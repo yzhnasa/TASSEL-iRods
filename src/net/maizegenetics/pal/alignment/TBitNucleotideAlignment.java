@@ -1,0 +1,31 @@
+/*
+ * TBitNucleotideAlignment
+ */
+package net.maizegenetics.pal.alignment;
+
+import net.maizegenetics.pal.ids.IdGroup;
+
+/**
+ *
+ * @author terry
+ */
+public class TBitNucleotideAlignment extends TBitAlignment {
+
+    protected TBitNucleotideAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isFinalized) {
+        super(a, maxNumAlleles, retainRareAlleles, isFinalized);
+    }
+
+    protected TBitNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
+        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+    }
+
+    @Override
+    public String getBaseAsString(int taxon, int site) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
+    }
+
+    @Override
+    public String[] getBaseAsStringArray(int taxon, int site) {
+        return new String[]{getBaseAsString(taxon, site)};
+    }
+}
