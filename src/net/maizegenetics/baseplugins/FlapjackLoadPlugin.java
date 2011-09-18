@@ -19,10 +19,7 @@ import net.maizegenetics.util.Utils;
 
 import javax.swing.*;
 
-import java.awt.Component;
 import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -31,8 +28,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 
 import java.io.*;
 
@@ -49,8 +44,8 @@ public class FlapjackLoadPlugin extends AbstractPlugin {
     private String myMapFile = null;
     private String myChromosome = null;
     private boolean hasHetSeparator;
-    private boolean hasNucleotides;
-    private boolean isPhysicalMap;
+    private boolean hasNucleotides = true;
+    private boolean isPhysicalMap = true;
     private String hetSeparator;
     private String missingCharacter;
 
@@ -152,9 +147,6 @@ public class FlapjackLoadPlugin extends AbstractPlugin {
 
     public DataSet loadFile(String theGenoFile, String theMapFile, String chromosome) {
 
-        throw new UnsupportedOperationException();
-
-        /*
         Alignment result;
         try {
             if (isPhysicalMap) {
@@ -166,12 +158,11 @@ public class FlapjackLoadPlugin extends AbstractPlugin {
             e.printStackTrace();
             return null;
         }
-        Datum td = new Datum(Utils.getFilename(theGenoFile), result, null);
+        Datum td = new Datum(Utils.getFilename(theGenoFile, FileLoadPlugin.FILE_EXT_FLAPJACK_GENO), result, null);
         DataSet tds = new DataSet(td, this);
         fireDataSetReturned(new PluginEvent(tds, FlapjackLoadPlugin.class));
 
         return tds;
-         */
 
     }
 

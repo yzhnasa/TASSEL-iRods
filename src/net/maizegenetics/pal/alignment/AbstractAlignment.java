@@ -589,8 +589,7 @@ abstract public class AbstractAlignment implements MutableAlignment {
 
     @Override
     public byte getPositionType(int site) {
-        // TODO - need to check for indels and return that if necessary.
-        return PositionType.ALL_GROUP;
+        return Alignment.ALL_GROUP;
     }
 
     @Override

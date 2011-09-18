@@ -70,6 +70,41 @@ public final class Utils {
 
     }
 
+    /**
+     * This returns the filename only.  Preceding
+     * directories are removed and suffix.  If suffix not
+     * found, then everything after last . is removed.
+     *
+     * @param str original filename
+     * @param suffix suffix
+     *
+     * @return trimmed filename
+     */
+    public static String getFilename(String str, String suffix) {
+
+        int indexForwardSlash = str.lastIndexOf('/');
+        int indexBackwardSlash = str.lastIndexOf('\\');
+
+        int index = 0;
+        if ((indexForwardSlash == -1) && (indexBackwardSlash == -1)) {
+            index = 0;
+        } else if (indexForwardSlash > indexBackwardSlash) {
+            index = indexForwardSlash + 1;
+        } else {
+            index = indexBackwardSlash + 1;
+        }
+
+        String result = str.substring(index);
+        if ((suffix != null) && (result.lastIndexOf(suffix) > 0)) {
+            result = result.substring(0, result.lastIndexOf(suffix));
+        } else if (result.lastIndexOf('.') > 0) {
+            result = result.substring(0, result.lastIndexOf('.'));
+        }
+
+        return result;
+
+    }
+
     public static List<String> getFullyQualifiedClassNames(String simpleName) {
 
         if (myJavaPackages == null) {

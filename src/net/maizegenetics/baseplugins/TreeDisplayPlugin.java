@@ -35,34 +35,40 @@ public class TreeDisplayPlugin extends AbstractDisplayPlugin {
     }
 
     public DataSet performFunction(DataSet input) {
-        List<Datum> treeInList = input.getDataOfType(Tree.class);
-        List<Datum> caInList = input.getDataOfType(Phenotype.class);
-        if (treeInList.size() != 1) {
-            String message = "Invalid selection.  Please select a 1 tree and upto 1 numerical.";
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), message);
-            } else {
-                System.out.println(message);
-            }
-            return null;
-        }
-        Phenotype ca = null;
-        if (caInList.size() > 0) {
-            ca = (Phenotype) caInList.get(0).getData();
-        }
-        Tree theTree = (Tree) treeInList.get(0).getData();
-        if (isInteractive()) {
-            TreePluginDialog myDialog = new TreePluginDialog(this, theTree, ca);
-            myDialog.setLocationRelativeTo(getParentFrame());
-            myDialog.setVisible(true);
-        } else if (theSaveFile != null) {
-            TreeComponent tc = new TreeComponent(theTree, false);
-            tc.setSize(defaultImageSize);
-            tc.setMode(getTreeMode());
-            saveDataToFile(tc, theSaveFile);
-        }
 
-        return null;
+        try {
+            List<Datum> treeInList = input.getDataOfType(Tree.class);
+            List<Datum> caInList = input.getDataOfType(Phenotype.class);
+            if (treeInList.size() != 1) {
+                String message = "Invalid selection.  Please select a 1 tree and upto 1 numerical.";
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), message);
+                } else {
+                    System.out.println(message);
+                }
+                return null;
+            }
+            Phenotype ca = null;
+            if (caInList.size() > 0) {
+                ca = (Phenotype) caInList.get(0).getData();
+            }
+            Tree theTree = (Tree) treeInList.get(0).getData();
+            if (isInteractive()) {
+                TreePluginDialog myDialog = new TreePluginDialog(this, theTree, ca);
+                myDialog.setLocationRelativeTo(getParentFrame());
+                myDialog.setVisible(true);
+            } else if (theSaveFile != null) {
+                TreeComponent tc = new TreeComponent(theTree, false);
+                tc.setSize(defaultImageSize);
+                tc.setMode(getTreeMode());
+                saveDataToFile(tc, theSaveFile);
+            }
+
+            return null;
+        } finally {
+            fireProgress(100);
+        }
+        
     }
 
     public int getTreeMode() {

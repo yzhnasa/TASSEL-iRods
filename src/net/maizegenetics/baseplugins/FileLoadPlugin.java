@@ -62,6 +62,13 @@ public class FileLoadPlugin extends AbstractPlugin {
         SqrMatrix, Annotated, Sequence, Polymorphism, Numerical, Unknown, Fasta,
         Hapmap, Plink, Phenotype, zipBLOB, gzipBLOB, Flapjack, Phylip_Seq, Phylip_Inter, GeneticMap, Table
     };
+    public static final String FILE_EXT_HAPMAP = ".hmp.txt";
+    public static final String FILE_EXT_PLINK_MAP = ".plk.map";
+    public static final String FILE_EXT_PLINK_PED = ".plk.ped";
+    public static final String FILE_EXT_FLAPJACK_MAP = ".flpjk.map";
+    public static final String FILE_EXT_FLAPJACK_GENO = ".flpjk.geno";
+    public static final String FILE_EXT_ZIP_BLOB = ".zip";
+    public static final String FILE_EXT_GZIP_BLOB = ".gz";
 
     /** Creates a new instance of FileLoadPlugin */
     public FileLoadPlugin(Frame parentFrame, boolean isInteractive) {
@@ -121,39 +128,39 @@ public class FileLoadPlugin extends AbstractPlugin {
                 try {
 
                     if (myFileType == TasselFileType.Unknown) {
-                        if (myOpenFiles[i].endsWith(".hmp.txt")) {
+                        if (myOpenFiles[i].endsWith(FILE_EXT_HAPMAP)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Hapmap);
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = processDatum(myOpenFiles[i], TasselFileType.Hapmap);
-                        } else if (myOpenFiles[i].endsWith(".plk.ped")) {
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_PLINK_PED)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Plink);
-                            String theMapFile = myOpenFiles[i].replaceFirst(".plk.ped", ".plk.map");
+                            String theMapFile = myOpenFiles[i].replaceFirst(FILE_EXT_PLINK_PED, FILE_EXT_PLINK_MAP);
                             alreadyLoaded.add(myOpenFiles[i]);
                             alreadyLoaded.add(theMapFile);
                             myPlinkLoadPlugin.loadFile(myOpenFiles[i], theMapFile, null);
-                        } else if (myOpenFiles[i].endsWith(".plk.map")) {
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_PLINK_MAP)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Plink);
-                            String thePedFile = myOpenFiles[i].replaceFirst(".plk.map", ".plk.ped");
+                            String thePedFile = myOpenFiles[i].replaceFirst(FILE_EXT_PLINK_MAP, FILE_EXT_PLINK_PED);
                             alreadyLoaded.add(myOpenFiles[i]);
                             alreadyLoaded.add(thePedFile);
                             myPlinkLoadPlugin.loadFile(thePedFile, myOpenFiles[i], null);
-                        } else if (myOpenFiles[i].endsWith(".flpjk.geno")) {
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_FLAPJACK_GENO)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Flapjack);
-                            String theMapFile = myOpenFiles[i].replaceFirst(".flpjk.geno", ".flpjk.map");
+                            String theMapFile = myOpenFiles[i].replaceFirst(FILE_EXT_FLAPJACK_GENO, FILE_EXT_FLAPJACK_MAP);
                             alreadyLoaded.add(myOpenFiles[i]);
                             alreadyLoaded.add(theMapFile);
                             myFlapjackLoadPlugin.loadFile(myOpenFiles[i], theMapFile, null);
-                        } else if (myOpenFiles[i].endsWith(".flpjk.map")) {
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_FLAPJACK_MAP)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Flapjack);
-                            String theGenoFile = myOpenFiles[i].replaceFirst(".flpjk.map", ".flpjk.geno");
+                            String theGenoFile = myOpenFiles[i].replaceFirst(FILE_EXT_FLAPJACK_MAP, FILE_EXT_FLAPJACK_GENO);
                             alreadyLoaded.add(myOpenFiles[i]);
                             alreadyLoaded.add(theGenoFile);
                             myFlapjackLoadPlugin.loadFile(theGenoFile, myOpenFiles[i], null);
-                        } else if (myOpenFiles[i].endsWith(".zip")) {
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_ZIP_BLOB)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.zipBLOB);
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = processDatum(myOpenFiles[i], TasselFileType.zipBLOB);
-                        } else if (myOpenFiles[i].endsWith(".gz")) {
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_GZIP_BLOB)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.gzipBLOB);
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = processDatum(myOpenFiles[i], TasselFileType.gzipBLOB);
@@ -307,20 +314,22 @@ public class FileLoadPlugin extends AbstractPlugin {
 
     private DataSet processDatum(String inFile, TasselFileType theFT) {
         Object result = null;
+        String suffix = null;
         try {
             switch (theFT) {
                 case zipBLOB: {
-                    throw new UnsupportedOperationException();
-                    //result = ImportUtils.readFromZip(inFile);
-                    //break;
+                    suffix = FILE_EXT_ZIP_BLOB;
+                    result = ImportUtils.readFromZip(inFile);
+                    break;
                 }
                 case gzipBLOB: {
-                    throw new UnsupportedOperationException();
-                    //result = ImportUtils.readFromGZIP(inFile);
-                    //break;
+                    suffix = FILE_EXT_GZIP_BLOB;
+                    result = ImportUtils.readFromGZIP(inFile);
+                    break;
                 }
                 case Hapmap: {
-                    result = ImportUtils.readFromHapmap(inFile, null);
+                    suffix = FILE_EXT_HAPMAP;
+                    result = ImportUtils.readFromHapmap(inFile);
                     break;
                 }
                 case Sequence: {
@@ -381,9 +390,9 @@ public class FileLoadPlugin extends AbstractPlugin {
                 theComment = sw.toString();
             }
 
-            String locusName = Utils.getFilename(inFile);
+            String name = Utils.getFilename(inFile, suffix);
 
-            Datum td = new Datum(locusName, result, theComment);
+            Datum td = new Datum(name, result, theComment);
             //todo need to add logic of directories.
             DataSet tds = new DataSet(td, this);
             return tds;

@@ -126,7 +126,7 @@ public class ImportUtils {
                 offsetsFinal[i] = ((Integer) lociOffsets.get(i)).intValue();
             }
 
-            return TBitAlignment.getNucleotideInstance(idGroup, theData, null, null, physicalPositions, Alignment.DEFAULT_MAX_NUM_ALLELES, lociFinal, offsetsFinal, snpIDs, true, true);
+            return SBitAlignment.getNucleotideInstance(idGroup, theData, null, null, physicalPositions, Alignment.DEFAULT_MAX_NUM_ALLELES, lociFinal, offsetsFinal, snpIDs, true, true);
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Problem creating Alignment: " + ExceptionUtils.getExceptionCauses(e));

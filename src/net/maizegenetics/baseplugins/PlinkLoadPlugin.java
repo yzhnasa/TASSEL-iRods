@@ -64,19 +64,12 @@ public class PlinkLoadPlugin extends AbstractPlugin {
             theDialog.dispose();
         }
 
-//        System.out.println("myPedFile: " + myPedFile);
-//        System.out.println("myMapFile: " + myMapFile);
-//        System.out.println("myChromosome: " + myChromosome);
-
         if ((myPedFile == null) || (myPedFile.length() == 0)) {
             return null;
         }
         if ((myMapFile == null) || (myMapFile.length() == 0)) {
             return null;
         }
-//        if ((myChromosome == null) || (myChromosome.length() == 0)) {
-//            return null;
-//        }
 
         DataSet result = loadFile(myPedFile, myMapFile, myChromosome);
 
@@ -137,13 +130,12 @@ public class PlinkLoadPlugin extends AbstractPlugin {
 
     public DataSet loadFile(String thePedFile, String theMapFile, String chromosome) {
 
-        throw new UnsupportedOperationException();
-        //Alignment result = ImportUtils.readFromPLINK(thePedFile, theMapFile);
-        //Datum td = new Datum(Utils.getFilename(thePedFile), result, null);
-        //DataSet tds = new DataSet(td, this);
-        //fireDataSetReturned(new PluginEvent(tds, PlinkLoadPlugin.class));
+        Alignment result = ImportUtils.readFromPLINK(thePedFile, theMapFile);
+        Datum td = new Datum(Utils.getFilename(thePedFile, FileLoadPlugin.FILE_EXT_PLINK_PED), result, null);
+        DataSet tds = new DataSet(td, this);
+        fireDataSetReturned(new PluginEvent(tds, PlinkLoadPlugin.class));
 
-        //return tds;
+        return tds;
 
     }
 

@@ -23,6 +23,15 @@ public class NestedCovariateModelEffect implements ModelEffect {
 		this.fme = fme;
 	}
 	
+	public NestedCovariateModelEffect(float[] covariate, FactorModelEffect fme) {
+		int n = covariate.length;
+		double[] cov = new double[n];
+		for (int i = 0; i < n; i++) cov[i] = covariate[i];
+		this.covariate = cov;
+		size = covariate.length;
+		this.fme = fme;
+	}
+	
 	private NestedCovariateModelEffect(Object id, int size, double[] covariate, FactorModelEffect fme) {
 		this.id = id;
 		this.covariate = Arrays.copyOf(covariate, covariate.length);

@@ -35,6 +35,19 @@ public interface Alignment extends Serializable {
         None, QualityScore, ImputedProbablity, Dosage
     };
 
+    final static public byte ALL_GROUP = 0;
+    final static public byte SILENT_GROUP = 1;
+    final static public byte SYNONYMOUS_GROUP = 2;
+    final static public byte NONCODING_GROUP = 3;
+    final static public byte NONTRANSSCRIBED_GROUP = 4;
+    final static public byte INTRON_GROUP = 5;
+    final static public byte INDEL_GROUP = 6;
+    final static public byte NONCODINGINDEL_GROUP = 7;
+    final static public byte NONSYNONYMOUS_GROUP = 8;
+    final static public byte CODING_GROUP = 9;
+    final static public byte CODINGINDEL_GROUP = 10;
+    final static public byte TRANSCRIBED_GROUP = 11;
+
     /**
      * Returns diploid values for given taxon and site.
      *

@@ -107,6 +107,7 @@ public class PartitionedLinearModel {
 		return x2tm1y * x2tm1y / x2tm1x2;
 	}
 
+	//only appropriate for a covariate which has one df
 	public void setModelSS(double modelss) {
 		this.modelss = modelss;
 		double[] ssdf = lm.getResidualSSdf();

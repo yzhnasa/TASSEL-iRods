@@ -63,6 +63,13 @@
         </javac>
     </target>
     
+    <target name="alignment" depends="init">
+        <javac srcdir="${src}" destdir="${build}" debug="true">
+            <include name="net/maizegenetics/pal/ids/**"/>
+            <include name="net/maizegenetics/pal/alignment/**"/>
+            <classpath refid="build.class.path"/>
+        </javac>
+    </target>
     
     <target name="genome" depends="init" description="compile the source">
         <javac srcdir="${src}" destdir="${build}" debug="true">

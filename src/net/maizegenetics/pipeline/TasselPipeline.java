@@ -44,9 +44,11 @@ import net.maizegenetics.baseplugins.gdpc.GDPCImportPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
+import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
 
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -350,6 +352,113 @@ public class TasselPipeline implements PluginListener {
                     writeXLSFile(xlsFile);
                 } else if (current.equalsIgnoreCase("-ld")) {
                     getLinkageDisequilibriumPlugin();
+                } else if (current.equalsIgnoreCase("-ldPermNum")) {
+
+                    LinkageDisequilibriumPlugin plugin = null;
+                    try {
+                        plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
+                    }
+
+                    String str = args[index++].trim();
+                    int permNum = -1;
+                    try {
+                        permNum = Integer.parseInt(str);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with LD Permutation number: " + str);
+                    }
+                    if (permNum < 1) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Permutation size can't be less than 1.");
+                    }
+
+                    plugin.setPermutationNumber(permNum);
+
+                } else if (current.equalsIgnoreCase("-ldTestSite")) {
+
+                    LinkageDisequilibriumPlugin plugin = null;
+                    try {
+                        plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
+                    }
+
+                    String str = args[index++].trim();
+                    int testSite = -1;
+                    try {
+                        testSite = Integer.parseInt(str);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with LD Test Site number: " + str);
+                    }
+                    if (testSite < 1) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Test Site can't be less than 1.");
+                    }
+
+                    plugin.setTestSite(testSite);
+
+                } else if (current.equalsIgnoreCase("-ldWinSize")) {
+
+                    LinkageDisequilibriumPlugin plugin = null;
+                    try {
+                        plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
+                    }
+
+                    String str = args[index++].trim();
+                    int winSize = -1;
+                    try {
+                        winSize = Integer.parseInt(str);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with LD Window Size: " + str);
+                    }
+                    if (winSize < 1) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Window Size can't be less than 1.");
+                    }
+
+                    plugin.setWinSize(winSize);
+
+                } else if (current.equalsIgnoreCase("-ldRapidAnalysis")) {
+
+                    LinkageDisequilibriumPlugin plugin = null;
+                    try {
+                        plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
+                    }
+
+                    String temp = args[index++].trim();
+                    boolean rapid = true;
+                    if (temp.equalsIgnoreCase("false")) {
+                        rapid = false;
+                    } else if (temp.equalsIgnoreCase("true")) {
+                        rapid = true;
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Rapid Analysis parameter must be true or false.");
+                    }
+
+                    plugin.setRapidAnalysis(rapid);
+
+                } else if (current.equalsIgnoreCase("-ldType")) {
+
+                    LinkageDisequilibriumPlugin plugin = null;
+                    try {
+                        plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
+                    }
+
+                    String temp = args[index++].trim();
+                    if (temp.equalsIgnoreCase("All")) {
+                        plugin.setLDType(testDesign.All);
+                    } else if (temp.equalsIgnoreCase("SlidingWindow")) {
+                        plugin.setLDType(testDesign.SlidingWindow);
+                    } else if (temp.equalsIgnoreCase("SiteByAll")) {
+                        plugin.setLDType(testDesign.SiteByAll);
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Type parameter must be All, SlidingWindow, or SiteByAll.");
+                    }
+
                 } else if (current.equalsIgnoreCase("-ldd")) {
                     String outputType = args[index++].trim();
                     getLinkageDiseqDisplayPlugin(outputType);

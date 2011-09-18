@@ -34,6 +34,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     int permutationNumber = 1000;
     int windowSize = 50;
     LinkageDisequilibrium.testDesign LDType = LinkageDisequilibrium.testDesign.SlidingWindow;
+    int testSite = -1;
 
     /** Creates a new instance of LinkageDisequilibriumPlugin */
     public LinkageDisequilibriumPlugin(Frame parentFrame, boolean isInteractive) {
@@ -41,50 +42,54 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     }
 
     public DataSet performFunction(DataSet input) {
-        List<Datum> alignInList = input.getDataOfType(Alignment.class);
-        if (alignInList.size() < 1) {
-            JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection.  Please select sequence or marker alignment.");
-            return null;
-        }
 
-        if (isInteractive()) {
-            LinkageDiseqDialog myDialog = new LinkageDiseqDialog(isRapidAnalysis, permutationNumber);
-            myDialog.setLocationRelativeTo(getParentFrame());
-            myDialog.setVisible(true);
-            if (myDialog.isCancel()) {
+        try {
+            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            if (alignInList.size() < 1) {
+                JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection.  Please select sequence or marker alignment.");
                 return null;
             }
-            isRapidAnalysis = myDialog.getRapidLDAnalysis();
-//            permutationNumber = myDialog.getPermutationNumber();
-            windowSize = myDialog.getWindowSize();
-            LDType = myDialog.getLDType();
-        }
 
-        List result = new ArrayList();
-        Iterator<Datum> itr = alignInList.iterator();
-        while (itr.hasNext()) {
-            DataSet tds = null;
-            Datum current = itr.next();
-            tds = processDatum(current);
-            if (tds != null) {
-                result.add(tds);
-                fireDataSetReturned(new PluginEvent(tds, LinkageDisequilibriumPlugin.class));
+            if (isInteractive()) {
+                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(isRapidAnalysis, permutationNumber);
+                myDialog.setLocationRelativeTo(getParentFrame());
+                myDialog.setVisible(true);
+                if (myDialog.isCancel()) {
+                    return null;
+                }
+                isRapidAnalysis = myDialog.getRapidLDAnalysis();
+                windowSize = myDialog.getWindowSize();
+                LDType = myDialog.getLDType();
             }
+
+            List result = new ArrayList();
+            Iterator<Datum> itr = alignInList.iterator();
+            while (itr.hasNext()) {
+                DataSet tds = null;
+                Datum current = itr.next();
+                tds = processDatum(current);
+                if (tds != null) {
+                    result.add(tds);
+                    fireDataSetReturned(new PluginEvent(tds, LinkageDisequilibriumPlugin.class));
+                }
+            }
+
+            return DataSet.getDataSet(result, this);
+        } finally {
+            fireProgress(100);
         }
 
-        return DataSet.getDataSet(result, this);
     }
 
     private DataSet processDatum(Datum input) {
         Alignment aa = (Alignment) input.getData();
-        net.maizegenetics.pal.popgen.LinkageDisequilibrium theLD = new net.maizegenetics.pal.popgen.LinkageDisequilibrium(aa, permutationNumber, windowSize, isRapidAnalysis, LDType);
+        net.maizegenetics.pal.popgen.LinkageDisequilibrium theLD = new net.maizegenetics.pal.popgen.LinkageDisequilibrium(aa, permutationNumber, windowSize, isRapidAnalysis, LDType, testSite, this);
         try {
             theLD.run();
             Datum td = new Datum("LD:" + input.getName(), theLD, "LD analysis");
             DataSet tds = new DataSet(td, this);
             return tds;
-        }
-        catch (Error e) {
+        } catch (Error e) {
             e.printStackTrace();
             StringBuilder builder = new StringBuilder();
             builder.append("Unable to run Linkage Disequilibrium analysis ");
@@ -109,6 +114,30 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 
     public void setPermutationNumber(int permutationNumber) {
         this.permutationNumber = permutationNumber;
+    }
+
+    public void setLDType(LinkageDisequilibrium.testDesign type) {
+        LDType = type;
+    }
+
+    public LinkageDisequilibrium.testDesign getLDType() {
+        return LDType;
+    }
+
+    public void setWinSize(int winSize) {
+        windowSize = winSize;
+    }
+
+    public int getWinSize() {
+        return windowSize;
+    }
+
+    public void setTestSite(int site) {
+        testSite = site;
+    }
+
+    public int getTestSite() {
+        return testSite;
     }
 
     /**
@@ -164,11 +193,9 @@ class LinkageDiseqDialog extends JDialog {
     JButton runButton = new JButton();
     JButton closeButton = new JButton();
     GridBagLayout gridBagLayout1 = new GridBagLayout();
-
     ButtonGroup matrixSelection = new ButtonGroup();
     JRadioButton denseMatrixButton = new JRadioButton("Full Matrix LD");
     JRadioButton slidingWindowButton = new JRadioButton("Sliding Window LD");
-
     JTextField windowSizeTextField = new JTextField();
     JLabel windowSizeLabel = new JLabel();
     int windowSize = 50;
@@ -207,7 +234,6 @@ class LinkageDiseqDialog extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 slidingWindowButton_actionPerformed(e);
             }
-
         });
 
         matrixSelection.add(denseMatrixButton);
@@ -253,8 +279,7 @@ class LinkageDiseqDialog extends JDialog {
     public LinkageDisequilibrium.testDesign getLDType() {
         if (denseMatrixButton.isSelected()) {
             return LinkageDisequilibrium.testDesign.All;
-        }
-        else {
+        } else {
             return LinkageDisequilibrium.testDesign.SlidingWindow;
         }
     }
@@ -278,7 +303,6 @@ class LinkageDiseqDialog extends JDialog {
 //    public int getPermutationNumber() {
 //        return numberPermutations;
 //    }
-
     /** Retrun the window size*/
     public int getWindowSize() {
         return windowSize;
@@ -294,8 +318,7 @@ class LinkageDiseqDialog extends JDialog {
 //        }
         try {
             windowSize = Integer.parseInt(windowSizeTextField.getText());
-        }
-        catch (Exception ee) {
+        } catch (Exception ee) {
             windowSizeTextField.setText("Set Integer");
         }
         runAnalysis = true;

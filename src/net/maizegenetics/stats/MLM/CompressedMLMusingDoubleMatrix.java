@@ -238,7 +238,7 @@ public class CompressedMLMusingDoubleMatrix {
 	    			MarkerPhenotypeAdapterUtils.updateMissing(finalMissing, missingMarkers);
 	    			boolean[] additionalMissing = new boolean[nonMissingObs];
 	    			
-	    			//only data for which missing=true are in the Z matrix
+	    			//only data for which missing=false are in the Z matrix
 	    			//the block below finds the rows of Z that have no marker data. 
 	    			//Those rows/columns will need to be removed from ZKZ or from V, depending on the analysis method.
 	    			int missingCount = 0;

@@ -4,9 +4,7 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-
 package net.maizegenetics.baseplugins;
-
 
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
@@ -19,94 +17,100 @@ import java.awt.event.ActionEvent;
 import java.net.URL;
 import java.util.List;
 
-
-
 /**
  *
  * @author Ed Buckler
  */
-public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin{
-    int upperCorner=LinkageDisequilibriumComponent.P_VALUE;
-    int lowerCorner=LinkageDisequilibriumComponent.RSQUARE;
-    boolean blockSchematic=true;
-    boolean chromosomalView=false;
+public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin {
+
+    int upperCorner = LinkageDisequilibriumComponent.P_VALUE;
+    int lowerCorner = LinkageDisequilibriumComponent.RSQUARE;
+    boolean blockSchematic = true;
+    boolean chromosomalView = false;
     boolean includeLabels = true;
-    
+
     /** Creates a new instance of LinkageDiseqDisplayPlugin */
     public LinkageDiseqDisplayPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
-    
-    
-    public DataSet performFunction(DataSet input) {
-        List <Datum> LDInList=input.getDataOfType(LinkageDisequilibrium.class);
-        if(LDInList.size()!=1) {
-            String message="Invalid selection.  Please select one LD result.";
-            if(isInteractive()) {JOptionPane.showMessageDialog(getParentFrame(), message);} else {System.out.println(message);}
-            return null;
-        }
-        LinkageDisequilibrium theLD=(LinkageDisequilibrium)LDInList.get(0).getData();
-        if(isInteractive()) {
-            try {
-                LinkageDiseqDisplayDialog myDialog=new LinkageDiseqDisplayDialog(this,theLD);
-                myDialog.setLocationRelativeTo(getParentFrame());
-                myDialog.setVisible(true);
-            }
-            catch(Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create LD plot " + ex);
-            } catch(Error er) {
-                er.printStackTrace();
-                JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create LD plot " + er);
-            }
-        } else if(theSaveFile!=null) {
-            LinkageDisequilibriumComponent ldc=new LinkageDisequilibriumComponent(theLD, blockSchematic, chromosomalView);
-            ldc.setUpperCorner(upperCorner);
-            ldc.setLowerCorner(lowerCorner);
-            ldc.setSize(defaultImageSize);
-            ldc.setShowLabels(includeLabels);
-            saveDataToFile(ldc, theSaveFile);
-        }
 
-        return null;
+    public DataSet performFunction(DataSet input) {
+
+        try {
+            List<Datum> LDInList = input.getDataOfType(LinkageDisequilibrium.class);
+            if (LDInList.size() != 1) {
+                String message = "Invalid selection.  Please select one LD result.";
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), message);
+                } else {
+                    System.out.println(message);
+                }
+                return null;
+            }
+            LinkageDisequilibrium theLD = (LinkageDisequilibrium) LDInList.get(0).getData();
+            if (isInteractive()) {
+                try {
+                    LinkageDiseqDisplayDialog myDialog = new LinkageDiseqDisplayDialog(this, theLD);
+                    myDialog.setLocationRelativeTo(getParentFrame());
+                    myDialog.setVisible(true);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create LD plot " + ex);
+                } catch (Error er) {
+                    er.printStackTrace();
+                    JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create LD plot " + er);
+                }
+            } else if (theSaveFile != null) {
+                LinkageDisequilibriumComponent ldc = new LinkageDisequilibriumComponent(theLD, blockSchematic, chromosomalView);
+                ldc.setUpperCorner(upperCorner);
+                ldc.setLowerCorner(lowerCorner);
+                ldc.setSize(defaultImageSize);
+                ldc.setShowLabels(includeLabels);
+                saveDataToFile(ldc, theSaveFile);
+            }
+
+            return null;
+        } finally {
+            fireProgress(100);
+        }
     }
-    
+
     public int getUpperCorner() {
         return upperCorner;
     }
-    
+
     public void setUpperCorner(int upperCorner) {
         this.upperCorner = upperCorner;
     }
-    
+
     public int getLowerCorner() {
         return lowerCorner;
     }
-    
+
     public void setLowerCorner(int lowerCorner) {
         this.lowerCorner = lowerCorner;
     }
-    
+
     public boolean isBlockSchematic() {
         return blockSchematic;
     }
-    
+
     public void setBlockSchematic(boolean blockSchematic) {
         this.blockSchematic = blockSchematic;
     }
-    
-    public void setShowLabels (boolean includeLabels) {
+
+    public void setShowLabels(boolean includeLabels) {
         this.includeLabels = includeLabels;
     }
-    
+
     public boolean isChromosomalView() {
         return chromosomalView;
     }
-    
+
     public void setChromosomalView(boolean chromosomalView) {
         this.chromosomalView = chromosomalView;
     }
-    
+
     /**
      * Icon for this plugin to be used in buttons, etc.
      *
@@ -114,10 +118,13 @@ public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin{
      */
     public ImageIcon getIcon() {
         URL imageURL = LinkageDiseqDisplayPlugin.class.getResource("images/LDPlot.gif");
-        if(imageURL == null) {
-            return null;} else {return new ImageIcon(imageURL);}
+        if (imageURL == null) {
+            return null;
+        } else {
+            return new ImageIcon(imageURL);
+        }
     }
-    
+
     /**
      * Button name for this plugin to be used in buttons, etc.
      *
@@ -126,7 +133,7 @@ public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin{
     public String getButtonName() {
         return "LD Plot";
     }
-    
+
     /**
      * Tool Tip Text for this plugin
      *
@@ -137,8 +144,8 @@ public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin{
     }
 }
 
-
 class LinkageDiseqDisplayDialog extends JDialog {
+
     JPanel panel1 = new JPanel();
     JButton okButton = new JButton();
     JButton printButton = new JButton();
@@ -166,30 +173,29 @@ class LinkageDiseqDisplayDialog extends JDialog {
     JRadioButton chromoRadioButton = new JRadioButton();
     JCheckBox schematicCheckBox = new JCheckBox();
 //  JComboBox formatComboBox = new JComboBox();
-    
+
     public LinkageDiseqDisplayDialog(LinkageDiseqDisplayPlugin theQAF, LinkageDisequilibrium theLinkageDisequilibrium) {
         super(theQAF.getParentFrame(), "Linkage Disequilibrium", false);
-        
-        this.theLinkageDiseqDisplayPlugin=theQAF;
-        this.theLinkageDisequilibrium=theLinkageDisequilibrium;
-        try  {
+
+        this.theLinkageDiseqDisplayPlugin = theQAF;
+        this.theLinkageDisequilibrium = theLinkageDisequilibrium;
+        try {
             jbInit();
-            ldFigurePanel=new LinkageDisequilibriumComponent(theLinkageDisequilibrium, true, false);
+            ldFigurePanel = new LinkageDisequilibriumComponent(theLinkageDisequilibrium, true, false);
             linkPanel.add(ldFigurePanel, BorderLayout.CENTER);
             pack();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this.getParent(), "Unable to create LD plot " + ex);
         }
         repaint();
     }
-    
-    
+
     void jbInit() throws Exception {
         panel1.setLayout(borderLayout2);
         okButton.setText("Close");
         okButton.addActionListener(new java.awt.event.ActionListener() {
-            
+
             public void actionPerformed(ActionEvent e) {
                 okButton_actionPerformed(e);
             }
@@ -198,7 +204,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         linkPanel.setLayout(borderLayout1);
         panel1.setPreferredSize(new Dimension(600, 600));
         saveButton.addActionListener(new java.awt.event.ActionListener() {
-            
+
             public void actionPerformed(ActionEvent e) {
                 saveButton_actionPerformed(e);
             }
@@ -206,7 +212,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         saveButton.setText("Save");
         upDPrimeRadioButton.setText("D\'");
         upDPrimeRadioButton.addActionListener(new java.awt.event.ActionListener() {
-            
+
             public void actionPerformed(ActionEvent e) {
                 upDPrimeRadioButton_actionPerformed(e);
             }
@@ -214,20 +220,20 @@ class LinkageDiseqDisplayDialog extends JDialog {
         upRSqrRadioButton.setSelected(true);
         upRSqrRadioButton.setText("r^2");
         upRSqrRadioButton.addActionListener(new java.awt.event.ActionListener() {
-            
+
             public void actionPerformed(ActionEvent e) {
                 upRSqrRadioButton_actionPerformed(e);
             }
         });
         upPRadioButton.addActionListener(new java.awt.event.ActionListener() {
-            
+
             public void actionPerformed(ActionEvent e) {
                 upPRadioButton_actionPerformed(e);
             }
         });
         upPRadioButton.setText("P");
         lowRSqrRadioButton.addActionListener(new java.awt.event.ActionListener() {
-            
+
             public void actionPerformed(ActionEvent e) {
                 lowRSqrRadioButton_actionPerformed(e);
             }
@@ -237,7 +243,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         jPanel1.setToolTipText("");
         lowDPrimeRadioButton.setText("D\'");
         lowDPrimeRadioButton.addActionListener(new java.awt.event.ActionListener() {
-            
+
             public void actionPerformed(ActionEvent e) {
                 lowDPrimeRadioButton_actionPerformed(e);
             }
@@ -245,7 +251,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         lowPRadioButton.setSelected(true);
         lowPRadioButton.setText("P");
         lowPRadioButton.addActionListener(new java.awt.event.ActionListener() {
-            
+
             public void actionPerformed(ActionEvent e) {
                 lowPRadioButton_actionPerformed(e);
             }
@@ -253,12 +259,14 @@ class LinkageDiseqDisplayDialog extends JDialog {
         geneRadioButton.setSelected(true);
         geneRadioButton.setText("Gene View");
         geneRadioButton.addActionListener(new java.awt.event.ActionListener() {
+
             public void actionPerformed(ActionEvent e) {
                 geneRadioButton_actionPerformed(e);
             }
         });
         chromoRadioButton.setText("Chromo View");
         chromoRadioButton.addActionListener(new java.awt.event.ActionListener() {
+
             public void actionPerformed(ActionEvent e) {
                 chromoRadioButton_actionPerformed(e);
             }
@@ -266,6 +274,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         schematicCheckBox.setSelected(true);
         schematicCheckBox.setText("Schematic");
         schematicCheckBox.addActionListener(new java.awt.event.ActionListener() {
+
             public void actionPerformed(ActionEvent e) {
                 schematicCheckBox_actionPerformed(e);
             }
@@ -281,93 +290,76 @@ class LinkageDiseqDisplayDialog extends JDialog {
         getContentPane().add(panel1);
         panel1.add(linkPanel, BorderLayout.CENTER);
         this.getContentPane().add(jPanel1, BorderLayout.SOUTH);
-        jPanel1.add(upPRadioButton, new GridBagConstraints(0, 0, 1, 2, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
-        jPanel1.add(upRSqrRadioButton, new GridBagConstraints(1, 0, 1, 2, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
-        jPanel1.add(upDPrimeRadioButton, new GridBagConstraints(2, 0, 1, 2, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
-        jPanel1.add(lowRSqrRadioButton, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
-        jPanel1.add(lowDPrimeRadioButton, new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 3, -2));
-        jPanel1.add(lowPRadioButton, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
-        jPanel1.add(chromoRadioButton, new GridBagConstraints(3, 2, 1, 1, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        jPanel1.add(okButton, new GridBagConstraints(5, 1, 2, 2, 0.0, 0.0
-                ,GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE, new Insets(0, 13, 12, 38), 0, 0));
-        jPanel1.add(geneRadioButton, new GridBagConstraints(3, 0, 1, 2, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        jPanel1.add(saveButton, new GridBagConstraints(4, 0, 1, 2, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        jPanel1.add(upPRadioButton, new GridBagConstraints(0, 0, 1, 2, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
+        jPanel1.add(upRSqrRadioButton, new GridBagConstraints(1, 0, 1, 2, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
+        jPanel1.add(upDPrimeRadioButton, new GridBagConstraints(2, 0, 1, 2, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
+        jPanel1.add(lowRSqrRadioButton, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
+        jPanel1.add(lowDPrimeRadioButton, new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 3, -2));
+        jPanel1.add(lowPRadioButton, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(3, 3, 3, 3), 0, 0));
+        jPanel1.add(chromoRadioButton, new GridBagConstraints(3, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        jPanel1.add(okButton, new GridBagConstraints(5, 1, 2, 2, 0.0, 0.0, GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE, new Insets(0, 13, 12, 38), 0, 0));
+        jPanel1.add(geneRadioButton, new GridBagConstraints(3, 0, 1, 2, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        jPanel1.add(saveButton, new GridBagConstraints(4, 0, 1, 2, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 //    jPanel1.add(formatComboBox, new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0
 //            ,GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 6, 0, 0), 0, 0));
-        jPanel1.add(schematicCheckBox, new GridBagConstraints(4, 2, 1, 1, 0.0, 0.0
-                ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        jPanel1.add(schematicCheckBox, new GridBagConstraints(4, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 //    jPanel1.add(svgButton, new GridBagConstraints(6, 0, 1, 1, 0.0, 0.0
 //            ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         geneChromoButtonGroup.add(chromoRadioButton);
         geneChromoButtonGroup.add(geneRadioButton);
     }
-    
-    
-    
-    
+
     void okButton_actionPerformed(ActionEvent e) {
         dispose();
     }/////////end calculateDisequilibrium
-    
+
     void saveButton_actionPerformed(ActionEvent e) {
         //     String s=formatComboBox.getSelectedItem().toString();
         this.theLinkageDiseqDisplayPlugin.saveDataToFile(ldFigurePanel);
     }
-    
+
     void upDPrimeRadioButton_actionPerformed(ActionEvent e) {
         ldFigurePanel.setUpperCorner(LinkageDisequilibriumComponent.DPRIME);
         repaint();
     }
-    
+
     void upRSqrRadioButton_actionPerformed(ActionEvent e) {
         ldFigurePanel.setUpperCorner(LinkageDisequilibriumComponent.RSQUARE);
         repaint();
     }
-    
+
     void upPRadioButton_actionPerformed(ActionEvent e) {
         ldFigurePanel.setUpperCorner(LinkageDisequilibriumComponent.P_VALUE);
         repaint();
     }
-    
-    
+
     void lowRSqrRadioButton_actionPerformed(ActionEvent e) {
         ldFigurePanel.setLowerCorner(LinkageDisequilibriumComponent.RSQUARE);
         repaint();
     }
-    
+
     void lowPRadioButton_actionPerformed(ActionEvent e) {
         ldFigurePanel.setLowerCorner(LinkageDisequilibriumComponent.P_VALUE);
         repaint();
     }
-    
+
     void lowDPrimeRadioButton_actionPerformed(ActionEvent e) {
         ldFigurePanel.setLowerCorner(LinkageDisequilibriumComponent.DPRIME);
         repaint();
     }
-    
+
     void geneRadioButton_actionPerformed(ActionEvent e) {
         ldFigurePanel.setScaleOfView(false);
         repaint();
     }
-    
+
     void chromoRadioButton_actionPerformed(ActionEvent e) {
         ldFigurePanel.setScaleOfView(true);
         repaint();
     }
-    
+
     void schematicCheckBox_actionPerformed(ActionEvent e) {
         ldFigurePanel.setShowSchematic(schematicCheckBox.isSelected());
         repaint();
     }
-    
 }
-
