@@ -7,7 +7,6 @@
 package net.maizegenetics.pal.tree;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.SimpleAlignment;
 import net.maizegenetics.pal.datatype.TextDataType;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
@@ -18,7 +17,6 @@ import net.maizegenetics.pal.math.MersenneTwisterFast;
 
 import java.io.PrintWriter;
 import java.util.Hashtable;
-
 
 /**
  * various utility functions on trees.
@@ -165,24 +163,24 @@ public class TreeUtils {
      */
     public static Tree mutationsToGenerations(Tree mutationTree, MutationRateModel muModel) {
         return scale(mutationTree, muModel, Units.GENERATIONS);
-    /*if (muModel.getMutationRate(0.0) <= 0.0) {
-    throw new IllegalArgumentException("Non-positive mutation rate is not permitted!");
-    }
+        /*if (muModel.getMutationRate(0.0) <= 0.0) {
+        throw new IllegalArgumentException("Non-positive mutation rate is not permitted!");
+        }
 
-    SimpleTree tree = new SimpleTree(mutationTree);
+        SimpleTree tree = new SimpleTree(mutationTree);
 
-    for (int i = 0; i < tree.getExternalNodeCount(); i++) {
-    double oldHeight = tree.getExternalNode(i).getNodeHeight();
-    tree.getExternalNode(i).setNodeHeight(muModel.getTime(oldHeight));
-    }
-    for (int i = 0; i < tree.getInternalNodeCount(); i++) {
-    double oldHeight = tree.getInternalNode(i).getNodeHeight();
-    tree.getInternalNode(i).setNodeHeight(muModel.getTime(oldHeight));
-    }
-    NodeUtils.heights2Lengths(tree.getRoot());
-    tree.setUnits(Units.GENERATIONS);
+        for (int i = 0; i < tree.getExternalNodeCount(); i++) {
+        double oldHeight = tree.getExternalNode(i).getNodeHeight();
+        tree.getExternalNode(i).setNodeHeight(muModel.getTime(oldHeight));
+        }
+        for (int i = 0; i < tree.getInternalNodeCount(); i++) {
+        double oldHeight = tree.getInternalNode(i).getNodeHeight();
+        tree.getInternalNode(i).setNodeHeight(muModel.getTime(oldHeight));
+        }
+        NodeUtils.heights2Lengths(tree.getRoot());
+        tree.setUnits(Units.GENERATIONS);
 
-    return tree;*/
+        return tree;*/
     }
 
     /**
@@ -415,8 +413,8 @@ public class TreeUtils {
             alias[i] = idGroup.whichIdNumber(tree.getExternalNode(i).getIdentifier().getName());
 
             if (alias[i] == -1) {
-                throw new IllegalArgumentException("Tree label " + tree.getExternalNode(i).getIdentifier() +
-                        " not present in given set of labels");
+                throw new IllegalArgumentException("Tree label " + tree.getExternalNode(i).getIdentifier()
+                        + " not present in given set of labels");
             }
         }
 
@@ -467,34 +465,6 @@ public class TreeUtils {
         tocd.setTimes(times, units);
 
         return tocd;
-    }
-
-    /**
-     * Extracts an alignment from a tree.
-     */
-    public static Alignment extractAlignment(Tree tree, boolean leaveSeqsInTree) {
-
-        tree.createNodeList();
-        String[] sequences = new String[tree.getExternalNodeCount()];
-        Identifier[] ids = new Identifier[sequences.length];
-
-        for (int i = 0; i < sequences.length; i++) {
-            sequences[i] = new String(tree.getExternalNode(i).getSequence());
-            ids[i] = tree.getExternalNode(i).getIdentifier();
-            if (!leaveSeqsInTree) {
-                tree.getExternalNode(i).setSequence(null);
-            }
-        }
-
-        //return new SimpleAlignment(ids, sequences, "-", AlignmentUtils.getSuitableInstance(sequences));
-        return SimpleAlignment.getInstance(new SimpleIdGroup(ids), sequences, new TextDataType());
-    }
-
-    /**
-     * Extracts an alignment from a tree.
-     */
-    public static Alignment extractAlignment(Tree tree) {
-        return extractAlignment(tree, true);
     }
 
     /**
@@ -559,26 +529,26 @@ public class TreeUtils {
         tree.setRoot(node);
     }
 
-   /**
-    * Return node with the highest average minimum and maximum distance.
-    * Ed thinks this is roughly the midpoint - need to look this up
-    * @param tree
-    * @return
-    */
-   public static Node findMidpointNode(Tree tree) {
-       Node midNode=null;
-       double maxAvgDist=-1;
+    /**
+     * Return node with the highest average minimum and maximum distance.
+     * Ed thinks this is roughly the midpoint - need to look this up
+     * @param tree
+     * @return
+     */
+    public static Node findMidpointNode(Tree tree) {
+        Node midNode = null;
+        double maxAvgDist = -1;
         for (int i = 0; i < tree.getInternalNodeCount(); i++) {
-            Node iNode=tree.getInternalNode(i);
-            double[] d=NodeUtils.getPathLengthInfo(iNode);
-            double avg=(d[0]+d[1])/2.0;
-            if(maxAvgDist<avg) {
-               maxAvgDist=avg;
-               midNode=iNode;
+            Node iNode = tree.getInternalNode(i);
+            double[] d = NodeUtils.getPathLengthInfo(iNode);
+            double avg = (d[0] + d[1]) / 2.0;
+            if (maxAvgDist < avg) {
+                maxAvgDist = avg;
+                midNode = iNode;
             }
         }
-       return midNode;
-   }
+        return midNode;
+    }
 
     /*
      * compute distance of external node a to all other leaves
@@ -773,8 +743,8 @@ public class TreeUtils {
     private static void rotateByLeafCount(Node node) {
 
         if (!node.isLeaf()) {
-            if (NodeUtils.getLeafCount(node.getChild(0)) >
-                    NodeUtils.getLeafCount(node.getChild(1))) {
+            if (NodeUtils.getLeafCount(node.getChild(0))
+                    > NodeUtils.getLeafCount(node.getChild(1))) {
                 Node temp = node.getChild(0);
                 node.removeChild(0);
                 node.addChild(temp);
@@ -800,7 +770,6 @@ public class TreeUtils {
     private static int numExternalNodes;
     private static int numInternalNodes;
     private static int numBranches;
-
 
     // Print picture of current tree in ASCII
     private static void printASCII(Tree tree, PrintWriter out) {
@@ -902,7 +871,6 @@ public class TreeUtils {
         }
     }
 
-
     // Print height information
     private static void heightInfo(Tree tree, PrintWriter out) {
         //
@@ -950,10 +918,10 @@ public class TreeUtils {
                 out.print("   ");
                 format.displayDecimal(out, tree.getInternalNode(i).getNodeHeight(), 7);
                 out.print("   ");
-            //if (showSE)
-            //{
-            //	format.displayDecimal(out, tree.getInternalNode(i).getNodeHeightSE(), 7);
-            //}
+                //if (showSE)
+                //{
+                //	format.displayDecimal(out, tree.getInternalNode(i).getNodeHeightSE(), 7);
+                //}
             }
 
             out.println();
