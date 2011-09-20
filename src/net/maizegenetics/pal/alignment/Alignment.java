@@ -169,6 +169,30 @@ public interface Alignment extends Serializable {
     public String getBaseAsString(int taxon, int site);
 
     /**
+     * Returns string representation of diploid alleles for given taxon in
+     * specified range (end site excluded).  Each value in string
+     * is what would be returned by getBaseAsString().
+     *
+     * @param taxon taxon
+     * @param startSite start site
+     * @param endSite end site
+     *
+     * @return string representation of alleles in range
+     */
+    public String getBaseAsStringRange(int taxon, int startSite, int endSite);
+
+    /**
+     * Returns string representation of diploid alleles for given taxon
+     * for all sites.  Each value in string
+     * is what would be returned by getBaseAsString().
+     *
+     * @param taxon taxon
+     *
+     * @return string representation of alleles
+     */
+    public String getBaseAsStringRow(int taxon);
+
+    /**
      * Returns string representation of diploid values returned by
      * getBaseArray() for given taxon and site.  Same two allele values
      * as getBaseAsString(), except already separated into two Strings.

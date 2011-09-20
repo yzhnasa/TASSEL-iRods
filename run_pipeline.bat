@@ -9,4 +9,4 @@ set CP=.\dist\sTASSEL.jar
 for %%i in (%LIB_JARS%\*.jar) do call ".\cp.bat" %%i
 echo %CP%
 
-java -classpath "%CP%" -Xms128m -Xmx1024m net.maizegenetics.pipeline.TasselPipeline %*
+java -classpath "%CP%" -Xms512m -Xmx1536m net.maizegenetics.pipeline.TasselPipeline %*

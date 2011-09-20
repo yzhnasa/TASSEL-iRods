@@ -17,12 +17,4 @@ print $CP;
 print "\n";
 my @args = @ARGV;
 
-# You may change the the memory allocation (two examples
-# are shown at the bottom).
-# If you would like to allocate more than 4GB, you need to
-# use -d64 to invoke 64-bit version of java
-
-system "java -classpath '$CP' -Xmx512m net.maizegenetics.pipeline.TasselPipeline @args";
-
-# system "java -d64 -classpath $CP -Xms2048m -Xmx8000m net.maizegenetics.pipeline.TasselPipeline";
-# qx/java -d64 -classpath $CP -Xms2048m -Xmx8000m net.maizegenetics.pipeline.TasselPipeline;
+system "java -classpath '$CP' -Xms512m -Xmx1536m net.maizegenetics.pipeline.TasselPipeline @args";

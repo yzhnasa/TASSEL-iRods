@@ -149,6 +149,23 @@ abstract public class AbstractAlignment implements MutableAlignment {
     }
 
     @Override
+    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = startSite; i < endSite; i++) {
+            if (i != startSite) {
+                builder.append(";");
+            }
+            builder.append(getBaseAsString(taxon, i));
+        }
+        return builder.toString();
+    }
+
+    @Override
+    public String getBaseAsStringRow(int taxon) {
+        return getBaseAsStringRange(taxon, 0, getSiteCount());
+    }
+
+    @Override
     public String[] getBaseAsStringArray(int taxon, int site) {
         byte[] temp = getBaseArray(taxon, site);
         return new String[]{myAlleleStates[0][temp[0]], myAlleleStates[0][temp[1]]};

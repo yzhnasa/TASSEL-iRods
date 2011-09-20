@@ -70,16 +70,19 @@ public class ImportUtils {
 
             BufferedReader fileIn = Utils.getBufferedReader(filename, 1000000);
             String[] header = WHITESPACE_PATTERN.split(fileIn.readLine());
+            int lineInFile = 1;
             int numTaxa = header.length - NUM_HAPMAP_NON_TAXA_HEADERS;
             String[] snpIDs = new String[numSites];
             int prevPosition = -1;
             for (int depth = 0; depth < depthInFile - 1; depth++) {
                 fileIn.readLine(); //shift .txt reader to desired position in .txt file
+                lineInFile++;
             }
             byte[][] theData = new byte[numTaxa][numSites];
             int[] physicalPositions = new int[numSites];
             for (int site = 0; site < numSites; site++) {
                 String[] s = WHITESPACE_PATTERN.split(fileIn.readLine());
+                lineInFile++;
 
                 int position = Integer.parseInt(s[HAPMAP_POSITION_COLUMN_INDEX]);
 
@@ -101,7 +104,7 @@ public class ImportUtils {
                 }
 
                 if (numTaxa + NUM_HAPMAP_NON_TAXA_HEADERS != s.length) {
-                    throw new IllegalStateException("Number of Taxa: " + numTaxa + " does not match number of values:" + (s.length - NUM_HAPMAP_NON_TAXA_HEADERS) + " at site: " + site);
+                    throw new IllegalStateException("Number of Taxa: " + numTaxa + " does not match number of values: " + (s.length - NUM_HAPMAP_NON_TAXA_HEADERS) + " at line in file: " + lineInFile + " site: " + site);
                 }
                 for (int i = 0; i < numTaxa; i++) {
                     theData[i][site] = NucleotideAlignmentConstants.getNucleotideDiploidByte(s[NUM_HAPMAP_NON_TAXA_HEADERS + i]);
