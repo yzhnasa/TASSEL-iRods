@@ -39,7 +39,7 @@ public class BasicImputation {
             if ((s1b != DataType.UNKNOWN_BYTE) && (s2b != DataType.UNKNOWN_BYTE)) {
                 if (s1b == s2b) {
                     leftMis[0][leftMissCnt]++;
-                //hapDescription[1]=b;
+                    //hapDescription[1]=b;
                 } else {
                     leftMis[1][leftMissCnt] = b;
                     leftMissCnt++;
@@ -60,7 +60,7 @@ public class BasicImputation {
                     if (b != initialSite) {
                         rightMis[0][rightMissCnt]++;
                     }
-                //hapDescription[2]=b;
+                    //hapDescription[2]=b;
                 } else {
                     rightMis[1][rightMissCnt] = b;
                     rightMissCnt++;
@@ -131,7 +131,7 @@ public class BasicImputation {
      * @return Imputed Pack1Alignment
      */
     public static Pack1Alignment imputeBySite(Pack1Alignment align, int minLength, int mismatchNum) {
-        long time=System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         byte[][] impAlleleBLOBs = new byte[align.getSequenceCount()][];
         for (int i = 0; i < align.getSequenceCount(); i++) {
             impAlleleBLOBs[i] = (byte[]) align.getAlleleBLOBs(i).clone();
@@ -141,8 +141,8 @@ public class BasicImputation {
             char[] alleles = null;
             boolean firstTime = true;
             if (b % 100 == 0) {
-                double rate=(double)unknownSNPs/(double)(System.currentTimeMillis()-time);
-                System.out.println("Imputed base:" + b + " known:" + knownSNPs + " unknownSNPs:" + unknownSNPs+" Rate:"+rate);
+                double rate = (double) unknownSNPs / (double) (System.currentTimeMillis() - time);
+                System.out.println("Imputed base:" + b + " known:" + knownSNPs + " unknownSNPs:" + unknownSNPs + " Rate:" + rate);
             }
             int[][] dm = maxHaplotypeLengthMatrix(align, b, mismatchNum, true);
             for (int i = 0; i < align.getSequenceCount(); i++) {

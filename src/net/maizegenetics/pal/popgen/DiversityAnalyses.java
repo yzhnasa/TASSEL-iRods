@@ -46,7 +46,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
     /** the base annotated alignment, it should be unprocessed (raw alignment)*/
     Alignment theAAlignment;
     /** the nature of the sites being evaluated, currently set to ALL POLYMORPHISMs, need to add specifics indels and SNPs.*/
-    byte siteGroup=PositionType.ALL_GROUP;
+    byte siteGroup = PositionType.ALL_GROUP;
     Vector diversityResultsVector = new Vector();
     PolymorphismDistribution thePolymorphismDistribution = null;
 
@@ -101,14 +101,13 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         }
         double startChrPosition = theAAlignment.getPositionInLocus(start);
         double endChrPosition = theAAlignment.getPositionInLocus(end);
-        Alignment theFilteredAlignment=FilterAlignment.getInstance(theAAlignment,start,end);
-        IBSDistanceMatrix adm =new IBSDistanceMatrix(theFilteredAlignment);
+        Alignment theFilteredAlignment = FilterAlignment.getInstance(theAAlignment, start, end);
+        IBSDistanceMatrix adm = new IBSDistanceMatrix(theFilteredAlignment);
         diversityResultsVector.add(evaluate(siteGroup, theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));
         if (thePolymorphismDistribution != null) {
             thePolymorphismDistribution.addDistribution(PositionType.getPositionGroupName(siteGroup) + "s" + start + "-e" + end, theFilteredAlignment, true);
         }
     }
-  
 
     DiversityResults evaluate(byte siteGroup, Alignment theAlignment, IBSDistanceMatrix dm,
             int start, int end, int chromosome, double startChrPosition, double endChrPosition) {
@@ -131,12 +130,10 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         theDiversityResults.thetapbp = estimateThetaPerbp(segSites, sites, theDiversityResults.avgSiteCoverage, taxa);
 
 //    theDiversityResults.theta=estimateTheta(segSites,sites,theDiversityResults.avgSiteCoverage, theAlignment.getSequenceCount());
-      theDiversityResults.tajimaD = estimateTajimaD(segSites, theDiversityResults.totalSites, theDiversityResults.avgSiteCoverage,
+        theDiversityResults.tajimaD = estimateTajimaD(segSites, theDiversityResults.totalSites, theDiversityResults.avgSiteCoverage,
                 theAlignment.getSequenceCount(), theDiversityResults.pipbp, theDiversityResults.thetapbp);
         return theDiversityResults;
     }
-
-
 
     public static double estimateTheta(int segSites, int totalSites, double averageSiteCoverage, int taxa) {
         double a = 0.0;
@@ -182,13 +179,16 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
 
     int countSegregatingSites(Alignment theAlignment) {
         int total = 0;
-        if(theAlignment.isAllPolymorphic()) return theAlignment.getSiteCount();
+        if (theAlignment.isAllPolymorphic()) {
+            return theAlignment.getSiteCount();
+        }
         for (int i = 0; i < theAlignment.getSiteCount(); i++) {
-            if (theAlignment.isPolymorphic(i)) total++;
+            if (theAlignment.isPolymorphic(i)) {
+                total++;
+            }
         }
         return total;
     }
-
 
     //Implementation of TableReport Interface
     public Object[] getTableColumnNames() {
@@ -283,8 +283,8 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
 
 class DiversityResults implements Serializable {
 
-    protected double pipbp,  thetapbp,  totalSites,  avgSiteCoverage,  tajimaD,  startChrPosition,  endChrPosition;
-    protected int startSite,  endSite,  haplotypes,  segregatingSites,  chromosome;
+    protected double pipbp, thetapbp, totalSites, avgSiteCoverage, tajimaD, startChrPosition, endChrPosition;
+    protected int startSite, endSite, haplotypes, segregatingSites, chromosome;
     protected int siteGroup;
     private int index;
 

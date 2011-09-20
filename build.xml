@@ -57,9 +57,9 @@
     
     <target name="pal" depends="init">
         <!-- Compile the java code from ${pal_src} into ${build} -->
-        <javac srcdir="${pal_src}" destdir="${build}" deprecation="true" debug="true">
+        <javac srcdir="${src}" destdir="${build}" debug="true">
             <classpath refid="build.class.path"/>
-            <include name="**/*"/>
+            <include name="net/maizegenetics/pal/**"/>
         </javac>
     </target>
     

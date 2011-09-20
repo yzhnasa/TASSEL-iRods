@@ -24,24 +24,26 @@ public class PolymorphismDistribution extends AbstractTableReport implements Tab
 
     //consider whether to output pooled minority alleles or everything
     public void addDistribution(String label, Alignment theSP, boolean poolMinor) {
-     //   int numStates = theSP.getDataType().getNumStates();
-        maxSeqCount=theSP.getSequenceCount() * 2;
+        //   int numStates = theSP.getDataType().getNumStates();
+        maxSeqCount = theSP.getSequenceCount() * 2;
         int[] pdist = new int[maxSeqCount];
         for (int i = 0; i < theSP.getSiteCount(); i++) {
             if (theSP.isPolymorphic(i)) {
-                SiteSummary ss=theSP.getSiteSummary(i);
-                if((poolMinor==false)||(ss.getAlleles().length==2)) {pdist[ss.getAlleleCounts()[1]]++;}
-                else {
-                    int sum=0;
-                    for(int a=1; a<ss.getAlleles().length; a++) {
-                        sum+=ss.getAlleleCounts()[a];
+                SiteSummary ss = theSP.getSiteSummary(i);
+                if ((poolMinor == false) || (ss.getAlleles().length == 2)) {
+                    pdist[ss.getAlleleCounts()[1]]++;
+                } else {
+                    int sum = 0;
+                    for (int a = 1; a < ss.getAlleles().length; a++) {
+                        sum += ss.getAlleleCounts()[a];
                     }
                     pdist[sum]++;
                 }
-            } else 
-            {pdist[0]++;}
+            } else {
+                pdist[0]++;
+            }
         }
-        
+
         PolymorphismDistributionResults pdr = new PolymorphismDistributionResults(label, pdist, poolMinor);
         polyDistResultsVector.add(pdr);
     }
@@ -160,4 +162,3 @@ class PolymorphismDistributionResults implements Serializable {
         return result;
     }
 }
-
