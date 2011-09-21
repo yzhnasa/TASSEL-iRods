@@ -240,4 +240,21 @@ public class AlignmentUtils {
         }
 
     }
+
+    /**
+     * Counts the number of pairwise allele matches. For identical
+     * homozygotes, this equals n * n, where n is the ploidy level.
+     * The probability that alleles drawn from the two loci are
+     * identical in state, P(IBS), equals this count divided by n*n.
+     * If either genotype is unknown returns -1.
+     *
+     * @param b1        the genotype for the first site
+     * @param b2        the genotype for the second site
+     *
+     * @return  a count of the number of times pairs of alleles match
+     * examining all possible pairwise combinations
+     */
+    public static int getDiploidIdentity(byte b1, byte b2) {
+        throw new UnsupportedOperationException();
+    }
 }

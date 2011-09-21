@@ -13,8 +13,6 @@ import net.maizegenetics.pal.io.InputSource;
 
 import java.io.IOException;
 import java.io.PushbackReader;
-import java.util.Vector;
-import net.maizegenetics.pal.datatype.IUPACNucleotides;
 
 /**
  * reads aligned sequence data from plain text files.<p>
@@ -153,7 +151,7 @@ public class ReadSequenceAlignmentUtils {
         for (int i = 0; i < numSeqs; i++) {
             s[i] = (new String(data[i])).toUpperCase();
         }
-//        SimpleAlignment saa = SimpleAlignment.getInstance(idGroup, s, new Nucleotides());
+        // SimpleAlignment saa = SimpleAlignment.getInstance(idGroup, s, new Nucleotides());
         String[] sites = new String[numSites];
         int[] positions = new int[numSites];
         for (int i = 0; i < numSites; i++) {

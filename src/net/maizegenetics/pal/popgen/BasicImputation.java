@@ -4,7 +4,6 @@
 package net.maizegenetics.pal.popgen;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.datatype.DataType;
 
 /**
  *
@@ -34,7 +33,7 @@ public class BasicImputation {
         for (b = initialSite; (b >= 0) && ibd; b--) {
             s1b = align.getBase(taxa1, b);
             s2b = align.getBase(taxa2, b);
-            if ((s1b != DataType.UNKNOWN_BYTE) && (s2b != DataType.UNKNOWN_BYTE)) {
+            if ((s1b != Alignment.UNKNOWN_DIPLOID_ALLELE) && (s2b != Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                 if (s1b == s2b) {
                     leftMis[0][leftMissCnt]++;
                     //hapDescription[1]=b;
@@ -53,7 +52,7 @@ public class BasicImputation {
         for (b = initialSite; (b < align.getSiteCount()) && ibd; b++) {
             s1b = align.getBase(taxa1, b);
             s2b = align.getBase(taxa2, b);
-            if ((s1b != DataType.UNKNOWN_BYTE) && (s2b != DataType.UNKNOWN_BYTE)) {
+            if ((s1b != Alignment.UNKNOWN_DIPLOID_ALLELE) && (s2b != Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                 if (s1b == s2b) {
                     if (b != initialSite) {
                         rightMis[0][rightMissCnt]++;
@@ -98,14 +97,14 @@ public class BasicImputation {
             for (int j = 0; j < i; j++) {
                 byte bj = align.getBase(j, initialSite);
                 byte bi = align.getBase(i, initialSite);
-                if (maskKnown && (bj != DataType.UNKNOWN_BYTE) && (bi != DataType.UNKNOWN_BYTE)) {
+                if (maskKnown && (bj != Alignment.UNKNOWN_DIPLOID_ALLELE) && (bi != Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                     m[j][i] = m[i][j] = Integer.MIN_VALUE;
                 } else {
                     m[j][i] = m[i][j] = maxHaplotypeLength(align, initialSite, i, j, maxMismatch)[0] + 1;
-                    if (bj == DataType.UNKNOWN_BYTE) {
+                    if (bj == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                         m[i][j] *= -1;
                     }
-                    if (bi == DataType.UNKNOWN_BYTE) {
+                    if (bi == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                         m[j][i] *= -1;
                     }
                 }

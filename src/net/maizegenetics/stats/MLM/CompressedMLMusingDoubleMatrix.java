@@ -710,29 +710,35 @@ public class CompressedMLMusingDoubleMatrix {
 	}
 	
 	public void testMarkerUsingP3D(CompressedMLMResult result, DoubleMatrix y, DoubleMatrix X, DoubleMatrix invV, int markerdf) {
-		
 		//calculate beta
 		DoubleMatrix invXVX = X.crossproduct(invV).mult(X);
 		invXVX.invert();
 		result.beta = invXVX.mult(X.crossproduct(invV.mult(y)));
-		
-		//calculate F test, p-value of F test
-		int nparm = result.beta.numberOfRows();
-		DoubleMatrix M = DoubleMatrixFactory.DEFAULT.make(markerdf, nparm, 0);
-		for (int i = 0; i < markerdf; i++) M.set(i, nparm - markerdf + i, 1);
-		DoubleMatrix Mb = M.mult(result.beta);
-		DoubleMatrix invMiM = M.mult(invXVX.tcrossproduct(M));
-		try {
-			invMiM.invert();
-			result.F = Mb.crossproduct(invMiM.mult(Mb)).get(0, 0) / markerdf;
-		} catch (Exception ex) {
-			result.F = Double.NaN;
-		}
-		try {
-			result.p = LinearModelUtils.Ftest(result.F, markerdf, y.numberOfRows() - nparm);
-		} catch (Exception e) {result.p = Double.NaN;}
 
-		calculateRsquare(X, y, invV, result, markerdf);
+		//test for markerdf = 0
+		if (markerdf == 0) {
+			result.F = Double.NaN;
+			result.p = Double.NaN;
+			result.r2 = 0.0;
+		} else {
+			//calculate F test, p-value of F test
+			int nparm = result.beta.numberOfRows();
+			DoubleMatrix M = DoubleMatrixFactory.DEFAULT.make(markerdf, nparm, 0);
+			for (int i = 0; i < markerdf; i++) M.set(i, nparm - markerdf + i, 1);
+			DoubleMatrix Mb = M.mult(result.beta);
+			DoubleMatrix invMiM = M.mult(invXVX.tcrossproduct(M));
+			try {
+				invMiM.invert();
+				result.F = Mb.crossproduct(invMiM.mult(Mb)).get(0, 0) / markerdf;
+			} catch (Exception ex) {
+				result.F = Double.NaN;
+			}
+			try {
+				result.p = LinearModelUtils.Ftest(result.F, markerdf, y.numberOfRows() - nparm);
+			} catch (Exception e) {result.p = Double.NaN;}
+
+			calculateRsquare(X, y, invV, result, markerdf);
+		}
 		
 	}
 	

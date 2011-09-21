@@ -15,7 +15,6 @@
 package net.maizegenetics.pal.distance;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.datatype.DataType;
 import net.maizegenetics.util.ProgressListener;
 
 /**
@@ -69,7 +68,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
                 distance[i][j] = params[0];
                 distance[j][i] = params[0];
                 avgTotalSites += params[1];
-                // System.err.println("i="+i+" j="+j+"  params[0]="+params[0]+"  params[1]="+params[1]);
                 count++;
             }
             fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
@@ -77,7 +75,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         lastCachedRow = null;
         setDistances(distance);
         avgTotalSites /= (double) count;
-        // System.err.println("avgTotalSites="+avgTotalSites);
     }
 
     private double[] calculateDistance(int s1, int s2) {
@@ -96,14 +93,13 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         for (int i = 0; i < siteCount; i++) {
             byte s1b = lastCachedRow[i];
             byte s2b = s2Row[i];
-            if ((s1b != DataType.UNKNOWN_CHARACTER) && (s2b != DataType.UNKNOWN_CHARACTER)) {
+            if ((s1b != Alignment.UNKNOWN_DIPLOID_ALLELE) && (s2b != Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                 if (s1b == s2b) {
                     numIdentical++;
                 } else {
                     numDifferent++;
                 }
             }
-            // if(i<12) System.out.println(i+"  s1="+s1+" b:"+s1b+"  s2="+s2+" b:"+s2b+"  id="+numIdentical+" nonid="+numDifferent);
         }
         params[1] = numIdentical + numDifferent;
         if (params[1] == 0) {
@@ -111,7 +107,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         } else {
             params[0] = (double) numDifferent / params[1];
         }
-        // System.out.println("  s1="+s1+"  s2="+s2+"  id="+numIdentical+" nonid="+numDifferent);
         return params;
     }
 

@@ -1,14 +1,13 @@
 package net.maizegenetics.stats.MLM;
 
-import net.maizegenetics.pal.datatype.DataType;
 import net.maizegenetics.pal.distance.DistanceMatrix;
+import net.maizegenetics.pal.distance.IBSDistanceMatrix;
+
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.SimplePhenotype;
 
-
 import java.awt.*;
-
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 
 /**
  * Created by IntelliJ IDEA.
@@ -236,7 +235,6 @@ public class Kinship extends DistanceMatrix {
      * @return
      */
     public static DistanceMatrix getSimilarityMatrixFromAlignment(Alignment alignment) {
-        DataType dt = alignment.getDataType();
         int nSites = alignment.getSiteCount();
         int nTaxa = alignment.getSequenceCount();
         double[][] ibs = new double[nTaxa][nTaxa];
@@ -244,14 +242,14 @@ public class Kinship extends DistanceMatrix {
 
         for (int t1 = 0; t1 < nTaxa; t1++) {
             for (int s = 0; s < nSites; s++) {
-                char t1base = alignment.getBaseChar(t1, s);
-                if (t1base != DataType.UNKNOWN_BYTE) { //if this base is not missing do the following
-                    ibs[t1][t1] += dt.getDiploidIdentity(t1base, t1base);
+                byte t1base = alignment.getBase(t1, s);
+                if (t1base != Alignment.UNKNOWN_DIPLOID_ALLELE) { //if this base is not missing do the following
+                    ibs[t1][t1] += AlignmentUtils.getDiploidIdentity(t1base, t1base);
                     cellCounts[t1][t1]++;
                     for (int t2 = t1 + 1; t2 < nTaxa; t2++) {
-                        char t2base = alignment.getBaseChar(t2, s);
-                        if (t2base != DataType.UNKNOWN_BYTE) {
-                            ibs[t1][t2] += dt.getDiploidIdentity(t1base, t2base);
+                        byte t2base = alignment.getBase(t2, s);
+                        if (t2base != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                            ibs[t1][t2] += AlignmentUtils.getDiploidIdentity(t1base, t2base);
                             cellCounts[t1][t2]++;
                         }
                     }

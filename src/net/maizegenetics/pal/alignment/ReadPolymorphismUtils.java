@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-import net.maizegenetics.pal.datatype.TextDataType;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-
 public class ReadPolymorphismUtils {
 
     private static Pattern WHITESPACE = Pattern.compile("\\s+");
@@ -67,7 +64,6 @@ public class ReadPolymorphismUtils {
         String[] markers = new String[nMarkers];
         markerNames.toArray(markers);
         String[] seq = new String[nTaxa];
-        TextDataType dt = new TextDataType();
         for (int i = 0; i < nTaxa; i++) {
             String[] data = dataList.get(i);
             taxa[i] = data[0];
@@ -81,9 +77,11 @@ public class ReadPolymorphismUtils {
             for (int j = 0; j < nMarkers; j++) {
                 char aChar;
                 if (data[j + 1].startsWith("?")) {
-                    aChar = TextDataType.UNKNOWN_CHARACTER;
+                    aChar = Alignment.UNKNOWN_ALLELE_CHAR;
                 } else {
-                    aChar = dt.getCharFromTextRepresentation(data[j + 1]);
+                    // Terry - fix this
+                    //aChar = dt.getCharFromTextRepresentation(data[j + 1]);
+                    aChar = ' ';
                 }
                 sb.append(aChar);
             }

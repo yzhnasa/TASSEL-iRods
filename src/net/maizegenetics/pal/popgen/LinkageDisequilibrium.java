@@ -7,7 +7,6 @@
 package net.maizegenetics.pal.popgen;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.datatype.DataType;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.statistics.FisherExact;
 
@@ -15,7 +14,6 @@ import net.maizegenetics.util.ProgressListener;
 
 import java.io.Serializable;
 import java.io.StringWriter;
-
 
 /**
  * This class calculates D' and r^2 estimates of linkage disequilibrium.  It also
@@ -43,7 +41,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     };
     protected Alignment theAlignment;
     boolean rapidPermute = true;
-//    int numberOfPermutations = 1000;
+    // int numberOfPermutations = 1000;
     int minTaxaForEstimate = 2;
     int windowOfSites = 50;
     int testSite = -1;  //this is only set when one versus all sites is calculated.
@@ -194,9 +192,9 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             byte colMajor = (byte) theAlignment.getMajorAllele(c);
             byte colMinor = (byte) theAlignment.getMinorAllele(c);
             double currentProgress = 100 * r * r / (theAlignment.getSiteCount() * theAlignment.getSiteCount());
-            fireProgress((int)currentProgress);
+            fireProgress((int) currentProgress);
             contig = new int[2][2];
-            if ((rowMinor == DataType.UNKNOWN_BYTE) || (colMinor == DataType.UNKNOWN_BYTE)) {
+            if ((rowMinor == Alignment.UNKNOWN_ALLELE) || (colMinor == Alignment.UNKNOWN_ALLELE)) {
                 rsqr[currTest] = dprime[currTest] = pval[currTest] = Float.NaN;
                 sampleSize[currTest] = 0;
             } else {
@@ -204,7 +202,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                 for (int sample = 0; sample < theAlignment.getSequenceCount(); sample++) {
                     byte x = theAlignment.getBase(sample, r);
                     byte y = theAlignment.getBase(sample, c);
-                    if ((x == DataType.UNKNOWN_BYTE) || (y == DataType.UNKNOWN_BYTE)) {
+                    if ((x == Alignment.UNKNOWN_DIPLOID_ALLELE) || (y == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                         continue;
                     }
                     int x1, y1;
@@ -290,14 +288,14 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         byte colMajor = (byte) a2.getMajorAllele(site2);
         byte colMinor = (byte) a2.getMinorAllele(site2);
         int[][] contig = new int[2][2];
-        if ((rowMinor == DataType.UNKNOWN_BYTE) || (colMinor == DataType.UNKNOWN_BYTE)) {
+        if ((rowMinor == Alignment.UNKNOWN_ALLELE) || (colMinor == Alignment.UNKNOWN_ALLELE)) {
             return null;
         }
         int n = 0;
         for (int sample = 0; sample < a1.getSequenceCount(); sample++) {
             byte x = a1.getBase(sample, site1);
             byte y = a2.getBase(sample, site2);
-            if ((x == DataType.UNKNOWN_BYTE) || (y == DataType.UNKNOWN_BYTE)) {
+            if ((x == Alignment.UNKNOWN_DIPLOID_ALLELE) || (y == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                 continue;
             }
             int x1, y1;
