@@ -46,7 +46,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
     /** the base annotated alignment, it should be unprocessed (raw alignment)*/
     Alignment theAAlignment;
     /** the nature of the sites being evaluated, currently set to ALL POLYMORPHISMs, need to add specifics indels and SNPs.*/
-    byte siteGroup = PositionType.ALL_GROUP;
+    byte siteGroup = Alignment.POSITION_TYPE_ALL_GROUP;
     Vector diversityResultsVector = new Vector();
     PolymorphismDistribution thePolymorphismDistribution = null;
 
@@ -105,7 +105,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         IBSDistanceMatrix adm = new IBSDistanceMatrix(theFilteredAlignment);
         diversityResultsVector.add(evaluate(siteGroup, theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));
         if (thePolymorphismDistribution != null) {
-            thePolymorphismDistribution.addDistribution(PositionType.getPositionGroupName(siteGroup) + "s" + start + "-e" + end, theFilteredAlignment, true);
+            thePolymorphismDistribution.addDistribution(Alignment.POSITION_TYPE_GROUP_TEXT[siteGroup] + "s" + start + "-e" + end, theFilteredAlignment, true);
         }
     }
 
@@ -129,7 +129,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         theDiversityResults.segregatingSites = segSites;
         theDiversityResults.thetapbp = estimateThetaPerbp(segSites, sites, theDiversityResults.avgSiteCoverage, taxa);
 
-//    theDiversityResults.theta=estimateTheta(segSites,sites,theDiversityResults.avgSiteCoverage, theAlignment.getSequenceCount());
+        // theDiversityResults.theta=estimateTheta(segSites,sites,theDiversityResults.avgSiteCoverage, theAlignment.getSequenceCount());
         theDiversityResults.tajimaD = estimateTajimaD(segSites, theDiversityResults.totalSites, theDiversityResults.avgSiteCoverage,
                 theAlignment.getSequenceCount(), theDiversityResults.pipbp, theDiversityResults.thetapbp);
         return theDiversityResults;
@@ -312,11 +312,11 @@ class DiversityResults implements Serializable {
     }
 
     public String getSiteGroupString() {
-        return PositionType.getPositionGroupName(siteGroup);
+        return Alignment.POSITION_TYPE_GROUP_TEXT[siteGroup];
     }
 
     public String toString() {
-        String result = "Diversity Results for " + PositionType.getPositionGroupName(siteGroup) + "\n";
+        String result = "Diversity Results for " + getSiteGroupString() + "\n";
         result += "Pi =" + pipbp + "\n";
         result += "Theta =" + thetapbp + "\n";
         result += "Segregrating Sites =" + segregatingSites + "\n";

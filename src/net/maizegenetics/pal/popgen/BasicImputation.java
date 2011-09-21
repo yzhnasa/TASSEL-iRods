@@ -4,8 +4,6 @@
 package net.maizegenetics.pal.popgen;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AllelePositionBLOBUtils;
-import net.maizegenetics.pal.alignment.Pack1Alignment;
 import net.maizegenetics.pal.datatype.DataType;
 
 /**
@@ -130,52 +128,7 @@ public class BasicImputation {
      * @param mismatchNum the number of misMatching bases in the length search
      * @return Imputed Pack1Alignment
      */
-    public static Pack1Alignment imputeBySite(Pack1Alignment align, int minLength, int mismatchNum) {
-        long time = System.currentTimeMillis();
-        byte[][] impAlleleBLOBs = new byte[align.getSequenceCount()][];
-        for (int i = 0; i < align.getSequenceCount(); i++) {
-            impAlleleBLOBs[i] = (byte[]) align.getAlleleBLOBs(i).clone();
-        }
-        int knownSNPs = 0, unknownSNPs = 0;
-        for (int b = 0; b < align.getSiteCount(); b++) {
-            char[] alleles = null;
-            boolean firstTime = true;
-            if (b % 100 == 0) {
-                double rate = (double) unknownSNPs / (double) (System.currentTimeMillis() - time);
-                System.out.println("Imputed base:" + b + " known:" + knownSNPs + " unknownSNPs:" + unknownSNPs + " Rate:" + rate);
-            }
-            int[][] dm = maxHaplotypeLengthMatrix(align, b, mismatchNum, true);
-            for (int i = 0; i < align.getSequenceCount(); i++) {
-                byte focusBase = align.getBase(i, b);
-                if (focusBase == DataType.UNKNOWN_BYTE) {
-                    int maxMatch = minLength, bestLine = -1;
-                    for (int j = 0; j < align.getSequenceCount(); j++) {
-                        if (dm[i][j] > maxMatch) {
-                            maxMatch = dm[i][j];
-                            bestLine = j;
-                        }
-                    }
-                    unknownSNPs++;
-                    if (bestLine != -1) {
-                        AllelePositionBLOBUtils.setHalfByteInAlleleBLOB(impAlleleBLOBs[i], b,
-                                align.getBaseChar(bestLine, b));
-                    } else {
-                        if (firstTime) {
-                            alleles = align.getSiteSummary(b).getAlleles();
-                            firstTime = false;
-                        }
-                        if ((alleles == null) || (alleles.length == 0)) {
-                            AllelePositionBLOBUtils.setHalfByteInAlleleBLOB(impAlleleBLOBs[i], b, DataType.UNKNOWN_CHARACTER);
-                        } else {
-                            AllelePositionBLOBUtils.setHalfByteInAlleleBLOB(impAlleleBLOBs[i], b, alleles[0]);  //use majority base
-                        }
-                    }
-                } else {
-                    knownSNPs++;
-                }
-            }
-        }
-        Pack1Alignment newAlign = new Pack1Alignment(impAlleleBLOBs, align.getVariableSitesBLOB(), align.getSNPidBLOB());
-        return newAlign;
+    public static Alignment imputeBySite(Alignment align, int minLength, int mismatchNum) {
+        throw new UnsupportedOperationException();
     }
 }

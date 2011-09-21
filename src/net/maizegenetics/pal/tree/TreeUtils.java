@@ -6,8 +6,6 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.datatype.TextDataType;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.LabelMapping;
@@ -20,8 +18,6 @@ import java.util.Hashtable;
 
 /**
  * various utility functions on trees.
- *
- * @version $Id: TreeUtils.java,v 1.1 2007/01/12 03:26:17 tcasstevens Exp $
  *
  * @author Alexei Drummond
  * @author Korbinian Strimmer

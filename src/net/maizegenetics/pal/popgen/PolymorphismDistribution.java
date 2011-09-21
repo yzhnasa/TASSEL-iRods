@@ -6,7 +6,6 @@ import net.maizegenetics.pal.report.AbstractTableReport;
 import java.io.Serializable;
 import java.util.Vector;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.SiteSummary;
 
 /**
  *This class provides the distribution of polymorphisms
@@ -24,18 +23,18 @@ public class PolymorphismDistribution extends AbstractTableReport implements Tab
 
     //consider whether to output pooled minority alleles or everything
     public void addDistribution(String label, Alignment theSP, boolean poolMinor) {
-        //   int numStates = theSP.getDataType().getNumStates();
         maxSeqCount = theSP.getSequenceCount() * 2;
         int[] pdist = new int[maxSeqCount];
         for (int i = 0; i < theSP.getSiteCount(); i++) {
             if (theSP.isPolymorphic(i)) {
-                SiteSummary ss = theSP.getSiteSummary(i);
-                if ((poolMinor == false) || (ss.getAlleles().length == 2)) {
-                    pdist[ss.getAlleleCounts()[1]]++;
+                int[][] alleleCounts = theSP.getAllelesSortedByFrequency(i);
+                int numAlleles = alleleCounts[0].length;
+                if ((poolMinor == false) || (numAlleles == 2)) {
+                    pdist[alleleCounts[1][1]]++;
                 } else {
                     int sum = 0;
-                    for (int a = 1; a < ss.getAlleles().length; a++) {
-                        sum += ss.getAlleleCounts()[a];
+                    for (int a = 1; a < numAlleles; a++) {
+                        sum += alleleCounts[1][a];
                     }
                     pdist[sum]++;
                 }
@@ -47,8 +46,8 @@ public class PolymorphismDistribution extends AbstractTableReport implements Tab
         PolymorphismDistributionResults pdr = new PolymorphismDistributionResults(label, pdist, poolMinor);
         polyDistResultsVector.add(pdr);
     }
-    //Implementation of TableReport Interface
 
+    //Implementation of TableReport Interface
     public Object[] getTableColumnNames() {
         String[] basicLabels = new String[1 + polyDistResultsVector.size()];
         basicLabels[0] = "Site_Freq";

@@ -34,19 +34,21 @@ public interface Alignment extends Serializable {
 
         None, QualityScore, ImputedProbablity, Dosage
     };
-
-    final static public byte ALL_GROUP = 0;
-    final static public byte SILENT_GROUP = 1;
-    final static public byte SYNONYMOUS_GROUP = 2;
-    final static public byte NONCODING_GROUP = 3;
-    final static public byte NONTRANSSCRIBED_GROUP = 4;
-    final static public byte INTRON_GROUP = 5;
-    final static public byte INDEL_GROUP = 6;
-    final static public byte NONCODINGINDEL_GROUP = 7;
-    final static public byte NONSYNONYMOUS_GROUP = 8;
-    final static public byte CODING_GROUP = 9;
-    final static public byte CODINGINDEL_GROUP = 10;
-    final static public byte TRANSCRIBED_GROUP = 11;
+    final static public byte POSITION_TYPE_ALL_GROUP = 0;
+    final static public byte POSITION_TYPE_SILENT_GROUP = 1;
+    final static public byte POSITION_TYPE_SYNONYMOUS_GROUP = 2;
+    final static public byte POSITION_TYPE_NONCODING_GROUP = 3;
+    final static public byte POSITION_TYPE_NONTRANSSCRIBED_GROUP = 4;
+    final static public byte POSITION_TYPE_INTRON_GROUP = 5;
+    final static public byte POSITION_TYPE_INDEL_GROUP = 6;
+    final static public byte POSITION_TYPE_NONCODINGINDEL_GROUP = 7;
+    final static public byte POSITION_TYPE_NONSYNONYMOUS_GROUP = 8;
+    final static public byte POSITION_TYPE_CODING_GROUP = 9;
+    final static public byte POSITION_TYPE_CODINGINDEL_GROUP = 10;
+    final static public byte POSITION_TYPE_TRANSCRIBED_GROUP = 11;
+    final static public String[] POSITION_TYPE_GROUP_TEXT = {"All", "Silent", "Synonymous", "Noncoding",
+        "Nontranscribed", "Intron", "Indel", "Noncoding Indel", "Nonsynonymous", "Coding",
+        "Coding Indel", "Transcribed"};
 
     /**
      * Returns diploid values for given taxon and site.
@@ -475,7 +477,7 @@ public interface Alignment extends Serializable {
     public byte[] getMinorAlleles(int site);
 
     /**
-     * Return all alleles at given site in order of frequency.
+     * Returns all alleles at given site in order of frequency.
      * Gap is included as state. Heterozygous count one for each
      * allele value.  Homozygous counts two for the allele value.
      *
