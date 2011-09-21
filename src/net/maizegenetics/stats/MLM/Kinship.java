@@ -7,7 +7,6 @@ import net.maizegenetics.pal.alignment.SimplePhenotype;
 
 
 import java.awt.*;
-import java.util.HashMap;
 
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 
@@ -33,14 +32,14 @@ public class Kinship extends DistanceMatrix {
     private int numSeqs;
     private boolean hetsRelated = false;
     private boolean rescale = true;
-    
+
     public Kinship(Alignment mar) {
-    	this(mar, false, true);
+        this(mar, false, true);
     }
 
     public Kinship(Alignment mar, boolean areHetsRelated, boolean rescaleKinship) {
-    	hetsRelated = areHetsRelated;
-    	rescale = rescaleKinship;
+        hetsRelated = areHetsRelated;
+        rescale = rescaleKinship;
         this.mar = mar;
         numSeqs = this.mar.getIdGroup().getIdCount();
         buildFromMarker();
@@ -56,22 +55,22 @@ public class Kinship extends DistanceMatrix {
     }
 
     public void buildFromMarker() {
-    	
-    	if (!hetsRelated) {
-    		IBSDistanceMatrix adm = new IBSDistanceMatrix(mar);
-    		dm = new DistanceMatrix(adm.getDistance(), mar.getIdGroup());
-    		toSimilarity();
-    	} else {
-    		dm = getSimilarityMatrixFromAlignment(mar);
-    	}
 
-    	if (rescale) {
-    		getKStatistics();
-    		pullBackExtrem();
-    		//cutOff();
-    		rescale();
-    	}
-		System.out.println("Kinship was built from markers");
+        if (!hetsRelated) {
+            IBSDistanceMatrix adm = new IBSDistanceMatrix(mar);
+            dm = new DistanceMatrix(adm.getDistance(), mar.getIdGroup());
+            toSimilarity();
+        } else {
+            dm = getSimilarityMatrixFromAlignment(mar);
+        }
+
+        if (rescale) {
+            getKStatistics();
+            pullBackExtrem();
+            //cutOff();
+            rescale();
+        }
+        System.out.println("Kinship was built from markers");
     }
 
     public void buildFromPed() {
@@ -227,7 +226,7 @@ public class Kinship extends DistanceMatrix {
     public DistanceMatrix getDm() {
         return dm;
     }
-    
+
     /**
      * Given an alignment this function calculates a kinship matrix as the probability 
      * that two alleles drawn at random are identical in state. 
@@ -237,48 +236,48 @@ public class Kinship extends DistanceMatrix {
      * @return
      */
     public static DistanceMatrix getSimilarityMatrixFromAlignment(Alignment alignment) {
-    	DataType dt = alignment.getDataType();
-    	int nSites = alignment.getSiteCount();
-    	int nTaxa = alignment.getSequenceCount();
-    	double[][] ibs = new double[nTaxa][nTaxa];
-    	int[][] cellCounts = new int[nTaxa][nTaxa]; //a count of cells with non-missing data
-    	
-    	for (int t1 = 0; t1 < nTaxa; t1++) {
-    		for (int s = 0; s < nSites; s++) {
-    			char t1base = alignment.getBaseChar(t1, s);
-    			if (t1base != DataType.UNKNOWN_BYTE) { //if this base is not missing do the following
-    				ibs[t1][t1] += dt.getDiploidIdentity(t1base, t1base);
-    				cellCounts[t1][t1]++;
-    				for (int t2 = t1 + 1; t2 < nTaxa; t2++) {
-    					char t2base = alignment.getBaseChar(t2, s);
-    					if (t2base != DataType.UNKNOWN_BYTE) {
-    						ibs[t1][t2] += dt.getDiploidIdentity(t1base, t2base);
-    						cellCounts[t1][t2]++;
-    					}
-    				}
-    			}
-    		}
-    	}
-    	
-    	for (int t1 = 0; t1 < nTaxa; t1++) {
-    		ibs[t1][t1] /= 2*cellCounts[t1][t1];
-    		for (int t2 = t1 + 1; t2 < nTaxa; t2++) {
-    			ibs[t1][t2] /= 2*cellCounts[t1][t2];
-    			ibs[t2][t1] = ibs[t1][t2];
-    		}
-    		
-    	}
-    	
-    	DistanceMatrix dm = new DistanceMatrix(ibs, alignment.getIdGroup());
-    	
-    	return dm;
+        DataType dt = alignment.getDataType();
+        int nSites = alignment.getSiteCount();
+        int nTaxa = alignment.getSequenceCount();
+        double[][] ibs = new double[nTaxa][nTaxa];
+        int[][] cellCounts = new int[nTaxa][nTaxa]; //a count of cells with non-missing data
+
+        for (int t1 = 0; t1 < nTaxa; t1++) {
+            for (int s = 0; s < nSites; s++) {
+                char t1base = alignment.getBaseChar(t1, s);
+                if (t1base != DataType.UNKNOWN_BYTE) { //if this base is not missing do the following
+                    ibs[t1][t1] += dt.getDiploidIdentity(t1base, t1base);
+                    cellCounts[t1][t1]++;
+                    for (int t2 = t1 + 1; t2 < nTaxa; t2++) {
+                        char t2base = alignment.getBaseChar(t2, s);
+                        if (t2base != DataType.UNKNOWN_BYTE) {
+                            ibs[t1][t2] += dt.getDiploidIdentity(t1base, t2base);
+                            cellCounts[t1][t2]++;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int t1 = 0; t1 < nTaxa; t1++) {
+            ibs[t1][t1] /= 2 * cellCounts[t1][t1];
+            for (int t2 = t1 + 1; t2 < nTaxa; t2++) {
+                ibs[t1][t2] /= 2 * cellCounts[t1][t2];
+                ibs[t2][t1] = ibs[t1][t2];
+            }
+
+        }
+
+        DistanceMatrix dm = new DistanceMatrix(ibs, alignment.getIdGroup());
+
+        return dm;
     }
 
-	public void setHetsRelated(boolean hetsRelated) {
-		this.hetsRelated = hetsRelated;
-	}
+    public void setHetsRelated(boolean hetsRelated) {
+        this.hetsRelated = hetsRelated;
+    }
 
-	public void setRescale(boolean rescale) {
-		this.rescale = rescale;
-	}
+    public void setRescale(boolean rescale) {
+        this.rescale = rescale;
+    }
 }
