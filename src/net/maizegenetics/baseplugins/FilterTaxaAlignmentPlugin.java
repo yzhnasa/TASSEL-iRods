@@ -106,8 +106,8 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
             myDialog.dispose();
         }
 
-        if (((myIdsToKeep == null) || (myIdsToKeep.getIdCount() == 0)) &&
-                ((myIdsToRemove == null) || (myIdsToRemove.getIdCount() == 0))) {
+        if (((myIdsToKeep == null) || (myIdsToKeep.getIdCount() == 0))
+                && ((myIdsToRemove == null) || (myIdsToRemove.getIdCount() == 0))) {
             return null;
         }
 
@@ -200,8 +200,8 @@ class DataRowFilterDialog extends JDialog {
     private JButton deleteSelectedButton = new JButton();
     private JButton closeButton = new JButton();
     private JTable table;
-    private String notification = "Unable to filter this type of data.\n Try filtering " +
-            "datasets which have not yet been merged";
+    private String notification = "Unable to filter this type of data.\n Try filtering "
+            + "datasets which have not yet been merged";
 
     /**
      * For filtering sequences, genotypes, and traits
@@ -212,7 +212,7 @@ class DataRowFilterDialog extends JDialog {
         Object[][] tableData = new Object[etr.getSequenceCount()][2];
         for (int i = 0; i < tableData.length; i++) {
             tableData[i][0] = etr.getIdGroup().getIdentifier(i);
-            tableData[i][1] = etr.getAlignedSequenceString(i);
+            tableData[i][1] = etr.getBaseAsStringRow(i);
         }
         Object[] tableColumnNames = {"Taxa", "Sequence"};
         table = new JTable(tableData, tableColumnNames) {

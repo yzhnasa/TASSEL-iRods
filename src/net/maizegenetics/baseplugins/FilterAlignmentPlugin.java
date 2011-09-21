@@ -6,6 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
+import com.sun.java.swing.plaf.gtk.GTKConstants.PositionType;
 import net.maizegenetics.pal.alignment.PositionType;
 import net.maizegenetics.pal.alignment.AnnotatedAlignmentUtils;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -50,7 +51,6 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     private static final Logger myLogger = Logger.getLogger(FilterAlignmentPlugin.class);
     int start = 0;
     int end = 0;
-//    int distFromEnd = 0;
     int minCount = 1;
     double minFreq = 0.01;
     boolean extractIndels = false;
@@ -159,8 +159,11 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         if ((start != 0) || (end < (naa.getSiteCount() - 1))) {
             naa = AnnotatedAlignmentUtils.removeSitesOutsideRange(naa, start, end);
         }
-        if(extractIndels) {naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, minFreq, minCount);}
-        else {naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreGapsMissing(naa, minFreq, minCount);}
+        if (extractIndels) {
+            naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, minFreq, minCount);
+        } else {
+            naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreGapsMissing(naa, minFreq, minCount);
+        }
         if (doSlidingHaps) {
             naa = AnnotatedAlignmentUtils.extractSlidingHaplotypes(naa, winSize, stepSize);
         }
@@ -900,7 +903,7 @@ class DataFilterAlignmentDialog extends JDialog {
             } else {
                 endPos = theAlignment.getPositionInLocus(end);
                 endPosTextField.setText(endPos + "");
-            //isEndTextFieldNumeric = true;
+                //isEndTextFieldNumeric = true;
             }
         } catch (Exception ee) {
             //System.err.println(ee);
@@ -908,7 +911,7 @@ class DataFilterAlignmentDialog extends JDialog {
             end = siteCount - 1;
             isEndTextFieldNumeric = false;
         }
-    //endTextField.setText(theEnd + "");
+        //endTextField.setText(theEnd + "");
 //        setDistanceFromEndTextField(theEnd);
     }
 
@@ -945,7 +948,7 @@ class DataFilterAlignmentDialog extends JDialog {
             } else {
                 startPos = theAlignment.getPositionInLocus(start);
                 startPosTextField.setText(startPos + "");
-            //isStartTextFieldNumeric = true;
+                //isStartTextFieldNumeric = true;
             }
         } catch (Exception ee) {
             //System.err.println(ee);
@@ -953,7 +956,7 @@ class DataFilterAlignmentDialog extends JDialog {
             start = 0;
             isStartTextFieldNumeric = false;
         }
-    //startTextField.setText(start + "");
+        //startTextField.setText(start + "");
     }
 
     private void endPosTextField_focusLost(FocusEvent e) {
@@ -989,7 +992,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 end = endSite;
                 endPos = theAlignment.getPositionInLocus(end);
                 endTextField.setText(end + "");
-            //isEndPosTextFieldNumeric = true;
+                //isEndPosTextFieldNumeric = true;
             }
         } catch (Exception ee) {
             //JOptionPane.showMessageDialog(this.getParent(), "Invalid end position.");
@@ -1031,7 +1034,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 start = startSite;
                 startPos = theAlignment.getPositionInLocus(start);
                 startTextField.setText(start + "");
-            //isStartPosTextFieldNumeric = true;
+                //isStartPosTextFieldNumeric = true;
             }
         } catch (Exception ee) {
             //JOptionPane.showMessageDialog(this.getParent(), "Invalid start position.");
@@ -1053,8 +1056,8 @@ class DataFilterAlignmentDialog extends JDialog {
             minFreq = tmpMinFreq;
 
         } catch (NumberFormatException nfe) {
-            JOptionPane.showMessageDialog(this.getParent(), "Could not parse \"Minimum Frequency\".  " +
-                    "Please enter a value between 0.0 and 1.0");
+            JOptionPane.showMessageDialog(this.getParent(), "Could not parse \"Minimum Frequency\".  "
+                    + "Please enter a value between 0.0 and 1.0");
         } catch (Exception ee) {
             ee.printStackTrace();
         }

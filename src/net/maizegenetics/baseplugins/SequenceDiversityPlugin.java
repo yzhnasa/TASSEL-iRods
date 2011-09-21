@@ -6,8 +6,8 @@
  */
 package net.maizegenetics.baseplugins;
 
+import com.sun.java.swing.plaf.gtk.GTKConstants.PositionType;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.PositionType;
 import net.maizegenetics.pal.popgen.DiversityAnalyses;
 import net.maizegenetics.pal.popgen.PolymorphismDistribution;
 import net.maizegenetics.pal.report.SimpleTableReport;
@@ -50,7 +50,7 @@ public class SequenceDiversityPlugin extends AbstractPlugin {
     /** Creates a new instance of SequenceDiversityPlugin */
     public SequenceDiversityPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
-        typeOfSitesToAnalyze.add(new Integer(PositionType.ALL_GROUP));
+        typeOfSitesToAnalyze.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
     }
 
     public DataSet performFunction(DataSet input) {
@@ -419,40 +419,40 @@ class DiversityDialog extends JDialog {
     public Vector getTypeOfSitesToAnalyze() {
         Vector grp = new Vector();
         if (overallCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.ALL_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
         }
         if (codingCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.CODING_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_CODING_GROUP));
         }
         if (noncodingCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.NONCODING_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_NONCODING_GROUP));
         }
         if (silentCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.SILENT_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_SILENT_GROUP));
         }
         if (intronCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.INTRON_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_INTRON_GROUP));
         }
         if (nontranscribedCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.NONTRANSSCRIBED_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_NONTRANSSCRIBED_GROUP));
         }
         if (codingIndelsCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.CODINGINDEL_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_CODINGINDEL_GROUP));
         }
         if (synonymousCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.SYNONYMOUS_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_SYNONYMOUS_GROUP));
         }
         if (indelNonCodingCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.NONCODINGINDEL_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_NONCODINGINDEL_GROUP));
         }
         if (allIndelCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.INDEL_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
         }
         if (nonSynCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.NONSYNONYMOUS_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_NONSYNONYMOUS_GROUP));
         }
         if (transcribedCheckBox.isSelected()) {
-            grp.add(new Integer(PositionType.TRANSCRIBED_GROUP));
+            grp.add(new Integer(Alignment.POSITION_TYPE_TRANSCRIBED_GROUP));
         }
         return grp;
     }

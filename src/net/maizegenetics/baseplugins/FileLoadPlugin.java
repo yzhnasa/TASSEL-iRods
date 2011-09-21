@@ -6,8 +6,6 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.baseplugins.gdpc.GDPCImportPlugin;
-
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.distance.ReadDistanceMatrix;
 import net.maizegenetics.pal.report.Report;
@@ -53,7 +51,6 @@ public class FileLoadPlugin extends AbstractPlugin {
     private static final Logger myLogger = Logger.getLogger(FileLoadPlugin.class);
     private String[] myOpenFiles = null;
     private TasselFileType myFileType = TasselFileType.Unknown;
-    private GDPCImportPlugin myImportPlugin = null;
     private PlinkLoadPlugin myPlinkLoadPlugin = null;
     private FlapjackLoadPlugin myFlapjackLoadPlugin = null;
 
@@ -75,14 +72,8 @@ public class FileLoadPlugin extends AbstractPlugin {
         super(parentFrame, isInteractive);
     }
 
-    public FileLoadPlugin(Frame parentFrame, boolean isInteractive, GDPCImportPlugin importPlugin) {
+    public FileLoadPlugin(Frame parentFrame, boolean isInteractive, PlinkLoadPlugin plinkLoadPlugin, FlapjackLoadPlugin flapjackLoadPlugin) {
         super(parentFrame, isInteractive);
-        myImportPlugin = importPlugin;
-    }
-
-    public FileLoadPlugin(Frame parentFrame, boolean isInteractive, GDPCImportPlugin importPlugin, PlinkLoadPlugin plinkLoadPlugin, FlapjackLoadPlugin flapjackLoadPlugin) {
-        super(parentFrame, isInteractive);
-        myImportPlugin = importPlugin;
         myPlinkLoadPlugin = plinkLoadPlugin;
         myFlapjackLoadPlugin = flapjackLoadPlugin;
     }

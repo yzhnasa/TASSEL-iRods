@@ -21,7 +21,6 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentMask;
 import net.maizegenetics.pal.alignment.AlignmentMask.MaskType;
 import net.maizegenetics.pal.alignment.AlignmentMaskBoolean;
-import net.maizegenetics.pal.alignment.Pack1Alignment;
 import net.maizegenetics.pal.popgen.BasicImputation;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -106,8 +105,8 @@ public class GenotypeImputationPlugin extends AbstractDisplayPlugin {
 
     public DataSet processDatum(Datum inDatum) {
         //TODO this will fail with a simple alignment, there needs to be a simple way to set bases in both approaches.
-        Pack1Alignment align = (Pack1Alignment) inDatum.getData();
-        Pack1Alignment impP1A = BasicImputation.imputeBySite(align, minLength, maxMismatch);
+        Alignment align = (Alignment) inDatum.getData();
+        Alignment impP1A = BasicImputation.imputeBySite(align, minLength, maxMismatch);
 
         String theName, theComment;
         theName = inDatum.getName() + "_Imp";

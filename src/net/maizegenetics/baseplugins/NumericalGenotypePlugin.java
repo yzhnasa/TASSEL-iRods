@@ -106,7 +106,6 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
         }
 
         double[][] pcValues = new double[seqCount][columnCount];
-        //String[][] traitNames = new String[2][columnCount];
         List<Trait> traitNames = new ArrayList<Trait>();
 
         int offset = 0;
@@ -140,8 +139,6 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             }
 
             for (int k = 0; k < currentSize; k++) {
-                //traitNames[0][k + offset] = "S" + i;
-                //traitNames[1][k + offset] = sortChars[k].toString();
                 traitNames.add(new Trait("S" + i, false, Trait.TYPE_DATA));
                 currentHash.put(sortChars[k], k);
             }

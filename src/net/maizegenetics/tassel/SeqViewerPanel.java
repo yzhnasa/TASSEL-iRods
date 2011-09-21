@@ -449,7 +449,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         int width = (int) size.getWidth() - ROW_HEADER_WIDTH - SCROLL_BAR_WIDTH;
         int columnWidth = TABLE_COLUMN_WIDTH + TABLE_COLUMN_MARGIN * 2;
         try {
-            columnWidth = myAlignment.getDataType().getFormattedString(myAlignment.getBaseChar(0, 0)).length() * TABLE_COLUMN_WIDTH + TABLE_COLUMN_MARGIN * 2;
+            columnWidth = myAlignment.getBaseAsString(0, 0).length() * TABLE_COLUMN_WIDTH + TABLE_COLUMN_MARGIN * 2;
         } catch (Exception ex) {
             // do nothing
         }

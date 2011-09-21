@@ -15,7 +15,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.datatype.DataType;
 import net.maizegenetics.pal.ids.IdGroup;
 
 /**
@@ -33,7 +32,6 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     private COLUMN_NAME_TYPE myColumnNameType = COLUMN_NAME_TYPE.physicalPosition;
     private boolean myIsPhysicalPosition = true;
     private final Alignment myAlignment;
-    private final DataType myDataType;
     // Left and Right variables
     private int myHorizontalPageSize = 0;
     private int myHorizontalCenter = 0;
@@ -47,7 +45,6 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         }
 
         myAlignment = alignment;
-        myDataType = alignment.getDataType();
 
         setHorizontalPageSize(horizontalPageSize);
 
@@ -74,7 +71,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         try {
             realColumn = col + myHorizontalStart;
-            result = myDataType.getFormattedString(myAlignment.getBaseChar(row, realColumn));
+            result = myAlignment.getBaseAsString(row, realColumn);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("row: " + row + "   col: " + col + "   realColumn: " + realColumn);
@@ -90,7 +87,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public Object getRealValueAt(int row, int col) {
-        return myAlignment.getBaseChar(row, col);
+        return myAlignment.getBase(row, col);
     }
 
     public String getColumnName(int col) {
@@ -106,7 +103,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteName) {
             return myAlignment.getSNPID(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.alleles) {
-            int[][] alleles = myAlignment.getAllelesSortedByFrequency(realColumn, true);
+            int[][] alleles = myAlignment.getAllelesSortedByFrequency(realColumn);
             int numAlleles = alleles[0].length;
             double total = 0.0;
 
@@ -120,7 +117,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
                     builder.append("; ");
                 }
                 builder.append(NUMBER_FORMAT.format((double) alleles[1][i] / total));
-                builder.append((char)alleles[0][i]);
+                builder.append(myAlignment.getBaseAsString(realColumn, (byte) alleles[0][i]));
             }
 
             return builder.toString();

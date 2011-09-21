@@ -1,15 +1,9 @@
 package net.maizegenetics.tassel;
 
-
 import net.maizegenetics.baseplugins.*;
-import net.maizegenetics.baseplugins.gdpc.ConvertGDPCToPALPlugin;
-import net.maizegenetics.baseplugins.gdpc.GDPCImportPlugin;
-import net.maizegenetics.baseplugins.gdpc.GDPCPlugin;
 import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
 
 import java.awt.*;
-
-
 
 /**
  * Title:        TASSEL
@@ -20,33 +14,16 @@ import java.awt.*;
  * @author Ed Buckler
  * @version 1.0
  */
-
 public class DataControlPanel extends AbstractControlPanel {
-    
-    private GDPCPlugin myGDPCPlugin;
-    
-    private GDPCImportPlugin myGDPCImportPlugin;
 
     private PlinkLoadPlugin myPlinkLoadPlugin;
-
     private FlapjackLoadPlugin myFlapjackLoadPlugin;
-    
-    
+
     public DataControlPanel(TASSELMainFrame theQAF, DataTreePanel theDTP) {
         super(theQAF, theDTP);
-        
+
         try {
             jbInit();
-            
-            myGDPCPlugin = new GDPCPlugin(theTASSELMainFrame, true);
-            
-            myGDPCImportPlugin = new GDPCImportPlugin();
-            
-            ConvertGDPCToPALPlugin convertPlugin = new ConvertGDPCToPALPlugin();
-            myGDPCPlugin.addGDPCListener(convertPlugin);
-            myGDPCImportPlugin.addListener(convertPlugin);
-            convertPlugin.addListener(theDataTreePanel);
-            addMainDisplayPlugin(myGDPCPlugin);
 
             myPlinkLoadPlugin = new PlinkLoadPlugin(theTASSELMainFrame, true);
             myPlinkLoadPlugin.addListener(theDataTreePanel);
@@ -54,7 +31,7 @@ public class DataControlPanel extends AbstractControlPanel {
             myFlapjackLoadPlugin = new FlapjackLoadPlugin(theTASSELMainFrame, true);
             myFlapjackLoadPlugin.addListener(theDataTreePanel);
 
-            addPlugin(new FileLoadPlugin(theTASSELMainFrame, true, myGDPCImportPlugin, myPlinkLoadPlugin, myFlapjackLoadPlugin));
+            addPlugin(new FileLoadPlugin(theTASSELMainFrame, true, myPlinkLoadPlugin, myFlapjackLoadPlugin));
             addPlugin(new ExportPlugin(theTASSELMainFrame, true));
             addPlugin(new FilterAlignmentPlugin(theTASSELMainFrame, true));
             addPlugin(new FilterTaxaAlignmentPlugin(theTASSELMainFrame, true));
@@ -68,29 +45,23 @@ public class DataControlPanel extends AbstractControlPanel {
             addPlugin(new UnionAlignmentPlugin(theTASSELMainFrame, true));
             addPlugin(new IntersectionAlignmentPlugin(theTASSELMainFrame, true));
             addPlugin(new SeparatePlugin(theTASSELMainFrame, true));
-            
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
-    
-    
+
     void jbInit() throws Exception {
-        
+
         this.setLayout(new FlowLayout());
         this.setFont(new java.awt.Font("Dialog", 1, 12));
         this.setMaximumSize(new Dimension(32767, 200));
         this.setMinimumSize(new Dimension(700, 34));
-        
+
     }
-    
+
     public void setDataTreePanel(DataTreePanel theDataTreePanel) {
         this.theDataTreePanel = theDataTreePanel;
     }
-    
-    
-    public boolean saveGDPCSettings() {
-        myGDPCPlugin.saveSettings();
-        return true;
-    }
+
 }

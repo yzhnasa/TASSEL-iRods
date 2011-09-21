@@ -641,7 +641,7 @@ public class TASSELMainFrame extends JFrame {
         modeSelectorsPanel.add(saveButton, new GridBagConstraints(7, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
         // delete button moved from datapanel
         modeSelectorsPanel.add(deleteButton, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 20, 1, 2), 0, 0));
-        
+
         modeSelectorsPanel.add(wizardButton, new GridBagConstraints(4, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 10, 1, 0), 0, 0));
 
         modeSelectorsPanel.add(getHeapButton(), new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 30, 1, 0), 0, 0));
@@ -1033,11 +1033,7 @@ public class TASSELMainFrame extends JFrame {
     }
 
     private void exitMenuItem_actionPerformed(ActionEvent e) {
-
-        theDataControlPanel.saveGDPCSettings();
-
         System.exit(0);
-
     }
 
     private void contigencyMenuItem_actionPerformed(ActionEvent e) {

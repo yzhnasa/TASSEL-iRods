@@ -15,7 +15,6 @@
 package net.maizegenetics.tassel;
 
 import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.datatype.DataType;
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.ids.IdentifierSynonymizer;
 import net.maizegenetics.pal.report.TableReport;
@@ -233,18 +232,12 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                     StringBuilder builder = new StringBuilder();
                     if (book.getData() instanceof Alignment) {
                         Alignment a = (Alignment) book.getData();
-                        DataType dt = a.getDataType();
                         builder.append("Number of sequences: ");
                         builder.append(a.getSequenceCount());
                         builder.append("\n");
                         builder.append("Number of sites: ");
                         builder.append(a.getSiteCount());
                         builder.append("\n");
-                        if (dt != null) {
-                            builder.append("Data type: ");
-                            builder.append(dt.getDescription());
-                            builder.append("\n");
-                        }
                         Locus[] loci = a.getLoci();
                         boolean first = true;
                         for (int i = 0; i < loci.length; i++) {
