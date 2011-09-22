@@ -147,14 +147,15 @@ public class FlapjackLoadPlugin extends AbstractPlugin {
 
     public DataSet loadFile(String theGenoFile, String theMapFile, String chromosome) {
 
-        Alignment result;
+        Alignment result = null;
+        //Terry - fix this
         try {
             if (isPhysicalMap) {
-                result = ImportUtils.readFromFlapjackPhysical(theGenoFile, theMapFile, hasHetSeparator, hasNucleotides, missingCharacter, hetSeparator);
+                //result = ImportUtils.readFromFlapjackPhysical(theGenoFile, theMapFile, hasHetSeparator, hasNucleotides, missingCharacter, hetSeparator);
             } else {
-                result = ImportUtils.readFromFlapjackGenetic(theGenoFile, theMapFile, hasHetSeparator, hasNucleotides, missingCharacter, hetSeparator);
+                //result = ImportUtils.readFromFlapjackGenetic(theGenoFile, theMapFile, hasHetSeparator, hasNucleotides, missingCharacter, hetSeparator);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }

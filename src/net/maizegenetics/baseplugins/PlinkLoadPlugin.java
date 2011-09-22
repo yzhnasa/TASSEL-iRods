@@ -130,7 +130,9 @@ public class PlinkLoadPlugin extends AbstractPlugin {
 
     public DataSet loadFile(String thePedFile, String theMapFile, String chromosome) {
 
-        Alignment result = ImportUtils.readFromPLINK(thePedFile, theMapFile);
+        // Terry - fix this.
+        Alignment result = null;
+        //Alignment result = ImportUtils.readFromPLINK(thePedFile, theMapFile);
         Datum td = new Datum(Utils.getFilename(thePedFile, FileLoadPlugin.FILE_EXT_PLINK_PED), result, null);
         DataSet tds = new DataSet(td, this);
         fireDataSetReturned(new PluginEvent(tds, PlinkLoadPlugin.class));

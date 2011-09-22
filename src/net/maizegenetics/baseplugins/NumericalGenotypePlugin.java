@@ -83,8 +83,8 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             Map charCount = new HashMap();
             for (int j = 0; j < seqCount; j++) {
 
-                char current = input.getBaseChar(j, i);
-                if ((current != 'N') && (current != '?')) {
+                byte current = input.getBase(j, i);
+                if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     Integer count = (Integer) charCount.get(current);
                     if (count != null) {
                         charCount.put(current, new Integer(count.intValue() + 1));
@@ -146,8 +146,8 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
 
             for (int j = 0; j < seqCount; j++) {
-                char current = input.getBaseChar(j, i);
-                if ((current == 'N') || (current == '?')) {
+                byte current = input.getBase(j, i);
+                if (current == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     for (int k = 0; k < currentSize; k++) {
                         pcValues[j][k + offset] = Double.NaN;
                     }
@@ -185,8 +185,8 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             char highestChar = 'z';
             for (int j = 0; j < seqCount; j++) {
 
-                char current = input.getBaseChar(j, i);
-                if ((current != 'N') && (current != '?')) {
+                byte current = input.getBase(j, i);
+                if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     Integer count = (Integer) charCount.get(current);
                     if (count != null) {
                         charCount.put(current, new Integer(count.intValue() + 1));
@@ -212,8 +212,8 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
 
             for (int j = 0; j < seqCount; j++) {
-                char current = input.getBaseChar(j, i);
-                if ((current == 'N') || (current == '?')) {
+                byte current = input.getBase(j, i);
+                if (current == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     pcValues[j][i] = Double.NaN;
                 } else if (current == highestChar) {
                     pcValues[j][i] = 0.0;

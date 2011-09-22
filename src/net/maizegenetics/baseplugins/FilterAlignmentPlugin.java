@@ -7,7 +7,6 @@
 package net.maizegenetics.baseplugins;
 
 import com.sun.java.swing.plaf.gtk.GTKConstants.PositionType;
-import net.maizegenetics.pal.alignment.PositionType;
 import net.maizegenetics.pal.alignment.AnnotatedAlignmentUtils;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.SimpleAlignment;
