@@ -12,7 +12,6 @@
  * public license. 
  *
  */
-
 /**
  * Title:        QEX (Quantitative Analysis of Expression)<p>
  * Description:  <p>
@@ -21,7 +20,6 @@
  * @author Edward Buckler
  * @version 1.0
  */
-
 /**
  * Title:        QEX (Quantitative Analysis of Expression)<p>
  * Description:  <p>
@@ -31,7 +29,6 @@
  * @version 1.0
  */
 package net.maizegenetics.tassel;
-
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -56,21 +53,21 @@ public class AboutBox extends JDialog implements ActionListener {
     FlowLayout flowLayout1 = new FlowLayout();
     FlowLayout flowLayout2 = new FlowLayout();
     GridLayout gridLayout1 = new GridLayout();
-    private String product              = "TASSEL";
+    private String product = "TASSEL";
     private String version;
-    private String comments             = "Trait Analysis by Association, Evolution and Linkage";
-    private String contact              = "Contacts...";
-    private String contact1             = "General Questions / Pipeline / GDPC - Terry Casstevens (tmc46@cornell.edu)";
-    private String contact2             = "Analysis Tools / MLM / GLM - Peter Bradbury (pjb39@cornell.edu), Zhiwu Zhang (zz19@cornell.edu)";
-    private String contact3             = "Overall Project Lead - Ed Buckler (esb33@cornell.edu)";
-    private String programmers          = "Produced by Edward Buckler, Peter Bradbury, Dallas Kroon, Yogesh Ramdoss, AJ Fink, Zhiwu Zhang, and Terry Casstevens";
-    private String acknowledgements     = "Libraries used: GDPC, PAL, Batik, COLT, JFreeChart, and others";
-    private String copyright            = "Copyright 2004 (c) by Edward Buckler";
+    private String comments = "Trait Analysis by Association, Evolution and Linkage";
+    private String contact = "Contacts...";
+    private String contact1 = "General Questions / Pipeline - Terry Casstevens (tmc46@cornell.edu)";
+    private String contact2 = "Analysis Tools / MLM / GLM - Peter Bradbury (pjb39@cornell.edu), Zhiwu Zhang (zz19@cornell.edu)";
+    private String contact3 = "Overall Project Lead - Ed Buckler (esb33@cornell.edu)";
+    private String programmers = "Produced by Edward Buckler, Peter Bradbury, Dallas Kroon, Yogesh Ramdoss, AJ Fink, Zhiwu Zhang, and Terry Casstevens";
+    private String acknowledgements = "Libraries used: PAL, Batik, COLT, JFreeChart, and others";
+    private String copyright = "Copyright 2004 (c) by Edward Buckler";
 
     public AboutBox(TASSELMainFrame parent) {
         super(parent);
 
-        version = "Version " + parent.version +" on " + parent.versionDate;
+        version = "Version " + parent.version + " on " + parent.versionDate;
 
         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
         try {
@@ -78,14 +75,18 @@ public class AboutBox extends JDialog implements ActionListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if(imageIcon != null)imageControl1.setIcon(imageIcon);
+        if (imageIcon != null) {
+            imageControl1.setIcon(imageIcon);
+        }
         pack();
     }
 
     private void jbInit() throws Exception {
         URL imageURL = getClass().getResource("images/AboutPicture.GIF");
 
-        if(imageURL != null) imageIcon = new ImageIcon(imageURL);
+        if (imageURL != null) {
+            imageIcon = new ImageIcon(imageURL);
+        }
         this.setTitle("About");
         setResizable(false);
         panel1.setLayout(borderLayout1);

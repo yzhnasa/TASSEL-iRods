@@ -38,9 +38,6 @@ import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
 import net.maizegenetics.baseplugins.MLMPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
-import net.maizegenetics.baseplugins.WriteDelimitedPlugin;
-import net.maizegenetics.baseplugins.WriteXLSPlugin;
-import net.maizegenetics.baseplugins.gdpc.GDPCImportPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
@@ -333,12 +330,6 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing max P: " + temp);
                     }
                     plugin.setMaxP(maxP);
-                } else if (current.equalsIgnoreCase("-wd_csv")) {
-                    String csvFile = args[index++].trim();
-                    writeDelimitedFile(csvFile, ",");
-                } else if (current.equalsIgnoreCase("-wd_tab")) {
-                    String tabFile = args[index++].trim();
-                    writeDelimitedFile(tabFile, "\t");
                 } else if (current.equalsIgnoreCase("-td_csv")) {
                     String csvFile = args[index++].trim();
                     getTableDisplayPlugin(csvFile, current);
@@ -347,9 +338,6 @@ public class TasselPipeline implements PluginListener {
                     getTableDisplayPlugin(tabFile, current);
                 } else if (current.equalsIgnoreCase("-td_gui")) {
                     getTableDisplayPlugin(null, current);
-                } else if (current.equalsIgnoreCase("-wxls")) {
-                    String xlsFile = args[index++].trim();
-                    writeXLSFile(xlsFile);
                 } else if (current.equalsIgnoreCase("-ld")) {
                     getLinkageDisequilibriumPlugin();
                 } else if (current.equalsIgnoreCase("-ldPermNum")) {
@@ -850,7 +838,7 @@ public class TasselPipeline implements PluginListener {
 
         myLogger.info("loadFile: " + filename);
 
-        FileLoadPlugin plugin = new FileLoadPlugin(myMainFrame, false, new GDPCImportPlugin());
+        FileLoadPlugin plugin = new FileLoadPlugin(myMainFrame, false);
         if (fileType == null) {
             plugin.setTheFileType(FileLoadPlugin.TasselFileType.Unknown);
         } else {
@@ -860,21 +848,6 @@ public class TasselPipeline implements PluginListener {
         plugin.setOpenFiles(new String[]{filename});
 
         integratePlugin(plugin, true);
-
-        return plugin;
-
-    }
-
-    public WriteDelimitedPlugin writeDelimitedFile(String filename, String delimiter) {
-
-        myLogger.info("writeDelimitedFile: " + filename);
-
-        WriteDelimitedPlugin plugin = new WriteDelimitedPlugin(filename);
-        if (delimiter != null) {
-            plugin.setDelimiter(delimiter);
-        }
-
-        integratePlugin(plugin, false);
 
         return plugin;
 
@@ -900,18 +873,6 @@ public class TasselPipeline implements PluginListener {
             plugin.setSaveFile(new File(filename));
             integratePlugin(plugin, false);
         }
-
-        return plugin;
-
-    }
-
-    public WriteXLSPlugin writeXLSFile(String filename) {
-
-        myLogger.info("writeXLSFile: " + filename);
-
-        WriteXLSPlugin plugin = new WriteXLSPlugin(filename);
-
-        integratePlugin(plugin, false);
 
         return plugin;
 
