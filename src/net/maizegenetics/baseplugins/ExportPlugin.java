@@ -16,7 +16,6 @@ import java.awt.event.ActionListener;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.Phenotype;
 import net.maizegenetics.pal.alignment.PhenotypeUtils;
@@ -223,11 +222,7 @@ public class ExportPlugin extends AbstractPlugin {
             return;
         }
 
-        if (myFileType == FileLoadPlugin.TasselFileType.zipBLOB) {
-            ExportUtils.writeToZip(inputAlignment, mySaveFile);
-        } else if (myFileType == FileLoadPlugin.TasselFileType.gzipBLOB) {
-            ExportUtils.writeToGZIP(inputAlignment, mySaveFile);
-        } else if (myFileType == FileLoadPlugin.TasselFileType.Hapmap) {
+        if (myFileType == FileLoadPlugin.TasselFileType.Hapmap) {
             int n = 0;
             DefaultMutableTreeNode node = null;
             if (isInteractive()) {
@@ -273,7 +268,7 @@ public class ExportPlugin extends AbstractPlugin {
             PrintWriter out = null;
             try {
                 out = new PrintWriter(new FileWriter(Utils.addSuffixIfNeeded(mySaveFile, ".phy")));
-                AlignmentUtils.printSequential(inputAlignment, out);
+                ExportUtils.printSequential(inputAlignment, out);
             } catch (Exception e) {
                 throw new IllegalStateException("ExportPlugin: performFunction: Problem writing file: " + mySaveFile);
             } finally {
@@ -284,7 +279,7 @@ public class ExportPlugin extends AbstractPlugin {
             PrintWriter out = null;
             try {
                 out = new PrintWriter(new FileWriter(Utils.addSuffixIfNeeded(mySaveFile, ".phy")));
-                AlignmentUtils.printInterleaved(inputAlignment, out);
+                ExportUtils.printInterleaved(inputAlignment, out);
             } catch (Exception e) {
                 throw new IllegalStateException("ExportPlugin: performFunction: Problem writing file: " + mySaveFile);
             } finally {
@@ -292,7 +287,7 @@ public class ExportPlugin extends AbstractPlugin {
                 out.close();
             }
         } else if (myFileType == FileLoadPlugin.TasselFileType.Table) {
-            AlignmentUtils.saveDelimitedAlignment(inputAlignment, "\t", mySaveFile);
+            ExportUtils.saveDelimitedAlignment(inputAlignment, "\t", mySaveFile);
         } else {
             throw new IllegalStateException("ExportPlugin: performFunction: Unknown Alignment File Format: " + myFileType);
         }
@@ -373,8 +368,6 @@ public class ExportPlugin extends AbstractPlugin {
 
         private boolean myIsCancel = true;
         private ButtonGroup myButtonGroup = new ButtonGroup();
-        private JRadioButton myZippedBLOBRadioButton = new JRadioButton("Write BLOB (zip)");
-        private JRadioButton myGZippedBLOBRadioButton = new JRadioButton("Write BLOB (gzip)");
         private JRadioButton myHapMapRadioButton = new JRadioButton("Write Hapmap");
         private JRadioButton myPlinkRadioButton = new JRadioButton("Write Plink");
         private JRadioButton myFlapjackRadioButton = new JRadioButton("Write Flapjack");
@@ -413,15 +406,13 @@ public class ExportPlugin extends AbstractPlugin {
 
             setResizable(false);
 
-            myButtonGroup.add(myZippedBLOBRadioButton);
-            myButtonGroup.add(myGZippedBLOBRadioButton);
             myButtonGroup.add(myHapMapRadioButton);
             myButtonGroup.add(myPlinkRadioButton);
             myButtonGroup.add(myFlapjackRadioButton);
             myButtonGroup.add(myPhylipRadioButton);
             myButtonGroup.add(myPhylipInterRadioButton);
             myButtonGroup.add(myTabTableRadioButton);
-            myZippedBLOBRadioButton.setSelected(true);
+            myHapMapRadioButton.setSelected(true);
 
         }
 
@@ -473,8 +464,6 @@ public class ExportPlugin extends AbstractPlugin {
             result.setAlignmentX(JPanel.CENTER_ALIGNMENT);
             result.setBorder(BorderFactory.createEtchedBorder());
 
-            result.add(myZippedBLOBRadioButton);
-            result.add(myGZippedBLOBRadioButton);
             result.add(myHapMapRadioButton);
             result.add(myPlinkRadioButton);
             result.add(myFlapjackRadioButton);
@@ -520,12 +509,6 @@ public class ExportPlugin extends AbstractPlugin {
         }
 
         public FileLoadPlugin.TasselFileType getTasselFileType() {
-            if (myZippedBLOBRadioButton.isSelected()) {
-                return FileLoadPlugin.TasselFileType.zipBLOB;
-            }
-            if (myGZippedBLOBRadioButton.isSelected()) {
-                return FileLoadPlugin.TasselFileType.gzipBLOB;
-            }
             if (myHapMapRadioButton.isSelected()) {
                 return FileLoadPlugin.TasselFileType.Hapmap;
             }

@@ -82,6 +82,26 @@ public class SBitAlignment extends AbstractAlignment {
 
     }
 
+    public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
+
+        if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
+            throw new IllegalArgumentException("SBitAlignment: getInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
+        }
+
+        if ((data == null) || (data.length == 0)) {
+            throw new IllegalArgumentException("SBitAlignment: getInstance: data can not be empty.");
+        }
+
+        if (data.length != idGroup.getIdCount()) {
+            throw new IllegalArgumentException("SBitAlignment: getInstance: data rows not equal to number of identifers.");
+        }
+
+        byte[][] dataBytes = AlignmentUtils.getDataBytes(data, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+
+        return SBitAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+
+    }
+
     public static SBitAlignment getInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > 14)) {

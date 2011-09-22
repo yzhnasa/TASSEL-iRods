@@ -57,15 +57,13 @@ public class FileLoadPlugin extends AbstractPlugin {
     public enum TasselFileType {
 
         SqrMatrix, Annotated, Sequence, Polymorphism, Numerical, Unknown, Fasta,
-        Hapmap, Plink, Phenotype, zipBLOB, gzipBLOB, Flapjack, Phylip_Seq, Phylip_Inter, GeneticMap, Table
+        Hapmap, Plink, Phenotype, Flapjack, Phylip_Seq, Phylip_Inter, GeneticMap, Table
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
     public static final String FILE_EXT_PLINK_MAP = ".plk.map";
     public static final String FILE_EXT_PLINK_PED = ".plk.ped";
     public static final String FILE_EXT_FLAPJACK_MAP = ".flpjk.map";
     public static final String FILE_EXT_FLAPJACK_GENO = ".flpjk.geno";
-    public static final String FILE_EXT_ZIP_BLOB = ".zip";
-    public static final String FILE_EXT_GZIP_BLOB = ".gz";
 
     /** Creates a new instance of FileLoadPlugin */
     public FileLoadPlugin(Frame parentFrame, boolean isInteractive) {
@@ -147,14 +145,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                             alreadyLoaded.add(myOpenFiles[i]);
                             alreadyLoaded.add(theGenoFile);
                             myFlapjackLoadPlugin.loadFile(theGenoFile, myOpenFiles[i], null);
-                        } else if (myOpenFiles[i].endsWith(FILE_EXT_ZIP_BLOB)) {
-                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.zipBLOB);
-                            alreadyLoaded.add(myOpenFiles[i]);
-                            tds = processDatum(myOpenFiles[i], TasselFileType.zipBLOB);
-                        } else if (myOpenFiles[i].endsWith(FILE_EXT_GZIP_BLOB)) {
-                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.gzipBLOB);
-                            alreadyLoaded.add(myOpenFiles[i]);
-                            tds = processDatum(myOpenFiles[i], TasselFileType.gzipBLOB);
                         } else {
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = guessAtUnknowns(myOpenFiles[i]);
@@ -308,19 +298,9 @@ public class FileLoadPlugin extends AbstractPlugin {
         String suffix = null;
         try {
             switch (theFT) {
-                case zipBLOB: {
-                    suffix = FILE_EXT_ZIP_BLOB;
-                    result = ImportUtils.readFromZip(inFile);
-                    break;
-                }
-                case gzipBLOB: {
-                    suffix = FILE_EXT_GZIP_BLOB;
-                    result = ImportUtils.readFromGZIP(inFile);
-                    break;
-                }
                 case Hapmap: {
                     suffix = FILE_EXT_HAPMAP;
-                    result = ImportUtils.readFromHapmap(inFile);
+                    result = ImportUtils.readFromHapmap(inFile, null);
                     break;
                 }
                 case Sequence: {
@@ -340,7 +320,7 @@ public class FileLoadPlugin extends AbstractPlugin {
                     break;
                 }
                 case Fasta: {
-                    myImportPlugin.performFunction(GDPCImportPlugin.IMPORT_TYPE.fasta, inFile);
+                    result = ImportUtils.readFasta(inFile);
                     break;
                 }
                 case SqrMatrix: {
@@ -494,8 +474,6 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton numericalRadioButton = new JRadioButton("Load numerical trait data or covariates");
     JRadioButton loadMatrixRadioButton = new JRadioButton("Load square numerical matrix (eg. kinship) (phylip)");
     JRadioButton guessRadioButton = new JRadioButton("I will make my best guess and try.");
-    JRadioButton zippedBLOBsRadioButton = new JRadioButton("Load BLOBs (zip)");
-    JRadioButton gzippedBLOBsRadioButton = new JRadioButton("Load BLOBs (gzip)");
     JRadioButton flapjackRadioButton = new JRadioButton("Load Flapjack");
     JRadioButton geneticMapRadioButton = new JRadioButton("Load a Genetic Map");
 
@@ -531,8 +509,6 @@ class FileLoadPluginDialog extends JDialog {
         setResizable(false);
 
         conversionButtonGroup.add(flapjackRadioButton);
-        conversionButtonGroup.add(zippedBLOBsRadioButton);
-        conversionButtonGroup.add(gzippedBLOBsRadioButton);
         conversionButtonGroup.add(hapMapRadioButton);
         conversionButtonGroup.add(plinkRadioButton);
         conversionButtonGroup.add(sequenceAlignRadioButton);
@@ -595,8 +571,6 @@ class FileLoadPluginDialog extends JDialog {
         result.setAlignmentX(JPanel.CENTER_ALIGNMENT);
         result.setBorder(BorderFactory.createEtchedBorder());
 
-        result.add(zippedBLOBsRadioButton);
-        result.add(gzippedBLOBsRadioButton);
         result.add(hapMapRadioButton);
         result.add(plinkRadioButton);
         result.add(flapjackRadioButton);
@@ -647,12 +621,6 @@ class FileLoadPluginDialog extends JDialog {
     }
 
     public FileLoadPlugin.TasselFileType getTasselFileType() {
-        if (zippedBLOBsRadioButton.isSelected()) {
-            return FileLoadPlugin.TasselFileType.zipBLOB;
-        }
-        if (gzippedBLOBsRadioButton.isSelected()) {
-            return FileLoadPlugin.TasselFileType.gzipBLOB;
-        }
         if (hapMapRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Hapmap;
         }

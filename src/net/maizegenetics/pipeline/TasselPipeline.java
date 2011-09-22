@@ -216,12 +216,6 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-h")) {
                     String hapFile = args[index++].trim();
                     loadFile(hapFile, FileLoadPlugin.TasselFileType.Hapmap);
-                } else if (current.equalsIgnoreCase("-b")) {
-                    String blobFile = args[index++].trim();
-                    loadFile(blobFile, FileLoadPlugin.TasselFileType.zipBLOB);
-                } else if (current.equalsIgnoreCase("-g")) {
-                    String gzipFile = args[index++].trim();
-                    loadFile(gzipFile, FileLoadPlugin.TasselFileType.gzipBLOB);
                 } else if (current.equalsIgnoreCase("-r")) {
                     String phenotypeFile = args[index++].trim();
                     loadFile(phenotypeFile, FileLoadPlugin.TasselFileType.Phenotype);
@@ -534,10 +528,6 @@ public class TasselPipeline implements PluginListener {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Phylip_Seq);
                     } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Plink.toString())) {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Plink);
-                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.gzipBLOB.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.gzipBLOB);
-                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.zipBLOB.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.zipBLOB);
                     }
 
                 } else if (current.equalsIgnoreCase("-impute")) {

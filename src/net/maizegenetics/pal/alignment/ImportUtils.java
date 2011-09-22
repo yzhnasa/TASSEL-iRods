@@ -4,9 +4,12 @@
 package net.maizegenetics.pal.alignment;
 
 import java.io.BufferedReader;
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import net.maizegenetics.pal.ids.IdGroup;
@@ -14,6 +17,8 @@ import net.maizegenetics.pal.ids.SimpleIdGroup;
 
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
+
+import org.apache.log4j.Logger;
 
 /**
  * The class imports Alignment from
@@ -23,6 +28,7 @@ import net.maizegenetics.util.Utils;
  */
 public class ImportUtils {
 
+    private static final Logger myLogger = Logger.getLogger(ImportUtils.class);
     private static Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
     public static final int NUM_HAPMAP_NON_TAXA_HEADERS = 11;
     public static final int HAPMAP_SNPID_COLUMN_INDEX = 0;
@@ -220,5 +226,59 @@ public class ImportUtils {
             chromInfo[1] += Integer.parseInt(chromCounts[i][1]);
         }
         return chromInfo;
+    }
+
+    public static Alignment readFasta(String filename) throws FileNotFoundException, IOException {
+
+        BufferedReader reader = Utils.getBufferedReader(filename);
+
+        List taxa = new ArrayList();
+        List sequences = new ArrayList();
+
+        String line = null;
+        line = reader.readLine();
+        boolean sequence = false;
+        while (line != null) {
+
+            line = line.trim();
+
+            if (line.startsWith(";")) {
+                line = reader.readLine();
+            } else if (line.startsWith(">")) {
+                StringTokenizer tokens = new StringTokenizer(line);
+                String taxaName = tokens.nextToken();
+                if (taxaName.length() == 1) {
+                    taxaName = tokens.nextToken();
+                } else {
+                    taxaName = taxaName.substring(1).trim();
+                }
+                taxa.add(taxaName);
+                sequence = true;
+                line = reader.readLine();
+            } else if (sequence) {
+                StringBuilder builder = new StringBuilder();
+                while ((line != null) && (!line.startsWith(">")) && (!line.startsWith(";"))) {
+                    line = line.trim().toUpperCase();
+                    builder.append(line);
+                    line = reader.readLine();
+                }
+                sequences.add(builder.toString());
+                sequence = false;
+            } else {
+                myLogger.error("readFasta: file: " + filename + " invalid format.");
+                throw new IllegalArgumentException("Import: readFasta: invalid format.");
+            }
+
+        }
+
+        String[] taxaNames = new String[taxa.size()];
+        taxa.toArray(taxaNames);
+        IdGroup idGroup = new SimpleIdGroup(taxaNames);
+
+        String[] sequenceArray = new String[sequences.size()];
+        sequences.toArray(sequenceArray);
+
+        return SBitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, true, true);
+
     }
 }
