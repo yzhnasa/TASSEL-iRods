@@ -125,8 +125,7 @@ public class TBitAlignment extends AbstractAlignment {
 
     private void loadAlleles(byte[][] data) {
 
-        // Plus 1 for Unknown
-        myNumDataRows = myMaxNumAlleles + 1;
+        myNumDataRows = myMaxNumAlleles;
         if (retainsRareAlleles()) {
             myNumDataRows++;
         }
@@ -144,21 +143,16 @@ public class TBitAlignment extends AbstractAlignment {
                 for (int i = 0; i < 2; i++) {
                     if (cb[i] == Alignment.UNKNOWN_ALLELE) {
                         myData[myMaxNumAlleles][t].fastSet(s);
-                    } else {
-                        boolean isRare = true;
-                        for (int j = 0; j < myMaxNumAlleles; j++) {
-                            if (cb[i] == myAlleles[s][j]) {
-                                myData[j][t].fastSet(s);
-                                isRare = false;
-                                break;
+                        if (cb[i] != Alignment.UNKNOWN_ALLELE) {
+                            boolean isRare = true;
+                            for (int j = 0; j < myMaxNumAlleles; j++) {
+                                if (cb[i] == myAlleles[s][j]) {
+                                    myData[j][t].fastSet(s);
+                                    isRare = false;
+                                    break;
+                                }
                             }
-                        }
-                        if (isRare) {
-                            if (retainsRareAlleles()) {
-                                // Record as Rare Allele
-                                myData[myMaxNumAlleles + 1][t].fastSet(s);
-                            } else {
-                                // Change to Unknown
+                            if (isRare && retainsRareAlleles()) {
                                 myData[myMaxNumAlleles][t].fastSet(s);
                             }
                         }
@@ -171,8 +165,7 @@ public class TBitAlignment extends AbstractAlignment {
 
     private void loadAlleles(Alignment a) {
 
-        // Plus 1 for Unknown
-        myNumDataRows = myMaxNumAlleles + 1;
+        myNumDataRows = myMaxNumAlleles;
         if (retainsRareAlleles()) {
             myNumDataRows++;
         }
@@ -186,9 +179,7 @@ public class TBitAlignment extends AbstractAlignment {
             for (int t = 0, n = getSequenceCount(); t < n; t++) {
                 byte[] cb = a.getBaseArray(t, s);
                 for (int i = 0; i < 2; i++) {
-                    if (cb[i] == Alignment.UNKNOWN_ALLELE) {
-                        myData[myMaxNumAlleles][t].fastSet(s);
-                    } else {
+                    if (cb[i] != Alignment.UNKNOWN_ALLELE) {
                         boolean isRare = true;
                         for (int j = 0; j < myMaxNumAlleles; j++) {
                             if (cb[i] == myAlleles[s][j]) {
@@ -197,14 +188,8 @@ public class TBitAlignment extends AbstractAlignment {
                                 break;
                             }
                         }
-                        if (isRare) {
-                            if (retainsRareAlleles()) {
-                                // Record as Rare Allele
-                                myData[myMaxNumAlleles + 1][t].fastSet(s);
-                            } else {
-                                // Change to Unknown
-                                myData[myMaxNumAlleles][t].fastSet(s);
-                            }
+                        if (isRare && retainsRareAlleles()) {
+                            myData[myMaxNumAlleles][t].fastSet(s);
                         }
                     }
                 }
@@ -236,17 +221,13 @@ public class TBitAlignment extends AbstractAlignment {
             }
 
             // Check For Rare Allele
-            if (retainsRareAlleles() && myData[myMaxNumAlleles + 1][taxon].fastGet(site)) {
+            if (retainsRareAlleles() && myData[myMaxNumAlleles][taxon].fastGet(site)) {
                 if (count == 0) {
                     result[1] = Alignment.RARE_ALLELE;
                 }
                 result[count] = Alignment.RARE_ALLELE;
             }
 
-            // Check For Unknown
-            if (myData[myMaxNumAlleles][taxon].fastGet(site)) {
-                result[1] = Alignment.UNKNOWN_ALLELE;
-            }
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
             throw new IllegalStateException("TBitAlignment: getBaseArray: bit sets indicate more than two alleles for taxon: " + taxon + "   site: " + site);

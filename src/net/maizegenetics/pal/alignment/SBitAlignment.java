@@ -126,7 +126,7 @@ public class SBitAlignment extends AbstractAlignment {
 
     private void loadAlleles(byte[][] data) {
 
-        myNumDataRows = myMaxNumAlleles + 1;
+        myNumDataRows = myMaxNumAlleles;
         if (retainsRareAlleles()) {
             myNumDataRows++;
         }
@@ -142,9 +142,7 @@ public class SBitAlignment extends AbstractAlignment {
                 cb[0] = (byte) ((data[t][s] >>> 4) & 0xf);
                 cb[1] = (byte) (data[t][s] & 0xf);
                 for (int i = 0; i < 2; i++) {
-                    if (cb[i] == Alignment.UNKNOWN_ALLELE) {
-                        myData[myMaxNumAlleles][s].fastSet(t);
-                    } else {
+                    if (cb[i] != Alignment.UNKNOWN_ALLELE) {
                         boolean isRare = true;
                         for (int j = 0; j < myMaxNumAlleles; j++) {
                             if (cb[i] == myAlleles[s][j]) {
@@ -153,14 +151,8 @@ public class SBitAlignment extends AbstractAlignment {
                                 break;
                             }
                         }
-                        if (isRare) {
-                            if (retainsRareAlleles()) {
-                                // Record as Rare Allele
-                                myData[myMaxNumAlleles + 1][s].fastSet(t);
-                            } else {
-                                // Change to Unknown
-                                myData[myMaxNumAlleles][s].fastSet(t);
-                            }
+                        if (isRare && retainsRareAlleles()) {
+                            myData[myMaxNumAlleles][s].fastSet(t);
                         }
                     }
                 }
@@ -171,7 +163,7 @@ public class SBitAlignment extends AbstractAlignment {
 
     private void loadAlleles(Alignment a) {
 
-        myNumDataRows = myMaxNumAlleles + 1;
+        myNumDataRows = myMaxNumAlleles;
         if (retainsRareAlleles()) {
             myNumDataRows++;
         }
@@ -185,9 +177,7 @@ public class SBitAlignment extends AbstractAlignment {
             for (int t = 0, n = getSequenceCount(); t < n; t++) {
                 byte[] cb = a.getBaseArray(t, s);
                 for (int i = 0; i < 2; i++) {
-                    if (cb[i] == Alignment.UNKNOWN_ALLELE) {
-                        myData[myMaxNumAlleles][s].fastSet(t);
-                    } else {
+                    if (cb[i] != Alignment.UNKNOWN_ALLELE) {
                         boolean isRare = true;
                         for (int j = 0; j < myMaxNumAlleles; j++) {
                             if (cb[i] == myAlleles[s][j]) {
@@ -196,14 +186,8 @@ public class SBitAlignment extends AbstractAlignment {
                                 break;
                             }
                         }
-                        if (isRare) {
-                            if (retainsRareAlleles()) {
-                                // Record as Rare Allele
-                                myData[myMaxNumAlleles + 1][s].fastSet(t);
-                            } else {
-                                // Change to Unknown
-                                myData[myMaxNumAlleles][s].fastSet(t);
-                            }
+                        if (isRare && retainsRareAlleles()) {
+                            myData[myMaxNumAlleles][s].fastSet(t);
                         }
                     }
                 }
@@ -235,16 +219,11 @@ public class SBitAlignment extends AbstractAlignment {
             }
 
             // Check For Rare Allele
-            if (retainsRareAlleles() && myData[myMaxNumAlleles + 1][site].fastGet(taxon)) {
+            if (retainsRareAlleles() && myData[myMaxNumAlleles][site].fastGet(taxon)) {
                 if (count == 0) {
                     result[1] = Alignment.RARE_ALLELE;
                 }
                 result[count] = Alignment.RARE_ALLELE;
-            }
-
-            // Check For Unknown
-            if (myData[myMaxNumAlleles][site].fastGet(taxon)) {
-                result[1] = Alignment.UNKNOWN_ALLELE;
             }
 
         } catch (IndexOutOfBoundsException e) {
