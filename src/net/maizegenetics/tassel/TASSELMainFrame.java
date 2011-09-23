@@ -71,10 +71,7 @@ import net.maizegenetics.wizard.panels.TestPanel4Descriptor;
 import org.apache.log4j.Logger;
 
 /**
- * Current revision: $Revision: 1.35 $
- * On branch $Name:  $
- * Latest change by $Author: tcasstevens $ on $Date: 2009/06/25 04:58:53 $
- *
+ * TASSELMainFrame
  *
  */
 public class TASSELMainFrame extends JFrame {
@@ -133,17 +130,15 @@ public class TASSELMainFrame extends JFrame {
     JMenuItem exitMenuItem = new JMenuItem();
     JMenu helpMenu = new JMenu();
     JMenuItem helpMenuItem = new JMenuItem();
-    JMenuItem contigencyMenuItem = new JMenuItem();
     JMenuItem preferencesMenuItem = new JMenuItem();
     JMenuItem aboutMenuItem = new JMenuItem();
     PreferencesDialog thePreferencesDialog;
     String UserComments = "";
     private final ProgressPanel myProgressPanel = ProgressPanel.getInstance();
-    private final JFrame myFrame;
     JButton wizardButton = new JButton();
+    ExportPlugin myExportPlugin = null;
 
     public TASSELMainFrame(boolean debug) {
-        myFrame = this;
         try {
             loadSettings();
             addMenuBar();
@@ -163,7 +158,7 @@ public class TASSELMainFrame extends JFrame {
         }
     }
 
-    void setIcon() {
+    private void setIcon() {
         URL url = this.getClass().getResource("Logo_small.png");
         if (url == null) {
             return;
@@ -258,7 +253,7 @@ public class TASSELMainFrame extends JFrame {
     }
 
     //Component initialization
-    public void initializeMyFrame() throws Exception {
+    private void initializeMyFrame() throws Exception {
         this.getContentPane().setLayout(new BorderLayout());
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
@@ -529,7 +524,7 @@ public class TASSELMainFrame extends JFrame {
         saveAsDataTreeMenuItem.addActionListener(new java.awt.event.ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-                ExportPlugin plugin = new ExportPlugin(myFrame, true);
+                ExportPlugin plugin = getExportPlugin();
                 PluginEvent event = new PluginEvent(theDataTreePanel.getSelectedTasselDataSet());
                 ProgressPanel progressPanel = getProgressPanel();
                 ThreadedPluginListener thread = new ThreadedPluginListener(plugin, event);
@@ -552,16 +547,6 @@ public class TASSELMainFrame extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
                 helpButton_actionPerformed(e);
-            }
-        });
-        contigencyMenuItem.setText("Contigency Test");
-
-        contigencyMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-
-                contigencyMenuItem_actionPerformed(e);
-
             }
         });
 
@@ -661,6 +646,13 @@ public class TASSELMainFrame extends JFrame {
         reportProgress.setDividerLocation((int) (this.getSize().height / 3.5));
     }
 
+    private ExportPlugin getExportPlugin() {
+        if (myExportPlugin == null) {
+            myExportPlugin = new ExportPlugin(this, true);
+        }
+        return myExportPlugin;
+    }
+
     private void addMenuBar() {
 
         jMenuBar.add(fileMenu);
@@ -683,8 +675,6 @@ public class TASSELMainFrame extends JFrame {
 
         fileMenu.add(exitMenuItem);
 
-
-        toolsMenu.add(contigencyMenuItem);
 
         toolsMenu.add(preferencesMenuItem);
 
@@ -1034,13 +1024,6 @@ public class TASSELMainFrame extends JFrame {
 
     private void exitMenuItem_actionPerformed(ActionEvent e) {
         System.exit(0);
-    }
-
-    private void contigencyMenuItem_actionPerformed(ActionEvent e) {
-
-        AnalysisContigencyDialog theAnalysisContigencyDialog = new AnalysisContigencyDialog(this, "Contigency/Fisher Exact Test", false);
-        theAnalysisContigencyDialog.setLocationRelativeTo(this);
-        theAnalysisContigencyDialog.setVisible(true);
     }
 
     private void preferencesMenuItem_actionPerformed(ActionEvent e) {
