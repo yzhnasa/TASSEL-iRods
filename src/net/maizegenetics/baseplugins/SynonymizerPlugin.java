@@ -43,55 +43,62 @@ public class SynonymizerPlugin extends AbstractPlugin {
 
     public DataSet performFunction(DataSet input) {
 
-        List<Datum> data = new ArrayList<Datum>();
-        for (int i = 0, n = input.getSize(); i < n; i++) {
-            Datum current = input.getData(i);
-            Object currentData = current.getData();
-            if (currentData instanceof Alignment) {
-                IdGroup idGroup = ((Alignment) currentData).getIdGroup();
-                Datum idGroupDatum = new Datum(current.getName(), idGroup, current.getComment());
-                data.add(idGroupDatum);
-            } else if (currentData instanceof Phenotype) {
-                IdGroup idGroup = ((Phenotype) currentData).getTaxa();
-                Datum idGroupDatum = new Datum(current.getName(), idGroup, current.getComment());
-                data.add(idGroupDatum);
-            } else {
-                data.add(current);
+        try {
+
+            List<Datum> data = new ArrayList<Datum>();
+            for (int i = 0, n = input.getSize(); i < n; i++) {
+                Datum current = input.getData(i);
+                Object currentData = current.getData();
+                if (currentData instanceof Alignment) {
+                    IdGroup idGroup = ((Alignment) currentData).getIdGroup();
+                    Datum idGroupDatum = new Datum(current.getName(), idGroup, current.getComment());
+                    data.add(idGroupDatum);
+                } else if (currentData instanceof Phenotype) {
+                    IdGroup idGroup = ((Phenotype) currentData).getTaxa();
+                    Datum idGroupDatum = new Datum(current.getName(), idGroup, current.getComment());
+                    data.add(idGroupDatum);
+                } else {
+                    data.add(current);
+                }
             }
-        }
-        DataSet newInput = new DataSet(data, this);
+            DataSet newInput = new DataSet(data, this);
 
-        int alignCnt = newInput.getDataOfType(IdGroup.class).size();
-        int synCnt = newInput.getDataOfType(IdentifierSynonymizer.class).size();
-        if ((synCnt == 0) && (alignCnt > 1)) {  //create a new synonymizer
-            Datum td = createSynonymizer(newInput);
-            DataSet output = new DataSet(td, this);
-            fireDataSetReturned(new PluginEvent(output, SynonymizerPlugin.class));
-            return output;
-        } else if ((synCnt == 1) && (alignCnt > 0)) {   //apply synonymizer to alignments
-            applySynonymsToIdGroups(newInput);
-        } else if ((synCnt == 1) && (alignCnt == 0)) {
-            Datum inputDatum = newInput.getDataOfType(IdentifierSynonymizer.class).get(0);
-            IdentifierSynonymizer is = (IdentifierSynonymizer) inputDatum.getData();
-            SynonymizerDialog theSD = new SynonymizerDialog(is, getParentFrame());
-            theSD.setLocationRelativeTo(getParentFrame());
-            theSD.setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(getParentFrame(), "To create a synonym list:\n Please first select the reference taxa names and then the synonym taxa names (use Ctrl key)\n" +
-                    "To apply a synonym list to a dataset:\n Select a synonym list and then the taxa names to be changed (use Ctrl key)");
-        }
+            int alignCnt = newInput.getDataOfType(IdGroup.class).size();
+            int synCnt = newInput.getDataOfType(IdentifierSynonymizer.class).size();
+            if ((synCnt == 0) && (alignCnt > 1)) {  //create a new synonymizer
+                Datum td = createSynonymizer(newInput);
+                DataSet output = new DataSet(td, this);
+                fireDataSetReturned(new PluginEvent(output, SynonymizerPlugin.class));
+                return output;
+            } else if ((synCnt == 1) && (alignCnt > 0)) {   //apply synonymizer to alignments
+                applySynonymsToIdGroups(newInput);
+            } else if ((synCnt == 1) && (alignCnt == 0)) {
+                Datum inputDatum = newInput.getDataOfType(IdentifierSynonymizer.class).get(0);
+                IdentifierSynonymizer is = (IdentifierSynonymizer) inputDatum.getData();
+                SynonymizerDialog theSD = new SynonymizerDialog(is, getParentFrame());
+                theSD.setLocationRelativeTo(getParentFrame());
+                theSD.setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(getParentFrame(), "To create a synonym list:\n Please first select the reference taxa names and then the synonym taxa names (use Ctrl key)\n"
+                        + "To apply a synonym list to a dataset:\n Select a synonym list and then the taxa names to be changed (use Ctrl key)");
+            }
 
-        return null;
+            return null;
+
+        } finally {
+            fireProgress(100);
+        }
     }
 
     private Datum createSynonymizer(DataSet input) {
         Datum td = null;
-        StringBuffer synonymSets = new StringBuffer();
+        StringBuilder synonymSets = new StringBuilder();
         for (int i = 1; i < input.getSize(); i++) {
-            synonymSets.append(input.getData(i).getName() + "\n");
+            synonymSets.append(input.getData(i).getName());
+            synonymSets.append("\n");
         }
-        String msg = "You have selected to apply synonym list " + input.getData(0).getName() + " to the following dataset:\n" +
-                synonymSets.toString();
+        String msg = "You have selected to apply synonym list " + input.getData(0).getName() + " to the following dataset:\n"
+                + synonymSets.toString();
         int response = JOptionPane.showOptionDialog(getParentFrame(), msg, "Verify Selection",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
         if (response != JOptionPane.CANCEL_OPTION) {
@@ -109,12 +116,13 @@ public class SynonymizerPlugin extends AbstractPlugin {
     }
 
     private void applySynonymsToIdGroups(DataSet input) {
-        StringBuffer synonymSets = new StringBuffer();
+        StringBuilder synonymSets = new StringBuilder();
         for (int i = 1; i < input.getSize(); i++) {
-            synonymSets.append(input.getData(i).getName() + "\n");
+            synonymSets.append(input.getData(i).getName());
+            synonymSets.append("\n");
         }
-        String msg = "You have selected " + input.getData(0).getName() + " as the reference name dataset.\n" +
-                "The synonyms will be extracted from the following: \n" + synonymSets.toString();
+        String msg = "You have selected " + input.getData(0).getName() + " as the reference name dataset.\n"
+                + "The synonyms will be extracted from the following: \n" + synonymSets.toString();
         int response = JOptionPane.showOptionDialog(getParentFrame(), msg, "Verify Selection",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
         if (response != JOptionPane.CANCEL_OPTION) {
@@ -441,4 +449,3 @@ class SynonymizerDialog extends JDialog {
         }
     }
 }
-

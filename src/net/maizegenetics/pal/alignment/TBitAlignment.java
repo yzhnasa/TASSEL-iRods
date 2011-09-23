@@ -60,15 +60,15 @@ public class TBitAlignment extends AbstractAlignment {
     public static TBitAlignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
-            throw new IllegalArgumentException("TBitAlignment: getInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
+            throw new IllegalArgumentException("TBitAlignment: getNucleotideInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
         }
 
         if ((data == null) || (data.length == 0)) {
-            throw new IllegalArgumentException("TBitAlignment: getInstance: data can not be empty.");
+            throw new IllegalArgumentException("TBitAlignment: getNucleotideInstance: data can not be empty.");
         }
 
         if (data.length != idGroup.getIdCount()) {
-            throw new IllegalArgumentException("TBitAlignment: getInstance: data rows not equal to number of identifers.");
+            throw new IllegalArgumentException("TBitAlignment: getNucleotideInstance: data rows not equal to number of identifers.");
         }
 
         byte[][] dataBytes = AlignmentUtils.getDataBytes(data, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
@@ -80,18 +80,18 @@ public class TBitAlignment extends AbstractAlignment {
     public static TBitAlignment getNucleotideInstance(IdGroup idGroup, String[] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
-            throw new IllegalArgumentException("TBitAlignment: getInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
+            throw new IllegalArgumentException("TBitAlignment: getNucleotideInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
         }
 
         if ((data == null) || (data.length == 0)) {
-            throw new IllegalArgumentException("TBitAlignment: getInstance: data can not be empty.");
+            throw new IllegalArgumentException("TBitAlignment: getNucleotideInstance: data can not be empty.");
         }
 
         if (data.length != idGroup.getIdCount()) {
-            throw new IllegalArgumentException("TBitAlignment: getInstance: data rows not equal to number of identifers.");
+            throw new IllegalArgumentException("TBitAlignment: getNucleotideInstance: data rows not equal to number of identifers.");
         }
 
-        byte[][] dataBytes = AlignmentUtils.getDataBytes(data, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+        byte[][] dataBytes = AlignmentUtils.getDataBytes(data);
 
         return TBitAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
 

@@ -201,7 +201,7 @@ public class AlignmentUtils {
 
     }
 
-    public static byte[][] getDataBytes(String[] data, String[][] alleleStates, int maxNumAlleles) {
+    public static byte[][] getDataBytes(String[] data) {
 
         int numTaxa = data.length;
 
@@ -209,13 +209,9 @@ public class AlignmentUtils {
 
         byte[][] dataBytes = new byte[numTaxa][numSites];
 
-        if (alleleStates.length == 1) {
-            for (int site = 0; site < numSites; site++) {
-                setDataBytes(data, alleleStates[0], maxNumAlleles, numTaxa, site, dataBytes);
-            }
-        } else {
-            for (int site = 0; site < numSites; site++) {
-                setDataBytes(data, alleleStates[site], maxNumAlleles, numTaxa, site, dataBytes);
+        for (int site = 0; site < numSites; site++) {
+            for (int taxon = 0; taxon < numTaxa; taxon++) {
+                dataBytes[taxon][site] = NucleotideAlignmentConstants.getNucleotideDiploidByte(data[taxon].charAt(site));
             }
         }
 
@@ -263,24 +259,6 @@ public class AlignmentUtils {
 
     }
 
-    private static void setDataBytes(String[] data, String[] alleleStates, int maxNumAlleles, int numTaxa, int site, byte[][] dataBytes) {
-
-        for (int taxon = 0; taxon < numTaxa; taxon++) {
-            if (data[taxon].charAt(site) == Alignment.UNKNOWN_ALLELE_CHAR) {
-                dataBytes[taxon][site] = Alignment.UNKNOWN_ALLELE;
-            } else {
-                dataBytes[taxon][site] = Alignment.RARE_ALLELE;
-                for (int k = 0; k < maxNumAlleles; k++) {
-                    if (alleleStates[k].equals(data[taxon].charAt(site))) {
-                        dataBytes[taxon][site] = (byte) k;
-                        break;
-                    }
-                }
-            }
-        }
-
-    }
-
     /**
      * Counts the number of pairwise allele matches. For identical
      * homozygotes, this equals n * n, where n is the ploidy level.
@@ -316,6 +294,8 @@ public class AlignmentUtils {
         for (int i = 0; i < 50; i++) {
             states[i] = Integer.toString(i);
         }
+        //Terry - Maybe use FilterAlignment
+        //Terry - Need to get loci if not
         return SBitAlignment.getNucleotideInstance(saa.getIdGroup(), sequences, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, true, true);
     }
 

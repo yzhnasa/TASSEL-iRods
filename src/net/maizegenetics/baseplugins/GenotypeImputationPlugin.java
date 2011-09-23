@@ -96,6 +96,8 @@ public class GenotypeImputationPlugin extends AbstractDisplayPlugin {
             }
 
             return null;
+        } finally {
+            fireProgress(100);
         }
 
         DataSet resultSet = new DataSet(result, this);
@@ -104,7 +106,6 @@ public class GenotypeImputationPlugin extends AbstractDisplayPlugin {
     }
 
     public DataSet processDatum(Datum inDatum) {
-        //TODO this will fail with a simple alignment, there needs to be a simple way to set bases in both approaches.
         Alignment align = (Alignment) inDatum.getData();
         Alignment impP1A = BasicImputation.imputeBySite(align, minLength, maxMismatch);
 
@@ -194,7 +195,7 @@ class GenotypeImputationPluginDialog extends JDialog {
             this.majorAlleleRadioButton.setEnabled(false);
             this.ibdProbRadioButton.setEnabled(false);
             this.similarWindowRadioButton.setEnabled(false);
-        //pack();
+            //pack();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -357,7 +358,6 @@ class GenotypeImputationPluginDialog extends JDialog {
         runAnalysis = false;
         setVisible(false);
     }
-
     // Variables declaration - do not modify
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton cancelButton;

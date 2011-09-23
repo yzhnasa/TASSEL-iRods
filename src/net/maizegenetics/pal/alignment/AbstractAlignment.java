@@ -100,7 +100,7 @@ abstract public class AbstractAlignment implements MutableAlignment {
             mySNPIDs = snpIDs;
         }
 
-        if ((loci == null) | (loci.length == 0)) {
+        if ((loci == null) || (loci.length == 0)) {
             throw new IllegalArgumentException("AbstractAlignment: init: must have at least one locus.");
         } else if (loci.length != lociOffsets.length) {
             throw new IllegalArgumentException("AbstractAlignment: init: number of loci must match number of loci offsets.");
@@ -531,7 +531,11 @@ abstract public class AbstractAlignment implements MutableAlignment {
 
     @Override
     public int getPositionInLocus(int site) {
-        return myVariableSites[site];
+        try {
+            return myVariableSites[site];
+        } catch (Exception e) {
+            return site;
+        }
     }
 
     @Override

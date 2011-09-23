@@ -193,6 +193,14 @@ public final class NucleotideAlignmentConstants {
         }
     }
 
+    public static byte getNucleotideDiploidByte(char value) {
+        try {
+            return ((Byte) NUCLEOTIDE_DIPLOID_HASH.get(String.valueOf(value))).byteValue();
+        } catch (NullPointerException e) {
+            throw new IllegalArgumentException("ImportUtils: getNucleotideDiploidByte: unknown allele value: " + value);
+        }
+    }
+
     public static String getNucleotideIUPAC(byte value) {
         try {
             return ((String) NUCLEOTIDE_IUPAC_HASH.get(value));

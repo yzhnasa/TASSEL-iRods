@@ -38,52 +38,56 @@ public class SeparatePlugin extends AbstractPlugin {
 
     public DataSet performFunction(DataSet input) {
 
-        List<Datum> inputs = input.getDataSet();
-        List<DataSet> result = new ArrayList();
+        try {
+            List<Datum> inputs = input.getDataSet();
+            List<DataSet> result = new ArrayList();
 
-        for (Datum current : inputs) {
-            Object currentValue = current.getData();
-            if (currentValue instanceof MarkerPhenotype) {
+            for (Datum current : inputs) {
+                Object currentValue = current.getData();
+                if (currentValue instanceof MarkerPhenotype) {
 
-                MarkerPhenotype mp = (MarkerPhenotype) currentValue;
-                Phenotype pheno = mp.getPhenotype();
-                String phenoName = current.getName() + "_pheno";
-                Datum phenoDatum = new Datum(phenoName, pheno, null);
+                    MarkerPhenotype mp = (MarkerPhenotype) currentValue;
+                    Phenotype pheno = mp.getPhenotype();
+                    String phenoName = current.getName() + "_pheno";
+                    Datum phenoDatum = new Datum(phenoName, pheno, null);
 
-                Alignment align = mp.getAlignment();
-                String alignName = current.getName() + "_align";
-                Datum alignDatum = new Datum(alignName, align, null);
+                    Alignment align = mp.getAlignment();
+                    String alignName = current.getName() + "_align";
+                    Datum alignDatum = new Datum(alignName, align, null);
 
-                DataSet tds = new DataSet(new Datum[]{phenoDatum, alignDatum}, this);
-                result.add(tds);
-                fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
+                    DataSet tds = new DataSet(new Datum[]{phenoDatum, alignDatum}, this);
+                    result.add(tds);
+                    fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
 
-            } else if (currentValue instanceof Alignment) {
-                Alignment align = (Alignment) current.getData();
-                Alignment[] alignments = align.getAlignments();
-                if (alignments.length > 1) {
-                    for (int i = 0; i < alignments.length; i++) {
-                        if (alignments[i] != null) {
-                            String name = current.getName() + "_align" + i;
-                            Datum td = new Datum(name, alignments[i], null);
-                            DataSet tds = new DataSet(td, null);
-                            result.add(tds);
-                            fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
+                } else if (currentValue instanceof Alignment) {
+                    Alignment align = (Alignment) current.getData();
+                    Alignment[] alignments = align.getAlignments();
+                    if (alignments.length > 1) {
+                        for (int i = 0; i < alignments.length; i++) {
+                            if (alignments[i] != null) {
+                                String name = current.getName() + "_align" + i;
+                                Datum td = new Datum(name, alignments[i], null);
+                                DataSet tds = new DataSet(td, null);
+                                result.add(tds);
+                                fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if (result.size() == 0) {
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), "Nothing to Separate");
+            if (result.size() == 0) {
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), "Nothing to Separate");
+                } else {
+                    myLogger.warn("performFunction: Nothing to Separate.");
+                }
+                return null;
             } else {
-                myLogger.warn("performFunction: Nothing to Separate.");
+                return DataSet.getDataSet(result, this);
             }
-            return null;
-        } else {
-            return DataSet.getDataSet(result, this);
+        } finally {
+            fireProgress(100);
         }
 
     }

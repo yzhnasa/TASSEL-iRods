@@ -128,6 +128,6 @@ public class BasicImputation {
      * @return Imputed Pack1Alignment
      */
     public static Alignment imputeBySite(Alignment align, int minLength, int mismatchNum) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("BasicImputation: imputeBySite: Not Supported.");
     }
 }
