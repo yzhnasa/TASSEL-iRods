@@ -26,168 +26,94 @@ import java.util.List;
  * Date: Apr 29, 2007
  */
 public class KinshipPlugin extends AbstractPlugin {
-	private boolean recognizeHets = false;
-	private boolean rescaleKinship = true;
-	
+
+    private boolean recognizeHets = false;
+    private boolean rescaleKinship = true;
+
     public KinshipPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
-        
+
     }
 
-    class KinshipDialog extends JDialog {
-    	JRadioButton btnRelated = new JRadioButton("Related to homozygotes", true);
-    	JRadioButton btnUnrelated = new JRadioButton("Independent allele state", false);
-    	JCheckBox chkRescale = new JCheckBox("Rescale results between 2 and 0", false);
-    	boolean run = false;
-    	
-    	KinshipDialog(Frame parent) {
-    		super(parent, true);
-    		setLocationRelativeTo(parent);
-    		setTitle("Kinship Options");
-    		Container contents = getContentPane();
-    		
-    		contents.setLayout(new GridBagLayout());
-    		GridBagConstraints gbc = new GridBagConstraints();
-    		
-    		JPanel hetPanel = new JPanel();
-    		hetPanel.setLayout(new BoxLayout(hetPanel, BoxLayout.Y_AXIS));
-    		hetPanel.setBorder(BorderFactory.createTitledBorder("Model heterozygotes as"));
-    		ButtonGroup bg = new ButtonGroup();
-    		bg.add(btnRelated);
-    		bg.add(btnUnrelated);
-    		hetPanel.add(btnRelated);
-    		hetPanel.add(btnUnrelated);
-    		
-    		JButton btnCancel = new JButton("Cancel");
-    		btnCancel.addActionListener(new ActionListener(){
-
-    			@Override
-    			public void actionPerformed(ActionEvent arg0) {
-    				run = false;
-    				setVisible(false);
-    			}
-    		});
-    		
-    		JButton btnRun = new JButton("Run");
-    		btnRun.addActionListener(new ActionListener(){
-
-    			@Override
-    			public void actionPerformed(ActionEvent arg0) {
-    				run = true;
-    				setVisible(false);
-    			}
-    		});
-    		
-    		JButton btnHelp = new JButton("Help");
-    		btnHelp.addActionListener(new ActionListener(){
-    			
-    			@Override
-    			public void actionPerformed(ActionEvent arg0) {
-    				String msg = "Modeling heterozygotes as related to homozygotes calculates P(IBS)= 0.5 between \n" +
-    						"heterozygous loci and between a heterozygote and a homozygote. \n" +
-    						"Modeling heterozygotes as an independent state uses the older version \n" +
-    						"of the TASSEL kinship function, which calculates P(IBS) = 1 for a heterozygote with itself \n" +
-    						"and 0 with the homozygotes.\n\n" +
-    						"Choosing to model heterozygotes as an independent state and rescaling results\n" +
-    						" in the same kinship matrix produced by TASSEL before the new options were added. ";
-    				String myTitle = "Help for Kinship Options";
-    				JOptionPane.showMessageDialog(null, msg, myTitle, JOptionPane.INFORMATION_MESSAGE);
-    			}
-    		});
-    		
-    		JPanel buttonBox = new JPanel();
-    		buttonBox.setLayout(new BoxLayout(buttonBox, BoxLayout.X_AXIS));
-    		buttonBox.add(btnRun);
-    		buttonBox.add(btnCancel);
-    		buttonBox.add(btnHelp);
-    		
-    		gbc.gridx = 0;
-    		gbc.gridy = 0;
-    		gbc.insets = new Insets(20,10,5,10);
-    		contents.add(hetPanel, gbc);
-    		
-    		gbc.gridy++;
-    		gbc.insets = new Insets(5,10,5,10);
-    		contents.add(chkRescale, gbc);
-    		
-    		gbc.gridy++;
-    		gbc.insets = new Insets(5,10,20,10);
-    		contents.add(buttonBox, gbc);
-    		
-    		pack();
-    	}
-    }
-    
     public DataSet performFunction(DataSet input) {
 
-        List<Datum> alignInList = input.getDataSet();
+        try {
 
-        if (alignInList.size() == 0) {
-            String message = "Nothing selected. Please select pedigree data.";
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), message);
-            } else {
-                System.out.println(message);
-            }
-            return null;
-        }
+            List<Datum> alignInList = input.getDataSet();
 
-        List result = new ArrayList();
-        Iterator itr = alignInList.iterator();
-        while (itr.hasNext()) {
-
-            Datum current = (Datum) itr.next();
-            String datasetName = current.getName();
-            Kinship kin = null;
-
-            try {
-
-                if (current.getData() instanceof Alignment) {
-                	//this section implements additional options for calculating kinship
-                	if (isInteractive()) {
-                		KinshipDialog kd = new KinshipDialog(getParentFrame());
-                		kd.setVisible(true);
-                		if (!kd.run) return null;
-                		recognizeHets = kd.btnRelated.isSelected();
-                		rescaleKinship = kd.chkRescale.isSelected();
-                		kd.dispose();
-                		getParentFrame().repaint();
-                	}
-                    Alignment theAlignment = (Alignment) current.getData();
-                    kin = new Kinship(theAlignment, recognizeHets, rescaleKinship);
-                    
-                } else if (current.getData() instanceof SimplePhenotype) { //pedigree data
-                    SimplePhenotype ped = (SimplePhenotype) current.getData();
-                    kin = new Kinship(ped);
-                } else {
-                    String message = "Invalid selection. Can't create kinship matrix from: " + datasetName;
-                    if (isInteractive()) {
-                        JOptionPane.showMessageDialog(getParentFrame(), message);
-                    } else {
-                        System.out.println(message);
-                    }
-                }
-
-            } catch (Exception e) {
-                String message = "Problem creating kinship matrix from: " + datasetName + "\n" + e.getClass().getName() + ": " + e.getMessage();
+            if (alignInList.isEmpty()) {
+                String message = "Nothing selected. Please select pedigree data.";
                 if (isInteractive()) {
                     JOptionPane.showMessageDialog(getParentFrame(), message);
                 } else {
                     System.out.println(message);
-                    e.printStackTrace();
                 }
+                return null;
             }
 
-            if (kin != null) {
-                //add kin to datatree;
-                DataSet ds = new DataSet(new Datum("kin_" + datasetName, kin.getDm(), "kinship matrix created from " + datasetName), this);
-                result.add(ds);
-                fireDataSetReturned(new PluginEvent(ds, KinshipPlugin.class));
+            List result = new ArrayList();
+            Iterator itr = alignInList.iterator();
+            while (itr.hasNext()) {
+
+                Datum current = (Datum) itr.next();
+                String datasetName = current.getName();
+                Kinship kin = null;
+
+                try {
+
+                    if (current.getData() instanceof Alignment) {
+                        //this section implements additional options for calculating kinship
+                        if (isInteractive()) {
+                            KinshipDialog kd = new KinshipDialog(getParentFrame());
+                            kd.setVisible(true);
+                            if (!kd.run) {
+                                return null;
+
+                            }
+                            recognizeHets = kd.btnRelated.isSelected();
+                            rescaleKinship = kd.chkRescale.isSelected();
+                            kd.dispose();
+                            getParentFrame().repaint();
+                        }
+                        Alignment theAlignment = (Alignment) current.getData();
+                        kin = new Kinship(theAlignment, recognizeHets, rescaleKinship);
+
+                    } else if (current.getData() instanceof SimplePhenotype) { //pedigree data
+                        SimplePhenotype ped = (SimplePhenotype) current.getData();
+                        kin = new Kinship(ped);
+                    } else {
+                        String message = "Invalid selection. Can't create kinship matrix from: " + datasetName;
+                        if (isInteractive()) {
+                            JOptionPane.showMessageDialog(getParentFrame(), message);
+                        } else {
+                            System.out.println(message);
+                        }
+                    }
+
+                } catch (Exception e) {
+                    String message = "Problem creating kinship matrix from: " + datasetName + "\n" + e.getClass().getName() + ": " + e.getMessage();
+                    if (isInteractive()) {
+                        JOptionPane.showMessageDialog(getParentFrame(), message);
+                    } else {
+                        System.out.println(message);
+                        e.printStackTrace();
+                    }
+                }
+
+                if (kin != null) {
+                    //add kin to datatree;
+                    DataSet ds = new DataSet(new Datum("kin_" + datasetName, kin.getDm(), "kinship matrix created from " + datasetName), this);
+                    result.add(ds);
+                    fireDataSetReturned(new PluginEvent(ds, KinshipPlugin.class));
+                }
+
             }
 
+            return DataSet.getDataSet(result, this);
+
+        } finally {
+            fireProgress(100);
         }
-
-        return DataSet.getDataSet(result, this);
 
     }
 
@@ -208,12 +134,96 @@ public class KinshipPlugin extends AbstractPlugin {
         return "Calculate kinship from marker data";
     }
 
-	public void setRecognizeHets(boolean recognizeHets) {
-		this.recognizeHets = recognizeHets;
-	}
+    public void setRecognizeHets(boolean recognizeHets) {
+        this.recognizeHets = recognizeHets;
+    }
 
-	public void setRescaleKinship(boolean rescaleKinship) {
-		this.rescaleKinship = rescaleKinship;
-	}
-    
+    public void setRescaleKinship(boolean rescaleKinship) {
+        this.rescaleKinship = rescaleKinship;
+    }
+
+    class KinshipDialog extends JDialog {
+
+        JRadioButton btnRelated = new JRadioButton("Related to homozygotes", true);
+        JRadioButton btnUnrelated = new JRadioButton("Independent allele state", false);
+        JCheckBox chkRescale = new JCheckBox("Rescale results between 2 and 0", false);
+        boolean run = false;
+
+        KinshipDialog(Frame parent) {
+            super(parent, true);
+            setLocationRelativeTo(parent);
+            setTitle("Kinship Options");
+            Container contents = getContentPane();
+
+            contents.setLayout(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+
+            JPanel hetPanel = new JPanel();
+            hetPanel.setLayout(new BoxLayout(hetPanel, BoxLayout.Y_AXIS));
+            hetPanel.setBorder(BorderFactory.createTitledBorder("Model heterozygotes as"));
+            ButtonGroup bg = new ButtonGroup();
+            bg.add(btnRelated);
+            bg.add(btnUnrelated);
+            hetPanel.add(btnRelated);
+            hetPanel.add(btnUnrelated);
+
+            JButton btnCancel = new JButton("Cancel");
+            btnCancel.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    run = false;
+                    setVisible(false);
+                }
+            });
+
+            JButton btnRun = new JButton("Run");
+            btnRun.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    run = true;
+                    setVisible(false);
+                }
+            });
+
+            JButton btnHelp = new JButton("Help");
+            btnHelp.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    String msg = "Modeling heterozygotes as related to homozygotes calculates P(IBS)= 0.5 between \n"
+                            + "heterozygous loci and between a heterozygote and a homozygote. \n"
+                            + "Modeling heterozygotes as an independent state uses the older version \n"
+                            + "of the TASSEL kinship function, which calculates P(IBS) = 1 for a heterozygote with itself \n"
+                            + "and 0 with the homozygotes.\n\n"
+                            + "Choosing to model heterozygotes as an independent state and rescaling results\n"
+                            + " in the same kinship matrix produced by TASSEL before the new options were added. ";
+                    String myTitle = "Help for Kinship Options";
+                    JOptionPane.showMessageDialog(null, msg, myTitle, JOptionPane.INFORMATION_MESSAGE);
+                }
+            });
+
+            JPanel buttonBox = new JPanel();
+            buttonBox.setLayout(new BoxLayout(buttonBox, BoxLayout.X_AXIS));
+            buttonBox.add(btnRun);
+            buttonBox.add(btnCancel);
+            buttonBox.add(btnHelp);
+
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.insets = new Insets(20, 10, 5, 10);
+            contents.add(hetPanel, gbc);
+
+            gbc.gridy++;
+            gbc.insets = new Insets(5, 10, 5, 10);
+            contents.add(chkRescale, gbc);
+
+            gbc.gridy++;
+            gbc.insets = new Insets(5, 10, 20, 10);
+            contents.add(buttonBox, gbc);
+
+            pack();
+        }
+    }
 }
