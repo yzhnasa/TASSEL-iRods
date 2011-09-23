@@ -464,8 +464,7 @@ public class ExportUtils {
             int n = 0;
             while (n < a.getSiteCount()) {
                 if (n == 0) {
-                    format.displayLabel(out,
-                            a.getIdGroup().getIdentifier(s).getName(), 10);
+                    format.displayLabel(out, a.getIdGroup().getIdentifier(s).getName(), 10);
                     out.print("     ");
                 } else {
                     out.print("               ");
@@ -488,8 +487,7 @@ public class ExportUtils {
         while (n < a.getSiteCount()) {
             for (int s = 0; s < a.getSequenceCount(); s++) {
                 if (n == 0) {
-                    format.displayLabel(out,
-                            a.getIdGroup().getIdentifier(s).getName(), 10);
+                    format.displayLabel(out, a.getIdGroup().getIdentifier(s).getName(), 10);
                     out.print("     ");
                 } else {
                     out.print("               ");
