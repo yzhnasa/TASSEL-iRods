@@ -51,6 +51,12 @@ public interface Alignment extends Serializable {
     final static public String[] POSITION_TYPE_GROUP_TEXT = {"All", "Silent", "Synonymous", "Noncoding",
         "Nontranscribed", "Intron", "Indel", "Noncoding Indel", "Nonsynonymous", "Coding",
         "Coding Indel", "Transcribed"};
+    final static public byte POSITION_TYPE_NONTRANSCRIBED_TYPE = 'N';
+    final static public byte POSITION_TYPE_ANON_CODING_TYPE = 'C';
+    final static public byte POSITION_TYPE_CODON1_TYPE = '1';
+    final static public byte POSITION_TYPE_CODON2_TYPE = '2';
+    final static public byte POSITION_TYPE_CODON3_TYPE = '3';
+    final static public byte POSITION_TYPE_INTRON_TYPE = 'I';
 
     /**
      * Returns diploid values for given taxon and site.

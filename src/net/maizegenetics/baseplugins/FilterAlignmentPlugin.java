@@ -6,10 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import com.sun.java.swing.plaf.gtk.GTKConstants.PositionType;
-import net.maizegenetics.pal.alignment.AnnotatedAlignmentUtils;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.SimpleAlignment;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.CombineAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -38,6 +35,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 
 import org.apache.log4j.Logger;
 
@@ -58,7 +56,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     boolean doSlidingHaps = false;
     int winSize = 3;
     int stepSize = 3;
-    char[] incTypes = {PositionType.ANON_CODING_TYPE, PositionType.INTRON_TYPE, PositionType.NONTRANSCRIBED_TYPE};  //default is all
+    char[] incTypes = {Alignment.POSITION_TYPE_ANON_CODING_TYPE, Alignment.POSITION_TYPE_INTRON_TYPE, Alignment.POSITION_TYPE_NONTRANSCRIBED_TYPE};  //default is all
 
     /** Creates a new instance of FilterAlignmentPlugin */
     public FilterAlignmentPlugin(Frame parentFrame, boolean isInteractive) {
@@ -135,36 +133,41 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         StringWriter sw = new StringWriter();
         Alignment naa = aa;
 
-        if ((extractIndels) && (aa instanceof SimpleAlignment)) {
-            naa = AnnotatedAlignmentUtils.extractIndels((SimpleAlignment) aa, true);
+        if ((extractIndels) && (aa instanceof Alignment)) {
+            naa = AlignmentUtils.extractIndels(aa, true);
         } else {
             naa = aa;
         }
 
         if (isUseAllSiteTypes == false) {
-            naa = AnnotatedAlignmentUtils.includeSitesByType(naa, incTypes);
+            throw new UnsupportedOperationException();
+            //naa = AnnotatedAlignmentUtils.includeSitesByType(naa, incTypes);
         }
         if (filterMinorSNPs) {
             if (naa instanceof CombineAlignment) {
                 Alignment[] tempAlign = naa.getAlignments();
                 for (int i = 0; i < tempAlign.length; i++) {
-                    tempAlign[i] = AnnotatedAlignmentUtils.setRareMultiAllelicStatesToMissing(tempAlign[i]);
+                    //tempAlign[i] = AnnotatedAlignmentUtils.setRareMultiAllelicStatesToMissing(tempAlign[i]);
                 }
                 naa = CombineAlignment.getInstance(tempAlign);
             } else {
-                naa = AnnotatedAlignmentUtils.setRareMultiAllelicStatesToMissing(naa);
+                //naa = AnnotatedAlignmentUtils.setRareMultiAllelicStatesToMissing(naa);
             }
+            throw new UnsupportedOperationException();
         }
         if ((start != 0) || (end < (naa.getSiteCount() - 1))) {
-            naa = AnnotatedAlignmentUtils.removeSitesOutsideRange(naa, start, end);
+            //naa = AnnotatedAlignmentUtils.removeSitesOutsideRange(naa, start, end);
+            throw new UnsupportedOperationException();
         }
         if (extractIndels) {
-            naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, minFreq, minCount);
+            //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, minFreq, minCount);
+            throw new UnsupportedOperationException();
         } else {
-            naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreGapsMissing(naa, minFreq, minCount);
+            //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreGapsMissing(naa, minFreq, minCount);
         }
         if (doSlidingHaps) {
-            naa = AnnotatedAlignmentUtils.extractSlidingHaplotypes(naa, winSize, stepSize);
+            //naa = AnnotatedAlignmentUtils.extractSlidingHaplotypes(naa, winSize, stepSize);
+            throw new UnsupportedOperationException();
         }
         String theComment;
         StringBuilder builder = new StringBuilder();
@@ -234,13 +237,6 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         this.end = end;
     }
 
-//    public int getDistFromEnd() {
-//        return distFromEnd;
-//    }
-//
-//    public void setDistFromEnd(int distFromEnd) {
-//        this.distFromEnd = distFromEnd;
-//    }
     public int getMinCount() {
         return minCount;
     }

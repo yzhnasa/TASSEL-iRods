@@ -297,4 +297,29 @@ public class AlignmentUtils {
     public static int getDiploidIdentity(byte b1, byte b2) {
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * All annotation is based off the first site in the AnnotationAlignment.
+     * This Alignment should not span multiple loci.
+     *
+     * @param saa the SimpleAnnotatedAlignment to filter
+     * @param anchored sets to score anchored indels as same position
+     */
+    public static Alignment extractIndels(Alignment saa, boolean anchored) {
+        String[] sequences = findIndels(saa, anchored);
+        StringBuffer[] tempSeq = new StringBuffer[saa.getSequenceCount()];
+
+        for (int i = 0; i < sequences.length; i++) {
+            sequences[i] = tempSeq[i].toString();
+        }
+        String[] states = new String[50];
+        for (int i = 0; i < 50; i++) {
+            states[i] = Integer.toString(i);
+        }
+        return SBitAlignment.getNucleotideInstance(saa.getIdGroup(), sequences, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, true, true);
+    }
+
+    private static String[] findIndels(Alignment alignment, boolean anchored) {
+        return null;
+    }
 }
