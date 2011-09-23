@@ -141,20 +141,17 @@ public class TBitAlignment extends AbstractAlignment {
                 cb[0] = (byte) ((data[t][s] >>> 4) & 0xf);
                 cb[1] = (byte) (data[t][s] & 0xf);
                 for (int i = 0; i < 2; i++) {
-                    if (cb[i] == Alignment.UNKNOWN_ALLELE) {
-                        myData[myMaxNumAlleles][t].fastSet(s);
-                        if (cb[i] != Alignment.UNKNOWN_ALLELE) {
-                            boolean isRare = true;
-                            for (int j = 0; j < myMaxNumAlleles; j++) {
-                                if (cb[i] == myAlleles[s][j]) {
-                                    myData[j][t].fastSet(s);
-                                    isRare = false;
-                                    break;
-                                }
+                    if (cb[i] != Alignment.UNKNOWN_ALLELE) {
+                        boolean isRare = true;
+                        for (int j = 0; j < myMaxNumAlleles; j++) {
+                            if (cb[i] == myAlleles[s][j]) {
+                                myData[j][t].fastSet(s);
+                                isRare = false;
+                                break;
                             }
-                            if (isRare && retainsRareAlleles()) {
-                                myData[myMaxNumAlleles][t].fastSet(s);
-                            }
+                        }
+                        if (isRare && retainsRareAlleles()) {
+                            myData[myMaxNumAlleles][t].fastSet(s);
                         }
                     }
                 }
