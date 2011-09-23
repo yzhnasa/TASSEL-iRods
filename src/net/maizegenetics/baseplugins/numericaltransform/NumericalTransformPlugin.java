@@ -41,43 +41,49 @@ public class NumericalTransformPlugin extends AbstractPlugin {
 
     public DataSet performFunction(DataSet input) {
 
-        List<Datum> phenotypeList = input.getDataOfType(Phenotype.class);
-        List<Datum> alignmentList = input.getDataOfType(Alignment.class);
+        try {
 
-        if (phenotypeList.size() + alignmentList.size() < 1) {
-            JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select genotype or phenotype data.");
-            return null;
-        }
+            List<Datum> phenotypeList = input.getDataOfType(Phenotype.class);
+            List<Datum> alignmentList = input.getDataOfType(Alignment.class);
 
-        List<Datum> outputList = new ArrayList<Datum>();
-        Iterator<Datum> itr = phenotypeList.iterator();
-        while (itr.hasNext()) {
-            Datum current = itr.next();
-            List<Datum> td = processDatum(current, isInteractive());
-            if (td != null) {
-                outputList.addAll(td);
+            if (phenotypeList.size() + alignmentList.size() < 1) {
+                JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select genotype or phenotype data.");
+                return null;
             }
-        }
 
-        Iterator<Datum> itr2 = alignmentList.iterator();
-        while (itr2.hasNext()) {
-            Datum current = itr2.next();
-            List<Datum> td = processDatum(current, isInteractive());
-            if (td != null) {
-                outputList.addAll(td);
+            List<Datum> outputList = new ArrayList<Datum>();
+            Iterator<Datum> itr = phenotypeList.iterator();
+            while (itr.hasNext()) {
+                Datum current = itr.next();
+                List<Datum> td = processDatum(current, isInteractive());
+                if (td != null) {
+                    outputList.addAll(td);
+                }
             }
+
+            Iterator<Datum> itr2 = alignmentList.iterator();
+            while (itr2.hasNext()) {
+                Datum current = itr2.next();
+                List<Datum> td = processDatum(current, isInteractive());
+                if (td != null) {
+                    outputList.addAll(td);
+                }
+            }
+
+            if (outputList.isEmpty()) {
+                return null;
+            }
+
+            DataSet output = new DataSet(outputList, this);
+            // I am setting the firing class as the metadata
+            // so that the control panel know where the event is coming from
+            fireDataSetReturned(new PluginEvent(output, NumericalTransformPlugin.class));
+
+            return output;
+            
+        } finally {
+            fireProgress(100);
         }
-
-        if (outputList.size() == 0) {
-            return null;
-        }
-
-        DataSet output = new DataSet(outputList, this);
-        // I am setting the firing class as the metadata
-        // so that the control panel know where the event is coming from
-        fireDataSetReturned(new PluginEvent(output, NumericalTransformPlugin.class));
-
-        return output;
 
     }
 
