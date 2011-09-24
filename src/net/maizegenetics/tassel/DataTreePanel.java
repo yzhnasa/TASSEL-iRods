@@ -311,11 +311,11 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                                 blankPanel.add(new JLabel("     Nothing to Display"), BorderLayout.CENTER);
                                 myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
                             } else {
-                                AlignmentTablePanel theATP;
+                                TableReportPanel theATP;
                                 if (book.getData() instanceof Phenotype) {
-                                    theATP = new AlignmentTablePanel((Phenotype) book.getData());
+                                    theATP = new TableReportPanel((Phenotype) book.getData());
                                 } else {
-                                    theATP = new AlignmentTablePanel((TableReport) book.getData());
+                                    theATP = new TableReportPanel((TableReport) book.getData());
                                 }
                                 myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
                             }

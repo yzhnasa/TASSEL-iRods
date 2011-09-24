@@ -13,7 +13,6 @@ import net.maizegenetics.pal.report.TableReportUtils;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin.FileFormat;
-import net.maizegenetics.gui.TableReportTableModel;
 
 import javax.swing.*;
 
@@ -29,6 +28,7 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
+import net.maizegenetics.gui.TableReportNoPagingTableModel;
 
 /**
  *
@@ -69,7 +69,7 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
         } finally {
             fireProgress(100);
         }
-        
+
     }
 
     private void processDatum(Datum input) {
@@ -85,7 +85,6 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
     }
 
     public void saveDataToFile(TableReport tr, String delimit, FileFormat[] formats) {
-        //saveDataToFile(TableReportUtils.toDelimitedString(tr,delimit), getSaveFileByChooser(formats, myDialog));
         TableReportUtils.saveDelimitedTableReport(tr, delimit, getSaveFileByChooser(formats, myDialog));
     }
 
@@ -100,7 +99,7 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
         } else {
             saveDataToFile(TableReportUtils.toDelimitedString(tr, delimit), theSaveFile);
 
-            
+
         }
     }
 
@@ -178,14 +177,7 @@ class TablePluginDialog extends JDialog implements Printable {
         super(plugin.getParentFrame(), theTableSource.getTableTitle(), false);
         theTableDisplayPlugin = plugin;
         this.theTableSource = theTableSource;
-        // replaced DefaultTableModel with TableReportTableModel,
-        // so that only part of table would display to prevent
-        // out of memory errors.  probably should remove this
-        // obsolete code at some point.  -terry
-        //Object[][] data=theTableSource.getTableData();
-        //Object[] colNames=theTableSource.getTableColumnNames();
-        //jTable = new JTable(new DefaultTableModel(data, colNames));
-        jTable = new JTable(new TableReportTableModel(theTableSource));
+        jTable = new JTable(new TableReportNoPagingTableModel(theTableSource));
         jTable.setAutoCreateRowSorter(true);
 
 

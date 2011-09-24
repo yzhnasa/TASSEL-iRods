@@ -11,12 +11,12 @@ import java.awt.*;
 
 /**
  */
-public class AlignmentTablePanel extends JPanel {
+public class TableReportPanel extends JPanel {
 
     private JTable myDataTable;
     private int myTaxaColumnIndex = -1;
 
-    public AlignmentTablePanel(TableReport theTableSource) {
+    public TableReportPanel(TableReport theTableSource) {
 
         TableModel theModel = null;
 
@@ -88,4 +88,3 @@ public class AlignmentTablePanel extends JPanel {
 
     }
 }
-	
