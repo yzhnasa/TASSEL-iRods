@@ -76,7 +76,7 @@ public class SeparatePlugin extends AbstractPlugin {
                 }
             }
 
-            if (result.size() == 0) {
+            if (result.isEmpty()) {
                 if (isInteractive()) {
                     JOptionPane.showMessageDialog(getParentFrame(), "Nothing to Separate");
                 } else {

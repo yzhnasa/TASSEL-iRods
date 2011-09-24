@@ -6,7 +6,6 @@
  */
 package net.maizegenetics.baseplugins;
 
-import com.sun.java.swing.plaf.gtk.GTKConstants.PositionType;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.popgen.DiversityAnalyses;
 import net.maizegenetics.pal.popgen.PolymorphismDistribution;
@@ -54,53 +53,58 @@ public class SequenceDiversityPlugin extends AbstractPlugin {
     }
 
     public DataSet performFunction(DataSet input) {
-        List<Datum> alignInList = input.getDataOfType(Alignment.class);
-        if (alignInList.size() < 1) {
-            JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection.  Please select sequence or marker alignment.");
-            return null;
-        }
 
-        List result = new ArrayList();
-        Iterator<Datum> itr = alignInList.iterator();
-        while (itr.hasNext()) {
-            DataSet tds = null;
-            Datum current = itr.next();
-            Alignment aa = (Alignment) current.getData();
-            if (isInteractive()) {
-                DiversityDialog myDialog = new DiversityDialog(aa);
-                myDialog.setLocationRelativeTo(getParentFrame());
-                myDialog.setVisible(true);
-                if (myDialog.isCancel()) {
-                    return null;
+        try {
+            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            if (alignInList.size() < 1) {
+                JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection.  Please select sequence or marker alignment.");
+                return null;
+            }
+
+            List result = new ArrayList();
+            Iterator<Datum> itr = alignInList.iterator();
+            while (itr.hasNext()) {
+                DataSet tds = null;
+                Datum current = itr.next();
+                Alignment aa = (Alignment) current.getData();
+                if (isInteractive()) {
+                    DiversityDialog myDialog = new DiversityDialog(aa);
+                    myDialog.setLocationRelativeTo(getParentFrame());
+                    myDialog.setVisible(true);
+                    if (myDialog.isCancel()) {
+                        return null;
+                    }
+                    isSlidingWindowAnalysis = myDialog.isSlidingWindowAnalysis();
+                    typeOfSitesToAnalyze = myDialog.getTypeOfSitesToAnalyze();
+                    startSite = myDialog.getStartSite();
+                    endSite = myDialog.getEndSite();
+                    windowSize = myDialog.getWindowSize();
+                    stepSize = myDialog.getStepSize();
+                } else {
+                    if ((startSite + 1) > aa.getSiteCount()) {
+                        startSite = 0;
+                    }
+                    if ((endSite < 1) || ((endSite + 1) > aa.getSiteCount())) {
+                        endSite = aa.getSiteCount() - 1;
+                    }
+                    if ((windowSize + 1) > aa.getSiteCount()) {
+                        windowSize = aa.getSiteCount() - 1;
+                    }
+                    if ((stepSize + 1) > aa.getSiteCount()) {
+                        stepSize = aa.getSiteCount() - 1;
+                    }
                 }
-                isSlidingWindowAnalysis = myDialog.isSlidingWindowAnalysis();
-                typeOfSitesToAnalyze = myDialog.getTypeOfSitesToAnalyze();
-                startSite = myDialog.getStartSite();
-                endSite = myDialog.getEndSite();
-                windowSize = myDialog.getWindowSize();
-                stepSize = myDialog.getStepSize();
-            } else {
-                if ((startSite + 1) > aa.getSiteCount()) {
-                    startSite = 0;
-                }
-                if ((endSite < 1) || ((endSite + 1) > aa.getSiteCount())) {
-                    endSite = aa.getSiteCount() - 1;
-                }
-                if ((windowSize + 1) > aa.getSiteCount()) {
-                    windowSize = aa.getSiteCount() - 1;
-                }
-                if ((stepSize + 1) > aa.getSiteCount()) {
-                    stepSize = aa.getSiteCount() - 1;
+                tds = processDatum(current);
+                if (tds != null) {
+                    result.add(tds);
+                    fireDataSetReturned(new PluginEvent(tds, SequenceDiversityPlugin.class));
                 }
             }
-            tds = processDatum(current);
-            if (tds != null) {
-                result.add(tds);
-                fireDataSetReturned(new PluginEvent(tds, SequenceDiversityPlugin.class));
-            }
-        }
 
-        return DataSet.getDataSet(result, this);
+            return DataSet.getDataSet(result, this);
+        } finally {
+            fireProgress(100);
+        }
     }
 
     public DataSet processDatum(Datum input) {
@@ -251,7 +255,7 @@ class DiversityDialog extends JDialog {
         }
     }
 
-    void jbInit() throws Exception {
+    private void jbInit() throws Exception {
         panel1.setLayout(gridBagLayout1);
         runButton.setText("Run");
         runButton.addActionListener(new java.awt.event.ActionListener() {
@@ -359,7 +363,7 @@ class DiversityDialog extends JDialog {
         jPanel2.add(jPanel1, new GridBagConstraints(0, 2, 2, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(27, 43, 43, 14), 0, 4));
     }
 
-    void endTextField_focusLost(FocusEvent e) {
+    private void endTextField_focusLost(FocusEvent e) {
         try {
             end = Integer.parseInt(endTextField.getText());
             if ((end <= start) || (end > (theAlignment.getSiteCount() - 1))) {
@@ -371,7 +375,7 @@ class DiversityDialog extends JDialog {
         endTextField.setText(end + "");
     }
 
-    void turnOffOptionsIfNotAnnotated() {
+    private void turnOffOptionsIfNotAnnotated() {
         boolean annotatedSites = false;
         for (int i = 0; i < theAlignment.getSiteCount(); i++) {
             if (theAlignment.getPositionType(i) != 0) {

@@ -23,11 +23,11 @@ import java.util.List;
  */
 public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin {
 
-    int upperCorner = LinkageDisequilibriumComponent.P_VALUE;
-    int lowerCorner = LinkageDisequilibriumComponent.RSQUARE;
-    boolean blockSchematic = true;
-    boolean chromosomalView = false;
-    boolean includeLabels = true;
+    private int upperCorner = LinkageDisequilibriumComponent.P_VALUE;
+    private int lowerCorner = LinkageDisequilibriumComponent.RSQUARE;
+    private boolean blockSchematic = true;
+    private boolean chromosomalView = false;
+    private boolean includeLabels = true;
 
     /** Creates a new instance of LinkageDiseqDisplayPlugin */
     public LinkageDiseqDisplayPlugin(Frame parentFrame, boolean isInteractive) {
@@ -151,11 +151,11 @@ class LinkageDiseqDisplayDialog extends JDialog {
     JButton printButton = new JButton();
     JPanel linkPanel = new JPanel();
     LinkageDisequilibriumComponent ldFigurePanel;
-//  net.maizegenetics.pal.popgen.LinkageDisequilibrium theLinkageDiseq;
+    // net.maizegenetics.pal.popgen.LinkageDisequilibrium theLinkageDiseq;
     BorderLayout borderLayout1 = new BorderLayout();
     LinkageDisequilibrium theLinkageDisequilibrium;
     LinkageDiseqDisplayPlugin theLinkageDiseqDisplayPlugin;
-//  TASSELMainFrame theTASSELMainFrame;
+    // TASSELMainFrame theTASSELMainFrame;
     BorderLayout borderLayout2 = new BorderLayout();
     JPanel jPanel1 = new JPanel();
     JButton saveButton = new JButton();
@@ -172,7 +172,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
     JRadioButton geneRadioButton = new JRadioButton();
     JRadioButton chromoRadioButton = new JRadioButton();
     JCheckBox schematicCheckBox = new JCheckBox();
-//  JComboBox formatComboBox = new JComboBox();
+    // JComboBox formatComboBox = new JComboBox();
 
     public LinkageDiseqDisplayDialog(LinkageDiseqDisplayPlugin theQAF, LinkageDisequilibrium theLinkageDisequilibrium) {
         super(theQAF.getParentFrame(), "Linkage Disequilibrium", false);
@@ -191,7 +191,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         repaint();
     }
 
-    void jbInit() throws Exception {
+    private void jbInit() throws Exception {
         panel1.setLayout(borderLayout2);
         okButton.setText("Close");
         okButton.addActionListener(new java.awt.event.ActionListener() {
@@ -279,8 +279,8 @@ class LinkageDiseqDisplayDialog extends JDialog {
                 schematicCheckBox_actionPerformed(e);
             }
         });
-//    String[] s=AbstractDisplayPlugin.getPossibleGraphicOutFormats();
-//    formatComboBox=new JComboBox(s);
+        // String[] s=AbstractDisplayPlugin.getPossibleGraphicOutFormats();
+        // formatComboBox=new JComboBox(s);
         theButtonGroup.add(upRSqrRadioButton);
         theButtonGroup.add(upDPrimeRadioButton);
         theButtonGroup.add(upPRadioButton);
@@ -300,11 +300,11 @@ class LinkageDiseqDisplayDialog extends JDialog {
         jPanel1.add(okButton, new GridBagConstraints(5, 1, 2, 2, 0.0, 0.0, GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE, new Insets(0, 13, 12, 38), 0, 0));
         jPanel1.add(geneRadioButton, new GridBagConstraints(3, 0, 1, 2, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         jPanel1.add(saveButton, new GridBagConstraints(4, 0, 1, 2, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-//    jPanel1.add(formatComboBox, new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0
-//            ,GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 6, 0, 0), 0, 0));
+        // jPanel1.add(formatComboBox, new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0
+        // ,GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 6, 0, 0), 0, 0));
         jPanel1.add(schematicCheckBox, new GridBagConstraints(4, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-//    jPanel1.add(svgButton, new GridBagConstraints(6, 0, 1, 1, 0.0, 0.0
-//            ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        // jPanel1.add(svgButton, new GridBagConstraints(6, 0, 1, 1, 0.0, 0.0
+        // ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         geneChromoButtonGroup.add(chromoRadioButton);
         geneChromoButtonGroup.add(geneRadioButton);
     }

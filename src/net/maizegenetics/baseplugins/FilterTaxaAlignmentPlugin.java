@@ -50,37 +50,43 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
     public DataSet performFunction(DataSet input) {
 
-        List inputData = input.getDataSet();
-        if (inputData.size() != 1) {
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select a single sequence or phenotype.");
-            } else {
-                myLogger.error("performFunction: Please input a single sequence or phenotype.");
+        try {
+
+            List inputData = input.getDataSet();
+            if (inputData.size() != 1) {
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select a single sequence or phenotype.");
+                } else {
+                    myLogger.error("performFunction: Please input a single sequence or phenotype.");
+                }
+                return null;
             }
-            return null;
-        }
 
-        Datum inputDatum = (Datum) inputData.get(0);
+            Datum inputDatum = (Datum) inputData.get(0);
 
-        if (!(inputDatum.getData() instanceof Alignment) && !(inputDatum.getData() instanceof Phenotype)) {
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select a single sequence or phenotype.");
-            } else {
-                myLogger.error("performFunction: Please input a single sequence or phenotype.");
+            if (!(inputDatum.getData() instanceof Alignment) && !(inputDatum.getData() instanceof Phenotype)) {
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select a single sequence or phenotype.");
+                } else {
+                    myLogger.error("performFunction: Please input a single sequence or phenotype.");
+                }
+                return null;
             }
-            return null;
+
+            Datum td = processDatum(inputDatum, isInteractive());
+            if (td == null) {
+                return null;
+            }
+
+            DataSet output = new DataSet(td, this);
+            //I am setting the firing class as the metadata - so that the control panel know where the event is coming from
+            fireDataSetReturned(new PluginEvent(output, FilterTaxaAlignmentPlugin.class));
+
+            return output;
+
+        } finally {
+            fireProgress(100);
         }
-
-        Datum td = processDatum(inputDatum, isInteractive());
-        if (td == null) {
-            return null;
-        }
-
-        DataSet output = new DataSet(td, this);
-        //I am setting the firing class as the metadata - so that the control panel know where the event is coming from
-        fireDataSetReturned(new PluginEvent(output, FilterTaxaAlignmentPlugin.class));
-
-        return output;
     }
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
@@ -200,8 +206,6 @@ class DataRowFilterDialog extends JDialog {
     private JButton deleteSelectedButton = new JButton();
     private JButton closeButton = new JButton();
     private JTable table;
-    private String notification = "Unable to filter this type of data.\n Try filtering "
-            + "datasets which have not yet been merged";
 
     /**
      * For filtering sequences, genotypes, and traits

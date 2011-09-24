@@ -19,15 +19,15 @@ import java.io.EOFException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
 
-
 // Print a file into the text area.
-public class PrintTextArea  {
+public class PrintTextArea {
+
     Frame theFrame;
-    
+
     public PrintTextArea(Frame frame) {
-        theFrame=frame;
+        theFrame = frame;
     }
-    
+
     public void printThis(String s) {
         PrintJob pjob = theFrame.getToolkit().getPrintJob(theFrame, "Cool Stuff", null);
         // PrintJob pjob = new PrintJob();
@@ -41,20 +41,22 @@ public class PrintTextArea  {
             pjob.end();
         }
     }
-    
+
     // Print string to graphics via printjob
     // Does not deal with word wrap or tabs
     void printLongString(PrintJob pjob, Graphics pg, String s) {
         int pageNum = 1;
         int linesForThisPage = 0;
         int linesForThisJob = 0;
-        int topMargin=20, leftMargin=20;
+        int topMargin = 20, leftMargin = 20;
         // Note: String is immutable so won't change while printing.
-        if (!(pg instanceof PrintGraphics)) {throw new IllegalArgumentException("Graphics context not PrintGraphics");}
+        if (!(pg instanceof PrintGraphics)) {
+            throw new IllegalArgumentException("Graphics context not PrintGraphics");
+        }
         StringReader sr = new StringReader(s);
         LineNumberReader lnr = new LineNumberReader(sr);
         String nextLine;
-        int pageHeight = pjob.getPageDimension().height-(topMargin*2);
+        int pageHeight = pjob.getPageDimension().height - (topMargin * 2);
         Font helv = new Font("Helvetica", Font.PLAIN, 10);
         //have to set the font to get any output
         pg.setFont(helv);
@@ -68,12 +70,14 @@ public class PrintTextArea  {
                 if (nextLine != null) {
                     if ((curHeight + fontHeight) > pageHeight) {
                         // New Page
-                        System.out.println("" + linesForThisPage + " lines printed for page " +pageNum);
+                        System.out.println("" + linesForThisPage + " lines printed for page " + pageNum);
                         pageNum++;
                         linesForThisPage = 0;
                         pg.dispose();
                         pg = pjob.getGraphics();
-                        if (pg != null) {pg.setFont(helv);}
+                        if (pg != null) {
+                            pg.setFont(helv);
+                        }
                         curHeight = topMargin;
                     }
                     curHeight += fontHeight;
@@ -81,10 +85,11 @@ public class PrintTextArea  {
                         pg.drawString(nextLine, leftMargin, curHeight - fontDescent);
                         linesForThisPage++;
                         linesForThisJob++;
-                    } else {System.out.println("pg null");}
+                    } else {
+                        System.out.println("pg null");
+                    }
                 }
-            }
-            while (nextLine != null);
+            } while (nextLine != null);
         } catch (EOFException eof) {
             // Fine, ignore
         } catch (Throwable t) { // Anything else
@@ -92,20 +97,7 @@ public class PrintTextArea  {
         }
         System.out.println("" + linesForThisPage + " lines printed for page " + pageNum);
         System.out.println("pages printed: " + pageNum);
-        System.out.println("total lines printed: " +
-                linesForThisJob);
-    }
-    
-    public void sendToPrinter() {
-  /*      PrinterJob printJob = PrinterJob.getPrinterJob();
-        printJob.setPrintable(this);
-        if (printJob.printDialog()) {
-            try {
-                printJob.print();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-      setVisible(false);*/
+        System.out.println("total lines printed: "
+                + linesForThisJob);
     }
 }

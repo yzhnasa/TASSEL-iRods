@@ -30,11 +30,11 @@ import java.util.List;
  */
 public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 
-    boolean isRapidAnalysis = true;
-    int permutationNumber = 1000;
-    int windowSize = 50;
-    LinkageDisequilibrium.testDesign LDType = LinkageDisequilibrium.testDesign.SlidingWindow;
-    int testSite = -1;
+    private boolean isRapidAnalysis = true;
+    private int permutationNumber = 1000;
+    private int windowSize = 50;
+    private LinkageDisequilibrium.testDesign LDType = LinkageDisequilibrium.testDesign.SlidingWindow;
+    private int testSite = -1;
 
     /** Creates a new instance of LinkageDisequilibriumPlugin */
     public LinkageDisequilibriumPlugin(Frame parentFrame, boolean isInteractive) {
@@ -184,11 +184,11 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 class LinkageDiseqDialog extends JDialog {
 
     boolean rapidPermutations = true;
-//    int numberPermutations = 1000;
+    // int numberPermutations = 1000;
     boolean runAnalysis = false;
     JPanel panel1 = new JPanel();
     JCheckBox rapidCheckBox = new JCheckBox();
-//    JTextField permNumberTextField = new JTextField();
+    // JTextField permNumberTextField = new JTextField();
     JLabel jLabel1 = new JLabel();
     JButton runButton = new JButton();
     JButton closeButton = new JButton();
@@ -203,7 +203,7 @@ class LinkageDiseqDialog extends JDialog {
     public LinkageDiseqDialog(boolean rapidPermutations, int numberPermutations) {
         super((Frame) null, "Linkage Disequilibrium", true);
         this.rapidPermutations = rapidPermutations;
-//        this.numberPermutations = numberPermutations;
+        // this.numberPermutations = numberPermutations;
         try {
             jbInit();
             pack();
@@ -212,11 +212,11 @@ class LinkageDiseqDialog extends JDialog {
         }
     }
 
-    void jbInit() throws Exception {
+    private void jbInit() throws Exception {
         panel1.setLayout(gridBagLayout1);
         rapidCheckBox.setSelected(rapidPermutations);
         rapidCheckBox.setText("Rapid Permutations (slightly biased p-values)");
-//        permNumberTextField.setText(numberPermutations + "");
+        // permNumberTextField.setText(numberPermutations + "");
         jLabel1.setText("Permutations");
 
         windowSizeTextField.setText(windowSize + "");
@@ -256,8 +256,8 @@ class LinkageDiseqDialog extends JDialog {
         });
         getContentPane().add(panel1);
         panel1.add(rapidCheckBox, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(102, 44, 0, 33), 82, 0));
-//        panel1.add(permNumberTextField, new GridBagConstraints(0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
-//        panel1.add(jLabel1, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
+        // panel1.add(permNumberTextField, new GridBagConstraints(0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
+        // panel1.add(jLabel1, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
         panel1.add(runButton, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(82, 55, 26, 0), 32, 5));
         panel1.add(closeButton, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(83, 20, 26, 156), 23, 5));
         panel1.add(windowSizeTextField, new GridBagConstraints(0, 3, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));

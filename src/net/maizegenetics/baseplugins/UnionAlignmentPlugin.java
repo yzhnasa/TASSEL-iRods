@@ -42,54 +42,59 @@ public class UnionAlignmentPlugin extends AbstractPlugin {
     }
 
     protected Datum processData(DataSet input, boolean isUnion) {
-        Datum outDatum = null;
-        String userMessage = "This action requires multiple items be simultaneously selected from the data tree "
-                + "(Ctrl + mouse click).  Please select genotype, trait, and population structure data to isUnion "
-                + "from the data tree.";
 
-        Alignment aa = null;
-        Phenotype ca = null;
-        List<Datum> aaVector = input.getDataOfType(Alignment.class);
-        List<Datum> caVector = input.getDataOfType(Phenotype.class);
-        if ((aaVector.size() + caVector.size()) < 2) {
-            JOptionPane.showMessageDialog(getParentFrame(), userMessage);
-            return null;
-        }
+        try {
+            Datum outDatum = null;
+            String userMessage = "This action requires multiple items be simultaneously selected from the data tree "
+                    + "(Ctrl + mouse click).  Please select genotype, trait, and population structure data to isUnion "
+                    + "from the data tree.";
 
-        StringWriter sw = new StringWriter();
-        Object result = null;
-        if (aaVector.size() == 1) {
-            aa = (Alignment) aaVector.get(0).getData();
-        } else if (aaVector.size() > 1) {
-            Alignment[] temp = new Alignment[aaVector.size()];
-            for (int i = 0; i < aaVector.size(); i++) {
-                temp[i] = (Alignment) aaVector.get(i).getData();
+            Alignment aa = null;
+            Phenotype ca = null;
+            List<Datum> aaVector = input.getDataOfType(Alignment.class);
+            List<Datum> caVector = input.getDataOfType(Phenotype.class);
+            if ((aaVector.size() + caVector.size()) < 2) {
+                JOptionPane.showMessageDialog(getParentFrame(), userMessage);
+                return null;
             }
-            aa = CombineAlignment.getInstance(temp, isUnion);
-            result = aa;
+
+            StringWriter sw = new StringWriter();
+            Object result = null;
+            if (aaVector.size() == 1) {
+                aa = (Alignment) aaVector.get(0).getData();
+            } else if (aaVector.size() > 1) {
+                Alignment[] temp = new Alignment[aaVector.size()];
+                for (int i = 0; i < aaVector.size(); i++) {
+                    temp[i] = (Alignment) aaVector.get(i).getData();
+                }
+                aa = CombineAlignment.getInstance(temp, isUnion);
+                result = aa;
+            }
+            if (caVector.size() > 0) {
+                ca = (Phenotype) caVector.get(0).getData();
+            }
+            for (int i = 1; i < caVector.size(); i++) {
+                Phenotype ta = (Phenotype) caVector.get(i).getData();
+                ca = CombinePhenotype.getInstance(ca, ta, isUnion);
+                result = ca;
+            }
+            if ((ca != null) && (aa != null)) {
+                //then make a concatenated alignment
+                MarkerPhenotype aac = MarkerPhenotype.getInstance(aa, ca, isUnion);
+                result = aac;
+            }
+            String theName = this.getConcatenatedName(input);
+            if (isUnion) {
+                sw.append("Union Join\n");
+            } else {
+                sw.append("Intersect Join\n");
+            }
+            String theComment = sw.toString();
+            outDatum = new Datum(theName, result, theComment);
+            return outDatum;
+        } finally {
+            fireProgress(100);
         }
-        if (caVector.size() > 0) {
-            ca = (Phenotype) caVector.get(0).getData();
-        }
-        for (int i = 1; i < caVector.size(); i++) {
-            Phenotype ta = (Phenotype) caVector.get(i).getData();
-            ca = CombinePhenotype.getInstance(ca, ta, isUnion);
-            result = ca;
-        }
-        if ((ca != null) && (aa != null)) {
-            //then make a concatenated alignment
-            MarkerPhenotype aac = MarkerPhenotype.getInstance(aa, ca, isUnion);
-            result = aac;
-        }
-        String theName = this.getConcatenatedName(input);
-        if (isUnion) {
-            sw.append("Union Join\n");
-        } else {
-            sw.append("Intersect Join\n");
-        }
-        String theComment = sw.toString();
-        outDatum = new Datum(theName, result, theComment);
-        return outDatum;
     }
 
     protected String getConcatenatedName(DataSet theTDS) {
