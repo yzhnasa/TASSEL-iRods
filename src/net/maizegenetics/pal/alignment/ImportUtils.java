@@ -49,7 +49,7 @@ public class ImportUtils {
      */
     public static Alignment readFromHapmap(String filename, String chrom) {
 
-        String[][] chromsAvailable = getFileInfo(filename, 2, 0);
+        String[][] chromsAvailable = getFileInfo(filename, HAPMAP_CHROMOSOME_COLUMN_INDEX, HAPMAP_SNPID_COLUMN_INDEX);
 
         int numSites = 0;
         int depthInFile = 1;
