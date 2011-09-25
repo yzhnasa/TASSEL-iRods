@@ -296,7 +296,7 @@ public class AlignmentUtils {
         }
         //Terry - Maybe use FilterAlignment
         //Terry - Need to get loci if not
-        return SBitAlignment.getNucleotideInstance(saa.getIdGroup(), sequences, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, true, true);
+        return SBitAlignment.getNucleotideInstance(saa.getIdGroup(), sequences, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, true);
     }
 
     private static String[] findIndels(Alignment alignment, boolean anchored) {

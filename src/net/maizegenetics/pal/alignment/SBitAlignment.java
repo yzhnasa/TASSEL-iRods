@@ -21,48 +21,48 @@ public class SBitAlignment extends AbstractAlignment {
     private int myNumDataRows;
     private boolean myIsDirty = false;
 
-    protected SBitAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isFinalized) {
-        super(a, maxNumAlleles, retainRareAlleles, isFinalized);
+    protected SBitAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
+        super(a, maxNumAlleles, retainRareAlleles);
         loadAlleles(a);
     }
 
-    protected SBitAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
-        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+    protected SBitAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         loadAlleles(data);
     }
 
     public static SBitAlignment getInstance(Alignment a) {
-        return SBitAlignment.getInstance(a, a.getMaxNumAlleles(), a.retainsRareAlleles(), true);
+        return SBitAlignment.getInstance(a, a.getMaxNumAlleles(), a.retainsRareAlleles());
     }
 
-    public static SBitAlignment getInstance(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isFinalized) {
+    public static SBitAlignment getInstance(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         String[][] alleleStates = a.getAlleleEncodings();
         if ((alleleStates == null) || (alleleStates.length == 0)) {
             throw new IllegalArgumentException("SBitAlignment: init: allele states can not be empty.");
         }
         if (alleleStates.length == 1) {
-            return new SBitAlignment(a, maxNumAlleles, retainRareAlleles, isFinalized);
+            return new SBitAlignment(a, maxNumAlleles, retainRareAlleles);
         } else {
-            return new SBitTextAlignment(a, maxNumAlleles, retainRareAlleles, isFinalized);
+            return new SBitTextAlignment(a, maxNumAlleles, retainRareAlleles);
         }
     }
 
-    public static SBitAlignment getInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
+    public static SBitAlignment getInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         if ((alleleStates == null) || (alleleStates.length == 0)) {
             throw new IllegalArgumentException("SBitAlignment: init: allele states can not be empty.");
         }
         if (alleleStates.length == 1) {
-            return new SBitAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+            return new SBitAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         } else {
-            return new SBitTextAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+            return new SBitTextAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         }
     }
 
-    public static SBitAlignment getNucleotideInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
-        return new SBitNucleotideAlignment(idGroup, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+    public static SBitAlignment getNucleotideInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        return new SBitNucleotideAlignment(idGroup, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 
-    public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
+    public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
             throw new IllegalArgumentException("SBitAlignment: getNucleotideInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
@@ -78,11 +78,11 @@ public class SBitAlignment extends AbstractAlignment {
 
         byte[][] dataBytes = AlignmentUtils.getDataBytes(data, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
 
-        return SBitAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+        return SBitAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
 
     }
 
-    public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
+    public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
             throw new IllegalArgumentException("SBitAlignment: getNucleotideInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
@@ -98,11 +98,11 @@ public class SBitAlignment extends AbstractAlignment {
 
         byte[][] dataBytes = AlignmentUtils.getDataBytes(data);
 
-        return SBitAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+        return SBitAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
 
     }
 
-    public static SBitAlignment getInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
+    public static SBitAlignment getInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > 14)) {
             throw new IllegalArgumentException("SBitAlignment: getInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
@@ -120,7 +120,7 @@ public class SBitAlignment extends AbstractAlignment {
 
         byte[][] dataBytes = AlignmentUtils.getDataBytes(data, alleleStates, maxNumAlleles);
 
-        return SBitAlignment.getInstance(idGroup, dataBytes, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+        return SBitAlignment.getInstance(idGroup, dataBytes, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
 
     }
 
@@ -234,182 +234,6 @@ public class SBitAlignment extends AbstractAlignment {
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        if (isFinalized()) {
-            return UnmodifiableBitSet.getInstance(myData[alleleNumber][site]);
-        } else {
-            return myData[alleleNumber][site];
-        }
-    }
-
-    //
-    // MutableAlignment Methods...
-    //
-    @Override
-    public void setBase(int taxon, int site, byte newBase) {
-
-        if (isFinalized()) {
-            throw new IllegalStateException("SBitAlignment: This Alignment has been finalized and can not be changed.");
-        }
-
-        for (int x = 0; x < myNumDataRows; x++) {
-            myData[x][site].fastClear(taxon);
-        }
-
-        byte[] cb = new byte[2];
-        cb[0] = (byte) ((newBase >>> 4) & 0xf);
-        cb[1] = (byte) (newBase & 0xf);
-        for (int i = 0; i < 2; i++) {
-            if (cb[i] == Alignment.UNKNOWN_ALLELE) {
-                myData[myMaxNumAlleles][site].fastSet(taxon);
-            } else {
-                boolean isRare = true;
-                for (int j = 0; j < myMaxNumAlleles; j++) {
-                    if (cb[i] == myAlleles[site][j]) {
-                        myData[j][site].fastSet(taxon);
-                        isRare = false;
-                        break;
-                    } else if (myAlleles[site][j] == Alignment.UNKNOWN_ALLELE) {
-                        myAlleles[site][j] = cb[i];
-                        myData[j][site].fastSet(taxon);
-                        isRare = false;
-                        break;
-                    }
-                }
-                if (isRare) {
-                    if (retainsRareAlleles()) {
-                        myData[myMaxNumAlleles + 1][site].fastSet(taxon);
-                    } else {
-                        myData[myMaxNumAlleles][site].fastSet(taxon);
-                    }
-                }
-            }
-        }
-
-        myIsDirty = true;
-    }
-
-    @Override
-    public void setBaseRange(int taxon, int startSite, byte[] newBases) {
-
-        if (isFinalized()) {
-            throw new IllegalStateException("SBitAlignment: This Alignment has been finalized and can not be changed.");
-        }
-
-        for (int i = 0, n = newBases.length; i < n; i++) {
-            setBase(taxon, i + startSite, newBases[i]);
-        }
-
-    }
-
-    @Override
-    public void addSite(int site) {
-
-        if (isFinalized()) {
-            throw new IllegalStateException("SBitAlignment: This Alignment has been finalized and can not be changed.");
-        }
-
-        if (myAlleleStates.length != 1) {
-            throw new IllegalStateException("SBitAlignment: addSite: Currently no way to add site to Alignment that has multiple allele state mappings.");
-        }
-
-        OpenBitSet[][] temp = myData;
-        myNumSites++;
-        myData = new OpenBitSet[myNumDataRows][myNumSites];
-        int offset = 0;
-        for (int a = 0; a < myNumDataRows; a++) {
-            for (int s = 0; s < myNumSites; s++) {
-                if (site == s) {
-                    myData[a][s] = new OpenBitSet(getSequenceCount());
-                    offset = 1;
-                } else {
-                    myData[a][s] = temp[a][s - offset];
-                }
-
-            }
-        }
-
-        byte[][] tempAlleles = myAlleles;
-        myAlleles = new byte[myNumSites][];
-        offset = 0;
-        for (int i = 0; i < myNumSites; i++) {
-            if (site == i) {
-                for (int j = 0; j < myMaxNumAlleles; j++) {
-                    myAlleles[i][j] = Alignment.UNKNOWN_ALLELE;
-                }
-                offset = 1;
-            } else {
-                myAlleles[i] = tempAlleles[i - offset];
-            }
-        }
-
-        myIsDirty = true;
-
-    }
-
-    @Override
-    public void removeSite(int site) {
-
-        if (isFinalized()) {
-            throw new IllegalStateException("SBitAlignment: This Alignment has been finalized and can not be changed.");
-        }
-
-        OpenBitSet[][] temp = myData;
-        myNumSites--;
-        myData = new OpenBitSet[myNumDataRows][myNumSites];
-        int offset = 0;
-        for (int a = 0; a < myNumDataRows; a++) {
-            for (int s = 0; s < myNumSites; s++) {
-                if (site == s) {
-                    offset = 1;
-                    myData[a][s] = temp[a][s + offset];
-                } else {
-                    myData[a][s] = temp[a][s + offset];
-                }
-
-            }
-        }
-
-        byte[][] tempAlleles = myAlleles;
-        myAlleles = new byte[myNumSites][];
-        offset = 0;
-        for (int i = 0; i < myNumSites; i++) {
-            if (site == i) {
-                offset = 1;
-                myAlleles[i] = tempAlleles[i + offset];
-            } else {
-                myAlleles[i] = tempAlleles[i + offset];
-            }
-        }
-
-        if (myAlleleStates.length != 1) {
-            String[][] tempAlleleStates = myAlleleStates;
-            myAlleleStates = new String[myNumSites][];
-            offset = 0;
-            for (int i = 0; i < myNumSites; i++) {
-                if (site == i) {
-                    offset = 1;
-                    myAlleleStates[i] = tempAlleleStates[i + offset];
-                } else {
-                    myAlleleStates[i] = tempAlleleStates[i + offset];
-                }
-            }
-        }
-
-        myIsDirty = true;
-
-    }
-
-    @Override
-    public void clean() {
-        if (isFinalized()) {
-            throw new IllegalStateException("SBitAlignment: This Alignment has been finalized and can not be changed.");
-        }
-        // Nothing needs to be done?
-        myIsDirty = false;
-    }
-
-    @Override
-    public boolean isDirty() {
-        return myIsDirty;
+        return UnmodifiableBitSet.getInstance(myData[alleleNumber][site]);
     }
 }

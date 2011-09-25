@@ -6,7 +6,6 @@ package net.maizegenetics.pal.alignment;
 import java.util.Arrays;
 
 import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
 
@@ -14,7 +13,7 @@ import net.maizegenetics.util.BitSet;
  *
  * @author terry
  */
-abstract public class AbstractAlignment implements MutableAlignment {
+abstract public class AbstractAlignment implements Alignment {
 
     private static final long serialVersionUID = -5197800047652332969L;
     protected IdGroup myIdGroup;
@@ -23,7 +22,7 @@ abstract public class AbstractAlignment implements MutableAlignment {
     protected int myNumSites;
     protected String[][] myAlleleStates;
     protected int[] myVariableSites;
-    protected int myMaxNumAlleles;
+    protected int myMaxNumAlleles = Alignment.DEFAULT_MAX_NUM_ALLELES;
     protected byte[][] myAlleles;
     private Locus[] myLoci;
     /**
@@ -31,32 +30,28 @@ abstract public class AbstractAlignment implements MutableAlignment {
      */
     private int[] myLociOffsets;
     private String[] mySNPIDs;
-    private boolean myRetainRareAlleles;
-    private boolean myIsFinalized = false;
+    private boolean myRetainRareAlleles = false;
 
-    public AbstractAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
+    public AbstractAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         if (idGroup.getIdCount() != data.length) {
             throw new IllegalArgumentException("AbstractAlignment: init: id group count: " + idGroup.getIdCount() + " doesn't equal number of data rows: " + data.length);
         }
         myNumSites = data[0].length;
         init(idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, snpIDs, loci, lociOffsets, retainRareAlleles);
         initAlleles(data);
-        myIsFinalized = isFinalized;
     }
 
-    public AbstractAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isFinalized) {
+    public AbstractAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         if (maxNumAlleles > a.getMaxNumAlleles()) {
             throw new IllegalArgumentException("AbstractAlignment: init: max number of alleles can't be larger than original alignment.");
         }
         myNumSites = a.getSiteCount();
         init(a.getIdGroup(), a.getGeneticMap(), a.getReference(), a.getAlleleEncodings(), a.getPhysicalPositions(), maxNumAlleles, a.getSNPIDs(), a.getLoci(), a.getLociOffsets(), retainRareAlleles);
         initAlleles(a);
-        myIsFinalized = isFinalized;
     }
 
     public AbstractAlignment(IdGroup idGroup) {
         myIdGroup = idGroup;
-        myIsFinalized = true;
     }
 
     private void init(IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, String[] snpIDs, Locus[] loci, int[] lociOffsets, boolean retainRareAlleles) {
@@ -649,59 +644,5 @@ abstract public class AbstractAlignment implements MutableAlignment {
     @Override
     public int getMaxNumAlleles() {
         return myMaxNumAlleles;
-    }
-
-    //
-    // MutableAlignment Methods...
-    //
-    @Override
-    public void setBase(int taxon, int site, byte newBase) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setBaseRange(int taxon, int startSite, byte[] newBases) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addSite(int site) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void removeSite(int site) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addTaxon(Identifier id) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void removeTaxon(int taxon) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clean() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isDirty() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void finalizeAlignment() {
-        clean();
-        myIsFinalized = true;
-    }
-
-    @Override
-    public boolean isFinalized() {
-        return myIsFinalized;
     }
 }

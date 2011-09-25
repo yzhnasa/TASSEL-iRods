@@ -54,14 +54,4 @@ public interface MutableAlignment extends Alignment {
      * @return true if dirty.
      */
     public boolean isDirty();
-
-    /**
-     * This makes this Alignment Immutable after called.
-     */
-    public void finalizeAlignment();
-
-    /**
-     * Returns whether this Alignment has been finalized.
-     */
-    public boolean isFinalized();
 }

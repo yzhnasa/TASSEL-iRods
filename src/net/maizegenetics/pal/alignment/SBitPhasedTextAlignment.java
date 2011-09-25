@@ -1,5 +1,5 @@
 /*
- * TBitTextAlignment
+ * SBitPhasedTextAlignment
  */
 package net.maizegenetics.pal.alignment;
 
@@ -9,13 +9,13 @@ import net.maizegenetics.pal.ids.IdGroup;
  *
  * @author terry
  */
-public class TBitTextAlignment extends TBitAlignment {
+public class SBitPhasedTextAlignment extends SBitPhasedAlignment {
 
-    protected TBitTextAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
+    protected SBitPhasedTextAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         super(a, maxNumAlleles, retainRareAlleles);
     }
 
-    protected TBitTextAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    protected SBitPhasedTextAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 

@@ -135,7 +135,7 @@ public class ImportUtils {
                 offsetsFinal[i] = ((Integer) lociOffsets.get(i)).intValue();
             }
 
-            return SBitAlignment.getNucleotideInstance(idGroup, theData, null, null, physicalPositions, Alignment.DEFAULT_MAX_NUM_ALLELES, lociFinal, offsetsFinal, snpIDs, true, true);
+            return SBitAlignment.getNucleotideInstance(idGroup, theData, null, null, physicalPositions, Alignment.DEFAULT_MAX_NUM_ALLELES, lociFinal, offsetsFinal, snpIDs, true);
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Problem creating Alignment: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
@@ -279,7 +279,7 @@ public class ImportUtils {
         sequences.toArray(sequenceArray);
 
         Locus unknown = new Locus("Unknown", "0", 0, sequenceArray[0].length(), null, null);
-        return SBitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, new Locus[]{unknown}, new int[]{0}, null, true, true);
+        return SBitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, new Locus[]{unknown}, new int[]{0}, null, true);
 
     }
 }

@@ -11,12 +11,12 @@ import net.maizegenetics.pal.ids.IdGroup;
  */
 public class SBitNucleotideAlignment extends SBitAlignment {
 
-    protected SBitNucleotideAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isFinalized) {
-        super(a, maxNumAlleles, retainRareAlleles, isFinalized);
+    protected SBitNucleotideAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
+        super(a, maxNumAlleles, retainRareAlleles);
     }
 
-    protected SBitNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isFinalized) {
-        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isFinalized);
+    protected SBitNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 
     @Override
