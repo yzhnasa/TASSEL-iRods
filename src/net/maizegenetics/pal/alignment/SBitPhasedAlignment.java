@@ -267,4 +267,9 @@ public class SBitPhasedAlignment extends AbstractAlignment {
         }
         return result;
     }
+
+    @Override
+    public boolean isPhased() {
+        return true;
+    }
 }
