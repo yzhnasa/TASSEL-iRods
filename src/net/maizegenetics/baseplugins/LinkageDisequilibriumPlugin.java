@@ -89,11 +89,11 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
             Datum td = new Datum("LD:" + input.getName(), theLD, "LD analysis");
             DataSet tds = new DataSet(td, this);
             return tds;
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             StringBuilder builder = new StringBuilder();
             builder.append("Unable to run Linkage Disequilibrium analysis ");
-            builder.append(e);
+            builder.append(e.getMessage());
             String str = builder.toString();
             JOptionPane.showMessageDialog(getParentFrame(), str);
         }
