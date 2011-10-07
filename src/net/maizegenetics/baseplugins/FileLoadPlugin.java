@@ -300,7 +300,7 @@ public class FileLoadPlugin extends AbstractPlugin {
             switch (theFT) {
                 case Hapmap: {
                     suffix = FILE_EXT_HAPMAP;
-                    result = ImportUtils.readFromHapmap(inFile, null);
+                    result = ImportUtils.readFromHapmap(inFile);
                     break;
                 }
                 case Sequence: {
