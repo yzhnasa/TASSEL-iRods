@@ -236,7 +236,7 @@ public class ExportPlugin extends AbstractPlugin {
 
             boolean foundImputed = false;
             if ((n == 0) || (!isInteractive())) {
-                ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t');
+                ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t', this);
             } else {
                 int i = 0;
                 while (i < n && !foundImputed) {
@@ -250,10 +250,10 @@ public class ExportPlugin extends AbstractPlugin {
                             imputeOptionDialog.setLocationRelativeTo(getParentFrame());
                             imputeOptionDialog.setVisible(true);
                             if (imputeOptionDialog.getDisplayImputed()) {
-                                ExportUtils.writeToHapmap(inputAlignment, (AlignmentMask) currentMask, myIsDiploid, mySaveFile, '\t');
+                                ExportUtils.writeToHapmap(inputAlignment, (AlignmentMask) currentMask, myIsDiploid, mySaveFile, '\t', this);
                                 foundImputed = true;
                             } else if (i == (n - 1)) {
-                                ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t');
+                                ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t', this);
                             }
                         }
                     }

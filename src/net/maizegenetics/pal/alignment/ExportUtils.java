@@ -13,11 +13,13 @@ import net.maizegenetics.util.Utils;
 import java.util.regex.Pattern;
 
 import net.maizegenetics.pal.io.FormattedOutput;
+import net.maizegenetics.util.ExceptionUtils;
+import net.maizegenetics.util.ProgressListener;
 
 import org.apache.log4j.Logger;
 
 /**
- * The class exports PAL alignment datatypes to
+ * The class exports PAL alignment data types to
  * various file formats.
  *
  * @author Jon
@@ -33,18 +35,21 @@ public class ExportUtils {
 
     /**
      * Writes multiple alignments to single Hapmap file. Currently no error checking
-     * @param alignment array of alignemnts
+     * @param alignment array of alignments
      * @param diploid
      * @param filename
      * @param delimChar
      */
-    public static void writeToHapmap(Alignment alignment, boolean diploid, String filename, char delimChar) {
+    public static void writeToHapmap(Alignment alignment, boolean diploid, String filename, char delimChar, ProgressListener listener) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
 
+        FileWriter fw = null;
+        BufferedWriter bw = null;
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(Utils.addSuffixIfNeeded(filename, ".hmp.txt")), 1000000);
+            fw = new FileWriter(Utils.addSuffixIfNeeded(filename, ".hmp.txt"));
+            bw = new BufferedWriter(fw, 1000000);
             bw.write("rs#");
             bw.write(delimChar);
             bw.write("alleles");
@@ -68,7 +73,8 @@ public class ExportUtils {
             bw.write("QCcode");
             bw.write(delimChar);
             int numTaxa = alignment.getSequenceCount();
-            for (int taxa = 0; taxa < numTaxa; taxa++) {//finish filling out first row
+            for (int taxa = 0; taxa < numTaxa; taxa++) {
+                //finish filling out first row
                 //not completely sure this does what I want, I need to access the
                 //accession name from every alleleBLOB in bytes [52-201] but there
                 //doesn't seem to be a method to access that in Alignment
@@ -81,81 +87,93 @@ public class ExportUtils {
             bw.write("\n");
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
-                StringBuilder sb = new StringBuilder(alignment.getSNPID(site));
-                sb.append(delimChar);
+                bw.write(alignment.getSNPID(site));
+                bw.write(delimChar);
                 byte[] alleles = alignment.getAlleles(site);
                 int numAlleles = alleles.length;
                 //currently does not correctly display if numAlleles > 2
                 if (numAlleles == 0) {
-                    sb.append("NA"); //if data does not exist
+                    bw.write("NA"); //if data does not exist
                 }
                 for (int i = 0; i < Math.min(2, numAlleles); i++) {
                     if (i > 0) {
-                        sb.append('/');
+                        bw.write('/');
                     }
-                    sb.append(alleles[i]); //alleles
+                    bw.write(alignment.getBaseAsString(site, alleles[i])); //alleles
                 }
-                sb.append(delimChar);
-                sb.append(alignment.getLocusName(site));
-                sb.append(delimChar);
-                sb.append(alignment.getPositionInLocus(site));
-                sb.append(delimChar);
-                sb.append("+"); //strand
-                sb.append(delimChar);
-                sb.append("NA"); //assembly# not supported
-                sb.append(delimChar);
-                sb.append("NA"); //center unavailable
-                sb.append(delimChar);
-                sb.append("NA"); //protLSID unavailable
-                sb.append(delimChar);
-                sb.append("NA"); //assayLSID unavailable
-                sb.append(delimChar);
-                sb.append("NA"); //panelLSID unavailable
-                sb.append(delimChar);
-                sb.append("NA"); //QCcode unavailable
-                sb.append(delimChar);
+                bw.write(delimChar);
+                bw.write(alignment.getLocusName(site));
+                bw.write(delimChar);
+                bw.write(String.valueOf(alignment.getPositionInLocus(site)));
+                bw.write(delimChar);
+                bw.write("+"); //strand
+                bw.write(delimChar);
+                bw.write("NA"); //assembly# not supported
+                bw.write(delimChar);
+                bw.write("NA"); //center unavailable
+                bw.write(delimChar);
+                bw.write("NA"); //protLSID unavailable
+                bw.write(delimChar);
+                bw.write("NA"); //assayLSID unavailable
+                bw.write(delimChar);
+                bw.write("NA"); //panelLSID unavailable
+                bw.write(delimChar);
+                bw.write("NA"); //QCcode unavailable
+                bw.write(delimChar);
                 for (int taxa = 0; taxa < numTaxa; taxa++) {
                     if (diploid == false) {
                         String baseIUPAC = alignment.getBaseAsString(taxa, site);
-                        sb.append(baseIUPAC);
+                        bw.write(baseIUPAC);
                     } else {
                         String[] b = alignment.getBaseAsStringArray(taxa, site);
                         if (b.length == 1) {
-                            sb.append(b[0]);
-                            sb.append(b[0]);
+                            bw.write(b[0]);
+                            bw.write(b[0]);
                         } else {
-                            sb.append(b[0]);
-                            sb.append(b[1]);
+                            bw.write(b[0]);
+                            bw.write(b[1]);
                         }
                     }
                     if (taxa != (numTaxa - 1)) {
-                        sb.append(delimChar);
+                        bw.write(delimChar);
                     }
                 }
-                bw.write(sb.toString());
                 bw.write("\n");
+
+                if (listener != null) {
+                    listener.progress((int) (((double) (site + 1) / (double) numSites) * 100.0), null);
+                }
             }
-            bw.close();
         } catch (Exception e) {
-            System.out.println("Error writing writeToHapmap: " + e);
             e.printStackTrace();
+            throw new IllegalArgumentException("Error writing Hapmap file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {
+                bw.close();
+                fw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     /**
      * Writes multiple alignments to single Hapmap file. Currently no error checking
-     * @param alignment array of alignemnts
+     * @param alignment array of alignments
      * @param diploid
      * @param filename
      * @param delimChar
      */
-    public static void writeToHapmap(Alignment alignment, AlignmentMask mask, boolean diploid, String filename, char delimChar) {
+    public static void writeToHapmap(Alignment alignment, AlignmentMask mask, boolean diploid, String filename, char delimChar, ProgressListener listener) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
 
+        FileWriter fw = null;
+        BufferedWriter bw = null;
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(Utils.addSuffixIfNeeded(filename, ".hmp.txt")), 1000000);
+            fw = new FileWriter(Utils.addSuffixIfNeeded(filename, ".hmp.txt"));
+            bw = new BufferedWriter(fw, 1000000);
             bw.write("rs#");
             bw.write(delimChar);
             bw.write("alleles");
@@ -179,7 +197,8 @@ public class ExportUtils {
             bw.write("QCcode");
             bw.write(delimChar);
             int numTaxa = alignment.getSequenceCount();
-            for (int taxa = 0; taxa < numTaxa; taxa++) {//finish filling out first row
+            for (int taxa = 0; taxa < numTaxa; taxa++) {
+                //finish filling out first row
                 //not completely sure this does what I want, I need to access the
                 //accession name from every alleleBLOB in bytes [52-201] but there
                 //doesn't seem to be a method to access that in Alignment
@@ -192,78 +211,87 @@ public class ExportUtils {
             bw.write("\n");
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
-                StringBuilder sb = new StringBuilder(alignment.getSNPID(site));
-                sb.append(delimChar);
+                bw.write(alignment.getSNPID(site));
+                bw.write(delimChar);
                 byte[] alleles = alignment.getAlleles(site);
                 int numAlleles = alleles.length;
                 //currently does not correctly display if numAlleles > 2
                 if (numAlleles == 0) {
-                    sb.append("NA"); //if data does not exist
+                    bw.write("NA"); //if data does not exist
                 }
                 for (int i = 0; i < Math.min(2, numAlleles); i++) {
                     if (i > 0) {
-                        sb.append('/');
+                        bw.write('/');
                     }
-                    sb.append(alleles[i]); //alleles
+                    bw.write(alignment.getBaseAsString(site, alleles[i])); //alleles
                 }
-                sb.append(delimChar);
-                sb.append(alignment.getLocusName(site));
-                sb.append(delimChar);
-                sb.append(alignment.getPositionInLocus(site));
-                sb.append(delimChar);
-                sb.append("+"); //strand
-                sb.append(delimChar);
-                sb.append("NA"); //assembly# not supported
-                sb.append(delimChar);
-                sb.append("NA"); //center unavailable
-                sb.append(delimChar);
-                sb.append("NA"); //protLSID unavailable
-                sb.append(delimChar);
-                sb.append("NA"); //assayLSID unavailable
-                sb.append(delimChar);
-                sb.append("NA"); //panelLSID unavailable
-                sb.append(delimChar);
-                sb.append("NA"); //QCcode unavailable
-                sb.append(delimChar);
+                bw.write(delimChar);
+                bw.write(alignment.getLocusName(site));
+                bw.write(delimChar);
+                bw.write(String.valueOf(alignment.getPositionInLocus(site)));
+                bw.write(delimChar);
+                bw.write("+"); //strand
+                bw.write(delimChar);
+                bw.write("NA"); //assembly# not supported
+                bw.write(delimChar);
+                bw.write("NA"); //center unavailable
+                bw.write(delimChar);
+                bw.write("NA"); //protLSID unavailable
+                bw.write(delimChar);
+                bw.write("NA"); //assayLSID unavailable
+                bw.write(delimChar);
+                bw.write("NA"); //panelLSID unavailable
+                bw.write(delimChar);
+                bw.write("NA"); //QCcode unavailable
+                bw.write(delimChar);
                 for (int taxa = 0; taxa < numTaxa; taxa++) {
                     if (diploid == false) {
                         String baseIUPAC = alignment.getBaseAsString(taxa, site);
                         if (mask.getMask(taxa, site) == 0x0) {
-                            sb.append(baseIUPAC);
+                            bw.write(baseIUPAC);
                         } else if (mask.getMask(taxa, site) == 0x1) {
-                            sb.append(baseIUPAC.toLowerCase());
+                            bw.write(baseIUPAC.toLowerCase());
                         }
                     } else {
                         String[] b = alignment.getBaseAsStringArray(taxa, site);
                         if (b.length == 1) {
                             if (mask.getMask(taxa, site) == 0x0) {
-                                sb.append(b[0]);
-                                sb.append(b[0]);
+                                bw.write(b[0]);
+                                bw.write(b[0]);
                             } else if (mask.getMask(taxa, site) == 0x1) {
-                                sb.append(b[0].toLowerCase());
-                                sb.append(b[0].toLowerCase());
+                                bw.write(b[0].toLowerCase());
+                                bw.write(b[0].toLowerCase());
                             }
                         } else {
                             if (mask.getMask(taxa, site) == 0x0) {
-                                sb.append(b[0]);
-                                sb.append(b[1]);
+                                bw.write(b[0]);
+                                bw.write(b[1]);
                             } else if (mask.getMask(taxa, site) == 0x1) {
-                                sb.append(b[0].toLowerCase());
-                                sb.append(b[1].toLowerCase());
+                                bw.write(b[0].toLowerCase());
+                                bw.write(b[1].toLowerCase());
                             }
                         }
                     }
                     if (taxa != (numTaxa - 1)) {
-                        sb.append(delimChar);
+                        bw.write(delimChar);
                     }
                 }
-                bw.write(sb.toString());
                 bw.write("\n");
+
+                if (listener != null) {
+                    listener.progress((int) (((double) (site + 1) / (double) numSites) * 100.0), null);
+                }
             }
-            bw.close();
         } catch (Exception e) {
-            System.out.println("Error writing writeToHapmap: " + e);
             e.printStackTrace();
+            throw new IllegalArgumentException("Error writing Hapmap file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {
+                bw.close();
+                fw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

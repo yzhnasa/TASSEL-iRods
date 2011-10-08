@@ -20,6 +20,7 @@ import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 
 import net.maizegenetics.util.ExceptionUtils;
+import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
 
 import org.apache.log4j.Logger;
@@ -147,7 +148,7 @@ public class ImportUtils {
 
     }
 
-    public static Alignment readFromHapmap(String filename) {
+    public static Alignment readFromHapmap(String filename, ProgressListener listener) {
 
         int minPosition = Integer.MAX_VALUE;
         String currLocus = null;
@@ -240,6 +241,10 @@ public class ImportUtils {
 
                 physicalPositions[site] = position;
                 prevPosition = position;
+
+                if (listener != null) {
+                    listener.progress((int) (((double) (site + 1) / (double) numSites) * 80.0), null);
+                }
             }
 
             pool.shutdown();

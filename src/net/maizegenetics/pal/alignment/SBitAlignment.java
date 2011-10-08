@@ -3,6 +3,9 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
@@ -23,12 +26,20 @@ public class SBitAlignment extends AbstractAlignment {
 
     protected SBitAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         super(a, maxNumAlleles, retainRareAlleles);
+        long currentTime = System.currentTimeMillis();
         loadAlleles(a);
+        long prevTime = currentTime;
+        currentTime = System.currentTimeMillis();
+        System.out.println("Time to load alleles: " + ((currentTime - prevTime) / 1000));
     }
 
     protected SBitAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+        long currentTime = System.currentTimeMillis();
         loadAlleles(data);
+        long prevTime = currentTime;
+        currentTime = System.currentTimeMillis();
+        System.out.println("Time to load alleles: " + ((currentTime - prevTime) / 1000));
     }
 
     public static SBitAlignment getInstance(Alignment a) {
@@ -130,35 +141,86 @@ public class SBitAlignment extends AbstractAlignment {
         if (retainsRareAlleles()) {
             myNumDataRows++;
         }
+        int numSeqs = getSequenceCount();
         myData = new OpenBitSet[myNumDataRows][myNumSites];
         for (int al = 0; al < myNumDataRows; al++) {
             for (int s = 0; s < myNumSites; s++) {
-                myData[al][s] = new OpenBitSet(getSequenceCount());
+                myData[al][s] = new OpenBitSet(numSeqs);
             }
         }
-        byte[] cb = new byte[2];
+        //byte[] cb = new byte[2];
+        ExecutorService pool = Executors.newFixedThreadPool(10);
         for (int s = 0; s < myNumSites; s++) {
-            for (int t = 0, n = getSequenceCount(); t < n; t++) {
-                cb[0] = (byte) ((data[t][s] >>> 4) & 0xf);
-                cb[1] = (byte) (data[t][s] & 0xf);
+            pool.execute(new ProcessSite(data, myData, s));
+            /*
+            for (int t = 0; t < numSeqs; t++) {
+            cb[0] = (byte) ((data[t][s] >>> 4) & 0xf);
+            cb[1] = (byte) (data[t][s] & 0xf);
+            for (int i = 0; i < 2; i++) {
+            if (cb[i] != Alignment.UNKNOWN_ALLELE) {
+            boolean isRare = true;
+            for (int j = 0; j < myMaxNumAlleles; j++) {
+            if (cb[i] == myAlleles[s][j]) {
+            myData[j][s].fastSet(t);
+            isRare = false;
+            break;
+            }
+            }
+            if (isRare && retainsRareAlleles()) {
+            myData[myMaxNumAlleles][s].fastSet(t);
+            }
+            }
+            }
+            }
+             */
+        }
+
+        try {
+            pool.shutdown();
+            if (!pool.awaitTermination(120, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("ImportUtils: readFromHapmap: processing threads timed out.");
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("ImportUtils: readFromHapmap: processing threads problem.");
+        }
+
+    }
+
+    private class ProcessSite implements Runnable {
+
+        private OpenBitSet[][] myData;
+        private byte[][] myOrigData;
+        private int mySite;
+
+        public ProcessSite(byte[][] origData, OpenBitSet[][] data, int site) {
+            myData = data;
+            myOrigData = origData;
+            mySite = site;
+        }
+
+        public void run() {
+            int numSeqs = getSequenceCount();
+            byte[] cb = new byte[2];
+            for (int t = 0; t < numSeqs; t++) {
+                cb[0] = (byte) ((myOrigData[t][mySite] >>> 4) & 0xf);
+                cb[1] = (byte) (myOrigData[t][mySite] & 0xf);
                 for (int i = 0; i < 2; i++) {
                     if (cb[i] != Alignment.UNKNOWN_ALLELE) {
                         boolean isRare = true;
                         for (int j = 0; j < myMaxNumAlleles; j++) {
-                            if (cb[i] == myAlleles[s][j]) {
-                                myData[j][s].fastSet(t);
+                            if (cb[i] == myAlleles[mySite][j]) {
+                                myData[j][mySite].fastSet(t);
                                 isRare = false;
                                 break;
                             }
                         }
                         if (isRare && retainsRareAlleles()) {
-                            myData[myMaxNumAlleles][s].fastSet(t);
+                            myData[myMaxNumAlleles][mySite].fastSet(t);
                         }
                     }
                 }
             }
         }
-
     }
 
     private void loadAlleles(Alignment a) {
@@ -167,14 +229,15 @@ public class SBitAlignment extends AbstractAlignment {
         if (retainsRareAlleles()) {
             myNumDataRows++;
         }
+        int numSeqs = getSequenceCount();
         myData = new OpenBitSet[myNumDataRows][myNumSites];
         for (int al = 0; al < myNumDataRows; al++) {
             for (int s = 0; s < myNumSites; s++) {
-                myData[al][s] = new OpenBitSet(getSequenceCount());
+                myData[al][s] = new OpenBitSet(numSeqs);
             }
         }
         for (int s = 0; s < myNumSites; s++) {
-            for (int t = 0, n = getSequenceCount(); t < n; t++) {
+            for (int t = 0; t < numSeqs; t++) {
                 byte[] cb = a.getBaseArray(t, s);
                 for (int i = 0; i < 2; i++) {
                     if (cb[i] != Alignment.UNKNOWN_ALLELE) {
