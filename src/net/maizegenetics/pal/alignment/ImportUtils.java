@@ -206,7 +206,7 @@ public class ImportUtils {
                     columnIndex++;
 
                     if (columnIndex == HAPMAP_SNPID_COLUMN_INDEX) {
-                        snpIDs[site] = input.substring(index, matcher.start());
+                        snpIDs[site] = new String(input.substring(index, matcher.start()));
                     } else if (columnIndex == HAPMAP_POSITION_COLUMN_INDEX) {
                         position = Integer.parseInt(input.substring(index, matcher.start()));
                     } else if (columnIndex == HAPMAP_CHROMOSOME_COLUMN_INDEX) {

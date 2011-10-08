@@ -16,7 +16,6 @@ public class TBitAlignment extends AbstractAlignment {
 
     private OpenBitSet[][] myData;
     private int myNumDataRows;
-    private boolean myIsDirty = false;
 
     protected TBitAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         super(a, maxNumAlleles, retainRareAlleles);

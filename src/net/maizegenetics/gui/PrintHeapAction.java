@@ -29,7 +29,6 @@ public class PrintHeapAction extends AbstractAction implements Runnable {
     private long myLastRecordedHeap = 0;
     private static final NumberFormat myFormat = NumberFormat.getInstance();
 
-
     static {
         myFormat.setMaximumFractionDigits(2);
     }

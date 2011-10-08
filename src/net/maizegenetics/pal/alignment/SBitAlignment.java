@@ -3,10 +3,12 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.UnmodifiableBitSet;
@@ -22,7 +24,6 @@ public class SBitAlignment extends AbstractAlignment {
 
     private OpenBitSet[][] myData;
     private int myNumDataRows;
-    private boolean myIsDirty = false;
 
     protected SBitAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         super(a, maxNumAlleles, retainRareAlleles);
@@ -40,6 +41,39 @@ public class SBitAlignment extends AbstractAlignment {
         long prevTime = currentTime;
         currentTime = System.currentTimeMillis();
         System.out.println("Time to load alleles: " + ((currentTime - prevTime) / 1000));
+    }
+
+    // TESTING ONLY
+    public static SBitAlignment getInstance() {
+
+        int numTaxa = 11319;
+        int numSites = 32043;
+
+        String[] ids = new String[numTaxa];
+        for (int i = 0; i < numTaxa; i++) {
+            ids[i] = "Taxa" + i;
+        }
+        IdGroup idGroup = new SimpleIdGroup(ids);
+
+        byte[][] data = new byte[numTaxa][numSites];
+        Random random = new Random();
+        for (int t = 0; t < numTaxa; t++) {
+            for (int s = 0; s < numSites; s++) {
+                byte temp = (byte) random.nextInt(6);
+                byte value = (byte) ((temp << 4) | temp);
+                data[t][s] = value;
+            }
+        }
+
+        int[] variableSites = new int[numSites];
+        String[] snpIDs = new String[numSites];
+        for (int i = 0; i < numSites; i++) {
+            variableSites[i] = i;
+            snpIDs[i] = "SNPID_" + i;
+        }
+
+        return SBitAlignment.getNucleotideInstance(idGroup, data, null, null, variableSites, Alignment.DEFAULT_MAX_NUM_ALLELES, new Locus[]{new Locus("10", "10", 0, 0, null, null)}, new int[]{0}, snpIDs, true);
+
     }
 
     public static SBitAlignment getInstance(Alignment a) {
