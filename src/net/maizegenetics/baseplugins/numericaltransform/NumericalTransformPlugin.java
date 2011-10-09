@@ -80,7 +80,7 @@ public class NumericalTransformPlugin extends AbstractPlugin {
             fireDataSetReturned(new PluginEvent(output, NumericalTransformPlugin.class));
 
             return output;
-            
+
         } finally {
             fireProgress(100);
         }

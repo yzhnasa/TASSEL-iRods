@@ -14,6 +14,7 @@ import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.prefs.TasselPrefs;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
@@ -28,14 +29,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 
-import java.io.StringWriter;
-
 import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
 
 import org.apache.log4j.Logger;
 
@@ -66,7 +64,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     public DataSet performFunction(DataSet input) {
         java.util.List<Datum> alignInList = input.getDataOfType(Alignment.class);
         if (alignInList.size() < 1) {
-            String gpMessage = "Invalid selection.  Please select sequence or marker alignment.";
+            String gpMessage = "Invalid selection.  Please select genotype alignment.";
             if (isInteractive()) {
                 JOptionPane.showMessageDialog(getParentFrame(), gpMessage);
             } else {
@@ -84,7 +82,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             }
         }
 
-        if (alignOutList.size() == 0) {
+        if (alignOutList.isEmpty()) {
             return null;
         }
 
@@ -95,9 +93,8 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         return output;
     }
 
-    public Datum processDatum(Datum inDatum, boolean isInteractive) {
+    private Datum processDatum(Datum inDatum, boolean isInteractive) {
         Alignment aa = (Alignment) inDatum.getData();
-        Datum outDatum = null;
 
         if (isInteractive) {
             DataFilterAlignmentDialog theDialog = new DataFilterAlignmentDialog(aa, getParentFrame());
@@ -106,38 +103,43 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             if (theDialog.isCanceled()) {
                 return null;
             }
-            int sequenceLength = aa.getSiteCount();
             aa = theDialog.getChromFilteredAlignment();
             start = theDialog.getStart();
             end = theDialog.getEnd();
-//            distFromEnd = theDialog.getDistanceFromEnd();
             minCount = theDialog.getMinimumCount();
             minFreq = theDialog.getMinimumFrequency();
             extractIndels = theDialog.isExtractIndels();
             filterMinorSNPs = theDialog.isRemoveMinorSNPs();
             isUseAllSiteTypes = theDialog.isAllSiteIncluded();
-//             char[] siteType = theDialog.getIncludedPositionTypes();
+            // char[] siteType = theDialog.getIncludedPositionTypes();
             doSlidingHaps = theDialog.isUseSlidingWindow();
             winSize = theDialog.getWindowSize();
             stepSize = theDialog.getStepSize();
 
             theDialog.dispose();
-        } else {
-            if ((start + 1) > aa.getSiteCount()) {
-                start = 0;
-            }
-            if (((end - 1) > aa.getSiteCount()) || (end == 0)) {
-                end = aa.getSiteCount() - 1;
-            }
         }
-        StringWriter sw = new StringWriter();
+
+        if (start >= aa.getSiteCount()) {
+            throw new IllegalArgumentException("FilterAlignmentPlugin: starting site can't be past end of alignment.");
+        }
+        if ((end < 0) || (end < start)) {
+            throw new IllegalArgumentException("FilterAlignmentPlugin: end site can't be less than zero or less that starting site.");
+        }
+
+        if (start < 0) {
+            start = 0;
+        }
+        if (end >= aa.getSiteCount()) {
+            end = aa.getSiteCount() - 1;
+        }
+
         Alignment naa = aa;
 
-        if ((extractIndels) && (aa instanceof Alignment)) {
-            naa = AlignmentUtils.extractIndels(aa, true);
-        } else {
-            naa = aa;
-        }
+        //if ((extractIndels) && (aa instanceof Alignment)) {
+        //    naa = AlignmentUtils.extractIndels(aa, true);
+        //} else {
+        //    naa = aa;
+        //}
 
         if (isUseAllSiteTypes == false) {
             throw new UnsupportedOperationException();
@@ -196,20 +198,19 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         String theName = builder.toString();
         if (doSlidingHaps) {
             //theName = "Sliding_Haps_" + inDatum.getName();
-            theComment = "Sliding Haplotypes.\n" + sw.toString();
+            theComment = "Sliding Haplotypes.\n";
         } else if (extractIndels) {
             //theName = "Indels_" + inDatum.getName();
-            theComment = "Indels\n" + sw.toString();
+            theComment = "Indels\n";
         } else if (filterMinorSNPs) {
             //theName = "Point_" + inDatum.getName();
-            theComment = "Point Poly.\nMinor SNPs Removed\n" + sw.toString();
+            theComment = "Point Poly.\nMinor SNPs Removed\n";
         } else {
-            theComment = "Point Poly.\n" + sw.toString();
+            theComment = "Point Poly.\n";
         }
         start = end = 0;  //reset so that it will test full length unless specifically set to do otherwise.
         if (naa.getSiteCount() != 0) {
-            outDatum = new Datum(theName, naa, theComment);
-            return outDatum;
+            return new Datum(theName, naa, theComment);
         } else {
             if (isInteractive()) {
                 JOptionPane.showMessageDialog(getParentFrame(), "No available SNPs given filter parameters.");
@@ -703,9 +704,6 @@ class DataFilterAlignmentDialog extends JDialog {
     public int getEnd() {
         return end;
     }
-//    public int getDistanceFromEnd() {
-//        return end;
-//    }
 
     public double getMinimumFrequency() {
         return minFreq;
@@ -742,11 +740,6 @@ class DataFilterAlignmentDialog extends JDialog {
         return indelCheckBox.isSelected();
     }
 
-    /*
-    public boolean isConvertToAminoAcid() {
-    return aminoCheckBox.isSelected();
-    }
-     */
     public boolean isRemoveMinorSNPs() {
         return removeMinorCheckBox.isSelected();
     }
@@ -791,14 +784,11 @@ class DataFilterAlignmentDialog extends JDialog {
         myChromFilter.setVisible(true);
         if (!myChromFilter.isCanceled()) {
             chromsSelected = myChromFilter.getChromsSelected();
-//            System.out.println(chromsSelected.length);
             Alignment[] selectedAlignments = new Alignment[chromsSelected.length];
             Alignment[] availableAlignments = theAlignment.getAlignments();
             for (int i = 0; i < chromsSelected.length; i++) {
                 for (int j = 0; j < availableAlignments.length; j++) {
                     if (availableAlignments[j].getLoci().length == 1) {
-//                        System.out.println(chromsSelected[i]);
-//                        System.out.println(availableAlignments[j].getLocusName(0));
                         if (chromsSelected[i].equals(availableAlignments[j].getLocusName(0))) {
                             selectedAlignments[i] = availableAlignments[j];
                         }

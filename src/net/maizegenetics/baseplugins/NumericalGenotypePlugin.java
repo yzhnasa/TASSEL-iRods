@@ -7,10 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.SimplePhenotype;
@@ -76,33 +73,14 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
         int seqCount = input.getSequenceCount();
         int siteCount = input.getSiteCount();
 
-        Map[] alleleCounts = new Map[siteCount];
-
+        byte[][] alleleCounts = new byte[siteCount][];
         for (int i = 0; i < siteCount; i++) {
-
-            Map charCount = new HashMap();
-            for (int j = 0; j < seqCount; j++) {
-
-                byte current = input.getBase(j, i);
-                if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                    Integer count = (Integer) charCount.get(current);
-                    if (count != null) {
-                        charCount.put(current, new Integer(count.intValue() + 1));
-                    } else {
-                        charCount.put(current, 1);
-                    }
-
-                }
-
-            }
-
-            alleleCounts[i] = charCount;
-
+            alleleCounts[i] = input.getAlleles(i);
         }
 
         int columnCount = 0;
         for (int i = 0; i < siteCount; i++) {
-            columnCount = columnCount + alleleCounts[i].size();
+            columnCount = columnCount + alleleCounts[i].length;
         }
 
         double[][] pcValues = new double[seqCount][columnCount];
@@ -111,59 +89,35 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
         int offset = 0;
         for (int i = 0; i < siteCount; i++) {
 
-            Map currentHash = alleleCounts[i];
-            int currentSize = currentHash.size();
-            Character[] sortChars = new Character[currentSize];
-            Iterator itr = currentHash.keySet().iterator();
-            int count = 0;
-            while (itr.hasNext()) {
-                sortChars[count++] = (Character) itr.next();
-            }
-
-            boolean change = true;
-            while (change) {
-
-                change = false;
-
-                for (int k = 0; k < currentSize - 1; k++) {
-                    Integer first = (Integer) currentHash.get(sortChars[k]);
-                    Integer second = (Integer) currentHash.get(sortChars[k + 1]);
-                    if (first.compareTo(second) > 0) {
-                        Character temp = sortChars[k];
-                        sortChars[k] = sortChars[k + 1];
-                        sortChars[k + 1] = temp;
-                        change = true;
-                    }
-                }
-
-            }
-
+            int currentSize = alleleCounts[i].length;
             for (int k = 0; k < currentSize; k++) {
                 traitNames.add(new Trait("S" + i, false, Trait.TYPE_DATA));
-                currentHash.put(sortChars[k], k);
             }
 
-
-
             for (int j = 0; j < seqCount; j++) {
-                byte current = input.getBase(j, i);
-                if (current == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                byte[] current = input.getBaseArray(j, i);
+                if ((current[0] == Alignment.UNKNOWN_ALLELE) && (current[1] == Alignment.UNKNOWN_ALLELE)) {
                     for (int k = 0; k < currentSize; k++) {
                         pcValues[j][k + offset] = Double.NaN;
                     }
                 } else {
-                    int position = ((Integer) currentHash.get(current)).intValue();
-                    pcValues[j][position + offset] = 1.0;
+                    for (int k = 0; k < currentSize; k++) {
+                        if (current[0] == alleleCounts[i][k]) {
+                            pcValues[j][currentSize - k - 1 + offset] = 1.0;
+                        }
+                        if (current[1] == alleleCounts[i][k]) {
+                            pcValues[j][currentSize - k - 1 + offset] = 1.0;
+                        }
+                    }
                 }
+
             }
 
             offset = offset + currentSize;
 
         }
 
-        //SimplePhenotype result = new SimplePhenotype(input, pcValues, new String[]{"Trait", "Env"}, traitNames);
-        SimplePhenotype result = new SimplePhenotype(input.getIdGroup(), traitNames, pcValues);
-        return result;
+        return new SimplePhenotype(input.getIdGroup(), traitNames, pcValues);
 
     }
 
@@ -173,50 +127,20 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
         int siteCount = input.getSiteCount();
 
         double[][] pcValues = new double[seqCount][siteCount];
-        //String[] traitNames = new String[siteCount];
         List<Trait> traitNames = new ArrayList<Trait>();
 
         for (int i = 0; i < siteCount; i++) {
 
-            //traitNames[i] = "S" + i;
             traitNames.add(new Trait("S" + i, false, Trait.TYPE_DATA));
 
-            Map charCount = new HashMap();
-            char highestChar = 'z';
-            for (int j = 0; j < seqCount; j++) {
-
-                byte current = input.getBase(j, i);
-                if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                    Integer count = (Integer) charCount.get(current);
-                    if (count != null) {
-                        charCount.put(current, new Integer(count.intValue() + 1));
-                    } else {
-                        charCount.put(current, 1);
-                    }
-
-                }
-
-            }
-
-            Iterator itr = charCount.keySet().iterator();
-            Integer highestCount = -1;
-            while (itr.hasNext()) {
-                char currentChar = ((Character) itr.next()).charValue();
-                Integer currentCount = (Integer) charCount.get(currentChar);
-                if (currentCount.compareTo(highestCount) > 0) {
-                    highestCount = currentCount;
-                    highestChar = currentChar;
-                }
-
-            }
-
+            byte[] allelesByFreq = input.getAlleles(i);
 
             for (int j = 0; j < seqCount; j++) {
-                byte current = input.getBase(j, i);
-                if (current == Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                    pcValues[j][i] = Double.NaN;
-                } else if (current == highestChar) {
+                byte[] current = input.getBaseArray(j, i);
+                if ((current[0] == allelesByFreq[0]) || (current[1] == allelesByFreq[0])) {
                     pcValues[j][i] = 0.0;
+                } else if ((current[0] == Alignment.UNKNOWN_ALLELE) && (current[1] == Alignment.UNKNOWN_ALLELE)) {
+                    pcValues[j][i] = Double.NaN;
                 } else {
                     pcValues[j][i] = 1.0;
                 }
@@ -224,7 +148,6 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        //return new SimplePhenotype(input, pcValues, traitNames);
         return new SimplePhenotype(input.getIdGroup(), traitNames, pcValues);
 
     }
