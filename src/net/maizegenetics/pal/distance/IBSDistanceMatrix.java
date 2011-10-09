@@ -83,10 +83,10 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 
         if ((lastCachedRow == null) || (s1 != lastCachedRowNum)) {
             lastCachedRowNum = s1;
-            lastCachedRow = theAlignment.getBaseRange(s1, 0, siteCount - 1);
+            lastCachedRow = theAlignment.getBaseRange(s1, 0, siteCount);
         }
 
-        byte[] s2Row = theAlignment.getBaseRange(s2, 0, siteCount - 1);
+        byte[] s2Row = theAlignment.getBaseRange(s2, 0, siteCount);
 
         double[] params = new double[2];
         int numIdentical = 0, numDifferent = 0;

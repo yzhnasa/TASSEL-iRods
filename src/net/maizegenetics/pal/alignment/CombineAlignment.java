@@ -141,7 +141,7 @@ public class CombineAlignment extends AbstractAlignment {
     public byte[] getBaseRange(int taxon, int startSite, int endSite) {
 
         int siteCount = getSiteCount();
-        if ((startSite == 0) && (endSite == siteCount - 1)) {
+        if ((startSite == 0) && (endSite == siteCount)) {
             byte[] result = new byte[siteCount];
             int count = 0;
             for (int i = 0; i < myAlignments.length; i++) {

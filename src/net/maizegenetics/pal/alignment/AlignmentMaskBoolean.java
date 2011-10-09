@@ -40,7 +40,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align) {
         String name = align.getIdGroup().getIdentifier(0).getName() + " Reference";
-        return getInstanceCompareReference(align, align.getBaseRange(0, 0, align.getSiteCount() - 1), name);
+        return getInstanceCompareReference(align, align.getBaseRange(0, 0, align.getSiteCount()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, Identifier id) {
@@ -49,7 +49,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
         String name = id.getName() + " Reference";
-        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount() - 1), name);
+        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, int index) {
@@ -57,7 +57,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown index: " + index);
         }
         String name = align.getTaxaName(index) + " Reference";
-        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount() - 1), name);
+        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, String id) {
@@ -65,7 +65,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
         if (index == -1) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount() - 1), id + " Reference");
+        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount()), id + " Reference");
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, byte[] ref, String name) {

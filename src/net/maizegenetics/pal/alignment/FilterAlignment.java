@@ -250,7 +250,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     public byte[] getBaseRange(int taxon, int startSite, int endSite) {
 
-        int siteCount = endSite - startSite + 1;
+        int siteCount = endSite - startSite;
         byte[] result = new byte[siteCount];
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {

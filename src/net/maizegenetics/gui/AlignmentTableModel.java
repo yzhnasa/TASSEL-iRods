@@ -46,6 +46,8 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         myAlignment = alignment;
 
+        myHorizontalCenter = myAlignment.getSiteCount() / 2;
+
         setHorizontalPageSize(horizontalPageSize);
 
     }
