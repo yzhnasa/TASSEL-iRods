@@ -306,7 +306,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
             } else if (myTableModel.getColumnNameType().equals(AlignmentTableModel.COLUMN_NAME_TYPE.siteNumber)) {
                 positionType = "site number";
             }
-            JOptionPane.showMessageDialog(this.getParent(), "Invalid " + positionType + ".");
+            JOptionPane.showMessageDialog(this.getParent(), "Invalid " + positionType + ": " + searchField.getText().trim());
         }
     }
 

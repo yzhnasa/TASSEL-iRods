@@ -206,7 +206,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     public void adjustPosition(int position) {
 
         if (isPhysicalPosition()) {
-            position = myAlignment.getSiteOfPhysicalPosition(position, null);
+            position = myAlignment.getSiteOfPhysicalPosition(position, myAlignment.getLocus(0));
             if (position < 0) {
                 position = -position;
             }
