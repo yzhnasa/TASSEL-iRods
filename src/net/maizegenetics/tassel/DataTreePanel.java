@@ -339,9 +339,9 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                             if (masks.size() != 0) {
                                 AlignmentMask[] masksArray = new AlignmentMask[masks.size()];
                                 masks.toArray(masksArray);
-                                seqViewer = new SeqViewerPanel(align, masksArray, getThis());
+                                seqViewer = SeqViewerPanel.getInstance(align, masksArray, getThis());
                             } else {
-                                seqViewer = new SeqViewerPanel(align, getThis());
+                                seqViewer = SeqViewerPanel.getInstance(align, getThis());
                             }
                             myTASSELMainFrame.mainDisplayPanel.add(seqViewer, BorderLayout.CENTER);
                         } else if (book.getData() instanceof AlignmentMask) {
@@ -675,6 +675,14 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                     myTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) parent).getPath()));
                     myTree.scrollPathToVisible(new TreePath(((DefaultMutableTreeNode) parent).getPath()));
                     myTreeSelectionListener.valueChanged(null);
+                }
+            } catch (Exception e) {
+                // do nothing
+            }
+
+            try {
+                if (((Datum) currentNode.getUserObject()).getData() instanceof Alignment) {
+                    SeqViewerPanel.removeInstance((Alignment) ((Datum) currentNode.getUserObject()).getData());
                 }
             } catch (Exception e) {
                 // do nothing

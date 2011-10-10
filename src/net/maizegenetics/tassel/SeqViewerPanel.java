@@ -16,6 +16,9 @@ import java.awt.event.MouseEvent;
 
 import java.net.URL;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -55,6 +58,7 @@ import net.maizegenetics.plugindef.Datum;
  */
 public class SeqViewerPanel extends JPanel implements ComponentListener, TableModelListener {
 
+    private static final Map INSTANCES = new WeakHashMap();
     private static final int ROW_HEADER_WIDTH = 150;
     private static final int SCROLL_BAR_WIDTH = 25;
     private static final int TABLE_COLUMN_WIDTH = 10;
@@ -81,11 +85,15 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
     private final AlignmentMask[] myMasks;
     private final DataTreePanel myDataTreePanel;
 
-    public SeqViewerPanel(Alignment alignment, DataTreePanel dataTreePanel) {
+    private SeqViewerPanel(Alignment alignment, DataTreePanel dataTreePanel) {
         this(alignment, null, dataTreePanel);
     }
 
-    public SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel) {
+    private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel) {
+        this(alignment, null, dataTreePanel, -1);
+    }
+
+    private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel, int sliderPosition) {
 
         setLayout(new BorderLayout());
         myAlignment = alignment;
@@ -115,7 +123,11 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         mySlider.setValue(min + (max - min) / 2);
          */
 
-        myTableModel.adjustPositionToCenter();
+        if (sliderPosition == -1) {
+            myTableModel.adjustPositionToCenter();
+        } else {
+            myTableModel.adjustPositionToSite(sliderPosition);
+        }
         myTableModel.addTableModelListener(this);
         myTable = new JTable(myTableModel);
         myTable.setUI(new MyTableUI());
@@ -148,13 +160,72 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
 
         if (multipleAlignments) {
             myTableModel.setColumnNameType(AlignmentTableModel.COLUMN_NAME_TYPE.siteNumber);
-            updateSliderPhysicalPositions();
+            updateSliderSiteNumbers();
         } else {
             myTableModel.setColumnNameType(AlignmentTableModel.COLUMN_NAME_TYPE.physicalPosition);
             updateSliderPhysicalPositions();
         }
 
         initMenu();
+    }
+
+    public static SeqViewerPanel getInstance(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel) {
+        Object[] instance = (Object[]) INSTANCES.get(alignment);
+        SeqViewerPanel result = null;
+        if (instance == null) {
+            result = new SeqViewerPanel(alignment, masks, dataTreePanel);
+            saveInstance(result, alignment, masks);
+        } else {
+
+            int arraySize = 1;
+            if (masks != null) {
+                arraySize = arraySize + masks.length;
+            }
+            if (instance.length != arraySize) {
+                result = new SeqViewerPanel(alignment, masks, dataTreePanel, ((SeqViewerPanel) instance[0]).getSliderPositionAsSite());
+                saveInstance(result, alignment, masks);
+            } else {
+                if (masks != null) {
+                    for (int i = 0; i < masks.length; i++) {
+                        if (masks[i] != instance[i + 1]) {
+                            result = new SeqViewerPanel(alignment, masks, dataTreePanel, ((SeqViewerPanel) instance[0]).getSliderPositionAsSite());
+                            saveInstance(result, alignment, masks);
+                            break;
+                        }
+                    }
+                }
+                result = (SeqViewerPanel) instance[0];
+            }
+
+        }
+        return result;
+    }
+
+    private static void saveInstance(SeqViewerPanel panel, Alignment alignment, AlignmentMask[] masks) {
+        int arraySize = 1;
+        if (masks != null) {
+            arraySize = arraySize + masks.length;
+        }
+        Object[] instance = new Object[arraySize];
+        instance[0] = panel;
+        if (masks != null) {
+            for (int i = 0; i < masks.length; i++) {
+                instance[i + 1] = masks[i];
+            }
+        }
+        INSTANCES.put(alignment, instance);
+    }
+
+    public static void removeInstance(Alignment alignment) {
+        try {
+            INSTANCES.remove(alignment);
+        } catch (Exception e) {
+            // do nothing
+        }
+    }
+
+    public static SeqViewerPanel getInstance(Alignment alignment, DataTreePanel dataTreePanel) {
+        return getInstance(alignment, null, dataTreePanel);
     }
 
     private void initMenu() {
@@ -382,6 +453,18 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
 
         return mySliderPane;
 
+    }
+
+    public int getSliderPosition() {
+        return mySlider.getValue();
+    }
+
+    public int getSliderPositionAsSite() {
+        return myTableModel.getHorizontalCenter();
+    }
+
+    public Alignment getAlignment() {
+        return myAlignment;
     }
 
     private void updateSliderPhysicalPositions() {

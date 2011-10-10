@@ -216,6 +216,10 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
     }
 
+    public void adjustPositionToSite(int site) {
+        adjustPositionInternal(site);
+    }
+
     public void adjustPositionToCenter() {
         adjustPositionInternal(myAlignment.getSiteCount() / 2);
     }
