@@ -30,12 +30,14 @@ import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
 import net.maizegenetics.baseplugins.FilterTaxaAlignmentPlugin;
 import net.maizegenetics.baseplugins.FilterTraitsPlugin;
 import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
+import net.maizegenetics.baseplugins.FlapjackLoadPlugin;
 import net.maizegenetics.baseplugins.GenotypeImputationPlugin;
 import net.maizegenetics.baseplugins.IntersectionAlignmentPlugin;
 import net.maizegenetics.baseplugins.KinshipPlugin;
 import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
 import net.maizegenetics.baseplugins.MLMPlugin;
+import net.maizegenetics.baseplugins.PlinkLoadPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
@@ -219,6 +221,26 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-r")) {
                     String phenotypeFile = args[index++].trim();
                     loadFile(phenotypeFile, FileLoadPlugin.TasselFileType.Phenotype);
+                } else if (current.equalsIgnoreCase("-plink")) {
+                    String pedFile = args[index++].trim();
+                    String mapFile = args[index++].trim();
+                    PlinkLoadPlugin plugin = new PlinkLoadPlugin(myMainFrame, false);
+                    plugin.setPedFile(pedFile);
+                    plugin.setMapFile(mapFile);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-flapjack")) {
+                    String genoFile = args[index++].trim();
+                    String mapFile = args[index++].trim();
+                    FlapjackLoadPlugin plugin = new FlapjackLoadPlugin(myMainFrame, false);
+                    plugin.setGenoFile(genoFile);
+                    plugin.setMapFile(mapFile);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-fasta")) {
+                    String fastaFile = args[index++].trim();
+                    loadFile(fastaFile, FileLoadPlugin.TasselFileType.Fasta);
+                } else if (current.equalsIgnoreCase("-geneticMap")) {
+                    String geneticMapFile = args[index++].trim();
+                    loadFile(geneticMapFile, FileLoadPlugin.TasselFileType.GeneticMap);
                 } else if (current.equalsIgnoreCase("-taxaJoinStrict")) {
                     String temp = args[index++].trim();
                     boolean strict = true;

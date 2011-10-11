@@ -46,8 +46,8 @@ public class SBitAlignment extends AbstractAlignment {
     // TESTING ONLY
     public static SBitAlignment getInstance() {
 
-        int numTaxa = 11319;
-        int numSites = 32043;
+        int numTaxa = 11321;
+        int numSites = 72425;
 
         String[] ids = new String[numTaxa];
         for (int i = 0; i < numTaxa; i++) {

@@ -191,7 +191,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             byte rowMinor = (byte) theAlignment.getMinorAllele(r);
             byte colMajor = (byte) theAlignment.getMajorAllele(c);
             byte colMinor = (byte) theAlignment.getMinorAllele(c);
-            double currentProgress = 100 * r * r / (theAlignment.getSiteCount() * theAlignment.getSiteCount());
+            int currentProgress = 100 * currTest / totalTests;
             fireProgress((int) currentProgress);
             contig = new int[2][2];
             if ((rowMinor == Alignment.UNKNOWN_ALLELE) || (colMinor == Alignment.UNKNOWN_ALLELE)) {

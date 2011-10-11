@@ -13,7 +13,6 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.maizegenetics.pal.ids.IdGroup;
@@ -180,7 +179,7 @@ public class ImportUtils {
 
         BufferedReader fileIn = null;
         try {
-            ExecutorService pool = Executors.newFixedThreadPool(10);
+            ExecutorService pool = Executors.newFixedThreadPool(20);
 
             fileIn = Utils.getBufferedReader(filename, 1000000);
             String[] header = WHITESPACE_PATTERN.split(fileIn.readLine());
@@ -195,49 +194,31 @@ public class ImportUtils {
                 lineInFile++;
 
                 String input = fileIn.readLine();
-                Matcher matcher = WHITESPACE_PATTERN.matcher(input);
-
+                String[] tokens = WHITESPACE_PATTERN.split(input);
 
                 int position = 0;
 
-                int index = 0;
-                int columnIndex = -1;
-                while (matcher.find()) {
-                    columnIndex++;
-
-                    if (columnIndex == HAPMAP_SNPID_COLUMN_INDEX) {
-                        snpIDs[site] = new String(input.substring(index, matcher.start()));
-                    } else if (columnIndex == HAPMAP_POSITION_COLUMN_INDEX) {
-                        position = Integer.parseInt(input.substring(index, matcher.start()));
-                    } else if (columnIndex == HAPMAP_CHROMOSOME_COLUMN_INDEX) {
-                        String temp = input.substring(index, matcher.start());
-                        if (currLocus == null) {
-                            lociOffsets.add(site);
-                            currLocus = temp;
-                            minPosition = position;
-                            prevPosition = -1;
-                        } else if (!temp.equals(currLocus)) {
-                            loci.add(new Locus(currLocus, currLocus, minPosition, prevPosition, null, null));
-                            lociOffsets.add(site);
-                            currLocus = temp;
-                            minPosition = position;
-                            prevPosition = -1;
-                        }
-                    }
-
-                    index = matcher.end();
-
-                    if (columnIndex == (NUM_HAPMAP_NON_TAXA_HEADERS - 1)) {
-                        break;
-                    }
-
+                snpIDs[site] = new String(tokens[HAPMAP_SNPID_COLUMN_INDEX]);
+                position = Integer.parseInt(tokens[HAPMAP_POSITION_COLUMN_INDEX]);
+                String temp = new String(tokens[HAPMAP_CHROMOSOME_COLUMN_INDEX]);
+                if (currLocus == null) {
+                    lociOffsets.add(site);
+                    currLocus = temp;
+                    minPosition = position;
+                    prevPosition = -1;
+                } else if (!temp.equals(currLocus)) {
+                    loci.add(new Locus(currLocus, currLocus, minPosition, prevPosition, null, null));
+                    lociOffsets.add(site);
+                    currLocus = temp;
+                    minPosition = position;
+                    prevPosition = -1;
                 }
 
                 if (position < prevPosition) {
                     throw new IllegalStateException("Sites are not properly sorted for chromosome: " + currLocus + " at " + position + " and " + prevPosition);
                 }
 
-                pool.execute(new ProcessLine(theData, matcher, input, site, index, numTaxa, lineInFile));
+                pool.execute(ProcessLineFromHapmap.getInstance(theData, tokens, site, numTaxa, lineInFile));
 
                 physicalPositions[site] = position;
                 prevPosition = position;
@@ -289,42 +270,6 @@ public class ImportUtils {
             }
         }
 
-    }
-
-    private static class ProcessLine implements Runnable {
-
-        private byte[][] myData;
-        private Matcher myMatcher;
-        private String myLine;
-        private int mySite;
-        private int myIndex;
-        private int myNumTaxa;
-        private int myLineInFile;
-
-        public ProcessLine(byte[][] data, Matcher matcher, String line, int site, int index, int numTaxa, int lineInFile) {
-            myData = data;
-            myMatcher = matcher;
-            myLine = line;
-            mySite = site;
-            myIndex = index;
-            myNumTaxa = numTaxa;
-            myLineInFile = lineInFile;
-        }
-
-        public void run() {
-            int columnIndex = -1;
-            while (myMatcher.find()) {
-                columnIndex++;
-                try {
-                    myData[columnIndex][mySite] = NucleotideAlignmentConstants.getNucleotideDiploidByte(myLine.substring(myIndex, myMatcher.start()));
-                } catch (IndexOutOfBoundsException ex) {
-                    throw new IllegalStateException("Number of Taxa: " + myNumTaxa + " does not match number of values at line in file: " + myLineInFile + " site: " + mySite);
-                }
-                myIndex = myMatcher.end();
-            }
-            columnIndex++;
-            myData[columnIndex][mySite] = NucleotideAlignmentConstants.getNucleotideDiploidByte(myLine.substring(myIndex));
-        }
     }
 
     /**

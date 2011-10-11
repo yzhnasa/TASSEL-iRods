@@ -36,9 +36,9 @@ public class PluginProgressUnit extends JPanel implements PluginListener {
     private final int LABEL_WIDTH = 20;
     private final JProgressBar myProgress;
     private final JButton myCancelButton;
-    private final JLabel myComment;
     private final Plugin myPlugin;
     private final Plugin myCancelPlugin;
+    private int myCurrentValue = 0;
 
     public PluginProgressUnit(Plugin plugin, int level) {
         this(plugin, level, true);
@@ -117,13 +117,6 @@ public class PluginProgressUnit extends JPanel implements PluginListener {
 
         add(top);
 
-        myComment = getComment(myPlugin);
-        if (myComment != null) {
-            JPanel commentPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            commentPane.add(myComment);
-            add(commentPane);
-        }
-
         myPlugin.addListener(this);
 
     }
@@ -170,23 +163,6 @@ public class PluginProgressUnit extends JPanel implements PluginListener {
         }
     }
 
-    private JLabel getComment(Plugin plugin) {
-
-        try {
-            //if (plugin instanceof FileLoadPlugin) {
-            //    String filename = ((FileLoadPlugin) plugin).getOpenFiles()[0];
-            //    String label = Utils.getFilename(filename);
-            //    JLabel result = new JLabel("   " + label);
-            //    result.setToolTipText(filename);
-            //    return result;
-            //}
-        } catch (Exception e) {
-        }
-
-        return null;
-
-    }
-
     public void dataSetReturned(PluginEvent event) {
         setProgress(100);
     }
@@ -202,6 +178,10 @@ public class PluginProgressUnit extends JPanel implements PluginListener {
     }
 
     private void setProgress(int num) {
+        if (myCurrentValue == num) {
+            return;
+        }
+        myCurrentValue = num;
         myProgress.setValue(num);
         if (num == 100) {
             ProgressPanel.getInstance().removeProgressUnit(this);
