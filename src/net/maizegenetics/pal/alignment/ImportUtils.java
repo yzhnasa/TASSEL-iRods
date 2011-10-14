@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
 public class ImportUtils {
 
     private static final Logger myLogger = Logger.getLogger(ImportUtils.class);
-    private static final Pattern WHITESPACE_PATTERN = Pattern.compile(" +\\t");
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("[ +\\t]");
     public static final int NUM_HAPMAP_NON_TAXA_HEADERS = 11;
     public static final int HAPMAP_SNPID_COLUMN_INDEX = 0;
     public static final int HAPMAP_CHROMOSOME_COLUMN_INDEX = 2;
