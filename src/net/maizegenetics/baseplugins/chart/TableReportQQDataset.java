@@ -18,6 +18,7 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     double[][] theData;
     String[] seriesNames;
     String xName;
+    String myTrait;
     int numberYAxes;
 
     Object[] myColumnNames;
@@ -31,16 +32,23 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
 
     int myPValueColumnIndex = -1;
     int myPositionColumnIndex = -1;
+    int myTraitColumnIndex = -1;
     int myMarkerColumnIndex = -1;
     int myNumRows;
+    int myStartIndex;
+    int myEndIndex;
 
-    // 1 = skip first row
-    // 0 = don't skip
-    int skipFirstRow;
-
-    public TableReportQQDataset(TableReport theTable) {
+    public TableReportQQDataset(TableReport table) {
         numberYAxes=1;
-        setTableReport(theTable);
+        setTableReport(table);
+    }
+
+    public TableReportQQDataset(TableReport table, int startIndex, int endIndex) {
+        numberYAxes = 1;
+        myStartIndex = startIndex;
+        myEndIndex = endIndex + 1;
+        myNumRows = endIndex - startIndex;
+        setTableReport(table);
     }
 
     public int getItemCount(int parm1) {
@@ -84,18 +92,6 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         //    throw new java.lang.UnsupportedOperationException("Method getSeriesName() not yet implemented.");
     }
 
-    // MLM analysis produces extra blank first row, method to compensate
-    private void setNumRows(TableReport myTableReport) {
-        if (((Double)myTableReport.getValueAt(0, myPValueColumnIndex)).doubleValue() > Double.NEGATIVE_INFINITY) {
-            skipFirstRow = 0;
-            myNumRows = myTableReport.getRowCount();
-        }
-        else {
-            skipFirstRow = 1;
-            myNumRows = myTableReport.getRowCount() - 1;
-        }
-    }
-
     private void setPValueColumnIndex() {
         for (int i = 0; i < myColumnNames.length; i++) {
             if (myColumnNames[i].equals("p") || myColumnNames[i].equals("marker_p")) {
@@ -115,6 +111,15 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         }
     }
 
+    private void setTraitColumnIndex() {
+        for (int i = 0; i < myColumnNames.length; i++) {
+            if (myColumnNames[i].equals("Trait")) {
+                myTraitColumnIndex = i;
+                return;
+            }
+        }
+    }
+
     private void setMarkerColumnIndex() {
         for (int i = 0; i < myColumnNames.length; i++) {
             if (myColumnNames[i].equals("Marker")) {
@@ -124,9 +129,13 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         }
     }
 
+    private void setTrait(TableReport table) {
+        myTrait = (String)table.getValueAt(myStartIndex, myTraitColumnIndex);
+    }
+
     private void setPValues(TableReport myTableReport) {
         for (int i = 0; i < myPValues.length; i++) {
-            myPValues[i] = ((Double)myTableReport.getValueAt(i + skipFirstRow, myPValueColumnIndex)).doubleValue();
+            myPValues[i] = ((Double)myTableReport.getValueAt(myStartIndex + i, myPValueColumnIndex)).doubleValue();
             myLookupTable.put(-Math.log10(myPValues[i]), i);
         }
     }
@@ -134,19 +143,19 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     private void setPositions(TableReport myTableReport) {
         if (myColumnNames[myPositionColumnIndex].equals("Locus_pos")) {
             for (int i = 0; i < myPositions.length; i++) {
-                myPositions[i] = ((Integer)myTableReport.getValueAt(i + skipFirstRow, myPositionColumnIndex)).intValue();
+                myPositions[i] = ((Integer)myTableReport.getValueAt(myStartIndex + i, myPositionColumnIndex)).intValue();
             }
         }
         else if (myColumnNames[myPositionColumnIndex].equals("Site")) {
             for (int i = 0; i < myPositions.length; i++) {
-                myPositions[i] = Integer.valueOf((String)myTableReport.getValueAt(i + skipFirstRow, myPositionColumnIndex));
+                myPositions[i] = Integer.valueOf((String)myTableReport.getValueAt(myStartIndex + i, myPositionColumnIndex));
             }
         }
     }
 
     private void setMarkers(TableReport myTableReport) {
         for (int i = 0; i < myMarkers.length; i++) {
-            myMarkers[i] = ((String)myTableReport.getValueAt(i + skipFirstRow, myMarkerColumnIndex));
+            myMarkers[i] = ((String)myTableReport.getValueAt(myStartIndex + i, myMarkerColumnIndex));
         }
     }
 
@@ -189,7 +198,8 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     public void setTableReport(TableReport theTable) {
         myColumnNames = theTable.getTableColumnNames();
         setPValueColumnIndex();
-        setNumRows(theTable);
+        setPositionColumnIndex();
+        setMarkerColumnIndex();
         myPValues = new double[myNumRows];
         myLogPValues = new double[myNumRows];
         myExpectedPValues = new double[myNumRows];
@@ -198,14 +208,14 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         myMarkers = new String[myNumRows];
         myLookupTable = new Hashtable(myNumRows);
         setPValues(theTable);
+        setPositions(theTable);
+        setMarkers(theTable);
         sortPValues();
         setLogPValues();
         setExpectedPValues();
         setLogExpectedPValues();
-        setPositionColumnIndex();
-        setPositions(theTable);
-        setMarkerColumnIndex();
-        setMarkers(theTable);
+        setTraitColumnIndex();
+        setTrait(theTable);
         theData = new double[myNumRows][2];
         for (int i = 0; i < myNumRows; i++) {
             try {
@@ -218,6 +228,6 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         }
         seriesNames=new String[1];
         xName= "Expected -Log(P-Value)";
-        seriesNames[0]="-Log(P-Value)";
+        seriesNames[0] = myTrait;
     }
 }

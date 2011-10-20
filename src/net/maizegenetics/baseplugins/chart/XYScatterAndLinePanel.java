@@ -7,6 +7,7 @@ package net.maizegenetics.baseplugins.chart;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.util.ArrayList;
 import javax.swing.JComponent;
 import net.maizegenetics.pal.report.TableReport;
 import org.jfree.chart.ChartFactory;
@@ -20,6 +21,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.function.Function2D;
 import org.jfree.data.function.LineFunction2D;
 import org.jfree.data.general.DatasetUtilities;
@@ -32,18 +34,25 @@ import org.jfree.data.xy.XYDataset;
 public class XYScatterAndLinePanel extends BasicChartPanel {
 
     ChartPanel myChartPanel;
-    TableReportQQDataset dataset;
+    TableReportQQDataset[] datasets;
 
     TableReport myTableReport;
 
-    public XYScatterAndLinePanel(TableReport theTable) {
-        myTableReport = theTable;
+    public XYScatterAndLinePanel(TableReport table) {
+        myTableReport = table;
+        ArrayList<Integer> indexes = splitTable(table);
+        datasets = new TableReportQQDataset[indexes.size() / 2];
+        for (int i = 0; i < datasets.length; i++) {
+            datasets[i] = new TableReportQQDataset(table, indexes.get(i * 2).intValue(), indexes.get(i * 2 + 1).intValue());
+        }
         try {
-            dataset = new TableReportQQDataset(theTable);
-            chart = createChart(dataset);
+            chart = createChart(datasets[0]);
             myChartPanel = new ChartPanel(chart);
-            myChartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
-            myTableReport = theTable;
+            myChartPanel.setPreferredSize(new java.awt.Dimension(750, 400));
+            for (int i = 1; i < datasets.length; i++) {
+                addSeries(chart.getXYPlot(), datasets[i], i);
+            }
+            createLine(chart.getXYPlot(), datasets[0], 0, Color.BLACK);
             jbInit();
         }
         catch(Exception ex) {
@@ -55,7 +64,6 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
         this.add(myChartPanel, BorderLayout.CENTER);
     }
 
-
     public JFreeChart createChart(TableReportQQDataset dataset) {
         String name="Please select numeric variables";
         String xName="X";
@@ -63,7 +71,7 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
         String y2Name="Y2";
         if(dataset!=null) {
             xName=dataset.getXName();
-            y1Name=dataset.getSeriesName(0);
+            y1Name="-Log(P-Value)";
             name=xName+" vs. "+y1Name;
             if(dataset.getSeriesCount()==2) {
                 y2Name=dataset.getSeriesName(1);
@@ -81,7 +89,6 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
         );
         chart.getXYPlot().setForegroundAlpha(0.75f);
         chart.getXYPlot().getRenderer().setToolTipGenerator(new XYAndLineToolTipGenerator());
-        createLine(chart.getXYPlot(), dataset, 0, Color.BLACK);
         return chart;
     }
 
@@ -102,6 +109,16 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
         setAxis(plot, max, min);
     }
 
+    private void addSeries(XYPlot plot, XYDataset data, int index) {
+        plot.setDataset(index, data);
+        XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer();
+//        renderer2.setSeriesPaint(0);
+        renderer2.setBaseShapesVisible(true);
+        renderer2.setBaseLinesVisible(false);
+        renderer2.setToolTipGenerator(new XYAndLineToolTipGenerator());
+        plot.setRenderer(index, renderer2);
+    }
+
     private void setAxis(XYPlot plot, double domainMax, double domainMin) {
         ValueAxis xAxis = plot.getDomainAxis();
         ValueAxis yAxis = plot.getRangeAxis();
@@ -115,15 +132,28 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
         plot.setRangeAxis(yAxis);
     }
 
-//    private void setToolTips(XYPlot plot, XYDataset data) {
-//        XYAndLineToolTipGenerator tipGenerator = new XYAndLineToolTipGenerator();
-//        XYItemRenderer itemRenderer = new StandardXYItemRenderer(StandardXYItemRenderer.SHAPES);
-//        itemRenderer.setToolTipGenerator(tipGenerator);
-//        plot.setRenderer(itemRenderer);
-//    }
-
     public JComponent getMainComponent() {
         return myChartPanel;
     }
 
+    public ArrayList<Integer> splitTable(TableReport table) {
+        ArrayList<Integer> indexes = new ArrayList<Integer>();
+        int numRows = table.getRowCount();
+        String previousTrait = "";
+        for (int i = 0; i < numRows; i++) {
+            if (!((String)table.getValueAt(i, 1)).equals("None")) {
+                if (previousTrait.equals("")) {
+                    previousTrait = (String)table.getValueAt(i, 0);
+                    indexes.add(new Integer(i));
+                } else if ( (!((String)table.getValueAt(i, 0)).equals(previousTrait)) || i == (numRows - 1)) {
+                    indexes.add(new Integer(i - 1));
+                    previousTrait = (String)table.getValueAt(i, 0);
+                    if (i != (numRows - 1)) {
+                        indexes.add(new Integer(i));
+                    }
+                }
+            }
+        }
+        return indexes;
+    }
 }
