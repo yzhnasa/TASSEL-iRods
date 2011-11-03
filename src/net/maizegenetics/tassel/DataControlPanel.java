@@ -34,6 +34,7 @@ public class DataControlPanel extends AbstractControlPanel {
             addPlugin(new FileLoadPlugin(theTASSELMainFrame, true, myPlinkLoadPlugin, myFlapjackLoadPlugin));
             addPlugin(new ExportPlugin(theTASSELMainFrame, true));
             addPlugin(new FilterAlignmentPlugin(theTASSELMainFrame, true));
+            addPlugin(new FilterSiteNamePlugin(theTASSELMainFrame, true));
             addPlugin(new FilterTaxaAlignmentPlugin(theTASSELMainFrame, true));
             addPlugin(new FilterTraitsPlugin(theTASSELMainFrame, true));
             //todo the kinship filtering needs to be reworked

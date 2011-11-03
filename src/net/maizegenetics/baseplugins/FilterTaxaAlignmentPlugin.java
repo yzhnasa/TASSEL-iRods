@@ -31,6 +31,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -211,15 +214,36 @@ class DataRowFilterDialog extends JDialog {
      * For filtering sequences, genotypes, and traits
      * @param etr an extended Table report with taxa in the first column (eg. Alignments)
      */
-    public DataRowFilterDialog(Alignment etr) {
+    public DataRowFilterDialog(final Alignment alignment) {
         super((Frame) null, true);
-        Object[][] tableData = new Object[etr.getSequenceCount()][2];
-        for (int i = 0; i < tableData.length; i++) {
-            tableData[i][0] = etr.getIdGroup().getIdentifier(i);
-            tableData[i][1] = etr.getBaseAsStringRow(i);
-        }
-        Object[] tableColumnNames = {"Taxa", "Sequence"};
-        table = new JTable(tableData, tableColumnNames) {
+
+        TableModel tableModel = new AbstractTableModel() {
+
+            @Override
+            public int getRowCount() {
+                return alignment.getSequenceCount();
+            }
+
+            @Override
+            public int getColumnCount() {
+                return 1;
+            }
+
+            @Override
+            public Object getValueAt(int rowIndex, int columnIndex) {
+                return alignment.getIdGroup().getIdentifier(rowIndex);
+            }
+
+            @Override
+            public String getColumnName(int column) {
+                if (column == 0) {
+                    return "Taxa";
+                } else {
+                    return super.getColumnName(column);
+                }
+            }
+        };
+        table = new JTable(tableModel) {
 
             public boolean isCellEditable(int row, int column) {
                 return false;

@@ -123,10 +123,30 @@ public class TasselPipeline implements PluginListener {
     }
 
     public static void main(String args[]) {
-        new TasselPipeline(args, null);
+        if ((args.length >= 2) && (args[0].equalsIgnoreCase("-createXML"))) {
+            String xmlFilename = args[1].trim();
+            String[] temp = new String[args.length - 2];
+            System.arraycopy(args, 2, temp, 0, temp.length);
+            TasselPipelineXMLUtil.writeArgsAsXML(xmlFilename, temp);
+        } else if ((args.length >= 2) && (args[0].equalsIgnoreCase("-translateXML"))) {
+            String xmlFilename = args[1].trim();
+            String[] result = TasselPipelineXMLUtil.readXMLAsArgs(xmlFilename);
+            for (int i = 0; i < result.length; i++) {
+                System.out.print(result[i]);
+                System.out.print(" ");
+            }
+            System.out.println("");
+        } else {
+            new TasselPipeline(args, null);
+        }
     }
 
     public void parseArgs(String[] args) {
+
+        if ((args.length >= 2) && (args[0].equalsIgnoreCase("-configFile"))) {
+            String xmlFilename = args[1].trim();
+            args = TasselPipelineXMLUtil.readXMLAsArgs(xmlFilename);
+        }
 
         int index = 0;
         while (index < args.length) {
@@ -222,15 +242,43 @@ public class TasselPipeline implements PluginListener {
                     String phenotypeFile = args[index++].trim();
                     loadFile(phenotypeFile, FileLoadPlugin.TasselFileType.Phenotype);
                 } else if (current.equalsIgnoreCase("-plink")) {
-                    String pedFile = args[index++].trim();
-                    String mapFile = args[index++].trim();
+                    String pedFile = null;
+                    String mapFile = null;
+                    for (int i = 0; i < 2; i++) {
+                        String fileType = args[index++].trim();
+                        String filename = args[index++].trim();
+                        if (fileType.equalsIgnoreCase("-ped")) {
+                            pedFile = filename;
+                        } else if (fileType.equalsIgnoreCase("-map")) {
+                            mapFile = filename;
+                        } else {
+                            throw new IllegalArgumentException("TasselPipeline: parseArgs: -plink: unknown file type: " + fileType);
+                        }
+                    }
+                    if ((pedFile == null) || (mapFile == null)) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -plink must specify both ped and map files.");
+                    }
                     PlinkLoadPlugin plugin = new PlinkLoadPlugin(myMainFrame, false);
                     plugin.setPedFile(pedFile);
                     plugin.setMapFile(mapFile);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-flapjack")) {
-                    String genoFile = args[index++].trim();
-                    String mapFile = args[index++].trim();
+                    String genoFile = null;
+                    String mapFile = null;
+                    for (int i = 0; i < 2; i++) {
+                        String fileType = args[index++].trim();
+                        String filename = args[index++].trim();
+                        if (fileType.equalsIgnoreCase("-geno")) {
+                            genoFile = filename;
+                        } else if (fileType.equalsIgnoreCase("-map")) {
+                            mapFile = filename;
+                        } else {
+                            throw new IllegalArgumentException("TasselPipeline: parseArgs: -flapjack: unknown file type: " + fileType);
+                        }
+                    }
+                    if ((genoFile == null) || (mapFile == null)) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -flapjack must specify both ped and map files.");
+                    }
                     FlapjackLoadPlugin plugin = new FlapjackLoadPlugin(myMainFrame, false);
                     plugin.setGenoFile(genoFile);
                     plugin.setMapFile(mapFile);
@@ -784,7 +832,13 @@ public class TasselPipeline implements PluginListener {
                         if (plugin == null) {
                             try {
                                 Class possibleClass = Class.forName(possibleClassName);
-                                plugin = (Plugin) possibleClass.newInstance();
+                                Constructor constructor = possibleClass.getConstructor(Frame.class);
+                                plugin = (Plugin) constructor.newInstance(myMainFrame);
+                            } catch (NoSuchMethodException nsme) {
+                                myLogger.warn("Self-describing Plugins should implement this constructor: " + current);
+                                myLogger.warn("public Plugin(Frame parentFrame) {");
+                                myLogger.warn("   super(parentFrame, false);");
+                                myLogger.warn("}");
                             } catch (Exception e) {
                                 // do nothing
                             }

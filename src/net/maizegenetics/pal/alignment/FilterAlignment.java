@@ -339,7 +339,7 @@ public class FilterAlignment extends AbstractAlignment {
         int numSites = getSiteCount();
         List loci = new ArrayList();
         for (int i = 0; i < numSites; i++) {
-            Locus current = myBaseAlignment.getLocus(i);
+            Locus current = getLocus(i);
             if (!loci.contains(current)) {
                 loci.add(current);
             }
