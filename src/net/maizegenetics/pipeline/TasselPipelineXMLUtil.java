@@ -110,6 +110,8 @@ public class TasselPipelineXMLUtil {
                 }
                 if (isFork(args[index])) {
                     break;
+                } else if (isSelfDescribingPlugin(args[index])) {
+                    index = createSelfDescribingPluginXML(doc, newElement, args, index);
                 } else if (isModifier(args[index])) {
                     index = createString(doc, newElement, args, index);
                 } else {
@@ -136,6 +138,27 @@ public class TasselPipelineXMLUtil {
             } else {
                 break;
             }
+        }
+
+        return index - 1;
+
+    }
+
+    private static int createSelfDescribingPluginXML(Document doc, Element element, String[] args, int index) throws IOException {
+
+        String current = args[index];
+        Element newElement = createTag(doc, element, current);
+
+        while (true) {
+            index++;
+            if (index >= args.length) {
+                break;
+            }
+            if (args[index].equalsIgnoreCase("-endPlugin")) {
+                index++;
+                break;
+            }
+            index = createString(doc, newElement, args, index);
         }
 
         return index - 1;
@@ -217,9 +240,6 @@ public class TasselPipelineXMLUtil {
                 index++;
                 if (index >= args.length) {
                     return index - 1;
-                }
-                if (args[index].equalsIgnoreCase("-endPlugin")) {
-                    return index;
                 }
                 if (args[index].startsWith("-")) {
                     return index - 1;
