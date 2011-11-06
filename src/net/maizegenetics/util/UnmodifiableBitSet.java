@@ -237,4 +237,12 @@ public class UnmodifiableBitSet implements BitSet {
     public void trimTrailingZeros() {
         throw new UnsupportedOperationException("UnmodifiableBitSet.");
     }
+
+    public int indexOfNthSetBit(int n) {
+        return myBitSet.indexOfNthSetBit(n);
+    }
+
+    public int[] getIndicesOfSetBits() {
+        return myBitSet.getIndicesOfSetBits();
+    }
 }

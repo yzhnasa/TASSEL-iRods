@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 
 use strict;
-my $libdir = './lib';
+my $top = '.';
+my $libdir = "$top/lib";
 opendir (DIR, "$libdir") || die "Could not open $libdir\n";
 my @list = readdir(DIR);
 
@@ -11,7 +12,7 @@ foreach my $fn(@list){
       push(@fl, "$libdir\/$fn");
    }
 }
-push(@fl, "./dist/sTASSEL.jar");
+push(@fl, "$top/dist/sTASSEL.jar");
 my $CP = join(":", @fl);
 print $CP;
 print "\n";

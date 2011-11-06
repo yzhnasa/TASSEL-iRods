@@ -258,4 +258,20 @@ public interface BitSet {
      * by checking for trailing zero words.
      */
     public void trimTrailingZeros();
+
+    /**
+     * Returns index of the nth set bit.
+     *
+     * @param n nth set bit
+     *
+     * @return index
+     */
+    public int indexOfNthSetBit(int n);
+
+    /**
+     * Return indices of set bits.
+     *
+     * @return indices
+     */
+    public int[] getIndicesOfSetBits();
 }

@@ -21,18 +21,14 @@ import net.maizegenetics.plugindef.PluginEvent;
 
 import javax.swing.*;
 
-import java.awt.BorderLayout;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 
 import java.net.URL;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
+import net.maizegenetics.gui.AbstractAvailableListModel;
+import net.maizegenetics.gui.SelectFromAvailableDialog;
 
 import org.apache.log4j.Logger;
 
@@ -97,22 +93,56 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
         Object theData = inDatum.getData();
 
         if (isInteractive) {
-            DataRowFilterDialog myDialog = null;
+            IdGroup origIdGroup = null;
+            SelectFromAvailableDialog dialog = null;
             if (theData instanceof Alignment) {
-                myDialog = new DataRowFilterDialog((Alignment) theData);
+                final Alignment alignment = (Alignment) theData;
+                origIdGroup = alignment.getIdGroup();
+                AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
+
+                    @Override
+                    public int getRealSize() {
+                        return alignment.getSequenceCount();
+                    }
+
+                    @Override
+                    public String getRealElementAt(int index) {
+                        return alignment.getIdGroup().getIdentifier(index).getFullName();
+                    }
+                };
+                dialog = new SelectFromAvailableDialog(getParentFrame(), "Taxa Filter", listModel);
             } else if (theData instanceof Phenotype) {
-                myDialog = new DataRowFilterDialog((Phenotype) theData);
+                final Phenotype phenotype = (Phenotype) theData;
+                origIdGroup = phenotype.getTaxa();
+                AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
+
+                    @Override
+                    public int getRealSize() {
+                        return phenotype.getNumberOfTaxa();
+                    }
+
+                    @Override
+                    public String getRealElementAt(int index) {
+                        return phenotype.getTaxon(index).getFullName();
+                    }
+                };
+                dialog = new SelectFromAvailableDialog(getParentFrame(), "Taxa Filter", listModel);
             } else {
                 JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select a single sequence or phenotype.");
                 return null;
             }
-            myDialog.setLocationRelativeTo(getParentFrame());
-            myDialog.setVisible(true);
-            if (!myDialog.isSelectionMade()) {
+            dialog.setLocationRelativeTo(getParentFrame());
+            dialog.setVisible(true);
+            if (dialog.isCanceled()) {
                 return null;
             }
-            myIdsToKeep = myDialog.getIdsToKeep();
-            myDialog.dispose();
+            int[] indicesToKeep = dialog.getDesiredIndices();
+            Identifier[] ids = new Identifier[indicesToKeep.length];
+            for (int i = 0; i < indicesToKeep.length; i++) {
+                ids[i] = origIdGroup.getIdentifier(indicesToKeep[i]);
+            }
+            myIdsToKeep = new SimpleIdGroup(ids);
+            dialog.dispose();
         }
 
         if (((myIdsToKeep == null) || (myIdsToKeep.getIdCount() == 0))
@@ -190,179 +220,5 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
      */
     public String getToolTipText() {
         return "Select Taxa Within Dataset";
-    }
-}
-
-/**
- * User: dallas & Ed 12/27/2006
- * Date: May 11, 2004
- * Time: 4:16:54 PM
- */
-class DataRowFilterDialog extends JDialog {
-
-    private IdGroup theIdsToKeep = null;
-    private boolean isSelectionMade = false;
-    private JPanel primaryPanel = new JPanel();
-    private JScrollPane jScrollPane1;
-    private JPanel buttonPanel = new JPanel();
-    private JButton captureSelectionButton = new JButton();
-    private JButton deleteSelectedButton = new JButton();
-    private JButton closeButton = new JButton();
-    private JTable table;
-
-    /**
-     * For filtering sequences, genotypes, and traits
-     * @param etr an extended Table report with taxa in the first column (eg. Alignments)
-     */
-    public DataRowFilterDialog(final Alignment alignment) {
-        super((Frame) null, true);
-
-        TableModel tableModel = new AbstractTableModel() {
-
-            @Override
-            public int getRowCount() {
-                return alignment.getSequenceCount();
-            }
-
-            @Override
-            public int getColumnCount() {
-                return 1;
-            }
-
-            @Override
-            public Object getValueAt(int rowIndex, int columnIndex) {
-                return alignment.getIdGroup().getIdentifier(rowIndex);
-            }
-
-            @Override
-            public String getColumnName(int column) {
-                if (column == 0) {
-                    return "Taxa";
-                } else {
-                    return super.getColumnName(column);
-                }
-            }
-        };
-        table = new JTable(tableModel) {
-
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-
-            public boolean getRowSelectionAllowed() {
-                return true;
-            }
-
-            public boolean getColumnSelectionAllowed() {
-                return false;
-            }
-        };
-        try {
-            initDialog();
-            pack();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-    }
-
-    public DataRowFilterDialog(Phenotype etr) {
-        super((Frame) null, true);
-        table = new JTable(etr.getTableData(), etr.getTableColumnNames()) {
-
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-
-            public boolean getRowSelectionAllowed() {
-                return true;
-            }
-
-            public boolean getColumnSelectionAllowed() {
-                return false;
-            }
-        };
-        try {
-            initDialog();
-            pack();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void initDialog() throws Exception {
-        primaryPanel.setLayout(new BorderLayout());
-        jScrollPane1 = new JScrollPane(table);
-        jScrollPane1.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        jScrollPane1.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-
-        captureSelectionButton.setText("Capture Selected");
-        captureSelectionButton.setMnemonic(KeyEvent.VK_S);
-        captureSelectionButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                captureSelectionButton_actionPerformed(e);
-            }
-        });
-        deleteSelectedButton.setText("Capture Unselected");
-        deleteSelectedButton.setMnemonic(KeyEvent.VK_D);
-        deleteSelectedButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                deleteSelectedButton_actionPerformed(e);
-            }
-        });
-        closeButton.setText("Close");
-        closeButton.setMnemonic(KeyEvent.VK_C);
-        closeButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                closeButton_actionPerformed(e);
-            }
-        });
-
-        primaryPanel.add(jScrollPane1, BorderLayout.CENTER);
-        primaryPanel.add(buttonPanel, BorderLayout.SOUTH);
-        buttonPanel.add(captureSelectionButton, null);
-        buttonPanel.add(deleteSelectedButton, null);
-        buttonPanel.add(closeButton, null);
-        getContentPane().add(primaryPanel);
-    }
-
-    private void captureSelectionButton_actionPerformed(ActionEvent e) {
-        makeIdsList(true);
-        isSelectionMade = true;
-        this.setVisible(false);
-    }
-
-    private void deleteSelectedButton_actionPerformed(ActionEvent e) {
-        makeIdsList(false);
-        isSelectionMade = true;
-        this.setVisible(false);
-    }
-
-    private void makeIdsList(boolean isKeepSelected) {
-        ArrayList<Identifier> ids = new ArrayList<Identifier>();
-        for (int i = 0; i < table.getRowCount(); i++) {
-            if (table.isRowSelected(i) == isKeepSelected) {
-                ids.add((Identifier) table.getModel().getValueAt(i, 0));
-            }
-        }
-        Identifier[] idsp = new Identifier[ids.size()];
-        ids.toArray(idsp);
-        theIdsToKeep = new SimpleIdGroup(idsp);
-    }
-
-    private void closeButton_actionPerformed(ActionEvent e) {
-        this.setVisible(false);
-        isSelectionMade = false;
-    }
-
-    public IdGroup getIdsToKeep() {
-        return theIdsToKeep;
-    }
-
-    public boolean isSelectionMade() {
-        return isSelectionMade;
     }
 }

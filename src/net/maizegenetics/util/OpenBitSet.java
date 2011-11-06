@@ -775,6 +775,53 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
         return (int) (((numBits - 1) >>> 6) + 1);
     }
 
+    public int indexOfNthSetBit(int n) {
+
+        int result = 0;
+        int count = 0;
+        for (int i = 0; i < myNumWords; i++) {
+            int currentCount = BitUtil.pop(myBits[i]);
+            if ((count + currentCount) >= n) {
+                long bitmask = 1L;
+                while (true) {
+                    if ((myBits[i] & bitmask) != 0) {
+                        count++;
+                        if (count == n) {
+                            return result;
+                        }
+                    }
+                    bitmask = bitmask << 1;
+                    result++;
+                }
+            } else {
+                count = count + currentCount;
+                result = result + 64;
+            }
+        }
+
+        return -1;
+
+    }
+
+    public int[] getIndicesOfSetBits() {
+
+        int[] result = new int[(int) cardinality()];
+        int count = 0;
+
+        for (int i = 0; i < myNumWords; i++) {
+            long bitmask = 1L;
+            for (int j = 0; j < 64; j++) {
+                if ((myBits[i] & bitmask) != 0) {
+                    result[count++] = i * 64 + j;
+                }
+                bitmask = bitmask << 1;
+            }
+        }
+
+        return result;
+
+    }
+
     /** returns true if both sets have the same bits set */
     @Override
     public boolean equals(Object o) {
