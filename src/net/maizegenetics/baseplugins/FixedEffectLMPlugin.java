@@ -940,7 +940,7 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
 	    	for (int i = 0; i < n - 1; i++) {
 	    		blues[i] = beta[i + 1] + overallMean;
 	    	}
-			
+	    	blues[n - 1] = overallMean;
 	    	blueList.add(blues);
 	    	taxaListList.add(taxaIds);
 	    	

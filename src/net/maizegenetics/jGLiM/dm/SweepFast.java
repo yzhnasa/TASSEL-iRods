@@ -237,13 +237,13 @@ public class SweepFast {
     		}
     		count++;
     	}
-    	
-    	for (int i = 0; i < dimA; i++) {
-    		for (int j = i; j < dimA; j++) {
-    			Amatrix.set(j, i, A[count++] * V[i] * V[j]);
+
+    	for (int i = 0; i < n; i++) {
+    		for (int j = i + 1; j < n; j++) {
+    			Amatrix.set(j, i, Amatrix.get(i, j) * V[i] * V[j]);
     		}
-    		count++;
     	}
+
     	return Amatrix;
     }
     
