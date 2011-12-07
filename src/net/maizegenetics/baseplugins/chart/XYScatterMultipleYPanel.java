@@ -13,14 +13,9 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.data.function.Function2D;
-import org.jfree.data.function.LineFunction2D;
-import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.xy.XYDataset;
 
 /**
@@ -33,13 +28,13 @@ public class XYScatterMultipleYPanel extends BasicChartPanel{
 
     TableReport myTableReport;
 
-    public XYScatterMultipleYPanel(TableReport theTable) {
+    public XYScatterMultipleYPanel(TableReport theTable, int start, int end) {
         myTableReport = theTable;
         try {
-            dataset = new TableReportManhattanDataset(theTable);
+            dataset = new TableReportManhattanDataset(theTable, start, end);
             chart = createChart(dataset);
             myChartPanel = new ChartPanel(chart);
-            myChartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
+            myChartPanel.setPreferredSize(new java.awt.Dimension(900, 500));
             myTableReport = theTable;
             jbInit();
         }
@@ -61,7 +56,7 @@ public class XYScatterMultipleYPanel extends BasicChartPanel{
         if(dataset!=null) {
             xName=dataset.getXName();
             y1Name= "-Log(P-Value)";
-            name= "P-Values by Chromosome";
+            name= "P-Values by Chromosome for " + dataset.getTrait();
 //            if(dataset.getSeriesCount()==2) {
 //                y2Name=dataset.getSeriesName(1);
 //                name+=" and "+y2Name;

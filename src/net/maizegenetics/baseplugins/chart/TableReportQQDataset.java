@@ -46,8 +46,9 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     public TableReportQQDataset(TableReport table, int startIndex, int endIndex) {
         numberYAxes = 1;
         myStartIndex = startIndex;
-        myEndIndex = endIndex + 1;
-        myNumRows = endIndex - startIndex;
+        myEndIndex = endIndex;
+        myNumRows = myEndIndex - startIndex;
+        System.out.println(myStartIndex + " " + myEndIndex);
         setTableReport(table);
     }
 

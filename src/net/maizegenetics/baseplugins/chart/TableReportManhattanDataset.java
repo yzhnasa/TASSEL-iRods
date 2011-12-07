@@ -5,7 +5,6 @@
 
 package net.maizegenetics.baseplugins.chart;
 
-import java.util.Arrays;
 import java.util.Hashtable;
 import net.maizegenetics.pal.report.TableReport;
 import org.jfree.data.xy.DefaultTableXYDataset;
@@ -18,6 +17,7 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
     double[][] theData;
     String[] seriesNames;
     String xName;
+    String myTrait;
     int numberYAxes;
 
     String[] myChromNames;
@@ -32,14 +32,17 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
     int myChromColumnIndex = -1;
     int myPositionColumnIndex = -1;
     int myMarkerColumnIndex = -1;
+    int myTraitColumnIndex = -1;
     int myNumRows;
 
-    // 1 = skip first row
-    // 0 = don't skip
-    int skipFirstRow;
+    int myStartIndex;
+    int myEndIndex;
 
-    public TableReportManhattanDataset(TableReport theTable) {
+    public TableReportManhattanDataset(TableReport theTable, int start, int end) {
         numberYAxes = 0;
+        myStartIndex = start;
+        myEndIndex = end;
+        myNumRows = myEndIndex - start;
         setTableReport(theTable);
     }
 
@@ -84,6 +87,15 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
         //    throw new java.lang.UnsupportedOperationException("Method getSeriesName() not yet implemented.");
     }
 
+    private void setTraitColumnIndex() {
+        for (int i = 0; i < myColumnNames.length; i++) {
+            if (myColumnNames[i].equals("Trait")) {
+                myTraitColumnIndex = i;
+                return;
+            }
+        }
+    }
+
     private void setPValueColumnIndex() {
         for (int i = 0; i < myColumnNames.length; i++) {
             if (myColumnNames[i].equals("p") || myColumnNames[i].equals("marker_p")) {
@@ -113,18 +125,6 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
         }
     }
 
-    // MLM analysis produces extra blank first row, method to compensate
-    private void setNumRows(TableReport myTableReport) {
-        if (((String)myTableReport.getValueAt(0, myChromColumnIndex)).equals("")) {
-            skipFirstRow = 1;
-            myNumRows = myTableReport.getRowCount() - 1;
-        }
-        else {
-            skipFirstRow = 0;
-            myNumRows = myTableReport.getRowCount();
-        }
-    }
-
     private void setPositionColumnIndex() {
         for (int i = 0; i < myColumnNames.length; i++) {
             if (myColumnNames[i].equals("Locus_pos") || myColumnNames[i].equals("Site")) {
@@ -138,7 +138,7 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
     private void setChromNames(TableReport myTableReport) {
         String currentChrom = "";
         for (int i = 0; i < myChromNames.length; i++) {
-            myChromNames[i]  = ((String)myTableReport.getValueAt(i + skipFirstRow, myChromColumnIndex));
+            myChromNames[i] = ((String)myTableReport.getValueAt(myStartIndex + i, myChromColumnIndex));
             if (!currentChrom.equals(myChromNames[i])) {
                 numberYAxes++;
                 currentChrom = myChromNames[i];
@@ -148,15 +148,34 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
 
     private void setMarkers(TableReport myTableReport) {
         for (int i = 0; i < myMarkers.length; i++) {
-            myMarkers[i] = ((String)myTableReport.getValueAt(i + skipFirstRow, myMarkerColumnIndex));
+            myMarkers[i] = ((String)myTableReport.getValueAt(myStartIndex + i, myMarkerColumnIndex));
         }
     }
 
     private void setPValues(TableReport myTableReport) {
         for (int i = 0; i < myPValues.length; i++) {
-            myPValues[i] = ((Double)myTableReport.getValueAt(i + skipFirstRow, myPValueColumnIndex)).doubleValue();
+            myPValues[i] = ((Double)myTableReport.getValueAt(myStartIndex + i, myPValueColumnIndex)).doubleValue();
             myLookupTable.put(myPValues[i], i);
         }
+    }
+
+    private void setPositions(TableReport myTableReport) {
+        int offset = 0;
+        int previousPosition = 0;
+        int currentPosition = 0;
+        // GLM positions formated as int
+        for (int i = 0; i < myPositions.length; i++) {
+            currentPosition = Integer.valueOf((myTableReport.getValueAt(myStartIndex + i, myPositionColumnIndex)).toString());
+            myPositions[i] = currentPosition + offset;
+            if (currentPosition < previousPosition) {
+                offset = offset + previousPosition;
+            }
+            previousPosition = currentPosition;
+        }
+    }
+
+    private void setTrait(TableReport table) {
+        myTrait = (String)table.getValueAt(myStartIndex, myTraitColumnIndex);
     }
 
     public String[] getMarkers() {
@@ -167,36 +186,8 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
         return myChromNames;
     }
 
-    private void setPositions(TableReport myTableReport) {
-        int offset = 0;
-        int previousPosition = 0;
-        int currentPosition = 0;
-        // GLM positions formated as int
-        if (myColumnNames[myPositionColumnIndex].equals("Locus_pos")) {
-            myPositions[0] = ((Integer)myTableReport.getValueAt(skipFirstRow, myPositionColumnIndex)).intValue();
-            previousPosition = myPositions[0];
-            for (int i = 1; i < myPValues.length; i++) {
-                currentPosition = ((Integer)myTableReport.getValueAt(i + skipFirstRow, myPositionColumnIndex)).intValue();
-                myPositions[i] = currentPosition + offset;
-                if (currentPosition < previousPosition) {
-                    offset = offset + previousPosition;
-                }
-                previousPosition = currentPosition;
-            }
-        }
-        // MLM positions formatted as string
-        else if (myColumnNames[myPositionColumnIndex].equals("Site")) {
-            myPositions[0] = Integer.valueOf((String)myTableReport.getValueAt(skipFirstRow, myPositionColumnIndex));
-            previousPosition = myPositions[0];
-            for (int i = 1; i < myPValues.length; i++) {
-                currentPosition = Integer.valueOf((String)myTableReport.getValueAt(i + skipFirstRow, myPositionColumnIndex));
-                myPositions[i] = currentPosition + offset;
-                if (currentPosition < previousPosition) {
-                    offset = offset + previousPosition;
-                }
-                previousPosition = currentPosition;
-            }
-        }
+    public String getTrait() {
+        return myTrait;
     }
 
     private void setLogPValues() {
@@ -211,7 +202,7 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
         setChromColumnIndex();
         setPositionColumnIndex();
         setMarkerColumnIndex();
-        setNumRows(theTable);
+        setTraitColumnIndex();
         myPValues = new double[myNumRows];
         myLogPValues = new double[myNumRows];
         myChromNames = new String[myNumRows];
@@ -223,6 +214,7 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
         setChromNames(theTable);
         setPositions(theTable);
         setMarkers(theTable);
+        setTrait(theTable);
         seriesNames = new String[numberYAxes];
         seriesNames[0] = myChromNames[0];
 

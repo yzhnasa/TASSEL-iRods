@@ -48,7 +48,7 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
         try {
             chart = createChart(datasets[0]);
             myChartPanel = new ChartPanel(chart);
-            myChartPanel.setPreferredSize(new java.awt.Dimension(750, 400));
+            myChartPanel.setPreferredSize(new java.awt.Dimension(900, 500));
             for (int i = 1; i < datasets.length; i++) {
                 addSeries(chart.getXYPlot(), datasets[i], i);
             }
@@ -141,19 +141,21 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
         int numRows = table.getRowCount();
         String previousTrait = "";
         for (int i = 0; i < numRows; i++) {
-            if (!((String)table.getValueAt(i, 1)).equals("None")) {
-                if (previousTrait.equals("")) {
-                    previousTrait = (String)table.getValueAt(i, 0);
+            if (!previousTrait.equals((String)table.getValueAt(i, 0))) {
+                if (!((String)table.getValueAt(i, 1)).equals("None")) {
                     indexes.add(new Integer(i));
-                } else if ( (!((String)table.getValueAt(i, 0)).equals(previousTrait)) || i == (numRows - 1)) {
-                    indexes.add(new Integer(i - 1));
                     previousTrait = (String)table.getValueAt(i, 0);
-                    if (i != (numRows - 1)) {
+                    if (i > 1) {
                         indexes.add(new Integer(i));
                     }
+                } else if (i != 0) {
+                    indexes.add(new Integer(i));
+                    indexes.add(new Integer(i+1));
+                    previousTrait = (String)table.getValueAt(i + 1, 0);
                 }
             }
         }
+        indexes.add(new Integer(numRows));
         return indexes;
     }
 }
