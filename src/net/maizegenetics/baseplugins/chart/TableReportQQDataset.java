@@ -37,18 +37,21 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     int myNumRows;
     int myStartIndex;
     int myEndIndex;
+    int myCountToDisplay;
+    int myCount = 100;
 
     public TableReportQQDataset(TableReport table) {
         numberYAxes=1;
         setTableReport(table);
     }
 
-    public TableReportQQDataset(TableReport table, int startIndex, int endIndex) {
+    public TableReportQQDataset(TableReport table, int startIndex, int endIndex, int countToDisplay) {
         numberYAxes = 1;
         myStartIndex = startIndex;
         myEndIndex = endIndex;
         myNumRows = myEndIndex - startIndex;
-        System.out.println(myStartIndex + " " + myEndIndex);
+        myCountToDisplay = countToDisplay;
+//        myNumRows = countToDisplay + (myNumRows - countToDisplay)/20 + 1;
         setTableReport(table);
     }
 
@@ -142,16 +145,16 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     }
 
     private void setPositions(TableReport myTableReport) {
-        if (myColumnNames[myPositionColumnIndex].equals("Locus_pos")) {
-            for (int i = 0; i < myPositions.length; i++) {
-                myPositions[i] = ((Integer)myTableReport.getValueAt(myStartIndex + i, myPositionColumnIndex)).intValue();
-            }
+//        if (myColumnNames[myPositionColumnIndex].equals("Locus_pos")) {
+//            for (int i = 0; i < myPositions.length; i++) {
+//                myPositions[i] = ((Integer)myTableReport.getValueAt(myStartIndex + i, myPositionColumnIndex)).intValue();
+//            }
+//        }
+//        else if (myColumnNames[myPositionColumnIndex].equals("Site")) {
+        for (int i = 0; i < myPositions.length; i++) {
+            myPositions[i] = Integer.valueOf((myTableReport.getValueAt(myStartIndex + i, myPositionColumnIndex)).toString());
         }
-        else if (myColumnNames[myPositionColumnIndex].equals("Site")) {
-            for (int i = 0; i < myPositions.length; i++) {
-                myPositions[i] = Integer.valueOf((String)myTableReport.getValueAt(myStartIndex + i, myPositionColumnIndex));
-            }
-        }
+//        }
     }
 
     private void setMarkers(TableReport myTableReport) {
@@ -195,7 +198,6 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         }
     }
 
-
     public void setTableReport(TableReport theTable) {
         myColumnNames = theTable.getTableColumnNames();
         setPValueColumnIndex();
@@ -221,12 +223,38 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         for (int i = 0; i < myNumRows; i++) {
             try {
                 theData[i][0] = myLogExpectedPValues[i];
-                theData[i][1] = myLogPValues[i];
+//                theData[i][0] = Double.NaN;
+                if (i < myCountToDisplay) {
+//                    System.out.println("great!" + myLogPValues[i]);
+                    if (myLogPValues[i] != 0) {
+                        theData[i][1] = myLogPValues[i];
+                    } else {
+                        theData[i][1] = Double.NaN;
+                    }
+//                    theData[i][0] = myLogExpectedPValues[i];
+                } else {
+                    if ((i % myCount) == 0) {
+//                        System.out.println("testing" + i);
+                        if (myLogPValues[i] != 0) {
+                            theData[i][1] = myLogPValues[i];
+                        } else {
+                            theData[i][1] = Double.NaN;
+                        }
+//                        theData[i][0] = myLogExpectedPValues[i];
+                    } else {
+//                        System.out.println("fail!" + i);
+                        theData[i][1] = Double.NaN;
+//                        theData[i][0] = Double.NaN;
+                    }
+                }
             }
             catch (NumberFormatException ex) {
                 System.out.println("throw new NumberFormatException();");
             }
         }
+
+        theData[0][0] = myLogExpectedPValues[0];
+        theData[myNumRows - 1][0] = myLogExpectedPValues[myNumRows - 1];
         seriesNames=new String[1];
         xName= "Expected -Log(P-Value)";
         seriesNames[0] = myTrait;
