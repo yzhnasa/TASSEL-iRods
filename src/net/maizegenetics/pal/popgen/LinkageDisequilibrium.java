@@ -7,6 +7,7 @@
 package net.maizegenetics.pal.popgen;
 
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.datatype.DataType;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.statistics.FisherExact;
 
@@ -41,7 +42,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     };
     protected Alignment theAlignment;
     boolean rapidPermute = true;
-    // int numberOfPermutations = 1000;
+//    int numberOfPermutations = 1000;
     int minTaxaForEstimate = 2;
     int windowOfSites = 50;
     int testSite = -1;  //this is only set when one versus all sites is calculated.
@@ -153,22 +154,50 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * what getIndex returns, which is based on the testDesign
      */
     private void designLDTests() {
-        for (int r = 1; r < theAlignment.getSiteCount(); r++) {
-            for (int c = 0; c < r; c++) {
-                int index = getIndex(r, c);
-                if (index > -1) {
-                    irow[index] = r;
-                    icol[index] = c;
+
+        int sites = theAlignment.getSiteCount();
+
+        if (currDesign == testDesign.SlidingWindow) {
+
+            for (int r = 0; r < sites; r++) {
+                //int half = Math.round((float)windowOfSites / 2.0f);
+                int start = Math.max(0, r - windowOfSites);
+                int end = Math.max(0, r - 1);
+
+                for (int c = start; c <= end; c++) {
+                    if (c != r) {
+                        int index = getIndex(r, c);
+                        if (index > -1) {
+                            irow[index] = r;
+                            icol[index] = c;
+                        }
+                    }
                 }
             }
+
+        } else {
+
+            for (int r = 1; r < sites; r++) {
+                for (int c = 0; c < r; c++) {
+                    int index = getIndex(r, c);
+                    if (index > -1) {
+                        irow[index] = r;
+                        icol[index] = c;
+                    }
+                }
+            }
+
         }
     }
 
     private void initMatrices() {
+        int sites = theAlignment.getSiteCount();
         if (currDesign == testDesign.All) {
-            totalTests = theAlignment.getSiteCount() * (theAlignment.getSiteCount() - 1) / 2;
+            totalTests = sites * (sites - 1) / 2;
         } else if (currDesign == testDesign.SlidingWindow) {
-            totalTests = theAlignment.getSiteCount() * windowOfSites;
+            //int half = Math.round((float)windowOfSites / 2.0f);
+            int n = Math.min(sites - 1, windowOfSites);
+            totalTests = ((n * (n + 1)) / 2) + (sites - n - 1) * n;
         } else if (currDesign == testDesign.SiteByAll) {
             totalTests = theAlignment.getSiteCount();
         }
@@ -191,10 +220,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             byte rowMinor = (byte) theAlignment.getMinorAllele(r);
             byte colMajor = (byte) theAlignment.getMajorAllele(c);
             byte colMinor = (byte) theAlignment.getMinorAllele(c);
+            //double currentProgress = 100 * r * r / (theAlignment.getSiteCount() * theAlignment.getSiteCount());
             int currentProgress = 100 * currTest / totalTests;
             fireProgress((int) currentProgress);
             contig = new int[2][2];
-            if ((rowMinor == Alignment.UNKNOWN_ALLELE) || (colMinor == Alignment.UNKNOWN_ALLELE)) {
+            if ((rowMinor == DataType.UNKNOWN_BYTE) || (colMinor == DataType.UNKNOWN_BYTE)) {
                 rsqr[currTest] = dprime[currTest] = pval[currTest] = Float.NaN;
                 sampleSize[currTest] = 0;
             } else {
@@ -202,7 +232,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                 for (int sample = 0; sample < theAlignment.getSequenceCount(); sample++) {
                     byte x = theAlignment.getBase(sample, r);
                     byte y = theAlignment.getBase(sample, c);
-                    if ((x == Alignment.UNKNOWN_DIPLOID_ALLELE) || (y == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
+                    if ((x == DataType.UNKNOWN_BYTE) || (y == DataType.UNKNOWN_BYTE)) {
                         continue;
                     }
                     int x1, y1;
@@ -288,14 +318,14 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         byte colMajor = (byte) a2.getMajorAllele(site2);
         byte colMinor = (byte) a2.getMinorAllele(site2);
         int[][] contig = new int[2][2];
-        if ((rowMinor == Alignment.UNKNOWN_ALLELE) || (colMinor == Alignment.UNKNOWN_ALLELE)) {
+        if ((rowMinor == DataType.UNKNOWN_BYTE) || (colMinor == DataType.UNKNOWN_BYTE)) {
             return null;
         }
         int n = 0;
         for (int sample = 0; sample < a1.getSequenceCount(); sample++) {
             byte x = a1.getBase(sample, site1);
             byte y = a2.getBase(sample, site2);
-            if ((x == Alignment.UNKNOWN_DIPLOID_ALLELE) || (y == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
+            if ((x == DataType.UNKNOWN_BYTE) || (y == DataType.UNKNOWN_BYTE)) {
                 continue;
             }
             int x1, y1;
@@ -351,8 +381,15 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (currDesign == testDesign.All) {
             index = (r * (r - 1) / 2) + c;
         } else if (currDesign == testDesign.SlidingWindow) {
-            if ((r - c) <= windowOfSites) {
-                index = ((r - 1) * windowOfSites) + (c - r + 1);
+            int sites = theAlignment.getSiteCount();
+            //int half = Math.round((float)windowOfSites / 2.0f);
+            int n = Math.min(sites - 1, windowOfSites);
+            if ((r - c) <= n) {
+                if (r < n) {
+                    index = (r * (r - 1) / 2) + c;
+                } else {
+                    index = (n * (n - 1) / 2) + ((r - n) * n) + (c - r + n);
+                }
             }
         } else if (currDesign == testDesign.SiteByAll) {
             if (r == testSite) {
@@ -364,7 +401,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (index >= totalTests) {
             return -1;
         }
-//        System.out.println(r+" "+c+" "+index);
+
         return index;
     }
 
