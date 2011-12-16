@@ -38,7 +38,7 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     int myStartIndex;
     int myEndIndex;
     int myCountToDisplay;
-    int myCount = 100;
+    int myCount = 140;
 
     public TableReportQQDataset(TableReport table) {
         numberYAxes=1;
@@ -223,28 +223,23 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         for (int i = 0; i < myNumRows; i++) {
             try {
                 theData[i][0] = myLogExpectedPValues[i];
-//                theData[i][0] = Double.NaN;
                 if (i < myCountToDisplay) {
-//                    System.out.println("great!" + myLogPValues[i]);
                     if (myLogPValues[i] != 0) {
                         theData[i][1] = myLogPValues[i];
                     } else {
                         theData[i][1] = Double.NaN;
                     }
-//                    theData[i][0] = myLogExpectedPValues[i];
                 } else {
-                    if ((i % myCount) == 0) {
+                    double value = myLogExpectedPValues[i];
+                    int filter = (int)(value/0.1);
+                    int count = Math.max(1, myCount - 18*filter);
+                    if ((i % count) == 0) {
 //                        System.out.println("testing" + i);
                         if (myLogPValues[i] != 0) {
                             theData[i][1] = myLogPValues[i];
-                        } else {
-                            theData[i][1] = Double.NaN;
                         }
-//                        theData[i][0] = myLogExpectedPValues[i];
                     } else {
-//                        System.out.println("fail!" + i);
                         theData[i][1] = Double.NaN;
-//                        theData[i][0] = Double.NaN;
                     }
                 }
             }
@@ -252,6 +247,11 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
                 System.out.println("throw new NumberFormatException();");
             }
         }
+
+//        int filter = (int)Math.pow(1.005, ((double)Math.round(myLogExpectedPValues[i]*100)));
+//                    System.out.println(myLogExpectedPValues[i] + " " + filter + " " + myLogPValues[i]);
+////                    if ((i % myCount) == 0) {
+//                    if ((i % filter) != 0) {
 
         theData[0][0] = myLogExpectedPValues[0];
         theData[myNumRows - 1][0] = myLogExpectedPValues[myNumRows - 1];

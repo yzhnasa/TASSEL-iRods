@@ -38,12 +38,12 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
 
     TableReport myTableReport;
 
-    public XYScatterAndLinePanel(TableReport table, int countToDisplay) {
+    public XYScatterAndLinePanel(TableReport table, int countToDisplay, ArrayList<Integer> tableIndices, int[] indices) {
         myTableReport = table;
-        ArrayList<Integer> indexes = splitTable(table);
-        datasets = new TableReportQQDataset[indexes.size() / 2];
+//        ArrayList<Integer> indexes = splitTable(table);
+        datasets = new TableReportQQDataset[indices.length];
         for (int i = 0; i < datasets.length; i++) {
-            datasets[i] = new TableReportQQDataset(table, indexes.get(i * 2).intValue(), indexes.get(i * 2 + 1).intValue(), countToDisplay);
+            datasets[i] = new TableReportQQDataset(table, tableIndices.get(indices[i] * 2).intValue(), tableIndices.get(indices[i] * 2 + 1).intValue(), countToDisplay);
         }
         try {
             chart = createChart(datasets[0]);

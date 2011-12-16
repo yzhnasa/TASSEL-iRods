@@ -26,6 +26,7 @@ public class TasselPrefs {
     public static final int TASSEL_FONT_METRICS_CHAR_WIDTH_DEFAULT = 9;
     public static final String TASSEL_IDENTIFIER_JOIN_STRICT = "idJoinStrict";
     public static final boolean TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT = false;
+    private static boolean TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = getIDJoinStrict();
     //
     // FilterAlignmentPlugin preferences
     //
@@ -133,10 +134,14 @@ public class TasselPrefs {
     }
 
     public static boolean getIDJoinStrict() {
-        return getBooleanPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT);
+        // This can be called many times, so to improve performance
+        // this will return value without executing system call.
+        return TASSEL_IDENTIFIER_JOIN_STRICT_VALUE;
+        // return getBooleanPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT);
     }
 
     public static void putIDJoinStrict(boolean value) {
+        TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = value;
         putBooleanPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, value);
     }
 
@@ -209,4 +214,5 @@ public class TasselPrefs {
     public static void putAlignPluginShowQualscore(boolean value) {
         putBooleanPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_SHOW_QUALSCORE, value);
     }
+
 }
