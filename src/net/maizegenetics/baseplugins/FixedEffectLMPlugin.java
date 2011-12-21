@@ -90,7 +90,7 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
     		hasMap = false;
     	}
 
-    	List<Datum> datasets = input.getDataOfType(Phenotype.class);
+    	List<Datum> datasets = input.getDataOfType(new Class[]{Phenotype.class, MarkerPhenotype.class});
     	if (datasets.size() < 1) {
     		String msg = "Error in performFunction: No appropriate dataset selected.";
     		myLogger.error(msg);
