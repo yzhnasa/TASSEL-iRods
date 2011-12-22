@@ -24,8 +24,4 @@ public class SBitNucleotideAlignment extends SBitAlignment {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
     }
 
-    @Override
-    public String[] getBaseAsStringArray(int taxon, int site) {
-        return new String[]{getBaseAsString(taxon, site)};
-    }
 }
