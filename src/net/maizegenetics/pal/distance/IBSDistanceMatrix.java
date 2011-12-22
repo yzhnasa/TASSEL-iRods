@@ -15,10 +15,12 @@
 package net.maizegenetics.pal.distance;
 
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.util.ProgressListener;
 
 /**
  * This class calculates an identity by state matrix.  It is scaled so only non-missing data is used.
+ * Class needs to be updated to use TBit alignment, and then bit calculations
  *
  * @author Ed Buckler
  * @version 1.0
@@ -28,6 +30,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     private ProgressListener myListener = null;
     private int numSeqs;
     private Alignment theAlignment;
+    private TBitAlignment theTBA=null;
     /**
      * Holds the average numbers of sites in the comparisons
      */
@@ -52,6 +55,8 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         myListener = listener;
         numSeqs = theAlignment.getSequenceCount();
         this.theAlignment = theAlignment;
+    //    theTBA=new TBitAlignment(theAlignment);
+    //  this should have an option to only use the 2 or 3 most common alleles
         setIdGroup(theAlignment.getIdGroup());
         computeDistances();
     }
