@@ -62,35 +62,43 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     }
 
     public DataSet performFunction(DataSet input) {
-        java.util.List<Datum> alignInList = input.getDataOfType(Alignment.class);
-        if (alignInList.size() < 1) {
-            String gpMessage = "Invalid selection.  Please select genotype alignment.";
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), gpMessage);
-            } else {
-                myLogger.error(gpMessage);
+
+        try {
+
+            java.util.List<Datum> alignInList = input.getDataOfType(Alignment.class);
+
+            if (alignInList.size() < 1) {
+                String gpMessage = "Invalid selection.  Please select genotype alignment.";
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), gpMessage);
+                } else {
+                    myLogger.error(gpMessage);
+                }
+                return null;
             }
-            return null;
-        }
-        List<Datum> alignOutList = new ArrayList<Datum>();
-        Iterator<Datum> itr = alignInList.iterator();
-        while (itr.hasNext()) {
-            Datum current = itr.next();
-            Datum result = processDatum(current, isInteractive());
-            if (result != null) {
-                alignOutList.add(result);
+            List<Datum> alignOutList = new ArrayList<Datum>();
+            Iterator<Datum> itr = alignInList.iterator();
+            while (itr.hasNext()) {
+                Datum current = itr.next();
+                Datum result = processDatum(current, isInteractive());
+                if (result != null) {
+                    alignOutList.add(result);
+                }
             }
+
+            if (alignOutList.isEmpty()) {
+                return null;
+            }
+
+            DataSet output = new DataSet(alignOutList, this);
+            fireDataSetReturned(new PluginEvent(output, FilterAlignmentPlugin.class));
+
+            return output;
+
+        } finally {
+            fireProgress(100);
         }
 
-        if (alignOutList.isEmpty()) {
-            return null;
-        }
-
-        DataSet output = new DataSet(alignOutList, this);
-        //I am setting the firing class as the metadata - so that the control panel know where the event is coming from
-        fireDataSetReturned(new PluginEvent(output, FilterAlignmentPlugin.class));
-
-        return output;
     }
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
@@ -167,6 +175,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         } else {
             //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreGapsMissing(naa, minFreq, minCount);
         }
+        naa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, minFreq, minCount);
         if (doSlidingHaps) {
             //naa = AnnotatedAlignmentUtils.extractSlidingHaplotypes(naa, winSize, stepSize);
             throw new UnsupportedOperationException();
@@ -381,7 +390,7 @@ class DataFilterAlignmentDialog extends JDialog {
     private JTextField winSizeTextField = new JTextField(TEXT_FIELD_WIDTH);
     private JTextField stepSizeTextField = new JTextField(TEXT_FIELD_WIDTH);
     private JPanel checkBoxPanel = new JPanel();
-    private JCheckBox indelCheckBox = new JCheckBox();
+    //private JCheckBox indelCheckBox = new JCheckBox();
     private JCheckBox removeMinorCheckBox = new JCheckBox();
     private JCheckBox slidingHapCheckBox = new JCheckBox();
     private GridBagLayout gridBagLayout2 = new GridBagLayout();
@@ -559,9 +568,9 @@ class DataFilterAlignmentDialog extends JDialog {
         }
         /*        siteGroupPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Site Type")   );
         siteGroupPanel.setOpaque(false);
-
+        
         siteGroupPanel.setLayout(gridBagLayout1);
-
+        
         transcribedRadioButton.setText("Transcribed");
         transcribedRadioButton.setOpaque(false);
         noncodingRadioButton.setText("Noncoding");
@@ -572,8 +581,8 @@ class DataFilterAlignmentDialog extends JDialog {
         allRadioButton.setOpaque(false);
         allRadioButton.setSelected(true);
          */
-        indelCheckBox.setText("Extract Indels");
-        indelCheckBox.setOpaque(false);
+        //indelCheckBox.setText("Extract Indels");
+        //indelCheckBox.setOpaque(false);
         // aminoCheckBox.setText("Convert To Amino Acid");
         // aminoCheckBox.setOpaque(false);
 
@@ -616,7 +625,7 @@ class DataFilterAlignmentDialog extends JDialog {
         stepSizePanel.add(stepSizeTextField);
 
         checkBoxPanel.setLayout(new GridLayout(6, 1));
-        checkBoxPanel.add(indelCheckBox);
+        //checkBoxPanel.add(indelCheckBox);
         checkBoxPanel.add(removeMinorCheckBox);
         checkBoxPanel.add(slidingHapCheckBox);
         checkBoxPanel.add(winSizePanel);
@@ -737,7 +746,8 @@ class DataFilterAlignmentDialog extends JDialog {
     }
 
     public boolean isExtractIndels() {
-        return indelCheckBox.isSelected();
+        //return indelCheckBox.isSelected();
+        return false;
     }
 
     public boolean isRemoveMinorSNPs() {

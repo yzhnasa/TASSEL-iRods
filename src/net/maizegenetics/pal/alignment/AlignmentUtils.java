@@ -276,4 +276,55 @@ public class AlignmentUtils {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * remove sites based on minimum frequency (the count of good bases, INCLUDING GAPS)
+     * and based on the proportion of good alleles (including gaps) different from consensus
+     *
+     * @param aa the AnnotatedAlignment to filter
+     * @param minimumProportion minimum proportion of sites different from the consensus
+     * @param minimumCount      minimum number of sequences with a good bases (not N or ?), where GAP IS CONSIDERED A GOOD BASE
+     */
+    public static Alignment removeSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, int minimumCount) {
+        int[] includeSites = getIncludedSitesBasedOnFreqIgnoreMissing(aa, minimumProportion, minimumCount);
+        Alignment mlaa = FilterAlignment.getInstance(aa, includeSites);
+        return mlaa;
+    }
+
+    /**
+     * get sites to be included based on minimum frequency (the count of good
+     * bases, INCLUDING GAPS) and based on the proportion of good sites (INCLUDING
+     * GAPS) different from consensus
+     *
+     * @param aa the AnnotatedAlignment to filter
+     * @param minimumProportion minimum proportion of sites different from the consensus
+     * @param minimumCount      minimum number of sequences with a good base or a gap (but not N or ?)
+     */
+    public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, int minimumCount) {
+        ArrayList<Integer> includeAL = new ArrayList<Integer>();
+        for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
+            int[][] alleles = aa.getAllelesSortedByFrequency(i);
+            int numAlleles = 0;
+            if ((alleles != null) && (alleles.length != 0)) {
+                numAlleles = alleles[0].length;
+            }
+            int totalNonMissing = 0;
+            for (int j = 0; j < numAlleles; j++) {
+                totalNonMissing = totalNonMissing + alleles[1][j];
+            }
+            double obsMinProp;
+            if (numAlleles >= 2) {
+                obsMinProp = (double) alleles[1][1] / (double) totalNonMissing;
+            } else {
+                obsMinProp = 0.0;
+            }
+            if ((totalNonMissing > 0) && (totalNonMissing >= minimumCount) && (obsMinProp >= minimumProportion)) {
+                includeAL.add(i);
+            }
+        }
+        int[] includeSites = new int[includeAL.size()];
+        for (int i = 0; i < includeAL.size(); i++) {
+            includeSites[i] = includeAL.get(i);
+        }
+        return includeSites;
+    }
 }
