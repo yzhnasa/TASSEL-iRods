@@ -632,7 +632,26 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public int[] getLociOffsets() {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        int[] orgOffsets = myBaseAlignment.getLociOffsets();
+
+        if ((!myIsSiteFilterByRange) && (!myIsSiteFilter)) {
+            return orgOffsets;
+        }
+
+        List newOffsets = new ArrayList();
+        for (int i = 0; i < orgOffsets.length; i++) {
+            int current = reverseTranslateSite(i);
+            if (current >= 0) {
+                newOffsets.add(i);
+            }
+        }
+        int[] result = new int[newOffsets.size()];
+        for (int i = 0; i < newOffsets.size(); i++) {
+            result[i] = (Integer) newOffsets.get(i);
+        }
+        return result;
+
     }
 
     public float getSiteScore(int seq, int site) {
