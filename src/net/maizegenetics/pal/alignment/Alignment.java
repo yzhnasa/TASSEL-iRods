@@ -629,4 +629,22 @@ public interface Alignment extends Serializable {
      * @return max number of alleles.
      */
     public int getMaxNumAlleles();
+    
+    /**
+     * Returns total number of non-missing allele values.
+     * This can be twice the number of taxa, as diploid values
+     * are supported.
+     * 
+     * @param site
+     * @return number of non-missing allele values.
+     */
+    public int getTotalCountNotMissing(int site);
+    
+    /**
+     * Returns the minor allele count for given site.
+     * 
+     * @param site
+     * @return minor allele count
+     */
+    public int getMinorAlleleCount(int site);
 }

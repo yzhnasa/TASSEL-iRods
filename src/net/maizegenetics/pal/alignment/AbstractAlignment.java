@@ -338,7 +338,7 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public byte getMinorAllele(int site) {
-
+        
         int[][] alleles = getAllelesSortedByFrequency(site);
 
         if (alleles[0].length >= 2) {
@@ -652,5 +652,39 @@ abstract public class AbstractAlignment implements Alignment {
     @Override
     public int getMaxNumAlleles() {
         return myMaxNumAlleles;
+    }
+
+    @Override
+    public int getTotalCountNotMissing(int site) {
+        
+        int result = 0;
+        for (int i = 0, n = getSequenceCount(); i < n; i++) {
+            byte[] current = getBaseArray(i, site);
+            if (current[0] != Alignment.UNKNOWN_ALLELE) {
+                result++;
+            }
+            if (current[1] != Alignment.UNKNOWN_ALLELE) {
+                result++;
+            }
+        }
+        return result;
+        
+    }
+    
+    public int getMinorAlleleCount(int site) {
+        
+        int result = 0;
+        byte minorAllele = getMinorAllele(site);
+        for (int i = 0, n = getSequenceCount(); i < n; i++) {
+            byte[] current = getBaseArray(i, site);
+            if (current[0] != minorAllele) {
+                result++;
+            }
+            if (current[1] != minorAllele) {
+                result++;
+            }
+        }
+        return result;
+        
     }
 }

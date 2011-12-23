@@ -333,4 +333,38 @@ public class SBitAlignment extends AbstractAlignment {
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
         return UnmodifiableBitSet.getInstance(myData[alleleNumber][site]);
     }
+
+    public int getTotalCountNotMissing(int site) {
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 0; i < myNumDataRows; i++) {
+            temp.or(myData[i][site]);
+        }
+        return (int) temp.cardinality() * 2;
+
+    }
+    
+    public int getMinorAlleleCount(int site) {
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 0; i < myNumDataRows; i++) {
+            if (i != 1) {
+                temp.or(myData[i][site]);
+            }
+        }
+        temp.flip(0, temp.size());
+        temp.and(myData[1][site]);
+        
+        return (int) temp.cardinality() + (int) myData[1][site].cardinality();
+
+    }
+
+    @Override
+    public double getMinorAlleleFrequency(int site) {
+        int minorAlleleCount = getMinorAlleleCount(site);
+        if (minorAlleleCount == 0) {
+            return 0.0;
+        }
+        return (double) getMinorAlleleCount(site) / (double) getTotalCountNotMissing(site);
+    }
 }
