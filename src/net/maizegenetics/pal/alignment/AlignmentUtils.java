@@ -302,21 +302,11 @@ public class AlignmentUtils {
     public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, int minimumCount) {
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
         for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
-            int[][] alleles = aa.getAllelesSortedByFrequency(i);
-            int numAlleles = 0;
-            if ((alleles != null) && (alleles.length != 0)) {
-                numAlleles = alleles[0].length;
-            }
-            int totalNonMissing = 0;
-            for (int j = 0; j < numAlleles; j++) {
-                totalNonMissing = totalNonMissing + alleles[1][j];
-            }
-            double obsMinProp;
-            if (numAlleles >= 2) {
-                obsMinProp = (double) alleles[1][1] / (double) totalNonMissing;
-            } else {
-                obsMinProp = 0.0;
-            }
+            
+            int totalNonMissing = aa.getTotalCountNotMissing(i);
+            
+            double obsMinProp = aa.getMinorAlleleFrequency(i);
+            
             if ((totalNonMissing > 0) && (totalNonMissing >= minimumCount) && (obsMinProp >= minimumProportion)) {
                 includeAL.add(i);
             }
