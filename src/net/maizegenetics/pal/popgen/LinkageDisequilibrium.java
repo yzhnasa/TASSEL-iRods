@@ -14,6 +14,10 @@ import net.maizegenetics.util.ProgressListener;
 
 import java.io.Serializable;
 import java.io.StringWriter;
+import net.maizegenetics.pal.alignment.SBitAlignment;
+import net.maizegenetics.pal.alignment.TBitAlignment;
+import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.OpenBitSet;
 
 /**
  * This class calculates D' and r^2 estimates of linkage disequilibrium.  It also
@@ -40,6 +44,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         All, SlidingWindow, SiteByAll
     };
     protected Alignment theAlignment;
+    private SBitAlignment theSBA;
     boolean rapidPermute = true;
 //    int numberOfPermutations = 1000;
     int minTaxaForEstimate = 2;
@@ -51,6 +56,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     int[] irow, icol, sampleSize;  //4*3 = 12 bytes per entry
     boolean isDense = true;
     private ProgressListener myListener = null;
+    FisherExact fisherExact; 
 
     /**
      * compute LD based on an alignment
@@ -63,6 +69,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType) {
         this.theAlignment = alignment;
+        if(theAlignment instanceof SBitAlignment) {
+            theSBA=(SBitAlignment)theAlignment;
+        } else {
+            theSBA=SBitAlignment.getInstance(theAlignment,2,false);
+        }
+        fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         this.rapidPermute = rapidPermute;
         // this.numberOfPermutations = numberOfPermutations;
         this.windowOfSites = windowSize;
@@ -81,6 +93,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType, int testSite, ProgressListener listener) {
         this.theAlignment = alignment;
+        if(theAlignment instanceof SBitAlignment) {
+            theSBA=(SBitAlignment)theAlignment;
+        } else {
+            theSBA=SBitAlignment.getInstance(theAlignment,2,false);
+        }
+        fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         this.rapidPermute = rapidPermute;
         this.windowOfSites = windowSize;
         this.currDesign = LDType;
@@ -99,6 +117,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations, int minTaxaForEstimate) {
         this.theAlignment = alignment;
+        if(theAlignment instanceof SBitAlignment) {
+            theSBA=(SBitAlignment)theAlignment;
+        } else {
+            theSBA=SBitAlignment.getInstance(theAlignment,2,false);
+        }
+        fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         this.rapidPermute = rapidPermute;
         // this.numberOfPermutations = numberOfPermutations;
         this.minTaxaForEstimate = minTaxaForEstimate;
@@ -131,6 +155,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations,
             int minTaxaForEstimate, int windowOfSites, testDesign currDesign, int testSite) {
         this.theAlignment = alignment;
+        if(theAlignment instanceof SBitAlignment) {
+            theSBA=(SBitAlignment)theAlignment;
+        } else {
+            theSBA=SBitAlignment.getInstance(theAlignment,2,false);
+        }
+        fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         this.rapidPermute = rapidPermute;
         // this.numberOfPermutations = numberOfPermutations;
         this.minTaxaForEstimate = minTaxaForEstimate;
@@ -145,7 +175,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     public void run() {
         initMatrices();
         designLDTests();
-        calculateLDForInbred(true);
+        long time=System.currentTimeMillis();
+  //      calculateLDForInbred(true);       
+        System.out.println("Old LD Time:"+(System.currentTimeMillis()-time));
+        time=System.currentTimeMillis();
+        calculateBitLDForInbred(true);
+        System.out.println("New LD Time:"+(System.currentTimeMillis()-time));
     }
 
     /**
@@ -208,6 +243,38 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         sampleSize = new int[totalTests];
     }
 
+    private void calculateBitLDForInbred(boolean collapseMinor) {  //only calculates disequilibrium for inbreds
+        int n;
+    //    FisherExact fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
+        int[][] contig;
+        for (int currTest = 0; currTest < totalTests; currTest++) {
+            int r = irow[currTest];
+            int c = icol[currTest];
+            int currentProgress = 100 * currTest / totalTests;
+            fireProgress((int) currentProgress);
+            contig = new int[2][2];
+            rsqr[currTest] = dprime[currTest] = pval[currTest] = Float.NaN;
+            sampleSize[currTest] = 0;
+            BitSet rMj=theSBA.getAllelePresenceForAllTaxa(r, 0);
+            BitSet rMn=theSBA.getAllelePresenceForAllTaxa(r, 1);
+            BitSet cMj=theSBA.getAllelePresenceForAllTaxa(c, 0);
+            BitSet cMn=theSBA.getAllelePresenceForAllTaxa(c, 1);
+            n = 0;
+            n+=contig[0][0]=(int)OpenBitSet.intersectionCount(rMj, cMj);
+            n+=contig[1][0]=(int)OpenBitSet.intersectionCount(rMn, cMj);
+            n+=contig[0][1]=(int)OpenBitSet.intersectionCount(rMj, cMn);
+            n+=contig[1][1]=(int)OpenBitSet.intersectionCount(rMn, cMn);
+            sampleSize[currTest] = n;
+            rsqr[currTest] = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minTaxaForEstimate);
+            dprime[currTest] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minTaxaForEstimate);
+            if (Double.isNaN(rsqr[currTest]) || Double.isNaN(dprime[currTest])) {
+                pval[currTest] = Float.NaN;
+            } else {
+                pval[currTest] = (float) fisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
+            }
+        } //end of currTest
+    }
+    
     private void calculateLDForInbred(boolean collapseMinor) {  //only calculates disequilibrium for inbreds
         int n;
         FisherExact fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
