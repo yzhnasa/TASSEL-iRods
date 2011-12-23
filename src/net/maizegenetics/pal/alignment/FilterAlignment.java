@@ -676,7 +676,19 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public String[][] getAlleleEncodings() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String[][] encodings = myBaseAlignment.getAlleleEncodings();
+        if (encodings.length == 1) {
+            return encodings;
+        } else if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
+            int numSites = getSiteCount();
+            String[][] result = new String[numSites][];
+            for (int i = 0; i < numSites; i++) {
+                result[i] = getAlleleEncodings(i);
+            }
+            return result;
+        } else {
+            return encodings;
+        }
     }
 
     public String[] getAlleleEncodings(int site) {
