@@ -597,12 +597,12 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
-    public byte[] getReference(int startSite, int endSite) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
     public byte[] getReference() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
+            return myBaseAlignment.getReference(0, getSiteCount());
+        } else {
+            return myBaseAlignment.getReference();
+        }
     }
 
     public boolean isHeterozygous(int taxon, int site) {
@@ -615,7 +615,16 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public int[] getPhysicalPositions() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
+            int numSites = getSiteCount();
+            int[] result = new int[numSites];
+            for (int i = 0; i < numSites; i++) {
+                result[i] = getPositionInLocus(i);
+            }
+            return result;
+        } else {
+            return myBaseAlignment.getPhysicalPositions();
+        }
     }
 
     public String getLocusName(int site) {
@@ -636,15 +645,11 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public boolean hasSiteScores() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myBaseAlignment.hasSiteScores();
     }
 
     public SITE_SCORE_TYPE getSiteScoreType() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public boolean isAllPolymorphic() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myBaseAlignment.getSiteScoreType();
     }
 
     public boolean isPolymorphic(int site) {
@@ -656,7 +661,7 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public String getGenomeAssembly() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myBaseAlignment.getGenomeAssembly();
     }
 
     public boolean isPositiveStrand(int site) {
@@ -664,15 +669,15 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public boolean isPhased() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myBaseAlignment.isPhased();
     }
 
     public GeneticMap getGeneticMap() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myBaseAlignment.getGeneticMap();
     }
 
     public boolean retainsRareAlleles() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myBaseAlignment.retainsRareAlleles();
     }
 
     public String[][] getAlleleEncodings() {
@@ -700,6 +705,6 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public int getMaxNumAlleles() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myBaseAlignment.getMaxNumAlleles();
     }
 }
