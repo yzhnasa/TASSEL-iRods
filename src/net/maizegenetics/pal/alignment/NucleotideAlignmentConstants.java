@@ -30,6 +30,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("A+", (byte) 0x04);
         NUCLEOTIDE_DIPLOID_HASH.put("A-", (byte) 0x05);
         NUCLEOTIDE_DIPLOID_HASH.put("AN", (byte) 0x0F);
+        NUCLEOTIDE_DIPLOID_HASH.put("AX", (byte) 0x0F);
 
         NUCLEOTIDE_DIPLOID_HASH.put("CA", (byte) 0x10);
         NUCLEOTIDE_DIPLOID_HASH.put("CC", (byte) 0x11);
@@ -38,6 +39,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("C+", (byte) 0x14);
         NUCLEOTIDE_DIPLOID_HASH.put("C-", (byte) 0x15);
         NUCLEOTIDE_DIPLOID_HASH.put("CN", (byte) 0x1F);
+        NUCLEOTIDE_DIPLOID_HASH.put("CX", (byte) 0x1F);
 
         NUCLEOTIDE_DIPLOID_HASH.put("GA", (byte) 0x20);
         NUCLEOTIDE_DIPLOID_HASH.put("GC", (byte) 0x21);
@@ -46,6 +48,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("G+", (byte) 0x24);
         NUCLEOTIDE_DIPLOID_HASH.put("G-", (byte) 0x25);
         NUCLEOTIDE_DIPLOID_HASH.put("GN", (byte) 0x2F);
+        NUCLEOTIDE_DIPLOID_HASH.put("GX", (byte) 0x2F);
 
         NUCLEOTIDE_DIPLOID_HASH.put("TA", (byte) 0x30);
         NUCLEOTIDE_DIPLOID_HASH.put("TC", (byte) 0x31);
@@ -54,6 +57,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("T+", (byte) 0x34);
         NUCLEOTIDE_DIPLOID_HASH.put("T-", (byte) 0x35);
         NUCLEOTIDE_DIPLOID_HASH.put("TN", (byte) 0x3F);
+        NUCLEOTIDE_DIPLOID_HASH.put("TX", (byte) 0x3F);
 
         NUCLEOTIDE_DIPLOID_HASH.put("+A", (byte) 0x40);
         NUCLEOTIDE_DIPLOID_HASH.put("+C", (byte) 0x41);
@@ -62,6 +66,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("++", (byte) 0x44);
         NUCLEOTIDE_DIPLOID_HASH.put("+-", (byte) 0x45);
         NUCLEOTIDE_DIPLOID_HASH.put("+N", (byte) 0x4F);
+        NUCLEOTIDE_DIPLOID_HASH.put("+X", (byte) 0x4F);
 
         NUCLEOTIDE_DIPLOID_HASH.put("-A", (byte) 0x50);
         NUCLEOTIDE_DIPLOID_HASH.put("-C", (byte) 0x51);
@@ -70,6 +75,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("-+", (byte) 0x54);
         NUCLEOTIDE_DIPLOID_HASH.put("--", (byte) 0x55);
         NUCLEOTIDE_DIPLOID_HASH.put("-N", (byte) 0x5F);
+        NUCLEOTIDE_DIPLOID_HASH.put("-X", (byte) 0x5F);
 
         NUCLEOTIDE_DIPLOID_HASH.put("NA", (byte) 0xF0);
         NUCLEOTIDE_DIPLOID_HASH.put("NC", (byte) 0xF1);
@@ -78,6 +84,16 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("N+", (byte) 0xF4);
         NUCLEOTIDE_DIPLOID_HASH.put("N-", (byte) 0xF5);
         NUCLEOTIDE_DIPLOID_HASH.put("NN", (byte) 0xFF);
+        NUCLEOTIDE_DIPLOID_HASH.put("NX", (byte) 0xFF);
+        
+        NUCLEOTIDE_DIPLOID_HASH.put("XA", (byte) 0xF0);
+        NUCLEOTIDE_DIPLOID_HASH.put("XC", (byte) 0xF1);
+        NUCLEOTIDE_DIPLOID_HASH.put("XG", (byte) 0xF2);
+        NUCLEOTIDE_DIPLOID_HASH.put("XT", (byte) 0xF3);
+        NUCLEOTIDE_DIPLOID_HASH.put("X+", (byte) 0xF4);
+        NUCLEOTIDE_DIPLOID_HASH.put("X-", (byte) 0xF5);
+        NUCLEOTIDE_DIPLOID_HASH.put("XN", (byte) 0xFF);
+        NUCLEOTIDE_DIPLOID_HASH.put("XX", (byte) 0xFF);
 
         NUCLEOTIDE_DIPLOID_HASH.put("A", (byte) 0x00); // AA
         NUCLEOTIDE_DIPLOID_HASH.put("C", (byte) 0x11); // CC
@@ -86,6 +102,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("+", (byte) 0x44); // ++
         NUCLEOTIDE_DIPLOID_HASH.put("-", (byte) 0x55); // --
         NUCLEOTIDE_DIPLOID_HASH.put("N", (byte) 0xFF); // NN
+        NUCLEOTIDE_DIPLOID_HASH.put("X", (byte) 0xFF); // NN
 
         NUCLEOTIDE_DIPLOID_HASH.put("R", (byte) 0x02); // AG
         NUCLEOTIDE_DIPLOID_HASH.put("Y", (byte) 0x13); // CT
