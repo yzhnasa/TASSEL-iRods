@@ -28,7 +28,8 @@ public class FilterAlignment extends AbstractAlignment {
     private final int[] mySiteRedirect;
     private final int myRangeStart;
     private final int myRangeEnd;
-    private final Locus[] myLoci;
+    private Locus[] myLoci;
+    private int[] myLociOffsets;
 
     private FilterAlignment(Alignment a, IdGroup subIdGroup, int[] taxaRedirect, FilterAlignment original) {
 
@@ -140,7 +141,7 @@ public class FilterAlignment extends AbstractAlignment {
         myRangeStart = startSite;
         myRangeEnd = endSite;
         mySiteRedirect = null;
-        myLoci = getLociFromBase();
+        getLociFromBase();
 
         if (original == null) {
             myIsTaxaFilter = false;
@@ -174,7 +175,7 @@ public class FilterAlignment extends AbstractAlignment {
         }
         myRangeStart = -1;
         myRangeEnd = -1;
-        myLoci = getLociFromBase();
+        getLociFromBase();
 
         if (original == null) {
             myIsTaxaFilter = false;
@@ -330,24 +331,30 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
-    private Locus[] getLociFromBase() {
+    private void getLociFromBase() {
 
         if ((!myIsSiteFilter) && (!myIsSiteFilterByRange)) {
-            return myBaseAlignment.getLoci();
+            myLoci = myBaseAlignment.getLoci();
         }
 
         int numSites = getSiteCount();
         List loci = new ArrayList();
+        List offsets = new ArrayList();
         for (int i = 0; i < numSites; i++) {
             Locus current = getLocus(i);
             if (!loci.contains(current)) {
                 loci.add(current);
+                offsets.add(i);
             }
         }
 
-        Locus[] result = new Locus[loci.size()];
-        loci.toArray(result);
-        return result;
+        myLoci = new Locus[loci.size()];
+        loci.toArray(myLoci);
+
+        myLociOffsets = new int[offsets.size()];
+        for (int i = 0; i < offsets.size(); i++) {
+            myLociOffsets[i] = (Integer) offsets.get(i);
+        }
 
     }
 
@@ -608,26 +615,7 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public int[] getLociOffsets() {
-
-        int[] orgOffsets = myBaseAlignment.getLociOffsets();
-
-        if ((!myIsSiteFilterByRange) && (!myIsSiteFilter)) {
-            return orgOffsets;
-        }
-
-        List newOffsets = new ArrayList();
-        for (int i = 0; i < orgOffsets.length; i++) {
-            int current = reverseTranslateSite(i);
-            if (current >= 0) {
-                newOffsets.add(i);
-            }
-        }
-        int[] result = new int[newOffsets.size()];
-        for (int i = 0; i < newOffsets.size(); i++) {
-            result[i] = (Integer) newOffsets.get(i);
-        }
-        return result;
-
+        return myLociOffsets;
     }
 
     public float getSiteScore(int seq, int site) {
