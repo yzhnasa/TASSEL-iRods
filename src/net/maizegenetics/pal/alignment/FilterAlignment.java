@@ -505,30 +505,6 @@ public class FilterAlignment extends AbstractAlignment {
         return myRangeEnd;
     }
 
-    public byte getMajorAllele(int site) {
-        return myBaseAlignment.getMajorAllele(translateSite(site));
-    }
-
-    public byte getMinorAllele(int site) {
-        return myBaseAlignment.getMinorAllele(translateSite(site));
-    }
-
-    public byte[] getMinorAlleles(int site) {
-        return myBaseAlignment.getMinorAlleles(translateSite(site));
-    }
-
-    public byte[] getAlleles(int site) {
-        return myBaseAlignment.getAlleles(translateSite(site));
-    }
-
-    public double getMinorAlleleFrequency(int site) {
-        return myBaseAlignment.getMinorAlleleFrequency(translateSite(site));
-    }
-
-    public int[][] getAllelesSortedByFrequency(int site) {
-        return myBaseAlignment.getAllelesSortedByFrequency(translateSite(site));
-    }
-
     public byte[] getBaseArray(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
