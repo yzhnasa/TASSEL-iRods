@@ -17,6 +17,7 @@ package net.maizegenetics.pal.distance;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 
@@ -68,10 +69,16 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 //        computeDistances();       
 //        System.out.println("Old Distance Time:"+(System.currentTimeMillis()-time));
 //        time=System.currentTimeMillis();
-        computeBitDistances();
-//        System.out.println("New Distance Time:"+(System.currentTimeMillis()-time));
+//        computeBitDistances();
+//        System.out.println("NewBit Distance Time:"+(System.currentTimeMillis()-time));
+        time=System.currentTimeMillis();
+        computeHetBitDistances();
+        System.out.println("NewBitHet Distance Time:"+(System.currentTimeMillis()-time));
     }
     
+    /**
+     * Only work for inbreds
+     */
     private void computeBitDistances() {
         avgTotalSites = 0;
         int count = 0;
@@ -82,9 +89,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
             BitSet iMj=theTBA.getAllelePresensceForAllSites(i, 0);
             BitSet iMn=theTBA.getAllelePresensceForAllSites(i, 1);
             //there are lots of approaches to deal with the hets
-            //right now we are ingoring
-//            BitSet iHet=new OpenBitSet(iMj.getBits(),iMj.getNumWords());
-//            iHet.and(iMn);
             for (int j = i + 1; j < numSeqs; j++) {
                 BitSet jMj=theTBA.getAllelePresensceForAllSites(j, 0);
                 BitSet jMn=theTBA.getAllelePresensceForAllSites(j, 1);
@@ -94,6 +98,47 @@ public class IBSDistanceMatrix extends DistanceMatrix {
                 double dist=1-identity;
                 distance[i][j] = distance[j][i] = dist;
                 avgTotalSites += (same+diff);  //this assumes not hets
+                count++;
+            }
+            fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
+        }
+        lastCachedRow = null;
+        setDistances(distance);
+        avgTotalSites /= (double) count;
+    }
+    
+    
+    /**
+     * This is a cleanest, fastest and most accurate way to calculate distance.
+     * It includes a simple approach for hets.
+     * This method is actually 10% faster than the inbred approach.
+     * Key reason for the speed increase is only 3 bit counts versus the 4 above.
+     */
+    private void computeHetBitDistances() {
+        avgTotalSites = 0;
+        int count = 0;
+        double[] params;
+        double[][] distance = new double[numSeqs][numSeqs];
+        for (int i = 0; i < numSeqs; i++) {
+            distance[i][i] = 0;
+            long[] iMj=theTBA.getAllelePresensceForAllSites(i, 0).getBits();
+            long[] iMn=theTBA.getAllelePresensceForAllSites(i, 1).getBits();
+            for (int j = i + 1; j < numSeqs; j++) {
+                long[] jMj=theTBA.getAllelePresensceForAllSites(j, 0).getBits();
+                long[] jMn=theTBA.getAllelePresensceForAllSites(j, 1).getBits();
+                int sameCnt=0, diffCnt=0, hetCnt=0;
+                for(int x=0; x<iMj.length; x++) {
+                    long same=(iMj[x]&jMj[x])|(iMn[x]&jMn[x]);
+                    long diff=(iMj[x]&jMn[x])|(iMn[x]&jMj[x]);
+                    long hets=same&diff;
+                    sameCnt+=BitUtil.pop(same);
+                    diffCnt+=BitUtil.pop(diff);
+                    hetCnt+=BitUtil.pop(hets);
+                }
+                double identity=(double)(sameCnt+(hetCnt/2))/(double)(sameCnt+diffCnt+hetCnt);
+                double dist=1-identity;
+                distance[i][j] = distance[j][i] = dist;
+                avgTotalSites += sameCnt+diffCnt+hetCnt;  //this assumes not hets
                 count++;
             }
             fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
