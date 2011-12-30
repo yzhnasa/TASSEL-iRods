@@ -86,12 +86,12 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         double[][] distance = new double[numSeqs][numSeqs];
         for (int i = 0; i < numSeqs; i++) {
             distance[i][i] = 0;
-            BitSet iMj=theTBA.getAllelePresensceForAllSites(i, 0);
-            BitSet iMn=theTBA.getAllelePresensceForAllSites(i, 1);
+            BitSet iMj=theTBA.getAllelePresenceForAllSites(i, 0);
+            BitSet iMn=theTBA.getAllelePresenceForAllSites(i, 1);
             //there are lots of approaches to deal with the hets
             for (int j = i + 1; j < numSeqs; j++) {
-                BitSet jMj=theTBA.getAllelePresensceForAllSites(j, 0);
-                BitSet jMn=theTBA.getAllelePresensceForAllSites(j, 1);
+                BitSet jMj=theTBA.getAllelePresenceForAllSites(j, 0);
+                BitSet jMn=theTBA.getAllelePresenceForAllSites(j, 1);
                 long same=OpenBitSet.intersectionCount(iMj, jMj)+OpenBitSet.intersectionCount(iMn, jMn);
                 long diff=OpenBitSet.intersectionCount(iMj, jMn)+OpenBitSet.intersectionCount(iMn, jMj);
                 double identity=(double)same/(double)(same+diff);
@@ -121,11 +121,11 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         double[][] distance = new double[numSeqs][numSeqs];
         for (int i = 0; i < numSeqs; i++) {
             distance[i][i] = 0;
-            long[] iMj=theTBA.getAllelePresensceForAllSites(i, 0).getBits();
-            long[] iMn=theTBA.getAllelePresensceForAllSites(i, 1).getBits();
+            long[] iMj=theTBA.getAllelePresenceForAllSites(i, 0).getBits();
+            long[] iMn=theTBA.getAllelePresenceForAllSites(i, 1).getBits();
             for (int j = i + 1; j < numSeqs; j++) {
-                long[] jMj=theTBA.getAllelePresensceForAllSites(j, 0).getBits();
-                long[] jMn=theTBA.getAllelePresensceForAllSites(j, 1).getBits();
+                long[] jMj=theTBA.getAllelePresenceForAllSites(j, 0).getBits();
+                long[] jMn=theTBA.getAllelePresenceForAllSites(j, 1).getBits();
                 int sameCnt=0, diffCnt=0, hetCnt=0;
                 for(int x=0; x<iMj.length; x++) {
                     long same=(iMj[x]&jMj[x])|(iMn[x]&jMn[x]);

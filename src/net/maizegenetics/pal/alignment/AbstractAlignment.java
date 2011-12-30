@@ -200,7 +200,7 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public BitSet getAllelePresensceForAllSites(int taxon, int alleleNumber) {
+    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
         throw new UnsupportedOperationException();
     }
 
@@ -210,7 +210,7 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public long[] getAllelePresensceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException();
     }
 

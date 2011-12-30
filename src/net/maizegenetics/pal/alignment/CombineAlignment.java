@@ -372,7 +372,7 @@ public class CombineAlignment extends AbstractAlignment {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public BitSet getAllelePresensceForAllSites(int taxon, int alleleNumber) {
+    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -380,7 +380,7 @@ public class CombineAlignment extends AbstractAlignment {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public long[] getAllelePresensceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

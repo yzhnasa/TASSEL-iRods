@@ -132,7 +132,7 @@ public interface Alignment extends Serializable {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresensceForAllSites(int taxon, int alleleNumber);
+    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether site
@@ -164,7 +164,7 @@ public interface Alignment extends Serializable {
      *
      * @return sequence of true/false values.
      */
-    public long[] getAllelePresensceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock);
+    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock);
 
     /**
      * Returns string representation of diploid values returned by

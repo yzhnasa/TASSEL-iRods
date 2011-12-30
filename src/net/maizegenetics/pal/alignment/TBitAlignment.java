@@ -230,12 +230,12 @@ public class TBitAlignment extends AbstractAlignment {
     }
 
     @Override
-    public BitSet getAllelePresensceForAllSites(int taxon, int alleleNumber) {
+    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
         return UnmodifiableBitSet.getInstance(myData[alleleNumber][taxon]);
     }
 
     @Override
-    public long[] getAllelePresensceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
         long[] result = new long[endBlock - startBlock];
         System.arraycopy(myData[alleleNumber][taxon].getBits(), startBlock, result, 0, endBlock - startBlock);
         return result;
