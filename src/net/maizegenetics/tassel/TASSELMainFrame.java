@@ -78,7 +78,7 @@ public class TASSELMainFrame extends JFrame {
 
     private static final Logger myLogger = Logger.getLogger(TASSELMainFrame.class);
     public static final String version = "4.0.3";
-    public static final String versionDate = "January 5, 2011";
+    public static final String versionDate = "January 5, 2012";
     DataTreePanel theDataTreePanel;
     DataControlPanel theDataControlPanel;
     AnalysisControlPanel theAnalysisControlPanel;
