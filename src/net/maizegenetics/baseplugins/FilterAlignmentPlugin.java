@@ -166,8 +166,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             throw new UnsupportedOperationException();
         }
         if ((start != 0) || (end < (naa.getSiteCount() - 1))) {
-            //naa = AnnotatedAlignmentUtils.removeSitesOutsideRange(naa, start, end);
-            throw new UnsupportedOperationException();
+            naa = AlignmentUtils.removeSitesOutsideRange(naa, start, end);
         }
         if (extractIndels) {
             //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, minFreq, minCount);

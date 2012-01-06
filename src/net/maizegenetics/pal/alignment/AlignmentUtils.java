@@ -302,11 +302,11 @@ public class AlignmentUtils {
     public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, int minimumCount) {
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
         for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
-            
+
             int totalNonMissing = aa.getTotalCountNotMissing(i);
-            
+
             double obsMinProp = aa.getMinorAlleleFrequency(i);
-            
+
             if ((totalNonMissing > 0) && (totalNonMissing >= minimumCount) && (obsMinProp >= minimumProportion)) {
                 includeAL.add(i);
             }
@@ -316,5 +316,23 @@ public class AlignmentUtils {
             includeSites[i] = includeAL.get(i);
         }
         return includeSites;
+    }
+
+    /**
+     * Remove sites based on site position (excluded sites are <firstSite and >lastSite)
+     * This not effect any prior exclusions.
+     * 
+     * @param aa the AnnotatedAlignment to filter
+     * @param firstSite first site to keep in the range
+     * @param lastSite  last site to keep in the range
+     */
+    public static Alignment removeSitesOutsideRange(Alignment aa, int firstSite, int lastSite) {
+        if ((firstSite < 0) || (firstSite > lastSite)) {
+            return null;
+        }
+        if (lastSite > aa.getSiteCount() - 1) {
+            return null;
+        }
+        return FilterAlignment.getInstance(aa, firstSite, lastSite);
     }
 }
