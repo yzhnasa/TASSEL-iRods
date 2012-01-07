@@ -50,6 +50,7 @@ public class FilterAlignment extends AbstractAlignment {
             myRangeStart = -1;
             myRangeEnd = -1;
             myLoci = myBaseAlignment.getLoci();
+            myLociOffsets = myBaseAlignment.getLociOffsets();
         } else {
             myIsSiteFilter = original.isSiteFilter();
             myIsSiteFilterByRange = original.isSiteFilterByRange();
@@ -57,6 +58,7 @@ public class FilterAlignment extends AbstractAlignment {
             myRangeStart = original.getRangeStart();
             myRangeEnd = original.getRangeEnd();
             myLoci = original.getLoci();
+            myLociOffsets = original.getLociOffsets();
         }
 
     }
