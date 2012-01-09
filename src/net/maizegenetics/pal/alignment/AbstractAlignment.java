@@ -223,6 +223,11 @@ abstract public class AbstractAlignment implements Alignment {
     public String getTaxaName(int index) {
         return myIdGroup.getIdentifier(index).getName();
     }
+    
+    @Override
+    public String getFullTaxaName(int index) {
+        return myIdGroup.getIdentifier(index).getFullName();
+    }
 
     @Override
     public int getSequenceCount() {

@@ -532,6 +532,14 @@ public interface Alignment extends Serializable {
      * @return taxa name
      */
     public String getTaxaName(int index);
+    
+    /**
+     * Return full taxa name at given index.
+     * 
+     * @param index
+     * @return full taxa name
+     */
+    public String getFullTaxaName(int index);
 
     /**
      * Gets the Genome Assembly.
