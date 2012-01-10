@@ -15,7 +15,6 @@ import net.maizegenetics.util.ProgressListener;
 import java.io.Serializable;
 import java.io.StringWriter;
 import net.maizegenetics.pal.alignment.SBitAlignment;
-import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 
@@ -56,7 +55,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     int[] irow, icol, sampleSize;  //4*3 = 12 bytes per entry
     boolean isDense = true;
     private ProgressListener myListener = null;
-    FisherExact fisherExact; 
+    FisherExact fisherExact;
+    private static String NotImplemented = "NotImplemented";
+    private static String NA = "N/A";
+    private static Integer IntegerTwo = Integer.valueOf(2);
 
     /**
      * compute LD based on an alignment
@@ -69,10 +71,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType) {
         this.theAlignment = alignment;
-        if(theAlignment instanceof SBitAlignment) {
-            theSBA=(SBitAlignment)theAlignment;
+        if (theAlignment instanceof SBitAlignment) {
+            theSBA = (SBitAlignment) theAlignment;
         } else {
-            theSBA=SBitAlignment.getInstance(theAlignment,2,false);
+            theSBA = SBitAlignment.getInstance(theAlignment, 2, false);
         }
         fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         this.rapidPermute = rapidPermute;
@@ -93,10 +95,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType, int testSite, ProgressListener listener) {
         this.theAlignment = alignment;
-        if(theAlignment instanceof SBitAlignment) {
-            theSBA=(SBitAlignment)theAlignment;
+        if (theAlignment instanceof SBitAlignment) {
+            theSBA = (SBitAlignment) theAlignment;
         } else {
-            theSBA=SBitAlignment.getInstance(theAlignment,2,false);
+            theSBA = SBitAlignment.getInstance(theAlignment, 2, false);
         }
         fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         this.rapidPermute = rapidPermute;
@@ -117,10 +119,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations, int minTaxaForEstimate) {
         this.theAlignment = alignment;
-        if(theAlignment instanceof SBitAlignment) {
-            theSBA=(SBitAlignment)theAlignment;
+        if (theAlignment instanceof SBitAlignment) {
+            theSBA = (SBitAlignment) theAlignment;
         } else {
-            theSBA=SBitAlignment.getInstance(theAlignment,2,false);
+            theSBA = SBitAlignment.getInstance(theAlignment, 2, false);
         }
         fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         this.rapidPermute = rapidPermute;
@@ -155,10 +157,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations,
             int minTaxaForEstimate, int windowOfSites, testDesign currDesign, int testSite) {
         this.theAlignment = alignment;
-        if(theAlignment instanceof SBitAlignment) {
-            theSBA=(SBitAlignment)theAlignment;
+        if (theAlignment instanceof SBitAlignment) {
+            theSBA = (SBitAlignment) theAlignment;
         } else {
-            theSBA=SBitAlignment.getInstance(theAlignment,2,false);
+            theSBA = SBitAlignment.getInstance(theAlignment, 2, false);
         }
         fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         this.rapidPermute = rapidPermute;
@@ -175,12 +177,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     public void run() {
         initMatrices();
         designLDTests();
-        long time=System.currentTimeMillis();
-  //      calculateLDForInbred(true);       
-        System.out.println("Old LD Time:"+(System.currentTimeMillis()-time));
-        time=System.currentTimeMillis();
+        long time = System.currentTimeMillis();
+        //      calculateLDForInbred(true);       
+        System.out.println("Old LD Time:" + (System.currentTimeMillis() - time));
+        time = System.currentTimeMillis();
         calculateBitLDForInbred(true);
-        System.out.println("New LD Time:"+(System.currentTimeMillis()-time));
+        System.out.println("New LD Time:" + (System.currentTimeMillis() - time));
     }
 
     /**
@@ -245,7 +247,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
     private void calculateBitLDForInbred(boolean collapseMinor) {  //only calculates disequilibrium for inbreds
         int n;
-    //    FisherExact fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
+        //    FisherExact fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
         int[][] contig;
         for (int currTest = 0; currTest < totalTests; currTest++) {
             int r = irow[currTest];
@@ -255,15 +257,15 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             contig = new int[2][2];
             rsqr[currTest] = dprime[currTest] = pval[currTest] = Float.NaN;
             sampleSize[currTest] = 0;
-            BitSet rMj=theSBA.getAllelePresenceForAllTaxa(r, 0);
-            BitSet rMn=theSBA.getAllelePresenceForAllTaxa(r, 1);
-            BitSet cMj=theSBA.getAllelePresenceForAllTaxa(c, 0);
-            BitSet cMn=theSBA.getAllelePresenceForAllTaxa(c, 1);
+            BitSet rMj = theSBA.getAllelePresenceForAllTaxa(r, 0);
+            BitSet rMn = theSBA.getAllelePresenceForAllTaxa(r, 1);
+            BitSet cMj = theSBA.getAllelePresenceForAllTaxa(c, 0);
+            BitSet cMn = theSBA.getAllelePresenceForAllTaxa(c, 1);
             n = 0;
-            n+=contig[0][0]=(int)OpenBitSet.intersectionCount(rMj, cMj);
-            n+=contig[1][0]=(int)OpenBitSet.intersectionCount(rMn, cMj);
-            n+=contig[0][1]=(int)OpenBitSet.intersectionCount(rMj, cMn);
-            n+=contig[1][1]=(int)OpenBitSet.intersectionCount(rMn, cMn);
+            n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
+            n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
+            n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
+            n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
             sampleSize[currTest] = n;
             rsqr[currTest] = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minTaxaForEstimate);
             dprime[currTest] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minTaxaForEstimate);
@@ -274,7 +276,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             }
         } //end of currTest
     }
-    
+
     private void calculateLDForInbred(boolean collapseMinor) {  //only calculates disequilibrium for inbreds
         int n;
         FisherExact fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
@@ -619,47 +621,41 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public Object[] getRow(int row) {
 
-        String NotImplemented = "NotImplemented";
-        String NA = "N/A";
-        Object[] data;
-        java.text.NumberFormat nf = new java.text.DecimalFormat();
-        nf.setMaximumFractionDigits(8);
         int labelOffset = 0;
-        data = new String[17];
+        Object[] data = new Object[17];
 
         int r = irow[row];
         int c = icol[row];
 
-        String rState = (char) theAlignment.getMajorAllele(r) + ":" + theAlignment.getMinorAllele(r);
-        //String rState = theAlignment.getAlleles(c)
-        String rStr = String.valueOf(r);
+        String rState = (char) theAlignment.getMajorAllele(r) + ":" + (char) theAlignment.getMinorAllele(r);
+        Integer rStr = Integer.valueOf(r);
 
-        String cState = (char) theAlignment.getMajorAllele(c) + ":" + theAlignment.getMinorAllele(c);
-        String cStr = String.valueOf(c);
+        String cState = (char) theAlignment.getMajorAllele(c) + ":" + (char) theAlignment.getMinorAllele(c);
+        Integer cStr = Integer.valueOf(c);
 
         data[labelOffset++] = theAlignment.getLocusName(r);
-        data[labelOffset++] = String.valueOf(theAlignment.getPositionInLocus(r));
+        data[labelOffset++] = Integer.valueOf(theAlignment.getPositionInLocus(r));
         data[labelOffset++] = rStr;
 
-        data[labelOffset++] = String.valueOf(2);
+        data[labelOffset++] = IntegerTwo;
         data[labelOffset++] = rState;
         data[labelOffset++] = NotImplemented;
         data[labelOffset++] = theAlignment.getLocusName(c);
-        data[labelOffset++] = String.valueOf(theAlignment.getPositionInLocus(c));
+        data[labelOffset++] = Integer.valueOf(theAlignment.getPositionInLocus(c));
         data[labelOffset++] = cStr;
 
-        data[labelOffset++] = String.valueOf(2);
+        data[labelOffset++] = IntegerTwo;
         data[labelOffset++] = cState;
         data[labelOffset++] = NotImplemented;
         if (theAlignment.getLocusName(r).equals(theAlignment.getLocusName(c))) {
-            data[labelOffset++] = String.valueOf(Math.abs(theAlignment.getPositionInLocus(r) - theAlignment.getPositionInLocus(c)));
+            data[labelOffset++] = Integer.valueOf(Math.abs(theAlignment.getPositionInLocus(r) - theAlignment.getPositionInLocus(c)));
         } else {
             data[labelOffset++] = NA;
         }
-        data[labelOffset++] = nf.format(getRSqr(r, c));
-        data[labelOffset++] = nf.format(getDPrime(r, c));
-        data[labelOffset++] = nf.format(getP(r, c));
-        data[labelOffset++] = String.valueOf(getN(r, c));
+        data[labelOffset++] = Double.valueOf(getRSqr(r, c));
+        data[labelOffset++] = Double.valueOf(getDPrime(r, c));
+        data[labelOffset++] = Double.valueOf(getP(r, c));
+        data[labelOffset++] = Integer.valueOf(getN(r, c));
 
         return data;
 
