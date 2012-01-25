@@ -23,6 +23,8 @@ public class CombineAlignment extends AbstractAlignment {
     private final Alignment[] myAlignments;
     private final int[] mySiteOffsets;
     private final Map myLoci = new HashMap();
+    private Locus[] myLociList;
+    private int[] myLociOffsets;
 
     private CombineAlignment(IdGroup subIdGroup, Alignment[] alignments) {
         super(subIdGroup);
@@ -41,6 +43,7 @@ public class CombineAlignment extends AbstractAlignment {
             }
         }
 
+        initLoci();
     }
 
     /**
@@ -130,6 +133,32 @@ public class CombineAlignment extends AbstractAlignment {
         }
 
         return true;
+
+    }
+
+    private void initLoci() {
+
+        List offsets = new ArrayList();
+        List<Locus> loci = new ArrayList();
+        for (int i = 0; i < myAlignments.length; i++) {
+            loci.addAll(Arrays.asList(myAlignments[i].getLoci()));
+            int[] tempOffsets = myAlignments[i].getLociOffsets();
+            for (int j = 0; j < tempOffsets.length; j++) {
+                offsets.add(tempOffsets[j] + mySiteOffsets[i]);
+            }
+        }
+
+        myLociList = new Locus[loci.size()];
+        myLociList = loci.toArray(myLociList);
+
+        myLociOffsets = new int[offsets.size()];
+        for (int i = 0; i < offsets.size(); i++) {
+            myLociOffsets[i] = (Integer) offsets.get(i);
+        }
+
+        if (myLociOffsets.length != myLociList.length) {
+            throw new IllegalStateException("CombineAlignment: initLoci: number loci offsets should equal number of loci.");
+        }
 
     }
 
@@ -263,19 +292,15 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     public Locus[] getLoci() {
-
-        List<Locus> loci = new ArrayList();
-        for (int i = 0; i < myAlignments.length; i++) {
-            loci.addAll(Arrays.asList(myAlignments[i].getLoci()));
-        }
-
-        Locus[] result = new Locus[loci.size()];
-        return loci.toArray(result);
-
+        return myLociList;
     }
 
     public int getNumLoci() {
-        return getLoci().length;
+        if (myLociList == null) {
+            return 0;
+        } else {
+            return myLociList.length;
+        }
     }
 
     public float[][] getSiteScores() {
@@ -417,7 +442,7 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     public int[] getLociOffsets() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myLociOffsets;
     }
 
     public SITE_SCORE_TYPE getSiteScoreType() {
