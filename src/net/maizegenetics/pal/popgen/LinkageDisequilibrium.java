@@ -252,8 +252,8 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         for (int currTest = 0; currTest < totalTests; currTest++) {
             int r = irow[currTest];
             int c = icol[currTest];
-            int currentProgress = 100 * currTest / totalTests;
-            fireProgress((int) currentProgress);
+            int currentProgress = 100 * (currTest / totalTests);
+            fireProgress(currentProgress);
             contig = new int[2][2];
             rsqr[currTest] = dprime[currTest] = pval[currTest] = Float.NaN;
             sampleSize[currTest] = 0;
@@ -706,6 +706,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     protected void fireProgress(int percent) {
+
+        if (percent < 0) {
+            percent = -percent;
+        }
 
         if (myListener != null) {
             myListener.progress(percent, null);
