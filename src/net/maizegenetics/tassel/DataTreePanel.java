@@ -244,7 +244,6 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                         if (loci != null) {
                             numLoci = loci.length;
                         }
-                        System.out.println("Number of loci: " + numLoci);
                         for (int i = 0; i < numLoci; i++) {
                             String name = loci[i].getName();
                             if ((name == null) || (name.length() == 0)) {
