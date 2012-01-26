@@ -75,7 +75,7 @@ public class ManhattanDisplayPlugin extends AbstractDisplayPlugin{
         return null;
     }
 
-    public ArrayList<Integer> splitTable(TableReport table) {
+    private ArrayList<Integer> splitTable(TableReport table) {
         ArrayList<Integer> indexes = new ArrayList<Integer>();
         int numRows = table.getRowCount();
         String previousTrait = "";
@@ -283,7 +283,7 @@ class PlotOptionsDialog extends JDialog {
         isCanceled = true;
         setVisible(false);
     }
-
+    
     private void traitSelector_actionPerformed(ActionEvent e) {
         if (traitList.getSelectedIndex() != 0) {
             okayButton.setEnabled(true);

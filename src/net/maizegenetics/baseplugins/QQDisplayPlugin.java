@@ -439,7 +439,7 @@ class PlotOptionsQQDialog extends JDialog {
         int l = 0;
         int m = 0;
         for (int i = 0; i < myTraits.length; i++) {
-            if (j< selected.length && myTraits[i].equals(selected[j])) {
+            if (j < selected.length && myTraits[i].equals(selected[j])) {
                 toList[l] = myTraits[i];
                 j++;
                 l++;
@@ -554,7 +554,7 @@ class PlotOptionsQQDialog extends JDialog {
         int[] indices = new int[list.getSize()];
         int j = 0;
         for (int i = 0; i < myTraits.length; i++) {
-            if (myTraits[i].equals(list.getElementAt(j))) {
+            if (j < list.getSize() && myTraits[i].equals(list.getElementAt(j))) {
                 indices[j] = i;
                 j++;
             }

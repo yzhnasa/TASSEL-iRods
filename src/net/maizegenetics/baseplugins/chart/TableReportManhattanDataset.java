@@ -155,6 +155,9 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
     private void setPValues(TableReport myTableReport) {
         for (int i = 0; i < myPValues.length; i++) {
             myPValues[i] = ((Double)myTableReport.getValueAt(myStartIndex + i, myPValueColumnIndex)).doubleValue();
+            if (myPValues[i] == 0) {
+                myPValues[i] = Double.MIN_VALUE;
+            }
             myLookupTable.put(myPValues[i], i);
         }
     }
