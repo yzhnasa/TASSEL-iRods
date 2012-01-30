@@ -252,7 +252,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         for (int currTest = 0; currTest < totalTests; currTest++) {
             int r = irow[currTest];
             int c = icol[currTest];
-            int currentProgress = 100 * (currTest / totalTests);
+            int currentProgress = (int) ((double) 100.0 * ((double) currTest / (double) totalTests));
             fireProgress(currentProgress);
             contig = new int[2][2];
             rsqr[currTest] = dprime[currTest] = pval[currTest] = Float.NaN;
