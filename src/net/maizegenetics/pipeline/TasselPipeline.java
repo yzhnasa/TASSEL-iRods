@@ -6,7 +6,6 @@
  */
 package net.maizegenetics.pipeline;
 
-import java.awt.Dimension;
 import java.awt.Frame;
 
 import java.io.BufferedReader;
@@ -534,7 +533,7 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Plot size can't be less than 1.");
                     }
 
-                    plugin.setDefaultImageSize(new Dimension(plotSize, plotSize));
+                    plugin.setImageSize(plotSize, plotSize);
 
                 } else if (current.equalsIgnoreCase("-ldplotlabels")) {
 
@@ -946,7 +945,7 @@ public class TasselPipeline implements PluginListener {
 
     public LinkageDisequilibriumPlugin getLinkageDisequilibriumPlugin() {
 
-        LinkageDisequilibriumPlugin plugin = new LinkageDisequilibriumPlugin(null, false);
+        LinkageDisequilibriumPlugin plugin = new LinkageDisequilibriumPlugin(myMainFrame, false);
 
         integratePlugin(plugin, true);
 
@@ -956,7 +955,7 @@ public class TasselPipeline implements PluginListener {
 
     public LinkageDiseqDisplayPlugin getLinkageDiseqDisplayPlugin(String type) {
 
-        LinkageDiseqDisplayPlugin plugin = new LinkageDiseqDisplayPlugin(null, true);
+        LinkageDiseqDisplayPlugin plugin = new LinkageDiseqDisplayPlugin(myMainFrame, true);
 
         if (type.equalsIgnoreCase("gui")) {
             plugin = new LinkageDiseqDisplayPlugin(null, true);
@@ -1107,7 +1106,7 @@ public class TasselPipeline implements PluginListener {
                     Integer percent = (Integer) datum.getData();
                     if (percent >= lastValue) {
                         myLogger.info(ds.getCreator().getClass().getName() + ": progress: " + percent.intValue() + "%");
-                        lastValue = lastValue + 25;
+                        lastValue = lastValue + 10;
                         myProgressValues.put(plugin, lastValue);
                     }
                 }

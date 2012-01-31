@@ -57,18 +57,18 @@ public class TreeDisplayPlugin extends AbstractDisplayPlugin {
                 TreePluginDialog myDialog = new TreePluginDialog(this, theTree, ca);
                 myDialog.setLocationRelativeTo(getParentFrame());
                 myDialog.setVisible(true);
-            } else if (theSaveFile != null) {
+            } else if (getSaveFile() != null) {
                 TreeComponent tc = new TreeComponent(theTree, false);
-                tc.setSize(defaultImageSize);
+                tc.setSize(getImageWidth(), getImageHeight());
                 tc.setMode(getTreeMode());
-                saveDataToFile(tc, theSaveFile);
+                saveDataToFile(tc, getSaveFile());
             }
 
             return null;
         } finally {
             fireProgress(100);
         }
-        
+
     }
 
     public int getTreeMode() {

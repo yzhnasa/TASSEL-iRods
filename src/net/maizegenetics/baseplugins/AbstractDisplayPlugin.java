@@ -40,8 +40,9 @@ import java.io.Writer;
  */
 public abstract class AbstractDisplayPlugin extends AbstractPlugin {
 
-    protected File theSaveFile;
-    protected Dimension defaultImageSize = new Dimension(500, 500);
+    private File mySaveFile;
+    private int myImageWidth = 500;
+    private int myImageHeight = 500;
 
     public enum Outformat {
 
@@ -117,10 +118,12 @@ public abstract class AbstractDisplayPlugin extends AbstractPlugin {
 
     public void saveDataToFile(Component comp, File saveFile) {
         try {
-            Dimension d = comp.getSize();
-            if (d.getWidth() == 0) {
-                comp.setSize(defaultImageSize);
-                d = defaultImageSize;
+            int d_width = comp.getWidth();
+            int d_height = comp.getHeight();
+            if (d_width == 0) {
+                d_width = myImageWidth;
+                d_height = myImageHeight;
+                comp.setSize(d_width, d_height);
             }
             if (myOutformat == Outformat.svg) {
                 DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
@@ -128,7 +131,7 @@ public abstract class AbstractDisplayPlugin extends AbstractPlugin {
                 SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
                 if (comp instanceof ChartPanel) {//this is needed as JFreeChart draws in a different way
                     ChartPanel cp = (ChartPanel) comp;
-                    (cp.getChart()).draw(svgGenerator, new Rectangle(d));
+                    (cp.getChart()).draw(svgGenerator, new Rectangle(d_width, d_height));
                 } else {
                     comp.paint(svgGenerator);
                 }
@@ -138,7 +141,7 @@ public abstract class AbstractDisplayPlugin extends AbstractPlugin {
                 fos.flush();
                 fos.close();
             } else {
-                BufferedImage img = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_RGB);
+                BufferedImage img = new BufferedImage(d_width, d_height, BufferedImage.TYPE_INT_RGB);
                 Graphics gbox = img.getGraphics();
                 comp.paint(gbox);
                 saveDataToFile(img, myOutformat, saveFile);
@@ -233,12 +236,17 @@ public abstract class AbstractDisplayPlugin extends AbstractPlugin {
 
     }
 
-    public Dimension getDefaultImageSize() {
-        return defaultImageSize;
+    public int getImageWidth() {
+        return myImageWidth;
     }
 
-    public void setDefaultImageSize(Dimension defaultImageSize) {
-        this.defaultImageSize = defaultImageSize;
+    public int getImageHeight() {
+        return myImageHeight;
+    }
+
+    public void setImageSize(int width, int height) {
+        myImageWidth = width;
+        myImageHeight = height;
     }
 
     public Outformat getOutformat() {
@@ -250,11 +258,10 @@ public abstract class AbstractDisplayPlugin extends AbstractPlugin {
     }
 
     public File getSaveFile() {
-        return theSaveFile;
+        return mySaveFile;
     }
 
     public void setSaveFile(File theSaveFile) {
-        this.theSaveFile = theSaveFile;
+        mySaveFile = theSaveFile;
     }
 }
-

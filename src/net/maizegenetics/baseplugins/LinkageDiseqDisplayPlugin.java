@@ -60,13 +60,13 @@ public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin {
                     er.printStackTrace();
                     JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create LD plot " + er);
                 }
-            } else if (theSaveFile != null) {
+            } else if (getSaveFile() != null) {
                 LinkageDisequilibriumComponent ldc = new LinkageDisequilibriumComponent(theLD, blockSchematic, chromosomalView);
                 ldc.setUpperCorner(upperCorner);
                 ldc.setLowerCorner(lowerCorner);
-                ldc.setSize(defaultImageSize);
+                ldc.setSize(getImageWidth(), getImageHeight());
                 ldc.setShowLabels(includeLabels);
-                saveDataToFile(ldc, theSaveFile);
+                saveDataToFile(ldc, getSaveFile());
             }
 
             return null;

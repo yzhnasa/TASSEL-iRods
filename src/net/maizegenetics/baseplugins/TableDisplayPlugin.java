@@ -79,7 +79,7 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
             myDialog = new TablePluginDialog(this, tr);
             myDialog.setLocationRelativeTo(getParentFrame());
             myDialog.setVisible(true);
-        } else if (theSaveFile != null || saveFiles.size() > 0) {
+        } else if (getSaveFile() != null || saveFiles.size() > 0) {
             saveDataToFile(tr, theDelimiter);
         }
     }
@@ -97,7 +97,7 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
             }
             saveDataToFile(TableReportUtils.toDelimitedString(tr, delimit), fileIt.next());
         } else {
-            saveDataToFile(TableReportUtils.toDelimitedString(tr, delimit), theSaveFile);
+            saveDataToFile(TableReportUtils.toDelimitedString(tr, delimit), getSaveFile());
 
 
         }
