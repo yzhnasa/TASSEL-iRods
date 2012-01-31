@@ -687,6 +687,19 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing filter alignment min frequency: " + temp);
                     }
                     plugin.setMinFreq(minFreq);
+                } else if (current.equalsIgnoreCase("-filterAlignMaxFreq")) {
+                    FilterAlignmentPlugin plugin = (FilterAlignmentPlugin) findLastPluginFromCurrentPipe(new Class[]{FilterAlignmentPlugin.class});
+                    if (plugin == null) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Filter Alignment step defined: " + current);
+                    }
+                    String temp = args[index++].trim();
+                    double maxFreq = 0;
+                    try {
+                        maxFreq = Double.parseDouble(temp);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing filter alignment max frequency: " + temp);
+                    }
+                    plugin.setMaxFreq(maxFreq);
                 } else if (current.equalsIgnoreCase("-filterAlignStart")) {
                     FilterAlignmentPlugin plugin = (FilterAlignmentPlugin) findLastPluginFromCurrentPipe(new Class[]{FilterAlignmentPlugin.class});
                     if (plugin == null) {

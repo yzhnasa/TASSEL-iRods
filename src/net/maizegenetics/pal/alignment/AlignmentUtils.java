@@ -284,8 +284,8 @@ public class AlignmentUtils {
      * @param minimumProportion minimum proportion of sites different from the consensus
      * @param minimumCount      minimum number of sequences with a good bases (not N or ?), where GAP IS CONSIDERED A GOOD BASE
      */
-    public static Alignment removeSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, int minimumCount) {
-        int[] includeSites = getIncludedSitesBasedOnFreqIgnoreMissing(aa, minimumProportion, minimumCount);
+    public static Alignment removeSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
+        int[] includeSites = getIncludedSitesBasedOnFreqIgnoreMissing(aa, minimumProportion, maximumProportion, minimumCount);
         Alignment mlaa = FilterAlignment.getInstance(aa, includeSites);
         return mlaa;
     }
@@ -297,9 +297,10 @@ public class AlignmentUtils {
      *
      * @param aa the AnnotatedAlignment to filter
      * @param minimumProportion minimum proportion of sites different from the consensus
+     * @param maximumProportion maximum proportion of sites different from the consensus
      * @param minimumCount      minimum number of sequences with a good base or a gap (but not N or ?)
      */
-    public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, int minimumCount) {
+    public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
         for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
 
@@ -307,7 +308,7 @@ public class AlignmentUtils {
 
             double obsMinProp = aa.getMinorAlleleFrequency(i);
 
-            if ((totalNonMissing > 0) && (totalNonMissing >= minimumCount) && (obsMinProp >= minimumProportion)) {
+            if ((totalNonMissing > 0) && (totalNonMissing >= minimumCount) && (obsMinProp >= minimumProportion) && (obsMinProp <= maximumProportion)) {
                 includeAL.add(i);
             }
         }

@@ -44,17 +44,18 @@ import org.apache.log4j.Logger;
 public class FilterAlignmentPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(FilterAlignmentPlugin.class);
-    int start = 0;
-    int end = 0;
-    int minCount = 1;
-    double minFreq = 0.01;
-    boolean extractIndels = false;
-    boolean filterMinorSNPs = false;
-    boolean isUseAllSiteTypes = true;
-    boolean doSlidingHaps = false;
-    int winSize = 3;
-    int stepSize = 3;
-    char[] incTypes = {Alignment.POSITION_TYPE_ANON_CODING_TYPE, Alignment.POSITION_TYPE_INTRON_TYPE, Alignment.POSITION_TYPE_NONTRANSCRIBED_TYPE};  //default is all
+    private int myStart = 0;
+    private int myEnd = 0;
+    private int myMinCount = 1;
+    private double myMinFreq = 0.01;
+    private double myMaxFreq = 1.0;
+    private boolean myExtractIndels = false;
+    private boolean myFilterMinorSNPs = false;
+    private boolean myIsUseAllSiteTypes = true;
+    private boolean myDoSlidingHaps = false;
+    private int myWinSize = 3;
+    private int myStepSize = 3;
+    private char[] myIncTypes = {Alignment.POSITION_TYPE_ANON_CODING_TYPE, Alignment.POSITION_TYPE_INTRON_TYPE, Alignment.POSITION_TYPE_NONTRANSCRIBED_TYPE};  //default is all
 
     /** Creates a new instance of FilterAlignmentPlugin */
     public FilterAlignmentPlugin(Frame parentFrame, boolean isInteractive) {
@@ -112,48 +113,48 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
                 return null;
             }
             aa = theDialog.getChromFilteredAlignment();
-            start = theDialog.getStart();
-            end = theDialog.getEnd();
-            minCount = theDialog.getMinimumCount();
-            minFreq = theDialog.getMinimumFrequency();
-            extractIndels = theDialog.isExtractIndels();
-            filterMinorSNPs = theDialog.isRemoveMinorSNPs();
-            isUseAllSiteTypes = theDialog.isAllSiteIncluded();
+            myStart = theDialog.getStart();
+            myEnd = theDialog.getEnd();
+            myMinCount = theDialog.getMinimumCount();
+            myMinFreq = theDialog.getMinimumFrequency();
+            myExtractIndels = theDialog.isExtractIndels();
+            myFilterMinorSNPs = theDialog.isRemoveMinorSNPs();
+            myIsUseAllSiteTypes = theDialog.isAllSiteIncluded();
             // char[] siteType = theDialog.getIncludedPositionTypes();
-            doSlidingHaps = theDialog.isUseSlidingWindow();
-            winSize = theDialog.getWindowSize();
-            stepSize = theDialog.getStepSize();
+            myDoSlidingHaps = theDialog.isUseSlidingWindow();
+            myWinSize = theDialog.getWindowSize();
+            myStepSize = theDialog.getStepSize();
 
             theDialog.dispose();
         }
 
-        if (start >= aa.getSiteCount()) {
+        if (myStart >= aa.getSiteCount()) {
             throw new IllegalArgumentException("FilterAlignmentPlugin: starting site can't be past end of alignment.");
         }
-        if ((end < 0) || (end < start)) {
+        if ((myEnd < 0) || (myEnd < myStart)) {
             throw new IllegalArgumentException("FilterAlignmentPlugin: end site can't be less than zero or less that starting site.");
         }
 
-        if (start < 0) {
-            start = 0;
+        if (myStart < 0) {
+            myStart = 0;
         }
-        if (end >= aa.getSiteCount()) {
-            end = aa.getSiteCount() - 1;
+        if (myEnd >= aa.getSiteCount()) {
+            myEnd = aa.getSiteCount() - 1;
         }
 
         Alignment naa = aa;
 
-        //if ((extractIndels) && (aa instanceof Alignment)) {
-        //    naa = AlignmentUtils.extractIndels(aa, true);
+        //if ((myExtractIndels) && (aa instanceof Alignment)) {
+        //    naa = AlignmentUtils.myExtractIndels(aa, true);
         //} else {
         //    naa = aa;
         //}
 
-        if (isUseAllSiteTypes == false) {
+        if (myIsUseAllSiteTypes == false) {
             throw new UnsupportedOperationException();
-            //naa = AnnotatedAlignmentUtils.includeSitesByType(naa, incTypes);
+            //naa = AnnotatedAlignmentUtils.includeSitesByType(naa, myIncTypes);
         }
-        if (filterMinorSNPs) {
+        if (myFilterMinorSNPs) {
             if (naa instanceof CombineAlignment) {
                 Alignment[] tempAlign = naa.getAlignments();
                 for (int i = 0; i < tempAlign.length; i++) {
@@ -165,18 +166,18 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             }
             throw new UnsupportedOperationException();
         }
-        if ((start != 0) || (end < (naa.getSiteCount() - 1))) {
-            naa = AlignmentUtils.removeSitesOutsideRange(naa, start, end);
+        if ((myStart != 0) || (myEnd < (naa.getSiteCount() - 1))) {
+            naa = AlignmentUtils.removeSitesOutsideRange(naa, myStart, myEnd);
         }
-        if (extractIndels) {
-            //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, minFreq, minCount);
+        if (myExtractIndels) {
+            //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, myMinFreq, myMinCount);
             throw new UnsupportedOperationException();
         } else {
-            //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreGapsMissing(naa, minFreq, minCount);
+            //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreGapsMissing(naa, myMinFreq, myMinCount);
         }
-        naa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, minFreq, minCount);
-        if (doSlidingHaps) {
-            //naa = AnnotatedAlignmentUtils.extractSlidingHaplotypes(naa, winSize, stepSize);
+        naa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, myMinFreq, myMaxFreq, myMinCount);
+        if (myDoSlidingHaps) {
+            //naa = AnnotatedAlignmentUtils.extractSlidingHaplotypes(naa, myWinSize, myStepSize);
             throw new UnsupportedOperationException();
         }
         String theComment;
@@ -204,19 +205,19 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             builder.append(naa.getPositionInLocus(naa.getSiteCount() - 1));
         }
         String theName = builder.toString();
-        if (doSlidingHaps) {
+        if (myDoSlidingHaps) {
             //theName = "Sliding_Haps_" + inDatum.getName();
             theComment = "Sliding Haplotypes.\n";
-        } else if (extractIndels) {
+        } else if (myExtractIndels) {
             //theName = "Indels_" + inDatum.getName();
             theComment = "Indels\n";
-        } else if (filterMinorSNPs) {
+        } else if (myFilterMinorSNPs) {
             //theName = "Point_" + inDatum.getName();
             theComment = "Point Poly.\nMinor SNPs Removed\n";
         } else {
             theComment = "Point Poly.\n";
         }
-        start = end = 0;  //reset so that it will test full length unless specifically set to do otherwise.
+        myStart = myEnd = 0;  //reset so that it will test full length unless specifically set to do otherwise.
         if (naa.getSiteCount() != 0) {
             return new Datum(theName, naa, theComment);
         } else {
@@ -231,91 +232,99 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     }
 
     public int getStart() {
-        return start;
+        return myStart;
     }
 
     public void setStart(int start) {
-        this.start = start;
+        myStart = start;
     }
 
     public int getEnd() {
-        return end;
+        return myEnd;
     }
 
     public void setEnd(int end) {
-        this.end = end;
+        myEnd = end;
     }
 
     public int getMinCount() {
-        return minCount;
+        return myMinCount;
     }
 
     public void setMinCount(int minCount) {
-        this.minCount = minCount;
+        myMinCount = minCount;
     }
 
     public double getMinFreq() {
-        return minFreq;
+        return myMinFreq;
     }
 
     public void setMinFreq(double minFreq) {
-        this.minFreq = minFreq;
+        myMinFreq = minFreq;
+    }
+
+    public double getMaxFreq() {
+        return myMaxFreq;
+    }
+
+    public void setMaxFreq(double maxFreq) {
+        myMaxFreq = maxFreq;
     }
 
     public boolean isExtractIndels() {
-        return extractIndels;
+        return myExtractIndels;
     }
 
     public void setExtractIndels(boolean extractIndels) {
-        this.extractIndels = extractIndels;
+        myExtractIndels = extractIndels;
     }
 
     public boolean isFilterMinorSNPs() {
-        return filterMinorSNPs;
+        return myFilterMinorSNPs;
     }
 
     public void setFilterMinorSNPs(boolean filterMinorSNPs) {
-        this.filterMinorSNPs = filterMinorSNPs;
+        myFilterMinorSNPs = filterMinorSNPs;
     }
 
     public boolean isUseAllSiteTypes() {
-        return isUseAllSiteTypes;
+        return myIsUseAllSiteTypes;
     }
 
     public void setUseAllSiteTypes(boolean useAllSiteTypes) {
-        isUseAllSiteTypes = useAllSiteTypes;
+        myIsUseAllSiteTypes = useAllSiteTypes;
     }
 
     public void setIncludedTypes(char[] includeTypes) {
-        incTypes = includeTypes;
+        myIncTypes = includeTypes;
     }
 
     public char[] getIncludedTypes() {
-        return incTypes;
+        return myIncTypes;
     }
 
     public boolean isDoSlidingHaps() {
-        return doSlidingHaps;
+        return myDoSlidingHaps;
     }
 
     public void setDoSlidingHaps(boolean doSlidingHaps) {
-        this.doSlidingHaps = doSlidingHaps;
+        myDoSlidingHaps = doSlidingHaps;
     }
 
     public int getWinSize() {
-        return winSize;
+        return myWinSize;
     }
 
     public void setWinSize(int winSize) {
-        this.winSize = winSize;
+        myWinSize = winSize;
     }
 
     public int getStepSize() {
-        return stepSize;
+        return myStepSize;
     }
 
     public void setStepSize(int stepSize) {
-        this.stepSize = stepSize;
+        myStepSize = stepSize;
     }
 
     /**
@@ -493,8 +502,8 @@ class DataFilterAlignmentDialog extends JDialog {
                 countTextField_focusLost(e);
             }
         });
-        // distanceFromEndTextField.setText(siteCount - end+"");
-//        this.setDistanceFromEndTextField(end);
+        // distanceFromEndTextField.setText(siteCount - myEnd+"");
+//        this.setDistanceFromEndTextField(myEnd);
 //        distanceFromEndTextField.addFocusListener(new java.awt.event.FocusAdapter() {
 //
 //            public void focusLost(FocusEvent e) {
@@ -851,14 +860,14 @@ class DataFilterAlignmentDialog extends JDialog {
 //                endTextFieldContents = endTextFieldContents.substring(0, index) + endTextFieldContents.substring(index + 1);
 //            }
 //
-//            end = Integer.parseInt(endTextFieldContents);
+//            myEnd = Integer.parseInt(endTextFieldContents);
 //        } catch (Exception ee) {
 //            System.err.println(ee);
 //            JOptionPane.showMessageDialog(this.getParent(),
 //                    "Unable to parse the input for \"" + lblDistanceFromEndString + "\"");
-//            end = 0;
+//            myEnd = 0;
 //        }
-//        distanceFromEndTextField.setText(end + "");
+//        distanceFromEndTextField.setText(myEnd + "");
 //
 //        if (!doBatchAnalysis) {
 //            setEndTextField();
@@ -891,7 +900,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 //end = siteCount - 1;
                 //isEndTextFieldNumeric = true;
             } else if (theEnd < start) {
-                //JOptionPane.showMessageDialog(this.getParent(), "End position must be greater than start position.");
+                //JOptionPane.showMessageDialog(this.getParent(), "End position must be greater than myStart position.");
                 //end = siteCount - 1;
                 //isEndTextFieldNumeric = true;
             } else {
@@ -909,9 +918,9 @@ class DataFilterAlignmentDialog extends JDialog {
 //        setDistanceFromEndTextField(theEnd);
     }
 
-//    private void setDistanceFromEndTextField(int end) {
-//        distanceFromEndTextField.setText(this.siteCount - end + "");
-//        this.end = this.siteCount - end;
+//    private void setDistanceFromEndTextField(int myEnd) {
+//        distanceFromEndTextField.setText(this.siteCount - myEnd + "");
+//        this.myEnd = this.siteCount - myEnd;
 //    }
     private void startTextField_focusLost(FocusEvent e) {
         try {
@@ -936,7 +945,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 //start = 0;
                 //isStartTextFieldNumeric = true;
             } else if (theStart > end) {
-                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than end position.");
+                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than myEnd position.");
                 //start = 0;
                 //isStartTextFieldNumeric = true;
             } else {
@@ -950,7 +959,7 @@ class DataFilterAlignmentDialog extends JDialog {
             start = 0;
             isStartTextFieldNumeric = false;
         }
-        //startTextField.setText(start + "");
+        //startTextField.setText(myStart + "");
     }
 
     private void endPosTextField_focusLost(FocusEvent e) {
@@ -976,10 +985,10 @@ class DataFilterAlignmentDialog extends JDialog {
                 //isEndPosTextFieldNumeric = true;
             } //            else if (theEnd >= siteCount) {
             //                JOptionPane.showMessageDialog(this.getParent(), "End position must be less than " + siteCount + ".");
-            //                end = siteCount - 1;
+            //                myEnd = siteCount - 1;
             //            }
             else if (theEnd < startPos) {
-                //JOptionPane.showMessageDialog(this.getParent(), "End position must be greater than start position.");
+                //JOptionPane.showMessageDialog(this.getParent(), "End position must be greater than myStart position.");
                 //endPos = theAlignment.getPositionInLocus(siteCount - 1);
                 //isEndPosTextFieldNumeric = true;
             } else {
@@ -989,7 +998,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 //isEndPosTextFieldNumeric = true;
             }
         } catch (Exception ee) {
-            //JOptionPane.showMessageDialog(this.getParent(), "Invalid end position.");
+            //JOptionPane.showMessageDialog(this.getParent(), "Invalid myEnd position.");
             endPos = theAlignment.getPositionInLocus(siteCount - 1);
             isEndPosTextFieldNumeric = false;
         }
@@ -1018,10 +1027,10 @@ class DataFilterAlignmentDialog extends JDialog {
                 //isStartPosTextFieldNumeric = true;
             } //            else if (theEnd >= siteCount) {
             //                JOptionPane.showMessageDialog(this.getParent(), "End position must be less than " + siteCount + ".");
-            //                end = siteCount - 1;
+            //                myEnd = siteCount - 1;
             //            }
             else if (theStart > endPos) {
-                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than end position.");
+                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than myEnd position.");
                 //startPos = theAlignment.getPositionInLocus(0);
                 //isStartPosTextFieldNumeric = true;
             } else {
@@ -1031,7 +1040,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 //isStartPosTextFieldNumeric = true;
             }
         } catch (Exception ee) {
-            //JOptionPane.showMessageDialog(this.getParent(), "Invalid start position.");
+            //JOptionPane.showMessageDialog(this.getParent(), "Invalid myStart position.");
             startPos = theAlignment.getPositionInLocus(0);
             isStartPosTextFieldNumeric = false;
         }
