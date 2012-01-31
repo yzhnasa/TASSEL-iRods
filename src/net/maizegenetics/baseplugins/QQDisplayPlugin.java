@@ -21,6 +21,7 @@ import javax.swing.ImageIcon;
 import net.maizegenetics.plugindef.DataSet;
 import java.util.List;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -61,7 +62,7 @@ public class QQDisplayPlugin extends AbstractDisplayPlugin{
                 myOptions.setLocationRelativeTo(getParentFrame());
                 myOptions.setVisible(true);
                 if (myOptions.isCanceled() == false) {
-                    QQDisplayPluginDialog myDialog = new QQDisplayPluginDialog(this.getParentFrame(), myTableReport, myOptions.getSliderValue(), splitTable(myTableReport), myOptions.getTraitIndices());
+                    QQDisplayPluginDialog myDialog = new QQDisplayPluginDialog(this.getParentFrame(), this, myTableReport, myOptions.getSliderValue(), splitTable(myTableReport), myOptions.getTraitIndices());
                     myDialog.setLocationRelativeTo(getParentFrame());
                     myDialog.setVisible(true);
                 }
@@ -157,12 +158,12 @@ class QQDisplayPluginDialog extends JDialog {
     JPanel myOptionPanel = new JPanel();
     
 
-    public QQDisplayPluginDialog(Frame f, TableReport theTableReport, int countToDisplay, ArrayList<Integer> tableIndices, int[] indices) {
+    public QQDisplayPluginDialog(Frame f, QQDisplayPlugin plugin, TableReport theTableReport, int countToDisplay, ArrayList<Integer> tableIndices, int[] indices) {
         super(f, "QQ Plot", false);
         myTableReport = theTableReport;
         try {
             jbInit();
-            myQQPlot = new XYScatterAndLinePanel(theTableReport, countToDisplay, tableIndices, indices);
+            myQQPlot = new XYScatterAndLinePanel(plugin, theTableReport, countToDisplay, tableIndices, indices);
 //            myQQFigurePanel = new QQComponent(theTableReport);
             getContentPane().add(myQQPlot, BorderLayout.CENTER);
             pack();
@@ -202,8 +203,10 @@ class PlotOptionsQQDialog extends JDialog {
     private JPanel mainPanel = new JPanel();
     private JButton okayButton = new JButton();
     private JButton cancelButton = new JButton();
+    private JLabel sliderLabel1 = new JLabel();
     private JSlider slider = new JSlider();
     private JLabel countLabel1 = new JLabel();
+    private JPanel countLabelPanel1 = new JPanel();
     private JLabel countLabel2 = new JLabel();
     private JLabel countLabel3 = new JLabel();
     private JLabel listLabel1 = new JLabel();
@@ -264,7 +267,7 @@ class PlotOptionsQQDialog extends JDialog {
         list1.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         list1.setLayoutOrientation(JList.VERTICAL);
         list1.setVisibleRowCount(5);
-        list1.setPreferredSize(new Dimension(63, 104));
+        list1.setMinimumSize(new Dimension(100, 104));
         list1.setBackground(Color.white);
         list1.setBorder(BorderFactory.createLineBorder(Color.black));
         c.gridx = 0;
@@ -280,7 +283,7 @@ class PlotOptionsQQDialog extends JDialog {
         list2.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         list2.setLayoutOrientation(JList.VERTICAL);
         list2.setVisibleRowCount(5);
-        list2.setPreferredSize(new Dimension(63, 104));
+        list2.setMinimumSize(new Dimension(100, 104));
         list2.setBorder(BorderFactory.createLineBorder(Color.black));
         c.gridx = 2;
         c.gridy = 1;
@@ -343,15 +346,36 @@ class PlotOptionsQQDialog extends JDialog {
         c.gridy = 4;
         mainPanel.add(removeAllButton, c);
 
+        sliderLabel1.setText("Significant points to plot:");
+        c.insets = new Insets(0, 10, 0, 0);
+        c.gridx = 0;
+        c.gridy = 5;
+        mainPanel.add(sliderLabel1, c);
+
         slider.addChangeListener(new javax.swing.event.ChangeListener() {
 
             public void stateChanged(ChangeEvent ce) {
                 slider_actionPerformed(ce);
             }
         });
-        c.gridx = 0;
+
+        if (myTraits.length == 1) {
+            mainPanel.setMinimumSize(new Dimension(400, 100));
+            mainPanel.setPreferredSize(new Dimension(400, 100));
+            listLabel1.setVisible(false);
+            listLabel2.setVisible(false);
+            list1.setVisible(false);
+            list2.setVisible(false);
+            addAllButton.setVisible(false);
+            addOneButton.setVisible(false);
+            removeOneButton.setVisible(false);
+            removeAllButton.setVisible(false);
+        }
+
+        c.insets = new Insets(0, 0, 0, 0);
+        c.gridx = 1;
         c.gridy = 5;
-        c.gridwidth = 3;
+        c.gridwidth = 2;
         mainPanel.add(slider, c);
 
         countLabel1.setText("Plotting");
@@ -385,14 +409,15 @@ class PlotOptionsQQDialog extends JDialog {
 
         countLabel2.setText("most significant out of \r\n");// + slider.getMaximum() + " per trait.");
         countLabel3.setText(slider.getMaximum() + " per trait.");
+
+        countLabelPanel1.setLayout(new BoxLayout(countLabelPanel1, BoxLayout.PAGE_AXIS));
+        countLabelPanel1.add(countLabel2);
+        countLabelPanel1.add(countLabel3);
+
         c.gridx = 2;
         c.gridy = 6;
         c.weighty = 0;
-        c.anchor = GridBagConstraints.PAGE_START;
-        mainPanel.add(countLabel2, c);
-        c.anchor = GridBagConstraints.PAGE_END;
-        mainPanel.add(countLabel3, c);
-        c.anchor = GridBagConstraints.CENTER;
+        mainPanel.add(countLabelPanel1, c);
 
         okayButton.setMaximumSize(new Dimension(63, 27));
         okayButton.setMinimumSize(new Dimension(63, 27));

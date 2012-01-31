@@ -5,18 +5,21 @@
 
 package net.maizegenetics.baseplugins.chart;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import javax.swing.BoxLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
+import net.maizegenetics.baseplugins.QQDisplayPlugin;
 import net.maizegenetics.pal.report.TableReport;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
@@ -33,12 +36,15 @@ import org.jfree.data.xy.XYDataset;
  */
 public class XYScatterAndLinePanel extends BasicChartPanel {
 
+    QQDisplayPlugin myQQDisplayPlugin;
     ChartPanel myChartPanel;
+    JButton saveButton = new JButton("save...");
     TableReportQQDataset[] datasets;
 
     TableReport myTableReport;
 
-    public XYScatterAndLinePanel(TableReport table, int countToDisplay, ArrayList<Integer> tableIndices, int[] indices) {
+    public XYScatterAndLinePanel(QQDisplayPlugin plugin, TableReport table, int countToDisplay, ArrayList<Integer> tableIndices, int[] indices) {
+        myQQDisplayPlugin = plugin;
         myTableReport = table;
 //        ArrayList<Integer> indexes = splitTable(table);
         datasets = new TableReportQQDataset[indices.length];
@@ -61,7 +67,20 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
     }
 
     private void jbInit() throws Exception {
-        this.add(myChartPanel, BorderLayout.CENTER);
+        this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS ));
+        this.add(myChartPanel);
+        saveButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        saveButton.addActionListener(new java.awt.event.ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                saveButton_actionPerformed(e);
+            }
+        });
+        this.add(saveButton);
+    }
+
+    private void saveButton_actionPerformed(ActionEvent e) {
+        myQQDisplayPlugin.saveDataToFile(myChartPanel);
     }
 
     public JFreeChart createChart(TableReportQQDataset dataset) {

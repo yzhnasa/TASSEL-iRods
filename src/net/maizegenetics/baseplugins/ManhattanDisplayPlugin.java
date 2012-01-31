@@ -54,12 +54,12 @@ public class ManhattanDisplayPlugin extends AbstractDisplayPlugin{
                     myOptions.setVisible(true);
                     if (myOptions.isCanceled() == false) {
                         int index = myOptions.getTraitIndex();
-                        ManhattanDisplayPluginDialog myDialog = new ManhattanDisplayPluginDialog(this.getParentFrame(), myTableReport, indexes.get((index-1)*2), indexes.get((index-1)*2+1));
+                        ManhattanDisplayPluginDialog myDialog = new ManhattanDisplayPluginDialog(this.getParentFrame(), this, myTableReport, indexes.get((index-1)*2), indexes.get((index-1)*2+1));
                         myDialog.setLocationRelativeTo(getParentFrame());
                         myDialog.setVisible(true);
                     }
                 } else if (traits.length == 1) {
-                    ManhattanDisplayPluginDialog myDialog = new ManhattanDisplayPluginDialog(this.getParentFrame(), myTableReport, indexes.get(0), indexes.get(1));
+                    ManhattanDisplayPluginDialog myDialog = new ManhattanDisplayPluginDialog(this.getParentFrame(), this, myTableReport, indexes.get(0), indexes.get(1));
                     myDialog.setLocationRelativeTo(getParentFrame());
                     myDialog.setVisible(true);
                 }
@@ -155,12 +155,12 @@ class ManhattanDisplayPluginDialog extends JDialog {
     JPanel myOptionPanel = new JPanel();
 
 
-    public ManhattanDisplayPluginDialog(Frame f, TableReport theTableReport, int start, int end) {
+    public ManhattanDisplayPluginDialog(Frame f, ManhattanDisplayPlugin plugin, TableReport theTableReport, int start, int end) {
         super(f, "Manhattan Plot", false);
         myTableReport = theTableReport;
         try {
             jbInit();
-            myManhattanPlot = new XYScatterMultipleYPanel(theTableReport, start, end);
+            myManhattanPlot = new XYScatterMultipleYPanel(plugin, theTableReport, start, end);
 //            myQQFigurePanel = new QQComponent(theTableReport);
             getContentPane().add(myManhattanPlot, BorderLayout.CENTER);
             pack();

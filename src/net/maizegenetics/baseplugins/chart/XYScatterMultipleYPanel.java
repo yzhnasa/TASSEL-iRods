@@ -7,7 +7,12 @@ package net.maizegenetics.baseplugins.chart;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComponent;
+import net.maizegenetics.baseplugins.ManhattanDisplayPlugin;
 import net.maizegenetics.pal.report.TableReport;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -23,12 +28,16 @@ import org.jfree.data.xy.XYDataset;
  * @author yz79
  */
 public class XYScatterMultipleYPanel extends BasicChartPanel{
+
+    ManhattanDisplayPlugin myManhattanDisplayPlugin;
     ChartPanel myChartPanel;
+    JButton saveButton = new JButton("save...");
     TableReportManhattanDataset dataset;
 
     TableReport myTableReport;
 
-    public XYScatterMultipleYPanel(TableReport theTable, int start, int end) {
+    public XYScatterMultipleYPanel(ManhattanDisplayPlugin plugin, TableReport theTable, int start, int end) {
+        myManhattanDisplayPlugin = plugin;
         myTableReport = theTable;
         try {
             dataset = new TableReportManhattanDataset(theTable, start, end);
@@ -44,9 +53,21 @@ public class XYScatterMultipleYPanel extends BasicChartPanel{
     }
 
     private void jbInit() throws Exception {
-        this.add(myChartPanel, BorderLayout.CENTER);
+        this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        this.add(myChartPanel);
+        saveButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        saveButton.addActionListener(new java.awt.event.ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                saveButton_actionPerformed(e);
+            }
+        });
+        this.add(saveButton);
     }
 
+    private void saveButton_actionPerformed(ActionEvent e) {
+        myManhattanDisplayPlugin.saveDataToFile(myChartPanel);
+    }
 
     public JFreeChart createChart(TableReportManhattanDataset dataset) {
         String name="Please select numeric variables";
