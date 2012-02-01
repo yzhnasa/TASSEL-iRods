@@ -352,7 +352,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
 
     private void searchButton_actionPerformed(ActionEvent e) {
         try {
-            int searchValue = Integer.parseInt(searchField.getText().trim());
+            int searchValue = (int)Double.parseDouble(searchField.getText().trim());
             if (myTableModel.getColumnNameType().equals(AlignmentTableModel.COLUMN_NAME_TYPE.physicalPosition)) {
                 if (searchValue > endPos) {
                     JOptionPane.showMessageDialog(this.getParent(), "Physical position must be between " + startPos + " and " + endPos + ".");
