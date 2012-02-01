@@ -35,6 +35,8 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     private int windowSize = 50;
     private LinkageDisequilibrium.testDesign LDType = LinkageDisequilibrium.testDesign.SlidingWindow;
     private int testSite = -1;
+    private int myNumAccumulateIntervals = 100;
+    private boolean myIsAccumulateResults = false;
 
     /** Creates a new instance of LinkageDisequilibriumPlugin */
     public LinkageDisequilibriumPlugin(Frame parentFrame, boolean isInteractive) {
@@ -60,6 +62,10 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
                 isRapidAnalysis = myDialog.getRapidLDAnalysis();
                 windowSize = myDialog.getWindowSize();
                 LDType = myDialog.getLDType();
+                myIsAccumulateResults = myDialog.isAccumulateResults();
+                if (myIsAccumulateResults) {
+                    myNumAccumulateIntervals = myDialog.getNumAccumulateIntervals();
+                }
             }
 
             List result = new ArrayList();
@@ -83,7 +89,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 
     private DataSet processDatum(Datum input) {
         Alignment aa = (Alignment) input.getData();
-        net.maizegenetics.pal.popgen.LinkageDisequilibrium theLD = new net.maizegenetics.pal.popgen.LinkageDisequilibrium(aa, permutationNumber, windowSize, isRapidAnalysis, LDType, testSite, this);
+        LinkageDisequilibrium theLD = new LinkageDisequilibrium(aa, permutationNumber, windowSize, isRapidAnalysis, LDType, testSite, this, myIsAccumulateResults, myNumAccumulateIntervals);
         try {
             theLD.run();
             Datum td = new Datum("LD:" + input.getName(), theLD, "LD analysis");
@@ -130,6 +136,22 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 
     public int getWinSize() {
         return windowSize;
+    }
+
+    public void setNumAccumulateIntervals(int numIntervals) {
+        myNumAccumulateIntervals = numIntervals;
+    }
+
+    public int getNumAccumulateIntervals() {
+        return myNumAccumulateIntervals;
+    }
+
+    public void setIsAccumulateResults(boolean accumulate) {
+        myIsAccumulateResults = accumulate;
+    }
+
+    public boolean getIsAccumulateResults() {
+        return myIsAccumulateResults;
     }
 
     public void setTestSite(int site) {
@@ -199,6 +221,10 @@ class LinkageDiseqDialog extends JDialog {
     JTextField windowSizeTextField = new JTextField();
     JLabel windowSizeLabel = new JLabel();
     int windowSize = 50;
+    JRadioButton accumulativeResultsButton = new JRadioButton("Accumulate R2 Results");
+    JTextField accumulativeResultsTextField = new JTextField();
+    JLabel accumulativeResultsLabel = new JLabel("Number Of Intervals");
+    int numAccumulativeInterval = 100;
 
     public LinkageDiseqDialog(boolean rapidPermutations, int numberPermutations) {
         super((Frame) null, "Linkage Disequilibrium", true);
@@ -219,7 +245,7 @@ class LinkageDiseqDialog extends JDialog {
         // permNumberTextField.setText(numberPermutations + "");
         jLabel1.setText("Permutations");
 
-        windowSizeTextField.setText(windowSize + "");
+        windowSizeTextField.setText(String.valueOf(windowSize));
         windowSizeLabel.setText("LD Window Size");
 
         denseMatrixButton.addActionListener(new java.awt.event.ActionListener() {
@@ -235,6 +261,9 @@ class LinkageDiseqDialog extends JDialog {
                 slidingWindowButton_actionPerformed(e);
             }
         });
+
+        accumulativeResultsButton.setSelected(false);
+        accumulativeResultsTextField.setText(String.valueOf(numAccumulativeInterval));
 
         matrixSelection.add(denseMatrixButton);
         matrixSelection.add(slidingWindowButton);
@@ -258,12 +287,18 @@ class LinkageDiseqDialog extends JDialog {
         panel1.add(rapidCheckBox, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(102, 44, 0, 33), 82, 0));
         // panel1.add(permNumberTextField, new GridBagConstraints(0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
         // panel1.add(jLabel1, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
-        panel1.add(runButton, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(82, 55, 26, 0), 32, 5));
-        panel1.add(closeButton, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(83, 20, 26, 156), 23, 5));
+        panel1.add(denseMatrixButton, new GridBagConstraints(0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(16, 44, 0, 0), 60, -1));
+
+        panel1.add(slidingWindowButton, new GridBagConstraints(0, 2, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(25, 44, 0, 6), 60, -1));
         panel1.add(windowSizeTextField, new GridBagConstraints(0, 3, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
         panel1.add(windowSizeLabel, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
-        panel1.add(denseMatrixButton, new GridBagConstraints(0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(16, 44, 0, 0), 60, -1));
-        panel1.add(slidingWindowButton, new GridBagConstraints(0, 2, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 44, 0, 6), 60, -1));
+
+        panel1.add(accumulativeResultsButton, new GridBagConstraints(0, 4, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(25, 44, 0, 6), 60, -1));
+        panel1.add(accumulativeResultsTextField, new GridBagConstraints(0, 5, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
+        panel1.add(accumulativeResultsLabel, new GridBagConstraints(1, 5, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
+
+        panel1.add(runButton, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(82, 55, 26, 0), 32, 5));
+        panel1.add(closeButton, new GridBagConstraints(1, 6, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(83, 20, 26, 156), 23, 5));
     }
 
     private void denseMatrixButton_actionPerformed(ActionEvent e) {
@@ -274,6 +309,10 @@ class LinkageDiseqDialog extends JDialog {
     private void slidingWindowButton_actionPerformed(ActionEvent e) {
         windowSizeTextField.setVisible(true);
         windowSizeLabel.setVisible(true);
+    }
+
+    public boolean isAccumulateResults() {
+        return accumulativeResultsButton.isSelected();
     }
 
     public LinkageDisequilibrium.testDesign getLDType() {
@@ -299,27 +338,39 @@ class LinkageDiseqDialog extends JDialog {
         return rapidPermutations;
     }
 
-//    /** Return the number of permutations to use*/
-//    public int getPermutationNumber() {
-//        return numberPermutations;
-//    }
-    /** Retrun the window size*/
+    /** Return the window size */
     public int getWindowSize() {
         return windowSize;
     }
 
+    public int getNumAccumulateIntervals() {
+        return numAccumulativeInterval;
+    }
+
     void runButton_actionPerformed(ActionEvent e) {
+
         rapidPermutations = rapidCheckBox.isSelected();
-//        try {
-//            numberPermutations = Integer.parseInt(permNumberTextField.getText());
-//        } catch (Exception ee) {
-//            permNumberTextField.setText("Set Integer");
-//            return;
-//        }
+        //        try {
+        //            numberPermutations = Integer.parseInt(permNumberTextField.getText());
+        //        } catch (Exception ee) {
+        //            permNumberTextField.setText("Set Integer");
+        //            return;
+        //        }
+
         try {
             windowSize = Integer.parseInt(windowSizeTextField.getText());
         } catch (Exception ee) {
             windowSizeTextField.setText("Set Integer");
+            return;
+        }
+
+        if (isAccumulateResults()) {
+            try {
+                numAccumulativeInterval = Integer.parseInt(accumulativeResultsTextField.getText());
+            } catch (Exception ee) {
+                accumulativeResultsTextField.setText("Set Integer");
+                return;
+            }
         }
         runAnalysis = true;
         setVisible(false);

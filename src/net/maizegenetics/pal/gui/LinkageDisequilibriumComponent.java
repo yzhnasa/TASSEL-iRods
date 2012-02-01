@@ -57,7 +57,7 @@ public class LinkageDisequilibriumComponent extends Component {
 
     public LinkageDisequilibriumComponent(LinkageDisequilibrium theLD, boolean includeBlockSchematic, boolean chromosomalScale) {
         this.theLD = theLD;
-        theAA = theLD.getAnnotatedAlignment();
+        theAA = theLD.getAlignment();
         this.includeBlockSchematic = includeBlockSchematic;
         this.chromosomalScale = chromosomalScale;
         this.diseq = new double[theLD.getSiteCount()][theLD.getSiteCount()];

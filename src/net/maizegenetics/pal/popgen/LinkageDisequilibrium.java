@@ -14,6 +14,7 @@ import net.maizegenetics.util.ProgressListener;
 
 import java.io.Serializable;
 import java.io.StringWriter;
+
 import net.maizegenetics.pal.alignment.SBitAlignment;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
@@ -22,7 +23,7 @@ import net.maizegenetics.util.OpenBitSet;
  * This class calculates D' and r^2 estimates of linkage disequilibrium.  It also
  * calculates the significance of the LD by either Fisher Exact or the multinomial
  * permutation test.  This class can work with either normal alignments of annotated alignments.
- * The alignments should be stripped of invariable sites.
+ * The alignments should be stripped of invariable numSites.
  *
  * 2 state estimates of D' and r^2 can be found reviewed and discussed in Weir 1996
  *
@@ -42,134 +43,146 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
         All, SlidingWindow, SiteByAll
     };
-    protected Alignment theAlignment;
-    private SBitAlignment theSBA;
-    boolean rapidPermute = true;
-//    int numberOfPermutations = 1000;
-    int minTaxaForEstimate = 2;
-    int windowOfSites = 50;
-    int testSite = -1;  //this is only set when one versus all sites is calculated.
-    int totalTests = 0;
-    testDesign currDesign = testDesign.SlidingWindow;
-    float[] rsqr, dprime, pval; //4*3 = 12 bytes per entry
-    int[] irow, icol, sampleSize;  //4*3 = 12 bytes per entry
-    boolean isDense = true;
+    private Alignment myAlignment;
+    private SBitAlignment mySBitAlignment;
+    private boolean myRapidPermute = true;
+    private int myMinTaxaForEstimate = 2;
+    private int myWindowSize = 50;
+    private int myTestSite = -1;  // this is only set when one versus all numSites is calculated.
+    private int myTotalTests = 0;
+    private testDesign myCurrDesign = testDesign.SlidingWindow;
+    private float[] myRSqr, myDPrime, myPVal;
+    private int[] myiRow, myiCol, mySampleSize;
     private ProgressListener myListener = null;
-    FisherExact fisherExact;
+    private FisherExact myFisherExact;
+    private boolean myIsAccumulativeReport = false;
+    private int myNumAccumulativeBins = 100;
+    private float myAccumulativeInterval;
+    private int[] myAccumulativeRValueBins;
     private static String NotImplemented = "NotImplemented";
     private static String NA = "N/A";
     private static Integer IntegerTwo = Integer.valueOf(2);
 
+    
+    //
+    // I've commented out all the unused constructors.  I will remove
+    // once I determine there is no need for them.  -Terry
+    //
+    
     /**
      * compute LD based on an alignment
      *
      *  @param alignment  Alignment or AnnotationAlignment (this should only contain
-     *                    polymorphic sites)
-     *  @param rapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
+     *                    polymorphic numSites)
+     *  @param myRapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
      *  @param numberOfPermutations The number of permutations to determine P values
      *  @param windowSize The size of the LD window, determined by user.
      */
-    public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType) {
-        this.theAlignment = alignment;
-        if (theAlignment instanceof SBitAlignment) {
-            theSBA = (SBitAlignment) theAlignment;
-        } else {
-            theSBA = SBitAlignment.getInstance(theAlignment, 2, false);
-        }
-        fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
-        this.rapidPermute = rapidPermute;
+    //public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType) {
+    //    myAlignment = alignment;
+    //    if (myAlignment instanceof SBitAlignment) {
+    //        mySBitAlignment = (SBitAlignment) myAlignment;
+    //    } else {
+    //        mySBitAlignment = SBitAlignment.getInstance(myAlignment, 2, false);
+    //    }
+    //    myFisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
+    //    myRapidPermute = rapidPermute;
         // this.numberOfPermutations = numberOfPermutations;
-        this.windowOfSites = windowSize;
-        this.currDesign = LDType;
-    }
+    //    myWindowSize = windowSize;
+    //    myCurrDesign = LDType;
+    //}
 
     /**
      * Compute LD based on alignment.
      * 
      * @param alignment  Alignment or AnnotationAlignment (this should only contain
-     *                    polymorphic sites)
-     * @param rapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
+     *                    polymorphic numSites)
+     * @param myRapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
      * @param numberOfPermutations The number of permutations to determine P values
      * @param windowSize The size of the LD window, determined by user.
-     * @param testSite
+     * @param myTestSite
      */
-    public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType, int testSite, ProgressListener listener) {
-        this.theAlignment = alignment;
-        if (theAlignment instanceof SBitAlignment) {
-            theSBA = (SBitAlignment) theAlignment;
+    public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals) {
+        myAlignment = alignment;
+        if (myAlignment instanceof SBitAlignment) {
+            mySBitAlignment = (SBitAlignment) myAlignment;
         } else {
-            theSBA = SBitAlignment.getInstance(theAlignment, 2, false);
+            mySBitAlignment = SBitAlignment.getInstance(myAlignment, 2, false);
         }
-        fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
-        this.rapidPermute = rapidPermute;
-        this.windowOfSites = windowSize;
-        this.currDesign = LDType;
-        this.testSite = testSite;
+        myFisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
+        myRapidPermute = rapidPermute;
+        myWindowSize = windowSize;
+        myCurrDesign = LDType;
+        myTestSite = testSite;
         myListener = listener;
-    }
-
-    /**
-     * compute LD based on an alignment
-     *
-     *  @param alignment  Alignment or AnnotationAlignment (this should only contain
-     *                    polymorphic sites)
-     *  @param rapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
-     *  @param numberOfPermutations The number of permutations to determine P values
-     *   @param minTaxaForEstimate After excluding missing data, the minimum number of taxa needed for LD estimation
-     */
-    public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations, int minTaxaForEstimate) {
-        this.theAlignment = alignment;
-        if (theAlignment instanceof SBitAlignment) {
-            theSBA = (SBitAlignment) theAlignment;
-        } else {
-            theSBA = SBitAlignment.getInstance(theAlignment, 2, false);
+        myIsAccumulativeReport = isAccumulativeReport;
+        if (myIsAccumulativeReport) {
+            myNumAccumulativeBins = numAccumulateIntervals;
         }
-        fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
-        this.rapidPermute = rapidPermute;
-        // this.numberOfPermutations = numberOfPermutations;
-        this.minTaxaForEstimate = minTaxaForEstimate;
     }
 
     /**
      * compute LD based on an alignment
      *
      *  @param alignment  Alignment or AnnotationAlignment (this should only contain
-     *                    polymorphic sites)
-     *  @param rapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
+     *                    polymorphic numSites)
+     *  @param myRapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
      *  @param numberOfPermutations The number of permutations to determine P values
-     *   @param minTaxaForEstimate After excluding missing data, the minimum number of taxa needed for LD estimation
+     *   @param myMinTaxaForEstimate After excluding missing data, the minimum number of taxa needed for LD estimation
      */
-    public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations,
-            int minTaxaForEstimate, int windowOfSites, testDesign currDesign) {
-        this(alignment, rapidPermute, numberOfPermutations, minTaxaForEstimate,
-                windowOfSites, currDesign, -1);
-    }
+    //public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations, int minTaxaForEstimate) {
+    //    myAlignment = alignment;
+    //    if (myAlignment instanceof SBitAlignment) {
+    //        mySBitAlignment = (SBitAlignment) myAlignment;
+    //    } else {
+    //        mySBitAlignment = SBitAlignment.getInstance(myAlignment, 2, false);
+    //    }
+    //    myFisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
+    //    myRapidPermute = rapidPermute;
+    //    // this.numberOfPermutations = numberOfPermutations;
+    //    myMinTaxaForEstimate = minTaxaForEstimate;
+    //}
 
     /**
      * compute LD based on an alignment
      *
      *  @param alignment  Alignment or AnnotationAlignment (this should only contain
-     *                    polymorphic sites)
-     *  @param rapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
+     *                    polymorphic numSites)
+     *  @param myRapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
      *  @param numberOfPermutations The number of permutations to determine P values
-     *  @param minTaxaForEstimate After excluding missing data, the minimum number of taxa needed for LD estimation
+     *   @param myMinTaxaForEstimate After excluding missing data, the minimum number of taxa needed for LD estimation
      */
-    public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations,
-            int minTaxaForEstimate, int windowOfSites, testDesign currDesign, int testSite) {
-        this.theAlignment = alignment;
-        if (theAlignment instanceof SBitAlignment) {
-            theSBA = (SBitAlignment) theAlignment;
-        } else {
-            theSBA = SBitAlignment.getInstance(theAlignment, 2, false);
-        }
-        fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
-        this.rapidPermute = rapidPermute;
+    //public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations,
+    //        int minTaxaForEstimate, int windowOfSites, testDesign currDesign) {
+    //    this(alignment, rapidPermute, numberOfPermutations, minTaxaForEstimate,
+    //            windowOfSites, currDesign, -1);
+    //}
+
+    /**
+     * compute LD based on an alignment
+     *
+     *  @param alignment  Alignment or AnnotationAlignment (this should only contain
+     *                    polymorphic numSites)
+     *  @param myRapidPermute Use a rapid approach to P-value estimation (see Contigency Table)
+     *  @param numberOfPermutations The number of permutations to determine P values
+     *  @param myMinTaxaForEstimate After excluding missing data, the minimum number of taxa needed for LD estimation
+     */
+    //public LinkageDisequilibrium(Alignment alignment, boolean rapidPermute, int numberOfPermutations,
+    //        int minTaxaForEstimate, int windowOfSites, testDesign currDesign, int testSite) {
+    //    myAlignment = alignment;
+    //    if (myAlignment instanceof SBitAlignment) {
+    //        mySBitAlignment = (SBitAlignment) myAlignment;
+    //    } else {
+    //        mySBitAlignment = SBitAlignment.getInstance(myAlignment, 2, false);
+    //    }
+    //    myFisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
+    //    myRapidPermute = rapidPermute;
         // this.numberOfPermutations = numberOfPermutations;
-        this.minTaxaForEstimate = minTaxaForEstimate;
-        this.windowOfSites = windowOfSites;
-        this.currDesign = currDesign;
-        this.testSite = testSite;
-    }
+    //    myMinTaxaForEstimate = minTaxaForEstimate;
+    //    myWindowSize = windowOfSites;
+    //    myCurrDesign = currDesign;
+    //    myTestSite = testSite;
+    //}
 
     /**
      * starts the thread to calculate LD
@@ -177,12 +190,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     public void run() {
         initMatrices();
         designLDTests();
-        long time = System.currentTimeMillis();
-        //      calculateLDForInbred(true);       
-        System.out.println("Old LD Time:" + (System.currentTimeMillis() - time));
-        time = System.currentTimeMillis();
         calculateBitLDForInbred(true);
-        System.out.println("New LD Time:" + (System.currentTimeMillis() - time));
     }
 
     /**
@@ -191,21 +199,20 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     private void designLDTests() {
 
-        int sites = theAlignment.getSiteCount();
+        int sites = myAlignment.getSiteCount();
 
-        if (currDesign == testDesign.SlidingWindow) {
+        if (myCurrDesign == testDesign.SlidingWindow) {
 
             for (int r = 0; r < sites; r++) {
-                //int half = Math.round((float)windowOfSites / 2.0f);
-                int start = Math.max(0, r - windowOfSites);
+                int start = Math.max(0, r - myWindowSize);
                 int end = Math.max(0, r - 1);
 
                 for (int c = start; c <= end; c++) {
                     if (c != r) {
                         int index = getIndex(r, c);
                         if (index > -1) {
-                            irow[index] = r;
-                            icol[index] = c;
+                            myiRow[index] = r;
+                            myiCol[index] = c;
                         }
                     }
                 }
@@ -217,8 +224,8 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                 for (int c = 0; c < r; c++) {
                     int index = getIndex(r, c);
                     if (index > -1) {
-                        irow[index] = r;
-                        icol[index] = c;
+                        myiRow[index] = r;
+                        myiCol[index] = c;
                     }
                 }
             }
@@ -227,79 +234,99 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     private void initMatrices() {
-        int sites = theAlignment.getSiteCount();
-        if (currDesign == testDesign.All) {
-            totalTests = sites * (sites - 1) / 2;
-        } else if (currDesign == testDesign.SlidingWindow) {
-            //int half = Math.round((float)windowOfSites / 2.0f);
-            int n = Math.min(sites - 1, windowOfSites);
-            totalTests = ((n * (n + 1)) / 2) + (sites - n - 1) * n;
-        } else if (currDesign == testDesign.SiteByAll) {
-            totalTests = theAlignment.getSiteCount();
+
+        int numSites = myAlignment.getSiteCount();
+        if (myCurrDesign == testDesign.All) {
+            myTotalTests = numSites * (numSites - 1) / 2;
+        } else if (myCurrDesign == testDesign.SlidingWindow) {
+            int n = Math.min(numSites - 1, myWindowSize);
+            myTotalTests = ((n * (n + 1)) / 2) + (numSites - n - 1) * n;
+        } else if (myCurrDesign == testDesign.SiteByAll) {
+            myTotalTests = numSites;
         }
-        rsqr = new float[totalTests];
-        dprime = new float[totalTests];
-        pval = new float[totalTests];
-        irow = new int[totalTests];
-        icol = new int[totalTests];
-        sampleSize = new int[totalTests];
+
+        if (myIsAccumulativeReport) {
+            myAccumulativeInterval = 1.0f / (float) myNumAccumulativeBins;
+            myAccumulativeRValueBins = new int[myNumAccumulativeBins + 1];
+            myiRow = new int[myTotalTests];
+            myiCol = new int[myTotalTests];
+        } else {
+            myRSqr = new float[myTotalTests];
+            myDPrime = new float[myTotalTests];
+            myPVal = new float[myTotalTests];
+            myiRow = new int[myTotalTests];
+            myiCol = new int[myTotalTests];
+            mySampleSize = new int[myTotalTests];
+        }
+
     }
 
     private void calculateBitLDForInbred(boolean collapseMinor) {  //only calculates disequilibrium for inbreds
-        int n;
-        //    FisherExact fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
+
         int[][] contig;
-        for (int currTest = 0; currTest < totalTests; currTest++) {
-            int r = irow[currTest];
-            int c = icol[currTest];
-            int currentProgress = (int) ((double) 100.0 * ((double) currTest / (double) totalTests));
+        for (int currTest = 0; currTest < myTotalTests; currTest++) {
+            int r = myiRow[currTest];
+            int c = myiCol[currTest];
+            int currentProgress = (int) ((double) 100.0 * ((double) currTest / (double) myTotalTests));
             fireProgress(currentProgress);
             contig = new int[2][2];
-            rsqr[currTest] = dprime[currTest] = pval[currTest] = Float.NaN;
-            sampleSize[currTest] = 0;
-            BitSet rMj = theSBA.getAllelePresenceForAllTaxa(r, 0);
-            BitSet rMn = theSBA.getAllelePresenceForAllTaxa(r, 1);
-            BitSet cMj = theSBA.getAllelePresenceForAllTaxa(c, 0);
-            BitSet cMn = theSBA.getAllelePresenceForAllTaxa(c, 1);
-            n = 0;
+            BitSet rMj = mySBitAlignment.getAllelePresenceForAllTaxa(r, 0);
+            BitSet rMn = mySBitAlignment.getAllelePresenceForAllTaxa(r, 1);
+            BitSet cMj = mySBitAlignment.getAllelePresenceForAllTaxa(c, 0);
+            BitSet cMn = mySBitAlignment.getAllelePresenceForAllTaxa(c, 1);
+            int n = 0;
             n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
             n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
             n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
             n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
-            sampleSize[currTest] = n;
-            rsqr[currTest] = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minTaxaForEstimate);
-            dprime[currTest] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minTaxaForEstimate);
-            if (Double.isNaN(rsqr[currTest]) || Double.isNaN(dprime[currTest])) {
-                pval[currTest] = Float.NaN;
+
+            float rVal = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate);
+
+            if (myIsAccumulativeReport) {
+                if (rVal == Float.NaN) {
+                    myAccumulativeRValueBins[myNumAccumulativeBins]++;
+                } else {
+                    int index = (int) Math.floor(rVal / myAccumulativeInterval);
+                    myAccumulativeRValueBins[index]++;
+                }
             } else {
-                pval[currTest] = (float) fisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
+                mySampleSize[currTest] = n;
+                myRSqr[currTest] = myDPrime[currTest] = myPVal[currTest] = Float.NaN;
+                myRSqr[currTest] = rVal;
+                myDPrime[currTest] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate);
+                if (Double.isNaN(myRSqr[currTest]) || Double.isNaN(myDPrime[currTest])) {
+                    myPVal[currTest] = Float.NaN;
+                } else {
+                    myPVal[currTest] = (float) myFisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
+                }
             }
+
         } //end of currTest
     }
 
     private void calculateLDForInbred(boolean collapseMinor) {  //only calculates disequilibrium for inbreds
         int n;
-        FisherExact fisherExact = new FisherExact(theAlignment.getSequenceCount() + 10);
+        FisherExact fisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
         int[][] contig;
-        for (int currTest = 0; currTest < totalTests; currTest++) {
-            int r = irow[currTest];
-            int c = icol[currTest];
-            byte rowMajor = (byte) theAlignment.getMajorAllele(r);
-            byte rowMinor = (byte) theAlignment.getMinorAllele(r);
-            byte colMajor = (byte) theAlignment.getMajorAllele(c);
-            byte colMinor = (byte) theAlignment.getMinorAllele(c);
-            //double currentProgress = 100 * r * r / (theAlignment.getSiteCount() * theAlignment.getSiteCount());
-            int currentProgress = 100 * currTest / totalTests;
+        for (int currTest = 0; currTest < myTotalTests; currTest++) {
+            int r = myiRow[currTest];
+            int c = myiCol[currTest];
+            byte rowMajor = (byte) myAlignment.getMajorAllele(r);
+            byte rowMinor = (byte) myAlignment.getMinorAllele(r);
+            byte colMajor = (byte) myAlignment.getMajorAllele(c);
+            byte colMinor = (byte) myAlignment.getMinorAllele(c);
+            //double currentProgress = 100 * r * r / (myAlignment.getSiteCount() * myAlignment.getSiteCount());
+            int currentProgress = 100 * currTest / myTotalTests;
             fireProgress((int) currentProgress);
             contig = new int[2][2];
             if ((rowMinor == Alignment.UNKNOWN_ALLELE) || (colMinor == Alignment.UNKNOWN_ALLELE)) {
-                rsqr[currTest] = dprime[currTest] = pval[currTest] = Float.NaN;
-                sampleSize[currTest] = 0;
+                myRSqr[currTest] = myDPrime[currTest] = myPVal[currTest] = Float.NaN;
+                mySampleSize[currTest] = 0;
             } else {
                 n = 0;
-                for (int sample = 0; sample < theAlignment.getSequenceCount(); sample++) {
-                    byte x = theAlignment.getBase(sample, r);
-                    byte y = theAlignment.getBase(sample, c);
+                for (int sample = 0; sample < myAlignment.getSequenceCount(); sample++) {
+                    byte x = myAlignment.getBase(sample, r);
+                    byte y = myAlignment.getBase(sample, c);
                     if ((x == Alignment.UNKNOWN_ALLELE) || (y == Alignment.UNKNOWN_ALLELE)) {
                         continue;
                     }
@@ -320,14 +347,14 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                     }
                     contig[x1][y1]++;
                     n++;
-                }//end of sample
-                sampleSize[currTest] = n;
-                rsqr[currTest] = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minTaxaForEstimate);
-                dprime[currTest] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minTaxaForEstimate);
-                if (Double.isNaN(rsqr[currTest]) || Double.isNaN(dprime[currTest])) {
-                    pval[currTest] = Float.NaN;
+                } //end of sample
+                mySampleSize[currTest] = n;
+                myRSqr[currTest] = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate);
+                myDPrime[currTest] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate);
+                if (Double.isNaN(myRSqr[currTest]) || Double.isNaN(myDPrime[currTest])) {
+                    myPVal[currTest] = Float.NaN;
                 } else {
-                    pval[currTest] = (float) fisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
+                    myPVal[currTest] = (float) fisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
                 }
             }
         } //end of currTest
@@ -413,45 +440,43 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             }
             contig[x1][y1]++;
             n++;
-        }//end of sample
-//        System.out.println(site1+" "+site2+" contig"+Arrays.deepToString(contig));
+        } // end of sample
+        // System.out.println(site1+" "+site2+" contig"+Arrays.deepToString(contig));
         if ((n < minComp) || (contig[0][1] + contig[1][1] < minMinor) || (contig[1][0] + contig[1][1] < minMinor)) {
             //          System.out.println("null contig"+Arrays.deepToString(contig));
             return null;
         }
         results = new double[4];
-//        System.out.println("contig"+Arrays.deepToString(contig));
+        // System.out.println("contig"+Arrays.deepToString(contig));
         results[0] = n;
         results[1] = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minComp);
         results[2] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minComp);
         if (Double.isNaN(results[1]) || Double.isNaN(results[2])) {
             results[3] = Float.NaN;
-//            System.out.println("NaN contig"+Arrays.deepToString(contig)+" "+results[0]+" "+results[1]+" "+results[2]);
+            // System.out.println("NaN contig"+Arrays.deepToString(contig)+" "+results[0]+" "+results[1]+" "+results[2]);
         } else {
             results[3] = (float) fisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
         }
-//        if(results[3]<0.00001) System.out.println("contig"+Arrays.deepToString(contig)+" "+results[0]+" "+results[1]+" "+results[2]+" "+results[3]);
-//        if(results[3]<0.1) System.out.printf("%d %d %d %d %f \n",contig[0][0], contig[1][0], contig[0][1], contig[1][1], results[3]);
+        // if(results[3]<0.00001) System.out.println("contig"+Arrays.deepToString(contig)+" "+results[0]+" "+results[1]+" "+results[2]+" "+results[3]);
+        // if(results[3]<0.1) System.out.printf("%d %d %d %d %f \n",contig[0][0], contig[1][0], contig[0][1], contig[1][1], results[3]);
         return results;
     }
 
     private int getIndex(int r, int c) {
-        int index = -1; //-1 is not found
-//        if((r==c)||(r<0)||(c<0)||(r>=theAlignment.getSiteCount())||(c>=theAlignment.getSiteCount())) return -1;
+        int index = -1; // -1 is not found
         if (r < c) {
             int t = r;
             r = c;
             c = t;
         }
-        if ((c < 0) || (c == r) || (r >= theAlignment.getSiteCount())) {
+        if ((c < 0) || (c == r) || (r >= myAlignment.getSiteCount())) {
             return -1;
         }
-        if (currDesign == testDesign.All) {
+        if (myCurrDesign == testDesign.All) {
             index = (r * (r - 1) / 2) + c;
-        } else if (currDesign == testDesign.SlidingWindow) {
-            int sites = theAlignment.getSiteCount();
-            //int half = Math.round((float)windowOfSites / 2.0f);
-            int n = Math.min(sites - 1, windowOfSites);
+        } else if (myCurrDesign == testDesign.SlidingWindow) {
+            int sites = myAlignment.getSiteCount();
+            int n = Math.min(sites - 1, myWindowSize);
             if ((r - c) <= n) {
                 if (r < n) {
                     index = (r * (r - 1) / 2) + c;
@@ -459,95 +484,101 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                     index = (n * (n - 1) / 2) + ((r - n) * n) + (c - r + n);
                 }
             }
-        } else if (currDesign == testDesign.SiteByAll) {
-            if (r == testSite) {
+        } else if (myCurrDesign == testDesign.SiteByAll) {
+            if (r == myTestSite) {
                 index = c;
-            } else if (c == testSite) {
+            } else if (c == myTestSite) {
                 index = r;
             }
         }
-        if (index >= totalTests) {
+        if (index >= myTotalTests) {
             return -1;
         }
 
         return index;
     }
 
-    /** Returns P-value estimate for a given pair of sites.  If there were only 2 alleles
-     *  at each locus, then the Fisher Exact P-value (one-tail) is returned.  If more states
-     *  then the permutaed Monte Carlo test is used.
-     *  @param r is site 1
-     *  @param c is site 2
-     *  @return P-value
+    /**
+     * Returns P-value estimate for a given pair of numSites.  If there were only 2 alleles
+     * at each locus, then the Fisher Exact P-value (one-tail) is returned.  If more states
+     * then the permutaed Monte Carlo test is used.
+     * @param r is site 1
+     * @param c is site 2
+     * @return P-value
      */
     public double getP(int r, int c) {
         int i = getIndex(r, c);
         if (i > -1) {
-            return (double) pval[i];
-        } else {
-            return Double.NaN;
-        }
-    }
-
-    /** Get number of gametes included in LD calculations (after missing data was excluded)
-     *  @param r is site 1
-     *  @param c is site 2
-     *  @return number of gametes
-     *
-     */
-    private int getN(int r, int c) {
-        int i = getIndex(r, c);
-        if (i > -1) {
-            return sampleSize[i];
-        } else {
-            return 0;
-        }
-    }
-
-    /** Returns D' estimate for a given pair of sites
-     *  @param r is site 1
-     *  @param c is site 2
-     *  @return D'
-     */
-    public double getDPrime(int r, int c) {
-        int i = getIndex(r, c);
-        if (i > -1) {
-            return (double) dprime[i];
-        } else {
-            return Double.NaN;
-        }
-    }
-
-    /** Returns r^2 estimate for a given pair of sites
-     *  @param r is site 1
-     *  @param c is site 2
-     *  @return D'
-     */
-    public double getRSqr(int r, int c) {
-        int i = getIndex(r, c);
-        if (i > -1) {
-            return (double) rsqr[i];
+            return (double) myPVal[i];
         } else {
             return Double.NaN;
         }
     }
 
     /**
-     * Returns the counts of the sites in the alignment
+     * Get number of gametes included in LD calculations (after missing data was excluded)
+     * @param r is site 1
+     * @param c is site 2
+     * @return number of gametes
+     *
+     */
+    private int getN(int r, int c) {
+        int i = getIndex(r, c);
+        if (i > -1) {
+            return mySampleSize[i];
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Returns D' estimate for a given pair of numSites
+     * @param r is site 1
+     * @param c is site 2
+     * @return D'
+     */
+    public double getDPrime(int r, int c) {
+        int i = getIndex(r, c);
+        if (i > -1) {
+            return (double) myDPrime[i];
+        } else {
+            return Double.NaN;
+        }
+    }
+
+    /**
+     * Returns r^2 estimate for a given pair of numSites
+     * @param r is site 1
+     * @param c is site 2
+     * @return D'
+     */
+    public double getRSqr(int r, int c) {
+        int i = getIndex(r, c);
+        if (i > -1) {
+            return (double) myRSqr[i];
+        } else {
+            return Double.NaN;
+        }
+    }
+
+    /**
+     * Returns the counts of the numSites in the alignment
      */
     public int getSiteCount() {
-        return theAlignment.getSiteCount();
+        return myAlignment.getSiteCount();
     }
 
     /**
      * Returns an annotated aligment if one was used for this LD
      * this could be used to access information of locus position
      */
-    public Alignment getAnnotatedAlignment() {
-        return theAlignment;
+    public Alignment getAlignment() {
+        return myAlignment;
     }
 
-    /** returns representation of the LD results as a string */
+    /**
+     * Returns representation of the LD results as a string
+     */
     public String toString() {
         String delimit = "\t";
         StringWriter sw = new StringWriter();
@@ -558,7 +589,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         }
         sw.write("\n");
 
-        for (int r = 0; r < totalTests; r++) {
+        for (int r = 0; r < myTotalTests; r++) {
             Object[] theRow = getRow(r);
             for (int i = 0; i < theRow.length; i++) {
                 sw.write(theRow[i].toString());
@@ -573,9 +604,14 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return column names for the table
      */
     public Object[] getTableColumnNames() {
-        String[] annotatedLabels = {"Locus1", "Position1", "Site1",
-            "NumberOfStates1", "States1", "Frequency1", "Locus2", "Position2",
-            "Site2", "NumberOfStates2", "States2", "Frequency2", "Dist_bp", "R^2", "DPrime", "pDiseq", "N"};
+        String[] annotatedLabels = null;
+        if (myIsAccumulativeReport) {
+            annotatedLabels = new String[]{"R2BinMin", "R2BinMax", "Count"};
+        } else {
+            annotatedLabels = new String[]{"Locus1", "Position1", "Site1",
+                "NumberOfStates1", "States1", "Frequency1", "Locus2", "Position2",
+                "Site2", "NumberOfStates2", "States2", "Frequency2", "Dist_bp", "R^2", "DPrime", "pDiseq", "N"};
+        }
         return annotatedLabels;
     }
 
@@ -621,43 +657,58 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public Object[] getRow(int row) {
 
-        int labelOffset = 0;
-        Object[] data = new Object[17];
-
-        int r = irow[row];
-        int c = icol[row];
-
-        String rState = (char) theAlignment.getMajorAllele(r) + ":" + (char) theAlignment.getMinorAllele(r);
-        Integer rStr = Integer.valueOf(r);
-
-        String cState = (char) theAlignment.getMajorAllele(c) + ":" + (char) theAlignment.getMinorAllele(c);
-        Integer cStr = Integer.valueOf(c);
-
-        data[labelOffset++] = theAlignment.getLocusName(r);
-        data[labelOffset++] = Integer.valueOf(theAlignment.getPositionInLocus(r));
-        data[labelOffset++] = rStr;
-
-        data[labelOffset++] = IntegerTwo;
-        data[labelOffset++] = rState;
-        data[labelOffset++] = NotImplemented;
-        data[labelOffset++] = theAlignment.getLocusName(c);
-        data[labelOffset++] = Integer.valueOf(theAlignment.getPositionInLocus(c));
-        data[labelOffset++] = cStr;
-
-        data[labelOffset++] = IntegerTwo;
-        data[labelOffset++] = cState;
-        data[labelOffset++] = NotImplemented;
-        if (theAlignment.getLocusName(r).equals(theAlignment.getLocusName(c))) {
-            data[labelOffset++] = Integer.valueOf(Math.abs(theAlignment.getPositionInLocus(r) - theAlignment.getPositionInLocus(c)));
+        if (myIsAccumulativeReport) {
+            Object[] data = new Object[3];
+            if (row == myNumAccumulativeBins) {
+                data[0] = Float.NaN;
+                data[1] = Float.NaN;
+                data[2] = Integer.valueOf(myAccumulativeRValueBins[row]);
+            } else {
+                float start = myAccumulativeInterval * (float) row;
+                data[0] = Float.valueOf(start);
+                data[1] = Float.valueOf(start + myAccumulativeInterval);
+                data[2] = Integer.valueOf(myAccumulativeRValueBins[row]);
+            }
+            return data;
         } else {
-            data[labelOffset++] = NA;
-        }
-        data[labelOffset++] = Double.valueOf(getRSqr(r, c));
-        data[labelOffset++] = Double.valueOf(getDPrime(r, c));
-        data[labelOffset++] = Double.valueOf(getP(r, c));
-        data[labelOffset++] = Integer.valueOf(getN(r, c));
+            int labelOffset = 0;
+            Object[] data = new Object[17];
 
-        return data;
+            int r = myiRow[row];
+            int c = myiCol[row];
+
+            String rState = (char) myAlignment.getMajorAllele(r) + ":" + (char) myAlignment.getMinorAllele(r);
+            Integer rStr = Integer.valueOf(r);
+
+            String cState = (char) myAlignment.getMajorAllele(c) + ":" + (char) myAlignment.getMinorAllele(c);
+            Integer cStr = Integer.valueOf(c);
+
+            data[labelOffset++] = myAlignment.getLocusName(r);
+            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInLocus(r));
+            data[labelOffset++] = rStr;
+
+            data[labelOffset++] = IntegerTwo;
+            data[labelOffset++] = rState;
+            data[labelOffset++] = NotImplemented;
+            data[labelOffset++] = myAlignment.getLocusName(c);
+            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInLocus(c));
+            data[labelOffset++] = cStr;
+
+            data[labelOffset++] = IntegerTwo;
+            data[labelOffset++] = cState;
+            data[labelOffset++] = NotImplemented;
+            if (myAlignment.getLocusName(r).equals(myAlignment.getLocusName(c))) {
+                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.getPositionInLocus(r) - myAlignment.getPositionInLocus(c)));
+            } else {
+                data[labelOffset++] = NA;
+            }
+            data[labelOffset++] = Double.valueOf(getRSqr(r, c));
+            data[labelOffset++] = Double.valueOf(getDPrime(r, c));
+            data[labelOffset++] = Double.valueOf(getP(r, c));
+            data[labelOffset++] = Integer.valueOf(getN(r, c));
+
+            return data;
+        }
 
     }
 
@@ -674,31 +725,15 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     public int getRowCount() {
-        return this.totalTests;
+        if (myIsAccumulativeReport) {
+            return myNumAccumulativeBins + 1;
+        } else {
+            return myTotalTests;
+        }
     }
 
     public int getElementCount() {
         return getRowCount() * getColumnCount();
-    }
-
-    /**
-     * Remove the rows passed
-     * This method is not implemented as the primary reason for implementing ExtendedTableReport
-     * is to 
-     *
-     * @param rows
-     */
-    public void deleteRows(int[] rows) {
-        System.out.println("LinkageDisequilibrium.deleteRows(int[] rows is not implemented)");
-    }
-
-    /**
-     * Remove the columns passed
-     *
-     * @param cols
-     */
-    public void deleteColumns(int[] cols) {
-        System.out.println("LinkageDisequilibrium.deleteColumns(int[] cols) is not implemented");
     }
 
     public Object getValueAt(int row, int col) {
