@@ -461,6 +461,17 @@ public interface Alignment extends Serializable {
      * @return most common allele
      */
     public byte getMajorAllele(int site);
+    
+    /**
+     * Return most common allele at given site.
+     * Gap is included as state.  Heterozygous count one for each
+     * allele value.  Homozygous counts two for the allele value.
+     *
+     * @param site site
+     *
+     * @return most common allele as String
+     */
+    public String getMajorAlleleAsString(int site);
 
     /**
      * Return most common minor allele at given site.
@@ -472,6 +483,17 @@ public interface Alignment extends Serializable {
      * @return most common minor allele
      */
     public byte getMinorAllele(int site);
+    
+    /**
+     * Return most common minor allele at given site.
+     * Gap is included as state. Heterozygous count one for each
+     * allele value.  Homozygous counts two for the allele value.
+     *
+     * @param site site
+     *
+     * @return most common minor allele as String
+     */
+    public String getMinorAlleleAsString(int site);
 
     /**
      * Return all minor alleles at given site.

@@ -340,6 +340,11 @@ abstract public class AbstractAlignment implements Alignment {
         }
 
     }
+    
+    @Override
+    public String getMajorAlleleAsString(int site) {
+        return getBaseAsString(site, getMajorAllele(site));
+    }
 
     @Override
     public byte getMinorAllele(int site) {
@@ -352,6 +357,11 @@ abstract public class AbstractAlignment implements Alignment {
             return Alignment.UNKNOWN_ALLELE;
         }
 
+    }
+    
+    @Override
+    public String getMinorAlleleAsString(int site) {
+        return getBaseAsString(site, getMinorAllele(site));
     }
 
     @Override
