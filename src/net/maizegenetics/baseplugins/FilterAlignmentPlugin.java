@@ -66,7 +66,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
         try {
 
-            java.util.List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(Alignment.class);
 
             if (alignInList.size() < 1) {
                 String gpMessage = "Invalid selection.  Please select genotype alignment.";
@@ -117,6 +117,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             myEnd = theDialog.getEnd();
             myMinCount = theDialog.getMinimumCount();
             myMinFreq = theDialog.getMinimumFrequency();
+            myMaxFreq = theDialog.getMaximumFrequency();
             myExtractIndels = theDialog.isExtractIndels();
             myFilterMinorSNPs = theDialog.isRemoveMinorSNPs();
             myIsUseAllSiteTypes = theDialog.isAllSiteIncluded();
@@ -368,6 +369,7 @@ class DataFilterAlignmentDialog extends JDialog {
     String[] chromsAvailable;
     String[] chromsSelected;
     double minFreq = 0.01;
+    double maxFreq = 1.0;
     double minPercentage = 0.5;
     boolean isCanceled = true;
     private final static int TEXT_FIELD_WIDTH = 8;
@@ -380,6 +382,7 @@ class DataFilterAlignmentDialog extends JDialog {
     private JLabel lblTotalSequences = new JLabel();
     private JLabel lblMinCount = new JLabel();
     private JLabel lblMinFreq = new JLabel();
+    private JLabel lblMaxFreq = new JLabel();
     private JLabel lblStartSite = new JLabel();
     private JLabel lblDistanceFromEndSite = new JLabel();
     private JLabel lblEndSite = new JLabel();
@@ -395,6 +398,7 @@ class DataFilterAlignmentDialog extends JDialog {
     private JTextField endPosTextField = new JTextField();
     private JTextField startPosTextField = new JTextField();
     private JTextField freqTextField = new JTextField();
+    private JTextField maxFreqTextField = new JTextField();
     private JTextField winSizeTextField = new JTextField(TEXT_FIELD_WIDTH);
     private JTextField stepSizeTextField = new JTextField(TEXT_FIELD_WIDTH);
     private JPanel checkBoxPanel = new JPanel();
@@ -429,6 +433,7 @@ class DataFilterAlignmentDialog extends JDialog {
         endPos = theAlignment.getPositionInLocus(siteCount - 1);
         minCount = TasselPrefs.getFilterAlignPluginMinCount();
         minFreq = TasselPrefs.getFilterAlignPluginMinFreq();
+        maxFreq = TasselPrefs.getFilterAlignPluginMaxFreq();
         myChromFilter = new ChromosomeFilterDialog(chromsAvailable, f);
 
         try {
@@ -481,6 +486,7 @@ class DataFilterAlignmentDialog extends JDialog {
         lblFilterAlignment.setText("Filter Alignment");
         // lblMinCount.setText("Minimum Count:");
         lblMinFreq.setText("Minimum Frequency:");
+        lblMaxFreq.setText("Maximum Frequency:");
         lblStartSite.setText("Start Position:");
         lblPosType.setText("Position Type:");
         lblSiteIndex.setText(" Position index");
@@ -568,6 +574,16 @@ class DataFilterAlignmentDialog extends JDialog {
         });
         freqTextField.setPreferredSize(new Dimension(63, 25));
         freqTextField.setMinimumSize(new Dimension(40, 25));
+        
+        maxFreqTextField.setText(maxFreq + "");
+        maxFreqTextField.addFocusListener(new java.awt.event.FocusAdapter() {
+
+            public void focusLost(FocusEvent e) {
+                maxFreqTextField_focusLost(e);
+            }
+        });
+        maxFreqTextField.setPreferredSize(new Dimension(63, 25));
+        maxFreqTextField.setMinimumSize(new Dimension(40, 25));
 
 
         if (!doBatchAnalysis) {
@@ -642,19 +658,21 @@ class DataFilterAlignmentDialog extends JDialog {
 
         mainPanel.add(lblMinCount, new GridBagConstraints(0, 1, 2, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
         mainPanel.add(lblMinFreq, new GridBagConstraints(0, 2, 1, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
-        mainPanel.add(lblPosType, new GridBagConstraints(0, 3, 1, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
-        mainPanel.add(lblStartSite, new GridBagConstraints(0, 4, 1, 1, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
-        mainPanel.add(lblDistanceFromEndSite, new GridBagConstraints(0, 5, 1, 1, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
+        mainPanel.add(lblMaxFreq, new GridBagConstraints(0, 3, 1, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
+        mainPanel.add(lblPosType, new GridBagConstraints(0, 4, 1, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
+        mainPanel.add(lblStartSite, new GridBagConstraints(0, 5, 1, 1, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
+        mainPanel.add(lblDistanceFromEndSite, new GridBagConstraints(0, 6, 1, 1, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
 
         mainPanel.add(countTextField, new GridBagConstraints(2, 1, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
         mainPanel.add(lblTotalSequences, new GridBagConstraints(3, 1, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
         mainPanel.add(freqTextField, new GridBagConstraints(2, 2, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
-        mainPanel.add(lblSiteIndex, new GridBagConstraints(2, 3, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
-        mainPanel.add(startTextField, new GridBagConstraints(2, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
+        mainPanel.add(maxFreqTextField, new GridBagConstraints(2, 3, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
+        mainPanel.add(lblSiteIndex, new GridBagConstraints(2, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
+        mainPanel.add(startTextField, new GridBagConstraints(2, 5, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
 //        mainPanel.add(distanceFromEndTextField, new GridBagConstraints(2, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
 
-        mainPanel.add(lblSitePos, new GridBagConstraints(3, 3, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
-        mainPanel.add(startPosTextField, new GridBagConstraints(3, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
+        mainPanel.add(lblSitePos, new GridBagConstraints(3, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
+        mainPanel.add(startPosTextField, new GridBagConstraints(3, 5, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
 
         lblSitePos.setVisible(theAlignment.getNumLoci() == 1 && startPos >= 0);
         startPosTextField.setVisible(theAlignment.getNumLoci() == 1 && startPos >= 0);
@@ -724,6 +742,10 @@ class DataFilterAlignmentDialog extends JDialog {
 
     public double getMinimumFrequency() {
         return minFreq;
+    }
+    
+    public double getMaximumFrequency() {
+        return maxFreq;
     }
 
     /**
@@ -1067,6 +1089,29 @@ class DataFilterAlignmentDialog extends JDialog {
         freqTextField.setText(minFreq + "");
         // save this value to the users settings so it shows up the next time
         TasselPrefs.putFilterAlignPluginMinFreq(minFreq);
+    }
+    
+    private void maxFreqTextField_focusLost(FocusEvent e) {
+        try {
+            String input = maxFreqTextField.getText().trim();
+            double tmpMaxFreq = -0.1;
+            if (input != null) {
+                tmpMaxFreq = Double.parseDouble(input);
+            }
+            if ((tmpMaxFreq > 1.0) || (tmpMaxFreq < 0.0)) {
+                tmpMaxFreq = maxFreq;
+            }
+            maxFreq = tmpMaxFreq;
+
+        } catch (NumberFormatException nfe) {
+            JOptionPane.showMessageDialog(this.getParent(), "Could not parse \"Maximum Frequency\".  "
+                    + "Please enter a value between 0.0 and 1.0");
+        } catch (Exception ee) {
+            ee.printStackTrace();
+        }
+        maxFreqTextField.setText(maxFreq + "");
+        // save this value to the users settings so it shows up the next time
+        TasselPrefs.putFilterAlignPluginMaxFreq(maxFreq);
     }
 
     private void countTextField_focusLost(FocusEvent e) {

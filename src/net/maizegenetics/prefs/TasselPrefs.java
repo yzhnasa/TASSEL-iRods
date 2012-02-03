@@ -34,6 +34,9 @@ public class TasselPrefs {
     // Min. frequency for filtering sites.
     public static final String FILTER_ALIGN_PLUGIN_MIN_FREQ = "minFreq";
     public static final double FILTER_ALIGN_PLUGIN_MIN_FREQ_DEFAULT = 0.01;
+    // Max. frequency for filtering sites.
+    public static final String FILTER_ALIGN_PLUGIN_MAX_FREQ = "maxFreq";
+    public static final double FILTER_ALIGN_PLUGIN_MAX_FREQ_DEFAULT = 1.0;
     // Min. frequency for filtering sites.
     public static final String FILTER_ALIGN_PLUGIN_MIN_COUNT = "minCount";
     public static final int FILTER_ALIGN_PLUGIN_MIN_COUNT_DEFAULT = 1;
@@ -154,6 +157,14 @@ public class TasselPrefs {
 
     public static void putFilterAlignPluginMinFreq(double value) {
         putDoublePref(FILTER_ALIGN_PLUGIN_TOP, FILTER_ALIGN_PLUGIN_MIN_FREQ, value);
+    }
+    
+    public static double getFilterAlignPluginMaxFreq() {
+        return getDoublePref(FILTER_ALIGN_PLUGIN_TOP, FILTER_ALIGN_PLUGIN_MAX_FREQ, FILTER_ALIGN_PLUGIN_MAX_FREQ_DEFAULT);
+    }
+
+    public static void putFilterAlignPluginMaxFreq(double value) {
+        putDoublePref(FILTER_ALIGN_PLUGIN_TOP, FILTER_ALIGN_PLUGIN_MAX_FREQ, value);
     }
 
     public static int getFilterAlignPluginMinCount() {
