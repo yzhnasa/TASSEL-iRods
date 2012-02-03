@@ -305,7 +305,7 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     /**
-     * Returns site of this FilterAlignment based on give site from
+     * Returns site of this FilterAlignment based on given site from
      * embedded Alignment.
      * 
      * @param site site
@@ -321,6 +321,21 @@ public class FilterAlignment extends AbstractAlignment {
             return site;
         }
 
+    }
+
+    /**
+     * Returns sites from original alignment that are viewable (not filtered)
+     * by this filter alignment.
+     * 
+     * @return list of sites 
+     */
+    public int[] getBaseSitesShown() {
+        int numSites = getSiteCount();
+        int[] result = new int[numSites];
+        for (int i = 0; i < numSites; i++) {
+            result[i] = translateSite(i);
+        }
+        return result;
     }
 
     public int translateTaxon(int taxon) {
