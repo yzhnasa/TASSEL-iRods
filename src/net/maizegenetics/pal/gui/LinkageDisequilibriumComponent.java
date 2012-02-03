@@ -52,7 +52,6 @@ public class LinkageDisequilibriumComponent extends Component {
     //h2off is on the right side for legends
     boolean probability = true, upperProb = false, lowerProb = true;
     // boolean genesOrChromo=true;  //true if display genes , false if display chromosomes
-
     double normalizer;
 
     public LinkageDisequilibriumComponent(LinkageDisequilibrium theLD, boolean includeBlockSchematic, boolean chromosomalScale) {
@@ -60,7 +59,13 @@ public class LinkageDisequilibriumComponent extends Component {
         theAA = theLD.getAlignment();
         this.includeBlockSchematic = includeBlockSchematic;
         this.chromosomalScale = chromosomalScale;
-        this.diseq = new double[theLD.getSiteCount()][theLD.getSiteCount()];
+        int numSites = theLD.getSiteCount();
+        this.diseq = new double[numSites][numSites];
+        for (int x = 0; x < numSites; x++) {
+            for (int y = 0; y < numSites; y++) {
+                diseq[x][y] = Double.NaN;
+            }
+        }
         setUpperCorner(RSQUARE);
         setLowerCorner(P_VALUE);
         totalVariableSites = theLD.getSiteCount();
@@ -84,28 +89,81 @@ public class LinkageDisequilibriumComponent extends Component {
      * This determines what is displayed in the lower left corner.
      * Options are: P_VALUE, DPRIME, and RSQUARE
      */
+//    public void setLowerCorner(int ldMeasure) {
+//        for (int r = 0; r < theLD.getSiteCount(); r++) {
+//            for (int c = r; c < theLD.getSiteCount(); c++) {
+//                switch (ldMeasure) {
+//                    case P_VALUE: {
+//                        diseq[r][c] = theLD.getP(r, c);
+//                        lowerLabel = "P value";
+//                        break;
+//                    }
+//                    case DPRIME: {
+//                        diseq[r][c] = theLD.getDPrime(r, c);
+//                        lowerLabel = "D'";
+//                        break;
+//                    }
+//                    case RSQUARE: {
+//                        diseq[r][c] = theLD.getRSqr(r, c);
+//                        lowerLabel = "R^2";
+//                        break;
+//                    }
+//                }
+//            }
+//        }
+//        lowerProb = (ldMeasure == P_VALUE) ? true : false;
+//    }
     public void setLowerCorner(int ldMeasure) {
+
         for (int r = 0; r < theLD.getSiteCount(); r++) {
             for (int c = r; c < theLD.getSiteCount(); c++) {
-                switch (ldMeasure) {
-                    case P_VALUE: {
-                        diseq[r][c] = theLD.getP(r, c);
-                        lowerLabel = "P value";
-                        break;
-                    }
-                    case DPRIME: {
-                        diseq[r][c] = theLD.getDPrime(r, c);
-                        lowerLabel = "D'";
-                        break;
-                    }
-                    case RSQUARE: {
-                        diseq[r][c] = theLD.getRSqr(r, c);
-                        lowerLabel = "R^2";
-                        break;
-                    }
-                }
+                diseq[r][c] = Double.NaN;
             }
         }
+
+        int xHigher = 0;
+        int xLower = 0;
+        switch (ldMeasure) {
+            case P_VALUE: {
+                for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
+                    if (theLD.getX(z) > theLD.getY(z)) {
+                        xHigher++;
+                    } else {
+                        xLower++;
+                    }
+                    diseq[theLD.getX(z)][theLD.getY(z)] = theLD.getP(z);
+                }
+                lowerLabel = "P value";
+                break;
+            }
+            case DPRIME: {
+                for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
+                    if (theLD.getX(z) > theLD.getY(z)) {
+                        xHigher++;
+                    } else {
+                        xLower++;
+                    }
+                    diseq[theLD.getX(z)][theLD.getY(z)] = theLD.getDPrime(z);
+                }
+                lowerLabel = "D'";
+                break;
+            }
+            case RSQUARE: {
+                for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
+                    if (theLD.getX(z) > theLD.getY(z)) {
+                        xHigher++;
+                    } else {
+                        xLower++;
+                    }
+                    diseq[theLD.getX(z)][theLD.getY(z)] = theLD.getRSqr(z);
+                }
+                lowerLabel = "R^2";
+                break;
+            }
+        }
+
+        System.out.println("setLowerCorner: xHigher: " + xHigher + "  xLower: " + xLower);
+
         lowerProb = (ldMeasure == P_VALUE) ? true : false;
     }
 
@@ -113,28 +171,82 @@ public class LinkageDisequilibriumComponent extends Component {
      * This determines what is displayed in the upper right corner.
      * Options are: P_VALUE, DPRIME, and RSQUARE
      */
+//    public void setUpperCorner(int ldMeasure) {
+//        for (int c = 0; c < theLD.getSiteCount(); c++) {
+//            for (int r = c; r < theLD.getSiteCount(); r++) {
+//                switch (ldMeasure) {
+//                    case P_VALUE: {
+//                        diseq[r][c] = theLD.getP(r, c);
+//                        upperLabel = "P value";
+//                        break;
+//                    }
+//                    case DPRIME: {
+//                        diseq[r][c] = theLD.getDPrime(r, c);
+//                        upperLabel = "D'";
+//                        break;
+//                    }
+//                    case RSQUARE: {
+//                        diseq[r][c] = theLD.getRSqr(r, c);
+//                        upperLabel = "R^2";
+//                        break;
+//                    }
+//                }
+//            }
+//        }
+//        upperProb = (ldMeasure == P_VALUE) ? true : false;
+//    }
     public void setUpperCorner(int ldMeasure) {
+
         for (int c = 0; c < theLD.getSiteCount(); c++) {
             for (int r = c; r < theLD.getSiteCount(); r++) {
-                switch (ldMeasure) {
-                    case P_VALUE: {
-                        diseq[r][c] = theLD.getP(r, c);
-                        upperLabel = "P value";
-                        break;
-                    }
-                    case DPRIME: {
-                        diseq[r][c] = theLD.getDPrime(r, c);
-                        upperLabel = "D'";
-                        break;
-                    }
-                    case RSQUARE: {
-                        diseq[r][c] = theLD.getRSqr(r, c);
-                        upperLabel = "R^2";
-                        break;
-                    }
-                }
+                diseq[r][c] = Double.NaN;
             }
         }
+
+        int xHigher = 0;
+        int xLower = 0;
+
+        switch (ldMeasure) {
+            case P_VALUE: {
+                for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
+                    if (theLD.getX(z) > theLD.getY(z)) {
+                        xHigher++;
+                    } else {
+                        xLower++;
+                    }
+                    diseq[theLD.getY(z)][theLD.getX(z)] = theLD.getP(z);
+                }
+                upperLabel = "P value";
+                break;
+            }
+            case DPRIME: {
+                for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
+                    if (theLD.getX(z) > theLD.getY(z)) {
+                        xHigher++;
+                    } else {
+                        xLower++;
+                    }
+                    diseq[theLD.getY(z)][theLD.getX(z)] = theLD.getDPrime(z);
+                }
+                upperLabel = "D'";
+                break;
+            }
+            case RSQUARE: {
+                for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
+                    if (theLD.getX(z) > theLD.getY(z)) {
+                        xHigher++;
+                    } else {
+                        xLower++;
+                    }
+                    diseq[theLD.getY(z)][theLD.getX(z)] = theLD.getRSqr(z);
+                }
+                upperLabel = "R^2";
+                break;
+            }
+        }
+
+        System.out.println("setUpperCorner: xHigher: " + xHigher + "  xLower: " + xLower);
+
         upperProb = (ldMeasure == P_VALUE) ? true : false;
     }
 
@@ -225,17 +337,17 @@ public class LinkageDisequilibriumComponent extends Component {
             //        blockEnd[c] = theAA.getChromosomePosition(r);
             //    }
             //} else {
-                if (!currLocus.equals(theAA.getLocusName(r))) {
-                    c++;
-                    currLocus = theAA.getLocusName(r);
-                    blockNames[c] = currLocus;
-                }
-                if (blockStart[c] > theAA.getPositionInLocus(r)) {
-                    blockStart[c] = theAA.getPositionInLocus(r);
-                }
-                if (blockEnd[c] < theAA.getPositionInLocus(r)) {
-                    blockEnd[c] = theAA.getPositionInLocus(r);
-                }
+            if (!currLocus.equals(theAA.getLocusName(r))) {
+                c++;
+                currLocus = theAA.getLocusName(r);
+                blockNames[c] = currLocus;
+            }
+            if (blockStart[c] > theAA.getPositionInLocus(r)) {
+                blockStart[c] = theAA.getPositionInLocus(r);
+            }
+            if (blockEnd[c] < theAA.getPositionInLocus(r)) {
+                blockEnd[c] = theAA.getPositionInLocus(r);
+            }
             //}
         }
         totalUnits = 0.5f;
@@ -296,7 +408,7 @@ public class LinkageDisequilibriumComponent extends Component {
             //if (chromosomalScale) {
             //    endPos[0] = blockBeginPos[0] + ((theAA.getChromosomePosition(0) - blockStart[0]) * proportionPerUnit);
             //} else {
-                endPos[0] = blockBeginPos[0] + ((theAA.getPositionInLocus(0) - blockStart[0] - normalizer) * (1/((1/proportionPerUnit) - normalizer)));
+            endPos[0] = blockBeginPos[0] + ((theAA.getPositionInLocus(0) - blockStart[0] - normalizer) * (1 / ((1 / proportionPerUnit) - normalizer)));
             //}
             for (int r = 1; r < totalVariableSites; r++) {
                 //if (chromosomalScale) {
@@ -305,23 +417,23 @@ public class LinkageDisequilibriumComponent extends Component {
                 //    }
                 //    endPos[r] = blockBeginPos[currB] + ((theAA.getChromosomePosition(r) - blockStart[currB]) * proportionPerUnit);
                 //} else {
-                    if (!theAA.getLocusName(r).equals(theAA.getLocusName(r - 1))) {
-                        currB++;
-                    }
-                    //endPos[r] = ((theAA.getPositionInLocus(r) - blockStart[currB]) * proportionPerUnit);
-                    endPos[r] = blockBeginPos[currB] + ((theAA.getPositionInLocus(r) - blockStart[currB] - normalizer) * (1/((1/proportionPerUnit) - normalizer)));
+                if (!theAA.getLocusName(r).equals(theAA.getLocusName(r - 1))) {
+                    currB++;
+                }
+                //endPos[r] = ((theAA.getPositionInLocus(r) - blockStart[currB]) * proportionPerUnit);
+                endPos[r] = blockBeginPos[currB] + ((theAA.getPositionInLocus(r) - blockStart[currB] - normalizer) * (1 / ((1 / proportionPerUnit) - normalizer)));
                 //}
             }
         }
-    // blockBeginPos[b]=currEndBase;
-    // blockEndPos[b]=endPos[r-1];
+        // blockBeginPos[b]=currEndBase;
+        // blockEndPos[b]=endPos[r-1];
     }
 
     private void jbInit() throws Exception {
         this.setBackground(Color.red);
         this.setSize(400, 400);
-    // this.setPreferredSize(new Dimension(400, 400));
-    // this.setLayout(borderLayout1);
+        // this.setPreferredSize(new Dimension(400, 400));
+        // this.setLayout(borderLayout1);
     }
 
     private Color getMagnitudeColor(int r, int c) {
@@ -337,11 +449,10 @@ public class LinkageDisequilibriumComponent extends Component {
         if (diseq[r][c] < -998.0) {
             return theColor.lightGray;
         }
-        if ((((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c]))/2) < 0.52f) {
-            return theColor.getHSBColor(((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c]))/2 - .5f, ((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c]))/2 - .5f, 1f);
-        }
-        else {
-            return theColor.getHSBColor(((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c]))/2, ((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c]))/2, 1f);
+        if ((((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c])) / 2) < 0.52f) {
+            return theColor.getHSBColor(((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c])) / 2 - .5f, ((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c])) / 2 - .5f, 1f);
+        } else {
+            return theColor.getHSBColor(((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c])) / 2, ((float) diseq[r][c]) + (1.0000f - ((float) diseq[r][c])) / 2, 1f);
         }
     }
 
@@ -374,7 +485,7 @@ public class LinkageDisequilibriumComponent extends Component {
             //if (chromosomalScale) {
             //    s = theAA.getChromosome(r) + "c" + Math.round(theAA.getChromosomePosition(r));
             //} else {
-                s = theAA.getLocusName(r) + "s" + theAA.getPositionInLocus(r);
+            s = theAA.getLocusName(r) + "s" + theAA.getPositionInLocus(r);
             //}
             g.drawString(s, 4, yPos[r] + ih - 1);
         }
@@ -395,7 +506,7 @@ public class LinkageDisequilibriumComponent extends Component {
         for (int r = 0; r < totalVariableSites; r++) {
             xPos[r] = (int) ((startPos[r] * xSize) + (double) hoff);
             yPos[r] = (int) ((startPos[r] * ySize) + (double) voff);
-        //xEndPos[r]=Math.round((endPos[r]*xSize)+hoff);
+            //xEndPos[r]=Math.round((endPos[r]*xSize)+hoff);
         }  //end of going through sites
         xPos[totalVariableSites] = (int) d.width - h2off;
         yPos[totalVariableSites] = (int) ySize + voff;
@@ -508,7 +619,7 @@ public class LinkageDisequilibriumComponent extends Component {
             dF = new DecimalFormat("0.00");
             for (double d = 1.0000f; d >= 0.5; d -= 0.05) {
 //                if (d >= 0.55) {
-                    g.setColor(theColor.getHSBColor((float) d, (float) d, 1f));
+                g.setColor(theColor.getHSBColor((float) d, (float) d, 1f));
 //                }
 //                else {
 //                    g.setColor(theColor.getHSBColor((float) 0, (float) 0, 1f));
