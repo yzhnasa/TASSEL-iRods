@@ -36,6 +36,7 @@ import net.maizegenetics.baseplugins.KinshipPlugin;
 import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
 import net.maizegenetics.baseplugins.MLMPlugin;
+import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
 import net.maizegenetics.baseplugins.PlinkLoadPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
@@ -770,6 +771,19 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing filter alignment step length: " + temp);
                     }
                     plugin.setStepSize(stepLen);
+                } else if (current.equalsIgnoreCase("-numericalGenoTransform")) {
+                    NumericalGenotypePlugin plugin = new NumericalGenotypePlugin();
+
+                    String temp = args[index++].trim();
+                    if (temp.equalsIgnoreCase(NumericalGenotypePlugin.TRANSFORM_TYPE.colapse.toString())) {
+                        plugin.setTransformType(NumericalGenotypePlugin.TRANSFORM_TYPE.colapse);
+                    } else if (temp.equalsIgnoreCase(NumericalGenotypePlugin.TRANSFORM_TYPE.separated.toString())) {
+                        plugin.setTransformType(NumericalGenotypePlugin.TRANSFORM_TYPE.separated);
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Not defined genotype transform type: " + temp);
+                    }
+
+                    integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-includeTaxa")) {
                     FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
                     String[] taxa = args[index++].trim().split(",");
