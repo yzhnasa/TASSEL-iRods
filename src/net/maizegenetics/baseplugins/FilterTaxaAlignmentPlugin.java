@@ -154,7 +154,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
         int count = 0;
         if (theData instanceof Alignment) {
             if (myIdsToKeep != null) {
-                result = FilterAlignment.getInstance((Alignment) theData, myIdsToKeep);
+                result = FilterAlignment.getInstance((Alignment) theData, myIdsToKeep, false);
             } else if (myIdsToRemove != null) {
                 result = FilterAlignment.getInstanceRemoveIDs((Alignment) theData, myIdsToRemove);
             }

@@ -63,7 +63,31 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    /**
+     * This returns FilterAlignment with only specified subIdGroup.  Defaults
+     * to retain unknown taxa.
+     * 
+     * @param a alignment
+     * @param subIdGroup subset id group
+     * 
+     * @return filter alignment 
+     */
     public static FilterAlignment getInstance(Alignment a, IdGroup subIdGroup) {
+        return getInstance(a, subIdGroup, true);
+    }
+
+    /**
+     * This returns FilterAlignment with only specified subIdGroup.  If
+     * retainUnknownTaxa is true then Alignment will return unknown values
+     * for missing taxa.
+     * 
+     * @param a alignment
+     * @param subIdGroup subset id group
+     * @param retainUnknownTaxa whether to retain unknown taxa
+     * 
+     * @return filter alignment 
+     */
+    public static FilterAlignment getInstance(Alignment a, IdGroup subIdGroup, boolean retainUnknownTaxa) {
 
         Alignment baseAlignment = a;
         FilterAlignment original = null;
@@ -72,22 +96,35 @@ public class FilterAlignment extends AbstractAlignment {
             baseAlignment = ((FilterAlignment) a).getBaseAlignment();
         }
 
-        int[] taxaRedirect = new int[subIdGroup.getIdCount()];
+        List<Integer> taxaRedirectList = new ArrayList<Integer>();
+        List<Identifier> idList = new ArrayList<Identifier>();
         for (int i = 0; i < subIdGroup.getIdCount(); i++) {
             int ion = a.getIdGroup().whichIdNumber(subIdGroup.getIdentifier(i));
-            if (ion < 0) {
-                taxaRedirect[i] = -1;
+            if ((retainUnknownTaxa) && (ion < 0)) {
+                taxaRedirectList.add(-1);
+                idList.add(subIdGroup.getIdentifier(i));
             } else {
                 int idn = baseAlignment.getIdGroup().whichIdNumber(subIdGroup.getIdentifier(i));
                 if (idn > -1) {
-                    taxaRedirect[i] = idn;
-                } else {
-                    taxaRedirect[i] = -1;
+                    taxaRedirectList.add(idn);
+                    idList.add(baseAlignment.getIdGroup().getIdentifier(idn));
+                } else if (retainUnknownTaxa) {
+                    taxaRedirectList.add(-1);
+                    idList.add(subIdGroup.getIdentifier(i));
                 }
             }
         }
 
-        return new FilterAlignment(baseAlignment, subIdGroup, taxaRedirect, original);
+        int[] taxaRedirect = new int[taxaRedirectList.size()];
+        for (int j = 0, n = taxaRedirectList.size(); j < n; j++) {
+            taxaRedirect[j] = (int) taxaRedirectList.get(j);
+        }
+
+        Identifier[] ids = new Identifier[idList.size()];
+        idList.toArray(ids);
+        IdGroup resultIdGroup = new SimpleIdGroup(ids);
+
+        return new FilterAlignment(baseAlignment, resultIdGroup, taxaRedirect, original);
 
     }
 
