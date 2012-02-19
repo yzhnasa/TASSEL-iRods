@@ -424,7 +424,23 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     public byte[] getReference() {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        for (int i = 0; i < myAlignments.length; i++) {
+            if (!myAlignments[i].hasReference()) {
+                return null;
+            }
+        }
+
+        byte[] result = new byte[getSiteCount()];
+        int count = 0;
+        for (int i = 0; i < myAlignments.length; i++) {
+            byte[] current = myAlignments[i].getReference();
+            for (int j = 0; j < current.length; j++) {
+                result[count++] = current[j];
+            }
+        }
+        return result;
+
     }
 
     public boolean isHeterozygous(int taxon, int site) {
@@ -433,7 +449,29 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     public int[] getPhysicalPositions() {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        boolean allNull = true;
+        for (int i = 0; i < myAlignments.length; i++) {
+            int[] current = myAlignments[0].getPhysicalPositions();
+            if ((current != null) && (current.length != 0)) {
+                allNull = false;
+                break;
+            }
+        }
+
+        if (allNull) {
+            return null;
+        } else {
+            int[] result = new int[getSiteCount()];
+            int count = 0;
+            for (int i = 0; i < myAlignments.length; i++) {
+                int[] current = myAlignments[i].getPhysicalPositions();
+                for (int j = 0; j < current.length; j++) {
+                    result[count++] = current[j];
+                }
+            }
+            return result;
+        }
     }
 
     public String getLocusName(int site) {
@@ -473,19 +511,68 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     public boolean isPhased() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (int i = 0; i < myAlignments.length; i++) {
+            if (myAlignments[i].isPhased() == false) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public GeneticMap getGeneticMap() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        GeneticMap result = myAlignments[0].getGeneticMap();
+        for (int i = 1; i < myAlignments.length; i++) {
+            GeneticMap current = myAlignments[i].getGeneticMap();
+            if ((current == null) || (!current.equals(result))) {
+                return null;
+            }
+        }
+        return result;
     }
 
     public boolean retainsRareAlleles() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (int i = 0; i < myAlignments.length; i++) {
+            if (myAlignments[i].retainsRareAlleles() == false) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public String[][] getAlleleEncodings() {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        boolean allTheSame = true;
+        String[][] encodings = myAlignments[0].getAlleleEncodings();
+        if (encodings.length == 1) {
+            for (int i = 1; i < myAlignments.length; i++) {
+                String[][] current = myAlignments[i].getAlleleEncodings();
+                if ((current.length == 1) && (encodings[0].length == current.length)) {
+                    for (int j = 0; j < encodings[0].length; j++) {
+                        if (!current[j].equals(encodings[j])) {
+                            allTheSame = false;
+                            break;
+                        }
+                    }
+                } else {
+                    allTheSame = false;
+                    break;
+                }
+            }
+        }
+
+        if (allTheSame) {
+            return encodings;
+        } else {
+            String[][] result = new String[getSiteCount()][];
+            int count = 0;
+            for (int i = 0; i < myAlignments.length; i++) {
+                for (int j = 0, n = myAlignments[0].getSiteCount(); j < n; j++) {
+                    result[count++] = myAlignments[i].getAlleleEncodings(j);
+                }
+            }
+            return result;
+        }
+
     }
 
     public String[] getAlleleEncodings(int site) {
@@ -499,6 +586,12 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     public int getMaxNumAlleles() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int result = 999999;
+        for (int i = 0; i < myAlignments.length; i++) {
+            if (myAlignments[i].getMaxNumAlleles() < result) {
+                result = myAlignments[i].getMaxNumAlleles();
+            }
+        }
+        return result;
     }
 }
