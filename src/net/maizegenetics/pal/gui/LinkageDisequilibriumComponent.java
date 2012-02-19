@@ -10,6 +10,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 
 import java.awt.*;
+import javax.swing.JComponent;
 import java.text.DecimalFormat;
 
 /**
@@ -23,7 +24,7 @@ import java.text.DecimalFormat;
  * @author Ed Buckler
  * @version $Id: LinkageDisequilibriumComponent.java
  */
-public class LinkageDisequilibriumComponent extends Component {
+public class LinkageDisequilibriumComponent extends JComponent {
 
     public final static int P_VALUE = 0;
     public final static int DPRIME = 1;
@@ -48,21 +49,25 @@ public class LinkageDisequilibriumComponent extends Component {
     Color theColor = new Color(0, 0, 0);
     int distanceBetweenGraphAndGene = 40;
     int hoff = 70, h2off = 70, voff = 20;
-    //hoff is on the left side for site labels
-    //h2off is on the right side for legends
     boolean probability = true, upperProb = false, lowerProb = true;
-    // boolean genesOrChromo=true;  //true if display genes , false if display chromosomes
     double normalizer;
+    //viewer attribute variables
+    int myWindowSize;
+    int myWindowX;
+    int myWindowY;
 
-    public LinkageDisequilibriumComponent(LinkageDisequilibrium theLD, boolean includeBlockSchematic, boolean chromosomalScale) {
+    public LinkageDisequilibriumComponent(LinkageDisequilibrium theLD, boolean includeBlockSchematic, boolean chromosomalScale, int windowSize, int windowX, int windowY) {
         this.theLD = theLD;
         theAA = theLD.getAlignment();
         this.includeBlockSchematic = includeBlockSchematic;
         this.chromosomalScale = chromosomalScale;
         int numSites = theLD.getSiteCount();
-        this.diseq = new double[numSites][numSites];
-        for (int x = 0; x < numSites; x++) {
-            for (int y = 0; y < numSites; y++) {
+        myWindowSize = windowSize;
+        myWindowX = windowX;
+        myWindowY = windowY;
+        this.diseq = new double[windowSize][windowSize];
+        for (int x = 0; x < myWindowSize; x++) {
+            for (int y = 0; y < myWindowSize; y++) {
                 diseq[x][y] = Double.NaN;
             }
         }
@@ -75,9 +80,9 @@ public class LinkageDisequilibriumComponent extends Component {
         } else {
             includeBlockSchematic = false;
         }
-        xPos = new int[theLD.getSiteCount() + 1];
-        yPos = new int[theLD.getSiteCount() + 1];
-        xEndPos = new int[theLD.getSiteCount() + 1];
+        xPos = new int[windowSize + 1];
+        yPos = new int[windowSize + 1];
+        xEndPos = new int[windowSize + 1];
         try {
             jbInit();
         } catch (Exception ex) {
@@ -86,168 +91,139 @@ public class LinkageDisequilibriumComponent extends Component {
     }
 
     /**
-     * This determines what is displayed in the lower left corner.
-     * Options are: P_VALUE, DPRIME, and RSQUARE
+     * This sets a new viewable size
      */
-//    public void setLowerCorner(int ldMeasure) {
-//        for (int r = 0; r < theLD.getSiteCount(); r++) {
-//            for (int c = r; c < theLD.getSiteCount(); c++) {
-//                switch (ldMeasure) {
-//                    case P_VALUE: {
-//                        diseq[r][c] = theLD.getP(r, c);
-//                        lowerLabel = "P value";
-//                        break;
-//                    }
-//                    case DPRIME: {
-//                        diseq[r][c] = theLD.getDPrime(r, c);
-//                        lowerLabel = "D'";
-//                        break;
-//                    }
-//                    case RSQUARE: {
-//                        diseq[r][c] = theLD.getRSqr(r, c);
-//                        lowerLabel = "R^2";
-//                        break;
-//                    }
-//                }
-//            }
-//        }
-//        lowerProb = (ldMeasure == P_VALUE) ? true : false;
-//    }
+    public void setWindowSize(int newSize, int ldMeasureLower, int ldMeasureUpper) {
+        System.out.println("new window size: " + newSize);
+        myWindowSize = newSize;
+        diseq = new double[myWindowSize][myWindowSize];
+
+        setLowerCorner(ldMeasureLower);
+        setUpperCorner(ldMeasureUpper);
+
+        if (theAA != null) {
+            countGenesAndChromosomes();
+            calculateStartAndEndPositions();
+        }
+
+        xPos = new int[myWindowSize + 1];
+        yPos = new int[myWindowSize + 1];
+        xEndPos = new int[myWindowSize + 1];
+    }
+
+    /**
+     * This sets a new X position
+     */
+    public void setWindowX(int newX, int ldMeasureLower, int ldMeasureUpper) {
+        myWindowX = newX;
+        calculateStartAndEndPositions();
+        setLowerCorner(ldMeasureLower);
+        setUpperCorner(ldMeasureUpper);
+    }
+
+    /**
+     * This sets a new Y position
+     */
+    public void setWindowY(int newY, int ldMeasureLower, int ldMeasureUpper) {
+        myWindowY = newY;
+        calculateStartAndEndPositions();
+        setLowerCorner(ldMeasureLower);
+        setUpperCorner(ldMeasureUpper);
+    }
+
     public void setLowerCorner(int ldMeasure) {
 
-        for (int r = 0; r < theLD.getSiteCount(); r++) {
-            for (int c = r; c < theLD.getSiteCount(); c++) {
+        for (int r = 0; r < myWindowSize; r++) {
+            for (int c = Math.max(r + myWindowX - myWindowY, 0); c < myWindowSize; c++) {
                 diseq[r][c] = Double.NaN;
             }
         }
 
-        int xHigher = 0;
-        int xLower = 0;
         switch (ldMeasure) {
             case P_VALUE: {
                 for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
-                    if (theLD.getX(z) > theLD.getY(z)) {
-                        xHigher++;
-                    } else {
-                        xLower++;
+                    int r = theLD.getX(z) - myWindowX + (myWindowSize / 2);
+                    int c = theLD.getY(z) - myWindowY + (myWindowSize / 2);
+                    if ((r >= 0) && (r < myWindowSize) && (c >= Math.max(r + myWindowX - myWindowY, 0)) && (c < myWindowSize)) {
+                        diseq[r][c] = theLD.getP(z);
                     }
-                    diseq[theLD.getX(z)][theLD.getY(z)] = theLD.getP(z);
                 }
                 lowerLabel = "P value";
                 break;
             }
             case DPRIME: {
                 for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
-                    if (theLD.getX(z) > theLD.getY(z)) {
-                        xHigher++;
-                    } else {
-                        xLower++;
+                    int r = theLD.getX(z) - myWindowX + (myWindowSize / 2);
+                    int c = theLD.getY(z) - myWindowY + (myWindowSize / 2);
+                    if ((r >= 0) && (r < myWindowSize) && (c >= Math.max(r + myWindowX - myWindowY, 0)) && (c < myWindowSize)) {
+                        diseq[r][c] = theLD.getDPrime(z);
                     }
-                    diseq[theLD.getX(z)][theLD.getY(z)] = theLD.getDPrime(z);
                 }
                 lowerLabel = "D'";
                 break;
             }
             case RSQUARE: {
                 for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
-                    if (theLD.getX(z) > theLD.getY(z)) {
-                        xHigher++;
-                    } else {
-                        xLower++;
+                    int r = theLD.getX(z) - myWindowX + (myWindowSize / 2);
+                    int c = theLD.getY(z) - myWindowY + (myWindowSize / 2);
+                    if ((r >= 0) && (r < myWindowSize) && (c >= Math.max(r + myWindowX - myWindowY, 0)) && (c < myWindowSize)) {
+                        diseq[r][c] = theLD.getRSqr(z);
                     }
-                    diseq[theLD.getX(z)][theLD.getY(z)] = theLD.getRSqr(z);
                 }
                 lowerLabel = "R^2";
                 break;
             }
         }
 
-        System.out.println("setLowerCorner: xHigher: " + xHigher + "  xLower: " + xLower);
-
         lowerProb = (ldMeasure == P_VALUE) ? true : false;
     }
 
-    /**
-     * This determines what is displayed in the upper right corner.
-     * Options are: P_VALUE, DPRIME, and RSQUARE
-     */
-//    public void setUpperCorner(int ldMeasure) {
-//        for (int c = 0; c < theLD.getSiteCount(); c++) {
-//            for (int r = c; r < theLD.getSiteCount(); r++) {
-//                switch (ldMeasure) {
-//                    case P_VALUE: {
-//                        diseq[r][c] = theLD.getP(r, c);
-//                        upperLabel = "P value";
-//                        break;
-//                    }
-//                    case DPRIME: {
-//                        diseq[r][c] = theLD.getDPrime(r, c);
-//                        upperLabel = "D'";
-//                        break;
-//                    }
-//                    case RSQUARE: {
-//                        diseq[r][c] = theLD.getRSqr(r, c);
-//                        upperLabel = "R^2";
-//                        break;
-//                    }
-//                }
-//            }
-//        }
-//        upperProb = (ldMeasure == P_VALUE) ? true : false;
-//    }
     public void setUpperCorner(int ldMeasure) {
 
-        for (int c = 0; c < theLD.getSiteCount(); c++) {
-            for (int r = c; r < theLD.getSiteCount(); r++) {
+        for (int c = 0; c < myWindowSize; c++) {
+            for (int r = Math.max(c + myWindowY - myWindowX, 0); r < myWindowSize; r++) {
                 diseq[r][c] = Double.NaN;
             }
         }
 
-        int xHigher = 0;
-        int xLower = 0;
-
         switch (ldMeasure) {
             case P_VALUE: {
                 for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
-                    if (theLD.getX(z) > theLD.getY(z)) {
-                        xHigher++;
-                    } else {
-                        xLower++;
+                    int r = theLD.getX(z) - myWindowY + (myWindowSize / 2);
+                    int c = theLD.getY(z) - myWindowX + (myWindowSize / 2);
+                    if ((r >= 0) && (r < myWindowSize) && (c >= Math.max(r + myWindowY - myWindowX, 0)) && (c < myWindowSize)) {
+                        diseq[c][r] = theLD.getP(z);
                     }
-                    diseq[theLD.getY(z)][theLD.getX(z)] = theLD.getP(z);
                 }
                 upperLabel = "P value";
                 break;
             }
             case DPRIME: {
                 for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
-                    if (theLD.getX(z) > theLD.getY(z)) {
-                        xHigher++;
-                    } else {
-                        xLower++;
+                    int r = theLD.getX(z) - myWindowY + (myWindowSize / 2);
+                    int c = theLD.getY(z) - myWindowX + (myWindowSize / 2);
+                    if ((r >= 0) && (r < myWindowSize) && (c >= Math.max(r + myWindowY - myWindowX, 0)) && (c < myWindowSize)) {
+                        diseq[c][r] = theLD.getDPrime(z);
                     }
-                    diseq[theLD.getY(z)][theLD.getX(z)] = theLD.getDPrime(z);
                 }
                 upperLabel = "D'";
                 break;
             }
             case RSQUARE: {
                 for (int z = 0, n = theLD.getRowCount(); z < n; z++) {
-                    if (theLD.getX(z) > theLD.getY(z)) {
-                        xHigher++;
-                    } else {
-                        xLower++;
+                    int r = theLD.getX(z) - myWindowY + (myWindowSize / 2);
+                    int c = theLD.getY(z) - myWindowX + (myWindowSize / 2);
+                    if ((r >= 0) && (r < myWindowSize) && (c >= Math.max(r + myWindowY - myWindowX, 0)) && (c < myWindowSize)) {
+                        diseq[c][r] = theLD.getRSqr(z);
                     }
-                    diseq[theLD.getY(z)][theLD.getX(z)] = theLD.getRSqr(z);
                 }
                 upperLabel = "R^2";
                 break;
             }
         }
 
-        System.out.println("setUpperCorner: xHigher: " + xHigher + "  xLower: " + xLower);
-
         upperProb = (ldMeasure == P_VALUE) ? true : false;
+
     }
 
     /**
@@ -295,17 +271,13 @@ public class LinkageDisequilibriumComponent extends Component {
         }
         int currc = -1999;
         String currLocus = "";
-        for (int r = 0; r < totalVariableSites; r++) //sites and chromosomes need to be sorted
-        {
-            //if (theAA.getChromosome(r) != currc) {
-            //    totalChromosomes++;
-            //    currc = theAA.getChromosome(r);
-            //}
+        for (int r = 0; r < totalVariableSites; r++) {
             if (!currLocus.equals(theAA.getLocusName(r))) {
                 totalLoci++;
                 currLocus = theAA.getLocusName(r);
             }
         }
+
         //the number of separate totalBlocks
         totalBlocks = (chromosomalScale) ? totalChromosomes : totalLoci;
         if (totalBlocks == 0) {
@@ -324,19 +296,6 @@ public class LinkageDisequilibriumComponent extends Component {
         currLocus = "unknown locus";
         currc = -1999;
         for (int r = 0; r < totalVariableSites; r++) {
-            //if (chromosomalScale) {
-            //    if (theAA.getChromosome(r) != currc) {
-            //        c++;
-            //        currc = theAA.getChromosome(r);
-            //        blockNames[c] = "Chr." + currc;
-            //    }
-            //    if (blockStart[c] > theAA.getChromosomePosition(r)) {
-            //        blockStart[c] = theAA.getChromosomePosition(r);
-            //    }
-            //    if (blockEnd[c] < theAA.getChromosomePosition(r)) {
-            //        blockEnd[c] = theAA.getChromosomePosition(r);
-            //    }
-            //} else {
             if (!currLocus.equals(theAA.getLocusName(r))) {
                 c++;
                 currLocus = theAA.getLocusName(r);
@@ -348,7 +307,6 @@ public class LinkageDisequilibriumComponent extends Component {
             if (blockEnd[c] < theAA.getPositionInLocus(r)) {
                 blockEnd[c] = theAA.getPositionInLocus(r);
             }
-            //}
         }
         totalUnits = 0.5f;
         for (int i = 0; i < totalBlocks; i++) {
@@ -365,68 +323,50 @@ public class LinkageDisequilibriumComponent extends Component {
      * this determines to relative positions of the sites and cartoons (everything ranges from 0..1)
      *
      */
-    void calculateStartAndEndPositions() {
+    private void calculateStartAndEndPositions() {
         //This will determine were all the relative positions of the sites go
         double proportionPerPolymorphism, proportionPerUnit = 0.0f;
         if (includeBlockSchematic) {
-            totalIntervals = totalVariableSites + totalBlocks - 1;
-            proportionPerPolymorphism = 1 / (double) totalIntervals;
-            proportionPerUnit = (proportionPerPolymorphism * totalVariableSites) / totalUnits;
+            totalIntervals = myWindowSize + totalBlocks - 1;
+            proportionPerPolymorphism = 1 / (double) myWindowSize;
+            proportionPerUnit = (proportionPerPolymorphism * myWindowSize) / totalUnits;
             blockBeginPos = new double[totalBlocks];    //These hold the start and end points of the genes
             blockEndPos = new double[totalBlocks];
         } else {
-            totalIntervals = totalVariableSites;
+            totalIntervals = myWindowSize;
             proportionPerPolymorphism = 1 / (double) totalIntervals;
         }
-        startPos = new double[totalVariableSites];
-        endPos = new double[totalVariableSites];
+        startPos = new double[myWindowSize];
+        endPos = new double[myWindowSize];
 
         // int r,b=0,currg=-1999,currc=-1999;
         startPos[0] = 0;
         endPos[0] = 0;
         double currStartBase = 0, currEndBase = 0, geneToChromosomeSpace = 0;
-        for (int r = 0; r < totalVariableSites; r++) {
-            //if ((chromosomalScale) && (r > 0) && (includeBlockSchematic) && (theAA.getChromosome(r) != theAA.getChromosome(r - 1))) //transition between chromosomes if on chromosomal scale
-            //{
-            //    currStartBase += proportionPerPolymorphism;
-            //}
-            if ((!chromosomalScale) && (r > 0) && (includeBlockSchematic) && (!theAA.getLocusName(r).equals(theAA.getLocusName(r - 1)))) //transition between loci if not at chromosomal scale
-            {
-                currStartBase += proportionPerPolymorphism;
-            }
-            startPos[r] = currStartBase;
+        for (int r = myWindowX - (myWindowSize / 2); r < myWindowX + (myWindowSize / 2 + (myWindowSize % 2)); r++) {
+            startPos[r - myWindowX + (myWindowSize / 2)] = currStartBase;
             currStartBase += proportionPerPolymorphism;
         }  //end of going through sites
         if (includeBlockSchematic) {
             currStartBase = 0;
             for (int b = 0; b < totalBlocks; b++) {
-                blockBeginPos[b] = currStartBase;
-                blockEndPos[b] = blockBeginPos[b] + ((blockEnd[b] - blockStart[b]) * proportionPerUnit);
-                currStartBase = blockEndPos[b] + proportionPerPolymorphism;
+                blockBeginPos[b] = b / (double) totalBlocks;
+                blockEndPos[b] = (b + 1) / (double) totalBlocks;
             }
             int currB = 0;
-            //if (chromosomalScale) {
-            //    endPos[0] = blockBeginPos[0] + ((theAA.getChromosomePosition(0) - blockStart[0]) * proportionPerUnit);
-            //} else {
-            endPos[0] = blockBeginPos[0] + ((theAA.getPositionInLocus(0) - blockStart[0] - normalizer) * (1 / ((1 / proportionPerUnit) - normalizer)));
-            //}
-            for (int r = 1; r < totalVariableSites; r++) {
-                //if (chromosomalScale) {
-                //    if (theAA.getChromosome(r) != theAA.getChromosome(r - 1)) {
-                //        currB++;
-                //    }
-                //    endPos[r] = blockBeginPos[currB] + ((theAA.getChromosomePosition(r) - blockStart[currB]) * proportionPerUnit);
-                //} else {
+            for (int i = 1; i < myWindowX - (myWindowSize / 2) + 1; i++) {
+                if (!theAA.getLocusName(i).equals(theAA.getLocusName(i - 1))) {
+                    currB++;
+                }
+            }
+            endPos[0] = blockBeginPos[currB] + (theAA.getPositionInLocus(myWindowX - (myWindowSize / 2)) - blockStart[currB]) / (blockEnd[currB] - blockStart[currB]) / totalBlocks;
+            for (int r = myWindowX - (myWindowSize / 2) + 1; r < myWindowX + (myWindowSize / 2 + (myWindowSize % 2)); r++) {
                 if (!theAA.getLocusName(r).equals(theAA.getLocusName(r - 1))) {
                     currB++;
                 }
-                //endPos[r] = ((theAA.getPositionInLocus(r) - blockStart[currB]) * proportionPerUnit);
-                endPos[r] = blockBeginPos[currB] + ((theAA.getPositionInLocus(r) - blockStart[currB] - normalizer) * (1 / ((1 / proportionPerUnit) - normalizer)));
-                //}
+                endPos[r - myWindowX + (myWindowSize / 2)] = blockBeginPos[currB] + (theAA.getPositionInLocus(r) - blockStart[currB]) / (blockEnd[currB] - blockStart[currB]) / totalBlocks;
             }
         }
-        // blockBeginPos[b]=currEndBase;
-        // blockEndPos[b]=endPos[r-1];
     }
 
     private void jbInit() throws Exception {
@@ -437,7 +377,7 @@ public class LinkageDisequilibriumComponent extends Component {
     }
 
     private Color getMagnitudeColor(int r, int c) {
-        if (r == c) {
+        if (r + myWindowX == c + myWindowY) {
             return theColor.getHSBColor(0.999f, (float) diseq[r][c], 1f);
         }
         if (Double.isNaN(diseq[r][c])) {
@@ -481,13 +421,17 @@ public class LinkageDisequilibriumComponent extends Component {
         String s;
         g.setFont(new java.awt.Font("Dialog", 0, 9));
         g.setColor(theColor.black);
-        for (int r = 0; r < totalVariableSites; r++) {
-            //if (chromosomalScale) {
-            //    s = theAA.getChromosome(r) + "c" + Math.round(theAA.getChromosomePosition(r));
-            //} else {
-            s = theAA.getLocusName(r) + "s" + theAA.getPositionInLocus(r);
-            //}
-            g.drawString(s, 4, yPos[r] + ih - 1);
+        String locus = theAA.getLocusName(myWindowY - (myWindowSize / 2));
+        int jump = 0;
+        for (int c = myWindowY - (myWindowSize / 2); c < myWindowY + (myWindowSize / 2 + (myWindowSize % 2)); c++) {
+            if (locus.equals(theAA.getLocusName(c + jump))) {
+                s = theAA.getLocusName(c + jump) + "s" + theAA.getPositionInLocus(c + jump);
+            } else {
+                s = "";
+                locus = theAA.getLocusName(c + jump);
+                jump--;
+            }
+            g.drawString(s, 4, yPos[c - myWindowY + (myWindowSize / 2)] + ih - 1);
         }
     }
 
@@ -498,20 +442,19 @@ public class LinkageDisequilibriumComponent extends Component {
         Dimension d = this.getSize();
         double iwf, ihf, xSize, ySize;
         ySize = d.height - voff - distanceBetweenGraphAndGene;
-        ihf = ySize / (double) totalIntervals;
+        ihf = ySize / (double) myWindowSize;
         xSize = d.width - hoff - h2off;
-        iwf = xSize / (double) totalIntervals;
+        iwf = xSize / (double) myWindowSize;
         ih = (int) Math.round(ihf);
         iw = (int) Math.round(iwf);
-        for (int r = 0; r < totalVariableSites; r++) {
+        for (int r = 0; r < myWindowSize; r++) {
             xPos[r] = (int) ((startPos[r] * xSize) + (double) hoff);
             yPos[r] = (int) ((startPos[r] * ySize) + (double) voff);
-            //xEndPos[r]=Math.round((endPos[r]*xSize)+hoff);
         }  //end of going through sites
-        xPos[totalVariableSites] = (int) d.width - h2off;
-        yPos[totalVariableSites] = (int) ySize + voff;
+        xPos[myWindowSize] = (int) d.width - h2off;
+        yPos[myWindowSize] = (int) ySize + voff;
         if (includeBlockSchematic) {
-            for (int r = 0; r < totalVariableSites; r++) {
+            for (int r = 0; r < myWindowSize; r++) {
                 xEndPos[r] = (int) Math.round((endPos[r] * xSize) + hoff);
             }  //end of going through sites
             blockBeginX = new int[totalBlocks];
@@ -527,37 +470,42 @@ public class LinkageDisequilibriumComponent extends Component {
         if (diseq == null) {
             return;
         }
-        // super.paintComponent(g);
-        int hue;
         Dimension d = this.getSize();
         calculateCoordinates(g);
         g.setColor(theColor.white);
         g.fillRect(0, 0, d.width, d.height);
         System.out.println("UpperProb=" + upperProb + "  LowerProb=" + lowerProb);
         g.setColor(theColor.darkGray);
-        g.fillRect(xPos[0], yPos[0], xPos[totalVariableSites] - xPos[0], yPos[totalVariableSites] - yPos[0] + 2);
-        for (int r = 0; r < totalVariableSites; r++) {
-            for (int c = 0; c < totalVariableSites; c++) {
-                if (((c < r) && (upperProb == true)) || ((c > r) && (lowerProb == true))) {
-                    g.setColor(getProbabilityColor(r, c));
-                } else if (r == c) {
-                    g.setColor(theColor.black);
-                } else {
-                    g.setColor(getMagnitudeColor(r, c));
+        g.fillRect(xPos[0], yPos[0], xPos[myWindowSize] - xPos[0], yPos[myWindowSize] - yPos[0] + 2);
+        String xLocus = theAA.getLocusName(myWindowX - (myWindowSize / 2));
+        int xJump = 0;
+        for (int r = 0; r < myWindowSize; r++) {
+            if (!xLocus.equals(theAA.getLocusName(r + xJump + myWindowX - (myWindowSize / 2)))) {
+                xLocus = theAA.getLocusName(r + xJump + myWindowX - (myWindowSize / 2));
+                g.setColor(theColor.darkGray);
+                for (int c = 0; c < myWindowSize; c++) {
+                    g.fillRect(xPos[r], yPos[c], iw + 1, ih + 1);
                 }
-                g.fillRect(xPos[r], yPos[c], iw + 1, ih + 1);
+                xJump--;
+            } else {
+                String yLocus = theAA.getLocusName(myWindowY - (myWindowSize / 2));
+                int yJump = 0;
+                for (int c = 0; c < myWindowSize; c++) {
+                    if (!yLocus.equals(theAA.getLocusName(c + yJump + myWindowY - (myWindowSize / 2)))) {
+                        yLocus = theAA.getLocusName(c + yJump + myWindowY - (myWindowSize / 2));
+                        g.setColor(theColor.darkGray);
+                        yJump--;
+                    } else if (((c + yJump + myWindowY < r + xJump + myWindowX) && (upperProb == true)) || ((c + yJump + myWindowY > r + xJump + myWindowX) && (lowerProb == true))) {
+                        g.setColor(getProbabilityColor(r + xJump, c + yJump));
+                    } else if (r + xJump + myWindowX == c + yJump + myWindowY) {
+                        g.setColor(theColor.black);
+                    } else {
+                        g.setColor(getMagnitudeColor(r + xJump, c + yJump));
+                    }
+                    g.fillRect(xPos[r], yPos[c], iw + 1, ih + 1);
+                }
             }
         }
-
-        // Removed grid lines because the cover too much
-        // on large graphs.  -terryc
-        /*
-        g.setColor(theColor.darkGray);
-        for(int r=0; r<totalVariableSites; r++) {
-        g.drawLine(xPos[r], yPos[0], xPos[r], yPos[totalVariableSites]);
-        g.drawLine(xPos[0], yPos[r], xPos[totalVariableSites], yPos[r]);
-        }
-         */
 
         if (includeLabels) {
             addPolymorphismLabels(g, ih);
@@ -578,10 +526,10 @@ public class LinkageDisequilibriumComponent extends Component {
         int localX = d.width - h2off + 10;
         int mid = d.height / 2;
         g.setColor(Color.black);
-        g.drawString("Upper " + upperLabel, localX, 10);
+        g.drawString(upperLabel, localX, 10);
         addLegendGraph(g, upperProb, localX, 20, mid - 10);
         g.setColor(Color.black);
-        g.drawString("Lower " + lowerLabel, localX, mid + 10);
+        g.drawString(lowerLabel, localX, mid + 10);
         addLegendGraph(g, lowerProb, localX, mid + 20, d.height - 10);
     }
 
@@ -618,12 +566,7 @@ public class LinkageDisequilibriumComponent extends Component {
             yInc = (yEnd - yStart) / 11;
             dF = new DecimalFormat("0.00");
             for (double d = 1.0000f; d >= 0.5; d -= 0.05) {
-//                if (d >= 0.55) {
                 g.setColor(theColor.getHSBColor((float) d, (float) d, 1f));
-//                }
-//                else {
-//                    g.setColor(theColor.getHSBColor((float) 0, (float) 0, 1f));
-//                }
                 g.fillRect(xStart, currY, barWidth, yInc);
                 g.setColor(Color.black);
                 g.drawRect(xStart, currY, barWidth, yInc);
@@ -644,18 +587,40 @@ public class LinkageDisequilibriumComponent extends Component {
         int halfIW = iw / 2;
         // MultiAlleleSiteCharacteristic theMSC, lastMSC;
         Dimension d = this.getSize();
-        yOfLinkBlock = yPos[totalVariableSites];
+        yOfLinkBlock = yPos[myWindowSize];
         yOfGene = yOfLinkBlock + (distanceBetweenGraphAndGene / 2);
         yOfGeneLabel = yOfLinkBlock + (int) (0.8f * (double) distanceBetweenGraphAndGene);
-
-        for (int r = 0; r < totalVariableSites; r++) {
-            g.drawLine(xPos[r] + halfIW, yOfLinkBlock + 1, xEndPos[r], yOfGene);
+        String locus = theAA.getLocusName(myWindowX - (myWindowSize / 2));
+        int jump = 0;
+        for (int r = 0; r < myWindowSize; r++) {
+            if (locus.equals(theAA.getLocusName(r + jump + myWindowX - (myWindowSize / 2)))) {
+                g.drawLine(xPos[r] + halfIW, yOfLinkBlock + 1, xEndPos[r], yOfGene);
+            } else {
+                locus = theAA.getLocusName(r + jump + myWindowX - (myWindowSize / 2));
+                jump--;
+            }
         }  //end of going through sites
-        g.setColor(theColor.blue);
         for (int b = 0; b < totalBlocks; b++) {
+            g.setColor(iterColor(b));
             g.drawLine(blockBeginX[b], yOfGene, blockEndX[b], yOfGene);
             g.drawLine(blockBeginX[b], yOfGene + 1, blockEndX[b], yOfGene + 1);
             g.drawString(blockNames[b], blockBeginX[b], yOfGeneLabel);
         }
+    }
+
+    private Color iterColor(int iter) {
+        Color newColor;
+        if (iter % 5 == 0) {
+            newColor = theColor.blue;
+        } else if (iter % 5 == 1) {
+            newColor = theColor.red;
+        } else if (iter % 5 == 2) {
+            newColor = theColor.green;
+        } else if (iter % 5 == 3) {
+            newColor = theColor.cyan;
+        } else {
+            newColor = theColor.orange;
+        }
+        return newColor;
     }
 }
