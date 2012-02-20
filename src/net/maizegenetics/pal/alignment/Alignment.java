@@ -34,7 +34,7 @@ public interface Alignment extends Serializable {
 
     public static enum SITE_SCORE_TYPE {
 
-        None, QualityScore, ImputedProbablity, Dosage
+        None, MixedScoreTypes, QualityScore, ImputedProbablity, Dosage
     };
     final static public byte POSITION_TYPE_ALL_GROUP = 0;
     final static public byte POSITION_TYPE_SILENT_GROUP = 1;

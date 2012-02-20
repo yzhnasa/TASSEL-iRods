@@ -596,10 +596,7 @@ public class FilterAlignment extends AbstractAlignment {
                 }
                 return result;
             } else {
-                for (int i = 0; i < siteCount; i++) {
-                    result[i] = myBaseAlignment.getBase(taxaIndex, i);
-                }
-                return result;
+                return myBaseAlignment.getBaseRow(taxaIndex);
             }
         }
     }

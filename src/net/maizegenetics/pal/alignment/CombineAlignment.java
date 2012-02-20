@@ -167,6 +167,7 @@ public class CombineAlignment extends AbstractAlignment {
         return myAlignments[translate].getBase(taxon, site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte[] getBaseRange(int taxon, int startSite, int endSite) {
 
         int siteCount = getSiteCount();
@@ -186,6 +187,7 @@ public class CombineAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public byte getBase(int taxon, Locus locus, int physicalPosition) {
         int site = getSiteOfPhysicalPosition(physicalPosition, locus);
         int translate = translateSite(site);
@@ -209,6 +211,7 @@ public class CombineAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public boolean hasReference() {
 
         for (int i = 0; i < myAlignments.length; i++) {
@@ -220,6 +223,7 @@ public class CombineAlignment extends AbstractAlignment {
         return true;
     }
 
+    @Override
     public String[] getSNPIDs() {
 
         int numSites = getSiteCount();
@@ -235,24 +239,29 @@ public class CombineAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public String getSNPID(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getSNPID(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public int getSiteCount() {
         return mySiteOffsets[mySiteOffsets.length - 1];
     }
 
+    @Override
     public int getLocusSiteCount(Locus locus) {
         return ((Alignment) myLoci.get(locus)).getLocusSiteCount(locus);
     }
 
+    @Override
     public int getPositionInLocus(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getPositionInLocus(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
         Alignment align = ((Alignment) myLoci.get(locus));
         int i = -1;
@@ -268,11 +277,13 @@ public class CombineAlignment extends AbstractAlignment {
         return mySiteOffsets[i] + align.getSiteOfPhysicalPosition(physicalPosition, locus);
     }
 
+    @Override
     public byte getPositionType(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getPositionType(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte[] getPositionTypes() {
 
         int numSites = getSiteCount();
@@ -286,15 +297,18 @@ public class CombineAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public Locus getLocus(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getLocus(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public Locus[] getLoci() {
         return myLociList;
     }
 
+    @Override
     public int getNumLoci() {
         if (myLociList == null) {
             return 0;
@@ -303,6 +317,7 @@ public class CombineAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public float[][] getSiteScores() {
 
         if (!hasSiteScores()) {
@@ -325,11 +340,13 @@ public class CombineAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public float getSiteScore(int seq, int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getSiteScore(seq, site - mySiteOffsets[translate]);
     }
 
+    @Override
     public boolean hasSiteScores() {
         for (Alignment align : myAlignments) {
             if (align.hasSiteScores()) {
@@ -339,90 +356,119 @@ public class CombineAlignment extends AbstractAlignment {
         return false;
     }
 
+    @Override
     public int getIndelSize(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getIndelSize(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public boolean isIndel(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].isIndel(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte getReferenceAllele(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getReferenceAllele(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public Alignment[] getAlignments() {
         return myAlignments;
     }
 
+    @Override
     public byte getMajorAllele(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getMajorAllele(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte getMinorAllele(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getMinorAllele(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte[] getMinorAlleles(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getMinorAlleles(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte[] getAlleles(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getAlleles(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public double getMinorAlleleFrequency(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getMinorAlleleFrequency(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public int[][] getAllelesSortedByFrequency(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getAllelesSortedByFrequency(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte[] getBaseArray(int taxon, int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getBaseArray(taxon, site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte[] getBaseRow(int taxon) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        byte[] result = new byte[getSiteCount()];
+        for (int i = 0; i < myAlignments.length; i++) {
+            byte[] current = myAlignments[i].getBaseRow(taxon);
+            System.arraycopy(current, 0, result, myLociOffsets[i], current.length);
+        }
+        return result;
     }
 
+    @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public String getBaseAsString(int taxon, int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getBaseAsString(taxon, site - mySiteOffsets[translate]);
     }
 
+    @Override
     public String[] getBaseAsStringArray(int taxon, int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getBaseAsStringArray(taxon, site - mySiteOffsets[translate]);
     }
 
+    @Override
     public byte[] getReference(int startSite, int endSite) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int numSites = endSite - startSite;
+        byte[] result = new byte[numSites];
+        for (int i = 0; i < numSites; i++) {
+            result[i] = getReferenceAllele(startSite + i);
+        }
+        return result;
     }
 
+    @Override
     public byte[] getReference() {
 
         for (int i = 0; i < myAlignments.length; i++) {
@@ -443,11 +489,13 @@ public class CombineAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public boolean isHeterozygous(int taxon, int site) {
         int translate = translateSite(site);
         return myAlignments[translate].isHeterozygous(taxon, site - mySiteOffsets[translate]);
     }
 
+    @Override
     public int[] getPhysicalPositions() {
 
         boolean allNull = true;
@@ -474,42 +522,72 @@ public class CombineAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public String getLocusName(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getLocusName(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public int[] getLociOffsets() {
         return myLociOffsets;
     }
 
+    @Override
     public SITE_SCORE_TYPE getSiteScoreType() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        SITE_SCORE_TYPE first = myAlignments[0].getSiteScoreType();
+        for (int i = 1; i < myAlignments.length; i++) {
+            if (first != myAlignments[i].getSiteScoreType()) {
+                return SITE_SCORE_TYPE.MixedScoreTypes;
+            }
+        }
+        return first;
     }
 
+    @Override
     public boolean isAllPolymorphic() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (int i = 0; i < myAlignments.length; i++) {
+            if (!myAlignments[i].isAllPolymorphic()) {
+                return false;
+            }
+        }
+        return true;
     }
 
+    @Override
     public boolean isPolymorphic(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].isPolymorphic(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public double getMajorAlleleFrequency(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getMajorAlleleFrequency(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public String getGenomeAssembly() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String first = myAlignments[0].getGenomeAssembly();
+        if (first == null) {
+            return null;
+        }
+        for (int i = 1; i < myAlignments.length; i++) {
+            String current = myAlignments[i].getGenomeAssembly();
+            if ((current != null) && (!first.equals(current))) {
+                return null;
+            }
+        }
+        return first;
     }
 
+    @Override
     public boolean isPositiveStrand(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].isPositiveStrand(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public boolean isPhased() {
         for (int i = 0; i < myAlignments.length; i++) {
             if (myAlignments[i].isPhased() == false) {
@@ -519,6 +597,7 @@ public class CombineAlignment extends AbstractAlignment {
         return true;
     }
 
+    @Override
     public GeneticMap getGeneticMap() {
         GeneticMap result = myAlignments[0].getGeneticMap();
         for (int i = 1; i < myAlignments.length; i++) {
@@ -530,6 +609,7 @@ public class CombineAlignment extends AbstractAlignment {
         return result;
     }
 
+    @Override
     public boolean retainsRareAlleles() {
         for (int i = 0; i < myAlignments.length; i++) {
             if (myAlignments[i].retainsRareAlleles() == false) {
@@ -539,6 +619,7 @@ public class CombineAlignment extends AbstractAlignment {
         return true;
     }
 
+    @Override
     public String[][] getAlleleEncodings() {
 
         boolean allTheSame = true;
@@ -557,7 +638,7 @@ public class CombineAlignment extends AbstractAlignment {
                     allTheSame = false;
                     break;
                 }
-                
+
                 if (!allTheSame) {
                     break;
                 }
@@ -579,16 +660,19 @@ public class CombineAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public String[] getAlleleEncodings(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getAlleleEncodings(site - mySiteOffsets[translate]);
     }
 
+    @Override
     public String getBaseAsString(int site, byte value) {
         int translate = translateSite(site);
         return myAlignments[translate].getBaseAsString(site - mySiteOffsets[translate], value);
     }
 
+    @Override
     public int getMaxNumAlleles() {
         int result = 999999;
         for (int i = 0; i < myAlignments.length; i++) {
