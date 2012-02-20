@@ -668,7 +668,7 @@ public interface Alignment extends Serializable {
      * @param site
      * @return number of non-missing allele values.
      */
-    public int getTotalCountNotMissing(int site);
+    public int getTotalGametesNotMissing(int site);
     
     /**
      * Returns the minor allele count for given site.

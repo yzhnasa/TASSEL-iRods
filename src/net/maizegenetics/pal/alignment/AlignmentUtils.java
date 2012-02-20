@@ -304,11 +304,11 @@ public class AlignmentUtils {
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
         for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
 
-            int totalNonMissing = aa.getTotalCountNotMissing(i);
+            int totalNonMissing = aa.getTotalGametesNotMissing(i);
 
             double obsMinProp = aa.getMinorAlleleFrequency(i);
 
-            if ((totalNonMissing > 0) && (totalNonMissing >= minimumCount) && (obsMinProp >= minimumProportion) && (obsMinProp <= maximumProportion)) {
+            if ((totalNonMissing > 0) && (totalNonMissing >= (minimumCount * 2)) && (obsMinProp >= minimumProportion) && (obsMinProp <= maximumProportion)) {
                 includeAL.add(i);
             }
         }

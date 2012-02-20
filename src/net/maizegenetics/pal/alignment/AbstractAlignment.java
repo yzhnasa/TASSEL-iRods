@@ -303,7 +303,7 @@ abstract public class AbstractAlignment implements Alignment {
             for (int i = 0; i < numAlleles; i++) {
                 totalNonMissing = totalNonMissing + alleles[1][i];
             }
-            return (double) alleles[1][0] / totalNonMissing;
+            return (double) alleles[1][0] / (double) totalNonMissing;
         } else {
             return 0.0;
         }
@@ -321,7 +321,7 @@ abstract public class AbstractAlignment implements Alignment {
             for (int i = 0; i < numAlleles; i++) {
                 totalNonMissing = totalNonMissing + alleles[1][i];
             }
-            return (double) alleles[1][1] / totalNonMissing;
+            return (double) alleles[1][1] / (double) totalNonMissing;
         } else {
             return 0.0;
         }
@@ -670,7 +670,7 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalCountNotMissing(int site) {
+    public int getTotalGametesNotMissing(int site) {
         
         int result = 0;
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
@@ -692,10 +692,10 @@ abstract public class AbstractAlignment implements Alignment {
         byte minorAllele = getMinorAllele(site);
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
             byte[] current = getBaseArray(i, site);
-            if (current[0] != minorAllele) {
+            if (current[0] == minorAllele) {
                 result++;
             }
-            if (current[1] != minorAllele) {
+            if (current[1] == minorAllele) {
                 result++;
             }
         }

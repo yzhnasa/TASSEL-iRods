@@ -334,7 +334,8 @@ public class SBitAlignment extends AbstractAlignment {
         return UnmodifiableBitSet.getInstance(myData[alleleNumber][site]);
     }
 
-    public int getTotalCountNotMissing(int site) {
+    @Override
+    public int getTotalGametesNotMissing(int site) {
 
         OpenBitSet temp = new OpenBitSet(getSequenceCount());
         for (int i = 0; i < myNumDataRows; i++) {
@@ -344,6 +345,7 @@ public class SBitAlignment extends AbstractAlignment {
 
     }
     
+    @Override
     public int getMinorAlleleCount(int site) {
 
         OpenBitSet temp = new OpenBitSet(getSequenceCount());
@@ -365,6 +367,6 @@ public class SBitAlignment extends AbstractAlignment {
         if (minorAlleleCount == 0) {
             return 0.0;
         }
-        return (double) getMinorAlleleCount(site) / (double) getTotalCountNotMissing(site);
+        return (double) minorAlleleCount / (double) getTotalGametesNotMissing(site);
     }
 }
