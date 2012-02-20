@@ -546,15 +546,19 @@ public class CombineAlignment extends AbstractAlignment {
         if (encodings.length == 1) {
             for (int i = 1; i < myAlignments.length; i++) {
                 String[][] current = myAlignments[i].getAlleleEncodings();
-                if ((current.length == 1) && (encodings[0].length == current.length)) {
+                if ((current.length == 1) && (encodings[0].length == current[0].length)) {
                     for (int j = 0; j < encodings[0].length; j++) {
-                        if (!current[j].equals(encodings[j])) {
+                        if (!current[0][j].equals(encodings[0][j])) {
                             allTheSame = false;
                             break;
                         }
                     }
                 } else {
                     allTheSame = false;
+                    break;
+                }
+                
+                if (!allTheSame) {
                     break;
                 }
             }
@@ -566,7 +570,7 @@ public class CombineAlignment extends AbstractAlignment {
             String[][] result = new String[getSiteCount()][];
             int count = 0;
             for (int i = 0; i < myAlignments.length; i++) {
-                for (int j = 0, n = myAlignments[0].getSiteCount(); j < n; j++) {
+                for (int j = 0, n = myAlignments[i].getSiteCount(); j < n; j++) {
                     result[count++] = myAlignments[i].getAlleleEncodings(j);
                 }
             }
