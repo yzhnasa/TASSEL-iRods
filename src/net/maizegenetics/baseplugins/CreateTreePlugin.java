@@ -30,9 +30,9 @@ import java.util.List;
 public class CreateTreePlugin extends AbstractPlugin {
     //  Settings theSettings;
 
-    boolean isNeighborJoining = true;
-    boolean isReturnDistanceMatrix = true;
-    boolean isReturnGroupTable = false;
+    private boolean isNeighborJoining = true;
+    private boolean isReturnDistanceMatrix = true;
+    private boolean isReturnGroupTable = false;
 
     /** Creates a new instance of CreateTreePlugin */
     public CreateTreePlugin(Frame parentFrame, boolean isInteractive) {
@@ -70,9 +70,8 @@ public class CreateTreePlugin extends AbstractPlugin {
             List result = new ArrayList();
             Iterator<Datum> itr = alignInList.iterator();
             while (itr.hasNext()) {
-                DataSet tds = null;
                 Datum current = itr.next();
-                tds = processDatum(current, isNeighborJoining, isReturnDistanceMatrix);
+                DataSet tds = processDatum(current, isNeighborJoining, isReturnDistanceMatrix);
                 result.add(tds);
                 if (tds != null) {
                     fireDataSetReturned(new PluginEvent(tds, CreateTreePlugin.class));
