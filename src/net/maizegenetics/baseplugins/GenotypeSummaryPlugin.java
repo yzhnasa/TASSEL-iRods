@@ -31,6 +31,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     private static final String NA = "NA";
     private static final Double ZERO_DOUBLE = new Double(0.0);
     private int myNumGametesMissing = 0;
+    private int myNumHeterozygous = 0;
 
     public GenotypeSummaryPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -92,7 +93,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         data[0][count++] = alignment.getSequenceCount();
         data[0][count++] = numSites;
         data[0][count++] = (double) myNumGametesMissing / (double) totalGametes;
-        data[0][count++] = "TBD";
+        data[0][count++] = (double) myNumHeterozygous / (double) totalGametes;
 
         return new SimpleTableReport("Overall Summary", columnNames, data);
     }
@@ -139,8 +140,6 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             int[][] alleles = alignment.getAllelesSortedByFrequency(i);
             int numAlleles = alleles[0].length;
             
-            System.out.println("site" + i + "  max alleles: " + maxAlleles + "  num alleles: " + numAlleles);
-
             for (int a = 0; a < numAlleles; a++) {
                 data[i][count++] = alignment.getBaseAsString(i, (byte) alleles[0][a]);
                 data[i][count++] = (double) alleles[1][a] / (double) totalGametes;
@@ -153,8 +152,14 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
                 data[i][count++] = ZERO_DOUBLE;
             }
 
-            data[i][count++] = (double) (totalGametes - totalGametesNotMissing) / (double) totalGametes;
-            data[i][count++] = "TBD";
+            int totalGametesMissing = totalGametes - totalGametesNotMissing;
+            myNumGametesMissing = myNumGametesMissing + totalGametesMissing;
+            data[i][count++] = (double) totalGametesMissing / (double) totalGametes;
+            
+            int numHeterozygous = alignment.getHeterozygousCount(i);
+            myNumHeterozygous = myNumHeterozygous + numHeterozygous;
+            data[i][count++] = (double) numHeterozygous / (double) totalGametes;
+            
             data[i][count++] = "TBD";
             data[i][count++] = "TBD";
 
