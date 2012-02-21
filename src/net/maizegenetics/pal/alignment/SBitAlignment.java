@@ -344,7 +344,7 @@ public class SBitAlignment extends AbstractAlignment {
         return (int) temp.cardinality() * 2;
 
     }
-    
+
     @Override
     public int getMinorAlleleCount(int site) {
 
@@ -356,7 +356,7 @@ public class SBitAlignment extends AbstractAlignment {
         }
         temp.flip(0, temp.size());
         temp.and(myData[1][site]);
-        
+
         return (int) temp.cardinality() + (int) myData[1][site].cardinality();
 
     }
@@ -368,5 +368,19 @@ public class SBitAlignment extends AbstractAlignment {
             return 0.0;
         }
         return (double) minorAlleleCount / (double) getTotalGametesNotMissing(site);
+    }
+
+    @Override
+    public int getMajorAlleleCount(int site) {
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 1; i < myNumDataRows; i++) {
+            temp.or(myData[i][site]);
+        }
+        temp.flip(0, temp.size());
+        temp.and(myData[0][site]);
+
+        return (int) temp.cardinality() + (int) myData[0][site].cardinality();
+
     }
 }

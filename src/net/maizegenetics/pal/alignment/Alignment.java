@@ -677,4 +677,12 @@ public interface Alignment extends Serializable {
      * @return minor allele count
      */
     public int getMinorAlleleCount(int site);
+    
+    /**
+     * Returns the major allele count for given site.
+     * 
+     * @param site
+     * @return major allele count
+     */
+    public int getMajorAlleleCount(int site);
 }
