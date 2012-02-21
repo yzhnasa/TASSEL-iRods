@@ -240,4 +240,17 @@ public class TBitAlignment extends AbstractAlignment {
         System.arraycopy(myData[alleleNumber][taxon].getBits(), startBlock, result, 0, endBlock - startBlock);
         return result;
     }
+    
+    public boolean isHeterozygous(int taxon, int site) {
+        int count = 0;
+        for (int i = 0; i < myNumDataRows; i++) {
+                if (myData[i][taxon].fastGet(site)) {
+                    count++;
+                    if (count == 2) {
+                        return true;
+                    }
+                }
+            }
+        return false;
+    }
 }

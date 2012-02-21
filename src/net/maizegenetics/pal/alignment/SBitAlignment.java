@@ -383,4 +383,18 @@ public class SBitAlignment extends AbstractAlignment {
         return (int) temp.cardinality() + (int) myData[0][site].cardinality();
 
     }
+    
+    public boolean isHeterozygous(int taxon, int site) {
+        int count = 0;
+        for (int i = 0; i < myNumDataRows; i++) {
+                if (myData[i][site].fastGet(taxon)) {
+                    count++;
+                    if (count == 2) {
+                        return true;
+                    }
+                }
+            }
+        return false;
+    }
+    
 }
