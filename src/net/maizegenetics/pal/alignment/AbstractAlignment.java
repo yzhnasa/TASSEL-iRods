@@ -223,7 +223,7 @@ abstract public class AbstractAlignment implements Alignment {
     public String getTaxaName(int index) {
         return myIdGroup.getIdentifier(index).getName();
     }
-    
+
     @Override
     public String getFullTaxaName(int index) {
         return myIdGroup.getIdentifier(index).getFullName();
@@ -340,7 +340,7 @@ abstract public class AbstractAlignment implements Alignment {
         }
 
     }
-    
+
     @Override
     public String getMajorAlleleAsString(int site) {
         return getBaseAsString(site, getMajorAllele(site));
@@ -348,7 +348,7 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public byte getMinorAllele(int site) {
-        
+
         int[][] alleles = getAllelesSortedByFrequency(site);
 
         if (alleles[0].length >= 2) {
@@ -358,7 +358,7 @@ abstract public class AbstractAlignment implements Alignment {
         }
 
     }
-    
+
     @Override
     public String getMinorAlleleAsString(int site) {
         return getBaseAsString(site, getMinorAllele(site));
@@ -477,6 +477,16 @@ abstract public class AbstractAlignment implements Alignment {
         } else {
             return true;
         }
+    }
+
+    public int getHeterozygousCount(int site) {
+        int result = 0;
+        for (int i = 0, n = getSequenceCount(); i < n; i++) {
+            if (isHeterozygous(i, site)) {
+                result++;
+            }
+        }
+        return result;
     }
 
     @Override
@@ -671,7 +681,7 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public int getTotalGametesNotMissing(int site) {
-        
+
         int result = 0;
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
             byte[] current = getBaseArray(i, site);
@@ -683,11 +693,11 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
         return result;
-        
+
     }
-    
+
     public int getMinorAlleleCount(int site) {
-        
+
         int result = 0;
         byte minorAllele = getMinorAllele(site);
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
@@ -700,11 +710,11 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
         return result;
-        
+
     }
-    
+
     public int getMajorAlleleCount(int site) {
-        
+
         int result = 0;
         byte majorAllele = getMajorAllele(site);
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
@@ -717,6 +727,6 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
         return result;
-        
+
     }
 }

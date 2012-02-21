@@ -264,6 +264,15 @@ public interface Alignment extends Serializable {
      * @return whether heterozygous
      */
     public boolean isHeterozygous(int taxon, int site);
+    
+    /**
+     * Returns number of heterozygous taxa at given site.
+     * 
+     * @param site site
+     * 
+     * @return number of heterozygous taxa 
+     */
+    public int getHeterozygousCount(int site);
 
     /**
      * Get SNP IDs.
