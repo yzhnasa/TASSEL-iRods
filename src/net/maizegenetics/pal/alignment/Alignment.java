@@ -26,6 +26,7 @@ public interface Alignment extends Serializable {
     public static byte UNKNOWN_ALLELE = 0xF;
     public static byte UNKNOWN_DIPLOID_ALLELE = (byte) 0xFF;
     public static String UNKNOWN_ALLELE_STR = "N";
+    public static String UNKNOWN_DIPLOID_ALLELE_STR = "N:N";
     public static char UNKNOWN_ALLELE_CHAR = 'N';
     /**
      * Default number of alleles to retain.
