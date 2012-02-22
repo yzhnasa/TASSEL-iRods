@@ -3,12 +3,14 @@
  */
 package net.maizegenetics.baseplugins;
 
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import java.awt.Frame;
 
-import java.util.Arrays;
+import java.util.Iterator;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
@@ -29,7 +31,9 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(GenotypeSummaryPlugin.class);
     private static final String NA = "NA";
-    private static final Double ZERO_DOUBLE = new Double(0.0);
+    private static final Double ZERO_DOUBLE = 0.0;
+    private static final int ZERO_INT = 0;
+    private static final Integer ONE_INTEGER = 1;
     private int myNumGametesMissing = 0;
     private int myNumHeterozygous = 0;
 
@@ -83,43 +87,117 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     private SimpleTableReport getOverallSummary(Alignment alignment) {
 
-        Object[] columnNames = new String[]{"Number of Taxa", "Number of Sites", "Proportion Missing",
-            "Proportion Heterozygous"};
+        Object[] firstColumnNames = new String[]{"Stat Type", "Value", "Diploid Value", "Number", "Proportion", "Frequency"};
 
         int numSites = alignment.getSiteCount();
-        int totalGametes = numSites * alignment.getSequenceCount() * 2;
-        int count = 0;
-        Object[][] data = new Object[1][columnNames.length];
-        data[0][count++] = alignment.getSequenceCount();
-        data[0][count++] = numSites;
-        data[0][count++] = (double) myNumGametesMissing / (double) totalGametes;
-        data[0][count++] = (double) myNumHeterozygous / (double) totalGametes;
+        int numTaxa = alignment.getSequenceCount();
 
-        return new SimpleTableReport("Overall Summary", columnNames, data);
+        HashMap<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
+        for (int r = 0; r < numTaxa; r++) {
+            for (int c = 0; c < numSites; c++) {
+                String current = alignment.getBaseAsString(r, c);
+                Integer num = diploidValueCounts.get(current);
+                if (num == null) {
+                    diploidValueCounts.put(current, ONE_INTEGER);
+                } else {
+                    diploidValueCounts.put(current, ++num);
+                }
+            }
+        }
+
+        int totalGametes = numSites * numTaxa * 2;
+        int totalGametesNotMissing = totalGametes - myNumGametesMissing;
+
+        int numDiploidsMissing = 0;
+        Integer numMissingInt = diploidValueCounts.get(Alignment.UNKNOWN_ALLELE_STR);
+        if (numMissingInt == null) {
+            numMissingInt = diploidValueCounts.get(Alignment.UNKNOWN_DIPLOID_ALLELE_STR);
+            if (numMissingInt != null) {
+                numDiploidsMissing = numMissingInt.intValue();
+            }
+        } else {
+            numDiploidsMissing = numMissingInt.intValue();
+        }
+
+        int totalDiploids = numSites * numTaxa;
+        int totalDiploidsNotMissing = totalDiploids - numDiploidsMissing;
+
+        int count = 0;
+        int numRows = Math.max(diploidValueCounts.size(), 13);
+        Object[][] data = new Object[numRows][firstColumnNames.length];
+
+        data[count][0] = "Number of Taxa";
+        data[count++][1] = (double) numTaxa;
+
+        data[count][0] = "Number of Sites";
+        data[count++][1] = (double) numSites;
+
+        data[count][0] = "Sites x Taxa";
+        data[count++][1] = (double) totalDiploids;
+
+        data[count][0] = "Number Not Missing";
+        data[count++][1] = (double) totalDiploidsNotMissing;
+
+        data[count][0] = "Proporton Not Missing";
+        data[count++][1] = (double) totalDiploidsNotMissing / (double) totalDiploids;
+
+        data[count][0] = "Number Missing";
+        data[count++][1] = (double) numDiploidsMissing;
+
+        data[count][0] = "Proporton Missing";
+        data[count++][1] = (double) numDiploidsMissing / (double) totalDiploids;
+
+        data[count][0] = "Number Gametes";
+        data[count++][1] = (double) totalGametes;
+
+        data[count][0] = "Gametes Not Missing";
+        data[count++][1] = (double) totalGametesNotMissing;
+
+        data[count][0] = "Proporton Gametes Not Missing";
+        data[count++][1] = (double) totalGametesNotMissing / (double) totalGametes;
+
+        data[count][0] = "Gametes Missing";
+        data[count++][1] = (double) myNumGametesMissing;
+
+        data[count][0] = "Proporton Gametes Missing";
+        data[count++][1] = (double) myNumGametesMissing / (double) totalGametes;
+
+        data[count][0] = "Proportion Heterozygous";
+        data[count++][1] = (double) myNumHeterozygous / (double) totalGametes;
+
+        count = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String value = (String) itr.next();
+            Integer numValue = (Integer) diploidValueCounts.get(value);
+            data[count][2] = value;
+            data[count][3] = numValue.intValue();
+            data[count][4] = numValue.doubleValue() / (double) totalDiploids;
+            data[count++][5] = numValue.doubleValue() / (double) totalDiploidsNotMissing;
+        }
+
+        return new SimpleTableReport("Overall Summary", firstColumnNames, data);
     }
 
     private SimpleTableReport getSiteSummary(Alignment alignment) {
 
-        String[] firstColumnNames = new String[]{"Site Number", "Number of Taxa", "Major Allele", "Major Proportion", "Major Allele Frequency",
-            "Minor Allele", "Minor Proportion", "Minor Allele Frequency"};
-        String[] lastColumnNames = new String[]{"Proportion Missing", "Proportion Heterozygous",
+        String[] firstColumnNames = new String[]{"Site Number", "Number of Taxa", "Major Allele", "Major Allele Gametes", "Major Allele Proportion", "Major Allele Frequency",
+            "Minor Allele", "Minor Allele Gametes", "Minor Allele Proportion", "Minor Allele Frequency"};
+        String[] lastColumnNames = new String[]{"Gametes Missing", "Proportion Missing", "Proportion Heterozygous",
             "Inbreeding Coefficient", "Inbreeding Coefficient Scaled by Missing"};
 
         List columnNames = new ArrayList(Arrays.asList(firstColumnNames));
 
         int maxAlleles = alignment.getMaxNumAlleles();
+        if (alignment.retainsRareAlleles()) {
+            maxAlleles++;
+        }
         for (int i = 2; i < maxAlleles; i++) {
             String alleleHeading = "Allele " + (i + 1);
             columnNames.add(alleleHeading);
-            columnNames.add(alleleHeading + "Proportion");
-            columnNames.add(alleleHeading + "Frequency");
-        }
-        
-        if (alignment.retainsRareAlleles()) {
-            maxAlleles++;
-            columnNames.add("Rare Alleles");
-            columnNames.add("Rare Proportion");
-            columnNames.add("Rare Frequency");
+            columnNames.add(alleleHeading + " Gametes");
+            columnNames.add(alleleHeading + " Proportion");
+            columnNames.add(alleleHeading + " Frequency");
         }
 
         columnNames.addAll(Arrays.asList(lastColumnNames));
@@ -139,27 +217,30 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
             int[][] alleles = alignment.getAllelesSortedByFrequency(i);
             int numAlleles = alleles[0].length;
-            
+
             for (int a = 0; a < numAlleles; a++) {
                 data[i][count++] = alignment.getBaseAsString(i, (byte) alleles[0][a]);
+                data[i][count++] = alleles[1][a];
                 data[i][count++] = (double) alleles[1][a] / (double) totalGametes;
                 data[i][count++] = (double) alleles[1][a] / (double) totalGametesNotMissing;
             }
 
             for (int b = 0; b < (maxAlleles - numAlleles); b++) {
                 data[i][count++] = NA;
+                data[i][count++] = ZERO_INT;
                 data[i][count++] = ZERO_DOUBLE;
                 data[i][count++] = ZERO_DOUBLE;
             }
 
             int totalGametesMissing = totalGametes - totalGametesNotMissing;
             myNumGametesMissing = myNumGametesMissing + totalGametesMissing;
+            data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;
-            
+
             int numHeterozygous = alignment.getHeterozygousCount(i);
             myNumHeterozygous = myNumHeterozygous + numHeterozygous;
             data[i][count++] = (double) numHeterozygous / (double) totalGametes;
-            
+
             data[i][count++] = "TBD";
             data[i][count++] = "TBD";
 
