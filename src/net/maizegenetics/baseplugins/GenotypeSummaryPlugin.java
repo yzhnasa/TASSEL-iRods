@@ -62,13 +62,13 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             String name = current.getName();
 
             SimpleTableReport siteSummary = getSiteSummary(alignment);
-            SimpleTableReport taxaSummary = getTaxaSummary(alignment);
+            //SimpleTableReport taxaSummary = getTaxaSummary(alignment);
             SimpleTableReport overallSummary = getOverallSummary(alignment);
 
             List<Datum> summaryTables = new ArrayList<Datum>();
             summaryTables.add(new Datum(name + "_OverallSummary", overallSummary, "Overall Summary of " + name));
             summaryTables.add(new Datum(name + "_SiteSummary", siteSummary, "Site Summary of " + name));
-            summaryTables.add(new Datum(name + "_TaxaSummary", taxaSummary, "Taxa Summary of " + name));
+            //summaryTables.add(new Datum(name + "_TaxaSummary", taxaSummary, "Taxa Summary of " + name));
 
             if (summaryTables.isEmpty()) {
                 return null;
