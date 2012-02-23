@@ -26,6 +26,7 @@ import net.maizegenetics.baseplugins.CombineDataSetsPlugin;
 import net.maizegenetics.baseplugins.ExportMultiplePlugin;
 import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
+import net.maizegenetics.baseplugins.FilterSiteNamePlugin;
 import net.maizegenetics.baseplugins.FilterTaxaAlignmentPlugin;
 import net.maizegenetics.baseplugins.FilterTraitsPlugin;
 import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
@@ -832,6 +833,40 @@ public class TasselPipeline implements PluginListener {
                         ids[i] = new Identifier(taxa[i]);
                     }
                     plugin.setIdsToRemove(new SimpleIdGroup(ids));
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-includeSiteNames")) {
+                    FilterSiteNamePlugin plugin = new FilterSiteNamePlugin(myMainFrame, false);
+                    String[] names = args[index++].trim().split(",");
+                    plugin.setSiteNamesToKeep(names);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-includeSiteNamesInFile")) {
+                    FilterSiteNamePlugin plugin = new FilterSiteNamePlugin(myMainFrame, false);
+                    String siteNameListFile = args[index++].trim();
+
+                    List siteNames = new ArrayList();
+                    BufferedReader br = null;
+                    try {
+                        br = Utils.getBufferedReader(siteNameListFile);
+                        String inputline = br.readLine();
+                        Pattern sep = Pattern.compile("\\s+");
+
+                        while (inputline != null) {
+                            inputline = inputline.trim();
+                            String[] parsedline = sep.split(inputline);
+                            for (int i = 0; i < parsedline.length; i++) {
+                                if ((parsedline[i] != null) || (parsedline[i].length() != 0)) {
+                                    siteNames.add(parsedline[i]);
+                                }
+                            }
+                            inputline = br.readLine();
+                        }
+                    } finally {
+                        br.close();
+                    }
+
+                    String[] siteNameArray = new String[siteNames.size()];
+                    siteNameArray = (String[]) siteNames.toArray(siteNameArray);
+                    plugin.setSiteNamesToKeep(siteNameArray);
                     integratePlugin(plugin, true);
                 } else {
 
