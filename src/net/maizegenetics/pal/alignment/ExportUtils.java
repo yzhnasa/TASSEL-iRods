@@ -314,7 +314,7 @@ public class ExportUtils {
                 MAPbw.write(delimChar);
                 MAPbw.write(alignment.getSNPID(site)); // rs#
                 MAPbw.write(delimChar);
-                MAPbw.write("NA"); // genetic distance unavailable
+                MAPbw.write("-9"); // genetic distance unavailable
                 MAPbw.write(delimChar);
                 MAPbw.write(Integer.toString(alignment.getPositionInLocus(site))); // position
                 MAPbw.write("\n");
@@ -329,18 +329,18 @@ public class ExportUtils {
                 if (name.length != 1) {
                     PEDbw.write(name[1]); // namelvl 1 if is available
                 } else {
-                    PEDbw.write("NA");
+                    PEDbw.write("-9");
                 }
                 PEDbw.write(delimChar);
                 PEDbw.write(alignment.getIdGroup().getIdentifier(taxa).getFullName().trim()); // namelvl 0
                 PEDbw.write(delimChar);
-                PEDbw.write("NA"); // paternal ID unavailable
+                PEDbw.write("-9"); // paternal ID unavailable
                 PEDbw.write(delimChar);
-                PEDbw.write("NA"); // maternal ID unavailable
+                PEDbw.write("-9"); // maternal ID unavailable
                 PEDbw.write(delimChar);
-                PEDbw.write("other"); // gender is both
+                PEDbw.write("-9"); // gender is both
                 PEDbw.write(delimChar);
-                PEDbw.write("NA"); // phenotype unavailable, might have to change to "-9" for missing affection status
+                PEDbw.write("-9"); // phenotype unavailable, might have to change to "-9" for missing affection status
                 PEDbw.write(delimChar);
                 for (int site = 0; site < numSites; site++) {
                     String[] b = getSNPValueForPlink(alignment.getBaseAsStringArray(taxa, site));
