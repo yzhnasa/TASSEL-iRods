@@ -35,6 +35,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(FilterSiteNamePlugin.class);
     private int[] mySitesToKeep = null;
+    private String[] mySiteNamesToKeep = null;
 
     /** Creates a new instance of FilterSiteNamePlugin */
     public FilterSiteNamePlugin(Frame parentFrame, boolean isInteractive) {
@@ -98,11 +99,15 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
             dialog.dispose();
         }
 
-        if (((mySitesToKeep == null) || (mySitesToKeep.length == 0))) {
+        Alignment result = null;
+
+        if (((mySitesToKeep != null) && (mySitesToKeep.length != 0))) {
+            result = FilterAlignment.getInstance(alignment, mySitesToKeep);
+        } else if (((mySiteNamesToKeep != null) && (mySiteNamesToKeep.length != 0))) {
+            result = FilterAlignment.getInstance(alignment, mySiteNamesToKeep);
+        } else {
             return null;
         }
-
-        Alignment result = FilterAlignment.getInstance(alignment, mySitesToKeep);
 
         String theName, theComment;
         theName = inDatum.getName() + "_" + result.getSiteCount() + "_Sites";
@@ -115,8 +120,22 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
         return mySitesToKeep;
     }
 
-    public void setIdsToKeep(int[] sitesToKeep) {
+    public void setSitesToKeep(int[] sitesToKeep) {
+        if (mySiteNamesToKeep != null) {
+            throw new IllegalStateException("FilterSiteNamePlugin: setIdsToKeep: Can't set both sites and site names.");
+        }
         mySitesToKeep = sitesToKeep;
+    }
+
+    public String[] getSiteNamesToKeep() {
+        return mySiteNamesToKeep;
+    }
+
+    public void setSiteNamesToKeep(String[] sitesToKeep) {
+        if (mySitesToKeep != null) {
+            throw new IllegalStateException("FilterSiteNamePlugin: setIdsToKeep: Can't set both sites and site names.");
+        }
+        mySiteNamesToKeep = sitesToKeep;
     }
 
     /**
