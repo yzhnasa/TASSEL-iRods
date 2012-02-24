@@ -682,4 +682,9 @@ public class CombineAlignment extends AbstractAlignment {
         }
         return result;
     }
+    
+    public int getTotalGametesNotMissing(int site) {
+        int translate = translateSite(site);
+        return myAlignments[translate].getTotalGametesNotMissing(site - mySiteOffsets[translate]);
+    }
 }
