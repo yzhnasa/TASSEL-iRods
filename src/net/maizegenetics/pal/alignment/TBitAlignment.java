@@ -32,15 +32,24 @@ public class TBitAlignment extends AbstractAlignment {
     }
 
     public static TBitAlignment getInstance(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
+
+        if ((a instanceof TBitAlignment) && (a.getMaxNumAlleles() == maxNumAlleles) && (a.retainsRareAlleles() == retainRareAlleles)) {
+            return (TBitAlignment) a;
+        }
+
         String[][] alleleStates = a.getAlleleEncodings();
         if ((alleleStates == null) || (alleleStates.length == 0)) {
-            throw new IllegalArgumentException("TBitAlignment: init: allele states can not be empty.");
+            throw new IllegalStateException("TBitAlignment: init: allele states should not be empty.");
         }
-        if (alleleStates.length == 1) {
+
+        if ((a instanceof SBitNucleotideAlignment) || (a instanceof TBitNucleotideAlignment)) {
+            return new TBitNucleotideAlignment(a, maxNumAlleles, retainRareAlleles);
+        } else if (alleleStates.length == 1) {
             return new TBitAlignment(a, maxNumAlleles, retainRareAlleles);
         } else {
             return new TBitTextAlignment(a, maxNumAlleles, retainRareAlleles);
         }
+
     }
 
     public static TBitAlignment getInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
@@ -240,17 +249,17 @@ public class TBitAlignment extends AbstractAlignment {
         System.arraycopy(myData[alleleNumber][taxon].getBits(), startBlock, result, 0, endBlock - startBlock);
         return result;
     }
-    
+
     public boolean isHeterozygous(int taxon, int site) {
         int count = 0;
         for (int i = 0; i < myNumDataRows; i++) {
-                if (myData[i][taxon].fastGet(site)) {
-                    count++;
-                    if (count == 2) {
-                        return true;
-                    }
+            if (myData[i][taxon].fastGet(site)) {
+                count++;
+                if (count == 2) {
+                    return true;
                 }
             }
+        }
         return false;
     }
 }

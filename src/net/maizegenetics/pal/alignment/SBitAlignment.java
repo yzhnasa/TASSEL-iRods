@@ -81,15 +81,24 @@ public class SBitAlignment extends AbstractAlignment {
     }
 
     public static SBitAlignment getInstance(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
+
+        if ((a instanceof SBitAlignment) && (a.getMaxNumAlleles() == maxNumAlleles) && (a.retainsRareAlleles() == retainRareAlleles)) {
+            return (SBitAlignment) a;
+        }
+
         String[][] alleleStates = a.getAlleleEncodings();
         if ((alleleStates == null) || (alleleStates.length == 0)) {
-            throw new IllegalArgumentException("SBitAlignment: init: allele states can not be empty.");
+            throw new IllegalStateException("SBitAlignment: init: allele states should not be empty.");
         }
-        if (alleleStates.length == 1) {
+
+        if ((a instanceof SBitNucleotideAlignment) || (a instanceof TBitNucleotideAlignment)) {
+            return new SBitNucleotideAlignment(a, maxNumAlleles, retainRareAlleles);
+        } else if (alleleStates.length == 1) {
             return new SBitAlignment(a, maxNumAlleles, retainRareAlleles);
         } else {
             return new SBitTextAlignment(a, maxNumAlleles, retainRareAlleles);
         }
+
     }
 
     public static SBitAlignment getInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
