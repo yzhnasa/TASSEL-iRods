@@ -44,6 +44,8 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     public DataSet performFunction(DataSet input) {
 
         try {
+            
+            init();
 
             List<Datum> alignInList = input.getDataOfType(Alignment.class);
 
@@ -83,6 +85,11 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             fireProgress(100);
         }
 
+    }
+
+    private void init() {
+        myNumGametesMissing = 0;
+        myNumHeterozygous = 0;
     }
 
     private SimpleTableReport getOverallSummary(Alignment alignment) {
@@ -138,13 +145,13 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         data[count][0] = "Number Not Missing";
         data[count++][1] = (double) totalDiploidsNotMissing;
 
-        data[count][0] = "Proporton Not Missing";
+        data[count][0] = "Proportion Not Missing";
         data[count++][1] = (double) totalDiploidsNotMissing / (double) totalDiploids;
 
         data[count][0] = "Number Missing";
         data[count++][1] = (double) numDiploidsMissing;
 
-        data[count][0] = "Proporton Missing";
+        data[count][0] = "Proportion Missing";
         data[count++][1] = (double) numDiploidsMissing / (double) totalDiploids;
 
         data[count][0] = "Number Gametes";
@@ -153,13 +160,13 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         data[count][0] = "Gametes Not Missing";
         data[count++][1] = (double) totalGametesNotMissing;
 
-        data[count][0] = "Proporton Gametes Not Missing";
+        data[count][0] = "Proportion Gametes Not Missing";
         data[count++][1] = (double) totalGametesNotMissing / (double) totalGametes;
 
         data[count][0] = "Gametes Missing";
         data[count++][1] = (double) myNumGametesMissing;
 
-        data[count][0] = "Proporton Gametes Missing";
+        data[count][0] = "Proportion Gametes Missing";
         data[count++][1] = (double) myNumGametesMissing / (double) totalGametes;
 
         data[count][0] = "Proportion Heterozygous";
@@ -181,7 +188,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     private SimpleTableReport getSiteSummary(Alignment alignment) {
 
-        String[] firstColumnNames = new String[]{"Site Number", "Number of Taxa", "Major Allele", "Major Allele Gametes", "Major Allele Proportion", "Major Allele Frequency",
+        String[] firstColumnNames = new String[]{"Site Number", "Site Name", "Physical Position", "Number of Taxa", "Major Allele", "Major Allele Gametes", "Major Allele Proportion", "Major Allele Frequency",
             "Minor Allele", "Minor Allele Gametes", "Minor Allele Proportion", "Minor Allele Frequency"};
         String[] lastColumnNames = new String[]{"Gametes Missing", "Proportion Missing", "Proportion Heterozygous",
             "Inbreeding Coefficient", "Inbreeding Coefficient Scaled by Missing"};
@@ -213,6 +220,8 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             int count = 0;
 
             data[i][count++] = i;
+            data[i][count++] = alignment.getSNPID(i);
+            data[i][count++] = alignment.getPositionInLocus(i);
             data[i][count++] = alignment.getSequenceCount();
 
             int[][] alleles = alignment.getAllelesSortedByFrequency(i);
