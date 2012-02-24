@@ -6,11 +6,13 @@ package net.maizegenetics.baseplugins;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import java.awt.Frame;
 
-import java.util.Iterator;
+import java.net.URL;
+
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
@@ -44,8 +46,9 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     public DataSet performFunction(DataSet input) {
 
         try {
-            
-            init();
+
+            myNumGametesMissing = 0;
+            myNumHeterozygous = 0;
 
             List<Datum> alignInList = input.getDataOfType(Alignment.class);
 
@@ -85,11 +88,6 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             fireProgress(100);
         }
 
-    }
-
-    private void init() {
-        myNumGametesMissing = 0;
-        myNumHeterozygous = 0;
     }
 
     private SimpleTableReport getOverallSummary(Alignment alignment) {
@@ -286,11 +284,16 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     }
 
     public ImageIcon getIcon() {
-        return null;
+        URL imageURL = GenotypeSummaryPlugin.class.getResource("images/summary.gif");
+        if (imageURL == null) {
+            return null;
+        } else {
+            return new ImageIcon(imageURL);
+        }
     }
 
     public String getButtonName() {
-        return "Genotype Summary";
+        return "Geno Summary";
     }
 
     public String getToolTipText() {
