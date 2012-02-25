@@ -5,9 +5,9 @@ package net.maizegenetics.baseplugins;
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import java.awt.Frame;
 
@@ -35,7 +35,6 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     private static final String NA = "NA";
     private static final Double ZERO_DOUBLE = 0.0;
     private static final int ZERO_INT = 0;
-    private static final Integer ONE_INTEGER = 1;
     private int myNumGametesMissing = 0;
     private int myNumHeterozygous = 0;
 
@@ -97,18 +96,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         int numSites = alignment.getSiteCount();
         int numTaxa = alignment.getSequenceCount();
 
-        HashMap<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
-        for (int r = 0; r < numTaxa; r++) {
-            for (int c = 0; c < numSites; c++) {
-                String current = alignment.getBaseAsString(r, c);
-                Integer num = diploidValueCounts.get(current);
-                if (num == null) {
-                    diploidValueCounts.put(current, ONE_INTEGER);
-                } else {
-                    diploidValueCounts.put(current, ++num);
-                }
-            }
-        }
+        Map<String, Integer> diploidValueCounts = alignment.getDiploidCounts();
 
         int totalGametes = numSites * numTaxa * 2;
         int totalGametesNotMissing = totalGametes - myNumGametesMissing;
