@@ -35,4 +35,8 @@ public class SBitTextAlignment extends SBitAlignment {
     public String getBaseAsString(int site, byte value) {
         return myAlleleStates[site][value];
     }
+    
+    public String getDiploidAsString(int site, byte value) {
+        return myAlleleStates[site][(value >>> 4) & 0xf] + ":" + myAlleleStates[site][value & 0xf];
+    }
 }

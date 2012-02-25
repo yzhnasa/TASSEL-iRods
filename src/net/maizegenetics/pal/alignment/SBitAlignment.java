@@ -3,10 +3,13 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
@@ -393,6 +396,7 @@ public class SBitAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public boolean isHeterozygous(int taxon, int site) {
         int count = 0;
         for (int i = 0; i < myNumDataRows; i++) {
@@ -404,5 +408,47 @@ public class SBitAlignment extends AbstractAlignment {
             }
         }
         return false;
+    }
+
+    @Override
+    public Map<String, Integer> getDiploidCounts() {
+
+        if (myAlleleStates.length != 1) {
+            throw new UnsupportedOperationException("SBitAlignment: getDiploidCounts: Not supported for Alignments with more than one Allele State Table.");
+        }
+
+        int[][] counts = new int[16][16];
+        for (int site = 0; site < myNumSites; site++) {
+            for (int i = 0; i < myMaxNumAlleles; i++) {
+                byte indexI = myAlleles[site][i];
+                counts[indexI][indexI] += (int) myData[i][site].cardinality();
+                for (int j = i + 1; j < myMaxNumAlleles; j++) {
+                    byte indexJ = myAlleles[site][j];
+                    int ijHet = (int) OpenBitSet.intersectionCount(myData[i][site], myData[j][site]);
+                    if (indexI < indexJ) {
+                        counts[indexI][indexJ] += ijHet;
+                    } else {
+                        counts[indexJ][indexI] += ijHet;
+                    }
+                    counts[indexI][indexI] -= ijHet;
+                    counts[indexJ][indexJ] -= ijHet;
+                }
+            }
+        }
+
+        int unknownCount = getSequenceCount() * myNumSites;
+        Map<String, Integer> result = new HashMap<String, Integer>();
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = x; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    byte value = (byte) ((x << 4) | y);
+                    result.put(getDiploidAsString(0, value), counts[x][y]);
+                    unknownCount -= counts[x][y];
+                }
+            }
+        }
+        result.put(getDiploidAsString(0, UNKNOWN_DIPLOID_ALLELE), unknownCount);
+
+        return result;
     }
 }

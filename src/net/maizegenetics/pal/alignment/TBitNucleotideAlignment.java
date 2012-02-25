@@ -23,5 +23,9 @@ public class TBitNucleotideAlignment extends TBitAlignment {
     public String getBaseAsString(int taxon, int site) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
     }
+    
+    public String getDiploidAsString(int site, byte value) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
+    }
 
 }

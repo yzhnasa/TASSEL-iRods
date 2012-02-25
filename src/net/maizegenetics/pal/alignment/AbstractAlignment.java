@@ -4,6 +4,8 @@
 package net.maizegenetics.pal.alignment;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -674,6 +676,10 @@ abstract public class AbstractAlignment implements Alignment {
         return myAlleleStates[0][value];
     }
 
+    public String getDiploidAsString(int site, byte value) {
+        return myAlleleStates[0][(value >>> 4) & 0xf] + ":" + myAlleleStates[0][value & 0xf];
+    }
+
     @Override
     public int getMaxNumAlleles() {
         return myMaxNumAlleles;
@@ -727,6 +733,29 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
         return result;
+
+    }
+
+    public Map<String, Integer> getDiploidCounts() {
+
+        Integer ONE_INTEGER = 1;
+        int numSites = getSiteCount();
+        int numTaxa = getSequenceCount();
+
+        Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
+        for (int r = 0; r < numTaxa; r++) {
+            for (int c = 0; c < numSites; c++) {
+                String current = getBaseAsString(r, c);
+                Integer num = diploidValueCounts.get(current);
+                if (num == null) {
+                    diploidValueCounts.put(current, ONE_INTEGER);
+                } else {
+                    diploidValueCounts.put(current, ++num);
+                }
+            }
+        }
+
+        return diploidValueCounts;
 
     }
 }

@@ -5,6 +5,8 @@ package net.maizegenetics.pal.alignment;
 
 import java.io.Serializable;
 
+import java.util.Map;
+
 import net.maizegenetics.pal.ids.IdGroup;
 
 import net.maizegenetics.util.BitSet;
@@ -265,7 +267,7 @@ public interface Alignment extends Serializable {
      * @return whether heterozygous
      */
     public boolean isHeterozygous(int taxon, int site);
-    
+
     /**
      * Returns number of heterozygous taxa at given site.
      * 
@@ -471,7 +473,7 @@ public interface Alignment extends Serializable {
      * @return most common allele
      */
     public byte getMajorAllele(int site);
-    
+
     /**
      * Return most common allele at given site.
      * Gap is included as state.  Heterozygous count one for each
@@ -493,7 +495,7 @@ public interface Alignment extends Serializable {
      * @return most common minor allele
      */
     public byte getMinorAllele(int site);
-    
+
     /**
      * Return most common minor allele at given site.
      * Gap is included as state. Heterozygous count one for each
@@ -564,7 +566,7 @@ public interface Alignment extends Serializable {
      * @return taxa name
      */
     public String getTaxaName(int index);
-    
+
     /**
      * Return full taxa name at given index.
      * 
@@ -664,12 +666,22 @@ public interface Alignment extends Serializable {
     public String getBaseAsString(int site, byte value);
 
     /**
+     * Returns String representation of diploid allele value at site.
+     * 
+     * @param site site
+     * @param value diploid allele value
+     * 
+     * @return String representation 
+     */
+    public String getDiploidAsString(int site, byte value);
+
+    /**
      * Return max number of alleles retained by this alignment.
      *
      * @return max number of alleles.
      */
     public int getMaxNumAlleles();
-    
+
     /**
      * Returns total number of non-missing allele values.
      * This can be twice the number of taxa, as diploid values
@@ -679,7 +691,7 @@ public interface Alignment extends Serializable {
      * @return number of non-missing allele values.
      */
     public int getTotalGametesNotMissing(int site);
-    
+
     /**
      * Returns the minor allele count for given site.
      * 
@@ -687,7 +699,7 @@ public interface Alignment extends Serializable {
      * @return minor allele count
      */
     public int getMinorAlleleCount(int site);
-    
+
     /**
      * Returns the major allele count for given site.
      * 
@@ -695,4 +707,13 @@ public interface Alignment extends Serializable {
      * @return major allele count
      */
     public int getMajorAlleleCount(int site);
+
+    /**
+     * Returns counts of all diploid combinations for alignment.
+     * Resulting Map keys are diploid value (String).  And the counts
+     * are Integers.
+     * 
+     * @return diploid counts.
+     */
+    public Map<String, Integer> getDiploidCounts();
 }
