@@ -414,7 +414,7 @@ public class SBitAlignment extends AbstractAlignment {
     public Map<String, Integer> getDiploidCounts() {
 
         if (myAlleleStates.length != 1) {
-            throw new UnsupportedOperationException("SBitAlignment: getDiploidCounts: Not supported for Alignments with more than one Allele State Table.");
+            return super.getDiploidCounts();
         }
 
         int[][] counts = new int[16][16];
