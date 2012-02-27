@@ -451,4 +451,72 @@ public class SBitAlignment extends AbstractAlignment {
 
         return result;
     }
+
+    @Override
+    public int[][] getAllelesSortedByFrequency(int site) {
+
+        int[] counts = new int[16];
+        for (int i = 0; i < myNumDataRows; i++) {
+            byte indexI;
+            if ((retainsRareAlleles()) && (i == myMaxNumAlleles)) {
+                indexI = Alignment.RARE_ALLELE;
+            } else {
+                indexI = myAlleles[site][i];
+            }
+            counts[indexI] += (int) myData[i][site].cardinality() * 2;
+            for (int j = i + 1; j < myNumDataRows; j++) {
+                byte indexJ;
+                if ((retainsRareAlleles()) && (j == myMaxNumAlleles)) {
+                    indexJ = Alignment.RARE_ALLELE;
+                } else {
+                    indexJ = myAlleles[site][j];
+                }
+                int ijHet = (int) OpenBitSet.intersectionCount(myData[i][site], myData[j][site]);
+                counts[indexI] -= ijHet;
+                counts[indexJ] -= ijHet;
+            }
+        }
+
+        int numAlleles = 0;
+        for (byte x = 0; x < Alignment.UNKNOWN_ALLELE; x++) {
+            if (counts[x] != 0) {
+                numAlleles++;
+            }
+        }
+
+        int current = 0;
+        int[][] result = new int[2][numAlleles];
+        for (byte x = 0; x < 15; x++) {
+            if (counts[x] != 0) {
+                result[0][current] = x;
+                result[1][current++] = counts[x];
+            }
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < numAlleles - 1; k++) {
+
+                if (result[1][k] < result[1][k + 1]) {
+
+                    int temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    int tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
 }
