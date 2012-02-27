@@ -196,9 +196,15 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         columnNames.addAll(Arrays.asList(lastColumnNames));
 
         int numSites = alignment.getSiteCount();
+        int numTaxa = alignment.getSequenceCount();
         Object[][] data = new Object[numSites][columnNames.size()];
+        int totalGametes = numTaxa * 2;
 
-        int totalGametes = alignment.getSequenceCount() * 2;
+        String[] snpIDs = alignment.getSNPIDs();
+        boolean hasSnpIDs = ((snpIDs != null) && (snpIDs.length != 0));
+
+        int[] physicalPositions = alignment.getPhysicalPositions();
+        boolean hasPhysicalPositions = ((physicalPositions != null) && (physicalPositions.length != 0));
 
         for (int i = 0; i < numSites; i++) {
 
@@ -206,9 +212,17 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             int count = 0;
 
             data[i][count++] = i;
-            data[i][count++] = alignment.getSNPID(i);
-            data[i][count++] = alignment.getPositionInLocus(i);
-            data[i][count++] = alignment.getSequenceCount();
+            if (hasSnpIDs) {
+                data[i][count++] = snpIDs[i];
+            } else {
+                count++;
+            }
+            if (hasPhysicalPositions) {
+                data[i][count++] = physicalPositions[i];
+            } else {
+                count++;
+            }
+            data[i][count++] = numTaxa;
 
             int[][] alleles = alignment.getAllelesSortedByFrequency(i);
             int numAlleles = alleles[0].length;
