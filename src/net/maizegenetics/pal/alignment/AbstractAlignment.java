@@ -716,18 +716,13 @@ abstract public class AbstractAlignment implements Alignment {
 
     public int getMajorAlleleCount(int site) {
 
-        int result = 0;
-        byte majorAllele = getMajorAllele(site);
-        for (int i = 0, n = getSequenceCount(); i < n; i++) {
-            byte[] current = getBaseArray(i, site);
-            if (current[0] == majorAllele) {
-                result++;
-            }
-            if (current[1] == majorAllele) {
-                result++;
-            }
+        int[][] alleles = getAllelesSortedByFrequency(site);
+
+        if (alleles[0].length >= 1) {
+            return alleles[1][0];
+        } else {
+            return 0;
         }
-        return result;
 
     }
 
