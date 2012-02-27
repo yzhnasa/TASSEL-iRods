@@ -337,7 +337,7 @@ public class SBitAlignment extends AbstractAlignment {
 
     @Override
     public int getMinorAlleleCount(int site) {
-        
+
         if ((myMaxNumAlleles < 2) || (myAlleles[site][1] == Alignment.UNKNOWN_ALLELE)) {
             return 0;
         }
@@ -363,7 +363,7 @@ public class SBitAlignment extends AbstractAlignment {
         }
         return (double) minorAlleleCount / (double) getTotalGametesNotMissing(site);
     }
-    
+
     @Override
     public double getMajorAlleleFrequency(int site) {
         int majorAlleleCount = getMajorAlleleCount(site);
@@ -375,7 +375,7 @@ public class SBitAlignment extends AbstractAlignment {
 
     @Override
     public int getMajorAlleleCount(int site) {
-        
+
         if (myAlleles[site][0] == Alignment.UNKNOWN_ALLELE) {
             return 0;
         }
@@ -400,6 +400,21 @@ public class SBitAlignment extends AbstractAlignment {
                 if (count == 2) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isPolymorphic(int site) {
+        boolean nonZero = false;
+        for (int i = 0; i < myNumDataRows; i++) {
+            int numTaxa = (int) myData[i][site].cardinality();
+            if (numTaxa != 0) {
+                if (nonZero) {
+                    return true;
+                }
+                nonZero = true;
             }
         }
         return false;
