@@ -313,6 +313,7 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public byte[] getBaseRange(int taxon, int startSite, int endSite) {
 
         int siteCount = endSite - startSite;
@@ -344,6 +345,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public byte getBase(int taxon, Locus locus, int physicalPosition) {
         int site = getSiteOfPhysicalPosition(physicalPosition, locus);
         int taxaIndex = translateTaxon(taxon);
@@ -437,18 +439,22 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public int getIndelSize(int site) {
         return myBaseAlignment.getIndelSize(translateSite(site));
     }
 
+    @Override
     public Locus[] getLoci() {
         return myLoci;
     }
 
+    @Override
     public Locus getLocus(int site) {
         return myBaseAlignment.getLocus(translateSite(site));
     }
 
+    @Override
     public int getLocusSiteCount(Locus locus) {
 
         int numSites = getSiteCount();
@@ -463,18 +469,22 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public int getNumLoci() {
         return myLoci.length;
     }
 
+    @Override
     public int getPositionInLocus(int site) {
         return myBaseAlignment.getPositionInLocus(translateSite(site));
     }
 
+    @Override
     public byte getPositionType(int site) {
         return myBaseAlignment.getPositionType(translateSite(site));
     }
 
+    @Override
     public byte[] getPositionTypes() {
 
         int numSites = getSiteCount();
@@ -487,6 +497,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public float[][] getSiteScores() {
 
         if (!myBaseAlignment.hasSiteScores()) {
@@ -511,10 +522,12 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public byte getReferenceAllele(int site) {
         return myBaseAlignment.getReferenceAllele(translateSite(site));
     }
 
+    @Override
     public int getSiteCount() {
 
         if (myIsSiteFilterByRange) {
@@ -527,10 +540,12 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public String getSNPID(int site) {
         return myBaseAlignment.getSNPID(translateSite(site));
     }
 
+    @Override
     public String[] getSNPIDs() {
 
         int numSites = getSiteCount();
@@ -543,14 +558,17 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public boolean hasReference() {
         return myBaseAlignment.hasReference();
     }
 
+    @Override
     public boolean isIndel(int site) {
         return myBaseAlignment.isIndel(translateSite(site));
     }
 
+    @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
         int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus);
         if (temp < 0) {
@@ -591,6 +609,7 @@ public class FilterAlignment extends AbstractAlignment {
         return myRangeEnd;
     }
 
+    @Override
     public byte[] getBaseArray(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
@@ -600,6 +619,7 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public byte[] getBaseRow(int taxon) {
         int siteCount = getSiteCount();
         byte[] result = new byte[siteCount];
@@ -626,18 +646,22 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public String getBaseAsString(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
@@ -647,6 +671,7 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public String[] getBaseAsStringArray(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
@@ -656,6 +681,7 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public byte[] getReference() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
             return myBaseAlignment.getReference(0, getSiteCount());
@@ -664,6 +690,7 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public boolean isHeterozygous(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
@@ -673,6 +700,7 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public int[] getPhysicalPositions() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
             int numSites = getSiteCount();
@@ -686,14 +714,17 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public String getLocusName(int site) {
         return myBaseAlignment.getLocusName(translateSite(site));
     }
 
+    @Override
     public int[] getLociOffsets() {
         return myLociOffsets;
     }
 
+    @Override
     public float getSiteScore(int seq, int site) {
         int taxaIndex = translateTaxon(seq);
         if (taxaIndex == -1) {
@@ -703,42 +734,42 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public boolean hasSiteScores() {
         return myBaseAlignment.hasSiteScores();
     }
 
+    @Override
     public SITE_SCORE_TYPE getSiteScoreType() {
         return myBaseAlignment.getSiteScoreType();
     }
 
-    public boolean isPolymorphic(int site) {
-        return myBaseAlignment.isPolymorphic(translateSite(site));
-    }
-
-    public double getMajorAlleleFrequency(int site) {
-        return myBaseAlignment.getMajorAlleleFrequency(translateSite(site));
-    }
-
+    @Override
     public String getGenomeAssembly() {
         return myBaseAlignment.getGenomeAssembly();
     }
 
+    @Override
     public boolean isPositiveStrand(int site) {
         return myBaseAlignment.isPositiveStrand(translateSite(site));
     }
 
+    @Override
     public boolean isPhased() {
         return myBaseAlignment.isPhased();
     }
 
+    @Override
     public GeneticMap getGeneticMap() {
         return myBaseAlignment.getGeneticMap();
     }
 
+    @Override
     public boolean retainsRareAlleles() {
         return myBaseAlignment.retainsRareAlleles();
     }
 
+    @Override
     public String[][] getAlleleEncodings() {
         String[][] encodings = myBaseAlignment.getAlleleEncodings();
         if (encodings.length == 1) {
@@ -755,15 +786,90 @@ public class FilterAlignment extends AbstractAlignment {
         }
     }
 
+    @Override
     public String[] getAlleleEncodings(int site) {
         return myBaseAlignment.getAlleleEncodings(translateSite(site));
     }
 
+    @Override
     public String getBaseAsString(int site, byte value) {
         return myBaseAlignment.getBaseAsString(translateSite(site), value);
     }
 
+    @Override
     public int getMaxNumAlleles() {
         return myBaseAlignment.getMaxNumAlleles();
+    }
+
+    @Override
+    public int[][] getAllelesSortedByFrequency(int site) {
+        if (myIsTaxaFilter) {
+            return super.getAllelesSortedByFrequency(site);
+        } else {
+            return myBaseAlignment.getAllelesSortedByFrequency(translateSite(site));
+        }
+    }
+
+    @Override
+    public double getMajorAlleleFrequency(int site) {
+        if (myIsTaxaFilter) {
+            return super.getMajorAlleleFrequency(site);
+        } else {
+            return myBaseAlignment.getMajorAlleleFrequency(translateSite(site));
+        }
+    }
+
+    @Override
+    public int getHeterozygousCount(int site) {
+        if (myIsTaxaFilter) {
+            return super.getHeterozygousCount(site);
+        } else {
+            return myBaseAlignment.getHeterozygousCount(translateSite(site));
+        }
+    }
+
+    @Override
+    public boolean isPolymorphic(int site) {
+        if (myIsTaxaFilter) {
+            return super.isPolymorphic(site);
+        } else {
+            return myBaseAlignment.isPolymorphic(translateSite(site));
+        }
+    }
+
+    @Override
+    public int getTotalGametesNotMissing(int site) {
+        if (myIsTaxaFilter) {
+            return super.getTotalGametesNotMissing(site);
+        } else {
+            return myBaseAlignment.getTotalGametesNotMissing(translateSite(site));
+        }
+    }
+
+    @Override
+    public int getMinorAlleleCount(int site) {
+        if (myIsTaxaFilter) {
+            return super.getMinorAlleleCount(site);
+        } else {
+            return myBaseAlignment.getMinorAlleleCount(translateSite(site));
+        }
+    }
+
+    @Override
+    public double getMinorAlleleFrequency(int site) {
+        if (myIsTaxaFilter) {
+            return super.getMinorAlleleFrequency(site);
+        } else {
+            return myBaseAlignment.getMinorAlleleFrequency(translateSite(site));
+        }
+    }
+
+    @Override
+    public int getMajorAlleleCount(int site) {
+        if (myIsTaxaFilter) {
+            return super.getMajorAlleleCount(site);
+        } else {
+            return myBaseAlignment.getMajorAlleleCount(translateSite(site));
+        }
     }
 }
