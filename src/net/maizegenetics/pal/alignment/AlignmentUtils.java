@@ -301,17 +301,27 @@ public class AlignmentUtils {
      * @param minimumCount      minimum number of sequences with a good base or a gap (but not N or ?)
      */
     public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
+        
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
         for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
 
             int totalNonMissing = aa.getTotalGametesNotMissing(i);
 
-            double obsMinProp = aa.getMinorAlleleFrequency(i);
+            if ((totalNonMissing > 0) && (totalNonMissing >= (minimumCount * 2))) {
 
-            if ((totalNonMissing > 0) && (totalNonMissing >= (minimumCount * 2)) && (obsMinProp >= minimumProportion) && (obsMinProp <= maximumProportion)) {
-                includeAL.add(i);
+                double minorCount = aa.getMinorAlleleCount(i);
+                double obsMinProp = 0.0;
+                if (minorCount != 0) {
+                    obsMinProp = minorCount / (double) totalNonMissing;
+                }
+
+                if ((obsMinProp >= minimumProportion) && (obsMinProp <= maximumProportion)) {
+                    includeAL.add(i);
+                }
+
             }
         }
+        
         int[] includeSites = new int[includeAL.size()];
         for (int i = 0; i < includeAL.size(); i++) {
             includeSites[i] = includeAL.get(i);
