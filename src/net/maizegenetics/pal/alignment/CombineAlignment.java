@@ -682,9 +682,28 @@ public class CombineAlignment extends AbstractAlignment {
         }
         return result;
     }
-    
+
+    @Override
     public int getTotalGametesNotMissing(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getTotalGametesNotMissing(site - mySiteOffsets[translate]);
+    }
+
+    @Override
+    public int getHeterozygousCount(int site) {
+        int translate = translateSite(site);
+        return myAlignments[translate].getHeterozygousCount(site - mySiteOffsets[translate]);
+    }
+
+    @Override
+    public int getMinorAlleleCount(int site) {
+        int translate = translateSite(site);
+        return myAlignments[translate].getMinorAlleleCount(site - mySiteOffsets[translate]);
+    }
+
+    @Override
+    public int getMajorAlleleCount(int site) {
+        int translate = translateSite(site);
+        return myAlignments[translate].getMajorAlleleCount(site - mySiteOffsets[translate]);
     }
 }
