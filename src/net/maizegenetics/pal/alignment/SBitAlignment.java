@@ -363,9 +363,22 @@ public class SBitAlignment extends AbstractAlignment {
         }
         return (double) minorAlleleCount / (double) getTotalGametesNotMissing(site);
     }
+    
+    @Override
+    public double getMajorAlleleFrequency(int site) {
+        int majorAlleleCount = getMajorAlleleCount(site);
+        if (majorAlleleCount == 0) {
+            return 0.0;
+        }
+        return (double) majorAlleleCount / (double) getTotalGametesNotMissing(site);
+    }
 
     @Override
     public int getMajorAlleleCount(int site) {
+        
+        if (myAlleles[site][0] == Alignment.UNKNOWN_ALLELE) {
+            return 0;
+        }
 
         OpenBitSet temp = new OpenBitSet(getSequenceCount());
         for (int i = 1; i < myNumDataRows; i++) {
