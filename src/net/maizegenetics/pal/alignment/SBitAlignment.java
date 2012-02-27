@@ -194,31 +194,9 @@ public class SBitAlignment extends AbstractAlignment {
                 myData[al][s] = new OpenBitSet(numSeqs);
             }
         }
-        //byte[] cb = new byte[2];
         ExecutorService pool = Executors.newFixedThreadPool(10);
         for (int s = 0; s < myNumSites; s++) {
             pool.execute(new ProcessSite(data, myData, s));
-            /*
-            for (int t = 0; t < numSeqs; t++) {
-            cb[0] = (byte) ((data[t][s] >>> 4) & 0xf);
-            cb[1] = (byte) (data[t][s] & 0xf);
-            for (int i = 0; i < 2; i++) {
-            if (cb[i] != Alignment.UNKNOWN_ALLELE) {
-            boolean isRare = true;
-            for (int j = 0; j < myMaxNumAlleles; j++) {
-            if (cb[i] == myAlleles[s][j]) {
-            myData[j][s].fastSet(t);
-            isRare = false;
-            break;
-            }
-            }
-            if (isRare && retainsRareAlleles()) {
-            myData[myMaxNumAlleles][s].fastSet(t);
-            }
-            }
-            }
-            }
-             */
         }
 
         try {
@@ -359,6 +337,10 @@ public class SBitAlignment extends AbstractAlignment {
 
     @Override
     public int getMinorAlleleCount(int site) {
+        
+        if ((myMaxNumAlleles < 2) || (myAlleles[site][1] == Alignment.UNKNOWN_ALLELE)) {
+            return 0;
+        }
 
         OpenBitSet temp = new OpenBitSet(getSequenceCount());
         for (int i = 0; i < myNumDataRows; i++) {
@@ -486,7 +468,7 @@ public class SBitAlignment extends AbstractAlignment {
 
         int current = 0;
         int[][] result = new int[2][numAlleles];
-        for (byte x = 0; x < 15; x++) {
+        for (byte x = 0; x < Alignment.UNKNOWN_ALLELE; x++) {
             if (counts[x] != 0) {
                 result[0][current] = x;
                 result[1][current++] = counts[x];
