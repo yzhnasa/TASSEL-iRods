@@ -725,7 +725,7 @@ public interface Alignment extends Serializable {
      * to lowest for whole alignment.
      * Resulting double dimension array
      * holds diploids (Strings) in result[0].  And the counts
-     * are in result[1] (Integers).
+     * are in result[1] (Longs).
      * 
      * @return diploid counts.
      */

@@ -450,14 +450,14 @@ public class SBitAlignment extends AbstractAlignment {
             return super.getDiploidCounts();
         }
 
-        int[][] counts = new int[16][16];
+        long[][] counts = new long[16][16];
         for (int site = 0; site < myNumSites; site++) {
             for (int i = 0; i < myMaxNumAlleles; i++) {
                 byte indexI = myAlleles[site][i];
-                counts[indexI][indexI] += (int) myData[i][site].cardinality();
+                counts[indexI][indexI] += myData[i][site].cardinality();
                 for (int j = i + 1; j < myMaxNumAlleles; j++) {
                     byte indexJ = myAlleles[site][j];
-                    int ijHet = (int) OpenBitSet.intersectionCount(myData[i][site], myData[j][site]);
+                    long ijHet = OpenBitSet.intersectionCount(myData[i][site], myData[j][site]);
                     if (indexI < indexJ) {
                         counts[indexI][indexJ] += ijHet;
                     } else {
@@ -470,7 +470,7 @@ public class SBitAlignment extends AbstractAlignment {
         }
 
         int numAlleles = 0;
-        int unknownCount = getSequenceCount() * myNumSites;
+        long unknownCount = (long) getSequenceCount() * (long) myNumSites;
         for (byte x = 0; x < 16; x++) {
             for (byte y = x; y < 16; y++) {
                 if (counts[x][y] != 0) {
@@ -508,7 +508,7 @@ public class SBitAlignment extends AbstractAlignment {
 
             for (int k = 0; k < numAlleles - 1; k++) {
 
-                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+                if ((Long) result[1][k] < (Long) result[1][k + 1]) {
 
                     Object temp = result[0][k];
                     result[0][k] = result[0][k + 1];

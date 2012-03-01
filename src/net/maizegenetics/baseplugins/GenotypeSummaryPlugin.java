@@ -33,8 +33,8 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     private static final String NA = "NA";
     private static final Double ZERO_DOUBLE = 0.0;
     private static final int ZERO_INT = 0;
-    private int myNumGametesMissing = 0;
-    private int myNumHeterozygous = 0;
+    private long myNumGametesMissing = 0;
+    private long myNumHeterozygous = 0;
 
     public GenotypeSummaryPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -91,25 +91,25 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         Object[] firstColumnNames = new String[]{"Stat Type", "Value", "Diploid Value", "Number", "Proportion", "Frequency"};
 
-        int numSites = alignment.getSiteCount();
-        int numTaxa = alignment.getSequenceCount();
+        long numSites = alignment.getSiteCount();
+        long numTaxa = alignment.getSequenceCount();
 
         Object[][] diploidValueCounts = alignment.getDiploidCounts();
         int numAlleles = diploidValueCounts[0].length;
 
-        int totalGametes = numSites * numTaxa * 2;
-        int totalGametesNotMissing = totalGametes - myNumGametesMissing;
+        long totalGametes = numSites * numTaxa * 2L;
+        long totalGametesNotMissing = totalGametes - myNumGametesMissing;
 
-        int numDiploidsMissing = 0;
+        long numDiploidsMissing = 0;
         for (int j = 0; j < numAlleles; j++) {
             if ((diploidValueCounts[0][j].equals(Alignment.UNKNOWN_ALLELE_STR)) || (diploidValueCounts[0][j].equals(Alignment.UNKNOWN_DIPLOID_ALLELE_STR))) {
-                numDiploidsMissing = (Integer) diploidValueCounts[1][j];
+                numDiploidsMissing = (Long) diploidValueCounts[1][j];
                 break;
             }
         }
 
-        int totalDiploids = numSites * numTaxa;
-        int totalDiploidsNotMissing = totalDiploids - numDiploidsMissing;
+        long totalDiploids = numSites * numTaxa;
+        long totalDiploidsNotMissing = totalDiploids - numDiploidsMissing;
         int count = 0;
 
         int numRows = Math.max(numAlleles, 13);
@@ -157,7 +157,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         count = 0;
         for (int i = 0; i < numAlleles; i++) {
             String value = (String) diploidValueCounts[0][i];
-            Integer numValue = (Integer) diploidValueCounts[1][i];
+            Long numValue = (Long) diploidValueCounts[1][i];
             data[count][2] = value;
             data[count][3] = numValue.intValue();
             data[count][4] = numValue.doubleValue() / (double) totalDiploids;
@@ -237,12 +237,12 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             }
 
             int totalGametesMissing = totalGametes - totalGametesNotMissing;
-            myNumGametesMissing = myNumGametesMissing + totalGametesMissing;
+            myNumGametesMissing = myNumGametesMissing + (long) totalGametesMissing;
             data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;
 
             int numHeterozygous = alignment.getHeterozygousCount(i);
-            myNumHeterozygous = myNumHeterozygous + numHeterozygous;
+            myNumHeterozygous = myNumHeterozygous + (long) numHeterozygous;
             data[i][count++] = (double) numHeterozygous / (double) totalGametes;
 
             data[i][count++] = "TBD";
@@ -296,4 +296,5 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     public String getToolTipText() {
         return "Genotype Summary";
     }
+
 }

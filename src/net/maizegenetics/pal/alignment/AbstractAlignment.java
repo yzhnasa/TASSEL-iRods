@@ -732,13 +732,13 @@ abstract public class AbstractAlignment implements Alignment {
         int numSites = getSiteCount();
         int numTaxa = getSequenceCount();
 
-        Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
+        Map<String, Long> diploidValueCounts = new HashMap<String, Long>();
         for (int c = 0; c < numSites; c++) {
             Object[][] diploids = getDiploidssSortedByFrequency(c);
             for (int i = 0; i < diploids[0].length; i++) {
                 String current = (String) diploids[0][i];
-                Integer count = (Integer) diploids[1][i];
-                Integer num = diploidValueCounts.get(current);
+                Long count = (long) ((Integer) diploids[1][i]).intValue();
+                Long num = diploidValueCounts.get(current);
                 if (num == null) {
                     diploidValueCounts.put(current, count);
                 } else {
@@ -753,7 +753,7 @@ abstract public class AbstractAlignment implements Alignment {
         Iterator itr = diploidValueCounts.keySet().iterator();
         while (itr.hasNext()) {
             String key = (String) itr.next();
-            Integer count = (Integer) diploidValueCounts.get(key);
+            Long count = (Long) diploidValueCounts.get(key);
             result[0][i] = key;
             result[1][i++] = count;
         }
@@ -765,7 +765,7 @@ abstract public class AbstractAlignment implements Alignment {
 
             for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
 
-                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+                if ((Long) result[1][k] < (Long) result[1][k + 1]) {
 
                     Object temp = result[0][k];
                     result[0][k] = result[0][k + 1];
