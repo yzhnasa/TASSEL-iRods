@@ -5,9 +5,7 @@ package net.maizegenetics.baseplugins;
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import java.awt.Frame;
 
@@ -96,27 +94,28 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         int numSites = alignment.getSiteCount();
         int numTaxa = alignment.getSequenceCount();
 
-        Map<String, Integer> diploidValueCounts = alignment.getDiploidCounts();
+        Object[][] diploidValueCounts = alignment.getDiploidCounts();
 
         int totalGametes = numSites * numTaxa * 2;
         int totalGametesNotMissing = totalGametes - myNumGametesMissing;
 
         int numDiploidsMissing = 0;
-        Integer numMissingInt = diploidValueCounts.get(Alignment.UNKNOWN_ALLELE_STR);
-        if (numMissingInt == null) {
-            numMissingInt = diploidValueCounts.get(Alignment.UNKNOWN_DIPLOID_ALLELE_STR);
-            if (numMissingInt != null) {
-                numDiploidsMissing = numMissingInt.intValue();
+        int numMissingInt = Arrays.binarySearch(diploidValueCounts[0], Alignment.UNKNOWN_ALLELE_STR);
+        if (numMissingInt < 0) {
+            numMissingInt = Arrays.binarySearch(diploidValueCounts[0], Alignment.UNKNOWN_DIPLOID_ALLELE_STR);
+            if (numMissingInt >= 0) {
+                numDiploidsMissing = (Integer) diploidValueCounts[1][numDiploidsMissing];
             }
         } else {
-            numDiploidsMissing = numMissingInt.intValue();
+            numDiploidsMissing = (Integer) diploidValueCounts[1][numDiploidsMissing];
         }
 
         int totalDiploids = numSites * numTaxa;
         int totalDiploidsNotMissing = totalDiploids - numDiploidsMissing;
 
         int count = 0;
-        int numRows = Math.max(diploidValueCounts.size(), 13);
+        int numAlleles = diploidValueCounts[0].length;
+        int numRows = Math.max(numAlleles, 13);
         Object[][] data = new Object[numRows][firstColumnNames.length];
 
         data[count][0] = "Number of Taxa";
@@ -159,10 +158,9 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         data[count++][1] = (double) myNumHeterozygous / (double) totalGametes;
 
         count = 0;
-        Iterator itr = diploidValueCounts.keySet().iterator();
-        while (itr.hasNext()) {
-            String value = (String) itr.next();
-            Integer numValue = (Integer) diploidValueCounts.get(value);
+        for (int i = 0; i < numAlleles; i++) {
+            String value = (String) diploidValueCounts[0][i];
+            Integer numValue = (Integer) diploidValueCounts[1][i];
             data[count][2] = value;
             data[count][3] = numValue.intValue();
             data[count][4] = numValue.doubleValue() / (double) totalDiploids;

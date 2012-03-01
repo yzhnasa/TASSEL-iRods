@@ -610,6 +610,18 @@ public interface Alignment extends Serializable {
      * @return sorted list of alleles and counts
      */
     public int[][] getAllelesSortedByFrequency(int site);
+    
+    /**
+     * Return sorted list of diploid vales from highest frequency to lowest
+     * at given site in alignment. Resulting double dimension array
+     * holds diploids (Strings) in result[0].  And the counts
+     * are in result[1] (Integers).
+     *
+     * @param site site
+     *
+     * @return sorted list of diploids and counts
+     */
+    public Object[][] getDiploidssSortedByFrequency(int site);
 
     /**
      * Returns whether this alignment is phased.
@@ -709,11 +721,13 @@ public interface Alignment extends Serializable {
     public int getMajorAlleleCount(int site);
 
     /**
-     * Returns counts of all diploid combinations for alignment.
-     * Resulting Map keys are diploid value (String).  And the counts
-     * are Integers.
+     * Returns counts of all diploid combinations from highest frequency
+     * to lowest for whole alignment.
+     * Resulting double dimension array
+     * holds diploids (Strings) in result[0].  And the counts
+     * are in result[1] (Integers).
      * 
      * @return diploid counts.
      */
-    public Map<String, Integer> getDiploidCounts();
+    public Object[][] getDiploidCounts();
 }

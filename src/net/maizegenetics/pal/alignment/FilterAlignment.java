@@ -872,4 +872,13 @@ public class FilterAlignment extends AbstractAlignment {
             return myBaseAlignment.getMajorAlleleCount(translateSite(site));
         }
     }
+
+    @Override
+    public Object[][] getDiploidssSortedByFrequency(int site) {
+        if (myIsTaxaFilter) {
+            return super.getDiploidssSortedByFrequency(site);
+        } else {
+            return myBaseAlignment.getDiploidssSortedByFrequency(translateSite(site));
+        }
+    }
 }

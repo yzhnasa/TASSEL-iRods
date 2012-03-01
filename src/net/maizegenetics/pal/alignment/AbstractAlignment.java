@@ -5,6 +5,7 @@ package net.maizegenetics.pal.alignment;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import net.maizegenetics.pal.ids.IdGroup;
@@ -120,7 +121,7 @@ abstract public class AbstractAlignment implements Alignment {
 
     private void initAlleles(Alignment a) {
         myAlleles = new byte[getSiteCount()][myMaxNumAlleles];
-        for (int i = 0; i < getSiteCount(); i++) {
+        for (int i = 0, n = getSiteCount(); i < n; i++) {
             byte[] alleles = a.getAlleles(i);
             for (int j = 0; j < myMaxNumAlleles; j++) {
                 myAlleles[i][j] = (j < alleles.length) ? alleles[j] : Alignment.UNKNOWN_ALLELE;
@@ -130,7 +131,7 @@ abstract public class AbstractAlignment implements Alignment {
 
     private void initAlleles(byte[][] data) {
         myAlleles = new byte[getSiteCount()][myMaxNumAlleles];
-        for (int i = 0; i < getSiteCount(); i++) {
+        for (int i = 0, n = getSiteCount(); i < n; i++) {
             byte[] alleles = AlignmentUtils.getAlleles(data, i);
             for (int j = 0; j < myMaxNumAlleles; j++) {
                 myAlleles[i][j] = (j < alleles.length) ? alleles[j] : Alignment.UNKNOWN_ALLELE;
@@ -703,7 +704,7 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     public int getMinorAlleleCount(int site) {
-        
+
         int[][] alleles = getAllelesSortedByFrequency(site);
 
         if (alleles[0].length >= 2) {
@@ -726,26 +727,115 @@ abstract public class AbstractAlignment implements Alignment {
 
     }
 
-    public Map<String, Integer> getDiploidCounts() {
+    public Object[][] getDiploidCounts() {
 
-        Integer ONE_INTEGER = 1;
         int numSites = getSiteCount();
         int numTaxa = getSequenceCount();
 
         Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
-        for (int r = 0; r < numTaxa; r++) {
-            for (int c = 0; c < numSites; c++) {
-                String current = getBaseAsString(r, c);
+        for (int c = 0; c < numSites; c++) {
+            Object[][] diploids = getDiploidssSortedByFrequency(c);
+            for (int i = 0; i < diploids[0].length; i++) {
+                String current = (String) diploids[0][i];
+                Integer count = (Integer) diploids[1][i];
                 Integer num = diploidValueCounts.get(current);
                 if (num == null) {
-                    diploidValueCounts.put(current, ONE_INTEGER);
+                    diploidValueCounts.put(current, count);
                 } else {
-                    diploidValueCounts.put(current, ++num);
+                    diploidValueCounts.put(current, (num + count));
                 }
             }
         }
 
-        return diploidValueCounts;
+        Object[][] result = new Object[2][diploidValueCounts.size()];
+
+        int i = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Integer count = (Integer) diploidValueCounts.get(key);
+            result[0][i] = key;
+            result[1][i++] = count;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
+
+                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
+
+    public Object[][] getDiploidssSortedByFrequency(int site) {
+
+        Integer ONE_INTEGER = 1;
+        int numTaxa = getSequenceCount();
+
+        Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
+        for (int r = 0; r < numTaxa; r++) {
+            String current = getBaseAsString(r, site);
+            Integer num = diploidValueCounts.get(current);
+            if (num == null) {
+                diploidValueCounts.put(current, ONE_INTEGER);
+            } else {
+                diploidValueCounts.put(current, ++num);
+            }
+        }
+
+        Object[][] result = new Object[2][diploidValueCounts.size()];
+
+        int i = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Integer count = (Integer) diploidValueCounts.get(key);
+            result[0][i] = key;
+            result[1][i++] = count;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
+
+                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
 
     }
 }

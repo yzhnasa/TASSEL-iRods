@@ -3,8 +3,6 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -405,6 +403,7 @@ public class SBitAlignment extends AbstractAlignment {
         return false;
     }
 
+    @Override
     public int getHeterozygousCount(int site) {
 
         int result = 0;
@@ -445,7 +444,7 @@ public class SBitAlignment extends AbstractAlignment {
     }
 
     @Override
-    public Map<String, Integer> getDiploidCounts() {
+    public Object[][] getDiploidCounts() {
 
         if (myAlleleStates.length != 1) {
             return super.getDiploidCounts();
@@ -470,20 +469,145 @@ public class SBitAlignment extends AbstractAlignment {
             }
         }
 
+        int numAlleles = 0;
         int unknownCount = getSequenceCount() * myNumSites;
-        Map<String, Integer> result = new HashMap<String, Integer>();
         for (byte x = 0; x < 16; x++) {
             for (byte y = x; y < 16; y++) {
                 if (counts[x][y] != 0) {
-                    byte value = (byte) ((x << 4) | y);
-                    result.put(getDiploidAsString(0, value), counts[x][y]);
+                    numAlleles++;
                     unknownCount -= counts[x][y];
                 }
             }
         }
-        result.put(getDiploidAsString(0, UNKNOWN_DIPLOID_ALLELE), unknownCount);
+
+        if (unknownCount > 0) {
+            numAlleles++;
+        }
+
+        Object[][] result = new Object[2][numAlleles];
+        int nextResult = 0;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = x; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    byte value = (byte) ((x << 4) | y);
+                    result[0][nextResult] = getDiploidAsString(0, value);
+                    result[1][nextResult++] = counts[x][y];
+                }
+            }
+        }
+
+        if (unknownCount > 0) {
+            result[0][nextResult] = getDiploidAsString(0, UNKNOWN_DIPLOID_ALLELE);
+            result[1][nextResult] = unknownCount;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < numAlleles - 1; k++) {
+
+                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
 
         return result;
+    }
+
+    @Override
+    public Object[][] getDiploidssSortedByFrequency(int site) {
+
+        if (myAlleleStates.length != 1) {
+            return super.getDiploidssSortedByFrequency(site);
+        }
+
+        int[][] counts = new int[16][16];
+        for (int i = 0; i < myMaxNumAlleles; i++) {
+            byte indexI = myAlleles[site][i];
+            counts[indexI][indexI] += (int) myData[i][site].cardinality();
+            for (int j = i + 1; j < myMaxNumAlleles; j++) {
+                byte indexJ = myAlleles[site][j];
+                int ijHet = (int) OpenBitSet.intersectionCount(myData[i][site], myData[j][site]);
+                if (indexI < indexJ) {
+                    counts[indexI][indexJ] += ijHet;
+                } else {
+                    counts[indexJ][indexI] += ijHet;
+                }
+                counts[indexI][indexI] -= ijHet;
+                counts[indexJ][indexJ] -= ijHet;
+            }
+        }
+
+        int numAlleles = 0;
+        int unknownCount = getSequenceCount();
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = x; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    numAlleles++;
+                    unknownCount -= counts[x][y];
+                }
+            }
+        }
+
+        if (unknownCount > 0) {
+            numAlleles++;
+        }
+
+        Object[][] result = new Object[2][numAlleles];
+        int nextResult = 0;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = x; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    byte value = (byte) ((x << 4) | y);
+                    result[0][nextResult] = getDiploidAsString(0, value);
+                    result[1][nextResult++] = counts[x][y];
+                }
+            }
+        }
+
+        if (unknownCount > 0) {
+            result[0][nextResult] = getDiploidAsString(0, UNKNOWN_DIPLOID_ALLELE);
+            result[1][nextResult] = unknownCount;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < numAlleles - 1; k++) {
+
+                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
     }
 
     @Override

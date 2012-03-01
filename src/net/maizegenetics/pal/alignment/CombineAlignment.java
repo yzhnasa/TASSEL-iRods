@@ -706,4 +706,10 @@ public class CombineAlignment extends AbstractAlignment {
         int translate = translateSite(site);
         return myAlignments[translate].getMajorAlleleCount(site - mySiteOffsets[translate]);
     }
+
+    @Override
+    public Object[][] getDiploidssSortedByFrequency(int site) {
+        int translate = translateSite(site);
+        return myAlignments[translate].getDiploidssSortedByFrequency(site - mySiteOffsets[translate]);
+    }
 }
