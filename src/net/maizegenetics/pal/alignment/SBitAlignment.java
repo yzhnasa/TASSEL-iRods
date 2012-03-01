@@ -444,6 +444,163 @@ public class SBitAlignment extends AbstractAlignment {
     }
 
     @Override
+    public Object[][] getMajorMinorDiploidCounts() {
+
+        if (myAlleleStates.length != 1) {
+            return super.getDiploidCounts();
+        }
+
+        long[][] counts = new long[16][16];
+        for (int site = 0; site < myNumSites; site++) {
+            for (int i = 0; i < myMaxNumAlleles; i++) {
+                byte indexI = myAlleles[site][i];
+                counts[indexI][indexI] += myData[i][site].cardinality();
+                for (int j = i + 1; j < myMaxNumAlleles; j++) {
+                    byte indexJ = myAlleles[site][j];
+                    long ijHet = OpenBitSet.intersectionCount(myData[i][site], myData[j][site]);
+                    counts[indexI][indexJ] += ijHet;
+                    counts[indexI][indexI] -= ijHet;
+                    counts[indexJ][indexJ] -= ijHet;
+                }
+            }
+        }
+
+        int numAlleles = 0;
+        long unknownCount = (long) getSequenceCount() * (long) myNumSites;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = 0; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    numAlleles++;
+                    unknownCount -= counts[x][y];
+                }
+            }
+        }
+
+        if (unknownCount > 0) {
+            numAlleles++;
+        }
+
+        Object[][] result = new Object[2][numAlleles];
+        int nextResult = 0;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = 0; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    result[0][nextResult] = getBaseAsString(0, x) + ":" + getBaseAsString(0, y);
+                    result[1][nextResult++] = counts[x][y];
+                }
+            }
+        }
+
+        if (unknownCount > 0) {
+            result[0][nextResult] = UNKNOWN_DIPLOID_ALLELE_STR;
+            result[1][nextResult] = unknownCount;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < numAlleles - 1; k++) {
+
+                if ((Long) result[1][k] < (Long) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+    }
+
+    @Override
+    public Object[][] getMajorMinorDiploidssSortedByFrequency(int site) {
+
+        if (myAlleleStates.length != 1) {
+            return super.getDiploidssSortedByFrequency(site);
+        }
+
+        int[][] counts = new int[16][16];
+        for (int i = 0; i < myMaxNumAlleles; i++) {
+            byte indexI = myAlleles[site][i];
+            counts[indexI][indexI] += (int) myData[i][site].cardinality();
+            for (int j = i + 1; j < myMaxNumAlleles; j++) {
+                byte indexJ = myAlleles[site][j];
+                int ijHet = (int) OpenBitSet.intersectionCount(myData[i][site], myData[j][site]);
+                counts[indexI][indexJ] += ijHet;
+                counts[indexI][indexI] -= ijHet;
+                counts[indexJ][indexJ] -= ijHet;
+            }
+        }
+
+        int numAlleles = 0;
+        int unknownCount = getSequenceCount();
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = 0; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    numAlleles++;
+                    unknownCount -= counts[x][y];
+                }
+            }
+        }
+
+        if (unknownCount > 0) {
+            numAlleles++;
+        }
+
+        Object[][] result = new Object[2][numAlleles];
+        int nextResult = 0;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = 0; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    result[0][nextResult] = getBaseAsString(0, x) + ":" + getBaseAsString(0, y);
+                    result[1][nextResult++] = counts[x][y];
+                }
+            }
+        }
+
+        if (unknownCount > 0) {
+            result[0][nextResult] = UNKNOWN_DIPLOID_ALLELE_STR;
+            result[1][nextResult] = unknownCount;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < numAlleles - 1; k++) {
+
+                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
+
+    @Override
     public Object[][] getDiploidCounts() {
 
         if (myAlleleStates.length != 1) {

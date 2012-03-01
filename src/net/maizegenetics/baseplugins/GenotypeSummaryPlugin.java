@@ -65,10 +65,13 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
             SimpleTableReport siteSummary = getSiteSummary(alignment);
             //SimpleTableReport taxaSummary = getTaxaSummary(alignment);
-            SimpleTableReport overallSummary = getOverallSummary(alignment);
+            SimpleTableReport[] overallSummaries = getOverallSummary(alignment);
+            SimpleTableReport overallSummary = overallSummaries[0];
+            SimpleTableReport alleleSummary = overallSummaries[1];
 
             List<Datum> summaryTables = new ArrayList<Datum>();
             summaryTables.add(new Datum(name + "_OverallSummary", overallSummary, "Overall Summary of " + name));
+            summaryTables.add(new Datum(name + "_AlleleSummary", alleleSummary, "Allele Summary of " + name));
             summaryTables.add(new Datum(name + "_SiteSummary", siteSummary, "Site Summary of " + name));
             //summaryTables.add(new Datum(name + "_TaxaSummary", taxaSummary, "Taxa Summary of " + name));
 
@@ -87,9 +90,9 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     }
 
-    private SimpleTableReport getOverallSummary(Alignment alignment) {
+    private SimpleTableReport[] getOverallSummary(Alignment alignment) {
 
-        Object[] firstColumnNames = new String[]{"Stat Type", "Value", "Diploid Value", "Number", "Proportion", "Frequency"};
+        Object[] firstColumnNames = new String[]{"Stat Type", "Value"};
 
         long numSites = alignment.getSiteCount();
         long numTaxa = alignment.getSequenceCount();
@@ -112,8 +115,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         long totalDiploidsNotMissing = totalDiploids - numDiploidsMissing;
         int count = 0;
 
-        int numRows = Math.max(numAlleles, 13);
-        Object[][] data = new Object[numRows][firstColumnNames.length];
+        Object[][] data = new Object[13][firstColumnNames.length];
 
         data[count][0] = "Number of Taxa";
         data[count++][1] = (double) numTaxa;
@@ -154,17 +156,45 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         data[count][0] = "Proportion Heterozygous";
         data[count++][1] = (double) myNumHeterozygous / (double) totalGametes;
 
+
+        Object[][] majorMinorDiploidValueCounts = alignment.getMajorMinorDiploidCounts();
+        int numMajorMinorAlleles = majorMinorDiploidValueCounts[0].length;
+
+        Object[] alleleColumnNames = new String[]{"Alleles", "Number", "Proportion", "Frequency"};
+        Object[][] data2 = new Object[numAlleles + numMajorMinorAlleles][alleleColumnNames.length];
+
         count = 0;
         for (int i = 0; i < numAlleles; i++) {
             String value = (String) diploidValueCounts[0][i];
             Long numValue = (Long) diploidValueCounts[1][i];
-            data[count][2] = value;
-            data[count][3] = numValue.intValue();
-            data[count][4] = numValue.doubleValue() / (double) totalDiploids;
-            data[count++][5] = numValue.doubleValue() / (double) totalDiploidsNotMissing;
+            data2[count][0] = value;
+            data2[count][1] = numValue.intValue();
+            data2[count][2] = numValue.doubleValue() / (double) totalDiploids;
+            data2[count++][3] = numValue.doubleValue() / (double) totalDiploidsNotMissing;
         }
 
-        return new SimpleTableReport("Overall Summary", firstColumnNames, data);
+        numDiploidsMissing = 0;
+        for (int j = 0; j < numMajorMinorAlleles; j++) {
+            if ((majorMinorDiploidValueCounts[0][j].equals(Alignment.UNKNOWN_ALLELE_STR)) || (majorMinorDiploidValueCounts[0][j].equals(Alignment.UNKNOWN_DIPLOID_ALLELE_STR))) {
+                numDiploidsMissing = (Long) majorMinorDiploidValueCounts[1][j];
+                break;
+            }
+        }
+
+        totalDiploids = numSites * numTaxa;
+        totalDiploidsNotMissing = totalDiploids - numDiploidsMissing;
+
+        for (int i = 0; i < numMajorMinorAlleles; i++) {
+            String value = (String) majorMinorDiploidValueCounts[0][i];
+            Long numValue = (Long) majorMinorDiploidValueCounts[1][i];
+            data2[count][0] = value;
+            data2[count][1] = numValue.intValue();
+            data2[count][2] = numValue.doubleValue() / (double) totalDiploids;
+            data2[count++][3] = numValue.doubleValue() / (double) totalDiploidsNotMissing;
+        }
+
+        return new SimpleTableReport[]{new SimpleTableReport("Overall Summary", firstColumnNames, data),
+                    new SimpleTableReport("Allele Summary", alleleColumnNames, data2)};
     }
 
     private SimpleTableReport getSiteSummary(Alignment alignment) {
@@ -296,5 +326,4 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     public String getToolTipText() {
         return "Genotype Summary";
     }
-
 }

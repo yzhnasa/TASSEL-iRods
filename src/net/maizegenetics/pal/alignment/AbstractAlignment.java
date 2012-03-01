@@ -727,6 +727,64 @@ abstract public class AbstractAlignment implements Alignment {
 
     }
 
+    public Object[][] getMajorMinorDiploidCounts() {
+
+        int numSites = getSiteCount();
+        int numTaxa = getSequenceCount();
+
+        Map<String, Long> diploidValueCounts = new HashMap<String, Long>();
+        for (int c = 0; c < numSites; c++) {
+            Object[][] diploids = getMajorMinorDiploidssSortedByFrequency(c);
+            for (int i = 0; i < diploids[0].length; i++) {
+                String current = (String) diploids[0][i];
+                Long count = (long) ((Integer) diploids[1][i]).intValue();
+                Long num = diploidValueCounts.get(current);
+                if (num == null) {
+                    diploidValueCounts.put(current, count);
+                } else {
+                    diploidValueCounts.put(current, (num + count));
+                }
+            }
+        }
+
+        Object[][] result = new Object[2][diploidValueCounts.size()];
+
+        int i = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Long count = (Long) diploidValueCounts.get(key);
+            result[0][i] = key;
+            result[1][i++] = count;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
+
+                if ((Long) result[1][k] < (Long) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
+
     public Object[][] getDiploidCounts() {
 
         int numSites = getSiteCount();
@@ -793,6 +851,61 @@ abstract public class AbstractAlignment implements Alignment {
         Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
         for (int r = 0; r < numTaxa; r++) {
             String current = getBaseAsString(r, site);
+            Integer num = diploidValueCounts.get(current);
+            if (num == null) {
+                diploidValueCounts.put(current, ONE_INTEGER);
+            } else {
+                diploidValueCounts.put(current, ++num);
+            }
+        }
+
+        Object[][] result = new Object[2][diploidValueCounts.size()];
+
+        int i = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Integer count = (Integer) diploidValueCounts.get(key);
+            result[0][i] = key;
+            result[1][i++] = count;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
+
+                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
+    
+    public Object[][] getMajorMinorDiploidssSortedByFrequency(int site) {
+
+        Integer ONE_INTEGER = 1;
+        int numTaxa = getSequenceCount();
+
+        Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
+        for (int r = 0; r < numTaxa; r++) {
+            String[] currentAlleles = getBaseAsStringArray(r, site);
+            String current = currentAlleles[0] + ":" + currentAlleles[1];
             Integer num = diploidValueCounts.get(current);
             if (num == null) {
                 diploidValueCounts.put(current, ONE_INTEGER);
