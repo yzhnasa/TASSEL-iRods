@@ -95,26 +95,23 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         int numTaxa = alignment.getSequenceCount();
 
         Object[][] diploidValueCounts = alignment.getDiploidCounts();
+        int numAlleles = diploidValueCounts[0].length;
 
         int totalGametes = numSites * numTaxa * 2;
         int totalGametesNotMissing = totalGametes - myNumGametesMissing;
 
         int numDiploidsMissing = 0;
-        int numMissingInt = Arrays.binarySearch(diploidValueCounts[0], Alignment.UNKNOWN_ALLELE_STR);
-        if (numMissingInt < 0) {
-            numMissingInt = Arrays.binarySearch(diploidValueCounts[0], Alignment.UNKNOWN_DIPLOID_ALLELE_STR);
-            if (numMissingInt >= 0) {
-                numDiploidsMissing = (Integer) diploidValueCounts[1][numDiploidsMissing];
+        for (int j = 0; j < numAlleles; j++) {
+            if ((diploidValueCounts[0][j].equals(Alignment.UNKNOWN_ALLELE_STR)) || (diploidValueCounts[0][j].equals(Alignment.UNKNOWN_DIPLOID_ALLELE_STR))) {
+                numDiploidsMissing = (Integer) diploidValueCounts[1][j];
+                break;
             }
-        } else {
-            numDiploidsMissing = (Integer) diploidValueCounts[1][numDiploidsMissing];
         }
 
         int totalDiploids = numSites * numTaxa;
         int totalDiploidsNotMissing = totalDiploids - numDiploidsMissing;
-
         int count = 0;
-        int numAlleles = diploidValueCounts[0].length;
+
         int numRows = Math.max(numAlleles, 13);
         Object[][] data = new Object[numRows][firstColumnNames.length];
 
