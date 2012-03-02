@@ -881,13 +881,4 @@ public class FilterAlignment extends AbstractAlignment {
             return myBaseAlignment.getDiploidssSortedByFrequency(translateSite(site));
         }
     }
-
-    @Override
-    public Object[][] getMajorMinorDiploidssSortedByFrequency(int site) {
-        if (myIsTaxaFilter) {
-            return super.getMajorMinorDiploidssSortedByFrequency(site);
-        } else {
-            return myBaseAlignment.getMajorMinorDiploidssSortedByFrequency(translateSite(site));
-        }
-    }
 }

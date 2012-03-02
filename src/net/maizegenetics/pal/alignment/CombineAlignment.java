@@ -712,10 +712,4 @@ public class CombineAlignment extends AbstractAlignment {
         int translate = translateSite(site);
         return myAlignments[translate].getDiploidssSortedByFrequency(site - mySiteOffsets[translate]);
     }
-
-    @Override
-    public Object[][] getMajorMinorDiploidssSortedByFrequency(int site) {
-        int translate = translateSite(site);
-        return myAlignments[translate].getMajorMinorDiploidssSortedByFrequency(site - mySiteOffsets[translate]);
-    }
 }

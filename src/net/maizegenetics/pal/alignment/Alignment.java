@@ -5,7 +5,6 @@ package net.maizegenetics.pal.alignment;
 
 import java.io.Serializable;
 
-import java.util.Map;
 
 import net.maizegenetics.pal.ids.IdGroup;
 
@@ -610,7 +609,7 @@ public interface Alignment extends Serializable {
      * @return sorted list of alleles and counts
      */
     public int[][] getAllelesSortedByFrequency(int site);
-    
+
     /**
      * Return sorted list of diploid vales from highest frequency to lowest
      * at given site in alignment. Resulting double dimension array
@@ -730,30 +729,15 @@ public interface Alignment extends Serializable {
      * @return diploid counts.
      */
     public Object[][] getDiploidCounts();
-    
+
     /**
-     * Returns counts of all diploid combinations from highest frequency
-     * to lowest for whole alignment.  Distinction made between
-     * A:C vs. C:A where first allele value is more frequent in site.
+     * Returns counts of all major/minor allele combinations from highest frequency
+     * to lowest for whole alignment.
      * Resulting double dimension array
-     * holds diploids (Strings) in result[0].  And the counts
+     * holds major/minor allele (Strings) in result[0].  And the counts
      * are in result[1] (Longs).
      * 
      * @return diploid counts.
      */
-    public Object[][] getMajorMinorDiploidCounts();
-    
-    /**
-     * Return sorted list of diploid vales from highest frequency to lowest
-     * at given site in alignment. Distinction made between
-     * A:C vs. C:A where first allele value is more frequent in site.
-     * Resulting double dimension array
-     * holds diploids (Strings) in result[0].  And the counts
-     * are in result[1] (Integers).
-     *
-     * @param site site
-     *
-     * @return sorted list of diploids and counts
-     */
-    public Object[][] getMajorMinorDiploidssSortedByFrequency(int site);
+    public Object[][] getMajorMinorCounts();
 }
