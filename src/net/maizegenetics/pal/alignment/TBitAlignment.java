@@ -250,6 +250,7 @@ public class TBitAlignment extends AbstractAlignment {
         return result;
     }
 
+    @Override
     public boolean isHeterozygous(int taxon, int site) {
         int count = 0;
         for (int i = 0; i < myNumDataRows; i++) {
@@ -261,5 +262,29 @@ public class TBitAlignment extends AbstractAlignment {
             }
         }
         return false;
+    }
+    
+    @Override
+    public int getTotalGametesNotMissingForTaxon(int taxon) {
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 0; i < myNumDataRows; i++) {
+            temp.or(myData[i][taxon]);
+        }
+        return ((int) temp.cardinality()) * 2;
+
+    }
+    
+    @Override
+    public int getHeterozygousCountForTaxon(int taxon) {
+
+        int result = 0;
+        for (int i = 0; i < myNumDataRows; i++) {
+            for (int j = i + 1; j < myNumDataRows; j++) {
+                result += (int) OpenBitSet.intersectionCount(myData[i][taxon], myData[j][taxon]);
+            }
+        }
+        return result;
+
     }
 }

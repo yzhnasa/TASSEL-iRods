@@ -694,11 +694,11 @@ public interface Alignment extends Serializable {
     public int getMaxNumAlleles();
 
     /**
-     * Returns total number of non-missing allele values.
+     * Returns total number of non-missing allele values for given site.
      * This can be twice the number of taxa, as diploid values
      * are supported.
      * 
-     * @param site
+     * @param site site
      * @return number of non-missing allele values.
      */
     public int getTotalGametesNotMissing(int site);
@@ -706,7 +706,7 @@ public interface Alignment extends Serializable {
     /**
      * Returns the minor allele count for given site.
      * 
-     * @param site
+     * @param site site 
      * @return minor allele count
      */
     public int getMinorAlleleCount(int site);
@@ -714,7 +714,7 @@ public interface Alignment extends Serializable {
     /**
      * Returns the major allele count for given site.
      * 
-     * @param site
+     * @param site site
      * @return major allele count
      */
     public int getMajorAlleleCount(int site);
@@ -740,4 +740,23 @@ public interface Alignment extends Serializable {
      * @return diploid counts.
      */
     public Object[][] getMajorMinorCounts();
+    
+    /**
+     * Returns total number of non-missing allele values for given taxon.
+     * This can be twice the number of sites, as diploid values
+     * are supported.
+     * 
+     * @param taxon taxon
+     * @return number of non-missing allele values.
+     */
+    public int getTotalGametesNotMissingForTaxon(int taxon);
+    
+    /**
+     * Returns number of heterozygous sites at given taxon.
+     * 
+     * @param taxon taxon
+     * 
+     * @return number of heterozygous sites 
+     */
+    public int getHeterozygousCountForTaxon(int taxon);
 }

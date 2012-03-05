@@ -881,4 +881,22 @@ public class FilterAlignment extends AbstractAlignment {
             return myBaseAlignment.getDiploidssSortedByFrequency(translateSite(site));
         }
     }
+
+    @Override
+    public int getTotalGametesNotMissingForTaxon(int taxon) {
+        if (myIsSiteFilter || myIsSiteFilterByRange) {
+            return super.getTotalGametesNotMissingForTaxon(taxon);
+        } else {
+            return myBaseAlignment.getTotalGametesNotMissingForTaxon(translateTaxon(taxon));
+        }
+    }
+
+    @Override
+    public int getHeterozygousCountForTaxon(int taxon) {
+        if (myIsSiteFilter || myIsSiteFilterByRange) {
+            return super.getHeterozygousCountForTaxon(taxon);
+        } else {
+            return myBaseAlignment.getHeterozygousCountForTaxon(translateTaxon(taxon));
+        }
+    }
 }

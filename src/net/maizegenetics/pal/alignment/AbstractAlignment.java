@@ -482,10 +482,22 @@ abstract public class AbstractAlignment implements Alignment {
         }
     }
 
+    @Override
     public int getHeterozygousCount(int site) {
         int result = 0;
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
             if (isHeterozygous(i, site)) {
+                result++;
+            }
+        }
+        return result;
+    }
+    
+    @Override
+    public int getHeterozygousCountForTaxon(int taxon) {
+        int result = 0;
+        for (int i = 0, n = getSiteCount(); i < n; i++) {
+            if (isHeterozygous(taxon, i)) {
                 result++;
             }
         }
@@ -692,6 +704,23 @@ abstract public class AbstractAlignment implements Alignment {
         int result = 0;
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
             byte[] current = getBaseArray(i, site);
+            if (current[0] != Alignment.UNKNOWN_ALLELE) {
+                result++;
+            }
+            if (current[1] != Alignment.UNKNOWN_ALLELE) {
+                result++;
+            }
+        }
+        return result;
+
+    }
+    
+    @Override
+    public int getTotalGametesNotMissingForTaxon(int taxon) {
+
+        int result = 0;
+        for (int i = 0, n = getSiteCount(); i < n; i++) {
+            byte[] current = getBaseArray(taxon, i);
             if (current[0] != Alignment.UNKNOWN_ALLELE) {
                 result++;
             }
