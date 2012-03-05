@@ -408,19 +408,7 @@ public class SBitAlignment extends AbstractAlignment {
 
         int result = 0;
         for (int i = 0; i < myNumDataRows; i++) {
-            byte indexI;
-            if ((retainsRareAlleles()) && (i == myMaxNumAlleles)) {
-                indexI = Alignment.RARE_ALLELE;
-            } else {
-                indexI = myAlleles[site][i];
-            }
             for (int j = i + 1; j < myNumDataRows; j++) {
-                byte indexJ;
-                if ((retainsRareAlleles()) && (j == myMaxNumAlleles)) {
-                    indexJ = Alignment.RARE_ALLELE;
-                } else {
-                    indexJ = myAlleles[site][j];
-                }
                 result += (int) OpenBitSet.intersectionCount(myData[i][site], myData[j][site]);
             }
         }
