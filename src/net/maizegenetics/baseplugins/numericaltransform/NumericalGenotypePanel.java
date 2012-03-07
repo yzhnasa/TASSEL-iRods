@@ -30,7 +30,6 @@ public class NumericalGenotypePanel extends JPanel {
     private void jbInit() throws Exception {
 
         JPanel panel = new JPanel();
-        //panel.setLayout(new GridBagLayout());
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         //Radio Buttons
