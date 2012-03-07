@@ -716,7 +716,6 @@ public class CombineAlignment extends AbstractAlignment {
     @Override
     public boolean isSBitFriendly() {
         for (int i = 0; i < myAlignments.length; i++) {
-            System.out.println("alignment: " + i + ": " + myAlignments[i].getClass().getName());
             if (!myAlignments[i].isSBitFriendly()) {
                 return false;
             }
