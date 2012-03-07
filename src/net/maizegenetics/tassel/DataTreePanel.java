@@ -48,6 +48,8 @@ import java.awt.event.KeyEvent;
 
 import java.io.Serializable;
 
+import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -130,6 +132,63 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
 
         myTree.putClientProperty("JTree.lineStyle", myLineStyle);
 
+        URL sBitURL = DataTreePanel.class.getResource("images/sBit.gif");
+        final ImageIcon sBitIcon;
+        if (sBitURL != null) {
+            sBitIcon = new ImageIcon(sBitURL);
+        } else {
+            sBitIcon = null;
+        }
+
+        URL tBitURL = DataTreePanel.class.getResource("images/tBit.gif");
+        final ImageIcon tBitIcon;
+        if (tBitURL != null) {
+            tBitIcon = new ImageIcon(tBitURL);
+        } else {
+            tBitIcon = null;
+        }
+
+        URL combineURL = DataTreePanel.class.getResource("images/combineAlign.gif");
+        final ImageIcon combineIcon;
+        if (combineURL != null) {
+            combineIcon = new ImageIcon(combineURL);
+        } else {
+            combineIcon = null;
+        }
+
+        URL filterURL = DataTreePanel.class.getResource("images/filterAlign.gif");
+        final ImageIcon filterIcon;
+        if (filterURL != null) {
+            filterIcon = new ImageIcon(filterURL);
+        } else {
+            filterIcon = null;
+        }
+
+        URL sBitCombineURL = DataTreePanel.class.getResource("images/sBitCombine.gif");
+        final ImageIcon sBitCombineIcon;
+        if (sBitCombineURL != null) {
+            sBitCombineIcon = new ImageIcon(sBitCombineURL);
+        } else {
+            sBitCombineIcon = null;
+        }
+
+        URL sBitFilterURL = DataTreePanel.class.getResource("images/sBitFilter.gif");
+        final ImageIcon sBitFilterIcon;
+        if (sBitFilterURL != null) {
+            sBitFilterIcon = new ImageIcon(sBitFilterURL);
+        } else {
+            sBitFilterIcon = null;
+        }
+
+        URL tBitFilterURL = DataTreePanel.class.getResource("images/tBitFilter.gif");
+        final ImageIcon tBitFilterIcon;
+        if (tBitFilterURL != null) {
+            tBitFilterIcon = new ImageIcon(tBitFilterURL);
+        } else {
+            tBitFilterIcon = null;
+        }
+
+
         myTree.setCellRenderer(new DefaultTreeCellRenderer() {
 
             public Component getTreeCellRendererComponent(JTree pTree,
@@ -139,8 +198,36 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                 Datum nodeInfo = (Datum) node.getUserObject();
                 Component result = super.getTreeCellRendererComponent(pTree, pValue, pIsSelected,
                         pIsExpanded, pIsLeaf, pRow, pHasFocus);
-                if (nodeInfo.getData() instanceof AlignmentMask) {
+                Object data = nodeInfo.getData();
+                if (data instanceof AlignmentMask) {
                     result.setForeground(((AlignmentMask) nodeInfo.getData()).getColor());
+                }
+
+                if (data instanceof Alignment) {
+                    Alignment align = (Alignment) data;
+                    if (align.isSBitFriendly()) {
+                        if ((align instanceof FilterAlignment) && (sBitFilterIcon != null)) {
+                            setIcon(sBitFilterIcon);
+                        } else if ((align instanceof CombineAlignment) && (sBitCombineIcon != null)) {
+                            setIcon(sBitCombineIcon);
+                        } else if (sBitIcon != null) {
+                            setIcon(sBitIcon);
+                        }
+                    } else if (align.isTBitFriendly()) {
+                        if ((align instanceof FilterAlignment) && (tBitFilterIcon != null)) {
+                            setIcon(tBitFilterIcon);
+                        } else if (tBitIcon != null) {
+                            setIcon(tBitIcon);
+                        }
+                    } else if (align instanceof FilterAlignment) {
+                        if (filterIcon != null) {
+                            setIcon(filterIcon);
+                        }
+                    } else if (align instanceof CombineAlignment) {
+                        if (combineIcon != null) {
+                            setIcon(combineIcon);
+                        }
+                    }
                 }
                 return result;
             }
