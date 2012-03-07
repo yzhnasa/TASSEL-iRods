@@ -42,7 +42,20 @@ public class TBitAlignment extends AbstractAlignment {
             throw new IllegalStateException("TBitAlignment: init: allele states should not be empty.");
         }
 
-        if ((a instanceof SBitNucleotideAlignment) || (a instanceof TBitNucleotideAlignment)) {
+        boolean isNucleotide = false;
+        if (alleleStates.length == 1) {
+            isNucleotide = true;
+            if (alleleStates[0].length == NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0].length) {
+                for (int i = 0; i < alleleStates.length; i++) {
+                    if (!alleleStates[0][i].equals(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][i])) {
+                        isNucleotide = false;
+                    }
+                }
+            }
+
+        }
+
+        if (isNucleotide) {
             return new TBitNucleotideAlignment(a, maxNumAlleles, retainRareAlleles);
         } else if (alleleStates.length == 1) {
             return new TBitAlignment(a, maxNumAlleles, retainRareAlleles);
@@ -263,7 +276,7 @@ public class TBitAlignment extends AbstractAlignment {
         }
         return false;
     }
-    
+
     @Override
     public int getTotalGametesNotMissingForTaxon(int taxon) {
 
@@ -274,7 +287,7 @@ public class TBitAlignment extends AbstractAlignment {
         return ((int) temp.cardinality()) * 2;
 
     }
-    
+
     @Override
     public int getHeterozygousCountForTaxon(int taxon) {
 
@@ -287,12 +300,12 @@ public class TBitAlignment extends AbstractAlignment {
         return result;
 
     }
-    
+
     @Override
     public boolean isSBitFriendly() {
         return false;
     }
-    
+
     @Override
     public boolean isTBitFriendly() {
         return true;

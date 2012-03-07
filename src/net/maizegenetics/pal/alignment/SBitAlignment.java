@@ -92,7 +92,20 @@ public class SBitAlignment extends AbstractAlignment {
             throw new IllegalStateException("SBitAlignment: init: allele states should not be empty.");
         }
 
-        if ((a instanceof SBitNucleotideAlignment) || (a instanceof TBitNucleotideAlignment)) {
+        boolean isNucleotide = false;
+        if (alleleStates.length == 1) {
+            isNucleotide = true;
+            if (alleleStates[0].length == NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0].length) {
+                for (int i = 0; i < alleleStates.length; i++) {
+                    if (!alleleStates[0][i].equals(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][i])) {
+                        isNucleotide = false;
+                    }
+                }
+            }
+
+        }
+
+        if (isNucleotide) {
             return new SBitNucleotideAlignment(a, maxNumAlleles, retainRareAlleles);
         } else if (alleleStates.length == 1) {
             return new SBitAlignment(a, maxNumAlleles, retainRareAlleles);
@@ -665,12 +678,12 @@ public class SBitAlignment extends AbstractAlignment {
         return result;
 
     }
-    
+
     @Override
     public boolean isSBitFriendly() {
         return true;
     }
-    
+
     @Override
     public boolean isTBitFriendly() {
         return false;
