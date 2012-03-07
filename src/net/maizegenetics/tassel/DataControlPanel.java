@@ -33,6 +33,7 @@ public class DataControlPanel extends AbstractControlPanel {
 
             addPlugin(new FileLoadPlugin(theTASSELMainFrame, true, myPlinkLoadPlugin, myFlapjackLoadPlugin));
             addPlugin(new ExportPlugin(theTASSELMainFrame, true));
+            addPlugin(new ConvertSBitTBitPlugin(theTASSELMainFrame, true));
             addPlugin(new FilterAlignmentPlugin(theTASSELMainFrame, true));
             addPlugin(new FilterSiteNamePlugin(theTASSELMainFrame, true));
             addPlugin(new FilterTaxaAlignmentPlugin(theTASSELMainFrame, true));
@@ -64,5 +65,4 @@ public class DataControlPanel extends AbstractControlPanel {
     public void setDataTreePanel(DataTreePanel theDataTreePanel) {
         this.theDataTreePanel = theDataTreePanel;
     }
-
 }

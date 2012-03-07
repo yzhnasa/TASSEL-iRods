@@ -8,7 +8,7 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
+
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -27,8 +27,13 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
+import net.maizegenetics.plugindef.PluginListener;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
+
+import java.net.URL;
+
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -48,6 +53,13 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
 
     public ConvertSBitTBitPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
+    }
+
+    public ConvertSBitTBitPlugin(Frame parentFrame, PluginListener listener) {
+        super(parentFrame, false);
+        if (listener != null) {
+            addListener(listener);
+        }
     }
 
     public DataSet performFunction(DataSet input) {
@@ -81,53 +93,116 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
                 theDialog.dispose();
             }
 
-            Alignment newAlignment = convertAlignment(alignment);
-            if (newAlignment == null) {
-                showErrorMessage(name, null);
-                return null;
-            } else if (alignment == newAlignment) {
-                if (isInteractive()) {
-                    JOptionPane.showMessageDialog(getParentFrame(), "Nothing To Change");
-                    return null;
-                }
-            }
-            DataSet tds = new DataSet(new Datum(alignDatum.getName() + "_" + myType, newAlignment, null), this);
-            fireDataSetReturned(new PluginEvent(tds, ConvertSBitTBitPlugin.class));
-            return tds;
+            return convertAlignment(alignDatum);
 
         } catch (Exception e) {
             e.printStackTrace();
-            showErrorMessage(name, e);
+            showErrorMessage(name, e, myType);
             return null;
         } finally {
             fireProgress(100);
         }
     }
 
-    private Alignment convertAlignment(Alignment alignment) {
+    public Alignment convertAlignment(Datum datum, CONVERT_TYPE type, boolean isFriendlyEnough, int maxAlleles, boolean retainRareAlleles) {
+
+        String name = datum.getName();
+        Alignment alignment = null;
+        try {
+            alignment = (Alignment) datum.getData();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("ConvertSBitTBitPlugin: convertAlignment: input must be an alignment.");
+        }
+
+        Alignment result = null;
+        if (type == CONVERT_TYPE.sbit) {
+            if (isFriendlyEnough && alignment.isSBitFriendly()) {
+                result = alignment;
+            } else if (alignment instanceof SBitAlignment) {
+                result = alignment;
+            } else {
+                JOptionPane.showMessageDialog(getParentFrame(), "Must convert data set to site\noptimized format for this function.");
+                if (maxAlleles > 0) {
+                    result = SBitAlignment.getInstance(alignment, maxAlleles, retainRareAlleles);
+                } else {
+                    result = SBitAlignment.getInstance(alignment);
+                }
+            }
+        } else if (type == CONVERT_TYPE.tbit) {
+            if (isFriendlyEnough && alignment.isTBitFriendly()) {
+                result = alignment;
+            } else if (alignment instanceof TBitAlignment) {
+                result = alignment;
+            } else {
+                JOptionPane.showMessageDialog(getParentFrame(), "Must convert data set to taxa\noptimized format for this function.");
+                if (maxAlleles > 0) {
+                    result = TBitAlignment.getInstance(alignment, maxAlleles, retainRareAlleles);
+                } else {
+                    result = TBitAlignment.getInstance(alignment);
+                }
+            }
+        } else {
+            throw new IllegalStateException("ConvertSBitTBitPlugin: convertAlignment: Unknown type: " + type);
+        }
+
+        if (result == null) {
+            showErrorMessage(name, null, type);
+            return null;
+        } else if (alignment != result) {
+            DataSet tds = new DataSet(new Datum(datum.getName(), result, null), this);
+            fireDataSetReturned(new PluginEvent(tds, ConvertSBitTBitPlugin.class));
+        }
+
+        return result;
+
+    }
+
+    private DataSet convertAlignment(Datum datum) {
+
+        String name = datum.getName();
+        Alignment alignment = null;
+        try {
+            alignment = (Alignment) datum.getData();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("ConvertSBitTBitPlugin: convertAlignment: input must be an alignment.");
+        }
+
         Alignment result = null;
         if (myType == CONVERT_TYPE.sbit) {
-            return SBitAlignment.getInstance(alignment);
+            result = SBitAlignment.getInstance(alignment);
         } else if (myType == CONVERT_TYPE.tbit) {
-            return TBitAlignment.getInstance(alignment);
+            result = TBitAlignment.getInstance(alignment);
         } else {
             throw new IllegalStateException("ConvertSBitTBitPlugin: convertAlignment: Unknown type: " + myType);
         }
+
+        if (result == null) {
+            showErrorMessage(name, null, myType);
+            return null;
+        } else if (alignment == result) {
+            if (isInteractive()) {
+                JOptionPane.showMessageDialog(getParentFrame(), "Nothing To Change");
+                return null;
+            }
+        }
+        DataSet tds = new DataSet(new Datum(datum.getName(), result, null), this);
+        fireDataSetReturned(new PluginEvent(tds, ConvertSBitTBitPlugin.class));
+        return tds;
     }
 
-    private void showErrorMessage(String name, Exception e) {
+    private void showErrorMessage(String name, Exception e, CONVERT_TYPE type) {
         StringBuilder builder = new StringBuilder();
         builder.append("Error converting: ");
         builder.append(name);
         builder.append(" to: ");
-        builder.append(myType);
+        builder.append(type);
         if (e != null) {
             builder.append("\n");
             builder.append(Utils.shortenStrLineLen(ExceptionUtils.getExceptionCauses(e), 50));
         }
         String str = builder.toString();
 
-        if (isInteractive()) {
+        if (getParentFrame() != null) {
             DialogUtils.showError(str, getParentFrame());
         } else {
             myLogger.error(str);
@@ -135,11 +210,16 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
     }
 
     public ImageIcon getIcon() {
-        return null;
+        URL imageURL = ConvertSBitTBitPlugin.class.getResource("images/STConvert.gif");
+        if (imageURL == null) {
+            return null;
+        } else {
+            return new ImageIcon(imageURL);
+        }
     }
 
     public String getButtonName() {
-        return "TtoS";
+        return "Optimize";
     }
 
     public String getToolTipText() {
@@ -157,7 +237,6 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
 
 class ConvertSBitTBitPluginDialog extends JDialog {
 
-    private ConvertSBitTBitPlugin.CONVERT_TYPE myType = ConvertSBitTBitPlugin.CONVERT_TYPE.sbit;
     private JTabbedPane myTabbedPane = new JTabbedPane();
     private ButtonGroup myButtonGroup = new ButtonGroup();
     private JRadioButton mySBit = new JRadioButton();
