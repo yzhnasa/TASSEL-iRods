@@ -644,6 +644,9 @@ abstract public class AbstractAlignment implements Alignment {
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
         try {
+            if (locus == null) {
+                locus = myLoci[0];
+            }
             int[] startEnd = getStartAndEndOfLocus(locus);
             return Arrays.binarySearch(myVariableSites, startEnd[0], startEnd[1], physicalPosition);
         } catch (Exception e) {
