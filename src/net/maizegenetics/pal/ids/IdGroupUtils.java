@@ -6,13 +6,12 @@ package net.maizegenetics.pal.ids;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.Vector;
 
 /**
  *
  * @author terry
  */
-public class IdGroupUtils {
+public final class IdGroupUtils {
 
     private IdGroupUtils() {
         // To prevent instantiation
@@ -21,7 +20,7 @@ public class IdGroupUtils {
     /**
      * @return true if <i>sub</i> IdGroup completely contained within <i>full</i>, false otherwise
      */
-    public static final boolean isContainedWithin(IdGroup sub, IdGroup full) {
+    public static boolean isContainedWithin(IdGroup sub, IdGroup full) {
         for (int i = 0; i < sub.getIdCount(); i++) {
             boolean found = false;
             Identifier subID = sub.getIdentifier(i);
@@ -42,7 +41,7 @@ public class IdGroupUtils {
     /**
      * @return true if <i>id1</i> and <i>id2</i> share exactly the same identifiers (.equals() based, not reference base). The order is not important.
      */
-    public static final boolean isEqualIgnoringOrder(IdGroup id1, IdGroup id2) {
+    public static boolean isEqualIgnoringOrder(IdGroup id1, IdGroup id2) {
         return (isContainedWithin(id1, id2) && isContainedWithin(id2, id1));
     }
 
@@ -51,7 +50,7 @@ public class IdGroupUtils {
      * IdGroup implementations
      * @return -1 if <i>s</i> not in <i>group</i>
      */
-    public static final int whichIdNumber(IdGroup group, String s) {
+    public static int whichIdNumber(IdGroup group, String s) {
         for (int i = 0; i < group.getIdCount(); i++) {
             if (s.equals(group.getIdentifier(i).getFullName())) {
                 return i;
@@ -65,7 +64,7 @@ public class IdGroupUtils {
      * @param group2 another IdGroup
      * @return the Ids in the intersection of groups 1 and 2, sorted in ascending order
      */
-    public static final IdGroup getCommonIds(IdGroup group1, IdGroup group2) {
+    public static IdGroup getCommonIds(IdGroup group1, IdGroup group2) {
         return getCommonIds(new IdGroup[]{group1, group2});
     }
 
@@ -75,7 +74,7 @@ public class IdGroupUtils {
      * @param groups groups to join.
      * @return The ids from the intersect join, sorted in ascending order
      */
-    public static final IdGroup getCommonIds(IdGroup[] groups) {
+    public static IdGroup getCommonIds(IdGroup[] groups) {
 
         if ((groups == null) || (groups.length == 0)) {
             return null;
@@ -105,7 +104,7 @@ public class IdGroupUtils {
      * @param group2	another IdGroup
      * @return	the Ids in the union of groups 1 and 2, sorted in ascending order
      */
-    public static final IdGroup getAllIds(IdGroup group1, IdGroup group2) {
+    public static IdGroup getAllIds(IdGroup group1, IdGroup group2) {
         return getAllIds(new IdGroup[]{group1, group2});
     }
 
@@ -115,7 +114,7 @@ public class IdGroupUtils {
      * @param groups groups to join.
      * @return The ids from the union join, sorted in ascending order
      */
-    public static final IdGroup getAllIds(IdGroup[] groups) {
+    public static IdGroup getAllIds(IdGroup[] groups) {
 
         if ((groups == null) || (groups.length == 0)) {
             return null;
@@ -144,7 +143,7 @@ public class IdGroupUtils {
      * @return a new IdGroup that is a subset of the original
      * @throws IllegalArgumentException if the number of Identifiers in original is not equal to the length of include.
      */
-    public static final IdGroup idGroupSubset(IdGroup original, boolean[] include) {
+    public static IdGroup idGroupSubset(IdGroup original, boolean[] include) {
         int nOld = original.getIdCount();
         if (nOld != include.length) {
             throw new IllegalArgumentException("Size of IdGroup and include array are different.");
@@ -161,7 +160,7 @@ public class IdGroupUtils {
     /**
      * Translates an array of identifiers into an array of strings
      */
-    public final static String[] getNames(Identifier[] ids) {
+    public static String[] getNames(Identifier[] ids) {
         String[] names = new String[ids.length];
         for (int i = 0; i < names.length; i++) {
             names[i] = ids[i].getName();
@@ -173,7 +172,7 @@ public class IdGroupUtils {
      * Translates an array of identifiers into an array of strings, with optional removal of particular identifier
      * @param toIgnoreIndex the index of an idetifier to ignore, if <0 no element is ignored
      */
-    public final static String[] getNames(Identifier[] ids, int toIgnore) {
+    public static String[] getNames(Identifier[] ids, int toIgnore) {
         if (toIgnore < 0 || toIgnore >= ids.length) {
             return getNames(ids);
         }
@@ -191,7 +190,7 @@ public class IdGroupUtils {
     /**
      * Translates an an array of strings into an array of identifiers
      */
-    public final static Identifier[] getIdentifiers(String[] names) {
+    public static Identifier[] getIdentifiers(String[] names) {
         Identifier[] ids = new Identifier[names.length];
         for (int i = 0; i < names.length; i++) {
             ids[i] = new Identifier(names[i]);
@@ -202,7 +201,7 @@ public class IdGroupUtils {
     /**
      * Translates an IdGroup into an array of identifiers
      */
-    public final static Identifier[] getIdentifiers(IdGroup idGroup) {
+    public static Identifier[] getIdentifiers(IdGroup idGroup) {
         Identifier[] ids = new Identifier[idGroup.getIdCount()];
         for (int i = 0; i < ids.length; i++) {
             ids[i] = idGroup.getIdentifier(i);
@@ -213,7 +212,7 @@ public class IdGroupUtils {
     /**
      * Translates an IdGroup into an array of strings
      */
-    public final static String[] getNames(IdGroup ids) {
+    public static String[] getNames(IdGroup ids) {
         String[] names = new String[ids.getIdCount()];
         for (int i = 0; i < names.length; i++) {
             names[i] = ids.getIdentifier(i).getName();
@@ -225,7 +224,7 @@ public class IdGroupUtils {
      * Translates an IDgroup into an array of strings, with optional removal of particular identifier
      * @param toIgnoreIndex the index of an idetifier to ignore, if <0 no element is ignored
      */
-    public final static String[] getNames(IdGroup ids, int toIgnore) {
+    public static String[] getNames(IdGroup ids, int toIgnore) {
         if (toIgnore < 0 || toIgnore >= ids.getIdCount()) {
             return getNames(ids);
         }
@@ -239,33 +238,5 @@ public class IdGroupUtils {
             }
         }
         return names;
-    }
-
-    /**
-     * Translates an IDgroup into an array of strings, with optional removal of particular identifier
-     * @param toIgnoreIndex the indexes of an idetifier to ignore, does not need to be sorted	 */
-    public final static String[] getNames(IdGroup ids, int[] toIgnore) {
-        if (toIgnore == null) {
-            return getNames(ids);
-        }
-
-        int numberOfIDS = ids.getIdCount();
-        Vector names = new Vector(numberOfIDS);
-
-        for (int i = 0; i < numberOfIDS; i++) {
-            boolean ignore = false;
-            for (int j = 0; j < toIgnore.length; j++) {
-                if (toIgnore[j] == i) {
-                    ignore = true;
-                    break;
-                }
-            }
-            if (!ignore) {
-                names.addElement(ids.getIdentifier(i).getName());
-            }
-        }
-        String[] namesFinal = new String[names.size()];
-        names.copyInto(namesFinal);
-        return namesFinal;
     }
 }
