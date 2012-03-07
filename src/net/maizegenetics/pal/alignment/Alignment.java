@@ -759,4 +759,24 @@ public interface Alignment extends Serializable {
      * @return number of heterozygous sites 
      */
     public int getHeterozygousCountForTaxon(int taxon);
+    
+    /**
+     * Return whether alignment will execute quickly for site
+     * optimized operations.  SBitAlignment is obviously friendly.
+     * But so would FilterAlignment is only sites have been filtered
+     * for example.
+     * 
+     * @return whether optimized for site operations.
+     */
+    public boolean isSBitFriendly();
+    
+    /**
+     * Return whether alignment will execute quickly for taxa
+     * optimized operations.  TBitAlignment is obviously friendly.
+     * But so would FilterAlignment is only taxa have been filtered
+     * for example.
+     * 
+     * @return whether optimized for taxa operations.
+     */
+    public boolean isTBitFriendly();
 }

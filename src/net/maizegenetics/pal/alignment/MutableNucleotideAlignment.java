@@ -364,4 +364,14 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
     public boolean isDirty() {
         throw new UnsupportedOperationException();
     }
+    
+    @Override
+    public boolean isSBitFriendly() {
+        return false;
+    }
+    
+    @Override
+    public boolean isTBitFriendly() {
+        return false;
+    }
 }

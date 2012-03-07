@@ -72,7 +72,7 @@ public class FilterAlignment extends AbstractAlignment {
      * 
      * @return filter alignment 
      */
-    public static FilterAlignment getInstance(Alignment a, IdGroup subIdGroup) {
+    public static Alignment getInstance(Alignment a, IdGroup subIdGroup) {
         return getInstance(a, subIdGroup, true);
     }
 
@@ -87,7 +87,7 @@ public class FilterAlignment extends AbstractAlignment {
      * 
      * @return filter alignment 
      */
-    public static FilterAlignment getInstance(Alignment a, IdGroup subIdGroup, boolean retainUnknownTaxa) {
+    public static Alignment getInstance(Alignment a, IdGroup subIdGroup, boolean retainUnknownTaxa) {
 
         Alignment baseAlignment = a;
         FilterAlignment original = null;
@@ -98,8 +98,14 @@ public class FilterAlignment extends AbstractAlignment {
 
         List<Integer> taxaRedirectList = new ArrayList<Integer>();
         List<Identifier> idList = new ArrayList<Identifier>();
-        for (int i = 0; i < subIdGroup.getIdCount(); i++) {
+        boolean noNeedToFilter = true;
+        for (int i = 0, n = subIdGroup.getIdCount(); i < n; i++) {
             int ion = a.getIdGroup().whichIdNumber(subIdGroup.getIdentifier(i));
+            
+            if (ion != i) {
+                noNeedToFilter = false;
+            }
+            
             if ((retainUnknownTaxa) && (ion < 0)) {
                 taxaRedirectList.add(-1);
                 idList.add(subIdGroup.getIdentifier(i));
@@ -113,6 +119,10 @@ public class FilterAlignment extends AbstractAlignment {
                     idList.add(subIdGroup.getIdentifier(i));
                 }
             }
+        }
+        
+        if (noNeedToFilter) {
+            return a;
         }
 
         int[] taxaRedirect = new int[taxaRedirectList.size()];
@@ -136,7 +146,7 @@ public class FilterAlignment extends AbstractAlignment {
      *
      * @return Filtered Alignment
      */
-    public static FilterAlignment getInstanceRemoveIDs(Alignment a, IdGroup subIdGroup) {
+    public static Alignment getInstanceRemoveIDs(Alignment a, IdGroup subIdGroup) {
 
         List result = new ArrayList();
         IdGroup current = a.getIdGroup();
@@ -897,6 +907,24 @@ public class FilterAlignment extends AbstractAlignment {
             return super.getHeterozygousCountForTaxon(taxon);
         } else {
             return myBaseAlignment.getHeterozygousCountForTaxon(translateTaxon(taxon));
+        }
+    }
+
+    @Override
+    public boolean isSBitFriendly() {
+        if (!myIsTaxaFilter && (myBaseAlignment instanceof SBitAlignment)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isTBitFriendly() {
+        if (!myIsSiteFilter && !myIsSiteFilterByRange && (myBaseAlignment instanceof TBitAlignment)) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

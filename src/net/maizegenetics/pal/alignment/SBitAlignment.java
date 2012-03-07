@@ -665,4 +665,14 @@ public class SBitAlignment extends AbstractAlignment {
         return result;
 
     }
+    
+    @Override
+    public boolean isSBitFriendly() {
+        return true;
+    }
+    
+    @Override
+    public boolean isTBitFriendly() {
+        return false;
+    }
 }

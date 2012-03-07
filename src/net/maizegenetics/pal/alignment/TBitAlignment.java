@@ -287,4 +287,14 @@ public class TBitAlignment extends AbstractAlignment {
         return result;
 
     }
+    
+    @Override
+    public boolean isSBitFriendly() {
+        return false;
+    }
+    
+    @Override
+    public boolean isTBitFriendly() {
+        return true;
+    }
 }
