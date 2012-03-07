@@ -64,7 +64,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             String name = current.getName();
 
             SimpleTableReport siteSummary = getSiteSummary(alignment);
-            //SimpleTableReport taxaSummary = getTaxaSummary(alignment);
+            SimpleTableReport taxaSummary = getTaxaSummary(alignment);
             SimpleTableReport[] overallSummaries = getOverallSummary(alignment);
             SimpleTableReport overallSummary = overallSummaries[0];
             SimpleTableReport alleleSummary = overallSummaries[1];
@@ -73,7 +73,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             summaryTables.add(new Datum(name + "_OverallSummary", overallSummary, "Overall Summary of " + name));
             summaryTables.add(new Datum(name + "_AlleleSummary", alleleSummary, "Allele Summary of " + name));
             summaryTables.add(new Datum(name + "_SiteSummary", siteSummary, "Site Summary of " + name));
-            //summaryTables.add(new Datum(name + "_TaxaSummary", taxaSummary, "Taxa Summary of " + name));
+            summaryTables.add(new Datum(name + "_TaxaSummary", taxaSummary, "Taxa Summary of " + name));
 
             if (summaryTables.isEmpty()) {
                 return null;
@@ -197,7 +197,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         String[] firstColumnNames = new String[]{"Site Number", "Site Name", "Physical Position", "Number of Taxa", "Major Allele", "Major Allele Gametes", "Major Allele Proportion", "Major Allele Frequency",
             "Minor Allele", "Minor Allele Gametes", "Minor Allele Proportion", "Minor Allele Frequency"};
-        String[] lastColumnNames = new String[]{"Gametes Missing", "Proportion Missing", "Proportion Heterozygous",
+        String[] lastColumnNames = new String[]{"Gametes Missing", "Proportion Missing", "Number Heterozygous", "Proportion Heterozygous",
             "Inbreeding Coefficient", "Inbreeding Coefficient Scaled by Missing"};
 
         List columnNames = new ArrayList(Arrays.asList(firstColumnNames));
@@ -269,6 +269,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
             int numHeterozygous = alignment.getHeterozygousCount(i);
             myNumHeterozygous = myNumHeterozygous + (long) numHeterozygous;
+            data[i][count++] = numHeterozygous;
             data[i][count++] = (double) numHeterozygous / (double) totalGametes;
 
             data[i][count++] = "TBD";
@@ -284,8 +285,8 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     private SimpleTableReport getTaxaSummary(Alignment alignment) {
 
-        Object[] columnNames = new String[]{"Taxa", "Number of Sites", "Proportion Missing",
-            "Proportion Heterozygous", "Inbreeding Coefficient",
+        Object[] columnNames = new String[]{"Taxa", "Number of Sites", "Gametes Missing", "Proportion Missing",
+            "Number Heterozygous", "Proportion Heterozygous", "Inbreeding Coefficient",
             "Inbreeding Coefficient Scaled by Missing"};
         int numSites = alignment.getSiteCount();
         int numTaxa = alignment.getSequenceCount();
@@ -293,11 +294,18 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         int totalGametes = numSites * 2;
         for (int i = 0; i < numTaxa; i++) {
+
+            int totalGametesNotMissing = alignment.getTotalGametesNotMissingForTaxon(i);
+            int totalGametesMissing = totalGametes - totalGametesNotMissing;
+            int numHeterozygous = alignment.getHeterozygousCountForTaxon(i);
+
             int count = 0;
             data[i][count++] = i;
             data[i][count++] = numSites;
-            data[i][count++] = "Proportion Missing";
-            data[i][count++] = "Proportion Heterozygous";
+            data[i][count++] = totalGametesMissing;
+            data[i][count++] = (double) totalGametesMissing / (double) totalGametes;
+            data[i][count++] = numHeterozygous;
+            data[i][count++] = (double) numHeterozygous / (double) totalGametes;
             data[i][count++] = "Inbreeding Coefficient";
             data[i][count++] = "ICSBM";
         }
