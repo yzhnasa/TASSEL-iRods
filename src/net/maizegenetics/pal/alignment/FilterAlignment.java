@@ -99,6 +99,9 @@ public class FilterAlignment extends AbstractAlignment {
         List<Integer> taxaRedirectList = new ArrayList<Integer>();
         List<Identifier> idList = new ArrayList<Identifier>();
         boolean noNeedToFilter = true;
+        if (subIdGroup.getIdCount() != a.getSequenceCount()) {
+            noNeedToFilter = false;
+        }
         for (int i = 0, n = subIdGroup.getIdCount(); i < n; i++) {
             int ion = a.getIdGroup().whichIdNumber(subIdGroup.getIdentifier(i));
             
