@@ -43,7 +43,7 @@ public class AnalysisControlPanel extends AbstractControlPanel {
             addPlugin(new FixedEffectLMPlugin(theTASSELMainFrame, true));
             addPlugin(new MLMPlugin(theTASSELMainFrame, true));
             addPlugin(new RidgeRegressionEmmaPlugin(theTASSELMainFrame,true));
-            addPlugin(new GenotypeSummaryPlugin(theTASSELMainFrame));
+            addPlugin(new GenotypeSummaryPlugin(theTASSELMainFrame, true));
             jbInit();
         } catch (Exception ex) {
             ex.printStackTrace();

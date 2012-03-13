@@ -7,12 +7,23 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.Frame;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import java.net.URL;
 
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTabbedPane;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.report.SimpleTableReport;
@@ -33,19 +44,22 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     private static final String NA = "NA";
     private static final Double ZERO_DOUBLE = 0.0;
     private static final int ZERO_INT = 0;
-    private long myNumGametesMissing = 0;
-    private long myNumHeterozygous = 0;
+    private long myNumGametesMissing = -1;
+    private long myNumHeterozygous = -1;
+    private boolean myIsOverview = true;
+    private boolean myIsSiteSummary = true;
+    private boolean myIsTaxaSummary = true;
 
-    public GenotypeSummaryPlugin(Frame parentFrame) {
-        super(parentFrame, false);
+    public GenotypeSummaryPlugin(Frame parentFrame, boolean isInteractive) {
+        super(parentFrame, isInteractive);
     }
 
     public DataSet performFunction(DataSet input) {
 
         try {
 
-            myNumGametesMissing = 0;
-            myNumHeterozygous = 0;
+            myNumGametesMissing = -1;
+            myNumHeterozygous = -1;
 
             List<Datum> alignInList = input.getDataOfType(Alignment.class);
 
@@ -59,21 +73,53 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
                 return null;
             }
 
+            if (isInteractive()) {
+                GenotypeSummaryPluginDialog theDialog = new GenotypeSummaryPluginDialog();
+                theDialog.setLocationRelativeTo(getParentFrame());
+                theDialog.setVisible(true);
+                if (theDialog.isCancel()) {
+                    return null;
+                }
+                myIsOverview = theDialog.isOverview();
+                myIsSiteSummary = theDialog.isSiteSummary();
+                myIsTaxaSummary = theDialog.isTaxaSummary();
+                theDialog.dispose();
+            }
+
             Datum current = alignInList.get(0);
             Alignment alignment = (Alignment) current.getData();
             String name = current.getName();
 
-            SimpleTableReport siteSummary = getSiteSummary(alignment);
-            SimpleTableReport taxaSummary = getTaxaSummary(alignment);
-            SimpleTableReport[] overallSummaries = getOverallSummary(alignment);
-            SimpleTableReport overallSummary = overallSummaries[0];
-            SimpleTableReport alleleSummary = overallSummaries[1];
-
             List<Datum> summaryTables = new ArrayList<Datum>();
-            summaryTables.add(new Datum(name + "_OverallSummary", overallSummary, "Overall Summary of " + name));
-            summaryTables.add(new Datum(name + "_AlleleSummary", alleleSummary, "Allele Summary of " + name));
-            summaryTables.add(new Datum(name + "_SiteSummary", siteSummary, "Site Summary of " + name));
-            summaryTables.add(new Datum(name + "_TaxaSummary", taxaSummary, "Taxa Summary of " + name));
+
+
+            SimpleTableReport siteSummary = null;
+            if (myIsSiteSummary) {
+                siteSummary = getSiteSummary(alignment);
+            }
+
+            SimpleTableReport taxaSummary = null;
+            if (myIsTaxaSummary) {
+                taxaSummary = getTaxaSummary(alignment);
+            }
+
+            SimpleTableReport[] overallSummaries = null;
+            if (myIsOverview) {
+                overallSummaries = getOverallSummary(alignment);
+            }
+
+
+            if (myIsOverview) {
+                summaryTables.add(new Datum(name + "_OverallSummary", overallSummaries[0], "Overall Summary of " + name));
+                summaryTables.add(new Datum(name + "_AlleleSummary", overallSummaries[1], "Allele Summary of " + name));
+            }
+
+            if (siteSummary != null) {
+                summaryTables.add(new Datum(name + "_SiteSummary", siteSummary, "Site Summary of " + name));
+            }
+            if (taxaSummary != null) {
+                summaryTables.add(new Datum(name + "_TaxaSummary", taxaSummary, "Taxa Summary of " + name));
+            }
 
             if (summaryTables.isEmpty()) {
                 return null;
@@ -99,6 +145,17 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         Object[][] diploidValueCounts = alignment.getDiploidCounts();
         int numAlleles = diploidValueCounts[0].length;
+
+        if (!myIsSiteSummary) {
+            int totalGametes = (int) numTaxa * 2;
+            for (int i = 0; i < numSites; i++) {
+                int totalGametesNotMissing = alignment.getTotalGametesNotMissing(i);
+                int totalGametesMissing = totalGametes - totalGametesNotMissing;
+                myNumGametesMissing = myNumGametesMissing + (long) totalGametesMissing;
+                int numHeterozygous = alignment.getHeterozygousCount(i);
+                myNumHeterozygous = myNumHeterozygous + (long) numHeterozygous;
+            }
+        }
 
         long totalGametes = numSites * numTaxa * 2L;
         long totalGametesNotMissing = totalGametes - myNumGametesMissing;
@@ -314,6 +371,30 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     }
 
+    public void setCaculateOverview(boolean calculate) {
+        myIsOverview = calculate;
+    }
+
+    public boolean getCalculateOverview() {
+        return myIsOverview;
+    }
+
+    public void setCalculateSiteSummary(boolean calculate) {
+        myIsSiteSummary = calculate;
+    }
+
+    public boolean getCalculateSiteSummary() {
+        return myIsSiteSummary;
+    }
+
+    public void setCalculateTaxaSummary(boolean calculate) {
+        myIsTaxaSummary = calculate;
+    }
+
+    public boolean getCalculateTaxaSummary() {
+        return myIsTaxaSummary;
+    }
+
     public ImageIcon getIcon() {
         URL imageURL = GenotypeSummaryPlugin.class.getResource("images/summary.gif");
         if (imageURL == null) {
@@ -329,5 +410,81 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     public String getToolTipText() {
         return "Genotype Summary";
+    }
+
+    class GenotypeSummaryPluginDialog extends JDialog {
+
+        private JTabbedPane myTabbedPane = new JTabbedPane();
+        private JRadioButton myOverview = new JRadioButton();
+        private JRadioButton mySiteSummary = new JRadioButton();
+        private JRadioButton myTaxaSummary = new JRadioButton();
+        private boolean myIsCancel = true;
+
+        public GenotypeSummaryPluginDialog() {
+            super((Frame) null, "Genotype Summary", true);
+
+
+            JButton okButton = new JButton();
+            okButton.setActionCommand("Ok");
+            okButton.setText("Ok");
+            okButton.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    myIsCancel = false;
+                    setVisible(false);
+                }
+            });
+            JButton closeButton = new JButton();
+            closeButton.setText("Close");
+            closeButton.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    myIsCancel = true;
+                    setVisible(false);
+                }
+            });
+
+            JPanel panel = new JPanel();
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+            //Radio Buttons
+            myOverview.setText("Genotype Overview");
+            myOverview.setSelected(myIsOverview);
+            mySiteSummary.setText("Site Summary");
+            mySiteSummary.setSelected(myIsSiteSummary);
+            myTaxaSummary.setText("Taxa Summary");
+            myTaxaSummary.setSelected(myIsTaxaSummary);
+
+            panel.add(myOverview);
+            panel.add(mySiteSummary);
+            panel.add(myTaxaSummary);
+
+            myTabbedPane.add(panel, "Genotype Summary");
+
+            JPanel pnlButtons = new JPanel();
+            pnlButtons.setLayout(new FlowLayout());
+            pnlButtons.add(okButton);
+            pnlButtons.add(closeButton);
+            getContentPane().add(myTabbedPane, BorderLayout.CENTER);
+            getContentPane().add(pnlButtons, BorderLayout.SOUTH);
+
+            pack();
+        }
+
+        public boolean isCancel() {
+            return myIsCancel;
+        }
+
+        public boolean isOverview() {
+            return myOverview.isSelected();
+        }
+
+        public boolean isSiteSummary() {
+            return mySiteSummary.isSelected();
+        }
+
+        public boolean isTaxaSummary() {
+            return myTaxaSummary.isSelected();
+        }
     }
 }
