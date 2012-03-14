@@ -395,6 +395,20 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing max P: " + temp);
                     }
                     plugin.setMaxP(maxP);
+                } else if (current.equalsIgnoreCase("-glmPermutations")) {
+                    FixedEffectLMPlugin plugin = (FixedEffectLMPlugin) findLastPluginFromCurrentPipe(new Class[]{FixedEffectLMPlugin.class});
+                    if (plugin == null) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No GLM step defined: " + current);
+                    }
+                    String temp = args[index++].trim();
+                    int permutations = 0;
+                    try {
+                        permutations = Integer.parseInt(temp);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing number of permutations: " + temp);
+                    }
+                    plugin.setPermute(true);
+                    plugin.setNumberOfPermutations(permutations);
                 } else if (current.equalsIgnoreCase("-td_csv")) {
                     String csvFile = args[index++].trim();
                     getTableDisplayPlugin(csvFile, current);
