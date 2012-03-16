@@ -65,6 +65,7 @@ public class KinshipPlugin extends AbstractPlugin {
                         //this section implements additional options for calculating kinship
                         if (isInteractive()) {
                             KinshipDialog kd = new KinshipDialog(getParentFrame());
+                            kd.setLocationRelativeTo(getParentFrame());
                             kd.setVisible(true);
                             if (!kd.run) {
                                 return null;
