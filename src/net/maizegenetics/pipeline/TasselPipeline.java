@@ -587,6 +587,42 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-ck")) {
                     KinshipPlugin plugin = new KinshipPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-ckModelHets")) {
+
+                    KinshipPlugin plugin = null;
+                    try {
+                        plugin = (KinshipPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No KinshipPlugin step defined: " + current);
+                    }
+
+                    String temp = args[index++].trim();
+                    if (temp.equalsIgnoreCase("RelateHomo")) {
+                        plugin.setRecognizeHets(true);
+                    } else if (temp.equalsIgnoreCase("IndepState")) {
+                        plugin.setRecognizeHets(false);
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Create Kinship Type parameter must be RelateHomo or IndepState: " + temp);
+                    }
+
+                } else if (current.equalsIgnoreCase("-ckRescale")) {
+
+                    KinshipPlugin plugin = null;
+                    try {
+                        plugin = (KinshipPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No KinshipPlugin step defined: " + current);
+                    }
+
+                    String temp = args[index++].trim();
+                    if (temp.equalsIgnoreCase("false")) {
+                        plugin.setRescaleKinship(false);
+                    } else if (temp.equalsIgnoreCase("true")) {
+                        plugin.setRescaleKinship(true);
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Create Kinship Rescale parameter must be true or false: " + temp);
+                    }
+
                 } else if (current.equalsIgnoreCase("-gs")) {
                     RidgeRegressionEmmaPlugin plugin = new RidgeRegressionEmmaPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
