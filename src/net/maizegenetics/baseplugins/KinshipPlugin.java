@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class KinshipPlugin extends AbstractPlugin {
 
-    private boolean recognizeHets = false;
+    private boolean recognizeHets = true;
     private boolean rescaleKinship = true;
 
     public KinshipPlugin(Frame parentFrame, boolean isInteractive) {
@@ -91,6 +91,7 @@ public class KinshipPlugin extends AbstractPlugin {
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     String message = "Problem creating kinship matrix from: " + datasetName + "\n" + e.getClass().getName() + ": " + e.getMessage();
                     if (isInteractive()) {
                         JOptionPane.showMessageDialog(getParentFrame(), message);
