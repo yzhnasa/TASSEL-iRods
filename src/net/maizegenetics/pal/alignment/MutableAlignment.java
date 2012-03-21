@@ -42,6 +42,10 @@ public interface MutableAlignment extends Alignment {
     public void addTaxon(Identifier id);
 
     public void removeTaxon(int taxon);
+    
+    public void setPositionOfSite(int site, int position);
+    
+    public void setLocusOfSite(int site, Locus locus);
 
     /**
      * Clean alignment including sorting sites by position.
