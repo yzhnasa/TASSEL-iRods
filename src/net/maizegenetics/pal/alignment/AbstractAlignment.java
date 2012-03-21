@@ -19,12 +19,12 @@ import net.maizegenetics.util.BitSet;
 abstract public class AbstractAlignment implements Alignment {
 
     private static final long serialVersionUID = -5197800047652332969L;
-    protected IdGroup myIdGroup;
+    private IdGroup myIdGroup;
     private GeneticMap myGeneticMap;
     private byte[] myReference;
     protected int myNumSites;
     protected String[][] myAlleleStates;
-    protected int[] myVariableSites;
+    private int[] myVariableSites;
     protected int myMaxNumAlleles = Alignment.DEFAULT_MAX_NUM_ALLELES;
     protected byte[][] myAlleles;
     private Locus[] myLoci;
@@ -61,13 +61,31 @@ abstract public class AbstractAlignment implements Alignment {
         System.out.println("Time to init alleles: " + ((currentTime - prevTime) / 1000));
     }
 
+    /**
+     * Constructor for FilterAlignment and CombineAlignment.  Most attributes
+     * are stored by wrapped alignments.
+     * 
+     * @param idGroup id group
+     */
     public AbstractAlignment(IdGroup idGroup) {
         myIdGroup = idGroup;
     }
 
+    /**
+     * Constructor for MutableAlignment.
+     * 
+     * @param alleleStates 
+     */
+    public AbstractAlignment(String[][] alleleStates) {
+        init(null, null, null, alleleStates, null, 1, null, new Locus[]{new Locus("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
+    }
+
     private void init(IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, String[] snpIDs, Locus[] loci, int[] lociOffsets, boolean retainRareAlleles) {
 
-        myIdGroup = SimpleIdGroup.getInstance(idGroup);
+        if ((idGroup != null) && (idGroup.getIdCount() != 0)) {
+            myIdGroup = SimpleIdGroup.getInstance(idGroup);
+        }
+
         myGeneticMap = map;
 
         if ((reference == null) || (reference.length == 0)) {
@@ -492,7 +510,7 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return result;
     }
-    
+
     @Override
     public int getHeterozygousCountForTaxon(int taxon) {
         int result = 0;
@@ -717,7 +735,7 @@ abstract public class AbstractAlignment implements Alignment {
         return result;
 
     }
-    
+
     @Override
     public int getTotalGametesNotMissingForTaxon(int taxon) {
 
@@ -940,5 +958,4 @@ abstract public class AbstractAlignment implements Alignment {
         return result;
 
     }
-    
 }
