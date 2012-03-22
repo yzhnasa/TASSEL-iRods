@@ -35,7 +35,7 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
     private MutableNucleotideAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a.getAlleleEncodings());
 
-        if (a.getAlleleEncodings().length == 1) {
+        if (a.getAlleleEncodings().length != 1) {
             throw new IllegalArgumentException("MutableNucleotideAlignment: init: must only have one allele encoding.");
         }
 
