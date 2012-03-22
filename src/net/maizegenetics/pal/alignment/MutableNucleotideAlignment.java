@@ -53,6 +53,7 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
         initData();
         initTaxa(a.getIdGroup());
         loadAlleles(a);
+        System.arraycopy(a.getSNPIDs(), 0, mySNPIDs, 0, a.getSiteCount());
     }
 
     public static MutableNucleotideAlignment getInstance(Alignment a, int maxTaxa, int maxNumSites) {
@@ -430,6 +431,10 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
                 it = myVariableSites[a];
                 myVariableSites[a] = myVariableSites[b];
                 myVariableSites[b] = it;
+                
+                String st = mySNPIDs[a];
+                mySNPIDs[a] = mySNPIDs[b];
+                mySNPIDs[b] = st;
             }
         };
         IntComparator compPos = new IntComparator() {
