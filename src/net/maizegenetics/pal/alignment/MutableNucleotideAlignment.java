@@ -426,6 +426,7 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
 
     public void clean() {
         sortSitesByPhysicalPosition();
+        myIsDirty = false;
     }
 
     public boolean isDirty() {
@@ -443,7 +444,7 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
                 myLocusIndices[b] = it;
 
                 byte bt;
-                for (int t = 0; t < getSequenceCount(); t++) {
+                for (int t = 0, n = getSequenceCount(); t < n; t++) {
                     bt = getBase(t, a);
                     setBase(t, a, getBase(t, b));
                     setBase(t, b, bt);
