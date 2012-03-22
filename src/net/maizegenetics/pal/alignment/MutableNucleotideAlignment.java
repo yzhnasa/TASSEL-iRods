@@ -53,7 +53,9 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
         initData();
         initTaxa(a.getIdGroup());
         loadAlleles(a);
+        loadLoci(a);
         System.arraycopy(a.getSNPIDs(), 0, mySNPIDs, 0, a.getSiteCount());
+        System.arraycopy(a.getPhysicalPositions(), 0, myVariableSites, 0, a.getSiteCount());
     }
 
     public static MutableNucleotideAlignment getInstance(Alignment a, int maxTaxa, int maxNumSites) {
@@ -131,6 +133,24 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
 
     }
 
+    private void loadLoci(Alignment a) {
+
+        Locus[] loci = a.getLoci();
+        for (int i = 0; i < loci.length; i++) {
+            myLocusToLociIndex.add(loci[i]);
+        }
+
+        int[] offsets = a.getLociOffsets();
+        for (int i = 0; i < offsets.length - 1; i++) {
+            for (int j = offsets[i]; j < offsets[i + 1]; j++) {
+                myLocusIndices[j] = i;
+            }
+        }
+        for (int j = offsets[offsets.length - 1], n = a.getSiteCount(); j < n; j++) {
+            myLocusIndices[j] = offsets.length - 1;
+        }
+    }
+
     public byte getBase(int taxon, int site) {
         return myData[taxon][site];
     }
@@ -156,6 +176,7 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
     @Override
     public IdGroup getIdGroup() {
         Identifier[] ids = new Identifier[myIdentifiers.size()];
+        myIdentifiers.toArray(ids);
         return new SimpleIdGroup(ids);
     }
 
@@ -431,7 +452,7 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
                 it = myVariableSites[a];
                 myVariableSites[a] = myVariableSites[b];
                 myVariableSites[b] = it;
-                
+
                 String st = mySNPIDs[a];
                 mySNPIDs[a] = mySNPIDs[b];
                 mySNPIDs[b] = st;
@@ -473,15 +494,23 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
         if ((site < 0) || (site >= myNumSites)) {
             throw new IllegalArgumentException("MutableNucleotideAlignment: setLocusOfSite: site outside of range: " + site);
         }
-        for (int i = 0; i < myLocusToLociIndex.size(); i++) {
-            if (myLocusToLociIndex.get(i) == locus) {
-                myLocusIndices[site] = i;
-                return;
-            }
+        int index = getLocusIndex(locus);
+        if (index < 0) {
+            myLocusToLociIndex.add(locus);
+            myLocusIndices[site] = myLocusToLociIndex.size() - 1;
+        } else {
+            myLocusIndices[site] = index;
         }
-        myLocusToLociIndex.add(locus);
-        myLocusIndices[site] = myLocusToLociIndex.size() - 1;
 
         myIsDirty = true;
+    }
+
+    private int getLocusIndex(Locus locus) {
+        for (int i = 0; i < myLocusToLociIndex.size(); i++) {
+            if (myLocusToLociIndex.get(i) == locus) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
