@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 import net.maizegenetics.baseplugins.CombineDataSetsPlugin;
+import net.maizegenetics.baseplugins.ConvertAlignmentCoordinatesPlugin;
 import net.maizegenetics.baseplugins.ExportMultiplePlugin;
 import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
@@ -73,7 +74,7 @@ import org.apache.log4j.PropertyConfigurator;
  * @author terryc
  */
 public class TasselPipeline implements PluginListener {
-
+    
     private static final Logger myLogger = Logger.getLogger(TasselPipeline.class);
     private final TASSELMainFrame myMainFrame;
     private final Map<String, List> myForks = new LinkedHashMap<String, List>();
@@ -85,9 +86,9 @@ public class TasselPipeline implements PluginListener {
 
     /** Creates a new instance of TasselPipeline */
     public TasselPipeline(String args[], TASSELMainFrame frame) {
-
+        
         myMainFrame = frame;
-
+        
         java.util.Properties props = new java.util.Properties();
         props.setProperty("log4j.logger.net.maizegenetics", "INFO, stdout");
         props.setProperty("log4j.appender.stdout",
@@ -95,11 +96,11 @@ public class TasselPipeline implements PluginListener {
         props.setProperty("log4j.appender.stdout.layout",
                 "org.apache.log4j.TTCCLayout");
         PropertyConfigurator.configure(props);
-
+        
         try {
-
+            
             parseArgs(args);
-
+            
             if (myMainFrame != null) {
                 ProgressPanel progressPanel = myMainFrame.getProgressPanel();
                 if (progressPanel != null) {
@@ -111,18 +112,18 @@ public class TasselPipeline implements PluginListener {
                     }
                 }
             }
-
+            
             for (int i = 0; i < myThreads.size(); i++) {
                 ThreadedPluginListener current = (ThreadedPluginListener) myThreads.get(i);
                 current.start();
             }
-
+            
         } catch (Exception e) {
             System.exit(1);
         }
-
+        
     }
-
+    
     public static void main(String args[]) {
         if ((args.length >= 2) && (args[0].equalsIgnoreCase("-createXML"))) {
             String xmlFilename = args[1].trim();
@@ -141,25 +142,25 @@ public class TasselPipeline implements PluginListener {
             new TasselPipeline(args, null);
         }
     }
-
+    
     public void parseArgs(String[] args) {
-
+        
         if ((args.length >= 2) && (args[0].equalsIgnoreCase("-configFile"))) {
             String xmlFilename = args[1].trim();
             args = TasselPipelineXMLUtil.readXMLAsArgs(xmlFilename);
         }
-
+        
         int index = 0;
         while (index < args.length) {
-
+            
             try {
-
+                
                 String current = args[index++];
-
+                
                 if (!current.startsWith("-")) {
                     throw new IllegalArgumentException("TasselPipeline: parseArgs: expecting argument beginning with dash: " + current);
                 }
-
+                
                 if (current.startsWith("-runfork")) {
                     String key = current.replaceFirst("-runfork", "-fork");
                     List specifiedPipe = (List) myForks.get(key);
@@ -420,14 +421,14 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-ld")) {
                     getLinkageDisequilibriumPlugin();
                 } else if (current.equalsIgnoreCase("-ldPermNum")) {
-
+                    
                     LinkageDisequilibriumPlugin plugin = null;
                     try {
                         plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
                     }
-
+                    
                     String str = args[index++].trim();
                     int permNum = -1;
                     try {
@@ -438,18 +439,18 @@ public class TasselPipeline implements PluginListener {
                     if (permNum < 1) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Permutation size can't be less than 1.");
                     }
-
+                    
                     plugin.setPermutationNumber(permNum);
-
+                    
                 } else if (current.equalsIgnoreCase("-ldTestSite")) {
-
+                    
                     LinkageDisequilibriumPlugin plugin = null;
                     try {
                         plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
                     }
-
+                    
                     String str = args[index++].trim();
                     int testSite = -1;
                     try {
@@ -460,18 +461,18 @@ public class TasselPipeline implements PluginListener {
                     if (testSite < 1) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Test Site can't be less than 1.");
                     }
-
+                    
                     plugin.setTestSite(testSite);
-
+                    
                 } else if (current.equalsIgnoreCase("-ldWinSize")) {
-
+                    
                     LinkageDisequilibriumPlugin plugin = null;
                     try {
                         plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
                     }
-
+                    
                     String str = args[index++].trim();
                     int winSize = -1;
                     try {
@@ -482,18 +483,18 @@ public class TasselPipeline implements PluginListener {
                     if (winSize < 1) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Window Size can't be less than 1.");
                     }
-
+                    
                     plugin.setWinSize(winSize);
-
+                    
                 } else if (current.equalsIgnoreCase("-ldRapidAnalysis")) {
-
+                    
                     LinkageDisequilibriumPlugin plugin = null;
                     try {
                         plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
                     }
-
+                    
                     String temp = args[index++].trim();
                     boolean rapid = true;
                     if (temp.equalsIgnoreCase("false")) {
@@ -503,18 +504,18 @@ public class TasselPipeline implements PluginListener {
                     } else {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Rapid Analysis parameter must be true or false.");
                     }
-
+                    
                     plugin.setRapidAnalysis(rapid);
-
+                    
                 } else if (current.equalsIgnoreCase("-ldType")) {
-
+                    
                     LinkageDisequilibriumPlugin plugin = null;
                     try {
                         plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
                     }
-
+                    
                     String temp = args[index++].trim();
                     if (temp.equalsIgnoreCase("All")) {
                         plugin.setLDType(testDesign.All);
@@ -525,19 +526,19 @@ public class TasselPipeline implements PluginListener {
                     } else {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Type parameter must be All, SlidingWindow, or SiteByAll.");
                     }
-
+                    
                 } else if (current.equalsIgnoreCase("-ldd")) {
                     String outputType = args[index++].trim();
                     getLinkageDiseqDisplayPlugin(outputType);
                 } else if (current.equalsIgnoreCase("-ldplotsize")) {
-
+                    
                     LinkageDiseqDisplayPlugin plugin = null;
                     try {
                         plugin = (LinkageDiseqDisplayPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDiseqDisplay step defined: " + current);
                     }
-
+                    
                     String str = args[index++].trim();
                     int plotSize = -1;
                     try {
@@ -548,18 +549,18 @@ public class TasselPipeline implements PluginListener {
                     if (plotSize < 1) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Plot size can't be less than 1.");
                     }
-
+                    
                     plugin.setImageSize(plotSize, plotSize);
-
+                    
                 } else if (current.equalsIgnoreCase("-ldplotlabels")) {
-
+                    
                     LinkageDiseqDisplayPlugin plugin = null;
                     try {
                         plugin = (LinkageDiseqDisplayPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDiseqDisplay step defined: " + current);
                     }
-
+                    
                     String temp = args[index++].trim();
                     boolean ldPlotLabels = true;
                     if (temp.equalsIgnoreCase("false")) {
@@ -569,33 +570,33 @@ public class TasselPipeline implements PluginListener {
                     } else {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Plot labels parameter must be true or false.");
                     }
-
+                    
                     plugin.setShowLabels(ldPlotLabels);
-
+                    
                 } else if (current.equalsIgnoreCase("-o")) {
-
+                    
                     Plugin plugin = findLastPluginFromCurrentPipe(new Class[]{LinkageDiseqDisplayPlugin.class});
-
+                    
                     String temp = args[index++].trim();
-
+                    
                     if (plugin == null) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDiseqDisplay step defined: " + current + " " + temp);
                     } else if (plugin instanceof LinkageDiseqDisplayPlugin) {
                         ((LinkageDiseqDisplayPlugin) plugin).setSaveFile(new File(temp));
                     }
-
+                    
                 } else if (current.equalsIgnoreCase("-ck")) {
                     KinshipPlugin plugin = new KinshipPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-ckModelHets")) {
-
+                    
                     KinshipPlugin plugin = null;
                     try {
                         plugin = (KinshipPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No KinshipPlugin step defined: " + current);
                     }
-
+                    
                     String temp = args[index++].trim();
                     if (temp.equalsIgnoreCase("RelateHomo")) {
                         plugin.setRecognizeHets(true);
@@ -604,16 +605,16 @@ public class TasselPipeline implements PluginListener {
                     } else {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Create Kinship Type parameter must be RelateHomo or IndepState: " + temp);
                     }
-
+                    
                 } else if (current.equalsIgnoreCase("-ckRescale")) {
-
+                    
                     KinshipPlugin plugin = null;
                     try {
                         plugin = (KinshipPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No KinshipPlugin step defined: " + current);
                     }
-
+                    
                     String temp = args[index++].trim();
                     if (temp.equalsIgnoreCase("false")) {
                         plugin.setRescaleKinship(false);
@@ -622,7 +623,7 @@ public class TasselPipeline implements PluginListener {
                     } else {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Create Kinship Rescale parameter must be true or false: " + temp);
                     }
-
+                    
                 } else if (current.equalsIgnoreCase("-gs")) {
                     RidgeRegressionEmmaPlugin plugin = new RidgeRegressionEmmaPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
@@ -632,12 +633,12 @@ public class TasselPipeline implements PluginListener {
                     plugin.setSaveFiles(filenames);
                     integratePlugin(plugin, false);
                 } else if (current.equalsIgnoreCase("-exportType")) {
-
+                    
                     ExportMultiplePlugin plugin = (ExportMultiplePlugin) findLastPluginFromCurrentPipe(new Class[]{ExportMultiplePlugin.class});
                     if (plugin == null) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No Export step defined: " + current);
                     }
-
+                    
                     String type = args[index++].trim();
                     if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Flapjack.toString())) {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Flapjack);
@@ -650,7 +651,7 @@ public class TasselPipeline implements PluginListener {
                     } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Plink.toString())) {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Plink);
                     }
-
+                    
                 } else if (current.equalsIgnoreCase("-impute")) {
                     GenotypeImputationPlugin plugin = new GenotypeImputationPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
@@ -824,7 +825,7 @@ public class TasselPipeline implements PluginListener {
                     plugin.setStepSize(stepLen);
                 } else if (current.equalsIgnoreCase("-numericalGenoTransform")) {
                     NumericalGenotypePlugin plugin = new NumericalGenotypePlugin();
-
+                    
                     String temp = args[index++].trim();
                     if (temp.equalsIgnoreCase(NumericalGenotypePlugin.TRANSFORM_TYPE.colapse.toString())) {
                         plugin.setTransformType(NumericalGenotypePlugin.TRANSFORM_TYPE.colapse);
@@ -833,7 +834,7 @@ public class TasselPipeline implements PluginListener {
                     } else {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Not defined genotype transform type: " + temp);
                     }
-
+                    
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-includeTaxa")) {
                     FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
@@ -847,14 +848,14 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-includeTaxaInFile")) {
                     FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
                     String taxaListFile = args[index++].trim();
-
+                    
                     List taxa = new ArrayList();
                     BufferedReader br = null;
                     try {
                         br = Utils.getBufferedReader(taxaListFile);
                         String inputline = br.readLine();
                         Pattern sep = Pattern.compile("\\s+");
-
+                        
                         while (inputline != null) {
                             inputline = inputline.trim();
                             String[] parsedline = sep.split(inputline);
@@ -868,7 +869,7 @@ public class TasselPipeline implements PluginListener {
                     } finally {
                         br.close();
                     }
-
+                    
                     Identifier[] ids = new Identifier[taxa.size()];
                     for (int i = 0; i < taxa.size(); i++) {
                         ids[i] = new Identifier((String) taxa.get(i));
@@ -892,14 +893,14 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-includeSiteNamesInFile")) {
                     FilterSiteNamePlugin plugin = new FilterSiteNamePlugin(myMainFrame, false);
                     String siteNameListFile = args[index++].trim();
-
+                    
                     List siteNames = new ArrayList();
                     BufferedReader br = null;
                     try {
                         br = Utils.getBufferedReader(siteNameListFile);
                         String inputline = br.readLine();
                         Pattern sep = Pattern.compile("\\s+");
-
+                        
                         while (inputline != null) {
                             inputline = inputline.trim();
                             String[] parsedline = sep.split(inputline);
@@ -913,13 +914,18 @@ public class TasselPipeline implements PluginListener {
                     } finally {
                         br.close();
                     }
-
+                    
                     String[] siteNameArray = new String[siteNames.size()];
                     siteNameArray = (String[]) siteNames.toArray(siteNameArray);
                     plugin.setSiteNamesToKeep(siteNameArray);
                     integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-newCoordinates")) {
+                    ConvertAlignmentCoordinatesPlugin plugin = new ConvertAlignmentCoordinatesPlugin(myMainFrame);
+                    String mapFile = args[index++].trim();
+                    plugin.setMapFilename(mapFile);
+                    integratePlugin(plugin, true);
                 } else {
-
+                    
                     try {
                         Plugin plugin = null;
                         String possibleClassName = current.substring(1);
@@ -939,7 +945,7 @@ public class TasselPipeline implements PluginListener {
                                 // do nothing
                             }
                         }
-
+                        
                         if (plugin == null) {
                             try {
                                 Class possibleClass = Class.forName(possibleClassName);
@@ -954,7 +960,7 @@ public class TasselPipeline implements PluginListener {
                                 // do nothing
                             }
                         }
-
+                        
                         if (plugin != null) {
                             List pluginArgs = new ArrayList();
                             if (index == args.length) {
@@ -968,72 +974,72 @@ public class TasselPipeline implements PluginListener {
                                 }
                                 temp = args[index++].trim();
                             }
-
+                            
                             String[] result = new String[pluginArgs.size()];
                             result = (String[]) pluginArgs.toArray(result);
-
+                            
                             plugin.setParameters(result);
                             integratePlugin(plugin, true);
                         } else {
                             throw new IllegalArgumentException("TasselPipeline: parseArgs: Unknown parameter: " + current);
                         }
-
+                        
                     } catch (UnsupportedOperationException usoe) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: this plugin is not self-described: " + current);
                     } catch (Exception e) {
                         ExceptionUtils.logExceptionCauses(e, myLogger, Level.ERROR);
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Unknown parameter: " + current);
                     }
-
+                    
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 System.exit(1);
             }
-
+            
         }
-
+        
         if (myFirstPlugin != null) {
             //((AbstractPlugin) myFirstPlugin).trace(0);
             tracePipeline();
         } else {
             myLogger.warn("parseArgs: no arguments specified.");
         }
-
+        
     }
-
+    
     private void tracePipeline() {
-
+        
         for (int i = 0; i < myThreads.size(); i++) {
             Plugin current = (Plugin) ((ThreadedPluginListener) myThreads.get(i)).getPluginListener();
             ((AbstractPlugin) current).trace(0);
         }
-
+        
     }
-
+    
     public FileLoadPlugin loadFile(String filename, FileLoadPlugin.TasselFileType fileType) {
-
+        
         myLogger.info("loadFile: " + filename);
-
+        
         FileLoadPlugin plugin = new FileLoadPlugin(myMainFrame, false);
         if (fileType == null) {
             plugin.setTheFileType(FileLoadPlugin.TasselFileType.Unknown);
         } else {
             plugin.setTheFileType(fileType);
         }
-
+        
         plugin.setOpenFiles(new String[]{filename});
-
+        
         integratePlugin(plugin, true);
-
+        
         return plugin;
-
+        
     }
-
+    
     public TableDisplayPlugin getTableDisplayPlugin(String filename, String flag) {
-
+        
         TableDisplayPlugin plugin = null;
-
+        
         if (flag.equalsIgnoreCase("-td_gui")) {
             plugin = new TableDisplayPlugin(myMainFrame, true);
             integratePlugin(plugin, false);
@@ -1050,25 +1056,25 @@ public class TasselPipeline implements PluginListener {
             plugin.setSaveFile(new File(filename));
             integratePlugin(plugin, false);
         }
-
+        
         return plugin;
-
+        
     }
-
+    
     public LinkageDisequilibriumPlugin getLinkageDisequilibriumPlugin() {
-
+        
         LinkageDisequilibriumPlugin plugin = new LinkageDisequilibriumPlugin(myMainFrame, false);
-
+        
         integratePlugin(plugin, true);
-
+        
         return plugin;
-
+        
     }
-
+    
     public LinkageDiseqDisplayPlugin getLinkageDiseqDisplayPlugin(String type) {
-
+        
         LinkageDiseqDisplayPlugin plugin = new LinkageDiseqDisplayPlugin(myMainFrame, true);
-
+        
         if (type.equalsIgnoreCase("gui")) {
             plugin = new LinkageDiseqDisplayPlugin(null, true);
             plugin.setBlockSchematic(false);
@@ -1079,7 +1085,7 @@ public class TasselPipeline implements PluginListener {
             plugin.setBlockSchematic(false);
             plugin.setLowerCorner(LinkageDisequilibriumComponent.P_VALUE);
             plugin.setUpperCorner(LinkageDisequilibriumComponent.RSQUARE);
-
+            
             if (type.equalsIgnoreCase("png")) {
                 plugin.setOutformat(AbstractDisplayPlugin.Outformat.png);
             } else if (type.equalsIgnoreCase("gif")) {
@@ -1094,49 +1100,49 @@ public class TasselPipeline implements PluginListener {
                 throw new IllegalArgumentException("TasselPipeline: getLinkageDiseqDisplayPlugin: unknown output type: " + type);
             }
         }
-
+        
         integratePlugin(plugin, false);
-
+        
         return plugin;
-
+        
     }
-
+    
     private void integratePlugin(Plugin plugin, boolean displayDataTree) {
-
+        
         if (myFirstPlugin == null) {
             myFirstPlugin = plugin;
         }
-
+        
         if (displayDataTree) {
             plugin.addListener(this);
         }
-
+        
         if (myCurrentPipe == null) {
             myCurrentPipe = new ArrayList();
-
+            
         }
-
+        
         if (myCurrentPipe.size() == 0) {
             myCurrentPipe.add(plugin);
         } else {
             plugin.receiveInput(((Plugin) myCurrentPipe.get(myCurrentPipe.size() - 1)));
             myCurrentPipe.add(plugin);
         }
-
+        
     }
-
+    
     private Plugin findLastPluginFromAll(Class[] types) {
-
+        
         if ((myCurrentPipe != null) && (myCurrentPipe.size() != 0)) {
             for (int i = myCurrentPipe.size() - 1; i >= 0; i--) {
                 Plugin current = (Plugin) myCurrentPipe.get(i);
                 if (matchType(types, current)) {
                     return current;
                 }
-
+                
             }
         }
-
+        
         List keys = new ArrayList(myForks.keySet());
         for (int i = keys.size() - 1; i >= 0; i--) {
             List currentPipe = (List) myForks.get(keys.get(i));
@@ -1145,41 +1151,41 @@ public class TasselPipeline implements PluginListener {
                 if (matchType(types, current)) {
                     return current;
                 }
-
+                
             }
         }
-
+        
         return null;
-
+        
     }
-
+    
     private Plugin findLastPluginFromCurrentPipe(Class[] types) {
-
+        
         if ((myCurrentPipe != null) && (myCurrentPipe.size() != 0)) {
             for (int i = myCurrentPipe.size() - 1; i >= 0; i--) {
                 Plugin current = (Plugin) myCurrentPipe.get(i);
                 if (matchType(types, current)) {
                     return current;
                 }
-
+                
             }
         }
-
+        
         return null;
-
+        
     }
-
+    
     private boolean matchType(Class[] types, Object test) {
-
+        
         for (int i = 0; i < types.length; i++) {
             if (types[i].isInstance(test)) {
                 return true;
             }
-
+            
         }
-
+        
         return false;
-
+        
     }
 
     /**
@@ -1192,7 +1198,7 @@ public class TasselPipeline implements PluginListener {
         if ((tds != null) && (tds.getSize() != 0) && (myMainFrame != null)) {
             myMainFrame.getDataTreePanel().addDataSet(tds, DataTreePanel.NODE_TYPE_DEFAULT);
         }
-
+        
     }
 
     /**
@@ -1201,9 +1207,9 @@ public class TasselPipeline implements PluginListener {
      * @param event event
      */
     public void progress(PluginEvent event) {
-
+        
         if (myMainFrame == null) {
-
+            
             DataSet ds = (DataSet) event.getSource();
             if (ds != null) {
                 List percentage = ds.getDataOfType(Integer.class);
@@ -1212,7 +1218,7 @@ public class TasselPipeline implements PluginListener {
                 if (lastValue == null) {
                     lastValue = new Integer(0);
                 }
-
+                
                 if (percentage.size() > 0) {
                     Datum datum = (Datum) percentage.get(0);
                     Integer percent = (Integer) datum.getData();
@@ -1223,8 +1229,8 @@ public class TasselPipeline implements PluginListener {
                     }
                 }
             }
-
+            
         }
-
+        
     }
 }
