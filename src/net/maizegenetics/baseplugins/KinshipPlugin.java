@@ -59,6 +59,7 @@ public class KinshipPlugin extends AbstractPlugin {
                 try {
 
                     if (current.getData() instanceof Alignment) {
+                        //this section implements additional options for calculating kinship
                         Alignment theAlignment = (Alignment) current.getData();
                         kin = new Kinship(theAlignment);
 
@@ -118,6 +119,5 @@ public class KinshipPlugin extends AbstractPlugin {
     public String getToolTipText() {
         return "Calculate kinship from marker data";
     }
-
 
 }
