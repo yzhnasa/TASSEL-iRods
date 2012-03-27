@@ -156,7 +156,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x42, "?"); // +G
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x43, "?"); // +T
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x44, "+"); // ++
-        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x45, "?"); // +-
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x45, "0"); // +-
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x4E, "?"); // +Z
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x4F, "?"); // +N
 
@@ -164,7 +164,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x51, "?"); // -C
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x52, "?"); // -G
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x53, "?"); // -T
-        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x54, "?"); // -+
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x54, "0"); // -+
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x55, "-"); // --
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x5E, "?"); // -Z
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x5F, "?"); // -N
