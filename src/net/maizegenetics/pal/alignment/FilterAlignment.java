@@ -915,7 +915,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     @Override
     public boolean isSBitFriendly() {
-        if (!myIsTaxaFilter && (myBaseAlignment instanceof SBitAlignment)) {
+        if (!myIsTaxaFilter && myBaseAlignment.isSBitFriendly()) {
             return true;
         } else {
             return false;
@@ -924,7 +924,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     @Override
     public boolean isTBitFriendly() {
-        if (!myIsSiteFilter && !myIsSiteFilterByRange && (myBaseAlignment instanceof TBitAlignment)) {
+        if (!myIsSiteFilter && !myIsSiteFilterByRange && myBaseAlignment.isTBitFriendly()) {
             return true;
         } else {
             return false;
