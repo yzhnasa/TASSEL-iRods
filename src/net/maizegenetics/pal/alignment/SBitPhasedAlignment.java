@@ -18,7 +18,6 @@ public class SBitPhasedAlignment extends AbstractAlignment {
     private OpenBitSet[][] myData0;
     private OpenBitSet[][] myData1;
     private int myNumDataRows;
-    private boolean myIsDirty = false;
 
     protected SBitPhasedAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         super(a, maxNumAlleles, retainRareAlleles);
@@ -281,5 +280,10 @@ public class SBitPhasedAlignment extends AbstractAlignment {
     @Override
     public boolean isTBitFriendly() {
         return false;
+    }
+    
+    @Override
+    public int getTotalNumAlleles() {
+        return myNumDataRows;
     }
 }

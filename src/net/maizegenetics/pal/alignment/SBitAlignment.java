@@ -688,4 +688,9 @@ public class SBitAlignment extends AbstractAlignment {
     public boolean isTBitFriendly() {
         return false;
     }
+    
+    @Override
+    public int getTotalNumAlleles() {
+        return myNumDataRows;
+    }
 }

@@ -33,7 +33,7 @@ public class BitNeighborFinder {
         this.hdTargetID = hdTargetID;
         this.ldAlign = ldAlign;
         initHDTargets();
-        ProjectionAlignment pa=new ProjectionAlignment(hdAlign,ldAlign.getIdGroup(),2,false);
+        ProjectionAlignment pa=new ProjectionAlignment(hdAlign,ldAlign.getIdGroup());
         long prevTime = System.currentTimeMillis();
         for (int i = 0; i < ldAlign.getSequenceCount(); i++) {
             ArrayList<Integer>[] result=findHDTaxa(i);

@@ -79,6 +79,11 @@ abstract public class AbstractAlignment implements Alignment {
     public AbstractAlignment(String[][] alleleStates) {
         init(null, null, null, alleleStates, null, 1, null, new Locus[]{new Locus("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
     }
+    
+    public AbstractAlignment(IdGroup idGroup, String[][] alleleStates) {
+        myIdGroup = idGroup;
+        init(null, null, null, alleleStates, null, 1, null, new Locus[]{new Locus("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
+    }
 
     private void init(IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, String[] snpIDs, Locus[] loci, int[] lociOffsets, boolean retainRareAlleles) {
 
@@ -718,7 +723,7 @@ abstract public class AbstractAlignment implements Alignment {
     public int getMaxNumAlleles() {
         return myMaxNumAlleles;
     }
-
+    
     @Override
     public int getTotalGametesNotMissing(int site) {
 
@@ -957,5 +962,10 @@ abstract public class AbstractAlignment implements Alignment {
 
         return result;
 
+    }
+    
+    @Override
+    public int getTotalNumAlleles() {
+        throw new UnsupportedOperationException("Not supported.");
     }
 }

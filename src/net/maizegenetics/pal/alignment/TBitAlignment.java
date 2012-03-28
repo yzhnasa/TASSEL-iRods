@@ -310,4 +310,9 @@ public class TBitAlignment extends AbstractAlignment {
     public boolean isTBitFriendly() {
         return true;
     }
+    
+    @Override
+    public int getTotalNumAlleles() {
+        return myNumDataRows;
+    }
 }

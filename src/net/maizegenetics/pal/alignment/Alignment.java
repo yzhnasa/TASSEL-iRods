@@ -692,6 +692,14 @@ public interface Alignment extends Serializable {
      * @return max number of alleles.
      */
     public int getMaxNumAlleles();
+    
+    /**
+     * Returns max number of alleles retained by this alignment
+     * including rare (if retained) and unknown (if phased).
+     * 
+     * @return total number alleles
+     */
+    public int getTotalNumAlleles();
 
     /**
      * Returns total number of non-missing allele values for given site.
