@@ -70,12 +70,8 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
         return getInstance(a, a.getSequenceCount(), a.getSiteCount());
     }
 
-    private MutableNucleotideAlignment(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites, String[][] alleleStates) {
-        super(alleleStates);
-
-        if (alleleStates.length == 1) {
-            throw new IllegalArgumentException("MutableNucleotideAlignment: init: must only have one allele encoding.");
-        }
+    private MutableNucleotideAlignment(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
+        super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
 
         if (initNumSites > maxNumSites) {
             throw new IllegalArgumentException("MutableNucleotideAlignment: init: initial number of sites can't be more than max number of sites.");
@@ -93,12 +89,12 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
         initTaxa(idGroup);
     }
 
-    public static MutableNucleotideAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites, String[][] alleleStates) {
-        return new MutableNucleotideAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites, alleleStates);
+    public static MutableNucleotideAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
+        return new MutableNucleotideAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
 
     public static MutableNucleotideAlignment getInstance(IdGroup idGroup, int initNumSites) {
-        return new MutableNucleotideAlignment(idGroup, initNumSites, idGroup.getIdCount(), initNumSites, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
+        return new MutableNucleotideAlignment(idGroup, initNumSites, idGroup.getIdCount(), initNumSites);
     }
 
     private void initData() {
@@ -340,6 +336,16 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
     @Override
     public int getMaxNumAlleles() {
         throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    public String getBaseAsString(int taxon, int site) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
+    }
+
+    @Override
+    public String getDiploidAsString(int site, byte value) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
 
     // Mutable Methods...
