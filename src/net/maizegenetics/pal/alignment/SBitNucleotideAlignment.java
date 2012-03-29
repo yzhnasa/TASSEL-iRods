@@ -23,10 +23,22 @@ public class SBitNucleotideAlignment extends SBitAlignment {
     public String getBaseAsString(int taxon, int site) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
     }
-    
+
     @Override
     public String getDiploidAsString(int site, byte value) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
+    }
+
+    @Override
+    public boolean isIndel(int site) {
+        int[][] alleles = getAllelesSortedByFrequency(site);
+        int numAlleles = Math.min(alleles[0].length, 2);
+        for (int i = 0; i < numAlleles; i++) {
+            if ((alleles[0][i] == 4) || (alleles[0][i] == 5)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
