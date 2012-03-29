@@ -24,14 +24,14 @@ public class EdTests {
     String hapFileAGP1="/Users/edbuckler/SolexaAnal/HapMapV2/HapMapV2RefgenV2_NAMfounders_teosinte_20110927_chr10.hmp.txt";
     String hapFileAGP2="/Users/edbuckler/SolexaAnal/GBS/build111217/imputed/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
     TBitAlignment gbsMap=null;
-    TBitAlignment hapMap=null;
+    SBitAlignment hapMap=null;
 
     
 
     public EdTests() {
-//        convertFilesToFast();
+//        convertFilesToFast(false, true);
         gbsMap=(TBitAlignment)readGZOfSBit(gbsFile, false);
-        hapMap=(TBitAlignment)readGZOfSBit(hapFileAGP1, false);
+        hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
 //        for(int i=0; i<hapMap.getSequenceCount(); i++) {
 //            System.out.print("\""+hapMap.getTaxaName(i)+"\",");
 //        }
@@ -44,6 +44,23 @@ public class EdTests {
        //I am using this testHD as the taxa names from hapMap do not match gbsMap.  
        //We will probably need to load a TreeMap to redirect between the two.
        BitNeighborFinder bnf=new BitNeighborFinder(testHD, gbsMap, hapMap);
+       Alignment pa=bnf.getPa();
+       compareIdentity("B73", hapMap, "Z001E0128", pa);
+       compareIdentity("B73", hapMap, "Z001E0101", pa);
+       compareIdentity("B97", hapMap, "Z001E0101", pa);
+       compareIdentity("B73", hapMap, "M0236", pa);
+       compareIdentity("B73", hapMap, "W22", pa);
+        System.out.println("Within HapMap");
+        compareIdentity("B73", hapMap, "B73", hapMap);
+       compareIdentity("B73", hapMap, "W22", hapMap);
+       compareIdentity("B73", hapMap, "MO17", hapMap);
+       compareIdentity("B73", hapMap, "B97", hapMap);
+       System.out.println("Within PA");
+       compareIdentity("B73(PI550473)", pa, "Z001E0128", pa);
+       compareIdentity("B73(PI550473)", pa, "Z001E0101", pa);
+       compareIdentity("B97", pa, "Z001E0101", pa);
+       compareIdentity("B73(PI550473)", pa, "M0236", pa);
+       compareIdentity("B73(PI550473)", pa, "W22", pa);
        
         
         
@@ -53,15 +70,45 @@ public class EdTests {
 //        hapMap=hapMap2;
 //        compareSitesInFiles();
     }
+    
+    private void compareIdentity(String taxon, Alignment hapMap, String taxon2, Alignment projAlign) {
+        int t1=hapMap.getIdGroup().whichIdNumber(taxon);
+        if(hapMap instanceof ProjectionAlignment) {
+            System.out.println(taxon+">"+((ProjectionAlignment)hapMap).getCompositionOfTaxon(t1));
+        }
+        int t2=projAlign.getIdGroup().whichIdNumber(taxon2);
+        if(projAlign instanceof ProjectionAlignment) {
+            System.out.println(taxon2+">"+((ProjectionAlignment)projAlign).getCompositionOfTaxon(t2));
+        }
+        int same=0, diff=0;
+        for (int i = 0; i < hapMap.getSiteCount(); i++) {
+            byte b1=hapMap.getBase(t1, i);
+            byte b2=projAlign.getBase(t2, i);
+            if(b1==Alignment.UNKNOWN_DIPLOID_ALLELE) continue;
+            if(b2==Alignment.UNKNOWN_DIPLOID_ALLELE) continue;
+            if(b1==b2) {same++;}
+            else {diff++;
+//                System.out.println(hapMap.getBaseAsString(t1, i)+":"+projAlign.getBaseAsString(t2, i));
+            }
+//            if(i%100000==0) System.out.printf("%d %s  %s  %d %d %g %n",i, taxon, taxon2, same, diff, ((double)same/(double)(same+diff)));
+        }
+        System.out.printf("%s  %s  %d %d %g %n",taxon, taxon2, same, diff, ((double)same/(double)(same+diff)));
+    }
   
     
-    private void convertFilesToFast() {
+    private void convertFilesToFast(boolean gbsSbit, boolean hapSbit) {
         SBitAlignment gbs=(SBitAlignment)ImportUtils.readFromHapmap(gbsFile, (ProgressListener)null);
-        TBitAlignment gbsOut=TBitAlignment.getInstance(gbs);
-        writeAlignmentToSerialGZ(gbsOut, gbsFile);
+        if(gbsSbit) {writeAlignmentToSerialGZ(gbs, gbsFile);}
+        else{ 
+            TBitAlignment gbsOut=TBitAlignment.getInstance(gbs);
+            writeAlignmentToSerialGZ(gbsOut, gbsFile);
+        }
         SBitAlignment hapmapIn=(SBitAlignment)ImportUtils.readFromHapmap(hapFileAGP1, (ProgressListener)null);
-        TBitAlignment hapmapOut=TBitAlignment.getInstance(hapmapIn);
-        writeAlignmentToSerialGZ(hapmapOut, hapFileAGP1);
+        if(hapSbit) {writeAlignmentToSerialGZ(hapmapIn, hapFileAGP1);}
+        else {
+            TBitAlignment hapmapOut=TBitAlignment.getInstance(hapmapIn);
+            writeAlignmentToSerialGZ(hapmapOut, hapFileAGP1);
+        }
     }
     
     private void compareSitesInFiles() {

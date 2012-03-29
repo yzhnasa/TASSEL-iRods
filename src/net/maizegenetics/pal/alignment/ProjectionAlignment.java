@@ -54,11 +54,21 @@ public class ProjectionAlignment extends AbstractAlignment {
         int taxon = getIdGroup().whichIdNumber(taxa);
         setCompositionOfTaxon(taxon, posBreaks, hdTaxa);
     }
+    
+    public String getCompositionOfTaxon(int taxon) {
+        StringBuilder sb=new StringBuilder();
+        for (int i = 0; i < myPosBreaks[taxon].length; i++) {
+            sb.append(myPosBreaks[taxon][i]+":");
+            sb.append(mySiteBreaks[taxon][i]+":");
+            sb.append(myHDTaxa[taxon][i]+"\t");
+        }
+        return sb.toString();
+    }
 
     private int translateTaxon(int taxon, int site) {
         int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
         if (b < 0) {
-            b = -(b + 1);
+            b = -(b + 2);
         }
         return myHDTaxa[taxon][b];
     }

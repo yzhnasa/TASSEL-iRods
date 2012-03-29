@@ -27,13 +27,14 @@ public class BitNeighborFinder {
     int minSites=256;
     int maxWindow=2048/64;
     double minIdentityDiff=0.01;
+    ProjectionAlignment pa;
     
 
     public BitNeighborFinder(IdGroup hdTargetID, TBitAlignment ldAlign, Alignment hdAlign) {
         this.hdTargetID = hdTargetID;
         this.ldAlign = ldAlign;
         initHDTargets();
-        ProjectionAlignment pa=new ProjectionAlignment(hdAlign,ldAlign.getIdGroup());
+        pa=new ProjectionAlignment(hdAlign,ldAlign.getIdGroup());
         long prevTime = System.currentTimeMillis();
         for (int i = 0; i < ldAlign.getSequenceCount(); i++) {
             ArrayList<Integer>[] result=findHDTaxa(i);
@@ -50,6 +51,12 @@ public class BitNeighborFinder {
         System.out.println("Time to load alleles: " + ((currentTime - prevTime) / 1000));
         
     }
+
+    public ProjectionAlignment getPa() {
+        return pa;
+    }
+    
+    
     
     private String reportTaxaMakeUp(ArrayList<Integer>[] data) {
         StringBuilder s=new StringBuilder();
@@ -115,7 +122,7 @@ public class BitNeighborFinder {
 //            System.out.printf("For %s section %d window %d best hit %d %d %s \n", ldAlign.getTaxaName(taxa), x, window,
 //                    best, ldAlignTN, ldAlign.getTaxaName(ldAlignTN));
 //            System.out.print(" "+ldAlign.getTaxaName(ldAlignTN));
-            if(x==0) {posBreaks.add(ldAlign.getPositionInLocus(x*64)); hdTaxa.add(best);}
+            if(x==0) {posBreaks.add(0); hdTaxa.add(best);}
             else if(hdTaxa.get(hdTaxa.size()-1)!=best) {posBreaks.add(ldAlign.getPositionInLocus(x*64)); hdTaxa.add(best);}
         }
 //        System.out.println("");
