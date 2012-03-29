@@ -27,5 +27,17 @@ public class TBitNucleotideAlignment extends TBitAlignment {
     public String getDiploidAsString(int site, byte value) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
+    
+    @Override
+    public boolean isIndel(int site) {
+        int[][] alleles = getAllelesSortedByFrequency(site);
+        int numAlleles = Math.min(alleles[0].length, 2);
+        for (int i = 0; i < numAlleles; i++) {
+            if ((alleles[0][i] == 4) || (alleles[0][i] == 5)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
