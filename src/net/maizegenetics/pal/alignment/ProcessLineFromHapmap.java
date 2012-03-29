@@ -26,7 +26,7 @@ public class ProcessLineFromHapmap implements Runnable {
     }
 
     public static ProcessLineFromHapmap getInstance(byte[][] data, String[] tokens, int site, int numTaxa, int lineInFile) {
-        if (myNumInstances <= 25) {
+        if (myNumInstances <= 35) {
             return new ProcessLineFromHapmap(data, tokens, site, numTaxa, lineInFile);
         } else {
             ProcessLineFromHapmap result;
@@ -62,6 +62,8 @@ public class ProcessLineFromHapmap implements Runnable {
                 myData[i][mySite] = NucleotideAlignmentConstants.getNucleotideDiploidByte(myTokens[ImportUtils.NUM_HAPMAP_NON_TAXA_HEADERS + i]);
             } catch (IndexOutOfBoundsException ex) {
                 throw new IllegalStateException("Number of Taxa: " + myNumTaxa + " does not match number of values at line in file: " + myLineInFile + " site: " + mySite);
+            } catch (Exception e) {
+                throw new IllegalStateException("Line in File: " + myLineInFile, e);
             }
         }
 

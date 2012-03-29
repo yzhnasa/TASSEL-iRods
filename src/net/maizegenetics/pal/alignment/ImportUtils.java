@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -147,7 +148,7 @@ public class ImportUtils {
 
     }
 
-    public static Alignment readFromHapmap(String filename, ProgressListener listener) {
+    public static Alignment readFromHapmap(final String filename, ProgressListener listener) {
 
         int minPosition = Integer.MAX_VALUE;
         String currLocus = null;
@@ -179,7 +180,10 @@ public class ImportUtils {
 
         BufferedReader fileIn = null;
         try {
-            ExecutorService pool = Executors.newFixedThreadPool(20);
+            int numThreads = 30;
+            int currentFuture = 0;
+            Future[] futures = new Future[numThreads];
+            ExecutorService pool = Executors.newFixedThreadPool(numThreads);
 
             fileIn = Utils.getBufferedReader(filename, 1000000);
             String[] header = WHITESPACE_PATTERN.split(fileIn.readLine());
@@ -218,7 +222,13 @@ public class ImportUtils {
                     throw new IllegalStateException("Sites are not properly sorted for chromosome: " + currLocus + " at " + position + " and " + prevPosition);
                 }
 
-                pool.execute(ProcessLineFromHapmap.getInstance(theData, tokens, site, numTaxa, lineInFile));
+                futures[currentFuture++] = pool.submit(ProcessLineFromHapmap.getInstance(theData, tokens, site, numTaxa, lineInFile));
+                if (currentFuture == numThreads) {
+                    for (int i = 0; i < numThreads; i++) {
+                        futures[i].get();
+                    }
+                    currentFuture = 0;
+                }
 
                 physicalPositions[site] = position;
                 prevPosition = position;
