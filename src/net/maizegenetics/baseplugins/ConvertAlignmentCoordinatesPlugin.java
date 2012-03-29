@@ -102,6 +102,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             // Ignore head, then get first line.
             String inputline = br.readLine();
             inputline = br.readLine();
+            int numChanges = 0;
             while (inputline != null) {
 
                 count++;
@@ -119,35 +120,35 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                     String locus2 = getLocusName(parsedline[3]);
                     int pos2 = Integer.valueOf(parsedline[4]);
 
-                    //Locus locusObj = getLocusObj(locus1);
-                    //int site = alignment.getSiteOfPhysicalPosition(pos1, locusObj);
-                    int site = getSiteOfSNPID(snpID, snpIDs);
-                    if (site < 0) {
-                        myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " not found in alignment.");
-                        continue;
-                    }
+                    if ((!locus1.equals(locus2)) || (pos1 != pos2)) {
 
-                    if ((pos1 != alignment.getPositionInLocus(site)) || (!locus1.equals(alignment.getLocus(site).getName()))) {
-                        myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " position and locus do not match alignment.");
-                        myLogger.warn("Alignment SNP ID: " + alignment.getSNPID(site) + "  position: " + alignment.getPositionInLocus(site) + "  locus: " + alignment.getLocusName(site));
-                        continue;
-                    }
+                        int site = getSiteOfSNPID(snpID, snpIDs);
+                        if (site < 0) {
+                            //myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " not found in alignment.");
+                            continue;
+                        }
 
-                    //String snpIDFromAlignment = alignment.getSNPID(site);
-                    //if (!snpIDFromAlignment.equals(snpID)) {
-                    //    myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " SNP ID doesn't match: " + snpIDFromAlignment);
-                    //    continue;
-                    //}
+                        if ((pos1 != alignment.getPositionInLocus(site)) || (!locus1.equals(alignment.getLocus(site).getName()))) {
+                            myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " position and locus do not match alignment.");
+                            myLogger.warn("Alignment SNP ID: " + alignment.getSNPID(site) + "  position: " + alignment.getPositionInLocus(site) + "  locus: " + alignment.getLocusName(site));
+                            continue;
+                        }
 
-                    alignment.setPositionOfSite(site, pos2);
+                        numChanges++;
 
-                    if (!locus1.equals(locus2)) {
-                        alignment.setLocusOfSite(site, getLocusObj(locus2));
+                        alignment.setPositionOfSite(site, pos2);
+
+                        if (!locus1.equals(locus2)) {
+                            alignment.setLocusOfSite(site, getLocusObj(locus2));
+                        }
+
                     }
 
                 }
 
             }
+
+            myLogger.info("Number Changes: " + numChanges);
 
             alignment.clean();
 
