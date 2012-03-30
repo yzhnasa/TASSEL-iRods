@@ -67,8 +67,8 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     private int translateTaxon(int taxon, int site) {
         int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
-        if (b < 0) {
-            b = -(b + 2);
+        if (b<0) {
+            b=-(b+2);  //this will not work if it does not start with zero.
         }
         return myHDTaxa[taxon][b];
     }

@@ -19,7 +19,8 @@ import net.maizegenetics.util.Utils;
  */
 public class EdTests {
  //   String gbsFile="/Users/edbuckler/SolexaAnal/GBS/build111217/imputed/allZea20111217_scv10mF8maf002_mgs_E1pLD5.imp95_1024.c10.hmp.txt";
-    String gbsFile="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.imp95_1024.c10.hmp.txt";
+  //  String gbsFile="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.imp95_1024.c10.hmp.txt";
+    String gbsFile="/Users/edbuckler/SolexaAnal/GBS/build20120110/bpec/Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
     //String hapFileAGP1="/Users/edbuckler/SolexaAnal/GBS/build111217/imputed/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
     String hapFileAGP1="/Users/edbuckler/SolexaAnal/HapMapV2/HapMapV2RefgenV2_NAMfounders_teosinte_20110927_chr10.hmp.txt";
     String hapFileAGP2="/Users/edbuckler/SolexaAnal/GBS/build111217/imputed/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
@@ -34,7 +35,8 @@ public class EdTests {
 //        printTaxaNames(hapMapOld);
 //        System.exit(0);
         
-//        convertFilesToFast(false, true);
+ //       convertFilesToFast(false, true);
+        
         gbsMap=(TBitAlignment)readGZOfSBit(gbsFile, false);
         hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
         combineAlignments(hapMap, gbsMap);
@@ -45,6 +47,7 @@ public class EdTests {
         compareIdentity("CML277", hapMap, "CML277", gbsMap, true);
         compareIdentity("CML277", hapMap, "B73", gbsMap, true);
         compareIdentity("TIL08", hapMap, "TIL08", gbsMap, true);
+        System.exit(0);
         System.out.println("GBS Map Taxa");
         printTaxaNames(gbsMap);
         System.out.println("HapMap Taxa");
@@ -89,13 +92,64 @@ public class EdTests {
     }
     
     public Alignment combineAlignments(Alignment hapMap, Alignment gbsAlign) {
-        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(gbsAlign);
+        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(gbsAlign,
+                hapMap.getSequenceCount()+gbsAlign.getSequenceCount(), gbsAlign.getSiteCount());
+        System.out.println("MNA Created");
         int orgTaxaNum=mna.getSequenceCount();
         for (int i = 0; i < hapMap.getSequenceCount(); i++) {
             Identifier id=hapMap.getIdGroup().getIdentifier(i);
             mna.addTaxon(id);  
         }
-        
+        mna.clean();
+        System.out.println("MNA taxa added and cleaned");
+        int mappingSites=0, sameStateSites=0;
+        for (int i = 0; i < hapMap.getSiteCount(); i++) {
+            int pos=hapMap.getPositionInLocus(i);
+            int site=mna.getSiteOfPhysicalPosition(pos, null);
+            if(site<0) continue;
+            mappingSites++;
+            if(hapMap.getMajorAllele(i)!=mna.getMajorAllele(site)) continue;
+            if(hapMap.getMinorAllele(i)!=mna.getMinorAllele(site)) continue;
+            sameStateSites++;
+            for (int j = 0; j < hapMap.getSequenceCount(); j++) {
+                mna.setBase(orgTaxaNum+j, site, hapMap.getBase(j, i));
+            }
+        }
+        System.out.printf("Mapping Sites=%d SameStates=%d %n", mappingSites, sameStateSites);
+        System.out.println("MNA taxa bases added");
+        int[] siteComp=new int[mna.getSiteCount()];
+        int[] siteErrors=new int[mna.getSiteCount()];
+        int[] taxaComp=new int[mna.getSiteCount()];
+        int[] taxaErrors=new int[mna.getSiteCount()];
+        for (int j = 0; j < hapMap.getSequenceCount(); j++) {
+            int tgbs=gbsAlign.getIdGroup().whichIdNumber(hapMap.getTaxaName(j));
+            if(tgbs<0) continue;
+            System.out.println(mna.getTaxaName(tgbs)+":"+mna.getTaxaName(j+orgTaxaNum));
+            for (int s = 0; s < mna.getSiteCount(); s++) {
+                byte hb=mna.getBase(j+orgTaxaNum, s);
+                byte gb=mna.getBase(tgbs, s);
+                if(((hb >>> 4) & 0xf)!=(hb & 0xf)) continue;  //heterozgyous test
+                if(((gb >>> 4) & 0xf)!=(gb & 0xf)) continue;
+                if(hb==Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                    mna.setBase(j, s, gb);
+                }  else if(gb!=Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                    siteComp[s]++;
+                    taxaComp[j]++;
+                    if(hb!=gb) {
+                        siteErrors[s]++;
+                        taxaErrors[j]++;
+  //                      System.out.println(NucleotideAlignmentConstants.getNucleotideIUPAC(hb)+":"+NucleotideAlignmentConstants.getNucleotideIUPAC(gb));
+                    }
+                }
+            }
+        }
+        System.out.println("Merged when possible");
+        for (int j = 0; j < hapMap.getSequenceCount(); j++) {
+            System.out.printf("s%s %d %d %n",hapMap.getTaxaName(j),taxaComp[j], taxaErrors[j]);
+        }
+//        for (int i = 0; i < siteComp.length; i++) {
+//            System.out.printf("s%d %d %d %n",i,siteComp[i], siteErrors[i]);
+//        }
         return null;
     }
     
