@@ -23,15 +23,32 @@ public class EdTests {
     //String hapFileAGP1="/Users/edbuckler/SolexaAnal/GBS/build111217/imputed/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
     String hapFileAGP1="/Users/edbuckler/SolexaAnal/HapMapV2/HapMapV2RefgenV2_NAMfounders_teosinte_20110927_chr10.hmp.txt";
     String hapFileAGP2="/Users/edbuckler/SolexaAnal/GBS/build111217/imputed/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
+    String hapFileAGP3="/Users/edbuckler/SolexaAnal/HapMapV2/jermpipe/SNPS201010/fusion/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
     TBitAlignment gbsMap=null;
     SBitAlignment hapMap=null;
 
     
 
     public EdTests() {
+//        SBitAlignment hapMapOld=(SBitAlignment)ImportUtils.readFromHapmap(hapFileAGP3, (ProgressListener)null);
+//        printTaxaNames(hapMapOld);
+//        System.exit(0);
+        
 //        convertFilesToFast(false, true);
         gbsMap=(TBitAlignment)readGZOfSBit(gbsFile, false);
         hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
+        combineAlignments(hapMap, gbsMap);
+        compareIdentity("B73", hapMap, "B73", gbsMap, true);
+        compareIdentity("B73", hapMap, "B97", gbsMap, true);
+        compareIdentity("B97", hapMap, "B97", gbsMap, true);
+        compareIdentity("B97", hapMap, "B73", gbsMap, true);
+        compareIdentity("CML277", hapMap, "CML277", gbsMap, true);
+        compareIdentity("CML277", hapMap, "B73", gbsMap, true);
+        compareIdentity("TIL08", hapMap, "TIL08", gbsMap, true);
+        System.out.println("GBS Map Taxa");
+        printTaxaNames(gbsMap);
+        System.out.println("HapMap Taxa");
+        printTaxaNames(hapMap);
 //        for(int i=0; i<hapMap.getSequenceCount(); i++) {
 //            System.out.print("\""+hapMap.getTaxaName(i)+"\",");
 //        }
@@ -45,22 +62,22 @@ public class EdTests {
        //We will probably need to load a TreeMap to redirect between the two.
        BitNeighborFinder bnf=new BitNeighborFinder(testHD, gbsMap, hapMap);
        Alignment pa=bnf.getPa();
-       compareIdentity("B73", hapMap, "Z001E0128", pa);
-       compareIdentity("B73", hapMap, "Z001E0101", pa);
-       compareIdentity("B97", hapMap, "Z001E0101", pa);
-       compareIdentity("B73", hapMap, "M0236", pa);
-       compareIdentity("B73", hapMap, "W22", pa);
+       compareIdentity("B73", hapMap, "Z001E0128", pa, false);
+       compareIdentity("B73", hapMap, "Z001E0101", pa, false);
+       compareIdentity("B97", hapMap, "Z001E0101", pa, false);
+       compareIdentity("B73", hapMap, "M0236", pa, false);
+       compareIdentity("B73", hapMap, "W22", pa, false);
         System.out.println("Within HapMap");
-        compareIdentity("B73", hapMap, "B73", hapMap);
-       compareIdentity("B73", hapMap, "W22", hapMap);
-       compareIdentity("B73", hapMap, "MO17", hapMap);
-       compareIdentity("B73", hapMap, "B97", hapMap);
+        compareIdentity("B73", hapMap, "B73", hapMap, false);
+       compareIdentity("B73", hapMap, "W22", hapMap, false);
+       compareIdentity("B73", hapMap, "MO17", hapMap, false);
+       compareIdentity("B73", hapMap, "B97", hapMap, false);
        System.out.println("Within PA");
-       compareIdentity("B73(PI550473)", pa, "Z001E0128", pa);
-       compareIdentity("B73(PI550473)", pa, "Z001E0101", pa);
-       compareIdentity("B97", pa, "Z001E0101", pa);
-       compareIdentity("B73(PI550473)", pa, "M0236", pa);
-       compareIdentity("B73(PI550473)", pa, "W22", pa);
+       compareIdentity("B73(PI550473)", pa, "Z001E0128", pa, false);
+       compareIdentity("B73(PI550473)", pa, "Z001E0101", pa, false);
+       compareIdentity("B97", pa, "Z001E0101", pa, false);
+       compareIdentity("B73(PI550473)", pa, "M0236", pa, false);
+       compareIdentity("B73(PI550473)", pa, "W22", pa, false);
        
         
         
@@ -71,7 +88,25 @@ public class EdTests {
 //        compareSitesInFiles();
     }
     
-    private void compareIdentity(String taxon, Alignment hapMap, String taxon2, Alignment projAlign) {
+    public Alignment combineAlignments(Alignment hapMap, Alignment gbsAlign) {
+        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(gbsAlign);
+        int orgTaxaNum=mna.getSequenceCount();
+        for (int i = 0; i < hapMap.getSequenceCount(); i++) {
+            Identifier id=hapMap.getIdGroup().getIdentifier(i);
+            mna.addTaxon(id);  
+        }
+        
+        return null;
+    }
+    
+    public void printTaxaNames(Alignment a) {
+        IdGroup idg=a.getIdGroup();
+        for (int i = 0; i < idg.getIdCount(); i++) {
+            System.out.printf("%d \t %s \t %s %n",i,idg.getIdentifier(i).getName(),idg.getIdentifier(i).getFullName());     
+        }
+    }
+    
+    private void compareIdentity(String taxon, Alignment hapMap, String taxon2, Alignment projAlign, boolean withSiteLookup) {
         int t1=hapMap.getIdGroup().whichIdNumber(taxon);
         if(hapMap instanceof ProjectionAlignment) {
             System.out.println(taxon+">"+((ProjectionAlignment)hapMap).getCompositionOfTaxon(t1));
@@ -82,13 +117,26 @@ public class EdTests {
         }
         int same=0, diff=0;
         for (int i = 0; i < hapMap.getSiteCount(); i++) {
+            if(hapMap.isHeterozygous(t1, i)) continue;
+            if((hapMap.getMajorAllele(i)==4)||(hapMap.getMajorAllele(i)==5)) continue;
+            if((hapMap.getMinorAllele(i)==4)||(hapMap.getMinorAllele(i)==5)) continue;
             byte b1=hapMap.getBase(t1, i);
-            byte b2=projAlign.getBase(t2, i);
+            byte b2=Alignment.UNKNOWN_DIPLOID_ALLELE;
+            int site2=i;
+            if(withSiteLookup) {
+                int pos=hapMap.getPositionInLocus(i);
+                site2=projAlign.getSiteOfPhysicalPosition(pos, null);
+                if(site2>-1) b2=projAlign.getBase(t2, site2);
+                
+            } else {
+                b2=projAlign.getBase(t2, site2);
+            }
+//            if(projAlign.isHeterozygous(t2, site2)) continue;
             if(b1==Alignment.UNKNOWN_DIPLOID_ALLELE) continue;
             if(b2==Alignment.UNKNOWN_DIPLOID_ALLELE) continue;
             if(b1==b2) {same++;}
             else {diff++;
-//                System.out.println(hapMap.getBaseAsString(t1, i)+":"+projAlign.getBaseAsString(t2, i));
+//                System.out.println(hapMap.getBaseAsString(t1, i)+":"+projAlign.getBaseAsString(t2, site2));
             }
 //            if(i%100000==0) System.out.printf("%d %s  %s  %d %d %g %n",i, taxon, taxon2, same, diff, ((double)same/(double)(same+diff)));
         }
