@@ -319,6 +319,8 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             if (myIsAccumulativeReport) {
                 if (rVal == Float.NaN) {
                     myAccumulativeRValueBins[myNumAccumulativeBins]++;
+                } else if (rVal == 1.0f) {
+                    myAccumulativeRValueBins[myNumAccumulativeBins - 1]++;
                 } else {
                     int index = (int) Math.floor(rVal / myAccumulativeInterval);
                     myAccumulativeRValueBins[index]++;
@@ -718,13 +720,13 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (myIsAccumulativeReport) {
             Object[] data = new Object[3];
             if (row == myNumAccumulativeBins) {
-                data[0] = Float.NaN;
-                data[1] = Float.NaN;
+                data[0] = Double.NaN;
+                data[1] = Double.NaN;
                 data[2] = Integer.valueOf(myAccumulativeRValueBins[row]);
             } else {
-                float start = myAccumulativeInterval * (float) row;
-                data[0] = Float.valueOf(start);
-                data[1] = Float.valueOf(start + myAccumulativeInterval);
+                double start = myAccumulativeInterval * (double) row;
+                data[0] = Double.valueOf(start);
+                data[1] = Double.valueOf(start + myAccumulativeInterval);
                 data[2] = Integer.valueOf(myAccumulativeRValueBins[row]);
             }
             return data;
