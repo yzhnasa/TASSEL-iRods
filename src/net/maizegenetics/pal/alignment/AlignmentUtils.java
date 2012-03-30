@@ -329,4 +329,21 @@ public class AlignmentUtils {
         }
         return FilterAlignment.getInstance(aa, firstSite, lastSite);
     }
+
+    /**
+     * Returns whether diploid allele values are heterozygous.
+     * First 4 bits in byte is one allele value.  Second 4 bits
+     * is other allele value.
+     * 
+     * @param diploidAllele alleles
+     * 
+     * @return true if allele values different; false if values the same.
+     */
+    public static boolean isHeterozygous(byte diploidAllele) {
+        if (((diploidAllele >>> 4) & 0xf) == (diploidAllele & 0xf)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 }

@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 
+import net.maizegenetics.util.DoubleFormat;
+
 /**
  * Created by IntelliJ IDEA.
  * User: Ed
@@ -12,11 +14,11 @@ import java.io.FileWriter;
  * To change this template use File | Settings | File Templates.
  */
 public class TableReportUtils {
-
+    
     public static String toDelimitedString(TableReport theTableSource, String delimit, String headerName, String headerValue) {
         Object[] colNames = theTableSource.getTableColumnNames();
         StringBuilder sb = new StringBuilder();
-
+        
         int cols;
         cols = colNames.length;
         int rows = theTableSource.getRowCount();
@@ -44,23 +46,23 @@ public class TableReportUtils {
         }
         return sb.toString();
     }
-
+    
     public static String toDelimitedString(TableReport theTableSource, String delimit) {
         return toDelimitedString(theTableSource, delimit, null, null);
     }
-
+    
     public static void saveDelimitedTableReport(TableReport theTableSource, String delimit, File saveFile) {
-
+        
         if (saveFile == null) {
             return;
         }
         FileWriter fw = null;
         BufferedWriter bw = null;
         try {
-
+            
             fw = new FileWriter(saveFile);
             bw = new BufferedWriter(fw);
-
+            
             Object[] colNames = theTableSource.getTableColumnNames();
             for (int j = 0; j < colNames.length; j++) {
                 if (j != 0) {
@@ -69,18 +71,22 @@ public class TableReportUtils {
                 bw.write(colNames[j].toString());
             }
             bw.write("\n");
-
+            
             for (int r = 0, n = theTableSource.getRowCount(); r < n; r++) {
                 Object[] theRow = theTableSource.getRow(r);
                 for (int i = 0; i < theRow.length; i++) {
                     if (i != 0) {
                         bw.write(delimit);
                     }
-                    bw.write(theRow[i].toString());
+                    if (theRow[i] instanceof Double) {
+                        bw.write(DoubleFormat.format((Double) theRow[i]));
+                    } else {
+                        bw.write(theRow[i].toString());
+                    }
                 }
                 bw.write("\n");
             }
-
+            
         } catch (Exception e) {
             System.out.println("TableReportUtils: writeReport: problem writing file: " + e.getMessage());
         } finally {
@@ -91,6 +97,6 @@ public class TableReportUtils {
                 // do nothing
             }
         }
-
+        
     }
 }
