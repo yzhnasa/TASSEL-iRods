@@ -150,7 +150,7 @@ public class BitNeighborFinder {
     private void initHDTargets() {
         hdTarget=new int[hdTargetID.getIdCount()];
         for (int i = 0; i < hdTargetID.getIdCount(); i++) {
-            hdTarget[i]=ldAlign.getIdGroup().whichIdNumber(hdTargetID.getIdentifier(i).getName());
+            hdTarget[i]=ldAlign.getIdGroup().whichIdNumber(hdTargetID.getIdentifier(i).getFullName());
             System.out.println(hdTargetID.getIdentifier(i).getName()+":"+i+":"+hdTarget[i]);
         }
        

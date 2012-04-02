@@ -27,12 +27,14 @@ public class EdTests {
     String gbsFile="/Volumes/LaCie/bigprojection/Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
     //String hapFileAGP1="/Users/edbuckler/SolexaAnal/GBS/build111217/imputed/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
 //    String hapFileAGP1="/Users/edbuckler/SolexaAnal/HapMapV2/HapMapV2RefgenV2_NAMfounders_teosinte_20110927_chr10.hmp.txt";
-    String hapFileAGP1="/Volumes/LaCie/bigprojection/maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt";
+//    String hapFileAGP1="/Volumes/LaCie/bigprojection/maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt";
+    String hapFileAGP1="/Users/edbuckler/SolexaAnal/bigprojection/maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt";
     String hapFileAGP2="/Users/edbuckler/SolexaAnal/GBS/build111217/imputed/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
     String hapFileAGP3="/Users/edbuckler/SolexaAnal/HapMapV2/jermpipe/SNPS201010/fusion/chr10.CSHLALLBGI.h90_f12.Q87Q87Union.hmp.txt";
     
     String gbsHapMergeFile="/Volumes/LaCie/bigprojection/MergeGBSHap.c10.hmp.txt";
-    String gbsHapMergeImpFile="/Volumes/LaCie/bigprojection/MergeGBSHapImp.c10.hmp.txt";
+ //   String gbsHapMergeImpFile="/Volumes/LaCie/bigprojection/MergeGBSHapImp.c10.hmp.txt";
+    String gbsHapMergeImpFile="/Users/edbuckler/SolexaAnal/bigprojection/MergeGBSHapImp.c10.hmp.txt";
     TBitAlignment gbsMap=null;
     SBitAlignment hapMap=null;
     TBitAlignment mergeMap=null;
@@ -51,20 +53,23 @@ public class EdTests {
 //        Alignment mna=combineAlignments(hapMap, gbsMap);
 //        ExportUtils.writeToHapmap(mna, true, gbsHapMergeFile, '\t', null);
         
-        SBitAlignment temp=(SBitAlignment)ImportUtils.readFromHapmap(gbsHapMergeFile, (ProgressListener)null);
-        mergeMap=TBitAlignment.getInstance(temp);
-        Alignment mna=imputeHapMapTaxaWithNearIdenticals(mergeMap);
-        ExportUtils.writeToHapmap(mna, true, gbsHapMergeImpFile, '\t', null);
-        System.exit(0);
-        
-        compareIdentity("B73", hapMap, "B73", gbsMap, true);
-        compareIdentity("B73", hapMap, "B97", gbsMap, true);
-        compareIdentity("B97", hapMap, "B97", gbsMap, true);
-        compareIdentity("B97", hapMap, "B73", gbsMap, true);
-        compareIdentity("CML277", hapMap, "CML277", gbsMap, true);
-        compareIdentity("CML277", hapMap, "B73", gbsMap, true);
-        compareIdentity("TIL08", hapMap, "TIL08", gbsMap, true);
-        System.exit(0);
+//        SBitAlignment temp=(SBitAlignment)ImportUtils.readFromHapmap(gbsHapMergeFile, (ProgressListener)null);
+//        mergeMap=TBitAlignment.getInstance(temp);
+//        Alignment mna=imputeHapMapTaxaWithNearIdenticals(mergeMap);
+//        ExportUtils.writeToHapmap(mna, true, gbsHapMergeImpFile, '\t', null);
+//        System.exit(0);
+//        convertFilesToFastTbit(gbsHapMergeImpFile);
+        gbsMap=(TBitAlignment)readGZOfSBit(gbsHapMergeImpFile, false);
+        hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
+        hapMap=(SBitAlignment)fixHapMapNames(hapMap); 
+//        compareIdentity("B73", hapMap, "B73", gbsMap, true);
+//        compareIdentity("B73", hapMap, "B97", gbsMap, true);
+//        compareIdentity("B97", hapMap, "B97", gbsMap, true);
+//        compareIdentity("B97", hapMap, "B73", gbsMap, true);
+//        compareIdentity("CML277", hapMap, "CML277", gbsMap, true);
+//        compareIdentity("CML277", hapMap, "B73", gbsMap, true);
+//        compareIdentity("TIL08", hapMap, "TIL08", gbsMap, true);
+//        System.exit(0);
         System.out.println("GBS Map Taxa");
         printTaxaNames(gbsMap);
         System.out.println("HapMap Taxa");
@@ -80,7 +85,7 @@ public class EdTests {
        IdGroup testHD=new SimpleIdGroup(taxa);
        //I am using this testHD as the taxa names from hapMap do not match gbsMap.  
        //We will probably need to load a TreeMap to redirect between the two.
-       BitNeighborFinder bnf=new BitNeighborFinder(testHD, gbsMap, hapMap);
+       BitNeighborFinder bnf=new BitNeighborFinder(hapMap.getIdGroup(), gbsMap, hapMap);
        Alignment pa=bnf.getPa();
        compareIdentity("B73", hapMap, "Z001E0128", pa, false);
        compareIdentity("B73", hapMap, "Z001E0101", pa, false);
@@ -288,6 +293,17 @@ public class EdTests {
             TBitAlignment hapmapOut=TBitAlignment.getInstance(hapmapIn);
             writeAlignmentToSerialGZ(hapmapOut, hapFileAGP1);
         }
+    }
+    
+    private void convertFilesToFastSbit(String flatFile) {
+        SBitAlignment align=(SBitAlignment)ImportUtils.readFromHapmap(flatFile, (ProgressListener)null);
+        writeAlignmentToSerialGZ(align, flatFile);
+    }
+    
+    private void convertFilesToFastTbit(String flatFile) {
+        SBitAlignment align=(SBitAlignment)ImportUtils.readFromHapmap(flatFile, (ProgressListener)null);
+        TBitAlignment alignT=TBitAlignment.getInstance(align);
+        writeAlignmentToSerialGZ(alignT, flatFile);
     }
     
     private void compareSitesInFiles() {
