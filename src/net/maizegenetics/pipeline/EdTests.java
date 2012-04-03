@@ -41,9 +41,12 @@ public class EdTests {
     
 
     public EdTests() {
+        String header="/Users/edbuckler/SolexaAnal/bigprojection/";
+        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr4.hmp.txt", 
+                header+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c4.hmp.txt", header+"chr4.projA.txt", 4);
 //        SBitAlignment hapMapOld=(SBitAlignment)ImportUtils.readFromHapmap(hapFileAGP3, (ProgressListener)null);
 //        printTaxaNames(hapMapOld);
-//        System.exit(0);
+        System.exit(0);
         
  //       convertFilesToFast(false, true);
  //       System.exit(0);
@@ -111,6 +114,25 @@ public class EdTests {
 //        convertHapMapSites();
 //        hapMap=hapMap2;
 //        compareSitesInFiles();
+    }
+    
+    public void createProjAlignment(String hFile, String gFile, String pOutFile, int chr) {
+        TBitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
+        System.out.println("GBS Map Read");
+        SBitAlignment hapMap=(SBitAlignment)ImportUtils.readFromHapmap(hFile, (ProgressListener)null);
+        System.out.println("HapMap Read");
+        hapMap=(SBitAlignment)fixHapMapNames(hapMap);  //adds tags so that HapMapNames are recognizable
+        System.out.println("HapMap Names Fixed");
+        MutableNucleotideAlignment mna=combineAlignments(hapMap, gbsMap);
+        System.out.println("HapMap and GBS combined");
+        mna.clean();
+        TBitAlignment mergeMap=TBitAlignment.getInstance(mna);
+        System.out.println("Merge convertd to TBit");
+        TBitAlignment gbsImpMap=TBitAlignment.getInstance(imputeHapMapTaxaWithNearIdenticals(mergeMap));
+        System.out.println("Imputed HapMapTaxa on MergeMap");
+        BitNeighborFinder bnf=new BitNeighborFinder(hapMap.getIdGroup(), gbsImpMap, hapMap);
+        Alignment pa=bnf.getPa();
+        this.writeAlignmentToSerialGZ(pa, pOutFile);
     }
     
     public Alignment fixHapMapNames(Alignment hapMap) {
