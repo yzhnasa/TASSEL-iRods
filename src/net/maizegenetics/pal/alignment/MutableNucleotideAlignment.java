@@ -31,9 +31,11 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
     private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
     private int[] myLocusIndices;
     private String[] mySNPIDs;
+    private int maxNumAlleles=2;
 
     private MutableNucleotideAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a.getAlleleEncodings());
+        maxNumAlleles=a.getMaxNumAlleles();
 
         if (a.getAlleleEncodings().length != 1) {
             throw new IllegalArgumentException("MutableNucleotideAlignment: init: must only have one allele encoding.");
@@ -193,17 +195,17 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
 
     @Override
     public byte getReferenceAllele(int site) {
-        throw new UnsupportedOperationException();
+        return 15;
     }
 
     @Override
     public byte[] getReference() {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
     public byte[] getReference(int startSite, int endSite) {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
@@ -213,12 +215,12 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
 
     @Override
     public boolean isPositiveStrand(int site) {
-        throw new UnsupportedOperationException("Not supported.");
+        return true;
     }
 
     @Override
     public String getGenomeAssembly() {
-        throw new UnsupportedOperationException("Not supported.");
+        return "AGPV2";
     }
 
     @Override
@@ -330,12 +332,12 @@ public class MutableNucleotideAlignment extends AbstractAlignment implements Mut
 
     @Override
     public boolean retainsRareAlleles() {
-        throw new UnsupportedOperationException("Not supported.");
+        return false;
     }
 
     @Override
     public int getMaxNumAlleles() {
-        throw new UnsupportedOperationException("Not supported.");
+        return maxNumAlleles;
     }
 
     @Override
