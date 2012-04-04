@@ -41,9 +41,15 @@ public class EdTests {
     
 
     public EdTests() {
-        String header="/Users/edbuckler/SolexaAnal/bigprojection/";
-        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr4.hmp.txt", 
-                header+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c4.hmp.txt", header+"chr4.projA.txt", 4);
+      //  String header="/Users/edbuckler/SolexaAnal/bigprojection/";
+        String header="/Volumes/LaCie/bigprojection/";
+//        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr4.hmp.txt", 
+//                header+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c4.hmp.txt", header+"chr4.projA.txt", 4);
+        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt", 
+                header+"282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt", header+"282chr10.projA.txt", 4);
+        
+        this.exportRegion(header+"282chr10.projA.txt", header+"282chr10_94M_95M.hmp.txt", 94000000,95000000);
+ //       this.exportRegion(header+"chr4.projA.txt", header+"chr4_412M_416M.hmp.txt", 41200000,41600000);
 //        SBitAlignment hapMapOld=(SBitAlignment)ImportUtils.readFromHapmap(hapFileAGP3, (ProgressListener)null);
 //        printTaxaNames(hapMapOld);
         System.exit(0);
@@ -128,11 +134,25 @@ public class EdTests {
         mna.clean();
         TBitAlignment mergeMap=TBitAlignment.getInstance(mna);
         System.out.println("Merge convertd to TBit");
-        TBitAlignment gbsImpMap=TBitAlignment.getInstance(imputeHapMapTaxaWithNearIdenticals(mergeMap));
+        mna=imputeHapMapTaxaWithNearIdenticals(mergeMap);
+        mna.clean();
+        TBitAlignment gbsImpMap=TBitAlignment.getInstance(mna);
         System.out.println("Imputed HapMapTaxa on MergeMap");
         BitNeighborFinder bnf=new BitNeighborFinder(hapMap.getIdGroup(), gbsImpMap, hapMap);
         Alignment pa=bnf.getPa();
         this.writeAlignmentToSerialGZ(pa, pOutFile);
+    }
+    
+    public void exportRegion(String paFile, String outFile, int start, int end) {
+        ProjectionAlignment pa=readGZOfPA(paFile);
+        pa.reportPAComposition();
+        System.out.println("Done reading Projection Alignment");
+        int startSite=Math.abs(pa.getSiteOfPhysicalPosition(start, null));
+        int endSite=Math.abs(pa.getSiteOfPhysicalPosition(end, null));
+        FilterAlignment fa=FilterAlignment.getInstance(pa, startSite, endSite);
+        System.out.printf("Filtering Complete startSite:%d endSite:%d %n", startSite, endSite);
+        ExportUtils.writeToHapmap(fa, false, outFile, '\t', null);
+        System.out.println("Export complete");
     }
     
     public Alignment fixHapMapNames(Alignment hapMap) {
@@ -162,7 +182,7 @@ public class EdTests {
         return ahid;
     }
     
-    private Alignment imputeHapMapTaxaWithNearIdenticals(TBitAlignment mergeAlign) {
+    private MutableNucleotideAlignment imputeHapMapTaxaWithNearIdenticals(TBitAlignment mergeAlign) {
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(mergeAlign);
         int[] hapMapTaxaInd=indicesOfHapMapTaxa(mergeAlign.getIdGroup());
         for (int t = 0; t < hapMapTaxaInd.length; t++) {
@@ -344,6 +364,28 @@ public class EdTests {
         
     }
     
+    static ProjectionAlignment readGZOfPA(String inFile) {
+        ProjectionAlignment pa=null;
+        long time=System.currentTimeMillis();
+        try {
+            File theFile = new File(Utils.addSuffixIfNeeded(inFile, ".gz"));
+            System.out.println("Reading PA:"+theFile);
+            FileInputStream fis = new FileInputStream(theFile);
+            GZIPInputStream gs = new GZIPInputStream(fis);
+            ObjectInputStream ois = new ObjectInputStream(gs);
+            pa=(ProjectionAlignment)ois.readObject();
+            System.out.println(pa.getSiteCount());
+            System.out.println(pa.getSequenceCount());
+            ois.close();
+            fis.close();
+            
+        } catch (Exception ee) {
+            //sendErrorMessage("Data could not be saved: " + ee);
+            ee.printStackTrace();
+        }
+        System.out.println("Time:"+(System.currentTimeMillis()-time));
+        return pa;
+    }
     
     
     static Alignment readGZOfSBit(String inFile, boolean isSBit) {

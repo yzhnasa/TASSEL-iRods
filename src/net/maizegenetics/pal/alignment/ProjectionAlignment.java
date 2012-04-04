@@ -56,7 +56,7 @@ public class ProjectionAlignment extends AbstractAlignment {
     }
     
     public String getCompositionOfTaxon(int taxon) {
-        StringBuilder sb=new StringBuilder();
+        StringBuilder sb=new StringBuilder(this.getIdGroup().getIdentifier(taxon).getFullName()+"\t");
         for (int i = 0; i < myPosBreaks[taxon].length; i++) {
             sb.append(myPosBreaks[taxon][i]+":");
             sb.append(mySiteBreaks[taxon][i]+":");
@@ -64,12 +64,23 @@ public class ProjectionAlignment extends AbstractAlignment {
         }
         return sb.toString();
     }
+    
+    public void reportPAComposition() {
+        for (int i = 0; i < this.getSequenceCount(); i++) {
+            System.out.println(getCompositionOfTaxon(i));
+        }
+    }
 
     private int translateTaxon(int taxon, int site) {
+        if(mySiteBreaks[taxon]==null) { 
+            if(site%100==0) System.out.printf("Taxon null:%d site:%d %n",taxon,site);
+            return 0;
+        }
         int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
         if (b<0) {
             b=-(b+2);  //this will not work if it does not start with zero.
         }
+ //       if(myHDTaxa[taxon]==null) return 0;//this should be a missing taxon.
         return myHDTaxa[taxon][b];
     }
 
