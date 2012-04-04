@@ -342,7 +342,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     private SimpleTableReport getTaxaSummary(Alignment alignment) {
 
-        Object[] columnNames = new String[]{"Taxa", "Number of Sites", "Gametes Missing", "Proportion Missing",
+        Object[] columnNames = new String[]{"Taxa", "Taxa Name" , "Number of Sites", "Gametes Missing", "Proportion Missing",
             "Number Heterozygous", "Proportion Heterozygous", "Inbreeding Coefficient",
             "Inbreeding Coefficient Scaled by Missing"};
         int numSites = alignment.getSiteCount();
@@ -358,6 +358,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
             int count = 0;
             data[i][count++] = i;
+            data[i][count++] = alignment.getIdGroup().getIdentifier(i).getFullName();
             data[i][count++] = numSites;
             data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;
