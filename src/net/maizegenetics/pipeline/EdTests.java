@@ -41,8 +41,8 @@ public class EdTests {
     
 
     public EdTests() {
-      //  String header="/Users/edbuckler/SolexaAnal/bigprojection/";
-        String header="/Volumes/LaCie/bigprojection/";
+        String header="/Users/edbuckler/SolexaAnal/bigprojection/";
+      //  String header="/Volumes/LaCie/bigprojection/";
 //        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr4.hmp.txt", 
 //                header+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c4.hmp.txt", header+"chr4.projA.txt", 4);
         this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt", 
@@ -125,7 +125,8 @@ public class EdTests {
     public void createProjAlignment(String hFile, String gFile, String pOutFile, int chr) {
         TBitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
         System.out.println("GBS Map Read");
-        SBitAlignment hapMap=(SBitAlignment)ImportUtils.readFromHapmap(hFile, (ProgressListener)null);
+        SBitAlignment hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
+//        SBitAlignment hapMap=(SBitAlignment)ImportUtils.readFromHapmap(hFile, (ProgressListener)null);
         System.out.println("HapMap Read");
         hapMap=(SBitAlignment)fixHapMapNames(hapMap);  //adds tags so that HapMapNames are recognizable
         System.out.println("HapMap Names Fixed");
@@ -139,8 +140,9 @@ public class EdTests {
         TBitAlignment gbsImpMap=TBitAlignment.getInstance(mna);
         System.out.println("Imputed HapMapTaxa on MergeMap");
         BitNeighborFinder bnf=new BitNeighborFinder(hapMap.getIdGroup(), gbsImpMap, hapMap);
-        Alignment pa=bnf.getPa();
-        this.writeAlignmentToSerialGZ(pa, pOutFile);
+        ProjectionAlignment pa=bnf.getPa();
+        pa.reportPAComposition();
+        writeAlignmentToSerialGZ(pa, pOutFile);
     }
     
     public void exportRegion(String paFile, String outFile, int start, int end) {

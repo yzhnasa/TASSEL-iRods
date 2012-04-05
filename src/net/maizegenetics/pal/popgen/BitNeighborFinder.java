@@ -44,7 +44,8 @@ public class BitNeighborFinder {
                 posBreaks[b]=result[0].get(b);
                 hdTaxa[b]=result[1].get(b);
             }
-            pa.setCompositionOfTaxon(ldAlign.getTaxaName(i), posBreaks, hdTaxa);
+            pa.setCompositionOfTaxon(i, posBreaks, hdTaxa);
+         //   pa.setCompositionOfTaxon(ldAlign.getIdGroup().getIdentifier(i).getFullName(), posBreaks, hdTaxa);
             System.out.printf("%s\t%d\t%s %n",ldAlign.getTaxaName(i),result[0].size(),reportTaxaMakeUp(result));
         }
         long currentTime = System.currentTimeMillis();

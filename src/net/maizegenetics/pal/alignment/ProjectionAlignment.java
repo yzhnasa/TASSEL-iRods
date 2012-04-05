@@ -52,16 +52,19 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     public void setCompositionOfTaxon(String taxa, int[] posBreaks, int[] hdTaxa) {
         int taxon = getIdGroup().whichIdNumber(taxa);
+        System.out.printf("SetComp %s %d %n", taxa, taxon);
         setCompositionOfTaxon(taxon, posBreaks, hdTaxa);
     }
     
     public String getCompositionOfTaxon(int taxon) {
         StringBuilder sb=new StringBuilder(this.getIdGroup().getIdentifier(taxon).getFullName()+"\t");
+        if(myPosBreaks[taxon]==null) {sb.append("NULL");}
+        else {
         for (int i = 0; i < myPosBreaks[taxon].length; i++) {
             sb.append(myPosBreaks[taxon][i]+":");
             sb.append(mySiteBreaks[taxon][i]+":");
             sb.append(myHDTaxa[taxon][i]+"\t");
-        }
+        }}
         return sb.toString();
     }
     
@@ -73,8 +76,7 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     private int translateTaxon(int taxon, int site) {
         if(mySiteBreaks[taxon]==null) { 
-            if(site%100==0) System.out.printf("Taxon null:%d site:%d %n",taxon,site);
-            return 0;
+            return -1;
         }
         int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
         if (b<0) {
@@ -86,7 +88,9 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     @Override
     public String getBaseAsString(int taxon, int site) {
-        return myBaseAlignment.getBaseAsString(translateTaxon(taxon, site), site);
+        int t=translateTaxon(taxon, site);
+        if(t<0) return Alignment.UNKNOWN_ALLELE_STR;
+        return myBaseAlignment.getBaseAsString(t, site);
     }
 
     @Override
@@ -101,7 +105,9 @@ public class ProjectionAlignment extends AbstractAlignment {
      * in a row (potentially, 10,000s of sites in many cases).
      */
     public byte getBase(int taxon, int site) {
-        return myBaseAlignment.getBase(translateTaxon(taxon, site), site);
+        int t=translateTaxon(taxon, site);
+        if(t<0) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        return myBaseAlignment.getBase(t, site);
     }
 
     @Override
