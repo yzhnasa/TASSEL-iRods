@@ -6,7 +6,9 @@ package net.maizegenetics.pipeline;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import net.maizegenetics.pal.alignment.*;
@@ -41,15 +43,28 @@ public class EdTests {
     
 
     public EdTests() {
-        String header="/Users/edbuckler/SolexaAnal/bigprojection/";
-      //  String header="/Volumes/LaCie/bigprojection/";
+//        String header="/Users/edbuckler/SolexaAnal/bigprojection/";
+        String header="/Volumes/LaCie/bigprojection/";
 //        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr4.hmp.txt", 
 //                header+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c4.hmp.txt", header+"chr4.projA.txt", 4);
-        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt", 
-                header+"282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt", header+"282chr10.projA.txt", 4);
+        int c=6;
+        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr"+c+".hmp.txt", 
+                header+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.imp95_1024.c"+c+".hmp.txt", header+"chr"+c+".imp95_1024.projA.txt", 4);
+//        this.createProjAlignment(header+"maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt", 
+//                header+"282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt", header+"282chr10.projA.txt", 4);
         
-        this.exportRegion(header+"282chr10.projA.txt", header+"282chr10_94M_95M.hmp.txt", 94000000,95000000);
- //       this.exportRegion(header+"chr4.projA.txt", header+"chr4_412M_416M.hmp.txt", 41200000,41600000);
+//        this.exportRegion(header+"282chr10.projA.txt", header+"282chr10_94M_95M.hmp.txt", 94000000,95000000);
+        
+//
+        int s=81, e=83;
+        this.exportRegion(header+"chr"+c+".imp95_1024.projA.txt", header+"chr"+c+".imp95_"+s+"M_"+e+"M.hmp.txt",
+                "/Volumes/LaCie/bigprojection/amestaxa.txt",
+                s*1000000,e*1000000);
+        s=83;
+        e=85;
+        this.exportRegion(header+"chr"+c+".imp95_1024.projA.txt", header+"chr"+c+".imp95_"+s+"M_"+e+"M.hmp.txt",
+                "/Volumes/LaCie/bigprojection/amestaxa.txt",
+                s*1000000,e*1000000);
 //        SBitAlignment hapMapOld=(SBitAlignment)ImportUtils.readFromHapmap(hapFileAGP3, (ProgressListener)null);
 //        printTaxaNames(hapMapOld);
         System.exit(0);
@@ -125,8 +140,8 @@ public class EdTests {
     public void createProjAlignment(String hFile, String gFile, String pOutFile, int chr) {
         TBitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
         System.out.println("GBS Map Read");
-        SBitAlignment hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
-//        SBitAlignment hapMap=(SBitAlignment)ImportUtils.readFromHapmap(hFile, (ProgressListener)null);
+//        SBitAlignment hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
+        SBitAlignment hapMap=(SBitAlignment)ImportUtils.readFromHapmap(hFile, (ProgressListener)null);
         System.out.println("HapMap Read");
         hapMap=(SBitAlignment)fixHapMapNames(hapMap);  //adds tags so that HapMapNames are recognizable
         System.out.println("HapMap Names Fixed");
@@ -145,14 +160,20 @@ public class EdTests {
         writeAlignmentToSerialGZ(pa, pOutFile);
     }
     
-    public void exportRegion(String paFile, String outFile, int start, int end) {
+    public void exportRegion(String paFile, String outFile, String taxaListFile, int start, int end) {
         ProjectionAlignment pa=readGZOfPA(paFile);
-        pa.reportPAComposition();
+//        pa.reportPAComposition();
         System.out.println("Done reading Projection Alignment");
         int startSite=Math.abs(pa.getSiteOfPhysicalPosition(start, null));
         int endSite=Math.abs(pa.getSiteOfPhysicalPosition(end, null));
-        FilterAlignment fa=FilterAlignment.getInstance(pa, startSite, endSite);
+        Alignment fa=FilterAlignment.getInstance(pa, startSite, endSite);
         System.out.printf("Filtering Complete startSite:%d endSite:%d %n", startSite, endSite);
+        if(taxaListFile!=null) {
+            IdGroup subIDS=getIDToKeepFromFile( taxaListFile);
+            fa=FilterAlignment.getInstance(fa, subIDS,false);
+            System.out.printf("Filtering Complete taxa:%d %n", fa.getSequenceCount());
+        }
+        
         ExportUtils.writeToHapmap(fa, false, outFile, '\t', null);
         System.out.println("Export complete");
     }
@@ -195,7 +216,7 @@ public class EdTests {
                 double dist=DistanceMatrixUtils.getIBSDistance(mergeAlign.getAllelePresenceForAllSites(gt, 0), 
                         mergeAlign.getAllelePresenceForAllSites(gt, 1), mergeAlign.getAllelePresenceForAllSites(ht, 0),
                         mergeAlign.getAllelePresenceForAllSites(ht, 1));
-                if(dist<0.01) closestTaxon.put(dist, gt);
+                if(dist<0.05) closestTaxon.put(dist, gt);
             }
             System.out.println(mergeAlign.getTaxaName(ht));
             System.out.println(closestTaxon.toString());
@@ -437,5 +458,35 @@ public class EdTests {
             ee.printStackTrace();
         }
         System.out.println("Time:"+(System.currentTimeMillis()-time));
+    }
+    
+    static IdGroup getIDToKeepFromFile(String taxaListFile) {
+        List taxa = new ArrayList();
+        BufferedReader br = null;
+        try {
+            br = Utils.getBufferedReader(taxaListFile);
+            String inputline = br.readLine();
+            Pattern sep = Pattern.compile("\\s+");
+
+            while (inputline != null) {
+                inputline = inputline.trim();
+                String[] parsedline = sep.split(inputline);
+                for (int i = 0; i < parsedline.length; i++) {
+                    if ((parsedline[i] != null) || (parsedline[i].length() != 0)) {
+                        taxa.add(parsedline[i]);
+                    }
+                }
+                inputline = br.readLine();
+            }
+            br.close();
+        } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        Identifier[] ids = new Identifier[taxa.size()];
+        for (int i = 0; i < taxa.size(); i++) {
+            ids[i] = new Identifier((String) taxa.get(i));
+        }
+        return (new SimpleIdGroup(ids));
     }
 }
