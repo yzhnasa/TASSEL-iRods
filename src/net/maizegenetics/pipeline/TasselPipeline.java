@@ -854,6 +854,37 @@ public class TasselPipeline implements PluginListener {
                     }
                     plugin.setIdsToRemove(new SimpleIdGroup(ids));
                     integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-excludeTaxaInFile")) {
+                    FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
+                    String taxaListFile = args[index++].trim();
+
+                    List taxa = new ArrayList();
+                    BufferedReader br = null;
+                    try {
+                        br = Utils.getBufferedReader(taxaListFile);
+                        String inputline = br.readLine();
+                        Pattern sep = Pattern.compile("\\s+");
+
+                        while (inputline != null) {
+                            inputline = inputline.trim();
+                            String[] parsedline = sep.split(inputline);
+                            for (int i = 0; i < parsedline.length; i++) {
+                                if ((parsedline[i] != null) || (parsedline[i].length() != 0)) {
+                                    taxa.add(parsedline[i]);
+                                }
+                            }
+                            inputline = br.readLine();
+                        }
+                    } finally {
+                        br.close();
+                    }
+
+                    Identifier[] ids = new Identifier[taxa.size()];
+                    for (int i = 0; i < taxa.size(); i++) {
+                        ids[i] = new Identifier((String) taxa.get(i));
+                    }
+                    plugin.setIdsToRemove(new SimpleIdGroup(ids));
+                    integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-includeSiteNames")) {
                     FilterSiteNamePlugin plugin = new FilterSiteNamePlugin(myMainFrame, false);
                     String[] names = args[index++].trim().split(",");
