@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 
+import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
@@ -158,7 +159,7 @@ public class ImportUtils {
                 offsetsFinal[i] = ((Integer) lociOffsets.get(i)).intValue();
             }
 
-            Alignment result = SBitAlignment.getNucleotideInstance(idGroup, theData, null, null, physicalPositions, Alignment.DEFAULT_MAX_NUM_ALLELES, lociFinal, offsetsFinal, snpIDs, true);
+            Alignment result = SBitAlignment.getNucleotideInstance(idGroup, theData, null, null, physicalPositions, TasselPrefs.getAlignmentMaxAllelesToRetain(), lociFinal, offsetsFinal, snpIDs, TasselPrefs.getAlignmentRetainRareAlleles());
 
             prevTime = currentTime;
             currentTime = System.currentTimeMillis();
