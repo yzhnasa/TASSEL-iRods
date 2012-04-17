@@ -40,22 +40,6 @@ public class TasselPrefs {
     // Min. frequency for filtering sites.
     public static final String FILTER_ALIGN_PLUGIN_MIN_COUNT = "minCount";
     public static final int FILTER_ALIGN_PLUGIN_MIN_COUNT_DEFAULT = 1;
-    //
-    // AlignmentPlugin Preferences
-    //
-    public static final String ALIGN_PLUGIN_TOP = "/tassel/plugins/alignment";
-    public static final String ALIGN_PLUGIN_QUALSCORE_LOWRANGE_CUTOFF = "qualityScoreLowRangeCuttoff";
-    public static final int ALIGN_PLUGIN_QUALSCORE_LOWRANGE_CUTOFF_DEFAULT = 0;
-    public static final String ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_CUTOFF = "qualityScoreHighRangeCuttoff";
-    public static final int ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_CUTOFF_DEFAULT = 20;
-    public static final String ALIGN_PLUGIN_QUALSCORE_LOWRANGE_COLOR = "qualityScoreLowRangeColor";
-    public static final int ALIGN_PLUGIN_QUALSCORE_LOWRANGE_COLOR_DEFAULT = -4144960; // light gray
-    public static final String ALIGN_PLUGIN_QUALSCORE_MIDRANGE_COLOR = "qualityScoreMidRangeColor";
-    public static final int ALIGN_PLUGIN_QUALSCORE_MIDRANGE_COLOR_DEFAULT = -256;     // yellow
-    public static final String ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_COLOR = "qualityScoreHighRangeColor";
-    public static final int ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_COLOR_DEFAULT = -1;      // white
-    public static final String ALIGN_PLUGIN_SHOW_QUALSCORE = "qualityScoreShow";
-    public static final boolean ALIGN_PLUGIN_SHOW_QUALSCORE_DEFAULT = true;
 
     /** Creates a new instance of TasselPrefs */
     private TasselPrefs() {
@@ -173,57 +157,6 @@ public class TasselPrefs {
 
     public static void putFilterAlignPluginMinCount(int value) {
         putIntPref(FILTER_ALIGN_PLUGIN_TOP, FILTER_ALIGN_PLUGIN_MIN_COUNT, value);
-    }
-
-    //
-    // AlignmentPlugin Preferences
-    //
-    public static int getAlignPluginQualscoreLowrangeCutoff() {
-        return getIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_LOWRANGE_CUTOFF, ALIGN_PLUGIN_QUALSCORE_LOWRANGE_CUTOFF_DEFAULT);
-    }
-
-    public static void putAlignPluginQualscoreLowrangeCutoff(int value) {
-        putIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_LOWRANGE_CUTOFF, value);
-    }
-
-    public static int getAlignPluginQualscoreHighrangeCutoff() {
-        return getIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_CUTOFF, ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_CUTOFF_DEFAULT);
-    }
-
-    public static void putAlignPluginQualscoreHighrangeCutoff(int value) {
-        putIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_CUTOFF, value);
-    }
-
-    public static int getAlignPluginQualscoreLowrangeColor() {
-        return getIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_LOWRANGE_COLOR, ALIGN_PLUGIN_QUALSCORE_LOWRANGE_COLOR_DEFAULT);
-    }
-
-    public static void putAlignPluginQualscoreLowrangeColor(int value) {
-        putIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_LOWRANGE_COLOR, value);
-    }
-
-    public static int getAlignPluginQualscoreMidrangeColor() {
-        return getIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_MIDRANGE_COLOR, ALIGN_PLUGIN_QUALSCORE_MIDRANGE_COLOR_DEFAULT);
-    }
-
-    public static void putAlignPluginQualscoreMidrangeColor(int value) {
-        putIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_MIDRANGE_COLOR, value);
-    }
-
-    public static int getAlignPluginQualscoreHighrangeColor() {
-        return getIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_COLOR, ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_COLOR_DEFAULT);
-    }
-
-    public static void putAlignPluginQualscoreHighrangeColor(int value) {
-        putIntPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_QUALSCORE_HIGHRANGE_COLOR, value);
-    }
-
-    public static boolean getAlignPluginShowQualscore() {
-        return getBooleanPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_SHOW_QUALSCORE, ALIGN_PLUGIN_SHOW_QUALSCORE_DEFAULT);
-    }
-
-    public static void putAlignPluginShowQualscore(boolean value) {
-        putBooleanPref(ALIGN_PLUGIN_TOP, ALIGN_PLUGIN_SHOW_QUALSCORE, value);
     }
 
 }
