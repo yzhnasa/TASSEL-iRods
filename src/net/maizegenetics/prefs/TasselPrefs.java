@@ -40,6 +40,14 @@ public class TasselPrefs {
     // Min. frequency for filtering sites.
     public static final String FILTER_ALIGN_PLUGIN_MIN_COUNT = "minCount";
     public static final int FILTER_ALIGN_PLUGIN_MIN_COUNT_DEFAULT = 1;
+    //
+    // Alignment preferences
+    //
+    public static final String ALIGNMENT_TOP = "/tassel/alignment";
+    public static final String ALIGNMENT_MAX_ALLELES_TO_RETAIN = "maxAllelesToRetain";
+    public static final int ALIGNMENT_MAX_ALLELES_TO_RETAIN_DEFAULT = 2;
+    public static final String ALIGNMENT_RETAIN_RARE_ALLELES = "retainRareAlleles";
+    public static final boolean ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT = true;
 
     /** Creates a new instance of TasselPrefs */
     private TasselPrefs() {
@@ -142,7 +150,7 @@ public class TasselPrefs {
     public static void putFilterAlignPluginMinFreq(double value) {
         putDoublePref(FILTER_ALIGN_PLUGIN_TOP, FILTER_ALIGN_PLUGIN_MIN_FREQ, value);
     }
-    
+
     public static double getFilterAlignPluginMaxFreq() {
         return getDoublePref(FILTER_ALIGN_PLUGIN_TOP, FILTER_ALIGN_PLUGIN_MAX_FREQ, FILTER_ALIGN_PLUGIN_MAX_FREQ_DEFAULT);
     }
@@ -159,4 +167,22 @@ public class TasselPrefs {
         putIntPref(FILTER_ALIGN_PLUGIN_TOP, FILTER_ALIGN_PLUGIN_MIN_COUNT, value);
     }
 
+    //
+    // Alignment preferences
+    //
+    public static int getAlignmentMaxAllelesToRetain() {
+        return getIntPref(ALIGNMENT_TOP, ALIGNMENT_MAX_ALLELES_TO_RETAIN, ALIGNMENT_MAX_ALLELES_TO_RETAIN_DEFAULT);
+    }
+
+    public static void putAlignmentMaxAllelesToRetain(int value) {
+        putIntPref(ALIGNMENT_TOP, ALIGNMENT_MAX_ALLELES_TO_RETAIN, value);
+    }
+    
+    public static boolean getAlignmentRetainRareAlleles() {
+        return getBooleanPref(ALIGNMENT_TOP, ALIGNMENT_RETAIN_RARE_ALLELES, ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT);
+    }
+
+    public static void putAlignmentRetainRareAlleles(boolean value) {
+        putBooleanPref(ALIGNMENT_TOP, ALIGNMENT_RETAIN_RARE_ALLELES, value);
+    }
 }
