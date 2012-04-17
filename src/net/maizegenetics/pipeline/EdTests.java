@@ -178,7 +178,7 @@ public class EdTests {
         System.out.println("Export complete");
     }
     
-    public Alignment fixHapMapNames(Alignment hapMap) {
+    public static Alignment fixHapMapNames(Alignment hapMap) {
         for (int i = 0; i < hapMap.getIdGroup().getIdCount(); i++) {
             Identifier id=hapMap.getIdGroup().getIdentifier(i);
             String s=id.getFullName();
@@ -233,7 +233,7 @@ public class EdTests {
         return mna;
     }
     
-    public MutableNucleotideAlignment combineAlignments(Alignment hapMap, Alignment gbsAlign) {
+    public static MutableNucleotideAlignment combineAlignments(Alignment hapMap, Alignment gbsAlign) {
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(gbsAlign,
                 hapMap.getSequenceCount()+gbsAlign.getSequenceCount(), gbsAlign.getSiteCount());
         System.out.println("MNA Created");
