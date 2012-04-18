@@ -77,7 +77,7 @@ public class NucleotideImputor {
 		
 		int n = inputFile.indexOf(".hmp.txt");
 		baseOutFilename = inputFile.substring(0, n);
-		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(inputFile, chr);
+		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(inputFile, null);
 		
 		importPopulationInformation("/Volumes/Macintosh HD 2/data/namgbs/genos_20120110/merged_nam_ibm/namibm.pedigree.info.txt");
 		scoreParentsForAPopulation("1");
