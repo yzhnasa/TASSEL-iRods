@@ -230,7 +230,7 @@ public class ImportUtils {
         sequences.toArray(sequenceArray);
 
         Locus unknown = new Locus("Unknown", "0", 0, sequenceArray[0].length(), null, null);
-        return SBitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, new Locus[]{unknown}, new int[]{0}, null, true);
+        return SBitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{unknown}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles());
 
     }
 }
