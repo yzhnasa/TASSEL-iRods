@@ -25,6 +25,11 @@ public class TreeClusters {
 		Arrays.sort(sortedHeight);
 	}
 	
+	/**
+	 * For a given number of groups this function returns the group membership for each taxon.
+	 * @param numberOfGroups the number of groups desired
+	 * @return an array of integers indicating the group of each taxon
+	 */
 	public int[] getGroups (int numberOfGroups) {
 		int[] groups = new int[nTaxa];
 		if (numberOfGroups == 1) {
@@ -46,6 +51,34 @@ public class TreeClusters {
 				}
 			}
 		}
+		return groups;
+	}
+	
+	/**
+	 * This function returns taxa group membership when the tree is cut at the designated height.
+	 * @param height the height at which the tree is cut
+	 * @return the group membership of each taxon
+	 */
+	public int[] getGroups(double height) {
+		int[] groups = new int[nTaxa];
+		double maxHeight = sortedHeight[nNodes -1];
+		if (maxHeight < height) { //all individuals are in a single group
+			for (int t = 0; t <nTaxa; t++) groups[t] = 0;
+		} else {
+			for (int t = 0; t <nTaxa; t++) groups[t] = -1;
+			int group = 0;
+			for (int t = 0; t < nTaxa; t++) {
+				if (groups[t] == -1) {
+					Node aNode = theTree.getExternalNode(t);
+					while (aNode.getParent().getNodeHeight() <= height) {
+						aNode = aNode.getParent();
+					}
+					setNodeToGroup(aNode, group, groups);
+					group++;
+				}
+			}
+		}
+		
 		return groups;
 	}
 	
