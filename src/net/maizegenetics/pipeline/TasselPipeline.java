@@ -33,6 +33,7 @@ import net.maizegenetics.baseplugins.FilterTraitsPlugin;
 import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
 import net.maizegenetics.baseplugins.FlapjackLoadPlugin;
 import net.maizegenetics.baseplugins.GenotypeImputationPlugin;
+import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
 import net.maizegenetics.baseplugins.IntersectionAlignmentPlugin;
 import net.maizegenetics.baseplugins.KinshipPlugin;
 import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
@@ -595,6 +596,29 @@ public class TasselPipeline implements PluginListener {
 
                 } else if (current.equalsIgnoreCase("-gs")) {
                     RidgeRegressionEmmaPlugin plugin = new RidgeRegressionEmmaPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-genotypeSummary")) {
+                    GenotypeSummaryPlugin plugin = new GenotypeSummaryPlugin(myMainFrame, false);
+                    String temp = args[index++].trim();
+                    String[] types = temp.split(",");
+                    plugin.setCaculateOverview(false);
+                    plugin.setCalculateSiteSummary(false);
+                    plugin.setCalculateTaxaSummary(false);
+                    for (int i = 0; i < types.length; i++) {
+                        if (types[i].equalsIgnoreCase("overall")) {
+                            plugin.setCaculateOverview(true);
+                        } else if (types[i].equalsIgnoreCase("site")) {
+                            plugin.setCalculateSiteSummary(true);
+                        } else if (types[i].equalsIgnoreCase("taxa")) {
+                            plugin.setCalculateTaxaSummary(true);
+                        } else if (types[i].equalsIgnoreCase("all")) {
+                            plugin.setCaculateOverview(true);
+                            plugin.setCalculateSiteSummary(true);
+                            plugin.setCalculateTaxaSummary(true);
+                        } else {
+                            throw new IllegalArgumentException("TasselPipeline: parseArgs: -genotypeSummary illegal types: " + temp);
+                        }
+                    }
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-export")) {
                     String[] filenames = args[index++].trim().split(",");
