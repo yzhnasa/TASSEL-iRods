@@ -4,8 +4,11 @@
 package net.maizegenetics.pal.alignment;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +18,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
@@ -232,5 +235,35 @@ public class ImportUtils {
         Locus unknown = new Locus("Unknown", "0", 0, sequenceArray[0].length(), null, null);
         return SBitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{unknown}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles());
 
+    }
+
+    public static Alignment readAlignmentFromSerialGZ(String inFile) {
+
+        Alignment alignment = null;
+        long time = System.currentTimeMillis();
+        FileInputStream fis = null;
+        GZIPInputStream gs = null;
+        ObjectInputStream ois = null;
+        try {
+            File theFile = new File(Utils.addSuffixIfNeeded(inFile, ".serial.gz"));
+            myLogger.info("readAlignmentFromSerialGZ: Reading:" + theFile);
+            fis = new FileInputStream(theFile);
+            gs = new GZIPInputStream(fis);
+            ois = new ObjectInputStream(gs);
+            alignment = (Alignment) ois.readObject();
+
+        } catch (Exception ee) {
+            ee.printStackTrace();
+        } finally {
+            try {
+                ois.close();
+                gs.close();
+                fis.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+        myLogger.info("readAlignmentFromSerialGZ: Time: " + (System.currentTimeMillis() - time) + "  Sites: " + alignment.getSiteCount() + "  Taxa: " + alignment.getSequenceCount());
+        return alignment;
     }
 }

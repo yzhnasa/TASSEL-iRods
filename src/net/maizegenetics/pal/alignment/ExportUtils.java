@@ -6,11 +6,14 @@ package net.maizegenetics.pal.alignment;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 
 import net.maizegenetics.util.Utils;
 
 import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.util.ExceptionUtils;
@@ -571,5 +574,34 @@ public class ExportUtils {
             }
             out.print(a.getBaseAsString(seq, start + i));
         }
+    }
+
+    public static void writeAlignmentToSerialGZ(Alignment sba, String outFile) {
+
+        long time = System.currentTimeMillis();
+
+        File theFile = null;
+        FileOutputStream fos = null;
+        GZIPOutputStream gz = null;
+        ObjectOutputStream oos = null;
+        try {
+            theFile = new File(Utils.addSuffixIfNeeded(outFile, ".serial.gz"));
+            fos = new FileOutputStream(theFile);
+            gz = new GZIPOutputStream(fos);
+            oos = new ObjectOutputStream(gz);
+            oos.writeObject(sba);
+        } catch (Exception ee) {
+            ee.printStackTrace();
+        } finally {
+            try {
+                oos.flush();
+                oos.close();
+                gz.close();
+                fos.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+        myLogger.info("writeAlignmentToSerialGZ: " + theFile.toString() + "  Time: " + (System.currentTimeMillis() - time));
     }
 }

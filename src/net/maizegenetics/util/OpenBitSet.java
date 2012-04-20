@@ -75,6 +75,7 @@ Test system: AMD Opteron, 64 bit linux, Sun Java 1.5_06 -server -Xbatch -Xmx64M
  */
 public class OpenBitSet implements BitSet, Cloneable, Serializable {
 
+    private static final long serialVersionUID = -5197800047652332969L;
     private long[] myBits;
     private int myNumWords;   // number of words (elements) used in the array
 

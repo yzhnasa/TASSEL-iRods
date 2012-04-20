@@ -5,10 +5,10 @@
 package net.maizegenetics.pal.popgen;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.TreeMap;
 import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.pal.statistics.ApproxFastChiSquareDistribution;
 import net.maizegenetics.pal.statistics.ChiSquareDistribution;
 import net.maizegenetics.pipeline.EdTests;
 import net.maizegenetics.util.BitUtil;
@@ -16,14 +16,11 @@ import net.maizegenetics.util.ProgressListener;
 
 /**
  * Finds the nearest neighbor for every 64 site window.  In case of ties, it 
- * extends to neighboring 64bp windows.  It can be restricted to only find 
- * neighbors for a taxa within a high density genotype set.  This is useful for 
- * projection.  This class is expected to be used with Projection alignment.
+ * extends to neighboring 64bp windows.  
  * 
  * @author edbuckler
  */
 public class Expanding64NNImputation {
-    private byte[][] same, diff, hets;
     private TBitAlignment ldAlign;
     int minSites=256;
     int maxWindow=2048/64;
@@ -34,18 +31,25 @@ public class Expanding64NNImputation {
     int[] hSite, hTaxon;
     byte[] hState;
     int maskSitCnt=0;
-    int maxNN=10;
-    double minProb=0.01;
+    int maxNN=100;
+    double minProb=1;
     boolean maskAndTest=true;
+    ApproxFastChiSquareDistribution fcs=new ApproxFastChiSquareDistribution(1000,200);
 
-    public Expanding64NNImputation(TBitAlignment ldAlign, String exportFile) {
-        this.ldAlign=ldAlign;
+    public Expanding64NNImputation(TBitAlignment inldAlign, String exportFile) {
+        this.ldAlign=inldAlign;
         if(maskAndTest) maskSites(300);
         blocks=ldAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
-        this.createNull64Share(ldAlign, 40000000);
+        this.createNull64Share(ldAlign, 500);
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(this.ldAlign);
+        int impSiteCnt=0;
         for (int bt = 0; bt < ldAlign.getSequenceCount(); bt++) {
+            int taxaImpCnt=0;
+            String name=ldAlign.getIdGroup().getIdentifier(bt).getFullName();
+            System.out.printf("Imputing %d:%s ...", bt,name);
+            long time=System.currentTimeMillis();
             float[][] idp=getTaxaIdentityProbMatrix(bt);
+            System.out.printf("IDmatrixTime %d ", System.currentTimeMillis()-time);
             for (int x = 0; x < idp[0].length; x++) {
                 int startSite=x*64;
                 int endSite=startSite+63;
@@ -65,11 +69,18 @@ public class Expanding64NNImputation {
                     int ct=c.compTaxon;
                     for(int cs=startSite; cs<=endSite; cs++) {
                         if(mna.getBase(bt, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                            mna.setBase(bt, cs, ldAlign.getBase(ct, cs));
+                            byte nb=ldAlign.getBase(ct, cs);
+                            if(nb!=Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                                mna.setBase(bt, cs, nb);
+                                impSiteCnt++;
+                                taxaImpCnt++;
+                            }
                         }
                     }
                 }
             }
+            System.out.printf("Finished %d Imp %d %d %n", System.currentTimeMillis()-time, impSiteCnt, taxaImpCnt);
+            if(bt%100==0) compareSites(mna);
         }
         if(maskAndTest) compareSites(mna);
         ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);
@@ -87,13 +98,14 @@ public class Expanding64NNImputation {
         hState=new byte[maxSites];
         int cnt=0;
         for (int t = 0; t < mna.getSequenceCount(); t++) {
-            for (int s = t; s < mna.getSiteCount(); s+=sampIntensity) {
+            for (int s = t%sampIntensity; s < mna.getSiteCount(); s+=sampIntensity) {
                 hSite[cnt]=s;
                 hTaxon[cnt]=t;
                 hState[cnt]=mna.getBase(t, s);
                 mna.setBase(t, s, Alignment.UNKNOWN_DIPLOID_ALLELE);
                 cnt++;
-            }  
+            }
+ //           System.out.println(t+":"+cnt);
         }
         maskSitCnt=cnt;
         mna.clean();
@@ -128,7 +140,8 @@ public class Expanding64NNImputation {
     private ShareSize getMaxShare(float[][] idp, ShareSize currShare) {
         if(currShare.left==currShare.right) {
             currShare.fsum=idp[currShare.compTaxon][currShare.left];
-            currShare.p=1.0-ChiSquareDistribution.cdf(currShare.fsum, 2);
+     //       currShare.p=1.0-ChiSquareDistribution.cdf(currShare.fsum, 2);
+            currShare.p=1.0-fcs.cdfFastApprox(currShare.fsum, 2);
         }
         double tL=-1, tR=-1;
         if(currShare.left>0) {
@@ -139,14 +152,16 @@ public class Expanding64NNImputation {
         }
         if(tL>tR) {
             double testFsum=currShare.fsum+tL;
-            double testp=1.0-ChiSquareDistribution.cdf(testFsum, currShare.df+2);
+         //   double testp=1.0-ChiSquareDistribution.cdf(testFsum, currShare.df+2);
+            double testp=1.0-fcs.cdfFastApprox(testFsum, currShare.df+2);
             if(testp<currShare.p) {
                 currShare.moveLeft(testp, testFsum);
                 return getMaxShare(idp, currShare);
             }
         } else {
             double testFsum=currShare.fsum+tR;
-            double testp=1.0-ChiSquareDistribution.cdf(testFsum, currShare.df+2);
+//            double testp=1.0-ChiSquareDistribution.cdf(testFsum, currShare.df+2);
+            double testp=1.0-fcs.cdfFastApprox(testFsum, currShare.df+2);
             if(testp<currShare.p) {
                 currShare.moveRight(testp, testFsum); 
                 return getMaxShare(idp, currShare);
@@ -165,12 +180,13 @@ public class Expanding64NNImputation {
             } 
         }
         Random r=new Random(0);
-        int samplingPerTaxon=maxSampling/(a.getSequenceCount()*a.getSequenceCount()/2);
-        System.out.println("samplingPerTaxonContrast:"+samplingPerTaxon);
+      //  int samplingPerTaxon=maxSampling/(a.getSequenceCount()*a.getSequenceCount()/2);
+        System.out.println("samplingPerTaxonContrast: "+maxSampling);
         for (int t1 = 0; t1 < a.getSequenceCount(); t1++) {
             long[] iMj=a.getAllelePresenceForAllSites(t1, 0).getBits();
             long[] iMn=a.getAllelePresenceForAllSites(t1, 1).getBits();
-            for (int t2 = 0; t2 < a.getSequenceCount(); t2++) {
+            for (int samp = 0; samp < maxSampling; samp++) {
+                int t2=r.nextInt(a.getSequenceCount());
                 if(t1==t2) continue;
                 long[] jMj=a.getAllelePresenceForAllSites(t2, 0).getBits();
                 long[] jMn=a.getAllelePresenceForAllSites(t2, 1).getBits();
@@ -260,14 +276,26 @@ public class Expanding64NNImputation {
     
     public static void main(String[] args) {
         String root="/Users/edbuckler/SolexaAnal/bigprojection/";
-        String gFile=root+"282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
+//        String gFile=root+"282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
+//        String mFile=root+"282merge.chr10.hmp.txt";
+//        String exFile=root+"282merge_01.chr10.imp.hmp.txt";
+        String gFile=root+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
+        String mFile=root+"Zeamerge.chr10.hmp.txt";
+        String exFile=root+"Zeamerge_01.chr10.imp.hmp.txt";
+        
         String hFile=root+"maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt";
-        String mFile=root+"merge.chr10.hmp.txt";
-        String exFile=root+"merge_01.chr10.imp.hmp.txt";
+
         boolean buildInput=false;
+        boolean filterTrue=true;
+        
         if(buildInput) {
-            TBitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
+            Alignment a=ImportUtils.readFromHapmap(gFile, (ProgressListener)null);
             System.out.println("GBS Map Read");
+            if(filterTrue) a=FilterAlignment.getInstance(a, 0, a.getSiteCount()/10);
+            TBitAlignment gbsMap=TBitAlignment.getInstance(a);
+            
+  //          TBitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
+            System.out.println("GBS converted and filtered");
     //        SBitAlignment hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
             SBitAlignment hapMap=(SBitAlignment)ImportUtils.readFromHapmap(hFile, (ProgressListener)null);
             System.out.println("HapMap Read");
