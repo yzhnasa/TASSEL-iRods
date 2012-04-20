@@ -292,6 +292,9 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-geneticMap")) {
                     String geneticMapFile = args[index++].trim();
                     loadFile(geneticMapFile, FileLoadPlugin.TasselFileType.GeneticMap);
+                } else if (current.equalsIgnoreCase("-readSerialAlignment")) {
+                    String file = args[index++].trim();
+                    loadFile(file, FileLoadPlugin.TasselFileType.Serial);
                 } else if (current.equalsIgnoreCase("-taxaJoinStrict")) {
                     String temp = args[index++].trim();
                     boolean strict = true;
@@ -643,6 +646,8 @@ public class TasselPipeline implements PluginListener {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Phylip_Seq);
                     } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Plink.toString())) {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Plink);
+                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Serial.toString())) {
+                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Serial);
                     }
 
                 } else if (current.equalsIgnoreCase("-impute")) {

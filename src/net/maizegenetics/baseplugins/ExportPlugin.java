@@ -288,6 +288,8 @@ public class ExportPlugin extends AbstractPlugin {
             }
         } else if (myFileType == FileLoadPlugin.TasselFileType.Table) {
             ExportUtils.saveDelimitedAlignment(inputAlignment, "\t", mySaveFile);
+        } else if (myFileType == FileLoadPlugin.TasselFileType.Serial) {
+            ExportUtils.writeAlignmentToSerialGZ(inputAlignment, mySaveFile);
         } else {
             throw new IllegalStateException("ExportPlugin: performFunction: Unknown Alignment File Format: " + myFileType);
         }

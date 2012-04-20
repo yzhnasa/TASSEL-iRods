@@ -57,13 +57,15 @@ public class FileLoadPlugin extends AbstractPlugin {
     public enum TasselFileType {
 
         SqrMatrix, Annotated, Sequence, Polymorphism, Numerical, Unknown, Fasta,
-        Hapmap, Plink, Phenotype, Flapjack, Phylip_Seq, Phylip_Inter, GeneticMap, Table
+        Hapmap, Plink, Phenotype, Flapjack, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
+        Serial
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
     public static final String FILE_EXT_PLINK_MAP = ".plk.map";
     public static final String FILE_EXT_PLINK_PED = ".plk.ped";
     public static final String FILE_EXT_FLAPJACK_MAP = ".flpjk.map";
     public static final String FILE_EXT_FLAPJACK_GENO = ".flpjk.geno";
+    public static final String FILE_EXT_SERIAL_GZ = ".serial.gz";
 
     /** Creates a new instance of FileLoadPlugin */
     public FileLoadPlugin(Frame parentFrame, boolean isInteractive) {
@@ -145,6 +147,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                             alreadyLoaded.add(myOpenFiles[i]);
                             alreadyLoaded.add(theGenoFile);
                             myFlapjackLoadPlugin.loadFile(theGenoFile, myOpenFiles[i], null);
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_SERIAL_GZ)) {
+                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.Serial);
+                            alreadyLoaded.add(myOpenFiles[i]);
+                            tds = processDatum(myOpenFiles[i], TasselFileType.Serial);
                         } else {
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = guessAtUnknowns(myOpenFiles[i]);
@@ -334,6 +340,10 @@ public class FileLoadPlugin extends AbstractPlugin {
 
                 case GeneticMap: {
                     result = ReadPolymorphismUtils.readGeneticMapFile(inFile);
+                    break;
+                }
+                case Serial: {
+                    result = ImportUtils.readAlignmentFromSerialGZ(inFile);
                     break;
                 }
             }
