@@ -99,7 +99,9 @@ public class TasselPipeline implements PluginListener {
         PropertyConfigurator.configure(props);
 
         try {
-
+            
+            myLogger.info("Tassel Version: " + myMainFrame.version + "  Date: " + myMainFrame.versionDate);
+            
             parseArgs(args);
 
             if (myMainFrame != null) {
