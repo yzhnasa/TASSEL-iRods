@@ -291,6 +291,28 @@ public class FilterAlignment extends AbstractAlignment {
         return getInstance(a, result);
 
     }
+    
+    public static FilterAlignment getInstanceRemoveSiteNames(Alignment a, String[] siteNamesToRemove) {
+
+        Arrays.sort(siteNamesToRemove);
+        int[] temp = new int[a.getSiteCount()];
+        int count = 0;
+        for (int i = 0, n = a.getSiteCount(); i < n; i++) {
+            if (Arrays.binarySearch(siteNamesToRemove, a.getSNPID(i)) < 0) {
+                temp[count++] = i;
+            }
+        }
+
+        int[] result = null;
+        if (count == temp.length) {
+            result = temp;
+        } else {
+            result = new int[count];
+            System.arraycopy(temp, 0, result, 0, count);
+        }
+        return getInstance(a, result);
+
+    }
 
     public static FilterAlignment getInstance(Alignment a, int startSite, int endSite) {
 
