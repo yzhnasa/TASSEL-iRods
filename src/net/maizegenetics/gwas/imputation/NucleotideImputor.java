@@ -60,6 +60,7 @@ public class NucleotideImputor {
 	static final byte CG = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
 	static final byte CT = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
 	static final byte GT = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
+	static final byte NN = NucleotideAlignmentConstants.getNucleotideDiploidByte("NN");
 	
 	static final byte[] byteval = new byte[] {AA,CC,GG,TT,AC};
 	final static HashMap<Byte, Integer> genotypeMap = new HashMap<Byte, Integer>();
@@ -247,7 +248,7 @@ public class NucleotideImputor {
 		}
 		
 		polyCount = 0;
-		while (polyCount < windowSize) { //find the starting point of the window
+		while (polyCount < (windowSize/2)) { //find the starting point of the window
 			if (polybits.get(start--)) polyCount++;
 		}
 		start++;
@@ -262,8 +263,8 @@ public class NucleotideImputor {
 			snpid++;
 		}
 		
+		//create a filtered alignment containing only the test snps
 		FilterAlignment filteredPopAlignment = FilterAlignment.getInstance(popAlignment, snpIds);
-		
 		
 		//cluster polymorphic snps within the window by creating a UPGMA tree (cluster on snps)
 		SBitAlignment haplotypeAlignment = SBitAlignment.getInstance(filteredPopAlignment);
@@ -296,8 +297,12 @@ public class NucleotideImputor {
 		int[] ldSnps = new int[ngrp];
 		int grpCount = 0;
 		for (int i = 0; i < windowSize; i++) {
-			if (groups[i] == biggestGroup) ldSnps[grpCount++] = snpIds[i];
-			ldbits.fastSet(snpIds[i]);
+			if (groups[i] == biggestGroup) {
+				//the tree nodes are not in the same order as the alignment, so have to do the conversion
+				int snpnumber = Integer.parseInt(myTree.getIdentifier(i).getFullName());
+				ldSnps[grpCount++] = snpIds[snpnumber];
+				ldbits.fastSet(snpIds[snpnumber]);
+			}
 		}
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
@@ -322,8 +327,6 @@ public class NucleotideImputor {
 		}
 		
 		//use haplotypes to score parental type
-		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popAlignment);
-		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
 		
 		//find the biggest and next biggest groups
 		int majorGroup = 0;
@@ -337,19 +340,19 @@ public class NucleotideImputor {
 			}
 		}
 		
-		//create an alignment for each cluster
-		IdGroup allTaxa = filteredPopAlignment.getIdGroup();
-		int ntaxa = allTaxa.getIdCount();
-		boolean[] isInMajor = new boolean[ntaxa];
-		boolean[] isInMinor = new boolean[ntaxa];
-		for (int i = 0; i < ntaxa; i++) {
-			isInMajor[i] = false;
-			isInMinor[i] = false;
-			if (groups[i] == majorGroup) isInMajor[i] = true; 
-			else if (groups[i] == minorGroup) isInMinor[i] = true;
+		//create major and minor id groups
+		String[] majorids = new String[groupCount[majorGroup]];
+		String[] minorids = new String[groupCount[minorGroup]];
+		int majorCount = 0;
+		int minorCount = 0;
+		for (int i = 0; i < groups.length; i++) {
+			if (groups[i] == majorGroup) majorids[majorCount++] = myTree.getIdentifier(i).getFullName();
+			else if (groups[i] == minorGroup) minorids[minorCount++] = myTree.getIdentifier(i).getFullName();
 		}
-		IdGroup majorTaxa = IdGroupUtils.idGroupSubset(allTaxa, isInMajor);
-		IdGroup minorTaxa = IdGroupUtils.idGroupSubset(allTaxa, isInMinor);
+		IdGroup majorTaxa = new SimpleIdGroup(majorids);
+		IdGroup minorTaxa =  new SimpleIdGroup(minorids);
+		
+		//create an alignment for each cluster
 		if (majorTaxa.whichIdNumber(pop.parent1) > -1) {
 			//nothing to do
 		} else if (minorTaxa.whichIdNumber(pop.parent1) > -1) {
@@ -363,31 +366,32 @@ public class NucleotideImputor {
 		
 		Alignment aAlignment = FilterAlignment.getInstance(filteredPopAlignment, majorTaxa);
 		Alignment cAlignment = FilterAlignment.getInstance(filteredPopAlignment, minorTaxa);
-		
+
 		//set first parent to AA, second parent to CC for ldSnps (snps used to form taxa clusters)
-		byte AA = NucleotideAlignmentConstants.getNucleotideDiploidByte("AA");
-		byte AC = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
-		byte CC = NucleotideAlignmentConstants.getNucleotideDiploidByte("CC");
-		byte missing = NucleotideAlignmentConstants.getNucleotideDiploidByte("NN");
+		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popAlignment);
+		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
+		System.out.println("snps in parent Alignment = " + parentAlignment.getSiteCount());
+		int ntaxa = parentAlignment.getSequenceCount();
+		
 		for (int i = 0; i < ldSnps.length; i++) {
 			int snp = ldSnps[i];
-			byte parentA = aAlignment.getMajorAllele(snp);
-			byte parentC = cAlignment.getMajorAllele(snp);
+			byte parentA = aAlignment.getMajorAllele(i);
+			byte parentC = cAlignment.getMajorAllele(i);
 			
 			for (int t = 0; t < ntaxa; t++) {
 				byte[] taxon = popAlignment.getBaseArray(t, snp);
 				if (taxon[0] == taxon[1]) {
 					if (taxon[0] == parentA) parentAlignment.setBase(t, snp, AA);
 					else if (taxon[0] == parentC) parentAlignment.setBase(t, snp, CC);
-					else parentAlignment.setBase(t, snp, missing);
+					else parentAlignment.setBase(t, snp, NN);
 				} else if (taxon[0] == parentA) {
 					if (taxon[1] == parentC) parentAlignment.setBase(t, snp, AC);
-					else parentAlignment.setBase(t, snp, missing);
+					else parentAlignment.setBase(t, snp, NN);
 				} else if (taxon[0] == parentC) {
 					if (taxon[1] == parentA) parentAlignment.setBase(t, snp, AC);
-					else parentAlignment.setBase(t, snp, missing);
+					else parentAlignment.setBase(t, snp, NN);
 				} else {
-					parentAlignment.setBase(t, snp, missing);
+					parentAlignment.setBase(t, snp, NN);
 				}
 			}
 		}
@@ -395,158 +399,90 @@ public class NucleotideImputor {
 		
 		//extend haplotypes
 		//add snps in ld
-		double minr = 0.9;
 		int testSize = 25;
+		double maxr = 0.8;
 		
-		//add snps from middle to start
+		//add snps from middle to start; test only polymorphic snps
 		LinkedList<Integer> testSnps = new LinkedList<Integer>();
-		for (int i = 0; i < testSize; i++) testSnps.add(snpIds[i]);
-		for (int testsnp = snpIds[0] - 1; testsnp >= 0; testsnp--) {
-			if (polybits.get(testsnp)) {
-				double sumr = 0;
-				double count = 0;
-				for (Integer snp:testSnps) {
-					double r = computeR(testsnp, snp, sbitPopAlignment);
-					if (!Double.isNaN(r)) {
-						sumr += Math.abs(r);
-						count++;
-					}
-				}
-				if (count > 0.9) sumr /= count;
-				if (sumr > minr && count > 5) {
-					ldbits.fastSet(testsnp);
-					testSnps.remove();
-					testSnps.add(testsnp);
-				}
+		for (int i = testSize - 1; i >= 0; i--) testSnps.add(snpIds[i]);
+		for (int snp = snpIds[0] - 1; snp >= 0; snp--) {
+			if (polybits.fastGet(snp) && recodeParentalSnps(snp, testSnps, parentAlignment, maxr)) {
+				ldbits.fastSet(snp);
+				testSnps.add(snp);
+				testSnps.remove();
 			}
+			
 		}
 		
 		//add snps from middle to end
 		testSnps.clear();
-		for (int i = testSize; i >= 1; i--) testSnps.add(snpIds[windowSize - i]);
-		for (int testsnp = snpIds[windowSize - 1] + 1; testsnp < nsites; testsnp++) {
-			if (polybits.get(testsnp)) {
-				double sumr = 0;
-				double count = 0;
-				for (Integer snp:testSnps) {
-					double r = computeR(testsnp, snp, sbitPopAlignment);
-					if (!Double.isNaN(r)) {
-						sumr += Math.abs(r);
-						count++;
-					}
-				}
-				if (count > 0.9) sumr /= count;
-				if (sumr > minr && count > 5) {
-					ldbits.fastSet(testsnp);
-					testSnps.remove();
-					testSnps.add(testsnp);
-				}
-			}
-		}
-		
-		//set ldbits to true for snps in the LD set
-		System.out.println("Snps added to the LD set = " + ldbits.cardinality());
-		int nsnps = (int) ldbits.cardinality(); //nsnps is now the number of snps that will be used
-		int[] snpIndex = new int[nsnps];
-		int ldCount = 0;
-		int n = popAlignment.getSiteCount();
-		for (int s = 0; s < n; s++) {
-			if (ldbits.fastGet(s)) snpIndex[ldCount++] = s;
-		}
-		
-		//get the parental haplotypes
-		SBitAlignment ldSnpAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(popAlignment, snpIndex));
-		BitSet parent0 = new OpenBitSet(nsnps); //records whether a parent carries the major allele
-		parent0.fastSet(0); //arbitrarily say that parent 0 is the parent carrying the major allele at site 0.
-		
-		BitSet[][] mySites = new BitSet[2][2];
-		int[][] matches = new int[2][2];
-		mySites[0][0] = ldSnpAlignment.getAllelePresenceForAllTaxa(0, 0);
-		mySites[0][1] = ldSnpAlignment.getAllelePresenceForAllTaxa(0, 1);
-		for (int s = 1; s < nsnps; s++) {
-			mySites[1][0] = ldSnpAlignment.getAllelePresenceForAllTaxa(s, 0);
-			mySites[1][1] = ldSnpAlignment.getAllelePresenceForAllTaxa(s, 1);
-			for (int i = 0; i < 2; i++) {
-				for (int j = 0; j < 2; j++) {
-					matches[0][0] = (int) OpenBitSet.intersectionCount(mySites[0][i], mySites[1][j]);
-				}
+		int n = snpIds.length;
+		for (int i = n - testSize; i < n; i++) testSnps.add(snpIds[i]);
+		for (int snp = snpIds[n - 1] + 1; snp < nsites; snp++) {
+			if (polybits.fastGet(snp) && recodeParentalSnps(snp, testSnps, parentAlignment, maxr)) {
+				ldbits.fastSet(snp);
+				testSnps.add(snp);
+				testSnps.remove();
 			}
 			
-			if (matches[0][0] + matches[1][1] > matches[0][1] + matches[1][0]) {
-				//if major alleles alleles at site s associate with major alleles at site s-1, parent values for s should match s-1.
-				if (parent0.fastGet(s - 1)) parent0.fastSet(s);
-			} else {
-				if (!parent0.fastGet(s - 1)) parent0.fastSet(s);
-			}
-			
-			mySites[0][0] = mySites[1][0];
-			mySites[0][1] = mySites[1][1];
 		}
 		
-		//get parental haplotypes
-		//cluster taxa using first
-		
-		//score the progeny as parent 0(2), parent 1(0), het(1), or missing(-1), i.e. count of parent 0 alleles
-		nsites = snpIndex.length;
-		ntaxa = popAlignment.getSequenceCount();
-		byte[][] scores = new byte[nsites][ntaxa];
-		for (int i = 0; i < nsites; i++) { //set to missing
-			for (int j = 0; j < ntaxa; j++) {
-				scores[i][j] = -1;
-			}
-		}
-		
-		TBitAlignment taxaAlignment = TBitAlignment.getInstance(ldSnpAlignment);
-		for (int t = 0; t < ntaxa; t++) {
-			BitSet major = taxaAlignment.getAllelePresenceForAllSites(t, 0);
-			BitSet minor = taxaAlignment.getAllelePresenceForAllSites(t, 1);
-			for (int s = 0; s < nsites; s++) {
-				boolean ismajor = major.fastGet(s);
-				boolean isminor = minor.fastGet(s);
-				if (ismajor && isminor) scores[s][t] = 1;
-				else if (!ismajor & !isminor) scores[s][t] = -1;
-				else if (parent0.fastGet(s)) {
-					if (ismajor) scores[s][t] = 2;
-					else scores[s][t] = 0;
-				} else {
-					if (isminor) scores[s][t] = 2;
-					else scores[s][t] = 0;
-				}
-			}
-		}
-		
-		writeScoresNumeric(ldSnpAlignment, scores, family);
+		parentAlignment.clean();
+		writeScoresNumeric(parentAlignment, family, ldbits);
 		
 		System.out.println("Finished.");
 	}
 	
-	private boolean addSnpToTarget(int snp, LinkedList<Integer> testSnps, MutableNucleotideAlignment targetAlignment) {
+	private boolean recodeParentalSnps(int snp, LinkedList<Integer> testSnps, MutableNucleotideAlignment snpAlignment, double maxr) {
 		
-		int ntaxa = targetAlignment.getSequenceCount();
+		int ntaxa = snpAlignment.getSequenceCount();
 		byte[] snpvals = new byte[ntaxa];
 		for (int t = 0; t < ntaxa; t++) {
-			snpvals[t] = targetAlignment.getBase(t, snp);
+			snpvals[t] = snpAlignment.getBase(t, snp);
 		}
 		
 		int[] acount = new int[5];
 		int[] ccount = new int[5];
 		for (Integer testsnp:testSnps) {
 			for (int t = 0; t < ntaxa; t++) {
-				if (snpvals[t] == AA) {
-					Integer ndx = genotypeMap.get(targetAlignment.getBase(t, testsnp));
+				byte testval = snpAlignment.getBase(t, testsnp);
+				if (testval == AA) {
+					Integer ndx = genotypeMap.get(snpvals[t]);
 					if (ndx != null) acount[ndx]++;
-				} else if (snpvals[t] == CC) {
-					Integer ndx = genotypeMap.get(targetAlignment.getBase(t, testsnp));
+				} else if (testval == CC) {
+					Integer ndx = genotypeMap.get(snpvals[t]);
 					if (ndx != null) ccount[ndx]++;
 				}
 			}
 		}
 		
+		//calculate r
 		int maxa = 0;
 		int maxc = 0;
 		for (int i = 1; i < 4; i++) {
 			if (acount[i] > acount[maxa]) maxa = i;
 			if (ccount[i] > ccount[maxc]) maxc = i;
+		}
+		
+		int[][] counts = new int[2][2];
+		counts[0][0] = acount[maxa];
+		counts[0][1] = acount[maxc];
+		counts[1][0] = ccount[maxa];
+		counts[1][1] = ccount[maxc];
+		
+		double r = Math.abs(calculateR(counts));
+		
+		//if abs(r) > 0.8, recode the snp
+		if ( r >= 0.8) {
+			byte hetval = genoval[maxa][maxc];
+			for (int t = 0; t < ntaxa; t++) {
+				byte val = snpvals[t];
+				if (val == byteval[maxa]) snpAlignment.setBase(t, snp, AA);
+				else if (val == byteval[maxc]) snpAlignment.setBase(t, snp, CC);
+				else if (val == hetval) snpAlignment.setBase(t, snp, AC);
+				else snpAlignment.setBase(t, snp, NN);
+			}
+			return true;
 		}
 		
 		return false;
@@ -573,7 +509,7 @@ public class NucleotideImputor {
 		
 	}
 	
-	public void writeScoresHapmap(Alignment a, byte[][] scores, String family) {
+	public void writeScoresHapmap(Alignment a, String family, BitSet ldbits) {
 		String outfile = baseOutFilename + "_family" + family + ".hmp.txt";
 		int ntaxa = a.getSequenceCount();
 		int nsites = a.getSiteCount();
@@ -589,7 +525,7 @@ public class NucleotideImputor {
 			
 			bw.newLine();
 			
-			for (int s = 0; s < nsites; s++) {
+			for (int s = 0; s < nsites; s++) if (ldbits.fastGet(s)){
 				bw.write(a.getSNPID(s));
 				bw.write("\t");
 				bw.write(a.getMajorAlleleAsString(s));
@@ -604,8 +540,11 @@ public class NucleotideImputor {
 				bw.write("\tNA\tNA\tNA\tNA\tNA");
 				for (int t = 0; t < ntaxa; t++) {
 					bw.write("\t");
-					if (scores[s][t] == -1) bw.write("N");
-					else bw.write(code[scores[s][t]]);
+					byte val = a.getBase(t, s);
+					if (val == AA) bw.write("A");
+					else if (val == CC) bw.write("C");
+					else if (val == AC) bw.write("M");
+					else bw.write("N");
 				}
 				bw.newLine();
 			}
@@ -617,7 +556,7 @@ public class NucleotideImputor {
 		}
 	}
 	
-	public void writeScoresNumeric(Alignment a, byte[][] scores, String family) {
+	public void writeScoresNumeric(Alignment a, String family, BitSet ldbits) {
 		String outfile = baseOutFilename + "_family" + family + ".numeric.txt";
 		int ntaxa = a.getSequenceCount();
 		int nsites = a.getSiteCount();
@@ -631,7 +570,7 @@ public class NucleotideImputor {
 			
 			bw.newLine();
 			
-			for (int s = 0; s < nsites; s++) {
+			for (int s = 0; s < nsites; s++) if (ldbits.fastGet(s)) {
 				bw.write(a.getLocus(s).getChromosomeName());
 				bw.write("\t");
 				bw.write(Integer.toString(a.getPositionInLocus(s)));
@@ -641,7 +580,11 @@ public class NucleotideImputor {
 				bw.write(a.getMinorAlleleAsString(s));
 				for (int t = 0; t < ntaxa; t++) {
 					bw.write("\t");
-					bw.write(Integer.toString(scores[s][t]));
+					byte val = a.getBase(t, s);
+					if (val == AA) bw.write("0");
+					else if (val == CC) bw.write("2");
+					else if (val == AC) bw.write("1");
+					else bw.write("-1");
 				}
 				bw.newLine();
 			}
