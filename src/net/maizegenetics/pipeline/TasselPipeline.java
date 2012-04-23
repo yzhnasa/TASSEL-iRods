@@ -99,9 +99,9 @@ public class TasselPipeline implements PluginListener {
         PropertyConfigurator.configure(props);
 
         try {
-            
+
             myLogger.info("Tassel Version: " + myMainFrame.version + "  Date: " + myMainFrame.versionDate);
-            
+
             parseArgs(args);
 
             if (myMainFrame != null) {
@@ -958,14 +958,14 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-excludeSiteNamesInFile")) {
                     FilterSiteNamePlugin plugin = new FilterSiteNamePlugin(myMainFrame, false);
                     String siteNameListFile = args[index++].trim();
-                    
+
                     List siteNames = new ArrayList();
                     BufferedReader br = null;
                     try {
                         br = Utils.getBufferedReader(siteNameListFile);
                         String inputline = br.readLine();
                         Pattern sep = Pattern.compile("\\s+");
-                        
+
                         while (inputline != null) {
                             inputline = inputline.trim();
                             String[] parsedline = sep.split(inputline);
@@ -979,7 +979,7 @@ public class TasselPipeline implements PluginListener {
                     } finally {
                         br.close();
                     }
-                    
+
                     String[] names = new String[siteNames.size()];
                     for (int i = 0; i < siteNames.size(); i++) {
                         names[i] = (String) siteNames.get(i);
