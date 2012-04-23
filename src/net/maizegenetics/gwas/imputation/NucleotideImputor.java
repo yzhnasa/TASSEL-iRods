@@ -50,6 +50,30 @@ public class NucleotideImputor {
 	String assembly = "NA";
 	int minAlleleCount = 20;
 	
+	static final byte AA = NucleotideAlignmentConstants.getNucleotideDiploidByte("AA");
+	static final byte CC = NucleotideAlignmentConstants.getNucleotideDiploidByte("CC");
+	static final byte GG = NucleotideAlignmentConstants.getNucleotideDiploidByte("GG");
+	static final byte TT = NucleotideAlignmentConstants.getNucleotideDiploidByte("TT");
+	static final byte AC = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
+	static final byte AG = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
+	static final byte AT = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
+	static final byte CG = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
+	static final byte CT = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
+	static final byte GT = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
+	
+	static final byte[] byteval = new byte[] {AA,CC,GG,TT,AC};
+	final static HashMap<Byte, Integer> genotypeMap = new HashMap<Byte, Integer>();
+	
+	static{
+		genotypeMap.put(AA, 0);
+		genotypeMap.put(CC, 1);
+		genotypeMap.put(GG, 2);
+		genotypeMap.put(TT, 3);
+		genotypeMap.put(AC, 4);
+	}
+	
+	static final byte[][] genoval = new byte[][]{{AA,AC,AG,AT},{AC,CC,CG,CT},{AG,CG,GG,GT},{AT,CT,GT,TT}};
+	
 	class Population {
 		ArrayList<String> members;
 		BitSet index;
@@ -298,7 +322,8 @@ public class NucleotideImputor {
 		}
 		
 		//use haplotypes to score parental type
-		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(SBitAlignment.getInstance(popAlignment));
+		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popAlignment);
+		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
 		
 		//find the biggest and next biggest groups
 		int majorGroup = 0;
@@ -374,7 +399,6 @@ public class NucleotideImputor {
 		int testSize = 25;
 		
 		//add snps from middle to start
-		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popAlignment);
 		LinkedList<Integer> testSnps = new LinkedList<Integer>();
 		for (int i = 0; i < testSize; i++) testSnps.add(snpIds[i]);
 		for (int testsnp = snpIds[0] - 1; testsnp >= 0; testsnp--) {
@@ -496,31 +520,37 @@ public class NucleotideImputor {
 		System.out.println("Finished.");
 	}
 	
-	private boolean addSnpToTarget(int snp, LinkedList<Integer> testSnps, SBitAlignment sourceAlignment, SBitAlignment targetAlignment ) {
-		byte AA = NucleotideAlignmentConstants.getNucleotideDiploidByte("AA");
-		byte AC = NucleotideAlignmentConstants.getNucleotideDiploidByte("AC");
-		byte CC = NucleotideAlignmentConstants.getNucleotideDiploidByte("CC");
+	private boolean addSnpToTarget(int snp, LinkedList<Integer> testSnps, MutableNucleotideAlignment targetAlignment) {
 		
-		BitSet majorSource = sourceAlignment.getAllelePresenceForAllTaxa(snp, 0);
-		BitSet minorSource = sourceAlignment.getAllelePresenceForAllTaxa(snp, 0);
+		int ntaxa = targetAlignment.getSequenceCount();
+		byte[] snpvals = new byte[ntaxa];
+		for (int t = 0; t < ntaxa; t++) {
+			snpvals[t] = targetAlignment.getBase(t, snp);
+		}
 		
+		int[] acount = new int[5];
+		int[] ccount = new int[5];
 		for (Integer testsnp:testSnps) {
-			BitSet majorTarget = targetAlignment.getAllelePresenceForAllTaxa(testsnp, 0);
-			BitSet minorTarget = targetAlignment.getAllelePresenceForAllTaxa(testsnp, 1);
-			
-			int[][] matches = new int[2][2];
-			matches[0][0] = (int) OpenBitSet.intersectionCount(majorSource, majorTarget);
-			matches[0][1] = (int) OpenBitSet.intersectionCount(majorSource, minorTarget);
-			matches[1][0] = (int) OpenBitSet.intersectionCount(minorSource, majorTarget);
-			matches[1][1] = (int) OpenBitSet.intersectionCount(minorSource, minorTarget);
-			
-			double absR = Math.abs(calculateR(matches));
-			if (absR >= 0.9) {
-				
+			for (int t = 0; t < ntaxa; t++) {
+				if (snpvals[t] == AA) {
+					Integer ndx = genotypeMap.get(targetAlignment.getBase(t, testsnp));
+					if (ndx != null) acount[ndx]++;
+				} else if (snpvals[t] == CC) {
+					Integer ndx = genotypeMap.get(targetAlignment.getBase(t, testsnp));
+					if (ndx != null) ccount[ndx]++;
+				}
 			}
 		}
 		
+		int maxa = 0;
+		int maxc = 0;
+		for (int i = 1; i < 4; i++) {
+			if (acount[i] > acount[maxa]) maxa = i;
+			if (ccount[i] > ccount[maxc]) maxc = i;
+		}
+		
 		return false;
+		
 	}
 	
 	private double calculateR(int[][] counts) {
