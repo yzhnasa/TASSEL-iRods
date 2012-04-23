@@ -36,6 +36,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
     private static final Logger myLogger = Logger.getLogger(FilterSiteNamePlugin.class);
     private int[] mySitesToKeep = null;
     private String[] mySiteNamesToKeep = null;
+    private String[] mySiteNamesToRemove = null;
 
     /** Creates a new instance of FilterSiteNamePlugin */
     public FilterSiteNamePlugin(Frame parentFrame, boolean isInteractive) {
@@ -105,6 +106,8 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
             result = FilterAlignment.getInstance(alignment, mySitesToKeep);
         } else if (((mySiteNamesToKeep != null) && (mySiteNamesToKeep.length != 0))) {
             result = FilterAlignment.getInstance(alignment, mySiteNamesToKeep);
+        } else if (((mySiteNamesToRemove != null) && (mySiteNamesToRemove.length != 0))) {
+            result = FilterAlignment.getInstanceRemoveSiteNames(alignment, mySiteNamesToRemove);
         } else {
             return null;
         }
@@ -121,10 +124,8 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
     }
 
     public void setSitesToKeep(int[] sitesToKeep) {
-        if (mySiteNamesToKeep != null) {
-            throw new IllegalStateException("FilterSiteNamePlugin: setIdsToKeep: Can't set both sites and site names.");
-        }
         mySitesToKeep = sitesToKeep;
+        validItemsSet();
     }
 
     public String[] getSiteNamesToKeep() {
@@ -132,10 +133,36 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
     }
 
     public void setSiteNamesToKeep(String[] sitesToKeep) {
-        if (mySitesToKeep != null) {
-            throw new IllegalStateException("FilterSiteNamePlugin: setIdsToKeep: Can't set both sites and site names.");
-        }
         mySiteNamesToKeep = sitesToKeep;
+        validItemsSet();
+    }
+
+    public String[] getSiteNamesToRemove() {
+        return mySiteNamesToRemove;
+    }
+
+    public void setSiteNamesToRemove(String[] sitesToRemove) {
+        mySiteNamesToKeep = sitesToRemove;
+        validItemsSet();
+    }
+
+    private void validItemsSet() {
+
+        int count = 0;
+        if ((mySitesToKeep != null) && (mySitesToKeep.length != 0)) {
+            count++;
+        }
+        if ((mySiteNamesToKeep != null) && (mySiteNamesToKeep.length != 0)) {
+            count++;
+        }
+        if ((mySiteNamesToRemove != null) && (mySiteNamesToRemove.length != 0)) {
+            count++;
+        }
+
+        if (count > 1) {
+            throw new IllegalStateException("FilterSiteNamePlugin: validItemsSet: Can only set one of the following: sites to keep, site names to keep, or site names to remove.");
+        }
+
     }
 
     /**

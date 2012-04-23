@@ -950,6 +950,42 @@ public class TasselPipeline implements PluginListener {
                     siteNameArray = (String[]) siteNames.toArray(siteNameArray);
                     plugin.setSiteNamesToKeep(siteNameArray);
                     integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-excludeSiteNames")) {
+                    FilterSiteNamePlugin plugin = new FilterSiteNamePlugin(myMainFrame, false);
+                    String[] sites = args[index++].trim().split(",");
+                    plugin.setSiteNamesToRemove(sites);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-excludeSiteNamesInFile")) {
+                    FilterSiteNamePlugin plugin = new FilterSiteNamePlugin(myMainFrame, false);
+                    String siteNameListFile = args[index++].trim();
+                    
+                    List siteNames = new ArrayList();
+                    BufferedReader br = null;
+                    try {
+                        br = Utils.getBufferedReader(siteNameListFile);
+                        String inputline = br.readLine();
+                        Pattern sep = Pattern.compile("\\s+");
+                        
+                        while (inputline != null) {
+                            inputline = inputline.trim();
+                            String[] parsedline = sep.split(inputline);
+                            for (int i = 0; i < parsedline.length; i++) {
+                                if ((parsedline[i] != null) || (parsedline[i].length() != 0)) {
+                                    siteNames.add(parsedline[i]);
+                                }
+                            }
+                            inputline = br.readLine();
+                        }
+                    } finally {
+                        br.close();
+                    }
+                    
+                    String[] names = new String[siteNames.size()];
+                    for (int i = 0; i < siteNames.size(); i++) {
+                        names[i] = (String) siteNames.get(i);
+                    }
+                    plugin.setSiteNamesToRemove(names);
+                    integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-newCoordinates")) {
                     ConvertAlignmentCoordinatesPlugin plugin = new ConvertAlignmentCoordinatesPlugin(myMainFrame);
                     String mapFile = args[index++].trim();
