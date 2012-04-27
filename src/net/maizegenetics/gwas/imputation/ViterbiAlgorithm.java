@@ -53,7 +53,7 @@ public class ViterbiAlgorithm {
 	public void initialize() {
 		for (int i = 0; i < numberOfStates; i++) {
 			try{
-				distance[i] = probObservationGivenState.getLnProbObsGivenState(obs[0], i, 0) + probTrueStates[i];
+				distance[i] = probObservationGivenState.getLnProbObsGivenState(i, obs[0], 0) + probTrueStates[i];
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
@@ -62,9 +62,10 @@ public class ViterbiAlgorithm {
 	
 	public void updateDistanceAndHistory(int node) {
 		double[][] candidateDistance = new double[numberOfStates][numberOfStates];
+		myTransitionMatrix.setNode(node);
 		for (int i = 0; i < numberOfStates; i++) {
 			for (int j = 0; j < numberOfStates; j++) {
-				candidateDistance[i][j] = distance[i] + myTransitionMatrix.getLnTransitionProbability(i, j, node) + probObservationGivenState.getLnProbObsGivenState(obs[node], j, node);
+				candidateDistance[i][j] = distance[i] + myTransitionMatrix.getLnTransitionProbability(i, j) + probObservationGivenState.getLnProbObsGivenState(j, obs[node], node);
 			}
 		}
 
