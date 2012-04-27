@@ -219,7 +219,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
         int count = 0;
         for (int i = 0; i < distance.length; i++) {
             for (int j = 0; j < distance[i].length; j++) {
-                if (i != j) {
+                if ((i != j)&&(!Double.isNaN(distance[i][j]))) {
                     dist += distance[i][j];
                     count += 1;
                 }
