@@ -45,7 +45,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(FilterAlignmentPlugin.class);
     private int myStart = 0;
-    private int myEnd = 0;
+    private int myEnd = -1;
     private int myMinCount = 1;
     private double myMinFreq = 0.01;
     private double myMaxFreq = 1.0;
@@ -104,6 +104,10 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
         Alignment aa = (Alignment) inDatum.getData();
+        
+        if (myEnd == -1) {
+            myEnd = aa.getSiteCount() - 1;
+        }
 
         if (isInteractive) {
             DataFilterAlignmentDialog theDialog = new DataFilterAlignmentDialog(aa, getParentFrame());
@@ -128,7 +132,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
             theDialog.dispose();
         }
-
+        
         if (myStart >= aa.getSiteCount()) {
             throw new IllegalArgumentException("FilterAlignmentPlugin: starting site can't be past end of alignment.");
         }
@@ -218,8 +222,8 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         } else {
             theComment = "Point Poly.\n";
         }
-        myStart = myEnd = 0;  //reset so that it will test full length unless specifically set to do otherwise.
         if (naa.getSiteCount() != 0) {
+            myLogger.info("Resulting Number Sites: " + naa.getSiteCount());
             return new Datum(theName, naa, theComment);
         } else {
             if (isInteractive()) {

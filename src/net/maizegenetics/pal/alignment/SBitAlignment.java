@@ -133,7 +133,7 @@ public class SBitAlignment extends AbstractAlignment {
     public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
-            throw new IllegalArgumentException("SBitAlignment: getNucleotideInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
+            throw new IllegalArgumentException("SBitAlignment: getNucleotideInstance: max number of alleles must be between 1 and " + NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES + " inclusive: " + maxNumAlleles);
         }
 
         if ((data == null) || (data.length == 0)) {
@@ -153,7 +153,7 @@ public class SBitAlignment extends AbstractAlignment {
     public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
-            throw new IllegalArgumentException("SBitAlignment: getNucleotideInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
+            throw new IllegalArgumentException("SBitAlignment: getNucleotideInstance: max number of alleles must be between 1 and " + NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES + " inclusive: " + maxNumAlleles);
         }
 
         if ((data == null) || (data.length == 0)) {
@@ -688,7 +688,7 @@ public class SBitAlignment extends AbstractAlignment {
     public boolean isTBitFriendly() {
         return false;
     }
-    
+
     @Override
     public int getTotalNumAlleles() {
         return myNumDataRows;

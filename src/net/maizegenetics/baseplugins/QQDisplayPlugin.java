@@ -206,9 +206,6 @@ class PlotOptionsQQDialog extends JDialog {
     private JLabel sliderLabel1 = new JLabel();
     private JSlider slider = new JSlider();
     private JLabel countLabel1 = new JLabel();
-    private JPanel countLabelPanel1 = new JPanel();
-    private JLabel countLabel2 = new JLabel();
-    private JLabel countLabel3 = new JLabel();
     private JLabel listLabel1 = new JLabel();
     private JLabel listLabel2 = new JLabel();
     private JTextField countTextField = new JTextField();
@@ -229,8 +226,8 @@ class PlotOptionsQQDialog extends JDialog {
         int numSites = indexes.get(1) - indexes.get(0);
         slider.setMinimum(1);
         slider.setMaximum(numSites);
-        slider.setValue((int)(numSites * 0.05));
-        countTextField.setText("" + (int)(numSites * 0.05));
+        slider.setValue((int)(numSites * 0.01));
+        countTextField.setText("" + (int)(numSites * 0.01));
 
         try {
             initUI();
@@ -242,27 +239,12 @@ class PlotOptionsQQDialog extends JDialog {
 
     void initUI() throws Exception {
 
-        // mainPanel.setBackground(SystemColor.menu);
         mainPanel.setMinimumSize(new Dimension(400, 230));
         mainPanel.setPreferredSize(new Dimension(400, 230));
         mainPanel.setLayout(gridBagLayout2);
 
-        GridBagConstraints c = new GridBagConstraints();
-
-//        c.fill = GridBagConstraints.HORIZONTAL;
-
         listLabel1.setText("Available Traits");
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(10, 0, 0, 0);
-        c.anchor = GridBagConstraints.CENTER;
-        mainPanel.add(listLabel1, c);
-
         listLabel2.setText("Traits to Plot");
-        c.gridx = 2;
-        c.gridy = 0;
-
-        mainPanel.add(listLabel2, c);
 
         list1.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         list1.setLayoutOrientation(JList.VERTICAL);
@@ -270,14 +252,6 @@ class PlotOptionsQQDialog extends JDialog {
         list1.setMinimumSize(new Dimension(100, 104));
         list1.setBackground(Color.white);
         list1.setBorder(BorderFactory.createLineBorder(Color.black));
-        c.gridx = 0;
-        c.gridy = 1;
-        c.gridheight = 4;
-        c.weightx = 1;
-        c.weighty = 1;
-        c.insets = new Insets(0, 0, 0, 20);
-        c.fill = GridBagConstraints.VERTICAL;
-        mainPanel.add(list1, c);
 
         list2.setListData(myTraits);
         list2.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -285,11 +259,6 @@ class PlotOptionsQQDialog extends JDialog {
         list2.setVisibleRowCount(5);
         list2.setMinimumSize(new Dimension(100, 104));
         list2.setBorder(BorderFactory.createLineBorder(Color.black));
-        c.gridx = 2;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 0, 0);
-//        c.anchor = GridBagConstraints.LINE_START;
-        mainPanel.add(list2, c);
 
         addAllButton.setText(">>");
         addAllButton.setMaximumSize(new Dimension(63, 27));
@@ -300,12 +269,6 @@ class PlotOptionsQQDialog extends JDialog {
                 addAllButton_actionPerformed(e);
             }
         });
-        c.gridx = 1;
-        c.gridy = 1;
-        c.gridheight = 1;
-        c.anchor = GridBagConstraints.CENTER;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        mainPanel.add(addAllButton, c);
 
         addOneButton.setText(">");
         addOneButton.setMaximumSize(new Dimension(63, 27));
@@ -316,9 +279,6 @@ class PlotOptionsQQDialog extends JDialog {
                 addOneButton_actionPerformed(e);
             }
         });
-        c.gridx = 1;
-        c.gridy = 2;
-        mainPanel.add(addOneButton, c);
 
         removeOneButton.setText("<");
         removeOneButton.setMaximumSize(new Dimension(63, 27));
@@ -329,9 +289,6 @@ class PlotOptionsQQDialog extends JDialog {
                 removeOneButton_actionPerformed(e);
             }
         });
-        c.gridx = 1;
-        c.gridy = 3;
-        mainPanel.add(removeOneButton, c);
 
         removeAllButton.setText("<<");
         removeAllButton.setMaximumSize(new Dimension(63, 27));
@@ -342,15 +299,9 @@ class PlotOptionsQQDialog extends JDialog {
                 removeAllButton_actionPerformed(e);
             }
         });
-        c.gridx = 1;
-        c.gridy = 4;
-        mainPanel.add(removeAllButton, c);
 
-        sliderLabel1.setText("Significant points to plot:");
-        c.insets = new Insets(0, 10, 0, 0);
-        c.gridx = 0;
-        c.gridy = 5;
-        mainPanel.add(sliderLabel1, c);
+        sliderLabel1.setText("Plot Density:");
+        sliderLabel1.setToolTipText("Plot Density is then number of Significant Points plotted without removing data. The rest of the data is plotted at a regular interval to maintain the trend without drawing all the points.");
 
         slider.addChangeListener(new javax.swing.event.ChangeListener() {
 
@@ -372,20 +323,6 @@ class PlotOptionsQQDialog extends JDialog {
             removeAllButton.setVisible(false);
         }
 
-        c.insets = new Insets(0, 0, 0, 0);
-        c.gridx = 1;
-        c.gridy = 5;
-        c.gridwidth = 2;
-        mainPanel.add(slider, c);
-
-        countLabel1.setText("Plotting");
-        c.gridx = 0;
-        c.gridy = 6;
-        c.gridwidth = 1;
-        c.anchor = GridBagConstraints.CENTER;
-        c.fill = GridBagConstraints.NONE;
-        mainPanel.add(countLabel1, c);
-
         countTextField.addKeyListener(new java.awt.event.KeyListener() {
 
             public void keyTyped(KeyEvent ke) {
@@ -401,26 +338,10 @@ class PlotOptionsQQDialog extends JDialog {
             }
         });
 
-        c.gridx = 1;
-        c.gridy = 6;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weighty = 1;
-        mainPanel.add(countTextField, c);
+        countLabel1.setText("of " + slider.getMaximum() + " points per trait.");
 
-        countLabel2.setText("most significant out of \r\n");// + slider.getMaximum() + " per trait.");
-        countLabel3.setText(slider.getMaximum() + " per trait.");
-
-        countLabelPanel1.setLayout(new BoxLayout(countLabelPanel1, BoxLayout.PAGE_AXIS));
-        countLabelPanel1.add(countLabel2);
-        countLabelPanel1.add(countLabel3);
-
-        c.gridx = 2;
-        c.gridy = 6;
-        c.weighty = 0;
-        mainPanel.add(countLabelPanel1, c);
-
-        okayButton.setMaximumSize(new Dimension(63, 27));
-        okayButton.setMinimumSize(new Dimension(63, 27));
+        okayButton.setMaximumSize(new Dimension(95, 27));
+        okayButton.setMinimumSize(new Dimension(95, 27));
         okayButton.setText("Okay");
         okayButton.addActionListener(new java.awt.event.ActionListener() {
 
@@ -428,12 +349,9 @@ class PlotOptionsQQDialog extends JDialog {
                 okayButton_actionPerformed(e);
             }
         });
-        c.gridx = 1;
-        c.gridy = 7;
-        mainPanel.add(okayButton, c);
 
-        cancelButton.setMaximumSize(new Dimension(63, 27));
-        cancelButton.setMinimumSize(new Dimension(63, 27));
+        cancelButton.setMaximumSize(new Dimension(95, 27));
+        cancelButton.setMinimumSize(new Dimension(95, 27));
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
 
@@ -441,9 +359,21 @@ class PlotOptionsQQDialog extends JDialog {
                 cancelButton_actionPerformed(e);
             }
         });
-        c.gridx = 2;
-        c.gridy = 7;
-        mainPanel.add(cancelButton, c);
+
+        mainPanel.add(listLabel1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(10, 0, 5, 0), 0, 0));
+        mainPanel.add(listLabel2, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(10, 0, 5, 0), 0, 0));
+        mainPanel.add(list1, new GridBagConstraints(0, 1, 1, 4, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 5, 0, 0), 0, 0));
+        mainPanel.add(list2, new GridBagConstraints(2, 1, 1, 4, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 5), 0, 0));
+        mainPanel.add(addAllButton, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+        mainPanel.add(addOneButton, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+        mainPanel.add(removeOneButton, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+        mainPanel.add(removeAllButton, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+        mainPanel.add(sliderLabel1, new GridBagConstraints(0, 5, 1, 2, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(0, 0, 5, 0), 0, 0));
+        mainPanel.add(slider, new GridBagConstraints(1, 5, 2, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 5, 0, 0), 0, 0));
+        mainPanel.add(countTextField, new GridBagConstraints(1, 6, 1, 1, 0.7, 0.7, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+        mainPanel.add(countLabel1, new GridBagConstraints(2, 6, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
+        mainPanel.add(okayButton, new GridBagConstraints(1, 7, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        mainPanel.add(cancelButton, new GridBagConstraints(2, 7, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
 
         this.add(mainPanel, BorderLayout.CENTER);
     }
