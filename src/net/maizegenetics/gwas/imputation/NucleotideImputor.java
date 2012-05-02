@@ -95,12 +95,68 @@ public class NucleotideImputor {
 	}
 	
 	public static void main(String[] args) {
-		String in = "/Volumes/Macintosh HD 2/data/chen/MAB_hmp_all_chr/MAB1_ct5.chr1.hmp.txt";
-		String out = "/Volumes/Macintosh HD 2/data/chen/MAB_hmp_all_chr/MAB1_ct5.chr1.HMMimputed.hmp.txt";
+		processRiceChromosomes();
+	}
+	
+	public static void processRiceChromosomes() {
+			NucleotideImputor ni = new NucleotideImputor();
+			ni.importRiceChromosome(1);
+	}
+	
+	public void importRiceChromosome(int chr) {
+		String in = "/Volumes/Macintosh HD 2/data/chen/MAB_hmp_all_chr/MAB1_ct5.chr" + chr + ".full.hmp.txt";
+		String out = "/Volumes/Macintosh HD 2/data/chen/MAB_hmp_all_chr/MAB1_ct5.chr" + chr + ".HMMimputed.hmp.txt";
+		String filled = "/Volumes/Macintosh HD 2/data/chen/MAB_hmp_all_chr/MAB1_ct5.chr" + chr + ".HMMimputed.filled.hmp.txt";
 		String ped = "/Volumes/Macintosh HD 2/data/chen/MAB_hmp_all_chr/MAB1_pedigree.txt";
-		NucleotideImputor ni = new NucleotideImputor();
-		ni.importChromosome(in, out, ped);
+
+		System.out.println("Imputing nucleotides from " + in);
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(in));
+			br.readLine();
+			String[] info = br.readLine().split("\t", 12);
+			assembly = info[5];
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
+		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(in, null);
+		
+		System.out.println("Importing population information...");
+		importPopulationInformation(ped);
+
+		System.out.println("Scoring parents...");
+		MutableNucleotideAlignment result = scoreParentsForAPopulation("1");
+		ExportUtils.writeToHapmap(result, true, out, '\t', null);
+
+		//set missing values to flanking values, when flanking markers are identical
+		int ntaxa = result.getSequenceCount();
+		int nsites = result.getSiteCount();
+		int prevsite = -1;
+		byte prevValue = -1;
+		for (int t = 0; t < ntaxa; t++) {
+			for (int s = 0; s < nsites; s++) {
+				byte val = result.getBase(t, s);
+				if (val != NN) {
+					if (prevsite == -1) {
+						prevsite = s;
+						prevValue = val;
+					} else if(val == prevValue) {
+						for (int site = prevsite + 1; site < s; site++) {
+							result.setBase(t, site, prevValue);
+							prevsite = s;
+						}
+					} else {
+						prevsite = s;
+						prevValue = val;
+					}
+				}
+			}
+		}
+
+		result.clean();
+		ExportUtils.writeToHapmap(result, true, filled, '\t', null);
+
 	}
 	
 	public void importChromosome(String inputFile, String outputFile, String ped) {
@@ -230,7 +286,7 @@ public class NucleotideImputor {
 	 * 3. score progeny
 	 * 
 	 * */
-	public Alignment scoreParentsForAPopulation(String family) {
+	public MutableNucleotideAlignment scoreParentsForAPopulation(String family) {
 		Population pop = familyMap.get(family);
 		String[] ids = new String[pop.members.size()];
 		pop.members.toArray(ids);
@@ -238,6 +294,7 @@ public class NucleotideImputor {
 		
 		//which sites are polymorphic? minor allele count > 2 and exceed the minimum allele count
 		int nsites = popAlignment.getSiteCount();
+		int ntaxa = popAlignment.getSequenceCount();
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			int[][] freq = popAlignment.getAllelesSortedByFrequency(s);
@@ -247,78 +304,95 @@ public class NucleotideImputor {
 			}
 		}
 		int totalpoly = (int) polybits.cardinality();
-		System.out.println("polymorphic sites = " + totalpoly);
+		System.out.println("polymorphic sites = " + totalpoly + ", total sites = " + popAlignment.getSiteCount());
 		
-		//define a window
+		//define parameters
 		int windowSize = 100;
+		FilterAlignment filteredPopAlignment;
+		UPGMATree myTree;
+		TreeClusters clusterMaker;
+		int[] ldSnps = null;
+		int[] snpIds = null;
+		OpenBitSet ldbits = null;
 		
-		//find windowSize polymorphic snps centered on the midpoint
-		int mid = totalpoly / 2;
-		int polyCount = 0;
-		int start = 0;
-		while (polyCount < mid) { //find the midpoint of the polymorphic snps
-			if (polybits.get(start++)) polyCount++;
-		}
-		
-		polyCount = 0;
-		while (polyCount < (windowSize/4)) { //find the starting point of the window
-			if (polybits.get(start--)) polyCount++;
-		}
-		start++;
-		
-		int[] snpIds = new int[windowSize];
-		polyCount = 0;
-		int snpid = start;
-		while (polyCount < windowSize) {
-			if (polybits.get(snpid)) {
-				snpIds[polyCount++] = snpid; 
+		int ntrials = 20;
+		for (int trial = 6; trial < 7; trial++) {
+			//find windowSize polymorphic snps centered on the midpoint
+			int mid = totalpoly / (ntrials + 1) * (trial + 1);
+			int polyCount = 0;
+			int start = 0;
+			while (polyCount < mid) { //find the midpoint of the polymorphic snps
+				if (polybits.get(start++)) polyCount++;
 			}
-			snpid++;
-		}
-		
-		//create a filtered alignment containing only the test snps
-		FilterAlignment filteredPopAlignment = FilterAlignment.getInstance(popAlignment, snpIds);
-		
-		//cluster polymorphic snps within the window by creating a UPGMA tree (cluster on snps)
-		SBitAlignment haplotypeAlignment = SBitAlignment.getInstance(filteredPopAlignment);
-		UPGMATree myTree = new UPGMATree(snpDistance(haplotypeAlignment));
-		
-		//display tree for debugging
-//		TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
-//		tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
-		
-		//cut the tree
-		TreeClusters clusterMaker = new TreeClusters(myTree);
-		int[] groups = clusterMaker.getGroups(0.3);
-		
-		//find the biggest group
-		int maxGroup = 0;
-		for (int grp:groups) maxGroup = Math.max(maxGroup, grp);
-		int ngroups = maxGroup + 1;
-		int[] groupCount = new int[ngroups];
-		for (int grp:groups) groupCount[grp]++;
-		int biggestGroup = 0;
-		for (int i = 1; i < ngroups; i++) {
-			if (groupCount[i] > groupCount[biggestGroup]) biggestGroup = i;
-		}
-		
-		//some diagnostics??
-		 //List groups
-		for (int i = 0; i < ngroups; i++) {
-			if (groupCount[i] > 5) System.out.println("Snp group " + i + " has " + groupCount[i] + " members.");
-		}
 
-		//this group of Snps is the starting point
-		OpenBitSet ldbits = new OpenBitSet(nsites);
-		int ngrp = groupCount[biggestGroup];
-		int[] ldSnps = new int[ngrp];
-		int grpCount = 0;
-		for (int i = 0; i < windowSize; i++) {
-			if (groups[i] == biggestGroup) {
-				//the tree nodes are not in the same order as the alignment, so have to do the conversion
-				int snpnumber = Integer.parseInt(myTree.getIdentifier(i).getFullName());
-				ldSnps[grpCount++] = snpIds[snpnumber];
-				ldbits.fastSet(snpIds[snpnumber]);
+			polyCount = 0;
+			while (polyCount < (windowSize/2)) { //find the starting point of the window
+				if (polybits.get(start--)) polyCount++;
+			}
+			start++;
+
+			snpIds = new int[windowSize];
+			polyCount = 0;
+			int snpid = start;
+			while (polyCount < windowSize && snpid < nsites) {
+				if (polybits.get(snpid)) {
+					snpIds[polyCount++] = snpid; 
+				}
+				snpid++;
+			}
+			
+			if (polyCount < windowSize) snpIds = Arrays.copyOf(snpIds, polyCount);
+
+			//create a filtered alignment containing only the test snps
+			filteredPopAlignment = FilterAlignment.getInstance(popAlignment, snpIds);
+
+			//cluster polymorphic snps within the window by creating a UPGMA tree (cluster on snps)
+			SBitAlignment haplotypeAlignment = SBitAlignment.getInstance(filteredPopAlignment);
+			myTree = new UPGMATree(snpDistance(haplotypeAlignment));
+
+			//display tree for debugging
+			TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
+			tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
+
+			//cut the tree
+			clusterMaker = new TreeClusters(myTree);
+			int[] groups = clusterMaker.getGroups(0.3);
+
+			//find the biggest group
+			int maxGroup = 0;
+			for (int grp:groups) maxGroup = Math.max(maxGroup, grp);
+			int ngroups = maxGroup + 1;
+			int[] groupCount = new int[ngroups];
+			for (int grp:groups) groupCount[grp]++;
+			int biggestGroup = 0;
+			for (int i = 1; i < ngroups; i++) {
+				if (groupCount[i] > groupCount[biggestGroup]) biggestGroup = i;
+			}
+
+			//some diagnostics??
+			//List groups
+			for (int i = 0; i < ngroups; i++) {
+				if (groupCount[i] > 5) System.out.println("For trial " + trial + " SNP group " + i + " has " + groupCount[i] + " members.");
+			}
+
+			//sort the groups
+			int[] order = ImputationUtils.reverseOrder(groupCount);
+			
+			
+			
+			//this group of Snps is the starting point
+			ldbits = new OpenBitSet(nsites);
+			int selectedGroup = order[0];
+			int ngrp = groupCount[selectedGroup];
+			ldSnps = new int[ngrp];
+			int grpCount = 0;
+			for (int i = 0; i < groups.length; i++) {
+				if (groups[i] == selectedGroup) {
+					//the tree nodes are not in the same order as the alignment, so have to do the conversion
+					int snpnumber = Integer.parseInt(myTree.getIdentifier(i).getFullName());
+					ldSnps[grpCount++] = snpIds[snpnumber];
+					ldbits.fastSet(snpIds[snpnumber]);
+				}
 			}
 		}
 		
@@ -328,40 +402,50 @@ public class NucleotideImputor {
 		estimateMissingDistances(dm);
 		myTree = new UPGMATree(dm);
 		clusterMaker = new TreeClusters(myTree);
-		groups = clusterMaker.getGroups(0.3);
+		
+		int majorCount = ntaxa;
+		int minorCount = 0;
+		int ngroups = 1;
+		int[] groups = new int[0];
+		int[] groupCount = null;
+		int majorGroup = 0;
+		int minorGroup = 1;
+		
+		while (majorCount > ntaxa / 2 && minorCount < 10) {
+			ngroups++;
+			groups = clusterMaker.getGroups(ngroups);
+			groupCount = new int[ngroups];
+			for (int gr : groups) groupCount[gr]++;
+			
+			for (int i = 1; i < ngroups; i++) {
+				if (groupCount[i] > groupCount[majorGroup]) {
+					minorGroup = majorGroup;
+					majorGroup = i;
+				} else if (groupCount[i] > groupCount[minorGroup]) minorGroup = i;
+			}
+			
+			majorCount = groupCount[majorGroup];
+			minorCount = groupCount[minorGroup];
+		}
 		
 		//parents should be in different clusters, there should only be two major clusters
-		//find biggest groups
-		maxGroup = 0;
-		for (int grp:groups) maxGroup = Math.max(maxGroup, grp);
-		ngroups = maxGroup + 1;
-		groupCount = new int[ngroups];
-		for (int grp:groups) groupCount[grp]++;
 		
 		 //List groups
 		for (int i = 0; i < ngroups; i++) {
 			if (groupCount[i] > 5) System.out.println("Taxa group " + i + " has " + groupCount[i] + " members.");
 		}
 		
+		//display tree for debugging
+		TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
+		tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
+
 		//use haplotypes to score parental type
-		
-		//find the biggest and next biggest groups
-		int majorGroup = 0;
-		int minorGroup = 1;
-		for (int i = 1; i < ngroups; i++) {
-			if (groupCount[i] > groupCount[majorGroup]) {
-				minorGroup = majorGroup;
-				majorGroup = i;
-			} else if (groupCount[i] > groupCount[minorGroup]) {
-				minorGroup = i;
-			}
-		}
 		
 		//create major and minor id groups
 		String[] majorids = new String[groupCount[majorGroup]];
 		String[] minorids = new String[groupCount[minorGroup]];
-		int majorCount = 0;
-		int minorCount = 0;
+		majorCount = 0;
+		minorCount = 0;
 		for (int i = 0; i < groups.length; i++) {
 			if (groups[i] == majorGroup) majorids[majorCount++] = myTree.getIdentifier(i).getFullName();
 			else if (groups[i] == minorGroup) minorids[minorCount++] = myTree.getIdentifier(i).getFullName();
@@ -393,7 +477,7 @@ public class NucleotideImputor {
 		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popAlignment);
 		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
 		System.out.println("snps in parent Alignment = " + parentAlignment.getSiteCount());
-		int ntaxa = parentAlignment.getSequenceCount();
+		ntaxa = parentAlignment.getSequenceCount();
 		
 		for (int i = 0; i < ldSnps.length; i++) {
 			int snp = ldSnps[i];
@@ -422,7 +506,7 @@ public class NucleotideImputor {
 		//extend haplotypes
 		//add snps in ld
 		int testSize = 25;
-		double minr = 0.0;
+		double minr = 0.4;
 		
 		//add snps from middle to start; test only polymorphic snps
 		LinkedList<Integer> testSnps = new LinkedList<Integer>();
@@ -463,11 +547,9 @@ public class NucleotideImputor {
 		
 		System.out.println("Starting Viterbi algorithm...");
 		
-		imputeUsingViterbiFiveState(tba);
+		MutableNucleotideAlignment a = imputeUsingViterbiFiveState(tba);
 		
-		System.out.println("Finished.");
-		
-		return tba;
+		return a;
 	}
 	
 	public Alignment imputeSnpsForPopulation(Alignment input, String parentA, String parentC, boolean outputParentalCalls) {
@@ -616,8 +698,10 @@ public class NucleotideImputor {
 		int start = - windowSize / 2;
 		int snpCount = 0;
 		int polyCount = 0;
+		int nsites = a.getSiteCount();
 		for (int setnum = 0; setnum < numberToTry; setnum++) {
 			start += snpInterval;
+			if (start < 0) start = 0;
 			while (polyCount < start) {
 				if (polybits.fastGet(snpCount)) polyCount++;
 				snpCount++;
@@ -625,13 +709,16 @@ public class NucleotideImputor {
 			
 			int[] snpIds = new int[windowSize];
 			int windowCount = 0;
-			while (windowCount < windowSize) {
+			while (windowCount < windowSize && snpCount < nsites) {
 				if (polybits.fastGet(snpCount)) {
 					snpIds[windowCount++] = snpCount;
 					polyCount++;
 				}
 				snpCount++;
 			}
+			
+			//adjust the size of the array if all the snps were used before the array was filled
+			if (windowCount < windowSize) snpIds = Arrays.copyOf(snpIds, windowCount);
 			
 			//create a filtered alignment containing only the test snps
 			FilterAlignment filteredPopAlignment = FilterAlignment.getInstance(a, snpIds);
@@ -640,7 +727,7 @@ public class NucleotideImputor {
 			SBitAlignment haplotypeAlignment = SBitAlignment.getInstance(filteredPopAlignment);
 			UPGMATree myTree = new UPGMATree(snpDistance(haplotypeAlignment));
 			
-			//cut the tree
+			//cut the tree to create two parent groups
 			TreeClusters clusterMaker = new TreeClusters(myTree);
 			int[] groups = clusterMaker.getGroups(0.3);
 			
@@ -657,7 +744,7 @@ public class NucleotideImputor {
 			
 			snpSets[setnum] = new int[groupCount[biggestGroup]];
 			int count = 0;
-			for (int i = 0; i < windowSize; i++) {
+			for (int i = 0; i < snpIds.length; i++) {
 				if (groups[i] == biggestGroup) {
 					snpSets[setnum][count++] = Integer.parseInt(myTree.getIdentifier(i).getFullName());
 				}
@@ -797,7 +884,7 @@ public class NucleotideImputor {
 		
 	}
 	
-	public Alignment imputeUsingViterbiFiveState(TBitAlignment a) {
+	public MutableNucleotideAlignment imputeUsingViterbiFiveState(TBitAlignment a) {
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
 		//obs are in {A, C, M}, where M is heterozygote A/C
 		HashMap<Byte, Byte> obsMap = new HashMap<Byte, Byte>();
@@ -876,7 +963,7 @@ public class NucleotideImputor {
 		
 		//iterate
 		ArrayList<byte[]> bestStates = new ArrayList<byte[]>();
-		for (int iter = 0; iter < 4; iter++) {
+		for (int iter = 0; iter < 25; iter++) {
 			//apply Viterbi
 			System.out.println("Iteration " + iter);
 			bestStates.clear();
@@ -1043,7 +1130,9 @@ public class NucleotideImputor {
 		int count = 0;
 		for (int i = 0; i < nsnps; i++) {
 			for (int j = i; j < nsnps; j++) {
-				distance[i][j] = distance[j][i] = 1 - Math.abs(computeR(i, j, a));
+//				distance[i][j] = distance[j][i] = 1 - Math.abs(computeR(i, j, a));
+				double r = computeR(i, j, a);
+				distance[i][j] = distance[j][i] = 1 - r*r;
 				if (!Double.isNaN(distance[i][j])) {
 					sum += distance[i][j];
 					count++;
@@ -1062,6 +1151,54 @@ public class NucleotideImputor {
 		}
 		
 		return new DistanceMatrix(distance, snpIds);
+	}
+	
+	public DistanceMatrix snpDistance2(SBitAlignment a) {
+		
+		int nsnps = a.getSiteCount();
+		SimpleIdGroup snpIds = new SimpleIdGroup(nsnps, true);
+		double[][] distance = new double[nsnps][nsnps];
+		double sum = 0;
+		int count = 0;
+		for (int i = 0; i < nsnps; i++) {
+			long[][][] snps = new long[2][2][];
+			snps[0][0] = a.getAllelePresenceForAllTaxa(i, 0).getBits();
+			snps[0][1] = a.getAllelePresenceForAllTaxa(i, 1).getBits();
+			int n = snps[0][0].length;
+			distance[i][i] = 0;
+			for (int j = i + 1; j < nsnps; j++) {
+				snps[1][0] = a.getAllelePresenceForAllTaxa(j, 0).getBits();
+				snps[1][1] = a.getAllelePresenceForAllTaxa(j, 1).getBits();
+				long[] bothHom = new long[n];
+				for (int m = 0; m < n; m++) bothHom[m] = (snps[0][0][m]^snps[0][1][m]) & (snps[1][0][m]^snps[1][1][m]);
+				long[] same = new long[n];
+				for (int m = 0; m < n; m++) same[m] = bothHom[m] & ~(snps[0][0][m]^snps[1][0][m]);
+				distance[i][j] = distance[j][i] = 1 - ((double) BitUtil.pop_array(same, 0, n)) / ((double) BitUtil.pop_array(bothHom, 0, n));
+			}
+		}
+		
+		double avgDistance = 0;
+		count = 0;
+		for (double[] row : distance) {
+			for (double cell : row) {
+				if (!Double.isNaN(cell)) {
+					avgDistance += cell;
+					count++;
+				}
+			}
+		}
+		
+		avgDistance /= count;
+		for (double[] row : distance) {
+			for (double cell : row) {
+				if (!Double.isNaN(cell)) {
+					cell = avgDistance;
+				}
+			}
+		}
+		
+		return new DistanceMatrix(distance, new SimpleIdGroup(nsnps, true));
+		
 	}
 	
 	public void estimateMissingDistances(DistanceMatrix dm) {
@@ -1091,3 +1228,4 @@ public class NucleotideImputor {
 		}
 	}
 }
+
