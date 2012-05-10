@@ -7,13 +7,14 @@ import java.io.Serializable;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
  *
  * @author terry
  */
-public class Locus implements Serializable{
+public class Locus implements Serializable {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private final String myName;
@@ -69,7 +70,51 @@ public class Locus implements Serializable{
         return Collections.unmodifiableMap(myFeatures);
     }
 
+    @Override
     public String toString() {
         return getName();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (!(obj instanceof Locus)) {
+            return false;
+        }
+        Locus other = (Locus) obj;
+
+        if (!myName.equals(other.getName())) {
+            return false;
+        }
+
+        if (!myChromosome.equals(other.getChromosomeName())) {
+            return false;
+        }
+
+        if (myStart != other.getStart()) {
+            return false;
+        }
+
+        if (myEnd != other.getEnd()) {
+            return false;
+        }
+
+        Map<String, Integer> otherFeatures = other.getFeatures();
+        if (myFeatures.size() != otherFeatures.size()) {
+            return false;
+        }
+
+        Iterator itr = myFeatures.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Integer value = myFeatures.get(key);
+            Integer otherValue = otherFeatures.get(key);
+            if ((otherValue == null) && (value != otherValue)) {
+                return false;
+            }
+        }
+
+        return true;
+
     }
 }

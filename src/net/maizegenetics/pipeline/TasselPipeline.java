@@ -39,6 +39,7 @@ import net.maizegenetics.baseplugins.KinshipPlugin;
 import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
 import net.maizegenetics.baseplugins.MLMPlugin;
+import net.maizegenetics.baseplugins.MergeAlignmentsPlugin;
 import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
 import net.maizegenetics.baseplugins.PlinkLoadPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
@@ -308,11 +309,34 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: -taxaJoinStrict parameter must be true or false.");
                     }
                     TasselPrefs.putIDJoinStrict(strict);
+                } else if (current.equalsIgnoreCase("-retainRareAlleles")) {
+                    String temp = args[index++].trim();
+                    boolean retain = true;
+                    if (temp.equalsIgnoreCase("false")) {
+                        retain = false;
+                    } else if (temp.equalsIgnoreCase("true")) {
+                        retain = true;
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -retainRareAlleles parameter must be true or false.");
+                    }
+                    TasselPrefs.putAlignmentRetainRareAlleles(retain);
+                } else if (current.equalsIgnoreCase("-maxAllelesToRetain")) {
+                    String temp = args[index++].trim();
+                    int maxAlleles = 0;
+                    try {
+                        maxAlleles = Integer.parseInt(temp);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing max alleles to retain: " + temp);
+                    }
+                    TasselPrefs.putAlignmentMaxAllelesToRetain(maxAlleles);
                 } else if (current.equalsIgnoreCase("-union")) {
                     UnionAlignmentPlugin plugin = new UnionAlignmentPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-intersect")) {
                     IntersectionAlignmentPlugin plugin = new IntersectionAlignmentPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-mergeAlignments")) {
+                    MergeAlignmentsPlugin plugin = new MergeAlignmentsPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-excludeLastTrait")) {
                     FilterTraitsPlugin plugin = new FilterTraitsPlugin(myMainFrame, false);
@@ -642,6 +666,8 @@ public class TasselPipeline implements PluginListener {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Flapjack);
                     } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Hapmap.toString())) {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Hapmap);
+                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.HapmapDiploid.toString())) {
+                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.HapmapDiploid);
                     } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Phylip_Inter.toString())) {
                         plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Phylip_Inter);
                     } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Phylip_Seq.toString())) {
