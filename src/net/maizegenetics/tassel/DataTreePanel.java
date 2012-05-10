@@ -126,6 +126,7 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
         myTree.setEditable(true);
         myTreeModel.addTreeModelListener(new MyTreeModelListener(this));
         myTree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+        myTree.setLargeModel(true);
         //Listen for when the selection changes.
         initSelectionListener();
         initKeyStrokeListener();
