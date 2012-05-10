@@ -3,8 +3,10 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import java.util.List;
 
 import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.Identifier;
 
 /**
  *
@@ -32,12 +34,20 @@ public class MutableNucleotideAlignment extends MutableSingleEncodeAlignment imp
         super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
 
+    private MutableNucleotideAlignment(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+        super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
+    }
+
     public static MutableNucleotideAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
         return new MutableNucleotideAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
 
     public static MutableNucleotideAlignment getInstance(IdGroup idGroup, int initNumSites) {
         return new MutableNucleotideAlignment(idGroup, initNumSites, idGroup.getIdCount(), initNumSites);
+    }
+
+    public static MutableSingleEncodeAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+        return new MutableNucleotideAlignment(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
     }
 
     @Override
@@ -49,5 +59,4 @@ public class MutableNucleotideAlignment extends MutableSingleEncodeAlignment imp
     public String getDiploidAsString(int site, byte value) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
-
 }

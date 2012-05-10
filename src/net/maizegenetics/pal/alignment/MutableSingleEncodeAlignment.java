@@ -10,10 +10,13 @@ import cern.colt.function.IntComparator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeSet;
 
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -21,6 +24,7 @@ import net.maizegenetics.pal.ids.SimpleIdGroup;
  */
 public class MutableSingleEncodeAlignment extends AbstractAlignment implements MutableAlignment {
 
+    private static final Logger myLogger = Logger.getLogger(MutableSingleEncodeAlignment.class);
     private boolean myIsDirty = true;
     private byte[][] myData;
     private List<Identifier> myIdentifiers = new ArrayList<Identifier>();
@@ -30,6 +34,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private int[] myVariableSites;
     private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
     private int[] myLocusIndices;
+    private int[] myLocusOffsets = null;
     private String[] mySNPIDs;
     private int maxNumAlleles = 2;
 
@@ -89,6 +94,163 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
         initData();
         initTaxa(idGroup);
+    }
+
+    protected MutableSingleEncodeAlignment(String[][] encodings, List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+        super(encodings);
+
+        if ((variableSites.length != locusIndices.length) || (variableSites.length != siteNames.length)) {
+            throw new IllegalArgumentException("MutableSingleEncodeAlignment: init: number variable sites, loci, and site names must be same.");
+        }
+
+        myMaxTaxa = idGroup.size();
+        myMaxNumSites = siteNames.length;
+        myNumSites = siteNames.length;
+
+        myVariableSites = variableSites;
+        myLocusToLociIndex = locusToLociIndex;
+        myLocusIndices = locusIndices;
+        mySNPIDs = siteNames;
+
+        myData = new byte[myMaxTaxa][myMaxNumSites];
+        for (int t = 0; t < myMaxTaxa; t++) {
+            Arrays.fill(myData[t], Alignment.UNKNOWN_DIPLOID_ALLELE);
+        }
+
+        myIdentifiers = idGroup;
+    }
+
+    public static MutableSingleEncodeAlignment getInstance(String[][] encodings, IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
+        return new MutableSingleEncodeAlignment(encodings, idGroup, initNumSites, maxNumTaxa, maxNumSites);
+    }
+
+    public static MutableSingleEncodeAlignment getInstance(String[][] encodings, IdGroup idGroup, int initNumSites) {
+        return MutableSingleEncodeAlignment.getInstance(encodings, idGroup, initNumSites, idGroup.getIdCount(), initNumSites);
+    }
+
+    public static MutableSingleEncodeAlignment getInstance(String[][] encodings, List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+        return new MutableSingleEncodeAlignment(encodings, idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
+    }
+
+    public static MutableSingleEncodeAlignment getInstance(Alignment[] alignments) {
+
+        if ((alignments == null) || (alignments.length == 0)) {
+            return null;
+        }
+
+        String[][] resultEncodings = alignments[0].getAlleleEncodings();
+        if (resultEncodings.length != 1) {
+            throw new IllegalArgumentException("MutableSingleEncodeAlignment: getInstance: Alignments must have single allele encoding.");
+        }
+
+        String[][][] encodings = new String[alignments.length][][];
+        for (int i = 0; i < alignments.length; i++) {
+            encodings[i] = alignments[i].getAlleleEncodings();
+        }
+        if (!AlignmentUtils.areEncodingsEqual(encodings)) {
+            throw new IllegalArgumentException("MutableSingleEncodeAlignment: getInstance: Alignments must have same allele encoding.");
+        }
+
+        TreeSet<Identifier> taxa = new TreeSet<Identifier>();
+        List<String> siteNames = new ArrayList<String>();
+        List<Integer> physicalPositions = new ArrayList<Integer>();
+        List<Locus> locusToLociIndex = new ArrayList<Locus>();
+        List<Integer> locusIndices = new ArrayList<Integer>();
+
+        for (int i = 0; i < alignments.length; i++) {
+
+            IdGroup currentIds = alignments[i].getIdGroup();
+            for (int j = 0, n = currentIds.getIdCount(); j < n; j++) {
+                taxa.add(currentIds.getIdentifier(j));
+            }
+
+            for (int s = 0, m = alignments[i].getSiteCount(); s < m; s++) {
+                String currentSiteName = alignments[i].getSNPID(s);
+                int currentPhysicalPos = alignments[i].getPositionInLocus(s);
+                Locus currentLocus = alignments[i].getLocus(s);
+                int index = siteNames.indexOf(currentSiteName);
+                if (index == -1) {
+                    siteNames.add(currentSiteName);
+                    physicalPositions.add(currentPhysicalPos);
+                    int locusIndex = locusToLociIndex.indexOf(currentLocus);
+                    if (locusIndex == -1) {
+                        locusIndices.add(locusToLociIndex.size());
+                        locusToLociIndex.add(currentLocus);
+                    } else {
+                        locusIndices.add(locusIndex);
+                    }
+                } else {
+                    if (i == 0) {
+                        throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Duplicate site name in alignment: " + currentSiteName);
+                    } else {
+                        if (currentPhysicalPos != physicalPositions.get(index)) {
+                            throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Physical Positions do not match for site name: " + currentSiteName);
+                        }
+                        if (locusIndices.get(index) != locusToLociIndex.indexOf(currentLocus)) {
+                            throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Loci do not match for site name: " + currentSiteName);
+                        }
+                    }
+                }
+            }
+
+        }
+
+        int[] variableSites = new int[physicalPositions.size()];
+        for (int i = 0, n = physicalPositions.size(); i < n; i++) {
+            variableSites[i] = physicalPositions.get(i);
+        }
+
+        int[] locusIndicesArray = new int[locusIndices.size()];
+        for (int i = 0, n = locusIndices.size(); i < n; i++) {
+            locusIndicesArray[i] = (int) locusIndices.get(i);
+        }
+
+        String[] siteNamesArray = new String[siteNames.size()];
+        siteNames.toArray(siteNamesArray);
+
+        List taxaList = new ArrayList<Identifier>(taxa);
+        MutableSingleEncodeAlignment result = null;
+
+        encodings = new String[2][][];
+        encodings[0] = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
+        encodings[1] = resultEncodings;
+        if (AlignmentUtils.areEncodingsEqual(encodings)) {
+            result = MutableNucleotideAlignment.getInstance(taxaList, variableSites, locusToLociIndex, locusIndicesArray, siteNamesArray);
+        } else {
+            result = getInstance(resultEncodings, taxaList, variableSites, locusToLociIndex, locusIndicesArray, siteNamesArray);
+        }
+        result.sortSitesByPhysicalPositionEmptyData();
+        result.setClean();
+
+        for (int i = 0; i < alignments.length; i++) {
+            myLogger.info("Merging Alignment: " + (i + 1) + " of " + alignments.length);
+            Alignment currentAlignment = alignments[i];
+            IdGroup ids = currentAlignment.getIdGroup();
+            int numSeqs = ids.getIdCount();
+            int[] taxaIndices = new int[numSeqs];
+            for (int t = 0; t < numSeqs; t++) {
+                taxaIndices[t] = taxaList.indexOf(ids.getIdentifier(t));
+            }
+            for (int s = 0, n = currentAlignment.getSiteCount(); s < n; s++) {
+                String siteName = currentAlignment.getSNPID(s);
+                int physicalPosition = currentAlignment.getPositionInLocus(s);
+                Locus locus = currentAlignment.getLocus(s);
+                int site = result.getSiteOfPhysicalPosition(physicalPosition, locus);
+                if (site < 0) {
+                    throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
+                } else {
+                    if (!siteName.equals(result.getSNPID(site))) {
+                        throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: site names at physical position: " + physicalPosition + " in locus: " + locus.getName() + " does not match: " + siteName);
+                    }
+                }
+                for (int t = 0; t < numSeqs; t++) {
+                    result.setBase(taxaIndices[t], site, currentAlignment.getBase(t, s));
+                    //result.setBase(ids.getIdentifier(t), currentAlignment.getSNPID(s), currentAlignment.getLocus(s), currentAlignment.getPositionInLocus(s), currentAlignment.getBase(t, s));
+                }
+            }
+        }
+
+        return result;
     }
 
     private void initData() {
@@ -255,20 +417,24 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             throw new IllegalStateException("MutableSingleEncodeAlignment: getLociOffsets: this alignment is dirty.");
         }
 
+        if (myLocusOffsets != null) {
+            return myLocusOffsets;
+        }
+
         List<Integer> result = new ArrayList<Integer>();
         int current = myLocusIndices[0];
         result.add(0);
         for (int i = 0, n = getSiteCount(); i < n; i++) {
             if (myLocusIndices[i] != current) {
                 result.add(i);
-                current = i;
+                current = myLocusIndices[i];
             }
         }
-        int[] offsets = new int[result.size()];
+        myLocusOffsets = new int[result.size()];
         for (int i = 0, n = result.size(); i < n; i++) {
-            offsets[i] = result.get(i);
+            myLocusOffsets[i] = result.get(i);
         }
-        return offsets;
+        return myLocusOffsets;
 
     }
 
@@ -280,10 +446,11 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
         Locus[] loci = getLoci();
         int[] lociOffsets = getLociOffsets();
-        for (int i = 0; i < getNumLoci(); i++) {
-            if (locus == loci[i]) {
+        int numLoci = getNumLoci();
+        for (int i = 0; i < numLoci; i++) {
+            if (locus.equals(loci[i])) {
                 int end = 0;
-                if (i == getNumLoci() - 1) {
+                if (i == numLoci - 1) {
                     end = getSiteCount();
                 } else {
                     end = lociOffsets[i + 1];
@@ -308,7 +475,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
 
         if (isDirty()) {
-            throw new IllegalStateException("MutableSingleEncodeAlignment: getStartAndEndOfLocus: this alignment is dirty.");
+            throw new IllegalStateException("MutableSingleEncodeAlignment: getSiteOfPhysicalPosition: this alignment is dirty.");
         }
 
         try {
@@ -318,6 +485,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             int[] startEnd = getStartAndEndOfLocus(locus);
             return Arrays.binarySearch(myVariableSites, startEnd[0], startEnd[1], physicalPosition);
         } catch (Exception e) {
+            e.printStackTrace();
             return -1;
         }
     }
@@ -335,6 +503,26 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     // Mutable Methods...
     public void setBase(int taxon, int site, byte newBase) {
         myData[taxon][site] = newBase;
+    }
+
+    public void setBase(Identifier taxon, String siteName, Locus locus, int physicalPosition, byte newBase) {
+
+        int taxonIndex = myIdentifiers.indexOf(taxon);
+        if (taxonIndex == -1) {
+            throw new IllegalArgumentException("MutableSingleEncodeAlignment: setBase: taxon not found.");
+        }
+
+        int site = getSiteOfPhysicalPosition(physicalPosition, locus);
+        if (site < 0) {
+            throw new IllegalStateException("MutableSingleEncodeAlignment: setBase: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
+        } else {
+            if (!siteName.equals(getSNPID(site))) {
+                throw new IllegalStateException("MutableSingleEncodeAlignment: setBase: site names at physical position: " + physicalPosition + " in locus: " + locus.getName() + " does not match: " + siteName);
+            }
+        }
+
+        myData[taxonIndex][site] = newBase;
+
     }
 
     public void setBaseRange(int taxon, int startSite, byte[] newBases) {
@@ -367,7 +555,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
         myNumSites++;
 
-        myIsDirty = true;
+        setDirty();
 
     }
 
@@ -423,6 +611,15 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         return myIsDirty;
     }
 
+    private void setDirty() {
+        myLocusOffsets = null;
+        myIsDirty = true;
+    }
+
+    private void setClean() {
+        myIsDirty = false;
+    }
+
     private void sortSitesByPhysicalPosition() {
 
         Swapper swapperPos = new Swapper() {
@@ -472,13 +669,55 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     }
 
+    private void sortSitesByPhysicalPositionEmptyData() {
+
+        Swapper swapperPos = new Swapper() {
+
+            public void swap(int a, int b) {
+                int it;
+                it = myLocusIndices[a];
+                myLocusIndices[a] = myLocusIndices[b];
+                myLocusIndices[b] = it;
+
+                it = myVariableSites[a];
+                myVariableSites[a] = myVariableSites[b];
+                myVariableSites[b] = it;
+
+                String st = mySNPIDs[a];
+                mySNPIDs[a] = mySNPIDs[b];
+                mySNPIDs[b] = st;
+            }
+        };
+        IntComparator compPos = new IntComparator() {
+
+            public int compare(int a, int b) {
+                if (myLocusIndices[a] < myLocusIndices[b]) {
+                    return -1;
+                }
+                if (myLocusIndices[a] > myLocusIndices[b]) {
+                    return 1;
+                }
+                if (myVariableSites[a] < myVariableSites[b]) {
+                    return -1;
+                }
+                if (myVariableSites[a] > myVariableSites[b]) {
+                    return 1;
+                }
+                return 0;
+            }
+        };
+
+        GenericSorting.quickSort(0, this.getSiteCount(), compPos, swapperPos);
+
+    }
+
     public void setPositionOfSite(int site, int position) {
         if ((site < 0) || (site >= myNumSites)) {
             throw new IllegalArgumentException("MutableSingleEncodeAlignment: setPositionOfSite: site outside of range: " + site);
         }
         myVariableSites[site] = position;
 
-        myIsDirty = true;
+        setDirty();
     }
 
     public void setLocusOfSite(int site, Locus locus) {
@@ -493,7 +732,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             myLocusIndices[site] = index;
         }
 
-        myIsDirty = true;
+        setDirty();
     }
 
     private int getLocusIndex(Locus locus) {
@@ -504,5 +743,4 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         }
         return -1;
     }
-    
 }

@@ -46,6 +46,7 @@ public class DataControlPanel extends AbstractControlPanel {
             addPlugin(new SynonymizerPlugin(theTASSELMainFrame, true));
             addPlugin(new UnionAlignmentPlugin(theTASSELMainFrame, true));
             addPlugin(new IntersectionAlignmentPlugin(theTASSELMainFrame, true));
+            addPlugin(new MergeAlignmentsPlugin(theTASSELMainFrame, true));
             addPlugin(new SeparatePlugin(theTASSELMainFrame, true));
 
         } catch (Exception ex) {
