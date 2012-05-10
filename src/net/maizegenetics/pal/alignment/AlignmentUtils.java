@@ -346,4 +346,26 @@ public class AlignmentUtils {
             return true;
         }
     }
+
+    public static boolean areEncodingsEqual(String[][][] encodings) {
+        int numEncodings = encodings.length;
+        for (int i = 1; i < numEncodings; i++) {
+            int numSites = encodings[0].length;
+            if (numSites != encodings[i].length) {
+                return false;
+            }
+            for (int s = 0; s < numSites; s++) {
+                int numCodes = encodings[0][s].length;
+                if (numCodes != encodings[i][s].length) {
+                    return false;
+                }
+                for (int c = 0; c < numCodes; c++) {
+                    if (!encodings[0][s][c].equals(encodings[i][s][c])) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
 }
