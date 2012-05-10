@@ -222,7 +222,7 @@ public class ExportPlugin extends AbstractPlugin {
             return;
         }
 
-        if (myFileType == FileLoadPlugin.TasselFileType.Hapmap) {
+        if ((myFileType == FileLoadPlugin.TasselFileType.Hapmap) || (myFileType == FileLoadPlugin.TasselFileType.HapmapDiploid)) {
             int n = 0;
             DefaultMutableTreeNode node = null;
             if (isInteractive()) {
@@ -232,6 +232,12 @@ public class ExportPlugin extends AbstractPlugin {
                 myIsDiploid = diploidDialog.getDiploid();
                 node = (DefaultMutableTreeNode) ((TASSELMainFrame) this.getParentFrame()).getDataTreePanel().getTree().getLastSelectedPathComponent();
                 n = node.getChildCount();
+            } else {
+                if (myFileType == FileLoadPlugin.TasselFileType.Hapmap) {
+                    myIsDiploid = false;
+                } else if (myFileType == FileLoadPlugin.TasselFileType.HapmapDiploid) {
+                    myIsDiploid = true;
+                }
             }
 
             boolean foundImputed = false;
