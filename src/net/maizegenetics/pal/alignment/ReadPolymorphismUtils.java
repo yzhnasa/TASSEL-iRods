@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
+import net.maizegenetics.pal.ids.SimpleIdGroup;
+
 public class ReadPolymorphismUtils {
 
     private static Pattern WHITESPACE = Pattern.compile("\\s+");
@@ -57,39 +59,20 @@ public class ReadPolymorphismUtils {
             nTaxa = dataList.size();
         }
 
+        String[][] myData = new String[nTaxa][nMarkers];
         String[] taxa = new String[nTaxa];
-        //int[] pos = new int[nMarkers];
-        //for (int i = 0; i < nMarkers; i++) pos[i] = -1;
-        Locus locus = new Locus("Unknown", "0", 0, 0, null, null);
+        for (int t = 0; t < nTaxa; t++) {
+        	String[] taxonData = dataList.get(t);
+        	taxa[t] = taxonData[0];
+        	for (int s = 0; s < nMarkers; s++) {
+        		myData[t][s] = taxonData[s+1];
+        	}
+        }
+        
         String[] markers = new String[nMarkers];
         markerNames.toArray(markers);
-        String[] seq = new String[nTaxa];
-        for (int i = 0; i < nTaxa; i++) {
-            String[] data = dataList.get(i);
-            taxa[i] = data[0];
-            int n = data.length;
-            if (n != nMarkers + 1) {
-                StringBuilder sb = new StringBuilder("Error: not enough marker data for taxa ");
-                sb.append(data[0]).append(" in line ").append(i);
-                throw new IOException(sb.toString());
-            }
-            StringBuilder sb = new StringBuilder();
-            for (int j = 0; j < nMarkers; j++) {
-                char aChar;
-                if (data[j + 1].startsWith("?")) {
-                    aChar = Alignment.UNKNOWN_ALLELE_CHAR;
-                } else {
-                    // Terry - fix this
-                    //aChar = dt.getCharFromTextRepresentation(data[j + 1]);
-                    aChar = ' ';
-                }
-                sb.append(aChar);
-            }
-            seq[i] = sb.toString();
-        }
-
-        //return new SimpleAlignment(new SimpleIdGroup(taxa), seq, dt, null, null, null, locus, scores, markers, false);
-        throw new UnsupportedOperationException();
+        Locus[] myLoci = new Locus[]{new Locus("Unknown", "0", 0, nMarkers, null, null)};
+        return SBitAlignment.getInstance(new SimpleIdGroup(taxa), myData, null, null, null, 14, myLoci, new int[]{0}, markers, true); 
     }
 
     public static GeneticMap readGeneticMapFile(String filename) throws IOException {
