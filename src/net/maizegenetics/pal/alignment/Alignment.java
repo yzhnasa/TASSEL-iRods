@@ -23,6 +23,7 @@ public interface Alignment extends Serializable {
      * as one of the maximum number of alleles.
      */
     public static byte RARE_ALLELE = 0xE;
+    public static byte RARE_DIPLOID_ALLELE = (byte) 0xEE;
     public static String RARE_ALLELE_STR = "Z";
     public static byte UNKNOWN_ALLELE = 0xF;
     public static byte UNKNOWN_DIPLOID_ALLELE = (byte) 0xFF;
