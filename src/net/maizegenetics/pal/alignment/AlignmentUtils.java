@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -242,16 +243,38 @@ public class AlignmentUtils {
     }
 
     private static void setDataBytes(String[][] data, String[] alleleStates, int maxNumAlleles, int numTaxa, int site, byte[][] dataBytes) {
-
-        for (int taxon = 0; taxon < numTaxa; taxon++) {
-            if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
-                dataBytes[taxon][site] = Alignment.UNKNOWN_ALLELE;
-            } else {
-                dataBytes[taxon][site] = Alignment.RARE_ALLELE;
-                for (int k = 0; k < maxNumAlleles; k++) {
-                    if (alleleStates[k].equals(data[taxon][site])) {
-                        dataBytes[taxon][site] = (byte) k;
-                        break;
+        if (data[0][0].contains(":")) {
+            Pattern colon = Pattern.compile(":");
+            for (int taxon = 0; taxon < numTaxa; taxon++) {
+                if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_DIPLOID_ALLELE_STR)) {
+                    dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                } else if (data[taxon][site].equals("?") || data[taxon][site].equals("?:?")) {
+                    dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                } else {
+                    String[] siteval = colon.split(data[taxon][site]);
+                    int[] byteval = new int[]{Alignment.RARE_ALLELE, Alignment.RARE_ALLELE};
+                    for (int k = 0; k < maxNumAlleles; k++) {
+                        if (alleleStates[k].equals(siteval[0])) {
+                            byteval[0] = k;
+                        }
+                        if (alleleStates[k].equals(siteval[1])) {
+                            byteval[1] = k;
+                        }
+                    }
+                    dataBytes[taxon][site] = (byte) ((byteval[0] << 4) | byteval[1]);
+                }
+            }
+        } else {
+            for (int taxon = 0; taxon < numTaxa; taxon++) {
+                if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
+                    dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                } else {
+                    dataBytes[taxon][site] = Alignment.RARE_DIPLOID_ALLELE;
+                    for (byte k = 0; k < maxNumAlleles; k++) {
+                        if (alleleStates[k].equals(data[taxon][site])) {
+                            dataBytes[taxon][site] = (byte) (k | (k << 4));
+                            break;
+                        }
                     }
                 }
             }
@@ -284,7 +307,7 @@ public class AlignmentUtils {
      * @param minimumCount      minimum number of sequences with a good base or a gap (but not N or ?)
      */
     public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
-        
+
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
         for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
 
@@ -304,7 +327,7 @@ public class AlignmentUtils {
 
             }
         }
-        
+
         int[] includeSites = new int[includeAL.size()];
         for (int i = 0; i < includeAL.size(); i++) {
             includeSites[i] = includeAL.get(i);
