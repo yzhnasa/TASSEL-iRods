@@ -65,7 +65,7 @@ public class TransitionProbability {
 			double offdiagsum = 0;
 			for (int col = 0; col < n; col++) {
 				if (col != row) {
-					m = -Math.log(1 - 2 * probabilityOfATransition[row][col]) * segmentLength / avgSegmentLength;
+					m = -Math.log(1 - 2 * probabilityOfATransition[row][col]) * segmentLength / avgSegmentLength / 2;
 					adjustedProbability[row][col] = (1 - Math.exp(-2*m)) / 2;
 					offdiagsum += adjustedProbability[row][col];
 				}
