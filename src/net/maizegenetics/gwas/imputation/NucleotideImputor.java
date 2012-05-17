@@ -54,7 +54,7 @@ public class NucleotideImputor {
 	Pattern tab = Pattern.compile("\t");
 	SBitAlignment gbsSnps;
 	TBitAlignment gbsSnpsByTaxa;
-	HashMap<String, PopulationData> familyMap;
+	ArrayList<PopulationData> familyList;
 	String baseOutFilename;
 	String assembly = "NA";
 	int minAlleleCount = 2;
@@ -128,10 +128,10 @@ public class NucleotideImputor {
 		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(in, null);
 		
 		System.out.println("Importing population information...");
-		familyMap = PopulationData.readPedigreeFile(ped);
+		familyList = PopulationData.readPedigreeFile(ped);
 
 		System.out.println("Scoring parents...");
-		MutableNucleotideAlignment result = scoreParentsForAPopulation("1");
+		MutableNucleotideAlignment result = scoreParentsForAPopulation(familyList.get(0));
 		ExportUtils.writeToHapmap(result, true, out, '\t', null);
 
 		//set missing values to flanking values, when flanking markers are identical
@@ -174,21 +174,18 @@ public class NucleotideImputor {
 		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(inHapmap, null);
 		
 		System.out.println("Importing population information...");
-		familyMap = PopulationData.readPedigreeFile(ped);
+		familyList = PopulationData.readPedigreeFile(ped);
 
 		System.out.println("Scoring parents...");
-		LinkedList<String> families = new LinkedList<String>(familyMap.keySet());
-		Collections.sort(families);  //not critical, just processes them in a reasonable order
 		int familyCount = 0;
-		for (String family : families) {
-			PopulationData popdata = familyMap.get(family);
-			System.out.println("Processing family " + family + "in NucleotideImputor.processMaizeChromosome()");
+		for (PopulationData popdata : familyList) {
+			System.out.println("Processing family " + popdata.name + "in NucleotideImputor.processMaizeChromosome()");
 			String[] ids = new String[popdata.members.size()];
 			popdata.members.toArray(ids);
 			Alignment a =  FilterAlignment.getInstance(gbsSnps, new SimpleIdGroup(ids), false);
 //			imputeSnpsForPopulation(a, pop);
 			TBitAlignment tba = callParentAlleles(a, popdata);
-			String parentout = "/Volumes/Macintosh HD 2/data/namgbs/genos_20120110/merged_nam_ibm/NAM_IBM_282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c" + chr + "." + family + "parent.calls.hmpImputed.txt";
+			String parentout = "/Volumes/Macintosh HD 2/data/namgbs/genos_20120110/merged_nam_ibm/NAM_IBM_282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c" + chr + "." + popdata.name + "parent.calls.hmpImputed.txt";
 			ExportUtils.writeToHapmap(tba, false, parentout, '\t', null);
 			
 //			String out = "/Volumes/Macintosh HD 2/data/namgbs/genos_20120110/merged_nam_ibm/NAM_IBM_282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c" + chr + "." + family + ".hmpImputed.txt";
@@ -197,8 +194,7 @@ public class NucleotideImputor {
 		
 		//update the original alignment
 		MutableNucleotideAlignment imputedGbsSnps = MutableNucleotideAlignment.getInstance(gbsSnps);
-		for (String family : families) {
-			PopulationData pop = familyMap.get(family);
+		for (PopulationData pop : familyList) {
 			//TODO finish this part
 		}
 		
@@ -212,23 +208,21 @@ public class NucleotideImputor {
 		String ped = "/Volumes/Macintosh HD 2/data/cimmyt/CIMMYT.3pop.peds.txt";
 		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(inHapmap, null);
 		
-		familyMap = PopulationData.readPedigreeFile(ped);
-		LinkedList<String> families = new LinkedList<String>(familyMap.keySet());
+		familyList = PopulationData.readPedigreeFile(ped);
 
-		for (String family:families) {
-			PopulationData popdata = familyMap.get(family);
-			System.out.println("Processing family " + family + "in NucleotideImputor.processMaizeChromosome()");
+		for (PopulationData popdata:familyList) {
+			System.out.println("Processing family " + popdata.name + "in NucleotideImputor.processMaizeChromosome()");
 			String[] ids = new String[popdata.members.size()];
 			popdata.members.toArray(ids);
 			Alignment a =  FilterAlignment.getInstance(gbsSnps, new SimpleIdGroup(ids), false);
 			TBitAlignment parentCalls = callParentAlleles(a, popdata);
 //			TBitAlignment parentCalls = callParentAllelesFromParents(a, pop);
-			System.out.println("Parents called on " + parentCalls.getSiteCount() + " sites for family " + family);
+			System.out.println("Parents called on " + parentCalls.getSiteCount() + " sites for family " + popdata.name);
 //			String out = "/Volumes/Macintosh HD 2/data/cimmyt/cimmyt_unimp_20120220/cimmyt_chr1_20120220.parentsfromparents." + family + ".hmp.txt";
 //			ExportUtils.writeToHapmap(parentCalls, false, out, '\t', null);
 			Alignment va = imputeUsingViterbiFiveState(parentCalls);
 			
-			String out = "/Volumes/Macintosh HD 2/data/cimmyt/cimmyt_unimp_20120220/cimmyt_chr" + chr + "_20120220.imputed.family." + family + ".hmp.txt";
+			String out = "/Volumes/Macintosh HD 2/data/cimmyt/cimmyt_unimp_20120220/cimmyt_chr" + chr + "_20120220.imputed.family." + popdata.name + ".hmp.txt";
 			ExportUtils.writeToHapmap(va, false, out, '\t', null);
 		}
 
@@ -262,9 +256,9 @@ public class NucleotideImputor {
 		String ped = "/Volumes/Macintosh HD 2/data/wheat/wheat.ped.txt";
 		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(inHapmap, null);
 		
-		familyMap = PopulationData.readPedigreeFile(ped);
+		familyList = PopulationData.readPedigreeFile(ped);
 		
-		PopulationData popdata = familyMap.get("1");
+		PopulationData popdata = familyList.get(0);
 		String[] ids = new String[popdata.members.size()];
 		popdata.members.toArray(ids);
 		Alignment a =  FilterAlignment.getInstance(gbsSnps, new SimpleIdGroup(ids), false);
@@ -340,8 +334,7 @@ public class NucleotideImputor {
 	 * 3. score progeny
 	 * 
 	 * */
-	public MutableNucleotideAlignment scoreParentsForAPopulation(String family) {
-		PopulationData popdata = familyMap.get(family);
+	public MutableNucleotideAlignment scoreParentsForAPopulation(PopulationData popdata) {
 		String[] ids = new String[popdata.members.size()];
 		popdata.members.toArray(ids);
 		Alignment popAlignment = FilterAlignment.getInstance(gbsSnps, new SimpleIdGroup(ids), false);
@@ -740,7 +733,7 @@ public class NucleotideImputor {
 //		ExportUtils.writeToHapmap(tba, false, "/Volumes/Macintosh HD 2/temp/pop14.txt", '\t', null);
 		
 		System.out.println("Starting Viterbi algorithm...");
-		popdata.align = imputeUsingViterbiFiveState(tba);
+		popdata.imputed = imputeUsingViterbiFiveState(tba);
 		 
 		System.out.println("Finished.");
 	}
@@ -1457,88 +1450,6 @@ public class NucleotideImputor {
 		}
 	}
 
-	public boolean writeJointResultsToHapmapFile(String hapmapFilename) {
-		
-		ArrayList<String> familyList = new ArrayList<String>(familyMap.keySet());
-		Collections.sort(familyList);
-		int npops = familyList.size();
-		int[] nextSite = new int[npops]; 
-		int[] nextSnpPos = new int[npops];
-		String[] nextSnpAlleles = new String[npops];
-		int[] ntaxa = new int[npops];
-		int[] nsites = new int[npops];
-		int[][] taxonIndex = new int[npops][];
-		
-		int popcount = 0;
-		for (String family:familyList) {
-			PopulationData popdata = familyMap.get(family);
-			nextSite[popcount] = 0;
-			nextSnpPos[popcount] = popdata.align.getPositionInLocus(0);
-			nextSnpAlleles[popcount] = popdata.align.getMajorAlleleAsString(0) + "/" + popdata.align.getMajorAlleleAsString(0);
-			ntaxa[popcount] = popdata.members.size();
-			nsites[popcount] = popdata.align.getSiteCount();
-			int[] ndx = new int[ntaxa[popcount]];
-			taxonIndex[popcount] = ndx;
-			for (int t = 0; t < ntaxa[popcount]; t++) {
-				ndx[t] = popdata.align.getIdGroup().whichIdNumber(popdata.members.get(t));
-			}
-			popcount++;
-		}
-		
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(hapmapFilename));
-			bw.write("rs#\talleles\tchrom\tpos\tstrand\tassembly#\tcenter\tprotLSID\tassayLSID\tpanelLSID\tQCcode");
-			for (String family:familyList) {
-				PopulationData popdata = familyMap.get(family);
-				for (String taxon:popdata.members) {
-					bw.write("\t");
-					bw.write(taxon);
-				}
-			}
-			bw.newLine();
-
-			int minPosition = 0;
-			String minAllele = "ZZZ";
-			for (int pos : nextSnpPos) minPosition = Math.min(minPosition, pos);
-			for (String allele:nextSnpAlleles) { if (minAllele.compareTo(allele) > 0) minAllele = allele; }
-
-			while (minPosition < Integer.MAX_VALUE) {
-				for (int p = 0; p < npops; p++) {
-					if (nextSnpPos[p] == minPosition) {
-						int thisSite = nextSite[p];
-						PopulationData popdata = familyMap.get(familyList.get(p));
-						for (int ndx:taxonIndex[p]) {
-							bw.write("\t");
-							bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(popdata.align.getBase(ndx, thisSite)));
-						}
-						if (nextSite[p] < nsites[p]) {
-							nextSite[p]++;
-							nextSnpPos[p] = popdata.align.getPositionInLocus(nextSite[p]);
-							nextSnpAlleles[p] = popdata.align.getMajorAlleleAsString(0) + "/" + popdata.align.getMajorAlleleAsString(0);
-						} else {
-							nextSnpPos[p] = Integer.MAX_VALUE;
-						}
-					} else {
-						for (int t = 0; t < ntaxa[p]; t++) {
-							bw.write("\tN");
-						}
-					}
-				}
-				bw.newLine();
-				minPosition = 0;
-				for (int pos : nextSnpPos) minPosition = Math.min(minPosition, pos);
-				for (String allele:nextSnpAlleles) { if (minAllele.compareTo(allele) > 0) minAllele = allele; }
-			}
-
-
-			bw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
-
 	public void updateSnpAlignment(MutableNucleotideAlignment mna, PopulationData popdata) {
 		//set monomorphic sites to major (or only allele) (or not)
 		//set polymorphic sites consistent with flanking markers if equal, unchanged otherwise
@@ -1547,10 +1458,10 @@ public class NucleotideImputor {
 		fillGapsInAlignment(popdata);
 		
 		//map population taxa to mna
-		int ntaxa = popdata.align.getSequenceCount();
+		int ntaxa = popdata.imputed.getSequenceCount();
 		int[] taxaIds = new int[ntaxa];
 		for (int t = 0; t < ntaxa; t++) {
-			Identifier ident = popdata.align.getIdGroup().getIdentifier(t);
+			Identifier ident = popdata.imputed.getIdGroup().getIdentifier(t);
 			if (popdata.parent1.equals(ident.getFullName()) || popdata.parent2.equals(ident.getFullName())) {
 				taxaIds[t] = -1;
 			} else {
@@ -1571,7 +1482,7 @@ public class NucleotideImputor {
 				byte ACcall = (byte) ((Acall << 4) | Ccall);
 				for (int t = 0; t < ntaxa; t++) {
 					if (taxaIds[t] > -1) {
-						byte parentCall = popdata.align.getBase(t, popSnpCount);
+						byte parentCall = popdata.imputed.getBase(t, popSnpCount);
 						if (parentCall == AA) {
 							mna.setBase(taxaIds[t], s, AAcall);
 						} else if (parentCall == CC) {
@@ -1589,17 +1500,15 @@ public class NucleotideImputor {
 			}
 		}
 		
-		
-		
 	}
 	
 	public void fillGapsInAlignment(PopulationData popdata) {
 		MutableNucleotideAlignment a;
-		if (popdata.align instanceof MutableNucleotideAlignment) {
-			a = (MutableNucleotideAlignment) popdata.align;
+		if (popdata.imputed instanceof MutableNucleotideAlignment) {
+			a = (MutableNucleotideAlignment) popdata.imputed;
 		} else {
-			a = MutableNucleotideAlignment.getInstance(popdata.align);
-			popdata.align = a;
+			a = MutableNucleotideAlignment.getInstance(popdata.imputed);
+			popdata.imputed = a;
 		}
 		
 		int ntaxa = a.getSequenceCount();
@@ -1708,16 +1617,15 @@ public class NucleotideImputor {
 		String pedFile = "/Volumes/Macintosh HD 2/data/cimmyt/CIMMYT.3pop.peds.txt";
 		
 		Alignment a = ImportUtils.readFromHapmap(genoFile, null);
-		familyMap = PopulationData.readPedigreeFile(pedFile);
+		familyList = PopulationData.readPedigreeFile(pedFile);
 		
-		Set<String> families = familyMap.keySet();
-		for (String family:families) {
-			System.out.println("Extracting data for family " + family);
-			int n = familyMap.get(family).members.size();
+		for (PopulationData family:familyList) {
+			System.out.println("Extracting data for family " + family.name);
+			int n = family.members.size();
 			String[] ids = new String[n];
-			familyMap.get(family).members.toArray(ids);
+			family.members.toArray(ids);
 			Alignment b = FilterAlignment.getInstance(a, new SimpleIdGroup(ids));
-			String out = "/Volumes/Macintosh HD 2/data/cimmyt/cimmyt_imp_20120220/cimmyt_chr1_imp_20120220.family." + family + ".hmp.txt";
+			String out = "/Volumes/Macintosh HD 2/data/cimmyt/cimmyt_imp_20120220/cimmyt_chr1_imp_20120220.family." + family.name + ".hmp.txt";
 			ExportUtils.writeToHapmap(b, false, out, '\t', null);
 		}
 	}

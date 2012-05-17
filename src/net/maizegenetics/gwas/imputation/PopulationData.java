@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -21,7 +22,8 @@ public class PopulationData {
 	public double contribution2;
 	public int Fgen;
 	public double inbredCoef;
-	public Alignment align;
+	public Alignment original;
+	public Alignment imputed;
 	public byte[] alleleA;
 	public byte[] alleleC;
 
@@ -29,9 +31,9 @@ public class PopulationData {
 	 * @param popFilename	the name of the file containing pedigree information for a group of populations
 	 * @return	a HashMap of family names (keys) and associated PopulationData objects (values) containing information for the families in the pedigree file
 	 */
-	public static HashMap<String, PopulationData> readPedigreeFile(String popFilename) {
+	public static ArrayList<PopulationData> readPedigreeFile(String popFilename) {
 		Pattern tab = Pattern.compile("\t");
-		HashMap<String, PopulationData> familyMap = new HashMap<String, PopulationData>(); 
+		LinkedHashMap<String, PopulationData> familyMap = new LinkedHashMap<String, PopulationData>(); 
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(popFilename));
 			br.readLine();
@@ -41,6 +43,7 @@ public class PopulationData {
 				PopulationData family = familyMap.get(info[0]);
 				if (family == null) {
 					family = new PopulationData ();
+					family.name = info[0];
 					family.members = new ArrayList<String>();
 					family.members.add(info[2]);  //add parents to family members
 					family.members.add(info[3]);
@@ -58,6 +61,6 @@ public class PopulationData {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-		return familyMap;
+		return new ArrayList<PopulationData>(familyMap.values());
 	}
 }
