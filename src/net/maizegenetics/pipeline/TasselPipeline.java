@@ -40,6 +40,7 @@ import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
 import net.maizegenetics.baseplugins.MLMPlugin;
 import net.maizegenetics.baseplugins.MergeAlignmentsPlugin;
+import net.maizegenetics.baseplugins.MergeAlignmentsSameSitesPlugin;
 import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
 import net.maizegenetics.baseplugins.PlinkLoadPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
@@ -337,6 +338,29 @@ public class TasselPipeline implements PluginListener {
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-mergeAlignments")) {
                     MergeAlignmentsPlugin plugin = new MergeAlignmentsPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-mergeAlignmentsSameSites")) {
+                    MergeAlignmentsSameSitesPlugin plugin = new MergeAlignmentsSameSitesPlugin(myMainFrame);
+                    try {
+                        for (int i = 0; i < 2; i++) {
+                            String paraType = args[index++].trim();
+                            String value = args[index++].trim();
+                            if (paraType.equalsIgnoreCase("-input")) {
+                                String[] files = value.split(",");
+                                List<String> filenames = new ArrayList<String>();
+                                for (int j = 0; j < files.length; j++) {
+                                    filenames.add(files[j]);
+                                }
+                                plugin.setInputFiles(filenames);
+                            } else if (paraType.equalsIgnoreCase("-output")) {
+                                plugin.setOutputFile(value);
+                            } else {
+                                throw new IllegalArgumentException("TasselPipeline: parseArgs: -mergeAlignmentsSameSites: unknown descriptor: " + paraType);
+                            }
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -mergeAlignmentsSameSites: not specified correctly.");
+                    }
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-excludeLastTrait")) {
                     FilterTraitsPlugin plugin = new FilterTraitsPlugin(myMainFrame, false);
