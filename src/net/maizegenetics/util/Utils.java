@@ -301,4 +301,21 @@ public final class Utils {
         }
         return null;
     }
+
+    /**
+     * Finds index of Nth occurrence of character in string.
+     * 
+     * @param str string
+     * @param match character to match
+     * @param n Nth occurrence
+     * 
+     * @return index 
+     */
+    public static int findNthOccurrenceInString(String str, char match, int n) {
+        int result = str.indexOf(match);
+        while (--n > 0 && result != -1) {
+            result = str.indexOf(match, result + 1);
+        }
+        return result;
+    }
 }
