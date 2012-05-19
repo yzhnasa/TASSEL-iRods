@@ -314,6 +314,16 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    /**
+     * Factory method that returns a FilterAlignment viewing
+     * sites between start site and end site inclusive.
+     * 
+     * @param a alignment
+     * @param startSite start site
+     * @param endSite end site
+     * 
+     * @return Filter Alignment
+     */
     public static FilterAlignment getInstance(Alignment a, int startSite, int endSite) {
 
         if (a instanceof FilterAlignment) {
