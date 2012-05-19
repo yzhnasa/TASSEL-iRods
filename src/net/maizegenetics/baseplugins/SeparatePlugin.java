@@ -60,12 +60,29 @@ public class SeparatePlugin extends AbstractPlugin {
                     fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
 
                 } else if (currentValue instanceof Alignment) {
-                    Alignment align = (Alignment) current.getData();
+
+                    Alignment align = (Alignment) currentValue;
                     Alignment[] alignments = align.getAlignments();
-                    if (alignments.length > 1) {
-                        for (int i = 0; i < alignments.length; i++) {
-                            if (alignments[i] != null) {
-                                String name = current.getName() + "_align" + i;
+                    for (int i = 0; i < alignments.length; i++) {
+                        int[] offsets = alignments[i].getLociOffsets();
+                        if (offsets.length > 1) {
+                            Locus[] loci = alignments[i].getLoci();
+                            for (int j = 0; j < offsets.length; j++) {
+                                String name = current.getName() + "_chrom" + loci[j];
+                                int endSite;
+                                try {
+                                    endSite = offsets[j + 1] - 1;
+                                } catch (Exception e) {
+                                    endSite = alignments[i].getSiteCount() - 1;
+                                }
+                                Datum td = new Datum(name, FilterAlignment.getInstance(alignments[i], offsets[j], endSite), null);
+                                DataSet tds = new DataSet(td, null);
+                                result.add(tds);
+                                fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
+                            }
+                        } else {
+                            if (alignments.length > 1) {
+                                String name = current.getName() + "_chrom" + alignments[i].getLocus(0);
                                 Datum td = new Datum(name, alignments[i], null);
                                 DataSet tds = new DataSet(td, null);
                                 result.add(tds);
