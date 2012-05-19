@@ -39,8 +39,13 @@ public class ExportMultiplePlugin extends AbstractPlugin {
 
         List data = input.getDataSet();
 
-        if ((mySaveFiles == null) || ((mySaveFiles.length != 1) && (mySaveFiles.length != data.size()))) {
-            throw new IllegalStateException("ExportMultiplePlugin: performFunction: number of save files should be either 1 or number of input data sets.");
+        int numSaveFiles = 0;
+        if (mySaveFiles != null) {
+            numSaveFiles = mySaveFiles.length;
+        }
+
+        if ((numSaveFiles != 0) && (numSaveFiles != 1) && (numSaveFiles != data.size())) {
+            throw new IllegalStateException("ExportMultiplePlugin: performFunction: number of save files should be either 0, 1 or number of input data sets.");
         }
 
         if ((myFileTypes != null) && (myFileTypes.length != 0)) {
@@ -54,13 +59,14 @@ public class ExportMultiplePlugin extends AbstractPlugin {
             Datum datum = (Datum) data.get(i);
             DataSet current = new DataSet(datum, input.getCreator());
 
-            if (mySaveFiles.length != data.size()) {
+            if (numSaveFiles == 0) {
+                myExportPlugin.setSaveFile(datum.getName());
+            } else if (numSaveFiles == 1) {
                 String temp = mySaveFiles[0].replaceFirst("\\.", (i + 1) + ".");
                 if (temp.length() == mySaveFiles[0].length()) {
                     temp = mySaveFiles[0] + (i + 1);
                 }
                 myExportPlugin.setSaveFile(temp);
-                System.out.println("datum name: " + datum.getName());
             } else {
                 myExportPlugin.setSaveFile(mySaveFiles[i]);
             }
@@ -73,7 +79,8 @@ public class ExportMultiplePlugin extends AbstractPlugin {
                 myExportPlugin.setAlignmentFileType(myFileTypes[i]);
             }
 
-            myExportPlugin.performFunction(current);
+            DataSet filename = myExportPlugin.performFunction(current);
+            myLogger.info("Datum: " + datum.getName() + " Written to: " + filename.getDataOfType(String.class).get(0).getData());
 
         }
 

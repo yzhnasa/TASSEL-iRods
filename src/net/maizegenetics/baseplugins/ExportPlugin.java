@@ -86,21 +86,18 @@ public class ExportPlugin extends AbstractPlugin {
                 return null;
             }
 
+            String filename = mySaveFile;
             try {
                 Object data = input.getData(0).getData();
 
                 if (data instanceof Alignment) {
-                    performFunctionForAlignment((Alignment) data);
-                    return null;
+                    filename = performFunctionForAlignment((Alignment) data);
                 } else if (data instanceof Phenotype) {
-                    performFunctionForPhenotype((Phenotype) data);
-                    return null;
+                    filename = performFunctionForPhenotype((Phenotype) data);
                 } else if (data instanceof DistanceMatrix) {
-                    performFunctionForDistanceMatrix((DistanceMatrix) data);
-                    return null;
+                    filename = performFunctionForDistanceMatrix((DistanceMatrix) data);
                 } else if (data instanceof TableReport) {
-                    performFunctionForTableReport((TableReport) data);
-                    return null;
+                    filename = performFunctionForTableReport((TableReport) data);
                 } else {
                     String message = "Don't know how to export data type: " + data.getClass().getName();
                     if (isInteractive()) {
@@ -124,25 +121,32 @@ public class ExportPlugin extends AbstractPlugin {
                 return null;
             }
 
+            if (filename != null) {
+                return new DataSet(new Datum("Filename", filename, null), this);
+            } else {
+                return null;
+            }
+
         } finally {
             fireProgress(100);
         }
 
     }
 
-    public void performFunctionForDistanceMatrix(DistanceMatrix input) {
+    public String performFunctionForDistanceMatrix(DistanceMatrix input) {
 
         if (isInteractive()) {
             setSaveFile(getFileByChooser());
         }
 
         if ((mySaveFile == null) || (mySaveFile.length() == 0)) {
-            return;
+            return null;
         }
 
         try {
             File theFile = new File(Utils.addSuffixIfNeeded(mySaveFile, ".txt"));
             WriteDistanceMatrix.saveDelimitedDistanceMatrix(input, theFile);
+            return theFile.getName();
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException("ExportPlugin: performFunctionForDistanceMatrix: Problem writing file: " + mySaveFile);
@@ -150,19 +154,20 @@ public class ExportPlugin extends AbstractPlugin {
 
     }
 
-    public void performFunctionForTableReport(TableReport input) {
+    public String performFunctionForTableReport(TableReport input) {
 
         if (isInteractive()) {
             setSaveFile(getFileByChooser());
         }
 
         if ((mySaveFile == null) || (mySaveFile.length() == 0)) {
-            return;
+            return null;
         }
 
         try {
             File theFile = new File(Utils.addSuffixIfNeeded(mySaveFile, ".txt"));
             TableReportUtils.saveDelimitedTableReport(input, "\t", theFile);
+            return theFile.getName();
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException("ExportPlugin: performFunctionForTableReport: Problem writing file: " + mySaveFile);
@@ -170,14 +175,14 @@ public class ExportPlugin extends AbstractPlugin {
 
     }
 
-    public void performFunctionForPhenotype(Phenotype input) {
+    public String performFunctionForPhenotype(Phenotype input) {
 
         if (isInteractive()) {
             setSaveFile(getFileByChooser());
         }
 
         if ((mySaveFile == null) || (mySaveFile.length() == 0)) {
-            return;
+            return null;
         }
 
         File theFile = null;
@@ -188,6 +193,7 @@ public class ExportPlugin extends AbstractPlugin {
             fw = new FileWriter(theFile);
             pw = new PrintWriter(fw);
             PhenotypeUtils.saveAs(input, pw);
+            return theFile.getName();
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException("ExportPlugin: performFunctionForPhenotype: Problem writing file: " + mySaveFile);
@@ -202,14 +208,14 @@ public class ExportPlugin extends AbstractPlugin {
 
     }
 
-    public void performFunctionForAlignment(Alignment inputAlignment) {
+    public String performFunctionForAlignment(Alignment inputAlignment) {
 
         if (isInteractive()) {
             ExportPluginDialog theDialog = new ExportPluginDialog();
             theDialog.setLocationRelativeTo(getParentFrame());
             theDialog.setVisible(true);
             if (theDialog.isCancel()) {
-                return;
+                return null;
             }
             myFileType = theDialog.getTasselFileType();
 
@@ -219,8 +225,10 @@ public class ExportPlugin extends AbstractPlugin {
         }
 
         if ((mySaveFile == null) || (mySaveFile.length() == 0)) {
-            return;
+            return null;
         }
+
+        String resultFile = mySaveFile;
 
         if ((myFileType == FileLoadPlugin.TasselFileType.Hapmap) || (myFileType == FileLoadPlugin.TasselFileType.HapmapDiploid)) {
             int n = 0;
@@ -242,7 +250,7 @@ public class ExportPlugin extends AbstractPlugin {
 
             boolean foundImputed = false;
             if ((n == 0) || (!isInteractive())) {
-                ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t', this);
+                resultFile = ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t', this);
             } else {
                 int i = 0;
                 while (i < n && !foundImputed) {
@@ -256,10 +264,10 @@ public class ExportPlugin extends AbstractPlugin {
                             imputeOptionDialog.setLocationRelativeTo(getParentFrame());
                             imputeOptionDialog.setVisible(true);
                             if (imputeOptionDialog.getDisplayImputed()) {
-                                ExportUtils.writeToHapmap(inputAlignment, (AlignmentMask) currentMask, myIsDiploid, mySaveFile, '\t', this);
+                                resultFile = ExportUtils.writeToHapmap(inputAlignment, (AlignmentMask) currentMask, myIsDiploid, mySaveFile, '\t', this);
                                 foundImputed = true;
                             } else if (i == (n - 1)) {
-                                ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t', this);
+                                resultFile = ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t', this);
                             }
                         }
                     }
@@ -267,13 +275,14 @@ public class ExportPlugin extends AbstractPlugin {
                 }
             }
         } else if (myFileType == FileLoadPlugin.TasselFileType.Plink) {
-            ExportUtils.writeToPlink(inputAlignment, mySaveFile, '\t');
+            resultFile = ExportUtils.writeToPlink(inputAlignment, mySaveFile, '\t');
         } else if (myFileType == FileLoadPlugin.TasselFileType.Flapjack) {
-            ExportUtils.writeToFlapjack(inputAlignment, mySaveFile, '\t');
+            resultFile = ExportUtils.writeToFlapjack(inputAlignment, mySaveFile, '\t');
         } else if (myFileType == FileLoadPlugin.TasselFileType.Phylip_Seq) {
             PrintWriter out = null;
             try {
-                out = new PrintWriter(new FileWriter(Utils.addSuffixIfNeeded(mySaveFile, ".phy")));
+                resultFile = Utils.addSuffixIfNeeded(mySaveFile, ".phy");
+                out = new PrintWriter(new FileWriter(resultFile));
                 ExportUtils.printSequential(inputAlignment, out);
             } catch (Exception e) {
                 throw new IllegalStateException("ExportPlugin: performFunction: Problem writing file: " + mySaveFile);
@@ -284,7 +293,8 @@ public class ExportPlugin extends AbstractPlugin {
         } else if (myFileType == FileLoadPlugin.TasselFileType.Phylip_Inter) {
             PrintWriter out = null;
             try {
-                out = new PrintWriter(new FileWriter(Utils.addSuffixIfNeeded(mySaveFile, ".phy")));
+                resultFile = Utils.addSuffixIfNeeded(mySaveFile, ".phy");
+                out = new PrintWriter(new FileWriter(resultFile));
                 ExportUtils.printInterleaved(inputAlignment, out);
             } catch (Exception e) {
                 throw new IllegalStateException("ExportPlugin: performFunction: Problem writing file: " + mySaveFile);
@@ -293,12 +303,14 @@ public class ExportPlugin extends AbstractPlugin {
                 out.close();
             }
         } else if (myFileType == FileLoadPlugin.TasselFileType.Table) {
-            ExportUtils.saveDelimitedAlignment(inputAlignment, "\t", mySaveFile);
+            resultFile = ExportUtils.saveDelimitedAlignment(inputAlignment, "\t", mySaveFile);
         } else if (myFileType == FileLoadPlugin.TasselFileType.Serial) {
-            ExportUtils.writeAlignmentToSerialGZ(inputAlignment, mySaveFile);
+            resultFile = ExportUtils.writeAlignmentToSerialGZ(inputAlignment, mySaveFile);
         } else {
             throw new IllegalStateException("ExportPlugin: performFunction: Unknown Alignment File Format: " + myFileType);
         }
+
+        return resultFile;
 
     }
 

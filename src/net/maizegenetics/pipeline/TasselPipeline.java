@@ -678,9 +678,13 @@ public class TasselPipeline implements PluginListener {
                     }
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-export")) {
-                    String[] filenames = args[index++].trim().split(",");
                     ExportMultiplePlugin plugin = new ExportMultiplePlugin(myMainFrame);
-                    plugin.setSaveFiles(filenames);
+                    String temp = args[index].trim();
+                    if (!temp.startsWith("-")) {
+                        String[] filenames = temp.split(",");
+                        plugin.setSaveFiles(filenames);
+                        index++;
+                    }
                     integratePlugin(plugin, false);
                 } else if (current.equalsIgnoreCase("-exportType")) {
 
