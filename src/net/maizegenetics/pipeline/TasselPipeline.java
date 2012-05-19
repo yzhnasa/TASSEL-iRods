@@ -43,6 +43,7 @@ import net.maizegenetics.baseplugins.MergeAlignmentsPlugin;
 import net.maizegenetics.baseplugins.MergeAlignmentsSameSitesPlugin;
 import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
 import net.maizegenetics.baseplugins.PlinkLoadPlugin;
+import net.maizegenetics.baseplugins.SeparatePlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
@@ -335,6 +336,9 @@ public class TasselPipeline implements PluginListener {
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-intersect")) {
                     IntersectionAlignmentPlugin plugin = new IntersectionAlignmentPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-separate")) {
+                    SeparatePlugin plugin = new SeparatePlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-mergeAlignments")) {
                     MergeAlignmentsPlugin plugin = new MergeAlignmentsPlugin(myMainFrame, false);
