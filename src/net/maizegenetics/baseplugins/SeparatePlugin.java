@@ -57,7 +57,6 @@ public class SeparatePlugin extends AbstractPlugin {
 
                     DataSet tds = new DataSet(new Datum[]{phenoDatum, alignDatum}, this);
                     result.add(tds);
-                    fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
 
                 } else if (currentValue instanceof Alignment) {
 
@@ -78,7 +77,6 @@ public class SeparatePlugin extends AbstractPlugin {
                                 Datum td = new Datum(name, FilterAlignment.getInstance(alignments[i], offsets[j], endSite), null);
                                 DataSet tds = new DataSet(td, null);
                                 result.add(tds);
-                                fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
                             }
                         } else {
                             if (alignments.length > 1) {
@@ -86,7 +84,6 @@ public class SeparatePlugin extends AbstractPlugin {
                                 Datum td = new Datum(name, alignments[i], null);
                                 DataSet tds = new DataSet(td, null);
                                 result.add(tds);
-                                fireDataSetReturned(new PluginEvent(tds, SeparatePlugin.class));
                             }
                         }
                     }
@@ -101,7 +98,9 @@ public class SeparatePlugin extends AbstractPlugin {
                 }
                 return null;
             } else {
-                return DataSet.getDataSet(result, this);
+                DataSet resultDataSet = DataSet.getDataSet(result, this);
+                fireDataSetReturned(new PluginEvent(resultDataSet, SeparatePlugin.class));
+                return resultDataSet;
             }
         } finally {
             fireProgress(100);
