@@ -9,6 +9,7 @@ import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+import net.maizegenetics.plugindef.PluginEvent;
 
 public class UpdateOriginalAlignmentPlugin extends AbstractPlugin {
 	//this plugin does not take any user-defined parameters
@@ -24,7 +25,10 @@ public class UpdateOriginalAlignmentPlugin extends AbstractPlugin {
 			PopulationData family = (PopulationData) data.getData();
 			NucleotideImputationUtils.updateSnpAlignment(family);
 		}
-		return new DataSet(theData, this);
+		
+		DataSet resultDS = new DataSet(theData, this);
+		fireDataSetReturned(new PluginEvent(resultDS, UpdateOriginalAlignmentPlugin.class));
+		return resultDS;
 	}
 
 	@Override

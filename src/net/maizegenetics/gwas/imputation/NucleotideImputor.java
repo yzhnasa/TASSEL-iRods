@@ -962,7 +962,7 @@ public class NucleotideImputor {
 	public IdGroup[] findTaxaGroups(Alignment a, int[] coreSnps) {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
-		IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(a));
+		IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterAlignment.getInstance(a, coreSnps)));
 		estimateMissingDistances(dm);
 		Tree myTree = new UPGMATree(dm);
 		TreeClusters clusterMaker = new TreeClusters(myTree);

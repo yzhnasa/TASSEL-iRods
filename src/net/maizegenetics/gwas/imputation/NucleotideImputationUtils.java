@@ -5,6 +5,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.xml.DOMConfigurator;
+
+import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
@@ -19,13 +23,14 @@ import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.tree.Tree;
 import net.maizegenetics.pal.tree.TreeClusters;
 import net.maizegenetics.pal.tree.UPGMATree;
+import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 
-
 public class NucleotideImputationUtils {
-	
+	private static final Logger myLogger = Logger.getLogger(NucleotideImputationUtils.class);
 	static final byte AA = NucleotideAlignmentConstants.getNucleotideDiploidByte("AA");
 	static final byte CC = NucleotideAlignmentConstants.getNucleotideDiploidByte("CC");
 	static final byte GG = NucleotideAlignmentConstants.getNucleotideDiploidByte("GG");
@@ -93,16 +98,20 @@ public class NucleotideImputationUtils {
 		//set first parent to AA, second parent to CC for snps used to form taxa clusters
 		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popdata.original);
 		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
-		System.out.println("snps in parent Alignment = " + parentAlignment.getSiteCount());
+		myLogger.info("snps in parent Alignment = " + parentAlignment.getSiteCount());
 		int ntaxa = parentAlignment.getSequenceCount();
 		
 		for (int i = 0; i < coreSnps.length; i++) {
 			int snp = coreSnps[i];
+			//debug
+			int[][] acounts = aAlignment.getAllelesSortedByFrequency(snp);
+			int[][] ccounts = cAlignment.getAllelesSortedByFrequency(snp);
+
 			byte alleleA = aAlignment.getMajorAllele(snp);
 			byte alleleC = cAlignment.getMajorAllele(snp);
 			Asnp[snp] = alleleA;
 			Csnp[snp] = alleleC;
-			 
+			
 			for (int t = 0; t < ntaxa; t++) {
 				byte[] taxon = popdata.original.getBaseArray(t, snp);
 				if (taxon[0] == taxon[1]) {
@@ -176,7 +185,7 @@ public class NucleotideImputationUtils {
 		
 		FilterAlignment ldAlignment = FilterAlignment.getInstance(parentAlignment, retainedSites);
 		popdata.snpIndex = ldbits;
-		System.out.println("number of original sites = " + popdata.original.getSiteCount() + ", number of polymorphic sites = " + polybits.cardinality() + ", number of ld sites = " + ldAlignment.getSiteCount());
+		myLogger.info("number of original sites = " + popdata.original.getSiteCount() + ", number of polymorphic sites = " + polybits.cardinality() + ", number of ld sites = " + ldAlignment.getSiteCount());
 
 		popdata.imputed = TBitAlignment.getInstance(ldAlignment);
 	}
@@ -340,7 +349,8 @@ public class NucleotideImputationUtils {
 	public static IdGroup[] findTaxaGroups(Alignment a, int[] coreSnps) {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
-		IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(a));
+		
+		IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterAlignment.getInstance(a, coreSnps)));
 		estimateMissingDistances(dm);
 		Tree myTree = new UPGMATree(dm);
 		TreeClusters clusterMaker = new TreeClusters(myTree);
@@ -377,7 +387,7 @@ public class NucleotideImputationUtils {
 
 		 //List groups
 		for (int i = 0; i < ngroups; i++) {
-			if (groupCount[i] > 5) System.out.println("Taxa group " + i + " has " + groupCount[i] + " members.");
+			if (groupCount[i] > 5) myLogger.info("Taxa group " + i + " has " + groupCount[i] + " members.");
 		}
 		
 		//create major and minor id groups
@@ -489,7 +499,7 @@ public class NucleotideImputationUtils {
 		return  num / Math.sqrt(denom);
 	}
 
-	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(TBitAlignment a, double probHeterozygous) {
+	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(TBitAlignment a, double probHeterozygous, String familyName) {
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
 		//obs are in {A, C, M}, where M is heterozygote A/C
 		int maxIterations = 50;
@@ -553,7 +563,7 @@ public class NucleotideImputationUtils {
 			for (int s = 0; s < nsites; s++) {
 				byte base = a.getBase(t, s);
 				if (isNotMissing.fastGet(s) && obsMap.get(a.getBase(t, s)) == null) {
-					System.out.println("null from " + Byte.toString(base));
+					myLogger.info("null from " + Byte.toString(base));
 				}
 				if (isNotMissing.fastGet(s)) {
 					obs[nmcount] = obsMap.get(a.getBase(t, s));
@@ -574,7 +584,7 @@ public class NucleotideImputationUtils {
 		boolean hasNotConverged = true;
 		while (iter < maxIterations && hasNotConverged) {
 			//apply Viterbi
-			System.out.println("Iteration " + iter++);
+			myLogger.info("Iteration " + iter++ + " for " + familyName);
 			bestStates.clear();
 			for (int t = 0; t < ntaxa; t++) {
 				tp.setPositions(snpPositions.get(t));
@@ -584,7 +594,7 @@ public class NucleotideImputationUtils {
 					va.calculate();
 					bestStates.add(va.getMostProbableStateSequence());
 				} else { //do not impute if obs < 20
-					System.out.println("Fewer then 20 observations for " + a.getTaxaName(t));
+					myLogger.info("Fewer then 20 observations for " + a.getTaxaName(t));
 					byte[] states = new byte[nobs];
 					byte[] obs = nonMissingObs.get(t);
 					for (int i = 0; i < nobs; i++) {
@@ -614,16 +624,6 @@ public class NucleotideImputationUtils {
 			}
 			tp.setTransitionCounts(transitionCounts, chrlength, ntaxa);
 			
-			//print transition probabilities
-			System.out.println("Transition probabilities");
-			for (double[] row:transitionProb) {
-				for (double cell:row) {
-					System.out.print(cell  + " ");
-				}
-				System.out.println();
-			}
-			System.out.println();
-			
 			//re-estimate emission probabilities
 			int[][] emissionCounts = new int[5][3];
 			double[][] emissionProb = new double[5][3];
@@ -634,17 +634,7 @@ public class NucleotideImputationUtils {
 					emissionCounts[states[s]][obs[s]]++;
 				}
 			}
-			
-			//print observation/state counts
-			System.out.println("Imputation counts, rows=states, columns=observations");
-			for (int[] row:emissionCounts) {
-				for (int cell:row) {
-					System.out.print(cell  + " ");
-				}
-				System.out.println();
-			}
-			System.out.println();
-			
+
 			//check to see if there is a change in the observation/state counts
 			hasNotConverged = false;
 			for (int r = 0; r < 5; r++) {
@@ -655,7 +645,6 @@ public class NucleotideImputationUtils {
 					}
 				}
 			}
-				
 			
 			//emission is prob(obs | state) = count(cell)/count(row)
 			for (int row = 0; row < 5; row++) {
@@ -665,15 +654,63 @@ public class NucleotideImputationUtils {
 			}
 			ep.setEmissionProbability(emissionProb);
 			
-			//print emission probabilities
-			System.out.println("Emission probabilities");
-			for (double[] row:emissionProb) {
-				for (double cell:row) {
-					System.out.print(cell  + " ");
+			//if the model has converged  or if the max iterations has been reached print tables
+			if (!hasNotConverged || iter == maxIterations) {
+				StringBuilder sb = new StringBuilder("Family ");
+				sb.append(familyName).append(", chromosome ").append(a.getLocusName(0));
+				if (iter < maxIterations) {
+					sb.append(": EM algorithm converged at iteration ").append(iter).append(".\n");
+				} else {
+					sb.append(": EM algorithm failed to converge after ").append(iter).append(" iterations.\n");
 				}
-				System.out.println();
+				
+				//print transition counts
+				sb = new StringBuilder("Transition counts:\n");
+				for (int[] row:transitionCounts) {
+					for (int cell:row) {
+						sb.append(cell).append("\t");
+					}
+					sb.append("\n");
+				}
+				sb.append("\n");
+				myLogger.info(sb.toString());
+				
+				//print transition probabilities
+				sb = new StringBuilder("Transition probabilities:\n");
+				for (double[] row:transitionProb) {
+					for (double cell:row) {
+						sb.append(cell).append("\t");
+					}
+					sb.append("\n");
+				}
+				sb.append("\n");
+				myLogger.info(sb.toString());
+				
+				//print observation/state counts
+				sb = new StringBuilder("Imputation counts, rows=states, columns=observations:\n");
+				for (int[] row:emissionCounts) {
+					for (int cell:row) {
+						sb.append(cell).append("\t");
+					}
+					sb.append("\n");
+				}
+				sb.append("\n");
+				myLogger.info(sb.toString());
+				
+				//print emission probabilities
+				sb = new StringBuilder("Emission probabilities:\n");
+				for (double[] row:emissionProb) {
+					for (double cell:row) {
+						sb.append(cell).append("\t");
+					}
+					sb.append("\n");
+				}
+				sb.append("\n");
+				myLogger.info(sb.toString());
+
 			}
-			System.out.println();
+			
+			
 		}
 		
 		MutableNucleotideAlignment result = MutableNucleotideAlignment.getInstance(a);

@@ -10,6 +10,7 @@ import java.util.List;
 import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.xml.DOMConfigurator;
 
 import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -20,13 +21,14 @@ import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+import net.maizegenetics.plugindef.PluginEvent;
 
 public class CallParentAllelesPlugin extends AbstractPlugin {
 	private static final Logger myLogger = Logger.getLogger(CallParentAllelesPlugin.class);
 	private String pedfileName = null;
 	private int minAlleleCount = 2; //minimum allele count for the minor allele to consider that a site might be polymorphic
 	private int windowSize = 100;  //the number of sites to be used a window for determining the original set of snps in LD
-	private int numberToTry = 3; //the number of different windows to check for snps in LD
+	private int numberToTry = 10; //the number of different windows to check for snps in LD
 	private double cutHeightSnps = 0.2;  //the tree cut height used to find the largest cluster of correlated SNPs
 	private double minRforSnps = 0.8;  //the minimum R used to judge whether a snp is in ld with a test group
 	
@@ -46,9 +48,9 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		LinkedList<Datum> datumList = new LinkedList<Datum>();
 
 		for (Datum d : inputAlignments) {
-			Alignment align = (Alignment) d;
+			Alignment align = (Alignment) d.getData();
 			for (PopulationData family : familyList) {
-				myLogger.info("Calling parent alleles for family " + family.name + ".");
+				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.getLocusName(0) + ".");
 				String[] ids = new String[family.members.size()];
 				family.members.toArray(ids);
 				family.original =  FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false);
@@ -58,7 +60,9 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			}
 		}
 		
-		return new DataSet(datumList, this);
+		DataSet resultDS =  new DataSet(datumList, this);
+		fireDataSetReturned(new PluginEvent(resultDS, CallParentAllelesPlugin.class));
+		return resultDS;
 	}
 
 	@Override
@@ -87,6 +91,9 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-r") || args[i].equalsIgnoreCase("-minR")) {
 				minRforSnps = Double.parseDouble(args[++i]);
+			}
+			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logconfig")) {
+				DOMConfigurator.configure(args[++i]);
 			}
 			else if (args[i].equals("?")) myLogger.error(getUsage());
 		}
@@ -140,6 +147,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		usage.append("-t or -numberToTry : the number of windows to test for the initial SNP cluster (default = 3)\n");
 		usage.append("-h or -cutHeight : the height at which to cut the SNP tree (default = 0.3)\n");
 		usage.append("-r or -minR : minimum R used to test SNPs for LD (default = 0.8, good for RILs, try 0.4 for F2s)\n");
+		usage.append("-l or -logconfig : an xml configuration file for the logger. Default will be to print all messages to console.\n");
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();

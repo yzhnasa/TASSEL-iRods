@@ -14,6 +14,7 @@ import net.maizegenetics.pal.alignment.MutableSingleEncodeAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+import net.maizegenetics.plugindef.PluginEvent;
 
 public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 	private static final Logger myLogger = Logger.getLogger(WritePopulationAlignmentPlugin.class);
@@ -48,7 +49,8 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 			}
 		}
 		
-		return null;
+		fireDataSetReturned(new PluginEvent(input, input.getCreator().getClass()));
+		return input;
 	}
 
 	@Override
@@ -101,8 +103,9 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 		StringBuilder usage = new StringBuilder("The WritePopulationAlignmentPlugin requires the following parameter:\n");
 		usage.append("-f or -file : The base file name for the ouput. .hmp.txt will be appended.\n");
 		usage.append("The following parameters are optional:\n");
-		usage.append("-g or -fillgaps : true if missing values between SNPs from the same parent should be imputed to that parent, false otherwise (default = true)");
-		usage.append("-h or -phet : expected frequency of heterozygous loci (default = 0.07). If the inbreeding coefficient is specified in the pedigree file that will used to calculate this value.");
+		usage.append("-m or -merge : if true families are merged into a single file, if false each family is output to a separate file (default = true)");
+		usage.append("-p or -parentCalls : if true output is A/C/M where parent 1 is A and parent 2 is M, if false outputs nucleotides (default = true)");
+		usage.append("-d or -diploid : if true output is AA/CC/AC, if false output is A/C/M");
 		usage.append("? : print the parameter list.");
 
 		return usage.toString();

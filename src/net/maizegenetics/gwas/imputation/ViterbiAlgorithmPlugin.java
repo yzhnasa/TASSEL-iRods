@@ -11,6 +11,7 @@ import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+import net.maizegenetics.plugindef.PluginEvent;
 
 public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 
@@ -41,17 +42,20 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 				phet = probHeterozygous;
 			}
 			
-			family.imputed = NucleotideImputationUtils.imputeUsingViterbiFiveState(tba, phet);
+			family.imputed = NucleotideImputationUtils.imputeUsingViterbiFiveState(tba, phet, family.name);
 			
 			if (fillGapsInAlignment) NucleotideImputationUtils.fillGapsInAlignment(family);
 		}
-		return new DataSet(theData, this);
+		
+		DataSet resultDS = new DataSet(theData, this);
+		fireDataSetReturned(new PluginEvent(resultDS, ViterbiAlgorithmPlugin.class));
+		return resultDS;
 	}
 
 	@Override
 	public void setParameters(String[] args) {
 		if (args == null || args.length == 0) {
-			myLogger.error(getUsage());
+//			myLogger.error(getUsage());
 			return;
 		}
 		
