@@ -43,7 +43,7 @@ public class ExportUtils {
      * @param filename
      * @param delimChar
      */
-    public static void writeToHapmap(Alignment alignment, boolean diploid, String filename, char delimChar, ProgressListener listener) {
+    public static String writeToHapmap(Alignment alignment, boolean diploid, String filename, char delimChar, ProgressListener listener) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
@@ -51,7 +51,8 @@ public class ExportUtils {
         FileWriter fw = null;
         BufferedWriter bw = null;
         try {
-            fw = new FileWriter(Utils.addSuffixIfNeeded(filename, ".hmp.txt"));
+            String fullFileName = Utils.addSuffixIfNeeded(filename, ".hmp.txt");
+            fw = new FileWriter(fullFileName);
             bw = new BufferedWriter(fw, 1000000);
             bw.write("rs#");
             bw.write(delimChar);
@@ -157,6 +158,7 @@ public class ExportUtils {
                     listener.progress((int) (((double) (site + 1) / (double) numSites) * 100.0), null);
                 }
             }
+            return fullFileName;
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Error writing Hapmap file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
@@ -177,7 +179,7 @@ public class ExportUtils {
      * @param filename
      * @param delimChar
      */
-    public static void writeToHapmap(Alignment alignment, AlignmentMask mask, boolean diploid, String filename, char delimChar, ProgressListener listener) {
+    public static String writeToHapmap(Alignment alignment, AlignmentMask mask, boolean diploid, String filename, char delimChar, ProgressListener listener) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
@@ -185,7 +187,8 @@ public class ExportUtils {
         FileWriter fw = null;
         BufferedWriter bw = null;
         try {
-            fw = new FileWriter(Utils.addSuffixIfNeeded(filename, ".hmp.txt"));
+            String fullFileName = Utils.addSuffixIfNeeded(filename, ".hmp.txt");
+            fw = new FileWriter(fullFileName);
             bw = new BufferedWriter(fw, 1000000);
             bw.write("rs#");
             bw.write(delimChar);
@@ -295,6 +298,7 @@ public class ExportUtils {
                     listener.progress((int) (((double) (site + 1) / (double) numSites) * 100.0), null);
                 }
             }
+            return fullFileName;
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Error writing Hapmap file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
@@ -314,13 +318,17 @@ public class ExportUtils {
      * @param filename
      * @param delimChar
      */
-    public static void writeToPlink(Alignment alignment, String filename, char delimChar) {
+    public static String writeToPlink(Alignment alignment, String filename, char delimChar) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
 
+        BufferedWriter MAPbw = null;
+        BufferedWriter PEDbw = null;
+        String mapFileName = Utils.addSuffixIfNeeded(filename, ".plk.map");
+        String pedFileName = Utils.addSuffixIfNeeded(filename, ".plk.ped");
         try {
-            BufferedWriter MAPbw = new BufferedWriter(new FileWriter(Utils.addSuffixIfNeeded(filename, ".plk.map")), 1000000);
+            MAPbw = new BufferedWriter(new FileWriter(mapFileName), 1000000);
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
                 MAPbw.write(alignment.getLocusName(site)); // chromosome name
@@ -333,7 +341,8 @@ public class ExportUtils {
                 MAPbw.write("\n");
             }
             MAPbw.close();
-            BufferedWriter PEDbw = new BufferedWriter(new FileWriter(Utils.addSuffixIfNeeded(filename, ".plk.ped")), 1000000);
+
+            PEDbw = new BufferedWriter(new FileWriter(pedFileName), 1000000);
             // Compiled : Pattern
             Pattern splitter = Pattern.compile(":");
             int numTaxa = alignment.getSequenceCount();
@@ -367,9 +376,21 @@ public class ExportUtils {
                 PEDbw.write("\n");
             }
             PEDbw.close();
+            return mapFileName + " and " + pedFileName;
         } catch (Exception e) {
-            myLogger.error("Error writing writeToPlink: " + e);
-            throw new IllegalStateException("writeToPlink: " + e.getMessage());
+            myLogger.error("Error writing Plink files: " + mapFileName + " and " + pedFileName + ": " + ExceptionUtils.getExceptionCauses(e));
+            throw new IllegalArgumentException("Error writing Plink files: " + mapFileName + " and " + pedFileName + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {
+                PEDbw.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+            try {
+                MAPbw.close();
+            } catch (Exception e) {
+                // do nothing
+            }
         }
     }
 
@@ -390,14 +411,17 @@ public class ExportUtils {
      * @param filename
      * @param delimChar
      */
-    public static void writeToFlapjack(Alignment alignment, String filename, char delimChar) {
+    public static String writeToFlapjack(Alignment alignment, String filename, char delimChar) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
 
+        String mapFileName = Utils.addSuffixIfNeeded(filename, ".flpjk.map");
+        String genoFileName = Utils.addSuffixIfNeeded(filename, ".flpjk.geno");
         try {
-            BufferedWriter MAPbw = new BufferedWriter(new FileWriter(Utils.addSuffixIfNeeded(filename, ".flpjk.map")), 1000000);
-            BufferedWriter DATbw = new BufferedWriter(new FileWriter(Utils.addSuffixIfNeeded(filename, ".flpjk.geno")), 1000000);
+
+            BufferedWriter MAPbw = new BufferedWriter(new FileWriter(mapFileName), 1000000);
+            BufferedWriter DATbw = new BufferedWriter(new FileWriter(genoFileName), 1000000);
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
                 MAPbw.write(alignment.getSNPID(site)); // rs#
@@ -438,8 +462,11 @@ public class ExportUtils {
                 DATbw.write("\n");
             }
             DATbw.close();
+            return mapFileName + " and " + genoFileName;
+
         } catch (Exception e) {
-            System.out.println("Error writing writeToFlapjack: " + e);
+            myLogger.error("Error writing Flapjack files: " + mapFileName + " and " + genoFileName + ": " + ExceptionUtils.getExceptionCauses(e));
+            throw new IllegalArgumentException("Error writing Flapjack files: " + mapFileName + " and " + genoFileName + ": " + ExceptionUtils.getExceptionCauses(e));
         }
     }
 
@@ -452,10 +479,10 @@ public class ExportUtils {
         return base;
     }
 
-    public static void saveDelimitedAlignment(Alignment theAlignment, String delimit, String saveFile) {
+    public static String saveDelimitedAlignment(Alignment theAlignment, String delimit, String saveFile) {
 
         if ((saveFile == null) || (saveFile.length() == 0)) {
-            return;
+            return null;
         }
         saveFile = Utils.addSuffixIfNeeded(saveFile, ".txt");
         FileWriter fw = null;
@@ -482,8 +509,11 @@ public class ExportUtils {
                 bw.write("\n");
             }
 
+            return saveFile;
+
         } catch (Exception e) {
-            System.out.println("AlignmentUtils: saveDelimitedAlignment: problem writing file: " + e.getMessage());
+            myLogger.error("Error writing Delimited Alignment: " + saveFile + ": " + ExceptionUtils.getExceptionCauses(e));
+            throw new IllegalArgumentException("Error writing Delimited Alignment: " + saveFile + ": " + ExceptionUtils.getExceptionCauses(e));
         } finally {
             try {
                 bw.close();
@@ -576,7 +606,7 @@ public class ExportUtils {
         }
     }
 
-    public static void writeAlignmentToSerialGZ(Alignment sba, String outFile) {
+    public static String writeAlignmentToSerialGZ(Alignment sba, String outFile) {
 
         long time = System.currentTimeMillis();
 
@@ -590,8 +620,11 @@ public class ExportUtils {
             gz = new GZIPOutputStream(fos);
             oos = new ObjectOutputStream(gz);
             oos.writeObject(sba);
-        } catch (Exception ee) {
-            ee.printStackTrace();
+            return theFile.getName();
+        } catch (Exception e) {
+            e.printStackTrace();
+            myLogger.error("Error writing Serial GZ: " + theFile.getName() + ": " + ExceptionUtils.getExceptionCauses(e));
+            throw new IllegalArgumentException("Error writing Serial GZ: " + theFile.getName() + ": " + ExceptionUtils.getExceptionCauses(e));
         } finally {
             try {
                 oos.flush();
@@ -601,7 +634,8 @@ public class ExportUtils {
             } catch (Exception e) {
                 // do nothing
             }
+            myLogger.info("writeAlignmentToSerialGZ: " + theFile.toString() + "  Time: " + (System.currentTimeMillis() - time));
         }
-        myLogger.info("writeAlignmentToSerialGZ: " + theFile.toString() + "  Time: " + (System.currentTimeMillis() - time));
+
     }
 }

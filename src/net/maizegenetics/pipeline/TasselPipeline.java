@@ -40,8 +40,10 @@ import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
 import net.maizegenetics.baseplugins.MLMPlugin;
 import net.maizegenetics.baseplugins.MergeAlignmentsPlugin;
+import net.maizegenetics.baseplugins.MergeAlignmentsSameSitesPlugin;
 import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
 import net.maizegenetics.baseplugins.PlinkLoadPlugin;
+import net.maizegenetics.baseplugins.SeparatePlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
@@ -335,8 +337,34 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-intersect")) {
                     IntersectionAlignmentPlugin plugin = new IntersectionAlignmentPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-separate")) {
+                    SeparatePlugin plugin = new SeparatePlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-mergeAlignments")) {
                     MergeAlignmentsPlugin plugin = new MergeAlignmentsPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-mergeAlignmentsSameSites")) {
+                    MergeAlignmentsSameSitesPlugin plugin = new MergeAlignmentsSameSitesPlugin(myMainFrame);
+                    try {
+                        for (int i = 0; i < 2; i++) {
+                            String paraType = args[index++].trim();
+                            String value = args[index++].trim();
+                            if (paraType.equalsIgnoreCase("-input")) {
+                                String[] files = value.split(",");
+                                List<String> filenames = new ArrayList<String>();
+                                for (int j = 0; j < files.length; j++) {
+                                    filenames.add(files[j]);
+                                }
+                                plugin.setInputFiles(filenames);
+                            } else if (paraType.equalsIgnoreCase("-output")) {
+                                plugin.setOutputFile(value);
+                            } else {
+                                throw new IllegalArgumentException("TasselPipeline: parseArgs: -mergeAlignmentsSameSites: unknown descriptor: " + paraType);
+                            }
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -mergeAlignmentsSameSites: not specified correctly.");
+                    }
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-excludeLastTrait")) {
                     FilterTraitsPlugin plugin = new FilterTraitsPlugin(myMainFrame, false);
@@ -650,9 +678,13 @@ public class TasselPipeline implements PluginListener {
                     }
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-export")) {
-                    String[] filenames = args[index++].trim().split(",");
                     ExportMultiplePlugin plugin = new ExportMultiplePlugin(myMainFrame);
-                    plugin.setSaveFiles(filenames);
+                    String temp = args[index].trim();
+                    if (!temp.startsWith("-")) {
+                        String[] filenames = temp.split(",");
+                        plugin.setSaveFiles(filenames);
+                        index++;
+                    }
                     integratePlugin(plugin, false);
                 } else if (current.equalsIgnoreCase("-exportType")) {
 
