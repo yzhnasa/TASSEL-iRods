@@ -36,11 +36,10 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private int[] myLocusIndices;
     private int[] myLocusOffsets = null;
     private String[] mySNPIDs;
-    private int maxNumAlleles = 2;
 
     protected MutableSingleEncodeAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a.getAlleleEncodings());
-        maxNumAlleles = a.getMaxNumAlleles();
+        myMaxNumAlleles = a.getMaxNumAlleles();
 
         if (a.getAlleleEncodings().length != 1) {
             throw new IllegalArgumentException("MutableSingleEncodeAlignment: init: must only have one allele encoding.");
@@ -496,8 +495,14 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     }
 
     @Override
-    public int getMaxNumAlleles() {
-        return maxNumAlleles;
+    public byte[] getAlleles(int site) {
+        int[][] alleles = getAllelesSortedByFrequency(site);
+        int resultSize = alleles[0].length;
+        byte[] result = new byte[resultSize];
+        for (int i = 0; i < resultSize; i++) {
+            result[i] = (byte) alleles[0][i];
+        }
+        return result;
     }
 
     // Mutable Methods...

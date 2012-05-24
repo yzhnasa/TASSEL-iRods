@@ -33,7 +33,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     private FilterAlignment(Alignment a, IdGroup subIdGroup, int[] taxaRedirect, FilterAlignment original) {
 
-        super(subIdGroup);
+        super(subIdGroup, a.getAlleleEncodings());
 
         if (subIdGroup.getIdCount() != taxaRedirect.length) {
             throw new IllegalArgumentException("FilterAlignment: init: subIdGroup should be same size as taxaRedirect.");
@@ -104,11 +104,11 @@ public class FilterAlignment extends AbstractAlignment {
         }
         for (int i = 0, n = subIdGroup.getIdCount(); i < n; i++) {
             int ion = a.getIdGroup().whichIdNumber(subIdGroup.getIdentifier(i));
-            
+
             if (ion != i) {
                 noNeedToFilter = false;
             }
-            
+
             if ((retainUnknownTaxa) && (ion < 0)) {
                 taxaRedirectList.add(-1);
                 idList.add(subIdGroup.getIdentifier(i));
@@ -123,7 +123,7 @@ public class FilterAlignment extends AbstractAlignment {
                 }
             }
         }
-        
+
         if (noNeedToFilter) {
             return a;
         }
@@ -291,7 +291,7 @@ public class FilterAlignment extends AbstractAlignment {
         return getInstance(a, result);
 
     }
-    
+
     public static FilterAlignment getInstanceRemoveSiteNames(Alignment a, String[] siteNamesToRemove) {
 
         Arrays.sort(siteNamesToRemove);
@@ -844,6 +844,20 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int getMaxNumAlleles() {
         return myBaseAlignment.getMaxNumAlleles();
+    }
+
+    public byte[] getAlleles(int site) {
+        if (myIsTaxaFilter) {
+            int[][] alleles = getAllelesSortedByFrequency(site);
+            int resultSize = alleles[0].length;
+            byte[] result = new byte[resultSize];
+            for (int i = 0; i < resultSize; i++) {
+                result[i] = (byte) alleles[0][i];
+            }
+            return result;
+        } else {
+            return myBaseAlignment.getAlleles(translateSite(site));
+        }
     }
 
     @Override
