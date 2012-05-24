@@ -622,6 +622,10 @@ public class CombineAlignment extends AbstractAlignment {
     @Override
     public String[][] getAlleleEncodings() {
 
+        if (myAlleleStates != null) {
+            return myAlleleStates;
+        }
+
         boolean allTheSame = true;
         String[][] encodings = myAlignments[0].getAlleleEncodings();
         if (encodings.length == 1) {
@@ -643,10 +647,12 @@ public class CombineAlignment extends AbstractAlignment {
                     break;
                 }
             }
+        } else {
+            allTheSame = false;
         }
 
         if (allTheSame) {
-            return encodings;
+            myAlleleStates = encodings;
         } else {
             String[][] result = new String[getSiteCount()][];
             int count = 0;
@@ -655,8 +661,10 @@ public class CombineAlignment extends AbstractAlignment {
                     result[count++] = myAlignments[i].getAlleleEncodings(j);
                 }
             }
-            return result;
+            myAlleleStates = result;
         }
+
+        return myAlleleStates;
 
     }
 
