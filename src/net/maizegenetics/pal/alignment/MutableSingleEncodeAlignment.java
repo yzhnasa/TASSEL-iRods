@@ -186,7 +186,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                             throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Physical Positions do not match for site name: " + currentSiteName);
                         }
                         if (locusIndices.get(index) != locusToLociIndex.indexOf(currentLocus)) {
-                            throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Loci do not match for site name: " + currentSiteName);
+                            throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Loci do not match for site name: " + currentSiteName + " expecting: " + locusToLociIndex.get(index) + " but doesn't match: " + currentLocus);
                         }
                     }
                 }
