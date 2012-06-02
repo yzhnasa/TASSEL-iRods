@@ -37,7 +37,6 @@ import java.awt.Dimension;
 import java.awt.Event;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
@@ -99,8 +98,6 @@ public class TASSELMainFrame extends JFrame {
     JPanel optionsPanelPanel = new JPanel();
     JPanel modeSelectorsPanel = new JPanel();
     JPanel buttonPanel = new JPanel();
-    GridLayout buttonPanelLayout = new GridLayout();
-    GridLayout optionsPanelLayout = new GridLayout(2, 1);
     JSplitPane dataTreeReportMainPanelsSplitPanel = new JSplitPane();
     JSplitPane dataTreeReportPanelsSplitPanel = new JSplitPane();
     JScrollPane reportPanelScrollPane = new JScrollPane();
@@ -215,9 +212,9 @@ public class TASSELMainFrame extends JFrame {
     private void initDataMode() {
 
         buttonPanel.removeAll();
-
-        buttonPanel.add(theDataControlPanel, null);
-
+        
+        buttonPanel.add(theDataControlPanel, BorderLayout.NORTH);
+        
         dataTreePanelPanel.removeAll();
 
         dataTreePanelPanel.add(theDataTreePanel, BorderLayout.CENTER);
@@ -461,21 +458,11 @@ public class TASSELMainFrame extends JFrame {
         });
 
 
-        optionsPanel.setLayout(optionsPanelLayout);
-
-        buttonPanel.setLayout(buttonPanelLayout);
-
-        buttonPanel.setMinimumSize(new Dimension(300, 34));
-
-        buttonPanel.setPreferredSize(new Dimension(300, 34));
-
-        buttonPanelLayout.setHgap(0);
-
-        buttonPanelLayout.setVgap(0);
+        optionsPanel.setLayout(new BorderLayout(0, 0));
+        
+        buttonPanel.setLayout(new BorderLayout(0, 0));
 
         optionsPanel.setToolTipText("Options Panel");
-
-        optionsPanelLayout.setVgap(0);
 
         mainPopupMenu.setInvoker(this);
         saveMainMenuItem.setText("Save");
@@ -611,7 +598,7 @@ public class TASSELMainFrame extends JFrame {
 
         this.getContentPane().add(optionsPanel, BorderLayout.NORTH);
 
-        optionsPanel.add(modeSelectorsPanel, null);
+        optionsPanel.add(modeSelectorsPanel, BorderLayout.NORTH);
 
         modeSelectorsPanel.add(resultButton, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
 
@@ -631,7 +618,7 @@ public class TASSELMainFrame extends JFrame {
 
         modeSelectorsPanel.add(getHeapButton(), new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 30, 1, 0), 0, 0));
 
-        optionsPanel.add(buttonPanel, null);
+        optionsPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         mainPopupMenu.add(matchCheckBoxMenuItem);
 

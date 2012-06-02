@@ -17,9 +17,6 @@ package net.maizegenetics.tassel;
 import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-
 /**
  * Title:        TASSEL
  * Description:  A java program to deal with diversity
@@ -34,29 +31,19 @@ public class AnalysisControlPanel extends AbstractControlPanel {
     public AnalysisControlPanel(TASSELMainFrame theQAF, DataTreePanel theDTP) {
         super(theQAF, theDTP);
         try {
+            ConvertSBitTBitPlugin convertAlignment = new ConvertSBitTBitPlugin(theQAF, theDTP);
             addPlugin(new SequenceDiversityPlugin(theTASSELMainFrame, true));
             addPlugin(new LinkageDisequilibriumPlugin(theTASSELMainFrame, true));
-            addPlugin(new CreateTreePlugin(theTASSELMainFrame, true));
+            addPlugin(new CreateTreePlugin(theTASSELMainFrame, true, convertAlignment));
             // addPlugin(new ExtractSNPAssaysPlugin(theTASSELMainFrame, true));
             // addPlugin(new LogisticRegressionAssocPlugin(theTASSELMainFrame,true));
             addPlugin(new KinshipPlugin(theTASSELMainFrame, true));
             addPlugin(new FixedEffectLMPlugin(theTASSELMainFrame, true));
             addPlugin(new MLMPlugin(theTASSELMainFrame, true));
-            addPlugin(new RidgeRegressionEmmaPlugin(theTASSELMainFrame,true));
+            addPlugin(new RidgeRegressionEmmaPlugin(theTASSELMainFrame, true));
             addPlugin(new GenotypeSummaryPlugin(theTASSELMainFrame, true));
-            jbInit();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    private void jbInit() throws Exception {
-
-        this.setLayout(new FlowLayout());
-        this.setFont(new java.awt.Font("Dialog", 1, 12));
-        this.setMaximumSize(new Dimension(32767, 200));
-        this.setMinimumSize(new Dimension(745, 34));
-        this.setPreferredSize(new Dimension(745, 34));
-
     }
 }

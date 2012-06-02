@@ -3,8 +3,6 @@ package net.maizegenetics.tassel;
 import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
 
-import java.awt.*;
-
 /**
  * Title:        TASSEL
  * Description:  A java program to deal with diversity
@@ -23,7 +21,6 @@ public class DataControlPanel extends AbstractControlPanel {
         super(theQAF, theDTP);
 
         try {
-            jbInit();
 
             myPlinkLoadPlugin = new PlinkLoadPlugin(theTASSELMainFrame, true);
             myPlinkLoadPlugin.addListener(theDataTreePanel);
@@ -52,18 +49,5 @@ public class DataControlPanel extends AbstractControlPanel {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    void jbInit() throws Exception {
-
-        this.setLayout(new FlowLayout());
-        this.setFont(new java.awt.Font("Dialog", 1, 12));
-        this.setMaximumSize(new Dimension(32767, 200));
-        this.setMinimumSize(new Dimension(700, 34));
-
-    }
-
-    public void setDataTreePanel(DataTreePanel theDataTreePanel) {
-        this.theDataTreePanel = theDataTreePanel;
     }
 }
