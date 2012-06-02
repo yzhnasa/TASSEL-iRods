@@ -31,10 +31,9 @@ public class AnalysisControlPanel extends AbstractControlPanel {
     public AnalysisControlPanel(TASSELMainFrame theQAF, DataTreePanel theDTP) {
         super(theQAF, theDTP);
         try {
-            ConvertSBitTBitPlugin convertAlignment = new ConvertSBitTBitPlugin(theQAF, theDTP);
             addPlugin(new SequenceDiversityPlugin(theTASSELMainFrame, true));
             addPlugin(new LinkageDisequilibriumPlugin(theTASSELMainFrame, true));
-            addPlugin(new CreateTreePlugin(theTASSELMainFrame, true, convertAlignment));
+            addPlugin(new CreateTreePlugin(theTASSELMainFrame, true));
             // addPlugin(new ExtractSNPAssaysPlugin(theTASSELMainFrame, true));
             // addPlugin(new LogisticRegressionAssocPlugin(theTASSELMainFrame,true));
             addPlugin(new KinshipPlugin(theTASSELMainFrame, true));
