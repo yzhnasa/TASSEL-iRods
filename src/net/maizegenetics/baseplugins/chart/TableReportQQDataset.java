@@ -38,7 +38,7 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     int myStartIndex;
     int myEndIndex;
     int myCountToDisplay;
-    double myDistance = 0.025;
+    double myDistance = 0.01;
 
     public TableReportQQDataset(TableReport table) {
         numberYAxes=1;
