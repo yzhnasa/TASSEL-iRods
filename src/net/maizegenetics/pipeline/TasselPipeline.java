@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
@@ -44,10 +45,12 @@ import net.maizegenetics.baseplugins.MergeAlignmentsSameSitesPlugin;
 import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
 import net.maizegenetics.baseplugins.PlinkLoadPlugin;
 import net.maizegenetics.baseplugins.SeparatePlugin;
+import net.maizegenetics.baseplugins.SequenceDiversityPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 
+import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
 
@@ -476,8 +479,117 @@ public class TasselPipeline implements PluginListener {
                     getTableDisplayPlugin(tabFile, current);
                 } else if (current.equalsIgnoreCase("-td_gui")) {
                     getTableDisplayPlugin(null, current);
+                } else if (current.equalsIgnoreCase("-diversity")) {
+                    SequenceDiversityPlugin plugin = new SequenceDiversityPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-diversityStartBase")) {
+
+                    SequenceDiversityPlugin plugin = null;
+                    try {
+                        plugin = (SequenceDiversityPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No SequenceDiversityPlugin step defined: " + current);
+                    }
+
+                    String str = args[index++].trim();
+                    int start = -1;
+                    try {
+                        start = Integer.parseInt(str);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with Diversity Start Base number: " + str);
+                    }
+                    if (start < 0) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Diversity Start Base can't be less than 0.");
+                    }
+
+                    plugin.setStartSite(start);
+
+                } else if (current.equalsIgnoreCase("-diversityEndBase")) {
+
+                    SequenceDiversityPlugin plugin = null;
+                    try {
+                        plugin = (SequenceDiversityPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No SequenceDiversityPlugin step defined: " + current);
+                    }
+
+                    String str = args[index++].trim();
+                    int end = -1;
+                    try {
+                        end = Integer.parseInt(str);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with Diversity Start Base number: " + str);
+                    }
+
+                    plugin.setEndSite(end);
+
+                } else if (current.equalsIgnoreCase("-diversitySlidingWin")) {
+                    SequenceDiversityPlugin plugin = null;
+                    plugin.setSlidingWindowAnalysis(true);
+                } else if (current.equalsIgnoreCase("-diversitySlidingWinStep")) {
+
+                    SequenceDiversityPlugin plugin = null;
+                    try {
+                        plugin = (SequenceDiversityPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No SequenceDiversityPlugin step defined: " + current);
+                    }
+
+                    String str = args[index++].trim();
+                    int step = -1;
+                    try {
+                        step = Integer.parseInt(str);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with Diversity Sliding Win Step number: " + str);
+                    }
+
+                    plugin.setStepSize(step);
+                    plugin.setSlidingWindowAnalysis(true);
+
+                } else if (current.equalsIgnoreCase("-diversitySlidingWinSize")) {
+
+                    SequenceDiversityPlugin plugin = null;
+                    try {
+                        plugin = (SequenceDiversityPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No SequenceDiversityPlugin step defined: " + current);
+                    }
+
+                    String str = args[index++].trim();
+                    int size = -1;
+                    try {
+                        size = Integer.parseInt(str);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with Diversity Sliding Win Size number: " + str);
+                    }
+
+                    plugin.setWindowSize(size);
+                    plugin.setSlidingWindowAnalysis(true);
+
+                } else if (current.equalsIgnoreCase("-diversityTypeSites")) {
+
+                    SequenceDiversityPlugin plugin = null;
+                    try {
+                        plugin = (SequenceDiversityPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No SequenceDiversityPlugin step defined: " + current);
+                    }
+
+                    Vector grp = new Vector();
+                    String[] types = args[index++].trim().split(",");
+                    for (int i = 0; i < types.length; i++) {
+                        if (types[i].equalsIgnoreCase("ALL")) {
+                            grp.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
+                        } else if (types[i].equalsIgnoreCase("INDEL")) {
+                            grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
+                        }
+                    }
+
+                    plugin.setTypeOfSitesToAnalyze(grp);
+
                 } else if (current.equalsIgnoreCase("-ld")) {
-                    getLinkageDisequilibriumPlugin();
+                    LinkageDisequilibriumPlugin plugin = new LinkageDisequilibriumPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-ldPermNum")) {
 
                     LinkageDisequilibriumPlugin plugin = null;
@@ -1181,16 +1293,6 @@ public class TasselPipeline implements PluginListener {
             plugin.setSaveFile(new File(filename));
             integratePlugin(plugin, false);
         }
-
-        return plugin;
-
-    }
-
-    public LinkageDisequilibriumPlugin getLinkageDisequilibriumPlugin() {
-
-        LinkageDisequilibriumPlugin plugin = new LinkageDisequilibriumPlugin(myMainFrame, false);
-
-        integratePlugin(plugin, true);
 
         return plugin;
 
