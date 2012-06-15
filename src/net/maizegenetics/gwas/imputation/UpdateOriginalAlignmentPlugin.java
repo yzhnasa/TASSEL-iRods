@@ -46,4 +46,9 @@ public class UpdateOriginalAlignmentPlugin extends AbstractPlugin {
 		return null;
 	}
 
+	@Override
+	public void setParameters(String[] args) {
+		// no parameters to set
+	}
+
 }
