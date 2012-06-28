@@ -15,47 +15,12 @@ import net.maizegenetics.util.DoubleFormat;
  */
 public class TableReportUtils {
 
-    public static String toDelimitedString(TableReport theTableSource, String delimit, String headerName, String headerValue) {
-        Object[] colNames = theTableSource.getTableColumnNames();
-        StringBuilder sb = new StringBuilder();
-
-        int cols;
-        cols = colNames.length;
-        int rows = theTableSource.getRowCount();
-        if (headerName != null) {
-            sb.append(headerName + delimit);
-        }
-        for (int j = 0; j < cols; j++) {
-            sb.append(colNames[j]);
-            if (j < (cols - 1)) {
-                sb.append(delimit);
-            }
-        }
-        sb.append("\n");
-        if (headerValue != null) {
-            sb.append(headerValue + delimit);
-        }
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                sb.append(theTableSource.getValueAt(i, j));
-                if (j < (cols - 1)) {
-                    sb.append(delimit);
-                }
-            }
-            sb.append("\n");
-        }
-        return sb.toString();
-    }
-
-    public static String toDelimitedString(TableReport theTableSource, String delimit) {
-        return toDelimitedString(theTableSource, delimit, null, null);
-    }
-
     public static void saveDelimitedTableReport(TableReport theTableSource, String delimit, File saveFile) {
 
         if (saveFile == null) {
             return;
         }
+        
         FileWriter fw = null;
         BufferedWriter bw = null;
         try {
