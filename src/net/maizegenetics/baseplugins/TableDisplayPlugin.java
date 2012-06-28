@@ -6,13 +6,13 @@
  */
 package net.maizegenetics.baseplugins;
 
-import java.io.File;
 
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.report.TableReportUtils;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin.FileFormat;
+import net.maizegenetics.gui.TableReportNoPagingTableModel;
 
 import javax.swing.*;
 
@@ -27,8 +27,7 @@ import java.net.URL;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.LinkedList;
-import net.maizegenetics.gui.TableReportNoPagingTableModel;
+
 
 /**
  *
@@ -36,10 +35,8 @@ import net.maizegenetics.gui.TableReportNoPagingTableModel;
  */
 public class TableDisplayPlugin extends AbstractDisplayPlugin {
 
-    String theDelimiter;
-    LinkedList<File> saveFiles = new LinkedList<File>();
-    Iterator<File> fileIt = null;
-    TablePluginDialog myDialog = null;
+    private String myDelimiter;
+    private TablePluginDialog myDialog = null;
 
     /** Creates a new instance of TableDisplayPlugin */
     public TableDisplayPlugin(Frame parentFrame, boolean isInteractive) {
@@ -79,8 +76,8 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
             myDialog = new TablePluginDialog(this, tr);
             myDialog.setLocationRelativeTo(getParentFrame());
             myDialog.setVisible(true);
-        } else if (getSaveFile() != null || saveFiles.size() > 0) {
-            saveDataToFile(tr, theDelimiter);
+        } else if (getSaveFile() != null) {
+            saveDataToFile(tr, myDelimiter);
         }
     }
 
@@ -89,26 +86,15 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
     }
 
     public void saveDataToFile(TableReport tr, String delimit) {
-
-        if (saveFiles.size() > 0) {
-            if (fileIt == null || !fileIt.hasNext()) {
-                fileIt = saveFiles.iterator();
-
-            }
-            saveDataToFile(TableReportUtils.toDelimitedString(tr, delimit), fileIt.next());
-        } else {
-            saveDataToFile(TableReportUtils.toDelimitedString(tr, delimit), getSaveFile());
-
-
-        }
+        TableReportUtils.saveDelimitedTableReport(tr, delimit, getSaveFile());
     }
 
     public String getDelimiter() {
-        return theDelimiter;
+        return myDelimiter;
     }
 
     public void setDelimiter(String theDelimiter) {
-        this.theDelimiter = theDelimiter;
+        myDelimiter = theDelimiter;
     }
 
     /**
@@ -143,13 +129,6 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
         return "Present data in table";
     }
 
-    public void addSaveFile(File saveFileName) {
-        saveFiles.add(saveFileName);
-    }
-
-    public void clearSaveFiles() {
-        saveFiles.clear();
-    }
 }
 
 /**
