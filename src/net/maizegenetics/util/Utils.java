@@ -47,6 +47,16 @@ public final class Utils {
         return str.substring(index);
     }
 
+    /**
+     * This returns the filename only.  Preceding
+     * directories are removed and  everything after
+     * last . is removed.
+     *
+     * @param str original filename
+     * @param suffix suffix
+     *
+     * @return trimmed filename
+     */
     public static String getFilename(String str) {
 
         int indexForwardSlash = str.lastIndexOf('/');
