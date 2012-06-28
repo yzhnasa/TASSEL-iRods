@@ -62,9 +62,14 @@ public class ExportMultiplePlugin extends AbstractPlugin {
             if (numSaveFiles == 0) {
                 myExportPlugin.setSaveFile(datum.getName());
             } else if (numSaveFiles == 1) {
-                String temp = mySaveFiles[0].replaceFirst("\\.", (i + 1) + ".");
-                if (temp.length() == mySaveFiles[0].length()) {
-                    temp = mySaveFiles[0] + (i + 1);
+                String temp;
+                if (data.size() == 1) {
+                    temp = mySaveFiles[0];
+                } else {
+                    temp = mySaveFiles[0].replaceFirst("\\.", (i + 1) + ".");
+                    if (temp.length() == mySaveFiles[0].length()) {
+                        temp = mySaveFiles[0] + (i + 1);
+                    }
                 }
                 myExportPlugin.setSaveFile(temp);
             } else {
