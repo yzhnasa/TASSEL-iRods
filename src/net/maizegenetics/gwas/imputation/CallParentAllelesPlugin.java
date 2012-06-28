@@ -30,7 +30,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	private int windowSize = 100;  //the number of sites to be used a window for determining the original set of snps in LD
 	private int numberToTry = 10; //the number of different windows to check for snps in LD
 	private double cutHeightSnps = 0.2;  //the tree cut height used to find the largest cluster of correlated SNPs
-	private double minRforSnps = 0.8;  //the minimum R used to judge whether a snp is in ld with a test group
+	private double minRforSnps = 0.5;  //the minimum R used to judge whether a snp is in ld with a test group
 	
 	public CallParentAllelesPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -51,10 +51,13 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			Alignment align = (Alignment) d.getData();
 			for (PopulationData family : familyList) {
 				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.getLocusName(0) + ".");
+				
 				String[] ids = new String[family.members.size()];
 				family.members.toArray(ids);
 				family.original =  FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false);
-				NucleotideImputationUtils.callParentAlleles(family, minAlleleCount, windowSize, numberToTry, cutHeightSnps, minRforSnps);
+//				ImputationUtils.printAlleleStats(family.original, family.name);
+//				NucleotideImputationUtils.callParentAlleles(family, minAlleleCount, windowSize, numberToTry, cutHeightSnps, minRforSnps);
+				NucleotideImputationUtils.callParentAllelesByWindow(family, 0.75, windowSize, numberToTry, cutHeightSnps, minRforSnps);
 				String comment = "Parent Calls for family " + family.name + " from " + d.getName() + ".";
 				datumList.add(new Datum(family.name, family, comment));
 			}

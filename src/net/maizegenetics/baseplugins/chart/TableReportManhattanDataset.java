@@ -39,7 +39,6 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
     int myEndIndex;
 
     boolean myNumericChromNames = true;
-    int[] myChromOrder;
 
     public TableReportManhattanDataset(TableReport theTable, int start, int end) {
         numberYAxes = 0;
@@ -152,27 +151,12 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
     private void setNumericChromNames() {
         for (int i = 0; i < myChromNames.length; i++) {
             try {
-                Integer.parseInt(myChromNames[i]);
+                if (numberYAxes < Integer.parseInt(myChromNames[i])) {
+                    numberYAxes = Integer.parseInt(myChromNames[i]);
+                }
             } catch (Exception e) {
                 myNumericChromNames = false;
                 break;
-            }
-        }
-    }
-
-    private void setChromOrder() {
-        myChromOrder = new int[myChromNames.length];
-        for (int i = 0; i < myChromNames.length; i++) {
-            myChromOrder[i] = 0;
-        }
-
-        for (int i = 0; i < myChromNames.length; i++) {
-            for (int j = i + 1; j < myChromNames.length; j++) {
-                if (Integer.parseInt(myChromNames[i]) > Integer.parseInt(myChromNames[j])) {
-                    myChromOrder[i]++;
-                } else {
-                    myChromOrder[j]++;
-                }
             }
         }
     }
@@ -247,9 +231,6 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
         setLogPValues();
         setChromNames(theTable);
         setNumericChromNames();
-        if (myNumericChromNames) {
-            setChromOrder();
-        }
         setPositions(theTable);
         setMarkers(theTable);
         setTrait(theTable);
@@ -267,16 +248,26 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
         for (int i = 0; i < myNumRows; i++) {
             try {
                 theData[i][0] = myPositions[i];
-                if (!currentChrom.equals(myChromNames[i])) {
-                    chromIndex++;
-                    currentChrom = myChromNames[i];
-                    seriesNames[chromIndex - 1] = currentChrom;
-                }
                 if (!myNumericChromNames) {
+                    if (!currentChrom.equals(myChromNames[i])) {
+                        chromIndex++;
+                        currentChrom = myChromNames[i];
+                        seriesNames[chromIndex - 1] = currentChrom;
+                    }
+    //                ÷if (!myNumericChromNames) {
                     theData[i][chromIndex] = myLogPValues[i];
                 } else {
-                    theData[i][myChromOrder[chromIndex]] = myLogPValues[i];
+
+                       for (int j = 0; j < numberYAxes; j++) {
+                           seriesNames[j] = Integer.toString(j+1);
+                       }
+
+                    theData[i][Integer.parseInt(myChromNames[i])] = myLogPValues[i];
+
                 }
+//               ÷ } else {
+//                    theData[i][myChromOrder[chromIndex - 1]+1] = myLogPValues[i];
+//                }
             }
             catch (NumberFormatException ex) {
                 System.out.println("throw new NumberFormatException();");
