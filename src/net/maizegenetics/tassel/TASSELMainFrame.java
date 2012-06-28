@@ -19,9 +19,6 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.PhenotypeUtils;
-import net.maizegenetics.pal.report.TableReportUtils;
 
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -108,7 +105,6 @@ public class TASSELMainFrame extends JFrame {
     ThreadedJTextArea mainPanelTextArea = new ThreadedJTextArea();
     JTextField statusBar = new JTextField();
     JButton resultButton = new JButton();
-    JButton saveButton = new JButton();
     JButton dataButton = new JButton();
     JButton deleteButton = new JButton();
     JButton printButton = new JButton();
@@ -343,24 +339,6 @@ public class TASSELMainFrame extends JFrame {
         wizardButton.setMaximumSize(new Dimension(90, 25));
         wizardButton.setBackground(Color.white);
 
-        saveButton.setMargin(new Insets(0, 0, 0, 0));
-        saveButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                saveButton_actionPerformed(e);
-            }
-        });
-        saveButton.setBackground(Color.white);
-        saveButton.setMinimumSize(new Dimension(20, 20));
-        saveButton.setToolTipText("Save selected data to text file");
-        imageURL = TASSELMainFrame.class.getResource("images/save1.gif");
-        ImageIcon saveIcon = null;
-        if (imageURL != null) {
-            saveIcon = new ImageIcon(imageURL);
-        }
-        if (saveIcon != null) {
-            saveButton.setIcon(saveIcon);
-        }
         dataButton.setBackground(Color.white);
         dataButton.setMaximumSize(new Dimension(90, 25));
         dataButton.setMinimumSize(new Dimension(87, 25));
@@ -606,12 +584,10 @@ public class TASSELMainFrame extends JFrame {
 
         modeSelectorsPanel.add(analysisButton, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
 
-        modeSelectorsPanel.add(helpButton, new GridBagConstraints(8, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 2), 0, 0));
+        modeSelectorsPanel.add(helpButton, new GridBagConstraints(7, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 2), 0, 0));
 
         modeSelectorsPanel.add(printButton, new GridBagConstraints(6, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
 
-        modeSelectorsPanel.add(saveButton, new GridBagConstraints(7, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
-        // delete button moved from datapanel
         modeSelectorsPanel.add(deleteButton, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 20, 1, 2), 0, 0));
 
         modeSelectorsPanel.add(wizardButton, new GridBagConstraints(4, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 10, 1, 0), 0, 0));
@@ -905,36 +881,6 @@ public class TASSELMainFrame extends JFrame {
 
     private void resultButton_actionPerformed(ActionEvent e) {
         initResultMode();
-    }
-
-    private void saveButton_actionPerformed(ActionEvent e) {
-        File theFile = getSaveFile();
-        if (theFile == null) {
-            return;
-        }
-        DataSet ds = theDataTreePanel.getSelectedTasselDataSet();
-        try {
-            FileWriter fw = new FileWriter(theFile);
-            PrintWriter pw = new PrintWriter(fw);
-            for (int i = 0; i < ds.getSize(); i++) {
-                if (ds.getData(i).getData() instanceof Alignment) {
-                    pw.println(ds.getData(i).getData().toString());
-                } else if (ds.getData(i).getData() instanceof net.maizegenetics.pal.alignment.Phenotype) {
-                    PhenotypeUtils.saveAs((net.maizegenetics.pal.alignment.Phenotype) ds.getData(i).getData(), pw);
-                } else if (ds.getData(i).getData() instanceof net.maizegenetics.pal.report.TableReport) {
-                    // TableReportUtils tbu=new TableReportUtils((net.maizegenetics.pal.report.TableReport)data[i]);
-                    pw.println(TableReportUtils.toDelimitedString((net.maizegenetics.pal.report.TableReport) ds.getData(i).getData(), "\t"));
-                } else {
-                    pw.println(ds.getData(i).getData().toString());
-                }
-                pw.println("");
-            }
-            fw.flush();
-            fw.close();
-        } catch (Exception ee) {
-            System.err.println("saveButton_actionPerformed:" + ee);
-        }
-        this.statusBar.setText("Datasets were saved to " + theFile.getName());
     }
 
     private void printButton_actionPerformed(ActionEvent e) {
