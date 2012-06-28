@@ -9,7 +9,6 @@ package net.maizegenetics.pipeline;
 import java.awt.Frame;
 
 import java.io.BufferedReader;
-import java.io.File;
 
 import java.lang.reflect.Constructor;
 
@@ -752,7 +751,7 @@ public class TasselPipeline implements PluginListener {
                     if (plugin == null) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDiseqDisplay step defined: " + current + " " + temp);
                     } else if (plugin instanceof LinkageDiseqDisplayPlugin) {
-                        ((LinkageDiseqDisplayPlugin) plugin).setSaveFile(new File(temp));
+                        ((LinkageDiseqDisplayPlugin) plugin).setSaveFile(temp);
                     }
 
                 } else if (current.equalsIgnoreCase("-ck")) {
@@ -1281,16 +1280,18 @@ public class TasselPipeline implements PluginListener {
             plugin = new TableDisplayPlugin(myMainFrame, true);
             integratePlugin(plugin, false);
         } else if (flag.equalsIgnoreCase("-td_tab")) {
+            filename = Utils.addSuffixIfNeeded(filename, ".txt");
             myLogger.info("getTableDisplayPlugin: " + filename);
             plugin = new TableDisplayPlugin(myMainFrame, false);
             plugin.setDelimiter("\t");
-            plugin.setSaveFile(new File(filename));
+            plugin.setSaveFile(filename);
             integratePlugin(plugin, false);
         } else if (flag.equalsIgnoreCase("-td_csv")) {
+            filename = Utils.addSuffixIfNeeded(filename, ".csv");
             myLogger.info("getTableDisplayPlugin: " + filename);
             plugin = new TableDisplayPlugin(myMainFrame, false);
             plugin.setDelimiter(",");
-            plugin.setSaveFile(new File(filename));
+            plugin.setSaveFile(filename);
             integratePlugin(plugin, false);
         }
 
