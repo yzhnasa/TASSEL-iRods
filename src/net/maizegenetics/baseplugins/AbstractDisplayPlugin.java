@@ -264,4 +264,8 @@ public abstract class AbstractDisplayPlugin extends AbstractPlugin {
     public void setSaveFile(File theSaveFile) {
         mySaveFile = theSaveFile;
     }
+    
+    public void setSaveFile(String theSaveFile) {
+        mySaveFile = new File(theSaveFile);
+    }
 }
