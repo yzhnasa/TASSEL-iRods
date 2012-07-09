@@ -33,11 +33,11 @@ public class PopulationData {
 	 */
 	public static ArrayList<PopulationData> readPedigreeFile(String popFilename) {
 		Pattern tab = Pattern.compile("\t");
-		LinkedHashMap<String, PopulationData> familyMap = new LinkedHashMap<String, PopulationData>(); 
+		LinkedHashMap<String, PopulationData> familyMap = new LinkedHashMap<String, PopulationData>();
+		String input = "";
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(popFilename));
 			br.readLine();
-			String input;
 			while ((input = br.readLine()) != null) {
 				String[] info = tab.split(input);
 				PopulationData family = familyMap.get(info[0]);
@@ -59,6 +59,10 @@ public class PopulationData {
 			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.exit(-1);
+		} catch (NumberFormatException nfe) {
+			System.out.println("at: " + input);
+			nfe.printStackTrace();
 			System.exit(-1);
 		}
 		return new ArrayList<PopulationData>(familyMap.values());
