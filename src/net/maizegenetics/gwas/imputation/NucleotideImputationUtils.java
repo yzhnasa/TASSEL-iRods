@@ -220,7 +220,8 @@ public class NucleotideImputationUtils {
 		
 		for (int[] snpIndex : snpIndices) {
 			SBitAlignment windowAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
-			LinkedList<Integer> snpList = new LinkedList<Integer>();
+			
+			LinkedList<Integer> snpList = new LinkedList<Integer>(); //snpList is a list of snps (indices) in this window
 			for (int s:snpIndex) snpList.add(s);
 			
 			Alignment[] taxaAlignments = getTaxaGroupAlignments(windowAlignment, parentIndex, snpList);
@@ -234,23 +235,24 @@ public class NucleotideImputationUtils {
 				myLogger.info("For " + popdata.name + " the window starting at snpIndex[0], # of snps in alignment = " + snpList.size());
 			}
 			
-			checkAlignmentOrder(taxaAlignments, popdata, r);
+			checkAlignmentOrder(taxaAlignments, popdata, r); //makes sure 
 			
 			//debug -check upgma tree
-			int[] selectSnps = new int[snpList.size()];
-			int cnt = 0;
-			for (Integer s : snpList) selectSnps[cnt++] = s;
-			SBitAlignment sba = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, selectSnps));
-			IBSDistanceMatrix dm = new IBSDistanceMatrix(sba);
-			estimateMissingDistances(dm);
-			Tree myTree = new UPGMATree(dm);
-			TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
-			tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
-
+//			int[] selectSnps = new int[snpList.size()];
+//			int cnt = 0;
+//			for (Integer s : snpList) selectSnps[cnt++] = s;
+//			SBitAlignment sba = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, selectSnps));
+//			IBSDistanceMatrix dm = new IBSDistanceMatrix(sba);
+//			estimateMissingDistances(dm);
+//			Tree myTree = new UPGMATree(dm);
+//			TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
+//			tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
 			
 			prevAlignment = taxaAlignments;
 			callParentAllelesUsingTaxaGroups(popdata, taxaAlignments, snpList);
 		}
+		
+		myLogger.info("number of called snps = " + popdata.snpIndex.cardinality());
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
@@ -266,10 +268,12 @@ public class NucleotideImputationUtils {
 		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
 		
 		for (int s = 0; s < nsnps; s++) {
-			byte genotypeA = (byte) (popdata.alleleA[s] << 4 | popdata.alleleA[s]);
-			byte genotypeC = (byte) (popdata.alleleC[s] << 4 | popdata.alleleC[s]);
-			byte het1 = (byte) (popdata.alleleA[s] << 4 | popdata.alleleC[s]);
-			byte het2 = (byte) (popdata.alleleC[s] << 4 | popdata.alleleA[s]);
+			byte Aallele = popdata.alleleA[snpIndex[s]];
+			byte Callele = popdata.alleleC[snpIndex[s]];
+			byte genotypeA = (byte) (Aallele << 4 | Aallele);
+			byte genotypeC = (byte) (Callele << 4 | Callele);
+			byte het1 = (byte) (Aallele << 4 | Callele);
+			byte het2 = (byte) (Callele << 4 | Aallele);
 			for (int t = 0; t < ntaxa; t++) {
 				byte val = mna.getBase(t, s);
 				if (val == genotypeA) {
@@ -375,6 +379,11 @@ public class NucleotideImputationUtils {
 		return windows;
 	}
 	
+	/**
+	 * @param family	a PopulationData object containing information for this family
+	 * @param taxaGroups	an array of two alignments corresponding to two clusters of taxa
+	 * @param snpList	the list of snps to be called
+	 */
 	public static void callParentAllelesUsingTaxaGroups(PopulationData family, Alignment[] taxaGroups, LinkedList<Integer> snpList) {
 		int nsnps = taxaGroups[0].getSiteCount();
 		Iterator<Integer> snpit = snpList.iterator();
@@ -386,7 +395,7 @@ public class NucleotideImputationUtils {
 			if(major[0] != Alignment.UNKNOWN_ALLELE && major[1] != Alignment.UNKNOWN_ALLELE && major[0] != major[1]) {
 				family.alleleA[snpIndex] = major[0];
 				family.alleleC[snpIndex] = major[1];
-				family.snpIndex.fastSet(s);
+				family.snpIndex.fastSet(snpIndex);
 			}
 		}
 	}
@@ -642,7 +651,7 @@ public class NucleotideImputationUtils {
 			Integer snpIndex = snpIndices.remove();
 			if (taxaClusters[0].getMajorAllele(s) != taxaClusters[1].getMajorAllele(s)) {
 				if ( taxaClusters[0].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && taxaClusters[1].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && 
-						taxaClusters[0].getMajorAlleleFrequency(s) > .75 &&  taxaClusters[1].getMajorAlleleFrequency(s) > .75) {
+						taxaClusters[0].getMajorAlleleFrequency(s) > .6 &&  taxaClusters[1].getMajorAlleleFrequency(s) > .6) {
 					include[s] = true;
 					includedSnps[snpcount++] = s;
 					snpIndices.add(snpIndex);
@@ -887,6 +896,17 @@ public class NucleotideImputationUtils {
 				}
 			}
 
+			//print observation/state counts
+			StringBuilder strb = new StringBuilder("Imputation counts, rows=states, columns=observations:\n");
+			for (int[] row:emissionCounts) {
+				for (int cell:row) {
+					strb.append(cell).append("\t");
+				}
+				strb.append("\n");
+			}
+			strb.append("\n");
+			myLogger.info(strb.toString());
+
 			//check to see if there is a change in the observation/state counts
 			hasNotConverged = false;
 			for (int r = 0; r < 5; r++) {
@@ -917,7 +937,7 @@ public class NucleotideImputationUtils {
 				}
 				
 				//print transition counts
-				sb = new StringBuilder("Transition counts:\n");
+				sb = new StringBuilder("Transition counts from row to column:\n");
 				for (int[] row:transitionCounts) {
 					for (int cell:row) {
 						sb.append(cell).append("\t");
@@ -997,9 +1017,9 @@ public class NucleotideImputationUtils {
 		
 		int ntaxa = a.getSequenceCount();
 		int nsites = a.getSiteCount();
-		int prevsite = -1;
-		byte prevValue = -1;
 		for (int t = 0; t < ntaxa; t++) {
+			int prevsite = -1;
+			byte prevValue = -1;
 			for (int s = 0; s < nsites; s++) {
 				byte val = a.getBase(t, s);
 				if (val != NN) {
@@ -1020,7 +1040,7 @@ public class NucleotideImputationUtils {
 		}
 
 		a.clean();
-				
+		popdata.imputed = a;		
 	}
 
 	public static void updateSnpAlignment(PopulationData popdata) {
