@@ -896,16 +896,16 @@ public class NucleotideImputationUtils {
 				}
 			}
 
-			//print observation/state counts
-			StringBuilder strb = new StringBuilder("Imputation counts, rows=states, columns=observations:\n");
-			for (int[] row:emissionCounts) {
-				for (int cell:row) {
-					strb.append(cell).append("\t");
-				}
-				strb.append("\n");
-			}
-			strb.append("\n");
-			myLogger.info(strb.toString());
+			//debug - print observation/state counts
+//			StringBuilder strb = new StringBuilder("Imputation counts, rows=states, columns=observations:\n");
+//			for (int[] row:emissionCounts) {
+//				for (int cell:row) {
+//					strb.append(cell).append("\t");
+//				}
+//				strb.append("\n");
+//			}
+//			strb.append("\n");
+//			myLogger.info(strb.toString());
 
 			//check to see if there is a change in the observation/state counts
 			hasNotConverged = false;
