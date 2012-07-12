@@ -105,6 +105,16 @@ public class TasselPipeline implements PluginListener {
 
         try {
 
+            if ((args.length == 1) && (args[0].equalsIgnoreCase("-versionComment"))) {
+                System.out.println("Version " + myMainFrame.version + " on " + myMainFrame.versionDate);
+                return;
+            }
+
+            if ((args.length == 1) && (args[0].equalsIgnoreCase("-versionTag"))) {
+                System.out.println("V" + myMainFrame.version);
+                return;
+            }
+
             myLogger.info("Tassel Version: " + myMainFrame.version + "  Date: " + myMainFrame.versionDate);
 
             parseArgs(args);
