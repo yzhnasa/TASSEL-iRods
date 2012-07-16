@@ -25,11 +25,15 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 /**
  *
  * @author Ed Buckler
  */
 public class LinkageDisequilibriumPlugin extends AbstractPlugin {
+    
+    private static final Logger myLogger = Logger.getLogger(LinkageDisequilibriumPlugin.class);
 
     private boolean myIsRapidAnalysis = true;
     private int myPermutationNumber = 1000;
@@ -131,7 +135,11 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
             builder.append("Unable to run Linkage Disequilibrium analysis ");
             builder.append(e.getMessage());
             String str = builder.toString();
-            JOptionPane.showMessageDialog(getParentFrame(), str);
+            if (isInteractive()) {
+                JOptionPane.showMessageDialog(getParentFrame(), str);
+            } else {
+                myLogger.error("processDatum: " + str);
+            }
         }
         return null;
     }
