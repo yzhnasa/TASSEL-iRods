@@ -197,9 +197,8 @@ public class NucleotideImputationUtils {
 		popdata.imputed = TBitAlignment.getInstance(ldAlignment);
 	}
 
-	public static void callParentAllelesByWindow(PopulationData popdata, double maxMajorFreq, int windowSize, int numberToTry, double cutHeightSnps, double minR) {
-		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMajorFreq);
-		
+	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
+		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
 		
 		int nsites = popdata.original.getSiteCount();
 		popdata.alleleA = new byte[nsites];
@@ -230,9 +229,9 @@ public class NucleotideImputationUtils {
 			double r = 0;
 			if (prevAlignment != null) {
 				r = getIdCorrelation(new IdGroup[][] {{prevAlignment[0].getIdGroup(), prevAlignment[1].getIdGroup()},{taxaAlignments[0].getIdGroup(), taxaAlignments[1].getIdGroup()}});
-				myLogger.info("For " + popdata.name + " the window starting at snpIndex[0], r = " + r + " , # of snps in alignment = " + snpList.size());
+				myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", r = " + r + " , # of snps in alignment = " + snpList.size());
 			} else {
-				myLogger.info("For " + popdata.name + " the window starting at snpIndex[0], # of snps in alignment = " + snpList.size());
+				myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", # of snps in alignment = " + snpList.size());
 			}
 			
 			checkAlignmentOrder(taxaAlignments, popdata, r); //makes sure 
@@ -345,7 +344,7 @@ public class NucleotideImputationUtils {
 		}
 		
 		if (parentsInWrongGroups) {
-			myLogger.warn("Parent(s) in unexpected group for family " + family.name + " at " + alignments[0].getSNPID(0));
+			myLogger.warn("Parents in unexpected group for family " + family.name + " at " + alignments[0].getSNPID(0));
 		}
 	}
 	
@@ -428,12 +427,19 @@ public class NucleotideImputationUtils {
 		return polybits;
 	}
 	
-	public static BitSet whichSitesArePolymorphic(Alignment a, double maxMajorFreq) {
+	public static BitSet whichSitesArePolymorphic(Alignment a, double maxMissing, double minMaf) {
 		//which sites are polymorphic? minor allele count > 2 and exceed the minimum allele count
 		int nsites = a.getSiteCount();
+		int ntaxa = a.getSequenceCount();
+		double totalgametes = 2 * ntaxa;
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			if (a.getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && a.getMajorAlleleFrequency(s) < maxMajorFreq) polybits.fastSet(s);
+			int[][] freq = a.getAllelesSortedByFrequency(s);
+			int ngametes = a.getTotalGametesNotMissing(s);
+			double pMissing = (totalgametes - ngametes) / totalgametes;
+			if (freq[1].length > 1 && freq[1][1] > 2 && pMissing <= maxMissing && a.getMinorAlleleFrequency(s) > minMaf) {
+				polybits.fastSet(s);
+			}
 		}
 		return polybits;
 	}
@@ -642,7 +648,7 @@ public class NucleotideImputationUtils {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
 		Alignment[] taxaClusters = ImputationUtils.getTwoClusters(a, parentIndex);
-		
+		LinkedList<Integer> originalList = new LinkedList<Integer>(snpIndices);
 		int nsites = a.getSiteCount();
 		boolean[] include = new boolean[nsites];
 		int[] includedSnps = new int[nsites];
@@ -661,8 +667,15 @@ public class NucleotideImputationUtils {
 //				include[s] = false;
 			}
 		}
-		includedSnps = Arrays.copyOf(includedSnps, snpcount);
-		return ImputationUtils.getTwoClusters(FilterAlignment.getInstance(a, includedSnps), parentIndex);
+		
+		if (snpcount > 5) {
+			includedSnps = Arrays.copyOf(includedSnps, snpcount);
+			return ImputationUtils.getTwoClusters(FilterAlignment.getInstance(a, includedSnps), parentIndex);
+		} else {
+			snpIndices.clear();
+			snpIndices.addAll(originalList);
+			return taxaClusters;
+		}
 	}
 	
 	public static void estimateMissingDistances(DistanceMatrix dm) {
