@@ -27,10 +27,12 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	private static final Logger myLogger = Logger.getLogger(CallParentAllelesPlugin.class);
 	private String pedfileName = null;
 	private int minAlleleCount = 2; //minimum allele count for the minor allele to consider that a site might be polymorphic
-	private int windowSize = 100;  //the number of sites to be used a window for determining the original set of snps in LD
+	private int windowSize = 50;  //the number of sites to be used a window for determining the original set of snps in LD
 	private int numberToTry = 10; //the number of different windows to check for snps in LD
 	private double cutHeightSnps = 0.2;  //the tree cut height used to find the largest cluster of correlated SNPs
 	private double minRforSnps = 0.5;  //the minimum R used to judge whether a snp is in ld with a test group
+	private double maxMissing = 0.9;
+	private double minMinorAlleleFrequency = 0.05;
 	
 	public CallParentAllelesPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -57,7 +59,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				family.original =  FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false);
 //				ImputationUtils.printAlleleStats(family.original, family.name);
 //				NucleotideImputationUtils.callParentAlleles(family, minAlleleCount, windowSize, numberToTry, cutHeightSnps, minRforSnps);
-				NucleotideImputationUtils.callParentAllelesByWindow(family, 0.75, windowSize, numberToTry, cutHeightSnps, minRforSnps);
+				NucleotideImputationUtils.callParentAllelesByWindow(family, maxMissing, minMinorAlleleFrequency, windowSize);
 				String comment = "Parent Calls for family " + family.name + " from " + d.getName() + ".";
 				datumList.add(new Datum(family.name, family, comment));
 			}
@@ -94,6 +96,12 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-r") || args[i].equalsIgnoreCase("-minR")) {
 				minRforSnps = Double.parseDouble(args[++i]);
+			}
+			else if (args[i].equals("-m") || args[i].equalsIgnoreCase("-maxMissing")) {
+				maxMissing = Double.parseDouble(args[++i]);
+			}
+			else if (args[i].equals("-f") || args[i].equalsIgnoreCase("-minMaf")) {
+				minMinorAlleleFrequency = Double.parseDouble(args[++i]);
 			}
 			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logconfig")) {
 				DOMConfigurator.configure(args[++i]);
@@ -150,6 +158,8 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		usage.append("-t or -numberToTry : the number of windows to test for the initial SNP cluster (default = 3)\n");
 		usage.append("-h or -cutHeight : the height at which to cut the SNP tree (default = 0.3)\n");
 		usage.append("-r or -minR : minimum R used to test SNPs for LD (default = 0.8, good for RILs, try 0.4 for F2s)\n");
+		usage.append("-m or -maxMissing : maximum proportion of missing data allowed for a SNP (default = 0.9)\n");
+		usage.append("-f or -minMaf : minimum minor allele frequency allowed for a SNP (default = 0.05)\n");
 		usage.append("-l or -logconfig : an xml configuration file for the logger. Default will be to print all messages to console.\n");
 		usage.append("? : print the parameter list.\n");
 
