@@ -9,6 +9,7 @@ package net.maizegenetics.baseplugins;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.distance.ReadDistanceMatrix;
 import net.maizegenetics.pal.report.Report;
+import net.maizegenetics.pal.report.TableReportUtils;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -346,6 +347,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                     result = ImportUtils.readAlignmentFromSerialGZ(inFile);
                     break;
                 }
+                case Table: {
+                    result = TableReportUtils.readDelimitedTableReport(inFile, "\t");
+                    break;
+                }
             }
         } catch (Exception e) {
 
@@ -486,6 +491,7 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton guessRadioButton = new JRadioButton("I will make my best guess and try.");
     JRadioButton flapjackRadioButton = new JRadioButton("Load Flapjack");
     JRadioButton geneticMapRadioButton = new JRadioButton("Load a Genetic Map");
+    JRadioButton tableReportRadioButton = new JRadioButton("Load a Table Report");
 
     public FileLoadPluginDialog() {
         super((Frame) null, "File Loader", true);
@@ -528,6 +534,7 @@ class FileLoadPluginDialog extends JDialog {
         conversionButtonGroup.add(numericalRadioButton);
         conversionButtonGroup.add(annotatedAlignRadioButton);
         conversionButtonGroup.add(geneticMapRadioButton);
+        conversionButtonGroup.add(tableReportRadioButton);
         conversionButtonGroup.add(guessRadioButton);
         guessRadioButton.setSelected(true);
 
@@ -591,6 +598,7 @@ class FileLoadPluginDialog extends JDialog {
         result.add(numericalRadioButton);
         result.add(loadMatrixRadioButton);
         result.add(geneticMapRadioButton);
+        result.add(tableReportRadioButton);
         result.add(guessRadioButton);
 
         result.add(Box.createRigidArea(new Dimension(1, 20)));
@@ -660,6 +668,9 @@ class FileLoadPluginDialog extends JDialog {
         }
         if (geneticMapRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.GeneticMap;
+        }
+        if (tableReportRadioButton.isSelected()) {
+            return FileLoadPlugin.TasselFileType.Table;
         }
         return FileLoadPlugin.TasselFileType.Unknown;
     }

@@ -1,17 +1,16 @@
 package net.maizegenetics.pal.report;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 
 import net.maizegenetics.util.DoubleFormat;
+import net.maizegenetics.util.ExceptionUtils;
+import net.maizegenetics.util.Utils;
 
 /**
- * Created by IntelliJ IDEA.
- * User: Ed
- * Date: Dec 7, 2004
- * Time: 2:10:50 PM
- * To change this template use File | Settings | File Templates.
+ * @author terry
  */
 public class TableReportUtils {
 
@@ -20,7 +19,7 @@ public class TableReportUtils {
         if (saveFile == null) {
             return;
         }
-        
+
         FileWriter fw = null;
         BufferedWriter bw = null;
         try {
@@ -62,6 +61,49 @@ public class TableReportUtils {
                 bw.close();
                 fw.close();
             } catch (Exception e) {
+                // do nothing
+            }
+        }
+
+    }
+
+    public static TableReport readDelimitedTableReport(String saveFile, String delimit) {
+
+        int numLines = -1;
+        BufferedReader reader = null;
+        try {
+            reader = Utils.getBufferedReader(saveFile, 1000000);
+            while (reader.readLine() != null) {
+                numLines++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Problem creating TableReport: " + saveFile + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {
+                reader.close();
+            } catch (Exception ex) {
+                // do nothing
+            }
+        }
+
+        BufferedReader br = null;
+        try {
+            br = Utils.getBufferedReader(saveFile);
+            String[] columnHeaders = br.readLine().trim().split(delimit);
+
+            String[][] data = new String[numLines][];
+            for (int i = 0; i < numLines; i++) {
+                data[i] = br.readLine().trim().split(delimit);
+            }
+            return new SimpleTableReport(saveFile, columnHeaders, data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Problem creating TableReport: " + saveFile + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {
+                br.close();
+            } catch (Exception ex) {
                 // do nothing
             }
         }
