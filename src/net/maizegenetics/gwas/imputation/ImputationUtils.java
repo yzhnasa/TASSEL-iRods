@@ -205,10 +205,11 @@ public class ImputationUtils {
 		for (int s = 0; s < nsnps; s++) {
 			if (alleles[0].fastGet(s)) {
 				result[s] = 2;
-				if (alleles[1].fastGet(s)) result[s] -= 1;
+				if (alleles[1].fastGet(s)) result[s] = 1;
 			} else {
 				if (alleles[1].fastGet(s)) result[s] = 0;
-				else result[s] = -1;
+//				else result[s] = -1;
+				else result[s] = 1;
 			}
 		}
 		return result;
