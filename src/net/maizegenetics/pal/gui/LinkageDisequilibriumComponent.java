@@ -424,8 +424,16 @@ public class LinkageDisequilibriumComponent extends JComponent {
         String locus = theAA.getLocusName(myWindowY - (myWindowSize / 2));
         int jump = 0;
         for (int c = myWindowY - (myWindowSize / 2); c < myWindowY + (myWindowSize / 2 + (myWindowSize % 2)); c++) {
-            if (locus.equals(theAA.getLocusName(c + jump))) {
-                s = theAA.getLocusName(c + jump) + "s" + theAA.getPositionInLocus(c + jump);
+            String tempLocus = theAA.getLocusName(c + jump);
+            if (locus.equals(tempLocus)) {
+                if ((tempLocus == null) || (tempLocus.length() == 0) || tempLocus.equalsIgnoreCase("unknown")) {
+                    tempLocus = theAA.getSNPID(c + jump);
+                }
+                if (tempLocus == null) {
+                    s = "s" + theAA.getPositionInLocus(c + jump);
+                } else {
+                    s = tempLocus + "s" + theAA.getPositionInLocus(c + jump);
+                }
             } else {
                 s = "";
                 locus = theAA.getLocusName(c + jump);
