@@ -21,23 +21,29 @@ my $CP = join(":", @fl);
 print $CP . "\n";
 
 # Scan @ARGV for Java memory arguments, and put rest in @args
-my $java_mem_default = "-Xms512m -Xmx1536m";
-my $java_mem = "";
+my $java_mem_min_default = "-Xms512m";
+my $java_mem_max_default = "-Xmx1536m";
+my $java_mem_min = "";
+my $java_mem_max = "";
 my @args;
 for (my $i=0; $i<=$#ARGV; $i++){
-   if ($ARGV[$i] =~ m/Xm/) {
-      $java_mem .= "$ARGV[$i] ";
+   if ($ARGV[$i] =~ m/Xms/) {
+      $java_mem_min .= "$ARGV[$i]";
+   }
+   elsif ($ARGV[$i] =~ m/Xmx/) {
+      $java_mem_max .= "$ARGV[$i]";
    }
    else{
       push(@args, $ARGV[$i]);
    }
 }
 
-if ($java_mem eq "") { $java_mem = $java_mem_default; }
+if ($java_mem_min eq "") { $java_mem_min = $java_mem_min_default; }
+if ($java_mem_max eq "") { $java_mem_max = $java_mem_max_default; }
 
-print "Memory Settings: " . $java_mem . "\n";
+print "Memory Settings: $java_mem_min $java_mem_max\n";
 if (@args != 0){
    print "Tassel Pipeline Arguments: " . "@args\n";
 }
 
-system "java -classpath '$CP' $java_mem net.maizegenetics.tassel.TASSELMainApp @args";
+system "java -classpath '$CP' $java_mem_min $java_mem_max net.maizegenetics.tassel.TASSELMainApp @args";
