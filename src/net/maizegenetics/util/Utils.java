@@ -328,4 +328,14 @@ public final class Utils {
         }
         return result;
     }
+
+    /**
+     * Returns max heap size in MB.
+     * 
+     * @return max heap size 
+     */
+    public static long getMaxHeapSizeMB() {
+        return Runtime.getRuntime().maxMemory() / 1048576l;
+    }
+    
 }
