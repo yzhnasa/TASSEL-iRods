@@ -10,6 +10,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
 import java.text.DecimalFormat;
 
@@ -51,10 +52,17 @@ public class LinkageDisequilibriumComponent extends JComponent {
     int hoff = 70, h2off = 70, voff = 20;
     boolean probability = true, upperProb = false, lowerProb = true;
     double normalizer;
+
     //viewer attribute variables
     int myWindowSize;
     int myWindowX;
     int myWindowY;
+
+    //stat and end coordinates for LD plot including chromosome jumps
+    int myXStart;
+    int myXEnd;
+    int myYStart;
+    int myYEnd;
 
     public LinkageDisequilibriumComponent(LinkageDisequilibrium theLD, boolean includeBlockSchematic, boolean chromosomalScale, int windowSize, int windowX, int windowY) {
         this.theLD = theLD;
@@ -83,11 +91,36 @@ public class LinkageDisequilibriumComponent extends JComponent {
         xPos = new int[windowSize + 1];
         yPos = new int[windowSize + 1];
         xEndPos = new int[windowSize + 1];
+
+        double testVal1 = theLD.getRSqr(0);
+        double testVal2 = theLD.getXXXRSqr(1, 0);
+        double testVal3 = theLD.getRSqr(5);
+        double testVal4 = theLD.getXXXRSqr(3, 2);
+
+        System.out.println(testVal1 + " " + testVal2);
+        System.out.println(testVal3 + " " + testVal4);
+
         try {
             jbInit();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    /**
+     * This sets the X start and end positions
+     */
+    public void setXStart() {
+        myXStart = (int)Math.floor(myWindowX-myWindowSize/2.0);
+        myXEnd = myXStart + myWindowSize;
+    }
+
+    /**
+     * This sets the Y start and end positions
+     */
+    public void setYStart() {
+        myYStart = (int)Math.floor(myWindowY-myWindowSize/2.0);
+        myYEnd = myYStart + myWindowSize;
     }
 
     /**
@@ -97,6 +130,9 @@ public class LinkageDisequilibriumComponent extends JComponent {
         System.out.println("new window size: " + newSize);
         myWindowSize = newSize;
         diseq = new double[myWindowSize][myWindowSize];
+
+        setXStart();
+        setYStart();
 
         setLowerCorner(ldMeasureLower);
         setUpperCorner(ldMeasureUpper);
