@@ -1,7 +1,11 @@
 #!/usr/bin/perl -w
 
 use strict;
-my $top = '.';
+use File::Basename;
+
+my $top = dirname(__FILE__);
+$top //= '.';
+
 my $libdir = "$top/lib";
 opendir (DIR, "$libdir") || die "Could not open $libdir\n";
 my @list = readdir(DIR);
@@ -14,8 +18,24 @@ foreach my $fn(@list){
 }
 push(@fl, "$top/dist/sTASSEL.jar");
 my $CP = join(":", @fl);
-print $CP;
-print "\n";
-my @args = @ARGV;
+print $CP . "\n";
 
-system "java -classpath '$CP' -Xms512m -Xmx1536m net.maizegenetics.pipeline.TasselPipeline @args";
+# Scan @ARGV for Java memory arguments, and put rest in @args
+my $java_mem_default = "-Xms512m -Xmx1536m";
+my $java_mem = "";
+my @args;
+for (my $i=0; $i<=$#ARGV; $i++){
+   if ($ARGV[$i] =~ m/Xm/) {
+      $java_mem .= "$ARGV[$i] ";
+   }
+   else{
+      push(@args, $ARGV[$i]);
+   }
+}
+
+if ($java_mem eq "") { $java_mem = $java_mem_default; }
+
+print "Memory Settings: " . $java_mem . "\n";
+print "Tassel Pipeline Arguments: " . "@args\n";
+
+system "java -classpath '$CP' $java_mem net.maizegenetics.pipeline.TasselPipeline @args";
