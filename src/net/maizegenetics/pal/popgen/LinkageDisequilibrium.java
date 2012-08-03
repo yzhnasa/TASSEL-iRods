@@ -534,6 +534,81 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         return index;
     }
 
+    private int getRowFromIndex(int index) {
+
+        int row = 0;
+        int n = myAlignment.getSiteCount();
+        int w = myWindowSize;
+
+        if ( myCurrDesign == testDesign.SlidingWindow && n > w+1 && index >= w*(w+1)/(double)2) {
+            row = (int)Math.ceil(((double)index+1-w*(w+1)/2+w*w)/w);
+        } else if ( myCurrDesign == testDesign.SiteByAll ) {
+            if ( index < myTestSite ) {
+                row = myTestSite;
+            } else {
+                row = index + 1;
+            }
+        } else if ( myCurrDesign == testDesign.SiteList ) {
+
+            int k = (int)Math.ceil((n-1.5)-Math.sqrt((n-1.5)*(n-1.5)+2*(n-index-2)));
+            int m = n*(k+1)-((k+1)*(k+2)/2)-1;
+
+            if ( m-index > n-mySiteList[k]-1 ) {
+                row = mySiteList[k];
+            } else {
+                row = n-1-m+index;
+            }
+        } else {
+            row = (int)Math.ceil((Math.sqrt(8*(index+1)+1)-1)/2);
+        }
+
+        return row;
+    }
+
+    private int getColFromIndex(int index) {
+
+        int row = getRowFromIndex(index);
+        int col = 0;
+        int n = myAlignment.getSiteCount();
+        int w = myWindowSize;
+
+        if ( myCurrDesign == testDesign.SlidingWindow && n > myWindowSize+1 && index >= myWindowSize*(myWindowSize+1)/(double)2) {
+            col = (int)((row-1-(double)w*(w+1)/2-w*(row-w)+1+index));
+        } else if ( myCurrDesign == testDesign.SiteByAll ) {
+            if ( index < myTestSite ) {
+                col = index;
+            } else {
+                col = myTestSite;
+            }
+        } else if ( myCurrDesign == testDesign.SiteList ) {
+
+            int k = (int)Math.ceil((n-1.5)-Math.sqrt((n-1.5)*(n-1.5)+2*(n-index-2)));
+            int m = n*(k+1)-((k+1)*(k+2)/2)-1;
+
+            if ( row != mySiteList[k] ) {
+                col = mySiteList[k];
+            } else {
+                col = n-m+index-2;
+                int y = Arrays.binarySearch(mySiteList, col);
+                int z = mySiteList.length-1;
+                while ( z != 0 ) {
+                    if ( y < -1) {
+                        y = -y-1;
+                    } else {
+                        y = Math.abs(y);
+                    }
+                    z = z-y;
+                    col = col-z;
+                    y = Arrays.binarySearch(mySiteList, col);
+                }
+            }
+        } else {
+            col = row-(row*(row+1)/2-index);
+        }
+
+        return col;
+    }
+
     /**
      * Returns P-value estimate for a given pair of numSites.  If there were only 2 alleles
      * at each locus, then the Fisher Exact P-value (one-tail) is returned.  If more states
