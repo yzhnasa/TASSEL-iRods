@@ -17,6 +17,8 @@ import java.util.Map;
 public class Locus implements Serializable {
 
     private static final long serialVersionUID = -5197800047652332969L;
+    public static Locus UNKNOWN = new Locus("Unknown", "0", 0, 0, null, null);
+    
     private final String myName;
     private final String myChromosome;
     private final int myStart;
