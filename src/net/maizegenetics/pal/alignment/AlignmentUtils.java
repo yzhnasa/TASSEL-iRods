@@ -391,4 +391,16 @@ public class AlignmentUtils {
         }
         return true;
     }
+
+    /**
+     * Combines two allele values into one diploid value.
+     * 
+     * @param a allele 1
+     * @param b allele 2
+     * 
+     * @return diploid value 
+     */
+    public static byte getDiploidValue(byte a, byte b) {
+        return (byte) ((a << 4) | b);
+    }
 }
