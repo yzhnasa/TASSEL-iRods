@@ -314,7 +314,7 @@ public class ParseBarcodeRead {
                 returnValue.length = 0;
             } else {
                 //If cut site is missing because it is beyond the end of the sequence (or not present at all)
-                returnValue.length = maxLength;
+                returnValue.length = (byte) Math.min(seq.length(), maxLength);
                 returnValue.processedSequence = (seq.substring(0, maxLength));
             }
         }
