@@ -741,7 +741,7 @@ public class TagsOnPhysicalMap extends AbstractTags {
         String[] inputLine = inputStr.split("\t");
         int name = 0, flag = 1, chr = 2, pos = 3, cigar = 5, tagS = 9; // column indices in inputLine
         String nullS = this.getNullTag();
-        if (Integer.parseInt(inputLine[flag]) == 4 || inputLine[chr].equals("*")) {  // no alignment
+        if ((Integer.parseInt(inputLine[flag]) & 4) == 4) {  // bit 0x4 (= 2^2 = 4) is set: NO ALIGNMENT
             recordLackOfSAMAlign(tagIndex, inputLine[tagS], inputLine[name], nullS);
         } else {  // aligns to one or more positions
             HashMap<String, Integer> SAMFields = parseOptionalFieldsFromSAMAlignment(inputLine);
