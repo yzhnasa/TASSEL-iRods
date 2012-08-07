@@ -48,7 +48,6 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     };
     private Alignment myAlignment;
     private SBitAlignment mySBitAlignment;
-    private boolean myRapidPermute = true;
     private int myMinTaxaForEstimate = 2;
     private int myWindowSize = 50;
     private int myTestSite = -1;  // this is only set when one versus all numSites is calculated.
@@ -119,7 +118,6 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             mySBitAlignment = SBitAlignment.getInstance(myAlignment, 2, false);
         }
         myFisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
-        myRapidPermute = rapidPermute;
         myWindowSize = windowSize;
         myCurrDesign = LDType;
         myTestSite = testSite;
@@ -945,7 +943,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      *
      * @return row
      */
-    public Object[] getRow(long row) {
+    public Object[] getRow(int row) {
 
         if (myIsAccumulativeReport) {
             Object[] data = new Object[3];
@@ -1020,15 +1018,15 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         return getTableColumnNames().length;
     }
 
-    public long getRowCount() {
+    public int getRowCount() {
         if (myIsAccumulativeReport) {
             return myNumAccumulativeBins + 1;
         } else {
-            return myTotalTests;
+            return (int)myTotalTests;
         }
     }
 
-    public long getElementCount() {
+    public int getElementCount() {
         return getRowCount() * getColumnCount();
     }
 
