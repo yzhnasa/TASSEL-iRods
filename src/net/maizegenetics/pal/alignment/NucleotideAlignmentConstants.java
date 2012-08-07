@@ -14,6 +14,9 @@ public final class NucleotideAlignmentConstants {
 
     public static byte GAP_ALLELE = 0x5;
     public static byte GAP_DIPLOID_ALLELE = (byte) 0x55;
+    public static byte A_DIPLOID_ALLELE = (byte) 0x00;
+    public static byte C_DIPLOID_ALLELE = (byte) 0x11;
+    public static byte M_DIPLOID_ALLELE = (byte) 0x01;
     public static String[][] NUCLEOTIDE_ALLELES = new String[][]{{"A", "C", "G", "T", "+", "-",
             Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR,
             Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.RARE_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR}};
