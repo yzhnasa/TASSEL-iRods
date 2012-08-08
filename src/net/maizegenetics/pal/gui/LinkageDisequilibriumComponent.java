@@ -97,6 +97,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
             } else {
                 jump[i] = jumpValue;
             }
+            System.out.println(jump[i]);
         }
 
         setUpperCorner(RSQUARE);
@@ -190,17 +191,20 @@ public class LinkageDisequilibriumComponent extends JComponent {
                     if (jump[c+myYStart] != 1) {
                         switch (ldMeasure) {
                             case P_VALUE: {
-                                diseq[r][c] = theLD.getPVal(r+myXStart+jump[r+myXStart], c+myYStart+jump[c+myYStart]);
+//                                diseq[r][c] = theLD.getPVal(r+myXStart+jump[r+myXStart], c+myYStart+jump[c+myYStart]);
+                                diseq[r][c] = theLD.getPVal(c+myYStart+jump[c+myYStart], r+myXStart+jump[r+myXStart]);
                                 lowerLabel = "P value";
                                 break;
                             }
                             case DPRIME: {
-                                diseq[r][c] = theLD.getDPrime(r+myXStart+jump[r+myXStart], c+myYStart+jump[c+myYStart]);
+//                                diseq[r][c] = theLD.getDPrime(r+myXStart+jump[r+myXStart], c+myYStart+jump[c+myYStart]);
+                                diseq[r][c] = theLD.getDPrime(c+myYStart+jump[c+myYStart], r+myXStart+jump[r+myXStart]);
                                 lowerLabel = "D'";
                                 break;
                             }
                             case RSQUARE: {
-                                diseq[r][c] = theLD.getRSqr(r+myXStart+jump[r+myXStart], c+myYStart+jump[c+myYStart]);
+//                                diseq[r][c] = theLD.getRSqr(r+myXStart+jump[r+myXStart], c+myYStart+jump[c+myYStart]);
+                                diseq[r][c] = theLD.getRSqr(c+myYStart+jump[c+myYStart], r+myXStart+jump[r+myXStart]);
                                 lowerLabel = "R^2";
                                 break;
                             }

@@ -673,17 +673,16 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                 col = mySiteList[k];
             } else {
                 col = n-m+(int)index-2;
-                int y = Arrays.binarySearch(mySiteList, col);
-                int z = mySiteList.length-1;
-                while ( z != 0 ) {
-                    if ( y < -1) {
-                        y = -y-1;
-                    } else {
-                        y = Math.abs(y);
+                int yy = Arrays.binarySearch(mySiteList, row);
+                int y  = Arrays.binarySearch(mySiteList, col);
+                while ( yy + (y + 1) != 0) {
+                    if ( y < 0 ) {
+                        y = -(y+1);
                     }
-                    z = z-y;
-                    col = col-z;
-                    y = Arrays.binarySearch(mySiteList, col);
+                    col = col-(yy-y);
+                    yy = y;
+                    y  = Arrays.binarySearch(mySiteList, col);
+
                 }
             }
         } else {
