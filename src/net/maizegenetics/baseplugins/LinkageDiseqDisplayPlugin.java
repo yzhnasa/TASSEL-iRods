@@ -21,6 +21,7 @@ import java.awt.event.MouseEvent;
 
 import java.net.URL;
 import java.util.List;
+import net.maizegenetics.pal.gui.LinkageDisequilibriumMinimapComponent;
 
 
 /**
@@ -163,7 +164,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
     JPanel linkPanel = new JPanel();
     JPanel mapPanel = new JPanel();
     LinkageDisequilibriumComponent ldFigurePanel;
-//    LinkageDisequilibriumMinimapComponent ldMapPanel;
+    LinkageDisequilibriumMinimapComponent ldMapPanel;
     BorderLayout borderLayout1 = new BorderLayout();
     LinkageDisequilibrium theLinkageDisequilibrium;
     LinkageDiseqDisplayPlugin theLinkageDiseqDisplayPlugin;
@@ -305,49 +306,49 @@ class LinkageDiseqDisplayDialog extends JDialog {
             });
 
             //Minimap
-//            ldMapPanel = new LinkageDisequilibriumMinimapComponent(theLinkageDisequilibrium, myDefaultViewableSize, (int)Math.ceil(maxWindowSize/2.0), (int)Math.ceil(maxWindowSize/2.0));
-//            mapPanel.add(ldMapPanel, BorderLayout.CENTER);
-//            mapPanel.setBorder(BorderFactory.createEtchedBorder());
-//
-//            ldMapPanel.addMouseListener(new java.awt.event.MouseListener() {
-//
-//                public void mouseClicked(MouseEvent me) {
-////                    throw new UnsupportedOperationException("Not supported yet.");
-//                }
-//
-//                public void mousePressed(MouseEvent me) {
-//                    mapPanel_mouseEvent(me);
-//                }
-//
-//                public void mouseReleased(MouseEvent me) {
-////                    throw new UnsupportedOperationException("Not supported yet.");
-//                }
-//
-//                public void mouseEntered(MouseEvent me) {
-////                    throw new UnsupportedOperationException("Not supported yet.");
-//                }
-//
-//                public void mouseExited(MouseEvent me) {
-////                    throw new UnsupportedOperationException("Not supported yet.");
-//                }
-//            });
-//
-//            ldMapPanel.addMouseMotionListener(new java.awt.event.MouseMotionListener() {
-//
-//                public void mouseDragged(MouseEvent me) {
-//                    mapPanel_mouseEvent(me);
-//                }
-//
-//                public void mouseMoved(MouseEvent me) {
-////                    throw new UnsupportedOperationException("Not supported yet.");
-//                }
-//            });
+            ldMapPanel = new LinkageDisequilibriumMinimapComponent(theLinkageDisequilibrium, myDefaultViewableSize, (int)Math.ceil(maxWindowSize/2.0), (int)Math.ceil(maxWindowSize/2.0));
+            mapPanel.add(ldMapPanel, BorderLayout.CENTER);
+            mapPanel.setBorder(BorderFactory.createEtchedBorder());
+
+            ldMapPanel.addMouseListener(new java.awt.event.MouseListener() {
+
+                public void mouseClicked(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                public void mousePressed(MouseEvent me) {
+                    mapPanel_mouseEvent(me);
+                }
+
+                public void mouseReleased(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                public void mouseEntered(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                public void mouseExited(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+            });
+
+            ldMapPanel.addMouseMotionListener(new java.awt.event.MouseMotionListener() {
+
+                public void mouseDragged(MouseEvent me) {
+                    mapPanel_mouseEvent(me);
+                }
+
+                public void mouseMoved(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+            });
 
             //Add window size to panel
             viewerLocationOptionsPanel.add(windowSizeLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 1.0, GridBagConstraints.LAST_LINE_END, GridBagConstraints.NONE, new Insets(0, 5, 8, 5), 0, 0));
             viewerLocationOptionsPanel.add(windowSizeSlider, new GridBagConstraints(1, 0, 2, 1, 0.9, 1.0, GridBagConstraints.PAGE_END, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
             viewerLocationOptionsPanel.add(windowSizeText, new GridBagConstraints(3, 0, 1, 1, 0.1, 1.0, GridBagConstraints.LAST_LINE_START, GridBagConstraints.HORIZONTAL, new Insets(0, 5, 0, 5), 0, 0));
-//            viewerLocationOptionsPanel.add(mapPanel, new GridBagConstraints(4, 0, 1, 1, 0.2, 0.2, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
+            viewerLocationOptionsPanel.add(mapPanel, new GridBagConstraints(4, 0, 1, 1, 0.2, 0.2, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
 
             //Add X coords to panel
             jPanel1.add(windowXSlider, new GridBagConstraints(0, 0, 6, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 172, 0, 85), 0, 0));
@@ -633,7 +634,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         }
 
         ldFigurePanel.setWindowSize(windowSizeSlider.getValue(), windowXSlider.getValue(), windowYSlider.getValue(), ldMeasureLower, ldMeasureUpper);
-//        ldMapPanel.setWindowSize(windowSizeSlider.getValue(), windowXSlider.getValue(), windowYSlider.getValue());
+        ldMapPanel.setWindowSize(windowSizeSlider.getValue(), windowXSlider.getValue(), windowYSlider.getValue());
 
         repaint();
     }
@@ -678,7 +679,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         }
 
         ldFigurePanel.setWindowX(windowXSlider.getValue(), ldMeasureLower, ldMeasureUpper);
-//        ldMapPanel.setWindowX(windowXSlider.getValue());
+        ldMapPanel.setWindowX(windowXSlider.getValue());
 
         myXPos = windowXSlider.getValue();
 
@@ -706,62 +707,62 @@ class LinkageDiseqDisplayDialog extends JDialog {
         }
 
         ldFigurePanel.setWindowY(windowYSlider.getValue(), ldMeasureLower, ldMeasureUpper);
-//        ldMapPanel.setWindowY(windowYSlider.getValue());
+        ldMapPanel.setWindowY(windowYSlider.getValue());
 
         myYPos = windowYSlider.getValue();
 
         repaint();
     }
 
-//    void mapPanel_mouseEvent(MouseEvent me) {
-//
-//        double mouseX = me.getLocationOnScreen().getX();
-//        double mouseY = me.getLocationOnScreen().getY();
-//
-//        double panelX = ldMapPanel.getLocationOnScreen().getX();
-//        double panelY = ldMapPanel.getLocationOnScreen().getY();
-//
-//        int mapSize = ldMapPanel.getMapSize();
-//
-//        double newX = (mouseX-panelX)/mapSize;
-//        double newY = (mouseY-panelY)/mapSize;
-//
-//        int newXPos = Math.min(Math.max((int)(maxWindowSize*newX), windowXSlider.getMinimum()), windowXSlider.getMaximum());
-//        int newYPos = Math.min(Math.max((int)(maxWindowSize*newY), windowYSlider.getMinimum()), windowYSlider.getMaximum());
-//
-//        int ldMeasureLower = 0;
-//        int ldMeasureUpper = 0;
-//
-//        if (lowerSqrSelector.getSelectedIndex() == 0) {
-//            ldMeasureLower = LinkageDisequilibriumComponent.P_VALUE;
-//        } else if (lowerSqrSelector.getSelectedIndex() == 1) {
-//            ldMeasureLower = LinkageDisequilibriumComponent.RSQUARE;
-//        } else {
-//            ldMeasureLower = LinkageDisequilibriumComponent.DPRIME;
-//        }
-//
-//        if (upperSqrSelector.getSelectedIndex() == 0) {
-//            ldMeasureUpper = LinkageDisequilibriumComponent.P_VALUE;
-//        } else if (upperSqrSelector.getSelectedIndex() == 1) {
-//            ldMeasureUpper = LinkageDisequilibriumComponent.RSQUARE;
-//        } else {
-//            ldMeasureUpper = LinkageDisequilibriumComponent.DPRIME;
-//        }
-//
-//        windowXSlider.setValue(newXPos);
-//        windowYSlider.setValue(newYPos);
-//
-//        ldFigurePanel.setWindowX(newXPos, ldMeasureLower, ldMeasureUpper);
-//        ldFigurePanel.setWindowY(newYPos, ldMeasureLower, ldMeasureUpper);
-//
-//        ldMapPanel.setWindowX(newXPos);
-//        ldMapPanel.setWindowY(newYPos);
-//
-//        myXPos = windowXSlider.getValue();
-//        myYPos = windowYSlider.getValue();
-//
-//        repaint();
-//    }
+    void mapPanel_mouseEvent(MouseEvent me) {
+
+        double mouseX = me.getLocationOnScreen().getX();
+        double mouseY = me.getLocationOnScreen().getY();
+
+        double panelX = ldMapPanel.getLocationOnScreen().getX();
+        double panelY = ldMapPanel.getLocationOnScreen().getY();
+
+        int mapSize = ldMapPanel.getMapSize();
+
+        double newX = (mouseX-panelX)/mapSize;
+        double newY = (mouseY-panelY)/mapSize;
+
+        int newXPos = Math.min(Math.max((int)(maxWindowSize*newX), windowXSlider.getMinimum()), windowXSlider.getMaximum());
+        int newYPos = Math.min(Math.max((int)(maxWindowSize*newY), windowYSlider.getMinimum()), windowYSlider.getMaximum());
+
+        int ldMeasureLower = 0;
+        int ldMeasureUpper = 0;
+
+        if (lowerSqrSelector.getSelectedIndex() == 0) {
+            ldMeasureLower = LinkageDisequilibriumComponent.P_VALUE;
+        } else if (lowerSqrSelector.getSelectedIndex() == 1) {
+            ldMeasureLower = LinkageDisequilibriumComponent.RSQUARE;
+        } else {
+            ldMeasureLower = LinkageDisequilibriumComponent.DPRIME;
+        }
+
+        if (upperSqrSelector.getSelectedIndex() == 0) {
+            ldMeasureUpper = LinkageDisequilibriumComponent.P_VALUE;
+        } else if (upperSqrSelector.getSelectedIndex() == 1) {
+            ldMeasureUpper = LinkageDisequilibriumComponent.RSQUARE;
+        } else {
+            ldMeasureUpper = LinkageDisequilibriumComponent.DPRIME;
+        }
+
+        windowXSlider.setValue(newXPos);
+        windowYSlider.setValue(newYPos);
+
+        ldFigurePanel.setWindowX(newXPos, ldMeasureLower, ldMeasureUpper);
+        ldFigurePanel.setWindowY(newYPos, ldMeasureLower, ldMeasureUpper);
+
+        ldMapPanel.setWindowX(newXPos);
+        ldMapPanel.setWindowY(newYPos);
+
+        myXPos = windowXSlider.getValue();
+        myYPos = windowYSlider.getValue();
+
+        repaint();
+    }
 
     public int getWindowSizeSelection() {
         return windowSizeSlider.getValue();

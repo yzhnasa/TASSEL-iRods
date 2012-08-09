@@ -102,7 +102,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
         xPos = new int[windowSize + 1];
         yPos = new int[windowSize + 1];
         xEndPos = new int[windowSize + 1];
-
+        setToolTipText("");
         try {
             jbInit();
         } catch (Exception ex) {
