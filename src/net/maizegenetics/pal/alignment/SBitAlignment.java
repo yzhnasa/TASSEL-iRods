@@ -212,7 +212,7 @@ public class SBitAlignment extends AbstractAlignment {
 
         try {
             pool.shutdown();
-            if (!pool.awaitTermination(300, TimeUnit.SECONDS)) {
+            if (!pool.awaitTermination(600, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("ImportUtils: readFromHapmap: processing threads timed out.");
             }
         } catch (Exception e) {
