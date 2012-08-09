@@ -7,7 +7,7 @@ package net.maizegenetics.util;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
 import java.net.URL;
@@ -18,8 +18,11 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -27,10 +30,11 @@ import java.util.zip.ZipFile;
  */
 public final class Utils {
 
+    private static final Logger myLogger = Logger.getLogger(Utils.class);
     private static Collection<String> myJavaPackages = null;
 
-    /** Creates a new instance of Utils */
     private Utils() {
+        // Utility Class
     }
 
     /**
@@ -213,7 +217,7 @@ public final class Utils {
      */
     public static String shortenStrLineLen(String str, int preferredLen, int preferredLines) {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         int startIndex = 0;
         int endIndex = preferredLen;
@@ -284,12 +288,22 @@ public final class Utils {
 
         try {
             if (inSourceName.startsWith("http")) {
-                return new BufferedReader(new InputStreamReader((new URL(inSourceName)).openStream()));
+                if (inSourceName.endsWith(".gz")) {
+                    return new BufferedReader(new InputStreamReader(new GZIPInputStream((new URL(inSourceName)).openStream())));
+                } else {
+                    return new BufferedReader(new InputStreamReader((new URL(inSourceName)).openStream()));
+                }
             } else {
-                return new BufferedReader(new FileReader(inSourceName));
+                if (inSourceName.endsWith(".gz")) {
+                    return new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(inSourceName))));
+                } else {
+                    return new BufferedReader(new InputStreamReader(new FileInputStream(inSourceName)));
+                    //return new BufferedReader(new FileReader(inSourceName));
+                }
             }
         } catch (Exception e) {
-            System.err.println("File IO in getBufferedReader: " + e);
+            myLogger.error("getBufferedReader: Error getting reader for: " + inSourceName);
+            e.printStackTrace();
         }
         return null;
     }
@@ -301,13 +315,22 @@ public final class Utils {
                 return getBufferedReader(inSourceName);
             } else {
                 if (inSourceName.startsWith("http")) {
-                    return new BufferedReader(new InputStreamReader((new URL(inSourceName)).openStream()), bufSize);
+                    if (inSourceName.endsWith(".gz")) {
+                        return new BufferedReader(new InputStreamReader(new GZIPInputStream((new URL(inSourceName)).openStream())), bufSize);
+                    } else {
+                        return new BufferedReader(new InputStreamReader((new URL(inSourceName)).openStream()), bufSize);
+                    }
                 } else {
-                    return new BufferedReader(new FileReader(inSourceName), bufSize);
+                    if (inSourceName.endsWith(".gz")) {
+                        return new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(inSourceName))), bufSize);
+                    } else {
+                        return new BufferedReader(new InputStreamReader(new FileInputStream(inSourceName)), bufSize);
+                    }
                 }
             }
         } catch (Exception e) {
-            System.err.println("File IO in getBufferedReader: " + e);
+            myLogger.error("getBufferedReader: Error getting reader for: " + inSourceName);
+            e.printStackTrace();
         }
         return null;
     }
@@ -328,7 +351,7 @@ public final class Utils {
         }
         return result;
     }
-    
+
     /**
      * Returns max heap size in MB.
      * 
