@@ -3,7 +3,6 @@ package net.maizegenetics.gbs.homology;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,10 +43,13 @@ public class ParseBarcodeRead {
         System.out.println("Total barcodes found in lane:" + totalBarcodes);
     }
 
-    /**Determines which cut sites to look for, and sets them, based on the enzyme used to generate the GBS library.
+    /**
+     * Determines which cut sites to look for, and sets them, based on the enzyme used to generate the GBS library.
      * For two-enzyme GBS  both enzymes MUST be specified and separated by a dash "-". e.g. PstI-MspI, SbfI-MspI
      * The enzyme pair "PstI-EcoT22I" uses the Elshire common adapter while PstI-MspI, PstI-TaqI, and SbfI-MspI use a Y adapter (Poland et al. 2012)
-    @param enzyme  The name of the enzyme (case insensitive)*/
+     * @param enzyme  The name of the enzyme (case insensitive)
+     */
+    
     //TODO these should all be private static final globals, then just use this set which one is active.
     public static void chooseEnzyme(String enzyme) {
         // Check for case-insensitive (?i) match to a known enzyme
@@ -315,7 +317,7 @@ public class ParseBarcodeRead {
             } else {
                 //If cut site is missing because it is beyond the end of the sequence (or not present at all)
                 returnValue.length = (byte) Math.min(seq.length(), maxLength);
-                returnValue.processedSequence = (seq.substring(0, maxLength));
+                returnValue.processedSequence = (seq.substring(0, returnValue.length));
             }
         }
 
