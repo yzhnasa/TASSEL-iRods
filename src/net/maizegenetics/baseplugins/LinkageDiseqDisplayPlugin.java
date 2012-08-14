@@ -257,10 +257,26 @@ class LinkageDiseqDisplayDialog extends JDialog {
             windowSizeSlider = new JSlider(1, Math.min(maxWindowSize, myMaxWindowSize), myDefaultViewableSize);
             windowSizeText.setText(String.valueOf(windowSizeSlider.getValue()));
 
-            windowSizeSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            windowSizeSlider.addMouseListener(new java.awt.event.MouseListener() {
 
-                public void stateChanged(ChangeEvent ce) {
-                    sizeSlider_actionPerformed(ce);
+                public void mouseClicked(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                public void mousePressed(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                public void mouseReleased(MouseEvent me) {
+                    sizeSlider_actionPerformed(me);
+                }
+
+                public void mouseEntered(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                public void mouseExited(MouseEvent me) {
+//                    throw new UnsupportedOperationException("Not supported yet.");
                 }
             });
 
@@ -601,7 +617,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         repaint();
     }
 
-    void sizeSlider_actionPerformed(ChangeEvent ce) {
+    void sizeSlider_actionPerformed(MouseEvent me) {
         windowSizeText.setText(String.valueOf(windowSizeSlider.getValue()));
 
 //        windowXSlider.setValue((int)Math.ceil(maxWindowSize/2.0));
