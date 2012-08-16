@@ -8,7 +8,8 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.net.URL;
+import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -18,7 +19,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
-
 import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.SBitAlignment;
@@ -30,11 +30,6 @@ import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.plugindef.PluginListener;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
-
-import java.net.URL;
-
-import java.util.List;
-
 import org.apache.log4j.Logger;
 
 /**
@@ -89,7 +84,7 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
                 if (theDialog.isCancel()) {
                     return null;
                 }
-                myType = theDialog.getType();
+                myType = theDialog.getConvertType();
                 theDialog.dispose();
             }
 
@@ -297,7 +292,7 @@ class ConvertSBitTBitPluginDialog extends JDialog {
         return myIsCancel;
     }
 
-    public ConvertSBitTBitPlugin.CONVERT_TYPE getType() {
+    public ConvertSBitTBitPlugin.CONVERT_TYPE getConvertType() {
         if (mySBit.isSelected()) {
             return ConvertSBitTBitPlugin.CONVERT_TYPE.sbit;
         } else if (myTBit.isSelected()) {
