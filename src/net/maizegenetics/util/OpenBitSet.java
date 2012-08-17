@@ -713,6 +713,32 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
         myNumWords = newLen;
     }
 
+    /** this = not(this XOR other) */
+    public void notXor(BitSet other) {
+        int newLen = Math.max(myNumWords, other.getNumWords());
+        ensureCapacityWords(newLen);
+
+        long[] thisArr = myBits;
+        long[] otherArr = other.getBits();
+        int pos = Math.min(myNumWords, other.getNumWords());
+        while (--pos >= 0) {
+            thisArr[pos] = ~(thisArr[pos] ^ otherArr[pos]);
+        }
+        if (myNumWords < newLen) {
+            System.arraycopy(otherArr, myNumWords, thisArr, myNumWords, newLen - myNumWords);
+        }
+        myNumWords = newLen;
+    }
+    
+    /** this = not(this) */
+    public void not() {
+        long[] thisArr = myBits;
+        int pos = myNumWords;
+        while (--pos >= 0) {
+            thisArr[pos] = ~(thisArr[pos]);
+        }
+    }
+    
     // some BitSet compatability methods
     //** see {@link intersect} */
     public void and(BitSet other) {

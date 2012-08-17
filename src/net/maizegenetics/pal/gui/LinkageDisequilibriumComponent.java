@@ -281,10 +281,6 @@ public class LinkageDisequilibriumComponent extends JComponent {
         String currLocus = "";
         for (int r = 0; r < totalVariableSites; r++)
         {
-            //if (theAA.getChromosome(r) != currc) {
-            //    totalChromosomes++;
-            //    currc = theAA.getChromosome(r);
-            //}
             if (!currLocus.equals(theAA.getLocusName(r))) {
                 totalLoci++;
                 currLocus = theAA.getLocusName(r);
@@ -365,14 +361,6 @@ public class LinkageDisequilibriumComponent extends JComponent {
             endPos[0] = blockBeginPos[currB] + (theAA.getPositionInLocus(myXStart+jump[myXStart]) - blockStart[currB]) / (blockEnd[currB] - blockStart[currB]) / totalBlocks;
 
             for (int r = myXStart+1; r < myXEnd; r++) {
-
-//                for (int r = myWindowX-(myWindowSize/2); r < myWindowX+(myWindowSize/2+(myWindowSize%2)); r++) {
-                //if (chromosomalScale) {
-                //    if (theAA.getChromosome(r) != theAA.getChromosome(r - 1)) {
-                //        currB++;
-                //    }
-                //    endPos[r] = blockBeginPos[currB] + ((theAA.getChromosomePosition(r) - blockStart[currB]) * proportionPerUnit);
-                //} else {
                 if (!theAA.getLocusName(r+jump[r]).equals(theAA.getLocusName(r+jump[r] - 1))) {
                     currB++;
                 }
@@ -384,8 +372,6 @@ public class LinkageDisequilibriumComponent extends JComponent {
     private void jbInit() throws Exception {
         this.setBackground(Color.red);
         this.setSize(400, 400);
-        // this.setPreferredSize(new Dimension(400, 400));
-        // this.setLayout(borderLayout1);
     }
 
     private Color getMagnitudeColor(int r, int c) {

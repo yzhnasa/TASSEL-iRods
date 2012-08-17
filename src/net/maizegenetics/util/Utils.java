@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author  terryc
+ * @author terryc
  */
 public final class Utils {
 
@@ -42,8 +42,8 @@ public final class Utils {
     }
 
     /**
-     * Returns the base name of a string delimited
-     * with periods (i.e. Java Class).
+     * Returns the base name of a string delimited with periods (i.e. Java
+     * Class).
      *
      * @param str string to parse
      *
@@ -56,9 +56,8 @@ public final class Utils {
     }
 
     /**
-     * This returns the filename only.  Preceding
-     * directories are removed and  everything after
-     * last . is removed.
+     * This returns the filename only. Preceding directories are removed and
+     * everything after last . is removed.
      *
      * @param str original filename
      * @param suffix suffix
@@ -89,9 +88,8 @@ public final class Utils {
     }
 
     /**
-     * This returns the filename only.  Preceding
-     * directories are removed and suffix.  If suffix not
-     * found, then everything after last . is removed.
+     * This returns the filename only. Preceding directories are removed and
+     * suffix. If suffix not found, then everything after last . is removed.
      *
      * @param str original filename
      * @param suffix suffix
@@ -265,8 +263,7 @@ public final class Utils {
     }
 
     /**
-     * Adds suffix (i.e. .txt) to end of filename if it's not
-     * already there.
+     * Adds suffix (i.e. .txt) to end of filename if it's not already there.
      *
      * @param filename filename
      * @param suffix suffix
@@ -288,6 +285,37 @@ public final class Utils {
 
     }
 
+    /**
+     * Adds default suffix if not already one of the possible suffixes.
+     * 
+     * @param filename filename
+     * @param defaultSuffix default suffix
+     * @param possible possible suffixes
+     * 
+     * @return filename with suffix
+     */
+    public static String addSuffixIfNeeded(String filename, String defaultSuffix, String[] possible) {
+
+        for (int i = 0; i < possible.length; i++) {
+            String current = possible[i];
+            if (current.charAt(0) != '.') {
+                current = '.' + current;
+            }
+
+            int periodIndex = filename.lastIndexOf(current);
+            if (periodIndex != -1) {
+                return filename;
+            }
+
+        }
+
+        if (defaultSuffix.charAt(0) != '.') {
+            defaultSuffix = '.' + defaultSuffix;
+        }
+        return filename + defaultSuffix;
+
+    }
+
     public static BufferedReader getBufferedReader(String inSourceName) {
 
         try {
@@ -302,7 +330,6 @@ public final class Utils {
                     return new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(inSourceName))));
                 } else {
                     return new BufferedReader(new InputStreamReader(new FileInputStream(inSourceName)));
-                    //return new BufferedReader(new FileReader(inSourceName));
                 }
             }
         } catch (Exception e) {
@@ -339,47 +366,29 @@ public final class Utils {
         return null;
     }
 
-    public static BufferedWriter getBufferedWriter(String outputName) {
+    public static BufferedWriter getBufferedWriter(String filename) {
 
-    	try {
-    		if (outputName.endsWith(".gz")) {
-    			return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputName))));
-    		} else {
-    			return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputName)));
-    		}
-
-    	} catch (Exception e) {
-    		myLogger.error("getBufferedWriter: Error getting writer for: " + outputName);
-    		e.printStackTrace();
-    	}
-    	return null;
+        try {
+            if (filename.endsWith(".gz")) {
+                return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(filename))));
+            } else {
+                return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename)));
+            }
+        } catch (Exception e) {
+            myLogger.error("getBufferedReader: Error getting reader for: " + filename);
+            e.printStackTrace();
+        }
+        return null;
     }
-
-    public static BufferedWriter getBufferedWriter(String outputName, int bufSize) {
-
-    	try {
-    		if (outputName.endsWith(".gz")) {
-    			return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputName))), bufSize);
-    		} else {
-    			return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputName)), bufSize);
-    		}
-
-    	} catch (Exception e) {
-    		myLogger.error("getBufferedWriter: Error getting writer for: " + outputName);
-    		e.printStackTrace();
-    	}
-    	return null;
-    }
-
 
     /**
      * Finds index of Nth occurrence of character in string.
-     * 
+     *
      * @param str string
      * @param match character to match
      * @param n Nth occurrence
-     * 
-     * @return index 
+     *
+     * @return index
      */
     public static int findNthOccurrenceInString(String str, char match, int n) {
         int result = str.indexOf(match);
@@ -391,8 +400,8 @@ public final class Utils {
 
     /**
      * Returns max heap size in MB.
-     * 
-     * @return max heap size 
+     *
+     * @return max heap size
      */
     public static long getMaxHeapSizeMB() {
         return Runtime.getRuntime().maxMemory() / 1048576l;

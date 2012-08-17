@@ -23,6 +23,7 @@ import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 import net.maizegenetics.pal.tree.NeighborJoiningTree;
 import net.maizegenetics.pal.tree.Tree;
 import net.maizegenetics.pal.tree.TreeClusters;
@@ -199,6 +200,8 @@ public class NucleotideImputationUtils {
 
 	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
 		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
+		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
+		filteredBits.and(polybits);
 		
 		int nsites = popdata.original.getSiteCount();
 		popdata.alleleA = new byte[nsites];
@@ -215,7 +218,7 @@ public class NucleotideImputationUtils {
 	
 		//iterate through windows
 		Alignment[] prevAlignment = null;
-		int[][] snpIndices = getWindows(polybits, windowSize);
+		int[][] snpIndices = getWindows(filteredBits, windowSize);
 		
 		for (int[] snpIndex : snpIndices) {
 			SBitAlignment windowAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
@@ -298,6 +301,10 @@ public class NucleotideImputationUtils {
 		
 		int p1group, p2group;
 		
+		//if parent 1 is in alignment 0, p1group = 0
+		//if parent1 is in alignment 1, p1group = 1
+		//if parent 1 is not in either alignment p1group = -1
+		//likewise for parent 2
 		if (alignments[0].getIdGroup().whichIdNumber(family.parent1) > -1) p1group = 0;
 		else if (alignments[1].getIdGroup().whichIdNumber(family.parent1) > -1) p1group = 1;
 		else p1group = -1;
@@ -306,6 +313,8 @@ public class NucleotideImputationUtils {
 		else if (alignments[0].getIdGroup().whichIdNumber(family.parent2) > -1) p2group = 0;
 		else p2group = -1;
 
+		//find out if parents are either in the same group or if they are in groups opposite expected
+		//parent 1 is expected to be in group 0 since it was used to seed group 0
 		if (p1group == 0) {
 			if (p2group == 0) {
 				parentsInSameGroup = true;
@@ -332,6 +341,9 @@ public class NucleotideImputationUtils {
 			}
 		}
 		
+		//r is the correlation between taxa assignments in this window and the previous one
+		//if r is negative then parental assignments should be swapped, which will make it positive
+		//this can happen when the parents are not in the data set and the assignment of parents to group is arbitrary
 		if (r < minR) swapAlignments = true;
 		if (swapAlignments) {
 			Alignment temp = alignments[0];
@@ -1191,6 +1203,128 @@ public class NucleotideImputationUtils {
 		
 	}
 	
+	/**
+	 * SNPs on the same tag will have correlated errors. While alignments do not have information about which SNPs come from the same tag, SNPs from one tag will be <64 bp distant. 
+	 * They will also be highly correlated. This function tests removes the second of any pair of SNPs that could come from the same tag.
+	 * @param alignIn	the input Alignment
+	 * @return	an alignment with the one of any correlated pairs of SNPs removed
+	 */
+	public static Alignment removeSNPsFromSameTag(Alignment alignIn, double minRsq) {
+		SBitAlignment sba;
+		if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
+		else sba = SBitAlignment.getInstance(alignIn);
+		
+		int nsites = sba.getSiteCount();
+		int ntaxa = sba.getSequenceCount();
+		int firstSite = 0;
+		int[] sitesSelected = new int[nsites];
+		int selectCount = 0;
+		sitesSelected[selectCount++] = 0;
+		String firstSnpLocus = sba.getLocus(0).getName();
+		int firstSnpPos = sba.getPositionInLocus(0);
+		while (firstSite < nsites - 1) {
+			int nextSite = firstSite + 1;
+			int nextSnpPos = sba.getPositionInLocus(nextSite);
+			String nextSnpLocus = sba.getLocus(nextSite).getName();
+			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
+				//calculate r^2 between snps
+	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
+	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
+	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
+	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
+	            int n = 0;
+	            int[][] contig = new int[2][2];
+	            n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
+	            n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
+	            n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
+	            n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
+				
+				double rsq = calculateRSqr(contig[0][0], contig[0][1], contig[1][0], contig[1][1], 2);
+				if (Double.isNaN(rsq) || rsq >= minRsq) sitesSelected[selectCount++] = nextSite;
+				nextSite++;
+				nextSnpPos = sba.getPositionInLocus(nextSite);
+				nextSnpLocus = sba.getLocus(nextSite).getName();
+			}
+			firstSite = nextSite;
+			firstSnpLocus = nextSnpLocus;
+			firstSnpPos = nextSnpPos;
+			sitesSelected[selectCount++] = firstSite;
+		}
+		
+		return FilterAlignment.getInstance(sba, sitesSelected);
+	}
+	
+	public static OpenBitSet whichSnpsAreFromSameTag(Alignment alignIn, double minRsq) {
+		SBitAlignment sba;
+		if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
+		else sba = SBitAlignment.getInstance(alignIn);
+		
+		int nsites = sba.getSiteCount();
+		int ntaxa = sba.getSequenceCount();
+		int firstSite = 0;
+		OpenBitSet isSelected = new OpenBitSet(nsites);
+		isSelected.fastSet(0);
+		String firstSnpLocus = sba.getLocus(0).getName();
+		int firstSnpPos = sba.getPositionInLocus(0);
+		while (firstSite < nsites - 1) {
+			int nextSite = firstSite + 1;
+			int nextSnpPos = sba.getPositionInLocus(nextSite);
+			String nextSnpLocus = sba.getLocus(nextSite).getName();
+			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
+				//calculate r^2 between snps
+	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
+	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
+	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
+	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
+	            int n = 0;
+	            int[][] contig = new int[2][2];
+	            n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
+	            n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
+	            n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
+	            n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
+				
+				double rsq = calculateRSqr(contig[0][0], contig[0][1], contig[1][0], contig[1][1], 2);
+				//if rsq cannot be calculted or rsq is less than the minimum rsq for a snp to be considered highly correlated, select this snp
+				if (Double.isNaN(rsq) || rsq < minRsq) isSelected.fastSet(nextSite);
+				nextSite++;
+				nextSnpPos = sba.getPositionInLocus(nextSite);
+				nextSnpLocus = sba.getLocus(nextSite).getName();
+			}
+			firstSite = nextSite;
+			firstSnpLocus = nextSnpLocus;
+			firstSnpPos = nextSnpPos;
+			isSelected.fastSet(firstSite);
+		}
+		
+		return isSelected;
+	}
+	
+    static double calculateRSqr(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
+        //this is the Hill & Robertson measure as used in Awadella Science 1999 286:2524
+        double freqA, freqB, rsqr, nonmissingSampleSize;
+        nonmissingSampleSize = countAB + countAb + countaB + countab;
+        if (nonmissingSampleSize < minTaxaForEstimate) {
+            return Double.NaN;
+        }
+        freqA = (double) (countAB + countAb) / nonmissingSampleSize;
+        freqB = (double) (countAB + countaB) / nonmissingSampleSize;
+
+        //Through missing data & incomplete datasets some alleles can be fixed this returns missing value
+        if ((freqA == 0) || (freqB == 0) || (freqA == 1) || (freqB == 1)) {
+            return Double.NaN;
+        }
+
+        rsqr = ((double) countAB / nonmissingSampleSize) * ((double) countab / nonmissingSampleSize);
+        rsqr -= ((double) countaB / nonmissingSampleSize) * ((double) countAb / nonmissingSampleSize);
+        rsqr *= rsqr;
+        rsqr /= freqA * (1 - freqA) * freqB * (1 - freqB);
+        return rsqr;
+    }
+
+    public static OpenBitSet filterSnpsOnLDandDistance(Alignment alignIn) {
+    	return null;
+    }
 	
 }
+
 

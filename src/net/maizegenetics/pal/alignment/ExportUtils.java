@@ -3,14 +3,12 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-
-import net.maizegenetics.util.Utils;
 
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
@@ -18,26 +16,28 @@ import java.util.zip.GZIPOutputStream;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
+import net.maizegenetics.util.Utils;
 
 import org.apache.log4j.Logger;
 
 /**
- * The class exports PAL alignment data types to
- * various file formats.
+ * The class exports PAL alignment data types to various file formats.
  *
- * @author Jon
+ * @author Jon, Terry
  */
 public class ExportUtils {
 
     private static final Logger myLogger = Logger.getLogger(ExportUtils.class);
-    static FormattedOutput format = FormattedOutput.getInstance();
+    private static FormattedOutput format = FormattedOutput.getInstance();
 
     private ExportUtils() {
         // Utility Class - do not instantiate.
     }
 
     /**
-     * Writes multiple alignments to single Hapmap file. Currently no error checking
+     * Writes multiple alignments to single Hapmap file. Currently no error
+     * checking
+     *
      * @param alignment array of alignments
      * @param diploid
      * @param filename
@@ -48,12 +48,10 @@ public class ExportUtils {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
 
-        FileWriter fw = null;
         BufferedWriter bw = null;
         try {
-            String fullFileName = Utils.addSuffixIfNeeded(filename, ".hmp.txt");
-            fw = new FileWriter(fullFileName);
-            bw = new BufferedWriter(fw, 1000000);
+            String fullFileName = Utils.addSuffixIfNeeded(filename, ".hmp.txt", new String[]{".hmp.txt", ".hmp.txt.gz"});
+            bw = Utils.getBufferedWriter(fullFileName);
             bw.write("rs#");
             bw.write(delimChar);
             bw.write("alleles");
@@ -165,7 +163,6 @@ public class ExportUtils {
         } finally {
             try {
                 bw.close();
-                fw.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -173,7 +170,9 @@ public class ExportUtils {
     }
 
     /**
-     * Writes multiple alignments to single Hapmap file. Currently no error checking
+     * Writes multiple alignments to single Hapmap file. Currently no error
+     * checking
+     *
      * @param alignment array of alignments
      * @param diploid
      * @param filename
@@ -184,12 +183,10 @@ public class ExportUtils {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
 
-        FileWriter fw = null;
         BufferedWriter bw = null;
         try {
-            String fullFileName = Utils.addSuffixIfNeeded(filename, ".hmp.txt");
-            fw = new FileWriter(fullFileName);
-            bw = new BufferedWriter(fw, 1000000);
+            String fullFileName = Utils.addSuffixIfNeeded(filename, ".hmp.txt", new String[]{".hmp.txt", ".hmp.txt.gz"});
+            bw = Utils.getBufferedWriter(fullFileName);
             bw.write("rs#");
             bw.write(delimChar);
             bw.write("alleles");
@@ -305,7 +302,6 @@ public class ExportUtils {
         } finally {
             try {
                 bw.close();
-                fw.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -314,6 +310,7 @@ public class ExportUtils {
 
     /**
      * Writes given set of alignments to a set of Plink files
+     *
      * @param alignment
      * @param filename
      * @param delimChar
@@ -407,6 +404,7 @@ public class ExportUtils {
 
     /**
      * Writes given set of alignments to a set of Flapjack files
+     *
      * @param alignment
      * @param filename
      * @param delimChar
@@ -525,7 +523,9 @@ public class ExportUtils {
 
     }
 
-    /** print alignment (in PHYLIP SEQUENTIAL format) */
+    /**
+     * print alignment (in PHYLIP SEQUENTIAL format)
+     */
     public static void printSequential(Alignment a, PrintWriter out) {
         // PHYLIP header line
         out.println("  " + a.getSequenceCount() + " " + a.getSiteCount() + "  S");
@@ -547,7 +547,9 @@ public class ExportUtils {
         }
     }
 
-    /** print alignment (in PHYLIP 3.4 INTERLEAVED format) */
+    /**
+     * print alignment (in PHYLIP 3.4 INTERLEAVED format)
+     */
     public static void printInterleaved(Alignment a, PrintWriter out) {
         int n = 0;
 
@@ -571,7 +573,9 @@ public class ExportUtils {
         }
     }
 
-    /** Print alignment (in CLUSTAL W format) */
+    /**
+     * Print alignment (in CLUSTAL W format)
+     */
     public static void printCLUSTALW(Alignment a, PrintWriter out) {
         int n = 0;
 
