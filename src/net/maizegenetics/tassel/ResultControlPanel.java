@@ -41,7 +41,6 @@ public class ResultControlPanel extends AbstractControlPanel {
 
             addPlugin(new TableDisplayPlugin(theTASSELMainFrame, true));
             addPlugin(new TreeDisplayPlugin(theTASSELMainFrame, true));
-            addPlugin(new ArchaeopteryxPlugin(theTASSELMainFrame, true));
             addPlugin(new Grid2dDisplayPlugin(theTASSELMainFrame, true));
             addPlugin(new LinkageDiseqDisplayPlugin(theTASSELMainFrame, true));
             addPlugin(new ChartDisplayPlugin(theTASSELMainFrame, true));
