@@ -14,7 +14,6 @@
  */
 package net.maizegenetics.tassel;
 
-import net.maizegenetics.baseplugins.ArchaeopteryxPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.baseplugins.Grid2dDisplayPlugin;
