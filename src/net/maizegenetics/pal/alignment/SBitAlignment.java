@@ -15,15 +15,15 @@ import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.UnmodifiableBitSet;
 
 /**
- * This data alignment is optimized for operations
- * involving lots of SNPs from a taxon - imputation, genetic distance, kinship, diversity, etc.
- * It is not optimized for LD or association mapping.
+ * This data alignment is optimized for operations involving lots of SNPs from a
+ * taxon - imputation, genetic distance, kinship, diversity, etc. It is not
+ * optimized for LD or association mapping.
  *
  * @author terry
  */
 public class SBitAlignment extends AbstractAlignment {
 
-    private OpenBitSet[][] myData;
+    private BitSet[][] myData;
     private int myNumDataRows;
 
     protected SBitAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
@@ -42,6 +42,15 @@ public class SBitAlignment extends AbstractAlignment {
         long prevTime = currentTime;
         currentTime = System.currentTimeMillis();
         System.out.println("Time to load alleles: " + ((currentTime - prevTime) / 1000));
+    }
+
+    protected SBitAlignment(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        super(alleles, idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+        myData = data;
+        myNumDataRows = myMaxNumAlleles;
+        if (retainsRareAlleles()) {
+            myNumDataRows++;
+        }
     }
 
     // TESTING ONLY
@@ -128,6 +137,10 @@ public class SBitAlignment extends AbstractAlignment {
 
     public static SBitAlignment getNucleotideInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         return new SBitNucleotideAlignment(idGroup, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+    }
+
+    public static SBitAlignment getNucleotideInstance(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        return new SBitNucleotideAlignment(idGroup, alleles, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 
     public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
@@ -224,11 +237,11 @@ public class SBitAlignment extends AbstractAlignment {
 
     private class ProcessSite implements Runnable {
 
-        private OpenBitSet[][] myData;
+        private BitSet[][] myData;
         private byte[][] myOrigData;
         private int mySite;
 
-        public ProcessSite(byte[][] origData, OpenBitSet[][] data, int site) {
+        public ProcessSite(byte[][] origData, BitSet[][] data, int site) {
             myData = data;
             myOrigData = origData;
             mySite = site;

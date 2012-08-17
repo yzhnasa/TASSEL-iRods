@@ -4,6 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.util.BitSet;
 
 /**
  *
@@ -17,6 +18,10 @@ public class TBitNucleotideAlignment extends TBitAlignment {
 
     protected TBitNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+    }
+    
+    protected TBitNucleotideAlignment(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        super(idGroup, alleles, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 
     @Override

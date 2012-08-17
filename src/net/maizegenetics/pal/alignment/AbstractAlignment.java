@@ -47,6 +47,12 @@ abstract public class AbstractAlignment implements Alignment {
         currentTime = System.currentTimeMillis();
         System.out.println("Time to init alleles: " + ((currentTime - prevTime) / 1000));
     }
+    
+    public AbstractAlignment(byte[][] alleles, IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        myNumSites = alleles.length;
+        init(idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, snpIDs, loci, lociOffsets, retainRareAlleles);
+        myAlleles = alleles;
+    }
 
     public AbstractAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         if (maxNumAlleles > a.getMaxNumAlleles()) {

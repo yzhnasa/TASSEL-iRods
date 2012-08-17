@@ -14,7 +14,7 @@ import net.maizegenetics.util.UnmodifiableBitSet;
  */
 public class TBitAlignment extends AbstractAlignment {
 
-    private OpenBitSet[][] myData;
+    private BitSet[][] myData;
     private int myNumDataRows;
 
     protected TBitAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
@@ -25,6 +25,15 @@ public class TBitAlignment extends AbstractAlignment {
     protected TBitAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         loadAlleles(data);
+    }
+
+    protected TBitAlignment(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        super(alleles, idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+        myData = data;
+        myNumDataRows = myMaxNumAlleles;
+        if (retainsRareAlleles()) {
+            myNumDataRows++;
+        }
     }
 
     public static TBitAlignment getInstance(Alignment a) {
@@ -78,6 +87,10 @@ public class TBitAlignment extends AbstractAlignment {
 
     public static TBitAlignment getNucleotideInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         return new TBitNucleotideAlignment(idGroup, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+    }
+
+    public static TBitAlignment getNucleotideInstance(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        return new TBitNucleotideAlignment(idGroup, alleles, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 
     public static TBitAlignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
@@ -310,7 +323,7 @@ public class TBitAlignment extends AbstractAlignment {
     public boolean isTBitFriendly() {
         return true;
     }
-    
+
     @Override
     public int getTotalNumAlleles() {
         return myNumDataRows;
