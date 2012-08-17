@@ -6,9 +6,12 @@
 package net.maizegenetics.util;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 import java.net.URL;
 
@@ -19,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -334,6 +338,39 @@ public final class Utils {
         }
         return null;
     }
+
+    public static BufferedWriter getBufferedWriter(String outputName) {
+
+    	try {
+    		if (outputName.endsWith(".gz")) {
+    			return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputName))));
+    		} else {
+    			return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputName)));
+    		}
+
+    	} catch (Exception e) {
+    		myLogger.error("getBufferedWriter: Error getting writer for: " + outputName);
+    		e.printStackTrace();
+    	}
+    	return null;
+    }
+
+    public static BufferedWriter getBufferedWriter(String outputName, int bufSize) {
+
+    	try {
+    		if (outputName.endsWith(".gz")) {
+    			return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputName))), bufSize);
+    		} else {
+    			return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputName)), bufSize);
+    		}
+
+    	} catch (Exception e) {
+    		myLogger.error("getBufferedWriter: Error getting writer for: " + outputName);
+    		e.printStackTrace();
+    	}
+    	return null;
+    }
+
 
     /**
      * Finds index of Nth occurrence of character in string.
