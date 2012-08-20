@@ -93,15 +93,16 @@ public class ExportUtils {
                 bw.write(delimChar);
                 byte[] alleles = alignment.getAlleles(site);
                 int numAlleles = alleles.length;
-                //currently does not correctly display if numAlleles > 2
                 if (numAlleles == 0) {
                     bw.write("NA"); //if data does not exist
-                }
-                for (int i = 0; i < Math.min(2, numAlleles); i++) {
-                    if (i > 0) {
+                } else if (numAlleles == 1) {
+                    bw.write(alignment.getBaseAsString(site, alleles[0]));
+                } else {
+                    bw.write(alignment.getBaseAsString(site, alleles[0]));
+                    if (alleles[1] != Alignment.UNKNOWN_ALLELE) {
                         bw.write('/');
+                        bw.write(alignment.getBaseAsString(site, alleles[1]));
                     }
-                    bw.write(alignment.getBaseAsString(site, alleles[i])); //alleles
                 }
                 bw.write(delimChar);
                 bw.write(alignment.getLocusName(site));
@@ -228,15 +229,16 @@ public class ExportUtils {
                 bw.write(delimChar);
                 byte[] alleles = alignment.getAlleles(site);
                 int numAlleles = alleles.length;
-                //currently does not correctly display if numAlleles > 2
                 if (numAlleles == 0) {
                     bw.write("NA"); //if data does not exist
-                }
-                for (int i = 0; i < Math.min(2, numAlleles); i++) {
-                    if (i > 0) {
+                } else if (numAlleles == 1) {
+                    bw.write(alignment.getBaseAsString(site, alleles[0]));
+                } else {
+                    bw.write(alignment.getBaseAsString(site, alleles[0]));
+                    if (alleles[1] != Alignment.UNKNOWN_ALLELE) {
                         bw.write('/');
+                        bw.write(alignment.getBaseAsString(site, alleles[1]));
                     }
-                    bw.write(alignment.getBaseAsString(site, alleles[i])); //alleles
                 }
                 bw.write(delimChar);
                 bw.write(alignment.getLocusName(site));
