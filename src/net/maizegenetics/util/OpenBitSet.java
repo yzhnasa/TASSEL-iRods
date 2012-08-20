@@ -138,6 +138,16 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
     public void setBits(long[] bits) {
         myBits = bits;
     }
+    
+    /**
+     * Expert: sets specified word with given bits.
+     * 
+     * @param wordNum word index
+     * @param bits bits
+     */
+    public void setLong(int wordNum, long bits) {
+        myBits[wordNum] = bits;
+    }
 
     /**
      * Expert: gets the number of longs in the array that are in use

@@ -47,6 +47,11 @@ public class UnmodifiableBitSet implements BitSet {
     public void setBits(long[] bits) {
         throw new UnsupportedOperationException("UnmodifiableBitSet.");
     }
+    
+    @Override
+    public void setLong(int wordNum, long bits) {
+        throw new UnsupportedOperationException("UnmodifiableBitSet.");
+    }
 
     @Override
     public int getNumWords() {
