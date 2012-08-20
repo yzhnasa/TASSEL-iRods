@@ -99,9 +99,9 @@ public class ProcessLineOfHapmap implements Runnable {
                     try {
                         data[s][i] = NucleotideAlignmentConstants.getNucleotideDiploidByte(myTokens[s][ImportUtils.NUM_HAPMAP_NON_TAXA_HEADERS + i]);
                     } catch (IndexOutOfBoundsException ex) {
-                        throw new IllegalStateException("Number of Taxa: " + myNumTaxa + " does not match number of values at line in file: " + myLineInFile + " site: " + mySite + s);
+                        throw new IllegalStateException("Number of Taxa: " + myNumTaxa + " does not match number of values at line in file: " + (myLineInFile + s) + " site: " + mySite + s);
                     } catch (Exception e) {
-                        throw new IllegalStateException("Line in File: " + myLineInFile + s, e);
+                        throw new IllegalStateException("Problem with line in file: " + (myLineInFile + s), e);
                     }
                 }
             }
