@@ -21,8 +21,7 @@ public final class NucleotideAlignmentConstants {
             Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR,
             Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.RARE_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR}};
     /**
-     * Number of nucleotide states excluding
-     * rare and unknown.
+     * Number of nucleotide states excluding rare and unknown.
      */
     public static final int NUMBER_NUCLEOTIDE_ALLELES = 6;
     private static final Map NUCLEOTIDE_DIPLOID_HASH = new HashMap<String, Byte>();
@@ -218,9 +217,9 @@ public final class NucleotideAlignmentConstants {
     }
 
     /**
-     * Returns diploid byte value for given nucleotide value.  First four
-     * bits contain first allele value.  And second four bits contain
-     * second allele value.
+     * Returns diploid byte value for given nucleotide value. First four bits
+     * contain first allele value. And second four bits contain second allele
+     * value.
      *
      * @param value
      *
@@ -230,7 +229,7 @@ public final class NucleotideAlignmentConstants {
         try {
             return ((Byte) NUCLEOTIDE_DIPLOID_HASH.get(value)).byteValue();
         } catch (NullPointerException e) {
-            throw new IllegalArgumentException("ImportUtils: getNucleotideDiploidByte: unknown allele value: " + value);
+            throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideDiploidByte: unknown allele value: " + value);
         }
     }
 
@@ -238,7 +237,7 @@ public final class NucleotideAlignmentConstants {
         try {
             return ((Byte) NUCLEOTIDE_DIPLOID_HASH.get(String.valueOf(value))).byteValue();
         } catch (NullPointerException e) {
-            throw new IllegalArgumentException("ImportUtils: getNucleotideDiploidByte: unknown allele value: " + value);
+            throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideDiploidByte: unknown allele value: " + value);
         }
     }
 
@@ -246,7 +245,7 @@ public final class NucleotideAlignmentConstants {
         try {
             return ((String) NUCLEOTIDE_IUPAC_HASH.get(value));
         } catch (NullPointerException e) {
-            throw new IllegalArgumentException("ImportUtils: getNucleotideIUPAC: unknown allele value: " + value);
+            throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideIUPAC: unknown allele value: " + value);
         }
     }
 }
