@@ -871,4 +871,55 @@ public class BitUtil {
         v++;
         return v;
     }
+
+    /**
+     * Transposes BitSet matrix to convert between taxa and site optimized
+     * alignments.
+     *
+     * @param matrix original bit set matrix
+     * @param numDataRows number of data rows (num alleles + rare?)
+     * @param numRows number of rows (either sites or taxa)
+     * @param numColumns number of columns (either sites or taxa)
+     *
+     * @return transposed matrix
+     */
+    public static BitSet[][] transpose(BitSet[][] matrix, int numDataRows, int numRows, int numColumns) {
+
+        if (matrix.length != numDataRows) {
+            throw new IllegalArgumentException("BitUtil: transpose: number of data rows: " + numDataRows + " should equal number rows in matrix: " + matrix.length);
+        }
+
+        if (matrix[0].length != numRows) {
+            throw new IllegalArgumentException("BitUtil: transpose: number of rows: " + numRows + " should equal number rows in matrix: " + matrix[0].length);
+            //throw new IllegalArgumentException("BitUtil: transpose: number words required to hold num columns: " + numColumns + " should equal number columns in matrix: " + matrix[0].length);
+        }
+
+        if (matrix[0][0].getNumWords() != OpenBitSet.bits2words(numColumns)) {
+            throw new IllegalArgumentException("BitUtil: transpose: number of words in matrix: " + matrix[0][0].getNumWords() + " should equal number words required by number columns: " + OpenBitSet.bits2words(numColumns));
+        }
+
+        int numResultRows = numColumns;
+        int numResultColumns = numRows;
+
+        BitSet[][] result = new BitSet[numDataRows][numResultRows];
+
+        for (int d = 0; d < numDataRows; d++) {
+            for (int r = 0; r < numResultRows; r++) {
+                result[d][r] = new OpenBitSet(numResultColumns);
+            }
+        }
+
+        for (int d = 0; d < numDataRows; d++) {
+            for (int c = 0; c < numResultColumns; c++) {
+                for (int r = 0; r < numResultRows; r++) {
+                    if (matrix[d][c].fastGet(r)) {
+                        result[d][r].fastSet(c);
+                    }
+                }
+            }
+        }
+
+        return result;
+
+    }
 }
