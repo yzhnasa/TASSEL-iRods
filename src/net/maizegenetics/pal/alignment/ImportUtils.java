@@ -56,26 +56,12 @@ public class ImportUtils {
         List<Integer> lociOffsets = new ArrayList<Integer>();
 
         long currentTime = System.currentTimeMillis();
-        int numSites = -1;
-        BufferedReader reader = null;
-        try {
-            reader = Utils.getBufferedReader(filename, 1000000);
-            while (reader.readLine() != null) {
-                numSites++;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Problem creating Alignment: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
-        } finally {
-            try {
-                reader.close();
-            } catch (Exception ex) {
-                // do nothing
-            }
-        }
+        int numSites = Utils.getNumberLines(filename) - 1;
+        myLogger.info("readFromHapmap: Number of Sites: " + numSites);
+
         long prevTime = currentTime;
         currentTime = System.currentTimeMillis();
-        System.out.println("Time to count lines: " + ((currentTime - prevTime) / 1000));
+        myLogger.info("readFromHapmap: Time to count lines: " + ((currentTime - prevTime) / 1000));
 
 
         BufferedReader fileIn = null;
@@ -138,7 +124,7 @@ public class ImportUtils {
                 }
 
                 if (position < prevPosition) {
-                    throw new IllegalStateException("Sites are not properly sorted for chromosome: " + currLocus + " at " + position + " and " + prevPosition);
+                    throw new IllegalStateException("ImportUtils: readFromHapmap: Sites are not properly sorted for chromosome: " + currLocus + " at " + position + " and " + prevPosition);
                 }
 
                 count++;
@@ -174,7 +160,7 @@ public class ImportUtils {
 
             prevTime = currentTime;
             currentTime = System.currentTimeMillis();
-            System.out.println("Time to read file: " + ((currentTime - prevTime) / 1000));
+            myLogger.info("readFromHapmap: Time to read file: " + ((currentTime - prevTime) / 1000));
 
             String[] taxaNames = new String[numTaxa];
             System.arraycopy(header, NUM_HAPMAP_NON_TAXA_HEADERS, taxaNames, 0, numTaxa);
@@ -196,12 +182,12 @@ public class ImportUtils {
 
             prevTime = currentTime;
             currentTime = System.currentTimeMillis();
-            System.out.println("Time to create Alignment: " + ((currentTime - prevTime) / 1000));
+            myLogger.info("readFromHapmap: Time to create Alignment: " + ((currentTime - prevTime) / 1000));
 
             return result;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new IllegalArgumentException("Problem creating Alignment: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
+            throw new IllegalArgumentException("ImportUtils: readFromHapmap: Problem creating Alignment: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
         } finally {
             try {
                 fileIn.close();

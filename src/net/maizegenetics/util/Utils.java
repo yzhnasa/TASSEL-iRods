@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
@@ -287,11 +288,11 @@ public final class Utils {
 
     /**
      * Adds default suffix if not already one of the possible suffixes.
-     * 
+     *
      * @param filename filename
      * @param defaultSuffix default suffix
      * @param possible possible suffixes
-     * 
+     *
      * @return filename with suffix
      */
     public static String addSuffixIfNeeded(String filename, String defaultSuffix, String[] possible) {
@@ -405,5 +406,71 @@ public final class Utils {
      */
     public static long getMaxHeapSizeMB() {
         return Runtime.getRuntime().maxMemory() / 1048576l;
+    }
+
+    /**
+     * Gets input stream for given file.
+     *
+     * @param filename file name
+     *
+     * @return input stream
+     */
+    public static InputStream getInputStream(String filename) {
+
+        try {
+            if (filename.startsWith("http")) {
+                if (filename.endsWith(".gz")) {
+                    return new GZIPInputStream((new URL(filename)).openStream());
+                } else {
+                    return (new URL(filename)).openStream();
+                }
+            } else {
+                if (filename.endsWith(".gz")) {
+                    return new GZIPInputStream(new FileInputStream(filename));
+                } else {
+                    return new FileInputStream(filename);
+                }
+            }
+        } catch (Exception e) {
+            myLogger.error("getInputStream: Error getting reader for: " + filename);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Return number of lines in given file.
+     * 
+     * @param filename file name
+     * 
+     * @return number of lines 
+     */
+    public static int getNumberLines(String filename) {
+
+        InputStream input = getInputStream(filename);
+        try {
+
+            byte[] buffer = new byte[1024];
+            int result = 0;
+            int numChrsRead = 0;
+            while ((numChrsRead = input.read(buffer)) != -1) {
+                for (int i = 0; i < numChrsRead; ++i) {
+                    if (buffer[i] == '\n') {
+                        ++result;
+                    }
+                }
+            }
+            return result;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Utils: getNumberLines: Problem getting number lines: " + filename);
+        } finally {
+            try {
+                input.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
     }
 }
