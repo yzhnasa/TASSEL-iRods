@@ -15,6 +15,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 
 import java.util.Random;
+import net.maizegenetics.util.BitUtil;
 
 /**
  * A bit implementation of TagByTaxa, so only presence or absence of a tags is known.
@@ -92,7 +93,7 @@ public class TagsByTaxaBitFileMap extends AbstractTagsByTaxa {
             dataStartPos = theRAF.getFilePointer();
             System.out.printf("nBytes to end of taxa names: %d %n", dataStartPos);
             distStartPos = dataStartPos + ((long) tagLengthInLong * 8L) + 1L;  // "L" casts the number preceding it as a long (rather than an int)
-            numLongPerTaxaDist = OpenBitSet.bits2words(taxaNum);
+            numLongPerTaxaDist = BitUtil.bits2words(taxaNum);
             byteLenRow = 1 + (8 * (tagLengthInLong + numLongPerTaxaDist));
             byte[] b = new byte[(int) byteLenRow];
             for (int i = 0; i < tagNum; i++) {
@@ -133,7 +134,7 @@ public class TagsByTaxaBitFileMap extends AbstractTagsByTaxa {
             dataStartPos = theRAF.getFilePointer();
             System.out.printf("nBytes to end of taxa names: %d %n", dataStartPos);
             distStartPos = dataStartPos + ((long) tagLengthInLong * 8L) + 1L;  // "L" casts the number preceding it as a long (rather than an int)
-            numLongPerTaxaDist = OpenBitSet.bits2words(taxaNum);
+            numLongPerTaxaDist = BitUtil.bits2words(taxaNum);
             byteLenRow = 1 + (8 * (tagLengthInLong + numLongPerTaxaDist));
             byte[] b = new byte[(int) byteLenRow];
             for (int i = 0; i < tagNum; i++) {

@@ -76,7 +76,7 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
      * @param numBits
      */
     public OpenBitSet(long numBits) {
-        myBits = new long[bits2words(numBits)];
+        myBits = new long[BitUtil.bits2words(numBits)];
         myNumWords = myBits.length;
     }
 
@@ -809,7 +809,7 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
      * necessary. getNumWords() is unchanged by this call.
      */
     public void ensureCapacity(long numBits) {
-        ensureCapacityWords(bits2words(numBits));
+        ensureCapacityWords(BitUtil.bits2words(numBits));
     }
 
     /**
@@ -822,13 +822,6 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
             idx--;
         }
         myNumWords = idx + 1;
-    }
-
-    /**
-     * returns the number of 64 bit words it would take to hold numBits
-     */
-    public static int bits2words(long numBits) {
-        return (int) (((numBits - 1) >>> 6) + 1);
     }
 
     public int indexOfNthSetBit(int n) {

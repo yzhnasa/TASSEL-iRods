@@ -18,6 +18,7 @@ import java.io.FileWriter;
 
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.util.OpenBitSet;
 
@@ -344,7 +345,7 @@ public class TagsByTaxaUtils {
                 System.exit(0);
                 break;
         }
-        longsInBitset = OpenBitSet.bits2words(numTaxa);
+        longsInBitset = BitUtil.bits2words(numTaxa);
         currRecord.sequence = new long[tagLengthInLong];
         currRecord.bitDistribution = new long[longsInBitset];
     }

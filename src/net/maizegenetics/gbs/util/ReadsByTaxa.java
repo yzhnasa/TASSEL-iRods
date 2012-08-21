@@ -15,6 +15,7 @@ import java.io.FileReader;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import net.maizegenetics.util.BitUtil;
 
 import net.maizegenetics.util.OpenBitSet;
 
@@ -167,7 +168,7 @@ public class ReadsByTaxa implements Reads {
                 taxaNames[t] = rw.readUTF();
             }
 
-            int numberOfLongs = OpenBitSet.bits2words(taxaNum);
+            int numberOfLongs = BitUtil.bits2words(taxaNum);
             long[] distInLong = new long[numberOfLongs];
             OpenBitSet obs;
             obs = new OpenBitSet(distInLong, taxaNum);

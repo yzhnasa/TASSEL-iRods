@@ -894,8 +894,8 @@ public class BitUtil {
             //throw new IllegalArgumentException("BitUtil: transpose: number words required to hold num columns: " + numColumns + " should equal number columns in matrix: " + matrix[0].length);
         }
 
-        if (matrix[0][0].getNumWords() != OpenBitSet.bits2words(numColumns)) {
-            throw new IllegalArgumentException("BitUtil: transpose: number of words in matrix: " + matrix[0][0].getNumWords() + " should equal number words required by number columns: " + OpenBitSet.bits2words(numColumns));
+        if (matrix[0][0].getNumWords() != bits2words(numColumns)) {
+            throw new IllegalArgumentException("BitUtil: transpose: number of words in matrix: " + matrix[0][0].getNumWords() + " should equal number words required by number columns: " + bits2words(numColumns));
         }
 
         int numResultRows = numColumns;
@@ -921,5 +921,12 @@ public class BitUtil {
 
         return result;
 
+    }
+
+    /**
+     * returns the number of 64 bit words it would take to hold numBits
+     */
+    public static int bits2words(long numBits) {
+        return (int) (((numBits - 1) >>> 6) + 1);
     }
 }

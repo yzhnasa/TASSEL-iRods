@@ -6,6 +6,7 @@ package net.maizegenetics.pal.alignment;
 import java.util.LinkedList;
 import java.util.Queue;
 import net.maizegenetics.baseplugins.FileLoadPlugin;
+import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 
 /**
@@ -138,7 +139,7 @@ public class ProcessLineOfHapmap implements Runnable {
 
     private void setSBits(byte[][] data) {
 
-        int numLongs = OpenBitSet.bits2words(myNumTaxa);
+        int numLongs = BitUtil.bits2words(myNumTaxa);
         for (int s = 0; s < myNumSitesToProcess; s++) {
 
             long[][] bits = new long[myNumDataRows][numLongs];
