@@ -891,7 +891,6 @@ public class BitUtil {
 
         if (matrix[0].length != numRows) {
             throw new IllegalArgumentException("BitUtil: transpose: number of rows: " + numRows + " should equal number rows in matrix: " + matrix[0].length);
-            //throw new IllegalArgumentException("BitUtil: transpose: number words required to hold num columns: " + numColumns + " should equal number columns in matrix: " + matrix[0].length);
         }
 
         if (matrix[0][0].getNumWords() != bits2words(numColumns)) {
