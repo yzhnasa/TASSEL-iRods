@@ -168,7 +168,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             //LinkageDisequilibrium theLD = new LinkageDisequilibrium(paf, true, 100,
             //        minCntForLD, windowSize, LinkageDisequilibrium.testDesign.SlidingWindow);
 
-            LinkageDisequilibrium theLD = new LinkageDisequilibrium(paf, 100, windowSize, true,
+            LinkageDisequilibrium theLD = new LinkageDisequilibrium(paf, 100, windowSize,
                     LinkageDisequilibrium.testDesign.SlidingWindow, -1, this, false, -1, null);
             theLD.run();
             for (int i = 0; i < paf.getSiteCount(); i++) {

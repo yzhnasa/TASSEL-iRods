@@ -107,7 +107,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param windowSize The size of the LD window, determined by user.
      * @param myTestSite
      */
-    public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, boolean rapidPermute, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList) {
+    public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList) {
         myAlignment = alignment;
         if (myAlignment instanceof SBitAlignment) {
             mySBitAlignment = (SBitAlignment) myAlignment;
