@@ -107,7 +107,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param windowSize The size of the LD window, determined by user.
      * @param myTestSite
      */
-    public LinkageDisequilibrium(Alignment alignment, int numberOfPermutations, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList) {
+    public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList) {
         myAlignment = alignment;
         if (myAlignment instanceof SBitAlignment) {
             mySBitAlignment = (SBitAlignment) myAlignment;
@@ -503,7 +503,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         int n = myAlignment.getSiteCount();
         int w = myWindowSize;
 
-        if ( myCurrDesign == testDesign.SlidingWindow && n > myWindowSize+1 && index >= myWindowSize*(myWindowSize+1)/(double)2) {
+        if ( myCurrDesign == testDesign.SlidingWindow && n > w+1 && index >= w*(w+1)/(double)2) {
             col = (int)((row-1-(double)w*(w+1)/2-w*(row-w)+1+index));
         } else if ( myCurrDesign == testDesign.SiteByAll ) {
             if ( index < myTestSite ) {

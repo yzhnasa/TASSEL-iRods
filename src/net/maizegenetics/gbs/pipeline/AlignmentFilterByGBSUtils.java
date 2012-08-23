@@ -261,7 +261,7 @@ public class AlignmentFilterByGBSUtils {
         //LinkageDisequilibrium theLD = new LinkageDisequilibrium(a, true, 100,
         //        minCnt, windowSize, LinkageDisequilibrium.testDesign.SlidingWindow);
 
-        LinkageDisequilibrium theLD = new LinkageDisequilibrium(a, 100, windowSize,
+        LinkageDisequilibrium theLD = new LinkageDisequilibrium(a, windowSize,
                 LinkageDisequilibrium.testDesign.SlidingWindow, -1, null, false, -1, null);
         theLD.run();
         for (int i = 0; i < a.getSiteCount(); i++) {
