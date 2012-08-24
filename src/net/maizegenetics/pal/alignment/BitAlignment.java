@@ -249,48 +249,6 @@ public class BitAlignment extends AbstractAlignment {
         }
     }
 
-    private void loadXXXSBitAlleles(Alignment a) {
-
-        if (mySBitData != null) {
-            return;
-        }
-
-        myNumDataRows = myMaxNumAlleles;
-        if (retainsRareAlleles()) {
-            myNumDataRows++;
-        }
-        int numSeqs = getSequenceCount();
-        BitSet[][] temp = new OpenBitSet[myNumDataRows][myNumSites];
-        for (int al = 0; al < myNumDataRows; al++) {
-            for (int s = 0; s < myNumSites; s++) {
-                temp[al][s] = new OpenBitSet(numSeqs);
-            }
-        }
-        for (int s = 0; s < myNumSites; s++) {
-            for (int t = 0; t < numSeqs; t++) {
-                byte[] cb = a.getBaseArray(t, s);
-                for (int i = 0; i < 2; i++) {
-                    if (cb[i] != Alignment.UNKNOWN_ALLELE) {
-                        boolean isRare = true;
-                        for (int j = 0; j < myMaxNumAlleles; j++) {
-                            if (cb[i] == myAlleles[s][j]) {
-                                temp[j][s].fastSet(t);
-                                isRare = false;
-                                break;
-                            }
-                        }
-                        if (isRare && retainsRareAlleles()) {
-                            temp[myMaxNumAlleles][s].fastSet(t);
-                        }
-                    }
-                }
-            }
-        }
-
-        mySBitData = temp;
-
-    }
-
     private void loadSBitAlleles(Alignment a, ProgressListener listener) {
 
         if (mySBitData != null) {
