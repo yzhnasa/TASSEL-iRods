@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import net.maizegenetics.util.ProgressListener;
 
 /**
  *
@@ -23,15 +24,14 @@ public class AlignmentUtils {
     }
 
     /**
-     * This sorts alleles by frequency.  Each cell in the given
-     * array contains a diploid value which is separated
-     * and counted individually.  Resulting double dimension array
-     * holds alleles (bytes) in result[0].  And the counts
-     * are in result[1]. Counts haploid values twice and diploid
-     * values once. Higher ploids are not supported.
-     * 
+     * This sorts alleles by frequency. Each cell in the given array contains a
+     * diploid value which is separated and counted individually. Resulting
+     * double dimension array holds alleles (bytes) in result[0]. And the counts
+     * are in result[1]. Counts haploid values twice and diploid values once.
+     * Higher ploids are not supported.
+     *
      * @param data data
-     * 
+     *
      * @return alleles and counts
      */
     public static int[][] getAllelesSortedByFrequency(byte[] data) {
@@ -93,16 +93,15 @@ public class AlignmentUtils {
     }
 
     /**
-     * This sorts alleles in a given site by frequency.  Each cell in the given
-     * array contains a diploid value which is separated
-     * and counted individually.  Resulting double dimension array
-     * holds alleles (bytes) in result[0].  And the counts
-     * are in result[1]. Counts haploid values twice and diploid
-     * values once. Higher ploids are not supported.
-     * 
+     * This sorts alleles in a given site by frequency. Each cell in the given
+     * array contains a diploid value which is separated and counted
+     * individually. Resulting double dimension array holds alleles (bytes) in
+     * result[0]. And the counts are in result[1]. Counts haploid values twice
+     * and diploid values once. Higher ploids are not supported.
+     *
      * @param data data
      * @param site site
-     * 
+     *
      * @return alleles and counts
      */
     public static int[][] getAllelesSortedByFrequency(byte[][] data, int site) {
@@ -366,12 +365,15 @@ public class AlignmentUtils {
     }
 
     /**
-     * remove sites based on minimum frequency (the count of good bases, INCLUDING GAPS)
-     * and based on the proportion of good alleles (including gaps) different from consensus
+     * remove sites based on minimum frequency (the count of good bases,
+     * INCLUDING GAPS) and based on the proportion of good alleles (including
+     * gaps) different from consensus
      *
      * @param aa the AnnotatedAlignment to filter
-     * @param minimumProportion minimum proportion of sites different from the consensus
-     * @param minimumCount      minimum number of sequences with a good bases (not N or ?), where GAP IS CONSIDERED A GOOD BASE
+     * @param minimumProportion minimum proportion of sites different from the
+     * consensus
+     * @param minimumCount minimum number of sequences with a good bases (not N
+     * or ?), where GAP IS CONSIDERED A GOOD BASE
      */
     public static Alignment removeSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
         int[] includeSites = getIncludedSitesBasedOnFreqIgnoreMissing(aa, minimumProportion, maximumProportion, minimumCount);
@@ -381,13 +383,16 @@ public class AlignmentUtils {
 
     /**
      * get sites to be included based on minimum frequency (the count of good
-     * bases, INCLUDING GAPS) and based on the proportion of good sites (INCLUDING
-     * GAPS) different from consensus
+     * bases, INCLUDING GAPS) and based on the proportion of good sites
+     * (INCLUDING GAPS) different from consensus
      *
      * @param aa the AnnotatedAlignment to filter
-     * @param minimumProportion minimum proportion of sites different from the consensus
-     * @param maximumProportion maximum proportion of sites different from the consensus
-     * @param minimumCount      minimum number of sequences with a good base or a gap (but not N or ?)
+     * @param minimumProportion minimum proportion of sites different from the
+     * consensus
+     * @param maximumProportion maximum proportion of sites different from the
+     * consensus
+     * @param minimumCount minimum number of sequences with a good base or a gap
+     * (but not N or ?)
      */
     public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
 
@@ -419,12 +424,12 @@ public class AlignmentUtils {
     }
 
     /**
-     * Remove sites based on site position (excluded sites are <firstSite and >lastSite)
-     * This not effect any prior exclusions.
-     * 
+     * Remove sites based on site position (excluded sites are <firstSite and
+     * >lastSite) This not effect any prior exclusions.
+     *
      * @param aa the AnnotatedAlignment to filter
      * @param firstSite first site to keep in the range
-     * @param lastSite  last site to keep in the range
+     * @param lastSite last site to keep in the range
      */
     public static Alignment removeSitesOutsideRange(Alignment aa, int firstSite, int lastSite) {
         if ((firstSite < 0) || (firstSite > lastSite)) {
@@ -437,12 +442,11 @@ public class AlignmentUtils {
     }
 
     /**
-     * Returns whether diploid allele values are heterozygous.
-     * First 4 bits in byte is one allele value.  Second 4 bits
-     * is other allele value.
-     * 
+     * Returns whether diploid allele values are heterozygous. First 4 bits in
+     * byte is one allele value. Second 4 bits is other allele value.
+     *
      * @param diploidAllele alleles
-     * 
+     *
      * @return true if allele values different; false if values the same.
      */
     public static boolean isHeterozygous(byte diploidAllele) {
@@ -477,11 +481,11 @@ public class AlignmentUtils {
 
     /**
      * Combines two allele values into one diploid value.
-     * 
+     *
      * @param a allele 1
      * @param b allele 2
-     * 
-     * @return diploid value 
+     *
+     * @return diploid value
      */
     public static byte getDiploidValue(byte a, byte b) {
         return (byte) ((a << 4) | b);
@@ -489,9 +493,9 @@ public class AlignmentUtils {
 
     /**
      * Separates diploid allele value into it's two values.
-     * 
+     *
      * @param diploidAllele diploid value
-     * 
+     *
      * @return separated allele values
      */
     public static byte[] getDiploidValues(byte diploidAllele) {
@@ -499,5 +503,77 @@ public class AlignmentUtils {
         result[0] = (byte) ((diploidAllele >>> 4) & 0xf);
         result[1] = (byte) (diploidAllele & 0xf);
         return result;
+    }
+
+    /**
+     * Returns an Alignment that's optimized for site operations. It may return
+     * the given alignment if nothing needs to be done.
+     *
+     * @param alignment alignment
+     *
+     * @return optimized alignment
+     */
+    public static Alignment optimizeForSites(Alignment alignment) {
+        return optimizeForSites(alignment, null);
+    }
+
+    /**
+     * Returns an Alignment that's optimized for site operations. It may return
+     * the given alignment if nothing needs to be done.
+     *
+     * @param alignment alignment
+     * @param listener progress listener
+     *
+     * @return optimized alignment
+     */
+    public static Alignment optimizeForSites(Alignment alignment, ProgressListener listener) {
+
+        Alignment result;
+
+        try {
+            alignment.optimizeForSites(listener);
+            result = alignment;
+        } catch (UnsupportedOperationException e) {
+            result = BitAlignment.getInstance(alignment, true);
+        }
+
+        return result;
+
+    }
+
+    /**
+     * Returns an Alignment that's optimized for taxa operations. It may return
+     * the given alignment if nothing needs to be done.
+     *
+     * @param alignment alignment
+     *
+     * @return optimized alignment
+     */
+    public static Alignment optimizeForTaxa(Alignment alignment) {
+        return optimizeForTaxa(alignment, null);
+    }
+
+    /**
+     * Returns an Alignment that's optimized for taxa operations. It may return
+     * the given alignment if nothing needs to be done.
+     *
+     * @param alignment alignment
+     * @param listener progress listener
+     *
+     * @return optimized alignment
+     */
+    public static Alignment optimizeForTaxa(Alignment alignment, ProgressListener listener) {
+
+        Alignment result;
+
+        try {
+            alignment.optimizeForTaxa(listener);
+            result = alignment;
+        } catch (UnsupportedOperationException e) {
+            result = BitAlignment.getInstance(alignment, false);
+        }
+
+        return result;
+
     }
 }
