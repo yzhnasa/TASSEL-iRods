@@ -20,11 +20,9 @@ import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.UnmodifiableBitSet;
 
 /**
- * This data alignment is optimized for operations
- * involving lots of SNPs from a taxon - imputation, genetic distance, kinship, diversity, etc.
- * It is not optimized for LD or association mapping.
+ * This data alignment reads from HDF5 files a native SBit alignment
  *
- * @author terry
+ * @author Ed & terry
  */
 public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
@@ -559,7 +557,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
     }
     
     public static void main(String[] args) {
-        String infile="/Users/edbuckler/SolexaAnal/GBS/build20120701/temp_Ed/h1kJuly_2012_Build.BPEC.Highf.c10.hmp.txt";
+        String infile="/Users/edbuckler/SolexaAnal/GBS/build20120701/temp_Ed/h10kJuly_2012_Build.BPEC.Highf.c10.hmp.txt";
         String outfile="/Users/edbuckler/SolexaAnal/GBS/build20120701/test/h1kJuly_2012_Build.BPEC.Highf.c10.hmp.h5";
         SBitAlignment a=(SBitAlignment)ImportUtils.readFromHapmap(infile, null);
         SBitAlignmentNucleotideHDF5.createFile(a, outfile);
