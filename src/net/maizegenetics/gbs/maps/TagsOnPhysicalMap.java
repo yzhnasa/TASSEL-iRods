@@ -41,7 +41,7 @@ import net.maizegenetics.util.MultiMemberGZIPInputStream;
  *
  * User: ed
  */
-public class TagsOnPhysicalMap extends AbstractTags {
+public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     public final static byte byteMissing = Byte.MIN_VALUE;
     public final static int intMissing = Integer.MIN_VALUE;
@@ -177,7 +177,6 @@ public class TagsOnPhysicalMap extends AbstractTags {
             indicesOfSortByPosition[i] = i;
         }
         Swapper swapperPos = new Swapper() {
-
             public void swap(int a, int b) {
                 int t1;
                 t1 = indicesOfSortByPosition[a];
@@ -518,10 +517,12 @@ public class TagsOnPhysicalMap extends AbstractTags {
 
     }
 
+    @Override
     public int getReadIndexForPositionIndex(int posIndex) {
         return indicesOfSortByPosition[posIndex];
     }
 
+    @Override
     public int[] getPositionArray(int index) {
         int[] r = {chromosome[index], strand[index], startPosition[index]};
         return r;
@@ -577,38 +578,47 @@ public class TagsOnPhysicalMap extends AbstractTags {
         }
     }
 
+    @Override
     public int getSize() {
         return tagNum;
     }
 
+    @Override
     public byte getMultiMaps(int index) {
         return multimaps[index];
     }
 
+    @Override
     public int getChromosome(int index) {
         return chromosome[index];
     }
 
+    @Override
     public int getStartPosition(int index) {
         return startPosition[index];
     }
 
+    @Override
     public int getEndPosition(int index) {
         return endPosition[index];
     }
 
+    @Override
     public byte getDivergence(int index) {
         return divergence[index];
     }
 
+    @Override
     public byte getMapP(int index) {
         return mapP[index];
     }
 
+    @Override
     public byte getDcoP(int index) {
         return dcoP[index];
     }
 
+    @Override
     public void setChromoPosition(int index, int chromosome, byte strand, int positionMin,
             int positionMax) {
         this.chromosome[index] = chromosome;
@@ -617,14 +627,17 @@ public class TagsOnPhysicalMap extends AbstractTags {
         this.endPosition[index] = positionMax;
     }
 
+    @Override
     public void setDivergence(int index, byte divergence) {
         this.divergence[index] = divergence;
     }
 
+    @Override
     public void setMapP(int index, byte mapP) {
         this.mapP[index] = mapP;
     }
 
+    @Override
     public void setMapP(int index, double mapP) {
         if (Double.isInfinite(mapP)) {
             this.mapP[index] = Byte.MAX_VALUE;
@@ -641,6 +654,7 @@ public class TagsOnPhysicalMap extends AbstractTags {
         this.mapP[index] = (byte) (-Math.round(Math.log10(mapP)));
     }
 
+    @Override
     public int addVariant(int tagIndex, byte offset, byte base) {
         for (int i = 0; i < maxVariants; i++) {
             if ((variantPosOff[i][tagIndex] <= 0) && (variantDef[i][tagIndex] <= 0)) {
@@ -965,6 +979,7 @@ public class TagsOnPhysicalMap extends AbstractTags {
 
     /**Returns an array whose <i>values</i> are the distinct chromosomes
     in this file, as stored in the chromosome[] array.  The indices are arbitrary. */
+    @Override
     public int[] getChromosomes() {
         ArrayList<Integer> chrs = new ArrayList<Integer>();
         for (int i = 0; i < chromosome.length; i++) {
@@ -980,6 +995,7 @@ public class TagsOnPhysicalMap extends AbstractTags {
         return result;
     }
 
+    @Override
     public Locus[] getLoci() {
         int[] chrs = getChromosomes();
         Locus[] result = new Locus[chrs.length];
@@ -990,6 +1006,7 @@ public class TagsOnPhysicalMap extends AbstractTags {
         return result;
     }
 
+    @Override
     public Locus getLocus(int tagIndex) {
         if (chromosome[tagIndex] == intMissing) {
             return null;
@@ -999,32 +1016,39 @@ public class TagsOnPhysicalMap extends AbstractTags {
 
     /** Returns an array containing all variant position offsets for the
     tag at the supplied index.*/
+    @Override
     public byte[] getVariantPosOffArray(int tagIndex) {
         return variantPosOff[tagIndex];
     }
 
     /** Returns an array containing all variant definitions for the
     tag at the supplied index.*/
+    @Override
     public byte[] getVariantDefArray(int tagIndex) {
         return variantDef[tagIndex];
     }
 
+    @Override
     public byte getVariantDef(int tagIndex, int variantIndex) {
         return variantDef[variantIndex][tagIndex];
     }
 
+    @Override
     public void setVariantDef(int tagIndex, int variantIndex, byte def) {
         variantDef[variantIndex][tagIndex] = def;
     }
 
+    @Override
     public byte getVariantPosOff(int tagIndex, int variantIndex) {
         return variantPosOff[variantIndex][tagIndex];
     }
 
+    @Override
     public void setVariantPosOff(int tagIndex, int variantIndex, byte offset) {
         variantPosOff[variantIndex][tagIndex] = offset;
     }
 
+    @Override
     public byte getStrand(int tagIndex) {
         return strand[tagIndex];
     }
