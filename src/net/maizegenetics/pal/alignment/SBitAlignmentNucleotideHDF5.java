@@ -9,9 +9,6 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import java.io.File;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 
@@ -30,7 +27,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     private OpenBitSet[] myData;
     private int myNumDataRows;
-    IHDF5Reader h5=null;
+    private IHDF5Reader h5=null;
     private int cachedRow=0;
     private int[] myVariableSites;
     private int myNumWords=0;
@@ -39,7 +36,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     
 
-    public static void createFile(SBitAlignment a, String newHDF5file) {
+    public static void createFile(BitAlignment a, String newHDF5file) {
         //super(a.getIdGroup());
         IHDF5WriterConfigurator  config = HDF5Factory.configure(new File(newHDF5file));
         System.out.println("Creating HDF5 file: "+newHDF5file);
@@ -561,7 +558,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
     public static void main(String[] args) {
         String infile="/Users/edbuckler/SolexaAnal/GBS/build20120701/temp_Ed/h1kJuly_2012_Build.BPEC.Highf.c10.hmp.txt";
         String outfile="/Users/edbuckler/SolexaAnal/GBS/build20120701/test/h1kJuly_2012_Build.BPEC.Highf.c10.hmp.h5";
-        SBitAlignment a=(SBitAlignment)ImportUtils.readFromHapmap(infile, null);
+        BitAlignment a=(BitAlignment)ImportUtils.readFromHapmap(infile, null);
         SBitAlignmentNucleotideHDF5.createFile(a, outfile);
         SBitAlignmentNucleotideHDF5 sbah2=SBitAlignmentNucleotideHDF5.getInstance(outfile,"10");
         String outHap="/Users/edbuckler/SolexaAnal/GBS/build20120701/test/rth1kJuly_2012_Build.BPEC.Highf.c10.hmp.txt";

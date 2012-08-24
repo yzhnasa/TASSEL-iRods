@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
-import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

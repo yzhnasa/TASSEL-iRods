@@ -11,6 +11,7 @@ import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.ProgressListener;
 
 /**
  * All taxa and site filtering should be controlled through this class. It
@@ -976,6 +977,24 @@ public class FilterAlignment extends AbstractAlignment {
             return true;
         } else {
             return false;
+        }
+    }
+    
+    @Override
+    public void optimizeForTaxa(ProgressListener listener) {
+        if (!myIsSiteFilter && !myIsSiteFilterByRange) {
+            myBaseAlignment.optimizeForTaxa(listener);
+        } else {
+            throw new UnsupportedOperationException("FilterAlignment: optimizeForTaxa: Sites have been filtered.  Can't optimize for taxa.  Must create a new alignment.");
+        }
+    }
+
+    @Override
+    public void optimizeForSites(ProgressListener listener) {
+        if (!myIsTaxaFilter) {
+            myBaseAlignment.optimizeForSites(listener);
+        } else {
+            throw new UnsupportedOperationException("FilterAlignment: optimizeForSites: Taxa have been filtered.  Can't optimize for sites.  Must create a new alignment.");
         }
     }
 }

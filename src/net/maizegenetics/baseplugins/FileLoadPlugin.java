@@ -332,7 +332,7 @@ public class FileLoadPlugin extends AbstractPlugin {
                     break;
                 }
                 case Fasta: {
-                    result = ImportUtils.readFasta(inFile);
+                    result = ImportUtils.readFasta(inFile, myIsSBit);
                     break;
                 }
                 case SqrMatrix: {

@@ -72,7 +72,7 @@ public class ReadPolymorphismUtils {
         String[] markers = new String[nMarkers];
         markerNames.toArray(markers);
         Locus[] myLoci = new Locus[]{new Locus("Unknown", "0", 0, nMarkers, null, null)};
-        return SBitAlignment.getInstance(new SimpleIdGroup(taxa), myData, null, null, null, 14, myLoci, new int[]{0}, markers, true); 
+        return BitAlignment.getInstance(new SimpleIdGroup(taxa), myData, null, null, null, 14, myLoci, new int[]{0}, markers, true, true); 
     }
 
     public static GeneticMap readGeneticMapFile(String filename) throws IOException {

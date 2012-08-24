@@ -27,7 +27,7 @@ import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.alignment.SBitAlignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -656,12 +656,12 @@ public class TagsToSNPByAlignmentMTPlugin extends AbstractPlugin {
             Alignment aa = null;
             if (refTagWithGaps) {
                 //aa = SimpleAlignment.getInstance(new SimpleIdGroup(names), aseqs, new IUPACNucleotides(), positions);
-                aa = SBitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, false);
+                aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, false, true);
                 //public static SBitAlignment getNucleotideInstance(IdGroup idGroup, String[] data, GeneticMap map, byte[] reference, int[] variableSites,
                 //int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
             } else {
                 //aa = SimpleAlignment.getInstance(new SimpleIdGroup(names), aseqs, new IUPACNucleotides());
-                aa = SBitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, false);
+                aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, Alignment.DEFAULT_MAX_NUM_ALLELES, null, null, null, false, true);
             }
             //Alignment faa = AnnotatedAlignmentUtils.removeConstantSitesIgnoreMissing(aa);
             Alignment faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);

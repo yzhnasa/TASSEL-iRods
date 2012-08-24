@@ -1,5 +1,5 @@
 /*
- * TBitTextAlignment
+ * BitTextAlignment
  */
 package net.maizegenetics.pal.alignment;
 
@@ -9,14 +9,14 @@ import net.maizegenetics.pal.ids.IdGroup;
  *
  * @author terry
  */
-public class TBitTextAlignment extends TBitAlignment {
+public class BitTextAlignment extends BitAlignment {
 
-    protected TBitTextAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
-        super(a, maxNumAlleles, retainRareAlleles);
+    protected BitTextAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isSBit) {
+        super(a, maxNumAlleles, retainRareAlleles, isSBit);
     }
 
-    protected TBitTextAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
-        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+    protected BitTextAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
+        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
     }
 
     @Override
@@ -35,7 +35,8 @@ public class TBitTextAlignment extends TBitAlignment {
     public String getBaseAsString(int site, byte value) {
         return myAlleleStates[site][value];
     }
-    
+
+    @Override
     public String getDiploidAsString(int site, byte value) {
         return myAlleleStates[site][(value >>> 4) & 0xf] + ":" + myAlleleStates[site][value & 0xf];
     }

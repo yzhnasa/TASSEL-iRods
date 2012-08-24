@@ -2,16 +2,14 @@ package net.maizegenetics.gwas.imputation;
 
 import java.awt.Frame;
 import java.util.List;
-
 import javax.swing.ImageIcon;
-
-import org.apache.log4j.Logger;
-
-import net.maizegenetics.pal.alignment.TBitAlignment;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
+import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
+import org.apache.log4j.Logger;
 
 public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 
@@ -28,12 +26,12 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 		List<Datum> theData = input.getDataOfType(PopulationData.class);
 		for (Datum data:theData) {
 			PopulationData family = (PopulationData) data.getData();
-			TBitAlignment tba;
-			if (family.imputed instanceof TBitAlignment) {
-				tba = (TBitAlignment) family.imputed;
-			} else {
-				tba = TBitAlignment.getInstance(family.imputed);
-			}
+			Alignment tba = ConvertSBitTBitPlugin.convertAlignment(family.imputed, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, this);
+			//if (family.imputed instanceof TBitAlignment) {
+			//	tba = (TBitAlignment) family.imputed;
+			//} else {
+			//	tba = TBitAlignment.getInstance(family.imputed);
+			//}
 			
 			double phet;
 			if (family.inbredCoef >= 0 && family.inbredCoef <= 1) {

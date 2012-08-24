@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 import java.util.TreeMap;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
@@ -26,7 +27,7 @@ import net.maizegenetics.util.ProgressListener;
  * @author edbuckler
  */
 public class Expanding64NNImputation {
-    private TBitAlignment ldAlign;
+    private Alignment ldAlign;
     int minSites=256;
     int maxWindow=2048/64;
     double minIdentityDiff=0.01;
@@ -41,8 +42,8 @@ public class Expanding64NNImputation {
     boolean maskAndTest=true;
     ApproxFastChiSquareDistribution fcs=new ApproxFastChiSquareDistribution(1000,200);
 
-    public Expanding64NNImputation(TBitAlignment inldAlign, String exportFile) {
-        this.ldAlign=inldAlign;
+    public Expanding64NNImputation(Alignment inldAlign, String exportFile) {
+        this.ldAlign=ConvertSBitTBitPlugin.convertAlignment(inldAlign, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
         if(maskAndTest) maskSites(300);
         blocks=ldAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
         this.createNull64Share(ldAlign, 500);
@@ -231,7 +232,7 @@ public class Expanding64NNImputation {
         maskSitCnt=cnt;
         mna.clean();
         compareSites(ldAlign);
-        ldAlign=TBitAlignment.getInstance(mna);
+        ldAlign=BitAlignment.getInstance(mna, false);
         compareSites(ldAlign);
         System.out.println("Sites masked");
     }
@@ -291,7 +292,8 @@ public class Expanding64NNImputation {
         return currShare;
     }
 
-    private void createNull64Share(TBitAlignment a, int maxSampling) {
+    private void createNull64Share(Alignment a, int maxSampling) {
+        a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
         System.out.println("Creating the null distribution");
         IBSDistanceMatrix dm=new IBSDistanceMatrix(a,100,null);
         System.out.printf("Distances estimated. Mean:%g %n", dm.meanDistance());
@@ -347,9 +349,10 @@ public class Expanding64NNImputation {
         }
     }
     
-    private void createNull64Share(TBitAlignment a) {
+    private void createNull64Share(Alignment a) {
+        a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
         System.out.println("Creating the SBitAlignment distribution");
-        SBitAlignment sbit=SBitAlignment.getInstance(a);
+        Alignment sbit=BitAlignment.getInstance(a, true);
         System.out.printf("SBitAlignment created %n");
 
         null64ShareProb=new float[blocks][65][66];
@@ -466,21 +469,21 @@ public class Expanding64NNImputation {
             Alignment a=ImportUtils.readFromHapmap(gFile, (ProgressListener)null);
             System.out.println("GBS Map Read");
             if(filterTrue) a=FilterAlignment.getInstance(a, 0, a.getSiteCount()/10);
-            TBitAlignment gbsMap=TBitAlignment.getInstance(a);
+            Alignment gbsMap=BitAlignment.getInstance(a, false);
             
   //          TBitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
             System.out.println("GBS converted and filtered");
     //        SBitAlignment hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
-            SBitAlignment hapMap=(SBitAlignment)ImportUtils.readFromHapmap(hFile, (ProgressListener)null);
+            Alignment hapMap=ImportUtils.readFromHapmap(hFile, true, (ProgressListener)null);
             System.out.println("HapMap Read");
-            hapMap=(SBitAlignment)EdTests.fixHapMapNames(hapMap);  //adds tags so that HapMapNames are recognizable
+            hapMap=EdTests.fixHapMapNames(hapMap);  //adds tags so that HapMapNames are recognizable
             System.out.println("HapMap Names Fixed");
             MutableNucleotideAlignment mna=EdTests.combineAlignments(hapMap, gbsMap);
             System.out.println("HapMap and GBS combined");
             mna.clean();
             ExportUtils.writeToHapmap(mna, false, mFile, '\t', null);
         }
-        TBitAlignment mergeMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(mFile, (ProgressListener)null));
+        Alignment mergeMap=ImportUtils.readFromHapmap(mFile, false, (ProgressListener)null);
         Expanding64NNImputation e64NNI=new Expanding64NNImputation(mergeMap, exFile);
     //    TBitAlignment mergeMap=TBitAlignment.getInstance(mna);
     }
