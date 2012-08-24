@@ -11,8 +11,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.SBitAlignment;
 import net.maizegenetics.pal.alignment.SBitAlignmentNucleotideHDF5;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
