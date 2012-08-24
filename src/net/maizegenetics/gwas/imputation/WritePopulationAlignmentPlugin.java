@@ -77,11 +77,27 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-d") || args[i].equalsIgnoreCase("-diploid")) {
 				String val = args[++i];
-				if (val.toUpperCase().startsWith("T")) writeParentCalls = true;
+				if (val.toUpperCase().startsWith("T")) outputDiploid = true;
 				else writeParentCalls = false;
 			}
 			else if (args[i].equals("?")) myLogger.error(getUsage());
 		}
+	}
+
+	public void setMergeAlignments(boolean mergeAlignments) {
+		this.mergeAlignments = mergeAlignments;
+	}
+
+	public void setWriteParentCalls(boolean writeParentCalls) {
+		this.writeParentCalls = writeParentCalls;
+	}
+
+	public void setOutputDiploid(boolean outputDiploid) {
+		this.outputDiploid = outputDiploid;
+	}
+
+	public void setBaseFileName(String baseFileName) {
+		this.baseFileName = baseFileName;
 	}
 
 	@Override
