@@ -9,6 +9,7 @@ import java.io.Serializable;
 import net.maizegenetics.pal.ids.IdGroup;
 
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.ProgressListener;
 
 /**
  * This supports heterozygous diploid alignments.
@@ -18,9 +19,8 @@ import net.maizegenetics.util.BitSet;
 public interface Alignment extends Serializable {
 
     /**
-     * This encoding is used to lump together allele
-     * values with frequencies too low to be retained
-     * as one of the maximum number of alleles.
+     * This encoding is used to lump together allele values with frequencies too
+     * low to be retained as one of the maximum number of alleles.
      */
     public static byte RARE_ALLELE = 0xE;
     public static byte RARE_DIPLOID_ALLELE = (byte) 0xEE;
@@ -67,43 +67,41 @@ public interface Alignment extends Serializable {
      * @param taxon taxon
      * @param site site
      *
-     * @return first four bits are the first allele value and the
-     * second four bits are the second allele value.
+     * @return first four bits are the first allele value and the second four
+     * bits are the second allele value.
      */
     public byte getBase(int taxon, int site);
 
     /**
-     * Returns diploid values for given taxon and site.
-     * Same values as getBase(), except two values are already
-     * separated into two bytes.
+     * Returns diploid values for given taxon and site. Same values as
+     * getBase(), except two values are already separated into two bytes.
      *
      * @param taxon taxon
      * @param site site
      *
-     * @return first byte (index 0) holds first allele value in
-     * right-most four bits.  second byte (index 1) holds second allele
-     * value in right-most four bits.
+     * @return first byte (index 0) holds first allele value in right-most four
+     * bits. second byte (index 1) holds second allele value in right-most four
+     * bits.
      */
     public byte[] getBaseArray(int taxon, int site);
 
     /**
-     * Returns diploid values for given taxon, locus, and physical
-     * position.  The locus and physical position should map to
-     * an unique site.
+     * Returns diploid values for given taxon, locus, and physical position. The
+     * locus and physical position should map to an unique site.
      *
      * @param taxon taxon
      * @param locus locus
      * @param physicalPosition physical position
      *
-     * @return first four bits are the first allele value and the
-     * second four bits are the second allele value.
+     * @return first four bits are the first allele value and the second four
+     * bits are the second allele value.
      */
     public byte getBase(int taxon, Locus locus, int physicalPosition);
 
     /**
-     * Returns sequence of diploid allele values for given taxon in
-     * specified range (end site excluded).  Each value in array
-     * is what would be returned by getBase().
+     * Returns sequence of diploid allele values for given taxon in specified
+     * range (end site excluded). Each value in array is what would be returned
+     * by getBase().
      *
      * @param taxon taxon
      * @param startSite start site
@@ -124,11 +122,11 @@ public interface Alignment extends Serializable {
     public byte[] getBaseRow(int taxon);
 
     /**
-     * Returns sequence of true/false values indicating whether taxon
-     * at each site matches a specific allele (based on frequency).  Allele
-     * number of value 0 would be the major allele.  Allele number of value
-     * 1 would be the minor allele.  Allele number of value 2 would be
-     * the third most frequent allele value and so on.
+     * Returns sequence of true/false values indicating whether taxon at each
+     * site matches a specific allele (based on frequency). Allele number of
+     * value 0 would be the major allele. Allele number of value 1 would be the
+     * minor allele. Allele number of value 2 would be the third most frequent
+     * allele value and so on.
      *
      * @param taxon taxon
      * @param alleleNumber allele number
@@ -138,11 +136,11 @@ public interface Alignment extends Serializable {
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber);
 
     /**
-     * Returns sequence of true/false values indicating whether site
-     * at each taxon matches a specific allele (based on frequency).  Allele
-     * number of value 0 would be the major allele.  Allele number of value
-     * 1 would be the minor allele.  Allele number of value 2 would be
-     * the third most frequent allele value and so on.
+     * Returns sequence of true/false values indicating whether site at each
+     * taxon matches a specific allele (based on frequency). Allele number of
+     * value 0 would be the major allele. Allele number of value 1 would be the
+     * minor allele. Allele number of value 2 would be the third most frequent
+     * allele value and so on.
      *
      * @param site site
      * @param alleleNumber allele number
@@ -152,13 +150,12 @@ public interface Alignment extends Serializable {
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber);
 
     /**
-     * Returns sequence of true/false values indicating whether taxon
-     * at sites (in given blocks, 64 sites per block including start block
-     * but excluding end block) matches a
-     * specific allele (based on frequency).  Allele
-     * number of value 0 would be the major allele.  Allele number of value
-     * 1 would be the minor allele.  Allele number of value 2 would be
-     * the third most frequent allele value and so on.
+     * Returns sequence of true/false values indicating whether taxon at sites
+     * (in given blocks, 64 sites per block including start block but excluding
+     * end block) matches a specific allele (based on frequency). Allele number
+     * of value 0 would be the major allele. Allele number of value 1 would be
+     * the minor allele. Allele number of value 2 would be the third most
+     * frequent allele value and so on.
      *
      * @param taxon taxon
      * @param alleleNumber allele number
@@ -170,9 +167,9 @@ public interface Alignment extends Serializable {
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock);
 
     /**
-     * Returns string representation of diploid values returned by
-     * getBase() for given taxon and site.  The two allele values will be
-     * separated by a colon (:) delimiter.
+     * Returns string representation of diploid values returned by getBase() for
+     * given taxon and site. The two allele values will be separated by a colon
+     * (:) delimiter.
      *
      * @param taxon taxon
      * @param site site
@@ -183,8 +180,8 @@ public interface Alignment extends Serializable {
 
     /**
      * Returns string representation of diploid alleles for given taxon in
-     * specified range (end site excluded).  Each value in string
-     * is what would be returned by getBaseAsString().
+     * specified range (end site excluded). Each value in string is what would
+     * be returned by getBaseAsString().
      *
      * @param taxon taxon
      * @param startSite start site
@@ -195,9 +192,9 @@ public interface Alignment extends Serializable {
     public String getBaseAsStringRange(int taxon, int startSite, int endSite);
 
     /**
-     * Returns string representation of diploid alleles for given taxon
-     * for all sites.  Each value in string
-     * is what would be returned by getBaseAsString().
+     * Returns string representation of diploid alleles for given taxon for all
+     * sites. Each value in string is what would be returned by
+     * getBaseAsString().
      *
      * @param taxon taxon
      *
@@ -207,8 +204,8 @@ public interface Alignment extends Serializable {
 
     /**
      * Returns string representation of diploid values returned by
-     * getBaseArray() for given taxon and site.  Same two allele values
-     * as getBaseAsString(), except already separated into two Strings.
+     * getBaseArray() for given taxon and site. Same two allele values as
+     * getBaseAsString(), except already separated into two Strings.
      *
      * @param taxon taxon
      * @param site site
@@ -222,16 +219,16 @@ public interface Alignment extends Serializable {
      *
      * @param site site
      *
-     * @return first four bits are the first allele value and the
-     * second four bits are the second allele value.
+     * @return first four bits are the first allele value and the second four
+     * bits are the second allele value.
      */
     public byte getReferenceAllele(int site);
 
     /**
      * Returns reference sequence of diploid allele values for given taxon in
-     * specified range (end site not included).  Each value in array
-     * contains both diploid values.  First four bits holds the first allele,
-     * and the second four bits holds the second allele.
+     * specified range (end site not included). Each value in array contains
+     * both diploid values. First four bits holds the first allele, and the
+     * second four bits holds the second allele.
      *
      * @param startSite start site
      * @param endSite end site
@@ -242,8 +239,8 @@ public interface Alignment extends Serializable {
 
     /**
      * Returns reference sequence of diploid allele values. Each value in array
-     * contains both diploid values.  First four bits holds the first allele,
-     * and the second four bits holds the second allele.
+     * contains both diploid values. First four bits holds the first allele, and
+     * the second four bits holds the second allele.
      *
      * @return reference sequence of diploid allele values.
      */
@@ -257,9 +254,9 @@ public interface Alignment extends Serializable {
     public boolean hasReference();
 
     /**
-     * Returns whether allele values at given taxon and site
-     * are heterozygous.  If two values returned by getBase() are
-     * different, this will return false.
+     * Returns whether allele values at given taxon and site are heterozygous.
+     * If two values returned by getBase() are different, this will return
+     * false.
      *
      * @param taxon taxon
      * @param site site
@@ -270,10 +267,10 @@ public interface Alignment extends Serializable {
 
     /**
      * Returns number of heterozygous taxa at given site.
-     * 
+     *
      * @param site site
-     * 
-     * @return number of heterozygous taxa 
+     *
+     * @return number of heterozygous taxa
      */
     public int getHeterozygousCount(int site);
 
@@ -342,8 +339,8 @@ public interface Alignment extends Serializable {
     public int[] getPhysicalPositions();
 
     /**
-     * Returns position type for given site.
-     * (eg.  I=intron, E=exon, P=promoter, 1=first, 2=second, 3=third, etc.)
+     * Returns position type for given site. (eg. I=intron, E=exon, P=promoter,
+     * 1=first, 2=second, 3=third, etc.)
      *
      * @param site site
      *
@@ -352,8 +349,8 @@ public interface Alignment extends Serializable {
     public byte getPositionType(int site);
 
     /**
-     * Returns position types.
-     * (eg.  I=intron, E=exon, P=promoter, 1=first, 2=second, 3=third, etc.)
+     * Returns position types. (eg. I=intron, E=exon, P=promoter, 1=first,
+     * 2=second, 3=third, etc.)
      *
      * @return position types
      */
@@ -464,9 +461,9 @@ public interface Alignment extends Serializable {
     public boolean isPolymorphic(int site);
 
     /**
-     * Return most common allele at given site.
-     * Gap is included as state.  Heterozygous count one for each
-     * allele value.  Homozygous counts two for the allele value.
+     * Return most common allele at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
      *
      * @param site site
      *
@@ -475,9 +472,9 @@ public interface Alignment extends Serializable {
     public byte getMajorAllele(int site);
 
     /**
-     * Return most common allele at given site.
-     * Gap is included as state.  Heterozygous count one for each
-     * allele value.  Homozygous counts two for the allele value.
+     * Return most common allele at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
      *
      * @param site site
      *
@@ -486,9 +483,9 @@ public interface Alignment extends Serializable {
     public String getMajorAlleleAsString(int site);
 
     /**
-     * Return most common minor allele at given site.
-     * Gap is included as state. Heterozygous count one for each
-     * allele value.  Homozygous counts two for the allele value.
+     * Return most common minor allele at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
      *
      * @param site site
      *
@@ -497,9 +494,9 @@ public interface Alignment extends Serializable {
     public byte getMinorAllele(int site);
 
     /**
-     * Return most common minor allele at given site.
-     * Gap is included as state. Heterozygous count one for each
-     * allele value.  Homozygous counts two for the allele value.
+     * Return most common minor allele at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
      *
      * @param site site
      *
@@ -508,9 +505,9 @@ public interface Alignment extends Serializable {
     public String getMinorAlleleAsString(int site);
 
     /**
-     * Return all minor alleles at given site.
-     * Gap is included as state. Heterozygous count one for each
-     * allele value.  Homozygous counts two for the allele value.
+     * Return all minor alleles at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
      *
      * @param site site
      *
@@ -519,9 +516,9 @@ public interface Alignment extends Serializable {
     public byte[] getMinorAlleles(int site);
 
     /**
-     * Returns all alleles at given site in order of frequency.
-     * Gap is included as state. Heterozygous count one for each
-     * allele value.  Homozygous counts two for the allele value.
+     * Returns all alleles at given site in order of frequency. Gap is included
+     * as state. Heterozygous count one for each allele value. Homozygous counts
+     * two for the allele value.
      *
      * @param site site
      *
@@ -530,9 +527,9 @@ public interface Alignment extends Serializable {
     public byte[] getAlleles(int site);
 
     /**
-     * Return frequency for most common minor allele at given site.
-     * Gap is included as state. Heterozygous count one for each
-     * allele value.  Homozygous counts two for the allele value.
+     * Return frequency for most common minor allele at given site. Gap is
+     * included as state. Heterozygous count one for each allele value.
+     * Homozygous counts two for the allele value.
      *
      * @param site site
      *
@@ -541,9 +538,9 @@ public interface Alignment extends Serializable {
     public double getMinorAlleleFrequency(int site);
 
     /**
-     * Return frequency for major allele at given site.
-     * Gap is included as state. Heterozygous count one for each
-     * allele value.  Homozygous counts two for the allele value.
+     * Return frequency for major allele at given site. Gap is included as
+     * state. Heterozygous count one for each allele value. Homozygous counts
+     * two for the allele value.
      *
      * @param site site
      *
@@ -569,7 +566,7 @@ public interface Alignment extends Serializable {
 
     /**
      * Return full taxa name at given index.
-     * 
+     *
      * @param index
      * @return full taxa name
      */
@@ -599,11 +596,10 @@ public interface Alignment extends Serializable {
     public Alignment[] getAlignments();
 
     /**
-     * Return sorted list of alleles from highest frequency to lowest
-     * at given site in alignment. Resulting double dimension array
-     * holds alleles (bytes) in result[0].  And the counts
-     * are in result[1]. Counts haploid values twice and diploid
-     * values once. Higher ploids are not supported.
+     * Return sorted list of alleles from highest frequency to lowest at given
+     * site in alignment. Resulting double dimension array holds alleles (bytes)
+     * in result[0]. And the counts are in result[1]. Counts haploid values
+     * twice and diploid values once. Higher ploids are not supported.
      *
      * @param site site
      *
@@ -612,10 +608,9 @@ public interface Alignment extends Serializable {
     public int[][] getAllelesSortedByFrequency(int site);
 
     /**
-     * Return sorted list of diploid vales from highest frequency to lowest
-     * at given site in alignment. Resulting double dimension array
-     * holds diploids (Strings) in result[0].  And the counts
-     * are in result[1] (Integers).
+     * Return sorted list of diploid vales from highest frequency to lowest at
+     * given site in alignment. Resulting double dimension array holds diploids
+     * (Strings) in result[0]. And the counts are in result[1] (Integers).
      *
      * @param site site
      *
@@ -638,20 +633,19 @@ public interface Alignment extends Serializable {
     public GeneticMap getGeneticMap();
 
     /**
-     * Returns true if this Alignment retains rare alleles.
-     * If false, rare alleles are recorded as unknown.
+     * Returns true if this Alignment retains rare alleles. If false, rare
+     * alleles are recorded as unknown.
      *
      * @return whether rare alleles are retained.
      */
     public boolean retainsRareAlleles();
 
     /**
-     * Returns allele values as strings for all sites.  The first
-     * dimension of the array indexes the sites.  The second
-     * dimension indexes the allele values for given site.  The
-     * indices for the allele values are used as the codes to store
-     * data.  These codes (indices) are returned by the getBase() methods.
-     * If only one array of allele values is returned, that is the
+     * Returns allele values as strings for all sites. The first dimension of
+     * the array indexes the sites. The second dimension indexes the allele
+     * values for given site. The indices for the allele values are used as the
+     * codes to store data. These codes (indices) are returned by the getBase()
+     * methods. If only one array of allele values is returned, that is the
      * encoding for all sites.
      *
      * @return allele values for all sites.
@@ -672,18 +666,18 @@ public interface Alignment extends Serializable {
      *
      * @param site site
      * @param value allele value
-     * 
+     *
      * @return String representation
      */
     public String getBaseAsString(int site, byte value);
 
     /**
      * Returns String representation of diploid allele value at site.
-     * 
+     *
      * @param site site
      * @param value diploid allele value
-     * 
-     * @return String representation 
+     *
+     * @return String representation
      */
     public String getDiploidAsString(int site, byte value);
 
@@ -693,20 +687,19 @@ public interface Alignment extends Serializable {
      * @return max number of alleles.
      */
     public int getMaxNumAlleles();
-    
+
     /**
-     * Returns max number of alleles retained by this alignment
-     * including rare (if retained) and unknown (if phased).
-     * 
+     * Returns max number of alleles retained by this alignment including rare
+     * (if retained) and unknown (if phased).
+     *
      * @return total number alleles
      */
     public int getTotalNumAlleles();
 
     /**
-     * Returns total number of non-missing allele values for given site.
-     * This can be twice the number of taxa, as diploid values
-     * are supported.
-     * 
+     * Returns total number of non-missing allele values for given site. This
+     * can be twice the number of taxa, as diploid values are supported.
+     *
      * @param site site
      * @return number of non-missing allele values.
      */
@@ -714,78 +707,82 @@ public interface Alignment extends Serializable {
 
     /**
      * Returns the minor allele count for given site.
-     * 
-     * @param site site 
+     *
+     * @param site site
      * @return minor allele count
      */
     public int getMinorAlleleCount(int site);
 
     /**
      * Returns the major allele count for given site.
-     * 
+     *
      * @param site site
      * @return major allele count
      */
     public int getMajorAlleleCount(int site);
 
     /**
-     * Returns counts of all diploid combinations from highest frequency
-     * to lowest for whole alignment.
-     * Resulting double dimension array
-     * holds diploids (Strings) in result[0].  And the counts
-     * are in result[1] (Longs).
-     * 
+     * Returns counts of all diploid combinations from highest frequency to
+     * lowest for whole alignment. Resulting double dimension array holds
+     * diploids (Strings) in result[0]. And the counts are in result[1] (Longs).
+     *
      * @return diploid counts.
      */
     public Object[][] getDiploidCounts();
 
     /**
-     * Returns counts of all major/minor allele combinations from highest frequency
-     * to lowest for whole alignment.
-     * Resulting double dimension array
-     * holds major/minor allele (Strings) in result[0].  And the counts
-     * are in result[1] (Longs).
-     * 
+     * Returns counts of all major/minor allele combinations from highest
+     * frequency to lowest for whole alignment. Resulting double dimension array
+     * holds major/minor allele (Strings) in result[0]. And the counts are in
+     * result[1] (Longs).
+     *
      * @return diploid counts.
      */
     public Object[][] getMajorMinorCounts();
-    
+
     /**
-     * Returns total number of non-missing allele values for given taxon.
-     * This can be twice the number of sites, as diploid values
-     * are supported.
-     * 
+     * Returns total number of non-missing allele values for given taxon. This
+     * can be twice the number of sites, as diploid values are supported.
+     *
      * @param taxon taxon
      * @return number of non-missing allele values.
      */
     public int getTotalGametesNotMissingForTaxon(int taxon);
-    
+
     /**
      * Returns number of heterozygous sites at given taxon.
-     * 
+     *
      * @param taxon taxon
-     * 
-     * @return number of heterozygous sites 
+     *
+     * @return number of heterozygous sites
      */
     public int getHeterozygousCountForTaxon(int taxon);
-    
+
     /**
-     * Return whether alignment will execute quickly for site
-     * optimized operations.  SBitAlignment is obviously friendly.
-     * But so would FilterAlignment is only sites have been filtered
-     * for example.
-     * 
+     * Return whether alignment will execute quickly for site optimized
+     * operations. SBitAlignment is obviously friendly. But so would
+     * FilterAlignment is only sites have been filtered for example.
+     *
      * @return whether optimized for site operations.
      */
     public boolean isSBitFriendly();
-    
+
     /**
-     * Return whether alignment will execute quickly for taxa
-     * optimized operations.  TBitAlignment is obviously friendly.
-     * But so would FilterAlignment is only taxa have been filtered
-     * for example.
-     * 
+     * Return whether alignment will execute quickly for taxa optimized
+     * operations. TBitAlignment is obviously friendly. But so would
+     * FilterAlignment is only taxa have been filtered for example.
+     *
      * @return whether optimized for taxa operations.
      */
     public boolean isTBitFriendly();
+
+    /**
+     * Optimizes this Alignment for Taxa based operations.
+     */
+    public void optimizeForTaxa(ProgressListener listener);
+
+    /**
+     * Optimizes this Alignment for Site based operations.
+     */
+    public void optimizeForSites(ProgressListener listener);
 }

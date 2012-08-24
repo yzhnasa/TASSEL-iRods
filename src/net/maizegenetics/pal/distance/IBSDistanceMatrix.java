@@ -14,11 +14,9 @@
  */
 package net.maizegenetics.pal.distance;
 
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.TBitAlignment;
-import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
-import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 
 /**
@@ -33,7 +31,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     private ProgressListener myListener = null;
     private int numSeqs;
     private Alignment theAlignment;
-    private TBitAlignment theTBA=null;
+    private Alignment theTBA=null;
     /**
      * Holds the average numbers of sites in the comparisons
      */
@@ -64,11 +62,12 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         myListener = listener;
         numSeqs = theAlignment.getSequenceCount();
         this.theAlignment = theAlignment;
-        if(theAlignment instanceof TBitAlignment) {
-            theTBA=(TBitAlignment)theAlignment;
-        } else {
-            theTBA=TBitAlignment.getInstance(theAlignment,2,false);
-        }
+        //if(theAlignment instanceof TBitAlignment) {
+        //    theTBA=(TBitAlignment)theAlignment;
+        //} else {
+        //    theTBA=TBitAlignment.getInstance(theAlignment,2,false);
+        //}
+        theTBA = ConvertSBitTBitPlugin.convertAlignment(theAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, listener);
     //  this should have an option to only use the 2 or 3 most common alleles
         setIdGroup(theAlignment.getIdGroup());
         long time=System.currentTimeMillis();

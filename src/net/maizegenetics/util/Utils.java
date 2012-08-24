@@ -6,9 +6,13 @@
 package net.maizegenetics.util;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 import java.net.URL;
 
@@ -18,24 +22,29 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.log4j.Logger;
+
 /**
  *
- * @author  terryc
+ * @author terryc
  */
 public final class Utils {
 
+    private static final Logger myLogger = Logger.getLogger(Utils.class);
     private static Collection<String> myJavaPackages = null;
 
-    /** Creates a new instance of Utils */
     private Utils() {
+        // Utility Class
     }
 
     /**
-     * Returns the base name of a string delimited
-     * with periods (i.e. Java Class).
+     * Returns the base name of a string delimited with periods (i.e. Java
+     * Class).
      *
      * @param str string to parse
      *
@@ -48,9 +57,8 @@ public final class Utils {
     }
 
     /**
-     * This returns the filename only.  Preceding
-     * directories are removed and  everything after
-     * last . is removed.
+     * This returns the filename only. Preceding directories are removed and
+     * everything after last . is removed.
      *
      * @param str original filename
      * @param suffix suffix
@@ -81,9 +89,8 @@ public final class Utils {
     }
 
     /**
-     * This returns the filename only.  Preceding
-     * directories are removed and suffix.  If suffix not
-     * found, then everything after last . is removed.
+     * This returns the filename only. Preceding directories are removed and
+     * suffix. If suffix not found, then everything after last . is removed.
      *
      * @param str original filename
      * @param suffix suffix
@@ -213,7 +220,7 @@ public final class Utils {
      */
     public static String shortenStrLineLen(String str, int preferredLen, int preferredLines) {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         int startIndex = 0;
         int endIndex = preferredLen;
@@ -257,8 +264,7 @@ public final class Utils {
     }
 
     /**
-     * Adds suffix (i.e. .txt) to end of filename if it's not
-     * already there.
+     * Adds suffix (i.e. .txt) to end of filename if it's not already there.
      *
      * @param filename filename
      * @param suffix suffix
@@ -280,16 +286,56 @@ public final class Utils {
 
     }
 
+    /**
+     * Adds default suffix if not already one of the possible suffixes.
+     *
+     * @param filename filename
+     * @param defaultSuffix default suffix
+     * @param possible possible suffixes
+     *
+     * @return filename with suffix
+     */
+    public static String addSuffixIfNeeded(String filename, String defaultSuffix, String[] possible) {
+
+        for (int i = 0; i < possible.length; i++) {
+            String current = possible[i];
+            if (current.charAt(0) != '.') {
+                current = '.' + current;
+            }
+
+            int periodIndex = filename.lastIndexOf(current);
+            if (periodIndex != -1) {
+                return filename;
+            }
+
+        }
+
+        if (defaultSuffix.charAt(0) != '.') {
+            defaultSuffix = '.' + defaultSuffix;
+        }
+        return filename + defaultSuffix;
+
+    }
+
     public static BufferedReader getBufferedReader(String inSourceName) {
 
         try {
             if (inSourceName.startsWith("http")) {
-                return new BufferedReader(new InputStreamReader((new URL(inSourceName)).openStream()));
+                if (inSourceName.endsWith(".gz")) {
+                    return new BufferedReader(new InputStreamReader(new GZIPInputStream((new URL(inSourceName)).openStream())));
+                } else {
+                    return new BufferedReader(new InputStreamReader((new URL(inSourceName)).openStream()));
+                }
             } else {
-                return new BufferedReader(new FileReader(inSourceName));
+                if (inSourceName.endsWith(".gz")) {
+                    return new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(inSourceName))));
+                } else {
+                    return new BufferedReader(new InputStreamReader(new FileInputStream(inSourceName)));
+                }
             }
         } catch (Exception e) {
-            System.err.println("File IO in getBufferedReader: " + e);
+            myLogger.error("getBufferedReader: Error getting reader for: " + inSourceName);
+            e.printStackTrace();
         }
         return null;
     }
@@ -301,25 +347,49 @@ public final class Utils {
                 return getBufferedReader(inSourceName);
             } else {
                 if (inSourceName.startsWith("http")) {
-                    return new BufferedReader(new InputStreamReader((new URL(inSourceName)).openStream()), bufSize);
+                    if (inSourceName.endsWith(".gz")) {
+                        return new BufferedReader(new InputStreamReader(new GZIPInputStream((new URL(inSourceName)).openStream())), bufSize);
+                    } else {
+                        return new BufferedReader(new InputStreamReader((new URL(inSourceName)).openStream()), bufSize);
+                    }
                 } else {
-                    return new BufferedReader(new FileReader(inSourceName), bufSize);
+                    if (inSourceName.endsWith(".gz")) {
+                        return new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(inSourceName))), bufSize);
+                    } else {
+                        return new BufferedReader(new InputStreamReader(new FileInputStream(inSourceName)), bufSize);
+                    }
                 }
             }
         } catch (Exception e) {
-            System.err.println("File IO in getBufferedReader: " + e);
+            myLogger.error("getBufferedReader: Error getting reader for: " + inSourceName);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static BufferedWriter getBufferedWriter(String filename) {
+
+        try {
+            if (filename.endsWith(".gz")) {
+                return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(filename))));
+            } else {
+                return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename)));
+            }
+        } catch (Exception e) {
+            myLogger.error("getBufferedReader: Error getting reader for: " + filename);
+            e.printStackTrace();
         }
         return null;
     }
 
     /**
      * Finds index of Nth occurrence of character in string.
-     * 
+     *
      * @param str string
      * @param match character to match
      * @param n Nth occurrence
-     * 
-     * @return index 
+     *
+     * @return index
      */
     public static int findNthOccurrenceInString(String str, char match, int n) {
         int result = str.indexOf(match);
@@ -328,13 +398,79 @@ public final class Utils {
         }
         return result;
     }
-    
+
     /**
      * Returns max heap size in MB.
-     * 
-     * @return max heap size 
+     *
+     * @return max heap size
      */
     public static long getMaxHeapSizeMB() {
         return Runtime.getRuntime().maxMemory() / 1048576l;
+    }
+
+    /**
+     * Gets input stream for given file.
+     *
+     * @param filename file name
+     *
+     * @return input stream
+     */
+    public static InputStream getInputStream(String filename) {
+
+        try {
+            if (filename.startsWith("http")) {
+                if (filename.endsWith(".gz")) {
+                    return new GZIPInputStream((new URL(filename)).openStream());
+                } else {
+                    return (new URL(filename)).openStream();
+                }
+            } else {
+                if (filename.endsWith(".gz")) {
+                    return new GZIPInputStream(new FileInputStream(filename));
+                } else {
+                    return new FileInputStream(filename);
+                }
+            }
+        } catch (Exception e) {
+            myLogger.error("getInputStream: Error getting reader for: " + filename);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Return number of lines in given file.
+     * 
+     * @param filename file name
+     * 
+     * @return number of lines 
+     */
+    public static int getNumberLines(String filename) {
+
+        InputStream input = getInputStream(filename);
+        try {
+
+            byte[] buffer = new byte[1024];
+            int result = 0;
+            int numChrsRead = 0;
+            while ((numChrsRead = input.read(buffer)) != -1) {
+                for (int i = 0; i < numChrsRead; ++i) {
+                    if (buffer[i] == '\n') {
+                        ++result;
+                    }
+                }
+            }
+            return result;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Utils: getNumberLines: Problem getting number lines: " + filename);
+        } finally {
+            try {
+                input.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
     }
 }

@@ -44,8 +44,8 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     private static final String NA = "NA";
     private static final Double ZERO_DOUBLE = 0.0;
     private static final int ZERO_INT = 0;
-    private long myNumGametesMissing = -1;
-    private long myNumHeterozygous = -1;
+    private long myNumGametesMissing = 0;
+    private long myNumHeterozygous = 0;
     private boolean myIsOverview = true;
     private boolean myIsSiteSummary = true;
     private boolean myIsTaxaSummary = true;
@@ -54,12 +54,13 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         super(parentFrame, isInteractive);
     }
 
+    @Override
     public DataSet performFunction(DataSet input) {
 
         try {
 
-            myNumGametesMissing = -1;
-            myNumHeterozygous = -1;
+            myNumGametesMissing = 0;
+            myNumHeterozygous = 0;
 
             List<Datum> alignInList = input.getDataOfType(Alignment.class);
 
@@ -172,7 +173,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         long totalDiploidsNotMissing = totalDiploids - numDiploidsMissing;
         int count = 0;
 
-        Object[][] data = new Object[13][firstColumnNames.length];
+        Object[][] data = new Object[14][firstColumnNames.length];
 
         data[count][0] = "Number of Taxa";
         data[count++][1] = (double) numTaxa;
@@ -210,8 +211,11 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         data[count][0] = "Proportion Gametes Missing";
         data[count++][1] = (double) myNumGametesMissing / (double) totalGametes;
 
+        data[count][0] = "Number Heterozygous";
+        data[count++][1] = (double) myNumHeterozygous;
+        
         data[count][0] = "Proportion Heterozygous";
-        data[count++][1] = (double) myNumHeterozygous / (double) totalGametes;
+        data[count++][1] = (double) myNumHeterozygous / (double) totalDiploids;
 
 
         Object[][] majorMinorDiploidValueCounts = alignment.getMajorMinorCounts();
@@ -342,7 +346,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     private SimpleTableReport getTaxaSummary(Alignment alignment) {
 
-        Object[] columnNames = new String[]{"Taxa", "Taxa Name" , "Number of Sites", "Gametes Missing", "Proportion Missing",
+        Object[] columnNames = new String[]{"Taxa", "Taxa Name", "Number of Sites", "Gametes Missing", "Proportion Missing",
             "Number Heterozygous", "Proportion Heterozygous", "Inbreeding Coefficient",
             "Inbreeding Coefficient Scaled by Missing"};
         int numSites = alignment.getSiteCount();
@@ -429,7 +433,6 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             okButton.setActionCommand("Ok");
             okButton.setText("Ok");
             okButton.addActionListener(new ActionListener() {
-
                 public void actionPerformed(ActionEvent e) {
                     myIsCancel = false;
                     setVisible(false);
@@ -438,7 +441,6 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             JButton closeButton = new JButton();
             closeButton.setText("Close");
             closeButton.addActionListener(new ActionListener() {
-
                 public void actionPerformed(ActionEvent e) {
                     myIsCancel = true;
                     setVisible(false);

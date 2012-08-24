@@ -2,8 +2,6 @@ package net.maizegenetics.gwas.imputation;
 
 import java.awt.Frame;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,11 +10,8 @@ import javax.swing.ImageIcon;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
-import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

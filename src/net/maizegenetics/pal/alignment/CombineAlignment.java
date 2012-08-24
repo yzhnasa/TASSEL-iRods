@@ -12,6 +12,7 @@ import java.util.Map;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.ProgressListener;
 
 /**
  *
@@ -47,10 +48,9 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     /**
-     * This factory method combines given alignments.
-     * It only one alignment, then it is returned unchanged.
-     * Otherwise, this requires that each alignment
-     * has the same Identifiers in the same order.
+     * This factory method combines given alignments. It only one alignment,
+     * then it is returned unchanged. Otherwise, this requires that each
+     * alignment has the same Identifiers in the same order.
      *
      * @param alignments
      * @return
@@ -77,14 +77,12 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     /**
-     * This factory method combines given alignments.
-     * It only one alignment, then it is returned unchanged.
-     * If isUnion equals true, a union join of the Identifiers
-     * will be used to construct the combination.  Any alignment
-     * not containing one of the Identifiers will return
-     * unknown value for those locations.  If isUnion equals
-     * false, a intersect join of the Identifiers will
-     * be used.
+     * This factory method combines given alignments. It only one alignment,
+     * then it is returned unchanged. If isUnion equals true, a union join of
+     * the Identifiers will be used to construct the combination. Any alignment
+     * not containing one of the Identifiers will return unknown value for those
+     * locations. If isUnion equals false, a intersect join of the Identifiers
+     * will be used.
      *
      * @param alignments alignments to combine
      * @param isUnion whether to union or intersect join
@@ -734,5 +732,17 @@ public class CombineAlignment extends AbstractAlignment {
     @Override
     public boolean isTBitFriendly() {
         return false;
+    }
+
+    @Override
+    public void optimizeForTaxa(ProgressListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void optimizeForSites(ProgressListener listener) {
+        for (int i = 0; i < myAlignments.length; i++) {
+            myAlignments[i].optimizeForSites(listener);
+        }
     }
 }

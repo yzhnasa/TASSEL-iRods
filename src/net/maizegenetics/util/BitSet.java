@@ -36,6 +36,14 @@ public interface BitSet {
      * Expert: sets a new long[] to use as the bit storage
      */
     public void setBits(long[] bits);
+    
+    /**
+     * Expert: sets specified word with given bits.
+     * 
+     * @param wordNum word index
+     * @param bits bits
+     */
+    public void setLong(int wordNum, long bits);
 
     /**
      * Expert: gets the number of longs in the array that are in use

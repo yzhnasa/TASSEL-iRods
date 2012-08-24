@@ -54,6 +54,7 @@ public class FileLoadPlugin extends AbstractPlugin {
     private TasselFileType myFileType = TasselFileType.Unknown;
     private PlinkLoadPlugin myPlinkLoadPlugin = null;
     private FlapjackLoadPlugin myFlapjackLoadPlugin = null;
+    private boolean myIsSBit = true;
 
     public enum TasselFileType {
 
@@ -62,6 +63,7 @@ public class FileLoadPlugin extends AbstractPlugin {
         Serial, HapmapDiploid
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
+    public static final String FILE_EXT_HAPMAP_GZ = ".hmp.txt.gz";
     public static final String FILE_EXT_PLINK_MAP = ".plk.map";
     public static final String FILE_EXT_PLINK_PED = ".plk.ped";
     public static final String FILE_EXT_FLAPJACK_MAP = ".flpjk.map";
@@ -120,7 +122,7 @@ public class FileLoadPlugin extends AbstractPlugin {
                 try {
 
                     if (myFileType == TasselFileType.Unknown) {
-                        if (myOpenFiles[i].endsWith(FILE_EXT_HAPMAP)) {
+                        if (myOpenFiles[i].endsWith(FILE_EXT_HAPMAP) || myOpenFiles[i].endsWith(FILE_EXT_HAPMAP_GZ)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Hapmap);
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = processDatum(myOpenFiles[i], TasselFileType.Hapmap);
@@ -307,7 +309,10 @@ public class FileLoadPlugin extends AbstractPlugin {
             switch (theFT) {
                 case Hapmap: {
                     suffix = FILE_EXT_HAPMAP;
-                    result = ImportUtils.readFromHapmap(inFile, this);
+                    if (inFile.endsWith(".gz")) {
+                        suffix = FILE_EXT_HAPMAP_GZ;
+                    }
+                    result = ImportUtils.readFromHapmap(inFile, myIsSBit, this);
                     break;
                 }
                 case Sequence: {
@@ -327,7 +332,7 @@ public class FileLoadPlugin extends AbstractPlugin {
                     break;
                 }
                 case Fasta: {
-                    result = ImportUtils.readFasta(inFile);
+                    result = ImportUtils.readFasta(inFile, myIsSBit);
                     break;
                 }
                 case SqrMatrix: {
@@ -433,6 +438,14 @@ public class FileLoadPlugin extends AbstractPlugin {
 
     public void setTheFileType(TasselFileType theFileType) {
         myFileType = theFileType;
+    }
+    
+    public boolean getIsFileCreatedSBit() {
+        return myIsSBit;
+    }
+    
+    public void setIsFileCreatedSBit(boolean value) {
+        myIsSBit = value;
     }
 
     /**

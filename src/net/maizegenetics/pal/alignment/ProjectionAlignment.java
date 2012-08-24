@@ -4,6 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import java.util.Arrays;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.util.BitSet;
@@ -20,15 +21,11 @@ public class ProjectionAlignment extends AbstractAlignment {
     private int[][] mySiteBreaks;  //temporary - saving not needed
     private int[][] myHDTaxa;  //taxa ids should be saved
     private int[][] myPosBreaks;  //positions should be saved
-    private final SBitAlignment myBaseAlignment;  //high density marker alignment that is being projected.
+    private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
 
     public ProjectionAlignment(Alignment hdAlign, IdGroup ldIDGroup) {
         super(ldIDGroup, hdAlign.getAlleleEncodings());
-        if (hdAlign instanceof SBitAlignment) {
-            myBaseAlignment = (SBitAlignment) hdAlign;
-        } else {
-            myBaseAlignment = SBitAlignment.getInstance(hdAlign);
-        }
+        myBaseAlignment = ConvertSBitTBitPlugin.convertAlignment(hdAlign, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
         mySiteBreaks = new int[getSequenceCount()][];
         myPosBreaks = new int[getSequenceCount()][];
         myHDTaxa = new int[getSequenceCount()][];
@@ -458,8 +455,7 @@ public class ProjectionAlignment extends AbstractAlignment {
         for (int i = 0; i < numDataRows; i++) {
             data[i] = getAllelePresenceForAllTaxa(site, i);
         }
-        // TERRY - need to think about this.
-        byte[] alleles = myBaseAlignment.myAlleles[site];
+        byte[] alleles = myBaseAlignment.getAlleles(site);
 
         int[] counts = new int[16];
         for (int i = 0; i < numDataRows; i++) {

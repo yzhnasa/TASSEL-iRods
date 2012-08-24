@@ -1,17 +1,14 @@
 package net.maizegenetics.gwas.imputation;
 
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.Random;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.SBitAlignment;
-import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.OpenBitSet;
 
 public class ImputationUtils {
 
@@ -77,9 +74,9 @@ public class ImputationUtils {
 	
 	public static Alignment[] getTwoClusters(Alignment a, int[] parentIndex) {
 		int maxiter = 5;
-		TBitAlignment tb;
-		if (a instanceof TBitAlignment) tb = (TBitAlignment) a;
-		else tb = TBitAlignment.getInstance(a);
+		Alignment tb = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+		//if (a instanceof TBitAlignment) tb = (TBitAlignment) a;
+		//else tb = TBitAlignment.getInstance(a);
 		
 		//if the parents are in the data set use these as seeds
 		//if one parent is in the dataset pick the taxon farthest from it as the other seed

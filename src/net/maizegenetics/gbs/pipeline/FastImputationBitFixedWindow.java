@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.TreeMap;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -15,7 +16,6 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.pal.statistics.ChiSquareTest;
 
 /**
@@ -41,7 +41,7 @@ public class FastImputationBitFixedWindow {
     int[] hetCntForTaxa;
     boolean[] highHet = null;
     long totalPresent = 0;
-    TBitAlignment anchorAlignment = null;
+    Alignment anchorAlignment = null;
     MutableNucleotideAlignment impAlign = null;
     static int windowSize = 64 * 64;  //left and right distance of 64bp window, so window 2 is 2+1+2=5 or 320bp
     static int minLengthOfMatch = 50;
@@ -58,7 +58,7 @@ public class FastImputationBitFixedWindow {
     // static int minimumMajorityRule=4;  //NN within  is used, and tie are not imputed
     public FastImputationBitFixedWindow(Alignment a, boolean[] highHet) {
         this.highHet = highHet;
-        this.anchorAlignment = (TBitAlignment) a;
+        this.anchorAlignment = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
         double avgMissing = calcPropMissingByLine();
         System.out.println("Average Missing:" + avgMissing);
         avgMissing = calcPropMissing();
@@ -540,7 +540,8 @@ public class FastImputationBitFixedWindow {
             Alignment a = ImportUtils.readFromHapmap(anchorMapFile, null);
             System.out.printf("Read Alignment with %d taxa and %d sites %n", a.getSequenceCount(), a.getSiteCount());
             System.out.println("p1a:" + a.getBaseAsStringRow(1));
-            a = TBitAlignment.getInstance(a);
+            //a = TBitAlignment.getInstance(a);
+            a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
             System.out.println("TBA:" + a.getBaseAsStringRow(1));
             FastImputationBitFixedWindow fi = new FastImputationBitFixedWindow(a);
             System.out.println("Writing " + outfile);

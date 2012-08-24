@@ -6,6 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
+import java.awt.event.KeyEvent;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 
@@ -75,15 +76,13 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
             }
 
             if (isInteractive()) {
-                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(myIsRapidAnalysis, myPossibleAlignmentName);
+                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(((Alignment)current.getData()).getSiteCount(), myPossibleAlignmentName);
                 myDialog.setLocationRelativeTo(getParentFrame());
                 myDialog.setVisible(true);
                 if (myDialog.isCancel()) {
                     return null;
                 }
                 myLDType = myDialog.getLDType();
-
-                myIsRapidAnalysis = myDialog.getRapidLDAnalysis();
 
                 if (myLDType == LinkageDisequilibrium.testDesign.SlidingWindow) {
                     myWindowSize = myDialog.getWindowSize();
@@ -123,7 +122,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 
     private DataSet processDatum(Datum input) {
         Alignment aa = (Alignment) input.getData();
-        LinkageDisequilibrium theLD = new LinkageDisequilibrium(aa, myPermutationNumber, myWindowSize, myIsRapidAnalysis, myLDType, myTestSite, this, myIsAccumulateResults, myNumAccumulateIntervals, myPossibleSiteList);
+        LinkageDisequilibrium theLD = new LinkageDisequilibrium(aa, myWindowSize, myLDType, myTestSite, this, myIsAccumulateResults, myNumAccumulateIntervals, myPossibleSiteList);
         try {
             theLD.run();
             Datum td = new Datum("LD:" + input.getName(), theLD, "LD Analysis");
@@ -243,34 +242,46 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
  */
 class LinkageDiseqDialog extends JDialog {
 
-    private boolean myIsRapidPermutations = true;
     // private int numberPermutations = 1000;
     private boolean myRunAnalysis = false;
-    private JCheckBox myRapidCheckBox = new JCheckBox();
     // private JTextField permNumberTextField = new JTextField();
     // private JLabel jLabel1 = new JLabel();
-    private JButton myRunButton = new JButton("Run");
-    private JButton myCloseButton = new JButton("Close");
-    private JRadioButton myDenseMatrixButton = new JRadioButton("Full Matrix LD");
-    private JRadioButton mySlidingWindowButton = new JRadioButton("Sliding Window LD");
-    private JTextField myWindowSizeTextField = new JTextField();
-    private JLabel myWindowSizeLabel = new JLabel("LD Window Size");
-    private int myWindowSize = 50;
-    private JRadioButton mySiteByAllButton = new JRadioButton("Site By All LD");
-    private JTextField mySiteByAllTextField = new JTextField();
-    private JLabel mySiteByAllLabel = new JLabel("Site");
     private int myTestSite = 0;
-    private JRadioButton mySiteListButton = new JRadioButton();
-    private JRadioButton myAccumulativeResultsButton = new JRadioButton("Accumulate R2 Results");
-    private JTextField myAccumulativeResultsTextField = new JTextField();
-    private JLabel myAccumulativeResultsLabel = new JLabel("Number Of Intervals");
-    private int myNumAccumulativeInterval = 100;
     private String myAlignmentForSiteList;
 
-    public LinkageDiseqDialog(boolean rapidPermutations, String alignmentForSiteList) {
+    private int myNumSites;
+
+    private JPanel myPanel = new JPanel();
+
+    private JPanel myLDSelectionPanel = new JPanel();
+    private JLabel myLDTypeLabel = new JLabel("Select LD type: ");
+    private JComboBox myLDType;
+
+    private JPanel myLDOptionsPanel = new JPanel();
+    private JLabel myFullMatrixLabel = new JLabel();
+    private JTextField myWindowSizeTextField = new JTextField();
+    private JLabel myWindowSizeLabel = new JLabel("LD Window Size: ");
+    private JLabel myWindowSizeCountLabel = new JLabel();
+    private int myWindowSize = 50;
+    private JTextField mySiteByAllTextField = new JTextField();
+    private JLabel mySiteByAllLabel = new JLabel("Site: ");
+    private JLabel mySiteByAllCountLabel = new JLabel();
+    private JLabel mySiteListLabel = new JLabel();
+
+    private JPanel myAccumulateOptionsPanel = new JPanel();
+    private JCheckBox myAccumulativeResultsBox = new JCheckBox("Accumulate R2 Results");
+    private JTextField myAccumulativeResultsTextField = new JTextField();
+    private JLabel myAccumulativeResultsLabel = new JLabel("Number Of Intervals: ");
+    private int myNumAccumulativeInterval = 100;
+
+    private JPanel myButtonsPanel = new JPanel();
+    private JButton myRunButton = new JButton("Run");
+    private JButton myCloseButton = new JButton("Close");
+
+    public LinkageDiseqDialog(int numSites, String alignmentForSiteList) {
         super((Frame) null, "Linkage Disequilibrium", true);
-        myIsRapidPermutations = rapidPermutations;
         myAlignmentForSiteList = alignmentForSiteList;
+        myNumSites = numSites;
         // numberPermutations = numberPermutations;
         try {
             jbInit();
@@ -281,68 +292,105 @@ class LinkageDiseqDialog extends JDialog {
     }
 
     private void jbInit() throws Exception {
-        JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridBagLayout());
-        myRapidCheckBox.setSelected(myIsRapidPermutations);
-        myRapidCheckBox.setText("Rapid Permutations (slightly biased p-values)");
-        // permNumberTextField.setText(numberPermutations + "");
-        // jLabel1.setText("Permutations");
 
-        myDenseMatrixButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                hideOptions();
-            }
-        });
-
-        myWindowSizeTextField.setText(String.valueOf(myWindowSize));
-
-        mySlidingWindowButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                hideOptions();
-                myWindowSizeTextField.setVisible(true);
-                myWindowSizeLabel.setVisible(true);
-            }
-        });
-
-        mySiteByAllTextField.setText(String.valueOf(myTestSite));
-
-        mySiteByAllButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                hideOptions();
-                mySiteByAllTextField.setVisible(true);
-                mySiteByAllLabel.setVisible(true);
-            }
-        });
-
-        mySiteListButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                hideOptions();
-            }
-        });
-
-        if (myAlignmentForSiteList != null) {
-            mySiteListButton.setText("Sites From: " + myAlignmentForSiteList);
-            mySiteListButton.setVisible(true);
+        String[] ldTypes;
+        if ( myAlignmentForSiteList != null ) {
+            ldTypes = new String[4];
+            ldTypes[0] = "Full Matrix";
+            ldTypes[1] = "Sliding Window";
+            ldTypes[2] = "Site by All";
+            ldTypes[3] = "Site List";
         } else {
-            mySiteListButton.setVisible(false);
+            ldTypes = new String[3];
+            ldTypes[0] = "Full Matrix";
+            ldTypes[1] = "Sliding Window";
+            ldTypes[2] = "Site by All";
         }
 
-        myAccumulativeResultsButton.setSelected(false);
-        myAccumulativeResultsTextField.setText(String.valueOf(myNumAccumulativeInterval));
+        myLDType = new JComboBox(ldTypes);
+        myLDType.setSelectedIndex(1);
 
-        ButtonGroup matrixSelection = new ButtonGroup();
-        matrixSelection.add(myDenseMatrixButton);
-        matrixSelection.add(mySlidingWindowButton);
-        matrixSelection.add(mySiteByAllButton);
-        matrixSelection.add(mySiteListButton);
-        mySlidingWindowButton.setSelected(true);
-        hideOptions();
-        myWindowSizeTextField.setVisible(true);
-        myWindowSizeLabel.setVisible(true);
+        myFullMatrixLabel.setText("Full LD with " + myNumSites*((myNumSites-1)/2) + " comparisons.");
+
+        long n = Math.min(myNumSites - 1, myWindowSize);
+
+        myWindowSizeCountLabel.setText("Sliding Window LD with " + (((n * (n + 1)) / 2) + (myNumSites - n - 1) * n) + " comparisons.");
+        mySiteByAllCountLabel.setText("Site by All LD with " + (myNumSites - 1) + " comparisons.");
+
+        if ( myAlignmentForSiteList != null ) {
+            mySiteListLabel.setText("Sites From: " + myAlignmentForSiteList);
+        }
+
+        myLDSelectionPanel.setLayout(new GridBagLayout());
+        myLDSelectionPanel.add(myLDTypeLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(10, 7, 0, 0), 0, 0));
+        myLDSelectionPanel.add(myLDType, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(10, 0, 0, 0), 0, 0));
+//        myLDSelectionPanel.add(myAccumulativeResultsBox, new GridBagConstraints(0, 1, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+
+        myLDType.addActionListener(new java.awt.event.ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                ldType_actionPerformed(e);
+            }
+        });
+
+        myAccumulativeResultsBox.addActionListener(new java.awt.event.ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                accumulativeResultsBox_actionPerformed(e);
+            }
+        });
+
+        myLDOptionsPanel.setLayout(new GridBagLayout());
+        myLDOptionsPanel.add(myFullMatrixLabel, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(10, 0, 0, 0), 0, 0));
+        myFullMatrixLabel.setVisible(false);
+
+        myWindowSizeTextField.setText("" + myWindowSize);
+        myLDOptionsPanel.add(myWindowSizeLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(10, 7, 0, 0), 0, 0));
+        myLDOptionsPanel.add(myWindowSizeTextField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.HORIZONTAL, new Insets(10, 0, 0, 7), 0, 0));
+        myLDOptionsPanel.add(myWindowSizeCountLabel, new GridBagConstraints(0, 1, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(7, 7, 0, 7), 0, 0));
+
+        myWindowSizeTextField.addKeyListener(new java.awt.event.KeyListener() {
+
+            public void keyTyped(KeyEvent e) {
+//                windowSizeTextField_actionPerformed(e);
+            }
+
+            public void keyPressed(KeyEvent ke) {
+//                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            public void keyReleased(KeyEvent e) {
+                windowSizeTextField_actionPerformed(e);
+            }
+        });
+
+        myLDOptionsPanel.add(mySiteByAllLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(10, 7, 0, 0), 0, 0));
+        myLDOptionsPanel.add(mySiteByAllTextField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.HORIZONTAL, new Insets(10, 0, 0, 7), 0, 0));
+        myLDOptionsPanel.add(mySiteByAllCountLabel, new GridBagConstraints(0, 1, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(7, 7, 0, 7), 0, 0));
+        mySiteByAllLabel.setVisible(false);
+        mySiteByAllTextField.setVisible(false);
+        mySiteByAllCountLabel.setVisible(false);
+
+        myLDOptionsPanel.add(mySiteListLabel, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(10, 0, 0, 0), 0, 0));
+        mySiteListLabel.setVisible(false);
+
+        myAccumulativeResultsTextField.setText(myNumAccumulativeInterval + "");
+        myAccumulateOptionsPanel.setLayout(new GridBagLayout());
+        myAccumulateOptionsPanel.add(myAccumulativeResultsBox, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(25, 7, 0, 7), 0, 0));
+        myAccumulateOptionsPanel.add(myAccumulativeResultsLabel, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(7, 7, 0, 0), 0, 0));
+        myAccumulateOptionsPanel.add(myAccumulativeResultsTextField, new GridBagConstraints(1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.HORIZONTAL, new Insets(7, 0, 0, 7), 0, 0));
+        myAccumulativeResultsLabel.setVisible(false);
+        myAccumulativeResultsTextField.setVisible(false);
+
+        myButtonsPanel.setLayout(new GridBagLayout());
+        myButtonsPanel.add(myRunButton, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.PAGE_END, GridBagConstraints.NONE, new Insets(0, 150, -5, 0), 0, 0));
+        myButtonsPanel.add(myCloseButton, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.PAGE_END, GridBagConstraints.NONE, new Insets(0, 0, -5, 0), 0, 0));
+
+        myPanel.setLayout(new GridLayout(4, 1));
+        myPanel.add(myLDSelectionPanel);
+        myPanel.add(myLDOptionsPanel);
+        myPanel.add(myAccumulateOptionsPanel);
+        myPanel.add(myButtonsPanel);
 
         myRunButton.addActionListener(new java.awt.event.ActionListener() {
 
@@ -357,29 +405,8 @@ class LinkageDiseqDialog extends JDialog {
                 closeButton_actionPerformed(e);
             }
         });
-
-        getContentPane().add(panel1);
-        panel1.add(myRapidCheckBox, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(102, 44, 0, 33), 82, 0));
-        // panel1.add(permNumberTextField, new GridBagConstraints(0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
-        // panel1.add(jLabel1, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
-        panel1.add(myDenseMatrixButton, new GridBagConstraints(0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(16, 44, 0, 0), 60, -1));
-
-        panel1.add(mySlidingWindowButton, new GridBagConstraints(0, 2, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(25, 44, 0, 6), 60, -1));
-        panel1.add(myWindowSizeTextField, new GridBagConstraints(0, 3, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
-        panel1.add(myWindowSizeLabel, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
-
-        panel1.add(mySiteByAllButton, new GridBagConstraints(0, 4, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(25, 44, 0, 6), 60, -1));
-        panel1.add(mySiteByAllTextField, new GridBagConstraints(0, 5, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
-        panel1.add(mySiteByAllLabel, new GridBagConstraints(1, 5, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
-
-        panel1.add(mySiteListButton, new GridBagConstraints(0, 6, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(25, 44, 0, 6), 60, -1));
-
-        panel1.add(myAccumulativeResultsButton, new GridBagConstraints(0, 7, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(25, 44, 0, 6), 60, -1));
-        panel1.add(myAccumulativeResultsTextField, new GridBagConstraints(0, 8, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(16, 44, 0, 6), 60, -1));
-        panel1.add(myAccumulativeResultsLabel, new GridBagConstraints(1, 8, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(13, 0, 0, 13), 60, 9));
-
-        panel1.add(myRunButton, new GridBagConstraints(0, 9, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(82, 55, 26, 0), 32, 5));
-        panel1.add(myCloseButton, new GridBagConstraints(1, 9, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(83, 20, 26, 156), 23, 5));
+        getContentPane().add(myPanel);
+        getContentPane().setPreferredSize(new Dimension(320, 300));
     }
 
     private void hideOptions() {
@@ -390,17 +417,17 @@ class LinkageDiseqDialog extends JDialog {
     }
 
     public boolean isAccumulateResults() {
-        return myAccumulativeResultsButton.isSelected();
+        return myAccumulativeResultsBox.isSelected();
     }
 
     public LinkageDisequilibrium.testDesign getLDType() {
-        if (myDenseMatrixButton.isSelected()) {
+        if (myLDType.getSelectedIndex() == 0) {
             return LinkageDisequilibrium.testDesign.All;
-        } else if (mySlidingWindowButton.isSelected()) {
+        } else if (myLDType.getSelectedIndex() == 1) {
             return LinkageDisequilibrium.testDesign.SlidingWindow;
-        } else if (mySiteByAllButton.isSelected()) {
+        } else if (myLDType.getSelectedIndex() == 2) {
             return LinkageDisequilibrium.testDesign.SiteByAll;
-        } else if (mySiteListButton.isSelected()) {
+        } else if (myLDType.getSelectedIndex() == 3) {
             return LinkageDisequilibrium.testDesign.SiteList;
         } else {
             throw new IllegalStateException("LinkageDisequilibriumPlugin: getLDType: No known LD Type selected.");
@@ -417,11 +444,6 @@ class LinkageDiseqDialog extends JDialog {
         return !myRunAnalysis;
     }
 
-    /** Returns whether the rapid permutation approach should be used */
-    public boolean getRapidLDAnalysis() {
-        return myIsRapidPermutations;
-    }
-
     /** Return the window size */
     public int getWindowSize() {
         return myWindowSize;
@@ -435,9 +457,70 @@ class LinkageDiseqDialog extends JDialog {
         return myNumAccumulativeInterval;
     }
 
+    void ldType_actionPerformed(ActionEvent e) {
+        if ( myLDType.getSelectedIndex() == 0 ) {
+            myFullMatrixLabel.setVisible(true);
+            myWindowSizeLabel.setVisible(false);
+            myWindowSizeCountLabel.setVisible(false);
+            myWindowSizeTextField.setVisible(false);
+            mySiteByAllLabel.setVisible(false);
+            mySiteByAllCountLabel.setVisible(false);
+            mySiteByAllTextField.setVisible(false);
+            mySiteListLabel.setVisible(false);
+        } else if ( myLDType.getSelectedIndex() == 1 ) {
+            myFullMatrixLabel.setVisible(false);
+            myWindowSizeLabel.setVisible(true);
+            myWindowSizeCountLabel.setVisible(true);
+            myWindowSizeTextField.setVisible(true);
+            mySiteByAllLabel.setVisible(false);
+            mySiteByAllCountLabel.setVisible(false);
+            mySiteByAllTextField.setVisible(false);
+            mySiteListLabel.setVisible(false);
+        } else if ( myLDType.getSelectedIndex() == 2 ) {
+            myFullMatrixLabel.setVisible(false);
+            myWindowSizeLabel.setVisible(false);
+            myWindowSizeCountLabel.setVisible(false);
+            myWindowSizeTextField.setVisible(false);
+            mySiteByAllLabel.setVisible(true);
+            mySiteByAllCountLabel.setVisible(true);
+            mySiteByAllTextField.setVisible(true);
+            mySiteListLabel.setVisible(false);
+        } else if ( myLDType.getSelectedIndex() == 3 ) {
+            myFullMatrixLabel.setVisible(false);
+            myWindowSizeLabel.setVisible(false);
+            myWindowSizeCountLabel.setVisible(false);
+            myWindowSizeTextField.setVisible(false);
+            mySiteByAllLabel.setVisible(false);
+            mySiteByAllCountLabel.setVisible(false);
+            mySiteByAllTextField.setVisible(false);
+            mySiteListLabel.setVisible(true);
+        }
+    }
+
+    void windowSizeTextField_actionPerformed(KeyEvent e) {
+        try {
+
+            int newSize = Integer.parseInt(myWindowSizeTextField.getText());
+            long n = Math.min(myNumSites - 1, newSize);
+            myWindowSizeCountLabel.setText("Sliding Window LD with " + (((n * (n + 1)) / 2) + (myNumSites - n - 1) * n) + " comparisons.");
+
+        } catch ( Exception err ) {
+            System.out.println("error!");
+        }
+    }
+
+    void accumulativeResultsBox_actionPerformed(ActionEvent e) {
+        if ( myAccumulativeResultsBox.isSelected() ) {
+            myAccumulativeResultsLabel.setVisible(true);
+            myAccumulativeResultsTextField.setVisible(true);
+        } else {
+            myAccumulativeResultsLabel.setVisible(false);
+            myAccumulativeResultsTextField.setVisible(false);
+        }
+    }
+
     void runButton_actionPerformed(ActionEvent e) {
 
-        myIsRapidPermutations = myRapidCheckBox.isSelected();
         //        try {
         //            numberPermutations = Integer.parseInt(permNumberTextField.getText());
         //        } catch (Exception ee) {

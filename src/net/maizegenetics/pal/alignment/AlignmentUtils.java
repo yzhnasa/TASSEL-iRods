@@ -22,6 +22,89 @@ public class AlignmentUtils {
         // utility class
     }
 
+    /**
+     * This sorts alleles by frequency.  Each cell in the given
+     * array contains a diploid value which is separated
+     * and counted individually.  Resulting double dimension array
+     * holds alleles (bytes) in result[0].  And the counts
+     * are in result[1]. Counts haploid values twice and diploid
+     * values once. Higher ploids are not supported.
+     * 
+     * @param data data
+     * 
+     * @return alleles and counts
+     */
+    public static int[][] getAllelesSortedByFrequency(byte[] data) {
+
+        int[] stateCnt = new int[16];
+        for (int i = 0; i < data.length; i++) {
+            byte first = (byte) ((data[i] >>> 4) & 0xf);
+            byte second = (byte) (data[i] & 0xf);
+            if (first != Alignment.UNKNOWN_ALLELE) {
+                stateCnt[first]++;
+            }
+            if (second != Alignment.UNKNOWN_ALLELE) {
+                stateCnt[second]++;
+            }
+        }
+
+        int count = 0;
+        for (int j = 0; j < 16; j++) {
+            if (stateCnt[j] != 0) {
+                count++;
+            }
+        }
+
+        int result[][] = new int[2][count];
+        int index = 0;
+        for (int k = 0; k < 16; k++) {
+            if (stateCnt[k] != 0) {
+                result[0][index] = k;
+                result[1][index] = stateCnt[k];
+                index++;
+            }
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < count - 1; k++) {
+
+                if (result[1][k] < result[1][k + 1]) {
+
+                    int temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    int tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
+
+    /**
+     * This sorts alleles in a given site by frequency.  Each cell in the given
+     * array contains a diploid value which is separated
+     * and counted individually.  Resulting double dimension array
+     * holds alleles (bytes) in result[0].  And the counts
+     * are in result[1]. Counts haploid values twice and diploid
+     * values once. Higher ploids are not supported.
+     * 
+     * @param data data
+     * @param site site
+     * 
+     * @return alleles and counts
+     */
     public static int[][] getAllelesSortedByFrequency(byte[][] data, int site) {
 
         int[] stateCnt = new int[16];
@@ -402,5 +485,19 @@ public class AlignmentUtils {
      */
     public static byte getDiploidValue(byte a, byte b) {
         return (byte) ((a << 4) | b);
+    }
+
+    /**
+     * Separates diploid allele value into it's two values.
+     * 
+     * @param diploidAllele diploid value
+     * 
+     * @return separated allele values
+     */
+    public static byte[] getDiploidValues(byte diploidAllele) {
+        byte[] result = new byte[2];
+        result[0] = (byte) ((diploidAllele >>> 4) & 0xf);
+        result[1] = (byte) (diploidAllele & 0xf);
+        return result;
     }
 }

@@ -18,6 +18,7 @@ import java.nio.CharBuffer;
 
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.util.BitUtil;
 
 /**
  * Basic method implementation of Tags by Taxa, including methods for reading and writing
@@ -214,7 +215,7 @@ public abstract class AbstractTagsByTaxa extends AbstractTags implements TagsByT
                 taxaNames[t] = rw.readUTF();
 //                    System.out.println(taxaNames[t]);
             }
-            int numberOfLongs = OpenBitSet.bits2words(taxaNum);
+            int numberOfLongs = BitUtil.bits2words(taxaNum);
             long[] distInLong = new long[numberOfLongs];
             OpenBitSet obs;
             for (int i = 0; i < tagNum; i++) {

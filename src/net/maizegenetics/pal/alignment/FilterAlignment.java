@@ -11,10 +11,12 @@ import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.ProgressListener;
 
 /**
- * All taxa and site filtering should be controlled through this class.
- * It essentially creates views of the baseAlignment
+ * All taxa and site filtering should be controlled through this class. It
+ * essentially creates views of the baseAlignment
+ *
  * @author terry
  */
 public class FilterAlignment extends AbstractAlignment {
@@ -64,28 +66,28 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     /**
-     * This returns FilterAlignment with only specified subIdGroup.  Defaults
-     * to retain unknown taxa.
-     * 
+     * This returns FilterAlignment with only specified subIdGroup. Defaults to
+     * retain unknown taxa.
+     *
      * @param a alignment
      * @param subIdGroup subset id group
-     * 
-     * @return filter alignment 
+     *
+     * @return filter alignment
      */
     public static Alignment getInstance(Alignment a, IdGroup subIdGroup) {
         return getInstance(a, subIdGroup, true);
     }
 
     /**
-     * This returns FilterAlignment with only specified subIdGroup.  If
-     * retainUnknownTaxa is true then Alignment will return unknown values
-     * for missing taxa.
-     * 
+     * This returns FilterAlignment with only specified subIdGroup. If
+     * retainUnknownTaxa is true then Alignment will return unknown values for
+     * missing taxa.
+     *
      * @param a alignment
      * @param subIdGroup subset id group
      * @param retainUnknownTaxa whether to retain unknown taxa
-     * 
-     * @return filter alignment 
+     *
+     * @return filter alignment
      */
     public static Alignment getInstance(Alignment a, IdGroup subIdGroup, boolean retainUnknownTaxa) {
 
@@ -315,13 +317,13 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     /**
-     * Factory method that returns a FilterAlignment viewing
-     * sites between start site and end site inclusive.
-     * 
+     * Factory method that returns a FilterAlignment viewing sites between start
+     * site and end site inclusive.
+     *
      * @param a alignment
      * @param startSite start site
      * @param endSite end site
-     * 
+     *
      * @return Filter Alignment
      */
     public static FilterAlignment getInstance(Alignment a, int startSite, int endSite) {
@@ -414,9 +416,9 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     /**
-     * Returns site of this FilterAlignment based on given site from
-     * embedded Alignment.
-     * 
+     * Returns site of this FilterAlignment based on given site from embedded
+     * Alignment.
+     *
      * @param site site
      * @return site in this alignment
      */
@@ -433,10 +435,10 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     /**
-     * Returns sites from original alignment that are viewable (not filtered)
-     * by this filter alignment.
-     * 
-     * @return list of sites 
+     * Returns sites from original alignment that are viewable (not filtered) by
+     * this filter alignment.
+     *
+     * @return list of sites
      */
     public int[] getBaseSitesShown() {
         int numSites = getSiteCount();
@@ -850,9 +852,10 @@ public class FilterAlignment extends AbstractAlignment {
         if (myIsTaxaFilter) {
             int[][] alleles = getAllelesSortedByFrequency(site);
             int resultSize = alleles[0].length;
-            byte[] result = new byte[resultSize];
-            for (int i = 0; i < resultSize; i++) {
-                result[i] = (byte) alleles[0][i];
+            byte[] result = new byte[myMaxNumAlleles];
+            for (int i = 0; i < myMaxNumAlleles; i++) {
+                result[i] = (i < resultSize) ? (byte) alleles[0][i] : Alignment.UNKNOWN_ALLELE;
+                //result[i] = (byte) alleles[0][i];
             }
             return result;
         } else {
@@ -974,6 +977,24 @@ public class FilterAlignment extends AbstractAlignment {
             return true;
         } else {
             return false;
+        }
+    }
+    
+    @Override
+    public void optimizeForTaxa(ProgressListener listener) {
+        if (!myIsSiteFilter && !myIsSiteFilterByRange) {
+            myBaseAlignment.optimizeForTaxa(listener);
+        } else {
+            throw new UnsupportedOperationException("FilterAlignment: optimizeForTaxa: Sites have been filtered.  Can't optimize for taxa.  Must create a new alignment.");
+        }
+    }
+
+    @Override
+    public void optimizeForSites(ProgressListener listener) {
+        if (!myIsTaxaFilter) {
+            myBaseAlignment.optimizeForSites(listener);
+        } else {
+            throw new UnsupportedOperationException("FilterAlignment: optimizeForSites: Taxa have been filtered.  Can't optimize for sites.  Must create a new alignment.");
         }
     }
 }

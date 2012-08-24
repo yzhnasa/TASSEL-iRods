@@ -344,6 +344,12 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing max alleles to retain: " + temp);
                     }
                     TasselPrefs.putAlignmentMaxAllelesToRetain(maxAlleles);
+                } else if (current.equalsIgnoreCase("-optimizeForTaxa")) {
+                    FileLoadPlugin plugin = (FileLoadPlugin) findLastPluginFromCurrentPipe(new Class[]{FileLoadPlugin.class});
+                    if (plugin == null) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No File Load step defined: " + current);
+                    }
+                    plugin.setIsFileCreatedSBit(false);
                 } else if (current.equalsIgnoreCase("-union")) {
                     UnionAlignmentPlugin plugin = new UnionAlignmentPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
