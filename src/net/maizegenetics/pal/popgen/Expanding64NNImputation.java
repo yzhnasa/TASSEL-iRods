@@ -36,7 +36,7 @@ public class Expanding64NNImputation {
     int[] hSite, hTaxon;
     byte[] hState;
     int maskSitCnt=0;
-    int maxNN=20;
+    int maxNN=50;
     double minProb=0.0001;
     boolean maskAndTest=true;
     ApproxFastChiSquareDistribution fcs=new ApproxFastChiSquareDistribution(1000,200);
@@ -45,8 +45,8 @@ public class Expanding64NNImputation {
         this.ldAlign=inldAlign;
         if(maskAndTest) maskSites(300);
         blocks=ldAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
-        this.createNull64Share(ldAlign, 500);
-//        this.createNull64Share(ldAlign);
+//        this.createNull64Share(ldAlign, 500);
+        this.createNull64Share(ldAlign);
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(this.ldAlign);
         int impSiteCnt=0;
         for (int bt = 0; bt < ldAlign.getSequenceCount(); bt++) {
@@ -82,27 +82,27 @@ public class Expanding64NNImputation {
 //                            }
 //                        }
 //                    }
-                for(ShareSize c: bestTaxa.values()) {
-                    int ct=c.compTaxon;
-                    for(int cs=startSite; cs<=endSite; cs++) {
-                        if(mna.getBase(bt, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                            byte nb=ldAlign.getBase(ct, cs);
-                            if(nb!=Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                                mna.setBase(bt, cs, nb);
-                                impSiteCnt++;
-                                taxaImpCnt++;
-                            }
-                        }
-                    }
-                }
-                
-//                for(int cs=startSite; cs<=endSite; cs++) {
-//                    if(mna.getBase(bt, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
-//                        mna.setBase(bt, cs, getBestBase(mna,bestTaxa.values(),cs));
-//                        impSiteCnt++;
-//                        taxaImpCnt++;
+//                for(ShareSize c: bestTaxa.values()) {
+//                    int ct=c.compTaxon;
+//                    for(int cs=startSite; cs<=endSite; cs++) {
+//                        if(mna.getBase(bt, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
+//                            byte nb=ldAlign.getBase(ct, cs);
+//                            if(nb!=Alignment.UNKNOWN_DIPLOID_ALLELE) {
+//                                mna.setBase(bt, cs, nb);
+//                                impSiteCnt++;
+//                                taxaImpCnt++;
+//                            }
+//                        }
 //                    }
 //                }
+                
+                for(int cs=startSite; cs<=endSite; cs++) {
+                    if(mna.getBase(bt, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                        mna.setBase(bt, cs, getBestBase(mna,bestTaxa.values(),cs));
+                        impSiteCnt++;
+                        taxaImpCnt++;
+                    }
+                }
             }
             System.out.printf("Finished %d Imp %d %d %n", System.currentTimeMillis()-time, impSiteCnt, taxaImpCnt);
             if(bt%10==0) compareSites(mna);
@@ -450,12 +450,12 @@ public class Expanding64NNImputation {
     public static void main(String[] args) {
 //        String root="/Users/edbuckler/SolexaAnal/bigprojection/";
         String root="/Volumes/LaCie/bigprojection/";
-        String gFile=root+"282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
-        String mFile=root+"282merge.chr10.hmp.txt";
-        String exFile=root+"282merge_01.chr10.imp.hmp.txt";
-//        String gFile=root+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
-//        String mFile=root+"10pctZeamerge.chr10.hmp.txt";
-//        String exFile=root+"10pctZeamerge_01.chr10.imp.hmp.txt";
+//        String gFile=root+"282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
+//        String mFile=root+"282merge.chr10.hmp.txt";
+//        String exFile=root+"282merge_01.chr10.imp.hmp.txt";
+        String gFile=root+"Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c10.hmp.txt";
+        String mFile=root+"10pctZeamerge.chr10.hmp.txt";
+        String exFile=root+"10pctZeamerge_01.chr10.imp.hmp.txt";
         
         String hFile=root+"maizeHapMapV2_B73RefGenV2_201203028_chr10.hmp.txt";
 
