@@ -11,6 +11,7 @@ import java.util.Map;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.ProgressListener;
 
 /**
  *
@@ -47,7 +48,7 @@ abstract public class AbstractAlignment implements Alignment {
         currentTime = System.currentTimeMillis();
         System.out.println("Time to init alleles: " + ((currentTime - prevTime) / 1000));
     }
-    
+
     public AbstractAlignment(byte[][] alleles, IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         myNumSites = alleles.length;
         init(idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, snpIDs, loci, lociOffsets, retainRareAlleles);
@@ -68,9 +69,9 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     /**
-     * Constructor for FilterAlignment and CombineAlignment.  Most attributes
-     * are stored by wrapped alignments.
-     * 
+     * Constructor for FilterAlignment and CombineAlignment. Most attributes are
+     * stored by wrapped alignments.
+     *
      * @param idGroup id group
      */
     public AbstractAlignment(IdGroup idGroup) {
@@ -79,8 +80,8 @@ abstract public class AbstractAlignment implements Alignment {
 
     /**
      * Constructor for MutableAlignment.
-     * 
-     * @param alleleStates 
+     *
+     * @param alleleStates
      */
     public AbstractAlignment(String[][] alleleStates) {
         init(null, null, null, alleleStates, null, 1, null, new Locus[]{new Locus("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
@@ -977,5 +978,15 @@ abstract public class AbstractAlignment implements Alignment {
     @Override
     public int getTotalNumAlleles() {
         throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    public void optimizeForTaxa(ProgressListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void optimizeForSites(ProgressListener listener) {
+        throw new UnsupportedOperationException();
     }
 }

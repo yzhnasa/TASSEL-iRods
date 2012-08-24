@@ -7,11 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Set;
 import java.util.regex.Pattern;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -22,12 +21,10 @@ import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.MutableSingleEncodeAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.alignment.SBitAlignment;
-import net.maizegenetics.pal.alignment.TBitAlignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.tree.Tree;
@@ -38,7 +35,6 @@ import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
-import net.maizegenetics.util.ProgressListener;
 
 public class NucleotideImputor {
 	/*
@@ -52,8 +48,8 @@ public class NucleotideImputor {
 	 * */
 	
 	Pattern tab = Pattern.compile("\t");
-	SBitAlignment gbsSnps;
-	TBitAlignment gbsSnpsByTaxa;
+	Alignment gbsSnps;
+	Alignment gbsSnpsByTaxa;
 	ArrayList<PopulationData> familyList;
 	String baseOutFilename;
 	String assembly = "NA";
@@ -125,7 +121,7 @@ public class NucleotideImputor {
 			e.printStackTrace();
 		}
 		
-		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(in, null);
+		gbsSnps = ImportUtils.readFromHapmap(in, true, null);
 		
 		System.out.println("Importing population information...");
 		familyList = PopulationData.readPedigreeFile(ped);
@@ -171,7 +167,7 @@ public class NucleotideImputor {
 //		String outImputedLinkage = "";
 		String ped = "/Volumes/Macintosh HD 2/data/namgbs/genos_20120110/merged_nam_ibm/namibm.pedigree.info.txt";
 
-		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(inHapmap, null);
+		gbsSnps = ImportUtils.readFromHapmap(inHapmap, true, null);
 		
 		System.out.println("Importing population information...");
 		familyList = PopulationData.readPedigreeFile(ped);
@@ -184,7 +180,7 @@ public class NucleotideImputor {
 			popdata.members.toArray(ids);
 			Alignment a =  FilterAlignment.getInstance(gbsSnps, new SimpleIdGroup(ids), false);
 //			imputeSnpsForPopulation(a, pop);
-			TBitAlignment tba = callParentAlleles(a, popdata);
+			Alignment tba = callParentAlleles(a, popdata);
 			String parentout = "/Volumes/Macintosh HD 2/data/namgbs/genos_20120110/merged_nam_ibm/NAM_IBM_282_Zea20120110_scv10mF8maf002_mgs_E1pLD5kpUn.c" + chr + "." + popdata.name + "parent.calls.hmpImputed.txt";
 			ExportUtils.writeToHapmap(tba, false, parentout, '\t', null);
 			
@@ -206,7 +202,7 @@ public class NucleotideImputor {
 //		String inHapmap = "/Volumes/Macintosh HD 2/data/cimmyt/cimmyt_imp_20120220/cimmyt_chr" + chr + "_imp_20120220.hmp.txt";
 		String inHapmap = "/Volumes/Macintosh HD 2/data/cimmyt/cimmyt_unimp_20120220/cimmyt_chr" + chr + "_20120220.hmp.txt";
 		String ped = "/Volumes/Macintosh HD 2/data/cimmyt/CIMMYT.3pop.peds.txt";
-		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(inHapmap, null);
+		gbsSnps = ImportUtils.readFromHapmap(inHapmap, true, null);
 		
 		familyList = PopulationData.readPedigreeFile(ped);
 
@@ -215,7 +211,7 @@ public class NucleotideImputor {
 			String[] ids = new String[popdata.members.size()];
 			popdata.members.toArray(ids);
 			Alignment a =  FilterAlignment.getInstance(gbsSnps, new SimpleIdGroup(ids), false);
-			TBitAlignment parentCalls = callParentAlleles(a, popdata);
+			Alignment parentCalls = callParentAlleles(a, popdata);
 //			TBitAlignment parentCalls = callParentAllelesFromParents(a, pop);
 			System.out.println("Parents called on " + parentCalls.getSiteCount() + " sites for family " + popdata.name);
 //			String out = "/Volumes/Macintosh HD 2/data/cimmyt/cimmyt_unimp_20120220/cimmyt_chr1_20120220.parentsfromparents." + family + ".hmp.txt";
@@ -243,8 +239,8 @@ public class NucleotideImputor {
 		
 		int n = inFiles.length;
 		for (int i = 0; i < n; i++) {
-			Alignment a = ImportUtils.readFromHapmap(inFiles[i], null);
-			TBitAlignment tba = TBitAlignment.getInstance(a);
+			Alignment tba = ImportUtils.readFromHapmap(inFiles[i], false, null);
+			//TBitAlignment tba = TBitAlignment.getInstance(a);
 			ExportUtils.writeToHapmap(imputeUsingViterbiFiveState(tba), false, outFiles[i], '\t', null);
 		}
 		System.out.println("Finished.");
@@ -254,7 +250,7 @@ public class NucleotideImputor {
 	public void processWheatSomething() {
 		String inHapmap = "/Volumes/Macintosh HD 2/data/wheat/wheat.f2.genotypes.txt";
 		String ped = "/Volumes/Macintosh HD 2/data/wheat/wheat.ped.txt";
-		gbsSnps = (SBitAlignment) ImportUtils.readFromHapmap(inHapmap, null);
+		gbsSnps = ImportUtils.readFromHapmap(inHapmap, true, null);
 		
 		familyList = PopulationData.readPedigreeFile(ped);
 		
@@ -394,7 +390,7 @@ public class NucleotideImputor {
 			filteredPopAlignment = FilterAlignment.getInstance(popAlignment, snpIds);
 
 			//cluster polymorphic snps within the window by creating a UPGMA tree (cluster on snps)
-			SBitAlignment haplotypeAlignment = SBitAlignment.getInstance(filteredPopAlignment);
+			Alignment haplotypeAlignment = BitAlignment.getInstance(filteredPopAlignment, true);
 			myTree = new UPGMATree(snpDistance(haplotypeAlignment));
 
 			//display tree for debugging
@@ -445,7 +441,7 @@ public class NucleotideImputor {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
 		filteredPopAlignment = FilterAlignment.getInstance(popAlignment, ldSnps);
-		IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(filteredPopAlignment));
+		IBSDistanceMatrix dm = new IBSDistanceMatrix(BitAlignment.getInstance(filteredPopAlignment, true));
 		estimateMissingDistances(dm);
 		myTree = new UPGMATree(dm);
 		clusterMaker = new TreeClusters(myTree);
@@ -521,7 +517,7 @@ public class NucleotideImputor {
 		Alignment cAlignment = FilterAlignment.getInstance(filteredPopAlignment, minorTaxa);
 
 		//set first parent to AA, second parent to CC for ldSnps (snps used to form taxa clusters)
-		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popAlignment);
+		Alignment sbitPopAlignment = BitAlignment.getInstance(popAlignment, true);
 		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
 		System.out.println("snps in parent Alignment = " + parentAlignment.getSiteCount());
 		ntaxa = parentAlignment.getSequenceCount();
@@ -595,7 +591,7 @@ public class NucleotideImputor {
 		
 		FilterAlignment ldAlignment = FilterAlignment.getInstance(parentAlignment, retainedSites);
 		System.out.println("Number of sites in the ldAlignment = " + ldAlignment.getSiteCount());
-		TBitAlignment tba = TBitAlignment.getInstance(ldAlignment);
+		Alignment tba = BitAlignment.getInstance(ldAlignment, false);
 		
 		System.out.println("Starting Viterbi algorithm...");
 		
@@ -639,7 +635,7 @@ public class NucleotideImputor {
 		byte[] Csnp = new byte[input.getSiteCount()];
 				
 		//set first parent to AA, second parent to CC for snps used to form taxa clusters
-		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(input);
+		Alignment sbitPopAlignment = BitAlignment.getInstance(input, true);
 		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
 		System.out.println("snps in parent Alignment = " + parentAlignment.getSiteCount());
 		int ntaxa = parentAlignment.getSequenceCount();
@@ -726,7 +722,7 @@ public class NucleotideImputor {
 		FilterAlignment ldAlignment = FilterAlignment.getInstance(parentAlignment, retainedSites);
 		popdata.snpIndex = ldbits;
 		
-		TBitAlignment tba = TBitAlignment.getInstance(ldAlignment);
+		Alignment tba = BitAlignment.getInstance(ldAlignment, false);
 		System.out.println("number of original sites = " + input.getSiteCount() + ", number of polymorphic sites = " + polybits.cardinality() + ", number of ld sites = " + tba.getSiteCount());
 		
 		//debug export parent alignment
@@ -738,7 +734,7 @@ public class NucleotideImputor {
 		System.out.println("Finished.");
 	}
 	
-	public TBitAlignment callParentAlleles(Alignment input, PopulationData popdata) {
+	public Alignment callParentAlleles(Alignment input, PopulationData popdata) {
 		BitSet polybits = whichSitesArePolymorphic(input);
 		int[] coreSnps = findCoreSnps(input, polybits, 20);
 		String parentA = popdata.parent1;
@@ -773,7 +769,7 @@ public class NucleotideImputor {
 		byte[] Csnp = new byte[input.getSiteCount()];
 				
 		//set first parent to AA, second parent to CC for snps used to form taxa clusters
-		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(input);
+		Alignment sbitPopAlignment = BitAlignment.getInstance(input, true);
 		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
 		System.out.println("snps in parent Alignment = " + parentAlignment.getSiteCount());
 		int ntaxa = parentAlignment.getSequenceCount();
@@ -861,7 +857,7 @@ public class NucleotideImputor {
 		popdata.snpIndex = ldbits;
 		System.out.println("number of original sites = " + input.getSiteCount() + ", number of polymorphic sites = " + polybits.cardinality() + ", number of ld sites = " + ldAlignment.getSiteCount());
 
-		return TBitAlignment.getInstance(ldAlignment);
+		return BitAlignment.getInstance(ldAlignment, false);
 	}
 	
 	public BitSet whichSitesArePolymorphic(Alignment a) {
@@ -922,7 +918,7 @@ public class NucleotideImputor {
 			FilterAlignment filteredPopAlignment = FilterAlignment.getInstance(a, snpIds);
 			
 			//cluster polymorphic snps within the window by creating a UPGMA tree (cluster on snps)
-			SBitAlignment haplotypeAlignment = SBitAlignment.getInstance(filteredPopAlignment);
+			Alignment haplotypeAlignment = BitAlignment.getInstance(filteredPopAlignment, true);
 			UPGMATree myTree = new UPGMATree(snpDistance(haplotypeAlignment));
 			
 			//debug - display the tree 
@@ -962,7 +958,7 @@ public class NucleotideImputor {
 	public IdGroup[] findTaxaGroups(Alignment a, int[] coreSnps) {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
-		IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterAlignment.getInstance(a, coreSnps)));
+		IBSDistanceMatrix dm = new IBSDistanceMatrix(BitAlignment.getInstance(FilterAlignment.getInstance(a, coreSnps), true));
 		estimateMissingDistances(dm);
 		Tree myTree = new UPGMATree(dm);
 		TreeClusters clusterMaker = new TreeClusters(myTree);
@@ -1091,7 +1087,8 @@ public class NucleotideImputor {
 		
 	}
 	
-	public MutableNucleotideAlignment imputeUsingViterbiFiveState(TBitAlignment a) {
+	public MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a) {
+                a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
 		//obs are in {A, C, M}, where M is heterozygote A/C
 		int maxIterations = 50;
@@ -1375,7 +1372,8 @@ public class NucleotideImputor {
 		return new DistanceMatrix(distance, snpIds);
 	}
 	
-	public DistanceMatrix snpDistance2(SBitAlignment a) {
+	public DistanceMatrix snpDistance2(Alignment a) {
+                a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
 		
 		int nsnps = a.getSiteCount();
 		SimpleIdGroup snpIds = new SimpleIdGroup(nsnps, true);
@@ -1539,7 +1537,7 @@ public class NucleotideImputor {
 				
 	}
 	
-	public TBitAlignment callParentAllelesFromParents(Alignment a, PopulationData popdata) {
+	public Alignment callParentAllelesFromParents(Alignment a, PopulationData popdata) {
 		int minAlleleCount = 3;
 		
 		//which are the parents?
@@ -1554,12 +1552,12 @@ public class NucleotideImputor {
 		}
 		
 		//convert a to an sbit alignment
-		SBitAlignment sba;
-		if (a instanceof SBitAlignment) {
-			sba = (SBitAlignment) a;
-		} else {
-			sba = SBitAlignment.getInstance(a);
-		}
+		Alignment sba = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
+		//if (a instanceof SBitAlignment) {
+		//	sba = (SBitAlignment) a;
+		//} else {
+		//	sba = SBitAlignment.getInstance(a);
+		//}
 		
 		int nsites = sba.getSiteCount();
 		OpenBitSet ispoly = new OpenBitSet(nsites);
@@ -1586,7 +1584,7 @@ public class NucleotideImputor {
 		
 		FilterAlignment fa = FilterAlignment.getInstance(sba, snpids);
 		
-		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(SBitAlignment.getInstance(fa));
+		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(BitAlignment.getInstance(fa, true));
 		
 		fa = null;
 		sba = null;
@@ -1609,7 +1607,7 @@ public class NucleotideImputor {
 		}
 		
 		mna.clean();
-		return TBitAlignment.getInstance(mna);
+		return BitAlignment.getInstance(mna, false);
 	}
 	
 	public void extractDataForAFamily() {

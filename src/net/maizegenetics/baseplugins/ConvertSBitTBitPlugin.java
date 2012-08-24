@@ -21,14 +21,14 @@ import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
 import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.SBitAlignment;
-import net.maizegenetics.pal.alignment.TBitAlignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.plugindef.PluginListener;
 import net.maizegenetics.util.ExceptionUtils;
+import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
 import org.apache.log4j.Logger;
 
@@ -57,6 +57,7 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
         }
     }
 
+    @Override
     public DataSet performFunction(DataSet input) {
 
         String name = null;
@@ -74,7 +75,6 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
             }
 
             Datum alignDatum = (Datum) inputData.get(0);
-            Alignment alignment = (Alignment) alignDatum.getData();
             name = alignDatum.getName();
 
             if (isInteractive()) {
@@ -99,59 +99,6 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
         }
     }
 
-    public Alignment convertAlignment(Datum datum, CONVERT_TYPE type, boolean isFriendlyEnough, int maxAlleles, boolean retainRareAlleles) {
-
-        String name = datum.getName();
-        Alignment alignment = null;
-        try {
-            alignment = (Alignment) datum.getData();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("ConvertSBitTBitPlugin: convertAlignment: input must be an alignment.");
-        }
-
-        Alignment result = null;
-        if (type == CONVERT_TYPE.sbit) {
-            if (isFriendlyEnough && alignment.isSBitFriendly()) {
-                result = alignment;
-            } else if (alignment instanceof SBitAlignment) {
-                result = alignment;
-            } else {
-                JOptionPane.showMessageDialog(getParentFrame(), "Must convert data set to site\noptimized format for this function.");
-                if (maxAlleles > 0) {
-                    result = SBitAlignment.getInstance(alignment, maxAlleles, retainRareAlleles);
-                } else {
-                    result = SBitAlignment.getInstance(alignment);
-                }
-            }
-        } else if (type == CONVERT_TYPE.tbit) {
-            if (isFriendlyEnough && alignment.isTBitFriendly()) {
-                result = alignment;
-            } else if (alignment instanceof TBitAlignment) {
-                result = alignment;
-            } else {
-                JOptionPane.showMessageDialog(getParentFrame(), "Must convert data set to taxa\noptimized format for this function.");
-                if (maxAlleles > 0) {
-                    result = TBitAlignment.getInstance(alignment, maxAlleles, retainRareAlleles);
-                } else {
-                    result = TBitAlignment.getInstance(alignment);
-                }
-            }
-        } else {
-            throw new IllegalStateException("ConvertSBitTBitPlugin: convertAlignment: Unknown type: " + type);
-        }
-
-        if (result == null) {
-            showErrorMessage(name, null, type);
-            return null;
-        } else if (alignment != result) {
-            DataSet tds = new DataSet(new Datum(datum.getName(), result, null), this);
-            fireDataSetReturned(new PluginEvent(tds, ConvertSBitTBitPlugin.class));
-        }
-
-        return result;
-
-    }
-
     private DataSet convertAlignment(Datum datum) {
 
         String name = datum.getName();
@@ -162,27 +109,35 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
             throw new IllegalArgumentException("ConvertSBitTBitPlugin: convertAlignment: input must be an alignment.");
         }
 
-        Alignment result = null;
-        if (myType == CONVERT_TYPE.sbit) {
-            result = SBitAlignment.getInstance(alignment);
-        } else if (myType == CONVERT_TYPE.tbit) {
-            result = TBitAlignment.getInstance(alignment);
-        } else {
-            throw new IllegalStateException("ConvertSBitTBitPlugin: convertAlignment: Unknown type: " + myType);
-        }
+        Alignment result = convertAlignment(alignment, myType, this);
 
-        if (result == null) {
-            showErrorMessage(name, null, myType);
-            return null;
-        } else if (alignment == result) {
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), "Nothing To Change");
-                return null;
-            }
-        }
         DataSet tds = new DataSet(new Datum(datum.getName(), result, null), this);
         fireDataSetReturned(new PluginEvent(tds, ConvertSBitTBitPlugin.class));
         return tds;
+    }
+
+    public static Alignment convertAlignment(Alignment alignment, CONVERT_TYPE type, ProgressListener listener) {
+
+        Alignment result = null;
+        if (type == CONVERT_TYPE.sbit) {
+            try {
+                alignment.optimizeForSites(listener);
+                result = alignment;
+            } catch (UnsupportedOperationException e) {
+                result = BitAlignment.getInstance(alignment, true);
+            }
+        } else if (type == CONVERT_TYPE.tbit) {
+            try {
+                alignment.optimizeForTaxa(listener);
+                result = alignment;
+            } catch (UnsupportedOperationException e) {
+                result = BitAlignment.getInstance(alignment, false);
+            }
+        } else {
+            throw new IllegalStateException("ConvertSBitTBitPlugin: convertAlignment: Unknown type: " + type);
+        }
+
+        return result;
     }
 
     private void showErrorMessage(String name, Exception e, CONVERT_TYPE type) {
@@ -246,7 +201,6 @@ class ConvertSBitTBitPluginDialog extends JDialog {
         okButton.setActionCommand("Ok");
         okButton.setText("Ok");
         okButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 myIsCancel = false;
                 setVisible(false);
@@ -255,7 +209,6 @@ class ConvertSBitTBitPluginDialog extends JDialog {
         JButton closeButton = new JButton();
         closeButton.setText("Close");
         closeButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 myIsCancel = true;
                 setVisible(false);

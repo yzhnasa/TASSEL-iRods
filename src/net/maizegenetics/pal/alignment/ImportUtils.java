@@ -173,12 +173,7 @@ public class ImportUtils {
                 offsetsFinal[i] = ((Integer) lociOffsets.get(i)).intValue();
             }
 
-            Alignment result;
-            if (isSBit) {
-                result = SBitAlignment.getNucleotideInstance(idGroup, alleles, theData, null, null, physicalPositions, TasselPrefs.getAlignmentMaxAllelesToRetain(), lociFinal, offsetsFinal, snpIDs, TasselPrefs.getAlignmentRetainRareAlleles());
-            } else {
-                result = TBitAlignment.getNucleotideInstance(idGroup, alleles, theData, null, null, physicalPositions, TasselPrefs.getAlignmentMaxAllelesToRetain(), lociFinal, offsetsFinal, snpIDs, TasselPrefs.getAlignmentRetainRareAlleles());
-            }
+            Alignment result = BitAlignment.getNucleotideInstance(idGroup, alleles, theData, null, null, physicalPositions, TasselPrefs.getAlignmentMaxAllelesToRetain(), lociFinal, offsetsFinal, snpIDs, TasselPrefs.getAlignmentRetainRareAlleles(), isSBit);
 
             prevTime = currentTime;
             currentTime = System.currentTimeMillis();
@@ -198,7 +193,7 @@ public class ImportUtils {
 
     }
 
-    public static Alignment readFasta(String filename) throws FileNotFoundException, IOException {
+    public static Alignment readFasta(String filename, boolean isSBit) throws FileNotFoundException, IOException {
 
         BufferedReader reader = Utils.getBufferedReader(filename);
 
@@ -249,7 +244,7 @@ public class ImportUtils {
         sequences.toArray(sequenceArray);
 
         Locus unknown = new Locus("Unknown", "0", 0, sequenceArray[0].length(), null, null);
-        return SBitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{unknown}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles());
+        return BitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{unknown}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), isSBit);
 
     }
 

@@ -4,7 +4,6 @@
 package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.util.ArgsEngine;
-import net.maizegenetics.pal.alignment.TBitAlignment;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -14,6 +13,7 @@ import java.io.File;
 import java.util.HashMap;
 
 import javax.swing.ImageIcon;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
@@ -46,7 +46,8 @@ public class FastImputationBitFixedWindowPlugin extends AbstractPlugin {
         myLogger.info("Reading from input file: " + myInputFile);
         Alignment a = ImportUtils.readFromHapmap(myInputFile, null);
         myLogger.info("Performing imputation...");
-        a = TBitAlignment.getInstance(a);
+        //a = TBitAlignment.getInstance(a);
+        a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, this);
         FastImputationBitFixedWindow fi;
         if (usePedigree) {
             boolean highHetTaxa[] = markHighHetTaxa(a);

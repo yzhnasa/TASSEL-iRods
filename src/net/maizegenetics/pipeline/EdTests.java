@@ -37,9 +37,9 @@ public class EdTests {
     String gbsHapMergeFile="/Volumes/LaCie/bigprojection/MergeGBSHap.c10.hmp.txt";
  //   String gbsHapMergeImpFile="/Volumes/LaCie/bigprojection/MergeGBSHapImp.c10.hmp.txt";
     String gbsHapMergeImpFile="/Users/edbuckler/SolexaAnal/bigprojection/MergeGBSHapImp.c10.hmp.txt";
-    TBitAlignment gbsMap=null;
-    SBitAlignment hapMap=null;
-    TBitAlignment mergeMap=null;
+    BitAlignment gbsMap=null;
+    BitAlignment hapMap=null;
+    BitAlignment mergeMap=null;
     
 
     public EdTests() {
@@ -83,9 +83,9 @@ public class EdTests {
 //        ExportUtils.writeToHapmap(mna, true, gbsHapMergeImpFile, '\t', null);
 //        System.exit(0);
 //        convertFilesToFastTbit(gbsHapMergeImpFile);
-        gbsMap=(TBitAlignment)readGZOfSBit(gbsHapMergeImpFile, false);
-        hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
-        hapMap=(SBitAlignment)fixHapMapNames(hapMap); 
+        gbsMap=(BitAlignment)readGZOfSBit(gbsHapMergeImpFile, false);
+        hapMap=(BitAlignment)readGZOfSBit(hapFileAGP1, true);
+        hapMap=(BitAlignment)fixHapMapNames(hapMap); 
 //        compareIdentity("B73", hapMap, "B73", gbsMap, true);
 //        compareIdentity("B73", hapMap, "B97", gbsMap, true);
 //        compareIdentity("B97", hapMap, "B97", gbsMap, true);
@@ -138,21 +138,22 @@ public class EdTests {
     }
     
     public void createProjAlignment(String hFile, String gFile, String pOutFile, int chr) {
-        TBitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
+        Alignment gbsMap = ImportUtils.readFromHapmap(gFile, false, null);
+        //BitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
         System.out.println("GBS Map Read");
 //        SBitAlignment hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
-        SBitAlignment hapMap=(SBitAlignment)ImportUtils.readFromHapmap(hFile, (ProgressListener)null);
+        Alignment hapMap=ImportUtils.readFromHapmap(hFile, true, (ProgressListener)null);
         System.out.println("HapMap Read");
-        hapMap=(SBitAlignment)fixHapMapNames(hapMap);  //adds tags so that HapMapNames are recognizable
+        hapMap=fixHapMapNames(hapMap);  //adds tags so that HapMapNames are recognizable
         System.out.println("HapMap Names Fixed");
         MutableNucleotideAlignment mna=combineAlignments(hapMap, gbsMap);
         System.out.println("HapMap and GBS combined");
         mna.clean();
-        TBitAlignment mergeMap=TBitAlignment.getInstance(mna);
+        Alignment mergeMap=BitAlignment.getInstance(mna, false);
         System.out.println("Merge convertd to TBit");
         mna=imputeHapMapTaxaWithNearIdenticals(mergeMap);
         mna.clean();
-        TBitAlignment gbsImpMap=TBitAlignment.getInstance(mna);
+        Alignment gbsImpMap=BitAlignment.getInstance(mna, false);
         System.out.println("Imputed HapMapTaxa on MergeMap");
         BitNeighborFinder bnf=new BitNeighborFinder(hapMap.getIdGroup(), gbsImpMap, hapMap);
         ProjectionAlignment pa=bnf.getPa();
@@ -205,7 +206,7 @@ public class EdTests {
         return ahid;
     }
     
-    private MutableNucleotideAlignment imputeHapMapTaxaWithNearIdenticals(TBitAlignment mergeAlign) {
+    private MutableNucleotideAlignment imputeHapMapTaxaWithNearIdenticals(Alignment mergeAlign) {
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(mergeAlign);
         int[] hapMapTaxaInd=indicesOfHapMapTaxa(mergeAlign.getIdGroup());
         for (int t = 0; t < hapMapTaxaInd.length; t++) {
@@ -346,28 +347,28 @@ public class EdTests {
   
     
     private void convertFilesToFast(boolean gbsSbit, boolean hapSbit) {
-        SBitAlignment gbs=(SBitAlignment)ImportUtils.readFromHapmap(gbsFile, (ProgressListener)null);
+        Alignment gbs=ImportUtils.readFromHapmap(gbsFile, true, (ProgressListener)null);
         if(gbsSbit) {writeAlignmentToSerialGZ(gbs, gbsFile);}
         else{ 
-            TBitAlignment gbsOut=TBitAlignment.getInstance(gbs);
+            Alignment gbsOut=BitAlignment.getInstance(gbs, false);
             writeAlignmentToSerialGZ(gbsOut, gbsFile);
         }
-        SBitAlignment hapmapIn=(SBitAlignment)ImportUtils.readFromHapmap(hapFileAGP1, (ProgressListener)null);
+        Alignment hapmapIn=ImportUtils.readFromHapmap(hapFileAGP1, true, (ProgressListener)null);
         if(hapSbit) {writeAlignmentToSerialGZ(hapmapIn, hapFileAGP1);}
         else {
-            TBitAlignment hapmapOut=TBitAlignment.getInstance(hapmapIn);
+            Alignment hapmapOut=BitAlignment.getInstance(hapmapIn, false);
             writeAlignmentToSerialGZ(hapmapOut, hapFileAGP1);
         }
     }
     
     private void convertFilesToFastSbit(String flatFile) {
-        SBitAlignment align=(SBitAlignment)ImportUtils.readFromHapmap(flatFile, (ProgressListener)null);
+        Alignment align=ImportUtils.readFromHapmap(flatFile, true, (ProgressListener)null);
         writeAlignmentToSerialGZ(align, flatFile);
     }
     
     private void convertFilesToFastTbit(String flatFile) {
-        SBitAlignment align=(SBitAlignment)ImportUtils.readFromHapmap(flatFile, (ProgressListener)null);
-        TBitAlignment alignT=TBitAlignment.getInstance(align);
+        Alignment align=ImportUtils.readFromHapmap(flatFile, true, (ProgressListener)null);
+        Alignment alignT=BitAlignment.getInstance(align, false);
         writeAlignmentToSerialGZ(alignT, flatFile);
     }
     
@@ -412,8 +413,8 @@ public class EdTests {
     
     
     static Alignment readGZOfSBit(String inFile, boolean isSBit) {
-        SBitAlignment sba=null;
-        TBitAlignment tba=null;
+        BitAlignment sba=null;
+        BitAlignment tba=null;
         long time=System.currentTimeMillis();
         try {
             File theFile = new File(Utils.addSuffixIfNeeded(inFile, ".gz"));
@@ -421,10 +422,10 @@ public class EdTests {
             FileInputStream fis = new FileInputStream(theFile);
             GZIPInputStream gs = new GZIPInputStream(fis);
             ObjectInputStream ois = new ObjectInputStream(gs);
-            if(isSBit) {sba=(SBitAlignment)ois.readObject();
+            if(isSBit) {sba=(BitAlignment)ois.readObject();
                 System.out.println(sba.getSiteCount());
                 System.out.println(sba.getSequenceCount());}
-            else {tba=(TBitAlignment)ois.readObject();
+            else {tba=(BitAlignment)ois.readObject();
                 System.out.println(tba.getSiteCount());
                 System.out.println(tba.getSequenceCount());}
             ois.close();

@@ -27,7 +27,7 @@ import org.biojava3.core.sequence.compound.NucleotideCompound;
 
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.alignment.Locus;
-import net.maizegenetics.pal.alignment.SBitAlignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.prefs.TasselPrefs;
@@ -304,9 +304,9 @@ public class TagsAtLocus {
         profile = null;
         Alignment aa = null;
         if (refTagWithGaps) {
-            aa = SBitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles());
+            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
         } else {
-            aa = SBitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles());
+            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
         }
         Alignment faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
         if (printOutRefWithGaps && refTagWithGaps) {
@@ -351,7 +351,7 @@ public class TagsAtLocus {
             writeAlignment(refSeq, myAlign, minRefGenIndex, maxRefGenIndex);
         }
         Alignment a = null;
-        a = SBitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles());
+        a = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
         Alignment fa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(a, 0.000001, 1.0, 2);
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  FA (alignment filtered for polymorphic sites):\n" + fa.toString());

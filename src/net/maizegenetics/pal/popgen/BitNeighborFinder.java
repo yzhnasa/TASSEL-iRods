@@ -5,9 +5,9 @@
 package net.maizegenetics.pal.popgen;
 
 import java.util.ArrayList;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ProjectionAlignment;
-import net.maizegenetics.pal.alignment.TBitAlignment;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.util.BitUtil;
 
@@ -23,16 +23,16 @@ public class BitNeighborFinder {
     private byte[][] same, diff, hets;
     IdGroup hdTargetID;
     int[] hdTarget;
-    private TBitAlignment ldAlign;
+    private Alignment ldAlign;
     int minSites=256;
     int maxWindow=2048/64;
     double minIdentityDiff=0.01;
     ProjectionAlignment pa;
     
 
-    public BitNeighborFinder(IdGroup hdTargetID, TBitAlignment ldAlign, Alignment hdAlign) {
+    public BitNeighborFinder(IdGroup hdTargetID, Alignment ldAlign, Alignment hdAlign) {
         this.hdTargetID = hdTargetID;
-        this.ldAlign = ldAlign;
+        this.ldAlign = ConvertSBitTBitPlugin.convertAlignment(ldAlign, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
         initHDTargets();
         pa=new ProjectionAlignment(hdAlign,ldAlign.getIdGroup());
         long prevTime = System.currentTimeMillis();

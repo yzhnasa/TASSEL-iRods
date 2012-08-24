@@ -5,26 +5,21 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
 
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
-import net.maizegenetics.pal.alignment.MutableSingleEncodeAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.alignment.SBitAlignment;
-import net.maizegenetics.pal.alignment.TBitAlignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
-import net.maizegenetics.pal.tree.NeighborJoiningTree;
 import net.maizegenetics.pal.tree.Tree;
 import net.maizegenetics.pal.tree.TreeClusters;
 import net.maizegenetics.pal.tree.UPGMATree;
@@ -104,7 +99,8 @@ public class NucleotideImputationUtils {
 		byte[] Csnp = new byte[popdata.original.getSiteCount()];
 				
 		//set first parent to AA, second parent to CC for snps used to form taxa clusters
-		SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popdata.original);
+		//SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popdata.original);
+                Alignment sbitPopAlignment = ConvertSBitTBitPlugin.convertAlignment(popdata.original, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
 		MutableNucleotideAlignment parentAlignment = MutableNucleotideAlignment.getInstance(sbitPopAlignment);
 		myLogger.info("snps in parent Alignment = " + parentAlignment.getSiteCount());
 		int ntaxa = parentAlignment.getSequenceCount();
@@ -195,7 +191,8 @@ public class NucleotideImputationUtils {
 		popdata.snpIndex = ldbits;
 		myLogger.info("number of original sites = " + popdata.original.getSiteCount() + ", number of polymorphic sites = " + polybits.cardinality() + ", number of ld sites = " + ldAlignment.getSiteCount());
 
-		popdata.imputed = TBitAlignment.getInstance(ldAlignment);
+		//popdata.imputed = TBitAlignment.getInstance(ldAlignment);
+                popdata.imputed = ConvertSBitTBitPlugin.convertAlignment(ldAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 	}
 
 	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
@@ -221,7 +218,8 @@ public class NucleotideImputationUtils {
 		int[][] snpIndices = getWindows(filteredBits, windowSize);
 		
 		for (int[] snpIndex : snpIndices) {
-			SBitAlignment windowAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
+			//SBitAlignment windowAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
+                        Alignment windowAlignment = BitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex), true);
 			
 			LinkedList<Integer> snpList = new LinkedList<Integer>(); //snpList is a list of snps (indices) in this window
 			for (int s:snpIndex) snpList.add(s);
@@ -290,7 +288,7 @@ public class NucleotideImputationUtils {
 			}
 		}
 		mna.clean();
-		popdata.imputed = SBitAlignment.getInstance(mna); 
+		popdata.imputed = BitAlignment.getInstance(mna, true); 
 	}
 
 	public static void checkAlignmentOrder(Alignment[] alignments, PopulationData family, double r) {
@@ -561,7 +559,7 @@ public class NucleotideImputationUtils {
 			FilterAlignment filteredPopAlignment = FilterAlignment.getInstance(a, snpIds);
 			
 			//cluster polymorphic snps within the window by creating a UPGMA tree (cluster on snps)
-			SBitAlignment haplotypeAlignment = SBitAlignment.getInstance(filteredPopAlignment);
+			Alignment haplotypeAlignment = BitAlignment.getInstance(filteredPopAlignment, true);
 			UPGMATree myTree = new UPGMATree(snpDistance(haplotypeAlignment));
 			
 			//debug - display the tree 
@@ -602,7 +600,8 @@ public class NucleotideImputationUtils {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
 		
-		IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterAlignment.getInstance(a, coreSnps)));
+		//IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterAlignment.getInstance(a, coreSnps)));
+                IBSDistanceMatrix dm = new IBSDistanceMatrix(ConvertSBitTBitPlugin.convertAlignment(FilterAlignment.getInstance(a, coreSnps), ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null));
 		estimateMissingDistances(dm);
 		Tree myTree = new UPGMATree(dm);
 		TreeClusters clusterMaker = new TreeClusters(myTree);
@@ -785,7 +784,8 @@ public class NucleotideImputationUtils {
 		return  num / Math.sqrt(denom);
 	}
 
-	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(TBitAlignment a, double probHeterozygous, String familyName) {
+	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName) {
+                a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
 		//obs are in {A, C, M}, where M is heterozygote A/C
 		int maxIterations = 50;
@@ -1125,7 +1125,7 @@ public class NucleotideImputationUtils {
 				sitecount++;
 			}
 			if (sitecount < nsnps) {
-				SBitAlignment subAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(a, snpndx));
+				Alignment subAlignment = BitAlignment.getInstance(FilterAlignment.getInstance(a, snpndx), true);
 				IBSDistanceMatrix dm = new IBSDistanceMatrix(subAlignment);
 				estimateMissingDistances(dm);
 
@@ -1173,7 +1173,7 @@ public class NucleotideImputationUtils {
 							if (include[s]) goodSnpIndex[cnt++] = s;
 						}
 						
-						IBSDistanceMatrix dm2 = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterAlignment.getInstance(subAlignment, goodSnpIndex)));
+						IBSDistanceMatrix dm2 = new IBSDistanceMatrix(BitAlignment.getInstance(FilterAlignment.getInstance(subAlignment, goodSnpIndex), true));
 						estimateMissingDistances(dm2);
 						Tree thisTree = new UPGMATree(dm2);
 						
@@ -1210,9 +1210,9 @@ public class NucleotideImputationUtils {
 	 * @return	an alignment with the one of any correlated pairs of SNPs removed
 	 */
 	public static Alignment removeSNPsFromSameTag(Alignment alignIn, double minRsq) {
-		SBitAlignment sba;
-		if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
-		else sba = SBitAlignment.getInstance(alignIn);
+		Alignment sba = ConvertSBitTBitPlugin.convertAlignment(alignIn, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
+		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
+		//else sba = SBitAlignment.getInstance(alignIn);
 		
 		int nsites = sba.getSiteCount();
 		int ntaxa = sba.getSequenceCount();
@@ -1255,9 +1255,9 @@ public class NucleotideImputationUtils {
 	}
 	
 	public static OpenBitSet whichSnpsAreFromSameTag(Alignment alignIn, double minRsq) {
-		SBitAlignment sba;
-		if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
-		else sba = SBitAlignment.getInstance(alignIn);
+		Alignment sba = ConvertSBitTBitPlugin.convertAlignment(alignIn, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
+		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
+		//else sba = SBitAlignment.getInstance(alignIn);
 		
 		int nsites = sba.getSiteCount();
 		int ntaxa = sba.getSequenceCount();

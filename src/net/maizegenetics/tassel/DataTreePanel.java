@@ -99,8 +99,8 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
     private TreeSelectionListener myTreeSelectionListener = null;
 
     /**
-     * This constructor is for debugging purposes.  It allows tracking of the type of object being held
-     * by the DataTreePanel.
+     * This constructor is for debugging purposes. It allows tracking of the
+     * type of object being held by the DataTreePanel.
      *
      * @param theQAF
      * @param dataOrResultMode
@@ -132,6 +132,14 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
         initKeyStrokeListener();
 
         myTree.putClientProperty("JTree.lineStyle", myLineStyle);
+
+        URL tsBitURL = DataTreePanel.class.getResource("images/tsBit.gif");
+        final ImageIcon tsBitIcon;
+        if (tsBitURL != null) {
+            tsBitIcon = new ImageIcon(tsBitURL);
+        } else {
+            tsBitIcon = null;
+        }
 
         URL sBitURL = DataTreePanel.class.getResource("images/sBit.gif");
         final ImageIcon sBitIcon;
@@ -191,7 +199,6 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
 
 
         myTree.setCellRenderer(new DefaultTreeCellRenderer() {
-
             public Component getTreeCellRendererComponent(JTree pTree,
                     Object pValue, boolean pIsSelected, boolean pIsExpanded,
                     boolean pIsLeaf, int pRow, boolean pHasFocus) {
@@ -206,7 +213,9 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
 
                 if (data instanceof Alignment) {
                     Alignment align = (Alignment) data;
-                    if (align.isSBitFriendly()) {
+                    if ((align.isTBitFriendly()) && (align.isSBitFriendly())) {
+                        setIcon(tsBitIcon);
+                    } else if (align.isSBitFriendly()) {
                         if ((align instanceof FilterAlignment) && (sBitFilterIcon != null)) {
                             setIcon(sBitFilterIcon);
                         } else if ((align instanceof CombineAlignment) && (sBitCombineIcon != null)) {
@@ -278,7 +287,6 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
     private void initKeyStrokeListener() {
 
         myTree.addKeyListener(new KeyAdapter() {
-
             /**
              * Invoked when a key has been released.
              */
@@ -292,7 +300,6 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
     private void initSelectionListener() {
 
         myTreeSelectionListener = (new TreeSelectionListener() {
-
             public void valueChanged(TreeSelectionEvent e) {
                 try {
                     DefaultMutableTreeNode node = null;
@@ -651,6 +658,15 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
             addDatum(theDatum);
             return;
         }
+
+        DefaultMutableTreeNode temp = findOnTree(theDatum);
+        if (temp != null) {
+            myTree.scrollPathToVisible(new TreePath(temp.getPath()));
+            myTree.validate();
+            myTree.repaint();
+            return;
+        }
+
         DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) myNodeHash.get(dataParent);
         DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(theDatum);
         myNodeHash.put(theDatum.getName(), childNode);
@@ -687,6 +703,21 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                 break;
             }
         }
+    }
+
+    private DefaultMutableTreeNode findOnTree(Datum theDatum) {
+
+        Object obj = theDatum.getData();
+        Iterator itr = myNodeHash.values().iterator();
+        while (itr.hasNext()) {
+            DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) itr.next();
+            Object current = ((Datum) parentNode.getUserObject()).getData();
+            if (current == obj) {
+                return parentNode;
+            }
+        }
+        return null;
+
     }
 
     public DataSet getSelectedTasselDataSet() {
