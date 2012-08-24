@@ -989,4 +989,9 @@ abstract public class AbstractAlignment implements Alignment {
     public void optimizeForSites(ProgressListener listener) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public byte[] getDepthForAllele(int taxon, int site) {
+        return new byte[]{1, 1};
+    }
 }

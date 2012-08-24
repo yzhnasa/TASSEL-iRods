@@ -785,4 +785,15 @@ public interface Alignment extends Serializable {
      * Optimizes this Alignment for Site based operations.
      */
     public void optimizeForSites(ProgressListener listener);
+    
+    /**
+     * Returns depth count for each diploid allele at
+     * the given taxon and site.
+     * 
+     * @param taxon taxon
+     * @param site site
+     * 
+     * @return two counts
+     */
+    public byte[] getDepthForAllele(int taxon, int site);
 }
