@@ -197,8 +197,9 @@ public class NucleotideImputationUtils {
 
 	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
 		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
-		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
-		filteredBits.and(polybits);
+		BitSet filteredBits = polybits;
+//		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
+//		filteredBits.and(polybits);
 		
 		int nsites = popdata.original.getSiteCount();
 		popdata.alleleA = new byte[nsites];
@@ -235,7 +236,7 @@ public class NucleotideImputationUtils {
 				myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", # of snps in alignment = " + snpList.size());
 			}
 			
-			checkAlignmentOrder(taxaAlignments, popdata, r); //makes sure 
+			checkAlignmentOrderIgnoringParents(taxaAlignments, popdata, r); //if r is negative switch alignment order (which will result in a positive r) 
 			
 			//debug -check upgma tree
 //			int[] selectSnps = new int[snpList.size()];
@@ -356,6 +357,24 @@ public class NucleotideImputationUtils {
 		if (parentsInWrongGroups) {
 			myLogger.warn("Parents in unexpected group for family " + family.name + " at " + alignments[0].getSNPID(0));
 		}
+	}
+	
+	public static void checkAlignmentOrderIgnoringParents(Alignment[] alignments, PopulationData family, double r) {
+		boolean swapAlignments = false;
+		double minR = -0.05;
+		
+		int p1group, p2group;
+		
+		//r is the correlation between taxa assignments in this window and the previous one
+		//if r is negative then parental assignments should be swapped, which will make it positive
+		//this can happen when the parents are not in the data set and the assignment of parents to group is arbitrary
+		if (r < minR) swapAlignments = true;
+		if (swapAlignments) {
+			Alignment temp = alignments[0];
+			alignments[0] = alignments[1];
+			alignments[1] = temp;
+		}
+		
 	}
 	
 	public static int[][] getWindows(BitSet ispoly, int windowSize) {
@@ -658,7 +677,7 @@ public class NucleotideImputationUtils {
 	public static Alignment[] getTaxaGroupAlignments(Alignment a, int[] parentIndex, LinkedList<Integer> snpIndices) {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
-		Alignment[] taxaClusters = ImputationUtils.getTwoClusters(a, parentIndex);
+		Alignment[] taxaClusters = ImputationUtils.getTwoClusters(a);
 		LinkedList<Integer> originalList = new LinkedList<Integer>(snpIndices);
 		int nsites = a.getSiteCount();
 		boolean[] include = new boolean[nsites];
@@ -681,7 +700,8 @@ public class NucleotideImputationUtils {
 		
 		if (snpcount > 5) {
 			includedSnps = Arrays.copyOf(includedSnps, snpcount);
-			return ImputationUtils.getTwoClusters(FilterAlignment.getInstance(a, includedSnps), parentIndex);
+			if (snpcount == nsites) return taxaClusters;
+			else return ImputationUtils.getTwoClusters(FilterAlignment.getInstance(a, includedSnps));
 		} else {
 			snpIndices.clear();
 			snpIndices.addAll(originalList);
@@ -944,12 +964,22 @@ public class NucleotideImputationUtils {
 			}
 			
 			//emission is prob(obs | state) = count(cell)/count(row)
+			double[] rowSums = new double[5];
+			double total = 0;
 			for (int row = 0; row < 5; row++) {
 				double rowsum = 0;
 				for (int col = 0; col < 3; col++) rowsum += emissionCounts[row][col];
 				for (int col = 0; col < 3; col++) emissionProb[row][col] = ((double) emissionCounts[row][col]) / rowsum;
+				rowSums[row] = rowsum;
+				total += rowsum;
 			}
 			ep.setEmissionProbability(emissionProb);
+			
+			//re-estimate pTrue
+			for (int i = 0; i < 5; i++) {
+				pTrue[i
+				      ] = rowSums[i] / total;
+			}
 			
 			//if the model has converged  or if the max iterations has been reached print tables
 			if (!hasNotConverged || iter == maxIterations) {
@@ -1260,7 +1290,7 @@ public class NucleotideImputationUtils {
 		//else sba = SBitAlignment.getInstance(alignIn);
 		
 		int nsites = sba.getSiteCount();
-		int ntaxa = sba.getSequenceCount();
+//		int ntaxa = sba.getSequenceCount();
 		int firstSite = 0;
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
@@ -1284,7 +1314,7 @@ public class NucleotideImputationUtils {
 	            n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
 				
 				double rsq = calculateRSqr(contig[0][0], contig[0][1], contig[1][0], contig[1][1], 2);
-				//if rsq cannot be calculted or rsq is less than the minimum rsq for a snp to be considered highly correlated, select this snp
+				//if rsq cannot be calculated or rsq is less than the minimum rsq for a snp to be considered highly correlated, select this snp
 				if (Double.isNaN(rsq) || rsq < minRsq) isSelected.fastSet(nextSite);
 				nextSite++;
 				nextSnpPos = sba.getPositionInLocus(nextSite);
