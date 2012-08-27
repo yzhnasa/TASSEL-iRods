@@ -178,19 +178,12 @@ class LinkageDiseqDisplayDialog extends JDialog {
     JComboBox upperSqrSelector;
     JComboBox lowerSqrSelector;
 
-    JRadioButton upDPrimeRadioButton = new JRadioButton();
-    JRadioButton upRSqrRadioButton = new JRadioButton();
-    ButtonGroup theButtonGroup = new ButtonGroup();
-    ButtonGroup lowerButtonGroup = new ButtonGroup();
-    JRadioButton upPRadioButton = new JRadioButton();
-    JRadioButton lowRSqrRadioButton = new JRadioButton();
-    JRadioButton lowDPrimeRadioButton = new JRadioButton();
-    JRadioButton lowPRadioButton = new JRadioButton();
     GridBagLayout gridBagLayout1 = new GridBagLayout();
-    ButtonGroup geneChromoButtonGroup = new ButtonGroup();
-    JRadioButton geneRadioButton = new JRadioButton();
-    JRadioButton chromoRadioButton = new JRadioButton();
     JCheckBox schematicCheckBox = new JCheckBox();
+
+    //locks scroll bars together
+    JCheckBox myLockScrollBarsCheckBox = new JCheckBox();
+    boolean myLockedBars = false;
 
     JScrollBar verticalScrollBar = new JScrollBar(Adjustable.VERTICAL);
     JScrollBar horizontalScrollBar = new JScrollBar(Adjustable.HORIZONTAL);
@@ -215,8 +208,8 @@ class LinkageDiseqDisplayDialog extends JDialog {
     JSlider windowYSlider;
 
     // remembers current location
-    int myXPos = (int)Math.ceil(maxWindowSize/2.0);
-    int myYPos = (int)Math.ceil(maxWindowSize/2.0);
+    int myXPos;
+    int myYPos;
 
     public LinkageDiseqDisplayDialog(LinkageDiseqDisplayPlugin theQAF, LinkageDisequilibrium theLinkageDisequilibrium) {
         super(theQAF.getParentFrame(), "Linkage Disequilibrium", false);
@@ -224,6 +217,10 @@ class LinkageDiseqDisplayDialog extends JDialog {
         this.theLinkageDiseqDisplayPlugin = theQAF;
         this.theLinkageDisequilibrium = theLinkageDisequilibrium;
         maxWindowSize = theLinkageDisequilibrium.getSiteCount() + theLinkageDisequilibrium.getAlignment().getNumLoci() - 1;
+
+        myXPos = (int)Math.ceil(maxWindowSize/2.0);
+        myYPos = (int)Math.ceil(maxWindowSize/2.0);
+
         try {
             jbInit();
             if (theLinkageDisequilibrium.getSiteCount() > myDefaultViewableSize) {
@@ -427,65 +424,6 @@ class LinkageDiseqDisplayDialog extends JDialog {
         });
         saveAllButton.setText("Save All");
 
-        upDPrimeRadioButton.setText("D\'");
-        upDPrimeRadioButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                upDPrimeRadioButton_actionPerformed(e);
-            }
-        });
-        upRSqrRadioButton.setSelected(true);
-        upRSqrRadioButton.setText("r^2");
-        upRSqrRadioButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                upRSqrRadioButton_actionPerformed(e);
-            }
-        });
-        upPRadioButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                upPRadioButton_actionPerformed(e);
-            }
-        });
-        upPRadioButton.setText("P");
-        lowRSqrRadioButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                lowRSqrRadioButton_actionPerformed(e);
-            }
-        });
-        lowRSqrRadioButton.setText("r^2");
-        lowDPrimeRadioButton.setText("D\'");
-        lowDPrimeRadioButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                lowDPrimeRadioButton_actionPerformed(e);
-            }
-        });
-        lowPRadioButton.setSelected(true);
-        lowPRadioButton.setText("P");
-        lowPRadioButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                lowPRadioButton_actionPerformed(e);
-            }
-        });
-        geneRadioButton.setSelected(true);
-        geneRadioButton.setText("Gene View");
-        geneRadioButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                geneRadioButton_actionPerformed(e);
-            }
-        });
-        chromoRadioButton.setText("Chromo View");
-        chromoRadioButton.addActionListener(new java.awt.event.ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                chromoRadioButton_actionPerformed(e);
-            }
-        });
         schematicCheckBox.setSelected(true);
         schematicCheckBox.setText("Schematic");
         schematicCheckBox.addActionListener(new java.awt.event.ActionListener() {
@@ -494,12 +432,16 @@ class LinkageDiseqDisplayDialog extends JDialog {
                 schematicCheckBox_actionPerformed(e);
             }
         });
-        theButtonGroup.add(upRSqrRadioButton);
-        theButtonGroup.add(upDPrimeRadioButton);
-        theButtonGroup.add(upPRadioButton);
-        lowerButtonGroup.add(lowRSqrRadioButton);
-        lowerButtonGroup.add(lowDPrimeRadioButton);
-        lowerButtonGroup.add(lowPRadioButton);
+
+        myLockScrollBarsCheckBox.setSelected(false);
+        myLockScrollBarsCheckBox.setText("Lock Y Axis to X");
+        myLockScrollBarsCheckBox.addActionListener(new java.awt.event.ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                lockScrollBarsCheckBox_actionPerformed(e);
+            }
+        });
+
         getContentPane().add(panel1, BorderLayout.CENTER);
         panel1.add(linkPanel, BorderLayout.CENTER);
         this.getContentPane().add(jPanel1, BorderLayout.SOUTH);
@@ -507,14 +449,11 @@ class LinkageDiseqDisplayDialog extends JDialog {
         jPanel1.add(lowerSqrLabel, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(0, 10, 0, 0), 5, 0));
         jPanel1.add(upperSqrSelector, new GridBagConstraints(1, 1, 1, 1, 0.5, 0.5, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
         jPanel1.add(lowerSqrSelector, new GridBagConstraints(1, 2, 1, 1, 0.5, 0.5, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-        jPanel1.add(chromoRadioButton, new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         jPanel1.add(okButton, new GridBagConstraints(5, 2, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(0, 0, 0, 15), 0, 0));
-        jPanel1.add(geneRadioButton, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        jPanel1.add(myLockScrollBarsCheckBox, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         jPanel1.add(saveButton, new GridBagConstraints(4, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         jPanel1.add(saveAllButton, new GridBagConstraints(5, 1, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(0, 0, 0, 15), 0, 0));
         jPanel1.add(schematicCheckBox, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        geneChromoButtonGroup.add(chromoRadioButton);
-        geneChromoButtonGroup.add(geneRadioButton);
     }
 
     void okButton_actionPerformed(ActionEvent e) {
@@ -617,6 +556,14 @@ class LinkageDiseqDisplayDialog extends JDialog {
         repaint();
     }
 
+    void lockScrollBarsCheckBox_actionPerformed(ActionEvent e) {
+        if ( myLockScrollBarsCheckBox.isSelected() ) {
+            myLockedBars = true;
+        } else {
+            myLockedBars = false;
+        }
+    }
+
     void sizeSlider_actionPerformed(MouseEvent me) {
         windowSizeText.setText(String.valueOf(windowSizeSlider.getValue()));
 
@@ -696,6 +643,20 @@ class LinkageDiseqDisplayDialog extends JDialog {
 
         ldFigurePanel.setWindowX(windowXSlider.getValue(), ldMeasureLower, ldMeasureUpper);
         ldMapPanel.setWindowX(windowXSlider.getValue());
+
+        if ( myLockedBars ) {
+            int diff = myXPos - windowXSlider.getValue();
+            System.out.println(diff + "");
+            if ( diff < 0) {
+                windowYSlider.setValue(Math.max(windowYSlider.getMinimum(), windowYSlider.getValue() - diff));
+            } else {
+                windowYSlider.setValue(Math.min(windowYSlider.getMaximum(), windowYSlider.getValue() - diff));
+            }
+
+            ldFigurePanel.setWindowY(windowYSlider.getValue(), ldMeasureLower, ldMeasureUpper);
+            ldMapPanel.setWindowY(windowYSlider.getValue());
+            myYPos = windowYSlider.getValue();
+        }
 
         myXPos = windowXSlider.getValue();
 
