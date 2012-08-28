@@ -314,14 +314,12 @@ public class BitAlignment extends AbstractAlignment {
                         for (int j = 0; j < myMaxNumAlleles; j++) {
                             if (cb[i] == myAlleles[mySite][j]) {
                                 setBit(myData, j, t, mySite, myLoadSBit);
-                                //myData[j][mySite].fastSet(t);
                                 isRare = false;
                                 break;
                             }
                         }
                         if (isRare && retainsRareAlleles()) {
                             setBit(myData, myMaxNumAlleles, t, mySite, myLoadSBit);
-                            //myData[myMaxNumAlleles][mySite].fastSet(t);
                         }
                     }
                 }
@@ -969,15 +967,15 @@ public class BitAlignment extends AbstractAlignment {
             myLogger.info("optimizeForTaxa: Already Optimized for Taxa.");
             return;
         }
-        myTBitData = BitUtil.transpose(mySBitData, myNumDataRows, myNumSites, getSequenceCount());
+        myTBitData = BitUtil.transpose(mySBitData, myNumDataRows, myNumSites, getSequenceCount(), listener);
     }
-    
+        
     @Override
     public void optimizeForSites(ProgressListener listener) {
         if (mySBitData != null) {
             myLogger.info("optimizeForTaxa: Already Optimized for Sites.");
             return;
         }
-        mySBitData = BitUtil.transpose(myTBitData, myNumDataRows, getSequenceCount(), myNumSites);
+        mySBitData = BitUtil.transpose(myTBitData, myNumDataRows, getSequenceCount(), myNumSites, listener);
     }
 }

@@ -16,6 +16,10 @@
  */
 package net.maizegenetics.util;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 /**
  * A variety of high efficiency bit twiddling routines.
  *
@@ -873,17 +877,17 @@ public class BitUtil {
     }
 
     /**
-     * This converts taxa optimized Bit Sets to site optimized Bit Sets
-     * and vice versa.
-     * 
+     * This converts taxa optimized Bit Sets to site optimized Bit Sets and vice
+     * versa.
+     *
      * @param matrix matrix to convert
      * @param numDataRows number data rows (i.e. max num alleles + rare?)
      * @param numRows number rows (i.e. number taxa)
      * @param numColumns number columns (i.e. number sites)
-     * 
+     *
      * @return transposed Bit Sets
      */
-    public static BitSet[][] transpose(BitSet[][] matrix, int numDataRows, int numRows, int numColumns) {
+    public static BitSet[][] transpose(BitSet[][] matrix, int numDataRows, int numRows, int numColumns, ProgressListener listener) {
 
         if (matrix.length != numDataRows) {
             throw new IllegalArgumentException("BitUtil: transpose: number of data rows: " + numDataRows + " should equal number rows in matrix: " + matrix.length);
@@ -905,40 +909,94 @@ public class BitUtil {
         BitSet[][] result = new BitSet[numDataRows][numResultRows];
 
         for (int d = 0; d < numDataRows; d++) {
-            int numProcessedRows = 0;
+
+            ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             for (int c = 0; c < numTransposeColumnWords; c++) {
-
-                long[][] transposeMatrix = new long[numTransposeRowWords][64];
-                for (int r = 0; r < numTransposeRowWords; r++) {
-                    for (int x = 0; x < 64; x++) {
-                        int index = r * 64 + x;
-                        if (index >= numRows) {
-                            break;
-                        }
-                        transposeMatrix[r][x] = matrix[d][index].getBits(c);
-                    }
-                    
-                    transposeMatrix[r] = transpose(transposeMatrix[r]);
-                    
+                int numColumnsToProcess = 64;
+                if (c == numTransposeColumnWords - 1) {
+                    numColumnsToProcess = numColumns - ((numTransposeColumnWords - 1) * 64);
                 }
-
-                for (int x = 0; x < 64; x++) {
-                    if (numProcessedRows >= numResultRows) {
-                        break;
-                    }
-                    long[] temp = new long[numTransposeRowWords];
-                    for (int r = 0; r < numTransposeRowWords; r++) {
-                        temp[r] = transposeMatrix[r][x];
-                    }
-                    result[d][numProcessedRows] = new OpenBitSet(temp, numTransposeRowWords);
-                    numProcessedRows++;
-                }
-
+                pool.execute(new Process64Columns(matrix, numTransposeRowWords, d, numColumnsToProcess, numRows, c, c * 64, result, listener));
             }
+
+            try {
+                pool.shutdown();
+                if (!pool.awaitTermination(600, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("BitUtil: transpose: processing threads timed out.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IllegalStateException("BitUtil: transpose: processing threads problem.");
+            }
+
         }
 
         return result;
 
+    }
+
+    private static class Process64Columns implements Runnable {
+
+        private final BitSet[][] myMatrix;
+        private final int myNumTransposeRowWords;
+        private final int myDataRow;
+        private final int myNumColumnsToProcess;
+        private final int myStartingResultRow;
+        private final int myTransposeColumnWord;
+        private final int myNumRows;
+        private final BitSet[][] myResult;
+        private final ProgressListener myListener;
+
+        public Process64Columns(BitSet[][] matrix, int numTransposeRowWords, int dataRow, int numColumnsToProcess, int numRows, int transposeColumnWord, int startingResultRow, BitSet[][] result, ProgressListener listener) {
+            myMatrix = matrix;
+            myNumTransposeRowWords = numTransposeRowWords;
+            myDataRow = dataRow;
+            myNumColumnsToProcess = numColumnsToProcess;
+            myStartingResultRow = startingResultRow;
+            myTransposeColumnWord = transposeColumnWord;
+            myNumRows = numRows;
+            myResult = result;
+            myListener = listener;
+        }
+
+        @Override
+        public void run() {
+
+            long[][] transposeMatrix = new long[myNumTransposeRowWords][64];
+            for (int r = 0; r < myNumTransposeRowWords; r++) {
+                int index = r * 64;
+                int numRowsToProcess = 64;
+                if (r == myNumTransposeRowWords - 1) {
+                    numRowsToProcess = myNumRows - ((myNumTransposeRowWords - 1) * 64);
+                }
+                for (int x = 0; x < numRowsToProcess; x++) {
+                    transposeMatrix[r][x] = myMatrix[myDataRow][index].getBits(myTransposeColumnWord);
+                    index++;
+                }
+
+                transposeMatrix[r] = transpose(transposeMatrix[r]);
+
+            }
+
+            int resultRow = myStartingResultRow;
+            for (int x = 0; x < myNumColumnsToProcess; x++) {
+                long[] temp = new long[myNumTransposeRowWords];
+                for (int r = 0; r < myNumTransposeRowWords; r++) {
+                    temp[r] = transposeMatrix[r][x];
+                }
+                myResult[myDataRow][resultRow++] = new OpenBitSet(temp, myNumTransposeRowWords);
+            }
+
+            if (myListener != null) {
+                int totalDataRows = myMatrix.length;
+                int totalColumnWords = myMatrix[myDataRow][0].getNumWords();
+                int numUnits = totalDataRows * totalColumnWords;
+                int currentUnit = (myDataRow * totalColumnWords) + myTransposeColumnWord + 1;
+                int progress = (int) (((double) currentUnit / (double) numUnits) * 100.0);
+                myListener.progress(progress, this);
+            }
+
+        }
     }
 
     /**
@@ -949,13 +1007,12 @@ public class BitUtil {
     }
 
     /**
-     * Transposes 64 x 64 bit matrix.  The below before and
-     * after locations.
-     * 1 2   4 2
-     * 3 4   3 1
-     * 
+     * Transposes 64 x 64 bit matrix. The below before and after locations.
+     * 1 2  4 2
+     * 3 4  3 1
+     *
      * @param orig original
-     * 
+     *
      * @return transposed matrix
      */
     public static long[] transpose(long[] orig) {
@@ -976,10 +1033,10 @@ public class BitUtil {
         return result;
 
     }
-    
+
     public static void printBitLong(long A) {
-            String s = String.format("%64s", Long.toBinaryString(A)).replace(" ", "0");
-            System.out.println(s);
+        String s = String.format("%64s", Long.toBinaryString(A)).replace(" ", "0");
+        System.out.println(s);
     }
 
     public static void printBitMatrix(long[] A) {
@@ -990,5 +1047,4 @@ public class BitUtil {
         }
 
     }
-
 }
