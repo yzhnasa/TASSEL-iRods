@@ -31,6 +31,11 @@ public interface BitSet {
      * Expert: returns the long[] storing the bits
      */
     public long[] getBits();
+    
+    /**
+     * Expert: returns 64 bits at index.
+     */
+    public long getBits(int index);
 
     /**
      * Expert: sets a new long[] to use as the bit storage

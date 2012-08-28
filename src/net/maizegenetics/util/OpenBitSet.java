@@ -131,6 +131,10 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
     public long[] getBits() {
         return myBits;
     }
+    
+    public long getBits(int index) {
+        return myBits[index];
+    }
 
     /**
      * Expert: sets a new long[] to use as the bit storage

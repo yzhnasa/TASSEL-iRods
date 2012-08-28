@@ -42,6 +42,11 @@ public class UnmodifiableBitSet implements BitSet {
     public long[] getBits() {
         return myBitSet.getBits().clone();
     }
+    
+    @Override
+    public long getBits(int index) {
+        return myBitSet.getBit(index);
+    }
 
     @Override
     public void setBits(long[] bits) {
