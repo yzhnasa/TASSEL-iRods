@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 import net.maizegenetics.baseplugins.CombineDataSetsPlugin;
 import net.maizegenetics.baseplugins.ConvertAlignmentCoordinatesPlugin;
+import net.maizegenetics.baseplugins.CreateTreePlugin;
 import net.maizegenetics.baseplugins.ExportMultiplePlugin;
 import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
@@ -778,6 +779,39 @@ public class TasselPipeline implements PluginListener {
                     throw new IllegalArgumentException("TasselPipeline: parseArgs: -ckModelHets not needed in Tassel 4.0. It is designed to handle heterzygotes.");
                 } else if (current.equalsIgnoreCase("-ckRescale")) {
                     throw new IllegalArgumentException("TasselPipeline: parseArgs: -ckRescale not needed in Tassel 4.0. It is designed to handle heterzygotes.");
+
+                } else if (current.equalsIgnoreCase("-tree")) {
+
+                    CreateTreePlugin plugin = new CreateTreePlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
+
+                    String temp = args[index++].trim();
+                    if (temp.equalsIgnoreCase("Neighbor")) {
+                        plugin.setNeighborJoining(true);
+                    } else if (temp.equalsIgnoreCase("UPGMA")) {
+                        plugin.setNeighborJoining(false);
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: tree clustering method must be Neighbor or UPGMA: " + temp);
+                    }
+
+                } else if (current.equalsIgnoreCase("-treeSaveDistance")) {
+
+                    CreateTreePlugin plugin = (CreateTreePlugin) findLastPluginFromCurrentPipe(new Class[]{CreateTreePlugin.class});
+                    if (plugin == null) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Create Tree step defined: " + current);
+                    }
+
+                    String temp = args[index++].trim();
+                    boolean value = true;
+                    if (temp.equalsIgnoreCase("false")) {
+                        value = false;
+                    } else if (temp.equalsIgnoreCase("true")) {
+                        value = true;
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: tree save distance matrix parameter must be true or false: " + value);
+                    }
+
+                    plugin.setReturnDistanceMatrix(value);
 
                 } else if (current.equalsIgnoreCase("-gs")) {
                     RidgeRegressionEmmaPlugin plugin = new RidgeRegressionEmmaPlugin(myMainFrame, false);
