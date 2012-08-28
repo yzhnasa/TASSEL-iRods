@@ -32,7 +32,7 @@ public class CreateTreePlugin extends AbstractPlugin {
 
     private boolean isNeighborJoining = true;
     private boolean isReturnDistanceMatrix = true;
-    private boolean isReturnGroupTable = false;
+    //private boolean isReturnGroupTable = false;
 
     /** Creates a new instance of CreateTreePlugin */
     public CreateTreePlugin(Frame parentFrame, boolean isInteractive) {
@@ -63,7 +63,7 @@ public class CreateTreePlugin extends AbstractPlugin {
                 }
                 isNeighborJoining = myDialog.isNeighborJoiningTree();
                 isReturnDistanceMatrix = myDialog.isSaveMatrix();
-                isReturnGroupTable = myDialog.isSaveGroups();
+                //isReturnGroupTable = myDialog.isSaveGroups();
                 myDialog.dispose();
             }
 
@@ -175,11 +175,11 @@ public class CreateTreePlugin extends AbstractPlugin {
 class CreateTreeDialog extends JDialog {
 
     boolean saveMatrix = true;
-    boolean saveGroups = false;
+    //boolean saveGroups = false;
     boolean runAnalysis = false;
     JPanel panel1 = new JPanel();
     JCheckBox saveMatrixCheckBox = new JCheckBox();
-    JCheckBox saveGroupsCheckBox = new JCheckBox();
+    //JCheckBox saveGroupsCheckBox = new JCheckBox();
     JButton runButton = new JButton();
     JButton closeButton = new JButton();
     //  String[] subModels = {"None","Max Likelihood"};
@@ -204,8 +204,8 @@ class CreateTreeDialog extends JDialog {
         panel1.setLayout(gridBagLayout1);
         saveMatrixCheckBox.setSelected(saveMatrix);
         saveMatrixCheckBox.setText("Save distance matrix");
-        saveGroupsCheckBox.setSelected(saveGroups);
-        saveGroupsCheckBox.setText("Save taxa groups");
+        //saveGroupsCheckBox.setSelected(saveGroups);
+        //saveGroupsCheckBox.setText("Save taxa groups");
         runButton.setText("Run");
         runButton.addActionListener(new java.awt.event.ActionListener() {
 
@@ -230,7 +230,7 @@ class CreateTreeDialog extends JDialog {
         //    panel1.add(jLabel2,  new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0
         //            ,GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(36, 107, 0, 171), 35, 9));
         panel1.add(saveMatrixCheckBox, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(6, 67, 0, 28), 38, 0));
-        panel1.add(saveGroupsCheckBox, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(6, 67, 0, 28), 38, 0));
+        //panel1.add(saveGroupsCheckBox, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(6, 67, 0, 28), 38, 0));
         panel1.add(clusteringComboBox, new GridBagConstraints(0, 5, 2, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 111, 0, 146), 41, -1));
         panel1.add(jLabel3, new GridBagConstraints(0, 4, 2, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(6, 113, 0, 165), 36, 9));
     }
@@ -249,9 +249,9 @@ class CreateTreeDialog extends JDialog {
         return saveMatrix;
     }
 
-    public boolean isSaveGroups() {
-        return saveGroups;
-    }
+    //public boolean isSaveGroups() {
+    //    return saveGroups;
+    //}
 
     /** Returns whether the matrix should be saved */
     public boolean isNeighborJoiningTree() {
@@ -264,7 +264,7 @@ class CreateTreeDialog extends JDialog {
 
     void runButton_actionPerformed(ActionEvent e) {
         saveMatrix = saveMatrixCheckBox.isSelected();
-        saveGroups = saveGroupsCheckBox.isSelected();
+        //saveGroups = saveGroupsCheckBox.isSelected();
         runAnalysis = true;
         setVisible(false);
     }
