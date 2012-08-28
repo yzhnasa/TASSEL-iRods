@@ -26,6 +26,7 @@ import net.maizegenetics.plugindef.Datum;
 
 import net.maizegenetics.prefs.TasselPrefs;
 
+import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.report.TableReportUtils;
 
@@ -54,6 +55,7 @@ import java.net.URL;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
+
 import org.apache.log4j.Logger;
 
 /**
@@ -67,7 +69,9 @@ public class ExportPlugin extends AbstractPlugin {
     private String mySaveFile = null;
     private boolean myIsDiploid = false;
 
-    /** Creates a new instance of ExportPlugin */
+    /**
+     * Creates a new instance of ExportPlugin
+     */
     public ExportPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
@@ -98,6 +102,8 @@ public class ExportPlugin extends AbstractPlugin {
                     filename = performFunctionForDistanceMatrix((DistanceMatrix) data);
                 } else if (data instanceof TableReport) {
                     filename = performFunctionForTableReport((TableReport) data);
+                } else if (data instanceof Report) {
+                    filename = performFunctionForReport((Report) data);
                 } else {
                     String message = "Don't know how to export data type: " + data.getClass().getName();
                     if (isInteractive()) {
@@ -314,6 +320,25 @@ public class ExportPlugin extends AbstractPlugin {
 
     }
 
+    public String performFunctionForReport(Report input) {
+        String resultFile = Utils.addSuffixIfNeeded(mySaveFile, ".txt");
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(resultFile);
+            input.report(writer);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalStateException("ExportPlugin: performFunctionForReport: Problem writing file: " + resultFile);
+        } finally {
+            try {
+                writer.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+        return resultFile;
+    }
+
     /**
      * Icon for this plugin to be used in buttons, etc.
      *
@@ -504,7 +529,6 @@ public class ExportPlugin extends AbstractPlugin {
 
             cancelButton.setText("Cancel");
             cancelButton.addActionListener(new ActionListener() {
-
                 public void actionPerformed(ActionEvent e) {
                     cancelButton_actionPerformed(e);
                 }
@@ -512,7 +536,6 @@ public class ExportPlugin extends AbstractPlugin {
 
             okButton.setText("OK");
             okButton.addActionListener(new ActionListener() {
-
                 public void actionPerformed(ActionEvent e) {
                     okButton_actionPerformed(e);
                 }
@@ -598,7 +621,6 @@ class ImputeDisplayOptionDialog extends JDialog {
         yesButton.setMinimumSize(new Dimension(63, 27));
         yesButton.setText("Yes");
         yesButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 yesButton_actionPerformed(e);
             }
@@ -608,7 +630,6 @@ class ImputeDisplayOptionDialog extends JDialog {
         noButton.setMinimumSize(new Dimension(63, 27));
         noButton.setText("No");
         noButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 noButton_actionPerformed(e);
             }
@@ -671,7 +692,6 @@ class DiploidOptionDialog extends JDialog {
         yesButton.setMinimumSize(new Dimension(63, 27));
         yesButton.setText("Yes");
         yesButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 yesButton_actionPerformed(e);
             }
@@ -681,7 +701,6 @@ class DiploidOptionDialog extends JDialog {
         noButton.setMinimumSize(new Dimension(63, 27));
         noButton.setText("No");
         noButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 noButton_actionPerformed(e);
             }
