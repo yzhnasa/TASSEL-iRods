@@ -2,8 +2,8 @@ package net.maizegenetics.gwas.imputation;
 
 import java.util.Arrays;
 import java.util.Random;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.ids.IdGroup;
@@ -197,6 +197,128 @@ public class ImputationUtils {
 		return new Alignment[]{a1, a2};
 	}
 	
+	public static Alignment[] getTwoClusters(Alignment inputAlignment) {
+		
+		Alignment myAlignment = ConvertSBitTBitPlugin.convertAlignment(inputAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+		int ntrials = 5;
+		int maxiter = 5;
+		
+		//if the parents are in the data set use these as seeds
+		//if one parent is in the dataset pick the taxon farthest from it as the other seed
+		//if neither parent is in the dataset choose random seeds
+		int ntaxa = myAlignment.getSequenceCount();
+		int nsnps = myAlignment.getSiteCount();
+		boolean[][] isInCluster1 = new boolean[ntrials][ntaxa];
+		int bestTrial = -1;
+		float maxDistance = 0;
+		
+		Random rand = new Random();
+		
+		float[][] taxaLocs = new float[ntaxa][nsnps];
+		
+		for (int t = 0; t < ntaxa; t++) {
+			taxaLocs[t] = snpsAsFloatVector(new BitSet[]{myAlignment.getAllelePresenceForAllSites(t, 0), myAlignment.getAllelePresenceForAllSites(t, 1)}, nsnps);
+		}
+		
+		for (int trial = 0; trial < ntrials; trial++) {
+			int seed1 = rand.nextInt(ntaxa);
+			int seed2 = -1;
+			while (seed2 == -1 || seed1 == seed2) {
+				seed2 = rand.nextInt(ntaxa);
+			}
+
+			isInCluster1[trial][seed1] = true;
+			isInCluster1[trial][seed2] = false;
+			
+			
+			//do initial cluster assignment
+			for (int t = 0; t < ntaxa; t++) {
+				if (t != seed1 && t != seed2) {
+					float dist1 = getManhattanDistance(taxaLocs[seed1], taxaLocs[t], nsnps);
+					float dist2 = getManhattanDistance(taxaLocs[seed2], taxaLocs[t], nsnps);
+					if (dist1 < dist2) {
+						isInCluster1[trial][t] = true;
+					} else if (dist1 > dist2){
+						isInCluster1[trial][t] = false;
+					} else if (rand.nextDouble() > 0.5) {
+						isInCluster1[trial][t] = true;
+					} else {
+						isInCluster1[trial][t] = false;
+					}
+				}
+			}
+			
+			//update cluster membership until there are no changes or for the maximum number of iterations
+			float[][] meanLocs = new float[2][];
+			boolean badclusters = false;
+			for (int iter = 0; iter < maxiter; iter++) {
+				boolean noChanges = true;
+				
+				int nCluster1 = 0;
+				int nCluster2 = 0;
+				for (int t = 0; t < ntaxa; t++) {
+					if (isInCluster1[trial][t]) nCluster1++;
+					else nCluster2++;
+				}
+				
+				if (nCluster1 == 0 || nCluster2 == 0) {
+					badclusters = true;
+					break;
+				}
+				
+				float[][] cluster1Locs = new float[nCluster1][];
+				float[][] cluster2Locs = new float[nCluster2][];
+				int countCluster1 = 0;
+				int countCluster2 = 0;
+				for (int t = 0; t < ntaxa; t++) {
+					if (isInCluster1[trial][t]) cluster1Locs[countCluster1++] = taxaLocs[t]; 
+					else cluster2Locs[countCluster2++] = taxaLocs[t];
+				}
+				
+				meanLocs = new float[2][];
+				meanLocs[0] = getMeanLocation(cluster1Locs);
+				meanLocs[1] = getMeanLocation(cluster2Locs);
+				for (int t = 0; t < ntaxa; t++) {
+					float[] tloc = snpsAsFloatVector(new BitSet[]{myAlignment.getAllelePresenceForAllSites(t, 0), myAlignment.getAllelePresenceForAllSites(t, 1)}, nsnps);
+					float dist1 = getManhattanDistance(meanLocs[0], tloc, nsnps);
+					float dist2 = getManhattanDistance(meanLocs[1], tloc, nsnps);
+					if (dist1 < dist2 && isInCluster1[trial][t] == false) {
+						isInCluster1[trial][t] = true;
+						noChanges = false;
+					} else if (dist1 > dist2 && isInCluster1[trial][t] == true){
+						isInCluster1[trial][t] = false;
+						noChanges = false;
+					}
+				}
+
+				if (noChanges) break;
+			}
+			
+			if (badclusters == true) {
+				System.out.println("Trial " + trial + ": bad clustering, no distance could be calculated");
+			} else {
+				float distanceBetweenClusters = getManhattanDistance(meanLocs[0], meanLocs[1], nsnps);
+				if (distanceBetweenClusters > maxDistance) {
+					maxDistance = distanceBetweenClusters;
+					bestTrial = trial;
+				}
+				System.out.println("Trial " + trial + ": distance between clusters = " + distanceBetweenClusters);
+			}
+		}
+
+		
+		//make alignments based on the clusters
+		boolean[] isInCluster2 = new boolean[ntaxa];
+		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[bestTrial][t];
+		IdGroup id1 = IdGroupUtils.idGroupSubset(myAlignment.getIdGroup(), isInCluster1[bestTrial]);
+		IdGroup id2 = IdGroupUtils.idGroupSubset(myAlignment.getIdGroup(), isInCluster2);
+		
+		Alignment a1 = FilterAlignment.getInstance(myAlignment, id1);
+		Alignment a2 = FilterAlignment.getInstance(myAlignment, id2);
+		
+		return new Alignment[]{a1, a2};
+	}
+	
 	public static float[] snpsAsFloatVector(BitSet[] alleles, int nsnps) {
 		float[] result = new float[nsnps];
 		for (int s = 0; s < nsnps; s++) {
@@ -256,6 +378,26 @@ public class ImputationUtils {
 			}
 		}
 		
+		return result;
+	}
+	
+	public static float[] getMeanLocation(float[][] locs) {
+		int nsites = locs[0].length;
+		int ntaxa = locs.length;
+		float[] result = new float[nsites];
+		
+		for (int s = 0; s < nsites; s++) {
+			int count = 0;
+			float sum = 0;
+			for (int t = 0; t < ntaxa; t++) {
+				if (!Float.isNaN(locs[t][s])) {
+					count++;
+					sum += locs[t][s];
+				}
+				if (count > 0) result[s] = sum / count;
+				else result[s] = Float.NaN;
+			}
+		}
 		return result;
 	}
 	
