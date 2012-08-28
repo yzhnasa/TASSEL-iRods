@@ -873,15 +873,15 @@ public class BitUtil {
     }
 
     /**
-     * Transposes BitSet matrix to convert between taxa and site optimized
-     * alignments.
-     *
-     * @param matrix original bit set matrix
-     * @param numDataRows number of data rows (num alleles + rare?)
-     * @param numRows number of rows (either sites or taxa)
-     * @param numColumns number of columns (either sites or taxa)
-     *
-     * @return transposed matrix
+     * This converts taxa optimized Bit Sets to site optimized Bit Sets
+     * and vice versa.
+     * 
+     * @param matrix matrix to convert
+     * @param numDataRows number data rows (i.e. max num alleles + rare?)
+     * @param numRows number rows (i.e. number taxa)
+     * @param numColumns number columns (i.e. number sites)
+     * 
+     * @return transposed Bit Sets
      */
     public static BitSet[][] transpose(BitSet[][] matrix, int numDataRows, int numRows, int numColumns) {
 
@@ -898,23 +898,42 @@ public class BitUtil {
         }
 
         int numResultRows = numColumns;
-        int numResultColumns = numRows;
+
+        int numTransposeRowWords = bits2words(numRows);
+        int numTransposeColumnWords = bits2words(numColumns);
 
         BitSet[][] result = new BitSet[numDataRows][numResultRows];
 
         for (int d = 0; d < numDataRows; d++) {
-            for (int r = 0; r < numResultRows; r++) {
-                result[d][r] = new OpenBitSet(numResultColumns);
-            }
-        }
+            int numProcessedRows = 0;
+            for (int c = 0; c < numTransposeColumnWords; c++) {
 
-        for (int d = 0; d < numDataRows; d++) {
-            for (int c = 0; c < numResultColumns; c++) {
-                for (int r = 0; r < numResultRows; r++) {
-                    if (matrix[d][c].fastGet(r)) {
-                        result[d][r].fastSet(c);
+                long[][] transposeMatrix = new long[numTransposeRowWords][64];
+                for (int r = 0; r < numTransposeRowWords; r++) {
+                    for (int x = 0; x < 64; x++) {
+                        int index = r * 64 + x;
+                        if (index >= numRows) {
+                            break;
+                        }
+                        transposeMatrix[r][x] = matrix[d][index].getBits(c);
                     }
+                    
+                    transposeMatrix[r] = transpose(transposeMatrix[r]);
+                    
                 }
+
+                for (int x = 0; x < 64; x++) {
+                    if (numProcessedRows >= numResultRows) {
+                        break;
+                    }
+                    long[] temp = new long[numTransposeRowWords];
+                    for (int r = 0; r < numTransposeRowWords; r++) {
+                        temp[r] = transposeMatrix[r][x];
+                    }
+                    result[d][numProcessedRows] = new OpenBitSet(temp, numTransposeRowWords);
+                    numProcessedRows++;
+                }
+
             }
         }
 
@@ -928,4 +947,48 @@ public class BitUtil {
     public static int bits2words(long numBits) {
         return (int) (((numBits - 1) >>> 6) + 1);
     }
+
+    /**
+     * Transposes 64 x 64 bit matrix.  The below before and
+     * after locations.
+     * 1 2   4 2
+     * 3 4   3 1
+     * 
+     * @param orig original
+     * 
+     * @return transposed matrix
+     */
+    public static long[] transpose(long[] orig) {
+
+        long[] result = new long[64];
+        System.arraycopy(orig, 0, result, 0, 64);
+
+        long m = 0xFFFFFFFF00000000l;
+        long t;
+        for (int j = 32; j != 0; j = j >> 1, m = m ^ (m >>> j)) {
+            for (int k = 0; k < 64; k = (k + j + 1) & ~j) {
+                t = (result[k] ^ (result[k + j] << j)) & m;
+                result[k] = result[k] ^ t;
+                result[k + j] = result[k + j] ^ (t >>> j);
+            }
+        }
+
+        return result;
+
+    }
+    
+    public static void printBitLong(long A) {
+            String s = String.format("%64s", Long.toBinaryString(A)).replace(" ", "0");
+            System.out.println(s);
+    }
+
+    public static void printBitMatrix(long[] A) {
+
+        for (int i = 0; i < A.length; i++) {
+            String s = String.format("%64s", Long.toBinaryString(A[i])).replace(" ", "0");
+            System.out.println(s);
+        }
+
+    }
+
 }
