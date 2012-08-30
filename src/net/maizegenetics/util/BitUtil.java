@@ -963,8 +963,8 @@ public class BitUtil {
         public void run() {
 
             long[][] transposeMatrix = new long[myNumTransposeRowWords][64];
+            int index = 0;
             for (int r = 0; r < myNumTransposeRowWords; r++) {
-                int index = r * 64;
                 int numRowsToProcess = 64;
                 if (r == myNumTransposeRowWords - 1) {
                     numRowsToProcess = myNumRows - ((myNumTransposeRowWords - 1) * 64);
@@ -1017,20 +1017,17 @@ public class BitUtil {
      */
     public static long[] transpose(long[] orig) {
 
-        long[] result = new long[64];
-        System.arraycopy(orig, 0, result, 0, 64);
-
         long m = 0xFFFFFFFF00000000l;
         long t;
         for (int j = 32; j != 0; j = j >> 1, m = m ^ (m >>> j)) {
             for (int k = 0; k < 64; k = (k + j + 1) & ~j) {
-                t = (result[k] ^ (result[k + j] << j)) & m;
-                result[k] = result[k] ^ t;
-                result[k + j] = result[k + j] ^ (t >>> j);
+                t = (orig[k] ^ (orig[k + j] << j)) & m;
+                orig[k] = orig[k] ^ t;
+                orig[k + j] = orig[k + j] ^ (t >>> j);
             }
         }
 
-        return result;
+        return orig;
 
     }
 
