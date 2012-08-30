@@ -91,7 +91,9 @@ public class TasselPipeline implements PluginListener {
     private final List<ThreadedPluginListener> myThreads = new ArrayList();
     private final Map<Plugin, Integer> myProgressValues = new HashMap<Plugin, Integer>();
 
-    /** Creates a new instance of TasselPipeline */
+    /**
+     * Creates a new instance of TasselPipeline
+     */
     public TasselPipeline(String args[], TASSELMainFrame frame) {
 
         myMainFrame = frame;
@@ -856,22 +858,14 @@ public class TasselPipeline implements PluginListener {
                     }
 
                     String type = args[index++].trim();
-                    if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Flapjack.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Flapjack);
-                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Hapmap.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Hapmap);
-                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.HapmapDiploid.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.HapmapDiploid);
-                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Phylip_Inter.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Phylip_Inter);
-                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Phylip_Seq.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Phylip_Seq);
-                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Plink.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Plink);
-                    } else if (type.equalsIgnoreCase(FileLoadPlugin.TasselFileType.Serial.toString())) {
-                        plugin.setAlignmentFileType(FileLoadPlugin.TasselFileType.Serial);
+                    FileLoadPlugin.TasselFileType[] types = FileLoadPlugin.TasselFileType.values();
+                    for (int i = 0; i < types.length; i++) {
+                        if (type.equalsIgnoreCase(types[i].toString())) {
+                            plugin.setAlignmentFileType(types[i]);
+                            break;
+                        }
                     }
-
+                    
                 } else if (current.equalsIgnoreCase("-impute")) {
                     GenotypeImputationPlugin plugin = new GenotypeImputationPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);

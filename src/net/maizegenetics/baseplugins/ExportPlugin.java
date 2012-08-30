@@ -46,6 +46,7 @@ import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.BufferedWriter;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -322,18 +323,34 @@ public class ExportPlugin extends AbstractPlugin {
 
     public String performFunctionForReport(Report input) {
         String resultFile = Utils.addSuffixIfNeeded(mySaveFile, ".txt");
-        PrintWriter writer = null;
-        try {
-            writer = new PrintWriter(resultFile);
-            input.report(writer);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException("ExportPlugin: performFunctionForReport: Problem writing file: " + resultFile);
-        } finally {
+        if (myFileType == FileLoadPlugin.TasselFileType.Text) {
+            BufferedWriter writer = Utils.getBufferedWriter(resultFile);
             try {
-                writer.close();
+                writer.append(input.toString());
             } catch (Exception e) {
-                // do nothing
+                e.printStackTrace();
+                throw new IllegalStateException("ExportPlugin: performFunctionForReport: Problem writing file: " + resultFile);
+            } finally {
+                try {
+                    writer.close();
+                } catch (Exception e) {
+                    // do nothing
+                }
+            }
+        } else {
+            PrintWriter writer = null;
+            try {
+                writer = new PrintWriter(resultFile);
+                input.report(writer);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IllegalStateException("ExportPlugin: performFunctionForReport: Problem writing file: " + resultFile);
+            } finally {
+                try {
+                    writer.close();
+                } catch (Exception e) {
+                    // do nothing
+                }
             }
         }
         return resultFile;
