@@ -131,6 +131,11 @@ public class ParseBarcodeRead {
             // likelyReadEnd for common adapter is CCGCTCAGG, as the Poland et al.(2012) Y adapter was used for MspI
             likelyReadEnd = new String[]{"CCGG", "GTCGAC", "CCGCTCAGG"}; // look for MspI site, SalI site, or common adapter for MspI
             readEndCutSiteRemnantLength = 3;
+        } else if(enzyme.matches("(?i)apo[i1]")){
+            theEnzyme = "ApoI";
+            initialCutSiteRemnant=new String[]{"AATTG","AATTC"};
+            likelyReadEnd = new String[]{"AAATTC","AAATTT","GAATTC","GAATTT","AAATTAGAT","GAATTAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
+            readEndCutSiteRemnantLength = 5;
         } else {
             System.out.println("The software didn't recognize your cut site.  "
                     + "Currently, only ApeKI, PstI, EcoT22I, PasI, HpaII, or MspI are recognized for single enzyme digests, "
