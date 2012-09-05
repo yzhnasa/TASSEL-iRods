@@ -133,8 +133,14 @@ public class ParseBarcodeRead {
             readEndCutSiteRemnantLength = 3;
         } else if(enzyme.matches("(?i)apo[i1]")){
             theEnzyme = "ApoI";
-            initialCutSiteRemnant=new String[]{"AATTG","AATTC"};
+            initialCutSiteRemnant = new String[]{"AATTG","AATTC"};
             likelyReadEnd = new String[]{"AAATTC","AAATTT","GAATTC","GAATTT","AAATTAGAT","GAATTAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
+            readEndCutSiteRemnantLength = 5;
+        } else if(enzyme.matches("(?i)BamH[i1l]")){
+            theEnzyme = "BamHI";
+            initialCutSiteRemnant = new String[]{"GATCC"};
+            // full cut site (from partial digest or chimera) or common adapter start
+            likelyReadEnd = new String[]{"GGATCC", "AGATCGGAA", "AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAG"};
             readEndCutSiteRemnantLength = 5;
         } else {
             System.out.println("The software didn't recognize your cut site.  "
