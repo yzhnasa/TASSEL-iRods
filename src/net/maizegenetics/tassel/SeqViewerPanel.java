@@ -90,7 +90,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
     }
 
     private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel) {
-        this(alignment, null, dataTreePanel, -1);
+        this(alignment, masks, dataTreePanel, -1);
     }
 
     private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel, int sliderPosition) {
