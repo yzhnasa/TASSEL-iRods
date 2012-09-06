@@ -553,6 +553,10 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
     public long cardinality() {
         return BitUtil.pop_array(myBits, 0, myNumWords);
     }
+    
+    public long cardinality(int index) {
+        return BitUtil.pop_array_to_index(myBits, index);
+    }
 
     /**
      * Returns the popcount or cardinality of the intersection of the two sets.

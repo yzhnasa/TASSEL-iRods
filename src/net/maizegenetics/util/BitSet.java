@@ -199,6 +199,16 @@ public interface BitSet {
      * @return the number of set bits
      */
     public long cardinality();
+    
+    /**
+     * Return number of set bits up to and including
+     * bit at given index.
+     * 
+     * @param index index
+     * 
+     * @return the number of set bits
+     */
+    public long cardinality(int index);
 
     /**
      * Returns the index of the first set bit starting at the index specified.

@@ -182,6 +182,11 @@ public class UnmodifiableBitSet implements BitSet {
     public long cardinality() {
         return myBitSet.cardinality();
     }
+    
+    @Override
+    public long cardinality(int index) {
+        return myBitSet.cardinality(index);
+    }
 
     @Override
     public int nextSetBit(int index) {

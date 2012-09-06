@@ -53,6 +53,17 @@ public class BitUtil {
         x = x + (x >>> 32);
         return ((int) x) & 0x7F;
     }
+    
+    public static long pop_array_to_index(long A[], int index) {
+        int numWords = bits2words(index+1);
+        System.out.println("numWords: " + numWords);
+        long result = pop_array(A, 0, numWords-1);
+        int shift = index & 0x3f;
+        shift = 63 - shift;
+        long temp = A[numWords-1] << shift;
+        result = result + pop(temp);
+        return result;
+    }
 
     /**
      * * Returns the number of set bits in an array of longs.
