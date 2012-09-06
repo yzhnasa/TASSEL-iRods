@@ -695,17 +695,29 @@ public class FilterAlignment extends AbstractAlignment {
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (myIsSiteFilter || myIsSiteFilterByRange) {
+            throw new IllegalStateException("FilterAlignment: getAllelePresenceForAllSites: This Filter Alignment has had Sites removed.  You need to optimize for taxa before calling this.");
+        } else {
+            return myBaseAlignment.getAllelePresenceForAllSites(taxon, alleleNumber);
+        }
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (myIsTaxaFilter) {
+            throw new IllegalStateException("FilterAlignment: getAllelePresenceForAllTaxa: This Filter Alignment has had Taxa removed.  You need to optimize for sites before calling this.");
+        } else {
+            return myBaseAlignment.getAllelePresenceForAllTaxa(site, alleleNumber);
+        }
     }
 
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (myIsSiteFilter || myIsSiteFilterByRange) {
+            throw new IllegalStateException("FilterAlignment: getAllelePresenceForSitesBlock: This Filter Alignment has had Sites removed.  You need to optimize for taxa before calling this.");
+        } else {
+            return myBaseAlignment.getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+        }
     }
 
     @Override
@@ -979,7 +991,7 @@ public class FilterAlignment extends AbstractAlignment {
             return false;
         }
     }
-    
+
     @Override
     public void optimizeForTaxa(ProgressListener listener) {
         if (!myIsSiteFilter && !myIsSiteFilterByRange) {
