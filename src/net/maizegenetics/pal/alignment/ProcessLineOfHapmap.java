@@ -167,6 +167,9 @@ public class ProcessLineOfHapmap implements Runnable {
 
             int lastLong = numLongs - 1;
             int numRemaining = myNumTaxa % 64;
+            if (numRemaining == 0) {
+                numRemaining = 64;
+            }
             long bitmask = 0x1L;
             for (int t = lastLong * 64, n = lastLong * 64 + numRemaining; t < n; t++) {
                 cb[0] = (byte) ((data[s][t] >>> 4) & 0xf);
