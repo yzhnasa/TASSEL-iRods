@@ -48,7 +48,7 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     /**
-     * This factory method combines given alignments. It only one alignment,
+     * This factory method combines given alignments. If only one alignment,
      * then it is returned unchanged. Otherwise, this requires that each
      * alignment has the same Identifiers in the same order.
      *
@@ -77,7 +77,7 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     /**
-     * This factory method combines given alignments. It only one alignment,
+     * This factory method combines given alignments. If only one alignment,
      * then it is returned unchanged. If isUnion equals true, a union join of
      * the Identifiers will be used to construct the combination. Any alignment
      * not containing one of the Identifiers will return unknown value for those
@@ -431,17 +431,18 @@ public class CombineAlignment extends AbstractAlignment {
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("CombineAlignment: getAllelePresenceForAllSites: This operation isn't possible as it spans multiple Alignments. It needs to be optimized for taxa first.");
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int translate = translateSite(site);
+        return myAlignments[translate].getAllelePresenceForAllTaxa(site - mySiteOffsets[translate], alleleNumber);
     }
 
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("CombineAlignment: getAllelePresenceForSitesBlock: This operation isn't possible as it spans multiple Alignments. It needs to be optimized for taxa first.");
     }
 
     @Override
