@@ -57,7 +57,9 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     private int myStepSize = 3;
     private char[] myIncTypes = {Alignment.POSITION_TYPE_ANON_CODING_TYPE, Alignment.POSITION_TYPE_INTRON_TYPE, Alignment.POSITION_TYPE_NONTRANSCRIBED_TYPE};  //default is all
 
-    /** Creates a new instance of FilterAlignmentPlugin */
+    /**
+     * Creates a new instance of FilterAlignmentPlugin
+     */
     public FilterAlignmentPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
@@ -104,7 +106,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
         Alignment aa = (Alignment) inDatum.getData();
-        
+
         if (myEnd == -1) {
             myEnd = aa.getSiteCount() - 1;
         }
@@ -132,7 +134,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
             theDialog.dispose();
         }
-        
+
         if (myStart >= aa.getSiteCount()) {
             throw new IllegalArgumentException("FilterAlignmentPlugin: starting site can't be past end of alignment.");
         }
@@ -456,7 +458,6 @@ class DataFilterAlignmentDialog extends JDialog {
         mainPanel.setLayout(gridBagLayout2);
         filterButton.setText("Filter");
         filterButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 filterButton_actionPerformed(e);
             }
@@ -465,14 +466,12 @@ class DataFilterAlignmentDialog extends JDialog {
         cancelButton.setMinimumSize(new Dimension(63, 27));
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 cancelButton_actionPerformed(e);
             }
         });
         chromSelectButton.setText("Select Chromosomes...");
         chromSelectButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 chromSelectButton_actionPerformed(e);
             }
@@ -507,7 +506,6 @@ class DataFilterAlignmentDialog extends JDialog {
         }
 
         countTextField.addFocusListener(new java.awt.event.FocusAdapter() {
-
             public void focusLost(FocusEvent e) {
                 countTextField_focusLost(e);
             }
@@ -525,7 +523,6 @@ class DataFilterAlignmentDialog extends JDialog {
 
         setEndTextField();
         endTextField.addFocusListener(new java.awt.event.FocusAdapter() {
-
             public void focusLost(FocusEvent e) {
                 endTextField_focusLost(e);
             }
@@ -535,7 +532,6 @@ class DataFilterAlignmentDialog extends JDialog {
 
         startTextField.setText(start + "");
         startTextField.addFocusListener(new java.awt.event.FocusAdapter() {
-
             public void focusLost(FocusEvent e) {
                 startTextField_focusLost(e);
             }
@@ -545,7 +541,6 @@ class DataFilterAlignmentDialog extends JDialog {
 
         endPosTextField.setText(endPos + "");
         endPosTextField.addFocusListener(new java.awt.event.FocusAdapter() {
-
             public void focusLost(FocusEvent e) {
                 endPosTextField_focusLost(e);
             }
@@ -555,7 +550,6 @@ class DataFilterAlignmentDialog extends JDialog {
 
         startPosTextField.setText(startPos + "");
         startPosTextField.addFocusListener(new java.awt.event.FocusAdapter() {
-
             public void focusLost(FocusEvent e) {
                 startPosTextField_focusLost(e);
             }
@@ -571,17 +565,15 @@ class DataFilterAlignmentDialog extends JDialog {
 
         freqTextField.setText(minFreq + "");
         freqTextField.addFocusListener(new java.awt.event.FocusAdapter() {
-
             public void focusLost(FocusEvent e) {
                 freqTextField_focusLost(e);
             }
         });
         freqTextField.setPreferredSize(new Dimension(63, 25));
         freqTextField.setMinimumSize(new Dimension(40, 25));
-        
+
         maxFreqTextField.setText(maxFreq + "");
         maxFreqTextField.addFocusListener(new java.awt.event.FocusAdapter() {
-
             public void focusLost(FocusEvent e) {
                 maxFreqTextField_focusLost(e);
             }
@@ -595,19 +587,19 @@ class DataFilterAlignmentDialog extends JDialog {
             lblTotalSequences.setText(" out of " + totalSeq + " sequences");
         }
         /*        siteGroupPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Site Type")   );
-        siteGroupPanel.setOpaque(false);
+         siteGroupPanel.setOpaque(false);
         
-        siteGroupPanel.setLayout(gridBagLayout1);
+         siteGroupPanel.setLayout(gridBagLayout1);
         
-        transcribedRadioButton.setText("Transcribed");
-        transcribedRadioButton.setOpaque(false);
-        noncodingRadioButton.setText("Noncoding");
-        noncodingRadioButton.setOpaque(false);
-        codingRadioButton.setText("Coding");
-        codingRadioButton.setOpaque(false);
-        allRadioButton.setText("All");
-        allRadioButton.setOpaque(false);
-        allRadioButton.setSelected(true);
+         transcribedRadioButton.setText("Transcribed");
+         transcribedRadioButton.setOpaque(false);
+         noncodingRadioButton.setText("Noncoding");
+         noncodingRadioButton.setOpaque(false);
+         codingRadioButton.setText("Coding");
+         codingRadioButton.setOpaque(false);
+         allRadioButton.setText("All");
+         allRadioButton.setOpaque(false);
+         allRadioButton.setSelected(true);
          */
         //indelCheckBox.setText("Extract Indels");
         //indelCheckBox.setOpaque(false);
@@ -619,7 +611,6 @@ class DataFilterAlignmentDialog extends JDialog {
         slidingHapCheckBox.setText("Generate haplotypes via sliding window");
         slidingHapCheckBox.setOpaque(false);
         slidingHapCheckBox.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 boolean enable = slidingHapCheckBox.isSelected();
                 if (!enable) {
@@ -747,14 +738,15 @@ class DataFilterAlignmentDialog extends JDialog {
     public double getMinimumFrequency() {
         return minFreq;
     }
-    
+
     public double getMaximumFrequency() {
         return maxFreq;
     }
 
     /**
-     * For use when not doing batch... it is useful to be able to specify the exact
-     * number of sequences which must be present.
+     * For use when not doing batch... it is useful to be able to specify the
+     * exact number of sequences which must be present.
+     *
      * @see public double getMinPercentage()
      * @return
      */
@@ -766,9 +758,10 @@ class DataFilterAlignmentDialog extends JDialog {
     }
 
     /**
-     * For use when doing batch...  given that one cannot know the number of sequences
-     * in advance of actual execution, one must use a relational number to specify the
-     * number of sequences which must be present.
+     * For use when doing batch... given that one cannot know the number of
+     * sequences in advance of actual execution, one must use a relational
+     * number to specify the number of sequences which must be present.
+     *
      * @see public int getMinimumCount()
      * @return
      */
@@ -1094,7 +1087,7 @@ class DataFilterAlignmentDialog extends JDialog {
         // save this value to the users settings so it shows up the next time
         TasselPrefs.putFilterAlignPluginMinFreq(minFreq);
     }
-    
+
     private void maxFreqTextField_focusLost(FocusEvent e) {
         try {
             String input = maxFreqTextField.getText().trim();
@@ -1227,7 +1220,6 @@ class ChromosomeFilterDialog extends JDialog {
         okayButton.setMinimumSize(new Dimension(63, 27));
         okayButton.setText("Select");
         okayButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 okayButton_actionPerformed(e);
             }
@@ -1237,7 +1229,6 @@ class ChromosomeFilterDialog extends JDialog {
         cancelButton.setMinimumSize(new Dimension(63, 27));
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 cancelButton_actionPerformed(e);
             }
@@ -1248,7 +1239,6 @@ class ChromosomeFilterDialog extends JDialog {
         buttonPanel.add(cancelButton);
 
         selectAllCheckBox.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 selectAllCheckBox_actionPerformed(e);
             }
@@ -1256,7 +1246,6 @@ class ChromosomeFilterDialog extends JDialog {
 
         for (int i = 0; i < selectChromsCheckBoxes.length; i++) {
             selectChromsCheckBoxes[i].addActionListener(new java.awt.event.ActionListener() {
-
                 public void actionPerformed(ActionEvent e) {
                     checkBox_actionPerformed(e);
                 }
