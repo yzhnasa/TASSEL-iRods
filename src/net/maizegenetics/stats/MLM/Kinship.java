@@ -51,11 +51,11 @@ public class Kinship extends DistanceMatrix {
 
     public void buildFromMarker() {
 
-    	IBSDistanceMatrix adm = new IBSDistanceMatrix(mar);
+    	IBSDistanceMatrix adm = new IBSDistanceMatrix(mar, 0, true, null);
     	dm = new DistanceMatrix(adm.getDistance(), mar.getIdGroup());
     	toSimilarity();
     	getKStatistics();
-    	pullBackExtrem();
+//    	pullBackExtrem();
     	//cutOff();
     	rescale();
     	System.out.println("Kinship was built from markers");
