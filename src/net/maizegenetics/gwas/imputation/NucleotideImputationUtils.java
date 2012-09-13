@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.BitAlignment;
@@ -1290,35 +1291,36 @@ public class NucleotideImputationUtils {
 		//else sba = SBitAlignment.getInstance(alignIn);
 		
 		int nsites = sba.getSiteCount();
-//		int ntaxa = sba.getSequenceCount();
 		int firstSite = 0;
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
-		String firstSnpLocus = sba.getLocus(0).getName();
+		Locus firstSnpLocus = sba.getLocus(0);
 		int firstSnpPos = sba.getPositionInLocus(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
 			int nextSnpPos = sba.getPositionInLocus(nextSite);
-			String nextSnpLocus = sba.getLocus(nextSite).getName();
+			Locus nextSnpLocus = sba.getLocus(nextSite);
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
 	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
 	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
 	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
 	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
-	            int n = 0;
 	            int[][] contig = new int[2][2];
-	            n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
-	            n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
-	            n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
-	            n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
+	            contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
+	            contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
+	            contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
+	            contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
 				
 				double rsq = calculateRSqr(contig[0][0], contig[0][1], contig[1][0], contig[1][1], 2);
 				//if rsq cannot be calculated or rsq is less than the minimum rsq for a snp to be considered highly correlated, select this snp
-				if (Double.isNaN(rsq) || rsq < minRsq) isSelected.fastSet(nextSite);
+				if (Double.isNaN(rsq) || rsq < minRsq) {
+					isSelected.fastSet(nextSite);
+					break;
+				}
 				nextSite++;
 				nextSnpPos = sba.getPositionInLocus(nextSite);
-				nextSnpLocus = sba.getLocus(nextSite).getName();
+				nextSnpLocus = sba.getLocus(nextSite);
 			}
 			firstSite = nextSite;
 			firstSnpLocus = nextSnpLocus;
