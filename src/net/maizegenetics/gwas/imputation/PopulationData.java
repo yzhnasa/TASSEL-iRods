@@ -40,24 +40,31 @@ public class PopulationData {
 			br.readLine();
 			while ((input = br.readLine()) != null) {
 				String[] info = tab.split(input);
-				PopulationData family = familyMap.get(info[0]);
-				if (family == null) {
-					family = new PopulationData ();
-					family.name = info[0];
-					family.members = new ArrayList<String>();
-					family.members.add(info[2]);  //add parents to family members
-					family.members.add(info[3]);
-					family.members.add(info[1]);
-					family.parent1 = info[2];
-					family.parent2 = info[3];
-					family.contribution1 = Double.parseDouble(info[4]);
-					family.contribution2 = Double.parseDouble(info[5]);
-					familyMap.put(info[0], family);
+				if (info[0].length() > 0 && !info[0].equalsIgnoreCase("NA")) {
+					PopulationData family = familyMap.get(info[0]);
+					if (family == null) {
+						family = new PopulationData ();
+						family.name = info[0];
+						family.members = new ArrayList<String>();
+						family.members.add(info[2]);  //add parents to family members
+						family.members.add(info[3]);
+						family.members.add(info[1]);
+						family.parent1 = info[2];
+						family.parent2 = info[3];
+						family.contribution1 = Double.parseDouble(info[4]);
+						family.contribution2 = Double.parseDouble(info[5]);
+						try {
+							family.inbredCoef = Double.parseDouble(info[6]);
+						} catch (Exception e) {}
+						
+						familyMap.put(info[0], family);
+					}
+					else family.members.add(info[1]);
 				}
-				else family.members.add(info[1]);
 			}
 			br.close();
 		} catch (IOException e) {
+			System.out.println("at: " + input);
 			e.printStackTrace();
 			System.exit(-1);
 		} catch (NumberFormatException nfe) {
