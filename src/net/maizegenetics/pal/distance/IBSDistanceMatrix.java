@@ -42,6 +42,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     private int lastCachedRowNum = 0;
     private byte[] lastCachedRow = null;
     private int minSitesComp=0;
+    private boolean isTrueIBS = false;
 
     /**
      * compute observed distances.  Missing sites are ignored.  This is no weighting for ambigous bases.
@@ -57,8 +58,13 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     }
 
     public IBSDistanceMatrix(Alignment theAlignment, int minSiteComp, ProgressListener listener) {
+    	this(theAlignment, minSiteComp, false, listener);
+    }
+    
+    public IBSDistanceMatrix(Alignment theAlignment, int minSiteComp, boolean trueIBS, ProgressListener listener) {
         super();
         this.minSitesComp=minSiteComp;
+        isTrueIBS = trueIBS;
         myListener = listener;
         numSeqs = theAlignment.getSequenceCount();
         this.theAlignment = theAlignment;
@@ -125,30 +131,33 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         double[] params;
         double[][] distance = new double[numSeqs][numSeqs];
         for (int i = 0; i < numSeqs; i++) {
-            distance[i][i] = 0;
             long[] iMj=theTBA.getAllelePresenceForAllSites(i, 0).getBits();
             long[] iMn=theTBA.getAllelePresenceForAllSites(i, 1).getBits();
-            for (int j = i + 1; j < numSeqs; j++) {
-                long[] jMj=theTBA.getAllelePresenceForAllSites(j, 0).getBits();
-                long[] jMn=theTBA.getAllelePresenceForAllSites(j, 1).getBits();
-                int sameCnt=0, diffCnt=0, hetCnt=0;
-                for(int x=0; x<iMj.length; x++) {
-                    long same=(iMj[x]&jMj[x])|(iMn[x]&jMn[x]);
-                    long diff=(iMj[x]&jMn[x])|(iMn[x]&jMj[x]);
-                    long hets=same&diff;
-                    sameCnt+=BitUtil.pop(same);
-                    diffCnt+=BitUtil.pop(diff);
-                    hetCnt+=BitUtil.pop(hets);
-                }
-                double identity=(double)(sameCnt+(hetCnt/2))/(double)(sameCnt+diffCnt+hetCnt);
-                double dist=1-identity;
-                int sites=sameCnt+diffCnt-hetCnt;
-                if(sites>minSitesComp) {distance[i][j] = distance[j][i] = dist;}
-                else {
-                    distance[i][j] = distance[j][i] = Double.NaN;
-                }
-                avgTotalSites += sites;  //this assumes not hets
-                count++;
+            for (int j = i; j < numSeqs; j++) {
+            	if (j==i && !isTrueIBS) {
+            		distance[i][i] = 0;
+            	} else {
+                    long[] jMj=theTBA.getAllelePresenceForAllSites(j, 0).getBits();
+                    long[] jMn=theTBA.getAllelePresenceForAllSites(j, 1).getBits();
+                    int sameCnt=0, diffCnt=0, hetCnt=0;
+                    for(int x=0; x<iMj.length; x++) {
+                        long same=(iMj[x]&jMj[x])|(iMn[x]&jMn[x]);
+                        long diff=(iMj[x]&jMn[x])|(iMn[x]&jMj[x]);
+                        long hets=same&diff;
+                        sameCnt+=BitUtil.pop(same);
+                        diffCnt+=BitUtil.pop(diff);
+                        hetCnt+=BitUtil.pop(hets);
+                    }
+                    double identity=(double)(sameCnt+(hetCnt/2))/(double)(sameCnt+diffCnt+hetCnt);
+                    double dist=1-identity;
+                    int sites=sameCnt+diffCnt-hetCnt;
+                    if(sites>minSitesComp) {distance[i][j] = distance[j][i] = dist;}
+                    else {
+                        distance[i][j] = distance[j][i] = Double.NaN;
+                    }
+                    avgTotalSites += sites;  //this assumes not hets
+                    count++;
+            	}
             }
             fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
         }
@@ -255,4 +264,8 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         }
 
     }
+
+	public boolean isTrueIBS() {
+		return isTrueIBS;
+	}
 }
