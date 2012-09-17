@@ -1,6 +1,9 @@
 package net.maizegenetics.gwas.imputation;
 
 import java.awt.Frame;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -9,6 +12,12 @@ import java.util.List;
 import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.xml.DOMConfigurator;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.DefaultXYDataset;
 
 import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -22,16 +31,20 @@ import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
+import net.maizegenetics.util.Utils;
 
 public class QualityChecksPlugin extends AbstractPlugin {
     private static final Logger myLogger = Logger.getLogger(QualityChecksPlugin.class);
 	private String pedigreeFile;
-	private int windowSizeForR2;
-	private double minNonMissingProportionForTaxon = 0.05;
-	private double minNonMissingProportionForSNP = 0.05;
+	private int windowSizeForR2 = 25;
+	private double minNonMissingProportionForTaxon = 0.1;
+	private double minNonMissingProportionForSNP = 0.1;
+	private String avgr2Filename = null;
+	private String avgr2Plotname = null;
+	private String propNonconsensusFilename = null;
 	
-	public enum checkType {AVERAGE_R2, NONCONSENSUS_PROPORTION, NONCONSENSUS_SITES};
-	private ArrayList<checkType> analysisList = new ArrayList<checkType>();
+//	public enum checkType {AVERAGE_R2, NONCONSENSUS_PROPORTION, NONCONSENSUS_SITES};
+//	private ArrayList<checkType> analysisList = new ArrayList<checkType>();
 	
 	public QualityChecksPlugin(Frame parentFrame) {
 		super(parentFrame, false);
@@ -44,19 +57,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		for (Datum datum : datumList) {
 			Alignment anAlignment = (Alignment) datum.getData();
 			anAlignment = preFilterAlignment(anAlignment);
-			for (checkType analysis : analysisList) {
-				switch (analysis) {
-				case AVERAGE_R2:
-					calculateAverageR2ForSnps(anAlignment);
-					break;
-				case NONCONSENSUS_PROPORTION:
-					calculateProportionNonConsensusPerTaxon(anAlignment);
-					break;
-				case NONCONSENSUS_SITES:
-					saveNonConsensusSites(anAlignment);
-					break;
-				}
-			}
+			
 		}
 		return null;
 	}
@@ -164,6 +165,53 @@ public class QualityChecksPlugin extends AbstractPlugin {
         return rsqr;
     }
 
+    private void saveToFileAverageR2(double[] avgr2, Alignment align) {
+    	if (avgr2Filename != null) {
+    		BufferedWriter bw = Utils.getBufferedWriter(avgr2Filename);
+    		int nsites = align.getSiteCount();
+    		try {
+    			bw.write("Site\tchr\tpos\tr2");
+    			bw.newLine();
+    			
+    			for (int s = 0; s < nsites; s++) {
+    				bw.write(align.getSNPID(s));
+    				bw.write("\t");
+    				bw.write(align.getLocusName(s));
+    				bw.write("\t");
+    				bw.write(align.getPositionInLocus(s));
+    				bw.write("\t");
+    				bw.write(Double.toString(avgr2[s]));
+    				bw.newLine();
+    			}
+    			bw.close();
+    		} catch(IOException e) {
+    			myLogger.error("error opening file for avgr2data\n" + e.getMessage() + e.getStackTrace());
+    		}
+    	}
+    }
+    
+    private void plotAverageR2(double[] avgr2, Alignment align) {
+    	if (avgr2Plotname != null) {
+    		int nsites = align.getSiteCount();
+    		String title = "Average R2 in " + windowSizeForR2 + " bp window, chromosome " + align.getLocusName(0);
+    		String xLabel = "position(Mbp)";
+    		String yLabel ="Average R-squared";
+    		DefaultXYDataset xydata = new DefaultXYDataset();
+    		double[][] dataset = new double[2][nsites];
+    		for (int s = 0; s < nsites; s++) {
+    			dataset[0][s] = ((double) align.getPositionInLocus(s)) / 1000000.0 ;
+    		}
+    		dataset[1] = avgr2;
+    		xydata.addSeries("avgr2", dataset);
+    		JFreeChart chart = ChartFactory.createScatterPlot(title, xLabel, yLabel, xydata, PlotOrientation.HORIZONTAL, false, false, false);
+    		try {
+    			ChartUtilities.saveChartAsPNG(new File(avgr2Plotname), chart, 800, 300);
+    		} catch (IOException e) {
+    			myLogger.error("error saving png in plotAverageR2\n" + e.getMessage() + e.getStackTrace());
+    		}
+    	}
+    }
+    
 	private double[] calculateProportionNonConsensusPerTaxon(Alignment align) {
 		double maxMaf = 0.05;
 		int ntaxa = align.getSequenceCount();
@@ -185,20 +233,85 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		return proportionMinor;
 	}
 	
+	private void saveProportionNonConsensusToFile(double[] propNonconsensus, Alignment align) {
+		if (propNonconsensusFilename != null) {
+    		BufferedWriter bw = Utils.getBufferedWriter(propNonconsensusFilename);
+    		int ntaxa = align.getSequenceCount();
+    		try {
+    			bw.write("Taxon\tchr\tpropNC");
+    			bw.newLine();
+    			String chr = align.getLocusName(0);
+    			for (int t = 0; t < ntaxa; t++) {
+    				bw.write(align.getFullTaxaName(t));
+    				bw.write("\t");
+    				bw.write(chr);
+    				bw.write("\t");
+    				bw.write(Double.toString(propNonconsensus[t]));
+    				bw.newLine();
+    			}
+    			bw.close();
+    		} catch(IOException e) {
+    			myLogger.error("error opening file for proportion nonconsensus\n" + e.getMessage() + e.getStackTrace());
+    		}
+		}
+	}
+	
 	private void saveNonConsensusSites(Alignment align) {
 		
 	}
 	
-	public void addAnalysis(checkType analysis) {
-		analysisList.add(analysis);
-	}
+//	public void addAnalysis(checkType analysis) {
+//		analysisList.add(analysis);
+//	}
 	
 	@Override
 	public void setParameters(String[] args) {
-		// TODO Auto-generated method stub
-		super.setParameters(args);
+		if (args == null || args.length == 0) {
+			myLogger.error(getUsage());
+			return;
+		}
+		
+		int narg = args.length;
+		for (int i = 0; i < narg - 1; i++) {
+			if (args[i].equals("-p") || args[i].equalsIgnoreCase("-pedigrees")) {
+				pedigreeFile = args[++i];
+			}
+			else if (args[i].equals("-w") || args[i].equalsIgnoreCase("-window")) {
+				windowSizeForR2 = Integer.parseInt(args[++i]);
+			}
+			else if (args[i].equals("-s") || args[i].equalsIgnoreCase("-nmsnp")) {
+				minNonMissingProportionForSNP = Double.parseDouble(args[++i]);
+			}
+			else if (args[i].equals("-t") || args[i].equalsIgnoreCase("-nmtaxon")) {
+				minNonMissingProportionForTaxon = Double.parseDouble(args[++i]);
+			}
+			else if (args[i].equals("-r") || args[i].equalsIgnoreCase("-r2file")) {
+				avgr2Filename = args[++i];
+			}
+			else if (args[i].equals("-x") || args[i].equalsIgnoreCase("-r2xyplot")) {
+				avgr2Plotname = args[++i];
+			}
+			else if (args[i].equals("-c") || args[i].equalsIgnoreCase("-confile")) {
+				propNonconsensusFilename = args[++i];
+			}
+			else if (args[i].equals("?")) myLogger.error(getUsage());
+		}
 	}
 
+	public String getUsage() {
+		StringBuilder usage = new StringBuilder("The QualityChecksPlugin can take the following parameters:\n");
+		usage.append("-p or -pedigrees : a file containing pedigrees of the individuals to be evaluated\n");
+		usage.append("-w or -window : use a window of +/- this size to evaluate average R-square (default = 25).\n");
+		usage.append("-s or -nmsnp : the minimum proportion of non-missing values allowed for a snp (default = 0.1)\n");
+		usage.append("-t or -nmtaxon : the minimum proportion of non-missing values allowed for a taxon (default = 0.1)\n");
+		usage.append("-r or -r2file : the name of the file to save the average R2 value for each SNP\n");
+		usage.append("-x or -r2xyplot : name of the png file of the average R2 of each SNP, .png will be appended\n");
+		usage.append("-c or -confile : name of the file to save the proportion of nonConsensus SNPs for each taxon\n");
+		usage.append("? : print the parameter list.\n");
+
+		return usage.toString();
+	}
+	
 	@Override
 	public ImageIcon getIcon() {
 		return null;
@@ -212,6 +325,32 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	@Override
 	public String getToolTipText() {
 		return null;
+	}
+
+	public void setWindowSizeForR2(int windowSizeForR2) {
+		this.windowSizeForR2 = windowSizeForR2;
+	}
+
+	public void setMinNonMissingProportionForTaxon(
+			double minNonMissingProportionForTaxon) {
+		this.minNonMissingProportionForTaxon = minNonMissingProportionForTaxon;
+	}
+
+	public void setMinNonMissingProportionForSNP(
+			double minNonMissingProportionForSNP) {
+		this.minNonMissingProportionForSNP = minNonMissingProportionForSNP;
+	}
+
+	public void setAvgr2Filename(String avgr2Filename) {
+		this.avgr2Filename = avgr2Filename;
+	}
+
+	public void setAvgr2Plotname(String avgr2Plotname) {
+		this.avgr2Plotname = avgr2Plotname;
+	}
+
+	public void setPropNonconsensusFilename(String propNonconsensusFilename) {
+		this.propNonconsensusFilename = propNonconsensusFilename;
 	}
 
 	
