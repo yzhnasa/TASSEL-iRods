@@ -21,6 +21,7 @@ import org.jfree.data.xy.DefaultXYDataset;
 
 import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -111,9 +112,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	public Alignment preFilterAlignment(Alignment align) {
 		int ntaxa = align.getSequenceCount();
 		int nsites = align.getSiteCount();
-		int ngametes = 2 * nsites;
-		int minTaxaGametes = (int) Math.ceil(ngametes * minNonMissingProportionForTaxon);
-		int minSiteGametes = (int) Math.ceil(ngametes * minNonMissingProportionForSNP);
+		int nTaxaGametes = 2 * nsites;
+		int nSiteGametes = 2 * ntaxa;
+		int minTaxaGametes = (int) Math.ceil(nTaxaGametes * minNonMissingProportionForTaxon);
+		int minSiteGametes = (int) Math.ceil(nSiteGametes * minNonMissingProportionForSNP);
 		
 		//create list of taxa with too much missing data
 		LinkedList<Identifier> taxaDiscardList = new LinkedList<Identifier>();
@@ -148,7 +150,12 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	}
 	
 	private double[] calculateAverageR2ForSnps(Alignment align) {
-		align.optimizeForSites(null);
+		try {
+			align.optimizeForSites(null);
+		} catch (UnsupportedOperationException e) {
+			align = BitAlignment.getInstance(align, true);
+		}
+		
 		int nsites = align.getSiteCount();
 		int ntaxa = align.getSequenceCount();
 		double[] avgRsq = new double[nsites];
