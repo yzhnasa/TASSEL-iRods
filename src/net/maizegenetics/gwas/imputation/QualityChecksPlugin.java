@@ -53,13 +53,59 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	@Override
 	public DataSet performFunction(DataSet input) {
 		List<Datum> datumList = input.getDataOfType(Alignment.class);
+		ArrayList<PopulationData> familyList;
+		if (pedigreeFile != null) {
+			familyList = PopulationData.readPedigreeFile(pedigreeFile);
+		} else {
+			familyList = new ArrayList<PopulationData>();
+		}
+			
 		
 		for (Datum datum : datumList) {
 			Alignment anAlignment = (Alignment) datum.getData();
-			anAlignment = preFilterAlignment(anAlignment);
+			Alignment familyAlignment;
+			if (pedigreeFile == null) {
+				processFamily(anAlignment, null);
+			} else {
+				for (PopulationData family : familyList) {
+					String[] names = new String[family.members.size()];
+					family.members.toArray(names);
+					Alignment align = FilterAlignment.getInstance(anAlignment, new SimpleIdGroup(names));
+					processFamily(align, family.name);
+				}
+			}
 			
 		}
 		return null;
+	}
+	
+	private void processFamily(Alignment align, String familyname) {
+		preFilterAlignment(align);
+		if (avgr2Filename != null || avgr2Plotname != null) {
+			double[] avgr2 = calculateAverageR2ForSnps(align);
+			if (avgr2Filename != null) saveToFileAverageR2(avgr2, align, addFamilyToFilename(avgr2Filename, familyname, ".txt"));
+			if (avgr2Plotname != null) plotAverageR2(avgr2, align, addFamilyToFilename(avgr2Plotname, familyname, ".png"));
+		}
+		
+		if (propNonconsensusFilename != null) {
+			double[] proportion = calculateProportionNonConsensusPerTaxon(align);
+			saveProportionNonConsensusToFile(proportion, align, addFamilyToFilename(propNonconsensusFilename, familyname, ".txt"));
+		}
+		
+	}
+	
+	private String addFamilyToFilename(String filename, String family, String extension) {
+		if (!extension.startsWith(".")) extension = "." + extension;
+		if (family == null) {
+			if (filename.endsWith(extension)) return filename;
+			else return filename + extension;
+		}
+		
+		if (filename.endsWith(extension)) {
+			filename = filename.substring(0, filename.length() - extension.length());
+		}
+		
+		return filename + "." + family + extension;
 	}
 	
 	public Alignment preFilterAlignment(Alignment align) {
@@ -165,9 +211,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
         return rsqr;
     }
 
-    private void saveToFileAverageR2(double[] avgr2, Alignment align) {
-    	if (avgr2Filename != null) {
-    		BufferedWriter bw = Utils.getBufferedWriter(avgr2Filename);
+    private void saveToFileAverageR2(double[] avgr2, Alignment align, String saveFilename) {
+    		BufferedWriter bw = Utils.getBufferedWriter(saveFilename);
     		int nsites = align.getSiteCount();
     		try {
     			bw.write("Site\tchr\tpos\tr2");
@@ -187,11 +232,9 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		} catch(IOException e) {
     			myLogger.error("error opening file for avgr2data\n" + e.getMessage() + e.getStackTrace());
     		}
-    	}
     }
     
-    private void plotAverageR2(double[] avgr2, Alignment align) {
-    	if (avgr2Plotname != null) {
+    private void plotAverageR2(double[] avgr2, Alignment align, String saveFilename) {
     		int nsites = align.getSiteCount();
     		String title = "Average R2 in " + windowSizeForR2 + " bp window, chromosome " + align.getLocusName(0);
     		String xLabel = "position(Mbp)";
@@ -205,11 +248,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		xydata.addSeries("avgr2", dataset);
     		JFreeChart chart = ChartFactory.createScatterPlot(title, xLabel, yLabel, xydata, PlotOrientation.HORIZONTAL, false, false, false);
     		try {
-    			ChartUtilities.saveChartAsPNG(new File(avgr2Plotname), chart, 800, 300);
+    			ChartUtilities.saveChartAsPNG(new File(saveFilename), chart, 800, 300);
     		} catch (IOException e) {
     			myLogger.error("error saving png in plotAverageR2\n" + e.getMessage() + e.getStackTrace());
     		}
-    	}
     }
     
 	private double[] calculateProportionNonConsensusPerTaxon(Alignment align) {
@@ -233,9 +275,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		return proportionMinor;
 	}
 	
-	private void saveProportionNonConsensusToFile(double[] propNonconsensus, Alignment align) {
-		if (propNonconsensusFilename != null) {
-    		BufferedWriter bw = Utils.getBufferedWriter(propNonconsensusFilename);
+	private void saveProportionNonConsensusToFile(double[] propNonconsensus, Alignment align, String saveFilename) {
+    		BufferedWriter bw = Utils.getBufferedWriter(saveFilename);
     		int ntaxa = align.getSequenceCount();
     		try {
     			bw.write("Taxon\tchr\tpropNC");
@@ -253,15 +294,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		} catch(IOException e) {
     			myLogger.error("error opening file for proportion nonconsensus\n" + e.getMessage() + e.getStackTrace());
     		}
-		}
 	}
 	
-	private void saveNonConsensusSites(Alignment align) {
-		
-	}
-	
-//	public void addAnalysis(checkType analysis) {
-//		analysisList.add(analysis);
+//	private void saveNonConsensusSites(Alignment align) {
+//		
 //	}
 	
 	@Override
@@ -290,6 +326,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-x") || args[i].equalsIgnoreCase("-r2xyplot")) {
 				avgr2Plotname = args[++i];
+				if (!avgr2Plotname.endsWith(".png")) avgr2Plotname += ".png";
 			}
 			else if (args[i].equals("-c") || args[i].equalsIgnoreCase("-confile")) {
 				propNonconsensusFilename = args[++i];
