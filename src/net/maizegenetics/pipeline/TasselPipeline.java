@@ -24,7 +24,9 @@ import java.util.regex.Pattern;
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 import net.maizegenetics.baseplugins.CombineDataSetsPlugin;
 import net.maizegenetics.baseplugins.ConvertAlignmentCoordinatesPlugin;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.baseplugins.CreateTreePlugin;
+import net.maizegenetics.baseplugins.DistanceMatrixPlugin;
 import net.maizegenetics.baseplugins.ExportMultiplePlugin;
 import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
@@ -353,6 +355,14 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: No File Load step defined: " + current);
                     }
                     plugin.setIsFileCreatedSBit(false);
+                } else if (current.equalsIgnoreCase("-convertToSiteOpt")) {
+                    ConvertSBitTBitPlugin plugin = new ConvertSBitTBitPlugin(myMainFrame, false);
+                    plugin.setType(ConvertSBitTBitPlugin.CONVERT_TYPE.sbit);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-convertToTaxaOpt")) {
+                    ConvertSBitTBitPlugin plugin = new ConvertSBitTBitPlugin(myMainFrame, false);
+                    plugin.setType(ConvertSBitTBitPlugin.CONVERT_TYPE.tbit);
+                    integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-union")) {
                     UnionAlignmentPlugin plugin = new UnionAlignmentPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
@@ -818,6 +828,9 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-gs")) {
                     RidgeRegressionEmmaPlugin plugin = new RidgeRegressionEmmaPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-distanceMatrix")) {
+                    DistanceMatrixPlugin plugin = new DistanceMatrixPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-genotypeSummary")) {
                     GenotypeSummaryPlugin plugin = new GenotypeSummaryPlugin(myMainFrame, false);
                     String temp = args[index++].trim();
@@ -993,6 +1006,32 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing filter alignment end: " + temp);
                     }
                     plugin.setEnd(end);
+                } else if (current.equalsIgnoreCase("-filterAlignStartPos")) {
+                    FilterAlignmentPlugin plugin = (FilterAlignmentPlugin) findLastPluginFromCurrentPipe(new Class[]{FilterAlignmentPlugin.class});
+                    if (plugin == null) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Filter Alignment step defined: " + current);
+                    }
+                    String temp = args[index++].trim();
+                    int startPos = 0;
+                    try {
+                        startPos = Integer.parseInt(temp);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing filter alignment start physical position: " + temp);
+                    }
+                    plugin.setStartPos(startPos);
+                } else if (current.equalsIgnoreCase("-filterAlignEndPos")) {
+                    FilterAlignmentPlugin plugin = (FilterAlignmentPlugin) findLastPluginFromCurrentPipe(new Class[]{FilterAlignmentPlugin.class});
+                    if (plugin == null) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Filter Alignment step defined: " + current);
+                    }
+                    String temp = args[index++].trim();
+                    int endPos = 0;
+                    try {
+                        endPos = Integer.parseInt(temp);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing filter alignment end physical position: " + temp);
+                    }
+                    plugin.setEndPos(endPos);
                 } else if (current.equalsIgnoreCase("-filterAlignExtInd")) {
                     FilterAlignmentPlugin plugin = (FilterAlignmentPlugin) findLastPluginFromCurrentPipe(new Class[]{FilterAlignmentPlugin.class});
                     if (plugin == null) {
