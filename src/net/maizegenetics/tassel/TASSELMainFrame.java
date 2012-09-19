@@ -146,6 +146,9 @@ public class TASSELMainFrame extends JFrame {
             initDataMode();
 
             this.setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage) " + this.version);
+            
+            myLogger.info("Tassel Version: " + version + "  Date: " + versionDate);
+            myLogger.info("Max Available Memory Reported by JVM: " + Utils.getMaxHeapSizeMB() + " MB");
         } catch (Exception e) {
             e.printStackTrace();
         }
