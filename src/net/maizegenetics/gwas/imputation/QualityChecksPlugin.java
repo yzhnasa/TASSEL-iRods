@@ -37,7 +37,7 @@ import net.maizegenetics.util.Utils;
 public class QualityChecksPlugin extends AbstractPlugin {
     private static final Logger myLogger = Logger.getLogger(QualityChecksPlugin.class);
 	private String pedigreeFile;
-	private int windowSizeForR2 = 25;
+	private int windowSizeForR2 = 15;
 	private double minNonMissingProportionForTaxon = 0.1;
 	private double minNonMissingProportionForSNP = 0.1;
 	private String avgr2Filename = null;
@@ -71,7 +71,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 				for (PopulationData family : familyList) {
 					String[] names = new String[family.members.size()];
 					family.members.toArray(names);
-					Alignment align = FilterAlignment.getInstance(anAlignment, new SimpleIdGroup(names));
+					Alignment align = FilterAlignment.getInstance(anAlignment, new SimpleIdGroup(names), false);
 					processFamily(align, family.name);
 				}
 			}
@@ -83,30 +83,37 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	private void processFamily(Alignment align, String familyname) {
 		preFilterAlignment(align);
 		if (avgr2Filename != null || avgr2Plotname != null) {
-			double[] avgr2 = calculateAverageR2ForSnps(align);
-			if (avgr2Filename != null) saveToFileAverageR2(avgr2, align, addFamilyToFilename(avgr2Filename, familyname, ".txt"));
-			if (avgr2Plotname != null) plotAverageR2(avgr2, align, addFamilyToFilename(avgr2Plotname, familyname, ".png"));
+			calculateAverageR2ForSnps(align, familyname);
 		}
 		
 		if (propNonconsensusFilename != null) {
 			double[] proportion = calculateProportionNonConsensusPerTaxon(align);
-			saveProportionNonConsensusToFile(proportion, align, addFamilyToFilename(propNonconsensusFilename, familyname, ".txt"));
+			saveProportionNonConsensusToFile(proportion, align, addFamilyToFilename(propNonconsensusFilename, familyname, align.getLocusName(0), ".txt"));
 		}
 		
 	}
 	
-	private String addFamilyToFilename(String filename, String family, String extension) {
+	private String addFamilyToFilename(String filename, String family, String chr, String extension) {
 		if (!extension.startsWith(".")) extension = "." + extension;
-		if (family == null) {
-			if (filename.endsWith(extension)) return filename;
-			else return filename + extension;
-		}
 		
+		StringBuilder sb = new StringBuilder();
 		if (filename.endsWith(extension)) {
-			filename = filename.substring(0, filename.length() - extension.length());
+			sb.append(filename.substring(0, filename.length() - extension.length()));
+		} else {
+			sb.append(filename);
 		}
 		
-		return filename + "." + family + extension;
+		if (family == null) {
+			if (chr != null) sb.append(".").append(chr);
+			sb.append(extension);
+		} else {
+			family = family.replace('/', '_');
+			sb.append(".").append(family);
+			if (chr != null) sb.append(".").append(chr);
+			sb.append(extension);
+		}
+		
+		return sb.toString();
 	}
 	
 	public Alignment preFilterAlignment(Alignment align) {
@@ -149,15 +156,20 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		return align;
 	}
 	
-	private double[] calculateAverageR2ForSnps(Alignment align) {
-		try {
-			align.optimizeForSites(null);
-		} catch (UnsupportedOperationException e) {
-			align = BitAlignment.getInstance(align, true);
-		}
+	private void calculateAverageR2ForSnps(Alignment align, String familyname) {
 		
+		//first filter out monomorphic sites
 		int nsites = align.getSiteCount();
-		int ntaxa = align.getSequenceCount();
+		int[] polysites = new int[nsites];
+		int sitecount = 0;
+		for (int s = 0; s < nsites; s++) {
+			if (align.getMinorAlleleFrequency(s) > 0.15) polysites[sitecount++] = s;  
+		}
+		polysites = Arrays.copyOf(polysites, sitecount);
+		align = FilterAlignment.getInstance(align, polysites);
+		align = BitAlignment.getInstance(align, true);
+		
+		nsites = align.getSiteCount();
 		double[] avgRsq = new double[nsites];
 		
 		for (int s = 0; s < nsites; s++) {
@@ -179,7 +191,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		            contig[1][1] = (int) OpenBitSet.intersectionCount(sMn, iMn);
 		            double rsq = calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], 4);
 		            if (!Double.isNaN(rsq)) {
-		            	sum += rsq;
+		            	sum += Math.sqrt(rsq);
 		            	count++;
 		            }
 				}
@@ -193,7 +205,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			
 		}
 		
-		return avgRsq;
+		String chrname = align.getLocusName(0);
+		if (avgr2Filename != null) saveToFileAverageR2(avgRsq, align, addFamilyToFilename(avgr2Filename, familyname, chrname, ".txt"));
+		if (avgr2Plotname != null) plotAverageR2(avgRsq, align, addFamilyToFilename(avgr2Plotname, familyname, chrname, ".png"));
+
 	}
 	
     static double calculateRSqr(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
@@ -230,7 +245,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     				bw.write("\t");
     				bw.write(align.getLocusName(s));
     				bw.write("\t");
-    				bw.write(align.getPositionInLocus(s));
+    				bw.write(Integer.toString(align.getPositionInLocus(s)));
     				bw.write("\t");
     				bw.write(Double.toString(avgr2[s]));
     				bw.newLine();
@@ -253,7 +268,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		}
     		dataset[1] = avgr2;
     		xydata.addSeries("avgr2", dataset);
-    		JFreeChart chart = ChartFactory.createScatterPlot(title, xLabel, yLabel, xydata, PlotOrientation.HORIZONTAL, false, false, false);
+    		JFreeChart chart = ChartFactory.createScatterPlot(title, xLabel, yLabel, xydata, PlotOrientation.VERTICAL, false, false, false);
     		try {
     			ChartUtilities.saveChartAsPNG(new File(saveFilename), chart, 800, 300);
     		} catch (IOException e) {
