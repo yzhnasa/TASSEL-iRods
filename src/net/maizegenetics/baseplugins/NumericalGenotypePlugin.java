@@ -103,10 +103,10 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
                 } else {
                     for (int k = 0; k < currentSize; k++) {
                         if (current[0] == alleleCounts[i][k]) {
-                            pcValues[j][currentSize - k - 1 + offset] = 1.0;
+                            pcValues[j][currentSize - k - 1 + offset] += 1.0;
                         }
                         if (current[1] == alleleCounts[i][k]) {
-                            pcValues[j][currentSize - k - 1 + offset] = 1.0;
+                            pcValues[j][currentSize - k - 1 + offset] += 1.0;
                         }
                     }
                 }
@@ -123,32 +123,39 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
     public static SimplePhenotype collapseTransform(Alignment input) {
 
-        int seqCount = input.getSequenceCount();
-        int siteCount = input.getSiteCount();
+    	int seqCount = input.getSequenceCount();
+    	int siteCount = input.getSiteCount();
 
-        double[][] pcValues = new double[seqCount][siteCount];
-        List<Trait> traitNames = new ArrayList<Trait>();
+    	double[][] pcValues = new double[seqCount][siteCount];
+    	List<Trait> traitNames = new ArrayList<Trait>();
 
-        for (int i = 0; i < siteCount; i++) {
+    	for (int i = 0; i < siteCount; i++) {
 
-            traitNames.add(new Trait("S" + i, false, Trait.TYPE_DATA));
+    		traitNames.add(new Trait("S" + i, false, Trait.TYPE_DATA));
 
-            byte[] allelesByFreq = input.getAlleles(i);
+    		byte[] allelesByFreq = input.getAlleles(i);
 
-            for (int j = 0; j < seqCount; j++) {
-                byte[] current = input.getBaseArray(j, i);
-                if ((current[0] == allelesByFreq[0]) || (current[1] == allelesByFreq[0])) {
-                    pcValues[j][i] = 0.0;
-                } else if ((current[0] == Alignment.UNKNOWN_ALLELE) && (current[1] == Alignment.UNKNOWN_ALLELE)) {
-                    pcValues[j][i] = Double.NaN;
-                } else {
-                    pcValues[j][i] = 1.0;
-                }
-            }
+    		for (int j = 0; j < seqCount; j++) {
+    			byte[] current = input.getBaseArray(j, i);
+//    			if ((current[0] == allelesByFreq[0]) || (current[1] == allelesByFreq[0])) {
+//    				pcValues[j][i] = 0.0;
+//    			} else if ((current[0] == Alignment.UNKNOWN_ALLELE) && (current[1] == Alignment.UNKNOWN_ALLELE)) {
+//    				pcValues[j][i] = Double.NaN;
+//    			} else {
+//    				pcValues[j][i] = 1.0;
+//    			}
+    			if ((current[0] == Alignment.UNKNOWN_ALLELE) && (current[1] == Alignment.UNKNOWN_ALLELE)) {
+    				pcValues[j][i] = Double.NaN;
+    			} else {
+        			pcValues[j][i] = 1.0;
+        			if (current[0]  == allelesByFreq[0]) pcValues[j][i] -= 0.5;
+        			if (current[1]  == allelesByFreq[0]) pcValues[j][i] -= 0.5;
+    			}
+    		}
 
-        }
+    	}
 
-        return new SimplePhenotype(input.getIdGroup(), traitNames, pcValues);
+    	return new SimplePhenotype(input.getIdGroup(), traitNames, pcValues);
 
     }
 
