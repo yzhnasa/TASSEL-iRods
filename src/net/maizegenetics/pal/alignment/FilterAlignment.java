@@ -623,7 +623,8 @@ public class FilterAlignment extends AbstractAlignment {
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
         int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus);
         if (temp < 0) {
-            temp = -temp;
+            temp = -(temp + 1);
+            return -(reverseTranslateSite(temp) + 1);
         }
         return reverseTranslateSite(temp);
     }
