@@ -46,8 +46,6 @@ public class PopulationData {
 						family = new PopulationData ();
 						family.name = info[0];
 						family.members = new ArrayList<String>();
-						family.members.add(info[2]);  //add parents to family members
-						family.members.add(info[3]);
 						family.members.add(info[1]);
 						family.parent1 = info[2];
 						family.parent2 = info[3];

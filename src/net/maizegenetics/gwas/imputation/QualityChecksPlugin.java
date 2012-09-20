@@ -6,11 +6,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.ImageIcon;
 
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.jfree.chart.ChartFactory;
@@ -49,6 +51,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	
 	public QualityChecksPlugin(Frame parentFrame) {
 		super(parentFrame, false);
+		BasicConfigurator.configure();
 	}
 	
 	@Override
@@ -60,11 +63,9 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		} else {
 			familyList = new ArrayList<PopulationData>();
 		}
-			
 		
 		for (Datum datum : datumList) {
 			Alignment anAlignment = (Alignment) datum.getData();
-			Alignment familyAlignment;
 			if (pedigreeFile == null) {
 				processFamily(anAlignment, null);
 			} else {
@@ -81,7 +82,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	}
 	
 	private void processFamily(Alignment align, String familyname) {
-		preFilterAlignment(align);
+		align = preFilterAlignment(align);
+		
+		myLogger.info("After site filter: " + align.getSequenceCount() + " taxa, " + align.getSiteCount() + " sites.");
+
 		if (avgr2Filename != null || avgr2Plotname != null) {
 			calculateAverageR2ForSnps(align, familyname);
 		}
@@ -124,6 +128,9 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		int minTaxaGametes = (int) Math.ceil(nTaxaGametes * minNonMissingProportionForTaxon);
 		int minSiteGametes = (int) Math.ceil(nSiteGametes * minNonMissingProportionForSNP);
 		
+		myLogger.info("preFilter Alignment: ");
+		myLogger.info("Before filter alignment has " + ntaxa + " taxa and " + nsites + " sites.");
+		
 		//create list of taxa with too much missing data
 		LinkedList<Identifier> taxaDiscardList = new LinkedList<Identifier>();
 		for (int t = 0; t < ntaxa; t++) {
@@ -132,13 +139,14 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		if (taxaDiscardList.size() > 0) {
 			myLogger.info("\nThe following taxa will not be included in the analysis because the proportion of nonMissing data is below " + minNonMissingProportionForTaxon + ":\n");
 			for (Identifier id:taxaDiscardList) myLogger.info(id.getFullName());
-			myLogger.info("\n");
 			
 			Identifier[] ids = new Identifier[taxaDiscardList.size()];
 			taxaDiscardList.toArray(ids);
 			
 			align = FilterAlignment.getInstanceRemoveIDs(align, new SimpleIdGroup(ids));
 		}
+		
+		myLogger.info("After filtering for taxa, there are " + align.getSequenceCount() + " taxa.");
 		
 		//number of non-missing values per site
 		int[] sitesToKeep = new int[nsites];
@@ -286,7 +294,15 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			if (align.getMinorAlleleFrequency(s) < maxMaf) lowmaf.set(s);
 		}
 		
-		align.optimizeForTaxa(null);
+//		myLogger.info("taxa = " + align.getSequenceCount() + ", sites = " + align.getSiteCount());
+//		myLogger.info("lowmaf count = " + lowmaf.cardinality());
+		
+		try {
+			align.optimizeForTaxa(null);
+		} catch(Exception e) {
+			align = BitAlignment.getInstance(align, false);
+		}
+		
 		double[] proportionMinor = new double[ntaxa];
 		double nmono = lowmaf.cardinality();
 		for (int t = 0; t < ntaxa; t++) {
@@ -410,6 +426,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
 
 	public void setPropNonconsensusFilename(String propNonconsensusFilename) {
 		this.propNonconsensusFilename = propNonconsensusFilename;
+	}
+
+	public void setPedigreeFile(String pedigreeFile) {
+		this.pedigreeFile = pedigreeFile;
 	}
 
 	
