@@ -375,6 +375,15 @@ public interface Alignment extends Serializable {
     public Locus getLocus(int site);
 
     /**
+     * Return Locus with matching name. First to match will be returned.
+     *
+     * @param name name
+     *
+     * @return Locus
+     */
+    public Locus getLocus(String name);
+
+    /**
      * Return all loci.
      *
      * @return loci
@@ -785,14 +794,13 @@ public interface Alignment extends Serializable {
      * Optimizes this Alignment for Site based operations.
      */
     public void optimizeForSites(ProgressListener listener);
-    
+
     /**
-     * Returns depth count for each diploid allele at
-     * the given taxon and site.
-     * 
+     * Returns depth count for each diploid allele at the given taxon and site.
+     *
      * @param taxon taxon
      * @param site site
-     * 
+     *
      * @return two counts
      */
     public byte[] getDepthForAllele(int taxon, int site);

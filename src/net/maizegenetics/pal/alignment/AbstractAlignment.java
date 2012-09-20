@@ -625,6 +625,20 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
+    public Locus getLocus(String name) {
+
+        name = name.trim();
+        Locus[] temp = getLoci();
+        for (int i = 0; i < temp.length; i++) {
+            if (temp[i].getChromosomeName().equalsIgnoreCase(name)) {
+                return temp[i];
+            }
+        }
+        return null;
+
+    }
+
+    @Override
     public int getNumLoci() {
         return myLoci.length;
     }

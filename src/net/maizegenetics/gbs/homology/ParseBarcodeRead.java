@@ -144,9 +144,14 @@ public class ParseBarcodeRead {
             likelyReadEnd = new String[]{"GGATCC", "GGATCAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
             // likelyReadEnd = new String[]{"GGATCC", "AGATCGGAA", "AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAG"}; // <-- corrected from this by Jeff Glaubitz on 2012/09/12
             readEndCutSiteRemnantLength = 5;
+        } else if (enzyme.matches("(?i)mse[i1]")) {
+            theEnzyme = "MseI";
+            initialCutSiteRemnant = new String[]{"TAA"};
+            likelyReadEnd = new String[]{"TTAA", "TTAAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
+            readEndCutSiteRemnantLength = 3;
         } else {
             System.out.println("The software didn't recognize your cut site.  "
-                    + "Currently, only ApeKI, PstI, EcoT22I, PasI, HpaII, MspI, ApoI, and BamHI are recognized for single enzyme digests, "
+                    + "Currently, only ApeKI, PstI, EcoT22I, PasI, HpaII, MspI, ApoI, BamHI, and MseI are recognized for single enzyme digests, "
                     + "or PstI-EcoT22I, PstI-MspI, PstI-TaqI, SbfI-MspI, AsiSI-MspI, BssHII-MspI, FseI-MspI, or SalI-MspI for two-enzyme digests.");
             System.out.println("For two-enzyme digest, enzyme names should be separated by a dash, e.g. PstI-MspI ");
         }

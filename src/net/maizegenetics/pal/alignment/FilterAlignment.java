@@ -35,7 +35,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     private FilterAlignment(Alignment a, IdGroup subIdGroup, int[] taxaRedirect, FilterAlignment original) {
 
-        super(subIdGroup, a.getAlleleEncodings());
+        super(subIdGroup);
 
         if (subIdGroup.getIdCount() != taxaRedirect.length) {
             throw new IllegalArgumentException("FilterAlignment: init: subIdGroup should be same size as taxaRedirect.");
@@ -595,13 +595,17 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public String[] getSNPIDs() {
 
-        int numSites = getSiteCount();
-        String[] result = new String[numSites];
-        for (int i = 0; i < numSites; i++) {
-            result[i] = myBaseAlignment.getSNPID(translateSite(i));
-        }
+        if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
+            int numSites = getSiteCount();
+            String[] result = new String[numSites];
+            for (int i = 0; i < numSites; i++) {
+                result[i] = myBaseAlignment.getSNPID(translateSite(i));
+            }
 
-        return result;
+            return result;
+        } else {
+            return myBaseAlignment.getSNPIDs();
+        }
 
     }
 
@@ -743,7 +747,7 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public byte[] getReference() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            return myBaseAlignment.getReference(0, getSiteCount());
+            return getReference(0, getSiteCount());
         } else {
             return myBaseAlignment.getReference();
         }
@@ -860,15 +864,17 @@ public class FilterAlignment extends AbstractAlignment {
         return myBaseAlignment.getMaxNumAlleles();
     }
 
+    @Override
     public byte[] getAlleles(int site) {
         if (myIsTaxaFilter) {
             int[][] alleles = getAllelesSortedByFrequency(site);
             int resultSize = alleles[0].length;
-            byte[] result = new byte[myMaxNumAlleles];
-            for (int i = 0; i < myMaxNumAlleles; i++) {
+            int maxNumAlleles = getMaxNumAlleles();
+            byte[] result = new byte[maxNumAlleles];
+            for (int i = 0; i < maxNumAlleles; i++) {
                 result[i] = (i < resultSize) ? (byte) alleles[0][i] : Alignment.UNKNOWN_ALLELE;
-                //result[i] = (byte) alleles[0][i];
             }
+
             return result;
         } else {
             return myBaseAlignment.getAlleles(translateSite(site));
