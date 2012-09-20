@@ -1,7 +1,19 @@
 package net.maizegenetics.gwas.imputation;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Random;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -11,7 +23,8 @@ import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.util.BitSet;
 
 public class ImputationUtils {
-
+	public static Pattern tab = Pattern.compile("\t");
+	
 	public static int[] order(int[] array) {
 		class SortElement implements Comparable<SortElement> {
 			int val;
@@ -420,5 +433,72 @@ public class ImputationUtils {
 		for (int i = 0; i < 20; i++) System.out.print(" " + binCount[i]);
 		System.out.println();
 		System.out.println();
+	}
+	
+	public static void mergeNonconsensusFiles(String dir, String match) {
+		File matchdir = new File(dir);
+		final String pattern = new String(match);
+		File[] mergeFiles = matchdir.listFiles(new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+				if (name.startsWith(pattern)) return true;
+				return false;
+			}
+		});
+		
+		int nfiles = mergeFiles.length;
+		String[] colLabel = new String[nfiles];
+		HashMap<String, String[]> taxonMap = new HashMap<String, String[]>();
+		
+		String input;
+		String[] info;
+		for (int f = 0; f < nfiles; f++) {
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(mergeFiles[f]));
+				br.readLine();
+				input = br.readLine();
+				info = tab.split(input);
+				colLabel[f] = info[1];
+				while (input != null) {
+					info = tab.split(input);
+					String[] values = taxonMap.get(info[0]);
+					if (values == null) {
+						values = new String[nfiles];
+						for (int i = 0; i < nfiles; i++) values[i] = "";
+						taxonMap.put(info[0], values);
+					}
+					values[f] = info[2];
+				}
+				
+				br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		String outfile = dir + "/" + match + ".all.txt";
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(outfile));
+			StringBuilder sb = new StringBuilder("Taxon");
+			for (int i = 0; i < nfiles; i++) {
+				sb.append("\t").append(colLabel[i]);
+			}
+			bw.write(sb.toString());
+			bw.newLine();
+			LinkedList<String> taxaList = new LinkedList<String>(taxonMap.keySet());
+			Collections.sort(taxaList);
+			for (String taxon : taxaList) {
+				sb = new StringBuilder(taxon);
+				String[] values = taxonMap.get(taxon);
+				for (int f = 0; f < nfiles; f++) sb.append("\t").append(values[f]);
+				bw.write(sb.toString());
+				bw.newLine();
+			}
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 }
