@@ -48,6 +48,8 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     private int myEnd = -1;
     private int myStartPos = -1;
     private int myEndPos = -1;
+    private Locus myLocus = null;
+    private String myLocusStr = null;
     private int myMinCount = 1;
     private double myMinFreq = 0.01;
     private double myMaxFreq = 1.0;
@@ -66,6 +68,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         super(parentFrame, isInteractive);
     }
 
+    @Override
     public DataSet performFunction(DataSet input) {
 
         try {
@@ -113,18 +116,30 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             myEnd = aa.getSiteCount() - 1;
         }
 
+        Locus theLocus = myLocus;
+        if ((theLocus == null) && (myLocusStr != null)) {
+            theLocus = aa.getLocus(myLocusStr);
+            if (theLocus == null) {
+                throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Alignment doesn't contain locus: " + myLocusStr);
+            }
+        }
+
         if (myStartPos != -1) {
-            myStart = aa.getSiteOfPhysicalPosition(myStartPos, null);
+            myStart = aa.getSiteOfPhysicalPosition(myStartPos, theLocus);
             if (myStart < 0) {
                 myStart = -(myStart + 1);
             }
         }
 
         if (myEndPos != -1) {
-            myEnd = aa.getSiteOfPhysicalPosition(myEndPos, null);
+            myEnd = aa.getSiteOfPhysicalPosition(myEndPos, theLocus);
             if (myEnd < 0) {
                 myEnd = -(myEnd + 2);
             }
+        }
+
+        if (myEnd < myStart) {
+            throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Start Site can't be after End Site.");
         }
 
         if (isInteractive) {
@@ -284,6 +299,24 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
     public void setEndPos(int end) {
         myEndPos = end;
+    }
+
+    public String getLocusStr() {
+        return myLocusStr;
+    }
+
+    public void setLocusStr(String name) {
+        myLocus = null;
+        myLocusStr = name;
+    }
+
+    public Locus getLocus() {
+        return myLocus;
+    }
+
+    public void setLocus(Locus locus) {
+        myLocusStr = null;
+        myLocus = locus;
     }
 
     public int getMinCount() {
