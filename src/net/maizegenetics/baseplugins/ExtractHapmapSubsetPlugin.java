@@ -142,7 +142,7 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
 					}
 					int nAlleles = alleles.size();
 					boolean hasN = alleles.contains("N");
-					if ((hasN && nAlleles > minAlleleCount + 1) || (!hasN && nAlleles > minAlleleCount)) {
+					if ((hasN && nAlleles >= minAlleleCount + 1) || (!hasN && nAlleles >= minAlleleCount)) {
 						bw.write(sb.toString());
 						bw.newLine();
 					}
