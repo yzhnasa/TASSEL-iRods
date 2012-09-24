@@ -26,7 +26,7 @@ import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 
 /**
- * This class is intended to be run directly after TagsToSNPByAlignmentMTPlugin, using the HapMap file from
+ * This class is intended to be run directly after TagsToSNPByAlignmentPlugin, using the HapMap file from
  * that step as input.
  * 
  * It finds duplicate SNPs in the HapMap file, and merges them if they have the same pair of alleles (not
@@ -168,7 +168,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             int currentPos = a.getPositionInLocus(0);
             for (int s = 0; s < a.getSiteCount(); s++) {  // must be sorted by position, as HapMap files typically are (ImportUtils.readFromHapmap() fails if they aren't)
                 int newPos = a.getPositionInLocus(s);
-                if (newPos == currentPos) {   // assumes that the strands are all '+' (in TagsToSNPByAlignmentMTPlugin(), - strand genos were complemented)
+                if (newPos == currentPos) {   // assumes that the strands are all '+' (in TagsToSNPByAlignmentPlugin(), - strand genos were complemented)
                     samePosAL.add(s);  // collect markers with the same position
                 } else {
                     samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
