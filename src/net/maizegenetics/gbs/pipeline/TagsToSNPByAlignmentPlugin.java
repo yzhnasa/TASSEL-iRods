@@ -378,10 +378,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             theL[i] = new Locus("" + (startChr + i), "" + (startChr + i), -1, -1, null, null);
         }
         IdGroup taxa = new SimpleIdGroup(theTBT.getTaxaNames());
-        MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, maxSites, taxa.getIdCount(), maxSites);
-        for (int i = 0; i < maxSites; i++) {
-            theMSA.setLocusOfSite(i, theL[0]);
-        }
+        MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
+        //for (int i = 0; i < maxSites; i++) {
+        //    theMSA.setLocusOfSite(i, theL[0]);
+        //}
         //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(theTBT.getTaxaNames(), maxSites, theL);
         return theMSA;
     }
@@ -422,6 +422,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 continue;
             }
             int currSite = theMSA.getSiteCount();
+            theMSA.addSite(currSite);
             //theMSA.setLocusOfSite(currSite, "" + theTAL.getChromosome());
             String chromosome = String.valueOf(theTAL.getChromosome());
             theMSA.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
@@ -478,6 +479,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private byte[] isSiteGood(byte[] calls) {
         int[][] alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
         //int[][] alleles = getSortedAlleleCounts(calls);
+        // Maybe problem here - alleles shouldn't be less than 2?
+        if (alleles[1].length < 2) {
+            return null;
+        }
         int aCnt = alleles[1][0] + alleles[1][1];
         double theMAF = (double) alleles[1][1] / (double) aCnt;
         if ((theMAF < minMAF) && (alleles[1][1] < minMAC)) {
