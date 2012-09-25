@@ -12,7 +12,13 @@ import java.util.Map;
  */
 public final class NucleotideAlignmentConstants {
 
+    public static byte A_ALLELE = (byte) 0x0;
+    public static byte C_ALLELE = (byte) 0x1;
+    public static byte G_ALLELE = (byte) 0x2;
+    public static byte T_ALLELE = (byte) 0x3;
+    public static byte INSERT_ALLELE = (byte) 0x4;
     public static byte GAP_ALLELE = 0x5;
+    
     public static byte GAP_DIPLOID_ALLELE = (byte) 0x55;
     public static byte A_DIPLOID_ALLELE = (byte) 0x00;
     public static byte C_DIPLOID_ALLELE = (byte) 0x11;
