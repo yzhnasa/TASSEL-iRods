@@ -38,10 +38,11 @@ import org.apache.log4j.Logger;
 import org.biojava3.core.util.ConcurrencyTools;
 
 /**
- * This class aligns tags at the same physical location against one another, calls SNPs,
- * and then outputs the SNPs to a HapMap file.
+ * This class aligns tags at the same physical location against one another,
+ * calls SNPs, and then outputs the SNPs to a HapMap file.
  *
  * It is multi-threaded, as there are substantial speed increases with it.
+ *
  * @author edbuckler
  */
 public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
@@ -367,8 +368,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     }
 
     /**
-     * Fills an array of Locus objects with one locus for each supplied chromosome.  Creates a MutableNucleotideAlignment using
-     * the locus list and TBT profile as input.  Returns the MSA object.
+     * Fills an array of Locus objects with one locus for each supplied
+     * chromosome. Creates a MutableNucleotideAlignment using the locus list and
+     * TBT profile as input. Returns the MSA object.
      */
     private static MutableNucleotideAlignment createMutableAlignment(TagsByTaxa theTBT, int startChr, int endChr, int maxSites) {
         Locus[] theL = new Locus[endChr - startChr + 1];
@@ -377,6 +379,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         IdGroup taxa = new SimpleIdGroup(theTBT.getTaxaNames());
         MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, maxSites, taxa.getIdCount(), maxSites);
+        for (int i = 0; i < maxSites; i++) {
+            theMSA.setLocusOfSite(i, theL[0]);
+        }
         //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(theTBT.getTaxaNames(), maxSites, theL);
         return theMSA;
     }
@@ -507,43 +512,6 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         byte[] majMinAlleles = {majAllele, minAllele};
         return majMinAlleles;
     }
-
-    /*
-    private int[][] getSortedAlleleCounts(byte[] calls) {
-        byte[] nuc = {'A', 'C', 'G', 'T', '-', '+', 'N'};
-        int[] nucIndex = new int[Byte.MAX_VALUE];
-        for (int i = 0; i < nuc.length; i++) {
-            nucIndex[nuc[i]] = i;
-        }
-        int[] cnt = new int[nuc.length];
-        for (byte dc : calls) {
-            byte[] cc = IUPACNucleotides.getDiploidValueFromIUPACCode(dc);
-            cnt[nucIndex[cc[0]]]++;
-            cnt[nucIndex[cc[1]]]++;
-        }
-        int[][] alleles = new int[2][nuc.length - 1];  // alleles[0]=allele; alleles[1]=count
-        for (int i = 0; i < nuc.length - 1; i++) {  // "i<nuc.length-1" stops N from being included
-            alleles[0][i] = nuc[i];
-            alleles[1][i] = cnt[i];
-        }
-        boolean change = true;  // sort the alleles by descending frequency
-        while (change) {
-            change = false;
-            for (int k = 0; k < nuc.length - 2; k++) {
-                if (alleles[1][k] < alleles[1][k + 1]) {
-                    int temp = alleles[0][k];
-                    alleles[0][k] = alleles[0][k + 1];
-                    alleles[0][k + 1] = temp;
-                    int tempCount = alleles[1][k];
-                    alleles[1][k] = alleles[1][k + 1];
-                    alleles[1][k + 1] = tempCount;
-                    change = true;
-                }
-            }
-        }
-        return alleles;
-    }
-     */
 
     private double calculateF(byte[] calls, int[][] alleles, byte hetG, double theMAF) {
         boolean report = false;
@@ -825,16 +793,19 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         return comp;
     }
-    
+
     /**
-     * Resolves the appropriate IUPACNucleotide from the given callPair (currCall, newCall)
-     * 
-     * CurrCall is any valid IUPACNucleotide (except '+') while newCall is restricted to A,C,G,T,-,N
-     * 
-     * @param   currCall, the current genotypic call from previous tag(s) at the locus
-     * @param   newCall,  the new allele from the current tag to be combined with currCall
-     *                    to make a new genotype
-     * @return  resolved byte (valid IUPACNucleotide) 
+     * Resolves the appropriate IUPACNucleotide from the given callPair
+     * (currCall, newCall)
+     *
+     * CurrCall is any valid IUPACNucleotide (except '+') while newCall is
+     * restricted to A,C,G,T,-,N
+     *
+     * @param currCall, the current genotypic call from previous tag(s) at the
+     * locus
+     * @param newCall, the new allele from the current tag to be combined with
+     * currCall to make a new genotype
+     * @return resolved byte (valid IUPACNucleotide)
      */
     public static byte resolveSNPByteFromCallPair(byte currCall, byte newCall) {
         byte snpByte;

@@ -189,7 +189,7 @@ public class TagsAtLocus {
         for (int tg = 0; tg < nAlignedTags; tg++) {
             tagIndices[tg] = Integer.parseInt(tagAlignment.getTaxaName(tg).split("_")[0]);  // taxaName in tagAlignment is set to indexInTheTags_"refSeq"|"no"
             for (int s = 0; s < nSites; s++) {
-                callsAtVariableSitesByTag[s][tagIndices[tg]] = tagAlignment.getBase(tg, s);
+                callsAtVariableSitesByTag[s][tagIndices[tg]] = tagAlignment.getBaseArray(tg, s)[0];
             }
         }
 
@@ -197,12 +197,12 @@ public class TagsAtLocus {
         for (int s = 0; s < nSites; s++) {
             positionsOfVariableSites[s] = tagAlignment.getPositionInLocus(s);
 
-            int[] alleleCounts = new int[Byte.MAX_VALUE];
+            int[] alleleCounts = new int[16];
             for (int tg = 0; tg < nAlignedTags; tg++) {
                 int tagIndex = tagIndices[tg];
                 byte baseToAdd = callsAtVariableSitesByTag[s][tagIndex];
-                if (baseToAdd == Alignment.UNKNOWN_DIPLOID_ALLELE && callBiallelicSNPsWithGap) {
-                    baseToAdd = NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
+                if (baseToAdd == Alignment.UNKNOWN_ALLELE && callBiallelicSNPsWithGap) {
+                    baseToAdd = NucleotideAlignmentConstants.GAP_ALLELE;
                 }
                 for (int tx = 0; tx < nTaxa; tx++) {
                     alleleCounts[baseToAdd] += theTags.get(tagIndices[tg]).tagDist[tx];
@@ -253,6 +253,8 @@ public class TagsAtLocus {
                 byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
                 for (int a = 0; a < maxAlleleDepth; a++) {
                     if (allelesInTaxa[a][tx] > max) {
+                        nextMax = max;
+                        nextMaxAllele = maxAllele;
                         max = allelesInTaxa[a][tx];
                         maxAllele = alleles[a];
                     } else if (allelesInTaxa[a][tx] > nextMax) {
@@ -376,9 +378,9 @@ public class TagsAtLocus {
         profile = null;
         Alignment aa = null;
         if (refTagWithGaps) {
-            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
+            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, 5, new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, false, true);
         } else {
-            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
+            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, 5, new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, false, true);
         }
         Alignment faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
         if (printOutRefWithGaps && refTagWithGaps) {
@@ -536,6 +538,7 @@ public class TagsAtLocus {
     private byte[] getCommonAlleles(int[] alleleCounts) {
         byte[] result = new byte[maxAlleleDepth];
         int[][] sortedAlleleCounts = sortAllelesByCount(alleleCounts);
+        // Ties between maxAlleleDepth - 1 and maxAlleleDepth are not handled
         for (int i = 0; i < maxAlleleDepth; i++) {
             result[i] = (byte) sortedAlleleCounts[0][i];
         }
@@ -573,7 +576,9 @@ public class TagsAtLocus {
     }
 
     private int[][] sortAllelesByCount(int[] alleleCounts) {
-        byte[] alleles = {'A', 'C', 'G', 'T', '-'};  // note that 'N' is not included as an allele
+        // note that 'N' is not included as an allele
+        byte[] alleles = {NucleotideAlignmentConstants.A_ALLELE, NucleotideAlignmentConstants.C_ALLELE,
+            NucleotideAlignmentConstants.G_ALLELE, NucleotideAlignmentConstants.T_ALLELE, NucleotideAlignmentConstants.GAP_ALLELE};
         int[][] result = new int[2][alleles.length]; // result[0][i]=allele; result[1][i]=count
         for (int i = 0; i < alleles.length; i++) {
             result[0][i] = alleles[i];
