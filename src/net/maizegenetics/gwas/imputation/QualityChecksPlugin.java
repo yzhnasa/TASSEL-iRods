@@ -6,33 +6,30 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.ImageIcon;
 
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.log4j.PatternLayout;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultXYDataset;
 
-import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.Utils;
 
@@ -45,6 +42,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	private String avgr2Filename = null;
 	private String avgr2Plotname = null;
 	private String propNonconsensusFilename = null;
+	private String logfileName = null;
+	private boolean hasFileAppender = false;
 	
 //	public enum checkType {AVERAGE_R2, NONCONSENSUS_PROPORTION, NONCONSENSUS_SITES};
 //	private ArrayList<checkType> analysisList = new ArrayList<checkType>();
@@ -56,6 +55,16 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	
 	@Override
 	public DataSet performFunction(DataSet input) {
+
+		if (!hasFileAppender) {
+			try{
+				myLogger.addAppender(new FileAppender(new PatternLayout("%-5p [%t]: %m%n"), logfileName));
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			hasFileAppender = true;
+		}
+		
 		List<Datum> datumList = input.getDataOfType(Alignment.class);
 		ArrayList<PopulationData> familyList;
 		if (pedigreeFile != null) {
@@ -82,9 +91,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	}
 	
 	private void processFamily(Alignment align, String familyname) {
+		myLogger.info("\nResults for chromosome " + align.getLocusName(0) + ", family " + familyname);
 		align = preFilterAlignment(align);
-		
-		myLogger.info("After site filter: " + align.getSequenceCount() + " taxa, " + align.getSiteCount() + " sites.");
 
 		if (avgr2Filename != null || avgr2Plotname != null) {
 			calculateAverageR2ForSnps(align, familyname);
@@ -176,6 +184,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		polysites = Arrays.copyOf(polysites, sitecount);
 		align = FilterAlignment.getInstance(align, polysites);
 		align = BitAlignment.getInstance(align, true);
+		
+		myLogger.info("Chromosome " + align.getLocusName(0) + ", family " + familyname + " has " + sitecount + " polymorphic snps.");
 		
 		nsites = align.getSiteCount();
 		double[] avgRsq = new double[nsites];
@@ -369,6 +379,9 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			else if (args[i].equals("-c") || args[i].equalsIgnoreCase("-confile")) {
 				propNonconsensusFilename = args[++i];
 			}
+			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logfile")) {
+				logfileName = args[++i];
+			}
 			else if (args[i].equals("?")) myLogger.error(getUsage());
 		}
 	}
@@ -382,6 +395,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		usage.append("-r or -r2file : the name of the file to save the average R2 value for each SNP\n");
 		usage.append("-x or -r2xyplot : name of the png file of the average R2 of each SNP, .png will be appended\n");
 		usage.append("-c or -confile : name of the file to save the proportion of nonConsensus SNPs for each taxon\n");
+		usage.append("-l or -logfile: name of the file to which the log will be appended\n");
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();
@@ -430,6 +444,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
 
 	public void setPedigreeFile(String pedigreeFile) {
 		this.pedigreeFile = pedigreeFile;
+	}
+
+	public void setLogfileName(String logfileName) {
+		this.logfileName = logfileName;
 	}
 
 	
