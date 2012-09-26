@@ -51,6 +51,7 @@ public class TagsAtLocus {
     private final static int maxAlignmentSize = 150;
     private final static double errorRate = 0.01;
     private final static int maxCountAtGeno = 500;
+    private final static int maxAlleleDepth = 3;
     private SubstitutionMatrix<NucleotideCompound> subMatrix = SubstitutionMatrixHelper.getNuc4_4();
     private SimpleGapPenalty gapPen = new SimpleGapPenalty((short) 5, (short) 2);
     private final static int[] likelihoodRatioThreshAlleleCnt = new int[maxCountAtGeno];  // index = sample size; value = min count of less tagged allele for likelihood ratio > 1
@@ -188,25 +189,98 @@ public class TagsAtLocus {
         for (int tg = 0; tg < nAlignedTags; tg++) {
             tagIndices[tg] = Integer.parseInt(tagAlignment.getTaxaName(tg).split("_")[0]);  // taxaName in tagAlignment is set to indexInTheTags_"refSeq"|"no"
             for (int s = 0; s < nSites; s++) {
-                callsAtVariableSitesByTag[s][tagIndices[tg]] = tagAlignment.getBase(tg, s);
+                callsAtVariableSitesByTag[s][tagIndices[tg]] = tagAlignment.getBaseArray(tg, s)[0];
             }
         }
+
         positionsOfVariableSites = new int[nSites];
         for (int s = 0; s < nSites; s++) {
             positionsOfVariableSites[s] = tagAlignment.getPositionInLocus(s);
-            for (int tx = 0; tx < nTaxa; tx++) {
-                int[] alleleCounts = new int[Byte.MAX_VALUE];
-                for (int tg = 0; tg < nAlignedTags; tg++) {
-                    int tagIndex = tagIndices[tg];
-                    byte baseToAdd = callsAtVariableSitesByTag[s][tagIndex];
-                    if (baseToAdd == Alignment.UNKNOWN_DIPLOID_ALLELE && callBiallelicSNPsWithGap) {
-                        baseToAdd = NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
-                    }
-                    alleleCounts[baseToAdd] += theTags.get(tagIndex).tagDist[tx];
+
+            int[] alleleCounts = new int[16];
+            for (int tg = 0; tg < nAlignedTags; tg++) {
+                int tagIndex = tagIndices[tg];
+                byte baseToAdd = callsAtVariableSitesByTag[s][tagIndex];
+                if (baseToAdd == Alignment.UNKNOWN_ALLELE && callBiallelicSNPsWithGap) {
+                    baseToAdd = NucleotideAlignmentConstants.GAP_ALLELE;
                 }
-                callsBySite[s][tx] = resolveQuantGeno(alleleCounts);
+                for (int tx = 0; tx < nTaxa; tx++) {
+                    alleleCounts[baseToAdd] += theTags.get(tagIndices[tg]).tagDist[tx];
+                }
+            }
+
+            byte[] alleles = getCommonAlleles(alleleCounts);
+            int[][] allelesInTaxa = new int[maxAlleleDepth][nTaxa];
+            for (int tg = 0; tg < nAlignedTags; tg++) {
+                byte baseToAdd = callsAtVariableSitesByTag[s][tg];
+                for (int a = 0; a < maxAlleleDepth; a++) {
+                    if (baseToAdd == alleles[a]) {
+                        for (int tx = 0; tx < nTaxa; tx++) {
+                            allelesInTaxa[a][tx] += theTags.get(tagIndices[tg]).tagDist[tx];
+                        }
+                    }
+                }
+
+            }
+
+            for (int tx = 0; tx < nTaxa; tx++) {
+                boolean done = false;
+                int count = 0;
+                for (int a = 0; a < maxAlleleDepth; a++) {
+                    count += allelesInTaxa[a][tx];
+                }
+
+                if (count == 0) {
+                    callsBySite[s][tx] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    continue;
+                }
+
+                for (int a = 0; a < maxAlleleDepth; a++) {
+                    if ((count - allelesInTaxa[a][tx]) == 0) {
+                        callsBySite[s][tx] = (byte) ((alleles[a] << 4) | alleles[a]);
+                        done = true;
+                        break;
+                    }
+                }
+
+                if (done) {
+                    continue;
+                }
+
+                int max = 0;
+                byte maxAllele = Alignment.UNKNOWN_ALLELE;
+                int nextMax = 0;
+                byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
+                for (int a = 0; a < maxAlleleDepth; a++) {
+                    if (allelesInTaxa[a][tx] > max) {
+                        nextMax = max;
+                        nextMaxAllele = maxAllele;
+                        max = allelesInTaxa[a][tx];
+                        maxAllele = alleles[a];
+                    } else if (allelesInTaxa[a][tx] > nextMax) {
+                        nextMax = allelesInTaxa[a][tx];
+                        nextMaxAllele = alleles[a];
+                    }
+                }
+
+                int totCount = max + nextMax;
+                if (totCount < maxCountAtGeno) {
+                    if (nextMax < likelihoodRatioThreshAlleleCnt[totCount]) {
+                        callsBySite[s][tx] = (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
+                    } else {
+                        callsBySite[s][tx] = (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
+                    }
+                } else {
+                    if (nextMax / totCount < 0.1) {
+                        callsBySite[s][tx] = (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
+                    } else {
+                        callsBySite[s][tx] = (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
+                    }
+                }
+
             }
         }
+
         return callsBySite;
     }
 
@@ -304,9 +378,9 @@ public class TagsAtLocus {
         profile = null;
         Alignment aa = null;
         if (refTagWithGaps) {
-            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
+            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, 5, new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, false, true);
         } else {
-            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
+            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, 5, new Locus[]{Locus.UNKNOWN}, new int[]{0}, null, false, true);
         }
         Alignment faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
         if (printOutRefWithGaps && refTagWithGaps) {
@@ -461,6 +535,16 @@ public class TagsAtLocus {
         System.out.print("\n");
     }
 
+    private byte[] getCommonAlleles(int[] alleleCounts) {
+        byte[] result = new byte[maxAlleleDepth];
+        int[][] sortedAlleleCounts = sortAllelesByCount(alleleCounts);
+        // Ties between maxAlleleDepth - 1 and maxAlleleDepth are not handled
+        for (int i = 0; i < maxAlleleDepth; i++) {
+            result[i] = (byte) sortedAlleleCounts[0][i];
+        }
+        return result;
+    }
+
     private byte resolveQuantGeno(int[] alleleCounts) {
         int[][] sortedAlleleCounts = sortAllelesByCount(alleleCounts);
         int a1Count = sortedAlleleCounts[1][0];
@@ -492,7 +576,9 @@ public class TagsAtLocus {
     }
 
     private int[][] sortAllelesByCount(int[] alleleCounts) {
-        byte[] alleles = {'A', 'C', 'G', 'T', '-'};  // note that 'N' is not included as an allele
+        // note that 'N' is not included as an allele
+        byte[] alleles = {NucleotideAlignmentConstants.A_ALLELE, NucleotideAlignmentConstants.C_ALLELE,
+            NucleotideAlignmentConstants.G_ALLELE, NucleotideAlignmentConstants.T_ALLELE, NucleotideAlignmentConstants.GAP_ALLELE};
         int[][] result = new int[2][alleles.length]; // result[0][i]=allele; result[1][i]=count
         for (int i = 0; i < alleles.length; i++) {
             result[0][i] = alleles[i];

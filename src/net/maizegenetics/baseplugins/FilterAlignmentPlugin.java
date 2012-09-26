@@ -39,13 +39,17 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author Ed Buckler
+ * @author Ed Buckler, Terry, Jon
  */
 public class FilterAlignmentPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(FilterAlignmentPlugin.class);
     private int myStart = 0;
     private int myEnd = -1;
+    private int myStartPos = -1;
+    private int myEndPos = -1;
+    private Locus myLocus = null;
+    private String myLocusStr = null;
     private int myMinCount = 1;
     private double myMinFreq = 0.01;
     private double myMaxFreq = 1.0;
@@ -64,6 +68,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         super(parentFrame, isInteractive);
     }
 
+    @Override
     public DataSet performFunction(DataSet input) {
 
         try {
@@ -109,6 +114,32 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
         if (myEnd == -1) {
             myEnd = aa.getSiteCount() - 1;
+        }
+
+        Locus theLocus = myLocus;
+        if ((theLocus == null) && (myLocusStr != null)) {
+            theLocus = aa.getLocus(myLocusStr);
+            if (theLocus == null) {
+                throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Alignment doesn't contain locus: " + myLocusStr);
+            }
+        }
+
+        if (myStartPos != -1) {
+            myStart = aa.getSiteOfPhysicalPosition(myStartPos, theLocus);
+            if (myStart < 0) {
+                myStart = -(myStart + 1);
+            }
+        }
+
+        if (myEndPos != -1) {
+            myEnd = aa.getSiteOfPhysicalPosition(myEndPos, theLocus);
+            if (myEnd < 0) {
+                myEnd = -(myEnd + 2);
+            }
+        }
+
+        if (myEnd < myStart) {
+            throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Start Site can't be after End Site.");
         }
 
         if (isInteractive) {
@@ -173,6 +204,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             }
             throw new UnsupportedOperationException();
         }
+
         if ((myStart != 0) || (myEnd < (naa.getSiteCount() - 1))) {
             naa = AlignmentUtils.removeSitesOutsideRange(naa, myStart, myEnd);
         }
@@ -252,6 +284,40 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
     public void setEnd(int end) {
         myEnd = end;
+    }
+
+    public int getStartPos() {
+        return myStartPos;
+    }
+
+    public void setStartPos(int start) {
+        myStartPos = start;
+    }
+
+    public int getEndPos() {
+        return myEndPos;
+    }
+
+    public void setEndPos(int end) {
+        myEndPos = end;
+    }
+
+    public String getLocusStr() {
+        return myLocusStr;
+    }
+
+    public void setLocusStr(String name) {
+        myLocus = null;
+        myLocusStr = name;
+    }
+
+    public Locus getLocus() {
+        return myLocus;
+    }
+
+    public void setLocus(Locus locus) {
+        myLocusStr = null;
+        myLocus = locus;
     }
 
     public int getMinCount() {
@@ -511,15 +577,15 @@ class DataFilterAlignmentDialog extends JDialog {
             }
         });
         // distanceFromEndTextField.setText(siteCount - myEnd+"");
-//        this.setDistanceFromEndTextField(myEnd);
-//        distanceFromEndTextField.addFocusListener(new java.awt.event.FocusAdapter() {
-//
-//            public void focusLost(FocusEvent e) {
-//                distanceFromEndTextField_focusLost(e);
-//            }
-//        });
-//        distanceFromEndTextField.setPreferredSize(new Dimension(63, 25));
-//        distanceFromEndTextField.setMinimumSize(new Dimension(40, 25));
+        //        this.setDistanceFromEndTextField(myEnd);
+        //        distanceFromEndTextField.addFocusListener(new java.awt.event.FocusAdapter() {
+        //
+        //            public void focusLost(FocusEvent e) {
+        //                distanceFromEndTextField_focusLost(e);
+        //            }
+        //        });
+        //        distanceFromEndTextField.setPreferredSize(new Dimension(63, 25));
+        //        distanceFromEndTextField.setMinimumSize(new Dimension(40, 25));
 
         setEndTextField();
         endTextField.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -560,6 +626,7 @@ class DataFilterAlignmentDialog extends JDialog {
         try {
             minFreq = TasselPrefs.getFilterAlignPluginMinFreq();
         } catch (NullPointerException npe) {
+            npe.printStackTrace();
             System.err.println(" There is an issue with the settings: " + npe);
         }
 
@@ -664,7 +731,6 @@ class DataFilterAlignmentDialog extends JDialog {
         mainPanel.add(maxFreqTextField, new GridBagConstraints(2, 3, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
         mainPanel.add(lblSiteIndex, new GridBagConstraints(2, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
         mainPanel.add(startTextField, new GridBagConstraints(2, 5, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
-//        mainPanel.add(distanceFromEndTextField, new GridBagConstraints(2, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
 
         mainPanel.add(lblSitePos, new GridBagConstraints(3, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
         mainPanel.add(startPosTextField, new GridBagConstraints(3, 5, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
@@ -822,12 +888,13 @@ class DataFilterAlignmentDialog extends JDialog {
         if (!myChromFilter.isCanceled()) {
             chromsSelected = myChromFilter.getChromsSelected();
             Alignment[] selectedAlignments = new Alignment[chromsSelected.length];
-            Alignment[] availableAlignments = theAlignment.getAlignments();
+            List<Datum> availableAlignments = SeparatePlugin.separateAlignmentIntoLoci(theAlignment, null);
             for (int i = 0; i < chromsSelected.length; i++) {
-                for (int j = 0; j < availableAlignments.length; j++) {
-                    if (availableAlignments[j].getLoci().length == 1) {
-                        if (chromsSelected[i].equals(availableAlignments[j].getLocusName(0))) {
-                            selectedAlignments[i] = availableAlignments[j];
+                for (int j = 0; j < availableAlignments.size(); j++) {
+                    Alignment current = (Alignment) availableAlignments.get(j).getData();
+                    if (current.getLoci().length == 1) {
+                        if (chromsSelected[i].equals(current.getLocusName(0))) {
+                            selectedAlignments[i] = current;
                         }
                     }
                 }
@@ -868,201 +935,173 @@ class DataFilterAlignmentDialog extends JDialog {
         return isCanceled;
     }
 
-//    private void distanceFromEndTextField_focusLost(FocusEvent e) {
-//        // Dallas' code to generalize filtering for batch processes
-//        try {
-//            String endTextFieldContents = distanceFromEndTextField.getText().trim();
-//
-//            //remove spaces
-//            int index = 0;
-//            while ((index = endTextFieldContents.indexOf(' ')) != -1) {
-//                endTextFieldContents = endTextFieldContents.substring(0, index) + endTextFieldContents.substring(index + 1);
-//            }
-//
-//            myEnd = Integer.parseInt(endTextFieldContents);
-//        } catch (Exception ee) {
-//            System.err.println(ee);
-//            JOptionPane.showMessageDialog(this.getParent(),
-//                    "Unable to parse the input for \"" + lblDistanceFromEndString + "\"");
-//            myEnd = 0;
-//        }
-//        distanceFromEndTextField.setText(myEnd + "");
-//
-//        if (!doBatchAnalysis) {
-//            setEndTextField();
-//        }
-//    }
     private void setEndTextField() {
-
         this.endTextField.setText("" + end);
     }
 
     private void endTextField_focusLost(FocusEvent e) {
-        try {
-//            String endTextFieldContents = endTextField.getText();
-//
-//            //remove spaces
-//            int index = 0;
-//            while ((index = endTextFieldContents.indexOf(' ')) != -1) {
-//                endTextFieldContents = endTextFieldContents.substring(0, index) + endTextFieldContents.substring(index + 1);
-//            }
 
-            int theEnd = Integer.parseInt(endTextField.getText().trim());
-            end = theEnd;
-            isEndTextFieldNumeric = true;
-            if (theEnd < 0) {
-                //JOptionPane.showMessageDialog(this.getParent(), "End position must be non negative.");
-                //end = siteCount - 1;
-                //isEndTextFieldNumeric = true;
-            } else if (theEnd >= siteCount) {
-                //JOptionPane.showMessageDialog(this.getParent(), "End position must be less than " + siteCount + ".");
-                //end = siteCount - 1;
-                //isEndTextFieldNumeric = true;
-            } else if (theEnd < start) {
-                //JOptionPane.showMessageDialog(this.getParent(), "End position must be greater than myStart position.");
-                //end = siteCount - 1;
-                //isEndTextFieldNumeric = true;
-            } else {
-                endPos = theAlignment.getPositionInLocus(end);
-                endPosTextField.setText(endPos + "");
-                //isEndTextFieldNumeric = true;
+        try {
+            int endFromField = Integer.parseInt(endTextField.getText().trim());
+            if (endFromField < 0) {
+                throw new IllegalArgumentException("End Site Can't be Negative.");
             }
+
+            if (endFromField >= siteCount) {
+                throw new IllegalArgumentException("End Site Can't be Greater Than: " + (siteCount - 1));
+            }
+
+            end = endFromField;
+            endPos = theAlignment.getPositionInLocus(end);
+            endPosTextField.setText(String.valueOf(endPos));
         } catch (Exception ee) {
-            //System.err.println(ee);
-            //JOptionPane.showMessageDialog(this.getParent(), "Unable to parse the input for \"" + lblEndString + "\"");
-            end = siteCount - 1;
-            isEndTextFieldNumeric = false;
+            StringBuilder builder = new StringBuilder();
+            builder.append("\nProblem with End Site: ");
+            builder.append(endTextField.getText().trim());
+            builder.append("\n");
+            builder.append("Number Should be a Positive Integer between:\n0 and ");
+            builder.append(siteCount - 1);
+            builder.append("\n");
+            builder.append(ee.getMessage());
+            builder.append("\n");
+            JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+            try {
+                end = theAlignment.getSiteOfPhysicalPosition(endPos, null);
+                endTextField.setText(String.valueOf(end));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                // do nothing
+            }
         }
-        //endTextField.setText(theEnd + "");
-//        setDistanceFromEndTextField(theEnd);
+
     }
 
-//    private void setDistanceFromEndTextField(int myEnd) {
-//        distanceFromEndTextField.setText(this.siteCount - myEnd + "");
-//        this.myEnd = this.siteCount - myEnd;
-//    }
     private void startTextField_focusLost(FocusEvent e) {
+
         try {
-//            String startTextFieldContents = startTextField.getText();
-//
-//            //remove spaces
-//            int index = 0;
-//            while ((index = startTextFieldContents.indexOf(' ')) != -1) {
-//                startTextFieldContents = startTextFieldContents.substring(0, index) + startTextFieldContents.substring(index + 1);
-//            }
-//
-//            theStart = Integer.parseInt(startTextFieldContents);
-            int theStart = Integer.parseInt(startTextField.getText().trim());
-            start = theStart;
-            isStartTextFieldNumeric = true;
-            if (theStart < 0) {
-                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be non negative.");
-                //start = 0;
-                //isStartTextFieldNumeric = true;
-            } else if (theStart >= siteCount) {
-                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than " + siteCount + ".");
-                //start = 0;
-                //isStartTextFieldNumeric = true;
-            } else if (theStart > end) {
-                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than myEnd position.");
-                //start = 0;
-                //isStartTextFieldNumeric = true;
-            } else {
-                startPos = theAlignment.getPositionInLocus(start);
-                startPosTextField.setText(startPos + "");
-                //isStartTextFieldNumeric = true;
+            int startFromField = Integer.parseInt(startTextField.getText().trim());
+            if (startFromField < 0) {
+                throw new IllegalArgumentException("Start Site Can't be Negative.");
             }
+
+            if (startFromField >= siteCount) {
+                throw new IllegalArgumentException("Start Site Can't be Greater Than: " + (siteCount - 1));
+            }
+
+            start = startFromField;
+            startPos = theAlignment.getPositionInLocus(start);
+            startPosTextField.setText(String.valueOf(startPos));
         } catch (Exception ee) {
-            //System.err.println(ee);
-            //JOptionPane.showMessageDialog(this.getParent(), "Unable to parse the input for \"" + lblStartSite.getText() + "\"");
-            start = 0;
-            isStartTextFieldNumeric = false;
+            StringBuilder builder = new StringBuilder();
+            builder.append("\nProblem with Start Site: ");
+            builder.append(startTextField.getText().trim());
+            builder.append("\n");
+            builder.append("Number Should be a Positive Integer between:\n0 and ");
+            builder.append(siteCount - 1);
+            builder.append("\n");
+            builder.append(ee.getMessage());
+            builder.append("\n");
+            JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+            try {
+                start = theAlignment.getSiteOfPhysicalPosition(startPos, null);
+                startTextField.setText(String.valueOf(start));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                // do nothing
+            }
         }
-        //startTextField.setText(myStart + "");
+
     }
 
     private void endPosTextField_focusLost(FocusEvent e) {
+
         try {
-            int theEnd = Integer.parseInt(endPosTextField.getText().trim());
-            endPos = theEnd;
-            isEndPosTextFieldNumeric = true;
-            int endSite = theAlignment.getSiteOfPhysicalPosition(theEnd, null);
+            int endPosFromField = Integer.parseInt(endPosTextField.getText().trim());
+            if (endPosFromField < 0) {
+                throw new IllegalArgumentException("End Position Can't be Negative.");
+            }
+
+            int endSite = theAlignment.getSiteOfPhysicalPosition(endPosFromField, null);
 
             if (endSite < 0) {
-                endSite = -(endSite + 1) - 1;
+                endSite = -(endSite + 1);
             }
-//            else {
-//                endSite = endSite - 1;
-//            }
-            if (theEnd < 0) {
-                //JOptionPane.showMessageDialog(this.getParent(), "End position must be non negative.");
-                //endPos = theAlignment.getPositionInLocus(siteCount - 1);
-                //isEndPosTextFieldNumeric = true;
-            } else if (endSite < 0) {
-                //JOptionPane.showMessageDialog(this.getParent(), "No available SNPs with positions less than " + theAlignment.getPositionInLocus(0) + ".");
-                //endPos = theAlignment.getPositionInLocus(siteCount - 1);
-                //isEndPosTextFieldNumeric = true;
-            } //            else if (theEnd >= siteCount) {
-            //                JOptionPane.showMessageDialog(this.getParent(), "End position must be less than " + siteCount + ".");
-            //                myEnd = siteCount - 1;
-            //            }
-            else if (theEnd < startPos) {
-                //JOptionPane.showMessageDialog(this.getParent(), "End position must be greater than myStart position.");
-                //endPos = theAlignment.getPositionInLocus(siteCount - 1);
-                //isEndPosTextFieldNumeric = true;
-            } else {
-                end = endSite;
-                endPos = theAlignment.getPositionInLocus(end);
-                endTextField.setText(end + "");
-                //isEndPosTextFieldNumeric = true;
+
+            if (endSite >= siteCount) {
+                endSite = siteCount - 1;
             }
+
+            end = endSite;
+            endPos = theAlignment.getPositionInLocus(end);
+            endTextField.setText(String.valueOf(end));
         } catch (Exception ee) {
-            //JOptionPane.showMessageDialog(this.getParent(), "Invalid myEnd position.");
-            endPos = theAlignment.getPositionInLocus(siteCount - 1);
-            isEndPosTextFieldNumeric = false;
+            ee.printStackTrace();
+            StringBuilder builder = new StringBuilder();
+            builder.append("\nProblem with End Physical Position: ");
+            builder.append(endPosTextField.getText().trim());
+            builder.append("\n");
+            builder.append("Number Should be a Positive Integer between: \n");
+            builder.append(theAlignment.getPositionInLocus(0));
+            builder.append(" and ");
+            builder.append(theAlignment.getPositionInLocus(siteCount - 1));
+            builder.append("\n");
+            builder.append(ee.getMessage());
+            builder.append("\n");
+            JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+            try {
+                endPos = theAlignment.getPositionInLocus(end);
+                endPosTextField.setText(String.valueOf(endPos));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                // do nothing
+            }
         }
+
     }
 
     private void startPosTextField_focusLost(FocusEvent e) {
+
         try {
-            int theStart = Integer.parseInt(startPosTextField.getText().trim());
-            startPos = theStart;
-            isStartPosTextFieldNumeric = true;
-            int startSite = theAlignment.getSiteOfPhysicalPosition(theStart, null);
+            int startPosFromField = Integer.parseInt(startPosTextField.getText().trim());
+            if (startPosFromField < 0) {
+                throw new IllegalArgumentException("Start Position Can't be Negative.");
+            }
+
+            int startSite = theAlignment.getSiteOfPhysicalPosition(startPosFromField, null);
 
             if (startSite < 0) {
                 startSite = -(startSite + 1);
             }
-//            else {
-//                endSite = endSite - 1;
-//            }
-            if (theStart < 0) {
-                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be non negative.");
-                //startPos = theAlignment.getPositionInLocus(0);
-                //isStartPosTextFieldNumeric = true;
-            } else if (startSite >= siteCount) {
-                //JOptionPane.showMessageDialog(this.getParent(), "No available SNPs with positions greater than " + theAlignment.getPositionInLocus(siteCount - 1) + ".");
-                // = theAlignment.getPositionInLocus(0);
-                //isStartPosTextFieldNumeric = true;
-            } //            else if (theEnd >= siteCount) {
-            //                JOptionPane.showMessageDialog(this.getParent(), "End position must be less than " + siteCount + ".");
-            //                myEnd = siteCount - 1;
-            //            }
-            else if (theStart > endPos) {
-                //JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than myEnd position.");
-                //startPos = theAlignment.getPositionInLocus(0);
-                //isStartPosTextFieldNumeric = true;
-            } else {
-                start = startSite;
-                startPos = theAlignment.getPositionInLocus(start);
-                startTextField.setText(start + "");
-                //isStartPosTextFieldNumeric = true;
+
+            if (startSite >= siteCount) {
+                startSite = siteCount - 1;
             }
+
+            start = startSite;
+            startPos = theAlignment.getPositionInLocus(start);
+            startTextField.setText(String.valueOf(start));
         } catch (Exception ee) {
-            //JOptionPane.showMessageDialog(this.getParent(), "Invalid myStart position.");
-            startPos = theAlignment.getPositionInLocus(0);
-            isStartPosTextFieldNumeric = false;
+            StringBuilder builder = new StringBuilder();
+            builder.append("\nProblem with Start Physical Position: ");
+            builder.append(startPosTextField.getText().trim());
+            builder.append("\n");
+            builder.append("Number Should be a Positive Integer between: \n");
+            builder.append(theAlignment.getPositionInLocus(0));
+            builder.append(" and ");
+            builder.append(theAlignment.getPositionInLocus(siteCount - 1));
+            builder.append("\n");
+            builder.append(ee.getMessage());
+            builder.append("\n");
+            JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+            try {
+                startPos = theAlignment.getPositionInLocus(start);
+                startPosTextField.setText(String.valueOf(startPos));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                // do nothing
+            }
         }
+
     }
 
     private void freqTextField_focusLost(FocusEvent e) {
@@ -1116,7 +1155,6 @@ class DataFilterAlignmentDialog extends JDialog {
             double minPercentageOriginal = minPercentage;
             try {
                 minPercentage = Double.parseDouble(countTextField.getText().trim());
-                System.out.println("minPercentage = " + minPercentage);
                 if (minPercentage > 1 || minPercentage < 0) {
                     minPercentage = minPercentageOriginal;
                 }
@@ -1138,36 +1176,6 @@ class DataFilterAlignmentDialog extends JDialog {
             }
             countTextField.setText(minCount + "");
             TasselPrefs.putFilterAlignPluginMinCount(minCount);
-        }
-    }
-
-    private String[] processChromInput(String input) {
-        if (input.equalsIgnoreCase("all") || input.equals("")) {
-            isChromSelectionValid = true;
-            return chromsAvailable;
-        } else {
-            ArrayList<String> selection = new ArrayList<String>();
-            String[] chroms = input.split(",");
-            for (int i = 0; i < chroms.length; i++) {
-                if (chroms[i].trim().length() == 1) {
-                    selection.add(chroms[i].trim());
-                } else if (chroms[i].trim().split("-").length == 2) {
-                    String[] range = chroms[i].trim().split("-");
-                    int start = Math.min(Integer.parseInt(range[0].trim()), Integer.parseInt(range[1].trim()));
-                    int end = Math.max(Integer.parseInt(range[0].trim()), Integer.parseInt(range[1].trim()));
-                    selection.add("" + start);
-                    for (int j = 1; j < end - start; j++) {
-                        selection.add("" + (start + j));
-                    }
-                    selection.add("" + end);
-                } else {
-                    System.err.println("Invalid chromosome selection");
-                    isChromSelectionValid = false;
-                    return null;
-                }
-            }
-            isChromSelectionValid = true;
-            return (String[]) selection.toArray();
         }
     }
 

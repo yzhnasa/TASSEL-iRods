@@ -203,6 +203,8 @@ public class ImportUtils {
         String line = null;
         line = reader.readLine();
         boolean sequence = false;
+        int sequenceLength = -1;
+        int count = 1;
         while (line != null) {
 
             line = line.trim();
@@ -227,8 +229,15 @@ public class ImportUtils {
                     builder.append(line);
                     line = reader.readLine();
                 }
-                sequences.add(builder.toString());
+                String temp = builder.toString();
+                if (sequenceLength == -1) {
+                    sequenceLength = temp.length();
+                } else if (sequenceLength != temp.length()) {
+                    throw new IllegalStateException("ImportUtils: readFasta: Sequence: " + count + " Differs in Length.");
+                }
+                sequences.add(temp);
                 sequence = false;
+                count++;
             } else {
                 myLogger.error("readFasta: file: " + filename + " invalid format.");
                 throw new IllegalArgumentException("Import: readFasta: invalid format.");

@@ -384,6 +384,9 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     @Override
     public int getPositionInLocus(int site) {
         try {
+            if (myVariableSites[site] < 0) {
+                return site;
+            }
             return myVariableSites[site];
         } catch (Exception e) {
             return site;
@@ -467,6 +470,9 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     @Override
     public String getSNPID(int site) {
+        if ((mySNPIDs == null) || (mySNPIDs.length ==0) || (mySNPIDs[site] == null)) {
+            return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
+        }
         return mySNPIDs[site];
     }
 
@@ -628,7 +634,6 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private void sortSitesByPhysicalPosition() {
 
         Swapper swapperPos = new Swapper() {
-
             public void swap(int a, int b) {
                 int it;
                 it = myLocusIndices[a];
@@ -652,7 +657,6 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             }
         };
         IntComparator compPos = new IntComparator() {
-
             public int compare(int a, int b) {
                 if (myLocusIndices[a] < myLocusIndices[b]) {
                     return -1;
@@ -677,7 +681,6 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private void sortSitesByPhysicalPositionEmptyData() {
 
         Swapper swapperPos = new Swapper() {
-
             public void swap(int a, int b) {
                 int it;
                 it = myLocusIndices[a];
@@ -694,7 +697,6 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             }
         };
         IntComparator compPos = new IntComparator() {
-
             public int compare(int a, int b) {
                 if (myLocusIndices[a] < myLocusIndices[b]) {
                     return -1;

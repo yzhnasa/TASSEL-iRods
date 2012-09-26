@@ -38,10 +38,11 @@ import org.apache.log4j.Logger;
 import org.biojava3.core.util.ConcurrencyTools;
 
 /**
- * This class aligns tags at the same physical location against one another, calls SNPs,
- * and then outputs the SNPs to a HapMap file.
+ * This class aligns tags at the same physical location against one another,
+ * calls SNPs, and then outputs the SNPs to a HapMap file.
  *
  * It is multi-threaded, as there are substantial speed increases with it.
+ *
  * @author edbuckler
  */
 public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
@@ -367,8 +368,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     }
 
     /**
-     * Fills an array of Locus objects with one locus for each supplied chromosome.  Creates a MutableNucleotideAlignment using
-     * the locus list and TBT profile as input.  Returns the MSA object.
+     * Fills an array of Locus objects with one locus for each supplied
+     * chromosome. Creates a MutableNucleotideAlignment using the locus list and
+     * TBT profile as input. Returns the MSA object.
      */
     private static MutableNucleotideAlignment createMutableAlignment(TagsByTaxa theTBT, int startChr, int endChr, int maxSites) {
         Locus[] theL = new Locus[endChr - startChr + 1];
@@ -376,7 +378,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             theL[i] = new Locus("" + (startChr + i), "" + (startChr + i), -1, -1, null, null);
         }
         IdGroup taxa = new SimpleIdGroup(theTBT.getTaxaNames());
-        MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, maxSites, taxa.getIdCount(), maxSites);
+        MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
+        //for (int i = 0; i < maxSites; i++) {
+        //    theMSA.setLocusOfSite(i, theL[0]);
+        //}
         //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(theTBT.getTaxaNames(), maxSites, theL);
         return theMSA;
     }
@@ -417,6 +422,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 continue;
             }
             int currSite = theMSA.getSiteCount();
+            theMSA.addSite(currSite);
             //theMSA.setLocusOfSite(currSite, "" + theTAL.getChromosome());
             String chromosome = String.valueOf(theTAL.getChromosome());
             theMSA.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
@@ -473,6 +479,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private byte[] isSiteGood(byte[] calls) {
         int[][] alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
         //int[][] alleles = getSortedAlleleCounts(calls);
+        // Maybe problem here - alleles shouldn't be less than 2?
+        if (alleles[1].length < 2) {
+            return null;
+        }
         int aCnt = alleles[1][0] + alleles[1][1];
         double theMAF = (double) alleles[1][1] / (double) aCnt;
         if ((theMAF < minMAF) && (alleles[1][1] < minMAC)) {
@@ -507,43 +517,6 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         byte[] majMinAlleles = {majAllele, minAllele};
         return majMinAlleles;
     }
-
-    /*
-    private int[][] getSortedAlleleCounts(byte[] calls) {
-        byte[] nuc = {'A', 'C', 'G', 'T', '-', '+', 'N'};
-        int[] nucIndex = new int[Byte.MAX_VALUE];
-        for (int i = 0; i < nuc.length; i++) {
-            nucIndex[nuc[i]] = i;
-        }
-        int[] cnt = new int[nuc.length];
-        for (byte dc : calls) {
-            byte[] cc = IUPACNucleotides.getDiploidValueFromIUPACCode(dc);
-            cnt[nucIndex[cc[0]]]++;
-            cnt[nucIndex[cc[1]]]++;
-        }
-        int[][] alleles = new int[2][nuc.length - 1];  // alleles[0]=allele; alleles[1]=count
-        for (int i = 0; i < nuc.length - 1; i++) {  // "i<nuc.length-1" stops N from being included
-            alleles[0][i] = nuc[i];
-            alleles[1][i] = cnt[i];
-        }
-        boolean change = true;  // sort the alleles by descending frequency
-        while (change) {
-            change = false;
-            for (int k = 0; k < nuc.length - 2; k++) {
-                if (alleles[1][k] < alleles[1][k + 1]) {
-                    int temp = alleles[0][k];
-                    alleles[0][k] = alleles[0][k + 1];
-                    alleles[0][k + 1] = temp;
-                    int tempCount = alleles[1][k];
-                    alleles[1][k] = alleles[1][k + 1];
-                    alleles[1][k + 1] = tempCount;
-                    change = true;
-                }
-            }
-        }
-        return alleles;
-    }
-     */
 
     private double calculateF(byte[] calls, int[][] alleles, byte hetG, double theMAF) {
         boolean report = false;
@@ -824,5 +797,314 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 break;
         }
         return comp;
+    }
+
+    /**
+     * Resolves the appropriate IUPACNucleotide from the given callPair
+     * (currCall, newCall)
+     *
+     * CurrCall is any valid IUPACNucleotide (except '+') while newCall is
+     * restricted to A,C,G,T,-,N
+     *
+     * @param currCall, the current genotypic call from previous tag(s) at the
+     * locus
+     * @param newCall, the new allele from the current tag to be combined with
+     * currCall to make a new genotype
+     * @return resolved byte (valid IUPACNucleotide)
+     */
+    public static byte resolveSNPByteFromCallPair(byte currCall, byte newCall) {
+        byte snpByte;
+        if (newCall == 'A') {
+            switch (currCall) {  // conflicts (more than 2 alleles) get set to N
+                case 'A':
+                    snpByte = 'A';
+                    break;
+                case 'C':
+                    snpByte = 'M';
+                    break;
+                case 'G':
+                    snpByte = 'R';
+                    break;
+                case 'T':
+                    snpByte = 'W';
+                    break;
+                case 'K':
+                    snpByte = 'N';
+                    break;
+                case 'M':
+                    snpByte = 'M';
+                    break;
+                case 'R':
+                    snpByte = 'R';
+                    break;
+                case 'S':
+                    snpByte = 'N';
+                    break;
+                case 'W':
+                    snpByte = 'W';
+                    break;
+                case 'Y':
+                    snpByte = 'N';
+                    break;
+                case '-':
+                    snpByte = '0';
+                    break;
+                case '+':
+                    snpByte = 'N';
+                    break; // it should not be possible for currCall to be '+'
+                case '0':
+                    snpByte = '0';
+                    break;
+                case 'N':
+                    snpByte = 'N';
+                    break; // was set to N because of a previous conflict, so should stay as N 
+                default:
+                    snpByte = 'N';
+                    break;
+            }
+        } else if (newCall == 'C') {
+            switch (currCall) {  // conflicts (more than 2 alleles) get set to N
+                case 'A':
+                    snpByte = 'M';
+                    break;
+                case 'C':
+                    snpByte = 'C';
+                    break;
+                case 'G':
+                    snpByte = 'S';
+                    break;
+                case 'T':
+                    snpByte = 'Y';
+                    break;
+                case 'K':
+                    snpByte = 'N';
+                    break;
+                case 'M':
+                    snpByte = 'M';
+                    break;
+                case 'R':
+                    snpByte = 'N';
+                    break;
+                case 'S':
+                    snpByte = 'S';
+                    break;
+                case 'W':
+                    snpByte = 'N';
+                    break;
+                case 'Y':
+                    snpByte = 'Y';
+                    break;
+                case '-':
+                    snpByte = '0';
+                    break;
+                case '+':
+                    snpByte = 'N';
+                    break; // it should not be possible for currCall to be '+'
+                case '0':
+                    snpByte = '0';
+                    break;
+                case 'N':
+                    snpByte = 'N';
+                    break; // was set to N because of a previous conflict, so should stay as N 
+                default:
+                    snpByte = 'N';
+                    break;
+            }
+        } else if (newCall == 'G') {
+            switch (currCall) {  // conflicts (more than 2 alleles) get set to N
+                case 'A':
+                    snpByte = 'R';
+                    break;
+                case 'C':
+                    snpByte = 'S';
+                    break;
+                case 'G':
+                    snpByte = 'G';
+                    break;
+                case 'T':
+                    snpByte = 'K';
+                    break;
+                case 'K':
+                    snpByte = 'K';
+                    break;
+                case 'M':
+                    snpByte = 'N';
+                    break;
+                case 'R':
+                    snpByte = 'R';
+                    break;
+                case 'S':
+                    snpByte = 'S';
+                    break;
+                case 'W':
+                    snpByte = 'N';
+                    break;
+                case 'Y':
+                    snpByte = 'N';
+                    break;
+                case '-':
+                    snpByte = '0';
+                    break;
+                case '+':
+                    snpByte = 'N';
+                    break; // it should not be possible for currCall to be '+'
+                case '0':
+                    snpByte = '0';
+                    break;
+                case 'N':
+                    snpByte = 'N';
+                    break; // was set to N because of a previous conflict, so should stay as N 
+                default:
+                    snpByte = 'N';
+                    break;
+            }
+        } else if (newCall == 'T') {
+            switch (currCall) {  // conflicts (more than 2 alleles) get set to N
+                case 'A':
+                    snpByte = 'W';
+                    break;
+                case 'C':
+                    snpByte = 'Y';
+                    break;
+                case 'G':
+                    snpByte = 'K';
+                    break;
+                case 'T':
+                    snpByte = 'T';
+                    break;
+                case 'K':
+                    snpByte = 'K';
+                    break;
+                case 'M':
+                    snpByte = 'N';
+                    break;
+                case 'R':
+                    snpByte = 'N';
+                    break;
+                case 'S':
+                    snpByte = 'N';
+                    break;
+                case 'W':
+                    snpByte = 'W';
+                    break;
+                case 'Y':
+                    snpByte = 'Y';
+                    break;
+                case '-':
+                    snpByte = '0';
+                    break;
+                case '+':
+                    snpByte = 'N';
+                    break; // it should not be possible for currCall to be '+'
+                case '0':
+                    snpByte = '0';
+                    break;
+                case 'N':
+                    snpByte = 'N';
+                    break; // was set to N because of a previous conflict, so should stay as N 
+                default:
+                    snpByte = 'N';
+                    break;
+            }
+        } else if (newCall == '-') {  // conflicts (more than 2 alleles) get set to N
+            switch (currCall) {
+                case 'A':
+                    snpByte = '0';
+                    break;
+                case 'C':
+                    snpByte = '0';
+                    break;
+                case 'G':
+                    snpByte = '0';
+                    break;
+                case 'T':
+                    snpByte = '0';
+                    break;
+                case 'K':
+                    snpByte = 'N';
+                    break;
+                case 'M':
+                    snpByte = 'N';
+                    break;
+                case 'R':
+                    snpByte = 'N';
+                    break;
+                case 'S':
+                    snpByte = 'N';
+                    break;
+                case 'W':
+                    snpByte = 'N';
+                    break;
+                case 'Y':
+                    snpByte = 'N';
+                    break;
+                case '-':
+                    snpByte = '-';
+                    break;
+                case '+':
+                    snpByte = 'N';
+                    break; // it should not be possible for currCall to be '+'
+                case '0':
+                    snpByte = '0';
+                    break;
+                case 'N':
+                    snpByte = 'N';
+                    break; // was set to N because of a previous conflict, so should stay as N 
+                default:
+                    snpByte = 'N';
+                    break;
+            }
+        } else if (newCall == 'N') {
+            switch (currCall) {
+                case 'A':
+                    snpByte = 'A';
+                    break;
+                case 'C':
+                    snpByte = 'C';
+                    break;
+                case 'G':
+                    snpByte = 'G';
+                    break;
+                case 'T':
+                    snpByte = 'T';
+                    break;
+                case 'K':
+                    snpByte = 'N';
+                    break;
+                case 'M':
+                    snpByte = 'N';
+                    break;
+                case 'R':
+                    snpByte = 'N';
+                    break;
+                case 'S':
+                    snpByte = 'N';
+                    break;
+                case 'W':
+                    snpByte = 'N';
+                    break;
+                case 'Y':
+                    snpByte = 'N';
+                    break;
+                case '-':
+                    snpByte = '-';
+                    break;
+                case '+':
+                    snpByte = 'N';
+                    break; // it should not be possible for currCall to be '+'
+                case '0':
+                    snpByte = '0';
+                    break;
+                case 'N':
+                    snpByte = 'N';
+                    break; // was set to N because of a previous conflict, so should stay as N 
+                default:
+                    snpByte = 'N';
+                    break;
+            }
+        } else {
+            snpByte = 'N';
+        }
+        return snpByte;
     }
 }
