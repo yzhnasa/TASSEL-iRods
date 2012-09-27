@@ -136,6 +136,19 @@ public class BaseEncoder {
         }
         return result;
     }
+    
+    /**
+     * @param seq A String containing a DNA sequence.
+     * @return result A array of Long ints containing the binary representation of the sequence.
+     * if sequence length is shorter than padded Length adds A to the end.
+     */
+    public static long[] getLongArrayFromSeq(String seq, int paddedLength) {
+        if(seq.length()<paddedLength) {
+            seq=seq+"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".substring(0, paddedLength-seq.length());
+        }
+    //    System.out.println("PadLength:"+seq.length());
+        return getLongArrayFromSeq(seq);
+    }
 
     //polyA is used represent unknown, but reverse complement will change it to polyT
     //which does not mean the same
