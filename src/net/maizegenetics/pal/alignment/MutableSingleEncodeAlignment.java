@@ -470,7 +470,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     @Override
     public String getSNPID(int site) {
-        if ((mySNPIDs == null) || (mySNPIDs.length ==0) || (mySNPIDs[site] == null)) {
+        if ((mySNPIDs == null) || (mySNPIDs.length == 0) || (mySNPIDs[site] == null)) {
             return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
         }
         return mySNPIDs[site];
@@ -615,6 +615,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     public void clean() {
         sortSitesByPhysicalPosition();
+        removeUnusedLoci();
         myIsDirty = false;
     }
 
@@ -629,6 +630,31 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     private void setClean() {
         myIsDirty = false;
+    }
+
+    private void removeUnusedLoci() {
+        boolean[] isUsed = new boolean[myLocusToLociIndex.size()];
+        Arrays.fill(isUsed, false);
+        for (int i = 0; i < myLocusIndices.length; i++) {
+            isUsed[myLocusIndices[i]] = true;
+        }
+        int removed = 0;
+        for (int i = 0; i < isUsed.length; i++) {
+            if (!isUsed[i]) {
+                myLocusToLociIndex.remove(i - removed);
+                decrementAllHigherLociIndices(i - removed);
+                removed++;
+            }
+        }
+
+    }
+
+    private void decrementAllHigherLociIndices(int starting) {
+        for (int i = 0; i < myLocusIndices.length; i++) {
+            if (myLocusIndices[i] > starting) {
+                myLocusIndices[i]--;
+            }
+        }
     }
 
     private void sortSitesByPhysicalPosition() {
