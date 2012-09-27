@@ -17,8 +17,7 @@ public class TagMappingInfo {
     byte dcoP=Byte.MIN_VALUE;
     byte mapP=Byte.MIN_VALUE;  //Round(Log2(P)), unknown Byte.MIN_VALUE
     
-    public TagMappingInfo() {
-        
+    public TagMappingInfo() {   
     }
     
     public TagMappingInfo(int chromosome, byte strand, int startPosition, 
