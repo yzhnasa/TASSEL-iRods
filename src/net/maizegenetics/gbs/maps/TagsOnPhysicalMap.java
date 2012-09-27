@@ -297,7 +297,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return printRow(row);
     }
 
-    protected void printRows(int numRows) {
+    public void printRows(int numRows) {
         for (int i = 0; i < numRows; i++) {
             System.out.println(printRow(i));
         }
