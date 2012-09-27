@@ -971,6 +971,15 @@ public class FilterAlignment extends AbstractAlignment {
             return myBaseAlignment.getTotalGametesNotMissingForTaxon(translateTaxon(taxon));
         }
     }
+    
+    @Override
+    public int getTotalNotMissingForTaxon(int taxon) {
+        if (myIsSiteFilter || myIsSiteFilterByRange) {
+            return super.getTotalNotMissingForTaxon(taxon);
+        } else {
+            return myBaseAlignment.getTotalNotMissingForTaxon(translateTaxon(taxon));
+        }
+    }
 
     @Override
     public int getHeterozygousCountForTaxon(int taxon) {

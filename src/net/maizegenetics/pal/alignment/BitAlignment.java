@@ -576,6 +576,21 @@ public class BitAlignment extends AbstractAlignment {
         return ((int) temp.cardinality()) * 2;
 
     }
+    
+    @Override
+    public int getTotalNotMissingForTaxon(int taxon) {
+        
+        if (myTBitData == null) {
+            return super.getTotalNotMissingForTaxon(taxon);
+        }
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 0; i < myNumDataRows; i++) {
+            temp.or(myTBitData[i][taxon]);
+        }
+        return (int) temp.cardinality();
+        
+    }
 
     @Override
     public int getMinorAlleleCount(int site) {

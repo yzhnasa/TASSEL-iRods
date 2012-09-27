@@ -754,6 +754,7 @@ public interface Alignment extends Serializable {
      * can be twice the number of sites, as diploid values are supported.
      *
      * @param taxon taxon
+     * 
      * @return number of non-missing allele values.
      */
     public int getTotalGametesNotMissingForTaxon(int taxon);
@@ -766,6 +767,17 @@ public interface Alignment extends Serializable {
      * @return number of heterozygous sites
      */
     public int getHeterozygousCountForTaxon(int taxon);
+    
+    /**
+     * Returns total number of non-missing sites for given taxon.
+     * Sites are considered missing only if both allele values
+     * are Unknown (N).
+     * 
+     * @param taxon taxon
+     * 
+     * @return number of non-missing sites.
+     */
+    public int getTotalNotMissingForTaxon(int taxon);
 
     /**
      * Return whether alignment will execute quickly for site optimized

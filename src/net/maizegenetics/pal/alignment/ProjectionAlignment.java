@@ -374,6 +374,33 @@ public class ProjectionAlignment extends AbstractAlignment {
         return result;
 
     }
+    
+    @Override
+    public int getTotalNotMissingForTaxon(int taxon) {
+        
+        int numBreaks = mySiteBreaks[taxon].length;
+        int result = 0;
+        for (int i = 0; i < numBreaks - 1; i++) {
+            int hdTaxon = myHDTaxa[taxon][i];
+            for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
+                byte current = myBaseAlignment.getBase(hdTaxon, j);
+                if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                    result++;
+                }
+            }
+        }
+
+        int hdTaxon = myHDTaxa[taxon][numBreaks - 1];
+        for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
+            byte current = myBaseAlignment.getBase(hdTaxon, j);
+            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                result++;
+            }
+        }
+
+        return result;
+        
+    }
 
     // TERRY - This Needs Work.
     public Object[][] getMajorMinorCounts() {
