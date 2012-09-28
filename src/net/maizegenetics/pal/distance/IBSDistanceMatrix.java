@@ -16,6 +16,7 @@ package net.maizegenetics.pal.distance;
 
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.ProgressListener;
 
@@ -88,7 +89,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         computeHetBitDistances();
         System.out.println("NewBitHet Distance Time:" + (System.currentTimeMillis() - time));
     }
-    
+
 //    
 //    /**
 //     * Only work for inbreds
@@ -120,7 +121,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 //        setDistances(distance);
 //        avgTotalSites /= (double) count;
 //    }
-
     /**
      * This is a cleanest, fastest and most accurate way to calculate distance.
      * It includes a simple approach for hets. This method is actually 10%
@@ -130,7 +130,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     private void computeHetBitDistances() {
         avgTotalSites = 0;
         int count = 0;
-        double[] params;
         double[][] distance = new double[numSeqs][numSeqs];
         for (int i = 0; i < numSeqs; i++) {
             long[] iMj = theTBA.getAllelePresenceForAllSites(i, 0).getBits();
@@ -169,6 +168,41 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         avgTotalSites /= (double) count;
     }
 
+    public static double computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2) {
+        return computeHetBitDistances(theTBA, taxon1, taxon2, 0, false);
+    }
+
+    public static double computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
+
+        if (taxon2 == taxon1 && !isTrueIBS) {
+            return 0.0;
+        } else {
+            theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
+            long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
+            long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
+            long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
+            long[] jMn = theTBA.getAllelePresenceForAllSites(taxon2, 1).getBits();
+            int sameCnt = 0, diffCnt = 0, hetCnt = 0;
+            for (int x = 0; x < iMj.length; x++) {
+                long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
+                long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
+                long hets = same & diff;
+                sameCnt += BitUtil.pop(same);
+                diffCnt += BitUtil.pop(diff);
+                hetCnt += BitUtil.pop(hets);
+            }
+            double identity = (double) (sameCnt + (hetCnt / 2)) / (double) (sameCnt + diffCnt + hetCnt);
+            double dist = 1 - identity;
+            int sites = sameCnt + diffCnt - hetCnt;
+            if (sites > minSitesCompared) {
+                return dist;
+            } else {
+                return Double.NaN;
+            }
+        }
+
+    }
+
 //    private void computeDistances() {
 //        avgTotalSites = 0;
 //        int count = 0;
@@ -189,7 +223,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 //        setDistances(distance);
 //        avgTotalSites /= (double) count;
 //    }
-    
     private double[] calculateDistance(int s1, int s2) {
 
         int siteCount = theAlignment.getSiteCount();
