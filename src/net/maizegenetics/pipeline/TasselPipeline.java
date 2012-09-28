@@ -27,6 +27,7 @@ import net.maizegenetics.baseplugins.ConvertAlignmentCoordinatesPlugin;
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.baseplugins.CreateTreePlugin;
 import net.maizegenetics.baseplugins.DistanceMatrixPlugin;
+import net.maizegenetics.baseplugins.DistanceMatrixRangesPlugin;
 import net.maizegenetics.baseplugins.ExportMultiplePlugin;
 import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
@@ -831,6 +832,72 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-distanceMatrix")) {
                     DistanceMatrixPlugin plugin = new DistanceMatrixPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-distMatrixRanges")) {
+                    DistanceMatrixRangesPlugin plugin = new DistanceMatrixRangesPlugin(myMainFrame, false);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-distMatrixRangesLocus")) {
+                    DistanceMatrixRangesPlugin plugin = null;
+                    try {
+                        plugin = (DistanceMatrixRangesPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No DistanceMatrixRangesPlugin step defined: " + current);
+                    }
+                    
+                    String str = args[index++].trim();
+                    plugin.setLocus(str);
+                } else if (current.equalsIgnoreCase("-distMatrixRangesTaxon")) {
+                    DistanceMatrixRangesPlugin plugin = null;
+                    try {
+                        plugin = (DistanceMatrixRangesPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No DistanceMatrixRangesPlugin step defined: " + current);
+                    }
+                    
+                    String str = args[index++].trim();
+                    plugin.setTaxon(str);
+                } else if (current.equalsIgnoreCase("-distMatrixRangesPos")) {
+                    DistanceMatrixRangesPlugin plugin = null;
+                    try {
+                        plugin = (DistanceMatrixRangesPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No DistanceMatrixRangesPlugin step defined: " + current);
+                    }
+                    
+                    String[] positions = args[index++].trim().split(",");
+                    plugin.setPhysicalPositions(positions);
+                } else if (current.equalsIgnoreCase("-distMatrixRangesPosFile")) {
+                    DistanceMatrixRangesPlugin plugin = null;
+                    try {
+                        plugin = (DistanceMatrixRangesPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No DistanceMatrixRangesPlugin step defined: " + current);
+                    }
+                    String posFile = args[index++].trim();
+                    
+                    List positions = new ArrayList();
+                    BufferedReader br = null;
+                    try {
+                        br = Utils.getBufferedReader(posFile);
+                        String inputline = br.readLine();
+                        Pattern sep = Pattern.compile("\\s+");
+                        
+                        while (inputline != null) {
+                            inputline = inputline.trim();
+                            String[] parsedline = sep.split(inputline);
+                            for (int i = 0; i < parsedline.length; i++) {
+                                if ((parsedline[i] != null) || (parsedline[i].length() != 0)) {
+                                    positions.add(parsedline[i]);
+                                }
+                            }
+                            inputline = br.readLine();
+                        }
+                    } finally {
+                        br.close();
+                    }
+                    
+                    String[] positionArray = new String[positions.size()];
+                    positionArray = (String[]) positions.toArray(positionArray);
+                    plugin.setPhysicalPositions(positionArray);
                 } else if (current.equalsIgnoreCase("-genotypeSummary")) {
                     GenotypeSummaryPlugin plugin = new GenotypeSummaryPlugin(myMainFrame, false);
                     String temp = args[index++].trim();
