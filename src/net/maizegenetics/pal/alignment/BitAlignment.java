@@ -27,28 +27,20 @@ public class BitAlignment extends AbstractAlignment {
 
     protected BitAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isSBit) {
         super(a, maxNumAlleles, retainRareAlleles);
-        long currentTime = System.currentTimeMillis();
         if (isSBit) {
             loadSBitAlleles(a, null);
         } else {
             loadTBitAlleles(a, null);
         }
-        long prevTime = currentTime;
-        currentTime = System.currentTimeMillis();
-        System.out.println("Time to load alleles: " + ((currentTime - prevTime) / 1000));
     }
 
     protected BitAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
         super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
-        long currentTime = System.currentTimeMillis();
         if (isSBit) {
             loadSBitAlleles(data);
         } else {
             loadTBitAlleles(data);
         }
-        long prevTime = currentTime;
-        currentTime = System.currentTimeMillis();
-        System.out.println("Time to load alleles: " + ((currentTime - prevTime) / 1000));
     }
 
     protected BitAlignment(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
