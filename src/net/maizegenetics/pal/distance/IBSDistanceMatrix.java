@@ -20,8 +20,9 @@ import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.ProgressListener;
 
 /**
- * This class calculates an identity by state matrix.  It is scaled so only non-missing data is used.
- * Class needs to be updated to use TBit alignment, and then bit calculations
+ * This class calculates an identity by state matrix. It is scaled so only
+ * non-missing data is used. Class needs to be updated to use TBit alignment,
+ * and then bit calculations
  *
  * @author Ed Buckler
  * @version 1.0
@@ -31,7 +32,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     private ProgressListener myListener = null;
     private int numSeqs;
     private Alignment theAlignment;
-    private Alignment theTBA=null;
+    private Alignment theTBA = null;
     /**
      * Holds the average numbers of sites in the comparisons
      */
@@ -41,29 +42,30 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      */
     private int lastCachedRowNum = 0;
     private byte[] lastCachedRow = null;
-    private int minSitesComp=0;
+    private int minSitesComp = 0;
     private boolean isTrueIBS = false;
 
     /**
-     * compute observed distances.  Missing sites are ignored.  This is no weighting for ambigous bases.
+     * Compute observed distances. Missing sites are ignored. This is no
+     * weighting for ambigous bases.
      *
      * @param theAlignment Alignment used to computed proportion that
      */
     public IBSDistanceMatrix(Alignment theAlignment) {
         this(theAlignment, 0, null);
     }
-    
+
     public IBSDistanceMatrix(Alignment theAlignment, ProgressListener listener) {
         this(theAlignment, 0, listener);
     }
 
     public IBSDistanceMatrix(Alignment theAlignment, int minSiteComp, ProgressListener listener) {
-    	this(theAlignment, minSiteComp, false, listener);
+        this(theAlignment, minSiteComp, false, listener);
     }
-    
+
     public IBSDistanceMatrix(Alignment theAlignment, int minSiteComp, boolean trueIBS, ProgressListener listener) {
         super();
-        this.minSitesComp=minSiteComp;
+        this.minSitesComp = minSiteComp;
         isTrueIBS = trueIBS;
         myListener = listener;
         numSeqs = theAlignment.getSequenceCount();
@@ -74,18 +76,19 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         //    theTBA=TBitAlignment.getInstance(theAlignment,2,false);
         //}
         theTBA = ConvertSBitTBitPlugin.convertAlignment(theAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, listener);
-    //  this should have an option to only use the 2 or 3 most common alleles
+        //  this should have an option to only use the 2 or 3 most common alleles
         setIdGroup(theAlignment.getIdGroup());
-        long time=System.currentTimeMillis();
-//        computeDistances();       
-//        System.out.println("Old Distance Time:"+(System.currentTimeMillis()-time));
-//        time=System.currentTimeMillis();
-//        computeBitDistances();
-//        System.out.println("NewBit Distance Time:"+(System.currentTimeMillis()-time));
-        time=System.currentTimeMillis();
+        long time = System.currentTimeMillis();
+        //        computeDistances();       
+        //        System.out.println("Old Distance Time:"+(System.currentTimeMillis()-time));
+        //        time=System.currentTimeMillis();
+        //        computeBitDistances();
+        //        System.out.println("NewBit Distance Time:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         computeHetBitDistances();
-        System.out.println("NewBitHet Distance Time:"+(System.currentTimeMillis()-time));
+        System.out.println("NewBitHet Distance Time:" + (System.currentTimeMillis() - time));
     }
+    
 //    
 //    /**
 //     * Only work for inbreds
@@ -117,13 +120,12 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 //        setDistances(distance);
 //        avgTotalSites /= (double) count;
 //    }
-    
-    
+
     /**
      * This is a cleanest, fastest and most accurate way to calculate distance.
-     * It includes a simple approach for hets.
-     * This method is actually 10% faster than the inbred approach.
-     * Key reason for the speed increase is only 3 bit counts versus the 4 above.
+     * It includes a simple approach for hets. This method is actually 10%
+     * faster than the inbred approach. Key reason for the speed increase is
+     * only 3 bit counts versus the 4 above.
      */
     private void computeHetBitDistances() {
         avgTotalSites = 0;
@@ -131,33 +133,34 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         double[] params;
         double[][] distance = new double[numSeqs][numSeqs];
         for (int i = 0; i < numSeqs; i++) {
-            long[] iMj=theTBA.getAllelePresenceForAllSites(i, 0).getBits();
-            long[] iMn=theTBA.getAllelePresenceForAllSites(i, 1).getBits();
+            long[] iMj = theTBA.getAllelePresenceForAllSites(i, 0).getBits();
+            long[] iMn = theTBA.getAllelePresenceForAllSites(i, 1).getBits();
             for (int j = i; j < numSeqs; j++) {
-            	if (j==i && !isTrueIBS) {
-            		distance[i][i] = 0;
-            	} else {
-                    long[] jMj=theTBA.getAllelePresenceForAllSites(j, 0).getBits();
-                    long[] jMn=theTBA.getAllelePresenceForAllSites(j, 1).getBits();
-                    int sameCnt=0, diffCnt=0, hetCnt=0;
-                    for(int x=0; x<iMj.length; x++) {
-                        long same=(iMj[x]&jMj[x])|(iMn[x]&jMn[x]);
-                        long diff=(iMj[x]&jMn[x])|(iMn[x]&jMj[x]);
-                        long hets=same&diff;
-                        sameCnt+=BitUtil.pop(same);
-                        diffCnt+=BitUtil.pop(diff);
-                        hetCnt+=BitUtil.pop(hets);
+                if (j == i && !isTrueIBS) {
+                    distance[i][i] = 0;
+                } else {
+                    long[] jMj = theTBA.getAllelePresenceForAllSites(j, 0).getBits();
+                    long[] jMn = theTBA.getAllelePresenceForAllSites(j, 1).getBits();
+                    int sameCnt = 0, diffCnt = 0, hetCnt = 0;
+                    for (int x = 0; x < iMj.length; x++) {
+                        long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
+                        long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
+                        long hets = same & diff;
+                        sameCnt += BitUtil.pop(same);
+                        diffCnt += BitUtil.pop(diff);
+                        hetCnt += BitUtil.pop(hets);
                     }
-                    double identity=(double)(sameCnt+(hetCnt/2))/(double)(sameCnt+diffCnt+hetCnt);
-                    double dist=1-identity;
-                    int sites=sameCnt+diffCnt-hetCnt;
-                    if(sites>minSitesComp) {distance[i][j] = distance[j][i] = dist;}
-                    else {
+                    double identity = (double) (sameCnt + (hetCnt / 2)) / (double) (sameCnt + diffCnt + hetCnt);
+                    double dist = 1 - identity;
+                    int sites = sameCnt + diffCnt - hetCnt;
+                    if (sites > minSitesComp) {
+                        distance[i][j] = distance[j][i] = dist;
+                    } else {
                         distance[i][j] = distance[j][i] = Double.NaN;
                     }
                     avgTotalSites += sites;  //this assumes not hets
                     count++;
-            	}
+                }
             }
             fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
         }
@@ -186,7 +189,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 //        setDistances(distance);
 //        avgTotalSites /= (double) count;
 //    }
-
+    
     private double[] calculateDistance(int s1, int s2) {
 
         int siteCount = theAlignment.getSiteCount();
@@ -231,7 +234,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     public String toString(int d) {
         double[][] distance = this.getDistance();
         /*Return a string representation of this matrix with 'd'
-        displayed digits*/
+         displayed digits*/
         String newln = System.getProperty("line.separator");
         String outPut = new String();
         String num = new String();
@@ -265,7 +268,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 
     }
 
-	public boolean isTrueIBS() {
-		return isTrueIBS;
-	}
+    public boolean isTrueIBS() {
+        return isTrueIBS;
+    }
 }
