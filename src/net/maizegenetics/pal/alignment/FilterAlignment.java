@@ -13,6 +13,8 @@ import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
 
+import org.apache.log4j.Logger;
+
 /**
  * All taxa and site filtering should be controlled through this class. It
  * essentially creates views of the baseAlignment
@@ -22,6 +24,7 @@ import net.maizegenetics.util.ProgressListener;
 public class FilterAlignment extends AbstractAlignment {
 
     private static final long serialVersionUID = -5197800047652332969L;
+    private static final Logger myLogger = Logger.getLogger(FilterAlignment.class);
     private final boolean myIsTaxaFilter;
     private final boolean myIsSiteFilter;
     private final boolean myIsSiteFilterByRange;
@@ -330,6 +333,11 @@ public class FilterAlignment extends AbstractAlignment {
         int endSite = a.getSiteOfPhysicalPosition(endPhysicalPos, locus);
         if (endSite < 0) {
             endSite = -(endSite + 2);
+        }
+
+        if (startSite > endSite) {
+            myLogger.warn("getInstance: start site: " + startSite + " from physical pos: " + startPhysicalPos + " is larger than end site: " + endSite + " from physical pos: " + endPhysicalPos);
+            return null;
         }
 
         return getInstance(a, startSite, endSite);
