@@ -316,6 +316,26 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    public static FilterAlignment getInstance(Alignment a, String locus, int startPhysicalPos, int endPhysicalPos) {
+        return getInstance(a, a.getLocus(locus), startPhysicalPos, endPhysicalPos);
+    }
+
+    public static FilterAlignment getInstance(Alignment a, Locus locus, int startPhysicalPos, int endPhysicalPos) {
+
+        int startSite = a.getSiteOfPhysicalPosition(startPhysicalPos, locus);
+        if (startSite < 0) {
+            startSite = -(startSite + 1);
+        }
+
+        int endSite = a.getSiteOfPhysicalPosition(endPhysicalPos, locus);
+        if (endSite < 0) {
+            endSite = -(endSite + 2);
+        }
+
+        return getInstance(a, startSite, endSite);
+
+    }
+
     /**
      * Factory method that returns a FilterAlignment viewing sites between start
      * site and end site inclusive.
@@ -971,7 +991,7 @@ public class FilterAlignment extends AbstractAlignment {
             return myBaseAlignment.getTotalGametesNotMissingForTaxon(translateTaxon(taxon));
         }
     }
-    
+
     @Override
     public int getTotalNotMissingForTaxon(int taxon) {
         if (myIsSiteFilter || myIsSiteFilterByRange) {
