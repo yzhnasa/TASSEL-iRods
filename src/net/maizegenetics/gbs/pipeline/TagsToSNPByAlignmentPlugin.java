@@ -416,14 +416,12 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         int[] positionsInLocus = theTAL.getPositionsOfVariableSites();
         int strand = theTAL.getStrand();
         for (int s = 0; s < callsBySite.length; s++) {
-            byte[] calls = callsBySite[s];
             byte[] alleles = null;
-            if ((alleles = isSiteGood(calls)) == null) {
+            if ((alleles = isSiteGood(callsBySite[s])) == null) { // NOTE: only the maj & min1 alleles are returned, so the Prod Pipeline can only call 2 alleles
                 continue;
             }
             int currSite = theMSA.getSiteCount();
             theMSA.addSite(currSite);
-            //theMSA.setLocusOfSite(currSite, "" + theTAL.getChromosome());
             String chromosome = String.valueOf(theTAL.getChromosome());
             theMSA.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
             int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
@@ -431,12 +429,12 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             //theMSA.setStrandOfSite(currSite, (byte) '+');  // all minus strand genotypes will be complemented to plus strand
             for (int tx = 0; tx < theTBT.getTaxaCount(); tx++) {
                 if (strand == -1) {
-                    theMSA.setBase(tx, currSite, complement(calls[tx]));  // complement to plus strand
+                    theMSA.setBase(tx, currSite, complementGeno(callsBySite[s][tx]));  // complement to plus strand
                 } else {
-                    theMSA.setBase(tx, currSite, calls[tx]);
+                    theMSA.setBase(tx, currSite, callsBySite[s][tx]);
                 }
             }
-            if (this.isUpdateTOPM) {
+            if (this.isUpdateTOPM) {  
                 updateTOPM(theTAL, s, position, strand, alleles);
             }
             if (currSite % 100 == 0) {
@@ -448,9 +446,11 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private void updateTOPM(TagsAtLocus myTAL, int variableSite, int position, int strand, byte[] alleles) {
         for (int tg = 0; tg < myTAL.getSize(); tg++) {
             byte baseToAdd = myTAL.getCallAtVariableSiteForTag(variableSite, tg);
-            if (baseToAdd == 0 || baseToAdd == Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                continue;
-            }
+            
+            // NOTE:
+            //  -"alleles" contains only the maj & min1 alleles, so the Prod Pipeline can only call 2 alleles at a site
+            //  -"alleles" are coded as (byte) 0 to 15 (tassel4 encoding).  So is baseToAdd, so they are matching
+            //  -this means that a production TOPM from Tassel3 cannot be used in Tassel4
             boolean matched = false;
             for (byte cb : alleles) {
                 if (baseToAdd == cb) {
@@ -458,14 +458,14 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                     break;
                 }
             }
-            // so that all tags in the tagAlignment have the same corresponding variants in the TOPM, add a variant no matter what (set to N if needed)
+            // so that all tags in the tagAlignment have the same corresponding variants in the TOPM, add a variant no matter what (set to missing if needed)
             int topmTagIndex = myTAL.getTOPMIndexOfTag(tg);
             byte offset = (byte) (position - myTAL.getMinStartPosition());
             if (!matched) {
                 baseToAdd = Alignment.UNKNOWN_DIPLOID_ALLELE;
             }
             if (strand == -1) {
-                baseToAdd = complement(baseToAdd);  // record everything relative to the plus strand
+                baseToAdd = complementAllele(baseToAdd);  // record everything relative to the plus strand
             }
             theTOPM.addVariant(topmTagIndex, offset, baseToAdd);
         }
@@ -481,34 +481,46 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         //int[][] alleles = getSortedAlleleCounts(calls);
         // Maybe problem here - alleles shouldn't be less than 2?
         if (alleles[1].length < 2) {
+            System.out.println("Too few alleles ("+alleles[1].length+"alleles)");
             return null;
         }
         int aCnt = alleles[1][0] + alleles[1][1];
         double theMAF = (double) alleles[1][1] / (double) aCnt;
-        if ((theMAF < minMAF) && (alleles[1][1] < minMAC)) {
-            return null;  // note that a site only needs to pass one of the criteria, minMAF &/or minMAC
-        }
+        if ((theMAF < minMAF) && (alleles[1][1] < minMAC)) return null;  // note that a site only needs to pass one of the criteria, minMAF &/or minMAC
         byte majAllele = (byte) alleles[0][0];
         byte minAllele = (byte) alleles[0][1];
-        if (!inclGaps && ((majAllele == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) || (minAllele == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE))) {
+        if (!inclGaps && ((majAllele == NucleotideAlignmentConstants.GAP_ALLELE) || (minAllele == NucleotideAlignmentConstants.GAP_ALLELE))) {
             return null;
         }
-        //byte hetG = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(majAllele, minAllele);
-        byte hetG = AlignmentUtils.getDiploidValue(majAllele, minAllele);
-        double obsF = calculateF(calls, alleles, hetG, theMAF);
-        if (obsF < minF) {
-            return null;
+        byte homMaj = (byte) ((majAllele << 4) | majAllele);
+        byte homMin = (byte) ((minAllele << 4) | minAllele);
+        byte hetG1 = AlignmentUtils.getDiploidValue(majAllele, minAllele);
+        byte hetG2 = AlignmentUtils.getDiploidValue(minAllele, majAllele);
+        if (minF > -1.0) { // only test for minF if the parameter has been set above the theoretical minimum
+            double obsF = calculateF(calls, alleles, hetG1, hetG2, theMAF);
+            if (obsF < minF) return null;
         }
         if (!inclRare) {
             if (callBiallelicSNPsWithGap) {
                 for (int i = 0; i < calls.length; i++) {
-                    if ((calls[i] != majAllele) && (calls[i] != minAllele) && (calls[i] != hetG) && (calls[i] != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) && (calls[i] != '0')) {
+                    // go through the possibilities in order of likelihood (so that not all have to be tested)
+                    if (calls[i] == homMaj || calls[i] == homMin || calls[i] == hetG1 || calls[i] == hetG2
+                            || calls[i] == AlignmentUtils.getDiploidValue(majAllele,NucleotideAlignmentConstants.GAP_ALLELE)
+                            || calls[i] == AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,majAllele)
+                            || calls[i] == AlignmentUtils.getDiploidValue(minAllele,NucleotideAlignmentConstants.GAP_ALLELE)
+                            || calls[i] == AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,minAllele)
+                            || calls[i] == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
+                        ) {
+                        continue;
+                    } else {
                         calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
                     }
                 }
             } else {
                 for (int i = 0; i < calls.length; i++) {
-                    if ((calls[i] != majAllele) && (calls[i] != minAllele) && (calls[i] != hetG)) {
+                    if ((calls[i] == homMaj) || (calls[i] == homMin) || (calls[i] == hetG1) || (calls[i] == hetG2)) {
+                        continue;
+                    } else {
                         calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
                     }
                 }
@@ -518,7 +530,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         return majMinAlleles;
     }
 
-    private double calculateF(byte[] calls, int[][] alleles, byte hetG, double theMAF) {
+    private double calculateF(byte[] calls, int[][] alleles, byte hetG1, byte hetG2, double theMAF) { 
         boolean report = false;
         double obsF;
         int hetGCnt = 0;
@@ -534,9 +546,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             byte majAllele = (byte) allelesToUse[0][0];
             byte minAllele = (byte) allelesToUse[0][1];
             //byte newHetG = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(majAllele, minAllele);
-            byte newHetG = AlignmentUtils.getDiploidValue(majAllele, minAllele);
+            byte newHetG1 = AlignmentUtils.getDiploidValue(majAllele, minAllele);
+            byte newHetG2 = AlignmentUtils.getDiploidValue(minAllele, majAllele);
             for (byte i : callsToUse) {
-                if (i == newHetG) {
+                if (i == newHetG1 || i == newHetG2) {
                     hetGCnt++;
                 }
             }
@@ -551,7 +564,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             return obsF;
         } else {
             for (byte i : calls) {
-                if (i == hetG) {
+                if (i == hetG1 || i == hetG2) {
                     hetGCnt++;
                 }
             }
@@ -747,54 +760,54 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         return sb.toString();
     }
 
-    public static byte complement(byte geno) {
+    public static byte complementGeno(byte geno) {
         byte comp = Byte.MIN_VALUE;
         switch (geno) {
-            case 'A':
-                comp = 'T';
-                break;
-            case 'C':
-                comp = 'G';
-                break;
-            case 'G':
-                comp = 'C';
-                break;
-            case 'T':
-                comp = 'A';
-                break;
-            case 'K':
-                comp = 'M';
-                break;
-            case 'M':
-                comp = 'K';
-                break;
-            case 'R':
-                comp = 'Y';
-                break;
-            case 'S':
-                comp = 'S';
-                break;
-            case 'W':
-                comp = 'W';
-                break;
-            case 'Y':
-                comp = 'R';
-                break;
-            case '-':
-                comp = '-';
-                break;  // both strands have the deletion
-            case '+':
-                comp = '+';
-                break;  // both strands have the insertion
-            case '0':
-                comp = '0';
-                break;
-            case 'N':
-                comp = 'N';
+            case 0x00: comp = 0x33; break;   // AA -> TT
+            case 0x01: comp = 0x32; break;   // AC -> TG
+            case 0x02: comp = 0x31; break;   // AG -> TC
+            case 0x03: comp = 0x30; break;   // AT -> TA
+            case 0x11: comp = 0x22; break;   // CC -> GG
+            case 0x10: comp = 0x23; break;   // CA -> GT
+            case 0x12: comp = 0x21; break;   // CG -> GC
+            case 0x13: comp = 0x20; break;   // CT -> GA
+            case 0x22: comp = 0x11; break;   // GG -> CC
+            case 0x20: comp = 0x13; break;   // GA -> CT
+            case 0x21: comp = 0x12; break;   // GC -> CG
+            case 0x23: comp = 0x10; break;   // GT -> CA
+            case 0x33: comp = 0x00; break;   // TT -> AA
+            case 0x30: comp = 0x03; break;   // TA -> AT
+            case 0x31: comp = 0x02; break;   // TC -> AG
+            case 0x32: comp = 0x01; break;   // TG -> AC
+            case 0x05: comp = 0x35; break;   // A- -> T-
+            case 0x50: comp = 0x53; break;   // -A -> -T
+            case 0x15: comp = 0x25; break;   // C- -> G-
+            case 0x51: comp = 0x52; break;   // -C -> -G
+            case 0x25: comp = 0x15; break;   // G- -> C-
+            case 0x52: comp = 0x51; break;   // -G -> -C
+            case 0x35: comp = 0x05; break;   // T- -> A-
+            case 0x53: comp = 0x50; break;   // -T -> -A
+            case 0x55: comp = 0x55; break;   // -- -> --            
+            case Alignment.UNKNOWN_DIPLOID_ALLELE:
+                comp = Alignment.UNKNOWN_DIPLOID_ALLELE;
                 break;
             default:
-                comp = 'N';
+                comp = Alignment.UNKNOWN_DIPLOID_ALLELE;
                 break;
+        }
+        return comp;
+    }
+    
+    public static byte complementAllele(byte allele) {
+        byte comp = Byte.MIN_VALUE;
+        switch (allele) {
+            case 0x00: comp=NucleotideAlignmentConstants.T_ALLELE; break;   // A -> T
+            case 0x01: comp=NucleotideAlignmentConstants.G_ALLELE; break;   // C -> G
+            case 0x02: comp=NucleotideAlignmentConstants.C_ALLELE; break;   // G -> C
+            case 0x03: comp=NucleotideAlignmentConstants.A_ALLELE; break;   // T -> A
+            case 0x05: comp=NucleotideAlignmentConstants.GAP_ALLELE; break; // - -> -
+            default:
+                comp = Alignment.UNKNOWN_ALLELE; break;
         }
         return comp;
     }
