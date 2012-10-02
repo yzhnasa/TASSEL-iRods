@@ -13,6 +13,8 @@ import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
 
+import org.apache.log4j.Logger;
+
 /**
  * All taxa and site filtering should be controlled through this class. It
  * essentially creates views of the baseAlignment
@@ -22,6 +24,7 @@ import net.maizegenetics.util.ProgressListener;
 public class FilterAlignment extends AbstractAlignment {
 
     private static final long serialVersionUID = -5197800047652332969L;
+    private static final Logger myLogger = Logger.getLogger(FilterAlignment.class);
     private final boolean myIsTaxaFilter;
     private final boolean myIsSiteFilter;
     private final boolean myIsSiteFilterByRange;
@@ -313,6 +316,31 @@ public class FilterAlignment extends AbstractAlignment {
             System.arraycopy(temp, 0, result, 0, count);
         }
         return getInstance(a, result);
+
+    }
+
+    public static FilterAlignment getInstance(Alignment a, String locus, int startPhysicalPos, int endPhysicalPos) {
+        return getInstance(a, a.getLocus(locus), startPhysicalPos, endPhysicalPos);
+    }
+
+    public static FilterAlignment getInstance(Alignment a, Locus locus, int startPhysicalPos, int endPhysicalPos) {
+
+        int startSite = a.getSiteOfPhysicalPosition(startPhysicalPos, locus);
+        if (startSite < 0) {
+            startSite = -(startSite + 1);
+        }
+
+        int endSite = a.getSiteOfPhysicalPosition(endPhysicalPos, locus);
+        if (endSite < 0) {
+            endSite = -(endSite + 2);
+        }
+
+        if (startSite > endSite) {
+            myLogger.warn("getInstance: start site: " + startSite + " from physical pos: " + startPhysicalPos + " is larger than end site: " + endSite + " from physical pos: " + endPhysicalPos);
+            return null;
+        }
+
+        return getInstance(a, startSite, endSite);
 
     }
 
@@ -969,6 +997,15 @@ public class FilterAlignment extends AbstractAlignment {
             return super.getTotalGametesNotMissingForTaxon(taxon);
         } else {
             return myBaseAlignment.getTotalGametesNotMissingForTaxon(translateTaxon(taxon));
+        }
+    }
+
+    @Override
+    public int getTotalNotMissingForTaxon(int taxon) {
+        if (myIsSiteFilter || myIsSiteFilterByRange) {
+            return super.getTotalNotMissingForTaxon(taxon);
+        } else {
+            return myBaseAlignment.getTotalNotMissingForTaxon(translateTaxon(taxon));
         }
     }
 

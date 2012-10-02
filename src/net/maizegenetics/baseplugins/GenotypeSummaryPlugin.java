@@ -359,6 +359,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             int totalGametesNotMissing = alignment.getTotalGametesNotMissingForTaxon(i);
             int totalGametesMissing = totalGametes - totalGametesNotMissing;
             int numHeterozygous = alignment.getHeterozygousCountForTaxon(i);
+            int totalSitesNotMissing = alignment.getTotalNotMissingForTaxon(i);
 
             int count = 0;
             data[i][count++] = i;
@@ -367,7 +368,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;
             data[i][count++] = numHeterozygous;
-            data[i][count++] = (double) numHeterozygous / (double) totalGametes;
+            data[i][count++] = (double) numHeterozygous / (double) totalSitesNotMissing;
             data[i][count++] = "Inbreeding Coefficient";
             data[i][count++] = "ICSBM";
         }

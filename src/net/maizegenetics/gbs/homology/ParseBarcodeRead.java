@@ -149,9 +149,19 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant = new String[]{"TAA"};
             likelyReadEnd = new String[]{"TTAA", "TTAAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
             readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)RBSTA")) {
+            theEnzyme = "RBSTA";
+            initialCutSiteRemnant = new String[]{"TA"};
+            likelyReadEnd = new String[]{"TTAA", "GTAC", "CTAG", "TTAAGAT", "GTAAGAT", "CTAAGAT"}; // full cut site (from partial digest or chimera) of MseI, CVIQi, XspI or common adapter start
+            readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)RBSCG")) {
+            theEnzyme = "RBSCG";
+            initialCutSiteRemnant = new String[]{"CG"};
+            likelyReadEnd = new String[]{"CCGC", "TCGA", "GCGC", "CCGG", "ACGT", "CCGAGAT", "TCGAGAT", "GCGAGAT", "ACGAGAT"}; // full cut site (from partial digest or chimera) of AciI, TaqaI, HinpI, HpaII, HpyCH4IV or common adapter start
+            readEndCutSiteRemnantLength = 3;
         } else {
             System.out.println("The software didn't recognize your cut site.  "
-                    + "Currently, only ApeKI, PstI, EcoT22I, PasI, HpaII, MspI, ApoI, BamHI, and MseI are recognized for single enzyme digests, "
+                    + "Currently, only ApeKI, PstI, EcoT22I, PasI, HpaII, MspI, ApoI, BamHI, MseI, RBSTA, and RBSCG are recognized for single enzyme digests, "
                     + "or PstI-EcoT22I, PstI-MspI, PstI-TaqI, SbfI-MspI, AsiSI-MspI, BssHII-MspI, FseI-MspI, or SalI-MspI for two-enzyme digests.");
             System.out.println("For two-enzyme digest, enzyme names should be separated by a dash, e.g. PstI-MspI ");
         }

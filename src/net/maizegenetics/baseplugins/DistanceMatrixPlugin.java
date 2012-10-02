@@ -50,7 +50,7 @@ public class DistanceMatrixPlugin extends AbstractPlugin {
                 DataSet tds = processDatum(current);
                 result.add(tds);
                 if (tds != null) {
-                    fireDataSetReturned(new PluginEvent(tds, CreateTreePlugin.class));
+                    fireDataSetReturned(new PluginEvent(tds, DistanceMatrixPlugin.class));
                 }
             }
 
@@ -65,10 +65,7 @@ public class DistanceMatrixPlugin extends AbstractPlugin {
     public DataSet processDatum(Datum input) {
         Alignment aa = (Alignment) input.getData();
         IBSDistanceMatrix adm = new IBSDistanceMatrix(aa, this);
-        List<Datum> results = new ArrayList<Datum>();
-        results.add(new Datum("Matrix:" + input.getName(), adm, "Distance Matrix"));
-        DataSet tds = new DataSet(results, this);
-        return tds;
+        return new DataSet(new Datum("Matrix:" + input.getName(), adm, "Distance Matrix"), this);
     }
 
     /**

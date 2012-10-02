@@ -42,11 +42,7 @@ abstract public class AbstractAlignment implements Alignment {
         }
         myNumSites = data[0].length;
         init(idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, snpIDs, loci, lociOffsets, retainRareAlleles);
-        long currentTime = System.currentTimeMillis();
         initAlleles(data);
-        long prevTime = currentTime;
-        currentTime = System.currentTimeMillis();
-        System.out.println("Time to init alleles: " + ((currentTime - prevTime) / 1000));
     }
 
     public AbstractAlignment(byte[][] alleles, IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
@@ -61,11 +57,7 @@ abstract public class AbstractAlignment implements Alignment {
         }
         myNumSites = a.getSiteCount();
         init(a.getIdGroup(), a.getGeneticMap(), a.getReference(), a.getAlleleEncodings(), a.getPhysicalPositions(), maxNumAlleles, a.getSNPIDs(), a.getLoci(), a.getLociOffsets(), retainRareAlleles);
-        long currentTime = System.currentTimeMillis();
         initAlleles(a);
-        long prevTime = currentTime;
-        currentTime = System.currentTimeMillis();
-        System.out.println("Time to init alleles: " + ((currentTime - prevTime) / 1000));
     }
 
     /**
@@ -777,7 +769,22 @@ abstract public class AbstractAlignment implements Alignment {
         return result;
 
     }
+    
+    @Override
+    public int getTotalNotMissingForTaxon(int taxon) {
+        
+        int result = 0;
+        for (int i = 0, n = getSiteCount(); i < n; i++) {
+            byte current = getBase(taxon, i);
+            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                result++;
+            }
+        }
+        return result;
+        
+    }
 
+    @Override
     public int getMinorAlleleCount(int site) {
 
         int[][] alleles = getAllelesSortedByFrequency(site);
@@ -790,6 +797,7 @@ abstract public class AbstractAlignment implements Alignment {
 
     }
 
+    @Override
     public int getMajorAlleleCount(int site) {
 
         int[][] alleles = getAllelesSortedByFrequency(site);
@@ -802,6 +810,7 @@ abstract public class AbstractAlignment implements Alignment {
 
     }
 
+    @Override
     public Object[][] getMajorMinorCounts() {
 
         String[][] alleleStates = getAlleleEncodings();
@@ -877,6 +886,7 @@ abstract public class AbstractAlignment implements Alignment {
         return result;
     }
 
+    @Override
     public Object[][] getDiploidCounts() {
 
         int numSites = getSiteCount();
@@ -935,6 +945,7 @@ abstract public class AbstractAlignment implements Alignment {
 
     }
 
+    @Override
     public Object[][] getDiploidssSortedByFrequency(int site) {
 
         Integer ONE_INTEGER = 1;
