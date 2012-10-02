@@ -21,6 +21,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultXYDataset;
 
+import net.maizegenetics.baseplugins.ExportPlugin;
+import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
@@ -42,6 +44,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	private String avgr2Filename = null;
 	private String avgr2Plotname = null;
 	private String propNonconsensusFilename = null;
+	private String summaryFilename = null;
 	private String logfileName = null;
 	private boolean hasFileAppender = false;
 	
@@ -103,6 +106,9 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			saveProportionNonConsensusToFile(proportion, align, addFamilyToFilename(propNonconsensusFilename, familyname, align.getLocusName(0), ".txt"));
 		}
 		
+		if (summaryFilename != null) {
+			runAndExportGenotypeSummaryForTaxa(align, addFamilyToFilename(summaryFilename, familyname, align.getLocusName(0), ".txt"));
+		}
 	}
 	
 	private String addFamilyToFilename(String filename, String family, String chr, String extension) {
@@ -116,12 +122,12 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		}
 		
 		if (family == null) {
-			if (chr != null) sb.append(".").append(chr);
+			if (chr != null) sb.append(".chr").append(chr);
 			sb.append(extension);
 		} else {
 			family = family.replace('/', '_');
 			sb.append(".").append(family);
-			if (chr != null) sb.append(".").append(chr);
+			if (chr != null) sb.append(".chr").append(chr);
 			sb.append(extension);
 		}
 		
@@ -313,11 +319,18 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			align = BitAlignment.getInstance(align, false);
 		}
 		
+		
 		double[] proportionMinor = new double[ntaxa];
-		double nmono = lowmaf.cardinality();
+//		double nmono = lowmaf.cardinality();
 		for (int t = 0; t < ntaxa; t++) {
-			long minorCount = OpenBitSet.intersectionCount(lowmaf, align.getAllelePresenceForAllSites(t, 1));
-			proportionMinor[t] = minorCount / nmono;
+			BitSet major = align.getAllelePresenceForAllSites(t, 0);
+			BitSet minor = align.getAllelePresenceForAllSites(t, 1);
+			long minorCount = OpenBitSet.intersectionCount(lowmaf, minor);
+			 
+			OpenBitSet notMissing = new OpenBitSet(major.getBits(), major.getNumWords());
+			notMissing.union(minor);
+			long notMissingCount = OpenBitSet.unionCount(lowmaf, notMissing);
+			proportionMinor[t] = ((double) minorCount) / ((double) notMissingCount);
 		}
 		
 		return proportionMinor;
@@ -342,6 +355,18 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		} catch(IOException e) {
     			myLogger.error("error opening file for proportion nonconsensus\n" + e.getMessage() + e.getStackTrace());
     		}
+	}
+	
+	private void runAndExportGenotypeSummaryForTaxa(Alignment align, String outfile) {
+		
+		GenotypeSummaryPlugin gsp = new GenotypeSummaryPlugin(null,false);
+		gsp.setCaculateOverview(false);
+		gsp.setCalculateSiteSummary(false);
+		gsp.setCalculateTaxaSummary(true);
+		DataSet result = gsp.performFunction(new DataSet(new Datum("alignment", align, "alignment"), this));
+		ExportPlugin exporter = new ExportPlugin(null, false);
+		exporter.setSaveFile(outfile);
+		exporter.performFunction(result);
 	}
 	
 //	private void saveNonConsensusSites(Alignment align) {
@@ -379,6 +404,9 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			else if (args[i].equals("-c") || args[i].equalsIgnoreCase("-confile")) {
 				propNonconsensusFilename = args[++i];
 			}
+			else if (args[i].equals("-s") || args[i].equalsIgnoreCase("-summaryfile")) {
+				propNonconsensusFilename = args[++i];
+			}
 			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logfile")) {
 				logfileName = args[++i];
 			}
@@ -395,6 +423,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		usage.append("-r or -r2file : the name of the file to save the average R2 value for each SNP\n");
 		usage.append("-x or -r2xyplot : name of the png file of the average R2 of each SNP, .png will be appended\n");
 		usage.append("-c or -confile : name of the file to save the proportion of nonConsensus SNPs for each taxon\n");
+		usage.append("-s or -summaryfile : name of the file for the taxa summary\n");
 		usage.append("-l or -logfile: name of the file to which the log will be appended\n");
 		usage.append("? : print the parameter list.\n");
 
@@ -448,6 +477,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
 
 	public void setLogfileName(String logfileName) {
 		this.logfileName = logfileName;
+	}
+
+	public void setSummaryFilename(String summaryFilename) {
+		this.summaryFilename = summaryFilename;
 	}
 
 	
