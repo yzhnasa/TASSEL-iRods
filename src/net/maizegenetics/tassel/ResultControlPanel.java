@@ -14,6 +14,7 @@
  */
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.baseplugins.ArchaeopteryxPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.baseplugins.Grid2dDisplayPlugin;
@@ -45,6 +46,7 @@ public class ResultControlPanel extends AbstractControlPanel {
             addPlugin(new ChartDisplayPlugin(theTASSELMainFrame, true));
             addPlugin(new QQDisplayPlugin(theTASSELMainFrame, true));
             addPlugin(new ManhattanDisplayPlugin(theTASSELMainFrame, true));
+//            addPlugin(new ArchaeopteryxPlugin(theTASSELMainFrame, true));
 
         } catch (Exception ex) {
             ex.printStackTrace();
