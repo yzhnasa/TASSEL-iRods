@@ -435,17 +435,8 @@ public class ImputationUtils {
 		System.out.println();
 	}
 	
-	public static void mergeNonconsensusFiles(String dir, String match) {
-		File matchdir = new File(dir);
-		final String pattern = new String(match);
-		File[] mergeFiles = matchdir.listFiles(new FilenameFilter() {
-			
-			@Override
-			public boolean accept(File dir, String name) {
-				if (name.startsWith(pattern)) return true;
-				return false;
-			}
-		});
+	public static void mergeNonconsensusFiles(String dir, String match, String outfileName) {
+		File[] mergeFiles = filterFiles(dir, match);
 		
 		int nfiles = mergeFiles.length;
 		String[] colLabel = new String[nfiles];
@@ -454,6 +445,7 @@ public class ImputationUtils {
 		String input;
 		String[] info;
 		for (int f = 0; f < nfiles; f++) {
+			System.out.println("processing" + mergeFiles[f].getName());
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(mergeFiles[f]));
 				br.readLine();
@@ -469,6 +461,7 @@ public class ImputationUtils {
 						taxonMap.put(info[0], values);
 					}
 					values[f] = info[2];
+					input =  br.readLine();
 				}
 				
 				br.close();
@@ -477,7 +470,7 @@ public class ImputationUtils {
 			}
 		}
 		
-		String outfile = dir + "/" + match + ".all.txt";
+		File outfile = new File(dir, outfileName);
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(outfile));
 			StringBuilder sb = new StringBuilder("Taxon");
@@ -492,6 +485,88 @@ public class ImputationUtils {
 				sb = new StringBuilder(taxon);
 				String[] values = taxonMap.get(taxon);
 				for (int f = 0; f < nfiles; f++) sb.append("\t").append(values[f]);
+				bw.write(sb.toString());
+				bw.newLine();
+			}
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static File[] filterFiles(String dir, String match) {
+		File matchdir = new File(dir);
+		final String pattern = new String(match);
+		File[] filteredFiles = matchdir.listFiles(new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+				if (name.matches(pattern)) return true;
+				return false;
+			}
+		});
+		return filteredFiles;
+	}
+	
+	public static void mergeFiles(File[] mergeFiles, int idcol, int datacol, int[] colOrder, String outfile) {
+		int nfiles = mergeFiles.length;
+		String input;
+		String[] info;
+		if (colOrder == null) colOrder = new int[]{0,2,3,4,5,6,7,8,9,1};
+		HashMap<String, String[]> taxonMap = new HashMap<String, String[]>();
+		
+		for (int f = 0; f < nfiles; f++) {
+			System.out.println("processing" + mergeFiles[f].getName());
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(mergeFiles[f]));
+				br.readLine();
+				input = br.readLine();
+				info = tab.split(input);
+				while (input != null) {
+					info = tab.split(input);
+					String[] values = taxonMap.get(info[idcol]);
+					if (values == null) {
+						values = new String[nfiles];
+						for (int i = 0; i < nfiles; i++) values[i] = "";
+						taxonMap.put(info[idcol], values);
+					}
+					values[f] = info[datacol];
+					input =  br.readLine();
+				}
+				
+				br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(outfile));
+			StringBuilder sb = new StringBuilder("Taxon");
+			for (int i = 0; i < nfiles; i++) {
+				sb.append("\t").append(i + 1);
+			}
+			sb.append("\t").append("average");
+			bw.write(sb.toString());
+			bw.newLine();
+			LinkedList<String> taxaList = new LinkedList<String>(taxonMap.keySet());
+			Collections.sort(taxaList);
+			for (String taxon : taxaList) {
+				sb = new StringBuilder(taxon);
+				String[] values = taxonMap.get(taxon);
+				double sum = 0;
+				double count = 0;
+				for (int f = 0; f < nfiles; f++) {
+					sb.append("\t").append(values[f]);
+					try {
+						sum += Double.parseDouble(values[f]);
+						count++;
+					} catch (NumberFormatException e) {
+						//do nothing
+					}
+				}
+				sb.append("\t").append(sum/count);
 				bw.write(sb.toString());
 				bw.newLine();
 			}
