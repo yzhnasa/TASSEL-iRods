@@ -636,7 +636,9 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         boolean[] isUsed = new boolean[myLocusToLociIndex.size()];
         Arrays.fill(isUsed, false);
         for (int i = 0; i < myLocusIndices.length; i++) {
-            isUsed[myLocusIndices[i]] = true;
+            if (myLocusIndices[i] >= 0) {
+                isUsed[myLocusIndices[i]] = true;
+            }
         }
         int removed = 0;
         for (int i = 0; i < isUsed.length; i++) {
@@ -700,7 +702,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             }
         };
 
-        GenericSorting.quickSort(0, this.getSiteCount(), compPos, swapperPos);
+        GenericSorting.quickSort(0, getSiteCount(), compPos, swapperPos);
 
     }
 
@@ -770,7 +772,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     private int getLocusIndex(Locus locus) {
         for (int i = 0; i < myLocusToLociIndex.size(); i++) {
-            if (myLocusToLociIndex.get(i) == locus) {
+            if (myLocusToLociIndex.get(i).equals(locus)) {
                 return i;
             }
         }
