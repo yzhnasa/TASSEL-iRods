@@ -1154,8 +1154,8 @@ public class TasselPipeline implements PluginListener {
                     NumericalGenotypePlugin plugin = new NumericalGenotypePlugin();
                     
                     String temp = args[index++].trim();
-                    if (temp.equalsIgnoreCase(NumericalGenotypePlugin.TRANSFORM_TYPE.colapse.toString())) {
-                        plugin.setTransformType(NumericalGenotypePlugin.TRANSFORM_TYPE.colapse);
+                    if (temp.equalsIgnoreCase(NumericalGenotypePlugin.TRANSFORM_TYPE.collapse.toString())) {
+                        plugin.setTransformType(NumericalGenotypePlugin.TRANSFORM_TYPE.collapse);
                     } else if (temp.equalsIgnoreCase(NumericalGenotypePlugin.TRANSFORM_TYPE.separated.toString())) {
                         plugin.setTransformType(NumericalGenotypePlugin.TRANSFORM_TYPE.separated);
                     } else {
