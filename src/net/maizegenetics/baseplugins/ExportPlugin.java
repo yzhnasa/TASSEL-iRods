@@ -129,6 +129,7 @@ public class ExportPlugin extends AbstractPlugin {
             }
 
             if (filename != null) {
+                myLogger.info("performFunction: wrote dataset: " + input.getData(0).getName() + " to file: " + filename);
                 return new DataSet(new Datum("Filename", filename, null), this);
             } else {
                 return null;
@@ -153,7 +154,7 @@ public class ExportPlugin extends AbstractPlugin {
         try {
             File theFile = new File(Utils.addSuffixIfNeeded(mySaveFile, ".txt"));
             WriteDistanceMatrix.saveDelimitedDistanceMatrix(input, theFile);
-            return theFile.getName();
+            return theFile.getCanonicalPath();
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException("ExportPlugin: performFunctionForDistanceMatrix: Problem writing file: " + mySaveFile);
@@ -174,7 +175,7 @@ public class ExportPlugin extends AbstractPlugin {
         try {
             File theFile = new File(Utils.addSuffixIfNeeded(mySaveFile, ".txt"));
             TableReportUtils.saveDelimitedTableReport(input, "\t", theFile);
-            return theFile.getName();
+            return theFile.getCanonicalPath();
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException("ExportPlugin: performFunctionForTableReport: Problem writing file: " + mySaveFile);
@@ -200,7 +201,7 @@ public class ExportPlugin extends AbstractPlugin {
             fw = new FileWriter(theFile);
             pw = new PrintWriter(fw);
             PhenotypeUtils.saveAs(input, pw);
-            return theFile.getName();
+            return theFile.getCanonicalPath();
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException("ExportPlugin: performFunctionForPhenotype: Problem writing file: " + mySaveFile);
@@ -322,6 +323,25 @@ public class ExportPlugin extends AbstractPlugin {
     }
 
     public String performFunctionForReport(Report input) {
+
+        if (isInteractive()) {
+            ReportOptionDialog theDialog = new ReportOptionDialog();
+            theDialog.setLocationRelativeTo(getParentFrame());
+            theDialog.setVisible(true);
+            if (theDialog.isCancel()) {
+                return null;
+            }
+            myFileType = theDialog.getTasselFileType();
+
+            theDialog.dispose();
+
+            setSaveFile(getFileByChooser());
+        }
+
+        if ((mySaveFile == null) || (mySaveFile.length() == 0)) {
+            return null;
+        }
+
         String resultFile = Utils.addSuffixIfNeeded(mySaveFile, ".txt");
         if (myFileType == FileLoadPlugin.TasselFileType.Text) {
             BufferedWriter writer = Utils.getBufferedWriter(resultFile);
@@ -354,6 +374,7 @@ public class ExportPlugin extends AbstractPlugin {
             }
         }
         return resultFile;
+
     }
 
     /**
@@ -747,3 +768,154 @@ class DiploidOptionDialog extends JDialog {
         return displayDiploid;
     }
 }
+
+class ReportOptionDialog extends JDialog {
+
+        private boolean myIsCancel = true;
+        private ButtonGroup myButtonGroup = new ButtonGroup();
+        private JRadioButton myReportRadioButton = new JRadioButton("Write As Report");
+        private JRadioButton myTextRadioButton = new JRadioButton("Write As Text");
+
+        public ReportOptionDialog() {
+            super((Frame) null, "Export Report...", true);
+            try {
+                jbInit();
+                pack();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        private void jbInit() throws Exception {
+
+            setTitle("Export Report...");
+            setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+            setUndecorated(false);
+            getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+
+            Container contentPane = getContentPane();
+
+            BoxLayout layout = new BoxLayout(contentPane, BoxLayout.Y_AXIS);
+            contentPane.setLayout(layout);
+
+            JPanel main = getMain();
+
+            contentPane.add(main);
+
+            pack();
+
+            setResizable(false);
+
+            myButtonGroup.add(myReportRadioButton);
+            myButtonGroup.add(myTextRadioButton);
+            myReportRadioButton.setSelected(true);
+
+        }
+
+        private JPanel getMain() {
+
+            JPanel inputs = new JPanel();
+            BoxLayout layout = new BoxLayout(inputs, BoxLayout.Y_AXIS);
+            inputs.setLayout(layout);
+            inputs.setAlignmentX(JPanel.CENTER_ALIGNMENT);
+
+            inputs.add(Box.createRigidArea(new Dimension(1, 10)));
+
+            inputs.add(getLabel());
+
+            inputs.add(Box.createRigidArea(new Dimension(1, 10)));
+
+            inputs.add(getOptionPanel());
+
+            inputs.add(Box.createRigidArea(new Dimension(1, 10)));
+
+            inputs.add(getButtons());
+
+            inputs.add(Box.createRigidArea(new Dimension(1, 10)));
+
+            return inputs;
+
+        }
+
+        private JPanel getLabel() {
+
+            JPanel result = new JPanel();
+            BoxLayout layout = new BoxLayout(result, BoxLayout.Y_AXIS);
+            result.setLayout(layout);
+            result.setAlignmentX(JPanel.CENTER_ALIGNMENT);
+
+            JLabel jLabel1 = new JLabel("Choose File Type to Export.");
+            jLabel1.setFont(new Font("Dialog", Font.BOLD, 18));
+            result.add(jLabel1);
+
+            return result;
+
+        }
+
+        private JPanel getOptionPanel() {
+
+            JPanel result = new JPanel();
+            BoxLayout layout = new BoxLayout(result, BoxLayout.Y_AXIS);
+            result.setLayout(layout);
+            result.setAlignmentX(JPanel.CENTER_ALIGNMENT);
+            result.setBorder(BorderFactory.createEtchedBorder());
+
+            result.add(myReportRadioButton);
+            result.add(myTextRadioButton);
+
+            result.add(Box.createRigidArea(new Dimension(1, 20)));
+
+            return result;
+
+        }
+
+        private JPanel getButtons() {
+
+            JButton okButton = new JButton();
+            JButton cancelButton = new JButton();
+
+            cancelButton.setText("Cancel");
+            cancelButton.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    cancelButton_actionPerformed(e);
+                }
+            });
+
+            okButton.setText("OK");
+            okButton.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    okButton_actionPerformed(e);
+                }
+            });
+
+            JPanel result = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
+            result.add(okButton);
+
+            result.add(cancelButton);
+
+            return result;
+
+        }
+
+        public FileLoadPlugin.TasselFileType getTasselFileType() {
+            if (myTextRadioButton.isSelected()) {
+                return FileLoadPlugin.TasselFileType.Text;
+            }
+            return null;
+        }
+
+        private void okButton_actionPerformed(ActionEvent e) {
+            myIsCancel = false;
+            setVisible(false);
+        }
+
+        private void cancelButton_actionPerformed(ActionEvent e) {
+            myIsCancel = true;
+            setVisible(false);
+        }
+
+        public boolean isCancel() {
+            return myIsCancel;
+        }
+    }
