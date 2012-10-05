@@ -28,9 +28,9 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
     public static enum TRANSFORM_TYPE {
 
-        colapse, separated
+        collapse, separated
     };
-    private TRANSFORM_TYPE myTransformType = TRANSFORM_TYPE.colapse;
+    private TRANSFORM_TYPE myTransformType = TRANSFORM_TYPE.collapse;
 
     /**
      * Principle Components Transform Plugin.
@@ -47,7 +47,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
         List data = dataSet.getDataOfType(Alignment.class);
         if ((data != null) && (data.size() == 1)) {
             Datum datum = (Datum) data.get(0);
-            if (myTransformType == TRANSFORM_TYPE.colapse) {
+            if (myTransformType == TRANSFORM_TYPE.collapse) {
                 Alignment input = (Alignment) datum.getData();
                 SimplePhenotype result = collapseTransform(input);
                 DataSet tds = new DataSet(new Datum(datum.getName() + "_Collapse", result, null), this);
