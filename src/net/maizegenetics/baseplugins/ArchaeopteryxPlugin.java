@@ -42,7 +42,7 @@ public class ArchaeopteryxPlugin extends AbstractPlugin {
 
         Tree myTree = (Tree) treeInList.get(0).getData();
 
-        makeTree(myTree, isInteractive());
+        makeTree(myTree, isInteractive(), getParentFrame());
         return null;
     }
 
@@ -66,7 +66,7 @@ public class ArchaeopteryxPlugin extends AbstractPlugin {
         return "Tree View using Archaeopteryx viewer";
     }
 
-    public static void makeTree(Tree theTree, boolean isInteractive) {
+    public static void makeTree(Tree theTree, boolean isInteractive, Frame frame) {
 
         class nodePair {
 
@@ -105,6 +105,6 @@ public class ArchaeopteryxPlugin extends AbstractPlugin {
             return;
         }
 
-        Archaeopteryx.createApplication(phy);
+        Archaeopteryx.createApplication(phy).setLocationRelativeTo(frame);
     }
 }
