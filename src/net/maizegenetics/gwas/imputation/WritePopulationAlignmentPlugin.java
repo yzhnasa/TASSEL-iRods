@@ -2,6 +2,7 @@ package net.maizegenetics.gwas.imputation;
 
 import java.awt.Frame;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.ImageIcon;
@@ -10,6 +11,7 @@ import org.apache.log4j.Logger;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.MutableSingleEncodeAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -34,18 +36,46 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 			String filename = baseFileName + ".hmp.txt";
 			Alignment[] allOfTheAlignments = new Alignment[theData.size()];
 			int count = 0;
-			for (Datum data:theData) {
-				if (writeParentCalls) allOfTheAlignments[count++] = ((PopulationData) data.getData()).imputed;
-				else allOfTheAlignments[count++] = ((PopulationData) data.getData()).original;
+			for (Datum datum:theData) { 
+				PopulationData family = (PopulationData) datum.getData();
+				int nsnps = (int) family.snpIndex.cardinality(); //only output the snps set in family.snpIndex
+				int[] snpsToOutput = new int[nsnps];
+				int snpcount = 0;
+				for (int s = 0; s < nsnps; s++) {
+					if (family.snpIndex.fastGet(s)) snpsToOutput[snpcount++] = s;
+				}
+				snpsToOutput = Arrays.copyOf(snpsToOutput, snpcount);
+				Alignment outputAlignment;
+				if (writeParentCalls) {
+					outputAlignment = FilterAlignment.getInstance(family.imputed, snpsToOutput);
+				}
+				else {
+					outputAlignment = FilterAlignment.getInstance(family.original, snpsToOutput);
+				}
+
+				allOfTheAlignments[count++] = outputAlignment;
 			}
 			Alignment alignment = MutableSingleEncodeAlignment.getInstance(allOfTheAlignments);
 			ExportUtils.writeToHapmap(alignment, outputDiploid, filename, '\t', null);
 		} else {
 			for (Datum datum:theData) {
 				PopulationData family = (PopulationData) datum.getData();
+				int nsnps = (int) family.snpIndex.cardinality();
+				int[] snpsToOutput = new int[nsnps];
+				int snpcount = 0;
+				for (int s = 0; s < nsnps; s++) {
+					if (family.snpIndex.fastGet(s)) snpsToOutput[snpcount++] = s;
+				}
+				snpsToOutput = Arrays.copyOf(snpsToOutput, snpcount);
+				Alignment outputAlignment;
 				String filename = baseFileName + ".family." + family.name + ".hmp.txt";
-				if (writeParentCalls) ExportUtils.writeToHapmap(family.imputed, outputDiploid, filename, '\t', null);
-				else ExportUtils.writeToHapmap(family.original, outputDiploid, filename, '\t', null);
+				if (writeParentCalls) {
+					outputAlignment = FilterAlignment.getInstance(family.imputed, snpsToOutput);
+				}
+				else {
+					outputAlignment = FilterAlignment.getInstance(family.original, snpsToOutput);
+				}
+				ExportUtils.writeToHapmap(outputAlignment, outputDiploid, filename, '\t', null);
 			}
 		}
 		
