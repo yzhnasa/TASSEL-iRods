@@ -67,20 +67,33 @@ public class KnownParentMinorWindowImputation {
             long time=System.currentTimeMillis();
             long[] mjT=unimpAlign.getAllelePresenceForAllSites(bt, 0).getBits();
             long[] mnT=unimpAlign.getAllelePresenceForAllSites(bt, 1).getBits();
-            for (int startBlock = 0; startBlock < blocks; startBlock++) {
-                int minorCnt=Long.bitCount(mnT[startBlock]);
-                int majorCnt=Long.bitCount(mjT[startBlock]);
-                int endBlock=startBlock;
-                while((minorCnt<minMinorCnt)&&(endBlock<(blocks-1))) {
-                    minorCnt+=Long.bitCount(mnT[++endBlock]);
-                    majorCnt+=Long.bitCount(mjT[endBlock]);
+            for (int focusBlock = 0; focusBlock < blocks; focusBlock++) {
+                int minorCnt=Long.bitCount(mnT[focusBlock]);
+                int majorCnt=Long.bitCount(mjT[focusBlock]);
+                int endBlock=focusBlock, startBlock=focusBlock;
+//                while((minorCnt<minMinorCnt)&&(endBlock<(blocks-1))) {
+//                    minorCnt+=Long.bitCount(mnT[++endBlock]);
+//                    majorCnt+=Long.bitCount(mjT[endBlock]);
+//                }
+                while(minorCnt<minMinorCnt) {
+                    int expandEnd=(endBlock<(blocks-1))?Long.bitCount(mnT[endBlock+1]):-1;
+                    int expandStart=(startBlock>0)?Long.bitCount(mnT[startBlock-1]):-1;
+                    if(expandStart>expandEnd) {
+                        minorCnt+=expandStart;
+                        startBlock--;
+                        majorCnt+=Long.bitCount(mjT[startBlock]);
+                    } else {
+                        minorCnt+=expandEnd;
+                        endBlock++;
+                        majorCnt+=Long.bitCount(mjT[expandEnd]);
+                    }
                 }
 //                System.out.printf("Taxa %d Name: %s blocks: %d end: %d MjCnt %d MnCnt %d %n", bt, name,
 //                        (1+endBlock-startBlock), endBlock, minorCnt, majorCnt);
-                int[] donors=getBestDonors(bt, startBlock, endBlock);
+                int[] donors=getBestDonors(bt, startBlock, endBlock, focusBlock);
 //                donors[0]=r.nextInt(donorAlign.getSequenceCount());
 //                donors[0]=r.nextInt(donorAlign.getSequenceCount());
-                int startSite=startBlock*64;//TODO move window to middle
+                int startSite=focusBlock*64;//TODO move window to middle
                 int endSite=startSite+63;
                 if(endSite>=unimpAlign.getSiteCount()) endSite=unimpAlign.getSiteCount()-1;
                 int highMask=15<<4;
@@ -123,7 +136,7 @@ public class KnownParentMinorWindowImputation {
        // System.out.printf("L%d R%d p:%g %n",ss.left, ss.right, ss.p);
     }
     
-    private int[] getBestDonors(int targetTaxon, int startBlock, int endBlock) {
+    private int[] getBestDonors(int targetTaxon, int startBlock, int endBlock, int focusBlock) {
         long[] mjT=unimpAlign.getAllelePresenceForAllSites(targetTaxon, 0).getBits();
         long[] mnT=unimpAlign.getAllelePresenceForAllSites(targetTaxon, 1).getBits();
         int[] donors={-1,-1,0};
@@ -172,8 +185,8 @@ public class KnownParentMinorWindowImputation {
                 }
                 double testPropUnmatched=(double)(mjUnmatched+mnUnmatched)/(double)testSites;
                 if((testing>1)&&(rDonors[0]==d1)&&(rDonors[1]==d2))
-                    System.out.printf("Donor %d %d %d %d %d %d %d block %d %n", d1, d2, mjUnmatched, mnUnmatched,
-                            testSites, testTargetMajor, testTargetMinor, startBlock);
+                    System.out.printf("Donor %d %d %d %d %d %d %d block %d-%d-%d %n", d1, d2, mjUnmatched, mnUnmatched,
+                            testSites, testTargetMajor, testTargetMinor, startBlock, focusBlock, endBlock);
                 if(testPropUnmatched<minPropUnmatched) {
                     donors[0]=d1;
                     donors[1]=d2;
@@ -343,7 +356,7 @@ public class KnownParentMinorWindowImputation {
 
         boolean buildInput=true;
         boolean filterTrue=true;
-        if(buildInput) {createSynthetic(donorFile, unImpTargetFile, 1900, 0.4, -1, 1000);}
+        if(buildInput) {createSynthetic(donorFile, unImpTargetFile, 1000, 0.4, -1, 1000);}
 
        // System.out.println(AlignmentUtils.getDiploidValue()
         KnownParentMinorWindowImputation e64NNI=new KnownParentMinorWindowImputation(donorFile,
