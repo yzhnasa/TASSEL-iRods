@@ -366,9 +366,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         if (theMSA.getSiteCount() > 0) {
             theMSA.clean();
-            //theMSA.sortSiteByPhysicalPosition();
             ExportUtils.writeToHapmap(theMSA, false, outHapMap, '\t', null);
-            //ExportUtils.writeToHapmap(theMSA, false, outHapMap, '\t');
         }
         myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + theMSA.getSiteCount());
     }
@@ -432,9 +430,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             theMSA.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
             int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
             theMSA.setPositionOfSite(currSite, position);
-            //theMSA.setStrandOfSite(currSite, (byte) '+');  // all minus strand genotypes will be complemented to plus strand
             for (int tx = 0; tx < theTBT.getTaxaCount(); tx++) {
-                if (strand == -1) {
+                if (callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
                     theMSA.setBase(tx, currSite, complementGeno(callsBySite[s][tx]));  // complement to plus strand
                 } else {
                     theMSA.setBase(tx, currSite, callsBySite[s][tx]);
@@ -484,10 +481,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
      */
     private byte[] isSiteGood(byte[] calls) {
         int[][] alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
-        //int[][] alleles = getSortedAlleleCounts(calls);
-        // Maybe problem here - alleles shouldn't be less than 2?
         if (alleles[1].length < 2) {
-            System.out.println("Too few alleles ("+alleles[1].length+"alleles)");
             return null;
         }
         int aCnt = alleles[1][0] + alleles[1][1];
