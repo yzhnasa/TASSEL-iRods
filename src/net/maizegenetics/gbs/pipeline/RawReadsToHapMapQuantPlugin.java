@@ -266,7 +266,7 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
         System.gc();
         System.out.println("\nWorking on GBS raw sequence file: " + rawSeqFileNames[laneNum]);
         fastq = true;
-        if (rawSeqFileNames[laneNum].contains("qseq")) {
+        if (rawSeqFileNames[laneNum].substring(rawSeqFileNames[laneNum].lastIndexOf(File.separator)).contains("qseq")) {
             fastq = false;
         }
         if (fastq) {
