@@ -4,21 +4,13 @@
  */
 package net.maizegenetics.pal.popgen;
 
-import cern.jet.random.Binomial;
-import edu.cornell.lassp.houle.RngPack.RandomJava;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Random;
-import java.util.TreeMap;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.distance.DistanceMatrix;
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.statistics.ApproxFastChiSquareDistribution;
-import net.maizegenetics.pipeline.EdTests;
 import net.maizegenetics.util.BitUtil;
+import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 
 
@@ -29,12 +21,15 @@ import net.maizegenetics.util.ProgressListener;
  * @author edbuckler
  */
 public class KnownParentMinorWindowImputation {
-    private Alignment ldAlign;
-    int minSites=256;
-    int maxWindow=2048/64;
+    private Alignment unimpAlign;
+    private Alignment donorAlign;
+    private int testing=2;
+    private OpenBitSet swapMjMnMask;
+//    int minSites=256;
+//    int maxWindow=2048/64;
     double minIdentityDiff=0.01;
-    int[][][] null64Share; //region, site cnt, siteIdentity
-    float[][][] null64ShareProb; //region, site cnt, siteIdentity
+//    int[][][] null64Share; //region, site cnt, siteIdentity
+//    float[][][] null64ShareProb; //region, site cnt, siteIdentity
     int blocks=-1;
     int[] hSite, hTaxon;
     byte[] hState;
@@ -44,48 +39,82 @@ public class KnownParentMinorWindowImputation {
     boolean maskAndTest=true;
     ApproxFastChiSquareDistribution fcs=new ApproxFastChiSquareDistribution(1000,200);
 
-    public KnownParentMinorWindowImputation(Alignment inldAlign, String exportFile) {
-        this.ldAlign=ConvertSBitTBitPlugin.convertAlignment(inldAlign, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+    public KnownParentMinorWindowImputation(String donorFile, String unImpTargetFile, String exportFile, int minMinorCnt) {
+        donorAlign=ImportUtils.readFromHapmap(donorFile, false, (ProgressListener)null);
+        donorAlign.optimizeForTaxa(null);
+        unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
+        unimpAlign.optimizeForTaxa(null);
+        
         if(maskAndTest) maskSites(300);
-        blocks=ldAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
-//        this.createNull64Share(ldAlign, 500);
-        this.createNull64Share(ldAlign);
-        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(this.ldAlign);
+        blocks=unimpAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
+        swapMjMnMask=new OpenBitSet(unimpAlign.getSiteCount());
+        int swapConflicts=0;
+        for (int i = 0; i < unimpAlign.getSiteCount(); i++) {
+            if((donorAlign.getMajorAllele(i)!=unimpAlign.getMajorAllele(i))||(donorAlign.getMinorAllele(i)!=unimpAlign.getMinorAllele(i))) {
+                swapConflicts++;
+                swapMjMnMask.set(i);
+            }  
+        }
+        swapMjMnMask.not();
+        System.out.println("swapConflicts"+swapConflicts+" same:"+swapMjMnMask.cardinality());
+        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
         int impSiteCnt=0;
-        for (int bt = 0; bt < ldAlign.getSequenceCount(); bt++) {
+        Random r=new Random(0);
+        for (int bt = 0; bt < unimpAlign.getSequenceCount(); bt++) {
             int taxaImpCnt=0;
-            String name=ldAlign.getIdGroup().getIdentifier(bt).getFullName();
-            System.out.printf("Imputing %d:%s ...", bt,name);
+            String name=unimpAlign.getIdGroup().getIdentifier(bt).getFullName();
+            System.out.printf("Imputing %d:%s ... %n", bt,name);
             long time=System.currentTimeMillis();
-            float[][] idp=getTaxaIdentityProbMatrix(bt);
-            System.out.printf("IDmatrixTime %d ", System.currentTimeMillis()-time);
-            for (int x = 0; x < idp[0].length; x++) {
-                int startSite=x*64;
-                int endSite=startSite+63;
-                if(endSite>=ldAlign.getSiteCount()) endSite=ldAlign.getSiteCount()-1;
-                TreeMap<Double, ShareSize> bestTaxa=new TreeMap<Double, ShareSize>();
-                for (int t = 0; t < idp.length; t++) {
-                    ShareSize xss=new ShareSize(bt,t, x, x);
-                    ShareSize fss=getMaxShare(idp,xss);
-                    if(fss.p>minProb) continue;
-                    if((bestTaxa.size()<maxNN)||(fss.p<bestTaxa.lastEntry().getKey())) {
-                        bestTaxa.put(fss.p, fss);
-                        if(bestTaxa.size()>maxNN) bestTaxa.remove(bestTaxa.lastEntry().getKey());
-                    }
-                    //System.out.printf("%g\t",idp[t][x]);   
+            long[] mjT=unimpAlign.getAllelePresenceForAllSites(bt, 0).getBits();
+            long[] mnT=unimpAlign.getAllelePresenceForAllSites(bt, 1).getBits();
+            for (int startBlock = 0; startBlock < blocks; startBlock++) {
+                int minorCnt=Long.bitCount(mnT[startBlock]);
+                int majorCnt=Long.bitCount(mjT[startBlock]);
+                int endBlock=startBlock;
+                while((minorCnt<minMinorCnt)&&(endBlock<(blocks-1))) {
+                    minorCnt+=Long.bitCount(mnT[++endBlock]);
+                    majorCnt+=Long.bitCount(mjT[endBlock]);
                 }
-
-                
+//                System.out.printf("Taxa %d Name: %s blocks: %d end: %d MjCnt %d MnCnt %d %n", bt, name,
+//                        (1+endBlock-startBlock), endBlock, minorCnt, majorCnt);
+                int[] donors=getBestDonors(bt, startBlock, endBlock);
+//                donors[0]=r.nextInt(donorAlign.getSequenceCount());
+//                donors[0]=r.nextInt(donorAlign.getSequenceCount());
+                int startSite=startBlock*64;//TODO move window to middle
+                int endSite=startSite+63;
+                if(endSite>=unimpAlign.getSiteCount()) endSite=unimpAlign.getSiteCount()-1;
+                int highMask=15<<4;
+                int lowMask=15;
                 for(int cs=startSite; cs<=endSite; cs++) {
-                    if(mna.getBase(bt, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                        mna.setBase(bt, cs, getBestBase(mna,bestTaxa.values(),cs));
-                        impSiteCnt++;
-                        taxaImpCnt++;
+                    byte bD1=donorAlign.getBase(donors[0], cs);
+                    byte bD2=donorAlign.getBase(donors[1], cs);
+                    byte donorEst=Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    if(bD1==Alignment.UNKNOWN_DIPLOID_ALLELE) {donorEst=bD2;}
+                    else if(bD2==Alignment.UNKNOWN_DIPLOID_ALLELE) {donorEst=bD1;}
+                    else {donorEst=(byte)((bD1&highMask)|(bD2&lowMask));
+//                        byte donorEst2=(bD1<bD2)?AlignmentUtils.getDiploidValue(bD1, bD2):AlignmentUtils.getDiploidValue(bD2, bD1);
+//                        if(donorEst!=donorEst2) 
+//                            System.out.printf("bd1:%d bd2:%d donorEst: %d donorEst2 %d %n",bD1,bD2,donorEst,donorEst2);
+//                           System.out.printf("bd1:%s bd2:%s donorEst: %s donorEst2 %s %n",
+//                                   NucleotideAlignmentConstants.getNucleotideIUPAC(bD1),NucleotideAlignmentConstants.getNucleotideIUPAC(bD2),
+//                                   NucleotideAlignmentConstants.getNucleotideIUPAC(donorEst),NucleotideAlignmentConstants.getNucleotideIUPAC(donorEst2));
                     }
+
+                    
+                    if(mna.getBase(bt, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                            mna.setBase(bt, cs, donorEst);
+                            impSiteCnt++;
+                            taxaImpCnt++;
+                        }
+                }
+ //               System.out.printf("Best Donors D1: %d D2: %d maxTestSites: %d %n", donors[0], donors[1], donors[2]);
+                if(endBlock==(blocks-1)) {
+                    break;
                 }
             }
-            System.out.printf("Finished %d Imp %d %d %n", System.currentTimeMillis()-time, impSiteCnt, taxaImpCnt);
-            if(bt%10==0) compareSites(mna);
+
+//            System.out.printf("Finished %d Imp %d %d %n", System.currentTimeMillis()-time, impSiteCnt, taxaImpCnt);
+//            if(bt%10==0) compareSites(mna);
         }
         if(maskAndTest) compareSites(mna);
         ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);
@@ -94,105 +123,91 @@ public class KnownParentMinorWindowImputation {
        // System.out.printf("L%d R%d p:%g %n",ss.left, ss.right, ss.p);
     }
     
-    private byte getBestBase(Alignment mna, Collection<ShareSize> bestTaxa, int cs) {
-        byte mjA=mna.getMajorAllele(cs);
-        mjA=(byte)((mjA<<4)|mjA);
-        byte mnA=mna.getMinorAllele(cs);
-        mnA=(byte)((mnA<<4)|mnA);
-        int mjCnt=0, mnCnt=0, unkCnt=0;
-        double mjLnSum=0, mnLnSum=0, unkLnSum=0;        
-        for(ShareSize c: bestTaxa) {
-            int ct=c.compTaxon;
-            byte nb=ldAlign.getBase(ct, cs);
-            if(nb==Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                unkCnt++;
-          //      unkLnSum+=Math.log(c.p);
-            } else if(nb==mjA) {
-                mjCnt++;
-          //      mjLnSum+=Math.log(c.p);
-            } else if(nb==mnA) {
-                mnCnt++;
-           //     mnLnSum+=Math.log(c.p);
+    private int[] getBestDonors(int targetTaxon, int startBlock, int endBlock) {
+        long[] mjT=unimpAlign.getAllelePresenceForAllSites(targetTaxon, 0).getBits();
+        long[] mnT=unimpAlign.getAllelePresenceForAllSites(targetTaxon, 1).getBits();
+        int[] donors={-1,-1,0};
+        double minPropUnmatched=1.0;
+        int maxTestSites=0;
+        int[] rDonors=getDonorsForRegion(unimpAlign.getTaxaName(targetTaxon),startBlock*64);
+        if(testing>3) System.out.printf("StartSite %d EndSite %d RealD1 %d RealD2 %d %n",startBlock*64, 
+                (endBlock*64+63),rDonors[0],rDonors[1]);
+//        System.out.println("T :"+unimpAlign.getBaseAsStringRow(targetTaxon));
+//        System.out.println("D1:"+donorAlign.getBaseAsStringRow(rDonors[0]));
+//        System.out.println("D2:"+donorAlign.getBaseAsStringRow(rDonors[1]));
+//        BitUtil.printBitLong(mjT[0]);
+//        BitUtil.printBitLong(mnT[0]);
+        long[] swapMask=this.swapMjMnMask.getBits();
+        
+        for (int d1 = 0; d1 < donorAlign.getSequenceCount(); d1++) {
+            long[] mj1=donorAlign.getAllelePresenceForAllSites(d1, 0).getBits();
+            long[] mn1=donorAlign.getAllelePresenceForAllSites(d1, 1).getBits();
+            for (int d2 = d1; d2 < donorAlign.getSequenceCount(); d2++) {
+                long[] mj2=donorAlign.getAllelePresenceForAllSites(d2, 0).getBits();
+                long[] mn2=donorAlign.getAllelePresenceForAllSites(d2, 1).getBits();
+                int mjUnmatched=0;
+                int mnUnmatched=0;
+                int testSites=0;
+                int testTargetMajor=0;
+                int testTargetMinor=0;
+                for (int i = startBlock; i <= endBlock; i++) {
+                    long siteMask=swapMask[i]&(mjT[i]|mnT[i])&(mj1[i]|mn1[i])&(mj2[i]|mn2[i]);
+                    mjUnmatched+=Long.bitCount(siteMask&mjT[i]&(mjT[i]^mj1[i])&(mjT[i]^mj2[i]));
+                    mnUnmatched+=Long.bitCount(siteMask&mnT[i]&(mnT[i]^mn1[i])&(mnT[i]^mn2[i]));
+                    if((testing>5)&&(rDonors[0]==d1)&&(rDonors[1]==d2)) {
+                        System.out.printf("mjUn %d mnUn %d %n",mjUnmatched, mnUnmatched);
+                        System.out.print(i+"J:"); BitUtil.printBitLong(mjT[i]);
+                        System.out.print(i+"J:"); BitUtil.printBitLong(mj1[i]);
+                        System.out.print(i+"J:"); BitUtil.printBitLong(mj2[i]);
+                        System.out.print(i+"N:"); BitUtil.printBitLong(mnT[i]);
+                        System.out.print(i+"N:"); BitUtil.printBitLong(mn1[i]);
+                        System.out.print(i+"N:"); BitUtil.printBitLong(mn2[i]);
+                        System.out.println("T1:"+unimpAlign.getBaseAsStringRange(targetTaxon, i*64, (i*64+64)));
+                        System.out.println("D1:"+donorAlign.getBaseAsStringRange(d1, i*64, (i*64+64)));
+                        System.out.println("D2:"+donorAlign.getBaseAsStringRange(d2, i*64, (i*64+64)));
+                    }
+                    testSites+=Long.bitCount(siteMask);
+                    testTargetMajor+=Long.bitCount(siteMask&mjT[i]);
+                    testTargetMinor+=Long.bitCount(siteMask&mnT[i]);
+                }
+                double testPropUnmatched=(double)(mjUnmatched+mnUnmatched)/(double)testSites;
+                if((testing>1)&&(rDonors[0]==d1)&&(rDonors[1]==d2))
+                    System.out.printf("Donor %d %d %d %d %d %d %d block %d %n", d1, d2, mjUnmatched, mnUnmatched,
+                            testSites, testTargetMajor, testTargetMinor, startBlock);
+                if(testPropUnmatched<minPropUnmatched) {
+                    donors[0]=d1;
+                    donors[1]=d2;
+                    minPropUnmatched=testPropUnmatched;
+                    donors[2]=maxTestSites=testSites;
+//                    System.out.printf("Better %d %d %d %d %d %d %d %n", d1, d2, mjUnmatched, mnUnmatched,
+//                            testSites, testTargetMajor, testTargetMinor);
+                }
+                
             }
+            
         }
-        if((mnCnt>(mjCnt+1))&&(mnCnt>0)) return mnA;
-        if(((1+mnCnt)<mjCnt)&&(mjCnt>0)) return mjA;
-        return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        return donors;
     }
     
-    private byte[] consensusCallBit(int taxon, int block, TreeMap<Double,ShareSize> taxa,
-            boolean callhets, double majority, int minCount, boolean ignoreKnownBases, boolean imputeGaps) {
-        int[] taxaIndex=new int[taxa.size()];
-        ArrayList<ShareSize> taxaList=new ArrayList(taxa.values());
-        for (int t = 0; t < taxaIndex.length; t++) {
-            taxaIndex[t]=taxaList.get(t).compTaxon;
+    private int[] getDonorsForRegion(String taxonName, int site) {
+        String[] sb=taxonName.split("\\|");
+        int[] donors={-1,-1};
+        for (int i = 1; i < sb.length; i++) {
+            String[] ss=sb[i].split("s");
+            int leftSite=Integer.parseInt(ss[1]);
+            if(leftSite<=site) {
+                String[] sd=ss[0].split("_");
+                donors[0]=Integer.parseInt(sd[0]);
+                donors[1]=Integer.parseInt(sd[1]);
+              //  break;
+            }
         }
-        short[][] siteCnt=new short[2][64];
-//        double[] sumExpPresent=new double[endBase-startBase];
-//        int[] sumNNxSitePresent=new int[endBase-startBase];
-//        int sumNNPresent=0;
-     //   for (int t = 0; t < taxaIndex.length; t++) sumNNPresent+=presentCntForTaxa[taxaIndex[t]];
-
-            int currWord=block;
-            int callSite=0;
-            for (int t = 0; t < taxaIndex.length; t++) {
-//                long bmj=ldAlign.getAllelePresenceForSitesBlock(taxaIndex[t], 0,currWord, currWord+1)[0];
-//                long bmn=ldAlign.getAllelePresenceForSitesBlock(taxaIndex[t], 1,currWord, currWord+1)[0];
-                long bmj=ldAlign.getAllelePresenceForAllSites(taxaIndex[t], 0).getBits()[block];
-                long bmn=ldAlign.getAllelePresenceForAllSites(taxaIndex[t], 1).getBits()[block];
-                int cs=callSite;
-                for (int j = 0; j < 64; j++) {
-                    boolean presentFlag=false;
-                    if((bmj & 0x01)!=0) {siteCnt[0][cs]++; presentFlag=true;}
-                    bmj=bmj>>1;
-                    if((bmn & 0x01)!=0) {siteCnt[1][cs]++; presentFlag=true;}
-                    bmn=bmn>>1;
-       //             sumExpPresent[cs]+=presentProp[taxaIndex[t]];
-//                    if(presentFlag) sumNNxSitePresent[cs]++;
-                    cs++;          
-                }
-            }
- //       System.out.println("Bit:"+Arrays.toString(siteCnt[0]));
-        byte[] calls=new byte[64];
-        Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
-        int startSite=block*64;
-        int endSite=startSite+63;
-        for (int alignS = startSite; alignS <= endSite; alignS++) {
-            int callS=alignS-startSite;
-            byte ob=ldAlign.getBase(taxon,alignS);
-            
-            if(ignoreKnownBases) ob=Alignment.UNKNOWN_DIPLOID_ALLELE;
-            calls[callS]=ob;
-            byte mj=ldAlign.getMajorAllele(alignS);
-            byte mn=ldAlign.getMinorAllele(alignS);
-            mj=(byte)((mj<<4)+mj);
-            mn=(byte)((mn<<4)+mn);
-            
-            int totalCnt=siteCnt[0][callS]+siteCnt[1][callS];
- //           double expPres=sumExpPresent[callS]/(double)taxaIndex.length;
-            
-            if(totalCnt<minCount) continue;  //no data leave missing
-            if((double)siteCnt[0][callS]/(double)totalCnt>majority) {
-                if((ob!=Alignment.UNKNOWN_DIPLOID_ALLELE)&&(ob!=mj)) {calls[callS]=Alignment.UNKNOWN_DIPLOID_ALLELE;}
-                else {calls[callS] = mj;}
-            }
-            else if((double)siteCnt[1][callS]/(double)totalCnt>majority) {
-                if((ob!=Alignment.UNKNOWN_DIPLOID_ALLELE)&&(ob!=mn)) {calls[callS]=Alignment.UNKNOWN_DIPLOID_ALLELE;}
-                else {calls[callS] = mn;}
-            }
-            else if(callhets) {
-//                byte[] snpValue={mj,mn};
-//                byte het=IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(snpValue);
-//                calls[callS]=het;
-            }
- //           System.out.printf("Taxon:%d orig:%d mj:%d mn:%d call:%d %s %n", taxon, ldAlign.getBase(taxon,alignS),  mj, mn, calls[callS], AlignmentUtils.isHeterozygous(calls[callS]));
-        }
-        return calls;
+        return donors;
     }
     
     private void maskSites(int sampIntensity) {
         System.out.println("Beginning to mask sites");
-        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(ldAlign);
+        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(unimpAlign);
         int maxSites=mna.getSequenceCount()*((mna.getSiteCount()/sampIntensity)+1);
         hSite=new int[maxSites];
         hTaxon=new int[maxSites];
@@ -210,9 +225,9 @@ public class KnownParentMinorWindowImputation {
         }
         maskSitCnt=cnt;
         mna.clean();
-        compareSites(ldAlign);
-        ldAlign=BitAlignment.getInstance(mna, false);
-        compareSites(ldAlign);
+        compareSites(unimpAlign);
+        unimpAlign=BitAlignment.getInstance(mna, false);
+        compareSites(unimpAlign);
         System.out.println("Sites masked");
     }
     
@@ -226,6 +241,10 @@ public class KnownParentMinorWindowImputation {
             byte impb=a.getBase(hTaxon[i], hSite[i]);
             if(AlignmentUtils.isHeterozygous(impb)) {
                 hetCnt++;
+                byte[] orig=AlignmentUtils.getDiploidValues(hState[i]);
+                byte[] imphet=AlignmentUtils.getDiploidValues(impb);
+                if((orig[0]==imphet[0])||(orig[0]==imphet[1])||(impb==hState[i])) {correctCnt++;}
+                else {errorCnt++;}
             } else if(impb==Alignment.UNKNOWN_DIPLOID_ALLELE) {
                 notImp++;
             } else if(impb==hState[i]) {
@@ -238,140 +257,6 @@ public class KnownParentMinorWindowImputation {
         
     }
     
-    private ShareSize getMaxShare(float[][] idp, ShareSize currShare) {
-        if(currShare.left==currShare.right) {
-            currShare.fsum=idp[currShare.compTaxon][currShare.left];
-     //       currShare.p=1.0-ChiSquareDistribution.cdf(currShare.fsum, 2);
-            currShare.p=1.0-fcs.cdfFastApprox(currShare.fsum, 2);
-        }
-        double tL=-1, tR=-1;
-        if(currShare.left>0) {
-            tL=idp[currShare.compTaxon][currShare.left-1];
-        }
-        if(currShare.right<idp[0].length-1) {
-            tR=idp[currShare.compTaxon][currShare.right+1];
-        }
-        if(tL>tR) {
-            double testFsum=currShare.fsum+tL;
-         //   double testp=1.0-ChiSquareDistribution.cdf(testFsum, currShare.df+2);
-            double testp=1.0-fcs.cdfFastApprox(testFsum, currShare.df+2);
-            if(testp<currShare.p) {
-                currShare.moveLeft(testp, testFsum);
-                return getMaxShare(idp, currShare);
-            }
-        } else {
-            double testFsum=currShare.fsum+tR;
-//            double testp=1.0-ChiSquareDistribution.cdf(testFsum, currShare.df+2);
-            double testp=1.0-fcs.cdfFastApprox(testFsum, currShare.df+2);
-            if(testp<currShare.p) {
-                currShare.moveRight(testp, testFsum); 
-                return getMaxShare(idp, currShare);
-            }
-        }
-        return currShare;
-    }
-
-    private void createNull64Share(Alignment a, int maxSampling) {
-        a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
-        System.out.println("Creating the null distribution");
-        IBSDistanceMatrix dm=new IBSDistanceMatrix(a,100,null);
-        System.out.printf("Distances estimated. Mean:%g %n", dm.meanDistance());
-        double meanDist=dm.meanDistance();
-        null64Share=new int[blocks][65][65];
-        for (int i = 0; i < blocks; i++) {
-            for (int j = 0; j < null64Share[0].length; j++) {
-                for (int k = 0; k <=j; k++) {
-                    null64Share[i][j][k]=1;
-                }                
-            } 
-        }
-        Random r=new Random(0);
-      //  int samplingPerTaxon=maxSampling/(a.getSequenceCount()*a.getSequenceCount()/2);
-        System.out.println("samplingPerTaxonContrast: "+maxSampling);
-        for (int t1 = 0; t1 < a.getSequenceCount(); t1++) {
-            long[] iMj=a.getAllelePresenceForAllSites(t1, 0).getBits();
-            long[] iMn=a.getAllelePresenceForAllSites(t1, 1).getBits();
-            for (int samp = 0; samp < maxSampling; samp++) {
-                int d=0;
-                int t2=r.nextInt(a.getSequenceCount());
-                while(dm.getDistance(t1, t2)<meanDist) {
-                    t2=r.nextInt(a.getSequenceCount());
-                }
- //               int t2=r.nextInt(a.getSequenceCount());
- //               int t2=getIndexOfMaxDistance(dm, t1);
-                if(t1==t2) continue;
-                long[] jMj=a.getAllelePresenceForAllSites(t2, 0).getBits();
-                long[] jMn=a.getAllelePresenceForAllSites(t2, 1).getBits();
-                for (int sN = 0; sN < blocks; sN++) {
-               //     int br=r.nextInt(numBins);
-                    int b=sN;
-                    int[] results=this.getIdentity(iMj[b], iMn[b], jMj[b], jMn[b]);
-              //      if((sN==0)&&((t1==39)||(t2==39))) System.out.printf("%d %d %d %s %n",sN, t1, t2, Arrays.toString(results));
-                    null64Share[sN][results[0]][results[2]]++;
-                }
-            }
-        }
-        null64ShareProb=new float[blocks][65][65];
-        for (int i = 0; i < blocks; i++) {
-            for (int j = 0; j < null64Share[0].length; j++) {
-                int sum=0, bsum=0;
-                for (int k = 0; k <=j; k++) {
-                    sum+=null64Share[i][j][k];
-                }
-                for (int k = j; k >=0; k--) {
-                    bsum+=null64Share[i][j][k];
-                  //  null64ShareProb[i][j][k]=(float)bsum/(float)sum;
-                    null64ShareProb[i][j][k]=(float)(-2*Math.log((double)bsum/(double)sum));
-                }  
- //               System.out.printf("%d %g %d %s %n", i, 0.5, j, Arrays.toString(null64ShareProb[i][j]));
-            } 
-        }
-    }
-    
-    private void createNull64Share(Alignment a) {
-        a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
-        System.out.println("Creating the SBitAlignment distribution");
-        Alignment sbit=BitAlignment.getInstance(a, true);
-        System.out.printf("SBitAlignment created %n");
-
-        null64ShareProb=new float[blocks][65][66];
-        net.maizegenetics.pal.math.Binomial bn=new net.maizegenetics.pal.math.Binomial();
-        for (int i = 0; i < blocks; i++) {
-            double mafSum=0;
-            int cnt=0;
-            for (int s = i*64; (s < (i+1)*64)&&(s<sbit.getSiteCount()); s++) { 
-                mafSum+=sbit.getMinorAlleleFrequency(s);
-                cnt++;
-            }
-            double avgMAF=mafSum/(double)cnt;
-            for (int j = 1; j < null64ShareProb[0].length; j++) {
-                Binomial binomFunc=new Binomial(j, 1.0-avgMAF, new RandomJava());
-                Arrays.fill(null64ShareProb[i][j], 0);
-                for (int k = j; k >=0; k--) {
-                    null64ShareProb[i][j][k]=(float)(binomFunc.pdf(k))+null64ShareProb[i][j][k+1];
-                }
-                for (int k = j; k >=0; k--) {
-                    if(null64ShareProb[i][j][k]>1) null64ShareProb[i][j][k]=1;
-                    null64ShareProb[i][j][k]=-2*(float)Math.log(null64ShareProb[i][j][k]);
-                }
-  //              System.out.printf("%d %g %d %s %n", i, avgMAF, j, Arrays.toString(null64ShareProb[i][j]));
-            } 
-        }
-    }
-    
-    private int getIndexOfMaxDistance(DistanceMatrix dm, int compTaxon) {
-        int resultTaxon=compTaxon;
-        double maxDist=dm.getDistance(compTaxon, compTaxon);
-        for (int i = 0; i < dm.getSize(); i++) {
-            if(dm.getDistance(compTaxon, i)>maxDist) {
-                maxDist=dm.getDistance(compTaxon, i);
-                resultTaxon=i;
-            }   
-        }
-        return resultTaxon;
-    }
-    
-    
     private String reportTaxaMakeUp(ArrayList<Integer>[] data) {
         StringBuilder s=new StringBuilder();
         for (int i = 0; i < data[0].size(); i++) {
@@ -383,21 +268,7 @@ public class KnownParentMinorWindowImputation {
         return s.toString();
     }
     
-    private float[][] getTaxaIdentityProbMatrix(int taxa) {
-        long[] iMj=ldAlign.getAllelePresenceForAllSites(taxa, 0).getBits();
-        long[] iMn=ldAlign.getAllelePresenceForAllSites(taxa, 1).getBits();
-        int sections=iMj.length;
-        float[][] result=new float[ldAlign.getSequenceCount()][sections];
-        for (int t = 0; t < ldAlign.getSequenceCount(); t++) {
-            long[] jMj=ldAlign.getAllelePresenceForAllSites(t, 0).getBits();
-            long[] jMn=ldAlign.getAllelePresenceForAllSites(t, 1).getBits();
-            for(int x=0; x<sections; x++) {
-                int[] results=this.getIdentity(iMj[x], iMn[x], jMj[x], jMn[x]);
-                result[t][x]=null64ShareProb[x][results[0]][results[2]];
-            }
-        }
-        return result;
-    }
+ 
 
     
     /**
@@ -439,6 +310,7 @@ public class KnownParentMinorWindowImputation {
             for (int b = 0; b < a.getSiteCount(); b+=blockSize) {
                 int p1=r.nextInt(a.getSequenceCount());
                 int p2=r.nextInt(a.getSequenceCount());
+                if(p2<p1) {int temp=p1; p1=p2; p2=temp;}
                 tName.append("|"+p1+"_"+p2+"s"+b);
                 for (int s = b; (s < b+blockSize) && (s<a.getSiteCount()); s++) {
                     if(r.nextDouble()<propPresent) {
@@ -462,38 +334,20 @@ public class KnownParentMinorWindowImputation {
     
     
     public static void main(String[] args) {
-//      String root="/Users/edbuckler/SolexaAnal/bigprojection/";
-        String root="/Volumes/LaCie/build20120110/imp/";
+      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
+//        String root="/Volumes/LaCie/build20120110/imp/";
 
-        String donorFile=root+"NAMfounder20120110.imp.hmp.txt";
+        String donorFile=root+"NAMfounder20120110seg.imp.hmp.txt";
         String unImpTargetFile=root+"ZeaSyn20120110.hmp.txt";
         String impTargetFile=root+"ZeaSyn20120110.imp.hmp.txt";
 
-        boolean buildInput=false;
+        boolean buildInput=true;
         boolean filterTrue=true;
-        createSynthetic(donorFile, unImpTargetFile, 1024, 0.4, -1, 100);
-        
-//        if(buildInput) {
-//            Alignment a=ImportUtils.readFromHapmap(donorFile, (ProgressListener)null);
-//            System.out.println("GBS Map Read");
-//            if(filterTrue) a=FilterAlignment.getInstance(a, 0, a.getSiteCount()/10);
-//            Alignment gbsMap=BitAlignment.getInstance(a, false);
-//            
-//  //          TBitAlignment gbsMap=TBitAlignment.getInstance(ImportUtils.readFromHapmap(gFile, (ProgressListener)null));
-//            System.out.println("GBS converted and filtered");
-//    //        SBitAlignment hapMap=(SBitAlignment)readGZOfSBit(hapFileAGP1, true);
-//            Alignment hapMap=ImportUtils.readFromHapmap(hFile, true, (ProgressListener)null);
-//            System.out.println("HapMap Read");
-//            hapMap=EdTests.fixHapMapNames(hapMap);  //adds tags so that HapMapNames are recognizable
-//            System.out.println("HapMap Names Fixed");
-//            MutableNucleotideAlignment mna=EdTests.combineAlignments(hapMap, gbsMap);
-//            System.out.println("HapMap and GBS combined");
-//            mna.clean();
-//            ExportUtils.writeToHapmap(mna, false, unImpTargetFile, '\t', null);
-//        }
-//        Alignment mergeMap=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
-//        KnownParentMinorWindowImputation e64NNI=new KnownParentMinorWindowImputation(mergeMap, impTargetFile);
-//    //    TBitAlignment mergeMap=TBitAlignment.getInstance(mna);
+        if(buildInput) {createSynthetic(donorFile, unImpTargetFile, 1900, 0.4, -1, 1000);}
+
+       // System.out.println(AlignmentUtils.getDiploidValue()
+        KnownParentMinorWindowImputation e64NNI=new KnownParentMinorWindowImputation(donorFile,
+                unImpTargetFile, impTargetFile,20);
     }
     
 }
