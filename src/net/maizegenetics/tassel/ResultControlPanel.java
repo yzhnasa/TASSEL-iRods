@@ -46,7 +46,7 @@ public class ResultControlPanel extends AbstractControlPanel {
             addPlugin(new ChartDisplayPlugin(theTASSELMainFrame, true));
             addPlugin(new QQDisplayPlugin(theTASSELMainFrame, true));
             addPlugin(new ManhattanDisplayPlugin(theTASSELMainFrame, true));
-//            addPlugin(new ArchaeopteryxPlugin(theTASSELMainFrame, true));
+            addPlugin(new ArchaeopteryxPlugin(theTASSELMainFrame, true));
 
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -30,13 +30,19 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 /**
  *
  * @author Ed Buckler
  */
 public class SynonymizerPlugin extends AbstractPlugin {
 
-    /** Creates a new instance of SynonymizerPlugin */
+    private static final Logger myLogger = Logger.getLogger(SynonymizerPlugin.class);
+
+    /**
+     * Creates a new instance of SynonymizerPlugin
+     */
     public SynonymizerPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
@@ -73,14 +79,21 @@ public class SynonymizerPlugin extends AbstractPlugin {
             } else if ((synCnt == 1) && (alignCnt > 0)) {   //apply synonymizer to alignments
                 applySynonymsToIdGroups(newInput);
             } else if ((synCnt == 1) && (alignCnt == 0)) {
-                Datum inputDatum = newInput.getDataOfType(IdentifierSynonymizer.class).get(0);
-                IdentifierSynonymizer is = (IdentifierSynonymizer) inputDatum.getData();
-                SynonymizerDialog theSD = new SynonymizerDialog(is, getParentFrame());
-                theSD.setLocationRelativeTo(getParentFrame());
-                theSD.setVisible(true);
+                if (isInteractive()) {
+                    Datum inputDatum = newInput.getDataOfType(IdentifierSynonymizer.class).get(0);
+                    IdentifierSynonymizer is = (IdentifierSynonymizer) inputDatum.getData();
+                    SynonymizerDialog theSD = new SynonymizerDialog(is, getParentFrame());
+                    theSD.setLocationRelativeTo(getParentFrame());
+                    theSD.setVisible(true);
+                }
             } else {
-                JOptionPane.showMessageDialog(getParentFrame(), "To create a synonym list:\n Please first select the reference taxa names and then the synonym taxa names (use Ctrl key)\n"
-                        + "To apply a synonym list to a dataset:\n Select a synonym list and then the taxa names to be changed (use Ctrl key)");
+                String msg = "To create a synonym list:\n Please first select the reference taxa names and then the synonym taxa names (use Ctrl key)\n"
+                        + "To apply a synonym list to a dataset:\n Select a synonym list and then the taxa names to be changed (use Ctrl key)";
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), msg);
+                } else {
+                    myLogger.error(msg);
+                }
             }
 
             return null;
@@ -97,11 +110,19 @@ public class SynonymizerPlugin extends AbstractPlugin {
             synonymSets.append(input.getData(i).getName());
             synonymSets.append("\n");
         }
+        boolean performFunction = true;
         String msg = "You have selected to apply synonym list " + input.getData(0).getName() + " to the following dataset:\n"
                 + synonymSets.toString();
-        int response = JOptionPane.showOptionDialog(getParentFrame(), msg, "Verify Selection",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
-        if (response != JOptionPane.CANCEL_OPTION) {
+        if (isInteractive()) {
+            int response = JOptionPane.showOptionDialog(getParentFrame(), msg, "Verify Selection",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+            if (response == JOptionPane.CANCEL_OPTION) {
+                performFunction = false;
+            }
+        } else {
+            myLogger.info(msg);
+        }
+        if (performFunction) {
             List<Datum> idList = input.getDataOfType(IdGroup.class);
             IdGroup[] aa = new IdGroup[idList.size() - 1];
             for (int i = 1; i < idList.size(); i++) {
@@ -121,11 +142,19 @@ public class SynonymizerPlugin extends AbstractPlugin {
             synonymSets.append(input.getData(i).getName());
             synonymSets.append("\n");
         }
+        boolean performFunction = true;
         String msg = "You have selected " + input.getData(0).getName() + " as the reference name dataset.\n"
                 + "The synonyms will be extracted from the following: \n" + synonymSets.toString();
-        int response = JOptionPane.showOptionDialog(getParentFrame(), msg, "Verify Selection",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
-        if (response != JOptionPane.CANCEL_OPTION) {
+        if (isInteractive()) {
+            int response = JOptionPane.showOptionDialog(getParentFrame(), msg, "Verify Selection",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+            if (response == JOptionPane.CANCEL_OPTION) {
+                performFunction = false;
+            }
+        } else {
+            myLogger.info(msg);
+        }
+        if (performFunction) {
             IdentifierSynonymizer is = (IdentifierSynonymizer) input.getDataOfType(IdentifierSynonymizer.class).get(0).getData();
             List<Datum> idList = input.getDataOfType(IdGroup.class);
             IdGroup[] aa = new IdGroup[idList.size()];
@@ -170,11 +199,6 @@ public class SynonymizerPlugin extends AbstractPlugin {
 }
 
 /**
- * Created by IntelliJ IDEA.
- * User: ed
- * Date: Apr 20, 2005
- * Time: 3:46:00 PM
- * To change this template use File | Settings | File Templates.
  */
 class SynonymizerDialog extends JDialog {
 
@@ -229,21 +253,18 @@ class SynonymizerDialog extends JDialog {
         jPanel1.setLayout(gridBagLayout1);
         setThresholdButton.setText("Apply threshold");
         setThresholdButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 setThresholdButton_actionPerformed(e);
             }
         });
         CancelButton.setText("Cancel");
         CancelButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 CancelButton_actionPerformed(e);
             }
         });
         okButton.setText("OK");
         okButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 okButton_actionPerformed(e);
             }
@@ -253,7 +274,6 @@ class SynonymizerDialog extends JDialog {
         selectSynButton.setToolTipText("Set synonym to selected taxon");
         selectSynButton.setText("<");
         selectSynButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 selectSynButton_actionPerformed(e);
             }
@@ -262,13 +282,11 @@ class SynonymizerDialog extends JDialog {
         setNoSynButton.setToolTipText("Set selected taxon to no synonym");
         setNoSynButton.setText("No Synonym");
         setNoSynButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 setNoSynButton_actionPerformed(e);
             }
         });
         theNameTable.addMouseListener(new MouseAdapter() {
-
             public void mouseClicked(MouseEvent e) {
                 synTable_mouseClicked(e);
             }
@@ -282,7 +300,6 @@ class SynonymizerDialog extends JDialog {
         cbxSortAlphabetically.setSelectedIcon(null);
         cbxSortAlphabetically.setText("Sort Alphabetically");
         cbxSortAlphabetically.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 cbxSortAlphabetically_actionPerformed(e);
             }

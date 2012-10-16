@@ -73,6 +73,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     int endChr = Integer.MIN_VALUE;
     private static ArgsEngine myArgsEngine = null;
     int minTaxaWithLocus;
+    private double errorRate = 0.01;
     private boolean includeReferenceGenome = false;
     private String refGenomeFileStr = null;
     private long[] refGenomeChr = null;
@@ -133,6 +134,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 + "-mnMAF   Minimum minor allele frequency (default: " + minMAF + ")\n"
                 + "-mnMAC   Minimum minor allele count (default: " + minMAC + ")\n"
                 + "-mnLCov  Minimum locus coverage (proportion of Taxa with a genotype) (default: " + defaultMinPropTaxaWithLocus + ")\n"
+                + "-errRate Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
                 + "-ref     Path to reference genome in fasta format. DEFAULT: Don't use reference\n"
                 + "         genome (instead, align tags with identical starting postions against each other)\n"
                 + "-LocusBorder  All tags on either strand with start postions that differ by less than the specified\n"
@@ -167,6 +169,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             myArgsEngine.add("-mnMAF", "--minMinorAlleleFreq", true);
             myArgsEngine.add("-mnMAC", "--minMinorAlleleCount", true);
             myArgsEngine.add("-mnLCov", "--minLocusCov", true);
+            myArgsEngine.add("-errRate", "--seqErrRate", true);
             myArgsEngine.add("-ref", "--referenceGenome", true);
             myArgsEngine.add("-LocusBorder", "--locus-border", true);
             myArgsEngine.add("-inclRare", "--includeRare", false);
@@ -257,6 +260,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             double minPropTaxaWithLocus = Double.parseDouble(myArgsEngine.getString("-mnLCov"));
             minTaxaWithLocus = (int) Math.round(theTBT.getTaxaCount() * minPropTaxaWithLocus);
         }
+        if (myArgsEngine.getBoolean("-errRate")) {
+            errorRate = Double.parseDouble(myArgsEngine.getString("-errRate"));
+        }
         if (myArgsEngine.getBoolean("-ref")) {
             refGenomeFileStr = myArgsEngine.getString("-ref");
             File refGenomeFile = new File(refGenomeFileStr);
@@ -322,7 +328,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         myLogger.info(String.format("minTaxaWithLocus:%d MinF:%g MinMAF:%g MinMAC:%d %n", minTaxaWithLocus, minF, minMAF, minMAC));
         myLogger.info(String.format("includeRare:%s includeGaps:%s %n", inclRare, inclGaps));
         long time = System.currentTimeMillis();
-        TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE, Byte.MIN_VALUE, Integer.MIN_VALUE, includeReferenceGenome);
+        TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE, Byte.MIN_VALUE, Integer.MIN_VALUE, includeReferenceGenome, errorRate);
         int[] currPos = null;
         int countLoci = 0;
         for (int i = 0; (i < theTOPM.getSize()) && (theMSA.getSiteCount() < (maxSize - 1000)); i++) {
@@ -348,7 +354,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 }
                 currPos = newPos; // start a new TAL with the current tag
                 if ((currPos[str] != TagsOnPhysicalMap.byteMissing) && (currPos[startPosit] != TagsOnPhysicalMap.intMissing)) {  // we already know that currPos[chr]==targetChromo
-                    currTAL = new TagsAtLocus(currPos[chr], (byte) currPos[str], currPos[startPosit], includeReferenceGenome);
+                    currTAL = new TagsAtLocus(currPos[chr], (byte) currPos[str], currPos[startPosit], includeReferenceGenome, errorRate);
                     currTAL.addTag(ri, theTOPM, theTBT, includeReferenceGenome);
                 } else {
                     currPos = null;  // invalid position
@@ -360,9 +366,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         if (theMSA.getSiteCount() > 0) {
             theMSA.clean();
-            //theMSA.sortSiteByPhysicalPosition();
             ExportUtils.writeToHapmap(theMSA, false, outHapMap, '\t', null);
-            //ExportUtils.writeToHapmap(theMSA, false, outHapMap, '\t');
         }
         myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + theMSA.getSiteCount());
     }
@@ -426,9 +430,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             theMSA.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
             int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
             theMSA.setPositionOfSite(currSite, position);
-            //theMSA.setStrandOfSite(currSite, (byte) '+');  // all minus strand genotypes will be complemented to plus strand
             for (int tx = 0; tx < theTBT.getTaxaCount(); tx++) {
-                if (strand == -1) {
+                if (callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
                     theMSA.setBase(tx, currSite, complementGeno(callsBySite[s][tx]));  // complement to plus strand
                 } else {
                     theMSA.setBase(tx, currSite, callsBySite[s][tx]);
@@ -478,10 +481,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
      */
     private byte[] isSiteGood(byte[] calls) {
         int[][] alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
-        //int[][] alleles = getSortedAlleleCounts(calls);
-        // Maybe problem here - alleles shouldn't be less than 2?
         if (alleles[1].length < 2) {
-            System.out.println("Too few alleles ("+alleles[1].length+"alleles)");
             return null;
         }
         int aCnt = alleles[1][0] + alleles[1][1];

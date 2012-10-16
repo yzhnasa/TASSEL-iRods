@@ -598,6 +598,14 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         }
         myIdentifiers.add(id);
     }
+    
+   public void setTaxonName(int taxon, Identifier id) {
+        if (taxon > myMaxTaxa) {
+            throw new IllegalStateException("MutableSingleEncodeAlignment: addTaxon: this exceeds max num of taxa: " + myMaxTaxa);
+        }
+        if(taxon<myIdentifiers.size()) {myIdentifiers.set(taxon, id);}
+        else {myIdentifiers.add(taxon, id);}
+    }
 
     public void removeTaxon(int taxon) {
 
