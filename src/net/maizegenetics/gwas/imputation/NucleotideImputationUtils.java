@@ -198,9 +198,9 @@ public class NucleotideImputationUtils {
 
 	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
 		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
-		BitSet filteredBits = polybits;
-//		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
-//		filteredBits.and(polybits);
+//		BitSet filteredBits = polybits;
+		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
+		filteredBits.and(polybits);
 		
 		int nsites = popdata.original.getSiteCount();
 		popdata.alleleA = new byte[nsites];
@@ -221,7 +221,7 @@ public class NucleotideImputationUtils {
 		
 		for (int[] snpIndex : snpIndices) {
 			//SBitAlignment windowAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
-                        Alignment windowAlignment = BitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex), true);
+			Alignment windowAlignment = BitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex), true);
 			
 			LinkedList<Integer> snpList = new LinkedList<Integer>(); //snpList is a list of snps (indices) in this window
 			for (int s:snpIndex) snpList.add(s);
@@ -266,9 +266,11 @@ public class NucleotideImputationUtils {
 			if (popdata.snpIndex.fastGet(s)) snpIndex[snpcount++] = s;
 		}
 		
+		snpIndex = Arrays.copyOf(snpIndex, snpcount);
 		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
 		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
 		
+		nsnps = snpIndex.length;
 		for (int s = 0; s < nsnps; s++) {
 			byte Aallele = popdata.alleleA[snpIndex[s]];
 			byte Callele = popdata.alleleC[snpIndex[s]];
@@ -806,7 +808,7 @@ public class NucleotideImputationUtils {
 	}
 
 	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName) {
-                a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+		a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
 		//obs are in {A, C, M}, where M is heterozygote A/C
 		int maxIterations = 50;
@@ -1099,48 +1101,45 @@ public class NucleotideImputationUtils {
 		popdata.imputed = a;		
 	}
 
-	public static void updateSnpAlignment(PopulationData popdata) {
+	public static Alignment convertParentCallsToNucleotides(PopulationData popdata) {
 		//set monomorphic sites to major (or only allele) (or not)
 		//set polymorphic sites consistent with flanking markers if equal, unchanged otherwise
 		//do not change sites that are not clearly monomorhpic or polymorphic
 
-		MutableNucleotideAlignment mna;
-		if (popdata.original instanceof MutableNucleotideAlignment) mna = (MutableNucleotideAlignment) popdata.original;
-		else mna = MutableNucleotideAlignment.getInstance(popdata.original);
-		
+		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(popdata.imputed);
 		BitSet isPopSnp = popdata.snpIndex;
-		
-		int nsites = mna.getSiteCount();
+		if (isPopSnp.cardinality() != mna.getSiteCount()) myLogger.info("size of imputed snps not equal to snpIndex cardinality in convertParentCallsToNucleotides.");
+		int nsites = (int) isPopSnp.capacity();
+		double ngametes = nsites * 2;
 		int ntaxa = mna.getSequenceCount();
-		int popSnpCount = 0;
+		int imputedSnpCount = 0;
+		
 		for (int s = 0; s < nsites; s++) {
 			if (isPopSnp.fastGet(s)) {
-				int Acall = popdata.alleleA[popSnpCount];
-				int Ccall = popdata.alleleC[popSnpCount];
+				int Acall = popdata.alleleA[s];
+				int Ccall = popdata.alleleC[s];
 				byte AAcall = (byte) ((Acall << 4) | Acall);
 				byte CCcall = (byte) ((Ccall << 4) | Ccall);
 				byte ACcall = (byte) ((Acall << 4) | Ccall);
 				for (int t = 0; t < ntaxa; t++) {
-					byte parentCall = popdata.imputed.getBase(t, popSnpCount);
+					byte parentCall = popdata.imputed.getBase(t, imputedSnpCount);
 					if (parentCall == AA) {
-						mna.setBase(t, s, AAcall);
+						mna.setBase(t, imputedSnpCount, AAcall);
 					} else if (parentCall == CC) {
-						mna.setBase(t, s, CCcall);
+						mna.setBase(t, imputedSnpCount, CCcall);
 					} else if (parentCall == AC || parentCall == CA) {
-						mna.setBase(t, s, ACcall);
+						mna.setBase(t, imputedSnpCount, ACcall);
 					} else {
-						mna.setBase(t, s, NN);
+						mna.setBase(t, imputedSnpCount, NN);
 					}
 				}
-				popSnpCount++;
-			} else { //if the site is monomorphic fill in all the genotypes
-				//do nothing for now.
+				imputedSnpCount++;
 			}
 		}
 		
 		mna.clean();
-		popdata.original = mna;
-		myLogger.info("Original alignment updated for family " + popdata.name + " chromosome " + popdata.original.getLocusName(0) + "./n");
+		myLogger.info("Original alignment updated for family " + popdata.name + " chromosome " + popdata.original.getLocusName(0) + ".\n");
+		return mna;
 	}
 
 	public static void examineTaxaClusters(Alignment a, BitSet polybits) {
