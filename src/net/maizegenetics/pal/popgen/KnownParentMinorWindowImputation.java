@@ -61,7 +61,7 @@ public class KnownParentMinorWindowImputation {
         System.out.println("swapConflicts"+swapConflicts+" same:"+swapMjMnMask.cardinality());
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
         Random r=new Random(0);
-        for (int bt = 0; bt < unimpAlign.getSequenceCount(); bt++) {
+        for (int bt = 0; bt < unimpAlign.getSequenceCount(); bt+=1) {
             int taxaImpCnt=0;
             String name=unimpAlign.getIdGroup().getIdentifier(bt).getFullName();
             System.out.printf("Imputing %d:%s ... %n", bt,name);
@@ -83,8 +83,12 @@ public class KnownParentMinorWindowImputation {
 //            System.out.printf("Finished %d Imp %d %d %n", System.currentTimeMillis()-time, impSiteCnt, taxaImpCnt);
 //            if(bt%10==0) compareSites(mna);
         }
-        if(maskAndTest) compareSites(mna);
-        if(testing>0) System.out.printf("Parents Right %d Wrong %d %n", parentsRight, parentsWrong);
+        StringBuilder s=new StringBuilder();
+        s.append(String.format("%s %s MinMinor:%d ", donorFile, unImpTargetFile, minMinorCnt));
+        if(maskAndTest) s.append(compareSites(mna));
+        if(testing>0) s.append(String.format("ParentsRight:%d Wrong %d", parentsRight, parentsWrong));
+        System.out.println(s.toString());
+        
         ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);
       
        //if we put the share size in the tree map, only remove those at a transiti0n boundary 
@@ -174,9 +178,11 @@ public class KnownParentMinorWindowImputation {
             
         }
         if(testing>1){
-            if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {System.out.println("Correct");parentsRight++;}
-            else {System.out.println("WRONG");parentsWrong++;}
+            if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {System.out.println("Correct");}
+            else {System.out.println("WRONG");}
         }
+        if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {parentsRight++;}
+            else {parentsWrong++;}
         return donors;
     }
     
@@ -197,12 +203,14 @@ public class KnownParentMinorWindowImputation {
             else if(bD2==Alignment.UNKNOWN_DIPLOID_ALLELE) {donorEst=bD1;}
             else {donorEst=(byte)((bD1&highMask)|(bD2&lowMask));
             }
-
-            if(mna.getBase(theDH.targetTaxon, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                    mna.setBase(theDH.targetTaxon, cs, donorEst);
-//                    impSiteCnt++;
-//                    taxaImpCnt++;
-                }
+            //need to check whether the heterozygote is put together properly
+            //need to change to 
+            mna.setBase(theDH.targetTaxon, cs, donorEst);
+//            if(mna.getBase(theDH.targetTaxon, cs)==Alignment.UNKNOWN_DIPLOID_ALLELE) {
+//                    mna.setBase(theDH.targetTaxon, cs, donorEst);
+////                    impSiteCnt++;
+////                    taxaImpCnt++;
+//                }
         } //end of cs loop
     }
     
@@ -253,7 +261,7 @@ public class KnownParentMinorWindowImputation {
         System.out.println("Sites masked");
     }
     
-    private void compareSites(Alignment a) {
+    private String compareSites(Alignment a) {
         int missingCnt=0, correctCnt=0, errorCnt=0, notImp=0, hetCnt=0;
         for (int i = 0; i < maskSitCnt; i++) {
             if(hState[i]==Alignment.UNKNOWN_DIPLOID_ALLELE) {
@@ -274,7 +282,7 @@ public class KnownParentMinorWindowImputation {
             } else {errorCnt++;}
         }
         double errRate=(double)errorCnt/(double)(errorCnt+correctCnt);
-        System.out.printf("Missing: %d Het: %d NotImp: %d Error: %d Correct: %d ErrorRate: %g %n", 
+        return String.format("Missing: %d Het: %d NotImp: %d Error: %d Correct: %d ErrorRate: %g ", 
                 missingCnt, hetCnt, notImp, errorCnt, correctCnt, errRate);
         
     }
@@ -327,10 +335,10 @@ public class KnownParentMinorWindowImputation {
         Random r=new Random();
         for (int t = 0; t < taxaNumber; t++) {
             StringBuilder tName=new StringBuilder("ZM"+t);
-            for (int b = 0; b < a.getSiteCount(); b+=blockSize) {
+            for (int b = 0; b < a.getSiteCount(); b+=blockSize) {  //change to bp?
                 int p1=r.nextInt(a.getSequenceCount());
                 int p2=r.nextInt(a.getSequenceCount());
-                //p2=t%a.getSequenceCount();  //only put one crossover in
+//                p2=t%a.getSequenceCount();  //only put one crossover in
                 if(p2<p1) {int temp=p1; p1=p2; p2=temp;}
                 tName.append("|"+p1+"_"+p2+"s"+b);
                 for (int s = b; (s < b+blockSize) && (s<a.getSiteCount()); s++) {
@@ -361,20 +369,29 @@ public class KnownParentMinorWindowImputation {
      * @param args
      */
     public static void main(String[] args) {
-      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
-//        String root="/Volumes/LaCie/build20120110/imp/";
+//      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
+        String root="/Volumes/LaCie/build20120110/imp/";
 
-        String donorFile=root+"NAMfounder20120110seg.imp.hmp.txt";
+ //       String donorFile=root+"NAMfounder20120110.imp.hmp.txt";
+        String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
         String unImpTargetFile=root+"ZeaSyn20120110.hmp.txt";
         String impTargetFile=root+"ZeaSyn20120110.imp.hmp.txt";
 
-        boolean buildInput=false;
+        boolean buildInput=true;
         boolean filterTrue=true;
-        if(buildInput) {createSynthetic(donorFile, unImpTargetFile, 1000, 0.4, -1, 1000);}
+        if(buildInput) {createSynthetic(donorFile, unImpTargetFile, 2000, 0.4, -1, 1000);}
 
-       // System.out.println(AlignmentUtils.getDiploidValue()
         KnownParentMinorWindowImputation e64NNI=new KnownParentMinorWindowImputation(donorFile,
-                unImpTargetFile, impTargetFile,20);
+                unImpTargetFile, impTargetFile,30);
+        
+        for (int recSize = 128; recSize < 10000; recSize+=(recSize/2)) {
+            for (int mm = 5; mm < 60; mm+=5) {
+                System.out.println("Rec size"+recSize);
+                unImpTargetFile=root+recSize+"ZeaSyn20120110.hmp.txt";
+                if(buildInput) {createSynthetic(donorFile, unImpTargetFile, recSize, 0.4, -1, 1000);}
+                e64NNI=new KnownParentMinorWindowImputation(donorFile, unImpTargetFile, impTargetFile,mm);
+                }
+        }
     }
     
 }
