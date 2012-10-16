@@ -43,6 +43,7 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 			family.imputed = NucleotideImputationUtils.imputeUsingViterbiFiveState(tba, phet, family.name);
 			
 			if (fillGapsInAlignment) NucleotideImputationUtils.fillGapsInAlignment(family);
+			
 		}
 		
 		DataSet resultDS = new DataSet(theData, this);
