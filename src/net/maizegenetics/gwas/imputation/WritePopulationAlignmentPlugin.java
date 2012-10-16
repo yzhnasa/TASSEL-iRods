@@ -2,6 +2,7 @@ package net.maizegenetics.gwas.imputation;
 
 import java.awt.Frame;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.ImageIcon;
@@ -10,6 +11,9 @@ import org.apache.log4j.Logger;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.pal.alignment.MutableAlignment;
+import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.MutableSingleEncodeAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -20,7 +24,10 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 	private static final Logger myLogger = Logger.getLogger(WritePopulationAlignmentPlugin.class);
 	boolean mergeAlignments = true;
 	boolean writeParentCalls = true;
+	boolean writeNucleotides = true;
 	boolean outputDiploid = false;
+	double minSnpCoverage = Double.NaN;
+	double maxMafForMono = Double.NaN;
 	String baseFileName;
 	
 	public WritePopulationAlignmentPlugin(Frame parentFrame) {
@@ -30,29 +37,80 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 	@Override
 	public DataSet performFunction(DataSet input) {
 		List<Datum> theData = input.getDataOfType(PopulationData.class);
+		
+		if (theData.size() > 0) {
+			if (writeParentCalls) writeOutput(theData, false);
+			if (writeNucleotides) writeOutput(theData, true);
+			fireDataSetReturned(new PluginEvent(input, input.getCreator().getClass()));
+			return input;
+		} else return null;
+		
+	}
+
+	private void writeOutput(List<Datum> theData, boolean asNucleotides) {
+		String filename;
 		if (mergeAlignments) {
-			String filename = baseFileName + ".hmp.txt";
+			if (asNucleotides) filename = baseFileName + "nuc.hmp.txt";
+			else filename = baseFileName + "parents.hmp.txt";
 			Alignment[] allOfTheAlignments = new Alignment[theData.size()];
 			int count = 0;
-			for (Datum data:theData) {
-				if (writeParentCalls) allOfTheAlignments[count++] = ((PopulationData) data.getData()).imputed;
-				else allOfTheAlignments[count++] = ((PopulationData) data.getData()).original;
+			for (Datum datum:theData) {
+				PopulationData family = (PopulationData) datum.getData();
+				allOfTheAlignments[count++] = createOutputAlignment(family, asNucleotides);
 			}
 			Alignment alignment = MutableSingleEncodeAlignment.getInstance(allOfTheAlignments);
 			ExportUtils.writeToHapmap(alignment, outputDiploid, filename, '\t', null);
 		} else {
 			for (Datum datum:theData) {
 				PopulationData family = (PopulationData) datum.getData();
-				String filename = baseFileName + ".family." + family.name + ".hmp.txt";
-				if (writeParentCalls) ExportUtils.writeToHapmap(family.imputed, outputDiploid, filename, '\t', null);
-				else ExportUtils.writeToHapmap(family.original, outputDiploid, filename, '\t', null);
+				if (asNucleotides) filename = baseFileName + ".family." + family.name + "nuc.hmp.txt";
+				else filename = baseFileName + ".family." + family.name + "parents.hmp.txt";
+				ExportUtils.writeToHapmap(createOutputAlignment(family, asNucleotides), outputDiploid, filename, '\t', null);
 			}
 		}
-		
-		fireDataSetReturned(new PluginEvent(input, input.getCreator().getClass()));
-		return input;
-	}
 
+	}
+	
+	private Alignment createOutputAlignment(PopulationData popdata, boolean asNucleotides) {
+		Alignment out = null;
+		
+		if (! asNucleotides) {
+			out = popdata.imputed;
+		} else {
+			//change the parent calls to original nucleotides
+			Alignment outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
+			
+			if (!Double.isNaN(minSnpCoverage) && !Double.isNaN(maxMafForMono)) {
+				int nsnps = popdata.original.getSiteCount();
+				double ngametes = 2*popdata.original.getSequenceCount();
+				int[] monomorphicSnps = new int[nsnps];
+				int snpCount = 0;
+				for (int s = 0; s < nsnps; s++) {
+					double coverage = popdata.original.getTotalGametesNotMissing(s) / ngametes;
+					if (!popdata.snpIndex.fastGet(s) && popdata.original.getMinorAlleleFrequency(s) <= maxMafForMono && coverage >= minSnpCoverage) {
+						monomorphicSnps[snpCount++] = s;
+					}
+				}
+				monomorphicSnps = Arrays.copyOf(monomorphicSnps, snpCount);
+				Alignment fa = FilterAlignment.getInstance(popdata.original, monomorphicSnps);
+				MutableAlignment outMono = MutableNucleotideAlignment.getInstance(fa);
+				
+				// fill in all values with the major allele
+				nsnps = outMono.getSiteCount();
+				int ntaxa = outMono.getSequenceCount();
+				for (int s = 0; s < nsnps; s++) {
+					byte majorAllele = outMono.getMajorAllele(s);
+					byte major = (byte) ((majorAllele << 4) | majorAllele);
+					for (int t = 0; t < ntaxa; t++) {
+						outMono.setBase(t, s, major);
+					}
+				}
+				out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly, outMono});
+			}
+		}
+		return out;
+	}
+	
 	@Override
 	public void setParameters(String[] args) {
 		if (args == null || args.length == 0) {
@@ -72,13 +130,42 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-p") || args[i].equalsIgnoreCase("-parentCalls")) {
 				String val = args[++i];
-				if (val.toUpperCase().startsWith("T")) writeParentCalls = true;
-				else writeParentCalls = false;
+				if (val.toUpperCase().startsWith("T")) {
+					writeParentCalls = true;
+					writeNucleotides = false;
+				} else {
+					writeParentCalls = false;
+					writeNucleotides = true;
+				}
+			}
+			else if (args[i].equals("-o") || args[i].equalsIgnoreCase("-outputType")) {
+				String val = args[++i];
+				if (val.toUpperCase().startsWith("P")) {
+					writeParentCalls = true;
+					writeNucleotides = false;
+				}
+				else if (val.toUpperCase().startsWith("N")) {
+					writeParentCalls = false;
+					writeNucleotides = true;
+				}
+				else if (val.toUpperCase().startsWith("B")) {
+					writeParentCalls = true;
+					writeNucleotides = true;
+				} else {
+					writeParentCalls = true;
+					writeNucleotides = false;
+				}
 			}
 			else if (args[i].equals("-d") || args[i].equalsIgnoreCase("-diploid")) {
 				String val = args[++i];
 				if (val.toUpperCase().startsWith("T")) outputDiploid = true;
-				else writeParentCalls = false;
+				else outputDiploid = false;
+			}
+			else if (args[i].equals("-c") || args[i].equalsIgnoreCase("-minCoverage")) {
+				minSnpCoverage = Double.parseDouble(args[++i]);
+			}
+			else if (args[i].equals("-x") || args[i].equalsIgnoreCase("-maxMono")) {
+				maxMafForMono = Double.parseDouble(args[++i]);
 			}
 			else if (args[i].equals("?")) myLogger.error(getUsage());
 		}
@@ -120,8 +207,10 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 		usage.append("-f or -file : The base file name for the ouput. .hmp.txt will be appended.\n");
 		usage.append("The following parameters are optional:\n");
 		usage.append("-m or -merge : if true families are merged into a single file, if false each family is output to a separate file (default = true)");
-		usage.append("-p or -parentCalls : if true output is A/C/M where parent 1 is A and parent 2 is M, if false outputs nucleotides (default = true)");
+		usage.append("-o or -outputType : parents = output parent calls, nucleotides = output nucleotides, both = output both");
 		usage.append("-d or -diploid : if true output is AA/CC/AC, if false output is A/C/M");
+		usage.append("-c or -minCoverage : the minimum coverage for a monomorphic snp to be included in the nucleotide output (default = NaN, no monomorphic SNPs included)");
+		usage.append("-x or -maxMono : the maximum minor allele frequency used to call monomorphic snps (default = NaN, none called)");
 		usage.append("? : print the parameter list.");
 
 		return usage.toString();
