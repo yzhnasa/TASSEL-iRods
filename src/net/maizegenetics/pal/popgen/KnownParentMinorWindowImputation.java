@@ -6,6 +6,7 @@ package net.maizegenetics.pal.popgen;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.TreeMap;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.util.BitUtil;
@@ -143,6 +144,8 @@ public class KnownParentMinorWindowImputation {
         if(testing>3) System.out.printf("StartSite %d EndSite %d RealD1 %d RealD2 %d %n",startBlock*64, 
                 (endBlock*64+63),rDonors[0],rDonors[1]);
         long[] swapMask=this.swapMjMnMask.getBits();
+        TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
+        bestDonors.put(1.0, new DonorHypoth());
         
         for (int d1 = 0; d1 < donorAlign.getSequenceCount(); d1++) {
             long[] mj1=donorAlign.getAllelePresenceForAllSites(d1, 0).getBits();
@@ -164,9 +167,16 @@ public class KnownParentMinorWindowImputation {
                     testTargetMinor+=Long.bitCount(siteMask&mnT[i]);
                 }
                 double testPropUnmatched=(double)(mjUnmatched+mnUnmatched)/(double)testSites;
+                if(testPropUnmatched<bestDonors.lastKey()) {
+                    DonorHypoth theDH=new DonorHypoth(targetTaxon, d1, d2, startBlock,
+                        endBlock, focusBlock);
+                    bestDonors.put(new Double(testPropUnmatched), theDH);
+                    if(bestDonors.size()>10) bestDonors.remove(bestDonors.lastKey());
+                }
                 if((testing>1)&&(rDonors[0]==d1)&&(rDonors[1]==d2))
                     System.out.printf("Donor %d %d %d %d %d %d %d block %d-%d-%d %n", d1, d2, mjUnmatched, mnUnmatched,
                             testSites, testTargetMajor, testTargetMinor, startBlock, focusBlock, endBlock);
+                
                 if((testPropUnmatched<minPropUnmatched)||
                         ((testPropUnmatched==minPropUnmatched)&&(testSites>maxTestSites))) {
                     donors[0]=d1;
@@ -188,6 +198,7 @@ public class KnownParentMinorWindowImputation {
             else {parentsWrong++;}
         return donors;
     }
+  
     
     /**
      * Takes a donor hypothesis and applies it to the output alignment 
@@ -373,8 +384,8 @@ public class KnownParentMinorWindowImputation {
      * @param args
      */
     public static void main(String[] args) {
-      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
-//        String root="/Volumes/LaCie/build20120110/imp/";
+//      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
+        String root="/Volumes/LaCie/build20120110/imp/";
 
         String donorFile=root+"NAMfounder20120110.imp.hmp.txt";
  //       String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
@@ -411,6 +422,9 @@ public class KnownParentMinorWindowImputation {
     int totalSites=0;
     int mendelianSites=0;
 
+    public DonorHypoth() {    
+    }
+    
     public DonorHypoth(int targetTaxon, int donor1Taxon, int donor2Taxon, int startBlock, 
             int focusBlock, int endBlock, int totalSites, int mendelianSites) {
         this(targetTaxon, donor1Taxon, donor2Taxon, startBlock, focusBlock, endBlock);
@@ -433,9 +447,47 @@ public class KnownParentMinorWindowImputation {
         this.endBlock=endBlock;
         
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DonorHypoth other = (DonorHypoth) obj;
+        if (this.targetTaxon != other.targetTaxon) {
+            return false;
+        }
+        if (this.donor1Taxon != other.donor1Taxon) {
+            return false;
+        }
+        if (this.donor2Taxon != other.donor2Taxon) {
+            return false;
+        }
+        if (this.focusBlock != other.focusBlock) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 83 * hash + this.targetTaxon;
+        hash = 83 * hash + this.donor1Taxon;
+        hash = 83 * hash + this.donor2Taxon;
+        hash = 83 * hash + this.focusBlock;
+        return hash;
+    }
+    
+    
+    
+    
     
     public String toString() {
-        return String.format("FTx:%d D1Tx:%d D1Tx:%d SBk:%d FBk:%d EBk:%d TS:%d MS:%s ", targetTaxon,
-                donor1Taxon, startBlock, focusBlock, endBlock, totalSites, mendelianSites);
+        return String.format("FTx:%d D1Tx:%d D2Tx:%d SBk:%d FBk:%d EBk:%d TS:%d MS:%d ", targetTaxon,
+                donor1Taxon, donor2Taxon, startBlock, focusBlock, endBlock, totalSites, mendelianSites);
     }
 }
