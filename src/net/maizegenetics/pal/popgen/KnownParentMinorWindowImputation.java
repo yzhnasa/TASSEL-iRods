@@ -138,6 +138,7 @@ public class KnownParentMinorWindowImputation {
         int[] donors={-1,-1,0};
         double minPropUnmatched=1.0;
         int maxTestSites=0;
+        int donorTieCnt=0;
         int[] rDonors=parseDonorsNamesForRegion(unimpAlign.getTaxaName(targetTaxon),startBlock*64);
         if(testing>3) System.out.printf("StartSite %d EndSite %d RealD1 %d RealD2 %d %n",startBlock*64, 
                 (endBlock*64+63),rDonors[0],rDonors[1]);
@@ -172,14 +173,16 @@ public class KnownParentMinorWindowImputation {
                     donors[1]=d2;
                     minPropUnmatched=testPropUnmatched;
                     donors[2]=maxTestSites=testSites;
-                }
+                    donorTieCnt=0;
+                } else if(testPropUnmatched==minPropUnmatched) donorTieCnt++;
                 
             }
             
         }
         if(testing>1){
-            if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {System.out.println("Correct");}
-            else {System.out.println("WRONG");}
+            if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {
+                System.out.printf("Correct ties:%d bestMatch:%g %n",donorTieCnt,minPropUnmatched);}
+            else {System.out.printf("WRONG D1:%d D2:%d ties:%d bestMatch:%g %n",donors[0], donors[1],donorTieCnt,minPropUnmatched);}
         }
         if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {parentsRight++;}
             else {parentsWrong++;}
@@ -357,7 +360,8 @@ public class KnownParentMinorWindowImputation {
                 }//end of site        
             } //end of blocks
             System.out.println(tName.toString());
-            mna.setTaxonName(t, new Identifier(tName.toString()));
+            if(mna.getSequenceCount()==t) {mna.addTaxon(new Identifier(tName.toString()));}
+            else {mna.setTaxonName(t, new Identifier(tName.toString()));}
         }
         mna.clean();
         ExportUtils.writeToHapmap(mna, false, unImpTargetFile, '\t', null);
@@ -369,11 +373,11 @@ public class KnownParentMinorWindowImputation {
      * @param args
      */
     public static void main(String[] args) {
-//      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
-        String root="/Volumes/LaCie/build20120110/imp/";
+      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
+//        String root="/Volumes/LaCie/build20120110/imp/";
 
- //       String donorFile=root+"NAMfounder20120110.imp.hmp.txt";
-        String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
+        String donorFile=root+"NAMfounder20120110.imp.hmp.txt";
+ //       String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
         String unImpTargetFile=root+"ZeaSyn20120110.hmp.txt";
         String impTargetFile=root+"ZeaSyn20120110.imp.hmp.txt";
 
@@ -384,14 +388,14 @@ public class KnownParentMinorWindowImputation {
         KnownParentMinorWindowImputation e64NNI=new KnownParentMinorWindowImputation(donorFile,
                 unImpTargetFile, impTargetFile,30);
         
-        for (int recSize = 128; recSize < 10000; recSize+=(recSize/2)) {
-            for (int mm = 5; mm < 60; mm+=5) {
-                System.out.println("Rec size"+recSize);
-                unImpTargetFile=root+recSize+"ZeaSyn20120110.hmp.txt";
-                if(buildInput) {createSynthetic(donorFile, unImpTargetFile, recSize, 0.4, -1, 1000);}
-                e64NNI=new KnownParentMinorWindowImputation(donorFile, unImpTargetFile, impTargetFile,mm);
-                }
-        }
+//        for (int recSize = 128; recSize < 10000; recSize+=(recSize/2)) {
+//            for (int mm = 5; mm < 60; mm+=5) {
+//                System.out.println("Rec size"+recSize);
+//                unImpTargetFile=root+recSize+"ZeaSyn20120110.hmp.txt";
+//                if(buildInput) {createSynthetic(donorFile, unImpTargetFile, recSize, 0.4, -1, 1000);}
+//                e64NNI=new KnownParentMinorWindowImputation(donorFile, unImpTargetFile, impTargetFile,mm);
+//                }
+//        }
     }
     
 }
