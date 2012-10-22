@@ -1318,13 +1318,16 @@ public class NucleotideImputationUtils {
 					break;
 				}
 				nextSite++;
+				if (nextSite >= nsites) break;
 				nextSnpPos = sba.getPositionInLocus(nextSite);
 				nextSnpLocus = sba.getLocus(nextSite);
 			}
 			firstSite = nextSite;
-			firstSnpLocus = nextSnpLocus;
-			firstSnpPos = nextSnpPos;
-			isSelected.fastSet(firstSite);
+			if (firstSite < nsites) {
+				firstSnpLocus = nextSnpLocus;
+				firstSnpPos = nextSnpPos;
+				isSelected.fastSet(firstSite);
+			}
 		}
 		
 		return isSelected;
