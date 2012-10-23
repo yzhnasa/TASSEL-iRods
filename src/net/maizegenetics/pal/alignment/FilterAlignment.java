@@ -379,6 +379,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    @Override
     public byte getBase(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
@@ -731,7 +732,7 @@ public class FilterAlignment extends AbstractAlignment {
         if (myIsSiteFilter || myIsSiteFilterByRange) {
             throw new IllegalStateException("FilterAlignment: getAllelePresenceForAllSites: This Filter Alignment has had Sites removed.  You need to optimize for taxa before calling this.");
         } else {
-            return myBaseAlignment.getAllelePresenceForAllSites(taxon, alleleNumber);
+            return myBaseAlignment.getAllelePresenceForAllSites(translateTaxon(taxon), alleleNumber);
         }
     }
 
@@ -740,7 +741,7 @@ public class FilterAlignment extends AbstractAlignment {
         if (myIsTaxaFilter) {
             throw new IllegalStateException("FilterAlignment: getAllelePresenceForAllTaxa: This Filter Alignment has had Taxa removed.  You need to optimize for sites before calling this.");
         } else {
-            return myBaseAlignment.getAllelePresenceForAllTaxa(site, alleleNumber);
+            return myBaseAlignment.getAllelePresenceForAllTaxa(translateSite(site), alleleNumber);
         }
     }
 
@@ -749,7 +750,7 @@ public class FilterAlignment extends AbstractAlignment {
         if (myIsSiteFilter || myIsSiteFilterByRange) {
             throw new IllegalStateException("FilterAlignment: getAllelePresenceForSitesBlock: This Filter Alignment has had Sites removed.  You need to optimize for taxa before calling this.");
         } else {
-            return myBaseAlignment.getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+            return myBaseAlignment.getAllelePresenceForSitesBlock(translateTaxon(taxon), alleleNumber, startBlock, endBlock);
         }
     }
 
