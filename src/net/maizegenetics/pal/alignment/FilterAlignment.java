@@ -781,6 +781,11 @@ public class FilterAlignment extends AbstractAlignment {
             return myBaseAlignment.getReference();
         }
     }
+    
+    @Override
+    public int getTotalNumAlleles() {
+        return myBaseAlignment.getTotalNumAlleles();
+    }
 
     @Override
     public boolean isHeterozygous(int taxon, int site) {
