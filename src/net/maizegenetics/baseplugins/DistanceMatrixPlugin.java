@@ -9,11 +9,13 @@ import java.util.Iterator;
 import java.util.List;
 import javax.swing.*;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
+import net.maizegenetics.util.ProgressListener;
 import org.apache.log4j.Logger;
 
 /**
@@ -64,8 +66,16 @@ public class DistanceMatrixPlugin extends AbstractPlugin {
 
     public DataSet processDatum(Datum input) {
         Alignment aa = (Alignment) input.getData();
-        IBSDistanceMatrix adm = new IBSDistanceMatrix(aa, this);
+        DistanceMatrix adm = getDistanceMatrix(aa, this);
         return new DataSet(new Datum("Matrix:" + input.getName(), adm, "Distance Matrix"), this);
+    }
+
+    public static DistanceMatrix getDistanceMatrix(Alignment alignment) {
+        return new IBSDistanceMatrix(alignment);
+    }
+
+    public static DistanceMatrix getDistanceMatrix(Alignment alignment, ProgressListener listener) {
+        return new IBSDistanceMatrix(alignment, listener);
     }
 
     /**
