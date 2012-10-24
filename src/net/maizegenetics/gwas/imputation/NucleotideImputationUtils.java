@@ -1359,7 +1359,7 @@ public class NucleotideImputationUtils {
     	return null;
     }
 
-    public static BitSet[] hetMasker(Alignment a) {
+    public static BitSet[] hetMasker(Alignment a, double estimatedHetFraction) {
     	//set up Viterbi algorithm
     	//states in hom, het
     	//observations = hom, het, missing
@@ -1369,7 +1369,7 @@ public class NucleotideImputationUtils {
     	int ntaxa = a.getSequenceCount();
     	int chrlen = a.getPositionInLocus(nsites - 1) - a.getPositionInLocus(0);
     	
-    	double phet = 0.07;
+    	double phet = estimatedHetFraction;
     	int totalTransitions = (nsites - 1) * ntaxa /10;
     	int hetHet = (int) Math.floor(phet*totalTransitions);
     	int hetHom = 2 * ntaxa;
