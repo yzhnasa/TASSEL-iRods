@@ -647,6 +647,22 @@ public class BitAlignment extends AbstractAlignment {
         return (int) temp.cardinality() + (int) mySBitData[0][site].cardinality();
 
     }
+    
+    @Override
+    public byte getMajorAllele(int site) {
+        return myAlleles[site][0];
+    }
+
+    @Override
+    public byte getMinorAllele(int site) {
+        
+        if (myMaxNumAlleles > 1) {
+            return myAlleles[site][1];
+        } else {
+            return Alignment.UNKNOWN_ALLELE;
+        }
+        
+    }
 
     @Override
     public boolean isHeterozygous(int taxon, int site) {

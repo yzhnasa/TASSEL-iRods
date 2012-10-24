@@ -989,6 +989,24 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
+    public byte getMajorAllele(int site) {
+        if (myIsTaxaFilter) {
+            return super.getMajorAllele(site);
+        } else {
+            return myBaseAlignment.getMajorAllele(translateSite(site));
+        }
+    }
+
+    @Override
+    public byte getMinorAllele(int site) {
+        if (myIsTaxaFilter) {
+            return super.getMinorAllele(site);
+        } else {
+            return myBaseAlignment.getMinorAllele(translateSite(site));
+        }
+    }
+
+    @Override
     public Object[][] getDiploidssSortedByFrequency(int site) {
         if (myIsTaxaFilter) {
             return super.getDiploidssSortedByFrequency(site);
