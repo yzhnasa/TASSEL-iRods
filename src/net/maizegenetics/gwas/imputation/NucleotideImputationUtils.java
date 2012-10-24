@@ -1358,7 +1358,92 @@ public class NucleotideImputationUtils {
     public static OpenBitSet filterSnpsOnLDandDistance(Alignment alignIn) {
     	return null;
     }
-	
+
+    public static BitSet[] hetMasker(Alignment a) {
+    	//set up Viterbi algorithm
+    	//states in hom, het
+    	//observations = hom, het, missing
+    	
+    	TransitionProbability tp = new TransitionProbability();
+    	int nsites = a.getSiteCount();
+    	int ntaxa = a.getSequenceCount();
+    	int chrlen = a.getPositionInLocus(nsites - 1) - a.getPositionInLocus(0);
+    	
+    	double phet = 0.07;
+    	int totalTransitions = (nsites - 1) * ntaxa /10;
+    	int hetHet = (int) Math.floor(phet*totalTransitions);
+    	int hetHom = 2 * ntaxa;
+    	int[][] transCount = new int[][]{{totalTransitions - hetHet - 2*hetHom, hetHom},{hetHom, hetHet}};
+    	
+    	tp.setTransitionCounts(transCount, chrlen, ntaxa);
+    	tp.setPositions(a.getPhysicalPositions());
+    	
+    	//count number of het loci
+    	int hetCount = 0;
+    	int nonMissingCount = 0;
+    	for (int s = 0; s < nsites; s++) {
+    		hetCount += a.getHeterozygousCount(s);
+    		nonMissingCount += a.getTotalGametesNotMissing(s) / 2;
+    	}
+    	
+    	double estimatedPhet = ((double) hetCount) / ((double) nonMissingCount); 
+    	double expectedPhet = 0.08;
+    	double hetGivenHet = Math.min(.9, estimatedPhet/expectedPhet);
+    	
+    	double[] initialProb = new double[]{1 - expectedPhet, expectedPhet};
+    	
+    	try {
+    		a.optimizeForTaxa(null);
+    	} catch (Exception e) {
+    		a = BitAlignment.getInstance(a, false);
+    	}
+    	
+    	BitSet[] taxaStates = new BitSet[ntaxa];
+    	for (int t = 0; t < ntaxa; t++) {
+    		BitSet major = a.getAllelePresenceForAllSites(t, 0);
+    		BitSet minor = a.getAllelePresenceForAllSites(t, 1);
+    		OpenBitSet notMissing = new OpenBitSet(major.getBits(), major.getNumWords());
+    		notMissing.union(minor);
+    		OpenBitSet het = new OpenBitSet(major.getBits(), major.getNumWords());
+    		het.intersect(minor);
+    		
+    		double nNotMissing = notMissing.cardinality();
+    		byte[] obs = new byte[nsites];
+    		for (int s = 0; s < nsites; s++) {
+    			if (notMissing.fastGet(s)) {
+    				if (het.fastGet(s)) obs[s] = 1;
+    				else obs[s] = 0;
+    			} else {
+    				obs[s] = 2;
+    			}
+    		}
+    		
+    		EmissionProbability ep = new EmissionProbability();
+    		
+    		//states rows, observations columns
+    		double[][] probMatrix = new double[2][3];
+    		
+    		// homozygous state
+    		probMatrix[0][2] = (nsites - nNotMissing) / ((double) nsites); //observe missing
+    		probMatrix[0][0] = .998 * (1 - probMatrix[0][2]); //observe hom
+    		probMatrix[0][1] = .002 * (1 - probMatrix[0][2]);//observe het
+    		//heterozygous state
+    		probMatrix[1][2] = probMatrix[0][2]; //observe missing
+    		probMatrix[1][0] = (1 - hetGivenHet) * (1 - probMatrix[0][2]); //observe hom
+    		probMatrix[1][1] = hetGivenHet * (1 - probMatrix[0][2]);//observe het
+    		
+    		ep.setEmissionProbability(probMatrix);
+    		
+    		ViterbiAlgorithm va = new ViterbiAlgorithm(obs, tp, ep, initialProb);
+    		va.calculate();
+    		byte[] states = va.getMostProbableStateSequence();
+    		OpenBitSet bitStates = new OpenBitSet(nsites);
+    		for (int s = 0; s < nsites; s++) if (states[s] == 1) bitStates.fastSet(s);
+    		taxaStates[t] = bitStates;
+    	}
+    	
+    	return taxaStates;
+    }
 }
 
 
