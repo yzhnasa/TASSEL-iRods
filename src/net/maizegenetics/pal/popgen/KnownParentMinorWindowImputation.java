@@ -6,6 +6,7 @@ package net.maizegenetics.pal.popgen;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.TreeMap;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.util.BitUtil;
@@ -26,20 +27,29 @@ import net.maizegenetics.util.ProgressListener;
 public class KnownParentMinorWindowImputation {
     private Alignment unimpAlign;
     private Alignment donorAlign;
-    private int testing=2;  //level of reporting to stdout
-    private OpenBitSet swapMjMnMask;
+    private int testing=0;  //level of reporting to stdout
+    private OpenBitSet swapMjMnMask;  //mask of sites that major and minor are swapped
     private int parentsRight=0, parentsWrong=0;
-     int blocks=-1;
+    private int blocks=-1;
     int[] hSite, hTaxon;
     byte[] hState;
     int maskSitCnt=0;
-    int maxNN=50;
     boolean maskAndTest=true;
+    private double maximumInbredError=0.02;  //inbreds are tested first, if too much error hybrids are tested.
     
     private static int highMask=0xF0;
     private static int lowMask=0x0F;
 
-    public KnownParentMinorWindowImputation(String donorFile, String unImpTargetFile, String exportFile, int minMinorCnt) {
+    /**
+     * 
+     * @param donorFile should be imputed inbreds that were founders of population
+     * @param unImpTargetFile sites must match exactly with donor file
+     * @param exportFile 
+     * @param minMinorCnt determines the size of the search window, low recombination 20-30, high recombination 10-15
+     * @param resolveMethod 0=focus sites; 1=regional solution (better)
+     */
+    public KnownParentMinorWindowImputation(String donorFile, String unImpTargetFile, 
+            String exportFile, int minMinorCnt, int resolveMethod) {
         donorAlign=ImportUtils.readFromHapmap(donorFile, false, (ProgressListener)null);
         donorAlign.optimizeForTaxa(null);
         unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
@@ -61,27 +71,28 @@ public class KnownParentMinorWindowImputation {
         System.out.println("swapConflicts"+swapConflicts+" same:"+swapMjMnMask.cardinality());
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
         Random r=new Random(0);
+        int total=0, hybrid=0;
         for (int bt = 0; bt < unimpAlign.getSequenceCount(); bt+=1) {
             int taxaImpCnt=0;
+            DonorHypoth[][] regionHypth=new DonorHypoth[blocks][10];
             String name=unimpAlign.getIdGroup().getIdentifier(bt).getFullName();
-            System.out.printf("Imputing %d:%s ... %n", bt,name);
+  //          System.out.printf("Imputing %d:%s ... %n", bt,name);
             long time=System.currentTimeMillis();
             long[] mjT=unimpAlign.getAllelePresenceForAllSites(bt, 0).getBits();
             long[] mnT=unimpAlign.getAllelePresenceForAllSites(bt, 1).getBits();
             for (int focusBlock = 0; focusBlock < blocks; focusBlock++) {
                 int[] resultRange=getBlockWithMinMinorCount(mnT, focusBlock, minMinorCnt);
-                int[] donors=getBestDonors(bt, resultRange[0],resultRange[2], focusBlock);
-//                donors[0]=r.nextInt(donorAlign.getSequenceCount());
-//                donors[1]=r.nextInt(donorAlign.getSequenceCount());
-                DonorHypoth theDH=new DonorHypoth(bt, donors[0], donors[1], resultRange[0],
-                        resultRange[2], focusBlock);
-                setAlignmentWithDonors(theDH,mna);
-
-
+                total++;
+                regionHypth[focusBlock]=getBestInbredDonors(bt, resultRange[0],resultRange[2], focusBlock);
+                if(regionHypth[focusBlock][0].getErrorRate()>maximumInbredError) {
+                    hybrid++;
+                    regionHypth[focusBlock]=getBestDonors(bt, resultRange[0],resultRange[2], focusBlock);
+                }
+//                regionHypth[focusBlock][0].donor1Taxon=r.nextInt(donorAlign.getSequenceCount());
+//                regionHypth[focusBlock][0].donor2Taxon=r.nextInt(donorAlign.getSequenceCount());
+                if(resolveMethod==0) setAlignmentWithDonors(regionHypth[focusBlock][0],mna);
             }
-
-//            System.out.printf("Finished %d Imp %d %d %n", System.currentTimeMillis()-time, impSiteCnt, taxaImpCnt);
-//            if(bt%10==0) compareSites(mna);
+            if(resolveMethod==1) solveRegionally(mna, bt, regionHypth);
         }
         StringBuilder s=new StringBuilder();
         s.append(String.format("%s %s MinMinor:%d ", donorFile, unImpTargetFile, minMinorCnt));
@@ -90,9 +101,50 @@ public class KnownParentMinorWindowImputation {
         System.out.println(s.toString());
         
         ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);
+        System.out.println(total+"total : hybrid"+hybrid);
       
        //if we put the share size in the tree map, only remove those at a transiti0n boundary 
        // System.out.printf("L%d R%d p:%g %n",ss.startBlock, ss.endBlock, ss.p);
+    }
+    
+    /**
+     * If the target regions has Mendelian errors that it looks for overlapping regional
+     * solutions that are better.
+     * @param mna
+     * @param targetTaxon
+     * @param regionHypth 
+     */
+    private void solveRegionally(MutableNucleotideAlignment mna, int targetTaxon, DonorHypoth[][] regionHypth) {
+        for (int focusBlock = 0; focusBlock < blocks; focusBlock++) {
+            DonorHypoth cbh=regionHypth[focusBlock][0];
+//            System.out.printf("%d %d %d %n", regionHypth[focusBlock][0].targetTaxon, 
+//                    regionHypth[focusBlock][0].focusBlock, regionHypth[focusBlock][0].mendelianErrors);
+            if(regionHypth[focusBlock][0].mendelianErrors==0) {setAlignmentWithDonors(cbh,mna);}
+            else {
+                int minMendelErrors=cbh.mendelianErrors;
+                int currBestBlock=cbh.focusBlock;
+                int bestBlockDistance=Integer.MAX_VALUE;
+                for (int i = cbh.startBlock; i <= cbh.endBlock; i++) {
+                    if((regionHypth[i][0].startBlock<=focusBlock)&&(regionHypth[i][0].endBlock>=focusBlock)) {
+                        if(regionHypth[i][0].mendelianErrors<minMendelErrors) {
+                            currBestBlock=i;
+                            minMendelErrors=regionHypth[i][0].mendelianErrors;
+                            bestBlockDistance=Math.abs(i-focusBlock);
+                        } 
+                        else if((regionHypth[i][0].mendelianErrors==minMendelErrors)&&
+                                (Math.abs(i-focusBlock)<bestBlockDistance)) {
+                            currBestBlock=i;
+                            minMendelErrors=regionHypth[i][0].mendelianErrors;
+                            bestBlockDistance=Math.abs(i-focusBlock);
+                        }
+                    }
+                    
+                }
+//                System.out.printf("c: %d %d %d %n", regionHypth[currBestBlock][0].targetTaxon, 
+//                    regionHypth[currBestBlock][0].focusBlock, regionHypth[currBestBlock][0].mendelianErrors);
+                setAlignmentWithDonors(regionHypth[currBestBlock][0],mna);
+            }
+        }
     }
     
     /**
@@ -122,6 +174,84 @@ public class KnownParentMinorWindowImputation {
         return result;
     }
     
+        /**
+     * Simple algorithm that tests every possible two donor combination to minimize
+     * the number of unmatched informative alleles.  Currently, there is litte tie
+     * breaking, longer matches are favored.
+     * @param targetTaxon
+     * @param startBlock
+     * @param endBlock
+     * @param focusBlock
+     * @return int[] array of {donor1, donor2, testSites}
+     */
+    private DonorHypoth[] getBestInbredDonors(int targetTaxon, int startBlock, int endBlock, int focusBlock) {
+        long[] mjT=unimpAlign.getAllelePresenceForAllSites(targetTaxon, 0).getBits();
+        long[] mnT=unimpAlign.getAllelePresenceForAllSites(targetTaxon, 1).getBits();
+        int[] donors={-1,-1,0};
+        double minPropUnmatched=1.0;
+        int maxTestSites=0;
+        int donorTieCnt=0;
+        int[] rDonors=parseDonorsNamesForRegion(unimpAlign.getTaxaName(targetTaxon),startBlock*64);
+        if(testing>3) System.out.printf("StartSite %d EndSite %d RealD1 %d RealD2 %d %n",startBlock*64, 
+                (endBlock*64+63),rDonors[0],rDonors[1]);
+        long[] swapMask=this.swapMjMnMask.getBits();
+        TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
+        bestDonors.put(1.0, new DonorHypoth());
+        
+        for (int d1 = 0; d1 < donorAlign.getSequenceCount(); d1++) {
+            long[] mj1=donorAlign.getAllelePresenceForAllSites(d1, 0).getBits();
+            long[] mn1=donorAlign.getAllelePresenceForAllSites(d1, 1).getBits();
+            int mjUnmatched=0;
+            int mnUnmatched=0;
+            int testSites=0;
+            int testTargetMajor=0;
+            int testTargetMinor=0;
+            for (int i = startBlock; i <= endBlock; i++) {
+                long siteMask=swapMask[i]&(mjT[i]|mnT[i])&(mj1[i]|mn1[i]);
+                mjUnmatched+=Long.bitCount(siteMask&mjT[i]&(mjT[i]^mj1[i]));
+                mnUnmatched+=Long.bitCount(siteMask&mnT[i]&(mnT[i]^mn1[i]));
+                testSites+=Long.bitCount(siteMask);
+                testTargetMajor+=Long.bitCount(siteMask&mjT[i]);
+                testTargetMinor+=Long.bitCount(siteMask&mnT[i]);
+            }
+            int totalMendelianErrors=mjUnmatched+mnUnmatched;
+            double testPropUnmatched=(double)(totalMendelianErrors)/(double)testSites;
+            if(testPropUnmatched<bestDonors.lastKey()) {
+                DonorHypoth theDH=new DonorHypoth(targetTaxon, d1, d1, startBlock,
+                    focusBlock, endBlock, testSites, totalMendelianErrors);
+                bestDonors.put(new Double(testPropUnmatched), theDH);
+                if(bestDonors.size()>10) bestDonors.remove(bestDonors.lastKey());
+            }
+            if((testing>1)&&(rDonors[0]==d1)&&(rDonors[1]==d1))
+                System.out.printf("Donor %d %d %d %d %d %d %d block %d-%d-%d %n", d1, d1, mjUnmatched, mnUnmatched,
+                        testSites, testTargetMajor, testTargetMinor, startBlock, focusBlock, endBlock);
+
+            if((testPropUnmatched<minPropUnmatched)||
+                    ((testPropUnmatched==minPropUnmatched)&&(testSites>maxTestSites))) {
+                donors[0]=d1;
+                donors[1]=d1;
+                minPropUnmatched=testPropUnmatched;
+                donors[2]=maxTestSites=testSites;
+                donorTieCnt=0;
+            } else if(testPropUnmatched==minPropUnmatched) donorTieCnt++;
+            
+        }
+        if(testing>1){
+            if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {
+                System.out.printf("Correct ties:%d bestMatch:%g %n",donorTieCnt,minPropUnmatched);}
+            else {System.out.printf("WRONG D1:%d D2:%d ties:%d bestMatch:%g %n",donors[0], donors[1],donorTieCnt,minPropUnmatched);}
+        }
+        if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {parentsRight++;}
+            else {parentsWrong++;}
+        DonorHypoth[] result=new DonorHypoth[10];
+        int count=0;
+        for (DonorHypoth dh : bestDonors.values()) {
+            result[count]=dh; 
+            count++;
+        }
+        return result;
+    }
+    
     /**
      * Simple algorithm that tests every possible two donor combination to minimize
      * the number of unmatched informative alleles.  Currently, there is litte tie
@@ -132,16 +262,19 @@ public class KnownParentMinorWindowImputation {
      * @param focusBlock
      * @return int[] array of {donor1, donor2, testSites}
      */
-    private int[] getBestDonors(int targetTaxon, int startBlock, int endBlock, int focusBlock) {
+    private DonorHypoth[] getBestDonors(int targetTaxon, int startBlock, int endBlock, int focusBlock) {
         long[] mjT=unimpAlign.getAllelePresenceForAllSites(targetTaxon, 0).getBits();
         long[] mnT=unimpAlign.getAllelePresenceForAllSites(targetTaxon, 1).getBits();
         int[] donors={-1,-1,0};
         double minPropUnmatched=1.0;
         int maxTestSites=0;
+        int donorTieCnt=0;
         int[] rDonors=parseDonorsNamesForRegion(unimpAlign.getTaxaName(targetTaxon),startBlock*64);
         if(testing>3) System.out.printf("StartSite %d EndSite %d RealD1 %d RealD2 %d %n",startBlock*64, 
                 (endBlock*64+63),rDonors[0],rDonors[1]);
         long[] swapMask=this.swapMjMnMask.getBits();
+        TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
+        bestDonors.put(1.0, new DonorHypoth());
         
         for (int d1 = 0; d1 < donorAlign.getSequenceCount(); d1++) {
             long[] mj1=donorAlign.getAllelePresenceForAllSites(d1, 0).getBits();
@@ -162,29 +295,46 @@ public class KnownParentMinorWindowImputation {
                     testTargetMajor+=Long.bitCount(siteMask&mjT[i]);
                     testTargetMinor+=Long.bitCount(siteMask&mnT[i]);
                 }
-                double testPropUnmatched=(double)(mjUnmatched+mnUnmatched)/(double)testSites;
+                int totalMendelianErrors=mjUnmatched+mnUnmatched;
+                double testPropUnmatched=(double)(totalMendelianErrors)/(double)testSites;
+                if(testPropUnmatched<bestDonors.lastKey()) {
+                    DonorHypoth theDH=new DonorHypoth(targetTaxon, d1, d2, startBlock,
+                        focusBlock, endBlock, testSites, totalMendelianErrors);
+                    bestDonors.put(new Double(testPropUnmatched), theDH);
+                    if(bestDonors.size()>10) bestDonors.remove(bestDonors.lastKey());
+                }
                 if((testing>1)&&(rDonors[0]==d1)&&(rDonors[1]==d2))
                     System.out.printf("Donor %d %d %d %d %d %d %d block %d-%d-%d %n", d1, d2, mjUnmatched, mnUnmatched,
                             testSites, testTargetMajor, testTargetMinor, startBlock, focusBlock, endBlock);
+                
                 if((testPropUnmatched<minPropUnmatched)||
                         ((testPropUnmatched==minPropUnmatched)&&(testSites>maxTestSites))) {
                     donors[0]=d1;
                     donors[1]=d2;
                     minPropUnmatched=testPropUnmatched;
                     donors[2]=maxTestSites=testSites;
-                }
+                    donorTieCnt=0;
+                } else if(testPropUnmatched==minPropUnmatched) donorTieCnt++;
                 
             }
             
         }
         if(testing>1){
-            if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {System.out.println("Correct");}
-            else {System.out.println("WRONG");}
+            if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {
+                System.out.printf("Correct ties:%d bestMatch:%g %n",donorTieCnt,minPropUnmatched);}
+            else {System.out.printf("WRONG D1:%d D2:%d ties:%d bestMatch:%g %n",donors[0], donors[1],donorTieCnt,minPropUnmatched);}
         }
         if((rDonors[0]==donors[0])&&(rDonors[1]==donors[1])) {parentsRight++;}
             else {parentsWrong++;}
-        return donors;
+        DonorHypoth[] result=new DonorHypoth[10];
+        int count=0;
+        for (DonorHypoth dh : bestDonors.values()) {
+            result[count]=dh; 
+            count++;
+        }
+        return result;
     }
+  
     
     /**
      * Takes a donor hypothesis and applies it to the output alignment 
@@ -212,6 +362,7 @@ public class KnownParentMinorWindowImputation {
 ////                    taxaImpCnt++;
 //                }
         } //end of cs loop
+
     }
     
     private int[] parseDonorsNamesForRegion(String taxonName, int site) {
@@ -328,17 +479,19 @@ public class KnownParentMinorWindowImputation {
     }
     
     private static void createSynthetic(String donorFile, String unImpTargetFile, int blockSize,
-            double propPresent, double homoProp, int taxaNumber) {
+            double propPresent, double inbreedingF, int taxaNumber) {
         Alignment a=ImportUtils.readFromHapmap(donorFile, (ProgressListener)null);
         System.out.printf("Read %s Sites %d Taxa %d %n", donorFile, a.getSiteCount(), a.getSequenceCount());
         MutableNucleotideAlignment mna= MutableNucleotideAlignment.getInstance(a, taxaNumber, a.getSiteCount());
         Random r=new Random();
         for (int t = 0; t < taxaNumber; t++) {
             StringBuilder tName=new StringBuilder("ZM"+t);
+            int p1=r.nextInt(a.getSequenceCount());
+            int p2=r.nextInt(a.getSequenceCount());
             for (int b = 0; b < a.getSiteCount(); b+=blockSize) {  //change to bp?
-                int p1=r.nextInt(a.getSequenceCount());
-                int p2=r.nextInt(a.getSequenceCount());
-//                p2=t%a.getSequenceCount();  //only put one crossover in
+                if(r.nextDouble()<0.5) {p1=r.nextInt(a.getSequenceCount());}
+                else {p2=r.nextInt(a.getSequenceCount());}
+                if(r.nextDouble()<inbreedingF) {p2=p1;}  //inbreeding
                 if(p2<p1) {int temp=p1; p1=p2; p2=temp;}
                 tName.append("|"+p1+"_"+p2+"s"+b);
                 for (int s = b; (s < b+blockSize) && (s<a.getSiteCount()); s++) {
@@ -357,7 +510,8 @@ public class KnownParentMinorWindowImputation {
                 }//end of site        
             } //end of blocks
             System.out.println(tName.toString());
-            mna.setTaxonName(t, new Identifier(tName.toString()));
+            if(mna.getSequenceCount()==t) {mna.addTaxon(new Identifier(tName.toString()));}
+            else {mna.setTaxonName(t, new Identifier(tName.toString()));}
         }
         mna.clean();
         ExportUtils.writeToHapmap(mna, false, unImpTargetFile, '\t', null);
@@ -369,29 +523,31 @@ public class KnownParentMinorWindowImputation {
      * @param args
      */
     public static void main(String[] args) {
-//      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
-        String root="/Volumes/LaCie/build20120110/imp/";
+      String root="/Users/edbuckler/SolexaAnal/GBS/build20120110/imp/";
+//        String root="/Volumes/LaCie/build20120110/imp/";
 
- //       String donorFile=root+"NAMfounder20120110.imp.hmp.txt";
-        String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
+        String donorFile=root+"NAMfounder20120110.imp.hmp.txt";
+ //       String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
         String unImpTargetFile=root+"ZeaSyn20120110.hmp.txt";
         String impTargetFile=root+"ZeaSyn20120110.imp.hmp.txt";
 
         boolean buildInput=true;
         boolean filterTrue=true;
-        if(buildInput) {createSynthetic(donorFile, unImpTargetFile, 2000, 0.4, -1, 1000);}
+        if(buildInput) {createSynthetic(donorFile, unImpTargetFile, 2000, 0.4, 0.5, 1000);}
 
         KnownParentMinorWindowImputation e64NNI=new KnownParentMinorWindowImputation(donorFile,
-                unImpTargetFile, impTargetFile,30);
+                unImpTargetFile, impTargetFile,15,1);
+
+
         
-        for (int recSize = 128; recSize < 10000; recSize+=(recSize/2)) {
-            for (int mm = 5; mm < 60; mm+=5) {
-                System.out.println("Rec size"+recSize);
-                unImpTargetFile=root+recSize+"ZeaSyn20120110.hmp.txt";
-                if(buildInput) {createSynthetic(donorFile, unImpTargetFile, recSize, 0.4, -1, 1000);}
-                e64NNI=new KnownParentMinorWindowImputation(donorFile, unImpTargetFile, impTargetFile,mm);
-                }
-        }
+//        for (int recSize = 512; recSize < 4000; recSize+=(recSize/2)) {
+//            for (int mm = 5; mm < 40; mm+=5) {
+//                System.out.println("Rec size"+recSize);
+//                unImpTargetFile=root+recSize+"ZeaSyn20120110.hmp.txt";
+//                if(buildInput) {createSynthetic(donorFile, unImpTargetFile, recSize, 0.4, -1, 1000);}
+//                e64NNI=new KnownParentMinorWindowImputation(donorFile, unImpTargetFile, impTargetFile,mm,1);
+//                }
+//        }
     }
     
 }
@@ -405,13 +561,16 @@ public class KnownParentMinorWindowImputation {
     double pError=1;
     double pHeterozygous=-1, pHomoD1=-1, pHomoD2=-11;
     int totalSites=0;
-    int mendelianSites=0;
+    int mendelianErrors=0;
 
+    public DonorHypoth() {    
+    }
+    
     public DonorHypoth(int targetTaxon, int donor1Taxon, int donor2Taxon, int startBlock, 
-            int focusBlock, int endBlock, int totalSites, int mendelianSites) {
+            int focusBlock, int endBlock, int totalSites, int mendelianErrors) {
         this(targetTaxon, donor1Taxon, donor2Taxon, startBlock, focusBlock, endBlock);
         this.totalSites=totalSites;
-        this.mendelianSites=mendelianSites;
+        this.mendelianErrors=mendelianErrors;
     }
     
     public DonorHypoth(int targetTaxon, int donor1Taxon, int donor2Taxon, int startBlock, 
@@ -427,11 +586,52 @@ public class KnownParentMinorWindowImputation {
         this.startBlock=startBlock;
         this.focusBlock=focusBlock;
         this.endBlock=endBlock;
-        
     }
     
+    public double getErrorRate() {
+        return (double)mendelianErrors/(double)totalSites;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DonorHypoth other = (DonorHypoth) obj;
+        if (this.targetTaxon != other.targetTaxon) {
+            return false;
+        }
+        if (this.donor1Taxon != other.donor1Taxon) {
+            return false;
+        }
+        if (this.donor2Taxon != other.donor2Taxon) {
+            return false;
+        }
+        if (this.focusBlock != other.focusBlock) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 83 * hash + this.targetTaxon;
+        hash = 83 * hash + this.donor1Taxon;
+        hash = 83 * hash + this.donor2Taxon;
+        hash = 83 * hash + this.focusBlock;
+        return hash;
+    }
+    
+    
+    
+    
+    
     public String toString() {
-        return String.format("FTx:%d D1Tx:%d D1Tx:%d SBk:%d FBk:%d EBk:%d TS:%d MS:%s ", targetTaxon,
-                donor1Taxon, startBlock, focusBlock, endBlock, totalSites, mendelianSites);
+        return String.format("FTx:%d D1Tx:%d D2Tx:%d SBk:%d FBk:%d EBk:%d TS:%d MS:%d ", targetTaxon,
+                donor1Taxon, donor2Taxon, startBlock, focusBlock, endBlock, totalSites, mendelianErrors);
     }
 }

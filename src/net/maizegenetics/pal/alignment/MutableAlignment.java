@@ -12,10 +12,9 @@ import net.maizegenetics.pal.ids.Identifier;
 public interface MutableAlignment extends Alignment {
 
     /**
-     * Sets base at given taxon and site.  newBase should
-     * contain both diploid allele values (one in first four bits
-     * and second in last four bits).  This method may not be
-     * supported by every implementation.
+     * Sets base at given taxon and site. newBase should contain both diploid
+     * allele values (one in first four bits and second in last four bits). This
+     * method may not be supported by every implementation.
      *
      * @param taxon taxon
      * @param site site
@@ -24,10 +23,10 @@ public interface MutableAlignment extends Alignment {
     public void setBase(int taxon, int site, byte newBase);
 
     /**
-     * Sets bases starting at specified site for given taxon.
-     * Each base should contain both diploid allele values
-     * (one in first four bits and second in last four bits).
-     * This method may not be supported by every implementation.
+     * Sets bases starting at specified site for given taxon. Each base should
+     * contain both diploid allele values (one in first four bits and second in
+     * last four bits). This method may not be supported by every
+     * implementation.
      *
      * @param taxon taxon
      * @param startSite starting site
@@ -39,12 +38,25 @@ public interface MutableAlignment extends Alignment {
 
     public void removeSite(int site);
 
+    /**
+     * Adds given identifier (taxon) to the end of taxa list.
+     *
+     * @param id identifier to add
+     */
     public void addTaxon(Identifier id);
 
+    /**
+     * Sets the identifier at given taxon index.
+     * 
+     * @param taxon taxon index
+     * @param id identifier to set
+     */
+    public void setTaxonName(int taxon, Identifier id);
+
     public void removeTaxon(int taxon);
-    
+
     public void setPositionOfSite(int site, int position);
-    
+
     public void setLocusOfSite(int site, Locus locus);
 
     /**

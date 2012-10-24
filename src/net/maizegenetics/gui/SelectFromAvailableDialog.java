@@ -232,7 +232,7 @@ public class SelectFromAvailableDialog extends JDialog {
             return mySelectedListModel.getBitSet().getIndicesOfSetBits();
         } else {
             BitSet temp = mySelectedListModel.getBitSet();
-            temp.flip(0, myAvailableListModel.getSize());
+            temp.flip(0, myAvailableListModel.getRealSize());
             return temp.getIndicesOfSetBits();
         }
 
