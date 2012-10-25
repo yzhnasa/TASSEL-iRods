@@ -18,7 +18,6 @@ public final class NucleotideAlignmentConstants {
     public static byte T_ALLELE = (byte) 0x3;
     public static byte INSERT_ALLELE = (byte) 0x4;
     public static byte GAP_ALLELE = 0x5;
-    
     public static byte GAP_DIPLOID_ALLELE = (byte) 0x55;
     public static byte A_DIPLOID_ALLELE = (byte) 0x00;
     public static byte C_DIPLOID_ALLELE = (byte) 0x11;
@@ -253,5 +252,31 @@ public final class NucleotideAlignmentConstants {
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideIUPAC: unknown allele value: " + value);
         }
+    }
+
+    public static byte getNucleotideComplement(byte geno) {
+
+        if (geno == A_ALLELE) {
+            return T_ALLELE;
+        } else if (geno == T_ALLELE) {
+            return A_ALLELE;
+        } else if (geno == C_ALLELE) {
+            return G_ALLELE;
+        } else if (geno == G_ALLELE) {
+            return C_ALLELE;
+        } else {
+            return geno;
+        }
+
+    }
+    
+    public static byte getNucleotideDiploidComplement(byte diploidAllele) {
+        
+        byte first = (byte) ((diploidAllele >>> 4) & 0xf);
+        byte second = (byte) (diploidAllele & 0xf);
+        first = getNucleotideComplement(first);
+        second = getNucleotideComplement(second);
+        return (byte) ((first << 4) | second);
+
     }
 }
