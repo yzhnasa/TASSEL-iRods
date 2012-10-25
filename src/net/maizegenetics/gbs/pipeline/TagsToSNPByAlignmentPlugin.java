@@ -99,6 +99,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         for (int i = startChr; i <= endChr; i++) {
             myLogger.info("\n\nProcessing chromosome " + i + "...");
             String out = outHapMap + ".c" + i;
+            String locusLog = outHapMap + ".c" + i;
             myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + i + " (maximum number of sites = " + maxSize + ")");
             MutableNucleotideAlignment theMSA = createMutableAlignment(theTBT, i, i, maxSize + 100);
             if (includeReferenceGenome) {
@@ -328,6 +329,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         myLogger.info(String.format("minTaxaWithLocus:%d MinF:%g MinMAF:%g MinMAC:%d %n", minTaxaWithLocus, minF, minMAF, minMAC));
         myLogger.info(String.format("includeRare:%s includeGaps:%s %n", inclRare, inclGaps));
         long time = System.currentTimeMillis();
+        File locusLogFile = new File(outHapMap + ".c" + targetChromo + ".LocusLog.txt");
+        
         TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE, Byte.MIN_VALUE, Integer.MIN_VALUE, includeReferenceGenome, errorRate);
         int[] currPos = null;
         int countLoci = 0;
@@ -482,7 +485,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private byte[] isSiteGood(byte[] calls) {
         int[][] alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
         if (alleles[1].length < 2) {
-            return null;
+            return null; // quantitative SNP calling rendered the site invariant
         }
         int aCnt = alleles[1][0] + alleles[1][1];
         double theMAF = (double) alleles[1][1] / (double) aCnt;
@@ -524,6 +527,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                         calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
                     }
                 }
+            }
+            alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
+            if (alleles[1].length < 2) {
+                return null; // removing genotypes involving a 3rd allele (when inclRare==false) rendered the site invariant
             }
         }
         byte[] majMinAlleles = {majAllele, minAllele};
