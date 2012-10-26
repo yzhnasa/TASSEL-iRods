@@ -280,19 +280,21 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         summStats[maf2] = a2.getMinorAlleleFrequency(site2);
         summStats[f1] = calculateF(a1, site1);
         summStats[f2] = calculateF(a2, site2);
+        String alleleString1 = a1.getBaseAsString(site1, alleles1[0]) + "/" + a1.getBaseAsString(site1, alleles1[1]);
+        String alleleString2 = a2.getBaseAsString(site2, alleles2[0]) + "/" + a2.getBaseAsString(site2, alleles2[1]);
         if (compareType == SiteCompareType.SAME_STRAND) {
             int[] compareStats = compareGenotypes(site1, a1, site2, a2, true);
-            writeCompareStats(compareStats, alleles1, alleles2, compareType, summStats);
+            writeCompareStats(compareStats, alleleString1, alleleString2, compareType, summStats);
         } else if (compareType == SiteCompareType.DIFF_STRAND) {
             int[] compareStats = compareGenotypes(site1, a1, site2, a2, false);
-            writeCompareStats(compareStats, alleles1, alleles2, compareType, summStats);
+            writeCompareStats(compareStats, alleleString1, alleleString2, compareType, summStats);
         } else if (compareType == SiteCompareType.EITHER_STRAND) {
             int[] compareStatsSame = compareGenotypes(site1, a1, site2, a2, true);
             int[] compareStatsDiff = compareGenotypes(site1, a1, site2, a2, false);
             if (compareStatsSame[nDiff] <= compareStatsDiff[nDiff]) {
-                writeCompareStats(compareStatsSame, alleles1, alleles2, compareType, summStats);
+                writeCompareStats(compareStatsSame, alleleString1, alleleString2, compareType, summStats);
             } else {
-                writeCompareStats(compareStatsDiff, alleles1, alleles2, compareType, summStats);
+                writeCompareStats(compareStatsDiff, alleleString1, alleleString2, compareType, summStats);
             }
         }
         return 1;
@@ -359,27 +361,47 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         return compareStats;
     }
 
-    private void writeCompareStats(int[] compareStats, byte[] alleles1, byte[] alleles2, SiteCompareType sct, double[] summStats) {
+    private void writeCompareStats(int[] compareStats, String alleles1, String alleles2, SiteCompareType sct, double[] summStats) {
         double errRate = compareStats[nCompare] > 0 ? (double) compareStats[nDiff] / compareStats[nCompare] : Double.NaN;
         double errRateHom = compareStats[nCompareHom] > 0 ? (double) compareStats[nDiffHom] / compareStats[nCompareHom] : Double.NaN;
+        final String DELIMITER = "\t";
         try {
-            fw.writeBytes(chr + "\t"
-                    + position + "\t"
-                    + (char) alleles1[0] + "/" + (char) alleles1[1] + "\t"
-                    + (char) alleles2[0] + "/" + (char) alleles2[1] + "\t"
-                    + sct.toString() + "\t"
-                    + summStats[maf1] + "\t"
-                    + summStats[maf2] + "\t"
-                    + summStats[f1] + "\t"
-                    + summStats[f2] + "\t"
-                    + compareStats[n] + "\t"
-                    + compareStats[nMiss] + "\t"
-                    + compareStats[nCompare] + "\t"
-                    + compareStats[nDiff] + "\t"
-                    + errRate + "\t"
-                    + compareStats[nCompareHom] + "\t"
-                    + compareStats[nDiffHom] + "\t"
-                    + errRateHom + "\n");
+            fw.writeBytes(String.valueOf(chr));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(position));
+            fw.writeBytes(DELIMITER);
+            //fw.writeBytes((char) alleles1[0] + "/" + (char) alleles1[1] + "\t");
+            //fw.writeBytes((char) alleles2[0] + "/" + (char) alleles2[1] + "\t");
+            fw.writeBytes(alleles1);
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(alleles2);
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(sct.toString());
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(summStats[maf1]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(summStats[maf2]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(summStats[f1]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(summStats[f2]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[n]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nMiss]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nCompare]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nDiff]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(errRate));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nCompareHom]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nDiffHom]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(errRateHom));
+            fw.writeBytes("\n");
         } catch (Exception e) {
             throw new IllegalArgumentException("Unable to write to your output report file: " + e);
         }
