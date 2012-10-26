@@ -41,12 +41,16 @@ public class TagsAtLocus {
     ArrayList<SingleTagByTaxa> theTags = new ArrayList<SingleTagByTaxa>();
     private int minStartPosition;
     private int maxStartPosition;
+    private int minTagLength;
+    private int maxTagLength;
     private int chromosome;
     private byte strand;
     private int indexOfRef;
     private int[] tagIndices = null;  // redirect from aligned tag indices to index in theTags
     private int[] positionsOfVariableSites;
     private byte[][] allelesAtVariableSitesByTag;
+    private int nTaxaCovered = Integer.MIN_VALUE;
+    private int totalNReads = Integer.MIN_VALUE;
     private final static int maxSNPsPerLocus = 64;
     private final static int maxAlignmentSize = 10000;
     // private final static double errorRate = 0.01;
@@ -87,12 +91,13 @@ public class TagsAtLocus {
         System.out.println("\n");
     }
 
-    //public TagsAtLocus(int chromosome, byte strand, int startPosition, boolean includeRefGenome) {
-    public TagsAtLocus(int chromosome, byte strand, int startPosition, boolean includeRefGenome, double errorRate) {
+    public TagsAtLocus(int chromosome, byte strand, int startPosition, int tagLength, boolean includeRefGenome, double errorRate) {
         this.chromosome = chromosome;
         this.strand = includeRefGenome ? 1 : strand;
         this.minStartPosition = startPosition;
         this.maxStartPosition = startPosition;
+        this.minTagLength = tagLength;
+        this.maxTagLength = tagLength;
         positionsOfVariableSites = null;
         allelesAtVariableSitesByTag = null;
         if (likelihoodRatioThreshAlleleCnt == null) {
@@ -106,6 +111,12 @@ public class TagsAtLocus {
             theTags.add(singleTBT);
             if (singleTBT.startPosition > minStartPosition) {
                 maxStartPosition = singleTBT.startPosition;
+            }
+            if (singleTBT.tagLength < minTagLength) {
+                minTagLength = singleTBT.tagLength;
+            }
+            if (singleTBT.tagLength > maxTagLength) {
+                maxTagLength = singleTBT.tagLength;
             }
         }
     }
@@ -129,6 +140,14 @@ public class TagsAtLocus {
     public int getMaxStartPosition() {
         return maxStartPosition;
     }
+    
+    public int getMinTagLength() {
+        return minTagLength;
+    }
+    
+    public int getMaxTagLength() {
+        return maxTagLength;
+    }
 
     public void setMinStartPosition(int newMinStartPosition) {
         minStartPosition = newMinStartPosition;
@@ -136,6 +155,10 @@ public class TagsAtLocus {
 
     public int getTOPMIndexOfTag(int tagIndex) {
         return theTags.get(tagIndex).tagTOPMIndex;
+    }
+
+    public int getTBTIndexOfTag(int tagIndex) {
+        return theTags.get(tagIndex).tagTBTIndex;
     }
 
     public byte getCallAtVariableSiteForTag(int site, int tagIndex) {
@@ -146,21 +169,40 @@ public class TagsAtLocus {
         if (theTags.size() < 1) {
             return 0;
         }
-        int nTaxaCovered = 0;
-        boolean[] covered = new boolean[theTags.get(0).tagDist.length];  // initializes to false
-        for (SingleTagByTaxa sTBT : theTags) {
-            for (int tx = 0; tx < covered.length; ++tx) {
-                if (!covered[tx] && sTBT.tagDist[tx] > 0) {
-                    covered[tx] = true;
+        if (nTaxaCovered == Integer.MIN_VALUE) {
+            nTaxaCovered = 0;
+            totalNReads = 0;
+            boolean[] covered = new boolean[theTags.get(0).tagDist.length];  // initializes to false
+            for (SingleTagByTaxa sTBT : theTags) {
+                for (int tx = 0; tx < covered.length; ++tx) {
+                    int reads = sTBT.tagDist[tx];
+                    totalNReads += reads;
+                    if (!covered[tx] && reads > 0) {
+                        covered[tx] = true;
+                    }
                 }
             }
-        }
-        for (int tx = 0; tx < covered.length; ++tx) {
-            if (covered[tx]) {
-                ++nTaxaCovered;
+            for (int tx = 0; tx < covered.length; ++tx) {
+                if (covered[tx]) {
+                    ++nTaxaCovered;
+                }
             }
+            return nTaxaCovered; 
+        } else {
+            return nTaxaCovered;
         }
-        return nTaxaCovered;
+    }
+
+    public int getTotalNReads() {
+        if (theTags.size() < 1) {
+            return 0;
+        }
+        if (totalNReads == Integer.MIN_VALUE) {
+            getNumberTaxaCovered();
+            return totalNReads; 
+        } else {
+            return totalNReads;
+        }
     }
 
     private void assignRefTag() {
@@ -648,7 +690,7 @@ class SingleTagByTaxa {
 
     int tagTOPMIndex;
     long[] tag;
-    byte tagLength;
+    int tagLength;
     int startPosition;
     byte tagStrand;
     int divergence;
@@ -665,7 +707,7 @@ class SingleTagByTaxa {
         taxaWithTag = (tagTBTIndex > -1) ? theTBT.getNumberOfTaxaWithTag(tagTBTIndex) : 0;
         if (taxaWithTag > 0) {  // tags with 0 taxaWithTag will not be added to TagsAtLocus
             startPosition = theTOPM.getStartPosition(tagTOPMIndex);
-            tagLength = (byte) theTOPM.getTagLength(tagTOPMIndex);
+            tagLength = theTOPM.getTagLength(tagTOPMIndex);
             divergence = theTOPM.getDivergence(tagTOPMIndex);
             tagTrimmed = BaseEncoder.getSequenceFromLong(tag).substring(0, tagLength);
             tagStrand = theTOPM.getStrand(tagTOPMIndex);
