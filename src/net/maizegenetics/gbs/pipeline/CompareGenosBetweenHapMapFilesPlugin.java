@@ -61,8 +61,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     private void printUsage() {
         myLogger.info(
                 "\n\nThe options for CompareGenosBetweenHapMapFilesPlugin are:\n"
-                + "    -hmp1  First hapmap format genotypic input file\n"
-                + "    -hmp2  Second hapmap format genotypic input file to compare the first one to\n"
+                + "    -hmp1  First hapmap format genotypic input file (use \"+\" as a wildcard character in place of the chromosome number)\n"
+                + "    -hmp2  Second hapmap format genotypic input file to compare the first one to (use \"+\" as a wildcard character in place of the chromosome number)\n"
                 + "    -sC    Start chromosome\n"
                 + "    -eC    End chromosome\n"
                 + "    -syn   Lookup table file of synonymous full taxon names in hmp1 and hmp2 (header line is ignored)\n"
@@ -114,13 +114,19 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
         if (myArgsEngine.getBoolean("-hmp1")) {
             hmp1FileStr = myArgsEngine.getString("-hmp1");
-            for (int chr = startChr; chr <= endChr; chr++) {
-                String infile = hmp1FileStr.replace("+", "" + chr);
-                File hmp1File = new File(infile);
-                if (!hmp1File.exists() || !hmp1File.isFile()) {
-                    printUsage();
-                    throw new IllegalArgumentException("Can't find the first hapmap format genotype input file (-hmp1 option: " + infile + ").");
+            if ((hmp1FileStr.contains(File.separator) && hmp1FileStr.substring(hmp1FileStr.lastIndexOf(File.separator)).contains("+"))
+                    || hmp1FileStr.contains("+")) {
+                for (int chr = startChr; chr <= endChr; chr++) {
+                    String infile = hmp1FileStr.replace("+", "" + chr);
+                    File hmp1File = new File(infile);
+                    if (!hmp1File.exists() || !hmp1File.isFile()) {
+                        printUsage();
+                        throw new IllegalArgumentException("Can't find the first hapmap format genotype input file (-hmp1 option: " + infile + ").");
+                    }
                 }
+            } else {
+                printUsage();
+                throw new IllegalArgumentException("The name of the first hapmap input file should contain a \"+\" wildcard character in place of the chromosome number (-hmp1 option: " + hmp1FileStr + ").");
             }
         } else {
             printUsage();
@@ -128,13 +134,19 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
         if (myArgsEngine.getBoolean("-hmp2")) {
             hmp2FileStr = myArgsEngine.getString("-hmp2");
-            for (int chr = startChr; chr <= endChr; chr++) {
-                String infile = hmp2FileStr.replace("+", "" + chr);
-                File hmp2File = new File(infile);
-                if (!hmp2File.exists() || !hmp2File.isFile()) {
-                    printUsage();
-                    throw new IllegalArgumentException("Can't find the second hapmap format genotype input file (-hmp2 option: " + infile + ").");
+            if ((hmp2FileStr.contains(File.separator) && hmp2FileStr.substring(hmp2FileStr.lastIndexOf(File.separator)).contains("+"))
+                    || hmp2FileStr.contains("+")) {
+                for (int chr = startChr; chr <= endChr; chr++) {
+                    String infile = hmp2FileStr.replace("+", "" + chr);
+                    File hmp2File = new File(infile);
+                    if (!hmp2File.exists() || !hmp2File.isFile()) {
+                        printUsage();
+                        throw new IllegalArgumentException("Can't find the second hapmap format genotype input file (-hmp2 option: " + infile + ").");
+                    }
                 }
+            } else {
+                printUsage();
+                throw new IllegalArgumentException("The name of the second hapmap input file should contain a \"+\" wildcard character in place of the chromosome number (-hmp2 option: " + hmp2FileStr + ").");
             }
         } else {
             printUsage();
@@ -240,6 +252,21 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     }
 
     private void findCommonPositionsAndCompare(Alignment a1, Alignment a2) {
+        
+        if (a1.getLoci().length != 1 || a2.getLoci().length != 1) {
+            myLogger.error("ERROR: both hapmap genotype files should contain only a single chromosome");
+            return;
+        }
+        if (!a1.getLoci()[0].getChromosomeName().equals(a2.getLoci()[0].getChromosomeName())) {
+            myLogger.error("ERROR: the hapmap genotype files to compare do not contain the same chromosome");
+            return;
+        }
+        if (Integer.parseInt(a1.getLoci()[0].getChromosomeName()) != chr || Integer.parseInt(a2.getLoci()[0].getChromosomeName()) != chr) {
+            myLogger.error("ERROR: one or both of the hapmap genotype files to compare do not contain the expected chromosome "
+                    + "(expected:" + chr + "  hmp1:" + a1.getLoci()[0].getChromosomeName() + "  hmp2:" + a2.getLoci()[0].getChromosomeName() + ")");
+            return;
+        }
+
         int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
         int s1 = 0, s2 = 0;
         int nCompared = 0;
