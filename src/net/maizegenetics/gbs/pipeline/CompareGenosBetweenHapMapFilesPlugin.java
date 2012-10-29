@@ -248,11 +248,13 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 }
             }
         }
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.getSequenceCount() + " taxa in total\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.getSequenceCount() + " taxa in total\n");
         myLogger.info("\n" + nTaxaPairs + " pairs of comparable taxa found in the two hapmap files\n\n");
     }
 
     private void findCommonPositionsAndCompare(Alignment a1, Alignment a2) {
-        
+
         if (a1.getLoci().length != 1 || a2.getLoci().length != 1) {
             myLogger.error("ERROR: both hapmap genotype files should contain only a single chromosome");
             return;
@@ -266,6 +268,9 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                     + "(expected:" + chr + "  hmp1:" + a1.getLoci()[0].getChromosomeName() + "  hmp2:" + a2.getLoci()[0].getChromosomeName() + ")");
             return;
         }
+
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.getLocusSiteCount(a1.getLocus(0)) + " sites on chromosome " + a1.getLocusName(0) + "\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.getLocusSiteCount(a2.getLocus(0)) + " sites on chromosome " + a2.getLocusName(0) + "\n\n");
 
         int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
         int s1 = 0, s2 = 0;
