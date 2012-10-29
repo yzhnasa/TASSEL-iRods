@@ -161,6 +161,10 @@ public class TagsAtLocus {
         return theTags.get(tagIndex).tagTBTIndex;
     }
 
+    public int getDivergenceOfTag(int tagIndex) {
+        return theTags.get(tagIndex).divergence;
+    }
+
     public byte getCallAtVariableSiteForTag(int site, int tagIndex) {
         return allelesAtVariableSitesByTag[site][tagIndex];
     }

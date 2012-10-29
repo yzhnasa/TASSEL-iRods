@@ -345,7 +345,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 currTAL.addTag(ri, theTOPM, theTBT, includeReferenceGenome);
             } else {
                 int nTaxaCovered = currTAL.getNumberTaxaCovered();
-                if (currTAL.getSize()>1 && nTaxaCovered > minTaxaWithLocus) {  // finish the current TAL
+                if (currTAL.getSize()>1 && nTaxaCovered >= minTaxaWithLocus) {  // finish the current TAL
                     addSitesToMutableAlignment(currTAL, theMSA);  // note that with fuzzyStartPositions there may be no overlapping tags!!
                     countLoci++;
                     if (theMSA.getSiteCount() % 100 == 0) {
@@ -363,7 +363,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 }
             }
         }
-        if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() > minTaxaWithLocus)) { // then finish the final TAL for the targetChromo
+        if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() >= minTaxaWithLocus)) { // then finish the final TAL for the targetChromo
             addSitesToMutableAlignment(currTAL, theMSA);
         } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
         if (theMSA.getSiteCount() > 0) {
@@ -592,7 +592,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             DataOutputStream locusLogDOS 
                     = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(outHapMap + ".c" + targetChromo + ".LocusLog.txt")), 65536));
             locusLogDOS.writeBytes(
-                "chr\tstart\tend\tstrand\ttotalbp\tnTags\tnReads\tnTaxaCovered\tminTaxaCovered\tstatus\tnVariableSites\tposVariableSites\tnSNPsKept\tposSNPsKept\trefTag\tmaxTagLen\tminTagLen\n");
+                "chr\tstart\tend\tstrand\ttotalbp\tnTags\tnReads\tnTaxaCovered\tminTaxaCovered\tstatus\tnVariableSites\tposVariableSites\tnSNPsKept\tposSNPsKept\trefTag?\tmaxTagLen\tminTagLen\n");
             return locusLogDOS;
         } catch (Exception e) {
             catchLocusLogException(e);
@@ -610,7 +610,24 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             end = currTAL.getMinStartPosition()+currTAL.getMaxTagLength()-1;
         }
         int totalbp = end-start+1;
-        String status = currTAL.getSize()>1 ? "tooFewTaxa\tNA" : "invariant\t0";
+        String status, refTag;
+        if (currTAL.getSize() == 1) {
+            status = "invariant\t0";
+            if (currTAL.getDivergenceOfTag(0)==0) refTag = "1";
+            else refTag = "0";            
+        } else {
+            status = "tooFewTaxa\tNA";
+            boolean refTagFound = false;
+            int t = -1;
+            while (!refTagFound && t < currTAL.getSize()-1) {
+                t++;
+                if (currTAL.getDivergenceOfTag(t)==0) {
+                    refTagFound=true;
+                }
+            }
+            if (refTagFound) refTag = "1";
+            else refTag = "0";
+        }
         try {
             locusLogDOS.writeBytes(
                 currTAL.getChromosome() +"\t"+
@@ -623,10 +640,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 currTAL.getNumberTaxaCovered() +"\t"+
                 minTaxaWithLocus +"\t"+
                 status +"\t"+ 
-                "NA\t" +
-                0+"\t" +
-                "NA\t" +
-                "NA\t" +
+                "NA"   +"\t"+
+                "0"    +"\t"+
+                "NA"   +"\t"+
+                refTag +"\t"+
                 currTAL.getMaxTagLength() +"\t"+
                 currTAL.getMinTagLength() +"\n"
             );
