@@ -202,7 +202,13 @@ public class NucleotideImputationUtils {
 		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
 		filteredBits.and(polybits);
 		
+		//get het mask
+		double phet = 0.075;
+//		double phet = (1 - popdata.inbredCoef)/2;
+		BitSet[] hetMask = hetMasker(popdata.original, phet);
+
 		int nsites = popdata.original.getSiteCount();
+		int ntaxa = popdata.original.getSequenceCount();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
@@ -222,6 +228,17 @@ public class NucleotideImputationUtils {
 		for (int[] snpIndex : snpIndices) {
 			//SBitAlignment windowAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
 			Alignment windowAlignment = BitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex), true);
+			
+			//mask the hets
+			MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
+			int n = snpIndex.length;
+			byte missing = NucleotideAlignmentConstants.getNucleotideDiploidByte('N');
+			for (int i = 0; i < n; i++) {
+				for (int t = 0; t < ntaxa; t++) {
+					if (hetMask[t].fastGet(snpIndex[i])) mna.setBase(t, i, missing);
+				}
+			}
+			mna.clean();
 			
 			LinkedList<Integer> snpList = new LinkedList<Integer>(); //snpList is a list of snps (indices) in this window
 			for (int s:snpIndex) snpList.add(s);
@@ -258,7 +275,7 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		int ntaxa = popdata.original.getSequenceCount();
+		ntaxa = popdata.original.getSequenceCount();
 		nsites = popdata.original.getSiteCount();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
@@ -680,7 +697,7 @@ public class NucleotideImputationUtils {
 	public static Alignment[] getTaxaGroupAlignments(Alignment a, int[] parentIndex, LinkedList<Integer> snpIndices) {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
-		Alignment[] taxaClusters = ImputationUtils.getTwoClusters(a);
+		Alignment[] taxaClusters = ImputationUtils.getTwoClusters(a, 20);
 		LinkedList<Integer> originalList = new LinkedList<Integer>(snpIndices);
 		int nsites = a.getSiteCount();
 		boolean[] include = new boolean[nsites];
@@ -704,7 +721,7 @@ public class NucleotideImputationUtils {
 		if (snpcount > 5) {
 			includedSnps = Arrays.copyOf(includedSnps, snpcount);
 			if (snpcount == nsites) return taxaClusters;
-			else return ImputationUtils.getTwoClusters(FilterAlignment.getInstance(a, includedSnps));
+			else return ImputationUtils.getTwoClusters(FilterAlignment.getInstance(a, includedSnps), 20);
 		} else {
 			snpIndices.clear();
 			snpIndices.addAll(originalList);
@@ -1443,6 +1460,11 @@ public class NucleotideImputationUtils {
     	}
     	
     	return taxaStates;
+    }
+    
+    public static BitSet ldfilter(Alignment a, BitSet[] hetmask) {
+    	int window = 25;
+    	return null;
     }
 }
 
