@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.ImageIcon;
@@ -49,6 +50,11 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     static final int summStatsLength = 4; //
     File outfile = null;
     DataOutputStream fw = null;
+    private int myNumCalculations = 0;
+    private List<Integer> myComparisons = new ArrayList<Integer>();
+    private List<Double> myErrorRates = new ArrayList<Double>();
+    private List<Integer> myHomComparisons = new ArrayList<Integer>();
+    private List<Double> myHomError = new ArrayList<Double>();
 
     public CompareGenosBetweenHapMapFilesPlugin() {
         super(null, false);
@@ -61,8 +67,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     private void printUsage() {
         myLogger.info(
                 "\n\nThe options for CompareGenosBetweenHapMapFilesPlugin are:\n"
-                + "    -hmp1  First hapmap format genotypic input file\n"
-                + "    -hmp2  Second hapmap format genotypic input file to compare the first one to\n"
+                + "    -hmp1  First hapmap format genotypic input file (use \"+\" as a wildcard character in place of the chromosome number)\n"
+                + "    -hmp2  Second hapmap format genotypic input file to compare the first one to (use \"+\" as a wildcard character in place of the chromosome number)\n"
                 + "    -sC    Start chromosome\n"
                 + "    -eC    End chromosome\n"
                 + "    -syn   Lookup table file of synonymous full taxon names in hmp1 and hmp2 (header line is ignored)\n"
@@ -114,13 +120,19 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
         if (myArgsEngine.getBoolean("-hmp1")) {
             hmp1FileStr = myArgsEngine.getString("-hmp1");
-            for (int chr = startChr; chr <= endChr; chr++) {
-                String infile = hmp1FileStr.replace("+", "" + chr);
-                File hmp1File = new File(infile);
-                if (!hmp1File.exists() || !hmp1File.isFile()) {
-                    printUsage();
-                    throw new IllegalArgumentException("Can't find the first hapmap format genotype input file (-hmp1 option: " + infile + ").");
+            if ((hmp1FileStr.contains(File.separator) && hmp1FileStr.substring(hmp1FileStr.lastIndexOf(File.separator)).contains("+"))
+                    || hmp1FileStr.contains("+")) {
+                for (int chr = startChr; chr <= endChr; chr++) {
+                    String infile = hmp1FileStr.replace("+", "" + chr);
+                    File hmp1File = new File(infile);
+                    if (!hmp1File.exists() || !hmp1File.isFile()) {
+                        printUsage();
+                        throw new IllegalArgumentException("Can't find the first hapmap format genotype input file (-hmp1 option: " + infile + ").");
+                    }
                 }
+            } else {
+                printUsage();
+                throw new IllegalArgumentException("The name of the first hapmap input file should contain a \"+\" wildcard character in place of the chromosome number (-hmp1 option: " + hmp1FileStr + ").");
             }
         } else {
             printUsage();
@@ -128,13 +140,19 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
         if (myArgsEngine.getBoolean("-hmp2")) {
             hmp2FileStr = myArgsEngine.getString("-hmp2");
-            for (int chr = startChr; chr <= endChr; chr++) {
-                String infile = hmp2FileStr.replace("+", "" + chr);
-                File hmp2File = new File(infile);
-                if (!hmp2File.exists() || !hmp2File.isFile()) {
-                    printUsage();
-                    throw new IllegalArgumentException("Can't find the second hapmap format genotype input file (-hmp2 option: " + infile + ").");
+            if ((hmp2FileStr.contains(File.separator) && hmp2FileStr.substring(hmp2FileStr.lastIndexOf(File.separator)).contains("+"))
+                    || hmp2FileStr.contains("+")) {
+                for (int chr = startChr; chr <= endChr; chr++) {
+                    String infile = hmp2FileStr.replace("+", "" + chr);
+                    File hmp2File = new File(infile);
+                    if (!hmp2File.exists() || !hmp2File.isFile()) {
+                        printUsage();
+                        throw new IllegalArgumentException("Can't find the second hapmap format genotype input file (-hmp2 option: " + infile + ").");
+                    }
                 }
+            } else {
+                printUsage();
+                throw new IllegalArgumentException("The name of the second hapmap input file should contain a \"+\" wildcard character in place of the chromosome number (-hmp2 option: " + hmp2FileStr + ").");
             }
         } else {
             printUsage();
@@ -178,8 +196,64 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             populateTaxaRedirect(a1, a2);
             findCommonPositionsAndCompare(a1, a2);
         }
+
+        int[] comparisons = new int[myNumCalculations];
+        double comparisonMean = 0.0;
+        double[] errorRates = new double[myNumCalculations];
+        double errorRateMean = 0.0;
+        int[] homComparisons = new int[myNumCalculations];
+        double homComparisonMean = 0.0;
+        double[] homErrors = new double[myNumCalculations];
+        double homErrorMean = 0.0;
+        for (int i = 0; i < myNumCalculations; i++) {
+            comparisons[i] = myComparisons.get(i);
+            comparisonMean = comparisonMean + comparisons[i];
+            errorRates[i] = myErrorRates.get(i);
+            errorRateMean = errorRateMean + errorRates[i];
+            homComparisons[i] = myHomComparisons.get(i);
+            homComparisonMean = homComparisonMean + homComparisons[i];
+            homErrors[i] = myHomError.get(i);
+            homErrorMean = homErrorMean + homErrors[i];
+        }
+
+        comparisonMean = comparisonMean / myNumCalculations;
+        double comparisonMedian = getMedian(comparisons);
+        myLogger.info("Comparison Mean: " + comparisonMean + "  Median: " + comparisonMedian);
+
+        errorRateMean = errorRateMean / myNumCalculations;
+        double errorRateMedian = getMedian(errorRates);
+        myLogger.info("Error Rate Mean: " + errorRateMean + "  Median: " + errorRateMedian);
+        
+        homComparisonMean = homComparisonMean / myNumCalculations;
+        double homComparisonMedian = getMedian(homComparisons);
+        myLogger.info("Homozygous Comparison Mean: " + homComparisonMean + "  Median: " + homComparisonMedian);
+        
+        homErrorMean = homErrorMean / myNumCalculations;
+        double homErrorMedian = getMedian(homErrors);
+        myLogger.info("Homozygous Error Mean: " + homErrorMean + "  Median: " + homErrorMedian);
+
         closeOutputFile();
         return null;
+    }
+
+    private static double getMedian(int[] values) {
+        Arrays.sort(values);
+        int middle = values.length / 2;
+        if (values.length % 2 == 1) {
+            return (values[middle - 1] + values[middle]) / 2.0;
+        } else {
+            return values[middle];
+        }
+    }
+
+    private static double getMedian(double[] values) {
+        Arrays.sort(values);
+        int middle = values.length / 2;
+        if (values.length % 2 == 1) {
+            return (values[middle - 1] + values[middle]) / 2.0;
+        } else {
+            return values[middle];
+        }
     }
 
     private boolean readTaxaSynonymsFromFile(File synFile) {
@@ -236,10 +310,30 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 }
             }
         }
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.getSequenceCount() + " taxa in total\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.getSequenceCount() + " taxa in total\n");
         myLogger.info("\n" + nTaxaPairs + " pairs of comparable taxa found in the two hapmap files\n\n");
     }
 
     private void findCommonPositionsAndCompare(Alignment a1, Alignment a2) {
+
+        if (a1.getLoci().length != 1 || a2.getLoci().length != 1) {
+            myLogger.error("ERROR: both hapmap genotype files should contain only a single chromosome");
+            return;
+        }
+        if (!a1.getLoci()[0].getChromosomeName().equals(a2.getLoci()[0].getChromosomeName())) {
+            myLogger.error("ERROR: the hapmap genotype files to compare do not contain the same chromosome");
+            return;
+        }
+        if (Integer.parseInt(a1.getLoci()[0].getChromosomeName()) != chr || Integer.parseInt(a2.getLoci()[0].getChromosomeName()) != chr) {
+            myLogger.error("ERROR: one or both of the hapmap genotype files to compare do not contain the expected chromosome "
+                    + "(expected:" + chr + "  hmp1:" + a1.getLoci()[0].getChromosomeName() + "  hmp2:" + a2.getLoci()[0].getChromosomeName() + ")");
+            return;
+        }
+
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.getLocusSiteCount(a1.getLocus(0)) + " sites on chromosome " + a1.getLocusName(0) + "\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.getLocusSiteCount(a2.getLocus(0)) + " sites on chromosome " + a2.getLocusName(0) + "\n\n");
+
         int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
         int s1 = 0, s2 = 0;
         int nCompared = 0;
@@ -280,19 +374,21 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         summStats[maf2] = a2.getMinorAlleleFrequency(site2);
         summStats[f1] = calculateF(a1, site1);
         summStats[f2] = calculateF(a2, site2);
+        String alleleString1 = a1.getBaseAsString(site1, alleles1[0]) + "/" + a1.getBaseAsString(site1, alleles1[1]);
+        String alleleString2 = a2.getBaseAsString(site2, alleles2[0]) + "/" + a2.getBaseAsString(site2, alleles2[1]);
         if (compareType == SiteCompareType.SAME_STRAND) {
             int[] compareStats = compareGenotypes(site1, a1, site2, a2, true);
-            writeCompareStats(compareStats, alleles1, alleles2, compareType, summStats);
+            writeCompareStats(compareStats, alleleString1, alleleString2, compareType, summStats);
         } else if (compareType == SiteCompareType.DIFF_STRAND) {
             int[] compareStats = compareGenotypes(site1, a1, site2, a2, false);
-            writeCompareStats(compareStats, alleles1, alleles2, compareType, summStats);
+            writeCompareStats(compareStats, alleleString1, alleleString2, compareType, summStats);
         } else if (compareType == SiteCompareType.EITHER_STRAND) {
             int[] compareStatsSame = compareGenotypes(site1, a1, site2, a2, true);
             int[] compareStatsDiff = compareGenotypes(site1, a1, site2, a2, false);
             if (compareStatsSame[nDiff] <= compareStatsDiff[nDiff]) {
-                writeCompareStats(compareStatsSame, alleles1, alleles2, compareType, summStats);
+                writeCompareStats(compareStatsSame, alleleString1, alleleString2, compareType, summStats);
             } else {
-                writeCompareStats(compareStatsDiff, alleles1, alleles2, compareType, summStats);
+                writeCompareStats(compareStatsDiff, alleleString1, alleleString2, compareType, summStats);
             }
         }
         return 1;
@@ -359,27 +455,54 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         return compareStats;
     }
 
-    private void writeCompareStats(int[] compareStats, byte[] alleles1, byte[] alleles2, SiteCompareType sct, double[] summStats) {
+    private void writeCompareStats(int[] compareStats, String alleles1, String alleles2, SiteCompareType sct, double[] summStats) {
         double errRate = compareStats[nCompare] > 0 ? (double) compareStats[nDiff] / compareStats[nCompare] : Double.NaN;
         double errRateHom = compareStats[nCompareHom] > 0 ? (double) compareStats[nDiffHom] / compareStats[nCompareHom] : Double.NaN;
+        final String DELIMITER = "\t";
         try {
-            fw.writeBytes(chr + "\t"
-                    + position + "\t"
-                    + (char) alleles1[0] + "/" + (char) alleles1[1] + "\t"
-                    + (char) alleles2[0] + "/" + (char) alleles2[1] + "\t"
-                    + sct.toString() + "\t"
-                    + summStats[maf1] + "\t"
-                    + summStats[maf2] + "\t"
-                    + summStats[f1] + "\t"
-                    + summStats[f2] + "\t"
-                    + compareStats[n] + "\t"
-                    + compareStats[nMiss] + "\t"
-                    + compareStats[nCompare] + "\t"
-                    + compareStats[nDiff] + "\t"
-                    + errRate + "\t"
-                    + compareStats[nCompareHom] + "\t"
-                    + compareStats[nDiffHom] + "\t"
-                    + errRateHom + "\n");
+            fw.writeBytes(String.valueOf(chr));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(position));
+            fw.writeBytes(DELIMITER);
+            //fw.writeBytes((char) alleles1[0] + "/" + (char) alleles1[1] + "\t");
+            //fw.writeBytes((char) alleles2[0] + "/" + (char) alleles2[1] + "\t");
+            fw.writeBytes(alleles1);
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(alleles2);
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(sct.toString());
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(summStats[maf1]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(summStats[maf2]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(summStats[f1]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(summStats[f2]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[n]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nMiss]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nCompare]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nDiff]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(errRate));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nCompareHom]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(compareStats[nDiffHom]));
+            fw.writeBytes(DELIMITER);
+            fw.writeBytes(String.valueOf(errRateHom));
+            fw.writeBytes("\n");
+
+            myNumCalculations++;
+            myComparisons.add(compareStats[nCompare]);
+            myErrorRates.add(errRate);
+            myHomComparisons.add(compareStats[nCompareHom]);
+            myHomError.add(errRateHom);
+
         } catch (Exception e) {
             throw new IllegalArgumentException("Unable to write to your output report file: " + e);
         }

@@ -4,9 +4,12 @@
 package net.maizegenetics.gbs.pipeline;
 
 import java.awt.Frame;
+import java.io.BufferedOutputStream;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 
 import java.util.Arrays;
@@ -99,6 +102,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         for (int i = startChr; i <= endChr; i++) {
             myLogger.info("\n\nProcessing chromosome " + i + "...");
             String out = outHapMap + ".c" + i;
+            String locusLog = outHapMap + ".c" + i;
             myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + i + " (maximum number of sites = " + maxSize + ")");
             MutableNucleotideAlignment theMSA = createMutableAlignment(theTBT, i, i, maxSize + 100);
             if (includeReferenceGenome) {
@@ -307,6 +311,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalArgumentException("Error: The start chromosome is larger than the end chromosome.");
         }
+        myLogger.info(String.format("minTaxaWithLocus:%d MinF:%g MinMAF:%g MinMAC:%d %n", minTaxaWithLocus, minF, minMAF, minMAC));
+        myLogger.info(String.format("includeRare:%s includeGaps:%s %n", inclRare, inclGaps));
     }
 
     @Override
@@ -325,25 +331,21 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     }
 
     public void runTagsToSNPByAlignment(MutableNucleotideAlignment theMSA, String outHapMap, int targetChromo, boolean requireGeneticSupport) {
-        myLogger.info(String.format("minTaxaWithLocus:%d MinF:%g MinMAF:%g MinMAC:%d %n", minTaxaWithLocus, minF, minMAF, minMAC));
-        myLogger.info(String.format("includeRare:%s includeGaps:%s %n", inclRare, inclGaps));
         long time = System.currentTimeMillis();
-        TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE, Byte.MIN_VALUE, Integer.MIN_VALUE, includeReferenceGenome, errorRate);
+        DataOutputStream locusLogDOS=openLocusLog(targetChromo);
+        TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE, Byte.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, includeReferenceGenome, errorRate);
         int[] currPos = null;
         int countLoci = 0;
         for (int i = 0; (i < theTOPM.getSize()) && (theMSA.getSiteCount() < (maxSize - 1000)); i++) {
             int ri = theTOPM.getReadIndexForPositionIndex(i);  // process tags in order of physical position
             int[] newPos = theTOPM.getPositionArray(ri);
-            if (newPos[chr] != targetChromo) {
-                continue;    //Skip tags from other chromosomes
-            }
-            if (requireGeneticSupport && (theTOPM.getMapP(ri) < 2)) {
-                continue; //Skip tags with low mapP scores
-            }
+            if (newPos[chr] != targetChromo) continue;    //Skip tags from other chromosomes
+            if (requireGeneticSupport && (theTOPM.getMapP(ri) < 2)) continue; //Skip tags with low mapP scores
             if ((fuzzyStartPositions && nearbyTag(newPos, currPos)) || Arrays.equals(newPos, currPos)) {
                 currTAL.addTag(ri, theTOPM, theTBT, includeReferenceGenome);
             } else {
-                if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() > minTaxaWithLocus)) {  // finish the current TAL
+                int nTaxaCovered = currTAL.getNumberTaxaCovered();
+                if (currTAL.getSize()>1 && nTaxaCovered >= minTaxaWithLocus) {  // finish the current TAL
                     addSitesToMutableAlignment(currTAL, theMSA);  // note that with fuzzyStartPositions there may be no overlapping tags!!
                     countLoci++;
                     if (theMSA.getSiteCount() % 100 == 0) {
@@ -351,24 +353,25 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                         myLogger.info(String.format(
                                 "Chr:%d Pos:%d Loci=%d SNPs=%d rate=%g SNP/millisec %n", currPos[chr], currPos[startPosit], countLoci, theMSA.getSiteCount(), rate));
                     }
-                }
+                } else if (currPos!=null) logRejectedTagLocus(currTAL,locusLogDOS);
                 currPos = newPos; // start a new TAL with the current tag
                 if ((currPos[str] != TagsOnPhysicalMap.byteMissing) && (currPos[startPosit] != TagsOnPhysicalMap.intMissing)) {  // we already know that currPos[chr]==targetChromo
-                    currTAL = new TagsAtLocus(currPos[chr], (byte) currPos[str], currPos[startPosit], includeReferenceGenome, errorRate);
+                    currTAL = new TagsAtLocus(currPos[chr], (byte) currPos[str], currPos[startPosit], theTOPM.getTagLength(ri), includeReferenceGenome, errorRate);
                     currTAL.addTag(ri, theTOPM, theTBT, includeReferenceGenome);
                 } else {
                     currPos = null;  // invalid position
                 }
             }
         }
-        if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() > minTaxaWithLocus)) { // then finish the final TAL for the targetChromo
+        if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() >= minTaxaWithLocus)) { // then finish the final TAL for the targetChromo
             addSitesToMutableAlignment(currTAL, theMSA);
-        }
+        } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
         if (theMSA.getSiteCount() > 0) {
             theMSA.clean();
             ExportUtils.writeToHapmap(theMSA, false, outHapMap, '\t', null);
         }
         myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + theMSA.getSiteCount());
+        try{ locusLogDOS.close(); } catch(Exception e) { catchLocusLogException(e); }
     }
 
     /**
@@ -482,7 +485,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private byte[] isSiteGood(byte[] calls) {
         int[][] alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
         if (alleles[1].length < 2) {
-            return null;
+            return null; // quantitative SNP calling rendered the site invariant
         }
         int aCnt = alleles[1][0] + alleles[1][1];
         double theMAF = (double) alleles[1][1] / (double) aCnt;
@@ -524,6 +527,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                         calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
                     }
                 }
+            }
+            alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
+            if (alleles[1].length < 2) {
+                return null; // removing genotypes involving a 3rd allele (when inclRare==false) rendered the site invariant
             }
         }
         byte[] majMinAlleles = {majAllele, minAllele};
@@ -578,6 +585,75 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             }
             return obsF;
         }
+    }
+
+    private DataOutputStream openLocusLog(int targetChromo) {
+        try {
+            DataOutputStream locusLogDOS 
+                    = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(outHapMap + ".c" + targetChromo + ".LocusLog.txt")), 65536));
+            locusLogDOS.writeBytes(
+                "chr\tstart\tend\tstrand\ttotalbp\tnTags\tnReads\tnTaxaCovered\tminTaxaCovered\tstatus\tnVariableSites\tposVariableSites\tnSNPsKept\tposSNPsKept\trefTag?\tmaxTagLen\tminTagLen\n");
+            return locusLogDOS;
+        } catch (Exception e) {
+            catchLocusLogException(e);
+        }
+        return null;
+    }
+    
+    private void logRejectedTagLocus(TagsAtLocus currTAL, DataOutputStream locusLogDOS) {
+        int start, end;
+        if (currTAL.getStrand() == -1) {
+            end = currTAL.getMinStartPosition();
+            start = currTAL.getMinStartPosition()-currTAL.getMaxTagLength()+1;
+        } else {
+            start = currTAL.getMinStartPosition();
+            end = currTAL.getMinStartPosition()+currTAL.getMaxTagLength()-1;
+        }
+        int totalbp = end-start+1;
+        String status, refTag;
+        if (currTAL.getSize() == 1) {
+            status = "invariant\t0";
+            if (currTAL.getDivergenceOfTag(0)==0) refTag = "1";
+            else refTag = "0";            
+        } else {
+            status = "tooFewTaxa\tNA";
+            boolean refTagFound = false;
+            int t = -1;
+            while (!refTagFound && t < currTAL.getSize()-1) {
+                t++;
+                if (currTAL.getDivergenceOfTag(t)==0) {
+                    refTagFound=true;
+                }
+            }
+            if (refTagFound) refTag = "1";
+            else refTag = "0";
+        }
+        try {
+            locusLogDOS.writeBytes(
+                currTAL.getChromosome() +"\t"+
+                start +"\t"+
+                end +"\t"+
+                currTAL.getStrand() +"\t"+
+                totalbp +"\t"+
+                currTAL.getSize() +"\t"+
+                currTAL.getTotalNReads() +"\t"+
+                currTAL.getNumberTaxaCovered() +"\t"+
+                minTaxaWithLocus +"\t"+
+                status +"\t"+ 
+                "NA"   +"\t"+
+                "0"    +"\t"+
+                "NA"   +"\t"+
+                refTag +"\t"+
+                currTAL.getMaxTagLength() +"\t"+
+                currTAL.getMinTagLength() +"\n"
+            );
+        } catch (Exception e) { catchLocusLogException(e); }
+    }
+    
+    private void catchLocusLogException(Exception e) {
+        System.out.println("ERROR: Unable to write to locus log file: " + e);
+        e.printStackTrace();
+        System.exit(1);
     }
 
     private byte[] filterCallsForInbreds(byte[] calls) {
