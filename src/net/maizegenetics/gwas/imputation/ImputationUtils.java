@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
@@ -210,16 +211,26 @@ public class ImputationUtils {
 		return new Alignment[]{a1, a2};
 	}
 	
-	public static Alignment[] getTwoClusters(Alignment inputAlignment) {
+	public static Alignment[] getTwoClusters(Alignment inputAlignment, int minGametesPerTaxon) {
 		
-		Alignment myAlignment = ConvertSBitTBitPlugin.convertAlignment(inputAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+		//filter out low coverage taxa
+		int ntaxa = inputAlignment.getSequenceCount();
+		boolean[] include = new boolean[ntaxa];
+		
+		for (int t = 0; t < ntaxa; t++) {
+			if (inputAlignment.getTotalGametesNotMissingForTaxon(t) >= minGametesPerTaxon) include[t] = true;
+			else include[t] = false;
+		}
+		
+		Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getIdGroup(), include));
+		Alignment myAlignment = BitAlignment.getInstance(fa, false);
 		int ntrials = 5;
 		int maxiter = 5;
 		
 		//if the parents are in the data set use these as seeds
 		//if one parent is in the dataset pick the taxon farthest from it as the other seed
 		//if neither parent is in the dataset choose random seeds
-		int ntaxa = myAlignment.getSequenceCount();
+		ntaxa = myAlignment.getSequenceCount();
 		int nsnps = myAlignment.getSiteCount();
 		boolean[][] isInCluster1 = new boolean[ntrials][ntaxa];
 		int bestTrial = -1;
@@ -229,6 +240,7 @@ public class ImputationUtils {
 		
 		float[][] taxaLocs = new float[ntaxa][nsnps];
 		
+		myAlignment.optimizeForTaxa(null);
 		for (int t = 0; t < ntaxa; t++) {
 			taxaLocs[t] = snpsAsFloatVector(new BitSet[]{myAlignment.getAllelePresenceForAllSites(t, 0), myAlignment.getAllelePresenceForAllSites(t, 1)}, nsnps);
 		}
