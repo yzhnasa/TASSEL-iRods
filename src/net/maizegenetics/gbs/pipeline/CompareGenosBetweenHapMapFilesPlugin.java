@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.ImageIcon;
@@ -49,6 +50,11 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     static final int summStatsLength = 4; //
     File outfile = null;
     DataOutputStream fw = null;
+    private int myNumCalculations = 0;
+    private List<Integer> myComparisons = new ArrayList<Integer>();
+    private List<Double> myErrorRates = new ArrayList<Double>();
+    private List<Integer> myHomComparisons = new ArrayList<Integer>();
+    private List<Double> myHomError = new ArrayList<Double>();
 
     public CompareGenosBetweenHapMapFilesPlugin() {
         super(null, false);
@@ -190,8 +196,64 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             populateTaxaRedirect(a1, a2);
             findCommonPositionsAndCompare(a1, a2);
         }
+
+        int[] comparisons = new int[myNumCalculations];
+        double comparisonMean = 0.0;
+        double[] errorRates = new double[myNumCalculations];
+        double errorRateMean = 0.0;
+        int[] homComparisons = new int[myNumCalculations];
+        double homComparisonMean = 0.0;
+        double[] homErrors = new double[myNumCalculations];
+        double homErrorMean = 0.0;
+        for (int i = 0; i < myNumCalculations; i++) {
+            comparisons[i] = myComparisons.get(i);
+            comparisonMean = comparisonMean + comparisons[i];
+            errorRates[i] = myErrorRates.get(i);
+            errorRateMean = errorRateMean + errorRates[i];
+            homComparisons[i] = myHomComparisons.get(i);
+            homComparisonMean = homComparisonMean + homComparisons[i];
+            homErrors[i] = myHomError.get(i);
+            homErrorMean = homErrorMean + homErrors[i];
+        }
+
+        comparisonMean = comparisonMean / myNumCalculations;
+        double comparisonMedian = getMedian(comparisons);
+        myLogger.info("Comparison Mean: " + comparisonMean + "  Median: " + comparisonMedian);
+
+        errorRateMean = errorRateMean / myNumCalculations;
+        double errorRateMedian = getMedian(errorRates);
+        myLogger.info("Error Rate Mean: " + errorRateMean + "  Median: " + errorRateMedian);
+        
+        homComparisonMean = homComparisonMean / myNumCalculations;
+        double homComparisonMedian = getMedian(homComparisons);
+        myLogger.info("Homozygous Comparison Mean: " + homComparisonMean + "  Median: " + homComparisonMedian);
+        
+        homErrorMean = homErrorMean / myNumCalculations;
+        double homErrorMedian = getMedian(homErrors);
+        myLogger.info("Homozygous Error Mean: " + homErrorMean + "  Median: " + homErrorMedian);
+
         closeOutputFile();
         return null;
+    }
+
+    private static double getMedian(int[] values) {
+        Arrays.sort(values);
+        int middle = values.length / 2;
+        if (values.length % 2 == 1) {
+            return (values[middle - 1] + values[middle]) / 2.0;
+        } else {
+            return values[middle];
+        }
+    }
+
+    private static double getMedian(double[] values) {
+        Arrays.sort(values);
+        int middle = values.length / 2;
+        if (values.length % 2 == 1) {
+            return (values[middle - 1] + values[middle]) / 2.0;
+        } else {
+            return values[middle];
+        }
     }
 
     private boolean readTaxaSynonymsFromFile(File synFile) {
@@ -434,6 +496,13 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             fw.writeBytes(DELIMITER);
             fw.writeBytes(String.valueOf(errRateHom));
             fw.writeBytes("\n");
+
+            myNumCalculations++;
+            myComparisons.add(compareStats[nCompare]);
+            myErrorRates.add(errRate);
+            myHomComparisons.add(compareStats[nCompareHom]);
+            myHomError.add(errRateHom);
+
         } catch (Exception e) {
             throw new IllegalArgumentException("Unable to write to your output report file: " + e);
         }
