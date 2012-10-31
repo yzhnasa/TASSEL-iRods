@@ -218,19 +218,22 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
         comparisonMean = comparisonMean / myNumCalculations;
         double comparisonMedian = getMedian(comparisons);
-        myLogger.info("Comparison Mean: " + comparisonMean + "  Median: " + comparisonMedian);
+        //myLogger.info("Comparison Mean: " + comparisonMean + "  Median: " + comparisonMedian);
 
         errorRateMean = errorRateMean / myNumCalculations;
         double errorRateMedian = getMedian(errorRates);
-        myLogger.info("Error Rate Mean: " + errorRateMean + "  Median: " + errorRateMedian);
-        
+        //myLogger.info("Error Rate Mean: " + errorRateMean + "  Median: " + errorRateMedian);
+
         homComparisonMean = homComparisonMean / myNumCalculations;
         double homComparisonMedian = getMedian(homComparisons);
-        myLogger.info("Homozygous Comparison Mean: " + homComparisonMean + "  Median: " + homComparisonMedian);
-        
+        //myLogger.info("Homozygous Comparison Mean: " + homComparisonMean + "  Median: " + homComparisonMedian);
+
         homErrorMean = homErrorMean / myNumCalculations;
         double homErrorMedian = getMedian(homErrors);
-        myLogger.info("Homozygous Error Mean: " + homErrorMean + "  Median: " + homErrorMedian);
+        //myLogger.info("Homozygous Error Mean: " + homErrorMean + "  Median: " + homErrorMedian);
+
+        myLogger.info("Comparison Mean\tComparison Median\tError Rate Mean\tError Rate Median\tHomozygous Comparison Mean\tHomozygous Comparison Median\tHomozygous Error Mean\tHomozygous Error Median");
+        myLogger.info(comparisonMean + "\t" + comparisonMedian + "\t" + errorRateMean + "\t" + errorRateMedian + "\t" + homComparisonMean + "\t" + homComparisonMedian + "\t" + homErrorMean + "\t" + homErrorMedian);
 
         closeOutputFile();
         return null;
