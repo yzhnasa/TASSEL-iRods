@@ -419,6 +419,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             callsBySite = theTAL.getSNPCallsQuant(callBiallelicSNPsWithGap);
         }
         if (callsBySite == null) {
+            logAcceptedTagLocus(theTAL.getLocusReport(minTaxaWithLocus, null), locusLogDOS);
             return;
         }
         int[] positionsInLocus = theTAL.getPositionsOfVariableSites();
