@@ -21,7 +21,7 @@ public class PopulationData {
 	public double contribution1;
 	public double contribution2;
 	public int Fgen;
-	public double inbredCoef;
+	public double inbredCoef = -1;
 	public Alignment original;
 	public Alignment imputed;
 	public byte[] alleleA;
