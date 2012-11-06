@@ -575,13 +575,13 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         myNumSites--;
 
         for (int t = 0, n = getSequenceCount(); t < n; t++) {
-            for (int s = site; s < myNumSites; s--) {
+            for (int s = site; s < myNumSites; s++) {
                 myData[t][s] = myData[t][s + 1];
             }
             myData[t][myNumSites] = Alignment.UNKNOWN_DIPLOID_ALLELE;
         }
 
-        for (int s = site; s < myNumSites; s--) {
+        for (int s = site; s < myNumSites; s++) {
             myVariableSites[s] = myVariableSites[s + 1];
             myLocusIndices[s] = myLocusIndices[s + 1];
             mySNPIDs[s] = mySNPIDs[s + 1];
