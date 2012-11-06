@@ -42,8 +42,8 @@ public class MutableNucleotideAlignment extends MutableSingleEncodeAlignment imp
         return new MutableNucleotideAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
 
-    public static MutableNucleotideAlignment getInstance(IdGroup idGroup, int initNumSites) {
-        return new MutableNucleotideAlignment(idGroup, initNumSites, idGroup.getIdCount(), initNumSites);
+    public static MutableNucleotideAlignment getInstance(IdGroup idGroup, int maxNumSites) {
+        return new MutableNucleotideAlignment(idGroup, 0, idGroup.getIdCount(), maxNumSites);
     }
 
     public static MutableSingleEncodeAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
