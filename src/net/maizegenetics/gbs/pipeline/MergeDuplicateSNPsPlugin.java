@@ -21,25 +21,28 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.TreeMap;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 
 /**
- * This class is intended to be run directly after TagsToSNPByAlignmentPlugin, using the HapMap file from
- * that step as input.
- * 
- * It finds duplicate SNPs in the HapMap file, and merges them if they have the same pair of alleles (not
- * necessarily in the same maj/min order) and if there mismatch rate is no greater than the threshold (-maxMisMat).
- * If -callHets is on, then genotypic disagreements will be called heterozygotes (otherwise set to 'N' = default).
- * 
- * By default, any remaining unmerged duplicate SNPs (but not indels) will be deleted. They can be kept by invoking
- * the -kpUnmergDups option.
- * 
- * If the germplasm is not fully inbred, and still contains residual heterozygosity (like the maize NAM or IBM 
- * populations do) then -callHets should be on and -maxMisMat should be set fairly high (0.1 to 0.2, depending on
- * the amount of heterozygosity).
- * 
+ * This class is intended to be run directly after TagsToSNPByAlignmentPlugin,
+ * using the HapMap file from that step as input.
+ *
+ * It finds duplicate SNPs in the HapMap file, and merges them if they have the
+ * same pair of alleles (not necessarily in the same maj/min order) and if there
+ * mismatch rate is no greater than the threshold (-maxMisMat). If -callHets is
+ * on, then genotypic disagreements will be called heterozygotes (otherwise set
+ * to 'N' = default).
+ *
+ * By default, any remaining unmerged duplicate SNPs (but not indels) will be
+ * deleted. They can be kept by invoking the -kpUnmergDups option.
+ *
+ * If the germplasm is not fully inbred, and still contains residual
+ * heterozygosity (like the maize NAM or IBM populations do) then -callHets
+ * should be on and -maxMisMat should be set fairly high (0.1 to 0.2, depending
+ * on the amount of heterozygosity).
+ *
  * @author jcg233
  */
 public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
@@ -55,7 +58,6 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private boolean callHets = false;  // true = when two genotypes disagree at a SNP, call it a heterozygote;  false = set to missing;
     private boolean kpUnmergDups = false;  // keep unmerged SNPs (not indels) in the data file
     int startChr = 1, endChr = 10;
-    TreeMap<Integer, Byte> hetKey;
 
     public MergeDuplicateSNPsPlugin() {
         super(null, false);
@@ -145,7 +147,6 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     }
 
     public DataSet performFunction(DataSet input) {
-        hetKey = generateHetKey();
         for (int chr = startChr; chr <= endChr; chr++) {
             infile = suppliedInputFileName.replace("+", "" + chr);
             outfile = suppliedOutputFileName.replace("+", "" + chr);
@@ -225,7 +226,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             byte[] currAlleles = new byte[2];
             currAlleles[0] = a.getMajorAllele(samePos[s1].intValue());
             currAlleles[1] = a.getMinorAllele(samePos[s1].intValue());
-            if (currAlleles[0] == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE || currAlleles[1] == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
+            if (currAlleles[0] == NucleotideAlignmentConstants.GAP_ALLELE || currAlleles[1] == NucleotideAlignmentConstants.GAP_ALLELE) {
                 addSiteToMutableAlignment(chr, currentPos, currMerge, msa);
                 finished[s1] = true;
                 continue;
@@ -239,7 +240,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 newAlleles[0] = a.getMajorAllele(samePos[s2].intValue());
                 newAlleles[1] = a.getMinorAllele(samePos[s2].intValue());
                 Arrays.sort(newAlleles);
-                if (newAlleles[0] == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE || newAlleles[1] == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
+                if (newAlleles[0] == NucleotideAlignmentConstants.GAP_ALLELE || newAlleles[1] == NucleotideAlignmentConstants.GAP_ALLELE) {
                     continue;
                 }
                 // Check if the alleles match.  If they do, merge the genos, provided that the number of genotypic mismatches is below threshold
@@ -253,14 +254,15 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                             if (!usePedigree || useTaxaForCompare[t]) {
                                 ++nCompare;
                             }
-                            if (currMerge[t] != geno2) {
+                            if (!AlignmentUtils.isEqual(currMerge[t], geno2)) {
                                 if (!usePedigree || useTaxaForCompare[t]) {
                                     ++nMismatch;
                                 }
-                                possibleMerge[t] = callHets ? resolveHet(currMerge[t], geno2, hetKey) : Alignment.UNKNOWN_DIPLOID_ALLELE;
-                                if (possibleMerge[t] == Byte.MIN_VALUE) {
+                                try {
+                                    possibleMerge[t] = callHets ? resolveHet(currMerge[t], geno2) : Alignment.UNKNOWN_DIPLOID_ALLELE;
+                                } catch (Exception e) {
                                     myLogger.warn(
-                                            "Invalid genotypes (" + (char) currMerge[t] + " and " + (char) geno2 + ") at position:" + currentPos + " taxon:" + a.getTaxaName(t));
+                                            "Invalid genotypes (" + a.getBaseAsString(t, samePos[s1]) + " and " + a.getBaseAsString(t, samePos[s2]) + ") at position:" + currentPos + " taxon:" + a.getTaxaName(t));
                                 }
                             } else {
                                 possibleMerge[t] = currMerge[t];
@@ -300,6 +302,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private void addSiteToMutableAlignment(int chromosome, int position, byte[] genos, MutableNucleotideAlignment theMSA) {
         int currSite = theMSA.getSiteCount();
         //int currSite = theMSA.getNextFreeSite();
+        theMSA.addSite(currSite);
         theMSA.setLocusOfSite(currSite, new Locus(String.valueOf(chromosome), String.valueOf(chromosome), -1, -1, null, null));
         theMSA.setPositionOfSite(currSite, position);
         //theMSA.setStrandOfSite(currSite, (byte) '+');
@@ -319,9 +322,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 if (samePosAL.size() > 1) {
                     Integer[] samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
                     for (int i = 0; i < samePos.length; ++i) {
-                        byte[] currAlleles = new byte[2];
-                        currAlleles[0] = theMSA.getMajorAllele(samePos[i].intValue());
-                        currAlleles[1] = theMSA.getMinorAllele(samePos[i].intValue());
+                        //byte[] currAlleles = new byte[2];
+                        //currAlleles[0] = theMSA.getMajorAllele(samePos[i].intValue());
+                        //currAlleles[1] = theMSA.getMinorAllele(samePos[i].intValue());
                         if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                                 && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
                             theMSA.removeSite(samePos[i]);
@@ -339,9 +342,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         if (samePosAL.size() > 1) {
             Integer[] samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
             for (int i = 0; i < samePos.length; ++i) {
-                byte[] currAlleles = new byte[2];
-                currAlleles[0] = theMSA.getMajorAllele(samePos[i].intValue());
-                currAlleles[1] = theMSA.getMinorAllele(samePos[i].intValue());
+                //byte[] currAlleles = new byte[2];
+                //currAlleles[0] = theMSA.getMajorAllele(samePos[i].intValue());
+                //currAlleles[1] = theMSA.getMinorAllele(samePos[i].intValue());
                 if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                         && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
                     theMSA.removeSite(samePos[i]);
@@ -377,68 +380,36 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         }
     }
 
-    /**
-     * Resolves the appropriate heterozygousIUPACNucleotide from the given callPair (geno1, geno2)
-     * @param   geno1, geno2: genotypes to be merged (geno1 != geno2)
-     *          Both should fall within {A,C,G,T,K,M,R,S,W,Y} (not 'N', '-', '+', '0', or 'X')
-     * @return  resolved byte (valid IUPACNucleotide) 
-     */
-    private static byte resolveHet(byte geno1, byte geno2, TreeMap<Integer, Byte> hetKey) {
-        int product = geno1 * geno2;
-        if (hetKey.containsKey(product)) {
-            return hetKey.get(product);
-        }
-        return Byte.MIN_VALUE;
-    }
+    private static byte resolveHet(byte geno1, byte geno2) {
 
-    private static TreeMap<Integer, Byte> generateHetKey() {
-        TreeMap<Integer, Byte> hetKey = new TreeMap<Integer, Byte>();
-        hetKey.put(4355, (byte) 'M');   // A (65) x C (67) = 4355  (AC=M)
-        hetKey.put(5005, (byte) 'M');   // A (65) x M (77) = 5005  (AM=M)
-        hetKey.put(5159, (byte) 'M');   // C (67) x M (77) = 5159  (CM=M)
-        hetKey.put(4615, (byte) 'R');   // A (65) x G (71) = 4615  (AG=R)
-        hetKey.put(5330, (byte) 'R');   // A (65) x R (82) = 5330  (AR=R)
-        hetKey.put(5822, (byte) 'R');   // G (71) x R (82) = 5822  (GR=R)
-        hetKey.put(5460, (byte) 'W');   // A (65) x T (84) = 5460  (AT=W)
-        hetKey.put(5655, (byte) 'W');   // A (65) x W (87) = 5655  (AW=W)
-        hetKey.put(7308, (byte) 'W');   // T (84) x W (87) = 7308  (TW=W)
-        hetKey.put(4757, (byte) 'S');   // C (67) x G (71) = 4757  (CG=S)
-        hetKey.put(5561, (byte) 'S');   // C (67) x S (83) = 5561  (CS=S)
-        hetKey.put(5893, (byte) 'S');   // G (71) x S (83) = 5893  (GS=S)
-        hetKey.put(5628, (byte) 'Y');   // C (67) x T (84) = 5628  (CT=Y)
-        hetKey.put(5963, (byte) 'Y');   // C (67) x Y (89) = 5963  (CY=Y)
-        hetKey.put(7476, (byte) 'Y');   // T (84) x Y (89) = 7476  (TY=Y)
-        hetKey.put(5964, (byte) 'K');   // G (71) x T (84) = 5964  (GT=K)
-        hetKey.put(5325, (byte) 'K');   // G (71) x K (75) = 5325  (GK=K)
-        hetKey.put(6300, (byte) 'K');   // T (84) x K (75) = 6300  (TK=K)
-        hetKey.put(4875, (byte) 'N');   // A (65) x K (75) = 4875  (AK=N)
-        hetKey.put(5395, (byte) 'N');   // A (65) x S (83) = 5395  (AS=N)
-        hetKey.put(5785, (byte) 'N');   // A (65) x Y (89) = 5785  (AY=N)
-        hetKey.put(5025, (byte) 'N');   // C (67) x K (75) = 5025  (CK=N)
-        hetKey.put(5494, (byte) 'N');   // C (67) x R (82) = 5494  (CR=N)
-        hetKey.put(5829, (byte) 'N');   // C (67) x W (87) = 5829  (CW=N)
-        hetKey.put(5467, (byte) 'N');   // G (71) x M (77) = 5467  (GM=N)
-        hetKey.put(6177, (byte) 'N');   // G (71) x W (87) = 6177  (GW=N)
-        hetKey.put(6319, (byte) 'N');   // G (71) x Y (89) = 6319  (GY=N)
-        hetKey.put(6468, (byte) 'N');   // T (84) x M (77) = 6468  (TM=N)
-        hetKey.put(6888, (byte) 'N');   // T (84) x R (82) = 6888  (TR=N)
-        hetKey.put(6972, (byte) 'N');   // T (84) x S (83) = 6972  (TS=N)
-        hetKey.put(5775, (byte) 'N');   // K (75) x M (77) = 5775  (KM=N)
-        hetKey.put(6150, (byte) 'N');   // K (75) x R (82) = 6150  (KR=N)
-        hetKey.put(6225, (byte) 'N');   // K (75) x S (83) = 6225  (KS=N)
-        hetKey.put(6525, (byte) 'N');   // K (75) x W (87) = 6525  (KW=N)
-        hetKey.put(6675, (byte) 'N');   // K (75) x Y (89) = 6675  (KY=N)
-        hetKey.put(6314, (byte) 'N');   // M (77) x R (82) = 6314  (MR=N)
-        hetKey.put(6391, (byte) 'N');   // M (77) x S (83) = 6391  (MS=N)
-        hetKey.put(6699, (byte) 'N');   // M (77) x W (87) = 6699  (MW=N)
-        hetKey.put(6853, (byte) 'N');   // M (77) x Y (89) = 6853  (MY=N)
-        hetKey.put(6806, (byte) 'N');   // R (82) x S (83) = 6806  (RS=N)
-        hetKey.put(7134, (byte) 'N');   // R (82) x W (87) = 7134  (RW=N)
-        hetKey.put(7298, (byte) 'N');   // R (82) x Y (89) = 7298  (RY=N)
-        hetKey.put(7221, (byte) 'N');   // S (83) x W (87) = 7221  (SW=N)
-        hetKey.put(7387, (byte) 'N');   // S (83) x Y (89) = 7387  (SY=N)
-        hetKey.put(7743, (byte) 'N');   // W (87) x Y (89) = 7743  (WY=N)
-        return hetKey;
+        byte[] result = new byte[2];
+        result[0] = (byte) (geno1 >>> 4);
+        byte temp = (byte) (geno1 & 0xf);
+        int count = 1;
+        if (temp != result[0]) {
+            result[count++] = temp;
+        }
+
+        temp = (byte) (geno2 >>> 4);
+        if (temp == result[0]) {
+            // do nothing
+        } else if (count == 1) {
+            result[count++] = temp;
+        } else if (temp != result[1]) {
+            throw new IllegalStateException();
+        }
+
+        temp = (byte) (geno2 & 0xf);
+        if (temp == result[0]) {
+            // do nothing
+        } else if (count == 1) {
+            result[count++] = temp;
+        } else if (temp != result[1]) {
+            throw new IllegalStateException();
+        }
+
+        return (byte) ((result[0] << 4) | (result[1]));
+
     }
 
     @Override
