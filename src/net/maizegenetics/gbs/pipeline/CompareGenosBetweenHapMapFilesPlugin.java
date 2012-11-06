@@ -44,6 +44,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
         SAME_STRAND, EITHER_STRAND, DIFF_STRAND, DIFFERENT
     };
+    int nCompared = 0;
     int nSamePosNotComparable;
     // these are indices of the stat in the int[] array compareStats[]
     static final int NUM_TAXA_POSSIBLE_COMPARISONS = 0, NUM_TAXA_MISSING = 1, NUM_TAXA_COMPARED = 2, NUM_TAXA_DIFFERENT = 3, NUM_TAXA_HOMOZYGOUS_COMPARED = 4, NUM_TAXA_HOMOZYGOUS_DIFF = 5;
@@ -209,19 +210,21 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         double[] errorRates = new double[myNumCalculations];
         double errorRateMean = 0.0;
         int[] homComparisons = new int[myNumCalculations];
-        double homComparisonMean = 0.0;
+        double homComparisonSum = 0.0;
         double[] homErrors = new double[myNumCalculations];
-        double homErrorMean = 0.0;
+        double homErrorSum = 0.0;
         for (int i = 0; i < myNumCalculations; i++) {
             comparisons[i] = myComparisons.get(i);
             comparisonMean = comparisonMean + comparisons[i];
             errorRates[i] = myErrorRates.get(i);
             errorRateMean = errorRateMean + errorRates[i];
             homComparisons[i] = myHomComparisons.get(i);
-            homComparisonMean = homComparisonMean + homComparisons[i];
+            homComparisonSum = homComparisonSum + homComparisons[i];
             homErrors[i] = myHomError.get(i);
-            homErrorMean = homErrorMean + homErrors[i];
+            homErrorSum = homErrorSum + homErrors[i];
         }
+
+        double overAllHomoErrorRate = homErrorSum / homComparisonSum;
 
         comparisonMean = comparisonMean / myNumCalculations;
         double comparisonMedian = getMedian(comparisons);
@@ -229,15 +232,18 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         errorRateMean = errorRateMean / myNumCalculations;
         double errorRateMedian = getMedian(errorRates);
 
-        homComparisonMean = homComparisonMean / myNumCalculations;
+        double homComparisonMean = homComparisonSum / myNumCalculations;
         double homComparisonMedian = getMedian(homComparisons);
 
-        homErrorMean = homErrorMean / myNumCalculations;
+        double homErrorMean = homErrorSum / myNumCalculations;
         double homErrorMedian = getMedian(homErrors);
 
         myLogger.info("Comparison Mean\tComparison Median\tError Rate Mean\tError Rate Median\tHomozygous Comparison Mean\tHomozygous Comparison Median\tHomozygous Error Mean\tHomozygous Error Median");
         myLogger.info(comparisonMean + "\t" + comparisonMedian + "\t" + errorRateMean + "\t" + errorRateMedian + "\t" + homComparisonMean + "\t" + homComparisonMedian + "\t" + homErrorMean + "\t" + homErrorMedian);
 
+        myLogger.info("Output Filename\tOver All Homo Error Rate\tCoverage");
+        myLogger.info(outfile.getName() + "\t" + overAllHomoErrorRate + "\t" + (nSamePosNotComparable + nCompared));
+        
         closeOutputFile();
         return null;
     }
@@ -342,7 +348,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
         int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
         int s1 = 0, s2 = 0;
-        int nCompared = 0;
+        nCompared = 0;
         nSamePosNotComparable = 0;
         boolean finished = false;
         while (!finished) {
@@ -363,7 +369,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             }
         }
         myLogger.info(nCompared + " sites compared on chromosome " + chr
-                + "\nAn addtional " + nSamePosNotComparable + " sites on chromosome " + chr + " had the same position but incomparable alleles\n");
+                + "\nAn additional " + nSamePosNotComparable + " sites on chromosome " + chr + " had the same position but incomparable alleles\n");
 
         outputTaxaReport(a1, a2);
     }
