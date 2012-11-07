@@ -322,13 +322,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 if (samePosAL.size() > 1) {
                     Integer[] samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
                     for (int i = 0; i < samePos.length; ++i) {
-                        //byte[] currAlleles = new byte[2];
-                        //currAlleles[0] = theMSA.getMajorAllele(samePos[i].intValue());
-                        //currAlleles[1] = theMSA.getMinorAllele(samePos[i].intValue());
                         if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                                 && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
-                            theMSA.removeSite(samePos[i]);
-                            //theMSA.clearSite(samePos[i]);
+                            theMSA.clearSiteForRemoval(samePos[i]);
                         }
                     }
                 }
@@ -342,18 +338,13 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         if (samePosAL.size() > 1) {
             Integer[] samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
             for (int i = 0; i < samePos.length; ++i) {
-                //byte[] currAlleles = new byte[2];
-                //currAlleles[0] = theMSA.getMajorAllele(samePos[i].intValue());
-                //currAlleles[1] = theMSA.getMinorAllele(samePos[i].intValue());
                 if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                         && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
-                    theMSA.removeSite(samePos[i]);
-                    //theMSA.clearSite(samePos[i]);
+                    theMSA.clearSiteForRemoval(samePos[i]);
                 }
             }
         }
         theMSA.clean();
-        //theMSA.sortSiteByPhysicalPosition();
         System.out.println("Number of sites written after deleting any remaining, unmerged duplicate SNPs: " + theMSA.getSiteCount());
     }
 
