@@ -60,6 +60,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     private List<Integer> myComparisons = new ArrayList<Integer>();
     private List<Double> myErrorRates = new ArrayList<Double>();
     private List<Integer> myHomComparisons = new ArrayList<Integer>();
+    private List<Integer> myHomDiff = new ArrayList<Integer>();
     private List<Double> myHomError = new ArrayList<Double>();
     int[][][] myCompareStatsTaxa;
 
@@ -210,6 +211,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         double[] errorRates = new double[myNumCalculations];
         double errorRateMean = 0.0;
         int[] homComparisons = new int[myNumCalculations];
+        double homDiffSum = 0.0;
         double homComparisonSum = 0.0;
         double[] homErrors = new double[myNumCalculations];
         double homErrorSum = 0.0;
@@ -220,11 +222,12 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             errorRateMean = errorRateMean + errorRates[i];
             homComparisons[i] = myHomComparisons.get(i);
             homComparisonSum = homComparisonSum + homComparisons[i];
+            homDiffSum = homDiffSum + myHomDiff.get(i);
             homErrors[i] = myHomError.get(i);
             homErrorSum = homErrorSum + homErrors[i];
         }
 
-        double overAllHomoErrorRate = homErrorSum / homComparisonSum;
+        double overAllHomoErrorRate = homDiffSum / homComparisonSum;
 
         comparisonMean = comparisonMean / myNumCalculations;
         double comparisonMedian = getMedian(comparisons);
@@ -243,7 +246,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
         myLogger.info("Output Filename\tOver All Homo Error Rate\tCoverage");
         myLogger.info(outfile.getName() + "\t" + overAllHomoErrorRate + "\t" + (nSamePosNotComparable + nCompared));
-        
+
         closeOutputFile();
         return null;
     }
@@ -615,6 +618,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             myNumCalculations++;
             myComparisons.add(compareStats[NUM_TAXA_COMPARED]);
             myErrorRates.add(errRate);
+            myHomDiff.add(compareStats[NUM_TAXA_HOMOZYGOUS_DIFF]);
             myHomComparisons.add(compareStats[NUM_TAXA_HOMOZYGOUS_COMPARED]);
             myHomError.add(errRateHom);
 
