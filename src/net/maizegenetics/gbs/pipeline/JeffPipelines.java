@@ -4,6 +4,8 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
+import net.maizegenetics.baseplugins.ExtractHapmapSubsetPlugin;
+
 /**
  *
  * @author terry
@@ -11,7 +13,8 @@ package net.maizegenetics.gbs.pipeline;
 public class JeffPipelines {
 
     public static void main(String[] args) {
-        runTagsToSNPByAlignmentPlugin();
+//        runTagsToSNPByAlignmentPlugin();
+        runExtractHapmapSubsetPlugin();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -59,5 +62,32 @@ public class JeffPipelines {
         plugin.setParameters(MDPLowVolArgs);
         plugin.performFunction(null);
 
+    }
+    
+    public static void runExtractHapmapSubsetPlugin() {
+        String baseDir = "/Volumes/nextgen/Zea/build20120701/06_HapMap/RC2/04_BPECFilteredSNPs/";
+//        String outDir =  "/Users/jcg233/Documents/GBS/ShilpaNIL28FMJuly2012BuildRC2BPEC/";
+//        for (int chr=1; chr<11; chr++) {
+//            String[] args = new String[]{
+//                "-h", baseDir+"rje22_BPEC_AllZea_GBS_Build_July_2012_RC-2_chr"+chr+".hmp.txt.gz",
+//                "-o", outDir+"ShilpaNIL28FMJuly2012BuildRC2BPECOrig_chr"+chr+".hmp.txt.gz",
+//                "-p", outDir+"ShilpaNIL28FMSamples20120701buildUTF8.txt"
+//            };
+//            ExtractHapmapSubsetPlugin plugin = new ExtractHapmapSubsetPlugin(null);
+//            plugin.setParameters(args);
+//            plugin.performFunction(null);
+//        }
+
+        baseDir =  "/Users/jcg233/Documents/GBS/ShilpaNIL28FMJuly2012BuildRC2BPEC/";
+        for (int chr=1; chr<11; chr++) {
+            String[] args = new String[]{
+                "-h", baseDir+"ShilpaNIL28FMJuly2012BuildRC2BPECOrig_chr"+chr+".hmp.txt.gz",
+                "-o", baseDir+"ShilpaNIL28FMJuly2012BuildRC2BPECOrig216taxa_chr"+chr+".hmp.txt.gz",
+                "-p", baseDir+"ShilpaNIL28FMSamples20120701build216taxa.txt"
+            };
+            ExtractHapmapSubsetPlugin plugin = new ExtractHapmapSubsetPlugin(null);
+            plugin.setParameters(args);
+            plugin.performFunction(null);
+        }
     }
 }

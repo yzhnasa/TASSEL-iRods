@@ -6,16 +6,13 @@ package net.maizegenetics.pal.alignment;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
-
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-
 import org.apache.log4j.Logger;
 
 /**
@@ -31,6 +28,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private final int myMaxTaxa;
     private final int myMaxNumSites;
     private int myNumSites = 0;
+    private int myNumSitesStagedToRemove = 0;
     private int[] myVariableSites;
     private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
     private int[] myLocusIndices;
@@ -258,7 +256,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             Arrays.fill(myData[t], Alignment.UNKNOWN_DIPLOID_ALLELE);
         }
         myLocusIndices = new int[myMaxNumSites];
-        Arrays.fill(myLocusIndices, -1);
+        Arrays.fill(myLocusIndices, Integer.MAX_VALUE);
         myVariableSites = new int[myMaxNumSites];
         Arrays.fill(myVariableSites, -1);
         mySNPIDs = new String[myMaxNumSites];
@@ -561,7 +559,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             mySNPIDs[s] = mySNPIDs[s - 1];
         }
         myVariableSites[site] = -1;
-        myLocusIndices[site] = -1;
+        myLocusIndices[site] = Integer.MAX_VALUE;
         mySNPIDs[site] = null;
 
         myNumSites++;
@@ -575,21 +573,35 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         myNumSites--;
 
         for (int t = 0, n = getSequenceCount(); t < n; t++) {
-            for (int s = site; s < myNumSites; s--) {
+            for (int s = site; s < myNumSites; s++) {
                 myData[t][s] = myData[t][s + 1];
             }
             myData[t][myNumSites] = Alignment.UNKNOWN_DIPLOID_ALLELE;
         }
 
-        for (int s = site; s < myNumSites; s--) {
+        for (int s = site; s < myNumSites; s++) {
             myVariableSites[s] = myVariableSites[s + 1];
             myLocusIndices[s] = myLocusIndices[s + 1];
             mySNPIDs[s] = mySNPIDs[s + 1];
         }
         myVariableSites[myNumSites] = -1;
-        myLocusIndices[myNumSites] = -1;
+        myLocusIndices[myNumSites] = Integer.MAX_VALUE;
         mySNPIDs[myNumSites] = null;
 
+    }
+    
+    public void clearSiteForRemoval(int site) {
+        
+        myNumSitesStagedToRemove++;
+        
+        for (int t = 0, n = getSequenceCount(); t < n; t++) {
+            myData[t][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        
+        myVariableSites[site] = Integer.MAX_VALUE;
+        myLocusIndices[site] = Integer.MAX_VALUE;
+        mySNPIDs[site] = null;
+        
     }
 
     public void addTaxon(Identifier id) {
@@ -624,6 +636,8 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         sortSitesByPhysicalPosition();
         removeUnusedLoci();
         myIsDirty = false;
+        myNumSites -= myNumSitesStagedToRemove;
+        myNumSitesStagedToRemove = 0;
     }
 
     public boolean isDirty() {
@@ -643,7 +657,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         boolean[] isUsed = new boolean[myLocusToLociIndex.size()];
         Arrays.fill(isUsed, false);
         for (int i = 0; i < myLocusIndices.length; i++) {
-            if (myLocusIndices[i] >= 0) {
+            if ((myLocusIndices[i] >= 0) && (myLocusIndices[i] != Integer.MAX_VALUE)) {
                 isUsed[myLocusIndices[i]] = true;
             }
         }
@@ -754,7 +768,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     }
 
     public void setPositionOfSite(int site, int position) {
-        if ((site < 0) || (site >= myNumSites)) {
+        if ((site < 0) || (site >= getSiteCount())) {
             throw new IllegalArgumentException("MutableSingleEncodeAlignment: setPositionOfSite: site outside of range: " + site);
         }
         myVariableSites[site] = position;
@@ -763,7 +777,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     }
 
     public void setLocusOfSite(int site, Locus locus) {
-        if ((site < 0) || (site >= myNumSites)) {
+        if ((site < 0) || (site >= getSiteCount())) {
             throw new IllegalArgumentException("MutableSingleEncodeAlignment: setLocusOfSite: site outside of range: " + site);
         }
         int index = getLocusIndex(locus);

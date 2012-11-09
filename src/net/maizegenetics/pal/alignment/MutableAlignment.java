@@ -39,6 +39,14 @@ public interface MutableAlignment extends Alignment {
     public void removeSite(int site);
 
     /**
+     * This clears all data from given site, and when next clean() is performed,
+     * it will be removed.
+     *
+     * @param site site
+     */
+    public void clearSiteForRemoval(int site);
+
+    /**
      * Adds given identifier (taxon) to the end of taxa list.
      *
      * @param id identifier to add
@@ -47,7 +55,7 @@ public interface MutableAlignment extends Alignment {
 
     /**
      * Sets the identifier at given taxon index.
-     * 
+     *
      * @param taxon taxon index
      * @param id identifier to set
      */

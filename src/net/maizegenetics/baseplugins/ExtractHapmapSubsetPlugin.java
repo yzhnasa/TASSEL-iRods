@@ -103,7 +103,7 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
 			while ((input = br.readLine()) != null) {
 				pedlist.add(input);
 			}
-			
+			System.out.println(pedlist.size() + " taxa read from the taxa file");
 			br.close();
 			
 			br = Utils.getBufferedReader(inputFilename);
@@ -117,6 +117,7 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
 			for (int i = 11; i < n; i++) {
 				if (Collections.binarySearch(pedlist, info[i]) > -1) colList.add(i);
 			}
+                        System.out.println(colList.size() + " matching taxa found in the HapMap file");
 			
 			BufferedWriter bw = Utils.getBufferedWriter(outputFilename);
 			bw.write(info[0]);

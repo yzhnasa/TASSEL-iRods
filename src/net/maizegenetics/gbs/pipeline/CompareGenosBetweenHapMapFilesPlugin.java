@@ -38,15 +38,21 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     private int startChr, endChr, chr, position;
     private HashMap<String, List<String>> taxaSynonyms = new HashMap<String, List<String>>();
     private HashMap<Integer, List<Integer>> taxaRedirect = new HashMap<Integer, List<Integer>>();
+    private final String DELIMITER = "\t";
 
     public static enum SiteCompareType {
 
         SAME_STRAND, EITHER_STRAND, DIFF_STRAND, DIFFERENT
     };
+    int nCompared = 0;
     int nSamePosNotComparable;
-    static final int n = 0, nMiss = 1, nCompare = 2, nDiff = 3, nCompareHom = 4, nDiffHom = 5; // these are indices of the stat in the int[] array compareStats[]
-    static final int compareStatsLength = 6; // this is the length of the int[] array compareStats[]
-    static final int maf1 = 0, maf2 = 1, f1 = 2, f2 = 3; // these are the indices of the (double) summary stat in the double[] array summStats
+    // these are indices of the stat in the int[] array compareStats[]
+    static final int NUM_TAXA_POSSIBLE_COMPARISONS = 0, NUM_TAXA_MISSING = 1, NUM_TAXA_COMPARED = 2, NUM_TAXA_DIFFERENT = 3, NUM_TAXA_HOMOZYGOUS_COMPARED = 4, NUM_TAXA_HOMOZYGOUS_DIFF = 5;
+    //Taxa1:1	Taxa2:1	 NumberTested	Same	Different	ErrorRate	HomozygousTested	Same	Different	ErrorRate
+    static final int COMPARE_STATS_LENGTH = 6; // this is the length of the int[] array compareStats[]
+    static final int NUM_SITES_COMPARED = 0, NUM_SITES_DIFF = 1, NUM_SITES_HOMOZYGOUS_COMPARED = 2, NUM_SITES_HOMOZYGOUS_DIFF = 3;
+    static final int COMPARE_TAXA_STATS_LENGTH = 4;
+    static final int MINOR_ALLELE_FREQ1 = 0, MINOR_ALLELE_FREQ2 = 1, F_VALUE1 = 2, F_VALUE2 = 3; // these are the indices of the (double) summary stat in the double[] array summStats
     static final int summStatsLength = 4; //
     File outfile = null;
     DataOutputStream fw = null;
@@ -54,7 +60,9 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     private List<Integer> myComparisons = new ArrayList<Integer>();
     private List<Double> myErrorRates = new ArrayList<Double>();
     private List<Integer> myHomComparisons = new ArrayList<Integer>();
+    private List<Integer> myHomDiff = new ArrayList<Integer>();
     private List<Double> myHomError = new ArrayList<Double>();
+    int[][][] myCompareStatsTaxa;
 
     public CompareGenosBetweenHapMapFilesPlugin() {
         super(null, false);
@@ -194,6 +202,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 continue;
             }
             populateTaxaRedirect(a1, a2);
+            myCompareStatsTaxa = new int[taxaRedirect.size()][][];
             findCommonPositionsAndCompare(a1, a2);
         }
 
@@ -202,35 +211,41 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         double[] errorRates = new double[myNumCalculations];
         double errorRateMean = 0.0;
         int[] homComparisons = new int[myNumCalculations];
-        double homComparisonMean = 0.0;
+        double homDiffSum = 0.0;
+        double homComparisonSum = 0.0;
         double[] homErrors = new double[myNumCalculations];
-        double homErrorMean = 0.0;
+        double homErrorSum = 0.0;
         for (int i = 0; i < myNumCalculations; i++) {
             comparisons[i] = myComparisons.get(i);
             comparisonMean = comparisonMean + comparisons[i];
             errorRates[i] = myErrorRates.get(i);
             errorRateMean = errorRateMean + errorRates[i];
             homComparisons[i] = myHomComparisons.get(i);
-            homComparisonMean = homComparisonMean + homComparisons[i];
+            homComparisonSum = homComparisonSum + homComparisons[i];
+            homDiffSum = homDiffSum + myHomDiff.get(i);
             homErrors[i] = myHomError.get(i);
-            homErrorMean = homErrorMean + homErrors[i];
+            homErrorSum = homErrorSum + homErrors[i];
         }
+
+        double overAllHomoErrorRate = homDiffSum / homComparisonSum;
 
         comparisonMean = comparisonMean / myNumCalculations;
         double comparisonMedian = getMedian(comparisons);
-        myLogger.info("Comparison Mean: " + comparisonMean + "  Median: " + comparisonMedian);
 
         errorRateMean = errorRateMean / myNumCalculations;
         double errorRateMedian = getMedian(errorRates);
-        myLogger.info("Error Rate Mean: " + errorRateMean + "  Median: " + errorRateMedian);
-        
-        homComparisonMean = homComparisonMean / myNumCalculations;
+
+        double homComparisonMean = homComparisonSum / myNumCalculations;
         double homComparisonMedian = getMedian(homComparisons);
-        myLogger.info("Homozygous Comparison Mean: " + homComparisonMean + "  Median: " + homComparisonMedian);
-        
-        homErrorMean = homErrorMean / myNumCalculations;
+
+        double homErrorMean = homErrorSum / myNumCalculations;
         double homErrorMedian = getMedian(homErrors);
-        myLogger.info("Homozygous Error Mean: " + homErrorMean + "  Median: " + homErrorMedian);
+
+        myLogger.info("Comparison Mean\tComparison Median\tError Rate Mean\tError Rate Median\tHomozygous Comparison Mean\tHomozygous Comparison Median\tHomozygous Error Mean\tHomozygous Error Median");
+        myLogger.info(comparisonMean + "\t" + comparisonMedian + "\t" + errorRateMean + "\t" + errorRateMedian + "\t" + homComparisonMean + "\t" + homComparisonMedian + "\t" + homErrorMean + "\t" + homErrorMedian);
+
+        myLogger.info("Output Filename\tOver All Homo Error Rate\tCoverage");
+        myLogger.info(outfile.getName() + "\t" + overAllHomoErrorRate + "\t" + (nSamePosNotComparable + nCompared));
 
         closeOutputFile();
         return null;
@@ -336,7 +351,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
         int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
         int s1 = 0, s2 = 0;
-        int nCompared = 0;
+        nCompared = 0;
         nSamePosNotComparable = 0;
         boolean finished = false;
         while (!finished) {
@@ -357,7 +372,37 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             }
         }
         myLogger.info(nCompared + " sites compared on chromosome " + chr
-                + "\nAn addtional " + nSamePosNotComparable + " sites on chromosome " + chr + " had the same position but incomparable alleles\n");
+                + "\nAn additional " + nSamePosNotComparable + " sites on chromosome " + chr + " had the same position but incomparable alleles\n");
+
+        outputTaxaReport(a1, a2);
+    }
+
+    private void outputTaxaReport(Alignment a1, Alignment a2) {
+
+        System.out.println("Taxon1\tTaxon2\tNum_Sites_Compared\tNum_Sites_Diff\tNum_Sites_Homo_Compared\tNum_Sites_Homo_Diff");
+        int taxon1Count = 0;
+        for (Integer taxon1Index : taxaRedirect.keySet()) {
+            List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
+            int taxon2Count = 0;
+            for (Integer taxon2Index : synTaxaIndicesForTaxonIndex) {
+                StringBuilder builder = new StringBuilder();
+                builder.append(a1.getFullTaxaName(taxon1Index));
+                builder.append(DELIMITER);
+                builder.append(a2.getFullTaxaName(taxon2Index));
+                builder.append(DELIMITER);
+                builder.append(myCompareStatsTaxa[taxon1Count][taxon2Count][NUM_SITES_COMPARED]);
+                builder.append(DELIMITER);
+                builder.append(myCompareStatsTaxa[taxon1Count][taxon2Count][NUM_SITES_DIFF]);
+                builder.append(DELIMITER);
+                builder.append(myCompareStatsTaxa[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_COMPARED]);
+                builder.append(DELIMITER);
+                builder.append(myCompareStatsTaxa[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_DIFF]);
+                System.out.println(builder.toString());
+                taxon2Count++;
+            }
+            taxon1Count++;
+        }
+
     }
 
     private int getCompareTypeAndCompare(int site1, Alignment a1, int site2, Alignment a2) {
@@ -370,28 +415,106 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
 
         double[] summStats = new double[summStatsLength];
-        summStats[maf1] = a1.getMinorAlleleFrequency(site1);
-        summStats[maf2] = a2.getMinorAlleleFrequency(site2);
-        summStats[f1] = calculateF(a1, site1);
-        summStats[f2] = calculateF(a2, site2);
+        summStats[MINOR_ALLELE_FREQ1] = a1.getMinorAlleleFrequency(site1);
+        summStats[MINOR_ALLELE_FREQ2] = a2.getMinorAlleleFrequency(site2);
+        summStats[F_VALUE1] = calculateF(a1, site1);
+        summStats[F_VALUE2] = calculateF(a2, site2);
         String alleleString1 = a1.getBaseAsString(site1, alleles1[0]) + "/" + a1.getBaseAsString(site1, alleles1[1]);
         String alleleString2 = a2.getBaseAsString(site2, alleles2[0]) + "/" + a2.getBaseAsString(site2, alleles2[1]);
-        if (compareType == SiteCompareType.SAME_STRAND) {
-            int[] compareStats = compareGenotypes(site1, a1, site2, a2, true);
-            writeCompareStats(compareStats, alleleString1, alleleString2, compareType, summStats);
-        } else if (compareType == SiteCompareType.DIFF_STRAND) {
-            int[] compareStats = compareGenotypes(site1, a1, site2, a2, false);
-            writeCompareStats(compareStats, alleleString1, alleleString2, compareType, summStats);
-        } else if (compareType == SiteCompareType.EITHER_STRAND) {
-            int[] compareStatsSame = compareGenotypes(site1, a1, site2, a2, true);
-            int[] compareStatsDiff = compareGenotypes(site1, a1, site2, a2, false);
-            if (compareStatsSame[nDiff] <= compareStatsDiff[nDiff]) {
-                writeCompareStats(compareStatsSame, alleleString1, alleleString2, compareType, summStats);
+
+        int[][][] compareTaxaStatsSame = null;
+        int[][][] compareTaxaStatsDiff = null;
+        if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
+            compareTaxaStatsSame = new int[taxaRedirect.size()][][];
+        }
+
+        if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
+            compareTaxaStatsDiff = new int[taxaRedirect.size()][][];
+        }
+
+        int[] compareStatsSame = null;
+        int[] compareStatsDiff = null;
+        int taxon1Count = 0;
+        for (Integer taxon1Index : taxaRedirect.keySet()) {
+            List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
+            if (myCompareStatsTaxa[taxon1Count] == null) {
+                myCompareStatsTaxa[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
+            }
+
+            if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
+                compareTaxaStatsSame[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
+            }
+
+            if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
+                compareTaxaStatsDiff[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
+            }
+
+            int taxon2Count = 0;
+            for (Integer taxon2Index : synTaxaIndicesForTaxonIndex) {
+
+                if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
+                    int[] tempStats = compareGenotypes(taxon1Index, site1, a1, taxon2Index, site2, a2, true);
+                    if (compareStatsSame == null) {
+                        compareStatsSame = new int[COMPARE_STATS_LENGTH];
+                    }
+                    for (int i = 0; i < COMPARE_STATS_LENGTH; i++) {
+                        compareStatsSame[i] += tempStats[i];
+                    }
+                    compareTaxaStatsSame[taxon1Count][taxon2Count][NUM_SITES_COMPARED] = 1;
+                    compareTaxaStatsSame[taxon1Count][taxon2Count][NUM_SITES_DIFF] = tempStats[NUM_TAXA_DIFFERENT];
+                    compareTaxaStatsSame[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_COMPARED] = tempStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
+                    compareTaxaStatsSame[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_DIFF] = tempStats[NUM_TAXA_HOMOZYGOUS_DIFF];
+                }
+
+                if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
+                    int[] tempStats = compareGenotypes(taxon1Index, site1, a1, taxon2Index, site2, a2, false);
+                    if (compareStatsDiff == null) {
+                        compareStatsDiff = new int[COMPARE_STATS_LENGTH];
+                    }
+                    for (int i = 0; i < COMPARE_STATS_LENGTH; i++) {
+                        compareStatsDiff[i] += tempStats[i];
+                    }
+                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_COMPARED] = 1;
+                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_DIFF] = tempStats[NUM_TAXA_DIFFERENT];
+                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_COMPARED] = tempStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
+                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_DIFF] = tempStats[NUM_TAXA_HOMOZYGOUS_DIFF];
+                }
+
+                taxon2Count++;
+            }
+            taxon1Count++;
+        }
+
+        int[] compareResults;
+        if (compareStatsSame == null) {
+            compareResults = compareStatsDiff;
+            addTaxaStats(myCompareStatsTaxa, compareTaxaStatsDiff);
+        } else if (compareStatsDiff == null) {
+            compareResults = compareStatsSame;
+            addTaxaStats(myCompareStatsTaxa, compareTaxaStatsSame);
+        } else {
+            if (compareStatsSame[NUM_TAXA_DIFFERENT] <= compareStatsDiff[NUM_TAXA_DIFFERENT]) {
+                compareResults = compareStatsSame;
+                addTaxaStats(myCompareStatsTaxa, compareTaxaStatsSame);
             } else {
-                writeCompareStats(compareStatsDiff, alleleString1, alleleString2, compareType, summStats);
+                compareResults = compareStatsDiff;
+                addTaxaStats(myCompareStatsTaxa, compareTaxaStatsDiff);
             }
         }
+
+        writeCompareStats(compareResults, alleleString1, alleleString2, compareType, summStats);
+
         return 1;
+    }
+
+    private void addTaxaStats(int[][][] totals, int[][][] additions) {
+        for (int i = 0; i < totals.length; i++) {
+            for (int j = 0; j < totals[0].length; j++) {
+                for (int k = 0; k < totals[0][0].length; k++) {
+                    totals[i][j][k] += additions[i][j][k];
+                }
+            }
+        }
     }
 
     private double calculateF(Alignment a, int site) {
@@ -421,44 +544,39 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
     }
 
-    private int[] compareGenotypes(int site1, Alignment a1, int site2, Alignment a2, boolean sameStrand) {
-        int[] compareStats = new int[compareStatsLength];
-        for (Integer taxon1Index : taxaRedirect.keySet()) {
-            List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
-            for (Integer taxon2Index : synTaxaIndicesForTaxonIndex) {
-                byte base1 = a1.getBase(taxon1Index, site1);
-                byte base2;
-                if (sameStrand) {
-                    base2 = a2.getBase(taxon2Index, site2);
-                } else {
-                    base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.getBase(taxon2Index, site2));
-                }
-                if (base1 != Alignment.UNKNOWN_DIPLOID_ALLELE && base2 != Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                    if (!(AlignmentUtils.isHeterozygous(base1) || AlignmentUtils.isHeterozygous(base2))) {
-                        if (base1 != base2) {
-                            ++compareStats[nDiff];
-                            ++compareStats[nDiffHom];
-                        }
-                        ++compareStats[nCompareHom];
-                    } else {
-                        if (base1 != base2) {
-                            ++compareStats[nDiff];
-                        }
-                    }
-                    ++compareStats[nCompare];
-                } else {
-                    ++compareStats[nMiss];
-                }
-                ++compareStats[n];
-            }
+    private int[] compareGenotypes(int taxon1Index, int site1, Alignment a1, int taxon2Index, int site2, Alignment a2, boolean sameStrand) {
+        int[] compareStats = new int[COMPARE_STATS_LENGTH];
+        byte base1 = a1.getBase(taxon1Index, site1);
+        byte base2;
+        if (sameStrand) {
+            base2 = a2.getBase(taxon2Index, site2);
+        } else {
+            base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.getBase(taxon2Index, site2));
         }
+        if (base1 != Alignment.UNKNOWN_DIPLOID_ALLELE && base2 != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+            if (!(AlignmentUtils.isHeterozygous(base1) || AlignmentUtils.isHeterozygous(base2))) {
+                if (base1 != base2) {
+                    ++compareStats[NUM_TAXA_DIFFERENT];
+                    ++compareStats[NUM_TAXA_HOMOZYGOUS_DIFF];
+                }
+                ++compareStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
+            } else {
+                if (!AlignmentUtils.isEqual(base1, base2)) {
+                    ++compareStats[NUM_TAXA_DIFFERENT];
+                }
+            }
+            ++compareStats[NUM_TAXA_COMPARED];
+        } else {
+            ++compareStats[NUM_TAXA_MISSING];
+        }
+        ++compareStats[NUM_TAXA_POSSIBLE_COMPARISONS];
         return compareStats;
     }
 
     private void writeCompareStats(int[] compareStats, String alleles1, String alleles2, SiteCompareType sct, double[] summStats) {
-        double errRate = compareStats[nCompare] > 0 ? (double) compareStats[nDiff] / compareStats[nCompare] : Double.NaN;
-        double errRateHom = compareStats[nCompareHom] > 0 ? (double) compareStats[nDiffHom] / compareStats[nCompareHom] : Double.NaN;
-        final String DELIMITER = "\t";
+        double errRate = compareStats[NUM_TAXA_COMPARED] > 0 ? (double) compareStats[NUM_TAXA_DIFFERENT] / compareStats[NUM_TAXA_COMPARED] : Double.NaN;
+        double errRateHom = compareStats[NUM_TAXA_HOMOZYGOUS_COMPARED] > 0 ? (double) compareStats[NUM_TAXA_HOMOZYGOUS_DIFF] / compareStats[NUM_TAXA_HOMOZYGOUS_COMPARED] : Double.NaN;
+
         try {
             fw.writeBytes(String.valueOf(chr));
             fw.writeBytes(DELIMITER);
@@ -472,35 +590,36 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             fw.writeBytes(DELIMITER);
             fw.writeBytes(sct.toString());
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(summStats[maf1]));
+            fw.writeBytes(String.valueOf(summStats[MINOR_ALLELE_FREQ1]));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(summStats[maf2]));
+            fw.writeBytes(String.valueOf(summStats[MINOR_ALLELE_FREQ2]));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(summStats[f1]));
+            fw.writeBytes(String.valueOf(summStats[F_VALUE1]));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(summStats[f2]));
+            fw.writeBytes(String.valueOf(summStats[F_VALUE2]));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(compareStats[n]));
+            fw.writeBytes(String.valueOf(compareStats[NUM_TAXA_POSSIBLE_COMPARISONS]));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(compareStats[nMiss]));
+            fw.writeBytes(String.valueOf(compareStats[NUM_TAXA_MISSING]));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(compareStats[nCompare]));
+            fw.writeBytes(String.valueOf(compareStats[NUM_TAXA_COMPARED]));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(compareStats[nDiff]));
+            fw.writeBytes(String.valueOf(compareStats[NUM_TAXA_DIFFERENT]));
             fw.writeBytes(DELIMITER);
             fw.writeBytes(String.valueOf(errRate));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(compareStats[nCompareHom]));
+            fw.writeBytes(String.valueOf(compareStats[NUM_TAXA_HOMOZYGOUS_COMPARED]));
             fw.writeBytes(DELIMITER);
-            fw.writeBytes(String.valueOf(compareStats[nDiffHom]));
+            fw.writeBytes(String.valueOf(compareStats[NUM_TAXA_HOMOZYGOUS_DIFF]));
             fw.writeBytes(DELIMITER);
             fw.writeBytes(String.valueOf(errRateHom));
             fw.writeBytes("\n");
 
             myNumCalculations++;
-            myComparisons.add(compareStats[nCompare]);
+            myComparisons.add(compareStats[NUM_TAXA_COMPARED]);
             myErrorRates.add(errRate);
-            myHomComparisons.add(compareStats[nCompareHom]);
+            myHomDiff.add(compareStats[NUM_TAXA_HOMOZYGOUS_DIFF]);
+            myHomComparisons.add(compareStats[NUM_TAXA_HOMOZYGOUS_COMPARED]);
             myHomError.add(errRateHom);
 
         } catch (Exception e) {

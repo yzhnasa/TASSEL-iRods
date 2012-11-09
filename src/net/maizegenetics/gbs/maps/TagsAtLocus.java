@@ -51,6 +51,8 @@ public class TagsAtLocus {
     private byte[][] allelesAtVariableSitesByTag;
     private int nTaxaCovered = Integer.MIN_VALUE;
     private int totalNReads = Integer.MIN_VALUE;
+    private String status = "notSet";
+    
     private final static int maxSNPsPerLocus = 64;
     private final static int maxAlignmentSize = 10000;
     // private final static double errorRate = 0.01;
@@ -224,17 +226,18 @@ public class TagsAtLocus {
 
     public byte[][] getSNPCallsQuant(boolean callBiallelicSNPsWithGap) {
         if (theTags.size() < 2) {
+            status = "invariant";
             return null;
         }
         Alignment tagAlignment = this.getVariableSites();
-        if (tagAlignment == null || tagAlignment.getSiteCount() < 1) {
-            return null;
-        }
+        if (tagAlignment == null || tagAlignment.getSiteCount() < 1) return null;
         int nSites = tagAlignment.getSiteCount();
         int nTaxa = theTags.get(0).tagDist.length;
         if (nTaxa < 1) {
+            status = "noTaxa";  // this shouldn't happen but is here just as a check
             return null;
         }
+        status = "polymorphic";
         byte[][] callsBySite = new byte[nSites][nTaxa];
         populateAllelesAtVariableSitesByTag(tagAlignment, nSites);
         positionsOfVariableSites = new int[nSites];
@@ -328,12 +331,65 @@ public class TagsAtLocus {
     public int[] getPositionsOfVariableSites() {
         return positionsOfVariableSites;
     }
+    
+    public String getLocusReport(int minTaxaWithLocus, boolean[] varSiteKept) {
+        int start, end, totalbp, refTag=Integer.MIN_VALUE;
+        if (strand == -1) {
+            end = minStartPosition;
+            start = minStartPosition - maxTagLength + 1;
+        } else {
+            start = minStartPosition;
+            end = minStartPosition + maxTagLength - 1;
+        }
+        totalbp = end - start + 1;
+        int nVarSites=0, nVarSitesKept=0;
+        String posVarSites = "", posVarsKept = "";
+        if (status.equals("polymorphic")) {
+            nVarSites = positionsOfVariableSites.length;
+            for (int s = 0; s < nVarSites; s++) {
+                posVarSites = s < nVarSites-1 ? posVarSites + positionsOfVariableSites[s] + ":"
+                                              : posVarSites + positionsOfVariableSites[s];
+                if (varSiteKept[s]) {
+                    posVarsKept = posVarsKept + positionsOfVariableSites[s] + ":";
+                    nVarSitesKept++;
+                }
+            }
+            if (posVarsKept.length()>0) posVarsKept = posVarsKept.substring(0, posVarsKept.length()-1);
+            else posVarsKept = "NA";
+        } else {
+            posVarSites = "NA";
+            posVarsKept = "NA";
+            if (status.equals("invariant") || status.contains("tooManyTags")) assignRefTag();
+        }
+        refTag = (indexOfRef==Integer.MIN_VALUE) ? 0 : 1;
+        return
+            chromosome +"\t"+
+            start +"\t"+
+            end +"\t"+
+            strand +"\t"+
+            totalbp +"\t"+
+            theTags.size() +"\t"+
+            this.getTotalNReads() +"\t"+
+            this.getNumberTaxaCovered() +"\t"+
+            minTaxaWithLocus+"\t"+
+            status +"\t"+ 
+            nVarSites +"\t"+ 
+            posVarSites +"\t"+
+            nVarSitesKept  +"\t"+
+            posVarsKept +"\t"+
+            refTag +"\t"+
+            maxTagLength +"\t"+
+            minTagLength +"\n"
+        ;
+    }
 
     private Alignment getVariableSites() {
         if (theTags.size() < 2) {
+            status = "invariant";
             return null;
         }
         if (theTags.size() > maxAlignmentSize) {
+            status = "tooManyTags(>"+maxAlignmentSize+")";
             return null;   // should we use a maxAlignmentSize (upper limit of tags) here?
         }
         this.assignRefTag();
@@ -392,7 +448,16 @@ public class TagsAtLocus {
                 System.out.println(faa.getBaseAsStringRow(tg));
             }
         }
-        if (faa.getSiteCount() > maxSNPsPerLocus || faa.getSiteCount() < 1 || faa.getSequenceCount() < 2) {
+        if (faa.getSiteCount() > maxSNPsPerLocus) {
+            status = "tooManyVariants(>"+maxSNPsPerLocus+")";
+            return null;
+        }
+        if (faa.getSiteCount() < 1) {
+            status = "noVarSitesInAlign";
+            return null;
+        }
+        if (faa.getSequenceCount() < 2) {
+            status = "onlyOneTagInAlign";
             return null;
         }
         return faa;
