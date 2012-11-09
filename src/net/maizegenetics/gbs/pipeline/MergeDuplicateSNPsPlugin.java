@@ -50,6 +50,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private static Logger myLogger = Logger.getLogger(MergeDuplicateSNPsPlugin.class);
     private static ArgsEngine myArgsEngine = null;
     private String suppliedInputFileName, suppliedOutputFileName, infile, outfile;
+    private String snpLogFileName;
     private double maxMisMat = 0.05;
     private boolean usePedigree = false;
     HashMap<String, Double> taxaFs = null;
@@ -98,6 +99,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             myArgsEngine.add("-kpUnmergDups", "--keepUnmergedDuplicates", false);
             myArgsEngine.add("-s", "--startChromosome", true);
             myArgsEngine.add("-e", "--endChromosome", true);
+            myArgsEngine.add("-snpLog", "", true);
         }
         myArgsEngine.parse(args);
         if (myArgsEngine.getBoolean("-hmp")) {
@@ -143,6 +145,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         if (endChr - startChr < 0) {
             printUsage();
             throw new IllegalArgumentException("Error: The start chromosome is higher than the end chromosome.");
+        }
+        if (myArgsEngine.getBoolean("-snpLog")) {
+            snpLogFileName = myArgsEngine.getString("-snpLog");
         }
     }
 
@@ -200,8 +205,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 addSiteToMutableAlignment(chr, currentPos, genos, msa);
             }
             msa.clean();
-            //msa.sortSiteByPhysicalPosition();
-            System.out.println("Number of sites written after merging duplicate SNPs: " + msa.getSiteCount());
+            myLogger.info("Number of sites written after merging duplicate SNPs: " + msa.getSiteCount());
             if (!kpUnmergDups) {
                 deleteRemainingDuplicates(msa);
             }
@@ -312,6 +316,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     }
 
     private void deleteRemainingDuplicates(MutableNucleotideAlignment theMSA) {
+        SNPLogging snpLogging = new SNPLogging(snpLogFileName);
         ArrayList<Integer> samePosAL = new ArrayList<Integer>();
         int currentPos = theMSA.getPositionInLocus(0);
         for (int s = 0; s < theMSA.getSiteCount(); s++) {
@@ -324,6 +329,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     for (int i = 0; i < samePos.length; ++i) {
                         if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                                 && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
+                            snpLogging.writeEntry(theMSA, samePos[i], null, null, this.getClass(), null, null, null, null);
                             theMSA.clearSiteForRemoval(samePos[i]);
                         }
                     }
@@ -340,12 +346,14 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             for (int i = 0; i < samePos.length; ++i) {
                 if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                         && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
+                    snpLogging.writeEntry(theMSA, samePos[i], null, null, this.getClass(), null, null, null, null);
                     theMSA.clearSiteForRemoval(samePos[i]);
                 }
             }
         }
+        snpLogging.close();
         theMSA.clean();
-        System.out.println("Number of sites written after deleting any remaining, unmerged duplicate SNPs: " + theMSA.getSiteCount());
+        myLogger.info("Number of sites written after deleting any remaining, unmerged duplicate SNPs: " + theMSA.getSiteCount());
     }
 
     private boolean maskNonInbredTaxa(Alignment a) {
