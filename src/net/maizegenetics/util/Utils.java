@@ -366,14 +366,18 @@ public final class Utils {
         }
         return null;
     }
-
+    
     public static BufferedWriter getBufferedWriter(String filename) {
+        return getBufferedWriter(filename, false);
+    }
+
+    public static BufferedWriter getBufferedWriter(String filename, boolean append) {
 
         try {
             if (filename.endsWith(".gz")) {
-                return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(filename))));
+                return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(filename, append))));
             } else {
-                return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename)));
+                return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename, append)));
             }
         } catch (Exception e) {
             myLogger.error("getBufferedReader: Error getting reader for: " + filename);
