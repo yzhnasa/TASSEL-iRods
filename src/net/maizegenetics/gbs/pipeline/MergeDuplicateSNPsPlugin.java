@@ -51,6 +51,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private static ArgsEngine myArgsEngine = null;
     private String suppliedInputFileName, suppliedOutputFileName, infile, outfile;
     private String snpLogFileName;
+    private SNPLogging snpLogging = null;
     private double maxMisMat = 0.05;
     private boolean usePedigree = false;
     HashMap<String, Double> taxaFs = null;
@@ -149,8 +150,10 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-snpLog")) {
             snpLogFileName = myArgsEngine.getString("-snpLog");
         }
+        snpLogging = new SNPLogging(snpLogFileName);
     }
 
+    @Override
     public DataSet performFunction(DataSet input) {
         for (int chr = startChr; chr <= endChr; chr++) {
             infile = suppliedInputFileName.replace("+", "" + chr);
@@ -168,7 +171,6 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 continue;
             }
             MutableNucleotideAlignment msa = MutableNucleotideAlignment.getInstance(a.getIdGroup(), a.getSiteCount());
-            //MutableNucleotideAlignment msa = new MutableNucleotideAlignment(a.getIdGroup(), a.getSiteCount(), a.getLoci());
             ArrayList<Integer> samePosAL = new ArrayList<Integer>();
             Integer[] samePos = null;
             int currentPos = a.getPositionInLocus(0);
@@ -281,6 +283,11 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                         for (int t = 0; t < a.getSequenceCount(); ++t) {
                             currMerge[t] = possibleMerge[t];
                         }
+                        double valueMisMat = Double.NaN;
+                        if (nCompare != 0) {
+                            valueMisMat = (double) nMismatch / nCompare;
+                        }
+                        snpLogging.writeEntry(a, samePos[s2], null, null, this.getClass(), "Genotypes Less Max Mismatch", "Merged", String.valueOf(valueMisMat), String.valueOf(maxMisMat));
                         finished[s2] = true;
                     }
                 }
@@ -316,7 +323,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     }
 
     private void deleteRemainingDuplicates(MutableNucleotideAlignment theMSA) {
-        SNPLogging snpLogging = new SNPLogging(snpLogFileName);
+
         ArrayList<Integer> samePosAL = new ArrayList<Integer>();
         int currentPos = theMSA.getPositionInLocus(0);
         for (int s = 0; s < theMSA.getSiteCount(); s++) {
@@ -329,7 +336,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     for (int i = 0; i < samePos.length; ++i) {
                         if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                                 && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
-                            snpLogging.writeEntry(theMSA, samePos[i], null, null, this.getClass(), null, null, null, null);
+                            snpLogging.writeEntry(theMSA, samePos[i], null, null, this.getClass(), "Delete Remaining Duplicates", "Removed", null, null);
                             theMSA.clearSiteForRemoval(samePos[i]);
                         }
                     }
@@ -346,7 +353,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             for (int i = 0; i < samePos.length; ++i) {
                 if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                         && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
-                    snpLogging.writeEntry(theMSA, samePos[i], null, null, this.getClass(), null, null, null, null);
+                    snpLogging.writeEntry(theMSA, samePos[i], null, null, this.getClass(), "Delete Remaining Duplicates", "Removed", null, null);
                     theMSA.clearSiteForRemoval(samePos[i]);
                 }
             }
