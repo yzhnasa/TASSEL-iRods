@@ -14,6 +14,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
+import net.maizegenetics.pal.alignment.MutableSingleEncodeAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.distance.DistanceMatrix;
@@ -21,6 +22,7 @@ import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.math.GammaFunction;
 import net.maizegenetics.pal.tree.Tree;
 import net.maizegenetics.pal.tree.TreeClusters;
 import net.maizegenetics.pal.tree.UPGMATree;
@@ -197,15 +199,18 @@ public class NucleotideImputationUtils {
 	}
 
 	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
-		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
+//		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
+		BitSet polybits = whichSitesSegregateCorrectly(popdata.original, maxMissing, 0.5);
 //		BitSet filteredBits = polybits;
+		System.out.println("polybits cardinality = " + polybits.cardinality());
 		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
 		filteredBits.and(polybits);
+		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
 		
 		//get het mask
 		double phet = 0.075;
 //		double phet = (1 - popdata.inbredCoef)/2;
-		BitSet[] hetMask = hetMasker(popdata.original, phet);
+//		BitSet[] hetMask = hetMasker(popdata.original, phet);
 
 		int nsites = popdata.original.getSiteCount();
 		int ntaxa = popdata.original.getSequenceCount();
@@ -224,51 +229,68 @@ public class NucleotideImputationUtils {
 		//iterate through windows
 		Alignment[] prevAlignment = null;
 		int[][] snpIndices = getWindows(filteredBits, windowSize);
+		boolean append = false;
 		
-		for (int[] snpIndex : snpIndices) {
-			//SBitAlignment windowAlignment = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
-			Alignment windowAlignment = BitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex), true);
+		int nWindows = snpIndices.length;
+		for (int w = 0; w < nWindows; w++) {
+//		for (int[] snpIndex : snpIndices) {
+			int[] snpIndex;
+			if (append) {
+				int n1 = snpIndices[w-1].length;
+				int n2 = snpIndices[w].length;
+				snpIndex = new int[n1 + n2];
+				System.arraycopy(snpIndices[w-1], 0, snpIndex, 0, n1);
+				System.arraycopy(snpIndices[w], 0, snpIndex, n1, n2);
+				append = false;
+			} else {
+				snpIndex = snpIndices[w];
+			}
 			
 			//mask the hets
-			MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
-			int n = snpIndex.length;
-			byte missing = NucleotideAlignmentConstants.getNucleotideDiploidByte('N');
-			for (int i = 0; i < n; i++) {
-				for (int t = 0; t < ntaxa; t++) {
-					if (hetMask[t].fastGet(snpIndex[i])) mna.setBase(t, i, missing);
-				}
-			}
-			mna.clean();
-			
+//			MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
+//			int n = snpIndex.length;
+//			byte missing = NucleotideAlignmentConstants.getNucleotideDiploidByte('N');
+//			for (int i = 0; i < n; i++) {
+//				for (int t = 0; t < ntaxa; t++) {
+//					if (hetMask[t].fastGet(snpIndex[i])) mna.setBase(t, i, missing);
+//				}
+//			}
+//			mna.clean();
+			Alignment windowAlignment = FilterAlignment.getInstance(popdata.original, snpIndex);
 			LinkedList<Integer> snpList = new LinkedList<Integer>(); //snpList is a list of snps (indices) in this window
 			for (int s:snpIndex) snpList.add(s);
 			
 			Alignment[] taxaAlignments = getTaxaGroupAlignments(windowAlignment, parentIndex, snpList);
 			
-			//are groups in this alignment correlated with groups in the previous alignment
-			double r = 0;
-			if (prevAlignment != null) {
-				r = getIdCorrelation(new IdGroup[][] {{prevAlignment[0].getIdGroup(), prevAlignment[1].getIdGroup()},{taxaAlignments[0].getIdGroup(), taxaAlignments[1].getIdGroup()}});
-				myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", r = " + r + " , # of snps in alignment = " + snpList.size());
+			if (taxaAlignments == null) {
+				append = true;
 			} else {
-				myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", # of snps in alignment = " + snpList.size());
+				//are groups in this alignment correlated with groups in the previous alignment
+				double r = 0;
+				if (prevAlignment != null) {
+					r = getIdCorrelation(new IdGroup[][] {{prevAlignment[0].getIdGroup(), prevAlignment[1].getIdGroup()},{taxaAlignments[0].getIdGroup(), taxaAlignments[1].getIdGroup()}});
+					myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", r = " + r + " , # of snps in alignment = " + snpList.size());
+				} else {
+					myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", # of snps in alignment = " + snpList.size());
+				}
+				
+				checkAlignmentOrderIgnoringParents(taxaAlignments, popdata, r); //if r is negative switch alignment order (which will result in a positive r) 
+				
+				//debug -check upgma tree
+//				int[] selectSnps = new int[snpList.size()];
+//				int cnt = 0;
+//				for (Integer s : snpList) selectSnps[cnt++] = s;
+//				SBitAlignment sba = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, selectSnps));
+//				IBSDistanceMatrix dm = new IBSDistanceMatrix(sba);
+//				estimateMissingDistances(dm);
+//				Tree myTree = new UPGMATree(dm);
+//				TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
+//				tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
+				
+				prevAlignment = taxaAlignments;
+				callParentAllelesUsingTaxaGroups(popdata, taxaAlignments, snpList);
 			}
 			
-			checkAlignmentOrderIgnoringParents(taxaAlignments, popdata, r); //if r is negative switch alignment order (which will result in a positive r) 
-			
-			//debug -check upgma tree
-//			int[] selectSnps = new int[snpList.size()];
-//			int cnt = 0;
-//			for (Integer s : snpList) selectSnps[cnt++] = s;
-//			SBitAlignment sba = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, selectSnps));
-//			IBSDistanceMatrix dm = new IBSDistanceMatrix(sba);
-//			estimateMissingDistances(dm);
-//			Tree myTree = new UPGMATree(dm);
-//			TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
-//			tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
-			
-			prevAlignment = taxaAlignments;
-			callParentAllelesUsingTaxaGroups(popdata, taxaAlignments, snpList);
 		}
 		
 		myLogger.info("number of called snps = " + popdata.snpIndex.cardinality());
@@ -493,6 +515,42 @@ public class NucleotideImputationUtils {
 		return polybits;
 	}
 	
+	public static BitSet whichSitesSegregateCorrectly(Alignment a, double maxMissing, double ratio) {
+		int nsites = a.getSiteCount();
+		int ntaxa = a.getSequenceCount();
+		double totalgametes = 2 * ntaxa;
+		OpenBitSet polybits = new OpenBitSet(nsites);
+		for (int s = 0; s < nsites; s++) {
+			int[][] freq = a.getAllelesSortedByFrequency(s);
+			int ngametes = a.getTotalGametesNotMissing(s);
+			double pMissing = (totalgametes - ngametes) / totalgametes;
+			if (freq[1].length > 1 && pMissing <= maxMissing) {
+				int Mj = freq[1][0];
+				int Mn = freq[1][1];
+				double pmono = binomialProbability(Mj + Mn, Mn, 0.002);
+				double pquarter = binomialProbability(Mj + Mn, Mn, 0.25);
+				double phalf = binomialProbability(Mj + Mn, Mn, 0.5);
+				if (ratio == 0.25 || ratio == 0.75) {
+					if (pquarter / (pmono + phalf) > 5) polybits.fastSet(s);
+				} else {
+					if (phalf / (pmono + pquarter) > 5) polybits.fastSet(s);
+				}
+			}
+		}
+		return polybits;
+
+	}
+	
+	private static double binomialProbability(int trials, int successes, double pSuccess) {
+		double n = trials;
+		double k = successes;
+
+		double logprob = GammaFunction.lnGamma(n + 1.0) -
+		GammaFunction.lnGamma(k + 1.0) - GammaFunction.lnGamma(n - k + 1.0) + k * Math.log(pSuccess) + (n - k) * Math.log(1 - pSuccess);
+
+		return Math.exp(logprob);
+	}
+	
 	//returns a byte array containing the A allele as element 0 and the C allele as element 1, or null if the snp is not in LD
 	public static byte[] recodeParentalSnps(int snp, LinkedList<Integer> testSnps, MutableNucleotideAlignment snpAlignment, double minr) {
 		int ntaxa = snpAlignment.getSequenceCount();
@@ -705,16 +763,20 @@ public class NucleotideImputationUtils {
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
 			Integer snpIndex = snpIndices.remove();
-			if (taxaClusters[0].getMajorAllele(s) != taxaClusters[1].getMajorAllele(s)) {
-				if ( taxaClusters[0].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && taxaClusters[1].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && 
-						taxaClusters[0].getMajorAlleleFrequency(s) > .6 &&  taxaClusters[1].getMajorAlleleFrequency(s) > .6) {
-					include[s] = true;
-					includedSnps[snpcount++] = s;
-					snpIndices.add(snpIndex);
-				} else include[s] = false;
+			if ( taxaClusters[0].getMajorAllele(s) != taxaClusters[1].getMajorAllele(s) ) {
+//				if ( taxaClusters[0].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && taxaClusters[1].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && 
+//						taxaClusters[0].getMajorAlleleFrequency(s) > .6 &&  taxaClusters[1].getMajorAlleleFrequency(s) > .6) {
+//					include[s] = true;
+//					includedSnps[snpcount++] = s;
+//					snpIndices.add(snpIndex);
+//				} else include[s] = false;
+				include[s] = true;
+				includedSnps[snpcount++] = s;
+				snpIndices.add(snpIndex);
 			} else {
 //				System.out.println("alleles equal at " + s);
 //				include[s] = false;
+				include[s] = false;
 			}
 		}
 		
@@ -1462,10 +1524,68 @@ public class NucleotideImputationUtils {
     	return taxaStates;
     }
     
-    public static BitSet ldfilter(Alignment a, BitSet[] hetmask) {
-    	int window = 25;
+    public static BitSet ldfilter(Alignment a, int window, double minR) {
+    	int nsites = a.getSiteCount();
+    	OpenBitSet ldbits = new OpenBitSet(nsites);
+    	for (int s = 0; s < nsites; s++) {
+    		double avgr = neighborLD(a, s, window);
+    		if (avgr >= minR) ldbits.fastSet(s);
+    	}
     	return null;
     }
+    
+    public static BitSet ldfilter(Alignment a, int window, double minR, BitSet filterBits) {
+    	int nsites = a.getSiteCount();
+    	OpenBitSet ldbits = new OpenBitSet(nsites);
+    	for (int s = 0; s < nsites; s++) {
+    		if (filterBits.fastGet(s)) {
+        		double avgr = neighborLD(a, s, window);
+        		if (avgr >= minR) ldbits.fastSet(s);
+    		}
+    	}
+    	return null;
+    }
+    
+    public static double neighborLD(Alignment a, int snp, int window) {
+    	double sumr = 0;
+    	double count = 0;
+    	int nsites = a.getSiteCount();
+    	for (int i = 0; i < window; i++) {
+    		int site = snp - window;
+    		if (site > -1) {
+    			sumr += Math.abs(computeR(snp, snp + i, a));
+    			count++;
+    		}
+    		site = snp + window;
+    		if (site < nsites) {
+        		sumr += Math.abs(computeR(snp, snp - i, a));
+    			count++;
+    		}
+    		
+    	}
+    	return sumr / count;
+    }
+    
+    public static double neighborLD(Alignment a, int snp, int window, BitSet filterBits) {
+    	double sumr = 0;
+    	double count = 0;
+    	int nsites = a.getSiteCount();
+    	for (int i = 0; i < window; i++) {
+    		int site = snp - window;
+    		if (site > -1) {
+    			sumr += Math.abs(computeR(snp, snp + i, a));
+    			count++;
+    		}
+    		site = snp + window;
+    		if (site < nsites) {
+        		sumr += Math.abs(computeR(snp, snp - i, a));
+    			count++;
+    		}
+    		
+    	}
+    	return Double.NaN; //needs to make use of filterbits
+    }
+
 }
 
 

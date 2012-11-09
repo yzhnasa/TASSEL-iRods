@@ -15,6 +15,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
@@ -24,6 +26,8 @@ import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.util.BitSet;
 
 public class ImputationUtils {
+	private static final Logger myLogger = Logger.getLogger(ImputationUtils.class);
+
 	public static Pattern tab = Pattern.compile("\t");
 	
 	public static int[] order(int[] array) {
@@ -217,13 +221,24 @@ public class ImputationUtils {
 		int ntaxa = inputAlignment.getSequenceCount();
 		boolean[] include = new boolean[ntaxa];
 		
+		int nIncluded = 0;
 		for (int t = 0; t < ntaxa; t++) {
-			if (inputAlignment.getTotalGametesNotMissingForTaxon(t) >= minGametesPerTaxon) include[t] = true;
+			if (inputAlignment.getTotalGametesNotMissingForTaxon(t) >= minGametesPerTaxon) {
+				nIncluded++;
+				include[t] = true;
+			}
 			else include[t] = false;
 		}
 		
-		Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getIdGroup(), include));
-		Alignment myAlignment = BitAlignment.getInstance(fa, false);
+		Alignment myAlignment;
+		if (nIncluded < 10) {
+			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.getSNPID(0));
+			return null;
+		} else {
+			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getIdGroup(), include));
+			
+			myAlignment = BitAlignment.getInstance(fa, false);
+		}
 		int ntrials = 5;
 		int maxiter = 5;
 		
@@ -589,3 +604,4 @@ public class ImputationUtils {
 		
 	}
 }
+
