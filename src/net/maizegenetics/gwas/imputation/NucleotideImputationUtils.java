@@ -198,17 +198,32 @@ public class NucleotideImputationUtils {
                 popdata.imputed = ConvertSBitTBitPlugin.convertAlignment(ldAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 	}
 
-	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
-//		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
-		BitSet polybits = whichSitesSegregateCorrectly(popdata.original, maxMissing, 0.5);
-//		BitSet filteredBits = polybits;
+	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize, double minR) {
+		
+		BitSet polybits;
+		double segratio = popdata.contribution1;
+		if (segratio == 0.5 || segratio == 0.25 || segratio == 0.75) {
+			polybits = whichSitesSegregateCorrectly(popdata.original, maxMissing, segratio);
+		} else {
+			polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
+		}
 		System.out.println("polybits cardinality = " + polybits.cardinality());
+
 		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
 		filteredBits.and(polybits);
 		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
 		
+		BitSet ldFilteredBits;
+		if (windowSize > 0) {
+			int halfWindow = windowSize / 2;
+			ldFilteredBits = ldfilter(popdata.original, halfWindow, minR, filteredBits);
+		} else {
+			ldFilteredBits = filteredBits;
+		}
+		System.out.println("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
+		
 		//get het mask
-		double phet = 0.075;
+//		double phet = 0.075;
 //		double phet = (1 - popdata.inbredCoef)/2;
 //		BitSet[] hetMask = hetMasker(popdata.original, phet);
 
@@ -256,6 +271,7 @@ public class NucleotideImputationUtils {
 //				}
 //			}
 //			mna.clean();
+			
 			Alignment windowAlignment = FilterAlignment.getInstance(popdata.original, snpIndex);
 			LinkedList<Integer> snpList = new LinkedList<Integer>(); //snpList is a list of snps (indices) in this window
 			for (int s:snpIndex) snpList.add(s);
@@ -1525,25 +1541,37 @@ public class NucleotideImputationUtils {
     }
     
     public static BitSet ldfilter(Alignment a, int window, double minR) {
+    	try {
+    		a.optimizeForSites(null);
+    	} catch(Exception e) {
+    		a = BitAlignment.getInstance(a, true);
+    	}
+
     	int nsites = a.getSiteCount();
     	OpenBitSet ldbits = new OpenBitSet(nsites);
     	for (int s = 0; s < nsites; s++) {
     		double avgr = neighborLD(a, s, window);
     		if (avgr >= minR) ldbits.fastSet(s);
     	}
-    	return null;
+    	return ldbits;
     }
     
     public static BitSet ldfilter(Alignment a, int window, double minR, BitSet filterBits) {
+    	try {
+    		a.optimizeForSites(null);
+    	} catch(Exception e) {
+    		a = BitAlignment.getInstance(a, true);
+    	}
+    	
     	int nsites = a.getSiteCount();
     	OpenBitSet ldbits = new OpenBitSet(nsites);
     	for (int s = 0; s < nsites; s++) {
     		if (filterBits.fastGet(s)) {
-        		double avgr = neighborLD(a, s, window);
+        		double avgr = neighborLD(a, s, window, filterBits);
         		if (avgr >= minR) ldbits.fastSet(s);
     		}
     	}
-    	return null;
+    	return ldbits;
     }
     
     public static double neighborLD(Alignment a, int snp, int window) {
@@ -1568,22 +1596,34 @@ public class NucleotideImputationUtils {
     
     public static double neighborLD(Alignment a, int snp, int window, BitSet filterBits) {
     	double sumr = 0;
-    	double count = 0;
     	int nsites = a.getSiteCount();
-    	for (int i = 0; i < window; i++) {
-    		int site = snp - window;
-    		if (site > -1) {
-    			sumr += Math.abs(computeR(snp, snp + i, a));
-    			count++;
+    	
+    	//test next <window> sites or to the end of the chromosome
+    	int site = snp + 1;
+    	int siteCount = 0;
+    	int sitesTestedCount = 0;
+    	while (siteCount < window && site < nsites) {
+    		if (filterBits.fastGet(site)) {
+    			sumr += Math.abs(computeR(snp, site, a));
+    			siteCount++;
+    			sitesTestedCount++;
     		}
-    		site = snp + window;
-    		if (site < nsites) {
-        		sumr += Math.abs(computeR(snp, snp - i, a));
-    			count++;
-    		}
-    		
+    		site++;
     	}
-    	return Double.NaN; //needs to make use of filterbits
+    	
+    	//test previous <window> sites or to the beginning of the chromosome
+    	site = snp - 1;
+    	siteCount = 0;
+    	while (siteCount < window && site >= 0) {
+    		if (filterBits.fastGet(site)) {
+    			sumr += Math.abs(computeR(snp, site, a));
+    			siteCount++;
+    			sitesTestedCount++;
+    		}
+    		site--;
+    	}
+    	
+    	return sumr / sitesTestedCount;
     }
 
 }
