@@ -207,20 +207,20 @@ public class NucleotideImputationUtils {
 		} else {
 			polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
 		}
-		System.out.println("polybits cardinality = " + polybits.cardinality());
+		myLogger.info("polybits cardinality = " + polybits.cardinality());
 
 		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
 		filteredBits.and(polybits);
 		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
 		
 		BitSet ldFilteredBits;
-		if (windowSize > 0) {
+		if (minR > 0) {
 			int halfWindow = windowSize / 2;
 			ldFilteredBits = ldfilter(popdata.original, halfWindow, minR, filteredBits);
 		} else {
 			ldFilteredBits = filteredBits;
 		}
-		System.out.println("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
+		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
 		//get het mask
 //		double phet = 0.075;
@@ -350,6 +350,79 @@ public class NucleotideImputationUtils {
 		popdata.imputed = BitAlignment.getInstance(mna, true); 
 	}
 
+	public static void callParentAllelesByWindowForBackcrosses(PopulationData popdata, double maxMissing, double minMaf, int windowSize, double minR) {
+		
+		BitSet polybits = whichSitesSegregateCorrectly(popdata.original, maxMissing, .25);
+		myLogger.info("polybits cardinality = " + polybits.cardinality());
+
+		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
+		filteredBits.and(polybits);
+		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
+		
+		BitSet ldFilteredBits;
+		if (minR > 0) {
+			int halfWindow = windowSize / 2;
+			ldFilteredBits = ldfilter(popdata.original, halfWindow, minR, filteredBits);
+		} else {
+			ldFilteredBits = filteredBits;
+		}
+		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
+		
+		int nsites = popdata.original.getSiteCount();
+		int ntaxa = popdata.original.getSequenceCount();
+		popdata.alleleA = new byte[nsites];
+		popdata.alleleC = new byte[nsites];
+		popdata.snpIndex = new OpenBitSet(nsites);
+		for (int s = 0; s < nsites; s++) {
+			if(ldFilteredBits.fastGet(s)) {
+				popdata.alleleA[s] = popdata.original.getMajorAllele(s);
+				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.snpIndex.fastSet(s);
+			} 
+		}
+		
+		
+		myLogger.info("number of called snps = " + popdata.snpIndex.cardinality());
+		
+		//create the imputed array with A/C calls
+		int nsnps = (int) popdata.snpIndex.cardinality();
+		ntaxa = popdata.original.getSequenceCount();
+		nsites = popdata.original.getSiteCount();
+		int[] snpIndex = new int[nsnps];
+		int snpcount = 0;
+		for (int s = 0; s < nsites; s++) {
+			if (popdata.snpIndex.fastGet(s)) snpIndex[snpcount++] = s;
+		}
+		
+		snpIndex = Arrays.copyOf(snpIndex, snpcount);
+		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
+		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
+		
+		nsnps = snpIndex.length;
+		for (int s = 0; s < nsnps; s++) {
+			byte Aallele = popdata.alleleA[snpIndex[s]];
+			byte Callele = popdata.alleleC[snpIndex[s]];
+			byte genotypeA = (byte) (Aallele << 4 | Aallele);
+			byte genotypeC = (byte) (Callele << 4 | Callele);
+			byte het1 = (byte) (Aallele << 4 | Callele);
+			byte het2 = (byte) (Callele << 4 | Aallele);
+			for (int t = 0; t < ntaxa; t++) {
+				byte val = mna.getBase(t, s);
+				if (val == genotypeA) {
+					mna.setBase(t, s, AA);
+				} else if (val == genotypeC) {
+					mna.setBase(t, s, CC);
+				} else if (val == het1 || val == het2) {
+					mna.setBase(t, s, AC);
+				} else {
+					mna.setBase(t, s, NN);
+				}
+			}
+		}
+		mna.clean();
+		popdata.imputed = BitAlignment.getInstance(mna, true); 
+	}
+	
 	public static void checkAlignmentOrder(Alignment[] alignments, PopulationData family, double r) {
 		boolean swapAlignments = false;
 		boolean parentsInSameGroup = false;
@@ -547,9 +620,9 @@ public class NucleotideImputationUtils {
 				double pquarter = binomialProbability(Mj + Mn, Mn, 0.25);
 				double phalf = binomialProbability(Mj + Mn, Mn, 0.5);
 				if (ratio == 0.25 || ratio == 0.75) {
-					if (pquarter / (pmono + phalf) > 5) polybits.fastSet(s);
+					if (pquarter / (pmono + phalf) > 4) polybits.fastSet(s);
 				} else {
-					if (phalf / (pmono + pquarter) > 5) polybits.fastSet(s);
+					if (phalf / (pmono + pquarter) > 4) polybits.fastSet(s);
 				}
 			}
 		}
