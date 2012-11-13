@@ -478,7 +478,7 @@ public class KnownParentMinorWindowImputation {
         return results;
     }
     
-    private static void createSynthetic(String donorFile, String unImpTargetFile, int blockSize,
+    public static void createSynthetic(String donorFile, String unImpTargetFile, int blockSize,
             double propPresent, double inbreedingF, int taxaNumber) {
         Alignment a=ImportUtils.readFromHapmap(donorFile, (ProgressListener)null);
         System.out.printf("Read %s Sites %d Taxa %d %n", donorFile, a.getSiteCount(), a.getSequenceCount());
@@ -495,7 +495,15 @@ public class KnownParentMinorWindowImputation {
                 if(p2<p1) {int temp=p1; p1=p2; p2=temp;}
                 tName.append("|"+p1+"_"+p2+"s"+b);
                 for (int s = b; (s < b+blockSize) && (s<a.getSiteCount()); s++) {
-                    if(r.nextDouble()<propPresent) {
+                    double presentRoll=r.nextDouble();
+                    if(presentRoll<(propPresent*propPresent)) {
+                        if(a.getBase(p1, s)==Alignment.UNKNOWN_DIPLOID_ALLELE) {mna.setBase(t, s, a.getBase(p2, s));}
+                        else if(a.getBase(p2, s)==Alignment.UNKNOWN_DIPLOID_ALLELE) {mna.setBase(t, s, a.getBase(p1, s));}
+                        else {
+                            byte het=AlignmentUtils.getDiploidValue(a.getBase(p1, s), a.getBase(p2, s));
+                            mna.setBase(t, s, het);
+                        }
+                    } else if(presentRoll<propPresent) {
                         if(r.nextDouble()<0.5) {
                             mna.setBase(t, s, a.getBase(p1, s));
                         } else {

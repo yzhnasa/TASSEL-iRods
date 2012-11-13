@@ -198,17 +198,32 @@ public class NucleotideImputationUtils {
                 popdata.imputed = ConvertSBitTBitPlugin.convertAlignment(ldAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 	}
 
-	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
-//		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
-		BitSet polybits = whichSitesSegregateCorrectly(popdata.original, maxMissing, 0.5);
-//		BitSet filteredBits = polybits;
-		System.out.println("polybits cardinality = " + polybits.cardinality());
+	public static void callParentAllelesByWindow(PopulationData popdata, double maxMissing, double minMaf, int windowSize, double minR) {
+		
+		BitSet polybits;
+		double segratio = popdata.contribution1;
+		if (segratio == 0.5 || segratio == 0.25 || segratio == 0.75) {
+			polybits = whichSitesSegregateCorrectly(popdata.original, maxMissing, segratio);
+		} else {
+			polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
+		}
+		myLogger.info("polybits cardinality = " + polybits.cardinality());
+
 		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
 		filteredBits.and(polybits);
 		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
 		
+		BitSet ldFilteredBits;
+		if (minR > 0) {
+			int halfWindow = windowSize / 2;
+			ldFilteredBits = ldfilter(popdata.original, halfWindow, minR, filteredBits);
+		} else {
+			ldFilteredBits = filteredBits;
+		}
+		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
+		
 		//get het mask
-		double phet = 0.075;
+//		double phet = 0.075;
 //		double phet = (1 - popdata.inbredCoef)/2;
 //		BitSet[] hetMask = hetMasker(popdata.original, phet);
 
@@ -256,6 +271,7 @@ public class NucleotideImputationUtils {
 //				}
 //			}
 //			mna.clean();
+			
 			Alignment windowAlignment = FilterAlignment.getInstance(popdata.original, snpIndex);
 			LinkedList<Integer> snpList = new LinkedList<Integer>(); //snpList is a list of snps (indices) in this window
 			for (int s:snpIndex) snpList.add(s);
@@ -334,6 +350,79 @@ public class NucleotideImputationUtils {
 		popdata.imputed = BitAlignment.getInstance(mna, true); 
 	}
 
+	public static void callParentAllelesByWindowForBackcrosses(PopulationData popdata, double maxMissing, double minMaf, int windowSize, double minR) {
+		
+		BitSet polybits = whichSitesSegregateCorrectly(popdata.original, maxMissing, .25);
+		myLogger.info("polybits cardinality = " + polybits.cardinality());
+
+		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
+		filteredBits.and(polybits);
+		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
+		
+		BitSet ldFilteredBits;
+		if (minR > 0) {
+			int halfWindow = windowSize / 2;
+			ldFilteredBits = ldfilter(popdata.original, halfWindow, minR, filteredBits);
+		} else {
+			ldFilteredBits = filteredBits;
+		}
+		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
+		
+		int nsites = popdata.original.getSiteCount();
+		int ntaxa = popdata.original.getSequenceCount();
+		popdata.alleleA = new byte[nsites];
+		popdata.alleleC = new byte[nsites];
+		popdata.snpIndex = new OpenBitSet(nsites);
+		for (int s = 0; s < nsites; s++) {
+			if(ldFilteredBits.fastGet(s)) {
+				popdata.alleleA[s] = popdata.original.getMajorAllele(s);
+				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.snpIndex.fastSet(s);
+			} 
+		}
+		
+		
+		myLogger.info("number of called snps = " + popdata.snpIndex.cardinality());
+		
+		//create the imputed array with A/C calls
+		int nsnps = (int) popdata.snpIndex.cardinality();
+		ntaxa = popdata.original.getSequenceCount();
+		nsites = popdata.original.getSiteCount();
+		int[] snpIndex = new int[nsnps];
+		int snpcount = 0;
+		for (int s = 0; s < nsites; s++) {
+			if (popdata.snpIndex.fastGet(s)) snpIndex[snpcount++] = s;
+		}
+		
+		snpIndex = Arrays.copyOf(snpIndex, snpcount);
+		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
+		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
+		
+		nsnps = snpIndex.length;
+		for (int s = 0; s < nsnps; s++) {
+			byte Aallele = popdata.alleleA[snpIndex[s]];
+			byte Callele = popdata.alleleC[snpIndex[s]];
+			byte genotypeA = (byte) (Aallele << 4 | Aallele);
+			byte genotypeC = (byte) (Callele << 4 | Callele);
+			byte het1 = (byte) (Aallele << 4 | Callele);
+			byte het2 = (byte) (Callele << 4 | Aallele);
+			for (int t = 0; t < ntaxa; t++) {
+				byte val = mna.getBase(t, s);
+				if (val == genotypeA) {
+					mna.setBase(t, s, AA);
+				} else if (val == genotypeC) {
+					mna.setBase(t, s, CC);
+				} else if (val == het1 || val == het2) {
+					mna.setBase(t, s, AC);
+				} else {
+					mna.setBase(t, s, NN);
+				}
+			}
+		}
+		mna.clean();
+		popdata.imputed = BitAlignment.getInstance(mna, true); 
+	}
+	
 	public static void checkAlignmentOrder(Alignment[] alignments, PopulationData family, double r) {
 		boolean swapAlignments = false;
 		boolean parentsInSameGroup = false;
@@ -531,9 +620,9 @@ public class NucleotideImputationUtils {
 				double pquarter = binomialProbability(Mj + Mn, Mn, 0.25);
 				double phalf = binomialProbability(Mj + Mn, Mn, 0.5);
 				if (ratio == 0.25 || ratio == 0.75) {
-					if (pquarter / (pmono + phalf) > 5) polybits.fastSet(s);
+					if (pquarter / (pmono + phalf) > 4) polybits.fastSet(s);
 				} else {
-					if (phalf / (pmono + pquarter) > 5) polybits.fastSet(s);
+					if (phalf / (pmono + pquarter) > 4) polybits.fastSet(s);
 				}
 			}
 		}
@@ -1525,25 +1614,37 @@ public class NucleotideImputationUtils {
     }
     
     public static BitSet ldfilter(Alignment a, int window, double minR) {
+    	try {
+    		a.optimizeForSites(null);
+    	} catch(Exception e) {
+    		a = BitAlignment.getInstance(a, true);
+    	}
+
     	int nsites = a.getSiteCount();
     	OpenBitSet ldbits = new OpenBitSet(nsites);
     	for (int s = 0; s < nsites; s++) {
     		double avgr = neighborLD(a, s, window);
     		if (avgr >= minR) ldbits.fastSet(s);
     	}
-    	return null;
+    	return ldbits;
     }
     
     public static BitSet ldfilter(Alignment a, int window, double minR, BitSet filterBits) {
+    	try {
+    		a.optimizeForSites(null);
+    	} catch(Exception e) {
+    		a = BitAlignment.getInstance(a, true);
+    	}
+    	
     	int nsites = a.getSiteCount();
     	OpenBitSet ldbits = new OpenBitSet(nsites);
     	for (int s = 0; s < nsites; s++) {
     		if (filterBits.fastGet(s)) {
-        		double avgr = neighborLD(a, s, window);
+        		double avgr = neighborLD(a, s, window, filterBits);
         		if (avgr >= minR) ldbits.fastSet(s);
     		}
     	}
-    	return null;
+    	return ldbits;
     }
     
     public static double neighborLD(Alignment a, int snp, int window) {
@@ -1568,22 +1669,34 @@ public class NucleotideImputationUtils {
     
     public static double neighborLD(Alignment a, int snp, int window, BitSet filterBits) {
     	double sumr = 0;
-    	double count = 0;
     	int nsites = a.getSiteCount();
-    	for (int i = 0; i < window; i++) {
-    		int site = snp - window;
-    		if (site > -1) {
-    			sumr += Math.abs(computeR(snp, snp + i, a));
-    			count++;
+    	
+    	//test next <window> sites or to the end of the chromosome
+    	int site = snp + 1;
+    	int siteCount = 0;
+    	int sitesTestedCount = 0;
+    	while (siteCount < window && site < nsites) {
+    		if (filterBits.fastGet(site)) {
+    			sumr += Math.abs(computeR(snp, site, a));
+    			siteCount++;
+    			sitesTestedCount++;
     		}
-    		site = snp + window;
-    		if (site < nsites) {
-        		sumr += Math.abs(computeR(snp, snp - i, a));
-    			count++;
-    		}
-    		
+    		site++;
     	}
-    	return Double.NaN; //needs to make use of filterbits
+    	
+    	//test previous <window> sites or to the beginning of the chromosome
+    	site = snp - 1;
+    	siteCount = 0;
+    	while (siteCount < window && site >= 0) {
+    		if (filterBits.fastGet(site)) {
+    			sumr += Math.abs(computeR(snp, site, a));
+    			siteCount++;
+    			sitesTestedCount++;
+    		}
+    		site--;
+    	}
+    	
+    	return sumr / sitesTestedCount;
     }
 
     public MutableNucleotideAlignment imputeUsingPhasedViterbi(Alignment a, double probHeterozygous, String familyName) {

@@ -5,19 +5,17 @@ import java.awt.Frame;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.swing.ImageIcon;
 
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.util.ArgsEngine;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 
@@ -25,21 +23,24 @@ import org.apache.log4j.Logger;
 
 /**
  * Basic filters needed for removing bad sites and taxa from GBS pipelines
+ *
  * @author edbuckler
  */
 public class GBSHapMapFiltersPlugin extends AbstractPlugin {
 
-    int startChromosome = 1, endChromosome = 10;
+    private int startChromosome = 1, endChromosome = 10;
     private ArgsEngine myArgsEngine = null;
     private static final Logger myLogger = Logger.getLogger(GBSHapMapFiltersPlugin.class);
+    private String snpLogFileName;
+    private SNPLogging snpLogging = null;
     private String suppliedInputFileName, suppliedOutputFileName, infile, outfile;
     private double minF = -2.0, minMAF = 0, maxMAF = 1, minPresence = 0;
     private boolean usePedigree = false;
-    HashMap<String, Double> taxaFs = null;
+    private HashMap<String, Double> taxaFs = null;
     private boolean hLD = false;
     private double minR2 = 0.01;
     private double minBonP = 0.01;
-    String[] lowCoverageTaxa = null;
+    private String[] lowCoverageTaxa = null;
 
     public GBSHapMapFiltersPlugin() {
         super(null, false);
@@ -90,6 +91,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             if (usePedigree) {
                 // filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, -2.0, minCount, minMAF, maxMAF);
+                String value = "isRefAltCoded: false" + " minF: -2.0" + " minCount: " + minCount + " minMAF: " + minMAF + " maxMAF: " + maxMAF;
+                logRemovedSNPs(goodLowHetSites, a, "Filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa", "Removed", value, "");
                 a = FilterAlignment.getInstance(a, goodLowHetSites);
 
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
@@ -99,9 +102,13 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0);
                 inbredGenos = null;
                 System.gc();
+                value = "isRefAltCoded: false" + " minF: " + minF + " minCount: 0" + " minMAF: -0.1" + " maxMAF: 2.0";
+                logRemovedSNPs(goodLowFSites, a, "Filter the sites for minF only based only on the taxa with expectedF >= minF", "Removed", value, "");
                 a = FilterAlignment.getInstance(a, goodLowFSites);
             } else {
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, minF, minCount, minMAF, maxMAF);
+                String value = "isRefAltCoded: false" + " minF: " + minF + " minCount: " + minCount + " minMAF: " + minMAF + " maxMAF: " + maxMAF;
+                logRemovedSNPs(goodLowHetSites, a, "Filter the sites", "Removed", value, "");
                 a = FilterAlignment.getInstance(a, goodLowHetSites);
             }
             myLogger.info("SiteFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
@@ -127,7 +134,23 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 myLogger.info("File written after basic & LD filtering:" + outfile);
             }
         }
+        snpLogging.close();
         return null;
+    }
+
+    private void logRemovedSNPs(int[] keepSNPs, Alignment a, String test, String status, String value, String cutoff) {
+        int[] temp = new int[keepSNPs.length];
+        System.arraycopy(keepSNPs, 0, temp, 0, keepSNPs.length);
+        Arrays.sort(temp);
+        int count = 0;
+        int numSites = a.getSiteCount();
+        for (int s = 0; s < numSites; s++) {
+            if ((count < numSites) && (s == temp[count])) {
+                count++;
+            } else {
+                snpLogging.writeEntry(a, s, null, null, this.getClass(), test, status, value, cutoff);
+            }
+        }
     }
 
     private void printUsage() {
@@ -148,7 +171,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 + "-mnR2    Minimum R-square value for the LD filter (default: " + minR2 + ")\n"
                 + "-mnBonP  Minimum Bonferroni-corrected p-value for the LD filter (default: " + minBonP + ")\n"
                 + "-sC      Start chromosome (default: 1).\n"
-                + "-eC      End chromosome (default: 10).\n\n\n");
+                + "-eC      End chromosome (default: 10).\n"
+                + "-snpLog  SNPs Removed Log file name\n\n");
     }
 
     @Override
@@ -173,6 +197,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             myArgsEngine.add("-mnBonP", "--minBonferronPForLD", true);
             myArgsEngine.add("-sC", "--startChrom", true);
             myArgsEngine.add("-eC", "--endChrom", true);
+            myArgsEngine.add("-snpLog", "", true);
         }
 
         myArgsEngine.parse(args);
@@ -244,30 +269,11 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalArgumentException("Please specify an output file name.\n");
         }
-    }
 
-    public static void tagmapTextToBinary() {
-        //String infile="c:/output9m.txt";
-        //String outfile="c:/output_binary.dat";
-        String infile = "/Users/edbuckler/SolexaAnal/GBS/test/14FCGBS.tg.txt";
-        String outfile = "/Users/edbuckler/SolexaAnal/GBS/test/14FCGBS.tg.bin";
-        TagsOnPhysicalMap theTOPM = new TagsOnPhysicalMap(infile, false);
-        theTOPM.sortTable(true);
-        myLogger.info(theTOPM.getTagCount());
-        theTOPM.writeBinaryFile(new File(outfile));
-        theTOPM.writeTextFile(new File("/Users/edbuckler/SolexaAnal/GBS/test/14FCGBS.tg.sort.txt"));
-    }
-
-    public static void removeDuplicateTagsOnMap() {
-//	String infile="c:/sample_tags.txt";
-        String infile = "/Users/edbuckler/SolexaAnal/GBS/reftags/14FCGBS.tg.txt";
-        String outfile = "/Users/edbuckler/SolexaAnal/GBS/test/14FCGBS.tg.ndup.txt";
-        TagsOnPhysicalMap theTOPM = new TagsOnPhysicalMap(infile, false);
-        TagsOnPhysicalMap theTOPMNoDup = new TagsOnPhysicalMap(theTOPM, true);
-
-        myLogger.info(theTOPMNoDup.getTagCount());
-        theTOPMNoDup.writeTextFile(new File(outfile));
-        theTOPMNoDup.writeBinaryFile(new File(outfile.replace(".txt", ".bin")));
+        if (myArgsEngine.getBoolean("-snpLog")) {
+            snpLogFileName = myArgsEngine.getString("-snpLog");
+        }
+        snpLogging = new SNPLogging(snpLogFileName);
     }
 
     public static String[] getLowCoverageLines(Alignment a, double pCoverage) {
@@ -280,7 +286,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 }
             }
             double propCovered = (double) covered / (double) a.getSiteCount();
-//            myLogger.info(a.getTaxaName(i)+":"+propCovered);
+            // myLogger.info(a.getTaxaName(i)+":"+propCovered);
             if (propCovered < pCoverage) {
                 lowLines.add(a.getIdGroup().getIdentifier(i).getFullName());
             }
@@ -304,52 +310,6 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
         myLogger.info(nInbredTaxa + " taxa with an Expected F >= the mnF of " + minF + " were found in the pedigree file (-p option)");
         String[] highF = highFLines.toArray(new String[0]);
         return highF;
-    }
-
-    public static void fuseHapMapWithMultipleChromosomes() {
-        String[] infileHMP = {"/Users/edbuckler/SolexaAnal/SNP55K/SNP55K_maize282_AGPv1_origStrand_20100513.hmp.txt",
-            "/Users/edbuckler/SolexaAnal/GBS/test/HiSeq282wLowHet_110215.hmp.txt"};
-        byte[] infilePrefix = {(byte) 'A', (byte) 'G'};
-        String outfileHMP = "/Users/edbuckler/SolexaAnal/GBS/test/HS55K_110215.hmp.txt";
-        Alignment[] a = new Alignment[infileHMP.length];
-        IdGroup commonIDs = null;
-        int totalSites = 0;
-        for (int i = 0; i < a.length; i++) {
-            myLogger.info("Reading:" + infileHMP[i]);
-            a[i] = ImportUtils.readFromHapmap(infileHMP[i], null);
-            if (i == 0) {
-                commonIDs = a[i].getIdGroup();
-            } else {
-                commonIDs = IdGroupUtils.getCommonIds(commonIDs, a[i].getIdGroup());
-            }
-            totalSites += a[i].getSiteCount();
-        }
-
-        //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(commonIDs, totalSites, a[0].getLoci());
-        MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(commonIDs, totalSites);
-        int currSite = 0;
-        for (int i = 0; i < a.length; i++) {
-            for (int j = 0; j < a[i].getSiteCount(); j++) {
-                theMSA.setLocusOfSite(currSite, a[i].getLocus(j));
-                theMSA.setPositionOfSite(currSite, a[i].getPositionInLocus(j));
-                //theMSA.setSitePrefix(currSite, infilePrefix[i]);
-                //    theMSA.setStrandOfSite(currSite, (byte)(a[i].isPositiveStrand(j)==0));
-                currSite++;
-            }
-        }
-        for (int t = 0; t < theMSA.getSequenceCount(); t++) {
-            currSite = 0;
-            for (int i = 0; i < a.length; i++) {
-                int aID = a[i].getIdGroup().whichIdNumber(theMSA.getTaxaName(t));
-                for (int j = 0; j < a[i].getSiteCount(); j++) {
-                    theMSA.setBase(t, currSite, a[i].getBase(aID, j));
-                    currSite++;
-                }
-            }
-        }
-        theMSA.clean();
-        //theMSA.sortSiteByPhysicalPosition();
-        ExportUtils.writeToHapmap(theMSA, false, outfileHMP, '\t', null);
     }
 
     @Override

@@ -4,16 +4,10 @@
  */
 package net.maizegenetics.gbs.maps;
 
-import cern.colt.GenericSorting;
-import cern.colt.Swapper;
-import cern.colt.function.IntComparator;
 import ch.systemsx.cisd.hdf5.*;
 import java.io.File;
-import java.util.Arrays;
 import net.maizegenetics.gbs.tagdist.AbstractTags;
 import net.maizegenetics.pal.alignment.Locus;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 
 /**
  *
@@ -107,7 +101,8 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
         h5.close();
     }
     
-    public TagsOnPhysMapHDF5(String theHDF5file) {
+    public TagsOnPhysMapHDF5(String theHDF5file, boolean cacheAllMappingBlocks) {
+        this.cacheAllMappingBlocks=cacheAllMappingBlocks;
         System.out.println("Opening :"+theHDF5file);
         h5=HDF5Factory.open(theHDF5file);
         this.tagNum=h5.getIntAttribute("/", "tagCount");
@@ -126,16 +121,33 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
         if(index==cachedMappingIndex) return;
         int block=index>>bitShiftChunk;
         if(cachedMappingBlock!=block) {
+            if(cleanMap==false) saveCacheBackToFile();
             for(int mi=0; mi<maxMapping; mi++) {
-                if(cleanMap==false) h5.compounds().writeArrayBlock("map0", tmiType, cachedTMIBlock[mi], block);
                 cachedTMIBlock[mi]=h5.compounds().readArrayBlock("map0", tmiType, chunkSize, block);
                 cachedMappingBlock=block;
                 if(cacheAllMappingBlocks==false) break;
             }
-            cleanMap=true;
         }
         this.cachedTMI=cachedTMIBlock[0][index%chunkSize];
         this.cachedMappingIndex=index;
+    }
+    
+    private void saveCacheBackToFile() {
+        int block=cachedMappingIndex>>bitShiftChunk;
+        if(cachedMappingBlock!=block) {
+            for(int mi=0; mi<maxMapping; mi++) {
+                if(cleanMap==false) {
+                    h5.compounds().writeArrayBlock("map0", tmiType, cachedTMIBlock[mi], block);
+                }
+                if(cacheAllMappingBlocks==false) break;
+            }
+            if(cleanMap==false) {h5.writeByteArray("multimaps", multimaps);}  //this could be made more efficient by just writing the block
+            cleanMap=true;
+        }
+    }
+    
+    public void getFileReadyForClosing() {
+        saveCacheBackToFile();
     }
     
 //    private void cacheMappingInfo(int index) {
@@ -156,6 +168,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
         if(cacheAllMappingBlocks==false) {cacheMappingInfo(index);}
         if(cachedMappingIndex!=index) cacheMappingInfo(index);
         cachedTMIBlock[mapIndex][index%chunkSize]=theTMI;
+        if(multimaps[index]>=mapIndex) multimaps[index]=(byte)(mapIndex+1);
         cleanMap=false;
     }
     
@@ -273,6 +286,12 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public void setMultimaps(int index, byte multimaps) {
+        this.multimaps[index] = multimaps;
+    }
+    
+    
+
     @Override
     public void setChromoPosition(int index, int chromosome, byte strand, int positionMin, int positionMax) {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -364,7 +383,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
         boolean binary=!inTOPMFile.endsWith(".txt");
         TagsOnPhysicalMap inTOPM = new TagsOnPhysicalMap(inTOPMFile, binary);
         TagsOnPhysMapHDF5.createFile(inTOPM, theTOPMH5,4,8);
-        TagsOnPhysMapHDF5 h5TOPM=new TagsOnPhysMapHDF5(theTOPMH5);
+        TagsOnPhysMapHDF5 h5TOPM=new TagsOnPhysMapHDF5(theTOPMH5,false);
         int count=0, error=0;
         for (int i = 0; i < inTOPM.getSize(); i+=1000) {
             if(inTOPM.getChromosome(i)>-1)

@@ -26,8 +26,8 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 	boolean writeParentCalls = true;
 	boolean writeNucleotides = true;
 	boolean outputDiploid = false;
-	double minSnpCoverage = Double.NaN;
-	double maxMafForMono = Double.NaN;
+	double minSnpCoverage = 0.1;
+	double maxMafForMono = 0.01;
 	String baseFileName;
 	
 	public WritePopulationAlignmentPlugin(Frame parentFrame) {
@@ -63,8 +63,9 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 		} else {
 			for (Datum datum:theData) {
 				PopulationData family = (PopulationData) datum.getData();
-				if (asNucleotides) filename = baseFileName + ".family." + family.name + "nuc.hmp.txt";
-				else filename = baseFileName + ".family." + family.name + "parents.hmp.txt";
+				String familyName = family.name.replace('/', '.');
+				if (asNucleotides) filename = baseFileName + ".family." + familyName + "nuc.hmp.txt";
+				else filename = baseFileName + ".family." + familyName + "parents.hmp.txt";
 				ExportUtils.writeToHapmap(createOutputAlignment(family, asNucleotides), outputDiploid, filename, '\t', null);
 			}
 		}

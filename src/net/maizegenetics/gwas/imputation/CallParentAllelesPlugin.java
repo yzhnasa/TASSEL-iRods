@@ -23,12 +23,11 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	private String pedfileName = null;
 	private int minAlleleCount = 2; //minimum allele count for the minor allele to consider that a site might be polymorphic
 	private int windowSize = 50;  //the number of sites to be used a window for determining the original set of snps in LD
-	private int numberToTry = 10; //the number of different windows to check for snps in LD
 	private double cutHeightSnps = 0.2;  //the tree cut height used to find the largest cluster of correlated SNPs
-	private double minRforSnps = 0.5;  //the minimum R used to judge whether a snp is in ld with a test group
+	private double minRforSnps = 0.2;  //the minimum R used to judge whether a snp is in ld with a test group
 	private double maxMissing = 0.9;
-	private double minMinorAlleleFrequency = 0.05;
-	
+	private double minMinorAlleleFrequency = -1.0;
+	private boolean useBCFilter = true;
 	public CallParentAllelesPlugin(Frame parentFrame) {
         super(parentFrame, false);
 	}
@@ -52,9 +51,8 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				String[] ids = new String[family.members.size()];
 				family.members.toArray(ids);
 				family.original =  FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false);
-//				ImputationUtils.printAlleleStats(family.original, family.name);
-//				NucleotideImputationUtils.callParentAlleles(family, minAlleleCount, windowSize, numberToTry, cutHeightSnps, minRforSnps);
-				NucleotideImputationUtils.callParentAllelesByWindow(family, maxMissing, minMinorAlleleFrequency, windowSize);
+				if (useBCFilter && (family.contribution1 == 0.75 || family.contribution2 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
+				else NucleotideImputationUtils.callParentAllelesByWindow(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
 				String comment = "Parent Calls for family " + family.name + " from " + d.getName() + ".";
 				datumList.add(new Datum(family.name, family, comment));
 			}
@@ -83,9 +81,6 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			else if (args[i].equals("-w") || args[i].equalsIgnoreCase("-windowSize")) {
 				windowSize = Integer.parseInt(args[++i]);
 			}
-			else if (args[i].equals("-t") || args[i].equalsIgnoreCase("-numberToTry")) {
-				numberToTry = Integer.parseInt(args[++i]);
-			}
 			else if (args[i].equals("-h") || args[i].equalsIgnoreCase("-cutHeight")) {
 				cutHeightSnps = Double.parseDouble(args[++i]);
 			}
@@ -97,6 +92,10 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-f") || args[i].equalsIgnoreCase("-minMaf")) {
 				minMinorAlleleFrequency = Double.parseDouble(args[++i]);
+			}
+			else if (args[i].equals("-b") || args[i].equalsIgnoreCase("-bc1")) {
+				String param = args[++i];
+				if (param.toUpperCase().startsWith("F")) useBCFilter = false;
 			}
 			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logconfig")) {
 				DOMConfigurator.configure(args[++i]);
@@ -115,10 +114,6 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 
 	public void setWindowSize(int windowSize) {
 		this.windowSize = windowSize;
-	}
-
-	public void setNumberToTry(int numberToTry) {
-		this.numberToTry = numberToTry;
 	}
 
 	public void setCutHeightSnps(double cutHeightSnps) {
@@ -148,13 +143,11 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		StringBuilder usage = new StringBuilder("The CallParentAllelesPlugin requires the following parameter:\n");
 		usage.append("-p or -pedigrees : a file containing pedigrees of the individuals to be imputed\n");
 		usage.append("The following parameters are optional:\n");
-		usage.append("-a or -minAlleleCount : the minimum minor allele count for a site to be considered polymorphic (default = 2).\n");
-		usage.append("-w or -windowSize : the number of SNPs to examine for the initial LD cluster (default = 100)\n");
-		usage.append("-t or -numberToTry : the number of windows to test for the initial SNP cluster (default = 3)\n");
-		usage.append("-h or -cutHeight : the height at which to cut the SNP tree (default = 0.3)\n");
-		usage.append("-r or -minR : minimum R used to test SNPs for LD (default = 0.8, good for RILs, try 0.4 for F2s)\n");
+		usage.append("-w or -windowSize : the number of SNPs to examine for LD clusters (default = 50)\n");
+		usage.append("-r or -minR : minimum R used to filter SNPs on LD (default = 0.2, use 0 for no ld filter)\n");
 		usage.append("-m or -maxMissing : maximum proportion of missing data allowed for a SNP (default = 0.9)\n");
-		usage.append("-f or -minMaf : minimum minor allele frequency allowed for a SNP (default = 0.05)\n");
+		usage.append("-f or -minMaf : minimum minor allele frequency used to filter SNPs. If negative, filters on expected segregation ratio from parental contribution (default = -1)\n");
+		usage.append("-b or -bc1 : use BC1 specific filter (default = true)\n");
 		usage.append("-l or -logconfig : an xml configuration file for the logger. Default will be to print all messages to console.\n");
 		usage.append("? : print the parameter list.\n");
 
