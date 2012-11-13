@@ -54,12 +54,12 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private SNPLogging snpLogging = null;
     private double maxMisMat = 0.05;
     private boolean usePedigree = false;
-    HashMap<String, Double> taxaFs = null;
-    boolean[] useTaxaForCompare = null;
-    int nInbredTaxa = Integer.MIN_VALUE;
+    private HashMap<String, Double> taxaFs = null;
+    private boolean[] useTaxaForCompare = null;
+    private int nInbredTaxa = Integer.MIN_VALUE;
     private boolean callHets = false;  // true = when two genotypes disagree at a SNP, call it a heterozygote;  false = set to missing;
     private boolean kpUnmergDups = false;  // keep unmerged SNPs (not indels) in the data file
-    int startChr = 1, endChr = 10;
+    private int startChr = 1, endChr = 10;
 
     public MergeDuplicateSNPsPlugin() {
         super(null, false);
@@ -81,7 +81,8 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 + "-callHets      When two genotypes disagree at a SNP, call it a heterozygote (default: " + callHets + " = set to missing)\n"
                 + "-kpUnmergDups  When two duplicate SNPs were not merged (different alleles or too many mismatches), keep them (default: " + kpUnmergDups + " = delete them)\n"
                 + "-s             Start chromosome\n"
-                + "-e             End chromosome\n\n");
+                + "-e             End chromosome\n"
+                + "-snpLog        SNPs Removed Log file name\n\n");
     }
 
     @Override
