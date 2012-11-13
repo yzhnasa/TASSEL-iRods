@@ -26,10 +26,8 @@ import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
@@ -57,24 +55,6 @@ public abstract class AbstractDisplayPlugin extends AbstractPlugin {
 
     public AbstractDisplayPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
-    }
-
-    protected void saveDataToFile(String s) {
-        saveDataToFile(s, getSaveFileByChooser());
-    }
-
-    protected void saveDataToFile(String s, File saveFile) {
-        if (saveFile == null) {
-            return;
-        }
-        try {
-            FileWriter fw = new FileWriter(saveFile);
-            BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(s);
-            bw.close();
-        } catch (Exception ee) {
-            System.out.println("saveDataToFile:" + ee);
-        }
     }
 
     protected void saveDataToFile(BufferedImage img, Outformat format, File saveFile) {
