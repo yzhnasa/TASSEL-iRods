@@ -5,6 +5,7 @@ import java.awt.Frame;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.swing.ImageIcon;
@@ -30,6 +31,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
     private int startChromosome = 1, endChromosome = 10;
     private ArgsEngine myArgsEngine = null;
     private static final Logger myLogger = Logger.getLogger(GBSHapMapFiltersPlugin.class);
+    private String snpLogFileName;
+    private SNPLogging snpLogging = null;
     private String suppliedInputFileName, suppliedOutputFileName, infile, outfile;
     private double minF = -2.0, minMAF = 0, maxMAF = 1, minPresence = 0;
     private boolean usePedigree = false;
@@ -88,6 +91,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             if (usePedigree) {
                 // filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, -2.0, minCount, minMAF, maxMAF);
+                String value = "isRefAltCoded: false" + " minF: -2.0" + " minCount: " + minCount + " minMAF: " + minMAF + " maxMAF: " + maxMAF;
+                logRemovedSNPs(goodLowHetSites, a, "Filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa", "Removed", value, "");
                 a = FilterAlignment.getInstance(a, goodLowHetSites);
 
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
@@ -97,9 +102,13 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0);
                 inbredGenos = null;
                 System.gc();
+                value = "isRefAltCoded: false" + " minF: " + minF + " minCount: 0" + " minMAF: -0.1" + " maxMAF: 2.0";
+                logRemovedSNPs(goodLowFSites, a, "Filter the sites for minF only based only on the taxa with expectedF >= minF", "Removed", value, "");
                 a = FilterAlignment.getInstance(a, goodLowFSites);
             } else {
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, minF, minCount, minMAF, maxMAF);
+                String value = "isRefAltCoded: false" + " minF: " + minF + " minCount: " + minCount + " minMAF: " + minMAF + " maxMAF: " + maxMAF;
+                logRemovedSNPs(goodLowHetSites, a, "Filter the sites", "Removed", value, "");
                 a = FilterAlignment.getInstance(a, goodLowHetSites);
             }
             myLogger.info("SiteFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
@@ -125,7 +134,23 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 myLogger.info("File written after basic & LD filtering:" + outfile);
             }
         }
+        snpLogging.close();
         return null;
+    }
+
+    private void logRemovedSNPs(int[] keepSNPs, Alignment a, String test, String status, String value, String cutoff) {
+        int[] temp = new int[keepSNPs.length];
+        System.arraycopy(keepSNPs, 0, temp, 0, keepSNPs.length);
+        Arrays.sort(temp);
+        int count = 0;
+        int numSites = a.getSiteCount();
+        for (int s = 0; s < numSites; s++) {
+            if ((count < numSites) && (s == temp[count])) {
+                count++;
+            } else {
+                snpLogging.writeEntry(a, s, null, null, this.getClass(), test, status, value, cutoff);
+            }
+        }
     }
 
     private void printUsage() {
@@ -146,7 +171,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 + "-mnR2    Minimum R-square value for the LD filter (default: " + minR2 + ")\n"
                 + "-mnBonP  Minimum Bonferroni-corrected p-value for the LD filter (default: " + minBonP + ")\n"
                 + "-sC      Start chromosome (default: 1).\n"
-                + "-eC      End chromosome (default: 10).\n\n\n");
+                + "-eC      End chromosome (default: 10).\n"
+                + "-snpLog  SNPs Removed Log file name\n\n");
     }
 
     @Override
@@ -171,6 +197,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             myArgsEngine.add("-mnBonP", "--minBonferronPForLD", true);
             myArgsEngine.add("-sC", "--startChrom", true);
             myArgsEngine.add("-eC", "--endChrom", true);
+            myArgsEngine.add("-snpLog", "", true);
         }
 
         myArgsEngine.parse(args);
@@ -242,6 +269,11 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalArgumentException("Please specify an output file name.\n");
         }
+
+        if (myArgsEngine.getBoolean("-snpLog")) {
+            snpLogFileName = myArgsEngine.getString("-snpLog");
+        }
+        snpLogging = new SNPLogging(snpLogFileName);
     }
 
     public static String[] getLowCoverageLines(Alignment a, double pCoverage) {
