@@ -1586,6 +1586,12 @@ public class NucleotideImputationUtils {
     	return Double.NaN; //needs to make use of filterbits
     }
 
+    public MutableNucleotideAlignment imputeUsingPhasedViterbi(Alignment a, double probHeterozygous, String familyName) {
+    	//perform initial phasing using an adhoc method
+    	//call parent alleles by window, letting A=B and C=D
+    	//
+    	return null;
+    }
 }
 
 
