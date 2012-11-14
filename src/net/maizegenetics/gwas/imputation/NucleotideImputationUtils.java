@@ -1699,10 +1699,26 @@ public class NucleotideImputationUtils {
     	return sumr / sitesTestedCount;
     }
 
-    public MutableNucleotideAlignment imputeUsingPhasedViterbi(Alignment a, double probHeterozygous, String familyName) {
-    	//perform initial phasing using an adhoc method
-    	//call parent alleles by window, letting A=B and C=D
-    	//
+    public MutableNucleotideAlignment imputeUsingPhasedViterbi(PopulationData family, double probHeterozygous, String familyName) {
+    	//call parent alleles by window first for intial estimate
+    	//impute haplotypes using Viterbi without iteration
+    	
+    	PhasedEmissionProbability pep = new PhasedEmissionProbability();
+    	
+    	//calculate parent allele probability given data
+    	//P(A=N1|y) = P(y|A=N1)/[P(y|A=N1) + P(y|A=N2)]
+    	int nsites = family.imputed.getSiteCount();
+    	int ntaxa = family.imputed.getSequenceCount();
+    	double[][][] alleleProb = new double[nsites][4][4]; //1st dim is site (node), 2nd dim is haplotype, 3rd dim is nucleotide (A,C,G,T)
+    	for (int s = 0; s < nsites; s++) {
+    		family.imputed.getSNPID(s);
+    		
+    		for (int t = 0; t < ntaxa; t++) {
+    			
+    		}
+    	}
+    	pep.setParentAlleleProbability(null);
+    	
     	return null;
     }
 }

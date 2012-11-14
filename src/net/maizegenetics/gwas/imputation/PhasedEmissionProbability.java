@@ -11,8 +11,8 @@ public class PhasedEmissionProbability extends EmissionProbability {
 	float probHetObsAsHet = 0.2f;
 	int myHaplotype;
 	
-	public PhasedEmissionProbability(Alignment a) {
-//		myGenotype = a;
+	public PhasedEmissionProbability() {
+
 		
 	}
 	
