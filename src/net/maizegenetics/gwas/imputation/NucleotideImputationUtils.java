@@ -202,11 +202,13 @@ public class NucleotideImputationUtils {
 		
 		BitSet polybits;
 		double segratio = popdata.contribution1;
-		if (segratio == 0.5 || segratio == 0.25 || segratio == 0.75) {
+		if (minMaf < 0 && (segratio == 0.5 || segratio == 0.25 || segratio == 0.75)) {
 			polybits = whichSitesSegregateCorrectly(popdata.original, maxMissing, segratio);
 		} else {
+			if (minMaf < 0) minMaf = 0;
 			polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMaf);
 		}
+		
 		myLogger.info("polybits cardinality = " + polybits.cardinality());
 
 		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
