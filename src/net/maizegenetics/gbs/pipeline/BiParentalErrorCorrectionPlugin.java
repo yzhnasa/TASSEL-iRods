@@ -43,10 +43,11 @@ import net.maizegenetics.plugindef.Datum;
 import org.apache.log4j.Logger;
 
 /**
- * Tools for characterizing and correcting SNPs segregating in bi-parental populations.
+ * Tools for characterizing and correcting SNPs segregating in bi-parental
+ * populations.
  *
- * Error rates are bounded away from zero, but adding 0.5 error to all error rates that
- * that were observed to be zero.
+ * Error rates are bounded away from zero, but adding 0.5 error to all error
+ * rates that that were observed to be zero.
  *
  * @author edbuckler
  */
@@ -64,12 +65,12 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
     private boolean myRemoveUntestedError = true;
     private boolean myRemoveUntestedLD = false;
     private String outHapMap = null;
-    //    private String outFreqBin=null;  // currently not used
-    //    private String outErrorRate=null;  // currently not used
+    // private String outFreqBin=null;  // currently not used
+    // private String outErrorRate=null;  // currently not used
     private ArrayList<String> popNames;
     private ArrayList<String> suppliedPopPrefixes = new ArrayList<String>();
     private File pedigreeFile;
-    private Alignment a;
+    // private Alignment a;
     private static ArgsEngine engine = new ArgsEngine();
     int start = 1, end = 1;
     private String infile;
@@ -89,7 +90,8 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         super(parentFrame, false);
     }
 
-    private void removeErrorsInAlignment(double relRatio) {
+    private Alignment removeErrorsInAlignment(Alignment a) {
+
         MutableNucleotideAlignment msa = MutableNucleotideAlignment.getInstance(a);
         for (int s = 0; s < a.getSiteCount(); s++) {
             byte mjb = a.getMajorAllele(s);
@@ -122,7 +124,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                     binomFunc.setNandP(present, expSegregation);
                     double segP = binomFunc.pdf(pmn);
                     errVSeg[pop] = errorP / segP;
-//                    System.out.println(errorRate[s]+"\t"+pmj+"\t"+pmn+"\t"+errorP+"\t"+segP+"\t"+errVSeg[pop]);
+                    // System.out.println(errorRate[s]+"\t"+pmj+"\t"+pmn+"\t"+errorP+"\t"+segP+"\t"+errVSeg[pop]);
                 }
             }
             for (int t = 0; t < a.getSequenceCount(); t++) {
@@ -144,7 +146,8 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                 }
             }
         }
-        a = msa;
+        msa.clean();
+        return msa;
     }
 
     private void calcLDByPop(Alignment a) {
@@ -161,12 +164,14 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             }
             Identifier[] ids = new Identifier[keepNames.size()];
             keepNames.toArray(ids);
-            Alignment pa = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(a, new SimpleIdGroup(ids)));
+            //Alignment pa = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(a, new SimpleIdGroup(ids)));
+            Alignment pa = FilterAlignment.getInstance(a, new SimpleIdGroup(ids));
             int[] segSites = AlignmentFilterByGBSUtils.getLowHetSNPs(pa, false, -2.0, minCntForLD, 0.15, 2);
-            Alignment paf = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(pa, segSites));
+            //Alignment paf = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(pa, segSites));
+            Alignment paf = FilterAlignment.getInstance(pa, segSites);
             int windowSize = paf.getSiteCount() / 20;
-            //LinkageDisequilibrium theLD = new LinkageDisequilibrium(paf, true, 100,
-            //        minCntForLD, windowSize, LinkageDisequilibrium.testDesign.SlidingWindow);
+            // LinkageDisequilibrium theLD = new LinkageDisequilibrium(paf, true, 100,
+            // minCntForLD, windowSize, LinkageDisequilibrium.testDesign.SlidingWindow);
 
             LinkageDisequilibrium theLD = new LinkageDisequilibrium(paf, windowSize,
                     LinkageDisequilibrium.testDesign.SlidingWindow, -1, this, false, -1, null);
@@ -187,22 +192,23 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                     ldByPop[pop][a.getSiteOfPhysicalPosition(paf.getPositionInLocus(i), null)] = obsR2.get(obsR2.size() / 2);
                 }
             }
-            //          System.out.println("POP:"+pop+Arrays.toString(ldByPop[pop]));
+            // System.out.println("POP:"+pop+Arrays.toString(ldByPop[pop]));
         }
     }
 
-    private void removeHighErrorSites(double maxErrorRate, boolean removeUntested) {
+    private Alignment removeHighErrorSites(Alignment a, double maxErrorRate, boolean removeUntested) {
+
         MutableNucleotideAlignment msa = MutableNucleotideAlignment.getInstance(a);
         int sitesWithHighError = 0, untestedSites = 0;
         for (int s = 0; s < a.getSiteCount(); s++) {
             if (Double.isNaN(errorRate[s])) {
                 if (removeUntested) {
-                    msa.removeSite(s);
-                    //msa.clearSite(s);
+                    msa.clearSiteForRemoval(s);
                     untestedSites++;
                 }
             } else if (errorRate[s] > maxErrorRate) {
-                msa.removeSite(s);
+                msa.clearSiteForRemoval(s);
+                //msa.removeSite(s);
                 //msa.clearSite(s);
                 sitesWithHighError++;
             }
@@ -210,12 +216,11 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         System.out.printf("Initial Sites %d  ErrorRate %g  HighErrorSites %d UntestedSites %d %n", a.getSiteCount(),
                 maxErrorRate, sitesWithHighError, untestedSites);
         msa.clean();
-        //msa.sortSiteByPhysicalPosition();
-        a = msa;
-        System.out.printf("Final Sites %d  ErrorRate %g  HighErrorSites %d %n", a.getSiteCount(), maxErrorRate, sitesWithHighError);
+        System.out.printf("Final Sites %d  ErrorRate %g  HighErrorSites %d %n", msa.getSiteCount(), maxErrorRate, sitesWithHighError);
+        return msa;
     }
 
-    private void removeLowLDSites(boolean removeUntested) {
+    private Alignment removeLowLDSites(Alignment a, boolean removeUntested) {
         MutableNucleotideAlignment msa = MutableNucleotideAlignment.getInstance(a);
         int sitesWithLowLD = 0, untestedSites = 0;
         for (int s = 0; s < a.getSiteCount(); s++) {
@@ -233,24 +238,21 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             if (Double.isNaN(medianR2)) {
                 untestedSites++;
                 if (removeUntested) {
-                    msa.removeSite(s);
-                    //msa.clearSite(s);
+                    msa.clearSiteForRemoval(s);
                 }
             } else if (medianR2 < minMedianLDR2) {
-                msa.removeSite(s);
-                //msa.clearSite(s);
+                msa.clearSiteForRemoval(s);
                 sitesWithLowLD++;
             }
         }
         System.out.printf("Initial Sites %d  minMedianLDR2 %g  LowLDSites %d UntestedSites %d %n", a.getSiteCount(),
                 minMedianLDR2, sitesWithLowLD, untestedSites);
-        msa.clean();;
-        //msa.sortSiteByPhysicalPosition();
-        a = msa;
-        System.out.printf("Final Sites %d  ErrorRate %g  LowLDSites %d %n", a.getSiteCount(), maxErrorRate, sitesWithLowLD);
+        msa.clean();
+        System.out.printf("Final Sites %d  ErrorRate %g  LowLDSites %d %n", msa.getSiteCount(), maxErrorRate, sitesWithLowLD);
+        return msa;
     }
 
-    private void classifyTaxaToPops(ArrayList<String> suppliedPopPrefixes) {
+    private void classifyTaxaToPops(Alignment a, ArrayList<String> suppliedPopPrefixes) {
         popNames = new ArrayList<String>();
         popOfTaxa = new short[a.getSequenceCount()];
         Arrays.fill(popOfTaxa, (short) -1);
@@ -267,7 +269,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         }
     }
 
-    private void classifyTaxaToPops(File pedigreeFile) {
+    private void classifyTaxaToPops(Alignment a, File pedigreeFile) {
         String inputLine = "Nothing has been read from the pedigree input file yet";
         popNames = new ArrayList<String>();
         HashMap<String, Short> popIndexOfTaxaName = new HashMap<String, Short>();
@@ -317,7 +319,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         }
     }
 
-    private void classifyTaxaToPops(String popMask) {
+    private void classifyTaxaToPops(Alignment a, String popMask) {
         popNames = new ArrayList<String>();
         popOfTaxa = new short[a.getSequenceCount()];
         Arrays.fill(popOfTaxa, (short) -1);
@@ -336,6 +338,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
 
     /**
      * Creates and reports minor allele frequency by population
+     *
      * @param a input alignment
      * @param popMask in REGEX format
      */
@@ -346,7 +349,9 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         int[][] errorCorrCnt = new int[2][a.getSiteCount()];
         for (int s = 0; s < a.getSiteCount(); s++) {
             byte mjb = a.getMajorAllele(s);
+            mjb = AlignmentUtils.getDiploidValue(mjb, mjb);
             byte mnb = a.getMinorAllele(s);
+            mnb = AlignmentUtils.getDiploidValue(mnb, mnb);
             byte hetb = AlignmentUtils.getDiploidValue(mjb, mnb);
             //byte hetb = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(mjb, mnb);
             //            if((mjb==Alignment.UNKNOWN_DIPLOID_ALLELE)||(mnb==Alignment.UNKNOWN_DIPLOID_ALLELE)) continue;
@@ -386,10 +391,9 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                 }
                 binomFunc.setNandP(present, expSegregation);
                 popP[pop][s] = binomFunc.cdf(pmn);
-//                System.out.println(pmj+"\t"+pmn+"\t"+popP[pop][s]);
+                // System.out.println(pmj+"\t"+pmn+"\t"+popP[pop][s]);
                 double minFreq = (double) pmn / (double) present;
                 if ((popP[pop][s] < pDevFromExp) && (minFreq < (expSegregation / minDistortionRatio))) {
-//                if((popP[pop][s]<pDevFromExp)) {
                     errorCorrCnt[0][s] += pmn;
                     errorCorrCnt[1][s] += present;
                 }
@@ -410,7 +414,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         }
     }
 
-    public void reportSNPFrequencyByFamily() {
+    public void reportSNPFrequencyByFamily(Alignment a) {
         //TODO make it saveable to file or stdout
         StringBuilder sb = new StringBuilder("Site\tErrorRate\t");
         for (int pop = 0; pop < popNames.size(); pop++) {
@@ -434,7 +438,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
 
     }
 
-    public void reportDistOfFrequency() {
+    public void reportDistOfFrequency(Alignment a) {
         //TODO make it saveable to file or stdout
         int[] bins = new int[101];
         for (int pop = 0; pop < popNames.size(); pop++) {
@@ -527,33 +531,10 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         performFunction(null);
     }
 
-//    public static void main(String[] args) {
-//            args = new String[]{
-//            "-hmp","/media/Data/SAP_070511/SAP_070511.c+.hmp.txt",
-//            "-o","/media/Data/SAP_070511/SAP_070511.c+.bpec.hmp.txt",
-//            "-oB", "/Users/edbuckler/SolexaAnal/GBS/test/errorBin.txt",
-//            "-oE", "/Users/edbuckler/SolexaAnal/GBS/test/errorBySNP.txt",
-//            "-popM",".*",
-//            "-sC","1","-eC","4",
-//            "-mxE","0.01",
-//            "-mnD","2.0",
-//        };
-//
-//
-//        BiParentalErrorCorrectionPlugin testClass = new BiParentalErrorCorrectionPlugin();
-//        testClass.setParameters(args);
-//        testClass.performFunction(null);
-//    }
-//    public void setOutErrorRate(String outErrorRate) {
-//        this.outErrorRate = outErrorRate;
-//    }
     public void setOutHapMap(String outHapMap) {
         this.outHapMap = outHapMap;
     }
 
-//    public void setOutFreqBin(String outFreqBin) {
-//        this.outFreqBin = outFreqBin;
-//    }
     public void setMaxErrorRate(double maxErrorRate) {
         this.maxErrorRate = maxErrorRate;
     }
@@ -613,8 +594,6 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             if (engine.getBoolean("-o")) {
                 setOutHapMap(engine.getString("-o").replace("+", "" + chr));
             }
-//            if(engine.getBoolean("-oE")) setOutErrorRate(engine.getString("-oE").replace("+", ""+chr));
-//            if(engine.getBoolean("-oB")) setOutFreqBin(engine.getString("-oB").replace("+", ""+chr));
             if (engine.getBoolean("-mxE")) {
                 setMaxErrorRate(Double.parseDouble(engine.getString("-mxE")));
             }
@@ -637,25 +616,27 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
     private void filter(DataSet input) {
         List<Datum> b = input.getDataOfType(Alignment.class);
         Datum c = b.get(0);
-        Object d = c.getData();
-        a = (Alignment) d;
-//        a=(Alignment)input.getDataOfType(Alignment.class).get(0).getData();
-        a = MutableNucleotideAlignment.getInstance(a);
+        Alignment a = MutableNucleotideAlignment.getInstance((Alignment) c.getData());
+        System.out.println("alignment site count1: " + a.getSiteCount());
+        ((MutableNucleotideAlignment) a).clean();
+        System.out.println("alignment site count2: " + a.getSiteCount());
         double realDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, false);
         double randomDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, true, false);
+        System.out.println("alignment site count3: " + a.getSiteCount());
         System.out.println("Ratio of RandomToReal:" + randomDist / realDist);
 
         if (engine.getString("-popF") != null) {
             System.out.println("Reading population prefixes from supplied file (-popF option).");
-            classifyTaxaToPops(suppliedPopPrefixes);
+            classifyTaxaToPops(a, suppliedPopPrefixes);
         } else if (engine.getString("-pedF") != null) {
             System.out.println("Reading population (pedigree) of each individual from supplied pedigree file (-pedF option).");
-            classifyTaxaToPops(pedigreeFile);
+            classifyTaxaToPops(a, pedigreeFile);
         } else {
             System.out.println("Reading population prefixes from regex.");
             String pm = (String) input.getDataOfType(String.class).get(0).getData();
-            classifyTaxaToPops(pm);
+            classifyTaxaToPops(a, pm);
         }
+        System.out.println("alignment site count4: " + a.getSiteCount());
 
         for (int i = 0; i < suppliedPopPrefixes.size(); i++) {
             System.out.println(suppliedPopPrefixes.get(i));
@@ -663,26 +644,30 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         for (int i = 0; i < popNames.size(); i++) {
             System.out.println(popNames.get(i));
         }
-//        for (int i= 0; i < popOfTaxa.length; i++) {
-//            System.out.println(popOfTaxa[i]);
-//        }
         if (this.minMedianLDR2 > 0) {
             calcLDByPop(a);
-            removeLowLDSites(myRemoveUntestedLD);
+            a = removeLowLDSites(a, myRemoveUntestedLD);
         }
+        System.out.println("alignment site count5: " + a.getSiteCount());
         calcSNPsFreqByPop(a, 0.001);
-//        reportSNPFrequencyByFamily();
-        reportDistOfFrequency();
+        System.out.println("alignment site count6: " + a.getSiteCount());
+        // reportSNPFrequencyByFamily(a);
+        reportDistOfFrequency(a);
+        System.out.println("alignment site count7: " + a.getSiteCount());
         reportPercentilesOfErrorRates();
-        removeErrorsInAlignment(1.0);
-        removeHighErrorSites(maxErrorRate, myRemoveUntestedError);
+        a = removeErrorsInAlignment(a);
+        System.out.println("alignment site count8: " + a.getSiteCount());
+        a = removeHighErrorSites(a, maxErrorRate, myRemoveUntestedError);
         calcSNPsFreqByPop(a, 0.001);
-//        reportSNPFrequencyByFamily();
-        reportDistOfFrequency();
+        System.out.println("alignment site count9: " + a.getSiteCount());
+        // reportSNPFrequencyByFamily(a);
+        reportDistOfFrequency(a);
+        System.out.println("alignment site count10: " + a.getSiteCount());
         reportPercentilesOfErrorRates();
         realDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
         randomDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, true, false);
         System.out.println("Ratio of RandomToReal:" + randomDist / realDist);
+        System.out.println("alignment site count11: " + a.getSiteCount());
         if (outHapMap != null) {
             ExportUtils.writeToHapmap(a, false, this.outHapMap, '\t', this);
         }
