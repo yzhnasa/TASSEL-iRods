@@ -799,4 +799,9 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         }
         return -1;
     }
+
+    @Override
+    public void setDepthForAllele(int taxon, int site, byte[] values) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
