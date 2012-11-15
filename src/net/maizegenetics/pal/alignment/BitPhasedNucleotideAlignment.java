@@ -1,5 +1,5 @@
 /*
- * SBitPhasedNucleotideAlignment
+ * BitPhasedNucleotideAlignment
  */
 package net.maizegenetics.pal.alignment;
 
@@ -9,13 +9,13 @@ import net.maizegenetics.pal.ids.IdGroup;
  *
  * @author terry
  */
-public class SBitPhasedNucleotideAlignment extends SBitPhasedAlignment {
+public class BitPhasedNucleotideAlignment extends BitPhasedAlignment {
 
-    protected SBitPhasedNucleotideAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
+    protected BitPhasedNucleotideAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         super(a, maxNumAlleles, retainRareAlleles);
     }
 
-    protected SBitPhasedNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    protected BitPhasedNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 

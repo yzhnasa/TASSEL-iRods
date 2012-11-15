@@ -1,5 +1,5 @@
 /*
- * SBitPhasedAlignment
+ * BitPhasedAlignment
  */
 package net.maizegenetics.pal.alignment;
 
@@ -13,54 +13,54 @@ import net.maizegenetics.util.OpenBitSet;
  *
  * @author terry
  */
-public class SBitPhasedAlignment extends AbstractAlignment {
+public class BitPhasedAlignment extends AbstractAlignment {
 
     private OpenBitSet[][] myData0;
     private OpenBitSet[][] myData1;
     private int myNumDataRows;
 
-    protected SBitPhasedAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
+    protected BitPhasedAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         super(a, maxNumAlleles, retainRareAlleles);
         loadAlleles(a);
     }
 
-    protected SBitPhasedAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    protected BitPhasedAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         loadAlleles(data);
     }
 
-    public static SBitPhasedAlignment getInstance(Alignment a) {
-        return SBitPhasedAlignment.getInstance(a, a.getMaxNumAlleles(), a.retainsRareAlleles());
+    public static BitPhasedAlignment getInstance(Alignment a) {
+        return BitPhasedAlignment.getInstance(a, a.getMaxNumAlleles(), a.retainsRareAlleles());
     }
 
-    public static SBitPhasedAlignment getInstance(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
+    public static BitPhasedAlignment getInstance(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         String[][] alleleStates = a.getAlleleEncodings();
         if ((alleleStates == null) || (alleleStates.length == 0)) {
             throw new IllegalArgumentException("SBitPhasedAlignment: init: allele states can not be empty.");
         }
         if (alleleStates.length == 1) {
-            return new SBitPhasedAlignment(a, maxNumAlleles, retainRareAlleles);
+            return new BitPhasedAlignment(a, maxNumAlleles, retainRareAlleles);
         } else {
-            return new SBitPhasedTextAlignment(a, maxNumAlleles, retainRareAlleles);
+            return new BitPhasedTextAlignment(a, maxNumAlleles, retainRareAlleles);
         }
     }
 
-    public static SBitPhasedAlignment getInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    public static BitPhasedAlignment getInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         if ((alleleStates == null) || (alleleStates.length == 0)) {
             throw new IllegalArgumentException("SBitPhasedAlignment: init: allele states can not be empty.");
         }
         if (alleleStates.length == 1) {
-            return new SBitPhasedAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+            return new BitPhasedAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         } else {
-            return new SBitPhasedTextAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+            return new BitPhasedTextAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         }
     }
 
-    public static SBitPhasedAlignment getNucleotideInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
-        return new SBitPhasedNucleotideAlignment(idGroup, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+    public static BitPhasedAlignment getNucleotideInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        return new BitPhasedNucleotideAlignment(idGroup, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 
-    public static SBitPhasedAlignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    public static BitPhasedAlignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
             throw new IllegalArgumentException("SBitPhasedAlignment: getNucleotideInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
@@ -76,11 +76,11 @@ public class SBitPhasedAlignment extends AbstractAlignment {
 
         byte[][] dataBytes = AlignmentUtils.getDataBytes(data, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
 
-        return SBitPhasedAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+        return BitPhasedAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
 
     }
 
-    public static SBitPhasedAlignment getNucleotideInstance(IdGroup idGroup, String[] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    public static BitPhasedAlignment getNucleotideInstance(IdGroup idGroup, String[] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES)) {
             throw new IllegalArgumentException("SBitPhasedAlignment: getNucleotideInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
@@ -96,11 +96,11 @@ public class SBitPhasedAlignment extends AbstractAlignment {
 
         byte[][] dataBytes = AlignmentUtils.getDataBytes(data);
 
-        return SBitPhasedAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+        return BitPhasedAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
 
     }
 
-    public static SBitPhasedAlignment getInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    public static BitPhasedAlignment getInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
 
         if ((maxNumAlleles < 1) || (maxNumAlleles > 14)) {
             throw new IllegalArgumentException("SBitPhasedAlignment: getInstance: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
@@ -118,7 +118,7 @@ public class SBitPhasedAlignment extends AbstractAlignment {
 
         byte[][] dataBytes = AlignmentUtils.getDataBytes(data, alleleStates, maxNumAlleles);
 
-        return SBitPhasedAlignment.getInstance(idGroup, dataBytes, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+        return BitPhasedAlignment.getInstance(idGroup, dataBytes, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
 
     }
 
