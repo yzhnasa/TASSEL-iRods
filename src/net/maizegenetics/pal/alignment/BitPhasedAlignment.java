@@ -4,19 +4,23 @@
 package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
+import net.maizegenetics.util.UnmodifiableBitSet;
 
 /**
- * This data alignment is optimized for operations
- * involving lots of SNPs from a taxon - imputation, genetic distance, kinship, diversity, etc.
- * It is not optimized for LD or association mapping.
+ * This data alignment is optimized for operations involving lots of SNPs from a
+ * taxon - imputation, genetic distance, kinship, diversity, etc. It is not
+ * optimized for LD or association mapping.
  *
  * @author terry
  */
 public class BitPhasedAlignment extends AbstractAlignment {
 
-    private OpenBitSet[][] myData0;
-    private OpenBitSet[][] myData1;
+    private OpenBitSet[][] mySBitData0;
+    private OpenBitSet[][] mySBitData1;
+    private OpenBitSet[][] myTBitData0;
+    private OpenBitSet[][] myTBitData1;
     private int myNumDataRows;
 
     protected BitPhasedAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
@@ -128,12 +132,12 @@ public class BitPhasedAlignment extends AbstractAlignment {
         if (retainsRareAlleles()) {
             myNumDataRows++;
         }
-        myData0 = new OpenBitSet[myNumDataRows][myNumSites];
-        myData1 = new OpenBitSet[myNumDataRows][myNumSites];
+        mySBitData0 = new OpenBitSet[myNumDataRows][myNumSites];
+        mySBitData1 = new OpenBitSet[myNumDataRows][myNumSites];
         for (int al = 0; al < myNumDataRows; al++) {
             for (int s = 0; s < myNumSites; s++) {
-                myData0[al][s] = new OpenBitSet(getSequenceCount());
-                myData1[al][s] = new OpenBitSet(getSequenceCount());
+                mySBitData0[al][s] = new OpenBitSet(getSequenceCount());
+                mySBitData1[al][s] = new OpenBitSet(getSequenceCount());
             }
         }
         byte[] cb = new byte[2];
@@ -146,13 +150,13 @@ public class BitPhasedAlignment extends AbstractAlignment {
                     boolean isRare = true;
                     for (int j = 0; j < myMaxNumAlleles; j++) {
                         if (cb[0] == myAlleles[s][j]) {
-                            myData0[j][s].fastSet(t);
+                            mySBitData0[j][s].fastSet(t);
                             isRare = false;
                             break;
                         }
                     }
                     if (isRare && retainsRareAlleles()) {
-                        myData0[myMaxNumAlleles][s].fastSet(t);
+                        mySBitData0[myMaxNumAlleles][s].fastSet(t);
                     }
                 }
 
@@ -160,13 +164,13 @@ public class BitPhasedAlignment extends AbstractAlignment {
                     boolean isRare = true;
                     for (int j = 0; j < myMaxNumAlleles; j++) {
                         if (cb[1] == myAlleles[s][j]) {
-                            myData1[j][s].fastSet(t);
+                            mySBitData1[j][s].fastSet(t);
                             isRare = false;
                             break;
                         }
                     }
                     if (isRare && retainsRareAlleles()) {
-                        myData1[myMaxNumAlleles][s].fastSet(t);
+                        mySBitData1[myMaxNumAlleles][s].fastSet(t);
                     }
                 }
 
@@ -181,12 +185,12 @@ public class BitPhasedAlignment extends AbstractAlignment {
         if (retainsRareAlleles()) {
             myNumDataRows++;
         }
-        myData0 = new OpenBitSet[myNumDataRows][myNumSites];
-        myData1 = new OpenBitSet[myNumDataRows][myNumSites];
+        mySBitData0 = new OpenBitSet[myNumDataRows][myNumSites];
+        mySBitData1 = new OpenBitSet[myNumDataRows][myNumSites];
         for (int al = 0; al < myNumDataRows; al++) {
             for (int s = 0; s < myNumSites; s++) {
-                myData0[al][s] = new OpenBitSet(getSequenceCount());
-                myData1[al][s] = new OpenBitSet(getSequenceCount());
+                mySBitData0[al][s] = new OpenBitSet(getSequenceCount());
+                mySBitData1[al][s] = new OpenBitSet(getSequenceCount());
             }
         }
         for (int s = 0; s < myNumSites; s++) {
@@ -197,13 +201,13 @@ public class BitPhasedAlignment extends AbstractAlignment {
                     boolean isRare = true;
                     for (int j = 0; j < myMaxNumAlleles; j++) {
                         if (cb[0] == myAlleles[s][j]) {
-                            myData0[j][s].fastSet(t);
+                            mySBitData0[j][s].fastSet(t);
                             isRare = false;
                             break;
                         }
                     }
                     if (isRare && retainsRareAlleles()) {
-                        myData0[myMaxNumAlleles][s].fastSet(t);
+                        mySBitData0[myMaxNumAlleles][s].fastSet(t);
                     }
                 }
 
@@ -211,13 +215,13 @@ public class BitPhasedAlignment extends AbstractAlignment {
                     boolean isRare = true;
                     for (int j = 0; j < myMaxNumAlleles; j++) {
                         if (cb[1] == myAlleles[s][j]) {
-                            myData1[j][s].fastSet(t);
+                            mySBitData1[j][s].fastSet(t);
                             isRare = false;
                             break;
                         }
                     }
                     if (isRare && retainsRareAlleles()) {
-                        myData1[myMaxNumAlleles][s].fastSet(t);
+                        mySBitData1[myMaxNumAlleles][s].fastSet(t);
                     }
                 }
 
@@ -240,24 +244,24 @@ public class BitPhasedAlignment extends AbstractAlignment {
         try {
 
             for (int i = 0; i < myMaxNumAlleles; i++) {
-                if (myData0[i][site].fastGet(taxon)) {
+                if (mySBitData0[i][site].fastGet(taxon)) {
                     result[0] = myAlleles[site][i];
                     break;
                 }
             }
 
             for (int i = 0; i < myMaxNumAlleles; i++) {
-                if (myData1[i][site].fastGet(taxon)) {
+                if (mySBitData1[i][site].fastGet(taxon)) {
                     result[1] = myAlleles[site][i];
                     break;
                 }
             }
 
             // Check For Rare Allele
-            if (retainsRareAlleles() && myData0[myMaxNumAlleles][site].fastGet(taxon)) {
+            if (retainsRareAlleles() && mySBitData0[myMaxNumAlleles][site].fastGet(taxon)) {
                 result[0] = Alignment.RARE_ALLELE;
             }
-            if (retainsRareAlleles() && myData1[myMaxNumAlleles][site].fastGet(taxon)) {
+            if (retainsRareAlleles() && mySBitData1[myMaxNumAlleles][site].fastGet(taxon)) {
                 result[1] = Alignment.RARE_ALLELE;
             }
 
@@ -271,19 +275,93 @@ public class BitPhasedAlignment extends AbstractAlignment {
     public boolean isPhased() {
         return true;
     }
-    
+
     @Override
     public boolean isSBitFriendly() {
         return true;
     }
-    
+
     @Override
     public boolean isTBitFriendly() {
         return false;
     }
-    
+
     @Override
     public int getTotalNumAlleles() {
         return myNumDataRows;
+    }
+
+    @Override
+    public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
+        if (myTBitData0 != null) {
+            if (firstParent) {
+                return UnmodifiableBitSet.getInstance(myTBitData0[alleleNumber][taxon]);
+            } else {
+                return UnmodifiableBitSet.getInstance(myTBitData1[alleleNumber][taxon]);
+            }
+        } else {
+            throw new IllegalStateException("BitPhasedAlignment: getPhasedAllelePresenceForAllSites: This alignment hasn't been optimized for Taxa Operations.");
+        }
+    }
+
+    @Override
+    public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
+        if (mySBitData0 != null) {
+            if (firstParent) {
+                return UnmodifiableBitSet.getInstance(mySBitData0[alleleNumber][site]);
+            } else {
+                return UnmodifiableBitSet.getInstance(mySBitData1[alleleNumber][site]);
+            }
+        } else {
+            throw new IllegalStateException("BitPhasedAlignment: getPhasedAllelePresenceForAllTaxa: This alignment hasn't been optimized for Site Operations.");
+        }
+    }
+
+    @Override
+    public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
+        if (myTBitData0 != null) {
+            BitSet temp = getAllelePresenceForAllSites(taxon, alleleNumber);
+            long[] result = new long[endBlock - startBlock];
+            System.arraycopy(temp.getBits(), startBlock, result, 0, endBlock - startBlock);
+            return result;
+        } else {
+            throw new IllegalStateException("BitPhasedAlignment: getPhasedAllelePresenceForSitesBlock: This alignment hasn't been optimized for Taxa Operations.");
+        }
+    }
+
+    @Override
+    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
+        if (mySBitData0 != null) {
+            OpenBitSet temp = new OpenBitSet(getSequenceCount());
+            temp.or(mySBitData0[alleleNumber][site]);
+            temp.or(mySBitData1[alleleNumber][site]);
+            return temp;
+        } else {
+            throw new IllegalStateException("BitPhasedAlignment: getAllelePresenceForAllTaxa: This alignment hasn't been optimized for Site Operations.");
+        }
+    }
+
+    @Override
+    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
+        if (myTBitData0 != null) {
+            OpenBitSet temp = new OpenBitSet(getSequenceCount());
+            temp.or(myTBitData0[alleleNumber][taxon]);
+            temp.or(myTBitData1[alleleNumber][taxon]);
+            return temp;
+        } else {
+            throw new IllegalStateException("BitPhasedAlignment: getAllelePresenceForAllSites: This alignment hasn't been optimized for Taxa Operations.");
+        }
+    }
+
+    @Override
+    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+        if (myTBitData0 != null) {
+            BitSet temp = getAllelePresenceForAllSites(taxon, alleleNumber);
+            long[] result = new long[endBlock - startBlock];
+            System.arraycopy(temp.getBits(), startBlock, result, 0, endBlock - startBlock);
+            return result;
+        } else {
+            throw new IllegalStateException("BitPhasedAlignment: getAllelePresenceForSitesBlock: This alignment hasn't been optimized for Taxa Operations.");
+        }
     }
 }
