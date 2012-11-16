@@ -22,10 +22,10 @@ import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 import org.apache.poi.util.IntList;
 
 /**
- * Filter methods for reference versus non-reference map.  These are not really appropriate
- * for a general solution.
- * GBSHapMapFilters are working towards the more general filters.
- * 
+ * Filter methods for reference versus non-reference map. These are not really
+ * appropriate for a general solution. GBSHapMapFilters are working towards the
+ * more general filters.
+ *
  * @author edbuckler
  */
 public class AlignmentFilterByGBSUtils {
@@ -144,6 +144,11 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static int[] getLowHetSNPs(Alignment a, boolean isRefAltCoded, double minF, int minCount, double minMAF, double maxMAF) {
+        return getLowHetSNPs(a, isRefAltCoded, minF, minCount, minMAF, maxMAF, null, null);
+    }
+
+    public static int[] getLowHetSNPs(Alignment a, boolean isRefAltCoded, double minF, int minCount, double minMAF, double maxMAF, SNPLogging snpLogging, String logTest) {
+        String REMOVED_STATUS = "Removed";
         int[][] hetCnt = genotypicCountsBySite(a, isRefAltCoded, false);
         IntArrayList goodSites = new IntArrayList();
         //        System.out.println("Site Genotypes Hets propHets theMAF expHets relHets obsF");
@@ -156,6 +161,10 @@ public class AlignmentFilterByGBSUtils {
             //            System.out.printf("%d %d %d %g %g %g %g %g %n",i, hetCnt[0][i], hetCnt[1][i], propHets,theMAF, expHets, relHets, obsF);
             if ((obsF > minF) && (hetCnt[0][i] >= minCount) && (theMAF >= minMAF) && (theMAF <= maxMAF)) {
                 goodSites.add(i);
+            } else if (snpLogging != null) {
+                String cutoff = "isRefAltCoded: " + isRefAltCoded + " minF: " + minF + " minCount: " + minCount + " minMAF: " + minMAF + " maxMAF: " + maxMAF;
+                String value = "obsF: " + obsF + " obsMinCount: " + hetCnt[0][i] + " MAF: " + theMAF;
+                snpLogging.writeEntry(a, i, null, null, logTest, REMOVED_STATUS, value, cutoff);
             }
         }
         goodSites.trimToSize();
