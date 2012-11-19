@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
@@ -211,9 +212,9 @@ public class NucleotideImputationUtils {
 		
 		myLogger.info("polybits cardinality = " + polybits.cardinality());
 
-		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
+		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original);
 		filteredBits.and(polybits);
-		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
+		myLogger.info("filteredBits.cardinality = " + filteredBits.cardinality());
 		
 		BitSet ldFilteredBits;
 		if (minR > 0) {
@@ -245,7 +246,8 @@ public class NucleotideImputationUtils {
 	
 		//iterate through windows
 		Alignment[] prevAlignment = null;
-		int[][] snpIndices = getWindows(filteredBits, windowSize);
+		int[][] snpIndices = getWindows(ldFilteredBits, windowSize);
+		
 		boolean append = false;
 		
 		int nWindows = snpIndices.length;
@@ -918,7 +920,7 @@ public class NucleotideImputationUtils {
 		int count = 0;
 		for (int i = 0; i < nsnps; i++) {
 			for (int j = i; j < nsnps; j++) {
-				double r = computeR(i, j, a);
+				double r = computeGenotypeR(i, j, a);
 				distance[i][j] = distance[j][i] = 1 - r*r;
 				if (!Double.isNaN(distance[i][j])) {
 					sum += distance[i][j];
@@ -940,7 +942,7 @@ public class NucleotideImputationUtils {
 		return new DistanceMatrix(distance, snpIds);
 	}
 	
-	public static double computeR(int site1, int site2, Alignment a) {
+	public static double computeRForAlleles(int site1, int site2, Alignment a) {
 		int s1Count = 0;
 		int s2Count = 0;
 		int prodCount = 0;
@@ -977,6 +979,63 @@ public class NucleotideImputationUtils {
 		return  num / Math.sqrt(denom);
 	}
 
+	public static double computeGenotypeR(int site1, int site2, Alignment a) throws IllegalStateException {
+		BitSet s1mj = a.getAllelePresenceForAllTaxa(site1, 0);
+		BitSet s1mn = a.getAllelePresenceForAllTaxa(site1, 1);
+		BitSet s2mj = a.getAllelePresenceForAllTaxa(site2, 0);
+		BitSet s2mn = a.getAllelePresenceForAllTaxa(site2, 1);
+		OpenBitSet bothpresent = new OpenBitSet(s1mj.getBits(), s1mj.getNumWords());
+		bothpresent.union(s1mn);
+		OpenBitSet s2present = new OpenBitSet(s2mj.getBits(), s2mj.getNumWords());
+		s2present.union(s2mn);
+		bothpresent.intersect(s2present);
+		
+		long nsites = s1mj.capacity();
+		double sum1 = 0;
+		double sum2 = 0;
+		double sumsq1 = 0;
+		double sumsq2 = 0;
+		double sumprod = 0;
+		double count = 0;
+
+		for (long i = 0; i < nsites; i++) {
+			if (bothpresent.fastGet(i)) {
+				double val1 = 0; 
+				double val2 = 0;
+
+				if (s1mj.fastGet(i)) {
+					if (s1mn.fastGet(i)) {
+						val1++;
+					} else {
+						val1 += 2;
+					}
+				}
+
+				if (s2mj.fastGet(i)) {
+					if (s2mn.fastGet(i)) {
+						val2++;
+					} else {
+						val2 += 2;
+					}
+				}
+				
+				sum1 += val1;
+				sumsq1 += val1*val1;
+				sum2 += val2;
+				sumsq2 += val2*val2;
+				sumprod += val1*val2;
+				count++;
+			}
+		}
+		
+		//r = sum(xy)/sqrt[sum(x2)*sum(y2)], where x = X - Xbar and y = Y - Ybar
+		//num.r = sum(XY) - 1/n * sum(X)sum(y)
+		//denom.r = sqrt[ (sum(XX) - 1/n*sum(X)sum(X)) * (sum(YY) - 1/n*sum(Y)sum(Y)) ]
+		double num = sumprod - sum1 / count * sum2;
+		double denom = Math.sqrt( (sumsq1 - sum1 / count * sum1) * (sumsq2 - sum2 / count * sum2) );
+		return num / denom;
+	}
+	
 	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName) {
 		a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
@@ -1503,6 +1562,38 @@ public class NucleotideImputationUtils {
 		return isSelected;
 	}
 	
+	public static OpenBitSet whichSnpsAreFromSameTag(Alignment alignIn) {
+		Alignment sba = ConvertSBitTBitPlugin.convertAlignment(alignIn, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
+		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
+		//else sba = SBitAlignment.getInstance(alignIn);
+		
+		int nsites = sba.getSiteCount();
+		int firstSite = 0;
+		OpenBitSet isSelected = new OpenBitSet(nsites);
+		isSelected.fastSet(0);
+		Locus firstSnpLocus = sba.getLocus(0);
+		int firstSnpPos = sba.getPositionInLocus(0);
+		while (firstSite < nsites - 1) {
+			int nextSite = firstSite + 1;
+			int nextSnpPos = sba.getPositionInLocus(nextSite);
+			Locus nextSnpLocus = sba.getLocus(nextSite);
+			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
+				nextSite++;
+				if (nextSite >= nsites) break;
+				nextSnpPos = sba.getPositionInLocus(nextSite);
+				nextSnpLocus = sba.getLocus(nextSite);
+			}
+			firstSite = nextSite;
+			if (firstSite < nsites) {
+				firstSnpLocus = nextSnpLocus;
+				firstSnpPos = nextSnpPos;
+				isSelected.fastSet(firstSite);
+			}
+		}
+		
+		return isSelected;
+	}
+	
     static double calculateRSqr(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
         //this is the Hill & Robertson measure as used in Awadella Science 1999 286:2524
         double freqA, freqB, rsqr, nonmissingSampleSize;
@@ -1615,28 +1706,15 @@ public class NucleotideImputationUtils {
     	return taxaStates;
     }
     
-    public static BitSet ldfilter(Alignment a, int window, double minR) {
-    	try {
-    		a.optimizeForSites(null);
-    	} catch(Exception e) {
-    		a = BitAlignment.getInstance(a, true);
-    	}
-
-    	int nsites = a.getSiteCount();
-    	OpenBitSet ldbits = new OpenBitSet(nsites);
-    	for (int s = 0; s < nsites; s++) {
-    		double avgr = neighborLD(a, s, window);
-    		if (avgr >= minR) ldbits.fastSet(s);
-    	}
-    	return ldbits;
-    }
-    
     public static BitSet ldfilter(Alignment a, int window, double minR, BitSet filterBits) {
     	try {
     		a.optimizeForSites(null);
     	} catch(Exception e) {
     		a = BitAlignment.getInstance(a, true);
     	}
+    	
+    	//debug
+    	ExportUtils.writeToHapmap(a, false, "/Volumes/Macintosh HD 2/temp/testalign.hmp.txt", '\t', null);
     	
     	int nsites = a.getSiteCount();
     	OpenBitSet ldbits = new OpenBitSet(nsites);
@@ -1649,26 +1727,6 @@ public class NucleotideImputationUtils {
     	return ldbits;
     }
     
-    public static double neighborLD(Alignment a, int snp, int window) {
-    	double sumr = 0;
-    	double count = 0;
-    	int nsites = a.getSiteCount();
-    	for (int i = 0; i < window; i++) {
-    		int site = snp - window;
-    		if (site > -1) {
-    			sumr += Math.abs(computeR(snp, snp + i, a));
-    			count++;
-    		}
-    		site = snp + window;
-    		if (site < nsites) {
-        		sumr += Math.abs(computeR(snp, snp - i, a));
-    			count++;
-    		}
-    		
-    	}
-    	return sumr / count;
-    }
-    
     public static double neighborLD(Alignment a, int snp, int window, BitSet filterBits) {
     	double sumr = 0;
     	int nsites = a.getSiteCount();
@@ -1679,9 +1737,13 @@ public class NucleotideImputationUtils {
     	int sitesTestedCount = 0;
     	while (siteCount < window && site < nsites) {
     		if (filterBits.fastGet(site)) {
-    			sumr += Math.abs(computeR(snp, site, a));
-    			siteCount++;
-    			sitesTestedCount++;
+    			double r = computeGenotypeR(snp, site, a);
+    			if (!Double.isNaN(r)) {
+        			sumr += Math.abs(computeGenotypeR(snp, site, a));
+        			siteCount++;
+        			sitesTestedCount++;
+
+    			}
     		}
     		site++;
     	}
@@ -1691,7 +1753,7 @@ public class NucleotideImputationUtils {
     	siteCount = 0;
     	while (siteCount < window && site >= 0) {
     		if (filterBits.fastGet(site)) {
-    			sumr += Math.abs(computeR(snp, site, a));
+    			sumr += Math.abs(computeGenotypeR(snp, site, a));
     			siteCount++;
     			sitesTestedCount++;
     		}
