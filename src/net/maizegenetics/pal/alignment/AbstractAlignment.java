@@ -243,6 +243,21 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
+    public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public IdGroup getIdGroup() {
         return myIdGroup;
     }

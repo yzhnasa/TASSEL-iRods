@@ -66,6 +66,15 @@ public interface MutableAlignment extends Alignment {
     public void setPositionOfSite(int site, int position);
 
     public void setLocusOfSite(int site, Locus locus);
+    
+    /**
+     * Sets depth count for each diploid allele at the given taxon and site.
+     * 
+     * @param taxon taxon
+     * @param site site
+     * @param values values
+     */
+    public void setDepthForAllele(int taxon, int site, byte[] values);
 
     /**
      * Clean alignment including sorting sites by position.

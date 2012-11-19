@@ -151,7 +151,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-snpLog")) {
             snpLogFileName = myArgsEngine.getString("-snpLog");
         }
-        snpLogging = new SNPLogging(snpLogFileName);
+        snpLogging = new SNPLogging(snpLogFileName, this.getClass());
     }
 
     @Override
@@ -288,7 +288,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                         if (nCompare != 0) {
                             valueMisMat = (double) nMismatch / nCompare;
                         }
-                        snpLogging.writeEntry(a, samePos[s2], null, null, this.getClass(), "Genotypes Less Max Mismatch", "Merged", String.valueOf(valueMisMat), String.valueOf(maxMisMat));
+                        snpLogging.writeEntry(a, samePos[s2], null, null, "Genotypes Less Max Mismatch", "Merged", String.valueOf(valueMisMat), String.valueOf(maxMisMat));
                         finished[s2] = true;
                     }
                 }
@@ -337,7 +337,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     for (int i = 0; i < samePos.length; ++i) {
                         if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                                 && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
-                            snpLogging.writeEntry(theMSA, samePos[i], null, null, this.getClass(), "Delete Remaining Duplicates", "Removed", null, null);
+                            snpLogging.writeEntry(theMSA, samePos[i], null, null, "Delete Remaining Duplicates", "Removed", null, null);
                             theMSA.clearSiteForRemoval(samePos[i]);
                         }
                     }
@@ -354,7 +354,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             for (int i = 0; i < samePos.length; ++i) {
                 if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
                         && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
-                    snpLogging.writeEntry(theMSA, samePos[i], null, null, this.getClass(), "Delete Remaining Duplicates", "Removed", null, null);
+                    snpLogging.writeEntry(theMSA, samePos[i], null, null, "Delete Remaining Duplicates", "Removed", null, null);
                     theMSA.clearSiteForRemoval(samePos[i]);
                 }
             }

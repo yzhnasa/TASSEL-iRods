@@ -19,8 +19,9 @@ public class SNPLogging {
     private static final String HEADER = "Chr\tPosition\tAlleles\tTagLocusStart\tStrand\tPlugin\tTest\tStatus\tValue\tCuttoff\n";
     private static final String DELIMITER = "\t";
     private final BufferedWriter myWriter;
+    private final Class myCreator;
 
-    public SNPLogging(String filename) {
+    public SNPLogging(String filename, Class creator) {
 
         if ((filename == null) || (filename.length() == 0)) {
             myWriter = null;
@@ -41,6 +42,8 @@ public class SNPLogging {
             }
         }
 
+        myCreator = creator;
+
     }
 
     public void close() {
@@ -51,12 +54,12 @@ public class SNPLogging {
         }
     }
 
-    public void writeEntry(Alignment a, int site, String tagLocusStart, String strand, Class plugin, String test, String status, String value, String cuttoff) {
+    public void writeEntry(Alignment a, int site, String tagLocusStart, String strand, String test, String status, String value, String cuttoff) {
         String alleles = a.getMajorAlleleAsString(site) + "/" + a.getMinorAlleleAsString(site);
-        writeEntry(a.getLocusName(site), a.getPositionInLocus(site), alleles, tagLocusStart, strand, plugin, test, status, value, cuttoff);
+        writeEntry(a.getLocusName(site), a.getPositionInLocus(site), alleles, tagLocusStart, strand, test, status, value, cuttoff);
     }
 
-    public void writeEntry(String chr, int position, String alleles, String tagLocusStart, String strand, Class plugin, String test, String status, String value, String cuttoff) {
+    public void writeEntry(String chr, int position, String alleles, String tagLocusStart, String strand, String test, String status, String value, String cuttoff) {
 
         StringBuilder builder = new StringBuilder();
         builder.append(chr);
@@ -69,7 +72,7 @@ public class SNPLogging {
         builder.append(DELIMITER);
         builder.append(strand);
         builder.append(DELIMITER);
-        builder.append(plugin.getSimpleName());
+        builder.append(myCreator.getSimpleName());
         builder.append(DELIMITER);
         builder.append(test);
         builder.append(DELIMITER);

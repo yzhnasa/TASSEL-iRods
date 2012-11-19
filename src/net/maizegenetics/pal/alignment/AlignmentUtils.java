@@ -17,7 +17,7 @@ import net.maizegenetics.util.ProgressListener;
  */
 public class AlignmentUtils {
 
-    private static final Integer ONE = new Integer(1);
+    private static final Integer ONE = Integer.valueOf(1);
 
     private AlignmentUtils() {
         // utility class
