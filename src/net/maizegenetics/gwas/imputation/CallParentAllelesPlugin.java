@@ -7,7 +7,9 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import net.maizegenetics.pal.alignment.Alignment;
@@ -100,7 +102,20 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logconfig")) {
 				DOMConfigurator.configure(args[++i]);
 			}
+			else if (args[i].equals("-logfile")) {
+				addFileLogger(args[++i]);
+			}
 			else if (args[i].equals("?")) myLogger.error(getUsage());
+		}
+	}
+	
+	private void addFileLogger(String filename) {
+		try {
+			FileAppender filelog = new FileAppender(new PatternLayout("%d %-5p  [%c{1}] %m %n"), filename, true);
+			Logger.getRootLogger().addAppender(filelog);
+		} catch(Exception e) {
+			myLogger.info("log file could not be instantiated");
+			e.printStackTrace();
 		}
 	}
 	
