@@ -1721,7 +1721,9 @@ public class NucleotideImputationUtils {
     	for (int s = 0; s < nsites; s++) {
     		if (filterBits.fastGet(s)) {
         		double avgr = neighborLD(a, s, window, filterBits);
-        		if (avgr >= minR) ldbits.fastSet(s);
+        		if (avgr >= minR) {
+        			ldbits.fastSet(s);
+        		}
     		}
     	}
     	return ldbits;
@@ -1732,7 +1734,7 @@ public class NucleotideImputationUtils {
     	int nsites = a.getSiteCount();
     	
     	//test next <window> sites or to the end of the chromosome
-    	int site = snp + 1;
+    	int site = snp + 10;
     	int siteCount = 0;
     	int sitesTestedCount = 0;
     	while (siteCount < window && site < nsites) {
@@ -1749,7 +1751,7 @@ public class NucleotideImputationUtils {
     	}
     	
     	//test previous <window> sites or to the beginning of the chromosome
-    	site = snp - 1;
+    	site = snp - 10;
     	siteCount = 0;
     	while (siteCount < window && site >= 0) {
     		if (filterBits.fastGet(site)) {
