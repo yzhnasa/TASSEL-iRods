@@ -81,6 +81,8 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
     //2 assumes better coverage, and homozygotes are counted twice.
     private double minDistortionRatio = 2.5;  //this is minimum distortion to be counted as an error
     //e.g. 2.0, means that the allele frequency has to be less the 25% if the expected is 50%
+    private String snpLogFileName;
+    private SNPLogging snpLogging = null;
 
     public BiParentalErrorCorrectionPlugin() {
         super(null, false);
@@ -164,10 +166,8 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             }
             Identifier[] ids = new Identifier[keepNames.size()];
             keepNames.toArray(ids);
-            //Alignment pa = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(a, new SimpleIdGroup(ids)));
             Alignment pa = FilterAlignment.getInstance(a, new SimpleIdGroup(ids));
             int[] segSites = AlignmentFilterByGBSUtils.getLowHetSNPs(pa, false, -2.0, minCntForLD, 0.15, 2);
-            //Alignment paf = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(pa, segSites));
             Alignment paf = FilterAlignment.getInstance(pa, segSites);
             int windowSize = paf.getSiteCount() / 20;
             // LinkageDisequilibrium theLD = new LinkageDisequilibrium(paf, true, 100,
@@ -197,6 +197,9 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
     }
 
     private Alignment removeHighErrorSites(Alignment a, double maxErrorRate, boolean removeUntested) {
+        String REMOVED_STATUS = "Removed";
+        String LOG_TEST = "Remove High Error Sites";
+        String LOG_TEST_UNTESTED = "Remove High Error Sites Untested";
 
         MutableNucleotideAlignment msa = MutableNucleotideAlignment.getInstance(a);
         int sitesWithHighError = 0, untestedSites = 0;
@@ -204,12 +207,16 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             if (Double.isNaN(errorRate[s])) {
                 if (removeUntested) {
                     msa.clearSiteForRemoval(s);
+                    if (snpLogging != null) {
+                        snpLogging.writeEntry(a, s, null, null, LOG_TEST_UNTESTED, REMOVED_STATUS, "NaN", "");
+                    }
                     untestedSites++;
                 }
             } else if (errorRate[s] > maxErrorRate) {
                 msa.clearSiteForRemoval(s);
-                //msa.removeSite(s);
-                //msa.clearSite(s);
+                if (snpLogging != null) {
+                    snpLogging.writeEntry(a, s, null, null, LOG_TEST, REMOVED_STATUS, String.valueOf(errorRate[s]), String.valueOf(maxErrorRate));
+                }
                 sitesWithHighError++;
             }
         }
@@ -221,6 +228,9 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
     }
 
     private Alignment removeLowLDSites(Alignment a, boolean removeUntested) {
+        String REMOVED_STATUS = "Removed";
+        String LOG_TEST = "Remove Low LD Sites";
+        String LOG_TEST_UNTESTED = "Remove Low LD Sites Untested";
         MutableNucleotideAlignment msa = MutableNucleotideAlignment.getInstance(a);
         int sitesWithLowLD = 0, untestedSites = 0;
         for (int s = 0; s < a.getSiteCount(); s++) {
@@ -239,9 +249,15 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                 untestedSites++;
                 if (removeUntested) {
                     msa.clearSiteForRemoval(s);
+                    if (snpLogging != null) {
+                        snpLogging.writeEntry(a, s, null, null, LOG_TEST_UNTESTED, REMOVED_STATUS, "NaN", "");
+                    }
                 }
             } else if (medianR2 < minMedianLDR2) {
                 msa.clearSiteForRemoval(s);
+                if (snpLogging != null) {
+                    snpLogging.writeEntry(a, s, null, null, LOG_TEST, REMOVED_STATUS, String.valueOf(medianR2), String.valueOf(minMedianLDR2));
+                }
                 sitesWithLowLD++;
             }
         }
@@ -353,8 +369,6 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             byte mnb = a.getMinorAllele(s);
             mnb = AlignmentUtils.getDiploidValue(mnb, mnb);
             byte hetb = AlignmentUtils.getDiploidValue(mjb, mnb);
-            //byte hetb = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(mjb, mnb);
-            //            if((mjb==Alignment.UNKNOWN_DIPLOID_ALLELE)||(mnb==Alignment.UNKNOWN_DIPLOID_ALLELE)) continue;
             for (int t = 0; t < a.getSequenceCount(); t++) {
                 if (popOfTaxa[t] < 0) {
                     continue;
@@ -370,7 +384,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                 if (b == mnb) {
                     popFreq[1][popOfTaxa[t]][s] += homoweight;
                 }
-                if (b == hetb) {
+                if (AlignmentUtils.isEqual(b, hetb)) {
                     popFreq[0][popOfTaxa[t]][s]++;
                     popFreq[1][popOfTaxa[t]][s]++;
                 }
@@ -486,6 +500,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         engine.add("-mnD", "--minDistortion", true);
         engine.add("-mnPLD", "--minPopLD", true);
         engine.add("-kpUT", "--keepUntested", false);
+        engine.add("-snpLog", "", true);
         engine.parse(args);
         if (engine.getBoolean("-sC")) {
             start = Integer.parseInt(engine.getString("-sC"));
@@ -528,6 +543,10 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             end = Integer.parseInt(engine.getString("-eC"));
         }
         infile = engine.getString("-hmp");
+        if (engine.getBoolean("-snpLog")) {
+            snpLogFileName = engine.getString("-snpLog");
+        }
+        snpLogging = new SNPLogging(snpLogFileName, this.getClass());
         performFunction(null);
     }
 
@@ -569,7 +588,8 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                 + "-mxE    Maximum error\n"
                 + "-mnD    Minimum distortion\n"
                 + "-mnPLD  Minimum median population LD (R^2)\n"
-                + "-kpUT   Keep untested SNPs for error (default remove)\n\n\n");
+                + "-kpUT   Keep untested SNPs for error (default remove)\n"
+                + "-snpLog  SNPs Removed Log file name\n\n");
     }
 
     @Override
@@ -610,6 +630,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             filter(new DataSet(dList, null));
             start++;
         }
+        snpLogging.close();
         return null;
     }
 
@@ -617,12 +638,9 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
         List<Datum> b = input.getDataOfType(Alignment.class);
         Datum c = b.get(0);
         Alignment a = MutableNucleotideAlignment.getInstance((Alignment) c.getData());
-        System.out.println("alignment site count1: " + a.getSiteCount());
         ((MutableNucleotideAlignment) a).clean();
-        System.out.println("alignment site count2: " + a.getSiteCount());
         double realDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, false);
         double randomDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, true, false);
-        System.out.println("alignment site count3: " + a.getSiteCount());
         System.out.println("Ratio of RandomToReal:" + randomDist / realDist);
 
         if (engine.getString("-popF") != null) {
@@ -636,7 +654,6 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             String pm = (String) input.getDataOfType(String.class).get(0).getData();
             classifyTaxaToPops(a, pm);
         }
-        System.out.println("alignment site count4: " + a.getSiteCount());
 
         for (int i = 0; i < suppliedPopPrefixes.size(); i++) {
             System.out.println(suppliedPopPrefixes.get(i));
@@ -648,21 +665,13 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             calcLDByPop(a);
             a = removeLowLDSites(a, myRemoveUntestedLD);
         }
-        System.out.println("alignment site count5: " + a.getSiteCount());
         calcSNPsFreqByPop(a, 0.001);
-        System.out.println("alignment site count6: " + a.getSiteCount());
-        // reportSNPFrequencyByFamily(a);
         reportDistOfFrequency(a);
-        System.out.println("alignment site count7: " + a.getSiteCount());
         reportPercentilesOfErrorRates();
         a = removeErrorsInAlignment(a);
-        System.out.println("alignment site count8: " + a.getSiteCount());
         a = removeHighErrorSites(a, maxErrorRate, myRemoveUntestedError);
         calcSNPsFreqByPop(a, 0.001);
-        System.out.println("alignment site count9: " + a.getSiteCount());
-        // reportSNPFrequencyByFamily(a);
         reportDistOfFrequency(a);
-        System.out.println("alignment site count10: " + a.getSiteCount());
         reportPercentilesOfErrorRates();
         realDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
         randomDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, true, false);

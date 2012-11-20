@@ -109,26 +109,29 @@ public class AlignmentFilterByGBSUtils {
         }
         for (int i = 0; i < a.getSiteCount(); i++) {
             byte majorAllele = a.getMajorAllele(i);
+            majorAllele = (byte) (majorAllele << 4 | majorAllele);
             byte minorAllele = a.getMinorAllele(i);
+            minorAllele = (byte) (minorAllele << 4 | minorAllele);
             for (int j = 0; j < a.getSequenceCount(); j++) {
-                if (a.getBase(j, i) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                byte currentBase = a.getBase(j, i);
+                if (currentBase != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][i]++;
                     if (isRefAltCoded) {
-                        if (a.getBase(j, i) == hetAllele) {
+                        if (AlignmentUtils.isEqual(currentBase, hetAllele)) {
                             counts[1][i]++;
                         }
                     } else {
-                        if (AlignmentUtils.isHeterozygous(a.getBase(j, i))) {
+                        if (AlignmentUtils.isHeterozygous(currentBase)) {
                             counts[1][i]++;
                         }
                     }
-                    if (a.getBase(j, i) == majorAllele) {
+                    if (AlignmentUtils.isEqual(currentBase, majorAllele)) {
                         counts[2][i]++;
                     }
-                    if (a.getBase(j, i) == minorAllele) {
+                    if (AlignmentUtils.isEqual(currentBase, minorAllele)) {
                         counts[3][i]++;
                     }
-                    if (a.getBase(j, i) == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
+                    if (AlignmentUtils.isEqual(currentBase, NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE)) {
                         counts[4][i]++;
                     }
                 }
@@ -139,7 +142,7 @@ public class AlignmentFilterByGBSUtils {
                         + (char) majorAllele + "\t" + counts[2][i] + "\t" + (char) minorAllele + "\t" + counts[3][i] + "\t" + counts[4][i]);
             }
         }
-        //     System.out.println("counts"+Arrays.deepToString(counts));
+        // System.out.println("counts"+Arrays.deepToString(counts));
         return counts;
     }
 
@@ -236,7 +239,7 @@ public class AlignmentFilterByGBSUtils {
                     }
                     if ((pB != Alignment.UNKNOWN_DIPLOID_ALLELE) && (cB != Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                         cntTotalTaxa++;
-                        if (pB != cB) {
+                        if (!AlignmentUtils.isEqual(pB, cB)) {
                             cntDiffTaxa++;
                         }
                     }
