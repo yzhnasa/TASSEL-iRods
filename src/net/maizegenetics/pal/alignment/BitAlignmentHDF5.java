@@ -16,7 +16,7 @@ import net.maizegenetics.util.UnmodifiableBitSet;
  *
  * @author Ed & Terry
  */
-public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
+public class BitAlignmentHDF5 extends AbstractAlignment {
 
     private OpenBitSet[] myData;
     private int myNumDataRows;
@@ -27,7 +27,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
     private String myLocusPath;
     private Locus[] myLoci;
 
-    public SBitAlignmentNucleotideHDF5(String theHDF5file, Locus[] loci, IdGroup idGroup,
+    public BitAlignmentHDF5(String theHDF5file, Locus[] loci, IdGroup idGroup,
             String[][] alleleStates, int[] positions, byte[][] alleles) {
         super(idGroup, alleleStates);
         h5 = HDF5Factory.openForReading(theHDF5file);
@@ -41,7 +41,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
         cachSiteRow(0);
     }
 
-    public static SBitAlignmentNucleotideHDF5 getInstance(String theHDF5file, String locusName) {
+    public static BitAlignmentHDF5 getInstance(String theHDF5file, String locusName) {
         IHDF5Reader h5 = HDF5Factory.openForReading(theHDF5file);
         IdGroup idg = new SimpleIdGroup(h5.readStringArray("taxaNames"));
         String[][] alleleStates = {h5.readStringArray("alleleStates"),};
@@ -50,7 +50,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
         byte[][] alleles = h5.readByteMatrix(locusPath + "/alleles");
         Locus[] theLocus = new Locus[]{new Locus(locusName, locusName, 0, positions[positions.length - 1], null, null)};
         h5.close();
-        return new SBitAlignmentNucleotideHDF5(theHDF5file, theLocus, idg,
+        return new BitAlignmentHDF5(theHDF5file, theLocus, idg,
                 alleleStates, positions, alleles);
     }
 
@@ -536,7 +536,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
         String outfile = "/Users/terry/TASSELTutorialData/data/mdp_genotype.hmp.h5";
         BitAlignment a = (BitAlignment) ImportUtils.readFromHapmap(infile, null);
         ExportUtils.writeToHDF5(a, outfile);
-        SBitAlignmentNucleotideHDF5 sbah2 = SBitAlignmentNucleotideHDF5.getInstance(outfile, "10");
+        BitAlignmentHDF5 sbah2 = BitAlignmentHDF5.getInstance(outfile, "10");
         String outHap = "/Users/terry/TASSELTutorialData/data/testing_h5.hmp.txt";
         ExportUtils.writeToHapmap(sbah2, false, outHap, '\t', null);
         long time = System.currentTimeMillis();
