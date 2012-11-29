@@ -73,15 +73,14 @@ import org.apache.log4j.Logger;
 public class TASSELMainFrame extends JFrame {
 
     private static final Logger myLogger = Logger.getLogger(TASSELMainFrame.class);
-    public static final String version = "4.1.13";
-    public static final String versionDate = "November 15, 2012";
+    public static final String version = "4.1.14";
+    public static final String versionDate = "November 29, 2012";
     DataTreePanel theDataTreePanel;
     DataControlPanel theDataControlPanel;
     AnalysisControlPanel theAnalysisControlPanel;
     ResultControlPanel theResultControlPanel;
     private String tasselDataFile = "TasselDataFile";
     //a variable to control when the progress bar was last updated
-    private long lastProgressPaint = 0;
     private String dataTreeLoadFailed = "Unable to open the saved data tree.  The file format of this version is "
             + "incompatible with other versions.";
     static final String GENOTYPE_DATA_NEEDED = "Please select genotypic data from the data tree.";
