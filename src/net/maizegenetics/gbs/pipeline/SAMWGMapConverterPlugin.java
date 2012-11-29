@@ -11,7 +11,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.pal.alignment.SBitAlignmentNucleotideHDF5;
+import net.maizegenetics.pal.alignment.BitAlignmentHDF5;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -32,7 +32,7 @@ public final class SAMWGMapConverterPlugin extends AbstractPlugin{
     private static String outputFileName=null;
     private boolean textFormat = false;
     private int tagLengthInLong = 2;
-    private SBitAlignmentNucleotideHDF5[] anchAlign;
+    private BitAlignmentHDF5[] anchAlign;
 
     public SAMWGMapConverterPlugin(){
         super(null, false);
