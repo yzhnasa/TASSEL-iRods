@@ -41,7 +41,7 @@ public class BitNucleotideAlignment extends BitAlignment {
         int[][] alleles = getAllelesSortedByFrequency(site);
         int numAlleles = Math.min(alleles[0].length, 2);
         for (int i = 0; i < numAlleles; i++) {
-            if ((alleles[0][i] == 4) || (alleles[0][i] == 5)) {
+            if ((alleles[0][i] == NucleotideAlignmentConstants.INSERT_ALLELE) || (alleles[0][i] == NucleotideAlignmentConstants.GAP_ALLELE)) {
                 return true;
             }
         }
