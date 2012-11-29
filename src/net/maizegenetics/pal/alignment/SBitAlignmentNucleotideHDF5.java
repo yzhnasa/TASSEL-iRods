@@ -5,10 +5,6 @@ package net.maizegenetics.pal.alignment;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
-import java.io.File;
-import java.util.Arrays;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
@@ -18,7 +14,7 @@ import net.maizegenetics.util.UnmodifiableBitSet;
 /**
  * This data alignment reads from HDF5 files a native SBit alignment
  *
- * @author Ed & terry
+ * @author Ed & Terry
  */
 public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
@@ -30,51 +26,6 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
     private int myNumWords = 0;
     private String myLocusPath;
     private Locus[] myLoci;
-
-    public static void createFile(BitAlignment a, String newHDF5file) {
-        //super(a.getIdGroup());
-        IHDF5WriterConfigurator config = HDF5Factory.configure(new File(newHDF5file));
-        System.out.println("Creating HDF5 file: " + newHDF5file);
-        config.overwrite();
-        config.dontUseExtendableDataTypes();
-        config.useUTF8CharacterEncoding();
-        IHDF5Writer h5w = config.writer();
-        int numWords = a.getAllelePresenceForAllTaxa(0, 0).getNumWords();
-        h5w.setIntAttribute("/", "taxaNum", a.getSequenceCount());
-        h5w.createStringVariableLengthArray("taxaNames", a.getSequenceCount());
-        h5w.setIntAttribute("/", "numWords", numWords);
-        System.out.println(Arrays.deepToString(a.getAlleleEncodings()));
-        h5w.writeStringArray("alleleStates", a.getAlleleEncodings()[0]);
-        String[] tn = new String[a.getSequenceCount()];
-        for (int i = 0; i < tn.length; i++) {
-            tn[i] = a.getFullTaxaName(i);
-        }
-        String locusPath = "L:" + a.getLocusName(0);
-        h5w.createGroup(locusPath);
-        h5w.setIntAttribute(locusPath, "sites", a.getSiteCount());
-        h5w.createIntArray(locusPath + "/positions", a.getSiteCount());
-        int[] pos = new int[a.getSiteCount()];
-        for (int i = 0; i < a.getSiteCount(); i++) {
-            pos[i] = a.getPositionInLocus(i);
-        }
-        h5w.writeIntArray(locusPath + "/positions", pos);
-        h5w.createByteMatrix(locusPath + "/alleles", a.getSiteCount(), a.getMaxNumAlleles());
-        byte[][] alleles = new byte[a.getSiteCount()][a.getMaxNumAlleles()];
-        for (int i = 0; i < a.getSiteCount(); i++) {
-            alleles[i] = a.getAlleles(i);
-        }
-        h5w.writeByteMatrix(locusPath + "/alleles", alleles);
-        h5w.writeStringVariableLengthArray("taxaNames", tn);
-        for (int aNum = 0; aNum < a.getMaxNumAlleles(); aNum++) {
-            h5w.createLongMatrix(locusPath + "/" + aNum, a.myNumSites, numWords, 1, numWords);
-            for (int i = 0; i < a.myNumSites; i++) {
-                long[][] lg = new long[1][numWords];
-                lg[0] = a.getAllelePresenceForAllTaxa(i, aNum).getBits();
-                h5w.writeLongMatrixBlockWithOffset(locusPath + "/" + aNum, lg, i, 0);
-            }
-        }
-        h5w.close();
-    }
 
     public SBitAlignmentNucleotideHDF5(String theHDF5file, Locus[] loci, IdGroup idGroup,
             String[][] alleleStates, int[] positions, byte[][] alleles) {
@@ -581,12 +532,12 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
     }
 
     public static void main(String[] args) {
-        String infile = "/Users/edbuckler/SolexaAnal/GBS/build20120701/temp_Ed/h10kJuly_2012_Build.BPEC.Highf.c10.hmp.txt";
-        String outfile = "/Users/edbuckler/SolexaAnal/GBS/build20120701/test/h1kJuly_2012_Build.BPEC.Highf.c10.hmp.h5";
+        String infile = "/Users/terry/TASSELTutorialData/data/mdp_genotype.hmp.txt";
+        String outfile = "/Users/terry/TASSELTutorialData/data/mdp_genotype.hmp.h5";
         BitAlignment a = (BitAlignment) ImportUtils.readFromHapmap(infile, null);
-        SBitAlignmentNucleotideHDF5.createFile(a, outfile);
+        ExportUtils.writeToHDF5(a, outfile);
         SBitAlignmentNucleotideHDF5 sbah2 = SBitAlignmentNucleotideHDF5.getInstance(outfile, "10");
-        String outHap = "/Users/edbuckler/SolexaAnal/GBS/build20120701/test/rth1kJuly_2012_Build.BPEC.Highf.c10.hmp.txt";
+        String outHap = "/Users/terry/TASSELTutorialData/data/testing_h5.hmp.txt";
         ExportUtils.writeToHapmap(sbah2, false, outHap, '\t', null);
         long time = System.currentTimeMillis();
         for (int i = 0; i < sbah2.getSiteCount(); i++) {
