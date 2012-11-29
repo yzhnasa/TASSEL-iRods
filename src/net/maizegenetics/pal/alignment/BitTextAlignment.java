@@ -10,6 +10,8 @@ import net.maizegenetics.pal.ids.IdGroup;
  * @author terry
  */
 public class BitTextAlignment extends BitAlignment {
+    
+    private static final long serialVersionUID = -5197800047652332969L;
 
     protected BitTextAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isSBit) {
         super(a, maxNumAlleles, retainRareAlleles, isSBit);
