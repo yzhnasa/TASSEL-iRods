@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
  */
 public class BitAlignment extends AbstractAlignment {
 
+    private static final long serialVersionUID = -5197800047652332969L;
     private static final Logger myLogger = Logger.getLogger(BitAlignment.class);
     private BitSet[][] mySBitData;
     private BitSet[][] myTBitData;

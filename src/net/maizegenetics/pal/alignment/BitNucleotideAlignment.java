@@ -12,6 +12,8 @@ import net.maizegenetics.util.BitSet;
  */
 public class BitNucleotideAlignment extends BitAlignment {
 
+    private static final long serialVersionUID = -5197800047652332969L;
+
     protected BitNucleotideAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isSBit) {
         super(a, maxNumAlleles, retainRareAlleles, isSBit);
     }
