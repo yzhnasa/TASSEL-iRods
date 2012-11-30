@@ -1,5 +1,5 @@
 /*
- * SBitAlignment
+ * BitAlignmentHDF5
  */
 package net.maizegenetics.pal.alignment;
 
@@ -9,15 +9,17 @@ import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
+import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.UnmodifiableBitSet;
 
 /**
- * This data alignment reads from HDF5 files a native SBit alignment
+ * This data alignment reads from HDF5 files
  *
  * @author Ed & Terry
  */
 public class BitAlignmentHDF5 extends AbstractAlignment {
 
+    private IHDF5Reader myHDF5;
     private OpenBitSet[] myData;
     private int myNumDataRows;
     private IHDF5Reader h5 = null;
@@ -27,12 +29,41 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     private String myLocusPath;
     private Locus[] myLoci;
 
-    public BitAlignmentHDF5(String theHDF5file, Locus[] loci, IdGroup idGroup,
+    protected BitAlignmentHDF5(IHDF5Reader hdf5, IdGroup idGroup, byte[][] alleles, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
+        super(alleles, idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+        myHDF5 = hdf5;
+        if (isSBit) {
+            loadSBitAlleles(hdf5, null);
+        } else {
+            loadTBitAlleles(hdf5, null);
+        }
+        myNumDataRows = myMaxNumAlleles;
+        if (retainsRareAlleles()) {
+            myNumDataRows++;
+        }
+    }
+    
+    public static BitAlignmentHDF5 getInstance(String filename) {
+        return null;
+    }
+
+    private void loadSBitAlleles(IHDF5Reader hdf5, ProgressListener listener) {
+    }
+
+    private void loadTBitAlleles(IHDF5Reader hdf5, ProgressListener listener) {
+    }
+
+    private IHDF5Reader createHDF5File(String filename, BitAlignment alignment) {
+        ExportUtils.writeToHDF5(alignment, filename);
+        return HDF5Factory.openForReading(filename);
+    }
+
+    protected BitAlignmentHDF5(String theHDF5file, Locus[] loci, IdGroup idGroup,
             String[][] alleleStates, int[] positions, byte[][] alleles) {
         super(idGroup, alleleStates);
         h5 = HDF5Factory.openForReading(theHDF5file);
         myLoci = loci;
-        myNumWords = h5.getIntAttribute("/", "numWords");
+        myNumWords = h5.getIntAttribute(HDF5Constants.NUM_WORDS_PATH, HDF5Constants.NUM_SBIT_WORDS);
         myNumSites = positions.length;
         myVariableSites = positions;
         myAlleles = alleles;
@@ -534,18 +565,18 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     public static void main(String[] args) {
         String infile = "/Users/terry/TASSELTutorialData/data/mdp_genotype.hmp.txt";
         String outfile = "/Users/terry/TASSELTutorialData/data/mdp_genotype.hmp.h5";
-        BitAlignment a = (BitAlignment) ImportUtils.readFromHapmap(infile, null);
+        Alignment a = ImportUtils.readFromHapmap(infile, null);
         ExportUtils.writeToHDF5(a, outfile);
-        BitAlignmentHDF5 sbah2 = BitAlignmentHDF5.getInstance(outfile, "10");
-        String outHap = "/Users/terry/TASSELTutorialData/data/testing_h5.hmp.txt";
-        ExportUtils.writeToHapmap(sbah2, false, outHap, '\t', null);
-        long time = System.currentTimeMillis();
-        for (int i = 0; i < sbah2.getSiteCount(); i++) {
-            if (a.getBase(i % 100, i) != sbah2.getBase(i % 100, i)) {
-                System.out.println("Error:" + i);
-            }
-        }
-        System.out.println("Accessing time:" + (System.currentTimeMillis() - time));
+        //BitAlignmentHDF5 sbah2 = BitAlignmentHDF5.getInstance(outfile, "10");
+        //String outHap = "/Users/terry/TASSELTutorialData/data/testing_h5.hmp.txt";
+        //ExportUtils.writeToHapmap(sbah2, false, outHap, '\t', null);
+        //long time = System.currentTimeMillis();
+        //for (int i = 0; i < sbah2.getSiteCount(); i++) {
+        //    if (a.getBase(i % 100, i) != sbah2.getBase(i % 100, i)) {
+        //        System.out.println("Error:" + i);
+        //    }
+        //}
+        //System.out.println("Accessing time:" + (System.currentTimeMillis() - time));
 
     }
 }
