@@ -35,49 +35,66 @@ public class ExportUtils {
         // Utility Class - do not instantiate.
     }
 
-    public static void writeToHDF5(BitAlignment a, String newHDF5file) {
+    public static String writeToHDF5(BitAlignment a, String newHDF5file) {
 
-        IHDF5WriterConfigurator config = HDF5Factory.configure(new File(newHDF5file));
-        myLogger.info("Writing HDF5 file: " + newHDF5file);
-        config.overwrite();
-        config.dontUseExtendableDataTypes();
-        config.useUTF8CharacterEncoding();
-        IHDF5Writer h5w = config.writer();
-        int numWords = a.getAllelePresenceForAllTaxa(0, 0).getNumWords();
-        h5w.setIntAttribute("/", "taxaNum", a.getSequenceCount());
-        h5w.createStringVariableLengthArray("taxaNames", a.getSequenceCount());
-        h5w.setIntAttribute("/", "numWords", numWords);
-        myLogger.info(Arrays.deepToString(a.getAlleleEncodings()));
-        h5w.writeStringArray("alleleStates", a.getAlleleEncodings()[0]);
-        String[] tn = new String[a.getSequenceCount()];
-        for (int i = 0; i < tn.length; i++) {
-            tn[i] = a.getFullTaxaName(i);
-        }
-        String locusPath = "L:" + a.getLocusName(0);
-        h5w.createGroup(locusPath);
-        h5w.setIntAttribute(locusPath, "sites", a.getSiteCount());
-        h5w.createIntArray(locusPath + "/positions", a.getSiteCount());
-        int[] pos = new int[a.getSiteCount()];
-        for (int i = 0; i < a.getSiteCount(); i++) {
-            pos[i] = a.getPositionInLocus(i);
-        }
-        h5w.writeIntArray(locusPath + "/positions", pos);
-        h5w.createByteMatrix(locusPath + "/alleles", a.getSiteCount(), a.getMaxNumAlleles());
-        byte[][] alleles = new byte[a.getSiteCount()][a.getMaxNumAlleles()];
-        for (int i = 0; i < a.getSiteCount(); i++) {
-            alleles[i] = a.getAlleles(i);
-        }
-        h5w.writeByteMatrix(locusPath + "/alleles", alleles);
-        h5w.writeStringVariableLengthArray("taxaNames", tn);
-        for (int aNum = 0; aNum < a.getMaxNumAlleles(); aNum++) {
-            h5w.createLongMatrix(locusPath + "/" + aNum, a.myNumSites, numWords, 1, numWords);
-            for (int i = 0; i < a.myNumSites; i++) {
-                long[][] lg = new long[1][numWords];
-                lg[0] = a.getAllelePresenceForAllTaxa(i, aNum).getBits();
-                h5w.writeLongMatrixBlockWithOffset(locusPath + "/" + aNum, lg, i, 0);
+        IHDF5Writer h5w = null;
+        try {
+
+            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, ".hmp.h5");
+            File hdf5File = new File(newHDF5file);
+            if (hdf5File.exists()) {
+                throw new IllegalArgumentException("ExportUtils: writeToHDF5: File already exists: " + newHDF5file);
+            }
+            IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+            myLogger.info("Writing HDF5 file: " + newHDF5file);
+            config.overwrite();
+            config.dontUseExtendableDataTypes();
+            config.useUTF8CharacterEncoding();
+            h5w = config.writer();
+            int numWords = a.getAllelePresenceForAllTaxa(0, 0).getNumWords();
+            h5w.setIntAttribute("/", "taxaNum", a.getSequenceCount());
+            h5w.createStringVariableLengthArray("taxaNames", a.getSequenceCount());
+            h5w.setIntAttribute(HDF5Constants.NUM_WORDS_PATH, HDF5Constants.NUM_WORDS, numWords);
+            myLogger.info(Arrays.deepToString(a.getAlleleEncodings()));
+            h5w.writeStringArray("alleleStates", a.getAlleleEncodings()[0]);
+            String[] tn = new String[a.getSequenceCount()];
+            for (int i = 0; i < tn.length; i++) {
+                tn[i] = a.getFullTaxaName(i);
+            }
+            String locusPath = "L:" + a.getLocusName(0);
+            h5w.createGroup(locusPath);
+            h5w.setIntAttribute(locusPath, "sites", a.getSiteCount());
+            h5w.createIntArray(locusPath + "/positions", a.getSiteCount());
+            int[] pos = new int[a.getSiteCount()];
+            for (int i = 0; i < a.getSiteCount(); i++) {
+                pos[i] = a.getPositionInLocus(i);
+            }
+            h5w.writeIntArray(locusPath + "/positions", pos);
+            h5w.createByteMatrix(locusPath + "/alleles", a.getSiteCount(), a.getMaxNumAlleles());
+            byte[][] alleles = new byte[a.getSiteCount()][a.getMaxNumAlleles()];
+            for (int i = 0; i < a.getSiteCount(); i++) {
+                alleles[i] = a.getAlleles(i);
+            }
+            h5w.writeByteMatrix(locusPath + "/alleles", alleles);
+            h5w.writeStringVariableLengthArray("taxaNames", tn);
+            for (int aNum = 0; aNum < a.getMaxNumAlleles(); aNum++) {
+                h5w.createLongMatrix(locusPath + "/" + aNum, a.myNumSites, numWords, 1, numWords);
+                for (int i = 0; i < a.myNumSites; i++) {
+                    long[][] lg = new long[1][numWords];
+                    lg[0] = a.getAllelePresenceForAllTaxa(i, aNum).getBits();
+                    h5w.writeLongMatrixBlockWithOffset(locusPath + "/" + aNum, lg, i, 0);
+                }
+            }
+
+            return newHDF5file;
+
+        } finally {
+            try {
+                h5w.close();
+            } catch (Exception e) {
+                // do nothing
             }
         }
-        h5w.close();
     }
 
     /**
