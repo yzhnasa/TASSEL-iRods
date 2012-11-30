@@ -34,9 +34,6 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private int[] myLocusIndices;
     private int[] myLocusOffsets = null;
     private String[] mySNPIDs;
-    
-    // allelic depth information, byte[allele][taxa][site] = depth max: 255
-    private byte[][][] myAlleleDepth;
 
     protected MutableSingleEncodeAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a.getAlleleEncodings());
@@ -270,11 +267,6 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         for (int i = 0, n = idGroup.getIdCount(); i < n; i++) {
             myIdentifiers.add(idGroup.getIdentifier(i));
         }
-    }
-    
-    // Initializes allele depth related variables, only call if need depth functionality
-    public void initAllelicDepth(int numAlleles) {
-        myAlleleDepth = new byte[numAlleles][myMaxTaxa][myMaxNumSites];
     }
 
     private void loadAlleles(Alignment a) {
@@ -810,21 +802,6 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     @Override 
     public void setDepthForAllele(int taxon, int site, byte[] values) {
-        for (int i = 0; i < values.length; i++) {
-            myAlleleDepth[i][taxon][site] = values[i];
-        }
+        throw new UnsupportedOperationException("Not supported yet.");
     }
-    
-    @Override
-    public byte[] getDepthForAllele(int taxon, int site) {
-        if (myAlleleDepth == null) {
-            return super.getDepthForAllele(taxon, site);
-        } else {
-            byte[] out = new byte[myAlleleDepth.length];
-            for (int i = 0; i < out.length; i++) {
-                out[i] = myAlleleDepth[i][taxon][site];
-            }
-            return out;
-        }
-    }  
 }
