@@ -438,7 +438,8 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     }
 
-    private int[] getStartAndEndOfLocus(Locus locus) {
+    @Override
+    public int[] getStartAndEndOfLocus(Locus locus) {
 
         if (isDirty()) {
             throw new IllegalStateException("MutableSingleEncodeAlignment: getStartAndEndOfLocus: this alignment is dirty.");
@@ -589,19 +590,19 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         mySNPIDs[myNumSites] = null;
 
     }
-    
+
     public void clearSiteForRemoval(int site) {
-        
+
         myNumSitesStagedToRemove++;
-        
+
         for (int t = 0, n = getSequenceCount(); t < n; t++) {
             myData[t][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
         }
-        
+
         myVariableSites[site] = Integer.MAX_VALUE;
         myLocusIndices[site] = Integer.MAX_VALUE;
         mySNPIDs[site] = null;
-        
+
     }
 
     public void addTaxon(Identifier id) {
@@ -800,7 +801,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         return -1;
     }
 
-    @Override 
+    @Override
     public void setDepthForAllele(int taxon, int site, byte[] values) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
