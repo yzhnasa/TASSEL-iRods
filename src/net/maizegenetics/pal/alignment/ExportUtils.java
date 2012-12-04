@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
@@ -56,20 +57,43 @@ public class ExportUtils {
             config.dontUseExtendableDataTypes();
             config.useUTF8CharacterEncoding();
             h5w = config.writer();
+            
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
+            
+            h5w.setBooleanAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
 
-            h5w.setIntAttribute(HDF5Constants.NUM_TAXA_PATH, HDF5Constants.NUM_TAXA, numTaxa);
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TAXA, numTaxa);
 
             int numSBitWords = a.getAllelePresenceForAllTaxa(0, 0).getNumWords();
-            h5w.setIntAttribute(HDF5Constants.NUM_WORDS_PATH, HDF5Constants.NUM_SBIT_WORDS, numSBitWords);
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SBIT_WORDS, numSBitWords);
 
             int numTBitWords = a.getAllelePresenceForAllSites(0, 0).getNumWords();
-            h5w.setIntAttribute(HDF5Constants.NUM_WORDS_PATH, HDF5Constants.NUM_TBIT_WORDS, numTBitWords);
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TBIT_WORDS, numTBitWords);
 
-            myLogger.info(Arrays.deepToString(a.getAlleleEncodings()));
-            h5w.writeStringArray(HDF5Constants.ALLELE_STATES, a.getAlleleEncodings()[0]);
+            String[][] aEncodings = a.getAlleleEncodings();
+            //int numEncodings = aEncodings.length;
+            //numEncodings = 3;
+            myLogger.info(Arrays.deepToString(aEncodings));
+            h5w.writeStringArray(HDF5Constants.ALLELE_STATES, aEncodings[0]);
+            //MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, 16});
+            //String[] flatAlleleEncodings = new String[numEncodings * 16];
+            //int count = 0;
+            //for (int s = 0; s < numEncodings; s++) {
+            //    for (int x = 0; x < 16; x++) {
+                    //alleleEncodings.set(aEncodings[0][x], s, x);
+                    //alleleEncodings.set(String.valueOf(s) + ":" + String.valueOf(x), s, x);
+            //        System.out.println("flat: " + count + ": " + aEncodings[0][x]);
+            //        flatAlleleEncodings[count++] = aEncodings[0][x];
+            //    }
+            //}
+            //MDArray<String> alleleEncodings = new MDArray<String>(a.getAlleleEncodings(), new int[]{numSites, 16});
+            //MDArray<String> alleleEncodings = new MDArray<String>(flatAlleleEncodings, new int[]{numEncodings, 16});
+            //h5w.writeStringMDArray(HDF5Constants.ALLELE_STATES, alleleEncodings);
+            
+            h5w.writeStringArray(HDF5Constants.SNP_IDS, a.getSNPIDs());
 
             h5w.createGroup(HDF5Constants.SBIT);
-            h5w.setIntAttribute(HDF5Constants.NUM_SITES_PATH, HDF5Constants.NUM_SITES, numSites);
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SITES, numSites);
 
             String[] lociNames = new String[a.getNumLoci()];
             Locus[] loci = a.getLoci();
