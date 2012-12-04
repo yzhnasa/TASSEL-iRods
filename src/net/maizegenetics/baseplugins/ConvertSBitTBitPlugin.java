@@ -101,7 +101,6 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
 
     private DataSet convertAlignment(Datum datum) {
 
-        String name = datum.getName();
         Alignment alignment = null;
         try {
             alignment = (Alignment) datum.getData();
