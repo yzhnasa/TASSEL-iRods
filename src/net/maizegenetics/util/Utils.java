@@ -370,14 +370,25 @@ public final class Utils {
     public static BufferedWriter getBufferedWriter(String filename) {
         return getBufferedWriter(filename, false);
     }
-
+    
     public static BufferedWriter getBufferedWriter(String filename, boolean append) {
+        return getBufferedWriter(new File(filename), append);
+    }
+    
+    public static BufferedWriter getBufferedWriter(File file) {
+        return getBufferedWriter(file, false);
+    }
+
+    public static BufferedWriter getBufferedWriter(File file, boolean append) {
+        
+        String filename = null;
 
         try {
+            filename = file.getCanonicalPath();
             if (filename.endsWith(".gz")) {
-                return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(filename, append))));
+                return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(file, append))));
             } else {
-                return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename, append)));
+                return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, append)));
             }
         } catch (Exception e) {
             myLogger.error("getBufferedReader: Error getting reader for: " + filename);
