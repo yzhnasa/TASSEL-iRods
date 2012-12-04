@@ -1028,7 +1028,7 @@ public class BitAlignment extends AbstractAlignment {
     @Override
     public void optimizeForSites(ProgressListener listener) {
         if (mySBitData != null) {
-            myLogger.info("optimizeForTaxa: Already Optimized for Sites.");
+            myLogger.info("optimizeForSites: Already Optimized for Sites.");
             return;
         }
         mySBitData = BitUtil.transpose(myTBitData, myNumDataRows, getSequenceCount(), myNumSites, listener);
