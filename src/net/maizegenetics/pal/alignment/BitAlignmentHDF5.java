@@ -63,7 +63,6 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
         super(idGroup, alleleStates);
         h5 = HDF5Factory.openForReading(theHDF5file);
         myLoci = loci;
-        myNumWords = h5.getIntAttribute(HDF5Constants.NUM_WORDS_PATH, HDF5Constants.NUM_SBIT_WORDS);
         myNumSites = positions.length;
         myVariableSites = positions;
         myAlleles = alleles;
