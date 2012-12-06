@@ -60,7 +60,7 @@ public class FileLoadPlugin extends AbstractPlugin {
 
         SqrMatrix, Annotated, Sequence, Polymorphism, Numerical, Unknown, Fasta,
         Hapmap, Plink, Phenotype, Flapjack, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
-        Serial, HapmapDiploid, Text
+        Serial, HapmapDiploid, Text, HDF5
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
     public static final String FILE_EXT_HAPMAP_GZ = ".hmp.txt.gz";
@@ -69,6 +69,7 @@ public class FileLoadPlugin extends AbstractPlugin {
     public static final String FILE_EXT_FLAPJACK_MAP = ".flpjk.map";
     public static final String FILE_EXT_FLAPJACK_GENO = ".flpjk.geno";
     public static final String FILE_EXT_SERIAL_GZ = ".serial.gz";
+    public static final String FILE_EXT_HDF5 = ".hmp.h5";
 
     /** Creates a new instance of FileLoadPlugin */
     public FileLoadPlugin(Frame parentFrame, boolean isInteractive) {
