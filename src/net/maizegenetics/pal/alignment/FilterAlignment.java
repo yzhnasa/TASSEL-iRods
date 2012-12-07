@@ -911,15 +911,7 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public byte[] getAlleles(int site) {
         if (myIsTaxaFilter) {
-            int[][] alleles = getAllelesSortedByFrequency(site);
-            int resultSize = alleles[0].length;
-            int maxNumAlleles = getMaxNumAlleles();
-            byte[] result = new byte[maxNumAlleles];
-            for (int i = 0; i < maxNumAlleles; i++) {
-                result[i] = (i < resultSize) ? (byte) alleles[0][i] : Alignment.UNKNOWN_ALLELE;
-            }
-
-            return result;
+            return super.getAlleles(site);
         } else {
             return myBaseAlignment.getAlleles(translateSite(site));
         }

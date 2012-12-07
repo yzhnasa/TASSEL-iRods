@@ -569,10 +569,10 @@ public class BitAlignment extends AbstractAlignment {
         return ((int) temp.cardinality()) * 2;
 
     }
-    
+
     @Override
     public int getTotalNotMissingForTaxon(int taxon) {
-        
+
         if (myTBitData == null) {
             return super.getTotalNotMissingForTaxon(taxon);
         }
@@ -582,7 +582,7 @@ public class BitAlignment extends AbstractAlignment {
             temp.or(myTBitData[i][taxon]);
         }
         return (int) temp.cardinality();
-        
+
     }
 
     @Override
@@ -648,22 +648,6 @@ public class BitAlignment extends AbstractAlignment {
         return (int) temp.cardinality() + (int) mySBitData[0][site].cardinality();
 
     }
-    
-    @Override
-    public byte getMajorAllele(int site) {
-        return myAlleles[site][0];
-    }
-
-    @Override
-    public byte getMinorAllele(int site) {
-        
-        if (myMaxNumAlleles > 1) {
-            return myAlleles[site][1];
-        } else {
-            return Alignment.UNKNOWN_ALLELE;
-        }
-        
-    }
 
     @Override
     public boolean isHeterozygous(int taxon, int site) {
@@ -674,7 +658,7 @@ public class BitAlignment extends AbstractAlignment {
         }
     }
 
-    public boolean isHeterozygousSBit(int taxon, int site) {
+    private boolean isHeterozygousSBit(int taxon, int site) {
         int count = 0;
         for (int i = 0; i < myNumDataRows; i++) {
             if (mySBitData[i][site].fastGet(taxon)) {
@@ -687,7 +671,7 @@ public class BitAlignment extends AbstractAlignment {
         return false;
     }
 
-    public boolean isHeterozygousTBit(int taxon, int site) {
+    private boolean isHeterozygousTBit(int taxon, int site) {
         int count = 0;
         for (int i = 0; i < myNumDataRows; i++) {
             if (myTBitData[i][taxon].fastGet(site)) {

@@ -374,15 +374,17 @@ abstract public class AbstractAlignment implements Alignment {
     
     @Override
     public byte getMajorAllele(int site) {
-        
-        int[][] alleles = getAllelesSortedByFrequency(site);
-        
-        if (alleles[0].length >= 1) {
-            return (byte) alleles[0][0];
+        if (myAlleles != null) {
+            return myAlleles[site][0];
         } else {
-            return Alignment.UNKNOWN_ALLELE;
+            int[][] alleles = getAllelesSortedByFrequency(site);
+            
+            if (alleles[0].length >= 1) {
+                return (byte) alleles[0][0];
+            } else {
+                return Alignment.UNKNOWN_ALLELE;
+            }
         }
-        
     }
     
     @Override
@@ -392,15 +394,21 @@ abstract public class AbstractAlignment implements Alignment {
     
     @Override
     public byte getMinorAllele(int site) {
-        
-        int[][] alleles = getAllelesSortedByFrequency(site);
-        
-        if (alleles[0].length >= 2) {
-            return (byte) alleles[0][1];
+        if (myAlleles != null) {
+            if (myMaxNumAlleles > 1) {
+                return myAlleles[site][1];
+            } else {
+                return Alignment.UNKNOWN_ALLELE;
+            }
         } else {
-            return Alignment.UNKNOWN_ALLELE;
+            int[][] alleles = getAllelesSortedByFrequency(site);
+            
+            if (alleles[0].length >= 2) {
+                return (byte) alleles[0][1];
+            } else {
+                return Alignment.UNKNOWN_ALLELE;
+            }
         }
-        
     }
     
     @Override
@@ -410,7 +418,19 @@ abstract public class AbstractAlignment implements Alignment {
     
     @Override
     public byte[] getAlleles(int site) {
-        return myAlleles[site];
+        if (myAlleles != null) {
+            return myAlleles[site];
+        } else {
+            int[][] alleles = getAllelesSortedByFrequency(site);
+            int resultSize = alleles[0].length;
+            int maxNumAlleles = getMaxNumAlleles();
+            byte[] result = new byte[maxNumAlleles];
+            for (int i = 0; i < maxNumAlleles; i++) {
+                result[i] = (i < resultSize) ? (byte) alleles[0][i] : Alignment.UNKNOWN_ALLELE;
+            }
+            
+            return result;
+        }
     }
     
     @Override
@@ -743,6 +763,7 @@ abstract public class AbstractAlignment implements Alignment {
         return getAlleleEncodings(site)[value];
     }
     
+    @Override
     public String getDiploidAsString(int site, byte value) {
         String[] alleleStates = getAlleleEncodings(site);
         return alleleStates[(value >>> 4) & 0xf] + ":" + alleleStates[value & 0xf];
@@ -930,7 +951,7 @@ abstract public class AbstractAlignment implements Alignment {
         Iterator itr = diploidValueCounts.keySet().iterator();
         while (itr.hasNext()) {
             String key = (String) itr.next();
-            Long count = (Long) diploidValueCounts.get(key);
+            Long count = diploidValueCounts.get(key);
             result[0][i] = key;
             result[1][i++] = count;
         }
