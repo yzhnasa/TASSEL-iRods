@@ -3,6 +3,7 @@
 package net.maizegenetics.gui;
 
 import java.awt.Component;
+import javax.swing.BorderFactory;
 
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -25,6 +26,7 @@ public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
         setForeground(header.getForeground());
         setBackground(header.getBackground());
         setFont(header.getFont());
+        setBorder(BorderFactory.createEtchedBorder());
     }
 
     public Component getListCellRendererComponent(JList list,
