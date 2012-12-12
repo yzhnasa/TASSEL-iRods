@@ -3,27 +3,28 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
-
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
-
 import org.apache.log4j.Logger;
 
 /**
  * The class exports PAL alignment data types to various file formats.
  *
- * @author Jon, Terry
+ * @author Jon, Terry, Ed
  */
 public class ExportUtils {
 
@@ -32,6 +33,121 @@ public class ExportUtils {
 
     private ExportUtils() {
         // Utility Class - do not instantiate.
+    }
+
+    public static String writeToHDF5(Alignment a, String newHDF5file) {
+
+        a = AlignmentUtils.optimizeForSites(a);
+        a = AlignmentUtils.optimizeForTaxa(a);
+        IHDF5Writer h5w = null;
+        try {
+
+            int numSites = a.getSiteCount();
+            int numTaxa = a.getSequenceCount();
+
+            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, ".hmp.h5");
+            File hdf5File = new File(newHDF5file);
+            if (hdf5File.exists()) {
+                throw new IllegalArgumentException("ExportUtils: writeToHDF5: File already exists: " + newHDF5file);
+            }
+            IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+            myLogger.info("Writing HDF5 file: " + newHDF5file);
+            config.overwrite();
+            config.dontUseExtendableDataTypes();
+            h5w = config.writer();
+
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
+
+            h5w.setBooleanAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
+
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TAXA, numTaxa);
+
+            int numSBitWords = a.getAllelePresenceForAllTaxa(0, 0).getNumWords();
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SBIT_WORDS, numSBitWords);
+
+            int numTBitWords = a.getAllelePresenceForAllSites(0, 0).getNumWords();
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TBIT_WORDS, numTBitWords);
+
+            String[][] aEncodings = a.getAlleleEncodings();
+            //myLogger.info(Arrays.deepToString(aEncodings));
+            int numEncodings = aEncodings.length;
+            int numStates = aEncodings[0].length;
+            MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, numStates});
+            for (int s = 0; s < numEncodings; s++) {
+                for (int x = 0; x < numStates; x++) {
+                    alleleEncodings.set(aEncodings[s][x], s, x);
+                }
+            }
+
+            h5w.createStringMDArray(HDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
+            h5w.writeStringMDArray(HDF5Constants.ALLELE_STATES, alleleEncodings);
+            MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HDF5Constants.ALLELE_STATES);
+            if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
+                throw new IllegalStateException("ExportUtils: writeToHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
+            }
+
+            h5w.writeStringArray(HDF5Constants.SNP_IDS, a.getSNPIDs());
+
+            h5w.createGroup(HDF5Constants.SBIT);
+            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SITES, numSites);
+
+            String[] lociNames = new String[a.getNumLoci()];
+            Locus[] loci = a.getLoci();
+            for (int i = 0; i < a.getNumLoci(); i++) {
+                lociNames[i] = loci[i].getName();
+            }
+            h5w.createStringVariableLengthArray(HDF5Constants.LOCI, a.getNumLoci());
+            h5w.writeStringVariableLengthArray(HDF5Constants.LOCI, lociNames);
+
+            h5w.createIntArray(HDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
+            h5w.writeIntArray(HDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
+
+            h5w.createIntArray(HDF5Constants.POSITIONS, numSites);
+            h5w.writeIntArray(HDF5Constants.POSITIONS, a.getPhysicalPositions());
+
+            h5w.createByteMatrix(HDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
+            byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
+            for (int i = 0; i < numSites; i++) {
+                alleles[i] = a.getAlleles(i);
+            }
+            h5w.writeByteMatrix(HDF5Constants.ALLELES, alleles);
+
+            String[] tn = new String[numTaxa];
+            for (int i = 0; i < tn.length; i++) {
+                tn[i] = a.getFullTaxaName(i);
+            }
+            h5w.createStringVariableLengthArray(HDF5Constants.TAXA, numTaxa);
+            h5w.writeStringVariableLengthArray(HDF5Constants.TAXA, tn);
+
+            for (int aNum = 0; aNum < a.getTotalNumAlleles(); aNum++) {
+
+                String currentSBitPath = HDF5Constants.SBIT + "/" + aNum;
+                h5w.createLongMatrix(currentSBitPath, numSites, numSBitWords, 1, numSBitWords);
+                for (int i = 0; i < numSites; i++) {
+                    long[][] lg = new long[1][numSBitWords];
+                    lg[0] = a.getAllelePresenceForAllTaxa(i, aNum).getBits();
+                    h5w.writeLongMatrixBlockWithOffset(currentSBitPath, lg, i, 0);
+                }
+
+                String currentTBitPath = HDF5Constants.TBIT + "/" + aNum;
+                h5w.createLongMatrix(currentTBitPath, numTaxa, numTBitWords, 1, numTBitWords);
+                for (int i = 0; i < numTaxa; i++) {
+                    long[][] lg = new long[1][numTBitWords];
+                    lg[0] = a.getAllelePresenceForAllSites(i, aNum).getBits();
+                    h5w.writeLongMatrixBlockWithOffset(currentTBitPath, lg, i, 0);
+                }
+
+            }
+
+            return newHDF5file;
+
+        } finally {
+            try {
+                h5w.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
     }
 
     /**

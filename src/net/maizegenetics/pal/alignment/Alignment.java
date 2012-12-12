@@ -354,6 +354,16 @@ public interface Alignment extends Serializable {
     public int getLocusSiteCount(Locus locus);
 
     /**
+     * Get the first (inclusive) and last (exclusive) site of the specified
+     * locus in this alignment.
+     *
+     * @param locus locus
+     *
+     * @return first and last site
+     */
+    public int[] getStartAndEndOfLocus(Locus locus);
+
+    /**
      * Returns number of sequences (taxa).
      *
      * @return number of sequences

@@ -1,114 +1,129 @@
 /*
- * SBitAlignment
+ * BitAlignmentHDF5
  */
 package net.maizegenetics.pal.alignment;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
-import java.io.File;
-import java.util.Arrays;
+import java.util.WeakHashMap;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
+import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.UnmodifiableBitSet;
+import org.apache.log4j.Logger;
 
 /**
- * This data alignment reads from HDF5 files a native SBit alignment
+ * This data alignment reads from HDF5 files
  *
- * @author Ed & terry
+ * @author Ed & Terry
  */
-public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
+public class BitAlignmentHDF5 extends AbstractAlignment {
 
-    private OpenBitSet[] myData;
+    private static final long serialVersionUID = -5197800047652332969L;
+    private static final Logger myLogger = Logger.getLogger(BitAlignmentHDF5.class);
+    private final IHDF5Reader myHDF5;
     private int myNumDataRows;
-    private IHDF5Reader h5 = null;
-    private int cachedRow = 0;
-    private int[] myVariableSites;
-    private int myNumWords = 0;
-    private String myLocusPath;
-    private Locus[] myLoci;
+    private int myNumSBitWords = 0;
+    private int myNumTBitWords = 0;
+    private WeakHashMap<Integer, OpenBitSet[]> myCachedSites = new WeakHashMap<Integer, OpenBitSet[]>(100);
+    private WeakHashMap<Integer, OpenBitSet[]> myCachedTaxa = new WeakHashMap<Integer, OpenBitSet[]>(100);
 
-    public static void createFile(BitAlignment a, String newHDF5file) {
-        //super(a.getIdGroup());
-        IHDF5WriterConfigurator config = HDF5Factory.configure(new File(newHDF5file));
-        System.out.println("Creating HDF5 file: " + newHDF5file);
-        config.overwrite();
-        config.dontUseExtendableDataTypes();
-        config.useUTF8CharacterEncoding();
-        IHDF5Writer h5w = config.writer();
-        int numWords = a.getAllelePresenceForAllTaxa(0, 0).getNumWords();
-        h5w.setIntAttribute("/", "taxaNum", a.getSequenceCount());
-        h5w.createStringVariableLengthArray("taxaNames", a.getSequenceCount());
-        h5w.setIntAttribute("/", "numWords", numWords);
-        System.out.println(Arrays.deepToString(a.getAlleleEncodings()));
-        h5w.writeStringArray("alleleStates", a.getAlleleEncodings()[0]);
-        String[] tn = new String[a.getSequenceCount()];
-        for (int i = 0; i < tn.length; i++) {
-            tn[i] = a.getFullTaxaName(i);
+    protected BitAlignmentHDF5(IHDF5Reader hdf5, IdGroup idGroup, byte[][] alleles, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        super(alleles, idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
+        myHDF5 = hdf5;
+        myNumSBitWords = myHDF5.getIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SBIT_WORDS);
+        myNumTBitWords = myHDF5.getIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TBIT_WORDS);
+        myNumDataRows = myMaxNumAlleles;
+        if (retainsRareAlleles()) {
+            myNumDataRows++;
         }
-        String locusPath = "L:" + a.getLocusName(0);
-        h5w.createGroup(locusPath);
-        h5w.setIntAttribute(locusPath, "sites", a.getSiteCount());
-        h5w.createIntArray(locusPath + "/positions", a.getSiteCount());
-        int[] pos = new int[a.getSiteCount()];
-        for (int i = 0; i < a.getSiteCount(); i++) {
-            pos[i] = a.getPositionInLocus(i);
-        }
-        h5w.writeIntArray(locusPath + "/positions", pos);
-        h5w.createByteMatrix(locusPath + "/alleles", a.getSiteCount(), a.getMaxNumAlleles());
-        byte[][] alleles = new byte[a.getSiteCount()][a.getMaxNumAlleles()];
-        for (int i = 0; i < a.getSiteCount(); i++) {
-            alleles[i] = a.getAlleles(i);
-        }
-        h5w.writeByteMatrix(locusPath + "/alleles", alleles);
-        h5w.writeStringVariableLengthArray("taxaNames", tn);
-        for (int aNum = 0; aNum < a.getMaxNumAlleles(); aNum++) {
-            h5w.createLongMatrix(locusPath + "/" + aNum, a.myNumSites, numWords, 1, numWords);
-            for (int i = 0; i < a.myNumSites; i++) {
-                long[][] lg = new long[1][numWords];
-                lg[0] = a.getAllelePresenceForAllTaxa(i, aNum).getBits();
-                h5w.writeLongMatrixBlockWithOffset(locusPath + "/" + aNum, lg, i, 0);
+    }
+
+    public static BitAlignmentHDF5 getInstance(String filename) {
+        IHDF5Reader reader = HDF5Factory.openForReading(filename);
+
+        String[] taxa = reader.readStringArray(HDF5Constants.TAXA);
+        IdGroup idgroup = new SimpleIdGroup(taxa);
+
+        byte[][] alleles = reader.readByteMatrix(HDF5Constants.ALLELES);
+
+        MDArray<String> alleleStatesMDArray = reader.readStringMDArray(HDF5Constants.ALLELE_STATES);
+        int[] dimensions = alleleStatesMDArray.dimensions();
+        int numEncodings = dimensions[0];
+        int numStates = dimensions[1];
+        String[][] alleleStates = new String[numEncodings][numStates];
+        for (int e = 0; e < numEncodings; e++) {
+            for (int s = 0; s < numStates; s++) {
+                alleleStates[e][s] = alleleStatesMDArray.get(e, s);
             }
         }
-        h5w.close();
-    }
 
-    public SBitAlignmentNucleotideHDF5(String theHDF5file, Locus[] loci, IdGroup idGroup,
-            String[][] alleleStates, int[] positions, byte[][] alleles) {
-        super(idGroup, alleleStates);
-        h5 = HDF5Factory.openForReading(theHDF5file);
-        myLoci = loci;
-        myNumWords = h5.getIntAttribute("/", "numWords");
-        myNumSites = positions.length;
-        myVariableSites = positions;
-        myAlleles = alleles;
-        myMaxNumAlleles = myAlleles[0].length;
-        myLocusPath = "L:" + loci[0].getName();
-        cachSiteRow(0);
-    }
+        int[] variableSites = reader.readIntArray(HDF5Constants.POSITIONS);
 
-    public static SBitAlignmentNucleotideHDF5 getInstance(String theHDF5file, String locusName) {
-        IHDF5Reader h5 = HDF5Factory.openForReading(theHDF5file);
-        IdGroup idg = new SimpleIdGroup(h5.readStringArray("taxaNames"));
-        String[][] alleleStates = {h5.readStringArray("alleleStates"),};
-        String locusPath = "L:" + locusName;
-        int[] positions = h5.readIntArray(locusPath + "/positions");
-        byte[][] alleles = h5.readByteMatrix(locusPath + "/alleles");
-        Locus[] theLocus = new Locus[]{new Locus(locusName, locusName, 0, positions[positions.length - 1], null, null)};
-        h5.close();
-        return new SBitAlignmentNucleotideHDF5(theHDF5file, theLocus, idg,
-                alleleStates, positions, alleles);
-    }
+        int maxNumAlleles = reader.getIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.MAX_NUM_ALLELES);
 
-    private void cachSiteRow(int site) {
-        myData = new OpenBitSet[myMaxNumAlleles];
-        for (int aNum = 0; aNum < myMaxNumAlleles; aNum++) {
-            myData[aNum] = new OpenBitSet(h5.readLongMatrixBlockWithOffset(myLocusPath + "/" + aNum, 1, myNumWords, site, 0)[0], myNumWords);
+        boolean retainRare = reader.getBooleanAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.RETAIN_RARE_ALLELES);
+
+        String[] lociStrings = reader.readStringArray(HDF5Constants.LOCI);
+        int numLoci = lociStrings.length;
+        Locus[] loci = new Locus[numLoci];
+        for (int i = 0; i < numLoci; i++) {
+            loci[i] = new Locus(lociStrings[i]);
         }
-        cachedRow = site;
+
+        int[] lociOffsets = reader.readIntArray(HDF5Constants.LOCUS_OFFSETS);
+
+        String[] snpIds = reader.readStringArray(HDF5Constants.SNP_IDS);
+
+        if (NucleotideAlignmentConstants.isNucleotideEncodings(alleleStates)) {
+            return new BitNucleotideAlignmentHDF5(reader, idgroup, alleles, null, null, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
+        } else if (alleleStates.length == 1) {
+            return new BitAlignmentHDF5(reader, idgroup, alleles, null, null, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
+        } else {
+            return new BitTextAlignmentHDF5(reader, idgroup, alleles, null, null, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
+        }
+
+    }
+
+    private OpenBitSet[] getCachedSite(int site) {
+
+        OpenBitSet[] result = myCachedSites.get(site);
+        if (result != null) {
+            return result;
+        }
+
+        result = new OpenBitSet[myNumDataRows];
+        for (int aNum = 0; aNum < myNumDataRows; aNum++) {
+            String currentSBitPath = HDF5Constants.SBIT + "/" + aNum;
+            synchronized (myHDF5) {
+                result[aNum] = new OpenBitSet(myHDF5.readLongMatrixBlock(currentSBitPath, 1, myNumSBitWords, site, 0)[0], myNumSBitWords);
+            }
+        }
+        myCachedSites.put(site, result);
+        return result;
+
+    }
+
+    private OpenBitSet[] getCachedTaxon(int taxon) {
+
+        OpenBitSet[] result = myCachedTaxa.get(taxon);
+        if (result != null) {
+            return result;
+        }
+
+        result = new OpenBitSet[myNumDataRows];
+        for (int aNum = 0; aNum < myNumDataRows; aNum++) {
+            String currentTBitPath = HDF5Constants.TBIT + "/" + aNum;
+            synchronized (myHDF5) {
+                result[aNum] = new OpenBitSet(myHDF5.readLongMatrixBlock(currentTBitPath, 1, myNumTBitWords, taxon, 0)[0], myNumTBitWords);
+            }
+        }
+        myCachedTaxa.put(taxon, result);
+        return result;
+
     }
 
     @Override
@@ -119,16 +134,14 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     @Override
     public byte[] getBaseArray(int taxon, int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+        OpenBitSet[] sBitData = getCachedSite(site);
         byte[] result = new byte[2];
         result[0] = Alignment.UNKNOWN_ALLELE;
         result[1] = Alignment.UNKNOWN_ALLELE;
         try {
             int count = 0;
             for (int i = 0; i < myMaxNumAlleles; i++) {
-                if (myData[i].fastGet(taxon)) {
+                if (sBitData[i].fastGet(taxon)) {
                     if (count == 0) {
                         result[1] = myAlleles[site][i];
                     }
@@ -137,7 +150,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
             }
 
             // Check For Rare Allele
-            if (retainsRareAlleles() && myData[myMaxNumAlleles].fastGet(taxon)) {
+            if (retainsRareAlleles() && sBitData[myMaxNumAlleles].fastGet(taxon)) {
                 if (count == 0) {
                     result[1] = Alignment.RARE_ALLELE;
                 }
@@ -145,27 +158,37 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
             }
 
         } catch (IndexOutOfBoundsException e) {
-            throw new IllegalStateException("SBitAlignment: getBaseArray: bit sets indicate more than two alleles for taxon: " + taxon + "   site: " + site);
+            throw new IllegalStateException("BitAlignmentHDF5: getBaseArray: bit sets indicate more than two alleles for taxon: " + taxon + "   site: " + site);
         }
         return result;
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
-        return UnmodifiableBitSet.getInstance(myData[alleleNumber]);
+        OpenBitSet[] sBitData = getCachedSite(site);
+        return UnmodifiableBitSet.getInstance(sBitData[alleleNumber]);
+    }
+
+    @Override
+    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
+        OpenBitSet[] tBitData = getCachedTaxon(taxon);
+        return UnmodifiableBitSet.getInstance(tBitData[alleleNumber]);
+    }
+
+    @Override
+    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+        OpenBitSet[] tBitData = getCachedTaxon(taxon);
+        long[] result = new long[endBlock - startBlock];
+        System.arraycopy(tBitData[alleleNumber].getBits(), startBlock, result, 0, endBlock - startBlock);
+        return result;
     }
 
     @Override
     public int getTotalGametesNotMissing(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+        OpenBitSet[] sBitData = getCachedSite(site);
         OpenBitSet temp = new OpenBitSet(getSequenceCount());
         for (int i = 0; i < myNumDataRows; i++) {
-            temp.or(myData[i]);
+            temp.or(sBitData[i]);
         }
         return ((int) temp.cardinality()) * 2;
 
@@ -173,9 +196,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     @Override
     public int getMinorAlleleCount(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+        OpenBitSet[] sBitData = getCachedSite(site);
         if ((myMaxNumAlleles < 2) || (myAlleles[site][1] == Alignment.UNKNOWN_ALLELE)) {
             return 0;
         }
@@ -183,21 +204,18 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
         OpenBitSet temp = new OpenBitSet(getSequenceCount());
         for (int i = 0; i < myNumDataRows; i++) {
             if (i != 1) {
-                temp.or(myData[i]);
+                temp.or(sBitData[i]);
             }
         }
         temp.flip(0, temp.size());
-        temp.and(myData[1]);
+        temp.and(sBitData[1]);
 
-        return (int) temp.cardinality() + (int) myData[1].cardinality();
+        return (int) temp.cardinality() + (int) sBitData[1].cardinality();
 
     }
 
     @Override
     public double getMinorAlleleFrequency(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
         int minorAlleleCount = getMinorAlleleCount(site);
         if (minorAlleleCount == 0) {
             return 0.0;
@@ -207,9 +225,6 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     @Override
     public double getMajorAlleleFrequency(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
         int majorAlleleCount = getMajorAlleleCount(site);
         if (majorAlleleCount == 0) {
             return 0.0;
@@ -219,32 +234,27 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     @Override
     public int getMajorAlleleCount(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+        OpenBitSet[] sBitData = getCachedSite(site);
         if (myAlleles[site][0] == Alignment.UNKNOWN_ALLELE) {
             return 0;
         }
 
         OpenBitSet temp = new OpenBitSet(getSequenceCount());
         for (int i = 1; i < myNumDataRows; i++) {
-            temp.or(myData[i]);
+            temp.or(sBitData[i]);
         }
         temp.flip(0, temp.size());
-        temp.and(myData[0]);
+        temp.and(sBitData[0]);
 
-        return (int) temp.cardinality() + (int) myData[0].cardinality();
-
+        return (int) temp.cardinality() + (int) sBitData[0].cardinality();
     }
 
     @Override
     public boolean isHeterozygous(int taxon, int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+        OpenBitSet[] sBitData = getCachedSite(site);
         int count = 0;
         for (int i = 0; i < myNumDataRows; i++) {
-            if (myData[i].fastGet(taxon)) {
+            if (sBitData[i].fastGet(taxon)) {
                 count++;
                 if (count == 2) {
                     return true;
@@ -256,27 +266,22 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     @Override
     public int getHeterozygousCount(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+        OpenBitSet[] sBitData = getCachedSite(site);
         int result = 0;
         for (int i = 0; i < myNumDataRows; i++) {
             for (int j = i + 1; j < myNumDataRows; j++) {
-                result += (int) OpenBitSet.intersectionCount(myData[i], myData[j]);
+                result += (int) OpenBitSet.intersectionCount(sBitData[i], sBitData[j]);
             }
         }
         return result;
-
     }
 
     @Override
     public boolean isPolymorphic(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+        OpenBitSet[] sBitData = getCachedSite(site);
         boolean nonZero = false;
         for (int i = 0; i < myNumDataRows; i++) {
-            int numTaxa = (int) myData[i].cardinality();
+            int numTaxa = (int) sBitData[i].cardinality();
             if (numTaxa != 0) {
                 if (nonZero) {
                     return true;
@@ -296,15 +301,13 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
         long[][] counts = new long[16][16];
         for (int site = 0; site < myNumSites; site++) {
-            if (site != cachedRow) {
-                cachSiteRow(site);
-            }
+            OpenBitSet[] sBitData = getCachedSite(site);
             for (int i = 0; i < myMaxNumAlleles; i++) {
                 byte indexI = myAlleles[site][i];
-                counts[indexI][indexI] += myData[i].cardinality();
+                counts[indexI][indexI] += sBitData[i].cardinality();
                 for (int j = i + 1; j < myMaxNumAlleles; j++) {
                     byte indexJ = myAlleles[site][j];
-                    long ijHet = OpenBitSet.intersectionCount(myData[i], myData[j]);
+                    long ijHet = OpenBitSet.intersectionCount(sBitData[i], sBitData[j]);
                     if (indexI < indexJ) {
                         counts[indexI][indexJ] += ijHet;
                     } else {
@@ -376,9 +379,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     @Override
     public Object[][] getDiploidssSortedByFrequency(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+        OpenBitSet[] sBitData = getCachedSite(site);
         if (myAlleleStates.length != 1) {
             return super.getDiploidssSortedByFrequency(site);
         }
@@ -386,10 +387,10 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
         int[][] counts = new int[16][16];
         for (int i = 0; i < myMaxNumAlleles; i++) {
             byte indexI = myAlleles[site][i];
-            counts[indexI][indexI] += (int) myData[i].cardinality();
+            counts[indexI][indexI] += (int) sBitData[i].cardinality();
             for (int j = i + 1; j < myMaxNumAlleles; j++) {
                 byte indexJ = myAlleles[site][j];
-                int ijHet = (int) OpenBitSet.intersectionCount(myData[i], myData[j]);
+                int ijHet = (int) OpenBitSet.intersectionCount(sBitData[i], sBitData[j]);
                 if (indexI < indexJ) {
                     counts[indexI][indexJ] += ijHet;
                 } else {
@@ -461,9 +462,8 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        if (site != cachedRow) {
-            cachSiteRow(site);
-        }
+
+        OpenBitSet[] sBitData = getCachedSite(site);
         int[] counts = new int[16];
         for (int i = 0; i < myNumDataRows; i++) {
             byte indexI;
@@ -472,7 +472,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
             } else {
                 indexI = myAlleles[site][i];
             }
-            counts[indexI] += (int) myData[i].cardinality() * 2;
+            counts[indexI] += (int) sBitData[i].cardinality() * 2;
             for (int j = i + 1; j < myNumDataRows; j++) {
                 byte indexJ;
                 if ((retainsRareAlleles()) && (j == myMaxNumAlleles)) {
@@ -480,7 +480,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
                 } else {
                     indexJ = myAlleles[site][j];
                 }
-                int ijHet = (int) OpenBitSet.intersectionCount(myData[i], myData[j]);
+                int ijHet = (int) OpenBitSet.intersectionCount(sBitData[i], sBitData[j]);
                 counts[indexI] -= ijHet;
                 counts[indexJ] -= ijHet;
             }
@@ -536,7 +536,7 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
 
     @Override
     public boolean isTBitFriendly() {
-        return false;
+        return true;
     }
 
     @Override
@@ -545,56 +545,53 @@ public class SBitAlignmentNucleotideHDF5 extends AbstractAlignment {
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
-        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
-    }
+    public int getTotalGametesNotMissingForTaxon(int taxon) {
 
-    @Override
-    public int getPositionInLocus(int site) {
-        try {
-            return myVariableSites[site];
-        } catch (Exception e) {
-            return site;
+        OpenBitSet[] tBitData = getCachedTaxon(taxon);
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 0; i < myNumDataRows; i++) {
+            temp.or(tBitData[i]);
         }
+        return ((int) temp.cardinality()) * 2;
+
     }
 
     @Override
-    public Locus getLocus(int site) {
-        return myLoci[0];
-    }
+    public int getHeterozygousCountForTaxon(int taxon) {
 
-    @Override
-    public String getDiploidAsString(int site, byte value) {
-        return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
-    }
+        OpenBitSet[] tBitData = getCachedTaxon(taxon);
 
-    @Override
-    public boolean isIndel(int site) {
-        int[][] alleles = getAllelesSortedByFrequency(site);
-        int numAlleles = Math.min(alleles[0].length, 2);
-        for (int i = 0; i < numAlleles; i++) {
-            if ((alleles[0][i] == 4) || (alleles[0][i] == 5)) {
-                return true;
+        int result = 0;
+        for (int i = 0; i < myNumDataRows; i++) {
+            for (int j = i + 1; j < myNumDataRows; j++) {
+                result += (int) OpenBitSet.intersectionCount(tBitData[i], tBitData[j]);
             }
         }
-        return false;
+        return result;
+
     }
 
-    public static void main(String[] args) {
-        String infile = "/Users/edbuckler/SolexaAnal/GBS/build20120701/temp_Ed/h10kJuly_2012_Build.BPEC.Highf.c10.hmp.txt";
-        String outfile = "/Users/edbuckler/SolexaAnal/GBS/build20120701/test/h1kJuly_2012_Build.BPEC.Highf.c10.hmp.h5";
-        BitAlignment a = (BitAlignment) ImportUtils.readFromHapmap(infile, null);
-        SBitAlignmentNucleotideHDF5.createFile(a, outfile);
-        SBitAlignmentNucleotideHDF5 sbah2 = SBitAlignmentNucleotideHDF5.getInstance(outfile, "10");
-        String outHap = "/Users/edbuckler/SolexaAnal/GBS/build20120701/test/rth1kJuly_2012_Build.BPEC.Highf.c10.hmp.txt";
-        ExportUtils.writeToHapmap(sbah2, false, outHap, '\t', null);
-        long time = System.currentTimeMillis();
-        for (int i = 0; i < sbah2.getSiteCount(); i++) {
-            if (a.getBase(i % 100, i) != sbah2.getBase(i % 100, i)) {
-                System.out.println("Error:" + i);
-            }
-        }
-        System.out.println("Accessing time:" + (System.currentTimeMillis() - time));
+    @Override
+    public int getTotalNotMissingForTaxon(int taxon) {
 
+        OpenBitSet[] tBitData = getCachedTaxon(taxon);
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 0; i < myNumDataRows; i++) {
+            temp.or(tBitData[i]);
+        }
+        return (int) temp.cardinality();
+
+    }
+
+    @Override
+    public void optimizeForTaxa(ProgressListener listener) {
+        myLogger.info("optimizeForTaxa: Already Optimized for Taxa.");
+    }
+
+    @Override
+    public void optimizeForSites(ProgressListener listener) {
+        myLogger.info("optimizeForSites: Already Optimized for Sites.");
     }
 }

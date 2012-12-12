@@ -60,7 +60,7 @@ public class FileLoadPlugin extends AbstractPlugin {
 
         SqrMatrix, Annotated, Sequence, Polymorphism, Numerical, Unknown, Fasta,
         Hapmap, Plink, Phenotype, Flapjack, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
-        Serial, HapmapDiploid, Text
+        Serial, HapmapDiploid, Text, HDF5
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
     public static final String FILE_EXT_HAPMAP_GZ = ".hmp.txt.gz";
@@ -69,8 +69,11 @@ public class FileLoadPlugin extends AbstractPlugin {
     public static final String FILE_EXT_FLAPJACK_MAP = ".flpjk.map";
     public static final String FILE_EXT_FLAPJACK_GENO = ".flpjk.geno";
     public static final String FILE_EXT_SERIAL_GZ = ".serial.gz";
+    public static final String FILE_EXT_HDF5 = ".hmp.h5";
 
-    /** Creates a new instance of FileLoadPlugin */
+    /**
+     * Creates a new instance of FileLoadPlugin
+     */
     public FileLoadPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
@@ -154,6 +157,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Serial);
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = processDatum(myOpenFiles[i], TasselFileType.Serial);
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_HDF5)) {
+                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.HDF5);
+                            alreadyLoaded.add(myOpenFiles[i]);
+                            tds = processDatum(myOpenFiles[i], TasselFileType.HDF5);
                         } else {
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = guessAtUnknowns(myOpenFiles[i]);
@@ -315,6 +322,11 @@ public class FileLoadPlugin extends AbstractPlugin {
                     result = ImportUtils.readFromHapmap(inFile, myIsSBit, this);
                     break;
                 }
+                case HDF5: {
+                    suffix = FILE_EXT_HDF5;
+                    result = BitAlignmentHDF5.getInstance(inFile);
+                    break;
+                }
                 case Sequence: {
                     result = ReadSequenceAlignmentUtils.readBasicAlignments(inFile, 40);
                     break;
@@ -392,7 +404,8 @@ public class FileLoadPlugin extends AbstractPlugin {
     }
 
     /**
-     * Provides a open filer that remember the last location something was opened from
+     * Provides a open filer that remember the last location something was
+     * opened from
      */
     private File[] getOpenFilesByChooser() {
         JFileChooser filerOpen = new JFileChooser(TasselPrefs.getOpenDir());
@@ -439,11 +452,11 @@ public class FileLoadPlugin extends AbstractPlugin {
     public void setTheFileType(TasselFileType theFileType) {
         myFileType = theFileType;
     }
-    
+
     public boolean getIsFileCreatedSBit() {
         return myIsSBit;
     }
-    
+
     public void setIsFileCreatedSBit(boolean value) {
         myIsSBit = value;
     }
@@ -494,6 +507,7 @@ class FileLoadPluginDialog extends JDialog {
     boolean isCancel = true;
     ButtonGroup conversionButtonGroup = new ButtonGroup();
     JRadioButton hapMapRadioButton = new JRadioButton("Load Hapmap");
+    JRadioButton hdf5RadioButton = new JRadioButton("Load HDF5");
     JRadioButton plinkRadioButton = new JRadioButton("Load Plink");
     JRadioButton sequenceAlignRadioButton = new JRadioButton("Load sequence alignment (phylip, NEXUS)");
     JRadioButton fastaRadioButton = new JRadioButton("Load FASTA file");
@@ -539,6 +553,7 @@ class FileLoadPluginDialog extends JDialog {
 
         conversionButtonGroup.add(flapjackRadioButton);
         conversionButtonGroup.add(hapMapRadioButton);
+        conversionButtonGroup.add(hdf5RadioButton);
         conversionButtonGroup.add(plinkRadioButton);
         conversionButtonGroup.add(sequenceAlignRadioButton);
         conversionButtonGroup.add(fastaRadioButton);
@@ -602,6 +617,7 @@ class FileLoadPluginDialog extends JDialog {
         result.setBorder(BorderFactory.createEtchedBorder());
 
         result.add(hapMapRadioButton);
+        result.add(hdf5RadioButton);
         result.add(plinkRadioButton);
         result.add(flapjackRadioButton);
         result.add(sequenceAlignRadioButton);
@@ -627,7 +643,6 @@ class FileLoadPluginDialog extends JDialog {
 
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 cancelButton_actionPerformed(e);
             }
@@ -635,7 +650,6 @@ class FileLoadPluginDialog extends JDialog {
 
         okButton.setText("OK");
         okButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 okButton_actionPerformed(e);
             }
@@ -654,6 +668,9 @@ class FileLoadPluginDialog extends JDialog {
     public FileLoadPlugin.TasselFileType getTasselFileType() {
         if (hapMapRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Hapmap;
+        }
+        if (hdf5RadioButton.isSelected()) {
+            return FileLoadPlugin.TasselFileType.HDF5;
         }
         if (plinkRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Plink;

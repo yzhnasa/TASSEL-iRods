@@ -1,24 +1,21 @@
 /*
- * BitTextAlignment
+ * BitTextAlignmentHDF5
  */
 package net.maizegenetics.pal.alignment;
 
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.pal.ids.IdGroup;
 
 /**
  *
  * @author terry
  */
-public class BitTextAlignment extends BitAlignment {
-    
+public class BitTextAlignmentHDF5 extends BitAlignmentHDF5 {
+
     private static final long serialVersionUID = -5197800047652332969L;
 
-    protected BitTextAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isSBit) {
-        super(a, maxNumAlleles, retainRareAlleles, isSBit);
-    }
-
-    protected BitTextAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
-        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
+    protected BitTextAlignmentHDF5(IHDF5Reader hdf5, IdGroup idGroup, byte[][] alleles, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+        super(hdf5, idGroup, alleles, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
     }
 
     @Override

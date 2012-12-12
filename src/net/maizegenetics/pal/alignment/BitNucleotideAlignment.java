@@ -12,16 +12,18 @@ import net.maizegenetics.util.BitSet;
  */
 public class BitNucleotideAlignment extends BitAlignment {
 
+    private static final long serialVersionUID = -5197800047652332969L;
+
     protected BitNucleotideAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles, boolean isSBit) {
         super(a, maxNumAlleles, retainRareAlleles, isSBit);
     }
 
-    protected BitNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
-        super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
+    protected BitNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
+        super(idGroup, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
     }
 
-    protected BitNucleotideAlignment(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
-        super(idGroup, alleles, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
+    protected BitNucleotideAlignment(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
+        super(idGroup, alleles, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
     }
 
     @Override
@@ -39,7 +41,7 @@ public class BitNucleotideAlignment extends BitAlignment {
         int[][] alleles = getAllelesSortedByFrequency(site);
         int numAlleles = Math.min(alleles[0].length, 2);
         for (int i = 0; i < numAlleles; i++) {
-            if ((alleles[0][i] == 4) || (alleles[0][i] == 5)) {
+            if ((alleles[0][i] == NucleotideAlignmentConstants.INSERT_ALLELE) || (alleles[0][i] == NucleotideAlignmentConstants.GAP_ALLELE)) {
                 return true;
             }
         }

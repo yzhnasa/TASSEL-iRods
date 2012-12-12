@@ -213,7 +213,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         data[count][0] = "Number Heterozygous";
         data[count++][1] = (double) myNumHeterozygous;
-        
+
         data[count][0] = "Proportion Heterozygous";
         data[count++][1] = (double) myNumHeterozygous / (double) totalDiploids;
 
@@ -229,7 +229,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             String value = (String) diploidValueCounts[0][i];
             Long numValue = (Long) diploidValueCounts[1][i];
             data2[count][0] = value;
-            data2[count][1] = numValue.intValue();
+            data2[count][1] = numValue;
             data2[count][2] = numValue.doubleValue() / (double) totalDiploids;
             data2[count++][3] = numValue.doubleValue() / (double) totalDiploidsNotMissing;
         }
@@ -246,7 +246,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             String value = (String) majorMinorDiploidValueCounts[0][i];
             Long numValue = (Long) majorMinorDiploidValueCounts[1][i];
             data2[count][0] = value;
-            data2[count][1] = numValue.intValue();
+            data2[count][1] = numValue;
             data2[count++][2] = numValue.doubleValue() / (double) numSites;
         }
 
@@ -261,7 +261,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         String[] lastColumnNames = new String[]{"Gametes Missing", "Proportion Missing", "Number Heterozygous", "Proportion Heterozygous",
             "Inbreeding Coefficient", "Inbreeding Coefficient Scaled by Missing"};
 
-        List columnNames = new ArrayList(Arrays.asList(firstColumnNames));
+        List<String> columnNames = new ArrayList<String>(Arrays.asList(firstColumnNames));
 
         int maxAlleles = alignment.getMaxNumAlleles();
         if (alignment.retainsRareAlleles()) {

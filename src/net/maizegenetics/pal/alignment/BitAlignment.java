@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
  */
 public class BitAlignment extends AbstractAlignment {
 
+    private static final long serialVersionUID = -5197800047652332969L;
     private static final Logger myLogger = Logger.getLogger(BitAlignment.class);
     private BitSet[][] mySBitData;
     private BitSet[][] myTBitData;
@@ -106,11 +107,11 @@ public class BitAlignment extends AbstractAlignment {
     }
 
     public static Alignment getNucleotideInstance(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
-        return new BitNucleotideAlignment(idGroup, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
+        return new BitNucleotideAlignment(idGroup, data, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
     }
 
     public static Alignment getNucleotideInstance(IdGroup idGroup, byte[][] alleles, BitSet[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
-        return new BitNucleotideAlignment(idGroup, alleles, data, map, reference, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
+        return new BitNucleotideAlignment(idGroup, alleles, data, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
     }
 
     public static Alignment getNucleotideInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
@@ -568,10 +569,10 @@ public class BitAlignment extends AbstractAlignment {
         return ((int) temp.cardinality()) * 2;
 
     }
-    
+
     @Override
     public int getTotalNotMissingForTaxon(int taxon) {
-        
+
         if (myTBitData == null) {
             return super.getTotalNotMissingForTaxon(taxon);
         }
@@ -581,7 +582,7 @@ public class BitAlignment extends AbstractAlignment {
             temp.or(myTBitData[i][taxon]);
         }
         return (int) temp.cardinality();
-        
+
     }
 
     @Override
@@ -647,22 +648,6 @@ public class BitAlignment extends AbstractAlignment {
         return (int) temp.cardinality() + (int) mySBitData[0][site].cardinality();
 
     }
-    
-    @Override
-    public byte getMajorAllele(int site) {
-        return myAlleles[site][0];
-    }
-
-    @Override
-    public byte getMinorAllele(int site) {
-        
-        if (myMaxNumAlleles > 1) {
-            return myAlleles[site][1];
-        } else {
-            return Alignment.UNKNOWN_ALLELE;
-        }
-        
-    }
 
     @Override
     public boolean isHeterozygous(int taxon, int site) {
@@ -673,7 +658,7 @@ public class BitAlignment extends AbstractAlignment {
         }
     }
 
-    public boolean isHeterozygousSBit(int taxon, int site) {
+    private boolean isHeterozygousSBit(int taxon, int site) {
         int count = 0;
         for (int i = 0; i < myNumDataRows; i++) {
             if (mySBitData[i][site].fastGet(taxon)) {
@@ -686,7 +671,7 @@ public class BitAlignment extends AbstractAlignment {
         return false;
     }
 
-    public boolean isHeterozygousTBit(int taxon, int site) {
+    private boolean isHeterozygousTBit(int taxon, int site) {
         int count = 0;
         for (int i = 0; i < myNumDataRows; i++) {
             if (myTBitData[i][taxon].fastGet(site)) {
@@ -1027,7 +1012,7 @@ public class BitAlignment extends AbstractAlignment {
     @Override
     public void optimizeForSites(ProgressListener listener) {
         if (mySBitData != null) {
-            myLogger.info("optimizeForTaxa: Already Optimized for Sites.");
+            myLogger.info("optimizeForSites: Already Optimized for Sites.");
             return;
         }
         mySBitData = BitUtil.transpose(myTBitData, myNumDataRows, getSequenceCount(), myNumSites, listener);

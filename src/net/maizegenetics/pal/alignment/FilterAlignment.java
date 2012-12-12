@@ -344,6 +344,11 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
+    public static FilterAlignment getInstance(Alignment a, Locus locus) {
+        int[] endStart = a.getStartAndEndOfLocus(locus);
+        return getInstance(a, endStart[0], endStart[1] - 1);
+    }
+
     /**
      * Factory method that returns a FilterAlignment viewing sites between start
      * site and end site inclusive.
@@ -532,6 +537,10 @@ public class FilterAlignment extends AbstractAlignment {
 
     @Override
     public int getLocusSiteCount(Locus locus) {
+        
+        if ((!myIsSiteFilter) && (!myIsSiteFilterByRange)) {
+            return myBaseAlignment.getLocusSiteCount(locus);
+        }
 
         int numSites = getSiteCount();
         int result = 0;
@@ -782,7 +791,7 @@ public class FilterAlignment extends AbstractAlignment {
             return myBaseAlignment.getReference();
         }
     }
-    
+
     @Override
     public int getTotalNumAlleles() {
         return myBaseAlignment.getTotalNumAlleles();
@@ -902,15 +911,7 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public byte[] getAlleles(int site) {
         if (myIsTaxaFilter) {
-            int[][] alleles = getAllelesSortedByFrequency(site);
-            int resultSize = alleles[0].length;
-            int maxNumAlleles = getMaxNumAlleles();
-            byte[] result = new byte[maxNumAlleles];
-            for (int i = 0; i < maxNumAlleles; i++) {
-                result[i] = (i < resultSize) ? (byte) alleles[0][i] : Alignment.UNKNOWN_ALLELE;
-            }
-
-            return result;
+            return super.getAlleles(site);
         } else {
             return myBaseAlignment.getAlleles(translateSite(site));
         }

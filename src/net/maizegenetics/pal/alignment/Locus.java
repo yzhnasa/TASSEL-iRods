@@ -44,6 +44,10 @@ public class Locus implements Serializable {
 
     }
 
+    public Locus(String name) {
+        this(name, name, -1, -1, null, null);
+    }
+
     public String getName() {
         return myName;
     }

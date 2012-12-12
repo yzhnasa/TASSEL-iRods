@@ -18,7 +18,7 @@ import net.maizegenetics.util.ProgressListener;
  * @author terry
  */
 abstract public class AbstractAlignment implements Alignment {
-
+    
     private static final long serialVersionUID = -5197800047652332969L;
     private IdGroup myIdGroup;
     private GeneticMap myGeneticMap;
@@ -35,7 +35,7 @@ abstract public class AbstractAlignment implements Alignment {
     private int[] myLociOffsets;
     private String[] mySNPIDs;
     private boolean myRetainRareAlleles = false;
-
+    
     public AbstractAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         if (idGroup.getIdCount() != data.length) {
             throw new IllegalArgumentException("AbstractAlignment: init: id group count: " + idGroup.getIdCount() + " doesn't equal number of data rows: " + data.length);
@@ -44,13 +44,13 @@ abstract public class AbstractAlignment implements Alignment {
         init(idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, snpIDs, loci, lociOffsets, retainRareAlleles);
         initAlleles(data);
     }
-
+    
     public AbstractAlignment(byte[][] alleles, IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         myNumSites = alleles.length;
         init(idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, snpIDs, loci, lociOffsets, retainRareAlleles);
         myAlleles = alleles;
     }
-
+    
     public AbstractAlignment(Alignment a, int maxNumAlleles, boolean retainRareAlleles) {
         if (maxNumAlleles > a.getMaxNumAlleles()) {
             throw new IllegalArgumentException("AbstractAlignment: init: max number of alleles can't be larger than original alignment.");
@@ -79,19 +79,20 @@ abstract public class AbstractAlignment implements Alignment {
         init(null, null, null, alleleStates, null, 1, null, new Locus[]{new Locus("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
     }
 
+    // TERRY - Need to check if this needed?
     public AbstractAlignment(IdGroup idGroup, String[][] alleleStates) {
         myIdGroup = idGroup;
         init(null, null, null, alleleStates, null, 1, null, new Locus[]{new Locus("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
     }
-
+    
     private void init(IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, String[] snpIDs, Locus[] loci, int[] lociOffsets, boolean retainRareAlleles) {
-
+        
         if ((idGroup != null) && (idGroup.getIdCount() != 0)) {
             myIdGroup = SimpleIdGroup.getInstance(idGroup);
         }
-
+        
         myGeneticMap = map;
-
+        
         if ((reference == null) || (reference.length == 0)) {
             myReference = null;
         } else {
@@ -100,7 +101,7 @@ abstract public class AbstractAlignment implements Alignment {
                 throw new IllegalArgumentException("AbstractAlignment: init: reference differs in length with sequences.");
             }
         }
-
+        
         if ((variableSites == null) || (variableSites.length == 0)) {
             myVariableSites = null;
         } else {
@@ -109,25 +110,25 @@ abstract public class AbstractAlignment implements Alignment {
                 throw new IllegalArgumentException("AbstractAlignment: init: variable sites differs in length with sequences.");
             }
         }
-
+        
         if ((alleleStates == null) || (alleleStates.length == 0)) {
             throw new IllegalArgumentException("AbstractAlignment: init: allele states can't be empty.");
         } else if ((alleleStates.length != 1) && (alleleStates.length != getSiteCount())) {
             throw new IllegalArgumentException("AbstractAlignment: init: number of allele states must be either 1 or the number of sites.");
         }
         myAlleleStates = alleleStates;
-
+        
         if ((maxNumAlleles < 1) || (maxNumAlleles > 14)) {
             throw new IllegalArgumentException("AbstractAlignment: init: max number of alleles must be between 1 and 14 inclusive: " + maxNumAlleles);
         }
         myMaxNumAlleles = maxNumAlleles;
-
+        
         if ((snpIDs == null) || (snpIDs.length == 0)) {
             mySNPIDs = null;
         } else {
             mySNPIDs = snpIDs;
         }
-
+        
         if ((loci == null) || (loci.length == 0)) {
             throw new IllegalArgumentException("AbstractAlignment: init: must have at least one locus.");
         } else if (loci.length != lociOffsets.length) {
@@ -136,11 +137,11 @@ abstract public class AbstractAlignment implements Alignment {
             myLoci = loci;
             myLociOffsets = lociOffsets;
         }
-
+        
         myRetainRareAlleles = retainRareAlleles;
-
+        
     }
-
+    
     private void initAlleles(Alignment a) {
         myAlleles = new byte[getSiteCount()][myMaxNumAlleles];
         for (int i = 0, n = getSiteCount(); i < n; i++) {
@@ -150,7 +151,7 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
     }
-
+    
     private void initAlleles(byte[][] data) {
         myAlleles = new byte[getSiteCount()][myMaxNumAlleles];
         for (int i = 0, n = getSiteCount(); i < n; i++) {
@@ -160,7 +161,7 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
     }
-
+    
     @Override
     public byte[] getBaseArray(int taxon, int site) {
         byte[] result = new byte[2];
@@ -169,14 +170,14 @@ abstract public class AbstractAlignment implements Alignment {
         result[1] = (byte) (combinedBase & 0xf);
         return result;
     }
-
+    
     @Override
     public String getBaseAsString(int taxon, int site) {
         String[][] alleleStates = getAlleleEncodings();
         byte[] temp = getBaseArray(taxon, site);
         return alleleStates[0][temp[0]] + ":" + alleleStates[0][temp[1]];
     }
-
+    
     @Override
     public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
         StringBuilder builder = new StringBuilder();
@@ -188,19 +189,19 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return builder.toString();
     }
-
+    
     @Override
     public String getBaseAsStringRow(int taxon) {
         return getBaseAsStringRange(taxon, 0, getSiteCount());
     }
-
+    
     @Override
     public String[] getBaseAsStringArray(int taxon, int site) {
         String[][] alleleStates = getAlleleEncodings();
         byte[] temp = getBaseArray(taxon, site);
         return new String[]{alleleStates[0][temp[0]], alleleStates[0][temp[1]]};
     }
-
+    
     @Override
     public byte[] getBaseRow(int taxon) {
         int numSites = getSiteCount();
@@ -210,76 +211,76 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return result;
     }
-
+    
     @Override
     public byte[] getBaseRange(int taxon, int startSite, int endSite) {
-
+        
         byte[] result = new byte[endSite - startSite];
         for (int i = startSite; i < endSite; i++) {
             result[i] = getBase(taxon, i);
         }
         return result;
-
+        
     }
-
+    
     @Override
     public byte getBase(int taxon, Locus locus, int physicalPosition) {
         return getBase(taxon, getSiteOfPhysicalPosition(physicalPosition, locus));
     }
-
+    
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public IdGroup getIdGroup() {
         return myIdGroup;
     }
-
+    
     @Override
     public String getTaxaName(int index) {
         return getIdGroup().getIdentifier(index).getName();
     }
-
+    
     @Override
     public String getFullTaxaName(int index) {
         return getIdGroup().getIdentifier(index).getFullName();
     }
-
+    
     @Override
     public int getSequenceCount() {
         return getIdGroup().getIdCount();
     }
-
+    
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-
+        
         int[] stateCnt = new int[16];
         for (int i = 0; i < getSequenceCount(); i++) {
             byte[] dipB = getBaseArray(i, site);
@@ -290,14 +291,14 @@ abstract public class AbstractAlignment implements Alignment {
                 stateCnt[dipB[1]]++;
             }
         }
-
+        
         int count = 0;
         for (int j = 0; j < 16; j++) {
             if (stateCnt[j] != 0) {
                 count++;
             }
         }
-
+        
         int result[][] = new int[2][count];
         int index = 0;
         for (int k = 0; k < 16; k++) {
@@ -307,39 +308,39 @@ abstract public class AbstractAlignment implements Alignment {
                 index++;
             }
         }
-
+        
         boolean change = true;
         while (change) {
-
+            
             change = false;
-
+            
             for (int k = 0; k < count - 1; k++) {
-
+                
                 if (result[1][k] < result[1][k + 1]) {
-
+                    
                     int temp = result[0][k];
                     result[0][k] = result[0][k + 1];
                     result[0][k + 1] = temp;
-
+                    
                     int tempCount = result[1][k];
                     result[1][k] = result[1][k + 1];
                     result[1][k + 1] = tempCount;
-
+                    
                     change = true;
                 }
             }
-
+            
         }
-
+        
         return result;
-
+        
     }
-
+    
     @Override
     public double getMajorAlleleFrequency(int site) {
-
+        
         int[][] alleles = getAllelesSortedByFrequency(site);
-
+        
         int numAlleles = alleles[0].length;
         if (numAlleles >= 1) {
             int totalNonMissing = 0;
@@ -350,14 +351,14 @@ abstract public class AbstractAlignment implements Alignment {
         } else {
             return 0.0;
         }
-
+        
     }
-
+    
     @Override
     public double getMinorAlleleFrequency(int site) {
-
+        
         int[][] alleles = getAllelesSortedByFrequency(site);
-
+        
         int numAlleles = alleles[0].length;
         if (numAlleles >= 2) {
             int totalNonMissing = 0;
@@ -368,50 +369,70 @@ abstract public class AbstractAlignment implements Alignment {
         } else {
             return 0.0;
         }
-
+        
     }
-
+    
     @Override
     public byte getMajorAllele(int site) {
-
-        int[][] alleles = getAllelesSortedByFrequency(site);
-
-        if (alleles[0].length >= 1) {
-            return (byte) alleles[0][0];
+        if (myAlleles != null) {
+            return myAlleles[site][0];
         } else {
-            return Alignment.UNKNOWN_ALLELE;
+            int[][] alleles = getAllelesSortedByFrequency(site);
+            
+            if (alleles[0].length >= 1) {
+                return (byte) alleles[0][0];
+            } else {
+                return Alignment.UNKNOWN_ALLELE;
+            }
         }
-
     }
-
+    
     @Override
     public String getMajorAlleleAsString(int site) {
         return getBaseAsString(site, getMajorAllele(site));
     }
-
+    
     @Override
     public byte getMinorAllele(int site) {
-
-        int[][] alleles = getAllelesSortedByFrequency(site);
-
-        if (alleles[0].length >= 2) {
-            return (byte) alleles[0][1];
+        if (myAlleles != null) {
+            if (myMaxNumAlleles > 1) {
+                return myAlleles[site][1];
+            } else {
+                return Alignment.UNKNOWN_ALLELE;
+            }
         } else {
-            return Alignment.UNKNOWN_ALLELE;
+            int[][] alleles = getAllelesSortedByFrequency(site);
+            
+            if (alleles[0].length >= 2) {
+                return (byte) alleles[0][1];
+            } else {
+                return Alignment.UNKNOWN_ALLELE;
+            }
         }
-
     }
-
+    
     @Override
     public String getMinorAlleleAsString(int site) {
         return getBaseAsString(site, getMinorAllele(site));
     }
-
+    
     @Override
     public byte[] getAlleles(int site) {
-        return myAlleles[site];
+        if (myAlleles != null) {
+            return myAlleles[site];
+        } else {
+            int[][] alleles = getAllelesSortedByFrequency(site);
+            int resultSize = alleles[0].length;
+            int maxNumAlleles = getMaxNumAlleles();
+            byte[] result = new byte[maxNumAlleles];
+            for (int i = 0; i < maxNumAlleles; i++) {
+                result[i] = (i < resultSize) ? (byte) alleles[0][i] : Alignment.UNKNOWN_ALLELE;
+            }
+            
+            return result;
+        }
     }
-
+    
     @Override
     public byte[] getMinorAlleles(int site) {
         int[][] alleles = getAllelesSortedByFrequency(site);
@@ -422,10 +443,10 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return result;
     }
-
+    
     @Override
     public boolean isPolymorphic(int site) {
-
+        
         byte first = Alignment.UNKNOWN_ALLELE;
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
             byte[] current = getBaseArray(i, site);
@@ -444,39 +465,39 @@ abstract public class AbstractAlignment implements Alignment {
                 }
             }
         }
-
+        
         return false;
-
+        
     }
-
+    
     @Override
     public boolean isAllPolymorphic() {
-
+        
         for (int i = 0, n = getSiteCount(); i < n; i++) {
             if (!isPolymorphic(i)) {
                 return false;
             }
         }
-
+        
         return true;
-
+        
     }
-
+    
     @Override
     public int getIndelSize(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
+    
     @Override
     public boolean isIndel(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
+    
     @Override
     public float getSiteScore(int seq, int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
+    
     @Override
     public float[][] getSiteScores() {
         if (hasSiteScores() == false) {
@@ -490,22 +511,22 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return f;
     }
-
+    
     @Override
     public boolean hasSiteScores() {
         return false;
     }
-
+    
     @Override
     public SITE_SCORE_TYPE getSiteScoreType() {
         return Alignment.SITE_SCORE_TYPE.None;
     }
-
+    
     @Override
     public String getLocusName(int site) {
         return getLocus(site).getName();
     }
-
+    
     @Override
     public boolean isHeterozygous(int taxon, int site) {
         byte[] values = getBaseArray(taxon, site);
@@ -515,7 +536,7 @@ abstract public class AbstractAlignment implements Alignment {
             return true;
         }
     }
-
+    
     @Override
     public int getHeterozygousCount(int site) {
         int result = 0;
@@ -526,7 +547,7 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return result;
     }
-
+    
     @Override
     public int getHeterozygousCountForTaxon(int taxon) {
         int result = 0;
@@ -537,7 +558,7 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return result;
     }
-
+    
     @Override
     public boolean hasReference() {
         byte[] reference = getReference();
@@ -546,67 +567,67 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return false;
     }
-
+    
     @Override
     public byte getReferenceAllele(int site) {
         return myReference[site];
     }
-
+    
     @Override
     public byte[] getReference() {
         return myReference;
     }
-
+    
     @Override
     public byte[] getReference(int startSite, int endSite) {
-
+        
         if (!hasReference()) {
             return null;
         }
-
+        
         byte[] result = new byte[endSite - startSite];
         for (int i = startSite; i < endSite; i++) {
             result[i] = getReferenceAllele(i);
         }
         return result;
-
+        
     }
-
+    
     @Override
     public Alignment[] getAlignments() {
         return new Alignment[]{this};
     }
-
+    
     @Override
     public boolean isPhased() {
         return false;
     }
-
+    
     @Override
     public boolean isPositiveStrand(int site) {
         throw new UnsupportedOperationException("Not supported.");
     }
-
+    
     @Override
     public String getGenomeAssembly() {
         throw new UnsupportedOperationException("Not supported.");
     }
-
+    
     @Override
     public GeneticMap getGeneticMap() {
         return myGeneticMap;
     }
-
+    
     @Override
     public int[] getPhysicalPositions() {
         return myVariableSites.clone();
     }
-
+    
     @Override
     public int getSiteCount() {
         return myNumSites;
     }
-
+    
     @Override
     public int getPositionInLocus(int site) {
         try {
@@ -615,7 +636,7 @@ abstract public class AbstractAlignment implements Alignment {
             return site;
         }
     }
-
+    
     @Override
     public Locus getLocus(int site) {
         for (int i = 1; i < myLociOffsets.length; i++) {
@@ -625,15 +646,15 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return myLoci[myLoci.length - 1];
     }
-
+    
     @Override
     public Locus[] getLoci() {
         return myLoci;
     }
-
+    
     @Override
     public Locus getLocus(String name) {
-
+        
         name = name.trim();
         Locus[] temp = getLoci();
         for (int i = 0; i < temp.length; i++) {
@@ -642,28 +663,29 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
         return null;
-
+        
     }
-
+    
     @Override
     public int getNumLoci() {
         return myLoci.length;
     }
-
+    
     @Override
     public int[] getLociOffsets() {
         return myLociOffsets;
     }
-
+    
     @Override
     public int getLocusSiteCount(Locus locus) {
         int[] startEnd = getStartAndEndOfLocus(locus);
-        return startEnd[1] = startEnd[0];
+        return startEnd[1] - startEnd[0];
     }
-
-    private int[] getStartAndEndOfLocus(Locus locus) {
+    
+    @Override
+    public int[] getStartAndEndOfLocus(Locus locus) {
         for (int i = 0; i < getNumLoci(); i++) {
-            if (locus == myLoci[i]) {
+            if (locus.equals(myLoci[i])) {
                 int end = 0;
                 if (i == getNumLoci() - 1) {
                     end = getSiteCount();
@@ -675,12 +697,12 @@ abstract public class AbstractAlignment implements Alignment {
         }
         throw new IllegalArgumentException("AbstractAlignment: getStartAndEndOfLocus: this locus not defined: " + locus.getName());
     }
-
+    
     @Override
     public String[] getSNPIDs() {
         return mySNPIDs;
     }
-
+    
     @Override
     public String getSNPID(int site) {
         if (mySNPIDs == null) {
@@ -689,7 +711,7 @@ abstract public class AbstractAlignment implements Alignment {
             return mySNPIDs[site];
         }
     }
-
+    
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
         try {
@@ -702,12 +724,12 @@ abstract public class AbstractAlignment implements Alignment {
             return -1;
         }
     }
-
+    
     @Override
     public byte getPositionType(int site) {
         return Alignment.POSITION_TYPE_ALL_GROUP;
     }
-
+    
     @Override
     public byte[] getPositionTypes() {
         byte[] positionTypes = new byte[this.getSiteCount()];
@@ -716,17 +738,17 @@ abstract public class AbstractAlignment implements Alignment {
         }
         return positionTypes;
     }
-
+    
     @Override
     public boolean retainsRareAlleles() {
         return myRetainRareAlleles;
     }
-
+    
     @Override
     public String[][] getAlleleEncodings() {
         return myAlleleStates;
     }
-
+    
     @Override
     public String[] getAlleleEncodings(int site) {
         if (myAlleleStates.length == 1) {
@@ -735,25 +757,26 @@ abstract public class AbstractAlignment implements Alignment {
             return myAlleleStates[site];
         }
     }
-
+    
     @Override
     public String getBaseAsString(int site, byte value) {
         return getAlleleEncodings(site)[value];
     }
-
+    
+    @Override
     public String getDiploidAsString(int site, byte value) {
         String[] alleleStates = getAlleleEncodings(site);
         return alleleStates[(value >>> 4) & 0xf] + ":" + alleleStates[value & 0xf];
     }
-
+    
     @Override
     public int getMaxNumAlleles() {
         return myMaxNumAlleles;
     }
-
+    
     @Override
     public int getTotalGametesNotMissing(int site) {
-
+        
         int result = 0;
         for (int i = 0, n = getSequenceCount(); i < n; i++) {
             byte[] current = getBaseArray(i, site);
@@ -765,12 +788,12 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
         return result;
-
+        
     }
-
+    
     @Override
     public int getTotalGametesNotMissingForTaxon(int taxon) {
-
+        
         int result = 0;
         for (int i = 0, n = getSiteCount(); i < n; i++) {
             byte[] current = getBaseArray(taxon, i);
@@ -782,7 +805,7 @@ abstract public class AbstractAlignment implements Alignment {
             }
         }
         return result;
-
+        
     }
     
     @Override
@@ -798,45 +821,45 @@ abstract public class AbstractAlignment implements Alignment {
         return result;
         
     }
-
+    
     @Override
     public int getMinorAlleleCount(int site) {
-
+        
         int[][] alleles = getAllelesSortedByFrequency(site);
-
+        
         if (alleles[0].length >= 2) {
             return alleles[1][1];
         } else {
             return 0;
         }
-
+        
     }
-
+    
     @Override
     public int getMajorAlleleCount(int site) {
-
+        
         int[][] alleles = getAllelesSortedByFrequency(site);
-
+        
         if (alleles[0].length >= 1) {
             return alleles[1][0];
         } else {
             return 0;
         }
-
+        
     }
-
+    
     @Override
     public Object[][] getMajorMinorCounts() {
-
+        
         String[][] alleleStates = getAlleleEncodings();
-
+        
         if (alleleStates.length != 1) {
             return new Object[0][0];
         }
-
+        
         int numSites = getSiteCount();
         long[][] counts = new long[16][16];
-
+        
         if (getMaxNumAlleles() >= 2) {
             for (int site = 0; site < numSites; site++) {
                 byte[] alleles = getAlleles(site);
@@ -854,7 +877,7 @@ abstract public class AbstractAlignment implements Alignment {
                 counts[indexI][indexI]++;
             }
         }
-
+        
         int numAlleles = 0;
         for (byte x = 0; x < 16; x++) {
             for (byte y = 0; y < 16; y++) {
@@ -863,7 +886,7 @@ abstract public class AbstractAlignment implements Alignment {
                 }
             }
         }
-
+        
         Object[][] result = new Object[2][numAlleles];
         int nextResult = 0;
         for (byte x = 0; x < 16; x++) {
@@ -874,39 +897,39 @@ abstract public class AbstractAlignment implements Alignment {
                 }
             }
         }
-
+        
         boolean change = true;
         while (change) {
-
+            
             change = false;
-
+            
             for (int k = 0; k < numAlleles - 1; k++) {
-
+                
                 if ((Long) result[1][k] < (Long) result[1][k + 1]) {
-
+                    
                     Object temp = result[0][k];
                     result[0][k] = result[0][k + 1];
                     result[0][k + 1] = temp;
-
+                    
                     Object tempCount = result[1][k];
                     result[1][k] = result[1][k + 1];
                     result[1][k + 1] = tempCount;
-
+                    
                     change = true;
                 }
             }
-
+            
         }
-
+        
         return result;
     }
-
+    
     @Override
     public Object[][] getDiploidCounts() {
-
+        
         int numSites = getSiteCount();
         int numTaxa = getSequenceCount();
-
+        
         Map<String, Long> diploidValueCounts = new HashMap<String, Long>();
         for (int c = 0; c < numSites; c++) {
             Object[][] diploids = getDiploidssSortedByFrequency(c);
@@ -921,51 +944,51 @@ abstract public class AbstractAlignment implements Alignment {
                 }
             }
         }
-
+        
         Object[][] result = new Object[2][diploidValueCounts.size()];
-
+        
         int i = 0;
         Iterator itr = diploidValueCounts.keySet().iterator();
         while (itr.hasNext()) {
             String key = (String) itr.next();
-            Long count = (Long) diploidValueCounts.get(key);
+            Long count = diploidValueCounts.get(key);
             result[0][i] = key;
             result[1][i++] = count;
         }
-
+        
         boolean change = true;
         while (change) {
-
+            
             change = false;
-
+            
             for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
-
+                
                 if ((Long) result[1][k] < (Long) result[1][k + 1]) {
-
+                    
                     Object temp = result[0][k];
                     result[0][k] = result[0][k + 1];
                     result[0][k + 1] = temp;
-
+                    
                     Object tempCount = result[1][k];
                     result[1][k] = result[1][k + 1];
                     result[1][k + 1] = tempCount;
-
+                    
                     change = true;
                 }
             }
-
+            
         }
-
+        
         return result;
-
+        
     }
-
+    
     @Override
     public Object[][] getDiploidssSortedByFrequency(int site) {
-
+        
         Integer ONE_INTEGER = 1;
         int numTaxa = getSequenceCount();
-
+        
         Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
         for (int r = 0; r < numTaxa; r++) {
             String current = getBaseAsString(r, site);
@@ -976,9 +999,9 @@ abstract public class AbstractAlignment implements Alignment {
                 diploidValueCounts.put(current, ++num);
             }
         }
-
+        
         Object[][] result = new Object[2][diploidValueCounts.size()];
-
+        
         int i = 0;
         Iterator itr = diploidValueCounts.keySet().iterator();
         while (itr.hasNext()) {
@@ -987,49 +1010,49 @@ abstract public class AbstractAlignment implements Alignment {
             result[0][i] = key;
             result[1][i++] = count;
         }
-
+        
         boolean change = true;
         while (change) {
-
+            
             change = false;
-
+            
             for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
-
+                
                 if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
-
+                    
                     Object temp = result[0][k];
                     result[0][k] = result[0][k + 1];
                     result[0][k + 1] = temp;
-
+                    
                     Object tempCount = result[1][k];
                     result[1][k] = result[1][k + 1];
                     result[1][k + 1] = tempCount;
-
+                    
                     change = true;
                 }
             }
-
+            
         }
-
+        
         return result;
-
+        
     }
-
+    
     @Override
     public int getTotalNumAlleles() {
         throw new UnsupportedOperationException("Not supported.");
     }
-
+    
     @Override
     public void optimizeForTaxa(ProgressListener listener) {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public void optimizeForSites(ProgressListener listener) {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public byte[] getDepthForAllele(int taxon, int site) {
         return new byte[]{1, 1};

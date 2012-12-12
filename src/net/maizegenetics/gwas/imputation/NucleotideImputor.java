@@ -268,7 +268,7 @@ public class NucleotideImputor {
 		for (int locusnumber = 0; locusnumber < nloci; locusnumber++) {
 			int start = offsets[locusnumber];
 			int end = nsites - 1;
-			if (locusnumber < nloci - 1) end = offsets[locusnumber + 1];
+			if (locusnumber < nloci - 1) end = offsets[locusnumber + 1] - 1;
 			
 			Alignment locusAlignment = FilterAlignment.getInstance(a, start, end);
 			theAlignments[locusnumber] = callParentAlleles(locusAlignment, popdata);

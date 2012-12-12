@@ -269,14 +269,33 @@ public final class NucleotideAlignmentConstants {
         }
 
     }
-    
+
     public static byte getNucleotideDiploidComplement(byte diploidAllele) {
-        
+
         byte first = (byte) ((diploidAllele >>> 4) & 0xf);
         byte second = (byte) (diploidAllele & 0xf);
         first = getNucleotideComplement(first);
         second = getNucleotideComplement(second);
         return (byte) ((first << 4) | second);
+
+    }
+
+    public static boolean isNucleotideEncodings(String[][] alleleStates) {
+
+        boolean isNucleotide = false;
+        if (alleleStates.length == 1) {
+            isNucleotide = true;
+            if (alleleStates[0].length == NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0].length) {
+                for (int i = 0; i < alleleStates.length; i++) {
+                    if (!alleleStates[0][i].equals(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][i])) {
+                        isNucleotide = false;
+                    }
+                }
+            }
+
+        }
+
+        return isNucleotide;
 
     }
 }
