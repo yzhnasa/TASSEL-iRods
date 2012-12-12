@@ -19,7 +19,6 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
-
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 
@@ -145,7 +144,7 @@ public class TASSELMainFrame extends JFrame {
             initDataMode();
 
             this.setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage) " + this.version);
-            
+
             myLogger.info("Tassel Version: " + version + "  Date: " + versionDate);
             myLogger.info("Max Available Memory Reported by JVM: " + Utils.getMaxHeapSizeMB() + " MB");
         } catch (Exception e) {
@@ -187,14 +186,6 @@ public class TASSELMainFrame extends JFrame {
         wizard.setCurrentPanel(TestPanel1Descriptor.IDENTIFIER);
 
         wizard.getDialog().setLocationRelativeTo(this);
-
-        int ret = wizard.showModalDialog();
-
-        // System.out.println("Dialog return code is (0=Finish,1=Cancel,2=Error): " + ret);
-        // System.out.println("Second panel selection is: " +
-        //    (((TestPanel2)descriptor2.getPanelComponent()).getRadioButtonSelected()));
-
-        // System.exit(0);
     }
 
     private JButton getHeapButton() {
@@ -210,9 +201,9 @@ public class TASSELMainFrame extends JFrame {
     private void initDataMode() {
 
         buttonPanel.removeAll();
-        
+
         buttonPanel.add(theDataControlPanel, BorderLayout.NORTH);
-        
+
         dataTreePanelPanel.removeAll();
 
         dataTreePanelPanel.add(theDataTreePanel, BorderLayout.CENTER);
@@ -227,7 +218,7 @@ public class TASSELMainFrame extends JFrame {
 
         buttonPanel.removeAll();
 
-        buttonPanel.add(theAnalysisControlPanel, null);
+        buttonPanel.add(theAnalysisControlPanel, BorderLayout.NORTH);
 
         dataTreePanelPanel.removeAll();
 
@@ -240,7 +231,7 @@ public class TASSELMainFrame extends JFrame {
 
     private void initResultMode() {
         buttonPanel.removeAll();
-        buttonPanel.add(theResultControlPanel, null);
+        buttonPanel.add(theResultControlPanel, BorderLayout.NORTH);
         dataTreePanelPanel.removeAll();
         dataTreePanelPanel.add(theDataTreePanel, BorderLayout.CENTER);
         this.validate();
@@ -258,7 +249,6 @@ public class TASSELMainFrame extends JFrame {
         this.setSize(new Dimension(screenSize.width * 19 / 20, screenSize.height * 19 / 20));
         this.setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage)");
         this.addWindowListener(new java.awt.event.WindowAdapter() {
-
             public void windowClosing(WindowEvent e) {
                 this_windowClosing(e);
             }
@@ -278,7 +268,6 @@ public class TASSELMainFrame extends JFrame {
         mainPanelTextArea.setFont(new java.awt.Font("Monospaced", 0, 12));
         mainPanelTextArea.setToolTipText("Main Panel");
         mainPanelTextArea.addMouseListener(new java.awt.event.MouseAdapter() {
-
             public void mouseClicked(MouseEvent e) {
                 mainTextArea_mouseClicked(e);
             }
@@ -298,7 +287,6 @@ public class TASSELMainFrame extends JFrame {
         helpButton.setIcon(helpIcon);
         helpButton.setMargin(new Insets(0, 0, 0, 0));
         helpButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 helpButton_actionPerformed(e);
             }
@@ -308,9 +296,8 @@ public class TASSELMainFrame extends JFrame {
         helpButton.setToolTipText("Help me!!");
         resultButton.setText("Results");
         resultButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
-                resultButton_actionPerformed(e);
+                initResultMode();
             }
         });
         resultButton.setMargin(new Insets(2, 2, 2, 2));
@@ -329,7 +316,6 @@ public class TASSELMainFrame extends JFrame {
 
         wizardButton.setText("Wizard");
         wizardButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 wizardButton_actionPerformed(e);
             }
@@ -356,10 +342,8 @@ public class TASSELMainFrame extends JFrame {
         dataButton.setMargin(new Insets(2, 2, 2, 2));
         dataButton.setText("Data");
         dataButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
-
-                dataButton_actionPerformed(e);
+                initDataMode();
             }
         });
 
@@ -382,7 +366,6 @@ public class TASSELMainFrame extends JFrame {
         printButton.setMargin(new Insets(0, 0, 0, 0));
 
         printButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
 
                 printButton_actionPerformed(e);
@@ -392,10 +375,8 @@ public class TASSELMainFrame extends JFrame {
         analysisButton.setText("Analysis");
 
         analysisButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
-
-                analysisButton_actionPerformed(e);
+                initAnalysisMode();
             }
         });
 
@@ -431,7 +412,6 @@ public class TASSELMainFrame extends JFrame {
 
 
         deleteButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 theDataTreePanel.deleteSelectedNodes();
             }
@@ -439,7 +419,7 @@ public class TASSELMainFrame extends JFrame {
 
 
         optionsPanel.setLayout(new BorderLayout(0, 0));
-        
+
         buttonPanel.setLayout(new BorderLayout(0, 0));
 
         optionsPanel.setToolTipText("Options Panel");
@@ -448,7 +428,6 @@ public class TASSELMainFrame extends JFrame {
         saveMainMenuItem.setText("Save");
         matchCheckBoxMenuItem.setText("Match");
         matchCheckBoxMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 matchCheckBoxMenuItem_actionPerformed(e);
             }
@@ -457,21 +436,18 @@ public class TASSELMainFrame extends JFrame {
         toolsMenu.setText("Tools");
         saveCompleteDataTreeMenuItem.setText("Save Data Tree");
         saveCompleteDataTreeMenuItem.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 saveCompleteDataTreeMenuItem_actionPerformed(e);
             }
         });
         saveDataTreeAsMenuItem.setText("Save Data Tree As ...");
         saveDataTreeAsMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 saveDataTreeMenuItem_actionPerformed(e);
             }
         });
         openCompleteDataTreeMenuItem.setText("Open Data Tree");
         openCompleteDataTreeMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
 
                 openCompleteDataTreeMenuItem_actionPerformed(e);
@@ -480,7 +456,6 @@ public class TASSELMainFrame extends JFrame {
 
         openDataMenuItem.setText("Open Data Tree...");
         openDataMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
 
                 openDataMenuItem_actionPerformed(e);
@@ -489,7 +464,6 @@ public class TASSELMainFrame extends JFrame {
 
         saveAsDataTreeMenuItem.setText("Save Selected As...");
         saveAsDataTreeMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 ExportPlugin plugin = getExportPlugin();
                 PluginEvent event = new PluginEvent(theDataTreePanel.getSelectedTasselDataSet());
@@ -502,7 +476,6 @@ public class TASSELMainFrame extends JFrame {
 
         exitMenuItem.setText("Exit");
         exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 exitMenuItem_actionPerformed(e);
             }
@@ -511,7 +484,6 @@ public class TASSELMainFrame extends JFrame {
         helpMenu.setText("Help");
         helpMenuItem.setText("Help Manual");
         helpMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 helpButton_actionPerformed(e);
             }
@@ -520,7 +492,6 @@ public class TASSELMainFrame extends JFrame {
         preferencesMenuItem.setText("Set Preferences");
 
         preferencesMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
 
                 preferencesMenuItem_actionPerformed(e);
@@ -531,7 +502,6 @@ public class TASSELMainFrame extends JFrame {
         aboutMenuItem.setText("About");
 
         aboutMenuItem.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
 
                 helpAbout_actionPerformed(e);
@@ -708,7 +678,8 @@ public class TASSELMainFrame extends JFrame {
     }
 
     /**
-     * Provides a save filer that remembers the last location something was saved to
+     * Provides a save filer that remembers the last location something was
+     * saved to
      */
     public File getSaveFile() {
 
@@ -724,7 +695,8 @@ public class TASSELMainFrame extends JFrame {
     }
 
     /**
-     * Provides a open filer that remember the last location something was opened from
+     * Provides a open filer that remember the last location something was
+     * opened from
      */
     public File getOpenFile() {
 
@@ -871,18 +843,6 @@ public class TASSELMainFrame extends JFrame {
 
     private void wizardButton_actionPerformed(ActionEvent e) {
         initWizard();
-    }
-
-    private void dataButton_actionPerformed(ActionEvent e) {
-        initDataMode();
-    }
-
-    private void analysisButton_actionPerformed(ActionEvent e) {
-        initAnalysisMode();
-    }
-
-    private void resultButton_actionPerformed(ActionEvent e) {
-        initResultMode();
     }
 
     private void printButton_actionPerformed(ActionEvent e) {
