@@ -445,11 +445,13 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                             myTASSELMainFrame.mainDisplayPanel.add(seqViewer, BorderLayout.CENTER);
                         } else if (book.getData() instanceof AlignmentMask) {
                             AlignmentMask mask = (AlignmentMask) book.getData();
-                            Color tempColor = JColorChooser.showDialog(myTASSELMainFrame, "Select Mask Color...", mask.getColor());
-                            //myTree.setSelectionPath(new TreePath(parentNode.getPath()));
-                            if (tempColor != null) {
-                                mask.setColor(tempColor);
-                                book.setName(mask.toString());
+                            if (mask.getColor() != null) {
+                                Color tempColor = JColorChooser.showDialog(myTASSELMainFrame, "Select Mask Color...", mask.getColor());
+                                //myTree.setSelectionPath(new TreePath(parentNode.getPath()));
+                                if (tempColor != null) {
+                                    mask.setColor(tempColor);
+                                    book.setName(mask.toString());
+                                }
                             }
                             myLastNode = null;
                             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
