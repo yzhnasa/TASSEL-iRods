@@ -587,11 +587,11 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
     @Override
     public void optimizeForTaxa(ProgressListener listener) {
-        myLogger.info("optimizeForTaxa: Already Optimized for Taxa.");
+        // do nothing
     }
 
     @Override
     public void optimizeForSites(ProgressListener listener) {
-        myLogger.info("optimizeForSites: Already Optimized for Sites.");
+        // do nothing
     }
 }
