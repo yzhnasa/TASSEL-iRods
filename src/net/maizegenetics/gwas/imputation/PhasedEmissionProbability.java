@@ -1,15 +1,11 @@
 package net.maizegenetics.gwas.imputation;
 
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 
 public class PhasedEmissionProbability extends EmissionProbability {
-//	Alignment myGenotype;
-	float[][][] parentAlleleProbability;  //1st dim is site (node), 2nd dim is haplotype, 3rd dim is nucleotide (A,C,G,T)
-	float probMissing;
-	float logProbMissing;
-	byte[] knownHaplotype;
-	float probHetObsAsHet = 0.2f;
-	int myHaplotype;
+	float[][][] parentHaplotypeProbability; //first dimension is the site, second dimension is the haplotype (0-3), third dimension is nucleotide (A=0, C=1, G=2, T=3)
 	
 	public PhasedEmissionProbability() {
 
@@ -18,55 +14,40 @@ public class PhasedEmissionProbability extends EmissionProbability {
 	
 	@Override
 	public double getProbObsGivenState(int state, int obs, int node) {
-		//obs equals the nucleotide byte code for the observation
-		//state in (0,1,2,3) indicating which parental haplotype
-		//node is the position index in the alignment
-		float prob = 0.0f;
-		int knownhapValue = knownHaplotype[node];
-		for (int i = 0; i < 4; i++) { //loop through possible state values
-			float thisprob;
-			if (obs > 3) { //obs is het
-				if (knownhapValue == i) thisprob = .01f; //genotype state is homozygous, this is prob of observing a het when the state is homozygous
-				else thisprob = probHetObsAsHet; //prob of observing a het if the genotype is a het
-			} else { //obs is homozygote
-				if (knownhapValue == i && knownhapValue == obs) thisprob = .998f; //genotype state is homozygous and equal to obs
-				else if (knownhapValue == i) thisprob = .001f; //genotype state is homozygous and not equal to obs
-				else thisprob = 1 - probHetObsAsHet; //genotype state is het
+		//state is an ordered pair of haplotypes, obs is the observed genotype, node is the site
+		//P(obs=X|state=H1H2) = P(obs=X|state=H1H2, H1=A, H2=A)P(H1=A)P(H2=A) + P(obs=X|state=H1H2, H1=A, H2=C)P(H1=A)P(H2=C) + ... + P(obs=X|state=H1H2, H1=T, H2=T)P(H1=T)P(H2=T)
+		double prob = 0.0;
+		byte[] haplotypes = AlignmentUtils.getDiploidValues((byte) state);
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				prob += conditionalProbability(obs, i, j) * parentHaplotypeProbability[node][haplotypes[0]][i] * parentHaplotypeProbability[node][haplotypes[1]][j];
 			}
-			prob =+ thisprob * parentAlleleProbability[node][myHaplotype][i];
 		}
-
 		return prob;
 	}
 
 	@Override
 	public double getLnProbObsGivenState(int state, int obs, int node) {
-		//obs equals the nucleotide byte code for the observation
-		//state in (0,1,2,3) indicating which parental haplotype
-		//node is the position index in the alignment
-		 
-		
 		return Math.log(getProbObsGivenState(state, obs, node));
 	}
 
-	public void setParentAlleleProbability(float[][][] probability) {
+	private double conditionalProbability(int obs, int N1, int N2) {
+		double p = 0.0;
+		
+		return p;
+	}
+	
+	public void setParentHaplotypeProbability(float[][][] probability) {
+		parentHaplotypeProbability = probability;
+	}
+	
+	public void setParentHaplotypeProbability(Alignment a) {
 		
 	}
 	
-	public void setProbabilityMissing(float pMissing) {
-		probMissing = pMissing;
+	public void setParentHaplotypeProbability(PopulationData pop) {
+		
 	}
-	
-	public void setKnownHaplotype(byte[] knownHaplotype) {
-		this.knownHaplotype = knownHaplotype;
-	}
-	
-	public void setProbabilityHetisObservedAsHet(float prob) {
-		probHetObsAsHet = prob;
-	}
-	
-	public void setKnownHaplotypeNumber(int whichIsKnown) {  // 0 or 1
-		myHaplotype = 1 - whichIsKnown;
-	}
+
 	
 }

@@ -1713,9 +1713,6 @@ public class NucleotideImputationUtils {
     		a = BitAlignment.getInstance(a, true);
     	}
     	
-    	//debug
-    	ExportUtils.writeToHapmap(a, false, "/Volumes/Macintosh HD 2/temp/testalign.hmp.txt", '\t', null);
-    	
     	int nsites = a.getSiteCount();
     	OpenBitSet ldbits = new OpenBitSet(nsites);
     	for (int s = 0; s < nsites; s++) {
@@ -1783,7 +1780,7 @@ public class NucleotideImputationUtils {
     			
     		}
     	}
-    	pep.setParentAlleleProbability(null);
+    	
     	
     	return null;
     }
