@@ -61,7 +61,11 @@ abstract public class AbstractAlignmentMask implements AlignmentMask {
     }
 
     public String toString() {
-        String color = " (Red: " + myColor.getRed() + "  Green: " + myColor.getGreen() + "  Blue: " + myColor.getBlue() + ")";
-        return myName + color;
+        if (myColor == null) {
+            return myName;
+        } else {
+            String color = " (Red: " + myColor.getRed() + "  Green: " + myColor.getGreen() + "  Blue: " + myColor.getBlue() + ")";
+            return myName + color;
+        }
     }
 }
