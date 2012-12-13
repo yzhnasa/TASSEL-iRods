@@ -29,6 +29,7 @@ public final class NucleotideAlignmentConstants {
      * Number of nucleotide states excluding rare and unknown.
      */
     public static final int NUMBER_NUCLEOTIDE_ALLELES = 6;
+    private static final String QUESTION_MARK = "?";
     private static final Map NUCLEOTIDE_DIPLOID_HASH = new HashMap<String, Byte>();
 
     static {
@@ -140,7 +141,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("M", (byte) 0x01); // AC
         NUCLEOTIDE_DIPLOID_HASH.put("0", (byte) 0x54); // -+
     }
-    private static final Map<Byte, String> NUCLEOTIDE_IUPAC_HASH = new HashMap<Byte, String>();
+    public static final Map<Byte, String> NUCLEOTIDE_IUPAC_HASH = new HashMap<Byte, String>();
 
     static {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x00, "A"); // AA
@@ -248,9 +249,14 @@ public final class NucleotideAlignmentConstants {
 
     public static String getNucleotideIUPAC(byte value) {
         try {
-            return ((String) NUCLEOTIDE_IUPAC_HASH.get(value));
+            String result = NUCLEOTIDE_IUPAC_HASH.get(value);
+            if (result == null) {
+                return QUESTION_MARK;
+            } else {
+                return result;
+            }
         } catch (NullPointerException e) {
-            throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideIUPAC: unknown allele value: " + value);
+            return QUESTION_MARK;
         }
     }
 

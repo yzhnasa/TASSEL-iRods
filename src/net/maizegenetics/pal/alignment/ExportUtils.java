@@ -248,7 +248,7 @@ public class ExportUtils {
                             String[] b = alignment.getBaseAsStringArray(taxa, site);
                             throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + "\nTry Exporting as Diploid Values.");
                         }
-                        if (baseIUPAC == null) {
+                        if ((baseIUPAC == null) || baseIUPAC.equals("?")) {
                             String[] b = alignment.getBaseAsStringArray(taxa, site);
                             throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + "\nTry Exporting as Diploid Values.");
                         }
