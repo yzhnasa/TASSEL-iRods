@@ -66,7 +66,7 @@ public class JeffPipelines {
     
     public static void runExtractHapmapSubsetPlugin() {
         String baseDir = "/Volumes/nextgen/Zea/build20120701/06_HapMap/RC2/04_BPECFilteredSNPs/";
-//        String outDir =  "/Users/jcg233/Documents/GBS/ShilpaNIL28FMJuly2012BuildRC2BPEC/";
+        String outDir =  "/Users/jcg233/Documents/GBS/ShilpaNIL28FMJuly2012BuildRC2BPEC/";
 //        for (int chr=1; chr<11; chr++) {
 //            String[] args = new String[]{
 //                "-h", baseDir+"rje22_BPEC_AllZea_GBS_Build_July_2012_RC-2_chr"+chr+".hmp.txt.gz",
@@ -78,12 +78,39 @@ public class JeffPipelines {
 //            plugin.performFunction(null);
 //        }
 
-        baseDir =  "/Users/jcg233/Documents/GBS/ShilpaNIL28FMJuly2012BuildRC2BPEC/";
-        for (int chr=1; chr<11; chr++) {
+//        baseDir =  "/Users/jcg233/Documents/GBS/ShilpaNIL28FMJuly2012BuildRC2BPEC/";
+//        for (int chr=1; chr<11; chr++) {
+//            String[] args = new String[]{
+//                "-h", baseDir+"ShilpaNIL28FMJuly2012BuildRC2BPECOrig_chr"+chr+".hmp.txt.gz",
+//                "-o", baseDir+"ShilpaNIL28FMJuly2012BuildRC2BPECOrig216taxa_chr"+chr+".hmp.txt.gz",
+//                "-p", baseDir+"ShilpaNIL28FMSamples20120701build216taxa.txt"
+//            };
+//            ExtractHapmapSubsetPlugin plugin = new ExtractHapmapSubsetPlugin(null);
+//            plugin.setParameters(args);
+//            plugin.performFunction(null);
+//        }
+
+//        baseDir = "/Volumes/nextgen/Zea/build20120701/06_HapMap/RC2.1/04_BPECFilteredSNPs/";
+//        outDir =  "/Users/jcg233/Documents/GBS/ZakFMJuly2012BuildRC2BPEC/";
+//        for (int chr=1; chr<11; chr++) {
+//            String[] args = new String[]{
+//                "-h", baseDir+"AllTaxa_BPEC_AllZea_GBS_Build_July_2012_RC-2.1_chr"+chr+".hmp.txt.gz",
+//                "-o", outDir+"ZakKRNCulmFMJuly2012BuildRC2-1BPEC_chr"+chr+".hmp.txt.gz",
+//                "-p", outDir+"ZakKRNCulmFMSamples01072012Build.txt"
+//            };
+//            ExtractHapmapSubsetPlugin plugin = new ExtractHapmapSubsetPlugin(null);
+//            plugin.setParameters(args);
+//            plugin.performFunction(null);
+//        }
+
+        baseDir = "/Users/jcg233/Documents/GBS/20120701BuildRC2-1BPEC/";
+        outDir =  "/Users/jcg233/Documents/GBS/ZakFMJuly2012BuildRC2BPEC/";
+        for (int chr=5; chr<11; chr++) {
             String[] args = new String[]{
-                "-h", baseDir+"ShilpaNIL28FMJuly2012BuildRC2BPECOrig_chr"+chr+".hmp.txt.gz",
-                "-o", baseDir+"ShilpaNIL28FMJuly2012BuildRC2BPECOrig216taxa_chr"+chr+".hmp.txt.gz",
-                "-p", baseDir+"ShilpaNIL28FMSamples20120701build216taxa.txt"
+                "-h", baseDir+"AllTaxa_BPEC_AllZea_GBS_Build_July_2012_RC-2.1_chr"+chr+".hmp.txt.gz",
+                "-o", outDir+"ZakKRNCulmFMHighCovBC2S3July2012BuildRC2-1BPEC_chr"+chr+".hmp.txt.gz",
+                "-p", outDir+"ZakKRNCulmFMHighCovBC2S3Samples01072012Build.txt",
+                "-a", "2" // at least 2 "alleles" (actually, genotypes) = polymorphic
             };
             ExtractHapmapSubsetPlugin plugin = new ExtractHapmapSubsetPlugin(null);
             plugin.setParameters(args);
