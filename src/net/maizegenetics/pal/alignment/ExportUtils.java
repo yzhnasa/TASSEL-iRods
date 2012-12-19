@@ -427,49 +427,50 @@ public class ExportUtils {
             }
         }
     }
-    
-     /**
+
+    /**
      * Writes given alignment to a VCF file
-     * 
+     *
      * @param alignment
      * @param filename
-     * @return 
+     * @return
      */
     public static String writeToVCF(Alignment alignment, String filename, char delimChar) {
         try {
-            
+
             HashMap<String, int[]> scoreMap = new HashMap();
             for (int i = 0; i < 255; i++) {
                 for (int j = 0; j < 255; j++) {
                     scoreMap.put(Integer.toString(i) + "," + Integer.toString(j), TagsToSNPByAlignmentPlugin.calcScore(i, j));
                 }
             }
-            
-            BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+
+            filename = Utils.addSuffixIfNeeded(filename, ".vcf");
+            BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
-            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">" );
+            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">");
             bw.newLine();
-            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the ref and alt alleles in the order listed\">" );
+            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the ref and alt alleles in the order listed\">");
             bw.newLine();
-            bw.write("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">" );
+            bw.write("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">");
             bw.newLine();
-            bw.write("##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">" );
+            bw.write("##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">");
             bw.newLine();
-            bw.write("####FORMAT=<ID=PL,Number=3,Type=Float,Description=\"Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\">" );
+            bw.write("####FORMAT=<ID=PL,Number=3,Type=Float,Description=\"Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\">");
             bw.newLine();
-            bw.write("##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of Samples With Data\">" );
+            bw.write("##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of Samples With Data\">");
             bw.newLine();
             bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">");
             bw.newLine();
             bw.write("##INFO=<ID=AF,Number=.,Type=Float,Description=\"Allele Frequency\">");
             bw.newLine();
-            bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar +"FORMAT");
+            bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
                 bw.write(alignment.getIdGroup().getIdentifier(taxa).getFullName().trim());
             }
             bw.newLine();
-            
+
             for (int site = 0; site < alignment.getSiteCount(); site++) {
                 int totalDepth = 0;
                 for (int i = 0; i < alignment.getSequenceCount(); i++) {
@@ -482,7 +483,7 @@ public class ExportUtils {
                         }
                     }
                 }
-                
+
                 byte[] alleleValues = alignment.getAlleles(site);
                 bw.write(alignment.getLocusName(site)); // chromosome
                 bw.write(delimChar);
@@ -490,7 +491,7 @@ public class ExportUtils {
                 bw.write(delimChar);
                 bw.write(alignment.getSNPID(site)); // site name
                 bw.write(delimChar);
-                
+
                 String refAllele;
                 if (alleleValues.length == 0) {
                     System.out.println("no alleles at: " + site);
@@ -508,13 +509,13 @@ public class ExportUtils {
                     refAllele = "-";
                 } else {
                     refAllele = ".";
-//                    throw new IllegalArgumentException("Unknown allele value: " + alleleValues[0]);
+                    // throw new IllegalArgumentException("Unknown allele value: " + alleleValues[0]);
                 }
-                
+
                 bw.write(refAllele); // ref allele
                 bw.write(delimChar);
-                
-                StringBuilder altAllelesBuilder  = new StringBuilder("");
+
+                StringBuilder altAllelesBuilder = new StringBuilder("");
                 for (int i = 1; i < alleleValues.length; i++) {
                     if (i != 1) {
                         altAllelesBuilder.append(",");
@@ -531,29 +532,29 @@ public class ExportUtils {
                         altAllelesBuilder.append("-");
                     } else {
                         altAllelesBuilder.append(".");
-//                            throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
+                        // throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
                     }
                 }
                 String altAlleles = altAllelesBuilder.toString();
                 altAlleles = (altAlleles.equals("")) ? "." : altAlleles;
                 bw.write(altAlleles); // alt alleles
                 bw.write(delimChar);
-                
+
                 bw.write("."); // qual score
                 bw.write(delimChar);
-                
+
                 bw.write("PASS"); // filter
                 bw.write(delimChar);
-                
+
                 // info column, additional fields?
                 bw.write("DP=" + totalDepth); // DP
                 bw.write(delimChar);
-                
+
                 bw.write("GT:AD:DP:GQ:PL");
-                
+
                 for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
                     bw.write(delimChar);
-                    
+
                     // GT
                     byte[] values = alignment.getBaseArray(taxa, site);
 
@@ -582,10 +583,10 @@ public class ExportUtils {
                             bw.write("-/");
                         } else {
                             bw.write(values[0] + "/");
-//                            throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
+                            // throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
                         }
                     }
-                    
+
                     boolean genoTwo = false;
                     for (int i = 0; i < alleleValues.length; i++) {
                         if (values[1] == Alignment.UNKNOWN_ALLELE) {
@@ -611,41 +612,41 @@ public class ExportUtils {
                             bw.write("-");
                         } else {
                             bw.write(values[1] + "");
-//                            throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
+                            // throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
                         }
                     }
-                    
+
                     bw.write(":");
-                    
+
                     // AD
                     byte[] siteAlleleDepths = alignment.getDepthForAllele(taxa, site);
                     int siteTotalDepth = 0;
                     if (siteAlleleDepths.length != 0) {
-                        bw.write((int)(siteAlleleDepths[0] & 0xFF) + "");
+                        bw.write((int) (siteAlleleDepths[0] & 0xFF) + "");
                         for (int i = 1; i < siteAlleleDepths.length; i++) {
                             if (siteAlleleDepths[i] == 0xFF) {
                                 break;
                             }
-                            bw.write("," + ((int)(siteAlleleDepths[i] & 0xFF)));
+                            bw.write("," + ((int) (siteAlleleDepths[i] & 0xFF)));
                             siteTotalDepth += siteAlleleDepths[i] & 0xFF;
                         }
                     } else {
                         bw.write(".,.,.");
                     }
                     bw.write(":");
-                    
+
                     // DP
                     bw.write(siteTotalDepth + "");
                     bw.write(":");
-                    
+
                     if (siteAlleleDepths.length != 0) {
                         int[] scores;
                         if (siteAlleleDepths.length == 1) {
-                            scores = scoreMap.get(Integer.toString(siteAlleleDepths[0]& 0xFF) + ",0");
+                            scores = scoreMap.get(Integer.toString(siteAlleleDepths[0] & 0xFF) + ",0");
                         } else {
                             scores = scoreMap.get(Integer.toString(siteAlleleDepths[0] & 0xFF) + "," + Integer.toString(siteAlleleDepths[1] & 0xFF));
                         }
-      
+
                         // GQ
                         if (scores == null) {
                             scores = new int[]{-1, -1, -1, -1};
@@ -665,11 +666,11 @@ public class ExportUtils {
             bw.close();
         } catch (Exception e) {
             e.printStackTrace();;
-            throw new IllegalArgumentException("Error writing Hapmap file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
+            throw new IllegalArgumentException("Error writing VCF file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
         }
         return filename;
     }
-    
+
     /**
      * Writes given set of alignments to a set of Plink files
      *
