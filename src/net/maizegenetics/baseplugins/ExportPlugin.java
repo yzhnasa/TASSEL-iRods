@@ -316,6 +316,8 @@ public class ExportPlugin extends AbstractPlugin {
             resultFile = ExportUtils.writeAlignmentToSerialGZ(inputAlignment, mySaveFile);
         } else if (myFileType == FileLoadPlugin.TasselFileType.HDF5) {
             resultFile = ExportUtils.writeToHDF5(inputAlignment, mySaveFile);
+        } else if (myFileType == FileLoadPlugin.TasselFileType.VCF) {
+            resultFile = ExportUtils.writeToVCF(inputAlignment, mySaveFile, '\t');
         } else {
             throw new IllegalStateException("ExportPlugin: performFunction: Unknown Alignment File Format: " + myFileType);
         }
@@ -455,6 +457,7 @@ public class ExportPlugin extends AbstractPlugin {
         private ButtonGroup myButtonGroup = new ButtonGroup();
         private JRadioButton myHapMapRadioButton = new JRadioButton("Write Hapmap");
         private JRadioButton myHDF5RadioButton = new JRadioButton("Write HDF5");
+        private JRadioButton myVCFRadioButton = new JRadioButton("Write VCF");
         private JRadioButton myPlinkRadioButton = new JRadioButton("Write Plink");
         private JRadioButton myFlapjackRadioButton = new JRadioButton("Write Flapjack");
         private JRadioButton myPhylipRadioButton = new JRadioButton("Write Phylip (Sequential)");
@@ -494,6 +497,7 @@ public class ExportPlugin extends AbstractPlugin {
 
             myButtonGroup.add(myHapMapRadioButton);
             myButtonGroup.add(myHDF5RadioButton);
+            myButtonGroup.add(myVCFRadioButton);
             myButtonGroup.add(myPlinkRadioButton);
             myButtonGroup.add(myFlapjackRadioButton);
             myButtonGroup.add(myPhylipRadioButton);
@@ -553,6 +557,7 @@ public class ExportPlugin extends AbstractPlugin {
 
             result.add(myHapMapRadioButton);
             result.add(myHDF5RadioButton);
+            result.add(myVCFRadioButton);
             result.add(myPlinkRadioButton);
             result.add(myFlapjackRadioButton);
             result.add(myPhylipRadioButton);
@@ -600,6 +605,9 @@ public class ExportPlugin extends AbstractPlugin {
             }
             if (myHDF5RadioButton.isSelected()) {
                 return FileLoadPlugin.TasselFileType.HDF5;
+            }
+            if (myVCFRadioButton.isSelected()) {
+                return FileLoadPlugin.TasselFileType.VCF;
             }
             if (myPlinkRadioButton.isSelected()) {
                 return FileLoadPlugin.TasselFileType.Plink;
