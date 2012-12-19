@@ -5,6 +5,7 @@ package net.maizegenetics.tassel;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -20,10 +21,12 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
@@ -39,16 +42,18 @@ import javax.swing.event.MouseInputListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.plaf.basic.BasicTableUI;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 import net.maizegenetics.gui.AlignmentTableCellRenderer;
 import net.maizegenetics.gui.AlignmentTableModel;
 import net.maizegenetics.gui.RowHeaderRenderer;
 import net.maizegenetics.gui.TableRowHeaderListModel;
-import net.maizegenetics.gui.MultiTextRowHeader;
+import net.maizegenetics.gui.VerticalLabelUI;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.AlignmentMaskBoolean;
+import net.maizegenetics.pal.alignment.AlignmentMaskGeneticDistance;
+import net.maizegenetics.pal.alignment.AlignmentMaskReference;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.plugindef.Datum;
 
@@ -73,7 +78,6 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
     private final Alignment myAlignment;
     private final JScrollPane myScrollPane;
     private JPanel mySliderPane;
-    private JLabel blankSpace;
     private JLabel searchLabel;
     private JTextField searchField;
     private JButton searchButton;
@@ -82,24 +86,33 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
     private int startPos;
     private int endPos;
     private int siteCount;
-    private final AlignmentMask[] myMasks;
     private final DataTreePanel myDataTreePanel;
-
-    private SeqViewerPanel(Alignment alignment, DataTreePanel dataTreePanel) {
-        this(alignment, null, dataTreePanel);
-    }
+    private final AlignmentTableCellRenderer myTableCellRenderer;
+    private final JComboBox myHighlightingComboBox;
 
     private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel) {
-        this(alignment, masks, dataTreePanel, -1);
+        this(alignment, masks, dataTreePanel, -1, AlignmentTableCellRenderer.RENDERING_TYPE.Nucleotide);
     }
 
-    private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel, int sliderPosition) {
+    private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel, int sliderPosition, AlignmentTableCellRenderer.RENDERING_TYPE type) {
 
         setLayout(new BorderLayout());
         myAlignment = alignment;
-        myMasks = masks;
         myDataTreePanel = dataTreePanel;
         myTableModel = new AlignmentTableModel(alignment);
+
+        myTableCellRenderer = new AlignmentTableCellRenderer(myTableModel, myAlignment, masks);
+
+        myHighlightingComboBox = new JComboBox(AlignmentTableCellRenderer.RENDERING_TYPE.values());
+        myHighlightingComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AlignmentTableCellRenderer.RENDERING_TYPE type = (AlignmentTableCellRenderer.RENDERING_TYPE) myHighlightingComboBox.getSelectedItem();
+                myTableCellRenderer.setRenderingType(type);
+                myTableModel.fireTableChanged();
+            }
+        });
+        myHighlightingComboBox.setSelectedItem(type);
 
         siteCount = myAlignment.getSiteCount();
         start = 0;
@@ -110,19 +123,6 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         mySlider = new JSlider();
         mySlider.addChangeListener(myTableModel);
 
-        /*
-        int min = myAlignment.getPositionInLocus(0);
-        int max = myAlignment.getPositionInLocus(myAlignment.getSiteCount() - 1);
-        int tableSize = max - min + 1;
-
-        mySlider = new JSlider(min, max);
-        mySlider.setMajorTickSpacing(tableSize / 10);
-        mySlider.setPaintTicks(true);
-        mySlider.setPaintLabels(true);
-        mySlider.addChangeListener(myTableModel);
-        mySlider.setValue(min + (max - min) / 2);
-         */
-
         if (sliderPosition == -1) {
             myTableModel.adjustPositionToCenter();
         } else {
@@ -131,10 +131,9 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         myTableModel.addTableModelListener(this);
         myTable = new JTable(myTableModel);
         myTable.setUI(new MyTableUI());
-        myTable.setDefaultRenderer(myTable.getColumnClass(0), new AlignmentTableCellRenderer(myTableModel, myMasks));
+        myTable.setDefaultRenderer(myTable.getColumnClass(0), myTableCellRenderer);
         myTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
         JList rowHeaders = new JList(new TableRowHeaderListModel(myTableModel.getRowHeaders())) {
-
             public String getToolTipText(MouseEvent evt) {
 
                 int index = locationToIndex(evt.getPoint());
@@ -175,20 +174,20 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         if (instance == null) {
             result = new SeqViewerPanel(alignment, masks, dataTreePanel);
             saveInstance(result, alignment, masks);
-        } else {
+        } else if (false) {
 
             int arraySize = 1;
             if (masks != null) {
                 arraySize = arraySize + masks.length;
             }
             if (instance.length != arraySize) {
-                result = new SeqViewerPanel(alignment, masks, dataTreePanel, ((SeqViewerPanel) instance[0]).getSliderPositionAsSite());
+                result = new SeqViewerPanel(alignment, masks, dataTreePanel, ((SeqViewerPanel) instance[0]).getSliderPositionAsSite(), ((SeqViewerPanel) instance[0]).getCellRenderingType());
                 saveInstance(result, alignment, masks);
             } else {
                 if (masks != null) {
                     for (int i = 0; i < masks.length; i++) {
                         if (masks[i] != instance[i + 1]) {
-                            result = new SeqViewerPanel(alignment, masks, dataTreePanel, ((SeqViewerPanel) instance[0]).getSliderPositionAsSite());
+                            result = new SeqViewerPanel(alignment, masks, dataTreePanel, ((SeqViewerPanel) instance[0]).getSliderPositionAsSite(), ((SeqViewerPanel) instance[0]).getCellRenderingType());
                             saveInstance(result, alignment, masks);
                             break;
                         }
@@ -197,6 +196,10 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
                 result = (SeqViewerPanel) instance[0];
             }
 
+        } else {
+            result = (SeqViewerPanel) instance[0];
+            result.setMasks(masks);
+            saveInstance(result, alignment, masks);
         }
         return result;
     }
@@ -228,38 +231,44 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         return getInstance(alignment, null, dataTreePanel);
     }
 
+    public void setMasks(AlignmentMask[] masks) {
+        myTableCellRenderer.setMasks(masks);
+    }
+
     private void initMenu() {
 
         myMenu.setInvoker(this);
 
         JMenuItem useAsReference = new JMenuItem("Use this Taxa as Reference");
         useAsReference.addActionListener(new AbstractAction() {
-
             public void actionPerformed(ActionEvent e) {
                 int index = myTable.getSelectedRow();
-                AlignmentMaskBoolean mask = AlignmentMaskBoolean.getInstanceCompareReference(myAlignment, index);
+                AlignmentMaskReference mask = AlignmentMaskReference.getInstanceCompareReference(myAlignment, index);
+                myHighlightingComboBox.setSelectedItem(AlignmentTableCellRenderer.RENDERING_TYPE.ReferenceMasks);
                 myDataTreePanel.addDatum(new Datum(mask.toString(), mask, null));
             }
         });
         myMenu.add(useAsReference);
 
-        myTable.addMouseListener(new MouseAdapter() {
+        JMenuItem useAsGeneticDistance = new JMenuItem("Use this Taxa for Genetic Distance");
+        useAsGeneticDistance.addActionListener(new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                int index = myTable.getSelectedRow();
+                AlignmentMaskGeneticDistance mask = AlignmentMaskGeneticDistance.getInstanceCompareReference(myAlignment, index);
+                myHighlightingComboBox.setSelectedItem(AlignmentTableCellRenderer.RENDERING_TYPE.GeneticDistanceMasks);
+                myDataTreePanel.addDatum(new Datum(mask.toString(), mask, null));
+            }
+        });
+        myMenu.add(useAsGeneticDistance);
 
+        myTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                //showPopup(e);
                 myMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
                 myMenu.setVisible(true);
             }
 
             public void mouseReleased(MouseEvent e) {
-                //showPopup(e);
                 myMenu.setVisible(false);
-            }
-
-            private void showPopup(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    myMenu.show(e.getComponent(), e.getX(), e.getY());
-                }
             }
         });
 
@@ -299,8 +308,10 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         alleles.setActionCommand(AlignmentTableModel.COLUMN_NAME_TYPE.alleles.toString());
         alleles.addActionListener(radioListener);
 
-        blankSpace = new JLabel();
-        blankSpace.setPreferredSize(new Dimension(70, 25));
+        JRadioButton allelesRetained = new JRadioButton("Alleles Retained");
+        allelesRetained.setActionCommand(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained.toString());
+        allelesRetained.addActionListener(radioListener);
+
         searchLabel = new JLabel();
         searchLabel.setPreferredSize(new Dimension(70, 25));
         searchField = new JTextField();
@@ -309,13 +320,50 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         searchButton = new JButton("Search");
 
         searchButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 searchButton_actionPerformed(e);
             }
         });
 
         JPanel selectColumnHeadings = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        FlowLayout layout = new FlowLayout(FlowLayout.CENTER, 0, 0) {
+            @Override
+            public Dimension preferredLayoutSize(Container target) {
+
+                int maxWidth = (target.getSize().width == 0) ? Integer.MAX_VALUE : target.getSize().width;
+
+                int resultWidth = 0;
+                int resultHeight = 0;
+
+                int currentWidth = 0;
+                int currentHeight = 0;
+                Component[] components = target.getComponents();
+                for (int i = 0; i < components.length; i++) {
+
+                    if (components[i].isVisible()) {
+                        Dimension currentSize = components[i].getPreferredSize();
+
+                        if (currentWidth + currentSize.width > maxWidth) {
+                            resultWidth = Math.max(resultWidth, currentWidth);
+                            resultHeight += currentHeight;
+                            currentWidth = 0;
+                            currentHeight = 0;
+                        }
+
+                        currentWidth += currentSize.width;
+                        currentHeight = Math.max(currentHeight, currentSize.height);
+                    }
+
+                }
+
+                resultWidth = Math.max(resultWidth, currentWidth);
+                resultHeight += currentHeight;
+
+                return new Dimension(resultWidth, resultHeight);
+            }
+        };
+        selectColumnHeadings.setLayout(layout);
 
         if (!multipleAlignments) {
             buttonGroup.add(physicalPosition);
@@ -324,6 +372,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         buttonGroup.add(locus);
         buttonGroup.add(siteName);
         buttonGroup.add(alleles);
+        buttonGroup.add(allelesRetained);
         if (multipleAlignments) {
             buttonGroup.setSelected(siteNumber.getModel(), true);
         } else {
@@ -337,7 +386,18 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         selectColumnHeadings.add(locus);
         selectColumnHeadings.add(siteName);
         selectColumnHeadings.add(alleles);
+        selectColumnHeadings.add(allelesRetained);
+
+        JLabel blankSpace = new JLabel();
+        blankSpace.setPreferredSize(new Dimension(25, 25));
         selectColumnHeadings.add(blankSpace);
+
+        selectColumnHeadings.add(myHighlightingComboBox);
+
+        JLabel blankSpace2 = new JLabel();
+        blankSpace2.setPreferredSize(new Dimension(25, 25));
+        selectColumnHeadings.add(blankSpace2);
+
         selectColumnHeadings.add(searchLabel);
         selectColumnHeadings.add(searchField);
         selectColumnHeadings.add(searchButton);
@@ -350,9 +410,13 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
 
     }
 
+    public AlignmentTableCellRenderer.RENDERING_TYPE getCellRenderingType() {
+        return (AlignmentTableCellRenderer.RENDERING_TYPE) myHighlightingComboBox.getSelectedItem();
+    }
+
     private void searchButton_actionPerformed(ActionEvent e) {
         try {
-            int searchValue = (int)Double.parseDouble(searchField.getText().trim());
+            int searchValue = (int) Double.parseDouble(searchField.getText().trim());
             if (myTableModel.getColumnNameType().equals(AlignmentTableModel.COLUMN_NAME_TYPE.physicalPosition)) {
                 if (searchValue > endPos) {
                     JOptionPane.showMessageDialog(this.getParent(), "Physical position must be between " + startPos + " and " + endPos + ".");
@@ -411,7 +475,6 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
 
         myLeftButton = new JButton(imageIcon);
         myLeftButton.addActionListener(new AbstractAction() {
-
             public void actionPerformed(ActionEvent e) {
                 if (myTableModel.isPhysicalPosition()) {
                     int newSite = myTableModel.getHorizontalCenter() - myTableModel.getHorizontalPageSize() * 3 / 4;
@@ -436,7 +499,6 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
 
         myRightButton = new JButton(imageIcon);
         myRightButton.addActionListener(new AbstractAction() {
-
             public void actionPerformed(ActionEvent e) {
                 if (myTableModel.isPhysicalPosition()) {
                     int newSite = myTableModel.getHorizontalCenter() + myTableModel.getHorizontalPageSize() * 3 / 4;
@@ -561,7 +623,15 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
     public void tableChanged(TableModelEvent e) {
         for (int c = 0; c < myTable.getColumnCount(); c++) {
             TableColumn col = myTable.getColumnModel().getColumn(c);
-            col.setHeaderRenderer(new MultiTextRowHeader(1, '.'));
+            col.setHeaderRenderer(new TableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    JLabel label = new JLabel(value.toString());
+                    label.setBorder(BorderFactory.createEtchedBorder());
+                    label.setUI(VerticalLabelUI.getInstance());
+                    return label;
+                }
+            });
         }
 
         if (myTableModel.isPhysicalPosition()) {
@@ -592,6 +662,9 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
                 hideSearchFunction();
             } else if (e.getActionCommand().equals(AlignmentTableModel.COLUMN_NAME_TYPE.siteName.toString())) {
                 myTableModel.setColumnNameType(AlignmentTableModel.COLUMN_NAME_TYPE.siteName);
+                hideSearchFunction();
+            } else if (e.getActionCommand().equals(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained.toString())) {
+                myTableModel.setColumnNameType(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained);
                 hideSearchFunction();
             }
         }
