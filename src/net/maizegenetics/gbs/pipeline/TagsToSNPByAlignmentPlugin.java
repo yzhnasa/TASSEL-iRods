@@ -30,6 +30,7 @@ import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
+import net.maizegenetics.pal.alignment.MutableVCFAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -72,6 +73,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     int nInbredTaxa = Integer.MIN_VALUE;
     String outputFilePrefix = null;
     String outHapMap = null;
+    String outVCF = null;
     int startChr = Integer.MAX_VALUE;
     int endChr = Integer.MIN_VALUE;
     private static ArgsEngine myArgsEngine = null;
@@ -83,6 +85,13 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private boolean fuzzyStartPositions = false;
     int locusBorder = 0;
     final static int chr = 0, str = 1, startPosit = 2;  // indices of these position attributes in array returned by theTOPM.getPositionArray(i)
+    
+    // variables for calculating OS and PL for VCF, might not be in the correct class
+    private static double error;
+    private static double v1;
+    private static double v2;
+    private static double v3;
+    private static HashMap<String, int[]> myGenoScoreMap;
 
     public TagsToSNPByAlignmentPlugin() {
         super(null, false);
@@ -104,7 +113,12 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             String out = outHapMap + ".c" + i;
             String locusLog = outHapMap + ".c" + i;
             myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + i + " (maximum number of sites = " + maxSize + ")");
-            MutableNucleotideAlignment theMSA = createMutableAlignment(theTBT, i, i, maxSize + 100);
+            MutableNucleotideAlignment theMSA;
+            if (outVCF == null) {
+                theMSA = createMutableAlignment(theTBT, i, i, maxSize + 100);
+            } else {
+                theMSA = createMutableVCFAlignment(theTBT, i, i, maxSize + 100);
+            }
             if (includeReferenceGenome) {
                 refGenomeChr = readReferenceGenomeChr(refGenomeFileStr, i);
             }
@@ -130,6 +144,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 + "-m       TagsOnPhysicalMap file containing genomic position of tags\n"
                 + "-mUpd    Update TagsOnPhysicalMap file with allele calls, saved to specified file\n"
                 + "-o       Output directory (default current directory)\n"
+                + "-vcf     Output VCF file as well as the default Hapmap define output VCF file name, -ref flag ignored for this option\n"
                 + "-mxSites Maximum number of sites (SNPs) output per chromosome (default: " + maxSize + ")\n"
                 + "-mnF     Minimum F (inbreeding coefficient) (default: " + minF + "  = no filter)\n"
                 + "-p       Pedigree file containing full sample names (or expected names after merging) & expected inbreeding\n"
@@ -167,6 +182,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             myArgsEngine.add("-m", "--physical-map", true);
             myArgsEngine.add("-mUpd", "--update-physical-map", true);
             myArgsEngine.add("-o", "--output-directory", true);
+            myArgsEngine.add("-vcf", "--output_vcf", true);
             myArgsEngine.add("-mxSites", "--max-sites-per-chr", true);
             myArgsEngine.add("-mnF", "--minFInbreeding", true);
             myArgsEngine.add("-p", "--pedigree-file", true);
@@ -231,6 +247,13 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         } else {
             outHapMap = inputFile.getParent() + File.separator + outputFilePrefix;
         }
+        
+        // Set output VCF file name
+        if (myArgsEngine.getBoolean("-vcf")) {
+            outVCF = myArgsEngine.getString("-vcf");
+            initVCFScoreMap();
+        }
+        
         if (myArgsEngine.getBoolean("-mxSites")) {
             maxSize = Integer.parseInt(myArgsEngine.getString("-mxSites"));
         }
@@ -365,10 +388,15 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() >= minTaxaWithLocus)) { // then finish the final TAL for the targetChromo
             addSitesToMutableAlignment(currTAL, theMSA,locusLogDOS);
-        } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
+        } else if (currPos!=null) {
+            logRejectedTagLocus(currTAL,locusLogDOS);
+        }
         if (theMSA.getSiteCount() > 0) {
             theMSA.clean();
             ExportUtils.writeToHapmap(theMSA, false, outHapMap, '\t', null);
+            if (outVCF != null) {
+                ExportUtils.writeToVCF(theMSA, outVCF, '\t');
+            }
         }
         myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + theMSA.getSiteCount());
         try{ locusLogDOS.close(); } catch(Exception e) { catchLocusLogException(e); }
@@ -392,6 +420,20 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(theTBT.getTaxaNames(), maxSites, theL);
         return theMSA;
     }
+    
+    /**
+     * Same as above method. Creates a MutableVCFAlignment 
+     */
+    private static MutableVCFAlignment createMutableVCFAlignment(TagsByTaxa theTBT, int startChr, int endChr, int maxSites) {
+        Locus[] theL = new Locus[endChr - startChr + 1];
+        for (int i = 0; i < theL.length; i++) {
+            theL[i] = new Locus("" + (startChr + i), "" + (startChr + i), -1, -1, null, null);
+        }
+        IdGroup taxa = new SimpleIdGroup(theTBT.getTaxaNames());
+        MutableVCFAlignment theMVA = MutableVCFAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
+        
+        return theMVA;
+    }
 
     boolean nearbyTag(int[] newTagPos, int[] currTagPos) {
         if (newTagPos == null || currTagPos == null) {
@@ -405,14 +447,20 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         return false;
     }
-
+    
     private synchronized void addSitesToMutableAlignment(TagsAtLocus theTAL, MutableNucleotideAlignment theMSA, DataOutputStream locusLogDOS) {
+        byte[][][] alleleDepth = null;
+        byte[][] commonAlleles = null;
         if (theTAL.getSize() < 2) {
             logRejectedTagLocus(theTAL,locusLogDOS);
             return;  // need at least two (overlapping!) sequences to make an alignment
         }
         byte[][] callsBySite;
-        if (includeReferenceGenome) {
+        if (outVCF != null) {
+            callsBySite = theTAL.getSNPCallsVCF(callBiallelicSNPsWithGap, myGenoScoreMap);
+            alleleDepth = theTAL.getAllelesInTaxa();
+            commonAlleles = theTAL.getCommonAlleles();
+        } else if (includeReferenceGenome) {
             String refSeqInRegion = getRefSeqInRegion(theTAL);
             callsBySite = theTAL.getSNPCallsQuant(refSeqInRegion, callBiallelicSNPsWithGap);
         } else {
@@ -438,11 +486,27 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
             theMSA.setPositionOfSite(currSite, position);
             for (int tx = 0; tx < theTBT.getTaxaCount(); tx++) {
-                if (callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
+                if (outVCF == null && callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
                     theMSA.setBase(tx, currSite, complementGeno(callsBySite[s][tx]));  // complement to plus strand
                 } else {
                     theMSA.setBase(tx, currSite, callsBySite[s][tx]);
+                    if (outVCF != null) {
+                        byte[] depth = new byte[alleleDepth.length];
+                        for (int i = 0; i < depth.length; i++) {
+                            depth[i] = alleleDepth[i][tx][s];
+                        }
+                        for (int a = 0; a < alleleDepth.length; a++) {
+                            theMSA.setDepthForAllele(tx, currSite, depth);
+                        }
+                    }
                 }
+            }
+            if (outVCF != null) {
+                byte[] allelesForSite = new byte[commonAlleles.length];
+                for (int i = 0; i < allelesForSite.length; i++) {
+                    allelesForSite[i] = commonAlleles[i][s];
+                }
+                theMSA.setCommonAllele(currSite, allelesForSite);
             }
             if (this.isUpdateTOPM) {  
                 updateTOPM(theTAL, s, position, strand, alleles);
@@ -1206,5 +1270,78 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             snpByte = 'N';
         }
         return snpByte;
+    }
+    
+    // Calculate QS and PL for VCF might not be in the correct class
+    public static int[] calcScore (int a, int b)
+    {   
+        int[] results= new int[4];
+        int n = a + b;
+        int m = a;
+        if (b > m) {
+            m = b;
+        }
+
+        double fact = 0;
+        if (n > m) {
+            for (int i = n; i > m; i--) {
+               fact += Math.log10(i);
+            }
+            for (int i = 1; i <= (n - m); i++){
+               fact -= Math.log10(i);
+            }
+        }
+        double aad = Math.pow(10, fact + (double)a * v1 + (double)b * v2);
+        double abd = Math.pow(10, fact + (double)n * v3);
+        double bbd = Math.pow(10, fact + (double)b * v1 + (double)a * v2);
+        double md = aad;
+        if (md < abd) {
+            md = abd;
+        }
+        if (md < bbd) {
+            md = bbd;
+        }
+        int gq = 0;
+        if ((aad + abd + bbd) > 0) {
+            gq = (int)(md / (aad + abd + bbd) * 100);
+        }
+        
+        int aa =(int) (-10 * (fact + (double)a * v1 + (double)b * v2));
+        int ab =(int) (-10 * (fact + (double)n * v3));
+        int bb =(int) (-10 * (fact + (double)b * v1 + (double)a * v2));
+        
+        m = aa;
+        if (m > ab) {
+            m = ab;
+        }
+        if (m>bb) {
+            m = bb;
+        }
+        aa -= m;
+        ab -= m;
+        bb -= m;
+        results[0] = aa > 255 ? 255 : aa;
+        results[1] = ab > 255 ? 255 : ab;
+        results[2] = bb > 255 ? 255 : bb;
+        results[3] = gq;
+        
+        return results;
+    }
+    
+    private void initVCFScoreMap() {
+        error = 0.001;
+        v1 = Math.log10(1.0 - error * 3.0 /4.0);
+        v2 = Math.log10(error/4);
+        v3 = Math.log10(0.5 - (error/4.0));
+        myGenoScoreMap = new HashMap();
+        for (int i = 0; i < 255; i++) {
+            for (int j = 0; j < 255; j++) {
+                myGenoScoreMap.put(Integer.toString(i) + Integer.toString(j), calcScore(i, j));
+            }
+        }
+    }
+    
+    public int[] getScore(String key) {
+        return myGenoScoreMap.get(key);
     }
 }

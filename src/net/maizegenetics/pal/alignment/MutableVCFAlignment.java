@@ -121,4 +121,67 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
             myAlleleDepth[i][taxon][site] = values[i];
         }
     }
+    
+    protected void sortSitesByPhysicalPosition() {
+
+        Swapper swapperPos = new Swapper() {
+            public void swap(int a, int b) {
+                int it;
+                it = myLocusIndices[a];
+                myLocusIndices[a] = myLocusIndices[b];
+                myLocusIndices[b] = it;
+
+                byte bt;
+                for (int t = 0, n = getSequenceCount(); t < n; t++) {
+                    bt = getBase(t, a);
+                    setBase(t, a, getBase(t, b));
+                    setBase(t, b, bt);
+                }
+
+                it = myVariableSites[a];
+                myVariableSites[a] = myVariableSites[b];
+                myVariableSites[b] = it;
+
+                String st = mySNPIDs[a];
+                mySNPIDs[a] = mySNPIDs[b];
+                mySNPIDs[b] = st;
+                
+                byte al;
+                for (int i = 0; i < myMaxNumAlleles; i++) {
+                    al = myCommonAlleles[i][a];
+                    myCommonAlleles[i][a] = myCommonAlleles[i][b];
+                    myCommonAlleles[i][b] = al;
+                }
+                
+                byte dp;
+                for (int i = 0; i < myMaxNumAlleles; i++) {
+                    for (int taxa = 0; taxa < getSequenceCount(); taxa++) {
+                        dp = myAlleleDepth[i][taxa][a];
+                        myAlleleDepth[i][taxa][a] = myAlleleDepth[i][taxa][b];
+                        myAlleleDepth[i][taxa][b] = dp;
+                    }
+                }
+            }
+        };
+        IntComparator compPos = new IntComparator() {
+            public int compare(int a, int b) {
+                if (myLocusIndices[a] < myLocusIndices[b]) {
+                    return -1;
+                }
+                if (myLocusIndices[a] > myLocusIndices[b]) {
+                    return 1;
+                }
+                if (myVariableSites[a] < myVariableSites[b]) {
+                    return -1;
+                }
+                if (myVariableSites[a] > myVariableSites[b]) {
+                    return 1;
+                }
+                return 0;
+            }
+        };
+
+        GenericSorting.quickSort(0, getSiteCount(), compPos, swapperPos);
+
+    }
 }

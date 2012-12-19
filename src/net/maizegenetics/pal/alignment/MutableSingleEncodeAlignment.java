@@ -29,11 +29,11 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private final int myMaxNumSites;
     private int myNumSites = 0;
     private int myNumSitesStagedToRemove = 0;
-    private int[] myVariableSites;
+    protected int[] myVariableSites;
     private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
-    private int[] myLocusIndices;
+    protected int[] myLocusIndices;
     private int[] myLocusOffsets = null;
-    private String[] mySNPIDs;
+    protected String[] mySNPIDs;
 
     protected MutableSingleEncodeAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a.getAlleleEncodings());
@@ -681,7 +681,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         }
     }
 
-    private void sortSitesByPhysicalPosition() {
+    protected void sortSitesByPhysicalPosition() {
 
         Swapper swapperPos = new Swapper() {
             public void swap(int a, int b) {

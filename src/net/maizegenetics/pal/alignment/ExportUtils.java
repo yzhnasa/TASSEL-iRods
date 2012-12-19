@@ -13,12 +13,14 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
+import net.maizegenetics.gbs.pipeline.TagsToSNPByAlignmentPlugin;
 import org.apache.log4j.Logger;
 
 /**
@@ -425,7 +427,249 @@ public class ExportUtils {
             }
         }
     }
+    
+     /**
+     * Writes given alignment to a VCF file
+     * 
+     * @param alignment
+     * @param filename
+     * @return 
+     */
+    public static String writeToVCF(Alignment alignment, String filename, char delimChar) {
+        try {
+            
+            HashMap<String, int[]> scoreMap = new HashMap();
+            for (int i = 0; i < 255; i++) {
+                for (int j = 0; j < 255; j++) {
+                    scoreMap.put(Integer.toString(i) + "," + Integer.toString(j), TagsToSNPByAlignmentPlugin.calcScore(i, j));
+                }
+            }
+            
+            BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+            bw.write("##fileformat=VCFv4.0");
+            bw.newLine();
+            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">" );
+            bw.newLine();
+            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the ref and alt alleles in the order listed\">" );
+            bw.newLine();
+            bw.write("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">" );
+            bw.newLine();
+            bw.write("##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">" );
+            bw.newLine();
+            bw.write("####FORMAT=<ID=PL,Number=3,Type=Float,Description=\"Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\">" );
+            bw.newLine();
+            bw.write("##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of Samples With Data\">" );
+            bw.newLine();
+            bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">");
+            bw.newLine();
+            bw.write("##INFO=<ID=AF,Number=.,Type=Float,Description=\"Allele Frequency\">");
+            bw.newLine();
+            bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar +"FORMAT");
+            for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
+                bw.write(alignment.getIdGroup().getIdentifier(taxa).getFullName().trim());
+            }
+            bw.newLine();
+            
+            for (int site = 0; site < alignment.getSiteCount(); site++) {
+                int totalDepth = 0;
+                for (int i = 0; i < alignment.getSequenceCount(); i++) {
+                    byte[] depth = alignment.getDepthForAllele(i, site);
+                    for (int k = 0; k < depth.length; k++) {
+                        if (depth[k] != -1) {
+                            totalDepth += depth[k] & 0xFF;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                
+                byte[] alleleValues = alignment.getAlleles(site);
+                bw.write(alignment.getLocusName(site)); // chromosome
+                bw.write(delimChar);
+                bw.write(alignment.getPositionInLocus(site) + ""); // position
+                bw.write(delimChar);
+                bw.write(alignment.getSNPID(site)); // site name
+                bw.write(delimChar);
+                
+                String refAllele;
+                if (alleleValues.length == 0) {
+                    System.out.println("no alleles at: " + site);
+                    continue;
+                }
+                if (alleleValues[0] == NucleotideAlignmentConstants.A_ALLELE) {
+                    refAllele = "A";
+                } else if (alleleValues[0] == NucleotideAlignmentConstants.C_ALLELE) {
+                    refAllele = "C";
+                } else if (alleleValues[0] == NucleotideAlignmentConstants.G_ALLELE) {
+                    refAllele = "G";
+                } else if (alleleValues[0] == NucleotideAlignmentConstants.T_ALLELE) {
+                    refAllele = "T";
+                } else if (alleleValues[0] == NucleotideAlignmentConstants.GAP_ALLELE) {
+                    refAllele = "-";
+                } else {
+                    refAllele = ".";
+//                    throw new IllegalArgumentException("Unknown allele value: " + alleleValues[0]);
+                }
+                
+                bw.write(refAllele); // ref allele
+                bw.write(delimChar);
+                
+                StringBuilder altAllelesBuilder  = new StringBuilder("");
+                for (int i = 1; i < alleleValues.length; i++) {
+                    if (i != 1) {
+                        altAllelesBuilder.append(",");
+                    }
+                    if (alleleValues[i] == NucleotideAlignmentConstants.A_ALLELE) {
+                        altAllelesBuilder.append("A");
+                    } else if (alleleValues[i] == NucleotideAlignmentConstants.C_ALLELE) {
+                        altAllelesBuilder.append("C");
+                    } else if (alleleValues[i] == NucleotideAlignmentConstants.G_ALLELE) {
+                        altAllelesBuilder.append("G");
+                    } else if (alleleValues[i] == NucleotideAlignmentConstants.T_ALLELE) {
+                        altAllelesBuilder.append("T");
+                    } else if (alleleValues[i] == NucleotideAlignmentConstants.GAP_ALLELE) {
+                        altAllelesBuilder.append("-");
+                    } else {
+                        altAllelesBuilder.append(".");
+//                            throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
+                    }
+                }
+                String altAlleles = altAllelesBuilder.toString();
+                altAlleles = (altAlleles.equals("")) ? "." : altAlleles;
+                bw.write(altAlleles); // alt alleles
+                bw.write(delimChar);
+                
+                bw.write("."); // qual score
+                bw.write(delimChar);
+                
+                bw.write("PASS"); // filter
+                bw.write(delimChar);
+                
+                // info column, additional fields?
+                bw.write("DP=" + totalDepth); // DP
+                bw.write(delimChar);
+                
+                bw.write("GT:AD:DP:GQ:PL");
+                
+                for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
+                    bw.write(delimChar);
+                    
+                    // GT
+                    byte[] values = alignment.getBaseArray(taxa, site);
 
+                    boolean genoOne = false;
+                    for (int i = 0; i < alleleValues.length; i++) {
+                        if (values[0] == Alignment.UNKNOWN_ALLELE) {
+                            bw.write("./");
+                            genoOne = true;
+                            break;
+                        } else if (values[0] == alleleValues[i]) {
+                            bw.write(i + "/");
+                            genoOne = true;
+                            break;
+                        }
+                    }
+                    if (!genoOne) {
+                        if (values[0] == NucleotideAlignmentConstants.A_ALLELE) {
+                            bw.write("A/");
+                        } else if (values[0] == NucleotideAlignmentConstants.C_ALLELE) {
+                            bw.write("C/");
+                        } else if (values[0] == NucleotideAlignmentConstants.G_ALLELE) {
+                            bw.write("G/");
+                        } else if (values[0] == NucleotideAlignmentConstants.T_ALLELE) {
+                            bw.write("T/");
+                        } else if (values[0] == NucleotideAlignmentConstants.GAP_ALLELE) {
+                            bw.write("-/");
+                        } else {
+                            bw.write(values[0] + "/");
+//                            throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
+                        }
+                    }
+                    
+                    boolean genoTwo = false;
+                    for (int i = 0; i < alleleValues.length; i++) {
+                        if (values[1] == Alignment.UNKNOWN_ALLELE) {
+                            bw.write(".");
+                            genoTwo = true;
+                            break;
+                        } else if (values[1] == alleleValues[i]) {
+                            bw.write(i + "");
+                            genoTwo = true;
+                            break;
+                        }
+                    }
+                    if (!genoTwo) {
+                        if (values[1] == NucleotideAlignmentConstants.A_ALLELE) {
+                            bw.write("A");
+                        } else if (values[1] == NucleotideAlignmentConstants.C_ALLELE) {
+                            bw.write("C");
+                        } else if (values[1] == NucleotideAlignmentConstants.G_ALLELE) {
+                            bw.write("G");
+                        } else if (values[1] == NucleotideAlignmentConstants.T_ALLELE) {
+                            bw.write("T");
+                        } else if (values[1] == NucleotideAlignmentConstants.GAP_ALLELE) {
+                            bw.write("-");
+                        } else {
+                            bw.write(values[1] + "");
+//                            throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
+                        }
+                    }
+                    
+                    bw.write(":");
+                    
+                    // AD
+                    byte[] siteAlleleDepths = alignment.getDepthForAllele(taxa, site);
+                    int siteTotalDepth = 0;
+                    if (siteAlleleDepths.length != 0) {
+                        bw.write((int)(siteAlleleDepths[0] & 0xFF) + "");
+                        for (int i = 1; i < siteAlleleDepths.length; i++) {
+                            if (siteAlleleDepths[i] == 0xFF) {
+                                break;
+                            }
+                            bw.write("," + ((int)(siteAlleleDepths[i] & 0xFF)));
+                            siteTotalDepth += siteAlleleDepths[i] & 0xFF;
+                        }
+                    } else {
+                        bw.write(".,.,.");
+                    }
+                    bw.write(":");
+                    
+                    // DP
+                    bw.write(siteTotalDepth + "");
+                    bw.write(":");
+                    
+                    if (siteAlleleDepths.length != 0) {
+                        int[] scores;
+                        if (siteAlleleDepths.length == 1) {
+                            scores = scoreMap.get(Integer.toString(siteAlleleDepths[0]& 0xFF) + ",0");
+                        } else {
+                            scores = scoreMap.get(Integer.toString(siteAlleleDepths[0] & 0xFF) + "," + Integer.toString(siteAlleleDepths[1] & 0xFF));
+                        }
+      
+                        // GQ
+                        if (scores == null) {
+                            scores = new int[]{-1, -1, -1, -1};
+                        }
+                        bw.write(scores[3] + "");
+                        bw.write(":");
+
+                        // PL
+                        bw.write(scores[0] + "," + scores[1] + "," + scores[2]);
+                    } else {
+                        bw.write(".:.,.,.");
+                    }
+                }
+                bw.newLine();
+            }
+            bw.flush();
+            bw.close();
+        } catch (Exception e) {
+            e.printStackTrace();;
+            throw new IllegalArgumentException("Error writing Hapmap file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
+        }
+        return filename;
+    }
+    
     /**
      * Writes given set of alignments to a set of Plink files
      *
