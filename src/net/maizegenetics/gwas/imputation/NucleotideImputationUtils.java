@@ -212,8 +212,7 @@ public class NucleotideImputationUtils {
 		
 		myLogger.info("polybits cardinality = " + polybits.cardinality());
 
-		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original);
-		filteredBits.and(polybits);
+		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, polybits);
 		myLogger.info("filteredBits.cardinality = " + filteredBits.cardinality());
 		
 		BitSet ldFilteredBits;
@@ -225,11 +224,6 @@ public class NucleotideImputationUtils {
 		}
 		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
-		//get het mask
-//		double phet = 0.075;
-//		double phet = (1 - popdata.inbredCoef)/2;
-//		BitSet[] hetMask = hetMasker(popdata.original, phet);
-
 		int nsites = popdata.original.getSiteCount();
 		int ntaxa = popdata.original.getSequenceCount();
 		popdata.alleleA = new byte[nsites];
@@ -252,7 +246,6 @@ public class NucleotideImputationUtils {
 		
 		int nWindows = snpIndices.length;
 		for (int w = 0; w < nWindows; w++) {
-//		for (int[] snpIndex : snpIndices) {
 			int[] snpIndex;
 			if (append) {
 				int n1 = snpIndices[w-1].length;
@@ -624,9 +617,9 @@ public class NucleotideImputationUtils {
 				double pquarter = binomialProbability(Mj + Mn, Mn, 0.25);
 				double phalf = binomialProbability(Mj + Mn, Mn, 0.5);
 				if (ratio == 0.25 || ratio == 0.75) {
-					if (pquarter / (pmono + phalf) > 4) polybits.fastSet(s);
+					if (pquarter / (pmono + phalf) > 2) polybits.fastSet(s);
 				} else {
-					if (phalf / (pmono + pquarter) > 4) polybits.fastSet(s);
+					if (phalf / (pmono + pquarter) > 2) polybits.fastSet(s);
 				}
 			}
 		}
@@ -966,6 +959,36 @@ public class NucleotideImputationUtils {
 		}
 		
 		if (totalCount < 2) return Double.NaN;
+		
+		//Explanation of method:
+		//  if major site one is x=1, minor site one is x = 0 and for site 2 y = 1 or 0
+		//  r = [sum(xy) - sum(x)sum(y)/N] / sqrt[(sum(x) - sum(x)*sum(x)/N) * ((sum(y) - sum(y)*sum(y)/N)]
+		//  and sum(x) - sum(x)*sum(x)/N = sum(x)(N - sum(x))/N
+		//  because sum(x^2) = sum(x)
+		double num = ((double) prodCount - ((double) s1Count * s2Count) / ((double) totalCount));
+		double denom = ((double) (s1Count * (totalCount - s1Count))) / ((double) totalCount);
+		denom *= ((double) (s2Count * (totalCount - s2Count))) / ((double) totalCount);
+		if (denom == 0) return Double.NaN;
+		return  num / Math.sqrt(denom);
+	}
+
+	public static double computeRForMissingness(int site1, int site2, Alignment a) {
+//		int s1Count = 0;
+//		int s2Count = 0;
+//		int prodCount = 0;
+		int totalCount = a.getSequenceCount();
+				
+		BitSet m11 = a.getAllelePresenceForAllTaxa(site1, 0);
+		BitSet m12 = a.getAllelePresenceForAllTaxa(site1, 1);
+		BitSet m21 = a.getAllelePresenceForAllTaxa(site2, 0);
+		BitSet m22 = a.getAllelePresenceForAllTaxa(site2, 1);
+		OpenBitSet s1present = new OpenBitSet(m11.getBits(), m11.getNumWords());
+		s1present.union(m12);
+		OpenBitSet s2present = new OpenBitSet(m21.getBits(), m21.getNumWords());
+		s2present.union(m22);
+		long s1Count = s1present.cardinality();
+		long s2Count = s2present.cardinality();
+		long prodCount = OpenBitSet.intersectionCount(s1present, s2present);
 		
 		//Explanation of method:
 		//  if major site one is x=1, minor site one is x = 0 and for site 2 y = 1 or 0
@@ -1583,6 +1606,66 @@ public class NucleotideImputationUtils {
 				nextSnpPos = sba.getPositionInLocus(nextSite);
 				nextSnpLocus = sba.getLocus(nextSite);
 			}
+			firstSite = nextSite;
+			if (firstSite < nsites) {
+				firstSnpLocus = nextSnpLocus;
+				firstSnpPos = nextSnpPos;
+				isSelected.fastSet(firstSite);
+			}
+		}
+		
+		return isSelected;
+	}
+	
+	public static OpenBitSet whichSnpsAreFromSameTag(Alignment alignIn, BitSet polybits) {
+		if (polybits.cardinality() == 0) {
+			if (polybits instanceof OpenBitSet) return (OpenBitSet) polybits;
+			else return new OpenBitSet(polybits.getBits(), polybits.getNumWords());
+		}
+		
+		Alignment sba = ConvertSBitTBitPlugin.convertAlignment(alignIn, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
+		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
+		//else sba = SBitAlignment.getInstance(alignIn);
+		
+		int nsites = sba.getSiteCount();
+		int firstSite = 0;
+		while (!polybits.fastGet(firstSite)) firstSite++;
+		
+		OpenBitSet isSelected = new OpenBitSet(nsites);
+		isSelected.fastSet(firstSite);
+		Locus firstSnpLocus = sba.getLocus(firstSite);
+		int firstSnpPos = sba.getPositionInLocus(firstSite);
+		while (firstSite < nsites - 1) {
+			int nextSite = firstSite + 1;
+			int nextSnpPos = sba.getPositionInLocus(nextSite);
+			Locus nextSnpLocus = sba.getLocus(nextSite);
+			
+			boolean skip = !polybits.fastGet(nextSite) || ( firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64 && computeRForMissingness(firstSite, nextSite, sba)  > 0.8) ;
+			
+			while (skip)  {
+				boolean validSite = true;
+				while (!polybits.fastGet(nextSite) && validSite) {
+					nextSite++;
+					validSite = nextSite < nsites;
+				}
+				if (validSite) {
+					nextSnpPos = sba.getPositionInLocus(nextSite);
+					nextSnpLocus = sba.getLocus(nextSite);
+					int dist = nextSnpPos - firstSnpPos;
+					boolean nearbySite = firstSnpLocus.equals(nextSnpLocus) && dist < 64;
+					double r = computeRForMissingness(firstSite, nextSite, sba);
+					boolean correlatedSite = r  > 0.7;
+					if (nearbySite && correlatedSite) {
+						skip = true;
+						nextSite++;
+						validSite = nextSite < nsites;
+					} else skip = false;
+					
+					//debug 
+//					System.out.println("first site = " + firstSnpPos + ", dist = " + dist + ", r = " + r);
+				} else skip = false;
+			}
+			
 			firstSite = nextSite;
 			if (firstSite < nsites) {
 				firstSnpLocus = nextSnpLocus;
