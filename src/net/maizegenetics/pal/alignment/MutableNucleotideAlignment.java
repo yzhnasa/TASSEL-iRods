@@ -14,7 +14,7 @@ import net.maizegenetics.pal.ids.Identifier;
  */
 public class MutableNucleotideAlignment extends MutableSingleEncodeAlignment implements MutableAlignment {
 
-    private MutableNucleotideAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
+    protected MutableNucleotideAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a, maxNumTaxa, maxNumSites);
     }
 
@@ -30,11 +30,11 @@ public class MutableNucleotideAlignment extends MutableSingleEncodeAlignment imp
         return getInstance(a, a.getSequenceCount(), a.getSiteCount());
     }
 
-    private MutableNucleotideAlignment(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
+    protected MutableNucleotideAlignment(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
         super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
 
-    private MutableNucleotideAlignment(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    protected MutableNucleotideAlignment(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES, idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
     }
 
