@@ -34,6 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import net.maizegenetics.pal.alignment.BitAlignment;
 
 import org.apache.log4j.Logger;
 
@@ -192,17 +193,9 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             throw new UnsupportedOperationException();
             //naa = AnnotatedAlignmentUtils.includeSitesByType(naa, myIncTypes);
         }
+
         if (myFilterMinorSNPs) {
-            if (naa instanceof CombineAlignment) {
-                Alignment[] tempAlign = naa.getAlignments();
-                for (int i = 0; i < tempAlign.length; i++) {
-                    //tempAlign[i] = AnnotatedAlignmentUtils.setRareMultiAllelicStatesToMissing(tempAlign[i]);
-                }
-                naa = CombineAlignment.getInstance(tempAlign);
-            } else {
-                //naa = AnnotatedAlignmentUtils.setRareMultiAllelicStatesToMissing(naa);
-            }
-            throw new UnsupportedOperationException();
+            naa = BitAlignment.getInstance(naa, 2, false, true);
         }
 
         if ((myStart != 0) || (myEnd < (naa.getSiteCount() - 1))) {
