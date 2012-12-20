@@ -497,6 +497,57 @@ public class AlignmentUtils {
 
     }
 
+    /**
+     * Returns whether two diploid allele values are equal ignoring order where
+     * unknown values equal anything.
+     *
+     * @param alleles1 diploid alleles 1
+     * @param alleles2 diploid alleles 2
+     *
+     * @return true if equal
+     */
+    public static boolean isEqualOrUnknown(byte[] alleles1, byte[] alleles2) {
+
+        if (((alleles1[0] == Alignment.UNKNOWN_ALLELE) && (alleles1[1] == Alignment.UNKNOWN_ALLELE))
+                || ((alleles2[0] == Alignment.UNKNOWN_ALLELE) && (alleles2[1] == Alignment.UNKNOWN_ALLELE))) {
+            return true;
+        }
+
+        if (((alleles1[0] == alleles2[0]) && (alleles1[1] == alleles2[1]))
+                || ((alleles1[0] == alleles2[1]) && (alleles1[1] == alleles2[0]))) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    /**
+     * Returns whether two diploid allele values are equal ignoring order where
+     * unknown values equal anything.
+     *
+     * @param diploidAllele1 diploid alleles 1
+     * @param diploidAllele2 diploid alleles 2
+     *
+     * @return true if equal
+     */
+    public static boolean isEqualOrUnknown(byte diploidAllele1, byte diploidAllele2) {
+
+        if ((diploidAllele1 == Alignment.UNKNOWN_DIPLOID_ALLELE) || (diploidAllele2 == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
+            return true;
+        }
+
+        if (diploidAllele1 != diploidAllele2) {
+            byte reversed = (byte) ((diploidAllele1 << 4) | (diploidAllele1 >>> 4));
+            if (reversed != diploidAllele2) {
+                return false;
+            }
+        }
+
+        return true;
+
+    }
+
     public static boolean areEncodingsEqual(String[][][] encodings) {
         int numEncodings = encodings.length;
         for (int i = 1; i < numEncodings; i++) {
