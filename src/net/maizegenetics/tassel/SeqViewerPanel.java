@@ -308,9 +308,9 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         alleles.setActionCommand(AlignmentTableModel.COLUMN_NAME_TYPE.alleles.toString());
         alleles.addActionListener(radioListener);
 
-        JRadioButton allelesRetained = new JRadioButton("Alleles Retained");
-        allelesRetained.setActionCommand(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained.toString());
-        allelesRetained.addActionListener(radioListener);
+        //JRadioButton allelesRetained = new JRadioButton("Alleles Retained");
+        //allelesRetained.setActionCommand(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained.toString());
+        //allelesRetained.addActionListener(radioListener);
 
         searchLabel = new JLabel();
         searchLabel.setPreferredSize(new Dimension(70, 25));
@@ -372,7 +372,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         buttonGroup.add(locus);
         buttonGroup.add(siteName);
         buttonGroup.add(alleles);
-        buttonGroup.add(allelesRetained);
+        //buttonGroup.add(allelesRetained);
         if (multipleAlignments) {
             buttonGroup.setSelected(siteNumber.getModel(), true);
         } else {
@@ -386,7 +386,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         selectColumnHeadings.add(locus);
         selectColumnHeadings.add(siteName);
         selectColumnHeadings.add(alleles);
-        selectColumnHeadings.add(allelesRetained);
+        //selectColumnHeadings.add(allelesRetained);
 
         JLabel blankSpace = new JLabel();
         blankSpace.setPreferredSize(new Dimension(25, 25));
