@@ -270,11 +270,11 @@ public class BitAlignment extends AbstractAlignment {
         try {
             pool.shutdown();
             if (!pool.awaitTermination(600, TimeUnit.SECONDS)) {
-                throw new IllegalStateException("BitAlignment: loadTBitAlleles: processing threads timed out.");
+                throw new IllegalStateException("BitAlignment: loadSBitAlleles: processing threads timed out.");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new IllegalStateException("BitAlignment: loadTBitAlleles: processing threads problem.");
+            throw new IllegalStateException("BitAlignment: loadSBitAlleles: processing threads problem.");
         }
 
         mySBitData = temp;
