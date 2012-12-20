@@ -663,10 +663,11 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
             } else if (e.getActionCommand().equals(AlignmentTableModel.COLUMN_NAME_TYPE.siteName.toString())) {
                 myTableModel.setColumnNameType(AlignmentTableModel.COLUMN_NAME_TYPE.siteName);
                 hideSearchFunction();
-            } else if (e.getActionCommand().equals(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained.toString())) {
-                myTableModel.setColumnNameType(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained);
-                hideSearchFunction();
             }
+            //} else if (e.getActionCommand().equals(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained.toString())) {
+            //    myTableModel.setColumnNameType(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained);
+            //    hideSearchFunction();
+            //}
         }
     }
 
