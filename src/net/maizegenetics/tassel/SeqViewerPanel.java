@@ -91,7 +91,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
     private final JComboBox myHighlightingComboBox;
 
     private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel) {
-        this(alignment, masks, dataTreePanel, -1, AlignmentTableCellRenderer.RENDERING_TYPE.Nucleotide);
+        this(alignment, masks, dataTreePanel, -1, AlignmentTableCellRenderer.RENDERING_TYPE.MajorMinorAllele);
     }
 
     private SeqViewerPanel(Alignment alignment, AlignmentMask[] masks, DataTreePanel dataTreePanel, int sliderPosition, AlignmentTableCellRenderer.RENDERING_TYPE type) {
