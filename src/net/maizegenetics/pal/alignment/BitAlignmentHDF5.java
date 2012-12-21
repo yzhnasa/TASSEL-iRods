@@ -6,7 +6,8 @@ package net.maizegenetics.pal.alignment;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import java.util.WeakHashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
@@ -24,21 +25,34 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private static final Logger myLogger = Logger.getLogger(BitAlignmentHDF5.class);
+    private static final int NUM_UNITS_TO_CACHE_ON_GET = 50;
+    private static final int MAX_CACHE_SIZE = 200;
     private final IHDF5Reader myHDF5;
-    private int myNumDataRows;
-    private int myNumSBitWords = 0;
-    private int myNumTBitWords = 0;
-    private WeakHashMap<Integer, OpenBitSet[]> myCachedSites = new WeakHashMap<Integer, OpenBitSet[]>(100);
-    private WeakHashMap<Integer, OpenBitSet[]> myCachedTaxa = new WeakHashMap<Integer, OpenBitSet[]>(100);
+    private final int myNumDataRows;
+    private final int myNumSBitWords;
+    private final int myNumTBitWords;
+    private static final String SBIT_HDF5_PATH = HDF5Constants.SBIT + "/";
+    private static final String TBIT_HDF5_PATH = HDF5Constants.TBIT + "/";
+    private final Map<Integer, OpenBitSet[]> myCachedSites = new LinkedHashMap<Integer, OpenBitSet[]>() {
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > MAX_CACHE_SIZE;
+        }
+    };
+    private final Map<Integer, OpenBitSet[]> myCachedTaxa = new LinkedHashMap<Integer, OpenBitSet[]>() {
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > MAX_CACHE_SIZE;
+        }
+    };
 
     protected BitAlignmentHDF5(IHDF5Reader hdf5, IdGroup idGroup, byte[][] alleles, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(alleles, idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         myHDF5 = hdf5;
         myNumSBitWords = myHDF5.getIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SBIT_WORDS);
         myNumTBitWords = myHDF5.getIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TBIT_WORDS);
-        myNumDataRows = myMaxNumAlleles;
         if (retainsRareAlleles()) {
-            myNumDataRows++;
+            myNumDataRows = myMaxNumAlleles + 1;
+        } else {
+            myNumDataRows = myMaxNumAlleles;
         }
     }
 
@@ -95,16 +109,28 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
             return result;
         }
 
-        result = new OpenBitSet[myNumDataRows];
-        for (int aNum = 0; aNum < myNumDataRows; aNum++) {
-            String currentSBitPath = HDF5Constants.SBIT + "/" + aNum;
-            synchronized (myHDF5) {
-                result[aNum] = new OpenBitSet(myHDF5.readLongMatrixBlock(currentSBitPath, 1, myNumSBitWords, site, 0)[0], myNumSBitWords);
-            }
-        }
-        myCachedSites.put(site, result);
-        return result;
+        int startSite = (site / NUM_UNITS_TO_CACHE_ON_GET) * NUM_UNITS_TO_CACHE_ON_GET;
 
+        int numToRetrieve = Math.min(NUM_UNITS_TO_CACHE_ON_GET, getSiteCount() - startSite);
+        OpenBitSet[][] block = new OpenBitSet[numToRetrieve][myNumDataRows];
+
+        for (int aNum = 0; aNum < myNumDataRows; aNum++) {
+
+            long[][] temp;
+            synchronized (myHDF5) {
+                temp = myHDF5.readLongMatrixBlockWithOffset(SBIT_HDF5_PATH + aNum, numToRetrieve, myNumSBitWords, startSite, 0);
+            }
+            for (int i = 0; i < numToRetrieve; i++) {
+                block[i][aNum] = new OpenBitSet(temp[i], myNumSBitWords);
+            }
+
+        }
+
+        for (int i = 0; i < numToRetrieve; i++) {
+            myCachedSites.put(startSite + i, block[i]);
+        }
+
+        return block[site - startSite];
     }
 
     private OpenBitSet[] getCachedTaxon(int taxon) {
@@ -114,16 +140,28 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
             return result;
         }
 
-        result = new OpenBitSet[myNumDataRows];
-        for (int aNum = 0; aNum < myNumDataRows; aNum++) {
-            String currentTBitPath = HDF5Constants.TBIT + "/" + aNum;
-            synchronized (myHDF5) {
-                result[aNum] = new OpenBitSet(myHDF5.readLongMatrixBlock(currentTBitPath, 1, myNumTBitWords, taxon, 0)[0], myNumTBitWords);
-            }
-        }
-        myCachedTaxa.put(taxon, result);
-        return result;
+        int startTaxon = (taxon / NUM_UNITS_TO_CACHE_ON_GET) * NUM_UNITS_TO_CACHE_ON_GET;
 
+        int numToRetrieve = Math.min(NUM_UNITS_TO_CACHE_ON_GET, getSequenceCount() - startTaxon);
+        OpenBitSet[][] block = new OpenBitSet[numToRetrieve][myNumDataRows];
+
+        for (int aNum = 0; aNum < myNumDataRows; aNum++) {
+
+            long[][] temp;
+            synchronized (myHDF5) {
+                temp = myHDF5.readLongMatrixBlockWithOffset(TBIT_HDF5_PATH + aNum, numToRetrieve, myNumTBitWords, startTaxon, 0);
+            }
+            for (int i = 0; i < numToRetrieve; i++) {
+                block[i][aNum] = new OpenBitSet(temp[i], myNumTBitWords);
+            }
+
+        }
+
+        for (int i = 0; i < numToRetrieve; i++) {
+            myCachedTaxa.put(startTaxon + i, block[i]);
+        }
+
+        return block[taxon - startTaxon];
     }
 
     @Override
