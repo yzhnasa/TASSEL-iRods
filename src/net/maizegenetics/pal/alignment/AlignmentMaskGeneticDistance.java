@@ -4,7 +4,8 @@
 package net.maizegenetics.pal.alignment;
 
 import java.awt.Color;
-import java.util.WeakHashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.Identifier;
 
@@ -15,9 +16,14 @@ import net.maizegenetics.pal.ids.Identifier;
 public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
 
     private static final long serialVersionUID = -5197800047652332969L;
-    private WeakHashMap<Integer, Byte> myCachedDistances = new WeakHashMap<Integer, Byte>(100);
+    private Map<Integer, Byte> myCache = new LinkedHashMap<Integer, Byte>() {
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > 100;
+        }
+    };
     private final int myTaxonReference;
     private final Alignment myAlignment;
+    private Alignment myTBitAlignment = null;
 
     private AlignmentMaskGeneticDistance(Alignment align, int taxonReference, String name, Color color) {
         super(align, name, color, AlignmentMask.MaskType.reference);
@@ -52,13 +58,17 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
     @Override
     public byte getMask(int taxon, int site) {
 
-        Byte result = myCachedDistances.get(taxon);
+        Byte result = myCache.get(taxon);
         if (result != null) {
             return result;
         }
 
-        result = (byte) (IBSDistanceMatrix.computeHetBitDistances(myAlignment, taxon, myTaxonReference) * 255.0);
-        myCachedDistances.put(taxon, result);
+        if (myTBitAlignment == null) {
+            myTBitAlignment = AlignmentUtils.optimizeForTaxa(myAlignment);
+        }
+
+        result = (byte) (IBSDistanceMatrix.computeHetBitDistances(myTBitAlignment, taxon, myTaxonReference) * 255.0);
+        myCache.put(taxon, result);
         return result;
 
     }
