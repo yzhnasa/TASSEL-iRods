@@ -8,6 +8,7 @@ import java.awt.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JTable;
@@ -50,6 +51,11 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
     private final Alignment myAlignment;
     private AlignmentMask[] myMasks;
     private RENDERING_TYPE myRenderingType = RENDERING_TYPE.Nucleotide;
+    private final Map<Integer, byte[]> myCachedAlleles = new LinkedHashMap<Integer, byte[]>() {
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > 100;
+        }
+    };
 
     public AlignmentTableCellRenderer(AlignmentTableModel model, Alignment alignment, AlignmentMask[] masks) {
         myAlignmentTableModel = model;
@@ -149,12 +155,20 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         setHorizontalAlignment(SwingConstants.CENTER);
 
         int site = myAlignmentTableModel.getRealColumnIndex(col);
-        byte major = myAlignment.getMajorAllele(site);
-        byte[] alleles = myAlignment.getBaseArray(row, site);
+        byte[] alleles = myCachedAlleles.get(site);
+        if (alleles == null) {
+            alleles = myAlignment.getAlleles(site);
+            myCachedAlleles.put(site, alleles);
+        }
+        byte major = Alignment.UNKNOWN_ALLELE;
+        if (alleles.length > 0) {
+            major = alleles[0];
+        }
+        byte[] diploidValues = myAlignment.getBaseArray(row, site);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
-        } else if ((alleles[0] == major) || (alleles[1] == major)) {
+        } else if ((diploidValues[0] == major) || (diploidValues[1] == major)) {
             comp.setBackground(MAJOR_ALLELE_COLOR);
         } else {
             comp.setBackground(null);
@@ -191,12 +205,20 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         setHorizontalAlignment(SwingConstants.CENTER);
 
         int site = myAlignmentTableModel.getRealColumnIndex(col);
-        byte minor = myAlignment.getMinorAllele(site);
-        byte[] alleles = myAlignment.getBaseArray(row, site);
+        byte[] alleles = myCachedAlleles.get(site);
+        if (alleles == null) {
+            alleles = myAlignment.getAlleles(site);
+            myCachedAlleles.put(site, alleles);
+        }
+        byte minor = Alignment.UNKNOWN_ALLELE;
+        if (alleles.length > 1) {
+            minor = alleles[1];
+        }
+        byte[] diploidValues = myAlignment.getBaseArray(row, site);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
-        } else if ((alleles[0] == minor) || (alleles[1] == minor)) {
+        } else if ((diploidValues[0] == minor) || (diploidValues[1] == minor)) {
             comp.setBackground(MINOR_ALLELE_COLOR);
         } else {
             comp.setBackground(null);
@@ -213,18 +235,29 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         setHorizontalAlignment(SwingConstants.CENTER);
 
         int site = myAlignmentTableModel.getRealColumnIndex(col);
-        byte minor = myAlignment.getMinorAllele(site);
-        byte major = myAlignment.getMajorAllele(site);
-        byte[] alleles = myAlignment.getBaseArray(row, site);
+        byte[] alleles = myCachedAlleles.get(site);
+        if (alleles == null) {
+            alleles = myAlignment.getAlleles(site);
+            myCachedAlleles.put(site, alleles);
+        }
+        byte major = Alignment.UNKNOWN_ALLELE;
+        byte minor = Alignment.UNKNOWN_ALLELE;
+        if (alleles.length > 1) {
+            major = alleles[0];
+            minor = alleles[1];
+        } else if (alleles.length > 0) {
+            major = alleles[0];
+        }
+        byte[] diploidValues = myAlignment.getBaseArray(row, site);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
-        } else if (((alleles[0] == major) && (alleles[1] == minor))
-                || ((alleles[0] == minor) && (alleles[1] == major))) {
+        } else if (((diploidValues[0] == major) && (diploidValues[1] == minor))
+                || ((diploidValues[0] == minor) && (diploidValues[1] == major))) {
             comp.setBackground(MAJOR_MINOR_ALLELE_COLOR);
-        } else if ((alleles[0] == major) || (alleles[1] == major)) {
+        } else if ((diploidValues[0] == major) || (diploidValues[1] == major)) {
             comp.setBackground(MAJOR_ALLELE_COLOR);
-        } else if ((alleles[0] == minor) || (alleles[1] == minor)) {
+        } else if ((diploidValues[0] == minor) || (diploidValues[1] == minor)) {
             comp.setBackground(MINOR_ALLELE_COLOR);
         } else {
             comp.setBackground(null);
