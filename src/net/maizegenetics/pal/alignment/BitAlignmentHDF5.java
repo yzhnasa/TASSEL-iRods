@@ -25,7 +25,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private static final Logger myLogger = Logger.getLogger(BitAlignmentHDF5.class);
-    private static final int NUM_UNITS_TO_CACHE_ON_GET = 50;
+    private static final int NUM_UNITS_TO_CACHE_ON_GET = 64;
     private static final int MAX_CACHE_SIZE = 200;
     private final IHDF5Reader myHDF5;
     private final int myNumDataRows;
@@ -33,12 +33,14 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     private final int myNumTBitWords;
     private static final String SBIT_HDF5_PATH = HDF5Constants.SBIT + "/";
     private static final String TBIT_HDF5_PATH = HDF5Constants.TBIT + "/";
-    private final Map<Integer, OpenBitSet[]> myCachedSites = new LinkedHashMap<Integer, OpenBitSet[]>() {
+    private final Map<Integer, OpenBitSet[]> myCachedSites = new LinkedHashMap<Integer, OpenBitSet[]>((MAX_CACHE_SIZE * 3) / 2) {
+        @Override
         protected boolean removeEldestEntry(Map.Entry eldest) {
             return size() > MAX_CACHE_SIZE;
         }
     };
-    private final Map<Integer, OpenBitSet[]> myCachedTaxa = new LinkedHashMap<Integer, OpenBitSet[]>() {
+    private final Map<Integer, OpenBitSet[]> myCachedTaxa = new LinkedHashMap<Integer, OpenBitSet[]>((MAX_CACHE_SIZE * 3) / 2) {
+        @Override
         protected boolean removeEldestEntry(Map.Entry eldest) {
             return size() > MAX_CACHE_SIZE;
         }
@@ -110,6 +112,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
         }
 
         int startSite = (site / NUM_UNITS_TO_CACHE_ON_GET) * NUM_UNITS_TO_CACHE_ON_GET;
+        //int startSite = site & 0xFFFFFFC0;
 
         int numToRetrieve = Math.min(NUM_UNITS_TO_CACHE_ON_GET, getSiteCount() - startSite);
         OpenBitSet[][] block = new OpenBitSet[numToRetrieve][myNumDataRows];
@@ -130,7 +133,47 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
             myCachedSites.put(startSite + i, block[i]);
         }
 
+        new Thread(new LookAheadSiteCache(startSite + numToRetrieve)).start();
+
         return block[site - startSite];
+
+    }
+    private static final int NUM_UNITS_TO_CACHE_IN_ADVANCE = 64;
+
+    private class LookAheadSiteCache implements Runnable {
+
+        private final int mySite;
+
+        public LookAheadSiteCache(int site) {
+            mySite = site;
+        }
+
+        @Override
+        public void run() {
+
+            int numToRetrieve = Math.min(NUM_UNITS_TO_CACHE_IN_ADVANCE, getSiteCount() - mySite);
+            if (numToRetrieve == 0) {
+                return;
+            }
+            OpenBitSet[][] block = new OpenBitSet[numToRetrieve][myNumDataRows];
+
+            for (int aNum = 0; aNum < myNumDataRows; aNum++) {
+
+                long[][] temp;
+                synchronized (myHDF5) {
+                    temp = myHDF5.readLongMatrixBlockWithOffset(SBIT_HDF5_PATH + aNum, numToRetrieve, myNumSBitWords, mySite, 0);
+                }
+                for (int i = 0; i < numToRetrieve; i++) {
+                    block[i][aNum] = new OpenBitSet(temp[i], myNumSBitWords);
+                }
+
+            }
+
+            for (int i = 0; i < numToRetrieve; i++) {
+                myCachedSites.put(mySite + i, block[i]);
+            }
+
+        }
     }
 
     private OpenBitSet[] getCachedTaxon(int taxon) {
@@ -141,6 +184,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
         }
 
         int startTaxon = (taxon / NUM_UNITS_TO_CACHE_ON_GET) * NUM_UNITS_TO_CACHE_ON_GET;
+        //int startTaxon = taxon & 0xFFFFFFC0;
 
         int numToRetrieve = Math.min(NUM_UNITS_TO_CACHE_ON_GET, getSequenceCount() - startTaxon);
         OpenBitSet[][] block = new OpenBitSet[numToRetrieve][myNumDataRows];
@@ -161,9 +205,47 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
             myCachedTaxa.put(startTaxon + i, block[i]);
         }
 
+        new Thread(new LookAheadTaxonCache(startTaxon + numToRetrieve)).start();
+
         return block[taxon - startTaxon];
     }
 
+    private class LookAheadTaxonCache implements Runnable {
+
+        private final int myTaxon;
+
+        public LookAheadTaxonCache(int taxon) {
+            myTaxon = taxon;
+        }
+
+        @Override
+        public void run() {
+
+            int numToRetrieve = Math.min(NUM_UNITS_TO_CACHE_IN_ADVANCE, getSequenceCount() - myTaxon);
+            if (numToRetrieve == 0) {
+                return;
+            }
+            OpenBitSet[][] block = new OpenBitSet[numToRetrieve][myNumDataRows];
+
+            for (int aNum = 0; aNum < myNumDataRows; aNum++) {
+
+                long[][] temp;
+                synchronized (myHDF5) {
+                    temp = myHDF5.readLongMatrixBlockWithOffset(TBIT_HDF5_PATH + aNum, numToRetrieve, myNumTBitWords, myTaxon, 0);
+                }
+                for (int i = 0; i < numToRetrieve; i++) {
+                    block[i][aNum] = new OpenBitSet(temp[i], myNumTBitWords);
+                }
+
+            }
+
+            for (int i = 0; i < numToRetrieve; i++) {
+                myCachedTaxa.put(myTaxon + i, block[i]);
+            }
+
+        }
+    }
+    
     @Override
     public byte getBase(int taxon, int site) {
         byte[] temp = getBaseArray(taxon, site);
