@@ -72,8 +72,8 @@ import org.apache.log4j.Logger;
 public class TASSELMainFrame extends JFrame {
 
     private static final Logger myLogger = Logger.getLogger(TASSELMainFrame.class);
-    public static final String version = "4.1.17";
-    public static final String versionDate = "December 20, 2012";
+    public static final String version = "4.1.18";
+    public static final String versionDate = "January 3, 2013";
     DataTreePanel theDataTreePanel;
     DataControlPanel theDataControlPanel;
     AnalysisControlPanel theAnalysisControlPanel;
