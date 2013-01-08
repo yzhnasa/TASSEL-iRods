@@ -50,7 +50,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     };
     private Alignment myAlignment;
     private Alignment mySBitAlignment;
-    private int myMinTaxaForEstimate = 2;
+    private int myMinTaxaForEstimate = 20;
     private int myWindowSize = 50;
     private int myTestSite = -1;  // this is only set when one versus all numSites is calculated.
     private long myTotalTests = 0;
