@@ -352,9 +352,9 @@ public class FastImputationBitFixedWindow {
             int currWord = alignS / 64;
             int callSite = alignS - startBase;
             for (int t = 0; t < taxaIndex.length; t++) {
-                long bmj = anchorAlignment.getAllelePresenceForAllSites(taxaIndex[t], 0).getBit(currWord);
+                long bmj = anchorAlignment.getAllelePresenceForAllSites(taxaIndex[t], 0).getBits()[currWord];
                 //long bmj = anchorAlignment.getTaxaBitsNoClone(taxaIndex[t], 0).getBits()[currWord];
-                long bmn = anchorAlignment.getAllelePresenceForAllSites(taxaIndex[t], 1).getBit(currWord);
+                long bmn = anchorAlignment.getAllelePresenceForAllSites(taxaIndex[t], 1).getBits()[currWord];
                 //long bmn = anchorAlignment.getTaxaBitsNoClone(taxaIndex[t], 1).getBits()[currWord];
                 int cs = callSite;
                 for (int j = 0; j < 64; j++) {
@@ -422,13 +422,15 @@ public class FastImputationBitFixedWindow {
                 if ((ob != Alignment.UNKNOWN_DIPLOID_ALLELE) && (ob != mj)) {
                     calls[callS] = Alignment.UNKNOWN_DIPLOID_ALLELE;
                 } else {
-                    calls[callS] = mj;
+                   // calls[callS] = mj;
+                    calls[callS] = AlignmentUtils.getDiploidValue(mj, mj);
                 }
             } else if ((double) siteCnt[1][callS] / (double) totalCnt > majority) {
                 if ((ob != Alignment.UNKNOWN_DIPLOID_ALLELE) && (ob != mn)) {
                     calls[callS] = Alignment.UNKNOWN_DIPLOID_ALLELE;
                 } else {
-                    calls[callS] = mn;
+                   // calls[callS] = mn;
+                    calls[callS] = AlignmentUtils.getDiploidValue(mn, mn);
                 }
             } else if (callhets) {
                 //byte[] snpValue = {mj, mn};
@@ -522,8 +524,10 @@ public class FastImputationBitFixedWindow {
         System.out.println("Running main method in FastImputation");
 
         String[] dargs = {
-            "-hmp", "/Users/edbuckler/SolexaAnal/GBS/build110813/test/maize110812.cov10.fT1E1pLD.mgNoHet.c10.hmp.txt",
-            "-o", "/Users/edbuckler/SolexaAnal/GBS/build110813/test/maize110812.cov10.fT1E1pLD.mgNoHet.imp.c10.hmp.txt",
+       //     "-hmp", "/Users/edbuckler/SolexaAnal/GBS/build110813/test/maize110812.cov10.fT1E1pLD.mgNoHet.c10.hmp.txt",
+            "-hmp","/Volumes/LaCie/GEM-DH_Production_January2012_FINAL_chr10.hmp.txt",
+     //       "-o", "/Users/edbuckler/SolexaAnal/GBS/build110813/test/maize110812.cov10.fT1E1pLD.mgNoHet.imp.c10.hmp.txt",
+            "-o", "/Volumes/LaCie/GEM-DH_Production_January2012_FINAL_chr10.imp.hmp.txt",
             "sC", "10",
             "eC", "10"
         };
