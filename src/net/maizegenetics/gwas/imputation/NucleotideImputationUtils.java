@@ -420,6 +420,78 @@ public class NucleotideImputationUtils {
 		popdata.imputed = BitAlignment.getInstance(mna, true); 
 	}
 	
+	public static void callParentAllelesByWindowForMultipleBC(PopulationData popdata, double maxMissing, int  minMinorAlleleCount, int windowSize) {
+		
+		BitSet polybits = whichSitesArePolymorphic(popdata.original, maxMissing, minMinorAlleleCount);
+		myLogger.info("polybits cardinality = " + polybits.cardinality());
+
+		OpenBitSet filteredBits = whichSnpsAreFromSameTag(popdata.original, 0.8);
+		filteredBits.and(polybits);
+		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
+		
+//		BitSet ldFilteredBits;
+//		if (minR > 0) {
+//			int halfWindow = windowSize / 2;
+//			ldFilteredBits = ldfilter(popdata.original, halfWindow, minR, filteredBits);
+//		} else {
+//			ldFilteredBits = filteredBits;
+//		}
+//		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
+		
+		int nsites = popdata.original.getSiteCount();
+		int ntaxa = popdata.original.getSequenceCount();
+		popdata.alleleA = new byte[nsites];
+		popdata.alleleC = new byte[nsites];
+		popdata.snpIndex = new OpenBitSet(nsites);
+		for (int s = 0; s < nsites; s++) {
+			if(filteredBits.fastGet(s)) {
+				popdata.alleleA[s] = popdata.original.getMajorAllele(s);
+				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.snpIndex.fastSet(s);
+			} 
+		}
+		
+		myLogger.info("number of called snps = " + popdata.snpIndex.cardinality());
+		
+		//create the imputed array with A/C calls
+		int nsnps = (int) popdata.snpIndex.cardinality();
+		ntaxa = popdata.original.getSequenceCount();
+		nsites = popdata.original.getSiteCount();
+		int[] snpIndex = new int[nsnps];
+		int snpcount = 0;
+		for (int s = 0; s < nsites; s++) {
+			if (popdata.snpIndex.fastGet(s)) snpIndex[snpcount++] = s;
+		}
+		
+		snpIndex = Arrays.copyOf(snpIndex, snpcount);
+		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
+		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
+		
+		nsnps = snpIndex.length;
+		for (int s = 0; s < nsnps; s++) {
+			byte Aallele = popdata.alleleA[snpIndex[s]];
+			byte Callele = popdata.alleleC[snpIndex[s]];
+			byte genotypeA = (byte) (Aallele << 4 | Aallele);
+			byte genotypeC = (byte) (Callele << 4 | Callele);
+			byte het1 = (byte) (Aallele << 4 | Callele);
+			byte het2 = (byte) (Callele << 4 | Aallele);
+			for (int t = 0; t < ntaxa; t++) {
+				byte val = mna.getBase(t, s);
+				if (val == genotypeA) {
+					mna.setBase(t, s, AA);
+				} else if (val == genotypeC) {
+					mna.setBase(t, s, CC);
+				} else if (val == het1 || val == het2) {
+					mna.setBase(t, s, AC);
+				} else {
+					mna.setBase(t, s, NN);
+				}
+			}
+		}
+		mna.clean();
+		popdata.imputed = BitAlignment.getInstance(mna, true); 
+	}
+	
 	public static void checkAlignmentOrder(Alignment[] alignments, PopulationData family, double r) {
 		boolean swapAlignments = false;
 		boolean parentsInSameGroup = false;
@@ -580,6 +652,20 @@ public class NucleotideImputationUtils {
 				int alleleCount = freq[1][0] + freq[1][1];
 				if (alleleCount >= minAlleleCount) polybits.fastSet(s);
 			}
+		}
+		return polybits;
+	}
+	
+	public static BitSet whichSitesArePolymorphic(Alignment a, double maxMissing, int minMinorAlleleCount) {
+		//which sites are polymorphic? minor allele count > 2 and exceed the minimum allele count
+		int nsites = a.getSiteCount();
+		int ngametes = 2 * nsites;
+		int minNotMissingGametes = (int) Math.floor(ngametes * (1 - maxMissing));
+		OpenBitSet polybits = new OpenBitSet(nsites);
+		for (int s = 0; s < nsites; s++) {
+			int gametesNotMissing = a.getTotalGametesNotMissing(s);
+			int minorAlleleCount = a.getMinorAlleleCount(s);
+			if (gametesNotMissing >= minNotMissingGametes && minorAlleleCount >= minMinorAlleleCount) polybits.fastSet(s);
 		}
 		return polybits;
 	}

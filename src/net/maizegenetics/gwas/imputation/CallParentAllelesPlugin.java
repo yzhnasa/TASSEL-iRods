@@ -30,6 +30,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	private double maxMissing = 0.9;
 	private double minMinorAlleleFrequency = -1.0;
 	private boolean useBCFilter = true;
+	private boolean useMultipleBCFilter = false;
 	public CallParentAllelesPlugin(Frame parentFrame) {
         super(parentFrame, false);
 	}
@@ -54,6 +55,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				family.members.toArray(ids);
 				family.original =  FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false);
 				if (useBCFilter && (family.contribution1 == 0.75 || family.contribution2 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
+				else if (useMultipleBCFilter) NucleotideImputationUtils.callParentAllelesByWindowForMultipleBC(family, maxMissing, 1, windowSize);
 				else NucleotideImputationUtils.callParentAllelesByWindow(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
 				String comment = "Parent Calls for family " + family.name + " from " + d.getName() + ".";
 				datumList.add(new Datum(family.name, family, comment));
@@ -98,6 +100,10 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			else if (args[i].equals("-b") || args[i].equalsIgnoreCase("-bc1")) {
 				String param = args[++i];
 				if (param.toUpperCase().startsWith("F")) useBCFilter = false;
+			}
+			else if (args[i].equals("-n") || args[i].equalsIgnoreCase("-bcn")) {
+				String param = args[++i];
+				if (param.toUpperCase().startsWith("T")) useBCFilter = true;
 			}
 			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logconfig")) {
 				DOMConfigurator.configure(args[++i]);
@@ -163,6 +169,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		usage.append("-m or -maxMissing : maximum proportion of missing data allowed for a SNP (default = 0.9)\n");
 		usage.append("-f or -minMaf : minimum minor allele frequency used to filter SNPs. If negative, filters on expected segregation ratio from parental contribution (default = -1)\n");
 		usage.append("-b or -bc1 : use BC1 specific filter (default = true)\n");
+		usage.append("-n or -bcn : use multipe backcross specific filter (default = false)\n");
 		usage.append("-l or -logconfig : an xml configuration file for the logger. Default will be to print all messages to console.\n");
 		usage.append("? : print the parameter list.\n");
 
