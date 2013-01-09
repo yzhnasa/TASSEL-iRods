@@ -18,9 +18,12 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
+import net.maizegenetics.gwas.NAM.AGPMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.util.BitSet;
@@ -602,6 +605,157 @@ public class ImputationUtils {
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public static void imputeLinkageMarkers(double interval, boolean hapmapFormat) {
+		String[] nuc = new String[]{"A","M","C"};
+		
+		HashMap<Byte, String> byteToNumberString = new HashMap<Byte, String>();
+		byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("A"), "0");
+		byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("M"), "1");
+		byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("C"), "2");
+		
+		HashMap<Byte, Double> byteToNumber = new HashMap<Byte, Double>();
+		byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("A"), 0.0);
+		byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("M"), 1.0);
+		byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("C"), 2.0);
+		
+		Pattern tab = Pattern.compile("\t");
+		BufferedWriter bw = null;
+		byte missingByte = NucleotideAlignmentConstants.getNucleotideDiploidByte("NN");
+		int chromosome = 1;
+		String outFilename;
+		String snpFilename = "/Volumes/Macintosh HD 2/data/namgbs/genos_1217/NAM282_20111217_scv10mF8maf002_mgs_E1pLD5_chr" + chromosome + ".hmp.abhv2.impute5to3stateHMM.txt";
+		if (hapmapFormat) outFilename = "/Volumes/Macintosh HD 2/data/namgbs/genos_1217/NAM282_20111217_scv10mF8maf002_mgs_E1pLD5_hmp_" + interval + "cmsnps.hmp.txt";
+		else outFilename = "/Volumes/Macintosh HD 2/data/namgbs/genos_1217/NAM282_20111217_scv10mF8maf002_mgs_E1pLD5_hmp_" + interval + "cmsnps.txt";
+		
+		AGPMap agpmap = new AGPMap();
+		
+		int ntaxa = 0;
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(snpFilename));
+			bw = new BufferedWriter(new FileWriter(outFilename));
+			String header = br.readLine(); 
+			String[] info = tab.split(header);
+			int ncol = info.length;
+			ntaxa = ncol - 11;
+			
+			if (hapmapFormat) bw.write("rs#\talleles\tchrom\tpos\tstrand\tassembly#\tcenter\tprotLSID\tassayLSID\tpanelLSID\tQCcode");
+			else bw.write("Snp\tallele\tchr\tpos\tcm");
+			for (int t = 11; t < ncol; t++) {
+				bw.write("\t");
+				bw.write(info[t]);
+			}
+			bw.newLine();
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		
+		String[] family = new String[]{"Z001","Z002","Z003","Z004","Z005","Z006","Z007","Z008","Z009","Z010","Z011","Z012","Z013","Z014","Z015","Z016","Z018","Z019","Z020","Z021","Z022","Z023","Z024","Z025","Z026"};
+		
+		//impute data for each chromosome
+		for (int chr = 1; chr <=10; chr++) {
+			String chrstr = Integer.toString(chr);
+			for (int fam = 0; fam < 25; fam++) {
+				System.out.println("Imputing data for chromosome " + chr + ", family " + family[fam] + ".");
+				snpFilename = "/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea/namibm.combined.hapmap.f.05r.5.chr" + chr + ".family."+ family[fam] + "parents.hmp.txt";
+				Alignment a = ImportUtils.readFromHapmap(snpFilename, true, null);
+				int nsnps = a.getSiteCount();
+				
+				double startgenpos = agpmap.getCmFromPosition(chr, a.getPositionInLocus(0));
+				//round up to nearest interval
+				startgenpos = ((double) (Math.ceil(startgenpos / interval))) * interval;
+				
+				double endgenpos = agpmap.getCmFromPosition(chr, a.getPositionInLocus(nsnps - 1));
+				//round down to nearest interval
+				endgenpos = ((double)(Math.floor(endgenpos / interval))) * interval;
+
+				
+				int leftflank = 0;
+				int rightflank = 0;
+				try {
+					for (double curpos = startgenpos; curpos <= endgenpos; curpos += interval) {
+						int physpos = agpmap.getPositionFromCm(chr, curpos);
+						String physposString = Integer.toString(physpos);
+						String genpos = Double.toString(curpos);
+						bw.write("S_");
+						bw.write(physposString);
+						bw.write("\timputed\t");
+						bw.write(chrstr);
+						bw.write("\t");
+						bw.write(physposString);
+						bw.write("\t");
+						bw.write(genpos);
+						if (hapmapFormat) bw.write("\tNA\tNA\tNA\tNA\tNA\tNA");
+						while (physpos > a.getPositionInLocus(rightflank)) rightflank++; 
+						leftflank = rightflank - 1;
+						
+						if (hapmapFormat) {
+							for (int t = 0; t < ntaxa; t++) {
+								bw.write("\t");
+								int leftndx = leftflank;
+								int rightndx = rightflank;
+								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								byte leftByte = a.getBase(t, leftndx);
+								byte rightByte = a.getBase(t, rightndx);
+								if (leftByte ==  missingByte) {
+									if (rightByte == missingByte) bw.write("N");
+									else bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
+								}
+								else if (rightByte ==  missingByte) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
+								else if (a.getBase(t, leftndx) == a.getBase(t, rightndx)) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
+								else bw.write("N"); 
+							}
+						} else {
+							for (int t = 0; t < ntaxa; t++) {
+								bw.write("\t");
+								int leftndx = leftflank;
+								int rightndx = rightflank;
+								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								byte leftByte = a.getBase(t, leftndx);
+								byte rightByte = a.getBase(t, rightndx);
+								if (leftByte ==  missingByte) {
+									if (rightByte == missingByte) bw.write("-");
+									else bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
+								}
+								else if (rightByte ==  missingByte) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte)));
+								else if (a.getBase(t, leftndx) == a.getBase(t, rightndx)) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
+								else {
+									double leftval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
+									double rightval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
+									int leftpos = a.getPositionInLocus(leftndx);
+									int rightpos = a.getPositionInLocus(rightndx);
+									double pd = ((double) (physpos - leftpos)) / ((double) (rightpos - leftpos));
+									double thisval = leftval * (1 - pd) + rightval * pd;
+									bw.write(Double.toString(thisval));
+								}; 
+							}
+						}
+						bw.newLine();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(-1);
+				}
+
+			}
+			
+
+			
+			
+		}
+		
+		try {
+			bw.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Finished imputing markers.");
 	}
 }
 
