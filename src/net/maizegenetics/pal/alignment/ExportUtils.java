@@ -248,11 +248,11 @@ public class ExportUtils {
                             baseIUPAC = alignment.getBaseAsString(taxa, site);
                         } catch (Exception e) {
                             String[] b = alignment.getBaseAsStringArray(taxa, site);
-                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + "\nTry Exporting as Diploid Values.");
+                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): " + Integer.toHexString(alignment.getBase(taxa, site)) + "\nTry Exporting as Diploid Values.");
                         }
                         if ((baseIUPAC == null) || baseIUPAC.equals("?")) {
                             String[] b = alignment.getBaseAsStringArray(taxa, site);
-                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + "\nTry Exporting as Diploid Values.");
+                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): " + Integer.toHexString(alignment.getBase(taxa, site)) + "\nTry Exporting as Diploid Values.");
                         }
                         bw.write(baseIUPAC);
                     } else {
