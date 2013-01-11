@@ -22,9 +22,10 @@ public final class NucleotideAlignmentConstants {
     public static byte A_DIPLOID_ALLELE = (byte) 0x00;
     public static byte C_DIPLOID_ALLELE = (byte) 0x11;
     public static byte M_DIPLOID_ALLELE = (byte) 0x01;
+    public static String UNDEFINED_ALLELE_STR = "X";
     public static String[][] NUCLEOTIDE_ALLELES = new String[][]{{"A", "C", "G", "T", "+", "-",
-            Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR,
-            Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR, Alignment.RARE_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR}};
+            UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR,
+            UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, Alignment.RARE_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR}};
     /**
      * Number of nucleotide states excluding rare and unknown.
      */
@@ -150,8 +151,8 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x03, "W"); // AT
         // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x04, "?"); // A+
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x05, "0"); // A-
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x0E, "?"); // AZ
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x0F, "?"); // AN
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x0E, "A"); // AZ
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x0F, "A"); // AN
 
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x10, "M"); // CA
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x11, "C"); // CC
@@ -159,8 +160,8 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x13, "Y"); // CT
         // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x14, "?"); // C+
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x15, "0"); // C-
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x1E, "?"); // CZ
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x1F, "?"); // CN
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x1E, "C"); // CZ
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x1F, "C"); // CN
 
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x20, "R"); // GA
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x21, "S"); // GC
@@ -168,8 +169,8 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x23, "K"); // GT
         // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x24, "?"); // G+
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x25, "0"); // G-
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x2E, "?"); // GZ
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x2F, "?"); // GN
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x2E, "G"); // GZ
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x2F, "G"); // GN
 
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x30, "W"); // TA
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x31, "Y"); // TC
@@ -177,8 +178,8 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x33, "T"); // TT
         // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x34, "?"); // T+
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x35, "0"); // T-
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x3E, "?"); // TZ
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x3F, "?"); // TN
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x3E, "T"); // TZ
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x3F, "T"); // TN
 
         // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x40, "?"); // +A
         // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x41, "?"); // +C
@@ -186,8 +187,8 @@ public final class NucleotideAlignmentConstants {
         // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x43, "?"); // +T
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x44, "+"); // ++
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x45, "0"); // +-
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x4E, "?"); // +Z
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x4F, "?"); // +N
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x4E, "+"); // +Z
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x4F, "+"); // +N
 
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x50, "0"); // -A
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x51, "0"); // -C
@@ -195,25 +196,25 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x53, "0"); // -T
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x54, "0"); // -+
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x55, "-"); // --
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0x5E, "?"); // -Z
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0x5E, "-"); // -Z
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0x5F, "-"); // -N
 
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE0, "?"); // ZA
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE1, "?"); // ZC
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE2, "?"); // ZG
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE3, "?"); // ZT
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE4, "?"); // Z+
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE5, "?"); // Z-
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE0, "A"); // ZA
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE1, "C"); // ZC
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE2, "G"); // ZG
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE3, "T"); // ZT
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE4, "+"); // Z+
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xE5, "-"); // Z-
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0xEE, "Z"); // ZZ
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xEF, "?"); // ZN
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xEF, "N"); // ZN
 
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF0, "?"); // NA
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF1, "?"); // NC
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF2, "?"); // NG
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF3, "?"); // NT
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF0, "A"); // NA
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF1, "C"); // NC
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF2, "G"); // NG
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF3, "T"); // NT
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF4, "+"); // N+
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0xF5, "-"); // N-
-        // NUCLEOTIDE_IUPAC_HASH.put((byte) 0xFE, "?"); // NZ
+        NUCLEOTIDE_IUPAC_HASH.put((byte) 0xFE, "N"); // NZ
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0xFF, "N"); // NN
 
     }
