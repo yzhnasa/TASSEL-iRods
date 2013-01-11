@@ -279,7 +279,7 @@ public class FastImputationBitFixedWindow {
                 if (cb == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     a.setBase(taxon, s + startBase, calls[s]);
                 } else if (cb != calls[s]) {
-                    a.setBase(taxon, s + startBase, (byte) 'X');
+                    a.setBase(taxon, s + startBase, Alignment.UNKNOWN_DIPLOID_ALLELE);
                 }
             }
         }
