@@ -1,15 +1,18 @@
 package net.maizegenetics.util;
 
 import java.io.*;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-/**@author james */
+/**
+ * @author james
+ */
 public class DirectoryCrawler {
 
-    /** The directory to search if the object is created with no parameters. */
+    /**
+     * The directory to search if the object is created with no parameters.
+     */
     private static String defaultDirectory = ".";
-    private static int recursionDepth;
 
     public static void main(String args[]) {
         File[] testFileArray = new File[2];
@@ -35,9 +38,11 @@ public class DirectoryCrawler {
 
     /**
      * Recursively searches the object's directory tree for a specific filename.
-     * @param pattern A regular expression specifying what filename to look for.  For example, pass the string ".*\.qseq.*" to search
-     * for .qseq files.
-     * @return outputFiles A list of matching files found in the directory structure.
+     *
+     * @param pattern A regular expression specifying what filename to look for.
+     * For example, pass the string ".*\.qseq.*" to search for .qseq files.
+     * @return outputFiles A list of matching files found in the directory
+     * structure.
      */
     public static File[] listFiles(String pattern, File[] inputArray) {
         List<File> outputList = null;
@@ -48,13 +53,15 @@ public class DirectoryCrawler {
         return (outputArray);
     }
 
-    /**@param pattern A regular expression specifying a filename to look for.
-     * @param inputFile The name of a directory in which to search for files.     */
-    public static String[] listFileNames(String pattern, String inputFile){
+    /**
+     * @param pattern A regular expression specifying a filename to look for.
+     * @param inputFile The name of a directory in which to search for files.
+     */
+    public static String[] listFileNames(String pattern, String inputFile) {
         File[] outputFiles = listFiles(pattern, inputFile);
         String[] outputNames = new String[outputFiles.length];
-        for(int i=0; i<outputFiles.length; i++){
-            outputNames[i]=outputFiles[i].getAbsolutePath();
+        for (int i = 0; i < outputFiles.length; i++) {
+            outputNames[i] = outputFiles[i].getAbsolutePath();
         }
         return outputNames;
     }
