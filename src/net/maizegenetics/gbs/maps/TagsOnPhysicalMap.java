@@ -619,6 +619,22 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return dcoP[index];
     }
 
+    public byte[][] getVariantOff() {
+        byte[][] result = new byte[maxVariants][getTagCount()];
+        for (int i = 0; i < maxVariants; i++) {
+            System.arraycopy(variantPosOff[i], 0, result[i], 0, getTagCount());
+        }
+        return result;
+    }
+    
+    public byte[][] getVariantDef() {
+        byte[][] result = new byte[maxVariants][getTagCount()];
+        for (int i = 0; i < maxVariants; i++) {
+            System.arraycopy(variantDef[i], 0, result[i], 0, getTagCount());
+        }
+        return result;
+    }
+
     @Override
     public void setChromoPosition(int index, int chromosome, byte strand, int positionMin,
             int positionMax) {
