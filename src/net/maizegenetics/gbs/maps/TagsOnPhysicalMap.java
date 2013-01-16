@@ -33,11 +33,12 @@ import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
 /**
- * Holds tag data compressed in long and a physical position.  
- * This can have two variations either include redundant positions or only unique positions.
- * If redundant than tags that map to multiple regions should be placed adjacently
+ * Holds tag data compressed in long and a physical position. This can have two
+ * variations either include redundant positions or only unique positions. If
+ * redundant than tags that map to multiple regions should be placed adjacently
  *
- * Default 40 bytes per position.  If we have 10,000,000 million positions then this will be at 400M byte data structure.
+ * Default 40 bytes per position. If we have 10,000,000 million positions then
+ * this will be at 400M byte data structure.
  *
  * User: ed
  */
@@ -185,7 +186,6 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             }
         };
         IntComparator compPos = new IntComparator() {
-
             public int compare(int a, int b) {
                 int index1 = indicesOfSortByPosition[a];
                 int index2 = indicesOfSortByPosition[b];
@@ -224,8 +224,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
 
     /**
-     * This helps collapse identical reads from different regions of the genome 
+     * This helps collapse identical reads from different regions of the genome
      * together.
+     *
      * @param sourceTOPM
      * @param sourceRow
      * @param destRow
@@ -425,12 +426,12 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         }
     }
 
-    /**@return An int[] result where :
-     *    result[0] = The number of tags with a unique physical positions in this file 
-     *                (i.e. , tags for which the chromosome number is known).
-     *    result[1] = The number of tags which align to multiple positions
-     *                (i.e., where multimaps[tagIndex] > 0)
-     * 
+    /**
+     * @return An int[] result where : result[0] = The number of tags with a
+     * unique physical positions in this file (i.e. , tags for which the
+     * chromosome number is known). result[1] = The number of tags which align
+     * to multiple positions (i.e., where multimaps[tagIndex] > 0)
+     *
      */
     public int[] mappedTags() {
         int[] result = {0, 0};
@@ -666,16 +667,20 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return -1; //no free space
     }
 
-    /**Decodes bitwise flags from the code in SAM field 3.  The code is a 32-bit integer, so I
-    boolean AND the flag value with the code, and compare the result with
-    the flag value.  If they are equal, that means all bits set in the flag number
-    were set in the code (i.e., that flag is turned on). */
+    /**
+     * Decodes bitwise flags from the code in SAM field 3. The code is a 32-bit
+     * integer, so I boolean AND the flag value with the code, and compare the
+     * result with the flag value. If they are equal, that means all bits set in
+     * the flag number were set in the code (i.e., that flag is turned on).
+     */
     private boolean flagSet(int code, int flag) {
         int flagValue = 1 << flag; //1<<flag is equivalent to 2^flag
         return ((code & flagValue) == flagValue);
     }
 
-    /** Reads SAM files output from BWA or bowtie2 */
+    /**
+     * Reads SAM files output from BWA or bowtie2
+     */
     public void readSAMFile(String inputFileName, int tagLengthInLong) {
         System.out.println("Reading SAM format tag alignment from: " + inputFileName);
         this.tagLengthInLong = tagLengthInLong;
@@ -977,8 +982,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return 0;
     }
 
-    /**Returns an array whose <i>values</i> are the distinct chromosomes
-    in this file, as stored in the chromosome[] array.  The indices are arbitrary. */
+    /**
+     * Returns an array whose <i>values</i> are the distinct chromosomes in this
+     * file, as stored in the chromosome[] array. The indices are arbitrary.
+     */
     @Override
     public int[] getChromosomes() {
         ArrayList<Integer> chrs = new ArrayList<Integer>();
@@ -1014,15 +1021,19 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return new Locus(chromosome[tagIndex] + "", chromosome[tagIndex] + "", -1, -1, null, null);
     }
 
-    /** Returns an array containing all variant position offsets for the
-    tag at the supplied index.*/
+    /**
+     * Returns an array containing all variant position offsets for the tag at
+     * the supplied index.
+     */
     @Override
     public byte[] getVariantPosOffArray(int tagIndex) {
         return variantPosOff[tagIndex];
     }
 
-    /** Returns an array containing all variant definitions for the
-    tag at the supplied index.*/
+    /**
+     * Returns an array containing all variant definitions for the tag at the
+     * supplied index.
+     */
     @Override
     public byte[] getVariantDefArray(int tagIndex) {
         return variantDef[tagIndex];
@@ -1081,8 +1092,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return result;
     }
 
-    /**First, find unique tags by concatenating them into a TagCountMutable object and
-    collapsing duplicate rows. */
+    /**
+     * First, find unique tags by concatenating them into a TagCountMutable
+     * object and collapsing duplicate rows.
+     */
     private static TagsOnPhysicalMap uniqueTags(String[] filenames) {
 
         //Find dimensions of concatenated file
@@ -1118,9 +1131,12 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return result;
     }
 
-    /**Merges several TOPM files into one, removing duplicate rows.  Variants from matching tags are combined
-    in the output file.  If there are more variants in the input files than can fit in the output,
-    extra variants are discarded with no particular order. */
+    /**
+     * Merges several TOPM files into one, removing duplicate rows. Variants
+     * from matching tags are combined in the output file. If there are more
+     * variants in the input files than can fit in the output, extra variants
+     * are discarded with no particular order.
+     */
     public static TagsOnPhysicalMap merge(String[] filenames) {
 
         TagsOnPhysicalMap output = uniqueTags(filenames);
@@ -1171,7 +1187,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return output;
     }
 
-    /**Copies values of everything BUT tag sequence and variant data (i.e. tag attributes) from one TOPM file to another.*/
+    /**
+     * Copies values of everything BUT tag sequence and variant data (i.e. tag
+     * attributes) from one TOPM file to another.
+     */
     private static void copyTagAttributes(TagsOnPhysicalMap input, int inTag, TagsOnPhysicalMap output, int outTag) {
         output.tagLength[outTag] = input.tagLength[inTag];
         output.multimaps[outTag] = input.multimaps[inTag];
@@ -1184,7 +1203,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         output.mapP[outTag] = input.mapP[inTag];
     }
 
-    /**Fills the variant definition & offset arrays with the value of "byteMissing".*/
+    /**
+     * Fills the variant definition & offset arrays with the value of "byteMissing".
+     */
     private void clearVariants() {
         for (int i = 0; i < maxVariants; i++) {
             Arrays.fill(variantDef[i], byteMissing);
@@ -1192,13 +1213,18 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         }
     }
 
-    /**Fills the variant definition & offset at the given indices with the value of "byteMissing".*/
+    /**
+     * Fills the variant definition & offset at the given indices with the value
+     * of "byteMissing".
+     */
     private void clearVariant(int tag, int variant) {
         setVariantDef(tag, variant, byteMissing);
         setVariantPosOff(tag, variant, byteMissing);
     }
 
-    /**Clears variant sites that are not found in the supplied alignments.*/
+    /**
+     * Clears variant sites that are not found in the supplied alignments.
+     */
     public void filter(String[] filenames) {
         HashMap<String, Integer> hapmapSites = new HashMap<String, Integer>();
 
@@ -1286,7 +1312,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         }
     }
 
-    /**Returns the start positions of tags whose variant arrays are full.*/
+    /**
+     * Returns the start positions of tags whose variant arrays are full.
+     */
     public HashSet<Integer> fullTagPositions() {
         HashSet<Integer> result = new HashSet<Integer>();
         for (int i = 0; i < tagNum; i++) {
@@ -1306,7 +1334,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return result;
     }
 
-    /**Maps unique sites (i.e. chromosome and position) to the indices of the tags in which they are found.*/
+    /**
+     * Maps unique sites (i.e. chromosome and position) to the indices of the
+     * tags in which they are found.
+     */
     public HashMap<String, Integer> uniqueSites() {
         HashMap<String, Integer> snps = new HashMap<String, Integer>();
         for (int tag = 0; tag < tagNum; tag++) {        //Visit each tag in TOPM
@@ -1341,8 +1372,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return snps;
     }
 
-    /** Returns an array whose indices are the number of mappings and whose elements are the
-     *  number of tags with that mapping.*/
+    /**
+     * Returns an array whose indices are the number of mappings and whose
+     * elements are the number of tags with that mapping.
+     */
     public int[] mappingDistribution() {
         int[] result = new int[128]; //Only up to 127 multiple mappings are stored.
         for (int i = 0; i < tagNum; i++) {
