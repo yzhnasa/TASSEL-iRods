@@ -496,24 +496,32 @@ public class KnownParentMinorWindowImputation {
                 tName.append("|"+p1+"_"+p2+"s"+b);
                 for (int s = b; (s < b+blockSize) && (s<a.getSiteCount()); s++) {
                     double presentRoll=r.nextDouble();
+                    byte p1b=a.getBase(p1, s);
+                    if(AlignmentUtils.isHeterozygous(p1b)==true) {p1b=Alignment.UNKNOWN_DIPLOID_ALLELE;}
+                    byte p2b=a.getBase(p2, s);
+                    if(AlignmentUtils.isHeterozygous(p2b)==true) {p2b=Alignment.UNKNOWN_DIPLOID_ALLELE;}
                     if(presentRoll<(propPresent*propPresent)) {
-                        if(a.getBase(p1, s)==Alignment.UNKNOWN_DIPLOID_ALLELE) {mna.setBase(t, s, a.getBase(p2, s));}
-                        else if(a.getBase(p2, s)==Alignment.UNKNOWN_DIPLOID_ALLELE) {mna.setBase(t, s, a.getBase(p1, s));}
+                        if(p1b==Alignment.UNKNOWN_DIPLOID_ALLELE) {mna.setBase(t, s, p2b);}
+                        else if(p2b==Alignment.UNKNOWN_DIPLOID_ALLELE) {mna.setBase(t, s, p1b);}
                         else {
-                            byte het=AlignmentUtils.getDiploidValue(a.getBase(p1, s), a.getBase(p2, s));
+                            byte het=AlignmentUtils.getDiploidValue(p1b, p2b);
                             mna.setBase(t, s, het);
                         }
                     } else if(presentRoll<propPresent) {
                         if(r.nextDouble()<0.5) {
-                            mna.setBase(t, s, a.getBase(p1, s));
+                            mna.setBase(t, s, p1b);
                         } else {
-                            mna.setBase(t, s, a.getBase(p2, s));
+                            mna.setBase(t, s, p2b);
                         }
+                        //if(AlignmentUtils.isHeterozygous(mna.getBase(t, s))==true) {mna.setBase(t, s, Alignment.UNKNOWN_DIPLOID_ALLELE);}
                     } else {
                         mna.setBase(t, s, Alignment.UNKNOWN_DIPLOID_ALLELE);
                     }
                     if(r.nextDouble()<0.000) {  //method to add error to simulation 0.002 is reasonable
                         mna.setBase(t, s, AlignmentUtils.getDiploidValue(a.getMinorAllele(s),a.getMinorAllele(s)));
+                    }
+                    if((p1==p2)&&(AlignmentUtils.isHeterozygous(mna.getBase(t, s))==true)) {
+                        System.out.printf("%d %d %d %d %d %d %s %s %s %n", p1, p2, p1b, p2b, a.getBase(p1, s), a.getBase(p2, s), a.getBaseAsString(p1, s), a.getBaseAsString(p2, s), mna.getBaseAsString(t, s));
                     }
                 }//end of site        
             } //end of blocks
