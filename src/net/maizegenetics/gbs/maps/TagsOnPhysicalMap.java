@@ -382,7 +382,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         System.out.println("Count of Tags=" + tagsInput);
     }
 
-    private boolean variantsDefined(int tagIndex) {
+    public boolean variantsDefined(int tagIndex) {
         for (int i = 0; i < maxVariants; i++) {
             if ((variantPosOff[i][tagIndex] > 0) && (variantDef[i][tagIndex] > 0)) {
                 return true;
