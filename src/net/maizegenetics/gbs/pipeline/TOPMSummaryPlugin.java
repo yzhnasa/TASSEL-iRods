@@ -33,10 +33,12 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
     private int myTagCount = 0;
     private int[] myChromosomes;
     private Map<Integer, Integer>[] myVariantsPerPosition;
-    private Map<Integer, Set>[] myVariantDefsPerPosition;
+    private Map<Integer, Set<Byte>>[] myVariantDefsPerPosition;
     private int myNumUndefinedStrandedTags = 0;
     private Set<Byte> myUndefinedStrandValues = new HashSet<Byte>();
     private String myOutputFilename = null;
+    private int[] myNumSNPsPerChromosome;
+    private int[] myNumTagsPerVariantsDefined;
 
     public TOPMSummaryPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -47,43 +49,59 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
 
         myInputTOPM = new TagsOnPhysicalMap(myInputFilename, true);
         myTagCount = myInputTOPM.getTagCount();
-        myLogger.info("performFunction: Number of Original Tags: " + myTagCount);
+        myLogger.info("performFunction: Number of Tags: " + myTagCount);
 
         myChromosomes = myInputTOPM.getChromosomes();
         Arrays.sort(myChromosomes);
+
+        myNumSNPsPerChromosome = new int[myChromosomes.length];
+
+        myNumTagsPerVariantsDefined = new int[myInputTOPM.maxVariants + 1];
+
         myVariantsPerPosition = new TreeMap[myChromosomes.length];
         for (int m = 0; m < myChromosomes.length; m++) {
             myVariantsPerPosition[m] = new TreeMap<Integer, Integer>();
         }
         myVariantDefsPerPosition = new TreeMap[myChromosomes.length];
         for (int m = 0; m < myChromosomes.length; m++) {
-            myVariantDefsPerPosition[m] = new TreeMap<Integer, Set>();
+            myVariantDefsPerPosition[m] = new TreeMap<Integer, Set<Byte>>();
         }
+
         for (int i = 0; i < myTagCount; i++) {
             int startPos = myInputTOPM.getStartPosition(i);
             int endPos = myInputTOPM.getEndPosition(i);
             byte strand = myInputTOPM.getStrand(i);
             int chrom = myInputTOPM.getChromosome(i);
+            int index = Arrays.binarySearch(myChromosomes, chrom);
+
             int tagLength = myInputTOPM.getTagLength(i);
+            //String tag = BaseEncoder.getSequenceFromLong(myInputTOPM.getTag(i));
             if (strand == 1) {
+                if (index < 0) {
+                    myLogger.error("performFunction: tag: " + i + " chromosome: " + chrom + " not reported by getChromosomes()");
+                    continue;
+                }
                 if (startPos > endPos) {
                     myLogger.error("performFunction: tag: " + i + " invalid state: strand: " + strand + "  start position: " + startPos + "  end position: " + endPos);
-                    break;
+                    continue;
                 }
-                int startEndLength = endPos - startPos + 1;
-                if (startEndLength != tagLength) {
-                    myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " doesn't equal (end pos - start pos + 1): " + startEndLength);
-                }
-                int index = Arrays.binarySearch(myChromosomes, chrom);
-                if (index < 0) {
-                    myLogger.warn("performFunction: tag: " + i + " chromosome: " + chrom + " not reported by getChromosomes()");
-                    break;
-                }
-
+                //int startEndLength = endPos - startPos + 1;
+                //if (startEndLength != tagLength) {
+                //    myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " doesn't equal (end pos - start pos + 1): " + startEndLength);
+                //}
+                int numDefinedVariants = 0;
                 for (int j = 0; j < myInputTOPM.maxVariants; j++) {
                     int offset = myInputTOPM.getVariantPosOff(i, j);
                     byte def = myInputTOPM.getVariantDef(i, j);
-                    if ((offset > 0) && (def > 0)) {
+                    //if (offset != Byte.MIN_VALUE) {
+                    //    myLogger.info("performFunction: Tag: " + i + " Positive Strand: Defined Variant: Offset: " + offset + "  def: " + (char) def);
+                    //}
+                    if ((offset >= 0) && (def >= 0)) {
+                        numDefinedVariants++;
+                        myNumSNPsPerChromosome[index]++;
+                        //if ((char) def != tag.charAt(offset)) {
+                        //    myLogger.error("performFunction: Mismatch: Sequence From Long: " + tag + "  offset: " + offset + " def: " + (char) def + " from tag: " + tag.charAt(offset));
+                        //}
                         int position = startPos + offset;
                         if (position > endPos) {
                             myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
@@ -101,25 +119,33 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         }
                     }
                 }
+                myNumTagsPerVariantsDefined[numDefinedVariants]++;
             } else if (strand == -1) {
+                if (index < 0) {
+                    myLogger.error("performFunction: tag: " + i + " chromosome: " + chrom + " not reported by getChromosomes()");
+                    continue;
+                }
                 if (startPos < endPos) {
                     myLogger.error("performFunction: tag: " + i + " invalid state: strand: " + strand + "  start position: " + startPos + "  end position: " + endPos);
-                    break;
+                    continue;
                 }
-                int startEndLength = startPos - endPos + 1;
-                if (startEndLength != tagLength) {
-                    myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " doesn't equal (start pos - end pos + 1): " + startEndLength);
-                }
-                int index = Arrays.binarySearch(myChromosomes, chrom);
-                if (index < 0) {
-                    myLogger.warn("performFunction: tag: " + i + " chromosome: " + chrom + " not reported by getChromosomes()");
-                    break;
-                }
-
+                //int startEndLength = startPos - endPos + 1;
+                //if (startEndLength != tagLength) {
+                //    myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " doesn't equal (start pos - end pos + 1): " + startEndLength);
+                //}
+                int numDefinedVariants = 0;
                 for (int j = 0; j < myInputTOPM.maxVariants; j++) {
                     int offset = myInputTOPM.getVariantPosOff(i, j);
                     byte def = myInputTOPM.getVariantDef(i, j);
-                    if ((offset > 0) && (def > 0)) {
+                    //if (offset != Byte.MIN_VALUE) {
+                    //    myLogger.info("performFunction: Tag: " + i + " Negative Strand: Defined Variant: Offset: " + offset + "  def: " + (char) def);
+                    //}
+                    if ((offset >= 0) && (def >= 0)) {
+                        numDefinedVariants++;
+                        myNumSNPsPerChromosome[index]++;
+                        //if ((char) def != tag.charAt(offset)) {
+                        //    myLogger.error("performFunction: Mismatch: Sequence From Long: " + tag + "  offset: " + offset + " def: " + (char) def + " from tag: " + tag.charAt(offset));
+                        //}
                         int position = startPos + offset;
                         if (position < endPos) {
                             myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
@@ -137,6 +163,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         }
                     }
                 }
+                myNumTagsPerVariantsDefined[numDefinedVariants]++;
             } else {
                 myNumUndefinedStrandedTags++;
                 myUndefinedStrandValues.add(strand);
@@ -147,6 +174,14 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
         Iterator itr = myUndefinedStrandValues.iterator();
         while (itr.hasNext()) {
             myLogger.info("performFunction: Undefined Strand Value: " + itr.next());
+        }
+
+        for (int i = 0; i < myChromosomes.length; i++) {
+            myLogger.info("performFunction: Chromosome: " + myChromosomes[i] + " Number of SNPs: " + myNumSNPsPerChromosome[i]);
+        }
+
+        for (int i = 0; i <= myInputTOPM.maxVariants; i++) {
+            myLogger.info("performFunction: Number of Tags: " + myNumTagsPerVariantsDefined[i] + " Has: " + i + " Variants Defined");
         }
 
         printSummary();
