@@ -382,6 +382,71 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         System.out.println("Count of Tags=" + tagsInput);
     }
 
+    public boolean variantsDefined(int tagIndex) {
+        for (int i = 0; i < maxVariants; i++) {
+            if ((variantPosOff[i][tagIndex] != Byte.MIN_VALUE) && (variantDef[i][tagIndex] != Byte.MIN_VALUE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void writeBinaryWVariantsFile(File outFile) {
+
+        int hapsOutput = 0;
+        try {
+            int[] numTagsWithDefinedVariantsPerChr = new int[20];
+            int numTagsWithDefinedVariants = 0;
+            for (int row = 0; row < tagNum; row++) {
+                if (variantsDefined(row)) {
+                    numTagsWithDefinedVariantsPerChr[getChromosome(row)]++;
+                    numTagsWithDefinedVariants++;
+                }
+            }
+
+            System.out.println("writeBinaryWVariantsFile: number tags with defined variants: " + numTagsWithDefinedVariants);
+            for (int i = 0; i < numTagsWithDefinedVariantsPerChr.length; i++) {
+                if (numTagsWithDefinedVariantsPerChr[i] != 0) {
+                    System.out.println("writeBinaryWVariantsFile: Chromosome: " + i + " Has Number Tags with Variants: " + numTagsWithDefinedVariantsPerChr[i]);
+                }
+            }
+
+            DataOutputStream fw = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile), 4000000));
+
+            fw.writeInt(numTagsWithDefinedVariants);
+            fw.writeInt(tagLengthInLong);
+            fw.writeInt(maxVariants);
+            for (int row = 0; row < tagNum; row++) {
+                if (variantsDefined(row)) {
+                    for (int j = 0; j < tagLengthInLong; j++) {
+                        fw.writeLong(tags[j][row]);
+                    }
+                    fw.writeByte(tagLength[row]);
+                    fw.writeByte(multimaps[row]);
+                    fw.writeInt(chromosome[row]);
+                    fw.writeByte(strand[row]);
+                    fw.writeInt(startPosition[row]);
+                    fw.writeInt(endPosition[row]);
+                    fw.writeByte(divergence[row]);
+                    for (int j = 0; j < maxVariants; j++) {
+                        fw.writeByte(variantPosOff[j][row]);
+                        fw.writeByte(variantDef[j][row]);
+                    }
+                    fw.writeByte(dcoP[row]);
+                    fw.writeByte(mapP[row]);
+                    hapsOutput++;
+                }
+            }
+            fw.flush();
+            fw.close();
+            System.out.println("writeBinaryWVariantsFile: Tag positions written to: " + outFile.toString());
+            System.out.println("writeBinaryWVariantsFile: Number of tags in file: " + hapsOutput);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Catch in writing output file e=" + e);
+        }
+    }
+
     public void writeBinaryFile(File outFile, int minResolution, boolean requirePhysPosition,
             boolean requireDCOMap, float minDCOP, boolean binary) {
         int hapsOutput = 0;
@@ -626,7 +691,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         }
         return result;
     }
-    
+
     public byte[][] getVariantDef() {
         byte[][] result = new byte[maxVariants][getTagCount()];
         for (int i = 0; i < maxVariants; i++) {
@@ -1220,9 +1285,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
 
     /**
-     * Fills the variant definition & offset arrays with the value of "byteMissing".
+     * Fills the variant definition & offset arrays with the value of
+     * "byteMissing".
      */
-    private void clearVariants() {
+    public void clearVariants() {
         for (int i = 0; i < maxVariants; i++) {
             Arrays.fill(variantDef[i], byteMissing);
             Arrays.fill(variantPosOff[i], byteMissing);
