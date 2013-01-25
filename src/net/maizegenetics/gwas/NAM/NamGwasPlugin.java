@@ -51,8 +51,10 @@ public class NamGwasPlugin extends AbstractPlugin {
 		parameters.iterations = iterations;
 		parameters.startIteration = start;
 		parameters.randomizeSnpOrder = randomizeSnpOrder;
+		parameters.threaded = threaded;
 
 		try {
+			//read the chromosome from the snp file
 			BufferedReader br = new BufferedReader(new FileReader(parameters.snps));
 			br.readLine();
 			String[] data = br.readLine().split("\t");
@@ -62,6 +64,7 @@ public class NamGwasPlugin extends AbstractPlugin {
 			myLogger.error(e);
 		}
 		
+		ModelFitterBootstrapForward fitter = new ModelFitterBootstrapForward(parameters);
 		return null;
 	}
 
@@ -162,6 +165,9 @@ public class NamGwasPlugin extends AbstractPlugin {
 			else if (args[i].equals("-noresample")) {
 				resample = false;
 			}
+			else if (args[i].equals("-enablethreads")) {
+				threaded = true;
+			}
 			else if (args[i].equals("?")) myLogger.info(getUsage());
 			else {
 				myLogger.info(getUsage());
@@ -183,7 +189,7 @@ public class NamGwasPlugin extends AbstractPlugin {
 		usage.append("-i or -iterations : the number of resampling iterations (default = 100");
 		usage.append("-d or -start : the number of the first iteration in this sequence (default = 1");
 		usage.append("-noresample : do not resample (does not take a parameter)");
-		usage.append("-enablethreads : have application use multiple cores if available.");
+		usage.append("-enablethreads : have application use multiple cores if available. (default is single threaded.)");
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();

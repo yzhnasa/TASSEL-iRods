@@ -4,10 +4,8 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
@@ -33,13 +31,8 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 	int numberOfThreads;
 	int nSamples;
 	
-	public ModelFitterBootstrapForward(int chromosome, FileNames files, boolean threaded) {
-		super(chromosome, files);
-		if (!Double.isNaN(files.enterlimit)) enterLimit = files.enterlimit;
-	}
-
-	public ModelFitterBootstrapForward(int chromosome, FileNames files) {
-		super(chromosome, files);
+	public ModelFitterBootstrapForward(FileNames files) {
+		super(files.chromosome, files);
 		if (!Double.isNaN(files.enterlimit)) enterLimit = files.enterlimit;
 	}
 
@@ -74,6 +67,8 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			
 			//fit forward regression
 			LinearModelForStepwiseRegression lmsr = getBaseModel();
+			
+			
 			SnpInfo nextSnp = findNextTerm(lmsr);
 			while (nextSnp.p < enterLimit) {
 				lmsr.addEffect(new CovariateModelEffect(nextSnp.genotype, nextSnp));
@@ -307,6 +302,49 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		return bestSnp;
 	}
 
+	protected SnpInfo findNextTerm(double[] residual) {
+		int chromosome = files.chromosome;
+		double bestSS = 0;
+		int bestPos = -1;
+		String bestSnpAllele = "";
+		double[] bestsnp = null;
+		
+		snpdata.reset();
+		while (snpdata.next()) {
+			double[] parents = snpdata.getGenotype();
+			int pos = snpdata.getPosition();
+			
+			//build and solve the model
+			double[] snp = projectSnp(parents, pos, popIndex);
+			double SS = SnpSSUsingResidual(residual, snp);
+			
+			if (SS > bestSS) {
+				bestSS = SS;
+				bestPos = snpdata.getPosition();
+				bestSnpAllele = snpdata.getAllele();
+				bestsnp = snp;
+			}
+		}
+		
+		double sumy = 0;
+		double sumysq = 0;
+		int n = residual.length;
+		double N = n;
+		for (int i = 0; i < n; i++) {
+			double y = residual[i];
+			sumy += y;
+			sumysq += y * y;
+		}
+		
+		double ssy = sumysq - sumy/N/sumy;
+		double F = bestSS / (ssy - bestSS) * (N - 2.0);
+		double p = LinearModelUtils.Ftest(F, 1, N - 2.0);
+		
+		SnpInfo bestSnp = new SnpInfo(chromosome, bestPos, bestSnpAllele, bestsnp, F, p);
+		System.out.println(bestSnp.pos + ", " + bestSnp.allele + ", " + bestSnp.F + ", " + bestSnp.p);
+		return bestSnp;
+	}
+	
 	public static synchronized void shuffle(int[] array) {
 	    // i is the number of items remaining to be shuffled.
 		int n = array.length;
@@ -404,6 +442,31 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		effects.add(mepop);
 		
 		return effects;
+	}
+	
+	protected double SnpSSUsingResidual(double[] residual, double[] snp) {
+		int n = residual.length;
+		double sumx = 0;
+		double sumy = 0;
+		double sumxsq = 0;
+		double sumxy = 0;
+		
+		for (int i = 0; i < n; i++) {
+			double x = snp[i];
+			double y = residual[i];
+			sumx += x;
+			sumy += y;
+			sumxsq += x * x;
+			sumxy += x * y;
+		}
+		
+		double N = n;
+		double snpSS = sumxsq - sumx / N * sumx;
+		double sumprod = sumxy - sumx / N * sumy;
+		
+		double b = sumprod / snpSS;
+		double yhatSS = b * sumprod;
+		return yhatSS;
 	}
 	
 	private void initializeOutput() throws IOException {
