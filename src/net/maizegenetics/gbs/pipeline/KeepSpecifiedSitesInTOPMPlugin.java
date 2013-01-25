@@ -28,6 +28,7 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
     private final Logger myLogger = Logger.getLogger(KeepSpecifiedSitesInTOPMPlugin.class);
     private static String SITE_LIST_FILENAME_REGEX = "(?i).*\\.txt$";
+    private static int PAD_POSITION = 300;
     private ArgsEngine myArgsEngine = null;
     private String[] mySiteListFileNames = null;
     private String myOutputFilename = null;
@@ -36,8 +37,8 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
     private int myOrigTagCount = 0;
     private byte[][] myOrigVariantOff = null;
     private byte[][] myOrigVariantDef = null;
-    private boolean[] myChangedRows = null;
     private int[] myNumVariantsKeptPerChrom = new int[20];
+    private int[] myTagsWithVariants = new int[20];
 
     public KeepSpecifiedSitesInTOPMPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -53,9 +54,6 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
         myOrigVariantDef = myOrigTOPM.getVariantDef();
         myOrigTOPM.clearVariants();
 
-        myChangedRows = new boolean[myOrigTagCount];
-        Arrays.fill(myChangedRows, false);
-
         for (int i = 0; i < mySiteListFileNames.length; i++) {
             if (!mySiteListFileNames[i].equals(myOrigFilename)) {
                 processSiteList(mySiteListFileNames[i]);
@@ -65,6 +63,12 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
         for (int x = 0; x < myNumVariantsKeptPerChrom.length; x++) {
             if (myNumVariantsKeptPerChrom[x] != 0) {
                 myLogger.info("performFunction: chromosome: " + x + " variants kept: " + myNumVariantsKeptPerChrom[x]);
+            }
+        }
+
+        for (int x = 0; x < myTagsWithVariants.length; x++) {
+            if (myTagsWithVariants[x] != 0) {
+                myLogger.info("performFunction: Chromosome: " + x + " Number Tags with Variants Defined: " + myTagsWithVariants[x]);
             }
         }
 
@@ -163,7 +167,7 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
 
             int numPositions = positions.size();
             int[] orderedPositions = new int[numPositions];
-            for (int j = 0, n = positions.size(); j < n; j++) {
+            for (int j = 0; j < numPositions; j++) {
                 orderedPositions[j] = positions.get(j);
             }
             Arrays.sort(orderedPositions);
@@ -172,28 +176,73 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
             int chrInt = Integer.valueOf(chr);
             int tagCount = myOrigTOPM.getTagCount();
             for (int i = 0; i < tagCount; i++) {
+
                 if (myOrigTOPM.getChromosome(i) == chrInt) {
+
                     int startPos = myOrigTOPM.getStartPosition(i);
                     int endPos = myOrigTOPM.getEndPosition(i);
-                    int posIndex = Arrays.binarySearch(orderedPositions, startPos);
-                    if (posIndex < 0) {
-                        posIndex = -(posIndex + 1);
-                    }
-                    while ((posIndex < numPositions) && (orderedPositions[posIndex] <= endPos)) {
-                        int currentPosition = orderedPositions[posIndex];
-                        if ((currentPosition >= startPos) && (currentPosition <= endPos)) {
+                    byte strand = myOrigTOPM.getStrand(i);
+
+                    if (strand == -1) {
+
+                        if (endPos > startPos) {
+                            throw new IllegalStateException("KeepSpecifiedSitesInTOPMPlugin: processSiteList: tag: " + i + " strand: " + strand + " end pos: " + endPos + " is greater than start pos: " + startPos);
+                        }
+                        int posIndex = Arrays.binarySearch(orderedPositions, Math.max(endPos - PAD_POSITION, 0));
+                        if (posIndex < 0) {
+                            posIndex = -(posIndex + 1);
+                        }
+                        int variantAdded = 0;
+                        while ((posIndex < numPositions) && (orderedPositions[posIndex] <= startPos + PAD_POSITION)) {
+                            int currentPosition = orderedPositions[posIndex];
                             for (int x = 0; x < numVariants; x++) {
-                                int tagPosition = myOrigVariantOff[x][i] + startPos;
-                                if (tagPosition == currentPosition) {
-                                    myOrigTOPM.addVariant(i, myOrigVariantOff[x][i], myOrigVariantDef[x][i]);
-                                    if (chrInt < myNumVariantsKeptPerChrom.length) {
-                                        myNumVariantsKeptPerChrom[chrInt]++;
+                                if ((myOrigVariantOff[x][i] != Byte.MIN_VALUE) && (myOrigVariantDef[x][i] != Byte.MIN_VALUE)) {
+                                    int tagPosition = myOrigVariantOff[x][i] + startPos;
+                                    if (tagPosition == currentPosition) {
+                                        myOrigTOPM.addVariant(i, myOrigVariantOff[x][i], myOrigVariantDef[x][i]);
+                                        variantAdded = 1;
+                                        if (chrInt < myNumVariantsKeptPerChrom.length) {
+                                            myNumVariantsKeptPerChrom[chrInt]++;
+                                        }
                                     }
                                 }
                             }
+                            posIndex++;
                         }
-                        posIndex++;
+                        myTagsWithVariants[chrInt] += variantAdded;
+
+                    } else if (strand == 1) {
+
+                        if (startPos > endPos) {
+                            throw new IllegalStateException("KeepSpecifiedSitesInTOPMPlugin: processSiteList: tag: " + i + " strand: " + strand + " start pos: " + startPos + " is greater than end pos: " + endPos);
+                        }
+                        int posIndex = Arrays.binarySearch(orderedPositions, Math.max(startPos - PAD_POSITION, 0));
+                        if (posIndex < 0) {
+                            posIndex = -(posIndex + 1);
+                        }
+                        int variantAdded = 0;
+                        while ((posIndex < numPositions) && (orderedPositions[posIndex] <= endPos + PAD_POSITION)) {
+                            int currentPosition = orderedPositions[posIndex];
+                            for (int x = 0; x < numVariants; x++) {
+                                if ((myOrigVariantOff[x][i] != Byte.MIN_VALUE) && (myOrigVariantDef[x][i] != Byte.MIN_VALUE)) {
+                                    int tagPosition = myOrigVariantOff[x][i] + startPos;
+                                    if (tagPosition == currentPosition) {
+                                        myOrigTOPM.addVariant(i, myOrigVariantOff[x][i], myOrigVariantDef[x][i]);
+                                        variantAdded = 1;
+                                        if (chrInt < myNumVariantsKeptPerChrom.length) {
+                                            myNumVariantsKeptPerChrom[chrInt]++;
+                                        }
+                                    }
+                                }
+                            }
+                            posIndex++;
+                        }
+                        myTagsWithVariants[chrInt] += variantAdded;
+
+                    } else {
+                        throw new IllegalStateException("KeepSpecifiedSitesInTOPMPlugin: processSiteList: tag: " + i + " unknown strand: " + strand);
                     }
+
                 }
             }
 
