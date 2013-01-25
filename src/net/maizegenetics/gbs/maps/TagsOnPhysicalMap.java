@@ -384,7 +384,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     public boolean variantsDefined(int tagIndex) {
         for (int i = 0; i < maxVariants; i++) {
-            if ((variantPosOff[i][tagIndex] > 0) && (variantDef[i][tagIndex] > 0)) {
+            if ((variantPosOff[i][tagIndex] != Byte.MIN_VALUE) && (variantDef[i][tagIndex] != Byte.MIN_VALUE)) {
                 return true;
             }
         }
@@ -392,17 +392,24 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
 
     public void writeBinaryWVariantsFile(File outFile) {
-        
+
         int hapsOutput = 0;
         try {
+            int[] numTagsWithDefinedVariantsPerChr = new int[20];
             int numTagsWithDefinedVariants = 0;
             for (int row = 0; row < tagNum; row++) {
                 if (variantsDefined(row)) {
+                    numTagsWithDefinedVariantsPerChr[getChromosome(row)]++;
                     numTagsWithDefinedVariants++;
                 }
             }
-            
+
             System.out.println("writeBinaryWVariantsFile: number tags with defined variants: " + numTagsWithDefinedVariants);
+            for (int i = 0; i < numTagsWithDefinedVariantsPerChr.length; i++) {
+                if (numTagsWithDefinedVariantsPerChr[i] != 0) {
+                    System.out.println("writeBinaryWVariantsFile: Chromosome: " + i + " Has Number Tags with Variants: " + numTagsWithDefinedVariantsPerChr[i]);
+                }
+            }
 
             DataOutputStream fw = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile), 4000000));
 
@@ -432,8 +439,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             }
             fw.flush();
             fw.close();
-            System.out.println("writeBinaryWVariantsFile: Tag positions written to:" + outFile.toString());
-            System.out.println("writeBinaryWVariantsFile: Number of tags in file:" + hapsOutput);
+            System.out.println("writeBinaryWVariantsFile: Tag positions written to: " + outFile.toString());
+            System.out.println("writeBinaryWVariantsFile: Number of tags in file: " + hapsOutput);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Catch in writing output file e=" + e);
