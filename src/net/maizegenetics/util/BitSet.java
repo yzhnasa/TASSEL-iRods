@@ -33,6 +33,11 @@ public interface BitSet {
     public long[] getBits();
     
     /**
+     * Expert: returns the long[] storing the bits from start to end
+     */
+    public long[] getBits(int startWord, int endWord);
+    
+    /**
      * Expert: returns 64 bits at index.
      */
     public long getBits(int index);

@@ -44,6 +44,14 @@ public class UnmodifiableBitSet implements BitSet {
     }
     
     @Override
+    public long[] getBits(int startWord, int endWord) {
+        int length=endWord-startWord+1;
+        long[] sL = new long[length];
+        System.arraycopy(myBitSet.getBits(), startWord, sL, 0, length);
+        return sL;
+    }
+    
+    @Override
     public long getBits(int index) {
         return myBitSet.getBit(index);
     }

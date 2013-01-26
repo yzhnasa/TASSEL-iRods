@@ -929,4 +929,12 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
         // empty sets from returning 0, which is too common.
         return (int) ((h >> 32) ^ h) + 0x98761234;
     }
+
+    @Override
+    public long[] getBits(int startWord, int endWord) {
+        int length=endWord-startWord+1;
+        long[] sL = new long[length];
+        System.arraycopy(myBits, startWord, sL, 0, length);
+        return sL;
+    }
 }
