@@ -6,12 +6,15 @@ package net.maizegenetics.gbs.pipeline;
 import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -32,13 +35,13 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
     private TagsOnPhysicalMap myInputTOPM = null;
     private int myTagCount = 0;
     private int[] myChromosomes;
-    private Map<Integer, Integer>[] myVariantsPerPosition;
+    private Map<Integer, Integer>[] myTagsPerSite;
     private Map<Integer, Set<Byte>>[] myVariantDefsPerPosition;
     private int myNumUndefinedStrandedTags = 0;
     private Set<Byte> myUndefinedStrandValues = new HashSet<Byte>();
     private String myOutputFilename = null;
-    private int[] myNumSNPsPerChromosome;
     private int[] myNumTagsPerVariantsDefined;
+    private TreeSet<Integer>[] myPositionsOnMaxVariantTags;
 
     public TOPMSummaryPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -54,13 +57,16 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
         myChromosomes = myInputTOPM.getChromosomes();
         Arrays.sort(myChromosomes);
 
-        myNumSNPsPerChromosome = new int[myChromosomes.length];
-
         myNumTagsPerVariantsDefined = new int[myInputTOPM.maxVariants + 1];
 
-        myVariantsPerPosition = new TreeMap[myChromosomes.length];
+        myPositionsOnMaxVariantTags = new TreeSet[myChromosomes.length];
         for (int m = 0; m < myChromosomes.length; m++) {
-            myVariantsPerPosition[m] = new TreeMap<Integer, Integer>();
+            myPositionsOnMaxVariantTags[m] = new TreeSet<Integer>();
+        }
+
+        myTagsPerSite = new TreeMap[myChromosomes.length];
+        for (int m = 0; m < myChromosomes.length; m++) {
+            myTagsPerSite[m] = new TreeMap<Integer, Integer>();
         }
         myVariantDefsPerPosition = new TreeMap[myChromosomes.length];
         for (int m = 0; m < myChromosomes.length; m++) {
@@ -89,6 +95,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                 //if (startEndLength != tagLength) {
                 //    myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " doesn't equal (end pos - start pos + 1): " + startEndLength);
                 //}
+                List<Integer> positionsOnTag = new ArrayList<Integer>();
                 int numDefinedVariants = 0;
                 for (int j = 0; j < myInputTOPM.maxVariants; j++) {
                     int offset = myInputTOPM.getVariantPosOff(i, j);
@@ -98,26 +105,29 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                     //}
                     if ((offset >= 0) && (def >= 0)) {
                         numDefinedVariants++;
-                        myNumSNPsPerChromosome[index]++;
                         //if ((char) def != tag.charAt(offset)) {
                         //    myLogger.error("performFunction: Mismatch: Sequence From Long: " + tag + "  offset: " + offset + " def: " + (char) def + " from tag: " + tag.charAt(offset));
                         //}
                         int position = startPos + offset;
+                        positionsOnTag.add(position);
                         if (position > endPos) {
                             myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
                         }
-                        Integer count = myVariantsPerPosition[index].get(position);
+                        Integer count = myTagsPerSite[index].get(position);
                         if (count == null) {
-                            myVariantsPerPosition[index].put(position, 1);
+                            myTagsPerSite[index].put(position, 1);
                             Set<Byte> temp = new HashSet<Byte>();
                             temp.add(def);
                             myVariantDefsPerPosition[index].put(position, temp);
                         } else {
-                            myVariantsPerPosition[index].put(position, count + 1);
+                            myTagsPerSite[index].put(position, count + 1);
                             Set<Byte> temp = myVariantDefsPerPosition[index].get(position);
                             temp.add(def);
                         }
                     }
+                }
+                if (numDefinedVariants == myInputTOPM.maxVariants) {
+                    myPositionsOnMaxVariantTags[index].addAll(positionsOnTag);
                 }
                 myNumTagsPerVariantsDefined[numDefinedVariants]++;
             } else if (strand == -1) {
@@ -133,6 +143,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                 //if (startEndLength != tagLength) {
                 //    myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " doesn't equal (start pos - end pos + 1): " + startEndLength);
                 //}
+                List<Integer> positionsOnTag = new ArrayList<Integer>();
                 int numDefinedVariants = 0;
                 for (int j = 0; j < myInputTOPM.maxVariants; j++) {
                     int offset = myInputTOPM.getVariantPosOff(i, j);
@@ -142,32 +153,53 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                     //}
                     if ((offset >= 0) && (def >= 0)) {
                         numDefinedVariants++;
-                        myNumSNPsPerChromosome[index]++;
                         //if ((char) def != tag.charAt(offset)) {
                         //    myLogger.error("performFunction: Mismatch: Sequence From Long: " + tag + "  offset: " + offset + " def: " + (char) def + " from tag: " + tag.charAt(offset));
                         //}
                         int position = startPos + offset;
+                        positionsOnTag.add(position);
                         if (position < endPos) {
                             myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
                         }
-                        Integer count = myVariantsPerPosition[index].get(position);
+                        Integer count = myTagsPerSite[index].get(position);
                         if (count == null) {
-                            myVariantsPerPosition[index].put(position, 1);
+                            myTagsPerSite[index].put(position, 1);
                             Set<Byte> temp = new HashSet<Byte>();
                             temp.add(def);
                             myVariantDefsPerPosition[index].put(position, temp);
                         } else {
-                            myVariantsPerPosition[index].put(position, count + 1);
+                            myTagsPerSite[index].put(position, count + 1);
                             Set<Byte> temp = myVariantDefsPerPosition[index].get(position);
                             temp.add(def);
                         }
                     }
+                }
+                if (numDefinedVariants == myInputTOPM.maxVariants) {
+                    myPositionsOnMaxVariantTags[index].addAll(positionsOnTag);
                 }
                 myNumTagsPerVariantsDefined[numDefinedVariants]++;
             } else {
                 myNumUndefinedStrandedTags++;
                 myUndefinedStrandValues.add(strand);
             }
+        }
+
+        for (int i = 0; i < myChromosomes.length; i++) {
+            Iterator itr = myPositionsOnMaxVariantTags[i].iterator();
+            StringBuilder builder = new StringBuilder();
+            builder.append("performFunction: Chromosome: ");
+            builder.append(myChromosomes[i]);
+            builder.append(" Positions on Tags with Max Variants: ");
+            boolean first = true;
+            while (itr.hasNext()) {
+                if (!first) {
+                    builder.append(", ");
+                } else {
+                    first = false;
+                }
+                builder.append(itr.next());
+            }
+            myLogger.info(builder.toString());
         }
 
         myLogger.info("performFunction: Number of Tags with Undefined Strands: " + myNumUndefinedStrandedTags);
@@ -177,7 +209,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
         }
 
         for (int i = 0; i < myChromosomes.length; i++) {
-            myLogger.info("performFunction: Chromosome: " + myChromosomes[i] + " Number of SNPs: " + myNumSNPsPerChromosome[i]);
+            myLogger.info("performFunction: Chromosome: " + myChromosomes[i] + " Number of SNPs: " + myTagsPerSite[i].size());
         }
 
         for (int i = 0; i <= myInputTOPM.maxVariants; i++) {
@@ -195,7 +227,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
             writer = Utils.getBufferedWriter(myOutputFilename);
             writer.append("Chromosome\tPosition\tNum Variants\tVariant Defs\n");
             for (int c = 0; c < myChromosomes.length; c++) {
-                Iterator itr = myVariantsPerPosition[c].entrySet().iterator();
+                Iterator itr = myTagsPerSite[c].entrySet().iterator();
                 while (itr.hasNext()) {
                     Map.Entry entry = (Map.Entry) itr.next();
                     writer.append(myChromosomes[c] + "\t" + entry.getKey() + "\t" + entry.getValue() + "\t");
