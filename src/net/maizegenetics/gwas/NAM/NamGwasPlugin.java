@@ -25,7 +25,7 @@ public class NamGwasPlugin extends AbstractPlugin {
 
 	@Override
 	public DataSet performFunction(DataSet input) {
-		if (parameters.agpmap == null || parameters.residuals == null || parameters.namMarkersByChr == null || parameters.snps == null || parameters.model == null || parameters.steps == null) {
+		if (parameters.agpmap == null || parameters.residuals == null || parameters.namMarkersByChr == null || parameters.snps == null || parameters.chrmodel == null || parameters.chrsteps == null) {
 			myLogger.info(getUsage());
 			return null;
 		}
@@ -119,10 +119,10 @@ public class NamGwasPlugin extends AbstractPlugin {
 				parameters.snps = new File(args[++i]);
 			}
 			else if (args[i].equals("-m") || args[i].equalsIgnoreCase("-model")) {
-				parameters.model = new File(args[++i]);
+				parameters.chrmodel = new File(args[++i]);
 			}
 			else if (args[i].equals("-s") || args[i].equalsIgnoreCase("-steps")) {
-				parameters.steps = new File(args[++i]);
+				parameters.chrsteps = new File(args[++i]);
 			}
 			else if (args[i].equals("-a") || args[i].equalsIgnoreCase("-randomize")) {
 				if (args[++i].toUpperCase().startsWith("T")) parameters.randomizeSnpOrder = true;
@@ -168,7 +168,7 @@ public class NamGwasPlugin extends AbstractPlugin {
 		usage.append("-d or -start : the number of the first iteration in this sequence (default = 1\n");
 		usage.append("-noresample : do not resample (default = resample)\n");
 		usage.append("-enablethreads : have application use multiple cores if available. (default is single threaded.)\n");
-		usage.append("-fullmodel : test snps for entry using the full model (default = use residuals from the previous model)");
+		usage.append("-fullmodel : test snps for entry using the full model (default = use residuals from the previous model)\n");
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();
