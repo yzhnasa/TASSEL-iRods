@@ -116,7 +116,10 @@ public class FactorModelEffect implements ModelEffect {
 	
 	public void setRestricted(boolean restricted) { this.restricted = restricted; }
 	
-	public int getNumberOfLevels() { return numberOfLevels; }
+	public int getNumberOfLevels() {
+		if (restricted) return numberOfLevels - 1;
+		return numberOfLevels; 
+	}
 	
 	@Override
 	public int[] getLevelCounts() {

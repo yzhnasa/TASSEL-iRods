@@ -35,6 +35,9 @@ public class LinearModelForStepwiseRegression {
         }
         
         lm = new SweepFastLinearModel(requiredEffects, data);
+        double ss = lm.getResiduals().crossproduct().get(0, 0);
+        double[] ssdf = lm.getResidualSSdf();
+
         plm = new PartitionedLinearModel(modelEffects, lm);
     }
     
@@ -58,6 +61,9 @@ public class LinearModelForStepwiseRegression {
         }
         
         lm = new SweepFastLinearModel(modelEffects, xtxmatrices, xtymatrices, data);
+        double ss = lm.getResiduals().crossproduct().get(0, 0);
+        double[] ssdf = lm.getResidualSSdf();
+        
         plm = new PartitionedLinearModel(modelEffects, lm);
     }
     
@@ -128,7 +134,7 @@ public class LinearModelForStepwiseRegression {
         lm = new SweepFastLinearModel(modelEffects, xtxmatrices, xtymatrices, data);
         plm = new PartitionedLinearModel(modelEffects, lm);
 
-        return modelEffects.remove(termNumber);
+        return removedEffect;
     }
     
     public DoubleMatrix getyhat() {
