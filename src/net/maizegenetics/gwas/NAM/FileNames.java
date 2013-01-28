@@ -23,11 +23,13 @@ public class FileNames {
 	public String replacement;
 	public String analysis = "";
 	public int maxsnps = 100;
-	public boolean threaded = true;
+	public boolean threaded = false;
 	public boolean permute = false;
 	public boolean bootstrapPermutation = false;
 	public boolean randomizeSnpOrder = false;
+	public boolean fullModel = false;
 	public int startIteration = 0;
 	public int chromosome = 0;
+	
 	
 }
