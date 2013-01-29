@@ -103,7 +103,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                     //if (offset != Byte.MIN_VALUE) {
                     //    myLogger.info("performFunction: Tag: " + i + " Positive Strand: Defined Variant: Offset: " + offset + "  def: " + (char) def);
                     //}
-                    if ((offset >= 0) && (def >= 0)) {
+                    if ((offset != Byte.MIN_VALUE) && (def != Byte.MIN_VALUE)) {
                         numDefinedVariants++;
                         //if ((char) def != tag.charAt(offset)) {
                         //    myLogger.error("performFunction: Mismatch: Sequence From Long: " + tag + "  offset: " + offset + " def: " + (char) def + " from tag: " + tag.charAt(offset));
@@ -151,7 +151,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                     //if (offset != Byte.MIN_VALUE) {
                     //    myLogger.info("performFunction: Tag: " + i + " Negative Strand: Defined Variant: Offset: " + offset + "  def: " + (char) def);
                     //}
-                    if ((offset >= 0) && (def >= 0)) {
+                    if ((offset != Byte.MIN_VALUE) && (def != Byte.MIN_VALUE)) {
                         numDefinedVariants++;
                         //if ((char) def != tag.charAt(offset)) {
                         //    myLogger.error("performFunction: Mismatch: Sequence From Long: " + tag + "  offset: " + offset + " def: " + (char) def + " from tag: " + tag.charAt(offset));
