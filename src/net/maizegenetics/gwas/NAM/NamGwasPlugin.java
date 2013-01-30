@@ -105,7 +105,7 @@ public class NamGwasPlugin extends AbstractPlugin {
 	public void setParameters(String[] args) {
 		
 		int narg = args.length;
-		for (int i = 0; i < narg - 1; i++) {
+		for (int i = 0; i < narg; i++) {
 			if (args[i].equals("-c") || args[i].equalsIgnoreCase("-map")) {
 				parameters.agpmap = new File(args[++i]);
 			}
