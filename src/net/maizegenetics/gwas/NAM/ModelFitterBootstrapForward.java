@@ -19,6 +19,9 @@ import net.maizegenetics.jGLiM.dm.FactorModelEffect;
 import net.maizegenetics.jGLiM.dm.LinearModelForStepwiseRegression;
 import net.maizegenetics.jGLiM.dm.ModelEffect;
 import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
+import net.maizegenetics.jGLiM.dm.SweepFastLinearModel;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 
 public class ModelFitterBootstrapForward extends ModelFitter {
 	static Random rng = new Random();
@@ -42,18 +45,16 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		System.out.println("Bootstrap analysis starting at " + System.currentTimeMillis());
 		buildPopulationList();
 		
-		if (files.randomizeSnpOrder) {
-		    if (files.threaded) {
-		        randomSnpThreadedAnalysis();
-		    } else {
-		        simpleAnalysis();
-		    }
+		if (files.randomizeSnpOrder && files.threaded && files.fullModel) {
+		       randomSnpThreadedAnalysis();
 		} else {
-		    if (files.threaded) {
+		    if (files.threaded && files.fullModel) {
 	            numberOfThreads = Runtime.getRuntime().availableProcessors();
 	            threadedAnalysis();
+		    } else if (files.fullModel) {
+		    	simpleAnalysis();
 		    } else {
-		        nonThreadedAnalysis();
+		    	analyzeResiduals();
 		    }
 		}
 		
@@ -68,14 +69,12 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			//fit forward regression
 			LinearModelForStepwiseRegression lmsr = getBaseModel();
 			
-			
 			SnpInfo nextSnp = findNextTerm(lmsr);
 			while (nextSnp.p < enterLimit) {
-				lmsr.addEffect(new CovariateModelEffect(nextSnp.genotype, nextSnp));
+				lmsr.addEffect(new CovariateModelEffect(sampleArray(nextSnp.genotype), nextSnp));
 				nextSnp = findNextTerm(lmsr);
 			}
-			
-			//sent results to output
+			 
 			try {
 				recordResults(i + files.startIteration, lmsr);
 			} catch (IOException e) {
@@ -115,7 +114,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 				LinkedList<SnpInfo> snpList = new LinkedList<SnpInfo>();
 				while (hasnext && snpList.size() <=500) {
 					double[] snp = projectSnp(snpdata.getGenotype(), snpdata.getPosition(), popIndex);
-					snpList.add(new SnpInfo(chromosome, snpdata.getPosition(),snpdata.getAllele(), sampleArray(snp), 1, 1));
+					snpList.add(new SnpInfo(chromosome, snpdata.getPosition(),snpdata.getAllele(), snp, 1, 1));
 					hasnext = snpdata.next();
 				}
 
@@ -278,6 +277,39 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		}
 	}
 	
+	protected void analyzeResiduals() {
+		//analyze bootstrap (subbagging) samples
+		System.out.println("analyze by residuals");
+		
+		//get data for this chromosome
+		int chromosome = files.chromosome;
+		
+		for (int i = 0; i < files.iterations; i++) {
+			getSubsample();
+			double[] data = new double[totalSubsampleSize];
+			for (int j = 0; j < totalSubsampleSize; j++) data[j] = residuals[subsample[j]][chromosome - 1];
+
+			//fit forward regression
+			LinearModelForStepwiseRegression lmsr = getBaseModel();
+			SnpInfo nextSnp = findNextTerm(lmsr.getLinearModel().getResiduals());
+
+			while (nextSnp.p < enterLimit) {
+				System.out.println("Adding " + nextSnp.pos + ", " + nextSnp.F + ", " + nextSnp.p);
+				lmsr.addEffect(new CovariateModelEffect(sampleArray(nextSnp.genotype), nextSnp));
+				nextSnp = findNextTerm(lmsr.getLinearModel().getResiduals());
+			}
+			System.out.println("-------------------------------------------------------------------------------");
+			
+			//sent results to output
+			try {
+				recordResults(i + files.startIteration, lmsr);
+			} catch (IOException e) {
+				String msg = "Failed to write results for iteration " + i;
+				e.printStackTrace();
+			}
+		}		
+	}
+	
 	//for the next term (max modelss) need pos, allele, projection, F, p
 	protected SnpInfo findNextTerm(LinearModelForStepwiseRegression lmsr) {
 		int chromosome = files.chromosome;
@@ -290,7 +322,8 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			
 			//build and solve the model
 			double[] snp = projectSnp(parents, pos, popIndex);
-			double ms =  lmsr.testNewEffect(snp);
+			
+			double ms =  lmsr.testNewEffect(sampleArray(snp));
 			
 			if (ms > bestSS) {
 				bestSS = ms;
@@ -302,7 +335,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		return bestSnp;
 	}
 
-	protected SnpInfo findNextTerm(double[] residual) {
+	protected SnpInfo findNextTerm(DoubleMatrix residual) {
 		int chromosome = files.chromosome;
 		double bestSS = 0;
 		int bestPos = -1;
@@ -316,7 +349,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			
 			//build and solve the model
 			double[] snp = projectSnp(parents, pos, popIndex);
-			double SS = SnpSSUsingResidual(residual, snp);
+			double SS = SnpSSUsingResidual(residual, sampleArray(snp));
 			
 			if (SS > bestSS) {
 				bestSS = SS;
@@ -326,22 +359,16 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			}
 		}
 		
-		double sumy = 0;
-		double sumysq = 0;
-		int n = residual.length;
-		double N = n;
-		for (int i = 0; i < n; i++) {
-			double y = residual[i];
-			sumy += y;
-			sumysq += y * y;
-		}
+		double sumy = residual.columnSum(0);
+		double sumysq = residual.crossproduct().get(0, 0);
+		double N = residual.numberOfRows();
 		
 		double ssy = sumysq - sumy/N/sumy;
 		double F = bestSS / (ssy - bestSS) * (N - 2.0);
 		double p = LinearModelUtils.Ftest(F, 1, N - 2.0);
 		
 		SnpInfo bestSnp = new SnpInfo(chromosome, bestPos, bestSnpAllele, bestsnp, F, p);
-		System.out.println(bestSnp.pos + ", " + bestSnp.allele + ", " + bestSnp.F + ", " + bestSnp.p);
+//		System.out.println(bestSnp.pos + ", " + bestSnp.allele + ", " + bestSnp.F + ", " + bestSnp.p);
 		return bestSnp;
 	}
 	
@@ -444,8 +471,8 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		return effects;
 	}
 	
-	protected double SnpSSUsingResidual(double[] residual, double[] snp) {
-		int n = residual.length;
+	protected double SnpSSUsingResidual(DoubleMatrix residual, double[] snp) {
+		int n = residual.numberOfRows();
 		double sumx = 0;
 		double sumy = 0;
 		double sumxsq = 0;
@@ -453,12 +480,29 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		
 		for (int i = 0; i < n; i++) {
 			double x = snp[i];
-			double y = residual[i];
+			double y = residual.get(i, 0);
 			sumx += x;
 			sumy += y;
 			sumxsq += x * x;
 			sumxy += x * y;
 		}
+		
+		double N = n;
+		double snpSS = sumxsq - sumx / N * sumx;
+		double sumprod = sumxy - sumx / N * sumy;
+		
+		double b = sumprod / snpSS;
+		double yhatSS = b * sumprod;
+		return yhatSS;
+	}
+	
+	protected double SnpSSUsingResidual2(DoubleMatrix residual, double[] snp) {
+		int n = residual.numberOfRows();
+		DoubleMatrix snpMatrix = DoubleMatrixFactory.DEFAULT.make(n, 1, snp);
+		double sumx = snpMatrix.columnSum(0);
+		double sumy = residual.columnSum(0);
+		double sumxsq = snpMatrix.crossproduct().get(0, 0);
+		double sumxy = snpMatrix.crossproduct(residual).get(0, 0);
 		
 		double N = n;
 		double snpSS = sumxsq - sumx / N * sumx;
@@ -538,4 +582,65 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		
 	}
 
+	private void recordResultsFromAnalyzeByResiduals(int iteration, LinearModelForStepwiseRegression lmsr) throws IOException {
+		int chromosome = files.chromosome;
+		String tab = "\t";
+		ArrayList<ModelEffect> effects = lmsr.getModelEffects();
+		int nsnps = effects.size() - 2;
+		double[] beta = lmsr.getLinearModel().getBeta();
+		int nbeta = beta.length;
+		int start = nbeta - nsnps;
+		
+		//write to model file
+		BufferedWriter bw = new BufferedWriter(new FileWriter(files.chrmodel, true));
+		double[] errorssdf = lmsr.getLinearModel().getResidualSSdf();
+		for (int i = 0; i < nsnps; i++) {
+			ModelEffect thiseffect = effects.get(i + 2);
+			SnpInfo snpinfo = (SnpInfo) thiseffect.getID();
+			
+			//calculate F and p
+			double[] snpssdf = lmsr.getLinearModel().getMarginalSSdf(i + 2);
+			double F = snpssdf[0] / snpssdf[1] / errorssdf[0] * errorssdf[1];
+			double p;
+			try {
+				p = LinearModelUtils.Ftest(F, snpssdf[1], errorssdf[1]);
+			} catch (Exception e) {
+				p = Double.NaN;
+			}
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append(chromosome);
+			sb.append(tab).append(snpinfo.pos);
+			sb.append(tab).append(theAGPMap.getCmFromPosition(chromosome, snpinfo.pos));
+			sb.append(tab).append(snpinfo.allele);
+			sb.append(tab).append(beta[start + i]);
+			sb.append(tab).append(F);
+			sb.append(tab).append(p);
+			sb.append(tab).append(iteration);
+			bw.write(sb.toString());
+			bw.newLine();
+		}
+		bw.close();
+		
+		//write to step file
+		bw = new BufferedWriter(new FileWriter(files.chrsteps, true));
+        for (int i = 0; i < nsnps; i++) {
+            ModelEffect thiseffect = effects.get(i + 2);
+            SnpInfo snp = (SnpInfo) thiseffect.getID();
+            bw.write(Integer.toString(snp.chromosome));
+            bw.write("\t");
+            bw.write(Integer.toString(snp.pos));
+            bw.write("\t");
+            bw.write(snp.allele);
+            bw.write("\t");
+            bw.write(Double.toString(snp.F));
+            bw.write("\t");
+            bw.write(Double.toString(snp.p));
+            bw.write("\t");
+            bw.write(Integer.toString(iteration));
+            bw.newLine();
+        }
+        bw.close();
+		
+	}
 }

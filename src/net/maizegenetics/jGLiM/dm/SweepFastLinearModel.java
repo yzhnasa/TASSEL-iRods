@@ -207,6 +207,7 @@ public class SweepFastLinearModel {
 			effectSize = me.getNumberOfLevels();
 			thisbeta = Arrays.copyOfRange(beta, start, start + effectSize);
 			p.plusEquals(me.getyhat(thisbeta));
+			start += effectSize;
 		}
 		return p;
 	}

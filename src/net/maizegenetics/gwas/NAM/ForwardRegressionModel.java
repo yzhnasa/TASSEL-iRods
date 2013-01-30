@@ -44,6 +44,8 @@ public class ForwardRegressionModel {
 		double[] Fp = lmsr.getFpFromModelSS(bestModelSS);
 		if (Fp[1] < enterlimit) {
 			lmsr.addEffect(new CovariateModelEffect(bestsnp.genotype, bestsnp));
+			System.out.println(this.toString());
+			System.out.println();
 			bestsnp = null;
 			bestModelSS = 0;
 			wasUpdated = true;
