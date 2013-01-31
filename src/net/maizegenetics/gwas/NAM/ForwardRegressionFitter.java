@@ -22,7 +22,7 @@ public class ForwardRegressionFitter implements Callable<ForwardRegressionModel>
 			mySnpData.reset();
 
 			//debug
-			System.out.println("SnpData has pointer set to " + ((SnpDataRandomOrder)mySnpData).currentIndex);
+//			System.out.println("SnpData has pointer set to " + ((SnpDataRandomOrder)mySnpData).currentIndex);
 			while (mySnpData.next()) {
 				//project the snp here
 				int pos = mySnpData.getPosition();

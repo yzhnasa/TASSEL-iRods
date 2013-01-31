@@ -137,6 +137,9 @@ public class NamGwasPlugin extends AbstractPlugin {
 			else if (args[i].equals("-d") || args[i].equalsIgnoreCase("-start")) {
 				parameters.startIteration = Integer.parseInt(args[++i]);
 			}
+			else if (args[i].equals("-g") || args[i].equalsIgnoreCase("-maxsnps")) {
+				parameters.maxsnps = Integer.parseInt(args[++i]);
+			}
 			else if (args[i].equals("-noresample")) {
 				resample = false;
 			}
@@ -166,11 +169,12 @@ public class NamGwasPlugin extends AbstractPlugin {
 		usage.append("-e or -enterlimit : the largest p-value for which a new term will be added to the model (default = 1e-6\n");
 		usage.append("-i or -iterations : the number of resampling iterations (default = 100\n");
 		usage.append("-d or -start : the number of the first iteration in this sequence (default = 1\n");
+		usage.append("-g or -maxsnps : the maximum number of snps that will be fit (default = 1000");
 		usage.append("-noresample : do not resample (default = resample)\n");
 		usage.append("-enablethreads : have application use multiple cores if available. (default is single threaded.)\n");
 		usage.append("-fullmodel : test snps for entry using the full model (default = use residuals from the previous model)\n");
 		usage.append("? : print the parameter list.\n");
-
+		
 		return usage.toString();
 	}
 	

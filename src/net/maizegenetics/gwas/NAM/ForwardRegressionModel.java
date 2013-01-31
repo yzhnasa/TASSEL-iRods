@@ -14,11 +14,14 @@ public class ForwardRegressionModel {
 	double bestModelSS = 0;
 	SnpInfo bestsnp = null;
 	double enterlimit;
+	int maxsnps;
+	int nsnpsInModel = 0;
 	boolean wasUpdated = true;
 	
-	public ForwardRegressionModel(ArrayList<ModelEffect> initialEffects, double[] phenotype, double enterlimit) {
+	public ForwardRegressionModel(ArrayList<ModelEffect> initialEffects, double[] phenotype, double enterlimit, int maxsnps) {
 		modelEffects.addAll(initialEffects);
 		this.enterlimit = enterlimit;
+		this.maxsnps = maxsnps;
 		lmsr = new LinearModelForStepwiseRegression(modelEffects, phenotype);
 	}
 	
@@ -36,7 +39,8 @@ public class ForwardRegressionModel {
 	
 	/**
 	 * Call this function when all the snps have been tested once. 
-	 * If the p-value for the most significant SNP is less than the entry p-value,
+	 * If the p-value for the most significant SNP is less than the entry p-value and
+	 * the maximum number of snps has not been exceeded,
 	 * then the SNP will be added to the model and the function will return true 
 	 * @return	true if a SNP was added to the model, false otherwise.
 	 */
@@ -44,10 +48,16 @@ public class ForwardRegressionModel {
 		double[] Fp = lmsr.getFpFromModelSS(bestModelSS);
 		if (Fp[1] < enterlimit) {
 			lmsr.addEffect(new CovariateModelEffect(bestsnp.genotype, bestsnp));
+			nsnpsInModel++;
 			System.out.println(this.toString());
 			System.out.println();
 			bestsnp = null;
 			bestModelSS = 0;
+			wasUpdated = true;
+			if (nsnpsInModel >= maxsnps) {
+				wasUpdated = false;
+				return false;
+			}
 			wasUpdated = true;
 			return true;
 		} else {
