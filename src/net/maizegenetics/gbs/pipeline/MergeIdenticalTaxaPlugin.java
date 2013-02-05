@@ -131,7 +131,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         return null;
     }
 
-    private byte[] consensusCalls(Alignment a, List<String> taxa, boolean callhets, double majority) {
+    public static byte[] consensusCalls(Alignment a, List<String> taxa, boolean callhets, double majority) {
         short[][] siteCnt = new short[2][a.getSiteCount()];
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {
@@ -140,11 +140,13 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         byte[] calls = new byte[a.getSiteCount()];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
         for (int s = 0; s < a.getSiteCount(); s++) {
-            byte mj = a.getMajorAllele(s);
-            byte mn = a.getMinorAllele(s);
-            byte[] snpValue = {mj, mn};
+            byte mjAllele = a.getMajorAllele(s);
+            byte mnAllele = a.getMinorAllele(s);
+            byte mj=AlignmentUtils.getDiploidValue(mjAllele,mjAllele);
+            byte mn=AlignmentUtils.getDiploidValue(mnAllele,mnAllele);
+       //     byte[] snpValue = {mj, mn};
             //byte het = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(snpValue);
-            byte het = AlignmentUtils.getDiploidValue(snpValue[0], snpValue[1]);
+            byte het = AlignmentUtils.getDiploidValue(mjAllele, mnAllele);
             for (int t = 0; t < taxaIndex.length; t++) {
                 byte ob = a.getBase(taxaIndex[t], s);
                 if (ob == Alignment.UNKNOWN_DIPLOID_ALLELE) {
