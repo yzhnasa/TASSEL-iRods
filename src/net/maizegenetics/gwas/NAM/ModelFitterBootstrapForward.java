@@ -293,13 +293,13 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 
 			//fit forward regression
 			LinearModelForStepwiseRegression lmsr = getBaseModel();
-			SnpInfo nextSnp = findNextTerm(lmsr.getLinearModel().getResiduals());
+			SnpInfo nextSnp = findNextTerm(lmsr, true);
 			int nsnpsAdded = 0;
 			while (nextSnp.p < enterLimit && nsnpsAdded < files.maxsnps) {
 				System.out.println("Adding " + nextSnp.pos + ", " + nextSnp.F + ", " + nextSnp.p);
 				lmsr.addEffect(new CovariateModelEffect(sampleArray(nextSnp.genotype), nextSnp));
 				nsnpsAdded++;
-				if (nsnpsAdded < files.maxsnps) nextSnp = findNextTerm(lmsr.getLinearModel().getResiduals());
+				if (nsnpsAdded < files.maxsnps) nextSnp = findNextTerm(lmsr, true);
 			}
 			System.out.println("-------------------------------------------------------------------------------");
 			
@@ -338,7 +338,8 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		return bestSnp;
 	}
 
-	protected SnpInfo findNextTerm(DoubleMatrix residual) {
+	protected SnpInfo findNextTerm(LinearModelForStepwiseRegression lmsr, boolean useResidual) {
+		DoubleMatrix residual = lmsr.getLinearModel().getResiduals();
 		int chromosome = files.chromosome;
 		double bestSS = 0;
 		int bestPos = -1;
@@ -362,15 +363,9 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			}
 		}
 		
-		double sumy = residual.columnSum(0);
-		double sumysq = residual.crossproduct().get(0, 0);
-		double N = residual.numberOfRows();
-		
-		double ssy = sumysq - sumy/N/sumy;
-		double F = bestSS / (ssy - bestSS) * (N - 2.0);
-		double p = LinearModelUtils.Ftest(F, 1, N - 2.0);
-		
-		SnpInfo bestSnp = new SnpInfo(chromosome, bestPos, bestSnpAllele, bestsnp, F, p);
+		double ms =  lmsr.testNewEffect(sampleArray(bestsnp));
+		double[] Fp = lmsr.getFpFromModelSS(ms);
+		SnpInfo bestSnp = new SnpInfo(chromosome, bestPos, bestSnpAllele, bestsnp, Fp[0], Fp[1]);
 //		System.out.println(bestSnp.pos + ", " + bestSnp.allele + ", " + bestSnp.F + ", " + bestSnp.p);
 		return bestSnp;
 	}
