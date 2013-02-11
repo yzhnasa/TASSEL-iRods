@@ -34,48 +34,57 @@ public class ChartDisplayPlugin extends AbstractDisplayPlugin {
     boolean isRegression = false;  //XY setting
     boolean isBoxWhisker = false, isBar = true, errBar = false;  //Barchart settings
 
-    /** Creates a new instance of ChartDisplayPlugin */
+    /**
+     * Creates a new instance of ChartDisplayPlugin
+     */
     public ChartDisplayPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
 
     public DataSet performFunction(DataSet input) {
-        List<Datum> tableInList = input.getDataOfType(TableReport.class);
-        if (tableInList.size() != 1) {
-            String message = "Invalid selection.  Please select one table result.";
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), message);
-            } else {
-                System.out.println(message);
-            }
-            return null;
-        }
-        TableReport theTR = (TableReport) tableInList.get(0).getData();
-        if (isInteractive()) {
-            BasicGraphFrame myDialog = new BasicGraphFrame(this, theTR);
-            myDialog.setLocationRelativeTo(getParentFrame());
-            myDialog.setVisible(true);
-        } else if (getSaveFile() != null) {
-            BasicChartPanel chartPanel = null;
-            switch (chartMode) {
-                case Histogram:
-                    chartPanel = new HistogramPanel(theTR, series1, series2, bins);
-                    break;
-                case XYScatter:
-                    chartPanel = new XYScatterPanel(theTR, series1, series2, series3, isRegression);
-                    break;
-                case BarChart:
-                    chartPanel = new BarChartPanel(theTR, series1, series2, series3,
-                            isBoxWhisker, isBar, errBar);
-                    break;
-                case PieChart:
-                    chartPanel = new PieChartPanel(theTR);
-                    break;
-            }
-            saveDataToFile(chartPanel.getMainComponent(), getSaveFile());
-        }
 
-        return null;
+        try {
+
+            List<Datum> tableInList = input.getDataOfType(TableReport.class);
+            if (tableInList.size() != 1) {
+                String message = "Invalid selection.  Please select one table result.";
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), message);
+                } else {
+                    System.out.println(message);
+                }
+                return null;
+            }
+            TableReport theTR = (TableReport) tableInList.get(0).getData();
+            if (isInteractive()) {
+                BasicGraphFrame myDialog = new BasicGraphFrame(this, theTR);
+                myDialog.setLocationRelativeTo(getParentFrame());
+                myDialog.setVisible(true);
+            } else if (getSaveFile() != null) {
+                BasicChartPanel chartPanel = null;
+                switch (chartMode) {
+                    case Histogram:
+                        chartPanel = new HistogramPanel(theTR, series1, series2, bins);
+                        break;
+                    case XYScatter:
+                        chartPanel = new XYScatterPanel(theTR, series1, series2, series3, isRegression);
+                        break;
+                    case BarChart:
+                        chartPanel = new BarChartPanel(theTR, series1, series2, series3,
+                                isBoxWhisker, isBar, errBar);
+                        break;
+                    case PieChart:
+                        chartPanel = new PieChartPanel(theTR);
+                        break;
+                }
+                saveDataToFile(chartPanel.getMainComponent(), getSaveFile());
+            }
+
+            return null;
+
+        } finally {
+            fireProgress(100);
+        }
 
     }
 

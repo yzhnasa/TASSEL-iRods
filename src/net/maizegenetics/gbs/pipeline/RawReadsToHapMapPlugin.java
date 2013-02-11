@@ -25,7 +25,6 @@ import net.maizegenetics.pal.alignment.Locus;
 import java.awt.Frame;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.TreeMap;
 
 import javax.swing.ImageIcon;
@@ -38,10 +37,12 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.SimpleLayout;
 
 /**
- * This pipeline converts all of the fastq AND/OR qseq files in the input folder to hapmap genotype files
- * (nOutputHapMapFiles = nChrs X nRawSeqFiles).  We refer to this step as the "Production Pipeline".
+ * This pipeline converts all of the fastq AND/OR qseq files in the input folder
+ * to hapmap genotype files (nOutputHapMapFiles = nChrs X nRawSeqFiles). We
+ * refer to this step as the "Production Pipeline".
  *
- * It requires a TOPM with variants added from a previous "Discovery Pipeline" run.
+ * It requires a TOPM with variants added from a previous "Discovery Pipeline"
+ * run.
  *
  * @author jcg233
  */
@@ -161,15 +162,22 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
     }
 
     /**
-     * Creates one hapmap genotype file for each fastq or qseq file in the input directory.
-     * Output hapmap genotype files written to the outputDir, using fastq/qseq file names with extension changed to .hmp.txt
+     * Creates one hapmap genotype file for each fastq or qseq file in the input
+     * directory. Output hapmap genotype files written to the outputDir, using
+     * fastq/qseq file names with extension changed to .hmp.txt
      *
-     * @param rawSeqFileNames Array of fastq AND/OR qseq file names (Illumina-created files with raw read sequence, quality score, machine name, etc.)
-     * @param keyFileS        A key file (list of taxa by barcode, lane & flow cell, including plate maps)
-     * @param enzyme          The enzyme used to make the library
-     * @param outputDir       String containing the path of the output directory where the HapMap files will be written
-     * @param theTOPM         TagsOnPhysicalMap object with variants added from a previous Discovery Pipeline run (filtered SNPs removed)
-     * @param maxDiv          Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)
+     * @param rawSeqFileNames Array of fastq AND/OR qseq file names
+     * (Illumina-created files with raw read sequence, quality score, machine
+     * name, etc.)
+     * @param keyFileS A key file (list of taxa by barcode, lane & flow cell,
+     * including plate maps)
+     * @param enzyme The enzyme used to make the library
+     * @param outputDir String containing the path of the output directory where
+     * the HapMap files will be written
+     * @param theTOPM TagsOnPhysicalMap object with variants added from a
+     * previous Discovery Pipeline run (filtered SNPs removed)
+     * @param maxDiv Maximum divergence (edit distance) between new read and
+     * previously mapped read (Default: 0 = perfect matches only)
      */
     public void translateRawReadsToHapmap(String[] rawSeqFileNames, String keyFileS, String enzyme, String outputDir, TagsOnPhysicalMap theTOPM, int maxDiv) {
         for (int laneNum = 0; laneNum < rawSeqFileNames.length; laneNum++) {
