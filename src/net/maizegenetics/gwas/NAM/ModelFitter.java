@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 
 public class ModelFitter extends Thread {
-	double[][] genotypes;
+	float[][] genotypes;
 	int firstMarker;
 	static AGPMap theAGPMap = null;
 	double[][] residuals;
@@ -101,7 +101,7 @@ public class ModelFitter extends Thread {
 
 			int nMarkers = data.length - 1;
 			int nTaxa = sampleNameMap.size();
-			genotypes = new double[nTaxa][nMarkers];
+			genotypes = new float[nTaxa][nMarkers];
 			
 			while ((input = br.readLine()) != null) {
 				data = tab.split(input);
@@ -109,7 +109,7 @@ public class ModelFitter extends Thread {
 				if (sampleNumber != null) {
 					int n = sampleNumber.intValue();
 					for (int j = 0; j < nMarkers; j++) {
-						genotypes[n][j] = Double.parseDouble(data[j + 1]);
+						genotypes[n][j] = Float.parseFloat(data[j + 1]);
 					}
 				}
 			}
