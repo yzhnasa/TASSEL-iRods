@@ -839,6 +839,7 @@ public class ImputationUtils {
 				boolean b73isA = isB73HaplotypeA(a);
 				HashMap<Byte, String> byteToNumberString = new HashMap<Byte, String>();
 				HashMap<Byte, Double> byteToNumber = new HashMap<Byte, Double>();
+				HashMap<Byte, String> byteToNucleotide = new HashMap<Byte, String>();
 				if (b73isA) {
 					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), "0");
 					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), "1");
@@ -849,6 +850,11 @@ public class ImputationUtils {
 					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), 1.0);
 					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), 1.0);
 					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), 2.0);
+					
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), "A");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), "M");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), "M");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), "C");
 
 				} else {
 					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), "2");
@@ -860,16 +866,22 @@ public class ImputationUtils {
 					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), 1.0);
 					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), 1.0);
 					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), 0.0);
+					
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), "C");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), "M");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), "M");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), "A");
 				}
 				
 				int nsnps = a.getSiteCount();
 				int ntaxa = a.getSequenceCount();
 				int leftflank = 0;
 				int rightflank = 0;
-				for (int t = 0; t < ntaxa; t++) {
-					taxaHeader.append("\t").append(a.getFullTaxaName(t));
-				}
 				
+				for (int t = 0; t < ntaxa; t++) {
+					if (!a.getTaxaName(t).startsWith(excludeTaxon)) taxaHeader.append("\t").append(a.getFullTaxaName(t));
+				}
+
 				for (ImputedSnp isnp : snpList) {
 					while (rightflank < nsnps && isnp.physicalPos > a.getPositionInLocus(rightflank)) rightflank++;
 //					System.out.println("rightflank= " + rightflank + ", snp physicalPos= " + isnp.physicalPos + ", position of rightflank= " + a.getPositionInLocus(rightflank)); //debug
@@ -878,7 +890,7 @@ public class ImputationUtils {
 
 					if (hapmapFormat) {
 						for (int t = 0; t < ntaxa; t++) {
-							if (a.getTaxaName(t).startsWith("B73")) continue;
+							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
@@ -897,14 +909,14 @@ public class ImputationUtils {
 							}
 							if (leftByte ==  missingByte) {
 								if (rightByte == missingByte) isnp.sb.append("N");
-								else isnp.sb.append(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
-							} else if (rightByte ==  missingByte) isnp.sb.append(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
-							else if (leftByte == rightByte) isnp.sb.append(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
+								else isnp.sb.append(byteToNucleotide.get(rightByte));
+							} else if (rightByte ==  missingByte) isnp.sb.append(byteToNucleotide.get(leftByte));
+							else if (leftByte == rightByte) isnp.sb.append(byteToNucleotide.get(leftByte));
 							else isnp.sb.append("N"); 
 						}
 					} else {
 						for (int t = 0; t < ntaxa; t++) {
-							if (a.getTaxaName(t).startsWith("B73")) continue;
+							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
@@ -1008,6 +1020,21 @@ public class ImputationUtils {
 		if (bestAllele == 0) return true;
 		
 		return false;
+	}
+	
+	public static LinkedList<String> getListOfTaxa() {
+		LinkedList<String> taxaList = new LinkedList<String>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(""));
+			String taxon;
+			while((taxon = br.readLine()) != null) taxaList.add(taxon);
+			br.close();
+		} catch(IOException e){
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		
+		return taxaList;
 	}
 }
 
