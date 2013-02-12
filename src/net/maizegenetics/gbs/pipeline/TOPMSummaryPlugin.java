@@ -208,10 +208,13 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
             myLogger.info("performFunction: Undefined Strand Value: " + itr.next());
         }
 
+        int totalSNPs = 0;
         for (int i = 0; i < myChromosomes.length; i++) {
+            totalSNPs += myTagsPerSite[i].size();
             myLogger.info("performFunction: Chromosome: " + myChromosomes[i] + " Number of SNPs: " + myTagsPerSite[i].size());
         }
-
+        myLogger.info("performFunction: Total SNPs: " + totalSNPs);
+        
         for (int i = 0; i <= myInputTOPM.maxVariants; i++) {
             myLogger.info("performFunction: Number of Tags: " + myNumTagsPerVariantsDefined[i] + " Has: " + i + " Variants Defined");
         }

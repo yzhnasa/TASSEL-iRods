@@ -17,19 +17,23 @@ public class AGPMap {
 	File mapfile;
 	
 	public AGPMap() {
-		this(new File(namMarkersV2)); 
+		this(new File(namMarkersV2), true); 
 	}
 	
 	public AGPMap(File mapfile) {
-		if (mapfile == null) mapfile = new File(namMarkers);
 		this.mapfile = mapfile;
 		loadMap();
 	}
 	
-	public AGPMap(boolean useAgpV2) {
-		if (useAgpV2) mapfile = new File(namMarkersV2);
-		else mapfile = new File(namMarkers);
-		loadMapAgpv2();
+	public AGPMap(File mapfile, boolean useAgpV2) {
+		this.mapfile = mapfile;
+		if (useAgpV2) {
+			loadMapAgpv2();
+		}
+		else {
+			loadMap();
+		}
+		
 	}
 	
 	private void loadMap() {

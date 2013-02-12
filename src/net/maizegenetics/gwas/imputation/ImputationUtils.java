@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -756,6 +757,284 @@ public class ImputationUtils {
 		}
 		
 		System.out.println("Finished imputing markers.");
+	}
+	
+	public static void imputeLinkageMarkersAcrossFamilies(double interval, boolean hapmapFormat) {
+		class ImputedSnp {
+			int physicalPos;
+			double geneticPos;
+			StringBuilder sb = new StringBuilder();
+		}
+		String excludeTaxon = "B73(PI550473)";
+		String[] nuc = new String[]{"A","M","C"};
+
+		Pattern tab = Pattern.compile("\t");
+		byte missingByte = NucleotideAlignmentConstants.getNucleotideDiploidByte("NN");
+
+		AGPMap agpmap = new AGPMap();
+
+		//impute data for each chromosome
+		for (int chr = 1; chr <=10; chr++) {
+
+			File snpfiledir = new File("/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea.consolidated.B");
+			final String chrname = "chr" + chr + ".family";
+			File[] snpFiles = snpfiledir.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					if (name.startsWith("nam.consolidated") && name.contains(chrname)) return true;
+					return false;
+				}
+			});
+
+			String chrstr = Integer.toString(chr);
+
+			//Get the minimum and maximum physical positions for all families
+			int minpos = Integer.MAX_VALUE;
+			int maxpos = 0;
+			for (File snpfile : snpFiles) {
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(snpfile));
+					br.readLine();
+					String input = br.readLine();
+					String[] info = tab.split(input, 5);
+					int firstpos = Integer.parseInt(info[3]);
+					String testInput;
+					while ((testInput = br.readLine()) != null) {
+						input = testInput;
+					}
+					info = tab.split(input, 5);
+					int lastpos = Integer.parseInt(info[3]);
+
+					minpos = Math.min(minpos, firstpos);
+					maxpos = Math.max(maxpos, lastpos);
+					br.close();
+				} catch(IOException e) {
+					e.printStackTrace();
+					System.exit(-1);
+				}
+			}
+
+			double startgenpos = agpmap.getCmFromPosition(chr, minpos);
+			
+			//round up to nearest interval
+			startgenpos = ((double) (Math.ceil(startgenpos / interval))) * interval;
+			int nIntervals = (int) ((agpmap.getCmFromPosition(chr, maxpos) - startgenpos) / interval);
+			int nImputedSnps = nIntervals + 1;
+			LinkedList<ImputedSnp> snpList = new LinkedList<ImputedSnp>();
+
+			double curpos = startgenpos;
+			for (int i = 0; i < nImputedSnps; i++) {
+				ImputedSnp snp = new ImputedSnp();
+				snp.geneticPos = curpos;
+				curpos += interval;
+				snp.physicalPos = agpmap.getPositionFromCm(chr, curpos);
+				snpList.add(snp);
+			}
+			
+			StringBuilder taxaHeader = new StringBuilder();
+			for (File snpfile : snpFiles) {
+				System.out.println("Imputing data for " + snpfile.getName() + ".");
+				Alignment a = ImportUtils.readFromHapmap(snpfile.getPath(), true, null);
+				
+				boolean b73isA = isB73HaplotypeA(a);
+				HashMap<Byte, String> byteToNumberString = new HashMap<Byte, String>();
+				HashMap<Byte, Double> byteToNumber = new HashMap<Byte, Double>();
+				HashMap<Byte, String> byteToNucleotide = new HashMap<Byte, String>();
+				if (b73isA) {
+					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), "0");
+					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), "1");
+					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), "1");
+					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), "2");
+
+					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), 0.0);
+					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), 1.0);
+					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), 1.0);
+					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), 2.0);
+					
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), "A");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), "M");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), "M");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), "C");
+
+				} else {
+					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), "2");
+					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), "1");
+					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), "1");
+					byteToNumberString.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), "0");
+
+					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), 2.0);
+					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), 1.0);
+					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), 1.0);
+					byteToNumber.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), 0.0);
+					
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AA"), "C");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("AC"), "M");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CA"), "M");
+					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), "A");
+				}
+				
+				int nsnps = a.getSiteCount();
+				int ntaxa = a.getSequenceCount();
+				int leftflank = 0;
+				int rightflank = 0;
+				
+				for (int t = 0; t < ntaxa; t++) {
+					if (!a.getTaxaName(t).startsWith(excludeTaxon)) taxaHeader.append("\t").append(a.getFullTaxaName(t));
+				}
+
+				for (ImputedSnp isnp : snpList) {
+					while (rightflank < nsnps && isnp.physicalPos > a.getPositionInLocus(rightflank)) rightflank++;
+//					System.out.println("rightflank= " + rightflank + ", snp physicalPos= " + isnp.physicalPos + ", position of rightflank= " + a.getPositionInLocus(rightflank)); //debug
+					leftflank = rightflank - 1;
+//					System.out.println("leftflank= " + leftflank + ", snp physicalPos= " + isnp.physicalPos + ", position of leftflank= " + a.getPositionInLocus(leftflank)); //debug
+
+					if (hapmapFormat) {
+						for (int t = 0; t < ntaxa; t++) {
+							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
+							isnp.sb.append("\t");
+							byte leftByte, rightByte;
+							
+							if (leftflank < 0) leftByte = missingByte;
+							else {
+								int leftndx = leftflank;
+								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								leftByte = a.getBase(t, leftndx);
+							}
+							
+							if (rightflank > nsnps - 1) rightByte = missingByte;
+							else {
+								int rightndx = rightflank;
+								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								rightByte = a.getBase(t, rightndx);
+							}
+							if (leftByte ==  missingByte) {
+								if (rightByte == missingByte) isnp.sb.append("N");
+								else isnp.sb.append(byteToNucleotide.get(rightByte));
+							} else if (rightByte ==  missingByte) isnp.sb.append(byteToNucleotide.get(leftByte));
+							else if (leftByte == rightByte) isnp.sb.append(byteToNucleotide.get(leftByte));
+							else isnp.sb.append("N"); 
+						}
+					} else {
+						for (int t = 0; t < ntaxa; t++) {
+							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
+							isnp.sb.append("\t");
+							byte leftByte, rightByte;
+							
+							int leftndx = leftflank;
+							if (leftflank < 0) leftByte = missingByte;
+							else {
+								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								leftByte = a.getBase(t, leftndx);
+							}
+							
+							int rightndx = rightflank;
+							if (rightflank > nsnps - 1) rightByte = missingByte;
+							else {
+								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								rightByte = a.getBase(t, rightndx);
+							}
+							
+							if (leftByte ==  missingByte) {
+								if (rightByte == missingByte) isnp.sb.append("-");
+								else isnp.sb.append(byteToNumberString.get(rightByte));
+							}
+							else if (rightByte ==  missingByte) isnp.sb.append(byteToNumberString.get(leftByte));
+							else if (leftByte == rightByte) isnp.sb.append(byteToNumberString.get(rightByte));
+							else {
+								double leftval = byteToNumber.get(leftByte);
+								double rightval = byteToNumber.get(rightByte);
+								int leftpos = a.getPositionInLocus(leftndx);
+								int rightpos = a.getPositionInLocus(rightndx);
+								double pd = ((double) (isnp.physicalPos - leftpos)) / ((double) (rightpos - leftpos));
+								double thisval = leftval * (1 - pd) + rightval * pd;
+								isnp.sb.append(Double.toString(thisval));
+							}
+//							System.out.println("leftflank = " + leftflank + ", rightflank = " + rightflank + ", leftndx = " + leftndx + ", rightndx = " + rightndx + ", leftbyte = " + NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte) + ", rightbyte = " + NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte) + ", imputed value = " + isnp.sb.charAt(isnp.sb.length() - 1));
+							
+						}
+					}
+					
+				}
+			}
+			
+			//write out the chromosome file here
+			File outfile;
+			if (hapmapFormat) outfile = new File(snpfiledir, "imputedMarkers.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.B.hmp.txt");
+			else outfile = new File(snpfiledir, "imputedMarkers.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.B.txt");
+
+			try{
+				BufferedWriter bw = new BufferedWriter(new FileWriter(outfile));
+				if (hapmapFormat) {
+					bw.write("rs#\talleles\tchrom\tpos\tcm\tassembly#\tcenter\tprotLSID\tassayLSID\tpanelLSID\tQCcode");
+				} else {
+					bw.write("Snp\tallele\tchr\tpos\tcm");
+				}
+				bw.write(taxaHeader.toString());
+				bw.write("\n");
+				for (ImputedSnp isnp : snpList) {
+					bw.write("S_");
+					bw.write(Integer.toString(isnp.physicalPos));
+					bw.write("\tNA\t");
+					bw.write(chrstr);
+					bw.write("\t");
+					bw.write(Integer.toString(isnp.physicalPos));
+					bw.write("\t");
+					bw.write(Double.toString(isnp.geneticPos));
+					if (hapmapFormat) bw.write("\tNA\tNA\tNA\tNA\tNA\tNA");
+					bw.write(isnp.sb.toString());
+					bw.write("\n");
+				}
+				bw.close();
+			} catch(IOException e) {
+
+			}
+
+		}
+		
+	}
+	
+	public static boolean isB73HaplotypeA(Alignment a) {
+		IdGroup ids = a.getIdGroup();
+		int ndx = ids.whichIdNumber("B73(PI550473)");
+		int nsnps = a.getSiteCount();
+		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();
+		for (int s = 0; s < nsnps; s++) {
+			Byte allele = a.getBase(ndx, s);
+			Integer count = alleleCounts.get(allele);
+			if (count == null) alleleCounts.put(allele, 1);
+			else alleleCounts.put(allele, 1 + count);
+		}
+		
+//		System.out.println("B73 allele counts:");
+		Byte bestAllele = -1;
+		int maxCount = 0;
+		for (Byte b:alleleCounts.keySet()) {
+			int count = alleleCounts.get(b);
+//			System.out.println(NucleotideAlignmentConstants.getNucleotideIUPAC(b) + ", " + count);
+			if (count > maxCount) {
+				maxCount = count;
+				bestAllele = b;
+			}
+		}
+		
+		if (bestAllele == 0) return true;
+		
+		return false;
+	}
+	
+	public static LinkedList<String> getListOfTaxa() {
+		LinkedList<String> taxaList = new LinkedList<String>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(""));
+			String taxon;
+			while((taxon = br.readLine()) != null) taxaList.add(taxon);
+			br.close();
+		} catch(IOException e){
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		
+		return taxaList;
 	}
 }
 

@@ -53,7 +53,7 @@ public class UnmodifiableBitSet implements BitSet {
     
     @Override
     public long getBits(int index) {
-        return myBitSet.getBit(index);
+        return myBitSet.getBits(index);
     }
     
     @Override

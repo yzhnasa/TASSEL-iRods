@@ -70,8 +70,10 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			LinearModelForStepwiseRegression lmsr = getBaseModel();
 			
 			SnpInfo nextSnp = findNextTerm(lmsr);
-			while (nextSnp.p < enterLimit) {
+			int nsnpsAdded = 0;
+			while (nextSnp.p < enterLimit && nsnpsAdded < files.maxsnps) {
 				lmsr.addEffect(new CovariateModelEffect(sampleArray(nextSnp.genotype), nextSnp));
+				nsnpsAdded++;
 				nextSnp = findNextTerm(lmsr);
 			}
 			 
@@ -94,7 +96,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			getSubsample();
 			for (int i = 0; i < totalSubsampleSize; i++) data[i] = residuals[subsample[i]][chromosome - 1];
 			
-			theModels.add(new ForwardRegressionModelSubsample(getBaseEffects(), data, enterLimit, subsample));
+			theModels.add(new ForwardRegressionModelSubsample(getBaseEffects(), data, enterLimit, subsample, files.maxsnps));
 		}
 
 		boolean areAnyUpdateable = true;
@@ -149,7 +151,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			getSubsample();
 			for (int i = 0; i < totalSubsampleSize; i++) data[i] = residuals[subsample[i]][chromosome - 1];
 			
-			theModels[iter] = new ForwardRegressionModelSubsample(getBaseEffects(), data, enterLimit, subsample);
+			theModels[iter] = new ForwardRegressionModelSubsample(getBaseEffects(), data, enterLimit, subsample, files.maxsnps);
 		}
 
 
@@ -184,7 +186,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 				while (hasnext) {
 					// create a list of snps to test
 					LinkedList<SnpInfo> snpList = new LinkedList<SnpInfo>();
-					while (hasnext && snpList.size() <=500) {
+					while (hasnext && snpList.size() <=5000) {
 						double[] snp = projectSnp(snpdata.getGenotype(), snpdata.getPosition(), popIndex);
 						snpList.add(new SnpInfo(chromosome, snpdata.getPosition(),snpdata.getAllele(), snp, 1, 1));
 						hasnext = snpdata.next();
@@ -248,7 +250,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			ArrayList<ModelEffect> initialEffects = new ArrayList<ModelEffect>();
 			initialEffects.add(new FactorModelEffect(mean, false));
 			initialEffects.add(new FactorModelEffect(ModelEffectUtils.getIntegerLevels(pops, null), true));
-			ForwardRegressionModel frm = new ForwardRegressionModelSubsample(initialEffects, data, enterLimit, sampleIndex);
+			ForwardRegressionModel frm = new ForwardRegressionModelSubsample(initialEffects, data, enterLimit, sampleIndex, files.maxsnps);
 			futureList.add(executor.submit(new ForwardRegressionFitter(this, frm, snpdata.getCopy())));
 		}
 		System.out.println("All models have been created. Fitting will proceed.");
@@ -276,7 +278,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			modelCount++;
 		}
 	}
-	
+
 	protected void analyzeResiduals() {
 		//analyze bootstrap (subbagging) samples
 		System.out.println("analyze by residuals");
@@ -291,12 +293,13 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 
 			//fit forward regression
 			LinearModelForStepwiseRegression lmsr = getBaseModel();
-			SnpInfo nextSnp = findNextTerm(lmsr.getLinearModel().getResiduals());
-
-			while (nextSnp.p < enterLimit) {
+			SnpInfo nextSnp = findNextTerm(lmsr, true);
+			int nsnpsAdded = 0;
+			while (nextSnp.p < enterLimit && nsnpsAdded < files.maxsnps) {
 				System.out.println("Adding " + nextSnp.pos + ", " + nextSnp.F + ", " + nextSnp.p);
 				lmsr.addEffect(new CovariateModelEffect(sampleArray(nextSnp.genotype), nextSnp));
-				nextSnp = findNextTerm(lmsr.getLinearModel().getResiduals());
+				nsnpsAdded++;
+				if (nsnpsAdded < files.maxsnps) nextSnp = findNextTerm(lmsr, true);
 			}
 			System.out.println("-------------------------------------------------------------------------------");
 			
@@ -335,7 +338,8 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 		return bestSnp;
 	}
 
-	protected SnpInfo findNextTerm(DoubleMatrix residual) {
+	protected SnpInfo findNextTerm(LinearModelForStepwiseRegression lmsr, boolean useResidual) {
+		DoubleMatrix residual = lmsr.getLinearModel().getResiduals();
 		int chromosome = files.chromosome;
 		double bestSS = 0;
 		int bestPos = -1;
@@ -359,15 +363,9 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 			}
 		}
 		
-		double sumy = residual.columnSum(0);
-		double sumysq = residual.crossproduct().get(0, 0);
-		double N = residual.numberOfRows();
-		
-		double ssy = sumysq - sumy/N/sumy;
-		double F = bestSS / (ssy - bestSS) * (N - 2.0);
-		double p = LinearModelUtils.Ftest(F, 1, N - 2.0);
-		
-		SnpInfo bestSnp = new SnpInfo(chromosome, bestPos, bestSnpAllele, bestsnp, F, p);
+		double ms =  lmsr.testNewEffect(sampleArray(bestsnp));
+		double[] Fp = lmsr.getFpFromModelSS(ms);
+		SnpInfo bestSnp = new SnpInfo(chromosome, bestPos, bestSnpAllele, bestsnp, Fp[0], Fp[1]);
 //		System.out.println(bestSnp.pos + ", " + bestSnp.allele + ", " + bestSnp.F + ", " + bestSnp.p);
 		return bestSnp;
 	}

@@ -72,7 +72,7 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
             }
         }
 
-        myOrigTOPM.writeBinaryWVariantsFile(new File(myOutputFilename));
+        myOrigTOPM.writeBinaryFile(new File(myOutputFilename));
 
         return null;
     }

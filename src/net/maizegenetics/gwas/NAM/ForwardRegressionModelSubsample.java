@@ -8,8 +8,8 @@ public class ForwardRegressionModelSubsample extends ForwardRegressionModel {
 	int[] sampleIndex;
 	int numberOfSamples;
 	
-	public ForwardRegressionModelSubsample(ArrayList<ModelEffect> initialEffects, double[] phenotype, double enterlimit, int[] sampleIndex) {
-		super(initialEffects, phenotype, enterlimit);
+	public ForwardRegressionModelSubsample(ArrayList<ModelEffect> initialEffects, double[] phenotype, double enterlimit, int[] sampleIndex, int maxsnps) {
+		super(initialEffects, phenotype, enterlimit, maxsnps);
 		this.sampleIndex = sampleIndex;
 		numberOfSamples = sampleIndex.length;
 	}

@@ -56,7 +56,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     private long myTotalTests = 0;
     private testDesign myCurrDesign = testDesign.SlidingWindow;
     private boolean myUseSparse = false;
-    // RSqr, PVal in bottom right; DPrime, SampleSize in top left
+    // RSqr, PVal in bottom left; DPrime, SampleSize in top right
     private float[][] myRSqrDPrime, myPValSampleSize;
     private SparseObjectMatrix2D mySparseRSqrDPrime, mySparsePValSampleSize;
     private ProgressListener myListener = null;
@@ -465,6 +465,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return P-value
      */
     public double getPVal(int r, int c) {
+        if (r < c) {
+            int temp = r;
+            r = c;
+            c = temp;
+        }
         if (!myUseSparse) {
             float val = myPValSampleSize[r][c];
             if (val != 0) {
@@ -491,7 +496,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return number of gametes
      *
      */
-    private int getSampleSize(int r, int c) {
+    public int getSampleSize(int r, int c) {
+        if (r > c) {
+            int temp = r;
+            r = c;
+            c = temp;
+        }
         if (!myUseSparse) {
             return (int) myPValSampleSize[c][r];
         } else {
@@ -512,6 +522,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return D'
      */
     public double getDPrime(int r, int c) {
+        if (r < c) {
+            int temp = r;
+            r = c;
+            c = temp;
+        }
         if (!myUseSparse) {
             float val = myRSqrDPrime[c][r];
             if (val != 0) {
@@ -537,6 +552,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return D'
      */
     public double getRSqr(int r, int c) {
+        if (r > c) {
+            int temp = r;
+            r = c;
+            c = temp;
+        }
         if (!myUseSparse) {
             float val = myRSqrDPrime[r][c];
             if (val != 0) {
