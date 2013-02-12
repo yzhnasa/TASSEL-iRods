@@ -58,17 +58,17 @@ public class ExportUtils {
             config.dontUseExtendableDataTypes();
             h5w = config.writer();
 
-            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
 
-            h5w.setBooleanAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
+            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
 
-            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TAXA, numTaxa);
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
 
             int numSBitWords = a.getAllelePresenceForAllTaxa(0, 0).getNumWords();
-            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SBIT_WORDS, numSBitWords);
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SBIT_WORDS, numSBitWords);
 
             int numTBitWords = a.getAllelePresenceForAllSites(0, 0).getNumWords();
-            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TBIT_WORDS, numTBitWords);
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TBIT_WORDS, numTBitWords);
 
             String[][] aEncodings = a.getAlleleEncodings();
             //myLogger.info(Arrays.deepToString(aEncodings));
@@ -81,49 +81,49 @@ public class ExportUtils {
                 }
             }
 
-            h5w.createStringMDArray(HDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
-            h5w.writeStringMDArray(HDF5Constants.ALLELE_STATES, alleleEncodings);
-            MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HDF5Constants.ALLELE_STATES);
+            h5w.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
+            h5w.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
+            MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
             if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
                 throw new IllegalStateException("ExportUtils: writeToHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
             }
 
-            h5w.writeStringArray(HDF5Constants.SNP_IDS, a.getSNPIDs());
+            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());
 
-            h5w.createGroup(HDF5Constants.SBIT);
-            h5w.setIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SITES, numSites);
+            h5w.createGroup(HapMapHDF5Constants.SBIT);
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
             String[] lociNames = new String[a.getNumLoci()];
             Locus[] loci = a.getLoci();
             for (int i = 0; i < a.getNumLoci(); i++) {
                 lociNames[i] = loci[i].getName();
             }
-            h5w.createStringVariableLengthArray(HDF5Constants.LOCI, a.getNumLoci());
-            h5w.writeStringVariableLengthArray(HDF5Constants.LOCI, lociNames);
+            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumLoci());
+            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
 
-            h5w.createIntArray(HDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
-            h5w.writeIntArray(HDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
+            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
+            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
 
-            h5w.createIntArray(HDF5Constants.POSITIONS, numSites);
-            h5w.writeIntArray(HDF5Constants.POSITIONS, a.getPhysicalPositions());
+            h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
+            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
 
-            h5w.createByteMatrix(HDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
+            h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
             byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
             for (int i = 0; i < numSites; i++) {
                 alleles[i] = a.getAlleles(i);
             }
-            h5w.writeByteMatrix(HDF5Constants.ALLELES, alleles);
+            h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
 
             String[] tn = new String[numTaxa];
             for (int i = 0; i < tn.length; i++) {
                 tn[i] = a.getFullTaxaName(i);
             }
-            h5w.createStringVariableLengthArray(HDF5Constants.TAXA, numTaxa);
-            h5w.writeStringVariableLengthArray(HDF5Constants.TAXA, tn);
+            h5w.createStringVariableLengthArray(HapMapHDF5Constants.TAXA, numTaxa);
+            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.TAXA, tn);
 
             for (int aNum = 0; aNum < a.getTotalNumAlleles(); aNum++) {
 
-                String currentSBitPath = HDF5Constants.SBIT + "/" + aNum;
+                String currentSBitPath = HapMapHDF5Constants.SBIT + "/" + aNum;
                 h5w.createLongMatrix(currentSBitPath, numSites, numSBitWords, 1, numSBitWords);
                 for (int i = 0; i < numSites; i++) {
                     long[][] lg = new long[1][numSBitWords];
@@ -131,7 +131,7 @@ public class ExportUtils {
                     h5w.writeLongMatrixBlockWithOffset(currentSBitPath, lg, i, 0);
                 }
 
-                String currentTBitPath = HDF5Constants.TBIT + "/" + aNum;
+                String currentTBitPath = HapMapHDF5Constants.TBIT + "/" + aNum;
                 h5w.createLongMatrix(currentTBitPath, numTaxa, numTBitWords, 1, numTBitWords);
                 for (int i = 0; i < numTaxa; i++) {
                     long[][] lg = new long[1][numTBitWords];
@@ -248,11 +248,11 @@ public class ExportUtils {
                             baseIUPAC = alignment.getBaseAsString(taxa, site);
                         } catch (Exception e) {
                             String[] b = alignment.getBaseAsStringArray(taxa, site);
-                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): " + Integer.toHexString(alignment.getBase(taxa, site)) + "\nTry Exporting as Diploid Values.");
+                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): 0x" + Integer.toHexString(alignment.getBase(taxa, site)) + "\nTry Exporting as Diploid Values.");
                         }
                         if ((baseIUPAC == null) || baseIUPAC.equals("?")) {
                             String[] b = alignment.getBaseAsStringArray(taxa, site);
-                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): " + Integer.toHexString(alignment.getBase(taxa, site)) + "\nTry Exporting as Diploid Values.");
+                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): 0x" + Integer.toHexString(alignment.getBase(taxa, site)) + "\nTry Exporting as Diploid Values.");
                         }
                         bw.write(baseIUPAC);
                     } else {

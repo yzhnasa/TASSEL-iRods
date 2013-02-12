@@ -31,8 +31,8 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     private final int myNumDataRows;
     private final int myNumSBitWords;
     private final int myNumTBitWords;
-    private static final String SBIT_HDF5_PATH = HDF5Constants.SBIT + "/";
-    private static final String TBIT_HDF5_PATH = HDF5Constants.TBIT + "/";
+    private static final String SBIT_HDF5_PATH = HapMapHDF5Constants.SBIT + "/";
+    private static final String TBIT_HDF5_PATH = HapMapHDF5Constants.TBIT + "/";
     private final Map<Integer, OpenBitSet[]> myCachedSites = new LinkedHashMap<Integer, OpenBitSet[]>((MAX_CACHE_SIZE * 3) / 2) {
         @Override
         protected boolean removeEldestEntry(Map.Entry eldest) {
@@ -49,8 +49,8 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     protected BitAlignmentHDF5(IHDF5Reader hdf5, IdGroup idGroup, byte[][] alleles, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(alleles, idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         myHDF5 = hdf5;
-        myNumSBitWords = myHDF5.getIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_SBIT_WORDS);
-        myNumTBitWords = myHDF5.getIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.NUM_TBIT_WORDS);
+        myNumSBitWords = myHDF5.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SBIT_WORDS);
+        myNumTBitWords = myHDF5.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TBIT_WORDS);
         if (retainsRareAlleles()) {
             myNumDataRows = myMaxNumAlleles + 1;
         } else {
@@ -61,12 +61,12 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     public static BitAlignmentHDF5 getInstance(String filename) {
         IHDF5Reader reader = HDF5Factory.openForReading(filename);
 
-        String[] taxa = reader.readStringArray(HDF5Constants.TAXA);
+        String[] taxa = reader.readStringArray(HapMapHDF5Constants.TAXA);
         IdGroup idgroup = new SimpleIdGroup(taxa);
 
-        byte[][] alleles = reader.readByteMatrix(HDF5Constants.ALLELES);
+        byte[][] alleles = reader.readByteMatrix(HapMapHDF5Constants.ALLELES);
 
-        MDArray<String> alleleStatesMDArray = reader.readStringMDArray(HDF5Constants.ALLELE_STATES);
+        MDArray<String> alleleStatesMDArray = reader.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
         int[] dimensions = alleleStatesMDArray.dimensions();
         int numEncodings = dimensions[0];
         int numStates = dimensions[1];
@@ -77,22 +77,22 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
             }
         }
 
-        int[] variableSites = reader.readIntArray(HDF5Constants.POSITIONS);
+        int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
 
-        int maxNumAlleles = reader.getIntAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.MAX_NUM_ALLELES);
+        int maxNumAlleles = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES);
 
-        boolean retainRare = reader.getBooleanAttribute(HDF5Constants.DEFAULT_ATTRIBUTES_PATH, HDF5Constants.RETAIN_RARE_ALLELES);
+        boolean retainRare = reader.getBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES);
 
-        String[] lociStrings = reader.readStringArray(HDF5Constants.LOCI);
+        String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
         int numLoci = lociStrings.length;
         Locus[] loci = new Locus[numLoci];
         for (int i = 0; i < numLoci; i++) {
             loci[i] = new Locus(lociStrings[i]);
         }
 
-        int[] lociOffsets = reader.readIntArray(HDF5Constants.LOCUS_OFFSETS);
+        int[] lociOffsets = reader.readIntArray(HapMapHDF5Constants.LOCUS_OFFSETS);
 
-        String[] snpIds = reader.readStringArray(HDF5Constants.SNP_IDS);
+        String[] snpIds = reader.readStringArray(HapMapHDF5Constants.SNP_IDS);
 
         if (NucleotideAlignmentConstants.isNucleotideEncodings(alleleStates)) {
             return new BitNucleotideAlignmentHDF5(reader, idgroup, alleles, null, null, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
