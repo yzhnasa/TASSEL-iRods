@@ -1,5 +1,5 @@
 /*
- * HDF5Constants
+ * HapMapHDF5Constants
  */
 package net.maizegenetics.pal.alignment;
 
@@ -7,7 +7,7 @@ package net.maizegenetics.pal.alignment;
  *
  * @author terry
  */
-public final class HDF5Constants {
+public final class HapMapHDF5Constants {
     // Paths
     public static final String ROOT = "/";
     public static final String TAXA = "Taxa";
@@ -29,7 +29,7 @@ public final class HDF5Constants {
     public static final String MAX_NUM_ALLELES = "maxNumAlleles";
     public static final String RETAIN_RARE_ALLELES = "retainRareAlleles";
     
-    private HDF5Constants() {
+    private HapMapHDF5Constants() {
         // do not instantiate
     }
     
