@@ -279,7 +279,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         } //end of currTest
     }
 
-    static double calculateDPrime(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
+    public static double calculateDPrime(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
         //this is the normalized D' is Weir Genetic Data Analysis II 1986 p120
         double freqR, freqC, freq, countR, countC, nonmissingSampleSize;
         nonmissingSampleSize = countAB + countAb + countaB + countab;
@@ -302,7 +302,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         }  //check these equations
     }
 
-    static double calculateRSqr(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
+    public static double calculateRSqr(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
         //this is the Hill & Robertson measure as used in Awadella Science 1999 286:2524
         double freqA, freqB, rsqr, nonmissingSampleSize;
         nonmissingSampleSize = countAB + countAb + countaB + countab;
