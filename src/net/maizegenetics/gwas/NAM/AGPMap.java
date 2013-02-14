@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class AGPMap {
 	static final String namMarkers = "/Volumes/Macintosh HD 2/data/namgbs/NAM_Map_20090730.txt";
@@ -134,6 +135,18 @@ public class AGPMap {
 		return new Object[][]{{marker[left],markerPosition[left]}, {marker[right], markerPosition[right]}};
 	}
 	
+	public int[] getFlankingMarkerIndices(int chromosome, double geneticPosition) {
+		int from = 0;
+		if (chromosome > 1) from = chrend[chromosome - 2] + 1;
+		int to = chrend[chromosome - 1] + 1;
+		int ndx = Arrays.binarySearch(markercm, from, to, geneticPosition);
+		if (ndx < 0) {
+			ndx = -(ndx + 1);
+			return new int[]{ndx - 1, ndx};
+		}
+		return new int[]{ndx, ndx};
+	}
+	
 	public double getCmFromPosition(int chromosome, int position) {
 		int end = chrend[chromosome - 1];
 		int start;
@@ -197,6 +210,24 @@ public class AGPMap {
 		return markerPosition[left] + (int) Math.round((cM - markercm[left]) * p2gRatio);
 	}
 	
+	
+	public double getFirstGeneticPosition(int chromosome) {
+		if (chromosome == 1) return markercm[0];
+		else return markercm[chrend[chromosome - 2] + 1];
+	}
+	
+	public double getLastGeneticPosition(int chromosome) {
+		return markercm[chrend[chromosome - 1]];
+	}
+	
+	public int getPhysPos(int markerIndex) {
+		return markerPosition[markerIndex];
+	}
+	
+	public double getGeneticPos(int markerIndex) {
+		return markercm[markerIndex];
+	}
+	
 	public static int getMarkerPosition(Object[] marker){
 		if (marker[1] == null) return -1;
 		return ((Integer) marker[1]).intValue();
@@ -210,6 +241,7 @@ public class AGPMap {
 		if (marker[0] == null) return -1;
 		return Integer.parseInt(((String) marker[0]).substring(1));
 	}
+	
 	
 	
 }
