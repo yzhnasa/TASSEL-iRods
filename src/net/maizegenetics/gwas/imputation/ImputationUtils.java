@@ -759,6 +759,7 @@ public class ImputationUtils {
 		System.out.println("Finished imputing markers.");
 	}
 	
+	//use this for imputation of July final build results
 	public static void imputeLinkageMarkersAcrossFamilies(double interval, boolean hapmapFormat) {
 		class ImputedSnp {
 			int physicalPos;
@@ -766,6 +767,7 @@ public class ImputationUtils {
 			StringBuilder sb = new StringBuilder();
 		}
 		String excludeTaxon = "B73(PI550473)";
+		LinkedList<String> excludeList = getListOfTaxa("/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea.consolidated.B/Nam.exclude.release.1.txt");
 		String[] nuc = new String[]{"A","M","C"};
 
 		Pattern tab = Pattern.compile("\t");
@@ -777,6 +779,7 @@ public class ImputationUtils {
 		for (int chr = 1; chr <=10; chr++) {
 
 			File snpfiledir = new File("/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea.consolidated.B");
+//			File snpfiledir = new File("/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea.consolidated");
 			final String chrname = "chr" + chr + ".family";
 			File[] snpFiles = snpfiledir.listFiles(new FilenameFilter() {
 				@Override
@@ -879,7 +882,7 @@ public class ImputationUtils {
 				int rightflank = 0;
 				
 				for (int t = 0; t < ntaxa; t++) {
-					if (!a.getTaxaName(t).startsWith(excludeTaxon)) taxaHeader.append("\t").append(a.getFullTaxaName(t));
+					if (!a.getTaxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.getTaxaName(t))) taxaHeader.append("\t").append(a.getFullTaxaName(t));
 				}
 
 				for (ImputedSnp isnp : snpList) {
@@ -891,6 +894,7 @@ public class ImputationUtils {
 					if (hapmapFormat) {
 						for (int t = 0; t < ntaxa; t++) {
 							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
+							if (excludeList.contains(a.getTaxaName(t))) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
@@ -917,6 +921,7 @@ public class ImputationUtils {
 					} else {
 						for (int t = 0; t < ntaxa; t++) {
 							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
+							if (excludeList.contains(a.getTaxaName(t))) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
@@ -959,8 +964,12 @@ public class ImputationUtils {
 			
 			//write out the chromosome file here
 			File outfile;
-			if (hapmapFormat) outfile = new File(snpfiledir, "imputedMarkers.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.B.hmp.txt");
-			else outfile = new File(snpfiledir, "imputedMarkers.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.B.txt");
+//			if (hapmapFormat) outfile = new File(snpfiledir, "imputedMarkers.release.1.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.B.hmp.txt");
+//			else outfile = new File(snpfiledir, "imputedMarkers.release.1.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.B.txt");
+//			if (hapmapFormat) outfile = new File(snpfiledir, "imputedMarkers.release.1.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.hmp.txt");
+//			else outfile = new File(snpfiledir, "imputedMarkers.release.1.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.txt");
+			if (hapmapFormat) outfile = new File(snpfiledir, "imputed.Markers/imputedMarkers.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.B.hmp.txt");
+			else outfile = new File(snpfiledir, "imputed.Markers/imputedMarkers.chr" + chrstr +"." + interval +"cm.final.Panzea.consolidated.B.txt");
 
 			try{
 				BufferedWriter bw = new BufferedWriter(new FileWriter(outfile));
@@ -1022,10 +1031,113 @@ public class ImputationUtils {
 		return false;
 	}
 	
-	public static LinkedList<String> getListOfTaxa() {
+	
+	public static void imputeLinkageMarkersFrom1106(double interval) {
+		//the input data
+		String snpFilename = "/Volumes/Macintosh HD 2/data/namgbs/ImputedMarkerGenotypes_flowering_traits_092909.txt";
+		String outFilename = "/Volumes/Macintosh HD 2/results/namgbs/jointlinkage/array1106/imputedMarkers.1106.allchr.txt";
+		ArrayList<float[]> genotypes = new ArrayList<float[]>();
+		ArrayList<String> taxanames = new ArrayList<String>();
+		int nmarkers = 1106;
+		int ntaxa;
+
+		AGPMap agpmap = new AGPMap();
+		
+		BufferedWriter bw = null;
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(snpFilename));
+			br.readLine();
+			String input;
+			while ((input = br.readLine()) != null) {
+				String[] info = tab.split(input);
+				float[] geno = new float[nmarkers];
+				for (int i = 0; i < nmarkers; i++) geno[i] = Float.parseFloat(info[i+5]);
+				genotypes.add(geno);
+				taxanames.add(info[0]);
+			}
+			br.close();
+
+			bw = new BufferedWriter(new FileWriter(outFilename));
+			bw.write("Snp\tallele\tchr\tpos\tcm");
+			for (String taxon:taxanames) {
+				bw.write("\t");
+				bw.write(taxon);
+			}
+			bw.write("\n");
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+
+		//impute data for each chromosome
+		ntaxa = taxanames.size();
+		for (int chr = 1; chr <=10; chr++) {
+			String chrstr = Integer.toString(chr);
+			double startgenpos = agpmap.getFirstGeneticPosition(chr);
+			//round down to nearest interval
+			startgenpos = ((double) (Math.floor(startgenpos / interval))) * interval;
+
+			double endgenpos = agpmap.getLastGeneticPosition(chr);
+			//round up to nearest interval
+			endgenpos = ((double)(Math.ceil(endgenpos / interval))) * interval;
+
+			try {
+				for (double curpos = startgenpos; curpos <= endgenpos; curpos += interval) {
+					int physpos = agpmap.getPositionFromCm(chr, curpos);
+					String physposString = Integer.toString(physpos);
+					String genpos = Double.toString(curpos);
+					bw.write("S");
+					bw.write(chrstr);
+					bw.write("_");
+					bw.write(physposString);
+					bw.write("\timputed\t");
+					bw.write(chrstr);
+					bw.write("\t");
+					bw.write(physposString);
+					bw.write("\t");
+					bw.write(genpos);
+					int[] flanks = agpmap.getFlankingMarkerIndices(chr, curpos);
+					
+					for (int t = 0; t < ntaxa; t++) {
+						bw.write("\t");
+						double val;
+						
+						if (flanks[0] < 0) val = genotypes.get(t)[flanks[1]];
+						else if(flanks[1] >= nmarkers) val = genotypes.get(t)[flanks[0]];
+						else if (flanks[0] == flanks[1]) val = genotypes.get(t)[flanks[0]]; 
+						else {
+							double pd = (curpos - agpmap.getGeneticPos(flanks[0])) / (agpmap.getGeneticPos(flanks[1]) - agpmap.getGeneticPos(flanks[0]));
+							val = genotypes.get(t)[flanks[0]] * (1 - pd) + genotypes.get(t)[flanks[1]] * pd;
+						}
+						bw.write(Double.toString(val));
+						
+					}
+					
+					bw.newLine();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+
+		}
+
+		try {
+			bw.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("Finished imputing markers.");
+
+
+	}
+	
+	public static LinkedList<String> getListOfTaxa(String filename) {
 		LinkedList<String> taxaList = new LinkedList<String>();
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(""));
+			BufferedReader br = new BufferedReader(new FileReader(filename));
 			String taxon;
 			while((taxon = br.readLine()) != null) taxaList.add(taxon);
 			br.close();
@@ -1036,5 +1148,7 @@ public class ImputationUtils {
 		
 		return taxaList;
 	}
+	
+	
 }
 
