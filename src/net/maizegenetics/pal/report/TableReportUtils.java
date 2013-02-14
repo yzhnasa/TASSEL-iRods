@@ -3,7 +3,6 @@ package net.maizegenetics.pal.report;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 
 import net.maizegenetics.util.DoubleFormat;
 import net.maizegenetics.util.ExceptionUtils;
@@ -20,12 +19,10 @@ public class TableReportUtils {
             return;
         }
 
-        FileWriter fw = null;
         BufferedWriter bw = null;
         try {
 
-            fw = new FileWriter(saveFile);
-            bw = new BufferedWriter(fw);
+            bw = Utils.getBufferedWriter(saveFile);
 
             Object[] colNames = theTableSource.getTableColumnNames();
             for (int j = 0; j < colNames.length; j++) {
@@ -59,7 +56,6 @@ public class TableReportUtils {
         } finally {
             try {
                 bw.close();
-                fw.close();
             } catch (Exception e) {
                 // do nothing
             }
