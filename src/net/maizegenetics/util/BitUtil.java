@@ -1046,6 +1046,10 @@ public class BitUtil {
         String s = String.format("%64s", Long.toBinaryString(A)).replace(" ", "0");
         System.out.println(s);
     }
+    
+    public static String toPadString(long A) {
+        return String.format("%64s", Long.toBinaryString(A)).replace(" ", "0");
+    }
 
     public static void printBitMatrix(long[] A) {
 
