@@ -30,10 +30,11 @@ public final class HapMapHDF5Constants {
     public static final String ERROR_DESC = SITE_DESC+"/ERROR";
     public static final String BPECERROR_DESC = ERROR_DESC+"/BPECERROR";
     public static final String BPECAVGR2_DESC = ERROR_DESC+"/BPECR2";
+    public static final String IBSERRORRATE_DESC = ERROR_DESC+"/IBSErrorRate";
+    public static final String IBSMINORERRORRATE_DESC = ERROR_DESC+"/IBSMinorErrorRate";
     public static final String IBSERROR_DESC = ERROR_DESC+"/IBSError";
-    public static final String IBSERRORTESTS_DESC = ERROR_DESC+"/IBSErrorTest";
-    public static final String IBSMINORERROR_DESC = ERROR_DESC+"/IBSMinorError";
-    public static final String IBSMINORERRORTESTS_DESC = ERROR_DESC+"/IBSMinorErrorTests";
+    public static final String IBSMINORCORR_DESC = ERROR_DESC+"/IBSMinorCorrect";
+    public static final String IBSMAJORCORR_DESC = ERROR_DESC+"/IBSMajorCorrect";
     
     // Attributes
     public static final String DEFAULT_ATTRIBUTES_PATH = ROOT;
