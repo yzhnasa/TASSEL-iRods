@@ -32,23 +32,17 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 
     private ProgressListener myListener = null;
     private int numSeqs;
-    private Alignment theAlignment;
     private Alignment theTBA = null;
     /**
      * Holds the average numbers of sites in the comparisons
      */
     private double avgTotalSites;
-    /**
-     * Caches one row at a time to improve performance
-     */
-    private int lastCachedRowNum = 0;
-    private byte[] lastCachedRow = null;
     private int minSitesComp = 0;
     private boolean isTrueIBS = false;
 
     /**
      * Compute observed distances. Missing sites are ignored. This is no
-     * weighting for ambigous bases.
+     * weighting for ambiguous bases.
      *
      * @param theAlignment Alignment used to computed proportion that
      */
@@ -70,57 +64,12 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         isTrueIBS = trueIBS;
         myListener = listener;
         numSeqs = theAlignment.getSequenceCount();
-        this.theAlignment = theAlignment;
-        //if(theAlignment instanceof TBitAlignment) {
-        //    theTBA=(TBitAlignment)theAlignment;
-        //} else {
-        //    theTBA=TBitAlignment.getInstance(theAlignment,2,false);
-        //}
         theTBA = ConvertSBitTBitPlugin.convertAlignment(theAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, listener);
         //  this should have an option to only use the 2 or 3 most common alleles
         setIdGroup(theAlignment.getIdGroup());
-        long time = System.currentTimeMillis();
-        //        computeDistances();       
-        //        System.out.println("Old Distance Time:"+(System.currentTimeMillis()-time));
-        //        time=System.currentTimeMillis();
-        //        computeBitDistances();
-        //        System.out.println("NewBit Distance Time:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
         computeHetBitDistances();
-        System.out.println("NewBitHet Distance Time:" + (System.currentTimeMillis() - time));
     }
 
-//    
-//    /**
-//     * Only work for inbreds
-//     */
-//    private void computeBitDistances() {
-//        avgTotalSites = 0;
-//        int count = 0;
-//        double[] params;
-//        double[][] distance = new double[numSeqs][numSeqs];
-//        for (int i = 0; i < numSeqs; i++) {
-//            distance[i][i] = 0;
-//            BitSet iMj=theTBA.getAllelePresenceForAllSites(i, 0);
-//            BitSet iMn=theTBA.getAllelePresenceForAllSites(i, 1);
-//            //there are lots of approaches to deal with the hets
-//            for (int j = i + 1; j < numSeqs; j++) {
-//                BitSet jMj=theTBA.getAllelePresenceForAllSites(j, 0);
-//                BitSet jMn=theTBA.getAllelePresenceForAllSites(j, 1);
-//                long same=OpenBitSet.intersectionCount(iMj, jMj)+OpenBitSet.intersectionCount(iMn, jMn);
-//                long diff=OpenBitSet.intersectionCount(iMj, jMn)+OpenBitSet.intersectionCount(iMn, jMj);
-//                double identity=(double)same/(double)(same+diff);
-//                double dist=1-identity;
-//                distance[i][j] = distance[j][i] = dist;
-//                avgTotalSites += (same+diff);  //this assumes not hets
-//                count++;
-//            }
-//            fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
-//        }
-//        lastCachedRow = null;
-//        setDistances(distance);
-//        avgTotalSites /= (double) count;
-//    }
     /**
      * This is a cleanest, fastest and most accurate way to calculate distance.
      * It includes a simple approach for hets. This method is actually 10%
@@ -132,7 +81,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         int count = 0;
         double[][] distance = new double[numSeqs][numSeqs];
         for (int i = 0; i < numSeqs; i++) {
-            System.out.println(i);
             long[] iMj = theTBA.getAllelePresenceForAllSites(i, 0).getBits();
             long[] iMn = theTBA.getAllelePresenceForAllSites(i, 1).getBits();
             for (int j = i; j < numSeqs; j++) {
@@ -163,9 +111,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
                 }
             }
             fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
-            if(i==500) break;
         }
-        lastCachedRow = null;
         setDistances(distance);
         avgTotalSites /= (double) count;
     }
@@ -186,78 +132,25 @@ public class IBSDistanceMatrix extends DistanceMatrix {
             return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared);
         }
     }
-    
+
     public static double computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, int minSitesCompared) {
         int sameCnt = 0, diffCnt = 0, hetCnt = 0;
-            for (int x = 0; x < iMj.length; x++) {
-                long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
-                long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
-                long hets = same & diff;
-                sameCnt += BitUtil.pop(same);
-                diffCnt += BitUtil.pop(diff);
-                hetCnt += BitUtil.pop(hets);
-            }
-            double identity = (double) (sameCnt + (hetCnt / 2)) / (double) (sameCnt + diffCnt + hetCnt);
-            double dist = 1 - identity;
-            int sites = sameCnt + diffCnt - hetCnt;
-            if (sites > minSitesCompared) {
-                return dist;
-            } else {
-                return Double.NaN;
-            }
-    }
-
-//    private void computeDistances() {
-//        avgTotalSites = 0;
-//        int count = 0;
-//        double[] params;
-//        double[][] distance = new double[numSeqs][numSeqs];
-//        for (int i = 0; i < numSeqs; i++) {
-//            distance[i][i] = 0;
-//            for (int j = i + 1; j < numSeqs; j++) {
-//                params = calculateDistance(i, j);
-//                distance[i][j] = params[0];
-//                distance[j][i] = params[0];
-//                avgTotalSites += params[1];
-//                count++;
-//            }
-//            fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
-//        }
-//        lastCachedRow = null;
-//        setDistances(distance);
-//        avgTotalSites /= (double) count;
-//    }
-    private double[] calculateDistance(int s1, int s2) {
-
-        int siteCount = theAlignment.getSiteCount();
-
-        if ((lastCachedRow == null) || (s1 != lastCachedRowNum)) {
-            lastCachedRowNum = s1;
-            lastCachedRow = theAlignment.getBaseRange(s1, 0, siteCount);
+        for (int x = 0; x < iMj.length; x++) {
+            long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
+            long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
+            long hets = same & diff;
+            sameCnt += BitUtil.pop(same);
+            diffCnt += BitUtil.pop(diff);
+            hetCnt += BitUtil.pop(hets);
         }
-
-        byte[] s2Row = theAlignment.getBaseRange(s2, 0, siteCount);
-
-        double[] params = new double[2];
-        int numIdentical = 0, numDifferent = 0;
-        for (int i = 0; i < siteCount; i++) {
-            byte s1b = lastCachedRow[i];
-            byte s2b = s2Row[i];
-            if ((s1b != Alignment.UNKNOWN_DIPLOID_ALLELE) && (s2b != Alignment.UNKNOWN_DIPLOID_ALLELE)) {
-                if (s1b == s2b) {
-                    numIdentical++;
-                } else {
-                    numDifferent++;
-                }
-            }
-        }
-        params[1] = numIdentical + numDifferent;
-        if (params[1] == 0) {
-            params[0] = Double.NaN;
+        double identity = (double) (sameCnt + (hetCnt / 2)) / (double) (sameCnt + diffCnt + hetCnt);
+        double dist = 1 - identity;
+        int sites = sameCnt + diffCnt - hetCnt;
+        if (sites > minSitesCompared) {
+            return dist;
         } else {
-            params[0] = (double) numDifferent / params[1];
+            return Double.NaN;
         }
-        return params;
     }
 
     public double getAverageTotalSites() {
