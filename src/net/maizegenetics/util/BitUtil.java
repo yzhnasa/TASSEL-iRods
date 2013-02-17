@@ -53,14 +53,14 @@ public class BitUtil {
         x = x + (x >>> 32);
         return ((int) x) & 0x7F;
     }
-    
+
     public static long pop_array_to_index(long A[], int index) {
-        int numWords = bits2words(index+1);
+        int numWords = bits2words(index + 1);
         System.out.println("numWords: " + numWords);
-        long result = pop_array(A, 0, numWords-1);
+        long result = pop_array(A, 0, numWords - 1);
         int shift = index & 0x3f;
         shift = 63 - shift;
-        long temp = A[numWords-1] << shift;
+        long temp = A[numWords - 1] << shift;
         result = result + pop(temp);
         return result;
     }
@@ -1043,19 +1043,23 @@ public class BitUtil {
     }
 
     public static void printBitLong(long A) {
-        String s = String.format("%64s", Long.toBinaryString(A)).replace(" ", "0");
-        System.out.println(s);
+        System.out.println(toPadString(A));
     }
-    
+
     public static String toPadString(long A) {
-        return String.format("%64s", Long.toBinaryString(A)).replace(" ", "0");
+        String str = Long.toBinaryString(A);
+        StringBuilder builder = new StringBuilder(64);
+        for (int i = 0, n = 64 - str.length(); i < n; i++) {
+            builder.append("0");
+        }
+        builder.append(str);
+        return builder.toString();
     }
 
     public static void printBitMatrix(long[] A) {
 
         for (int i = 0; i < A.length; i++) {
-            String s = String.format("%64s", Long.toBinaryString(A[i])).replace(" ", "0");
-            System.out.println(s);
+            System.out.println(toPadString(A[i]));
         }
 
     }
