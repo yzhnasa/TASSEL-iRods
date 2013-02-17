@@ -132,6 +132,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         int count = 0;
         double[][] distance = new double[numSeqs][numSeqs];
         for (int i = 0; i < numSeqs; i++) {
+            System.out.println(i);
             long[] iMj = theTBA.getAllelePresenceForAllSites(i, 0).getBits();
             long[] iMn = theTBA.getAllelePresenceForAllSites(i, 1).getBits();
             for (int j = i; j < numSeqs; j++) {
@@ -162,6 +163,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
                 }
             }
             fireProgress((int) (((double) (i + 1) / (double) numSeqs) * 100.0));
+            if(i==500) break;
         }
         lastCachedRow = null;
         setDistances(distance);
@@ -173,7 +175,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     }
 
     public static double computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
-
         if (taxon2 == taxon1 && !isTrueIBS) {
             return 0.0;
         } else {
@@ -182,7 +183,12 @@ public class IBSDistanceMatrix extends DistanceMatrix {
             long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
             long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
             long[] jMn = theTBA.getAllelePresenceForAllSites(taxon2, 1).getBits();
-            int sameCnt = 0, diffCnt = 0, hetCnt = 0;
+            return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared);
+        }
+    }
+    
+    public static double computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, int minSitesCompared) {
+        int sameCnt = 0, diffCnt = 0, hetCnt = 0;
             for (int x = 0; x < iMj.length; x++) {
                 long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
                 long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
@@ -199,8 +205,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
             } else {
                 return Double.NaN;
             }
-        }
-
     }
 
 //    private void computeDistances() {
