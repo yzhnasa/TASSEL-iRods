@@ -396,19 +396,28 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             r = c;
             c = temp;
         }
+        int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myPValSampleSize[r][c];
-            if (val >= 0) {
-                return (double) val;
-            } else {
+            if (Float.isNaN(val)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+            } else {
+                return (double) val;
             }
         } else {
             Float val = (Float) mySparsePValSampleSize.getQuick(r, c);
-            if ((val == null) || val < 0) {
+            if (Float.isNaN(val)) {
                 return Double.NaN;
+            } else if ((val == null) || val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
             } else {
-                return (double) val;
+                return val.doubleValue();
             }
         }
     }
@@ -452,19 +461,28 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             r = c;
             c = temp;
         }
+        int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myRSqrDPrime[c][r];
-            if (val >= 0) {
-                return (double) val;
-            } else {
+            if (Float.isNaN(val)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+            } else {
+                return (double) val;
             }
         } else {
             Float val = (Float) mySparseRSqrDPrime.getQuick(c, r);
-            if ((val == null) || val < 0) {
+            if (Float.isNaN(val)) {
                 return Double.NaN;
+            } else if ((val == null) || val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
             } else {
-                return (double) val;
+                return val.doubleValue();
             }
         }
     }
@@ -482,19 +500,28 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             r = c;
             c = temp;
         }
+        int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myRSqrDPrime[r][c];
-            if (val >= 0) {
-                return (double) val;
-            } else {
+            if (Float.isNaN(val)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+            } else {
+                return (double) val;
             }
         } else {
             Float val = (Float) mySparseRSqrDPrime.getQuick(r, c);
-            if ((val == null) || val < 0) {
+            if (Float.isNaN(val)) {
                 return Double.NaN;
+            } else if ((val == null) || val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
             } else {
-                return (double) val;
+                return val.doubleValue();
             }
         }
     }
