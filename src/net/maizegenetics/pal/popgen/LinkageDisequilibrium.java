@@ -6,21 +6,18 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.popgen;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.statistics.FisherExact;
-
-import net.maizegenetics.util.ProgressListener;
-
+import cern.colt.matrix.impl.SparseObjectMatrix2D;
 import java.io.Serializable;
 import java.io.StringWriter;
-
 import java.util.Arrays;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
-
-import cern.colt.matrix.impl.SparseObjectMatrix2D;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
+import net.maizegenetics.util.ProgressListener;
+import org.apache.log4j.Logger;
 
 /**
  * This class calculates D' and r^2 estimates of linkage disequilibrium. It also
@@ -44,10 +41,11 @@ import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
  */
 public class LinkageDisequilibrium extends Thread implements Serializable, TableReport {
 
-    public enum testDesign {
+    public static enum testDesign {
 
         All, SlidingWindow, SiteByAll, SiteList
     };
+    private static final Logger myLogger = Logger.getLogger(LinkageDisequilibrium.class);
     private Alignment myAlignment;
     private Alignment mySBitAlignment;
     private int myMinTaxaForEstimate = 20;
@@ -89,7 +87,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         //} else {
         //    mySBitAlignment = SBitAlignment.getInstance(myAlignment, 2, false);
         //}
-        mySBitAlignment = ConvertSBitTBitPlugin.convertAlignment(myAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, listener);
+        mySBitAlignment = AlignmentUtils.optimizeForSites(myAlignment, listener);
         myFisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
         myWindowSize = windowSize;
         myCurrDesign = LDType;
@@ -404,7 +402,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             } else if (val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getPVal: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
             } else if (sampleSize < myMinTaxaForEstimate) {
-                throw new IllegalStateException("LinkageDisequilibrium: getPVal: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
                 return (double) val;
             }
@@ -415,7 +413,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             } else if ((val == null) || val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getPVal: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
             } else if (sampleSize < myMinTaxaForEstimate) {
-                throw new IllegalStateException("LinkageDisequilibrium: getPVal: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
                 return val.doubleValue();
             }
@@ -469,7 +467,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             } else if (val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getDPrime: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
             } else if (sampleSize < myMinTaxaForEstimate) {
-                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
                 return (double) val;
             }
@@ -480,7 +478,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             } else if ((val == null) || val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getDPrime: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
             } else if (sampleSize < myMinTaxaForEstimate) {
-                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
                 return val.doubleValue();
             }
@@ -508,7 +506,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             } else if (val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getRSqr: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
             } else if (sampleSize < myMinTaxaForEstimate) {
-                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
                 return (double) val;
             }
@@ -519,7 +517,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             } else if ((val == null) || val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getRSqr: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
             } else if (sampleSize < myMinTaxaForEstimate) {
-                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize);
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
                 return val.doubleValue();
             }

@@ -14,7 +14,6 @@
  */
 package net.maizegenetics.pal.distance;
 
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.util.BitUtil;
@@ -64,7 +63,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         isTrueIBS = trueIBS;
         myListener = listener;
         numSeqs = theAlignment.getSequenceCount();
-        theTBA = ConvertSBitTBitPlugin.convertAlignment(theAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, listener);
+        theTBA = AlignmentUtils.optimizeForTaxa(theAlignment, listener);
         //  this should have an option to only use the 2 or 3 most common alleles
         setIdGroup(theAlignment.getIdGroup());
         computeHetBitDistances();

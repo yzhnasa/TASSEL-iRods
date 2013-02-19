@@ -1,12 +1,11 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * BitNeighborFinder
  */
 package net.maizegenetics.pal.popgen;
 
 import java.util.ArrayList;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ProjectionAlignment;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.util.BitUtil;
@@ -32,7 +31,7 @@ public class BitNeighborFinder {
 
     public BitNeighborFinder(IdGroup hdTargetID, Alignment ldAlign, Alignment hdAlign) {
         this.hdTargetID = hdTargetID;
-        this.ldAlign = ConvertSBitTBitPlugin.convertAlignment(ldAlign, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+        this.ldAlign = AlignmentUtils.optimizeForTaxa(ldAlign);
         initHDTargets();
         pa=new ProjectionAlignment(hdAlign,ldAlign.getIdGroup());
         long prevTime = System.currentTimeMillis();

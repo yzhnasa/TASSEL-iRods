@@ -4,7 +4,6 @@
 package net.maizegenetics.pal.alignment;
 
 import java.util.Arrays;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.util.BitSet;
@@ -25,7 +24,7 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     public ProjectionAlignment(Alignment hdAlign, IdGroup ldIDGroup) {
         super(ldIDGroup, hdAlign.getAlleleEncodings());
-        myBaseAlignment = ConvertSBitTBitPlugin.convertAlignment(hdAlign, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
+        myBaseAlignment = AlignmentUtils.optimizeForSites(hdAlign);
         mySiteBreaks = new int[getSequenceCount()][];
         myPosBreaks = new int[getSequenceCount()][];
         myHDTaxa = new int[getSequenceCount()][];
