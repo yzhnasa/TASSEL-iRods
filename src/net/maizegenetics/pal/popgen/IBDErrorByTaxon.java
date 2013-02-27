@@ -69,7 +69,8 @@ public class IBDErrorByTaxon {
             error+=recordCnts(startBlock, errorCnt, rsx[2]);
             startBlock=window[1];
         }
-        System.out.printf("MjC:%d MnC:%d Er:%d %n",mjCorrect, mnCorrect, error);
+        System.out.printf("%d:%s MjC:%d MnC:%d Er:%d %n",tx, a.getTaxaName(tx),
+                mjCorrect, mnCorrect, error);
     }
     
     public int[] getMajorCorrectCounts() {

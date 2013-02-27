@@ -4,8 +4,11 @@
 package net.maizegenetics.gbs.pipeline;
 
 
-import cern.colt.list.IntArrayList;
+import ch.systemsx.cisd.hdf5.HDF5DataClass;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import java.awt.Frame;
@@ -13,16 +16,18 @@ import java.awt.Frame;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.TreeMap;
 
 import javax.swing.ImageIcon;
+import net.maizegenetics.gbs.maps.SiteMappingInfo;
 
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.BitAlignmentHDF5;
 import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.Locus;
@@ -33,7 +38,6 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 
 import org.apache.log4j.Logger;
@@ -165,10 +169,10 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
             }
             System.out.println("Finished Reading: " + currFile);
             String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/06_HapMap/";
-            String outfile=root+"anno2.hmp.h5";
+            String outfile=root+"annoA.hmp.h5";
             annotateMAF(a,  outfile);
             annotateIBSError(a,  outfile);
-            annotateLD(a,outfile,3);
+            annotateLD(a, outfile,128,4,0.05f, 5000);
             start++;
         }
         snpLogging.close();
@@ -176,9 +180,9 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
     }
     
     private void annotateMAF(Alignment ah5, String hdf5File) {
-        float[] maf=new float[ah5.getSequenceCount()];
-        float[] hets=new float[ah5.getSequenceCount()];
-        float[] scov=new float[ah5.getSequenceCount()];
+        float[] maf=new float[ah5.getSiteCount()];
+        float[] hets=new float[ah5.getSiteCount()];
+        float[] scov=new float[ah5.getSiteCount()];
         float taxa=(float)ah5.getSequenceCount();
         for (int i = 0; i < maf.length; i++) {
             maf[i]=(float)ah5.getMinorAlleleFrequency(i);
@@ -200,30 +204,47 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         h5w.writeFloatArray(HapMapHDF5Constants.SITECOV_DESC, scov);
     }
     
-    private void annotateLD(Alignment a, String hdf5File, int minMinorCnt) {
+    
+    /**
+     * Methods to evaluate the LD of a site.  Currently it evaluates everything by r2 and p-value.  It may be
+     * reasonable to rescale the p-value by comparison to distant locations in the genome
+     * @param a
+     * @param hdf5File
+     * @param minPhysDist
+     * @param minMinorCnt
+     * @param minR2
+     * @param numberOfTests 
+     */
+    private void annotateLD(Alignment a, String hdf5File, int minPhysDist, int minMinorCnt, 
+            float minR2, int numberOfTests) {
         FisherExact myFisherExact=new FisherExact(a.getSequenceCount() + 10);
         a.optimizeForSites(null);
-        int minCnt=20;
+        int minCnt=40;
         int sites=a.getSiteCount();
         int binOf10=8;
-        float[][] maxR2=new float[sites][binOf10];
-        float[][] minP=new float[sites][binOf10];
-        int[][] testsLD=new int[sites][binOf10];
+        float[] maxR2=new float[sites];  Arrays.fill(maxR2, Float.NaN);
+        float[] minPOfMaxR2=new float[sites];  Arrays.fill(minPOfMaxR2, Float.NaN);
+        int[] minSigDistance=new int[sites]; Arrays.fill(minSigDistance, Integer.MAX_VALUE);
+        float[] propSigTests=new float[sites]; Arrays.fill(propSigTests, Float.NaN);
+        double maxSum=0, sumSites=0;
         for (int i = 0; i < a.getSiteCount(); i++) {
-            Arrays.fill(maxR2[i], Float.NaN);
-            Arrays.fill(minP[i], Float.NaN);
             int[][] contig = new int[2][2];
             Locus myLocus=a.getLocus(i);
-            int leftSite=Math.abs(a.getSiteOfPhysicalPosition(a.getPositionInLocus(i)-1000000,myLocus));
-            int rightSite=Math.abs(a.getSiteOfPhysicalPosition(a.getPositionInLocus(i)+1000000,myLocus));
             BitSet rMj = a.getAllelePresenceForAllTaxa(i, 0);
             BitSet rMn = a.getAllelePresenceForAllTaxa(i, 1); 
             if(rMn.cardinality()<minMinorCnt) continue;
-            for (int j = leftSite; j < rightSite; j++) {
-                if((j<0)||(j>=a.getSiteCount())||(i==j)) continue;
-                int dist=Math.abs(a.getPositionInLocus(i) - a.getPositionInLocus(j));
-                int bin=(Integer.numberOfTrailingZeros(Integer.highestOneBit(dist))-7)/2;
-                if(bin<0) bin=0;
+            TreeMap<Double,SiteMappingInfo> bestLDSites=new TreeMap<Double,SiteMappingInfo>(Collections.reverseOrder());
+            double minLD=0;
+            int attemptTests=0, completedTests=0, sigTests=0;
+            int leftSite=i, rightSite=i, j=-1;
+            int position=a.getPositionInLocus(i), dist=-1, minSigDist=Integer.MAX_VALUE;
+            while((completedTests<numberOfTests)&&((leftSite>0)||(rightSite+1<sites))) {
+                int rightDistance=(rightSite+1<sites)?a.getPositionInLocus(rightSite+1)-position:Integer.MAX_VALUE;
+                int leftDistance=(leftSite>0)?position-a.getPositionInLocus(leftSite-1):Integer.MAX_VALUE;
+                if(rightDistance<leftDistance) {rightSite++; j=rightSite; dist=rightDistance;}
+                else {leftSite--; j=leftSite; dist=leftDistance;}
+                if(dist<minPhysDist) continue;
+                attemptTests++;
                // System.out.printf("Dist: %d %d bin: %d %n",dist, Integer.highestOneBit(dist), bin);
                 BitSet cMj = a.getAllelePresenceForAllTaxa(j, 0);
                 BitSet cMn = a.getAllelePresenceForAllTaxa(j, 1);
@@ -236,20 +257,56 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
                 n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
                 if(n<minCnt) continue;
                 double rValue = LinkageDisequilibrium.calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minCnt);
-                if (Double.isNaN(rValue)) {
-                    continue;
-                }
+                if (Double.isNaN(rValue)) continue;
+                completedTests++;
+                if(rValue<minR2) continue;
                 double pValue=myFisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
-                testsLD[i][bin]++;
-                if (Float.isNaN(maxR2[i][bin])||(rValue > maxR2[i][bin])) {
-                    maxR2[i][bin] = (float)rValue;
+                if(pValue>(0.05/numberOfTests)) continue;
+                if(dist<minSigDist) minSigDist=dist;
+                sigTests++;
+                if(rValue>minLD) {
+                    float[] result={j, (float)rValue, (float)pValue, dist};
+                    SiteMappingInfo smi=new SiteMappingInfo(Integer.parseInt(a.getLocusName(j)),
+                            (byte)1,a.getPositionInLocus(j),(float)rValue, (float)pValue);
+                    bestLDSites.put(rValue, smi);
                 }
-                if (Float.isNaN(minP[i][bin])||(pValue < minP[i][bin])) {
-                    minP[i][bin] = (float)pValue;
+                if(bestLDSites.size()>20) {
+                    bestLDSites.remove(bestLDSites.lastKey());
+                    minLD=bestLDSites.lastKey();
                 }
             }
-            System.out.printf("s:%d %s %s %s %n",i,Arrays.toString(testsLD[i]),Arrays.toString(maxR2[i]),Arrays.toString(minP[i]));
+            
+            if(bestLDSites.size()>0) {
+                SiteMappingInfo smi=(SiteMappingInfo)bestLDSites.firstEntry().getValue();
+                maxR2[i]=smi.r2;
+                minPOfMaxR2[i]=smi.mapP;
+                maxSum+=bestLDSites.firstEntry().getKey();
+                sumSites+=bestLDSites.size();
+            }
+            minSigDistance[i]=minSigDist;
+            propSigTests[i]=(float)sigTests/(float)completedTests;
+            System.out.printf("s:%d Attempted:%d Completed:%d SigTests:%d MinDist:%d TreeSize: %d %n",i,attemptTests,completedTests,
+                    sigTests, minSigDist, bestLDSites.size());
+//            System.out.printf("s:%d %s %s %s %n",i,Arrays.toString(testsLD[i]),Arrays.toString(maxR2[i]),Arrays.toString(minP[i]));
+            System.out.printf("s:%d %s %n",i,bestLDSites.toString());
+            
+            if(i%1000==0) System.out.println("Avg MaxR2:"+(maxSum/(double)i)+"  avgSites:"+(sumSites/(double)i));
         }
+        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+        myLogger.info("Annotating HDF5 file with LD: " + hdf5File);
+//        config.overwrite();
+//        config.dontUseExtendableDataTypes();
+        IHDF5Writer h5w = config.writer();
+        if(!h5w.exists(HapMapHDF5Constants.LD_DESC)) h5w.createGroup(HapMapHDF5Constants.LD_DESC);
+        if(!h5w.exists(HapMapHDF5Constants.LDR2_DESC)) h5w.createFloatArray(HapMapHDF5Constants.LDR2_DESC, maxR2.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.LDR2_DESC, maxR2);
+        if(!h5w.exists(HapMapHDF5Constants.LDP_DESC)) h5w.createFloatArray(HapMapHDF5Constants.LDP_DESC, minPOfMaxR2.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.LDP_DESC, minPOfMaxR2);
+        if(!h5w.exists(HapMapHDF5Constants.LDPropLD_DESC)) h5w.createFloatArray(HapMapHDF5Constants.LDPropLD_DESC, propSigTests.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.LDPropLD_DESC, propSigTests);
+        if(!h5w.exists(HapMapHDF5Constants.LDMinDist_DESC)) h5w.createIntArray(HapMapHDF5Constants.LDMinDist_DESC, minSigDistance.length);
+        h5w.writeIntArray(HapMapHDF5Constants.LDMinDist_DESC, minSigDistance);
+        
     }
     
     private void initDiploids(Alignment a) {
@@ -266,7 +323,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         mjCorrCnt=new int[sites];
         mnCorrCnt=new int[sites];
         for (int bt = 0; bt < a.getSequenceCount(); bt++) {
-            IBDErrorByTaxon iebt=new IBDErrorByTaxon(bt,a,50, 1000, 50,0.02);
+            IBDErrorByTaxon iebt=new IBDErrorByTaxon(bt,a,75, 1500, 75,0.02);
             mjCorrCnt=addTwoVector(mjCorrCnt,iebt.getMajorCorrectCounts());
             mnCorrCnt=addTwoVector(mnCorrCnt,iebt.getMinorCorrectCounts());
             errorCnt=addTwoVector(errorCnt,iebt.getErrorCounts());
@@ -314,6 +371,56 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         }
         return src;
     }
+    
+    public static void saveAnnotationsToFile(String filename, String outFile) {
+        IHDF5Reader reader = HDF5Factory.openForReading(filename);
+      //  int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
+        String delimiter="\t";
+        List<HDF5LinkInformation> fields=reader.getAllGroupMemberInformation(HapMapHDF5Constants.SITE_DESC, true);
+        List<HDF5LinkInformation> fields2=new ArrayList(fields);
+        for (HDF5LinkInformation is : fields) {
+            //if(is.isGroup()==false) continue;
+            if(is.isGroup())fields2.addAll(reader.getAllGroupMemberInformation(is.getPath(), true));
+        }
+        float[][] fa=new float[20][];  
+        String[] fNames=new String[20];
+        int[][] ia=new int[20][]; 
+        String[] iNames=new String[20];
+        int currentFA=0;
+        int currentIA=0;
+        for (HDF5LinkInformation is : fields2) {
+            System.out.println(is.getPath().toString()+"::"+reader.getObjectType(is.getPath()).toString());
+            if(is.isDataSet()==false) continue;
+            HDF5DataSetInformation info=reader.getDataSetInformation(is.getPath());
+            if(info.getTypeInformation().getDataClass()==HDF5DataClass.FLOAT) {
+                fNames[currentFA]=is.getName();
+                fa[currentFA]=reader.readFloatArray(is.getPath());
+                currentFA++;
+            } else if(info.getTypeInformation().getDataClass()==HDF5DataClass.INTEGER) {
+                iNames[currentIA]=is.getName();
+                ia[currentIA]=reader.readIntArray(is.getPath());
+                currentIA++;
+            }
+            
+            System.out.println(is.getPath().toString()+"::"+reader.getDataSetInformation(is.getPath()).toString());
+        }
+        StringBuilder sb=new StringBuilder("Site"+delimiter);
+        for (int fi = 0; fi < currentFA; fi++) {sb.append(fNames[fi]); sb.append(delimiter);}
+        for (int ii = 0; ii < currentIA; ii++) {sb.append(iNames[ii]); sb.append(delimiter);}
+        System.out.println(sb.toString());
+        for (int i = 0; i < fa[0].length; i++) {
+            sb=new StringBuilder();
+           // sb.append(variableSites[i]);sb.append(delimiter);
+            for (int fi = 0; fi < currentFA; fi++) {
+                sb.append(fa[fi][i]);sb.append(delimiter);             
+            }
+            for (int ii = 0; ii < currentIA; ii++) {
+                sb.append(ia[ii][i]);sb.append(delimiter);             
+            }
+            //sb.append(reader.readFloat(outFile));sb.append(delimiter);
+            System.out.println(i+delimiter+sb.toString());
+        }
+    }
 
     @Override
     public ImageIcon getIcon() {
@@ -332,13 +439,15 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
     
     public static void main(String[] args) {
         String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/06_HapMap/";
-        String infile=root+"Z0NE00N_chr10S.hmp.txt.gz";
- //       String infile=root+"All_chr10S.hmp.txt.gz";
-        String outfile=root+"anno.hmp.h5";
+//        String infile=root+"Z0NE00N_chr10S.hmp.txt.gz";
+        String infile=root+"All_chr10S.hmp.txt.gz";
+        String outfile=root+"annoA.hmp.h5";
 //        Alignment a = ImportUtils.readFromHapmap(infile, null);
 //        ExportUtils.writeToHDF5(a, outfile);
         
  //       infile=outfile;
+        saveAnnotationsToFile(root+"annoA.hmp.h5",root+"test.txt");
+        System.exit(0);
 
         String[] args2 = new String[]{
             "-hmp", infile,

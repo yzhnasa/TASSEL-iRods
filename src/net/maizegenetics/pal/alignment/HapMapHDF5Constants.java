@@ -27,6 +27,8 @@ public final class HapMapHDF5Constants {
     public static final String LD_DESC = SITE_DESC+"/LD";
     public static final String LDR2_DESC = LD_DESC+"/R2";
     public static final String LDP_DESC = LD_DESC+"/P";
+    public static final String LDPropLD_DESC = LD_DESC+"/PropLD";
+    public static final String LDMinDist_DESC = LD_DESC+"/MinDist";
     public static final String ERROR_DESC = SITE_DESC+"/ERROR";
     public static final String BPECERROR_DESC = ERROR_DESC+"/BPECERROR";
     public static final String BPECAVGR2_DESC = ERROR_DESC+"/BPECR2";
