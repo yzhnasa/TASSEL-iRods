@@ -36,7 +36,7 @@ public class MinorWindowImputation {
     int maskSitCnt=0;
     boolean maskAndTest=true;
     boolean isSwapMajorMinor=false;
-    private int maxDonorHypotheses=20;
+    private int maxDonorHypotheses=10;
     private double maximumInbredError=0.02;  //inbreds are tested first, if too much error hybrids are tested.
     private int minTestSites=20;  //minimum number of compared sites to find a hit
     private byte[][][] allDist;
@@ -63,9 +63,11 @@ public class MinorWindowImputation {
         unimpAlign.optimizeForTaxa(null);
         System.out.printf("Donor taxa:%d sites:%d %n",unimpAlign.getSequenceCount(),unimpAlign.getSiteCount());
         
+        System.out.println("Creating mutable alignment");
         if(maskAndTest) maskSites(200);  //mask sites to test imputation accuracy
         blocks=unimpAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
         
+        System.out.println("Masking sites");
         //Create mask for all sites where major & minor are swapped in alignments
         goodMask=new OpenBitSet(unimpAlign.getSiteCount());
         errorMask=new OpenBitSet(unimpAlign.getSiteCount());
@@ -478,10 +480,12 @@ public class MinorWindowImputation {
      */
     private void setAlignmentWithDonors(DonorHypoth[] theDH, int focusBlock, MutableNucleotideAlignment mna) {
         if(theDH[0].targetTaxon<0) return;
+        boolean print=false;
+//        if(donorAlign.getTaxaName(theDH[0].donor1Taxon).contains("B73")) print=true;
         int startSite=focusBlock*64;
         int endSite=startSite+63;
         if(endSite>=unimpAlign.getSiteCount()) endSite=unimpAlign.getSiteCount()-1;
-//        System.out.println("B:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
+        if (print) System.out.println("B:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         for(int cs=startSite; cs<=endSite; cs++) {
             byte donorEst=Alignment.UNKNOWN_DIPLOID_ALLELE; 
             for (int i = 0; i < theDH.length; i++) {
@@ -507,7 +511,7 @@ public class MinorWindowImputation {
             }
             mna.setBase(theDH[0].targetTaxon, cs, donorEst);
         } //end of cs loop
-//        System.out.println("E:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
+        if (print) System.out.println("E:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
     }
     
     private int[] parseDonorsNamesForRegion(String taxonName, int site) {
@@ -597,22 +601,31 @@ public class MinorWindowImputation {
         String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/06_HapMap/";
 
         String donorFile=root+"TaxaWMRG8FINAL_chr10.hmp.txt.gz";
+ //       String donorFile2=root+"AllHFMerge20120110.hmp.txt";
+        String donorFile2=root+"AllHFMerge_chr10L.hmp.txt.gz";
  //       String donorFile=root+"AllTaxa_BPEC_AllZea_GBS_Build_July_2012_FINAL_chr10.hmp.txt.gz";
  //       String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
-        String unImpTargetFile=root+"TaxaW142FINAL_chr10.hmp.txt.gz";
-        String impTargetFile=root+"Test20120110.imp.hmp.txt";
+ //       String unImpTargetFile=root+"Panzea_chr10L.hmp.txt.gz";
+        String unImpTargetFile=root+"Z0NE00N_chr10L.hmp.txt.gz";
+        //String unImpTargetFile=root+"TaxaW142FINAL_chr10S.hmp.txt.gz";
+        String impTargetFile=root+"All_IE02MxD10_chr10L.imp.hmp.txt";
+        
 
        // boolean buildInput=false;
        // boolean filterTrue=true;
        // if(buildInput) {KnownParentMinorWindowImputation.createSynthetic(donorFile, unImpTargetFile, 2000, 0.4, 0.5, 1000);}
 
-        System.out.println("Resolve Method 0");
+//        System.out.println("Resolve Method 0");
         MinorWindowImputation e64NNI;
-        e64NNI=new MinorWindowImputation(donorFile,
+//        e64NNI=new MinorWindowImputation(donorFile,
+//                unImpTargetFile, impTargetFile,15,0);
+        e64NNI=new MinorWindowImputation(donorFile2,
                 unImpTargetFile, impTargetFile,15,0);
         System.out.println("Resolve Method 1");
-         e64NNI=new MinorWindowImputation(donorFile,
-                unImpTargetFile, impTargetFile,15,1);
+//        e64NNI=new MinorWindowImputation(donorFile,
+//                unImpTargetFile, impTargetFile,15,1);
+//         e64NNI=new MinorWindowImputation(donorFile2,
+//                unImpTargetFile, impTargetFile,15,1);
 
 
         
