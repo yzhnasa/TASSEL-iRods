@@ -31,7 +31,7 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.Locus;
-import net.maizegenetics.pal.popgen.IBDErrorByTaxon;
+import net.maizegenetics.pal.popgen.IBSErrorByTaxon;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 import net.maizegenetics.pal.statistics.FisherExact;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -323,7 +323,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         mjCorrCnt=new int[sites];
         mnCorrCnt=new int[sites];
         for (int bt = 0; bt < a.getSequenceCount(); bt++) {
-            IBDErrorByTaxon iebt=new IBDErrorByTaxon(bt,a,75, 1500, 75,0.02);
+            IBSErrorByTaxon iebt=new IBSErrorByTaxon(bt,a,75, 1500, 75,0.02);
             mjCorrCnt=addTwoVector(mjCorrCnt,iebt.getMajorCorrectCounts());
             mnCorrCnt=addTwoVector(mnCorrCnt,iebt.getMinorCorrectCounts());
             errorCnt=addTwoVector(errorCnt,iebt.getErrorCounts());

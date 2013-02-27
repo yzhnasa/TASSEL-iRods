@@ -11,30 +11,18 @@ import net.maizegenetics.util.OpenBitSet;
 
 
 /**
- *  Imputation methods that relies on a list of possible parents, and optimized for
- * highly heterozygous samples.  It works at the scale of 64 sites to accelerate searching
- * through all possible parental combinations for a window.  
+ *  Scores error for each site of taxon based on IBS.
  * 
- * It only begins each 64 site block and expand outward to find set number of minor
- * alleles in the target sequence, and then it looks for all possible parents.
- * 
- * @author edbuckler, kswarts, aromero
+ * @author edbuckler
  */
-public class IBDErrorByTaxon {
+public class IBSErrorByTaxon {
     private int blocks=-1;
     private int sites=0;
     private int[] errorCnt, mjCorrCnt, mnCorrCnt;
     
 
-    /**
-     * 
-     * @param donorFile should be imputed inbreds that were founders of population
-     * @param unImpTargetFile sites must match exactly with donor file
-     * @param exportFile 
-     * @param minMinorCnt determines the size of the search window, low recombination 20-30, high recombination 10-15
-     * @param resolveMethod 0=use top ten; 1=uses only the best
-     */
-    public IBDErrorByTaxon(int tx, Alignment a, int minMinorCnt, int minMajorCnt, 
+ 
+    public IBSErrorByTaxon(int tx, Alignment a, int minMinorCnt, int minMajorCnt, 
             int minSites, double maxDivergence) {
         OpenBitSet mjTbs=new OpenBitSet(a.getAllelePresenceForAllSites(tx, 0));
         OpenBitSet mnTbs=new OpenBitSet(a.getAllelePresenceForAllSites(tx, 1));
