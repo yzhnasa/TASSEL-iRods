@@ -397,7 +397,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myPValSampleSize[r][c];
-            if (Float.isNaN(val)) {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
             } else if (val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getPVal: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
@@ -408,7 +408,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             }
         } else {
             Float val = (Float) mySparsePValSampleSize.getQuick(r, c);
-            if (Float.isNaN(val)) {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
             } else if ((val == null) || val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getPVal: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
@@ -462,7 +462,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myRSqrDPrime[c][r];
-            if (Float.isNaN(val)) {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
             } else if (val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getDPrime: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
@@ -473,7 +473,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             }
         } else {
             Float val = (Float) mySparseRSqrDPrime.getQuick(c, r);
-            if (Float.isNaN(val)) {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
             } else if ((val == null) || val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getDPrime: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
@@ -501,7 +501,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myRSqrDPrime[r][c];
-            if (Float.isNaN(val)) {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
             } else if (val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getRSqr: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
@@ -512,7 +512,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             }
         } else {
             Float val = (Float) mySparseRSqrDPrime.getQuick(r, c);
-            if (Float.isNaN(val)) {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
             } else if ((val == null) || val < 0) {
                 throw new IllegalStateException("LinkageDisequilibrium: getRSqr: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
