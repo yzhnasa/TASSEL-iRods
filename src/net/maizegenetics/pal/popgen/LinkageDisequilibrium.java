@@ -250,6 +250,28 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         rsqr /= freqA * (1 - freqA) * freqB * (1 - freqB);
         return rsqr;
     }
+    
+    public static float[] getLDForSitePair(BitSet rMj, BitSet rMn, BitSet cMj, BitSet cMn, 
+            int minMinorCnt, int minCnt, float minR2,  FisherExact myFisherExact) {
+        float[] results={Float.NaN,Float.NaN,Float.NaN,Float.NaN};
+        int n = 0;
+        int[][] contig=new int[2][2];
+        n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
+        n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
+        if(contig[1][0]+contig[1][1]<minMinorCnt) return results;
+        n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
+        if(contig[0][1]+contig[1][1]<minMinorCnt) return results;
+        n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
+        results[0]=n;
+        if(n<minCnt) return results;
+        double rValue = LinkageDisequilibrium.calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minCnt);
+        results[1]=(float)rValue;
+        if (Double.isNaN(rValue)) return results;
+        if(rValue<minR2) return results;
+        double pValue=myFisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
+        results[3]=(float)pValue;
+        return results;
+    }
 
     public static double[] getLDForSitePair(Alignment a1, int site1, Alignment a2, int site2,
             int minComp, int minMinor, FisherExact fisherExact) {
