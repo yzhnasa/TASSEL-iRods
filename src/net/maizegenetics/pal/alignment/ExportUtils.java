@@ -451,7 +451,7 @@ public class ExportUtils {
             bw.newLine();
             bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">");
             bw.newLine();
-            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the ref and alt alleles in the order listed\">");
+            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the major and minor alleles in the order listed\">");
             bw.newLine();
             bw.write("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">");
             bw.newLine();
@@ -467,7 +467,7 @@ public class ExportUtils {
             bw.newLine();
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
-                bw.write(alignment.getIdGroup().getIdentifier(taxa).getFullName().trim());
+                bw.write(delimChar + alignment.getIdGroup().getIdentifier(taxa).getFullName().trim());
             }
             bw.newLine();
 
