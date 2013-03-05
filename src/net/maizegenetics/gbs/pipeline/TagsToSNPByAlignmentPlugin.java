@@ -5,18 +5,14 @@ package net.maizegenetics.gbs.pipeline;
 
 import java.awt.Frame;
 import java.io.BufferedOutputStream;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-
 import java.util.Arrays;
 import java.util.HashMap;
-
 import javax.swing.ImageIcon;
-
 import net.maizegenetics.gbs.maps.TagsAtLocus;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
@@ -36,9 +32,9 @@ import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-
 import org.apache.log4j.Logger;
-
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.SimpleLayout;
 import org.biojava3.core.util.ConcurrencyTools;
 
 /**
@@ -79,12 +75,12 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private static ArgsEngine myArgsEngine = null;
     int minTaxaWithLocus;
     private double errorRate = 0.01;
-    private boolean includeReferenceGenome = false;
+    private boolean includeReference = false;
     private String refGenomeFileStr = null;
     private long[] refGenomeChr = null;
     private boolean fuzzyStartPositions = false;
     int locusBorder = 0;
-    final static int chr = 0, str = 1, startPosit = 2;  // indices of these position attributes in array returned by theTOPM.getPositionArray(i)
+    final static int chr = 0, str = 1, startPosit = 2;  // indices of these position attributes in array returned by theTOPM.getPositionArray(a)
     
     // variables for calculating OS and PL for VCF, might not be in the correct class
     private static double error;
@@ -111,15 +107,14 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         for (int i = startChr; i <= endChr; i++) {
             myLogger.info("\n\nProcessing chromosome " + i + "...");
             String out = outHapMap + ".c" + i;
-            String locusLog = outHapMap + ".c" + i;
             myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + i + " (maximum number of sites = " + maxSize + ")");
             MutableNucleotideAlignment theMSA;
             if (outVCF == null) {
-                theMSA = createMutableAlignment(theTBT, i, i, maxSize + 100);
+                theMSA = createMutableAlignment(theTBT, maxSize + 100, includeReference);
             } else {
-                theMSA = createMutableVCFAlignment(theTBT, i, i, maxSize + 100);
+                theMSA = createMutableVCFAlignment(theTBT, maxSize + 100, includeReference);
             }
-            if (includeReferenceGenome) {
+            if (includeReference) {
                 refGenomeChr = readReferenceGenomeChr(refGenomeFileStr, i);
             }
             runTagsToSNPByAlignment(theMSA, out, i, false);
@@ -154,13 +149,15 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 + "-mnMAC   Minimum minor allele count (default: " + minMAC + ")\n"
                 + "-mnLCov  Minimum locus coverage (proportion of Taxa with a genotype) (default: " + defaultMinPropTaxaWithLocus + ")\n"
                 + "-errRate Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
-                + "-ref     Path to reference genome in fasta format. DEFAULT: Don't use reference\n"
-                + "         genome (instead, align tags with identical starting postions against each other)\n"
-                + "-LocusBorder  All tags on either strand with start postions that differ by less than the specified\n"
-                + "              integer (LocusBorder) are aligned to the reference genome to call SNPs at a locus.\n"
-                + "              By default (without the -LocusBorder option), only tags with identical start postions and\n"
-                + "              strand are grouped as a locus.\n"
-                + "              Use of the -LocusBorder option requires that the -ref option is also invoked.\n"
+                + "-ref     Path to reference genome in fasta format. Ensures that a tag from the reference genome is always included\n"
+                + "         when the tags at a locus are aligned against each other to call SNPs. The reference allele for each site\n"
+                + "         is then provided in the output HapMap files, under the taxon name \"REFERENCE_GENOME\" (first taxon).\n"
+                + "         DEFAULT: Don't use reference genome.\n"
+//                + "-LocusBorder  All tags on either strand with start postions that differ by less than the specified\n"
+//                + "              integer (LocusBorder) are aligned to the reference genome to call SNPs at a locus.\n"
+//                + "              By default (without the -LocusBorder option), only tags with identical start postions and\n"
+//                + "              strand are grouped as a locus.\n"
+//                + "              Use of the -LocusBorder option requires that the -ref option is also invoked.\n"
                 + "-inclRare  Include the rare alleles at site (3 or 4th states) (default: " + inclRare + ")\n"
                 + "-inclGaps  Include sites where major or minor allele is a GAP (default: " + inclGaps + ")\n"
                 + "-callBiSNPsWGap  Include sites where the third allele is a GAP (default: " + callBiallelicSNPsWithGap + ")\n"
@@ -170,6 +167,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
 
     @Override
     public void setParameters(String[] args) {
+        myLogger.addAppender(new ConsoleAppender(new SimpleLayout()));
         if (args.length == 0) {
             printUsage();
             throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
@@ -191,7 +189,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             myArgsEngine.add("-mnLCov", "--minLocusCov", true);
             myArgsEngine.add("-errRate", "--seqErrRate", true);
             myArgsEngine.add("-ref", "--referenceGenome", true);
-            myArgsEngine.add("-LocusBorder", "--locus-border", true);
+//            myArgsEngine.add("-LocusBorder", "--locus-border", true);
             myArgsEngine.add("-inclRare", "--includeRare", false);
             myArgsEngine.add("-inclGaps", "--includeGaps", false);
             myArgsEngine.add("-callBiSNPsWGap", "--callBiSNPsWGap", false);
@@ -248,12 +246,10 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             outHapMap = inputFile.getParent() + File.separator + outputFilePrefix;
         }
         
-        // Set output VCF file name
         if (myArgsEngine.getBoolean("-vcf")) {
-            outVCF = myArgsEngine.getString("-vcf");
+            outVCF = myArgsEngine.getString("-vcf");  // Set output VCF file name
             initVCFScoreMap();
         }
-        
         if (myArgsEngine.getBoolean("-mxSites")) {
             maxSize = Integer.parseInt(myArgsEngine.getString("-mxSites"));
         }
@@ -297,18 +293,23 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 printUsage();
                 throw new IllegalArgumentException("Can't find the reference genome fasta file (-ref option: " + refGenomeFileStr + ").");
             }
-            includeReferenceGenome = true;
+            includeReference = true;
             refGenomeFile = null;
             System.gc();
         }
-        if (myArgsEngine.getBoolean("-LocusBorder")) {
-            if (!includeReferenceGenome) {
-                printUsage();
-                throw new IllegalArgumentException("The -LocusBorder option requires that the -ref option (referenceGenome) is also invoked.");
-            }
-            locusBorder = Integer.parseInt(myArgsEngine.getString("-LocusBorder"));
-            fuzzyStartPositions = true;
-        }
+          // the (experimental) -LocusBorder option is not properly implemented yet in Tassel4
+//        if (myArgsEngine.getBoolean("-LocusBorder")) {
+//            if (!includeReference) {
+//                printUsage();
+//                throw new IllegalArgumentException("The -LocusBorder option requires that the -ref option (referenceGenome) is also invoked.");
+//            }
+//            if (outVCF != null) {
+//                printUsage();
+//                throw new IllegalArgumentException("The -LocusBorder option is currently incompatible with the -vcf option.");
+//            }
+//            locusBorder = Integer.parseInt(myArgsEngine.getString("-LocusBorder"));
+//            fuzzyStartPositions = true;
+//        }
         if (myArgsEngine.getBoolean("-inclRare")) {
             inclRare = true;
         }
@@ -356,7 +357,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     public void runTagsToSNPByAlignment(MutableNucleotideAlignment theMSA, String outHapMap, int targetChromo, boolean requireGeneticSupport) {
         long time = System.currentTimeMillis();
         DataOutputStream locusLogDOS=openLocusLog(targetChromo);
-        TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE,Byte.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,includeReferenceGenome,errorRate);
+        TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE,Byte.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,includeReference,fuzzyStartPositions,errorRate);
         int[] currPos = null;
         int countLoci = 0;
         for (int i = 0; (i < theTOPM.getSize()) && (theMSA.getSiteCount() < (maxSize - 1000)); i++) {
@@ -365,7 +366,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             if (newPos[chr] != targetChromo) continue;    //Skip tags from other chromosomes
             if (requireGeneticSupport && (theTOPM.getMapP(ri) < 2)) continue; //Skip tags with low mapP scores
             if ((fuzzyStartPositions && nearbyTag(newPos, currPos)) || Arrays.equals(newPos, currPos)) {
-                currTAL.addTag(ri, theTOPM, theTBT, includeReferenceGenome);
+                currTAL.addTag(ri, theTOPM, theTBT, includeReference, fuzzyStartPositions);
             } else {
                 int nTaxaCovered = currTAL.getNumberTaxaCovered();
                 if (currTAL.getSize()>1 && nTaxaCovered >= minTaxaWithLocus) {  // finish the current TAL
@@ -379,8 +380,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
                 currPos = newPos; // start a new TAL with the current tag
                 if ((currPos[str] != TagsOnPhysicalMap.byteMissing) && (currPos[startPosit] != TagsOnPhysicalMap.intMissing)) {  // we already know that currPos[chr]==targetChromo
-                    currTAL = new TagsAtLocus(currPos[chr],(byte) currPos[str],currPos[startPosit],theTOPM.getTagLength(ri),includeReferenceGenome,errorRate);
-                    currTAL.addTag(ri, theTOPM, theTBT, includeReferenceGenome);
+                    currTAL = new TagsAtLocus(currPos[chr],(byte) currPos[str],currPos[startPosit],theTOPM.getTagLength(ri),includeReference,fuzzyStartPositions,errorRate);
+                    currTAL.addTag(ri, theTOPM, theTBT, includeReference, fuzzyStartPositions);
                 } else {
                     currPos = null;  // invalid position
                 }
@@ -403,35 +404,42 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     }
 
     /**
-     * Fills an array of Locus objects with one locus for each supplied
-     * chromosome. Creates a MutableNucleotideAlignment using the locus list and
-     * TBT profile as input. Returns the MSA object.
+     * Creates a MutableNucleotideAlignment based on the taxa in a TBT.
      */
-    private static MutableNucleotideAlignment createMutableAlignment(TagsByTaxa theTBT, int startChr, int endChr, int maxSites) {
-        Locus[] theL = new Locus[endChr - startChr + 1];
-        for (int i = 0; i < theL.length; i++) {
-            theL[i] = new Locus("" + (startChr + i), "" + (startChr + i), -1, -1, null, null);
+    private static MutableNucleotideAlignment createMutableAlignment(TagsByTaxa theTBT, int maxSites, boolean includeReference) {
+        String[] taxaNames;
+        if (includeReference) {
+            int nTaxa = theTBT.getTaxaNames().length + 1;
+            taxaNames = new String[nTaxa];
+            taxaNames[0] = "REFERENCE_GENOME";  // will hold the "genotype" of the reference genome
+            for (int t = 1; t < nTaxa; t++) {
+                taxaNames[t] = theTBT.getTaxaName(t-1);
+            }
+        } else {
+            taxaNames = theTBT.getTaxaNames();
         }
-        IdGroup taxa = new SimpleIdGroup(theTBT.getTaxaNames());
+        IdGroup taxa = new SimpleIdGroup(taxaNames);
         MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
-        //for (int i = 0; i < maxSites; i++) {
-        //    theMSA.setLocusOfSite(i, theL[0]);
-        //}
-        //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(theTBT.getTaxaNames(), maxSites, theL);
         return theMSA;
     }
     
     /**
      * Same as above method. Creates a MutableVCFAlignment 
      */
-    private static MutableVCFAlignment createMutableVCFAlignment(TagsByTaxa theTBT, int startChr, int endChr, int maxSites) {
-        Locus[] theL = new Locus[endChr - startChr + 1];
-        for (int i = 0; i < theL.length; i++) {
-            theL[i] = new Locus("" + (startChr + i), "" + (startChr + i), -1, -1, null, null);
+    private static MutableVCFAlignment createMutableVCFAlignment(TagsByTaxa theTBT, int maxSites, boolean includeReference) {
+        String[] taxaNames;
+        if (includeReference) {
+            int nTaxa = theTBT.getTaxaNames().length + 1;
+            taxaNames = new String[nTaxa];
+            taxaNames[0] = "REFERENCE_GENOME";  // will hold the "genotype" of the reference genome
+            for (int t = 1; t < nTaxa; t++) {
+                taxaNames[t] = theTBT.getTaxaName(t-1);
+            }
+        } else {
+            taxaNames = theTBT.getTaxaNames();
         }
-        IdGroup taxa = new SimpleIdGroup(theTBT.getTaxaNames());
+        IdGroup taxa = new SimpleIdGroup(taxaNames);
         MutableVCFAlignment theMVA = MutableVCFAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
-        
         return theMVA;
     }
 
@@ -449,7 +457,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     }
     
     private synchronized void addSitesToMutableAlignment(TagsAtLocus theTAL, MutableNucleotideAlignment theMSA, DataOutputStream locusLogDOS) {
-        byte[][][] alleleDepth = null;
+        byte[][][] alleleDepths = null;
         byte[][] commonAlleles = null;
         if (theTAL.getSize() < 2) {
             logRejectedTagLocus(theTAL,locusLogDOS);
@@ -457,14 +465,20 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         byte[][] callsBySite;
         if (outVCF != null) {
-            callsBySite = theTAL.getSNPCallsVCF(callBiallelicSNPsWithGap, myGenoScoreMap);
-            alleleDepth = theTAL.getAllelesInTaxa();
+            if (includeReference) addRefTag(theTAL);
+            callsBySite = theTAL.getSNPCallsVCF(callBiallelicSNPsWithGap, myGenoScoreMap, includeReference);
+            alleleDepths = theTAL.getAlleleDepthsInTaxa();
             commonAlleles = theTAL.getCommonAlleles();
-        } else if (includeReferenceGenome) {
-            String refSeqInRegion = getRefSeqInRegion(theTAL);
-            callsBySite = theTAL.getSNPCallsQuant(refSeqInRegion, callBiallelicSNPsWithGap);
+        } else if (includeReference) {
+            if (fuzzyStartPositions) {
+                String refSeqInRegion = getRefSeqInRegion(theTAL);
+                callsBySite = theTAL.getSNPCallsQuant(refSeqInRegion, callBiallelicSNPsWithGap);
+            } else {
+                addRefTag(theTAL);
+                callsBySite = theTAL.getSNPCallsQuant(callBiallelicSNPsWithGap, includeReference);
+            }
         } else {
-            callsBySite = theTAL.getSNPCallsQuant(callBiallelicSNPsWithGap);
+            callsBySite = theTAL.getSNPCallsQuant(callBiallelicSNPsWithGap, includeReference);
         }
         if (callsBySite == null) {
             logAcceptedTagLocus(theTAL.getLocusReport(minTaxaWithLocus, null), locusLogDOS);
@@ -485,28 +499,37 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             theMSA.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
             int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
             theMSA.setPositionOfSite(currSite, position);
+            int offset = 0;
+            if (includeReference && !fuzzyStartPositions) {
+                offset = 1;
+                if (strand == -1) theMSA.setBase(0, currSite, complementGeno(theTAL.getRefGeno(s)));
+                else theMSA.setBase(0, currSite, theTAL.getRefGeno(s));
+                if (outVCF != null) {
+                    byte[] depths = new byte[]{0,0,0}; // assumes maxNumAlleles = 3
+                    theMSA.setDepthForAlleles(0, currSite, depths);
+                }
+            }
             for (int tx = 0; tx < theTBT.getTaxaCount(); tx++) {
-                if (outVCF == null && callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
-                    theMSA.setBase(tx, currSite, complementGeno(callsBySite[s][tx]));  // complement to plus strand
+                if (callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
+                    theMSA.setBase(tx+offset, currSite, complementGeno(callsBySite[s][tx]));  // complement to plus strand
                 } else {
-                    theMSA.setBase(tx, currSite, callsBySite[s][tx]);
-                    if (outVCF != null) {
-                        byte[] depth = new byte[alleleDepth.length];
-                        for (int i = 0; i < depth.length; i++) {
-                            depth[i] = alleleDepth[i][tx][s];
-                        }
-                        for (int a = 0; a < alleleDepth.length; a++) {
-                            theMSA.setDepthForAllele(tx, currSite, depth);
-                        }
+                    theMSA.setBase(tx+offset, currSite, callsBySite[s][tx]);
+                }
+                if (outVCF != null) {
+                    byte[] depths = new byte[alleleDepths.length];
+                    for (int a = 0; a < depths.length; a++) {
+                        depths[a] = alleleDepths[a][s][tx];
                     }
+                    theMSA.setDepthForAlleles(tx+offset, currSite, depths);
                 }
             }
             if (outVCF != null) {
                 byte[] allelesForSite = new byte[commonAlleles.length];
-                for (int i = 0; i < allelesForSite.length; i++) {
-                    allelesForSite[i] = commonAlleles[i][s];
+                for (int a = 0; a < allelesForSite.length; a++) {
+                    if (strand == -1) allelesForSite[a] = complementAllele(commonAlleles[a][s]);
+                    else allelesForSite[a] = commonAlleles[a][s];
                 }
-                theMSA.setCommonAllele(currSite, allelesForSite);
+                theMSA.setCommonAlleles(currSite, allelesForSite);
             }
             if (this.isUpdateTOPM) {  
                 updateTOPM(theTAL, s, position, strand, alleles);
@@ -911,6 +934,31 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         return sb.toString();
     }
 
+    private void addRefTag(TagsAtLocus theTAL) {
+        String refTag;
+        int basesPerLong = BaseEncoder.chunkSize;
+        int refSeqStartPos, refSeqEndPos;
+        if (theTAL.getStrand() == -1) {
+            refSeqEndPos = theTAL.getMinStartPosition();
+            refSeqStartPos = refSeqEndPos - theTAL.getMaxTagLength() + 1;
+        } else {
+            refSeqStartPos = theTAL.getMinStartPosition();
+            refSeqEndPos = refSeqStartPos + theTAL.getMaxTagLength() - 1;
+        }
+        int startIndex = Math.max((refSeqStartPos/basesPerLong)-1, 0);
+        int endIndex = Math.min((refSeqEndPos/basesPerLong), refGenomeChr.length-1);
+        StringBuilder sb = new StringBuilder();
+        for (int i = startIndex; i <= endIndex; ++i) {
+            sb.append(BaseEncoder.getSequenceFromLong(refGenomeChr[i]));
+        }
+        refTag = sb.substring(refSeqStartPos-startIndex*basesPerLong-1, 
+                refSeqStartPos-startIndex*basesPerLong-1+theTAL.getMaxTagLength());
+        if (theTAL.getStrand() == -1) {
+            refTag = revComplement(refTag);
+        }
+        theTAL.addRefTag(refTag, theTOPM.getTagSizeInLong(), theTOPM.getNullTag());
+    }
+
     public static byte complementGeno(byte geno) {
         byte comp = Byte.MIN_VALUE;
         switch (geno) {
@@ -961,6 +1009,36 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 comp = Alignment.UNKNOWN_ALLELE; break;
         }
         return comp;
+    }
+
+    public static char complement(char geno) {
+        char comp = 'X';
+        switch (geno) {
+            case 'A':  comp = 'T';  break;
+            case 'C':  comp = 'G';  break;
+            case 'G':  comp = 'C';  break;
+            case 'T':  comp = 'A';  break;
+            case 'K':  comp = 'M';  break;
+            case 'M':  comp = 'K';  break;
+            case 'R':  comp = 'Y';  break;
+            case 'S':  comp = 'S';  break;
+            case 'W':  comp = 'W';  break;
+            case 'Y':  comp = 'R';  break;
+            case '-':  comp = '-';  break;  // both strands have the deletion
+            case '+':  comp = '+';  break;  // both strands have the insertion
+            case '0':  comp = '0';  break;
+            case 'N':  comp = 'N';  break;
+            default:   comp = 'N';  break;
+        }
+        return comp;
+    }
+    
+    public static String revComplement(String seq) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = seq.length()-1; i >= 0; i--) {
+            sb.append(complement(seq.charAt(i)));
+        }
+        return sb.toString();
     }
 
     /**
