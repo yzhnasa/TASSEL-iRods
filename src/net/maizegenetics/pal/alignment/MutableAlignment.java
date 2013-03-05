@@ -74,7 +74,7 @@ public interface MutableAlignment extends Alignment {
      * @param site site
      * @param values values
      */
-    public void setDepthForAllele(int taxon, int site, byte[] values);
+    public void setDepthForAlleles(int taxon, int site, byte[] values);
 
     /**
      * Sets possible alleles for a site
@@ -82,13 +82,21 @@ public interface MutableAlignment extends Alignment {
      * @param site
      * @param values 
      */
-    public void setCommonAllele(int site, byte[] values);
+    public void setCommonAlleles(int site, byte[] values);
     
     /**
      * Clean alignment including sorting sites by position.
      */
     public void clean();
 
+    /**
+     * Sets the reference allele for a site
+     * 
+     * @param site
+     * @param diploidAllele
+     */
+    public void setReferenceAllele(int site, byte diploidAllele);
+    
     /**
      * True if changes since last clean().
      *

@@ -474,7 +474,7 @@ public class ExportUtils {
             for (int site = 0; site < alignment.getSiteCount(); site++) {
                 int totalDepth = 0;
                 for (int i = 0; i < alignment.getSequenceCount(); i++) {
-                    byte[] depth = alignment.getDepthForAllele(i, site);
+                    byte[] depth = alignment.getDepthForAlleles(i, site);
                     for (int k = 0; k < depth.length; k++) {
                         if (depth[k] != -1) {
                             totalDepth += depth[k] & 0xFF;
@@ -619,7 +619,7 @@ public class ExportUtils {
                     bw.write(":");
 
                     // AD
-                    byte[] siteAlleleDepths = alignment.getDepthForAllele(taxa, site);
+                    byte[] siteAlleleDepths = alignment.getDepthForAlleles(taxa, site);
                     int siteTotalDepth = 0;
                     if (siteAlleleDepths.length != 0) {
                         bw.write((int) (siteAlleleDepths[0] & 0xFF) + "");

@@ -22,7 +22,7 @@ abstract public class AbstractAlignment implements Alignment {
     private static final long serialVersionUID = -5197800047652332969L;
     private IdGroup myIdGroup;
     private GeneticMap myGeneticMap;
-    private byte[] myReference;
+    protected byte[] myReference;
     protected int myNumSites;
     protected String[][] myAlleleStates;
     private int[] myVariableSites;
@@ -570,7 +570,11 @@ abstract public class AbstractAlignment implements Alignment {
     
     @Override
     public byte getReferenceAllele(int site) {
-        return myReference[site];
+        if (hasReference()) {
+            return myReference[site];
+        } else {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
     }
     
     @Override
@@ -1054,7 +1058,7 @@ abstract public class AbstractAlignment implements Alignment {
     }
     
     @Override
-    public byte[] getDepthForAllele(int taxon, int site) {
+    public byte[] getDepthForAlleles(int taxon, int site) {
         return new byte[]{1, 1};
     }
 }

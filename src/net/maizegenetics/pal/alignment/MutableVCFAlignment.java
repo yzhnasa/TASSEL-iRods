@@ -8,9 +8,7 @@ import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 
@@ -20,7 +18,7 @@ import net.maizegenetics.pal.ids.Identifier;
  */
 public class MutableVCFAlignment extends MutableNucleotideAlignment implements MutableAlignment {
     
-    // allelic depth information, byte[allele][taxa][site] = depth, max: 255
+    // allelic depth information, byte[allele][taxa][site] = depth, max: 127
     private byte[][][] myAlleleDepth;
     
     // possible alleles for each site
@@ -94,7 +92,7 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
     }
     
     @Override
-    public byte[] getDepthForAllele(int taxon, int site) {
+    public byte[] getDepthForAlleles(int taxon, int site) {
         ArrayList<Byte> outArray = new ArrayList<Byte>();
         for (int i = 0; i < myAlleleDepth.length; i++) {
             if (myAlleleDepth[i][taxon][site] != (byte) -1) {
@@ -110,18 +108,21 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
         return out;
     }
     
-    public void setCommonAllele(int site, byte[] values) {
+    @Override
+    public void setCommonAlleles(int site, byte[] values) {
         for (int i = 0; i < values.length; i++) {
             myCommonAlleles[i][site] = values[i];
         }
     }
     
-    public void setDepthForAllele(int taxon, int site, byte[] values) {
+    @Override
+    public void setDepthForAlleles(int taxon, int site, byte[] values) {
         for (int i = 0; i < values.length; i++) {
             myAlleleDepth[i][taxon][site] = values[i];
         }
     }
     
+    @Override
     protected void sortSitesByPhysicalPosition() {
 
         Swapper swapperPos = new Swapper() {
@@ -152,6 +153,10 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
                     myCommonAlleles[i][a] = myCommonAlleles[i][b];
                     myCommonAlleles[i][b] = al;
                 }
+                
+                bt = myReference[a];
+                myReference[a] = myReference[b];
+                myReference[b] = bt;
                 
                 byte dp;
                 for (int i = 0; i < myMaxNumAlleles; i++) {

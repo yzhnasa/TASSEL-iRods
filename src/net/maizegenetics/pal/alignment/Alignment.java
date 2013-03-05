@@ -872,5 +872,5 @@ public interface Alignment extends Serializable {
      *
      * @return two counts
      */
-    public byte[] getDepthForAllele(int taxon, int site);
+    public byte[] getDepthForAlleles(int taxon, int site);
 }
