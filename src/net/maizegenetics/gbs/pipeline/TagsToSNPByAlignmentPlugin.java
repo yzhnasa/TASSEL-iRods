@@ -502,8 +502,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             int offset = 0;
             if (includeReference && !fuzzyStartPositions) {
                 offset = 1;
-                if (strand == -1) theMSA.setBase(0, currSite, complementGeno(theTAL.getRefGeno(s)));
-                else theMSA.setBase(0, currSite, theTAL.getRefGeno(s));
+                byte geno = (strand == -1) ? complementGeno(theTAL.getRefGeno(s)) : theTAL.getRefGeno(s);
+                theMSA.setBase(0, currSite, geno);
+                theMSA.setReferenceAllele(currSite, geno);
                 if (outVCF != null) {
                     byte[] depths = new byte[]{0,0,0}; // assumes maxNumAlleles = 3
                     theMSA.setDepthForAlleles(0, currSite, depths);
