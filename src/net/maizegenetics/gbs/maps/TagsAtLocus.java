@@ -50,7 +50,7 @@ public class TagsAtLocus {
     private int totalNReads = Integer.MIN_VALUE;
     private String status = "notSet";
     
-    // For VCF output with depth
+    // For VCF output with depth (now used for custom SNP report in regular pipeline as well)
     private byte[][] myCommonAlleles = null;
     private byte[][][] myAlleleDepthsInTaxa = null;
         
@@ -273,17 +273,7 @@ public class TagsAtLocus {
             positionsOfVariableSites[s] = tagAlignment.getPositionInLocus(s);
             byte[] commonAlleles = getCommonAlleles(s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag);
             int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag);
-            for (int a = 0; a < commonAlleles.length; a++) {
-                myCommonAlleles[a][s] = commonAlleles[a];
-            }
-            for (int a = 0; a < alleleDepthsInTaxa.length; a++) {
-                for (int tx = 0; tx < alleleDepthsInTaxa[a].length; tx++) {
-                    if (alleleDepthsInTaxa[a][tx] > 127) { // max value is 127
-                        alleleDepthsInTaxa[a][tx] = 127;
-                    }
-                    myAlleleDepthsInTaxa[a][s][tx] = (byte)alleleDepthsInTaxa[a][tx];
-                }
-            }
+            setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
             for (int tx = 0; tx < nTaxa; tx++) {
                 callsBySite[s][tx] = resolveVCFGeno(commonAlleles, alleleDepthsInTaxa, tx, genoScoreMap);
             }
@@ -312,14 +302,17 @@ public class TagsAtLocus {
         if (includeReferenceTag) refCallsBySite = new byte[nSites];
         populateAllelesAtVariableSitesByTag(tagAlignment, nSites, includeReferenceTag);
         positionsOfVariableSites = new int[nSites];
+        myCommonAlleles = new byte[maxNumAlleles][nSites];
+        myAlleleDepthsInTaxa = new byte[maxNumAlleles][nSites][nTaxa];
         for (int s = 0; s < nSites; s++) {
             positionsOfVariableSites[s] = tagAlignment.getPositionInLocus(s);
             byte[] commonAlleles = getCommonAlleles(s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag); // NOTE: gap could be one of the common alleles (even if callBiallelicSNPsWithGap is false)
-            int[][] allelesInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag);
+            int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag);
+            setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
             for (int tx = 0; tx < nTaxa; tx++) {
                 int count = 0;
                 for (int a = 0; a < maxNumAlleles; a++) {
-                    count += allelesInTaxa[a][tx];
+                    count += alleleDepthsInTaxa[a][tx];
                 }
                 if (count == 0) {
                     callsBySite[s][tx] = Alignment.UNKNOWN_DIPLOID_ALLELE;
@@ -328,7 +321,7 @@ public class TagsAtLocus {
                 // check for each possible homozygote
                 boolean done = false;
                 for (int a = 0; a < maxNumAlleles; a++) {
-                    if ((count - allelesInTaxa[a][tx]) == 0) {
+                    if ((count - alleleDepthsInTaxa[a][tx]) == 0) {
                         callsBySite[s][tx] = (byte) ((commonAlleles[a] << 4) | commonAlleles[a]);
                         done = true;
                         break;
@@ -337,7 +330,7 @@ public class TagsAtLocus {
                 if (done) {
                     continue;
                 }
-                callsBySite[s][tx] = resolveHetGeno(commonAlleles, allelesInTaxa, tx);
+                callsBySite[s][tx] = resolveHetGeno(commonAlleles, alleleDepthsInTaxa, tx);
             }
         }
         return callsBySite;
@@ -385,6 +378,20 @@ public class TagsAtLocus {
             }
         }
         return callsBySite;
+    }
+    
+    private void setAlleleDepthsInTaxaForSite(int site, int[][] alleleDepthsInTaxa, byte[] commonAlleles) {
+        for (int a = 0; a < commonAlleles.length; a++) {
+            myCommonAlleles[a][site] = commonAlleles[a];
+        }
+        for (int a = 0; a < alleleDepthsInTaxa.length; a++) {
+            for (int tx = 0; tx < alleleDepthsInTaxa[a].length; tx++) {
+                if (alleleDepthsInTaxa[a][tx] > 127) { // max value is 127
+                    alleleDepthsInTaxa[a][tx] = 127;
+                }
+                myAlleleDepthsInTaxa[a][site][tx] = (byte)alleleDepthsInTaxa[a][tx];
+            }
+        }
     }
 
     private void populateAllelesAtVariableSitesByTag(Alignment tagAlignment, int nSites, boolean includeReferenceTag) {
