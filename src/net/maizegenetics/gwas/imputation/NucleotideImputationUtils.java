@@ -1142,6 +1142,7 @@ public class NucleotideImputationUtils {
 		//denom.r = sqrt[ (sum(XX) - 1/n*sum(X)sum(X)) * (sum(YY) - 1/n*sum(Y)sum(Y)) ]
 		double num = sumprod - sum1 / count * sum2;
 		double denom = Math.sqrt( (sumsq1 - sum1 / count * sum1) * (sumsq2 - sum2 / count * sum2) );
+		if (denom == 0) return Double.NaN;
 		return num / denom;
 	}
 	
