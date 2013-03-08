@@ -13,20 +13,40 @@ import net.maizegenetics.baseplugins.ExtractHapmapSubsetPlugin;
 public class JeffPipelines {
 
     public static void main(String[] args) {
-//        runTagsToSNPByAlignmentPlugin();
-        runExtractHapmapSubsetPlugin();
+        runTagsToSNPByAlignmentPlugin();
+//        runExtractHapmapSubsetPlugin();
+//        runCompareGenosBetweenHapMapFilesPlugin();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
 
         String baseDirMDPLowVol = "/Users/jcg233/Documents/GBS/MDP1_low_vol/";
-        String[] MDPLowVolArgs = new String[]{
+        String[] MDPLowVolArgsOld = new String[]{
             "-i", baseDirMDPLowVol + "C08L7ACXX_6_min2.tbt.byte",
             "-y", // use TagsByTaxaByte
             "-o", baseDirMDPLowVol + "hapmap/testLocusLog",
             "-m", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit.topm.bin",
             //            "-mUpd", baseDir+"",
             //"-ref", "maize_agp_v2.fasta",
+            //"-LocusBorder", "150",
+            "-mnF", "0.8",
+            "-mnMAF", "0.005",
+            "-mnMAC", "99999", // this will never be satified: this way -mnMAF overrides it
+            "-mnLCov", "0.1", // Minimum locus coverage (proportion of Taxa)
+            //            "-inclGaps",  // Include sites where major or minor allele is a GAP
+            //            "-callBiSNPsWGap",  //call sites with a biallelic SNP plus a gap (e.g., A/C/-)
+            "-s", "10", // Start chromosome
+            "-e", "10" // End chromosome
+        };
+
+        String[] MDPLowVolArgs = new String[]{
+            "-i", baseDirMDPLowVol + "C08L7ACXX_6_min2.tbt.byte",
+            "-y", // use TagsByTaxaByte
+            "-o",   baseDirMDPLowVol + "tassel4/hapmap/vcf",
+            "-vcf", baseDirMDPLowVol + "tassel4/hapmap/vcf/MDP1_low_vol_wRef.c10.vcf",
+            "-m", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit.topm.bin",
+            //            "-mUpd", baseDir+"",
+            "-ref", baseDirMDPLowVol + "maize_agp_v2_chr10.fasta",
             //"-LocusBorder", "150",
             "-mnF", "0.8",
             "-mnMAF", "0.005",
@@ -116,5 +136,22 @@ public class JeffPipelines {
             plugin.setParameters(args);
             plugin.performFunction(null);
         }
+    }
+    
+    public static void runCompareGenosBetweenHapMapFilesPlugin() {
+        String baseDir = "/Users/jcg233/Documents/GBS/MDP1_low_vol/";
+        String[] tassel4WRefVsTassel3Args = new String[]{
+            "-hmp1", baseDir+"tassel4/hapmap/withRef/MDP1_low_vol_mergeSNPs.c+.hmp.txt",
+//            "-hmp2", baseDir+"hapmap/MDP1_low_vol_noRefOption_mergeSNPs.c+.hmp.txt",
+            "-hmp2", baseDir+"hapmap/MDP1_low_vol_RefOptionWOutput2_mergeSNPs.c+.hmp.txt",
+            "-sC",   "10",
+            "-eC",   "10",
+            "-syn",  baseDir+"282synsWRef.txt",
+            "-o",    baseDir+"tassel4WRefVsTassel3WRefGenoCompare.txt",
+        };
+
+        CompareGenosBetweenHapMapFilesPlugin plugin = new CompareGenosBetweenHapMapFilesPlugin();
+        plugin.setParameters(tassel4WRefVsTassel3Args);
+        plugin.performFunction(null);
     }
 }

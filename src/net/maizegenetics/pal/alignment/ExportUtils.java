@@ -451,7 +451,7 @@ public class ExportUtils {
             bw.newLine();
             bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">");
             bw.newLine();
-            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the ref and alt alleles in the order listed\">");
+            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the major and minor alleles in the order listed\">");
             bw.newLine();
             bw.write("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">");
             bw.newLine();
@@ -467,14 +467,14 @@ public class ExportUtils {
             bw.newLine();
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
-                bw.write(alignment.getIdGroup().getIdentifier(taxa).getFullName().trim());
+                bw.write(delimChar + alignment.getIdGroup().getIdentifier(taxa).getFullName().trim());
             }
             bw.newLine();
 
             for (int site = 0; site < alignment.getSiteCount(); site++) {
                 int totalDepth = 0;
                 for (int i = 0; i < alignment.getSequenceCount(); i++) {
-                    byte[] depth = alignment.getDepthForAllele(i, site);
+                    byte[] depth = alignment.getDepthForAlleles(i, site);
                     for (int k = 0; k < depth.length; k++) {
                         if (depth[k] != -1) {
                             totalDepth += depth[k] & 0xFF;
@@ -619,7 +619,7 @@ public class ExportUtils {
                     bw.write(":");
 
                     // AD
-                    byte[] siteAlleleDepths = alignment.getDepthForAllele(taxa, site);
+                    byte[] siteAlleleDepths = alignment.getDepthForAlleles(taxa, site);
                     int siteTotalDepth = 0;
                     if (siteAlleleDepths.length != 0) {
                         bw.write((int) (siteAlleleDepths[0] & 0xFF) + "");

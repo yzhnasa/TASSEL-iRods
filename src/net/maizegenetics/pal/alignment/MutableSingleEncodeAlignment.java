@@ -88,6 +88,8 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         myMaxTaxa = maxNumTaxa;
         myMaxNumSites = maxNumSites;
         myNumSites = initNumSites;
+        myReference = new byte[myMaxNumSites];
+        Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
 
         initData();
         initTaxa(idGroup);
@@ -113,6 +115,9 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         for (int t = 0; t < myMaxTaxa; t++) {
             Arrays.fill(myData[t], Alignment.UNKNOWN_DIPLOID_ALLELE);
         }
+        
+        myReference = new byte[myMaxNumSites];
+        Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
 
         myIdentifiers = idGroup;
     }
@@ -340,26 +345,6 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     }
 
     @Override
-    public boolean hasReference() {
-        return false;
-    }
-
-    @Override
-    public byte getReferenceAllele(int site) {
-        return 15;
-    }
-
-    @Override
-    public byte[] getReference() {
-        return null;
-    }
-
-    @Override
-    public byte[] getReference(int startSite, int endSite) {
-        return null;
-    }
-
-    @Override
     public boolean isPhased() {
         return false;
     }
@@ -540,6 +525,10 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             myData[taxon][startSite++] = newBases[i];
         }
     }
+    
+    public void setReferenceAllele(int site, byte diploidAllele) {
+        myReference[site] = diploidAllele;
+    }
 
     public void addSite(int site) {
 
@@ -558,11 +547,13 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             myVariableSites[s] = myVariableSites[s - 1];
             myLocusIndices[s] = myLocusIndices[s - 1];
             mySNPIDs[s] = mySNPIDs[s - 1];
+            myReference[s] = myReference[s-1];
         }
         myVariableSites[site] = -1;
         myLocusIndices[site] = Integer.MAX_VALUE;
         mySNPIDs[site] = null;
-
+        myReference[site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+ 
         myNumSites++;
 
         setDirty();
@@ -584,10 +575,12 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             myVariableSites[s] = myVariableSites[s + 1];
             myLocusIndices[s] = myLocusIndices[s + 1];
             mySNPIDs[s] = mySNPIDs[s + 1];
+            myReference[s] = myReference[s + 1];
         }
         myVariableSites[myNumSites] = -1;
         myLocusIndices[myNumSites] = Integer.MAX_VALUE;
         mySNPIDs[myNumSites] = null;
+        myReference[myNumSites] = Alignment.UNKNOWN_DIPLOID_ALLELE;
 
     }
 
@@ -602,6 +595,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         myVariableSites[site] = Integer.MAX_VALUE;
         myLocusIndices[site] = Integer.MAX_VALUE;
         mySNPIDs[site] = null;
+        myReference[site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
 
     }
 
@@ -704,6 +698,10 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                 String st = mySNPIDs[a];
                 mySNPIDs[a] = mySNPIDs[b];
                 mySNPIDs[b] = st;
+                
+                bt = myReference[a];
+                myReference[a] = myReference[b];
+                myReference[b] = bt;
             }
         };
         IntComparator compPos = new IntComparator() {
@@ -744,6 +742,10 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                 String st = mySNPIDs[a];
                 mySNPIDs[a] = mySNPIDs[b];
                 mySNPIDs[b] = st;
+                
+                byte bt = myReference[a];
+                myReference[a] = myReference[b];
+                myReference[b] = bt;
             }
         };
         IntComparator compPos = new IntComparator() {
@@ -801,13 +803,11 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         return -1;
     }
 
-    @Override
-    public void setDepthForAllele(int taxon, int site, byte[] values) {
+    public void setDepthForAlleles(int taxon, int site, byte[] values) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
-    @Override
-    public void setCommonAllele(int site, byte[] values) {
+    public void setCommonAlleles(int site, byte[] values) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

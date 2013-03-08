@@ -6,21 +6,18 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.popgen;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.statistics.FisherExact;
-
-import net.maizegenetics.util.ProgressListener;
-
+import cern.colt.matrix.impl.SparseObjectMatrix2D;
 import java.io.Serializable;
 import java.io.StringWriter;
-
 import java.util.Arrays;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
-
-import cern.colt.matrix.impl.SparseObjectMatrix2D;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
+import net.maizegenetics.util.ProgressListener;
+import org.apache.log4j.Logger;
 
 /**
  * This class calculates D' and r^2 estimates of linkage disequilibrium. It also
@@ -44,10 +41,11 @@ import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
  */
 public class LinkageDisequilibrium extends Thread implements Serializable, TableReport {
 
-    public enum testDesign {
+    public static enum testDesign {
 
         All, SlidingWindow, SiteByAll, SiteList
     };
+    private static final Logger myLogger = Logger.getLogger(LinkageDisequilibrium.class);
     private Alignment myAlignment;
     private Alignment mySBitAlignment;
     private int myMinTaxaForEstimate = 20;
@@ -76,7 +74,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param alignment Alignment or AnnotationAlignment (this should only
      * contain polymorphic numSites)
      * @param myRapidPermute Use a rapid approach to P-value estimation (see
-     * Contigency Table)
+     * Contingency Table)
      * @param numberOfPermutations The number of permutations to determine P
      * values
      * @param windowSize The size of the LD window, determined by user.
@@ -89,7 +87,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         //} else {
         //    mySBitAlignment = SBitAlignment.getInstance(myAlignment, 2, false);
         //}
-        mySBitAlignment = ConvertSBitTBitPlugin.convertAlignment(myAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, listener);
+        mySBitAlignment = AlignmentUtils.optimizeForSites(myAlignment, listener);
         myFisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
         myWindowSize = windowSize;
         myCurrDesign = LDType;
@@ -100,6 +98,9 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             myNumAccumulativeBins = numAccumulateIntervals;
         }
         mySiteList = sitesList;
+        if (mySiteList != null) {
+            Arrays.sort(mySiteList);
+        }
     }
 
     /**
@@ -127,7 +128,6 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
         if (2.0 * myTotalTests / (numSites * numSites) < 0.1) {
             myUseSparse = true;
-            System.out.println("using sparse");
         }
 
         if (myIsAccumulativeReport) {
@@ -181,7 +181,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                     myRSqrDPrime[r][c] = myRSqrDPrime[c][r] = myPValSampleSize[r][c] = Float.NaN;
                     myRSqrDPrime[r][c] = rVal;
                     myRSqrDPrime[c][r] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate);
-                    if (Double.isNaN(myRSqrDPrime[r][c]) || Double.isNaN(myRSqrDPrime[c][r])) {
+                    if (Float.isNaN(myRSqrDPrime[r][c]) || Float.isNaN(myRSqrDPrime[c][r])) {
                         myPValSampleSize[r][c] = Float.NaN;
                     } else {
                         myPValSampleSize[r][c] = (float) myFisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
@@ -193,8 +193,8 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                     mySparsePValSampleSize.setQuick(r, c, Float.NaN);
 
                     mySparseRSqrDPrime.setQuick(r, c, new Float(rVal));
-                    mySparseRSqrDPrime.setQuick(c, r, (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate));
-                    if (Double.isNaN((Float) mySparseRSqrDPrime.getQuick(r, c)) || Double.isNaN((Float) mySparseRSqrDPrime.getQuick(c, r))) {
+                    mySparseRSqrDPrime.setQuick(c, r, new Float(calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate)));
+                    if (Float.isNaN((Float) mySparseRSqrDPrime.getQuick(r, c)) || Float.isNaN((Float) mySparseRSqrDPrime.getQuick(c, r))) {
                         mySparsePValSampleSize.setQuick(r, c, Float.NaN);
                     } else {
                         mySparsePValSampleSize.setQuick(r, c, (float) myFisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]));
@@ -203,80 +203,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             }
 
         } //end of currTest
-    }
 
-    private void calculateLDForInbred(boolean collapseMinor) {  //only calculates disequilibrium for inbreds
-        int n;
-        FisherExact fisherExact = new FisherExact(myAlignment.getSequenceCount() + 10);
-        int[][] contig;
-        for (long currTest = 0; currTest < myTotalTests; currTest++) {
-            int r = getRowFromIndex(currTest);
-            int c = getColFromIndex(currTest);
-            byte rowMajor = (byte) myAlignment.getMajorAllele(r);
-            byte rowMinor = (byte) myAlignment.getMinorAllele(r);
-            byte colMajor = (byte) myAlignment.getMajorAllele(c);
-            byte colMinor = (byte) myAlignment.getMinorAllele(c);
-            //double currentProgress = 100 * r * r / (myAlignment.getSiteCount() * myAlignment.getSiteCount());
-            int currentProgress = (int) (100 * currTest / myTotalTests);
-            fireProgress((int) currentProgress);
-            contig = new int[2][2];
-            if ((rowMinor == Alignment.UNKNOWN_ALLELE) || (colMinor == Alignment.UNKNOWN_ALLELE)) {
-                if (!myUseSparse) {
-                    myRSqrDPrime[r][c] = myRSqrDPrime[c][r] = myPValSampleSize[r][c] = Float.NaN;
-                    myPValSampleSize[c][r] = 0;
-                } else {
-                    mySparseRSqrDPrime.setQuick(r, c, Float.NaN);
-                    mySparseRSqrDPrime.setQuick(c, r, Float.NaN);
-                    mySparsePValSampleSize.setQuick(r, c, Float.NaN);
-                    mySparsePValSampleSize.setQuick(c, r, new Float(0));
-                }
-            } else {
-                n = 0;
-                for (int sample = 0; sample < myAlignment.getSequenceCount(); sample++) {
-                    byte x = myAlignment.getBase(sample, r);
-                    byte y = myAlignment.getBase(sample, c);
-                    if ((x == Alignment.UNKNOWN_ALLELE) || (y == Alignment.UNKNOWN_ALLELE)) {
-                        continue;
-                    }
-                    int x1, y1;
-                    if (x == rowMajor) {
-                        x1 = 0;
-                    } else if (collapseMinor || (x == rowMinor)) {
-                        x1 = 1;
-                    } else {
-                        continue;
-                    }
-                    if (y == colMajor) {
-                        y1 = 0;
-                    } else if (collapseMinor || (y == colMinor)) {
-                        y1 = 1;
-                    } else {
-                        continue;
-                    }
-                    contig[x1][y1]++;
-                    n++;
-                } //end of sample
-                if (!myUseSparse) {
-                    myPValSampleSize[c][r] = n;
-                    myRSqrDPrime[r][c] = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate);
-                    myRSqrDPrime[c][r] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate);
-                    if (Double.isNaN(myRSqrDPrime[r][c]) || Double.isNaN(myRSqrDPrime[c][r])) {
-                        myPValSampleSize[r][c] = Float.NaN;
-                    } else {
-                        myPValSampleSize[r][c] = (float) fisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
-                    }
-                } else {
-                    mySparsePValSampleSize.setQuick(c, r, new Float(n));
-                    mySparseRSqrDPrime.setQuick(r, c, (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate));
-                    mySparseRSqrDPrime.setQuick(c, r, (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], myMinTaxaForEstimate));
-                    if (Double.isNaN((Float) mySparseRSqrDPrime.getQuick(r, c)) || Double.isNaN((Float) mySparseRSqrDPrime.getQuick(c, r))) {
-                        mySparsePValSampleSize.setQuick(r, c, Float.NaN);
-                    } else {
-                        mySparsePValSampleSize.setQuick(r, c, (float) fisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]));
-                    }
-                }
-            }
-        } //end of currTest
     }
 
     public static double calculateDPrime(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
@@ -324,6 +251,38 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         return rsqr;
     }
 
+    public static float[] getLDForSitePair(BitSet rMj, BitSet rMn, BitSet cMj, BitSet cMn,
+            int minMinorCnt, int minCnt, float minR2, FisherExact myFisherExact) {
+        float[] results = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};
+        int n = 0;
+        int[][] contig = new int[2][2];
+        n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
+        n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
+        if (contig[1][0] + contig[1][1] < minMinorCnt) {
+            return results;
+        }
+        n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
+        if (contig[0][1] + contig[1][1] < minMinorCnt) {
+            return results;
+        }
+        n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
+        results[0] = n;
+        if (n < minCnt) {
+            return results;
+        }
+        double rValue = LinkageDisequilibrium.calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minCnt);
+        results[1] = (float) rValue;
+        if (Double.isNaN(rValue)) {
+            return results;
+        }
+        if (rValue < minR2) {
+            return results;
+        }
+        double pValue = myFisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
+        results[3] = (float) pValue;
+        return results;
+    }
+
     public static double[] getLDForSitePair(Alignment a1, int site1, Alignment a2, int site2,
             int minComp, int minMinor, FisherExact fisherExact) {
         double[] results = null;
@@ -360,13 +319,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             contig[x1][y1]++;
             n++;
         } // end of sample
-        // System.out.println(site1+" "+site2+" contig"+Arrays.deepToString(contig));
         if ((n < minComp) || (contig[0][1] + contig[1][1] < minMinor) || (contig[1][0] + contig[1][1] < minMinor)) {
-            //          System.out.println("null contig"+Arrays.deepToString(contig));
             return null;
         }
         results = new double[4];
-        // System.out.println("contig"+Arrays.deepToString(contig));
         results[0] = n;
         results[1] = (float) calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minComp);
         results[2] = (float) calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minComp);
@@ -458,7 +414,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     /**
      * Returns P-value estimate for a given pair of numSites. If there were only
      * 2 alleles at each locus, then the Fisher Exact P-value (one-tail) is
-     * returned. If more states then the permutaed Monte Carlo test is used.
+     * returned. If more states then the permuted Monte Carlo test is used.
      *
      * @param r is site 1
      * @param c is site 2
@@ -470,19 +426,28 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             r = c;
             c = temp;
         }
+        int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myPValSampleSize[r][c];
-            if (val != 0) {
-                return (double) val;
-            } else {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
+            } else {
+                return (double) val;
             }
         } else {
             Float val = (Float) mySparsePValSampleSize.getQuick(r, c);
-            if (val == null) {
+            if ((val == null) || (Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getPVal: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
-                return (double) val;
+                return val.doubleValue();
             }
         }
     }
@@ -494,10 +459,9 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param r is site 1
      * @param c is site 2
      * @return number of gametes
-     *
      */
     public int getSampleSize(int r, int c) {
-        if (r > c) {
+        if (r < c) {
             int temp = r;
             r = c;
             c = temp;
@@ -509,7 +473,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             if (val == null) {
                 return 0;
             } else {
-                return (int) val.floatValue();
+                return val.intValue();
             }
         }
     }
@@ -527,19 +491,28 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             r = c;
             c = temp;
         }
+        int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myRSqrDPrime[c][r];
-            if (val != 0) {
-                return (double) val;
-            } else {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
+            } else {
+                return (double) val;
             }
         } else {
             Float val = (Float) mySparseRSqrDPrime.getQuick(c, r);
-            if (val == null) {
+            if ((val == null) || (Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getDPrime: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
-                return (double) val;
+                return val.doubleValue();
             }
         }
     }
@@ -549,27 +522,36 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      *
      * @param r is site 1
      * @param c is site 2
-     * @return D'
+     * @return r^2
      */
     public double getRSqr(int r, int c) {
-        if (r > c) {
+        if (r < c) {
             int temp = r;
             r = c;
             c = temp;
         }
+        int sampleSize = getSampleSize(c, r);
         if (!myUseSparse) {
             float val = myRSqrDPrime[r][c];
-            if (val != 0) {
-                return (double) val;
-            } else {
+            if ((Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
+            } else {
+                return (double) val;
             }
         } else {
             Float val = (Float) mySparseRSqrDPrime.getQuick(r, c);
-            if (val == null) {
+            if ((val == null) || (Float.isNaN(val)) || (sampleSize == 0)) {
                 return Double.NaN;
+            } else if (val < 0) {
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: value less than zero: site1: " + r + " site2: " + c + " value: " + val);
+            } else if (sampleSize < myMinTaxaForEstimate) {
+                throw new IllegalStateException("LinkageDisequilibrium: getRSqr: Sample Size less than Minimum: site1: " + r + " site2: " + c + " sample size: " + sampleSize + " value: " + val);
             } else {
-                return (double) val;
+                return val.doubleValue();
             }
         }
     }

@@ -1,6 +1,5 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Expanding64NNImputation
  */
 package net.maizegenetics.pal.popgen;
 
@@ -11,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 import java.util.TreeMap;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
@@ -43,7 +41,7 @@ public class Expanding64NNImputation {
     ApproxFastChiSquareDistribution fcs=new ApproxFastChiSquareDistribution(1000,200);
 
     public Expanding64NNImputation(Alignment inldAlign, String exportFile) {
-        this.ldAlign=ConvertSBitTBitPlugin.convertAlignment(inldAlign, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+        this.ldAlign = AlignmentUtils.optimizeForTaxa(inldAlign);
         if(maskAndTest) maskSites(300);
         blocks=ldAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
 //        this.createNull64Share(ldAlign, 500);
@@ -293,7 +291,7 @@ public class Expanding64NNImputation {
     }
 
     private void createNull64Share(Alignment a, int maxSampling) {
-        a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+        a = AlignmentUtils.optimizeForTaxa(a);
         System.out.println("Creating the null distribution");
         IBSDistanceMatrix dm=new IBSDistanceMatrix(a,100,null);
         System.out.printf("Distances estimated. Mean:%g %n", dm.meanDistance());
@@ -350,7 +348,7 @@ public class Expanding64NNImputation {
     }
     
     private void createNull64Share(Alignment a) {
-        a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+        a = AlignmentUtils.optimizeForTaxa(a);
         System.out.println("Creating the SBitAlignment distribution");
         Alignment sbit=BitAlignment.getInstance(a, true);
         System.out.printf("SBitAlignment created %n");
