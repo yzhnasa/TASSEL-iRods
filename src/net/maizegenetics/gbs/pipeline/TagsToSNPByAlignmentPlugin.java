@@ -1456,12 +1456,18 @@ class CustomSNPLog {
         "nTaxaCovered"            +"\t"+
         "nInbreds"                +"\t"+
         "nInbredsCovered"         +"\t"+
+        "nInbreds1Read"           +"\t"+
+        "nInbreds1ReadMaj"        +"\t"+
+        "nInbreds1ReadMin"        +"\t"+
         "nInbredsGT1Read"         +"\t"+
         "nInbredsGT1ReadHomoMaj"  +"\t"+
         "nInbredsGT1ReadHomoMin"  +"\t"+
         "nInbredHets"             +"\t"+
         "nOutbreds"               +"\t"+
         "nOutbredsCovered"        +"\t"+
+        "nOutbreds1Read"           +"\t"+
+        "nOutbreds1ReadMaj"        +"\t"+
+        "nOutbreds1ReadMin"        +"\t"+
         "nOutbredsGT1Read"        +"\t"+
         "nOutbredsGT1ReadHomoMaj" +"\t"+
         "nOutbredsGT1ReadHomoMin" +"\t"+
@@ -1519,12 +1525,18 @@ class CustomSNPLogRecord {
     private int nTaxaCovered;
     private int nInbreds;
     private int nInbredsCovered;
+    private int nInbreds1Read;
+    private int nInbreds1ReadMaj;
+    private int nInbreds1ReadMin;
     private int nInbredsGT1Read;
     private int nInbredsGT1ReadHomoMaj;
     private int nInbredsGT1ReadHomoMin;
     private int nInbredHets;
     private int nOutbreds;
     private int nOutbredsCovered;
+    private int nOutbreds1Read;
+    private int nOutbreds1ReadMaj;
+    private int nOutbreds1ReadMin;
     private int nOutbredsGT1Read;
     private int nOutbredsGT1ReadMajHomo;
     private int nOutbredsGT1ReadMinHomo;
@@ -1572,6 +1584,10 @@ class CustomSNPLogRecord {
                         if (nAlleles > 1) ++nInbredHets;
                         else if (majPresent) ++nInbredsGT1ReadHomoMaj;
                         else ++nInbredsGT1ReadHomoMin;
+                    } else {
+                        ++nInbreds1Read;
+                        if (majPresent) ++nInbreds1ReadMaj;
+                        else ++nInbreds1ReadMin;
                     }
                 }
             } else {
@@ -1594,6 +1610,10 @@ class CustomSNPLogRecord {
                         if (nAlleles > 1) ++nOutbredHets;
                         else if (majPresent) ++nOutbredsGT1ReadMajHomo;
                         else ++nOutbredsGT1ReadMinHomo;
+                    } else {
+                        ++nOutbreds1Read;
+                        if (majPresent) ++nOutbreds1ReadMaj;
+                        else ++nOutbreds1ReadMin;
                     }
                 }
             }
@@ -1624,6 +1644,12 @@ class CustomSNPLogRecord {
         sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nInbredsCovered));
         sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(nInbreds1Read));
+        sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(nInbreds1ReadMaj));
+        sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(nInbreds1ReadMin));
+        sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nInbredsGT1Read));
         sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nInbredsGT1ReadHomoMaj));
@@ -1635,6 +1661,12 @@ class CustomSNPLogRecord {
         sBuilder.append(String.valueOf(nOutbreds));
         sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nOutbredsCovered));
+        sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(nOutbreds1Read));
+        sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(nOutbreds1ReadMaj));
+        sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(nOutbreds1ReadMin));
         sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nOutbredsGT1Read));
         sBuilder.append(DELIM);
