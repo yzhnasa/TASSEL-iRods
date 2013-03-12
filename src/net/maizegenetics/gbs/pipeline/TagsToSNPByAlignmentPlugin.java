@@ -503,16 +503,20 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             if ((alleles = isSiteGood(callsBySite[s])) == null) { // NOTE: only the maj & min1 alleles are returned, so the Prod Pipeline can only call 2 alleles
                 continue;
             }
+            int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
+            if (customSNPLogging) {
+                CustomSNPLogRecord mySNPLogRecord = new CustomSNPLogRecord(s, theTAL, position, useTaxaForMinF, refTagUsed);
+                myCustomSNPLog.writeEntry(mySNPLogRecord.toString());
+                if (!mySNPLogRecord.isGoodSNP()) {
+                    continue;
+                }
+            }
             varSiteKept[s] = true;
             int currSite = theMSA.getSiteCount();
             theMSA.addSite(currSite);
             String chromosome = String.valueOf(theTAL.getChromosome());
             theMSA.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
-            int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
             theMSA.setPositionOfSite(currSite, position);
-            if (customSNPLogging) {
-                myCustomSNPLog.writeEntry(new CustomSNPLogRecord(s, theTAL, position, useTaxaForMinF, refTagUsed).toString());
-            }
             int offset = 0;
             if (includeReference && !fuzzyStartPositions) {
                 offset = 1;
@@ -1463,16 +1467,18 @@ class CustomSNPLog {
         "nInbredsGT1ReadHomoMaj"  +"\t"+
         "nInbredsGT1ReadHomoMin"  +"\t"+
         "nInbredHets"             +"\t"+
+        "inbredCoverage"          +"\t"+
+        "inbredHetScore"          +"\t"+
         "nOutbreds"               +"\t"+
         "nOutbredsCovered"        +"\t"+
-        "nOutbreds1Read"           +"\t"+
-        "nOutbreds1ReadMaj"        +"\t"+
-        "nOutbreds1ReadMin"        +"\t"+
+        "nOutbreds1Read"          +"\t"+
+        "nOutbreds1ReadMaj"       +"\t"+
+        "nOutbreds1ReadMin"       +"\t"+
         "nOutbredsGT1Read"        +"\t"+
         "nOutbredsGT1ReadHomoMaj" +"\t"+
         "nOutbredsGT1ReadHomoMin" +"\t"+
-        "nOutbredHets"            +"\n"
-    ;
+        "nOutbredHets"            +"\t"+
+        "passed?"                 +"\n";
     
     public CustomSNPLog(String filename, boolean append) {
         if ((filename == null) || (filename.length() == 0)) {
@@ -1541,6 +1547,9 @@ class CustomSNPLogRecord {
     private int nOutbredsGT1ReadMajHomo;
     private int nOutbredsGT1ReadMinHomo;
     private int nOutbredHets;
+    private double inbredCoverage;
+    private double inbredHetScore;
+    private boolean pass;
     private static final String DELIM = "\t";
     
     public CustomSNPLogRecord(int site, TagsAtLocus myTAL, int position, boolean[] isInbred, boolean includeReference) {
@@ -1564,11 +1573,11 @@ class CustomSNPLogRecord {
         int genoDepth, nAlleles;
         boolean majPresent;
         for (int tx = 0; tx < nTaxa; tx++) {
+            genoDepth = 0;
+            nAlleles = 0;
+            majPresent = false;
             if (isInbred == null || isInbred[tx]) {  // if no pedigree file was used, assume that all taxa are inbred
                 ++nInbreds;
-                genoDepth = 0;
-                nAlleles = 0;
-                majPresent = false;
                 for (int a = 0; a < 2; a++) {
                     int alleleDepth = alleleDepthsInTaxa[a][site][tx];
                     if (alleleDepth > 0) {
@@ -1592,9 +1601,6 @@ class CustomSNPLogRecord {
                 }
             } else {
                 ++nOutbreds;
-                genoDepth = 0;
-                nAlleles = 0;
-                majPresent = false;
                 for (int a = 0; a < 2; a++) {
                     int alleleDepth = alleleDepthsInTaxa[a][site][tx];
                     if (alleleDepth > 0) {
@@ -1618,6 +1624,13 @@ class CustomSNPLogRecord {
                 }
             }
         }
+        inbredCoverage = (double) nInbredsCovered/nInbreds;
+        inbredHetScore = (double) nInbredHets/(nInbredsGT1ReadHomoMin + nInbredHets + 0.5);
+        if (inbredCoverage > 0.15 && inbredHetScore < 0.21) pass = true;  // machine learning cutoffs set by Ed
+    }
+        
+    public boolean isGoodSNP() {
+        return pass;
     }
     
     public String toString() {
@@ -1658,6 +1671,10 @@ class CustomSNPLogRecord {
         sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nInbredHets));
         sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(inbredCoverage));
+        sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(inbredHetScore));
+        sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nOutbreds));
         sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nOutbredsCovered));
@@ -1675,6 +1692,12 @@ class CustomSNPLogRecord {
         sBuilder.append(String.valueOf(nOutbredsGT1ReadMinHomo));
         sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nOutbredHets));
+        sBuilder.append(DELIM);
+        if (pass) {
+            sBuilder.append(String.valueOf(1));
+        } else {
+            sBuilder.append(String.valueOf(0));
+        }
         sBuilder.append("\n");
         return sBuilder.toString();
     }

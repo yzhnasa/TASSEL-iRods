@@ -42,13 +42,13 @@ public class JeffPipelines {
         String[] MDPLowVolArgs = new String[]{
             "-i", baseDirMDPLowVol + "C08L7ACXX_6_min2.tbt.byte",
             "-y", // use TagsByTaxaByte
-            "-o",   baseDirMDPLowVol + "tassel4/hapmap/customSNPLogging/MAFs",
+            "-o",   baseDirMDPLowVol + "tassel4/hapmap/customSNPLogging/customFilt",
 //            "-vcf", baseDirMDPLowVol + "tassel4/hapmap/vcf/MDP1_low_vol_wRef.c10.vcf",
             "-m", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit.topm.bin",
             //            "-mUpd", baseDir+"",
             "-ref", baseDirMDPLowVol + "maize_agp_v2_chr10.fasta",
             //"-LocusBorder", "150",
-            "-p", baseDirMDPLowVol + "MDP1_fake_ped.txt", 
+            "-p", baseDirMDPLowVol + "MDP1_betterFake_ped.txt", 
             "-mnF", "0.8",
             "-mnMAF", "0.005",
             "-mnMAC", "99999", // this will never be satified: this way -mnMAF overrides it
