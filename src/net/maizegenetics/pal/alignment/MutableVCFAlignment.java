@@ -69,6 +69,8 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
                 for (int k = 0; k < myAlleleDepth[i][j].length; k++) {
                     myAlleleDepth[i][j][k] = (byte) -1;
                 }
+            }
+            for (int j = 0; j < myCommonAlleles[i].length; j++) {
                 myCommonAlleles[i][j] = (byte) -1;
             }
         }
