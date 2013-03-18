@@ -51,7 +51,24 @@ public class ImportUtils {
     private ImportUtils() {
         // Utility Class - do not instantiate.
     }
-        
+    
+    //Main method
+    static public void main(String[] args) {
+        String testVCFFile = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testVCF.txt";
+        String outVCFFile = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testVCFout.vcf";
+        String outHapmap = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testHapmap.txt";
+        String outHapmap2 = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testHapmap2.txt";
+        String outHapmap3 = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testHapmap3.txt";
+        String inHapmap = "C:\\Users\\yz79\\Documents\\Tassel\\TASSELTutorialData3\\TASSELTutorialData\\data\\mdp_genotype.hmp.txt";
+        Alignment a = readFromVCF(testVCFFile, null);
+        ExportUtils.writeToHapmap(a, true, outHapmap, '\t', null);
+        Alignment b = readFromHapmap(inHapmap, null);
+        ExportUtils.writeToHapmap(b, true, outHapmap3, '\t', null);
+        ExportUtils.writeToVCF(b, outVCFFile, '\t');
+        Alignment c = readFromVCF(outVCFFile, null);
+        ExportUtils.writeToHapmap(c, true, outHapmap2, '\t', null);
+    }
+    
     /*
      * Counts number of Header rows in a VCF files
      * Use in conjunction with util.getNumberLines to count numSites
@@ -207,32 +224,37 @@ public class ImportUtils {
                     if (dataSplit.length != numDataFields) {
                         result.setBase(taxa, site, value);
                     } else {
-                        String genotypes = dataSplit[genoIndex].replaceAll("/", "").replaceAll("|", "");
-                        if (genotypes.length() > 2) {
+                        String[] genotypes = Pattern.compile("[/|]").split(dataSplit[genoIndex]);
+//                        String genotypes = dataSplit[genoIndex].replaceAll("/", "").replaceAll("|", "");
+                        if (genotypes.length > 2) {
                             throw new IllegalStateException("ImportUtils: readFromVCF: number of genotypes larger than supported by TASSEL at line: " + (numHeader + site + 1));
                         }
-                        for(int i = 0; i < genotypes.length(); i++) {
+                        for(int i = 0; i < genotypes.length; i++) {
                             value <<= 4;
-                            String currGenotype = genotypes.substring(i, i + 1);
+                            String currGenotype = genotypes[i];
                             if (currGenotype.equals(".")) {
                                 value |= 0x0F;
                             } else {
                                 int currGenoInt = Integer.parseInt(currGenotype);
-                                currGenotype = alleleString.substring(currGenoInt, currGenoInt + 1);
-                                if (currGenotype.equalsIgnoreCase("A")) {
-                                    value |= 0x00;
-                                } else if (currGenotype.equalsIgnoreCase("C")) {
-                                    value |= 0x01;
-                                } else if (currGenotype.equalsIgnoreCase("G")) {
-                                    value |= 0x02;
-                                } else if (currGenotype.equalsIgnoreCase("T")) {
-                                    value |= 0x03;
-                                } else if (currGenotype.equals("+")) {
-                                    value |= 0x04;
-                                } else if (currGenotype.equals("-")) {
-                                    value |= 0x05;
+                                if (currGenoInt == 14) {
+                                    value |= 0x0E;
                                 } else {
-                                    throw new IllegalStateException("ImportUtils: readFromVCF: a unsupported allele detected in this VCF file: " + currGenotype + " in line " + (numHeader + site + 1));
+                                    currGenotype = alleleString.substring(currGenoInt, currGenoInt + 1);
+                                    if (currGenotype.equalsIgnoreCase("A")) {
+                                        value |= 0x00;
+                                    } else if (currGenotype.equalsIgnoreCase("C")) {
+                                        value |= 0x01;
+                                    } else if (currGenotype.equalsIgnoreCase("G")) {
+                                        value |= 0x02;
+                                    } else if (currGenotype.equalsIgnoreCase("T")) {
+                                        value |= 0x03;
+                                    } else if (currGenotype.equals("+")) {
+                                        value |= 0x04;
+                                    } else if (currGenotype.equals("-")) {
+                                        value |= 0x05;
+                                    } else {
+                                        throw new IllegalStateException("ImportUtils: readFromVCF: a unsupported allele detected in this VCF file: " + currGenotype + " in line " + (numHeader + site + 1));
+                                    }
                                 }
                             }
                         }
