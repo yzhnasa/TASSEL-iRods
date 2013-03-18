@@ -51,23 +51,6 @@ public class ImportUtils {
         // Utility Class - do not instantiate.
     }
 
-    //Main method
-    static public void main(String[] args) {
-        String testVCFFile = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testVCF.txt";
-        String outVCFFile = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testVCFout.vcf";
-        String outHapmap = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testHapmap.txt";
-        String outHapmap2 = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testHapmap2.txt";
-        String outHapmap3 = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testHapmap3.txt";
-        String inHapmap = "C:\\Users\\yz79\\Documents\\Tassel\\TASSELTutorialData3\\TASSELTutorialData\\data\\mdp_genotype.hmp.txt";
-        Alignment a = readFromVCF(testVCFFile, null);
-        ExportUtils.writeToHapmap(a, true, outHapmap, '\t', null);
-        Alignment b = readFromHapmap(inHapmap, null);
-        ExportUtils.writeToHapmap(b, true, outHapmap3, '\t', null);
-        ExportUtils.writeToVCF(b, outVCFFile, '\t');
-        Alignment c = readFromVCF(outVCFFile, null);
-        ExportUtils.writeToHapmap(c, true, outHapmap2, '\t', null);
-    }
-    
     /*
      * Counts number of Header rows in a VCF files
      * Use in conjunction with util.getNumberLines to count numSites
