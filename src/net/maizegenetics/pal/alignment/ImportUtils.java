@@ -15,7 +15,6 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import net.maizegenetics.pal.ids.IdGroup;
@@ -51,7 +50,7 @@ public class ImportUtils {
     private ImportUtils() {
         // Utility Class - do not instantiate.
     }
-    
+
     //Main method
     static public void main(String[] args) {
         String testVCFFile = "C:\\Users\\yz79\\Documents\\Tassel\\Tassel4\\Data\\testVCF.txt";
@@ -78,9 +77,9 @@ public class ImportUtils {
         try {
             int numHeader = 0;
             fileIn = Utils.getBufferedReader(filename, 1000000);
-            
+
             String currLine = fileIn.readLine();
-            while(currLine != null) {
+            while (currLine != null) {
                 if (currLine.substring(0, 1).equals("#")) {
                     numHeader++;
                 } else {
@@ -88,7 +87,7 @@ public class ImportUtils {
                 }
                 currLine = fileIn.readLine();
             }
-            
+
             return numHeader;
         } catch (Exception e) {
             e.printStackTrace();
@@ -101,53 +100,54 @@ public class ImportUtils {
             }
         }
     }
-    
+
     // add support for SNP ID?
     public static Alignment readFromVCF(final String filename, ProgressListener listener) {
-        
+
         int maxAlleles = 3;
         int minPosition = Integer.MAX_VALUE;
         String currLocus = null;
         List<Locus> loci = new ArrayList<Locus>();
         List<Integer> lociOffsets = new ArrayList<Integer>();
-        
+
         Pattern colonPattern = Pattern.compile(":");
         Pattern commaPattern = Pattern.compile(",");
-        
+
         long currentTime = System.currentTimeMillis();
         int numHeader = getNumHeaderRowsVCF(filename);
-        int numSites = Utils.getNumberLines(filename)- numHeader;
+        int numSites = Utils.getNumberLines(filename) - numHeader;
         myLogger.info("readFromVCF: Number of Header Rows: " + numHeader);
         myLogger.info("readFromVCF: Number of Sites: " + numSites);
-        
+
         long prevTime = currentTime;
         currentTime = System.currentTimeMillis();
         myLogger.info("readFromVCF: Time to count lines: " + ((currentTime - prevTime) / 1000));
-        
-        
+
+
         BufferedReader fileIn = null;
         try {
             fileIn = Utils.getBufferedReader(filename, 1000000);
             String currLine = null;
-            for(int i = 0; i < numHeader; i++) {
+            for (int i = 0; i < numHeader; i++) {
                 currLine = fileIn.readLine();
             }
-            
+
             // get taxa names
             String[] header = WHITESPACE_PATTERN.split(currLine);
             int numTaxa = header.length - NUM_VCF_NON_TAXA_COLUMNS;
             String[] taxaNames = new String[numTaxa];
             System.arraycopy(header, NUM_VCF_NON_TAXA_COLUMNS, taxaNames, 0, numTaxa);
             IdGroup idGroup = new SimpleIdGroup(taxaNames);
-            
+
             String[] snpID = new String[numSites];
-            
+
             MutableVCFAlignment result = MutableVCFAlignment.getInstance(idGroup, numSites, numTaxa, numSites);
             int prevPos = -1;
             int currPos = -1;
             int locusStart = 0;
-            
-            for(int site = 0; site < numSites; site++) {
+
+
+            for (int site = 0; site < numSites; site++) {
                 currLine = fileIn.readLine();
                 String[] currSite = WHITESPACE_PATTERN.split(currLine);
 //                1	6407	S1000_6407	.	A,C	20	PASS	NS=929;DP=2210;AF=0.01,0.01	GT:AD:DP:GQ:PL	./.	0/0:2,0,0:2:79:0,6,72	1/2:0,1,1:2:54:0,5,34
@@ -159,16 +159,17 @@ public class ImportUtils {
                 String format = currSite[VCF_FORMAT_COLUMN_INDEX];
                 String[] dataByTaxa = new String[numTaxa];
                 System.arraycopy(currSite, NUM_VCF_NON_TAXA_COLUMNS, dataByTaxa, 0, numTaxa);
-                
+
                 // find alleles for current site, check to see if number of alleles is supported
                 int numAlleles = alt.length() + 1;
                 if (numAlleles > maxAlleles) {
                     throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxAlleles + " alleles allowed, in line " + (numHeader + site + 1));
                 }
-                
+
                 String alleleString = ref + alt;
                 byte[] alleles = new byte[numAlleles];
-                for(int allele = 0; allele < numAlleles; allele++) {
+
+                for (int allele = 0; allele < numAlleles; allele++) {
                     String currAllele = alleleString.substring(allele, allele + 1);
                     if (currAllele.equals(".")) {
                         alleles[allele] = (byte) -1;
@@ -189,35 +190,36 @@ public class ImportUtils {
                     }
                 }
                 result.setCommonAlleles(site, alleles);
-                
+
                 // get the possible alleles for each site in to an byte array
 //                result.setCommonAlleles(site, values);
-                
+
                 // figure out order of format
                 int genoIndex = -1;
                 int alleleDepthIndex = -1;
-                
+
                 String[] formatSplit = colonPattern.split(format);
                 int numDataFields = formatSplit.length;
-                for(int i = 0; i < formatSplit.length; i++) {
+                for (int i = 0; i < formatSplit.length; i++) {
                     if (formatSplit[i].equalsIgnoreCase("GT")) {
                         genoIndex = i;
                     } else if (formatSplit[i].equalsIgnoreCase("AD")) {
                         alleleDepthIndex = i;
                     }
                 }
-                
+
                 if (genoIndex == -1) {
                     throw new IllegalStateException("ImportUtils: readFromVCF: no genotype data found in this VCF file at line: " + (numHeader + site + 1));
                 }
-                
+
                 if (alleleDepthIndex == -1) {
                     throw new IllegalStateException("ImportUtils: readFromVCF: no allele depth data found in this VCF file at line: " + (numHeader + site + 1));
                 }
                 
-                for(int taxa = 0; taxa < numTaxa; taxa++) {
+
+                for (int taxa = 0; taxa < numTaxa; taxa++) {
                     String[] dataSplit = colonPattern.split(dataByTaxa[taxa]);
-                    
+
                     // for whatever reason if the actual data fields do not match up with the format column
                     // assume the data is unknown
                     byte value = (byte) 0xFF;
@@ -229,7 +231,7 @@ public class ImportUtils {
                         if (genotypes.length > 2) {
                             throw new IllegalStateException("ImportUtils: readFromVCF: number of genotypes larger than supported by TASSEL at line: " + (numHeader + site + 1));
                         }
-                        for(int i = 0; i < genotypes.length; i++) {
+                        for (int i = 0; i < genotypes.length; i++) {
                             value <<= 4;
                             String currGenotype = genotypes[i];
                             if (currGenotype.equals(".")) {
@@ -259,16 +261,17 @@ public class ImportUtils {
                             }
                         }
                         result.setBase(taxa, site, value);
-                        
+
                         String alleleDepths = dataSplit[alleleDepthIndex];
                         String[] stringDepths = commaPattern.split(alleleDepths);
-                        
+
                         if (stringDepths.length != alleleString.length()) {
                             throw new IllegalStateException("ImportUtils: readFromVCF: number of allele depth values does not match number of alleles in line: " + (numHeader + site + 1) + " taxa number: " + taxa);
                         }
-                        
+
                         byte[] depths = new byte[stringDepths.length];
-                        for(int i = 0; i < stringDepths.length; i++) {
+
+                        for (int i = 0; i < stringDepths.length; i++) {
                             int depth = Integer.parseInt(stringDepths[i]);
                             if (depth > 127) {
                                 myLogger.info("Depth value for genotype " + i + " had an original value of " + depth + ". Converted to the maximum of 127. In line: " + (numHeader + site + 1) + " taxa number: " + taxa);
@@ -279,14 +282,15 @@ public class ImportUtils {
                         result.setDepthForAlleles(taxa, site, alleles);
                     }
                 }
-                        
+
                 result.setPositionOfSite(site, currPos);
                 if (currLocus == null) {
                     currLocus = temp;
                     minPosition = currPos;
                 } else if (!temp.equals(currLocus)) {
                     Locus newLocus = new Locus(currLocus, currLocus, minPosition, prevPos, null, null);
-                    for(int i = locusStart; i < site; i++) {
+
+                    for (int i = locusStart; i < site; i++) {
                         result.setLocusOfSite(i, newLocus);
                     }
                     currLocus = temp;
@@ -294,21 +298,22 @@ public class ImportUtils {
                     locusStart = site;
                     prevPos = -1;
                 }
-                
+
                 if (currPos < prevPos) {
                     throw new IllegalStateException("ImportUtils: readFromVCF: Sites are not properly sorted for chromosome: " + currLocus + " at " + currPos + " and " + prevPos);
                 }
-                
+
                 prevPos = currPos;
             }
-            
+
             if (currLocus != null) {
                 Locus newLocus = new Locus(currLocus, currLocus, minPosition, prevPos, null, null);
-                for(int i = locusStart; i < numSites; i++) {
+
+                for (int i = locusStart; i < numSites; i++) {
                     result.setLocusOfSite(i, newLocus);
                 }
             }
-            
+
             return result;
         } catch (Exception e) {
             e.printStackTrace();

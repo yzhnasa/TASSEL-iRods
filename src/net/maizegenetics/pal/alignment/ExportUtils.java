@@ -445,7 +445,7 @@ public class ExportUtils {
                 }
             }
 
-            filename = Utils.addSuffixIfNeeded(filename, ".vcf");
+            filename = Utils.addSuffixIfNeeded(filename, ".vcf", new String[]{".vcf", ".vcf.gz"});
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
