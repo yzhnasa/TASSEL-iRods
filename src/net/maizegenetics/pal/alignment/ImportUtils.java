@@ -129,11 +129,10 @@ public class ImportUtils {
             int currPos = -1;
             int locusStart = 0;
 
-
             for (int site = 0; site < numSites; site++) {
                 currLine = fileIn.readLine();
                 String[] currSite = WHITESPACE_PATTERN.split(currLine);
-//                1	6407	S1000_6407	.	A,C	20	PASS	NS=929;DP=2210;AF=0.01,0.01	GT:AD:DP:GQ:PL	./.	0/0:2,0,0:2:79:0,6,72	1/2:0,1,1:2:54:0,5,34
+                // 1	6407	S1000_6407	.	A,C	20	PASS	NS=929;DP=2210;AF=0.01,0.01	GT:AD:DP:GQ:PL	./.	0/0:2,0,0:2:79:0,6,72	1/2:0,1,1:2:54:0,5,34
                 String temp = currSite[VCF_CHROMOSOME_COLUMN_INDEX];
                 currPos = Integer.parseInt(currSite[VCF_POSITION_COLUMN_INDEX]);
                 snpID[site] = currSite[VCF_SNPID_COLUMN_INDEX];
@@ -175,7 +174,7 @@ public class ImportUtils {
                 result.setCommonAlleles(site, alleles);
 
                 // get the possible alleles for each site in to an byte array
-//                result.setCommonAlleles(site, values);
+                // result.setCommonAlleles(site, values);
 
                 // figure out order of format
                 int genoIndex = -1;
@@ -198,7 +197,7 @@ public class ImportUtils {
                 if (alleleDepthIndex == -1) {
                     throw new IllegalStateException("ImportUtils: readFromVCF: no allele depth data found in this VCF file at line: " + (numHeader + site + 1));
                 }
-                
+
 
                 for (int taxa = 0; taxa < numTaxa; taxa++) {
                     String[] dataSplit = colonPattern.split(dataByTaxa[taxa]);
@@ -210,7 +209,7 @@ public class ImportUtils {
                         result.setBase(taxa, site, value);
                     } else {
                         String[] genotypes = Pattern.compile("[/|]").split(dataSplit[genoIndex]);
-//                        String genotypes = dataSplit[genoIndex].replaceAll("/", "").replaceAll("|", "");
+                        // String genotypes = dataSplit[genoIndex].replaceAll("/", "").replaceAll("|", "");
                         if (genotypes.length > 2) {
                             throw new IllegalStateException("ImportUtils: readFromVCF: number of genotypes larger than supported by TASSEL at line: " + (numHeader + site + 1));
                         }
@@ -411,7 +410,7 @@ public class ImportUtils {
             }
 
             if (count != 0) {
-                pool.submit(ProcessLineOfHapmap.getInstance(alleles, theData, TasselPrefs.getAlignmentRetainRareAlleles(), tokens, count, currentSite, numTaxa, lineInFile, isSBit));
+                pool.execute(ProcessLineOfHapmap.getInstance(alleles, theData, TasselPrefs.getAlignmentRetainRareAlleles(), tokens, count, currentSite, numTaxa, lineInFile, isSBit));
             }
 
 
