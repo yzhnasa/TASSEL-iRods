@@ -3,9 +3,6 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 
@@ -15,8 +12,6 @@ import net.maizegenetics.util.OpenBitSet;
  */
 public class ProcessLineOfHapmap implements Runnable {
 
-    private static int myNumInstances = 0;
-    private static Queue myInstances = new LinkedList();
     private String[][] myTokens;
     private int mySite;
     private int myNumTaxa;
@@ -36,15 +31,7 @@ public class ProcessLineOfHapmap implements Runnable {
     }
 
     public static ProcessLineOfHapmap getInstance(byte[][] alleles, OpenBitSet[][] data, boolean retainRareAlleles, String[][] tokens, int numSitesToProcess, int site, int numTaxa, int lineInFile, boolean isSBit) {
-        if (myNumInstances <= 35) {
-            return new ProcessLineOfHapmap(alleles, data, retainRareAlleles, tokens, numSitesToProcess, site, numTaxa, lineInFile, isSBit);
-        } else {
-            ProcessLineOfHapmap result;
-            while ((result = (ProcessLineOfHapmap) myInstances.poll()) == null) {
-            }
-            result.setVariables(alleles, data, retainRareAlleles, tokens, numSitesToProcess, site, numTaxa, lineInFile, isSBit);
-            return result;
-        }
+        return new ProcessLineOfHapmap(alleles, data, retainRareAlleles, tokens, numSitesToProcess, site, numTaxa, lineInFile, isSBit);
     }
 
     private void setVariables(byte[][] alleles, OpenBitSet[][] data, boolean retainRareAlleles, String[][] tokens, int numSitesToProcess, int site, int numTaxa, int lineInFile, boolean isSBit) {
@@ -80,13 +67,7 @@ public class ProcessLineOfHapmap implements Runnable {
         myIsSBit = isSBit;
     }
 
-    private void clearVariables() {
-        myData = null;
-        myTokens = null;
-        myAlleles = null;
-        myAlleleMappings = null;
-    }
-
+    @Override
     public void run() {
         try {
             if (myComplete) {
@@ -114,8 +95,6 @@ public class ProcessLineOfHapmap implements Runnable {
                 setTBits(data);
             }
 
-            clearVariables();
-            myInstances.offer(this);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -238,5 +217,4 @@ public class ProcessLineOfHapmap implements Runnable {
         }
 
     }
-    
 }
