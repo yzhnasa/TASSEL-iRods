@@ -83,8 +83,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private boolean fuzzyStartPositions = false;
     int locusBorder = 0;
     final static int CHR = 0, STRAND = 1, START_POS = 2;  // indices of these position attributes in array returned by theTOPM.getPositionArray(a)
-    private boolean customSNPLogging = false;  // a custom SNP log that collects useful info for filtering SNPs through machine learning criteria
+    private boolean customSNPLogging = true;  // a custom SNP log that collects useful info for filtering SNPs through machine learning criteria
     private CustomSNPLog myCustomSNPLog = null;
+    private boolean customFiltering = true;
     
     // variables for calculating OS and PL for VCF, might not be in the correct class
     private static double error;
@@ -507,7 +508,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             if (customSNPLogging) {
                 CustomSNPLogRecord mySNPLogRecord = new CustomSNPLogRecord(s, theTAL, position, useTaxaForMinF, refTagUsed);
                 myCustomSNPLog.writeEntry(mySNPLogRecord.toString());
-                if (!mySNPLogRecord.isGoodSNP()) {
+                if (customFiltering && !mySNPLogRecord.isGoodSNP()) {
                     continue;
                 }
             }
