@@ -973,7 +973,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         for (int i = startIndex; i <= endIndex; ++i) {
             sb.append(BaseEncoder.getSequenceFromLong(refGenomeChr[i]));
         }
-        refTag = sb.substring(refSeqStartPos-startIndex*basesPerLong-1, 
+        refTag = sb.substring(Math.max(refSeqStartPos-startIndex*basesPerLong-1,0), 
                 refSeqStartPos-startIndex*basesPerLong-1+theTAL.getMaxTagLength());
         if (theTAL.getStrand() == -1) {
             refTag = revComplement(refTag);
