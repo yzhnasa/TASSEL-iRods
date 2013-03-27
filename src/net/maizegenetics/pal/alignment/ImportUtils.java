@@ -90,8 +90,6 @@ public class ImportUtils {
         int maxAlleles = 3;
         int minPosition = Integer.MAX_VALUE;
         String currLocus = null;
-        List<Locus> loci = new ArrayList<Locus>();
-        List<Integer> lociOffsets = new ArrayList<Integer>();
 
         Pattern colonPattern = Pattern.compile(":");
         Pattern commaPattern = Pattern.compile(",");
@@ -261,7 +259,7 @@ public class ImportUtils {
                                 depths[i] = (byte) depth;
                             }
                         }
-                        result.setDepthForAlleles(taxa, site, alleles);
+                        result.setDepthForAlleles(taxa, site, depths);
                     }
                 }
 
