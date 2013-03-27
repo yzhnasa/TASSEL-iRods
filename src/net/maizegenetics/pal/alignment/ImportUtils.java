@@ -187,7 +187,7 @@ public class ImportUtils {
                         alleleDepthIndex = i;
                     }
                 }
-
+                
                 if (genoIndex == -1) {
                     throw new IllegalStateException("ImportUtils: readFromVCF: no genotype data found in this VCF file at line: " + (numHeader + site + 1));
                 }
@@ -256,8 +256,8 @@ public class ImportUtils {
                             if (depth > 127) {
                                 myLogger.info("Depth value for genotype " + i + " had an original value of " + depth + ". Converted to the maximum of 127. In line: " + (numHeader + site + 1) + " taxa number: " + taxa);
                                 depth = 127;
-                                depths[i] = (byte) depth;
                             }
+                            depths[i] = (byte) depth;
                         }
                         result.setDepthForAlleles(taxa, site, depths);
                     }
