@@ -14,17 +14,19 @@ public class SiteMappingInfo {
     public int position=Integer.MIN_VALUE;  // chromosomal position of the barcoded end of the tag  // 4 bytes
     public float r2=Float.NaN;
     public float mapP=Float.NaN;  //Round(Log2(P)), unknown Byte.MIN_VALUE
+    public int site=Integer.MIN_VALUE;
     
     public SiteMappingInfo() {   
     }
     
     public SiteMappingInfo(int chromosome, byte strand, int position, 
-                float r2, float mapP) {
+                float r2, float mapP, int site) {
         this.chromosome=chromosome;
         this.strand=strand;
         this.position=position;
         this.r2=r2;
         this.mapP=mapP;
+        this.site=site;
 
     } 
     
