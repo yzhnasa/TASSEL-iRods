@@ -35,7 +35,7 @@ public class IBSErrorByTaxon {
         int mjCorrect=0, mnCorrect=0, error=0;
         for (int startBlock = 0; startBlock < blocks; startBlock++) {
             int[] window=getBlockWithMinCount(mjTbs.getBits(), mnTbs.getBits(), 
-                    startBlock, minMinorCnt, minMinorCnt*10);      
+                    startBlock, minMinorCnt, minMajorCnt);      
             TreeMap<Double,long[][]> bestDonors=new TreeMap<Double,long[][]>();
             long[] iMj=a.getAllelePresenceForSitesBlock(tx, 0, window[0], window[1]);
             long[] iMn=a.getAllelePresenceForSitesBlock(tx, 1, window[0], window[1]);
