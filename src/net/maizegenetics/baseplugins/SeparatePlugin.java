@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 public class SeparatePlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(SeparatePlugin.class);
+    private String[] myChromosomesToSeparate = null;
 
     /**
      * Creates a new instance of SeparatePlugin
@@ -42,7 +43,7 @@ public class SeparatePlugin extends AbstractPlugin {
 
         try {
             List<Datum> inputs = input.getDataSet();
-            List<DataSet> result = new ArrayList();
+            List<DataSet> result = new ArrayList<DataSet>();
 
             for (Datum current : inputs) {
                 Object currentValue = current.getData();
@@ -62,7 +63,7 @@ public class SeparatePlugin extends AbstractPlugin {
 
                 } else if (currentValue instanceof Alignment) {
 
-                    List<Datum> alignments = separateAlignmentIntoLoci((Alignment) currentValue, current.getName());
+                    List<Datum> alignments = separateAlignmentIntoLoci((Alignment) currentValue, current.getName(), myChromosomesToSeparate);
                     if (alignments.size() > 0) {
                         DataSet tds = new DataSet(alignments, this);
                         result.add(tds);
@@ -90,6 +91,10 @@ public class SeparatePlugin extends AbstractPlugin {
     }
 
     public static List<Datum> separateAlignmentIntoLoci(Alignment alignment, String dataSetName) {
+        return separateAlignmentIntoLoci(alignment, dataSetName, null);
+    }
+
+    public static List<Datum> separateAlignmentIntoLoci(Alignment alignment, String dataSetName, String[] chromosomesToSeparate) {
 
         List<Datum> result = new ArrayList<Datum>();
         Alignment[] alignments = alignment.getAlignments();
@@ -98,23 +103,25 @@ public class SeparatePlugin extends AbstractPlugin {
             if (offsets.length > 1) {
                 Locus[] loci = alignments[i].getLoci();
                 for (int j = 0; j < offsets.length; j++) {
-                    String name;
-                    if (dataSetName == null) {
-                        name = "Alignment_chrom" + loci[j];
-                    } else {
-                        name = dataSetName + "_chrom" + loci[j];
+                    if (alignmentInList(loci[j], chromosomesToSeparate)) {
+                        String name;
+                        if (dataSetName == null) {
+                            name = "Alignment_chrom" + loci[j];
+                        } else {
+                            name = dataSetName + "_chrom" + loci[j];
+                        }
+                        int endSite;
+                        try {
+                            endSite = offsets[j + 1] - 1;
+                        } catch (Exception e) {
+                            endSite = alignments[i].getSiteCount() - 1;
+                        }
+                        Datum td = new Datum(name, FilterAlignment.getInstance(alignments[i], offsets[j], endSite), null);
+                        result.add(td);
                     }
-                    int endSite;
-                    try {
-                        endSite = offsets[j + 1] - 1;
-                    } catch (Exception e) {
-                        endSite = alignments[i].getSiteCount() - 1;
-                    }
-                    Datum td = new Datum(name, FilterAlignment.getInstance(alignments[i], offsets[j], endSite), null);
-                    result.add(td);
                 }
             } else {
-                if (alignments.length > 1) {
+                if ((alignments.length > 1) && (alignmentInList(alignments[i].getLoci()[0], chromosomesToSeparate))) {
                     String name;
                     if (dataSetName == null) {
                         name = "Alignment_chrom" + alignments[i].getLocus(0);
@@ -131,11 +138,35 @@ public class SeparatePlugin extends AbstractPlugin {
 
     }
 
+    private static boolean alignmentInList(Locus locus, String[] chromosomesToSeparate) {
+
+        if (chromosomesToSeparate == null) {
+            return true;
+        }
+
+        String currentChr = locus.getChromosomeName();
+        for (int i = 0; i < chromosomesToSeparate.length; i++) {
+            if (currentChr.equalsIgnoreCase(chromosomesToSeparate[i])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void setChromosomesToSeparate(String[] chrs) {
+        myChromosomesToSeparate = new String[chrs.length];
+        for (int i = 0; i < chrs.length; i++) {
+            myChromosomesToSeparate[i] = chrs[i].trim();
+        }
+    }
+
     /**
      * Icon for this plugin to be used in buttons, etc.
      *
      * @return ImageIcon
      */
+    @Override
     public ImageIcon getIcon() {
         URL imageURL = SeparatePlugin.class.getResource("images/Separate.gif");
         if (imageURL == null) {
@@ -150,6 +181,7 @@ public class SeparatePlugin extends AbstractPlugin {
      *
      * @return String
      */
+    @Override
     public String getButtonName() {
         return "Separate";
     }
@@ -159,6 +191,7 @@ public class SeparatePlugin extends AbstractPlugin {
      *
      * @return String
      */
+    @Override
     public String getToolTipText() {
         return "Separate Data into Components";
     }

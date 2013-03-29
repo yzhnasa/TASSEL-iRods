@@ -379,6 +379,12 @@ public class TasselPipeline implements PluginListener {
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-separate")) {
                     SeparatePlugin plugin = new SeparatePlugin(myMainFrame, false);
+                    String temp = args[index].trim();
+                    if (!temp.startsWith("-")) {
+                        String[] chromosomes = temp.split(",");
+                        plugin.setChromosomesToSeparate(chromosomes);
+                        index++;
+                    }
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-synonymizer")) {
                     SynonymizerPlugin plugin = new SynonymizerPlugin(myMainFrame, false);
