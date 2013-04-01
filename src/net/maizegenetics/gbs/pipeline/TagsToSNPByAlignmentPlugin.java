@@ -69,9 +69,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     HashMap<String, Double> taxaFs = null;
     boolean[] useTaxaForMinF = null;
     int nInbredTaxa = Integer.MIN_VALUE;
-    String outputFilePrefix = null;
-    String outHapMap = null;
-    String outVCF = null;
+    String suppliedOutputFileName;
+    boolean vcf = false;
     int startChr = Integer.MAX_VALUE;
     int endChr = Integer.MIN_VALUE;
     private static ArgsEngine myArgsEngine = null;
@@ -85,7 +84,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     final static int CHR = 0, STRAND = 1, START_POS = 2;  // indices of these position attributes in array returned by theTOPM.getPositionArray(a)
     private boolean customSNPLogging = true;  // a custom SNP log that collects useful info for filtering SNPs through machine learning criteria
     private CustomSNPLog myCustomSNPLog = null;
-    private boolean customFiltering = true;
+    private boolean customFiltering = false;
     
     // variables for calculating OS and PL for VCF, might not be in the correct class
     private static double error;
@@ -107,25 +106,22 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         myLogger.info("Finding SNPs in " + inputFile.getAbsolutePath() + ".");
         myLogger.info(String.format("StartChr:%d EndChr:%d %n", startChr, endChr));
         theTOPM.sortTable(true);
-        myLogger.info("\nHere are the first 5 tags in the TOPM (sorted by position):");
+        myLogger.info("\nAs a check, here are the first 5 tags in the TOPM (sorted by position):");
         theTOPM.printRows(5, true, true);
-        for (int i = startChr; i <= endChr; i++) {
-            myLogger.info("\n\nProcessing chromosome " + i + "...");
-            String out = outHapMap + ".c" + i;
-            if (customSNPLogging) myCustomSNPLog = new CustomSNPLog(out+".customSNPLog.txt", false);
-            myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + i + " (maximum number of sites = " + maxSize + ")");
-            MutableNucleotideAlignment theMSA;
-            if (outVCF == null) {
-                theMSA = createMutableAlignment(theTBT, maxSize + 100, includeReference);
-            } else {
-                theMSA = createMutableVCFAlignment(theTBT, maxSize + 100, includeReference);
-            }
+        for (int chr = startChr; chr <= endChr; chr++) {
+            myLogger.info("\n\nProcessing chromosome " + chr + "...");
+            String out = suppliedOutputFileName.replace("+", "" + chr);
+            if (customSNPLogging) myCustomSNPLog = new CustomSNPLog(out, false);
+            myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + chr + " (maximum number of sites = " + maxSize + ")");
+            MutableNucleotideAlignment theMSA = vcf ? createMutableVCFAlignment(theTBT, maxSize + 100, includeReference)
+                    : createMutableAlignment(theTBT, maxSize + 100, includeReference);
             if (includeReference) {
-                refGenomeChr = readReferenceGenomeChr(refGenomeFileStr, i);
+                refGenomeChr = readReferenceGenomeChr(refGenomeFileStr, chr);
+                if (refGenomeChr == null) continue;
             }
-            runTagsToSNPByAlignment(theMSA, out, i, false);
+            runTagsToSNPByAlignment(theMSA, out, chr, false);
             if (customSNPLogging) myCustomSNPLog.close();
-            myLogger.info("Finished processing chromosome " + i + "\n\n");
+            myLogger.info("Finished processing chromosome " + chr + "\n\n");
         }
         if (this.isUpdateTOPM) {
             if (outTOPMFile.endsWith(".txt")) {
@@ -143,10 +139,11 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 "\n\n\nThe available options for the TagsToSNPByAlignmentPlugin are as follows:\n"
                 + "-i       Input .tbt file\n"
                 + "-y       Use byte-formatted TBT file (*.tbt.byte)\n"
-                + "-m       TagsOnPhysicalMap file containing genomic position of tags\n"
-                + "-mUpd    Update TagsOnPhysicalMap file with allele calls, saved to specified file\n"
-                + "-o       Output directory (default current directory)\n"
-                + "-vcf     Output VCF file as well as the default Hapmap define output VCF file name, -ref flag ignored for this option\n"
+                + "-m       TagsOnPhysicalMap file containing genomic positions of tags\n"
+                + "-mUpd    Update TagsOnPhysicalMap file with allele calls for Production Pipeline, save to specified file (default: no updating)\n"
+                + "-o       Output HapMap file. Use a plus sign (+) as a wild card character in place of the chromosome number\n"
+                + "           (e.g., /path/hapmap/myGBSGenos.chr+.hmp.txt)\n"
+                + "-vcf     Output a VCF file (*.vcf) as well as the default HapMap (*.hmp.txt)  (default: "+vcf+")\n"
                 + "-mxSites Maximum number of sites (SNPs) output per chromosome (default: " + maxSize + ")\n"
                 + "-mnF     Minimum F (inbreeding coefficient) (default: " + minF + "  = no filter)\n"
                 + "-p       Pedigree file containing full sample names (or expected names after merging) & expected inbreeding\n"
@@ -168,8 +165,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 + "-inclRare  Include the rare alleles at site (3 or 4th states) (default: " + inclRare + ")\n"
                 + "-inclGaps  Include sites where major or minor allele is a GAP (default: " + inclGaps + ")\n"
                 + "-callBiSNPsWGap  Include sites where the third allele is a GAP (default: " + callBiallelicSNPsWithGap + ")\n"
-                + "-s       Start chromosome\n"
-                + "-e       End chromosome\n\n\n");
+                + "-sC       Start chromosome\n"
+                + "-eC       End chromosome\n\n\n");
     }
 
     @Override
@@ -187,7 +184,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             myArgsEngine.add("-m", "--physical-map", true);
             myArgsEngine.add("-mUpd", "--update-physical-map", true);
             myArgsEngine.add("-o", "--output-directory", true);
-            myArgsEngine.add("-vcf", "--output_vcf", true);
+            myArgsEngine.add("-vcf", "--output_vcf", false);
             myArgsEngine.add("-mxSites", "--max-sites-per-chr", true);
             myArgsEngine.add("-mnF", "--minFInbreeding", true);
             myArgsEngine.add("-p", "--pedigree-file", true);
@@ -200,8 +197,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             myArgsEngine.add("-inclRare", "--includeRare", false);
             myArgsEngine.add("-inclGaps", "--includeGaps", false);
             myArgsEngine.add("-callBiSNPsWGap", "--callBiSNPsWGap", false);
-            myArgsEngine.add("-s", "--start-chromosome", true);
-            myArgsEngine.add("-e", "--end-chromosome", true);
+            myArgsEngine.add("-sC", "--start-chromosome", true);
+            myArgsEngine.add("-eC", "--end-chromosome", true);
         }
         myArgsEngine.parse(args);
 
@@ -215,7 +212,6 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 printUsage();
                 throw new IllegalArgumentException("Can't find the TagsByTaxa input file (-i option: " + myArgsEngine.getString("-i") + ").");
             }
-            outputFilePrefix = inputFile.getParentFile().getName();
             if (inputFileName.endsWith(".hdf") || inputFileName.endsWith(".h5")) {
                 theTBT = new TagsByTaxaByteHDF5TagGroups(inputFileName);
             } else if (useTBTByte) {
@@ -245,16 +241,34 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             this.isUpdateTOPM = true;
             this.outTOPMFile = myArgsEngine.getString("-mUpd");
         }
-
-        //Set output directory and use the input TagsByTaxa filename for the output file prefix
         if (myArgsEngine.getBoolean("-o")) {
-            outHapMap = myArgsEngine.getString("-o") + File.separator + outputFilePrefix;
-        } else {
-            outHapMap = inputFile.getParent() + File.separator + outputFilePrefix;
+            suppliedOutputFileName = myArgsEngine.getString("-o");
+            boolean noWildCard = false;
+            if (suppliedOutputFileName.contains(File.separator)) {
+                if (!suppliedOutputFileName.substring(suppliedOutputFileName.lastIndexOf(File.separator)).contains("+")) {
+                    noWildCard = true;
+                }
+            } else if (!suppliedOutputFileName.contains("+")) {
+                noWildCard = true;
+            } 
+            if (noWildCard) {
+                printUsage();
+                throw new IllegalArgumentException("The output file name should contain a \"+\" wildcard character in place of the chromosome number (-o option: " + suppliedOutputFileName + ")");
+            }
+            String outFolder = suppliedOutputFileName.substring(0,suppliedOutputFileName.lastIndexOf(File.separator));
+            File outDir = new File(outFolder);
+            try {
+                if (!outDir.getCanonicalFile().isDirectory()) {
+                    throw new Exception();
+                }
+            } catch (Exception e) {
+                printUsage();
+                throw new IllegalArgumentException("Path to the output file does not exist (-o option: " + suppliedOutputFileName + ")");
+            }
         }
         
         if (myArgsEngine.getBoolean("-vcf")) {
-            outVCF = myArgsEngine.getString("-vcf");  // Set output VCF file name
+            vcf = true;
             initVCFScoreMap();
         }
         if (myArgsEngine.getBoolean("-mxSites")) {
@@ -310,7 +324,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
 //                printUsage();
 //                throw new IllegalArgumentException("The -LocusBorder option requires that the -ref option (referenceGenome) is also invoked.");
 //            }
-//            if (outVCF != null) {
+//            if (vcf) {
 //                printUsage();
 //                throw new IllegalArgumentException("The -LocusBorder option is currently incompatible with the -vcf option.");
 //            }
@@ -326,14 +340,14 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-callBiSNPsWGap")) {
             callBiallelicSNPsWithGap = true;
         }
-        if (myArgsEngine.getBoolean("-s")) {
-            startChr = Integer.parseInt(myArgsEngine.getString("-s"));
+        if (myArgsEngine.getBoolean("-sC")) {
+            startChr = Integer.parseInt(myArgsEngine.getString("-sC"));
         } else {
             printUsage();
             throw new IllegalArgumentException("Please specify start and end chromosome numbers.");
         }
-        if (myArgsEngine.getBoolean("-e")) {
-            endChr = Integer.parseInt(myArgsEngine.getString("-e"));
+        if (myArgsEngine.getBoolean("-eC")) {
+            endChr = Integer.parseInt(myArgsEngine.getString("-eC"));
         } else {
             printUsage();
             throw new IllegalArgumentException("Please specify start and end chromosome numbers.");
@@ -363,7 +377,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
 
     public void runTagsToSNPByAlignment(MutableNucleotideAlignment theMSA, String outHapMap, int targetChromo, boolean requireGeneticSupport) {
         long time = System.currentTimeMillis();
-        DataOutputStream locusLogDOS=openLocusLog(targetChromo);
+        DataOutputStream locusLogDOS = openLocusLog(outHapMap);
         TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE,Byte.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,includeReference,fuzzyStartPositions,errorRate);
         int[] currPos = null;
         int countLoci = 0;
@@ -402,8 +416,16 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         if (theMSA.getSiteCount() > 0) {
             theMSA.clean();
             ExportUtils.writeToHapmap(theMSA, false, outHapMap, '\t', null);
-            if (outVCF != null) {
-                ExportUtils.writeToVCF(theMSA, outVCF, '\t');
+            if (vcf) {
+                String vcfFileName;
+                if (outHapMap.endsWith(".hmp.txt")) {
+                    vcfFileName = outHapMap.replace(".hmp.txt", ".vcf");
+                } else if (outHapMap.endsWith(".hmp.txt.gz")) {
+                    vcfFileName = outHapMap.replace(".hmp.txt.gz", ".vcf.gz");
+                } else {
+                    vcfFileName = outHapMap + ".vcf";
+                }
+                ExportUtils.writeToVCF(theMSA, vcfFileName, '\t');
             }
         }
         myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + theMSA.getSiteCount());
@@ -472,7 +494,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             return;  // need at least two (overlapping!) sequences to make an alignment
         }
         byte[][] callsBySite;
-        if (outVCF != null) {
+        if (vcf) {
             if (includeReference) {
                 addRefTag(theTAL);
                 refTagUsed = true;
@@ -504,6 +526,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             if ((alleles = isSiteGood(callsBySite[s])) == null) { // NOTE: only the maj & min1 alleles are returned, so the Prod Pipeline can only call 2 alleles
                 continue;
             }
+            if (includeReference && !fuzzyStartPositions && theTAL.getRefGeno(s) == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
+                continue;
+            }
             int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
             if (customSNPLogging) {
                 CustomSNPLogRecord mySNPLogRecord = new CustomSNPLogRecord(s, theTAL, position, useTaxaForMinF, refTagUsed);
@@ -524,7 +549,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 byte geno = (strand == -1) ? complementGeno(theTAL.getRefGeno(s)) : theTAL.getRefGeno(s);
                 theMSA.setBase(0, currSite, geno);
                 theMSA.setReferenceAllele(currSite, geno);
-                if (outVCF != null) {
+                if (vcf) {
                     byte[] depths = new byte[]{0,0,0}; // assumes maxNumAlleles = 3
                     theMSA.setDepthForAlleles(0, currSite, depths);
                 }
@@ -535,7 +560,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 } else {
                     theMSA.setBase(tx+offset, currSite, callsBySite[s][tx]);
                 }
-                if (outVCF != null) {
+                if (vcf) {
                     byte[] depths = new byte[alleleDepths.length];
                     for (int a = 0; a < depths.length; a++) {
                         depths[a] = alleleDepths[a][s][tx];
@@ -543,7 +568,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                     theMSA.setDepthForAlleles(tx+offset, currSite, depths);
                 }
             }
-            if (outVCF != null) {
+            if (vcf) {
                 byte[] allelesForSite = new byte[commonAlleles.length];
                 for (int a = 0; a < allelesForSite.length; a++) {
                     if (strand == -1) allelesForSite[a] = complementAllele(commonAlleles[a][s]);
@@ -702,10 +727,18 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
     }
 
-    private DataOutputStream openLocusLog(int targetChromo) {
+    private DataOutputStream openLocusLog(String outHapMap) {
+        String logFileName;
+        if (outHapMap.endsWith(".hmp.txt")) {
+            logFileName = outHapMap.replace(".hmp.txt", ".LocusLog.txt");
+        } else if (outHapMap.endsWith(".hmp.txt.gz")) {
+            logFileName = outHapMap.replace(".hmp.txt.gz", ".LocusLog.txt");
+        } else {
+            logFileName = outHapMap + ".LocusLog.txt";
+        }
         try {
             DataOutputStream locusLogDOS 
-                    = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(outHapMap + ".c" + targetChromo + ".LocusLog.txt")), 65536));
+                    = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(logFileName)), 65536));
             locusLogDOS.writeBytes(
                 "chr\tstart\tend\tstrand\ttotalbp\tnTags\tnReads\tnTaxaCovered\tminTaxaCovered\tstatus\tnVariableSites\tposVariableSites\tnVarSitesKept\tposVarSitesKept\trefTag?\tmaxTagLen\tminTagLen\n");
             return locusLogDOS;
@@ -853,6 +886,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
 
     private long[] readReferenceGenomeChr(String inFileStr, int targetChr) {
         int nBases = getLengthOfReferenceGenomeChr(inFileStr, targetChr);
+        if (nBases == 0) return null;
         int basesPerLong = BaseEncoder.chunkSize;
         int nLongs = (nBases % basesPerLong == 0) ? nBases / basesPerLong : (nBases / basesPerLong) + 1;
         long[] refGenomeChrAsLongs = new long[nLongs];
@@ -933,12 +967,19 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                     nBases += temp.length();
                 }
             }
+            if (nBases == 0) {
+                throw new Exception("Target chromosome ("+targetChr+") not found");
+            } 
             myLogger.info("The target chromosome " + targetChr + " is " + nBases + " bases long");
             br.close();
         } catch (Exception e) {
-            myLogger.error("Exception caught while reading the reference genome fasta file at line " + line + "  e=" + e);
-            e.printStackTrace();
-            System.exit(1);
+            if (nBases == 0) {
+                myLogger.warn("Exception caught while reading the reference genome fasta file at line " + line + "\n   e=" + e +"\n   Skipping this chromosome...");
+            }  else {
+                myLogger.error("Exception caught while reading the reference genome fasta file at line " + line + "\n   e=" + e);
+                e.printStackTrace();
+                System.exit(1);
+            }
         }
         return nBases;
     }
@@ -974,8 +1015,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         for (int i = startIndex; i <= endIndex; ++i) {
             sb.append(BaseEncoder.getSequenceFromLong(refGenomeChr[i]));
         }
-        refTag = sb.substring(Math.max(refSeqStartPos-startIndex*basesPerLong-1,0), 
-                refSeqStartPos-startIndex*basesPerLong-1+theTAL.getMaxTagLength());
+        refTag = sb.substring(Math.max(refSeqStartPos-startIndex*basesPerLong-1,0),
+                Math.min(refSeqStartPos-startIndex*basesPerLong-1+theTAL.getMaxTagLength(),sb.length()));
         if (theTAL.getStrand() == -1) {
             refTag = revComplement(refTag);
         }
@@ -1481,16 +1522,24 @@ class CustomSNPLog {
         "nOutbredHets"            +"\t"+
         "passed?"                 +"\n";
     
-    public CustomSNPLog(String filename, boolean append) {
-        if ((filename == null) || (filename.length() == 0)) {
+    public CustomSNPLog(String outHapMapFile, boolean append) {
+        String logFileName;
+        if (outHapMapFile.endsWith(".hmp.txt")) {
+            logFileName = outHapMapFile.replace(".hmp.txt", ".customSNPLog.txt");
+        } else if (outHapMapFile.endsWith(".hmp.txt.gz")) {
+            logFileName = outHapMapFile.replace(".hmp.txt.gz", ".customSNPLog.txt");
+        } else {
+            logFileName = outHapMapFile + ".customSNPLog.txt";
+        }
+        if ((logFileName == null) || (logFileName.length() == 0)) {
             myWriter = null;
         } else {
             boolean exists = false;
-            File file = new File(filename);
+            File file = new File(logFileName);
             if (file.exists()) {
                 exists = true;
             }
-            myWriter = Utils.getBufferedWriter(filename, append);
+            myWriter = Utils.getBufferedWriter(logFileName, append);
             if (!exists || !append) {
                 try {
                     myWriter.append(HEADER);
