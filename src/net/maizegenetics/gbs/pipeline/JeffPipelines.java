@@ -21,62 +21,48 @@ public class JeffPipelines {
     public static void runTagsToSNPByAlignmentPlugin() {
 
         String baseDirMDPLowVol = "/Users/jcg233/Documents/GBS/MDP1_low_vol/";
-        String[] MDPLowVolArgsOld = new String[]{
-            "-i", baseDirMDPLowVol + "C08L7ACXX_6_min2.tbt.byte",
-            "-y", // use TagsByTaxaByte
-            "-o", baseDirMDPLowVol + "hapmap/testLocusLog",
-            "-m", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit.topm.bin",
-            //            "-mUpd", baseDir+"",
-            //"-ref", "maize_agp_v2.fasta",
-            //"-LocusBorder", "150",
-            "-mnF", "0.8",
-            "-mnMAF", "0.005",
-            "-mnMAC", "99999", // this will never be satified: this way -mnMAF overrides it
-            "-mnLCov", "0.1", // Minimum locus coverage (proportion of Taxa)
-            //            "-inclGaps",  // Include sites where major or minor allele is a GAP
-            //            "-callBiSNPsWGap",  //call sites with a biallelic SNP plus a gap (e.g., A/C/-)
-            "-s", "10", // Start chromosome
-            "-e", "10" // End chromosome
-        };
-
         String[] MDPLowVolArgs = new String[]{
             "-i", baseDirMDPLowVol + "C08L7ACXX_6_min2.tbt.byte",
             "-y", // use TagsByTaxaByte
-            "-o",   baseDirMDPLowVol + "tassel4/hapmap/customSNPLogging/customFilt",
-//            "-vcf", baseDirMDPLowVol + "tassel4/hapmap/vcf/MDP1_low_vol_wRef.c10.vcf",
+            "-o", baseDirMDPLowVol + "tassel4/hapmap/vcfRef/MDP1_low_vol_test9.chr+.hmp.txt",
+            "-vcf",
             "-m", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit.topm.bin",
-            //            "-mUpd", baseDir+"",
-            "-ref", baseDirMDPLowVol + "maize_agp_v2_chr10.fasta",
-            //"-LocusBorder", "150",
+//            "-mUpd", baseDir+"",
+//            "-ref", baseDirMDPLowVol + "maize_agp_v2_chr10.fasta",
+            "-ref", "/Users/jcg233/Documents/GBS/refGenome/ZmB73_RefGen_v2.fa",
+//            "-LocusBorder", "150",
             "-p", baseDirMDPLowVol + "MDP1_betterFake_ped.txt", 
             "-mnF", "0.8",
             "-mnMAF", "0.005",
             "-mnMAC", "99999", // this will never be satified: this way -mnMAF overrides it
             "-mnLCov", "0.1", // Minimum locus coverage (proportion of Taxa)
-            //            "-inclGaps",  // Include sites where major or minor allele is a GAP
-            //            "-callBiSNPsWGap",  //call sites with a biallelic SNP plus a gap (e.g., A/C/-)
-            "-s", "10", // Start chromosome
-            "-e", "10" // End chromosome
+//            "-inclRare",
+//            "-inclGaps",  // Include sites where major or minor allele is a GAP
+//            "-callBiSNPsWGap",  //call sites with a biallelic SNP plus a gap (e.g., A/C/-)
+            "-sC", "10", // Start chromosome
+            "-eC", "10" // End chromosome
         };
 
-        String baseDirJulyBuild = "/Volumes/nextgen/Zea/build20120701/";
+        String baseDirJulyBuild = "/Users/jcg233/Documents/GBS/";
         String[] JulyBuildArgs = new String[]{
-            "-i", baseDirJulyBuild + "05_TBT/04_PivotMergedTaxaTBT/mergedTBTHDF5_mergedtaxa_pivot_20120628.h5",
-//            "-y", // use TagsByTaxaByte
-            "-o", "/Users/jcg233/Documents/GBS/JulyBuild/hapmap",
-            "-m", baseDirJulyBuild + "04_TOPM/AllZeaMasterTags_c10_20120703.topm",
-            //            "-mUpd", baseDir+"",
-            //"-ref", "maize_agp_v2.fasta",
-            //"-LocusBorder", "150",
-            "-p", "50_KeyFiles/AllZeaPedigree20120730.txt",
+            "-i", baseDirJulyBuild + "20120701Build/tbt/mergeTBTHDF5_mergedtaxa_pivot_20120921.h5",
+            "-m", baseDirJulyBuild + "20120701Build/topm/AllZeaMasterTags_c10_20120703.topm",
+            "-p", baseDirJulyBuild + "20120701Build/AllZeaPedigree2012oct01C.txt",
+            "-o", baseDirJulyBuild + "20120701Build/hapmap",
+            "-ref", baseDirJulyBuild + "refGenome/ZmB73_RefGen_v2.fa",
             "-mnF", "0.8",
             "-mnMAF", "0.001",
-            "-mnMAC", "99999", // this will never be satified: this way -mnMAF overrides it
+            "-mnMAC", "10",
             "-mnLCov", "0.1", // Minimum locus coverage (proportion of Taxa)
-            //            "-inclGaps",  // Include sites where major or minor allele is a GAP
-            //            "-callBiSNPsWGap",  //call sites with a biallelic SNP plus a gap (e.g., A/C/-)
-            "-s", "10", // Start chromosome
-            "-e", "10" // End chromosome
+            "-mxSites", "2000",
+//            "-y", // use TagsByTaxaByte
+//            "-mUpd", baseDir+"",
+//            "-LocusBorder", "150",
+//            "-inclRare",
+//            "-inclGaps",  // Include sites where major or minor allele is a GAP
+//            "-callBiSNPsWGap",  //call sites with a biallelic SNP plus a gap (e.g., A/C/-)
+            "-sC", "7", // Start chromosome
+            "-eC", "7" // End chromosome
         };
 
         TagsToSNPByAlignmentPlugin plugin = new TagsToSNPByAlignmentPlugin();
