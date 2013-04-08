@@ -80,8 +80,8 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 + "                 to test if two duplicate SNPs agree with each other (default: use ALL taxa to compare duplicate SNPs)\n"
                 + "-callHets      When two genotypes disagree at a SNP, call it a heterozygote (default: " + callHets + " = set to missing)\n"
                 + "-kpUnmergDups  When two duplicate SNPs were not merged (different alleles or too many mismatches), keep them (default: " + kpUnmergDups + " = delete them)\n"
-                + "-s             Start chromosome\n"
-                + "-e             End chromosome\n"
+                + "-sC             Start chromosome\n"
+                + "-eC             End chromosome\n"
                 + "-snpLog        SNPs Removed Log file name\n\n");
     }
 
@@ -99,8 +99,8 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             myArgsEngine.add("-p", "--pedigree-file", true);
             myArgsEngine.add("-callHets", "--callHeterozygotes", false);
             myArgsEngine.add("-kpUnmergDups", "--keepUnmergedDuplicates", false);
-            myArgsEngine.add("-s", "--startChromosome", true);
-            myArgsEngine.add("-e", "--endChromosome", true);
+            myArgsEngine.add("-sC", "--startChromosome", true);
+            myArgsEngine.add("-eC", "--endChromosome", true);
             myArgsEngine.add("-snpLog", "", true);
         }
         myArgsEngine.parse(args);
@@ -138,11 +138,11 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-kpUnmergDups")) {
             kpUnmergDups = true;
         }
-        if (myArgsEngine.getBoolean("-s")) {
-            startChr = Integer.parseInt(myArgsEngine.getString("-s"));
+        if (myArgsEngine.getBoolean("-sC")) {
+            startChr = Integer.parseInt(myArgsEngine.getString("-sC"));
         }
-        if (myArgsEngine.getBoolean("-e")) {
-            endChr = Integer.parseInt(myArgsEngine.getString("-e"));
+        if (myArgsEngine.getBoolean("-eC")) {
+            endChr = Integer.parseInt(myArgsEngine.getString("-eC"));
         }
         if (endChr - startChr < 0) {
             printUsage();
