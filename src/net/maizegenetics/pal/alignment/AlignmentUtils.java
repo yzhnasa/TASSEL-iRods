@@ -667,4 +667,24 @@ public class AlignmentUtils {
         return result;
 
     }
+
+    public static Alignment optimizeForTaxaAndSites(Alignment alignment) {
+
+        boolean isSBit = alignment.isSBitFriendly();
+        boolean isTBit = alignment.isTBitFriendly();
+
+        Alignment result = null;
+        if (isSBit && isTBit) {
+            result = alignment;
+        } else if (isSBit) {
+            result = optimizeForTaxa(alignment);
+            result = optimizeForSites(result);
+        } else {
+            result = optimizeForSites(alignment);
+            result = optimizeForTaxa(result);
+        }
+
+        return result;
+
+    }
 }

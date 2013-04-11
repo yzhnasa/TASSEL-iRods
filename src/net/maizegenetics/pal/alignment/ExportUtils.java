@@ -39,8 +39,7 @@ public class ExportUtils {
 
     public static String writeToHDF5(Alignment a, String newHDF5file) {
 
-        a = AlignmentUtils.optimizeForSites(a);
-        a = AlignmentUtils.optimizeForTaxa(a);
+        a = AlignmentUtils.optimizeForTaxaAndSites(a);
         IHDF5Writer h5w = null;
         try {
 
