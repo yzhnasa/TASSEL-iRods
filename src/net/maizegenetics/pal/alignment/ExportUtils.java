@@ -208,8 +208,8 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 bw.write(alignment.getSNPID(site));
                 bw.write(delimChar);
-//                byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
-//                int numAlleles = alleles.length;
+                // byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
+                // int numAlleles = alleles.length;
                 int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
                 int numAlleles = sortedAlleles[0].length;
                 if (numAlleles == 0) {
@@ -510,7 +510,7 @@ public class ExportUtils {
                     boolean refAlleleInAllelValues = false;
                     for (int sortedAIndex = 0; sortedAIndex < sortedAlleles[0].length; sortedAIndex++) {
                         if (sortedAlleles[0][sortedAIndex] == refAllele) {
-                            refAlleleAmongGenos = true; 
+                            refAlleleAmongGenos = true;
                             for (int aValuesIndex = 0; aValuesIndex < alleleValues.length; aValuesIndex++) {
                                 if (alleleValues[aValuesIndex] == refAllele) {
                                     refAlleleInAllelValues = true;
@@ -539,7 +539,7 @@ public class ExportUtils {
                     } else {
                         // alleleRedirect[0] set to -1, the remaining in desc order of freq: maj, min1, [min2]
                         if (!refAlleleAmongGenos) {
-                            alleleRedirect = new int[alleleRedirect.length+1];
+                            alleleRedirect = new int[alleleRedirect.length + 1];
                         }
                         alleleRedirect[0] = -1;
                         int aRedirectIndex = 1;
@@ -569,7 +569,7 @@ public class ExportUtils {
                     if (i != firstAltAllele) {
                         altAllelesBuilder.append(",");
                     }
-                    byte diploidByte = (byte) ((alleleValues[alleleRedirect[i]]<<4) | alleleValues[alleleRedirect[i]]);
+                    byte diploidByte = (byte) ((alleleValues[alleleRedirect[i]] << 4) | alleleValues[alleleRedirect[i]]);
                     String AlleleStr = NucleotideAlignmentConstants.NUCLEOTIDE_IUPAC_HASH.get(diploidByte);
                     if (AlleleStr == null) {
                         altAllelesBuilder.append(".");
@@ -603,7 +603,9 @@ public class ExportUtils {
                 bw.write("GT:AD:DP:GQ:PL");
 
                 for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
-                    if (taxa == 0 && refTaxon) continue;  // don't include REFERENCE_GENOME in vcf output
+                    if (taxa == 0 && refTaxon) {
+                        continue;  // don't include REFERENCE_GENOME in vcf output
+                    }
                     bw.write(delimChar);
 
                     // GT = genotype
@@ -614,13 +616,13 @@ public class ExportUtils {
                         genoOne = true;
                     } else {
                         for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/[alt2] order (if no alt2,length=2)
-                            if (i==0 && alleleRedirect[i]==-1) {  // refAllele known but either not among genos or not in alleleValues
-                                if (values[0]==refAllele) {
+                            if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
+                                if (values[0] == refAllele) {
                                     bw.write(i + "/");
                                     genoOne = true;
                                     break;
                                 }
-                            } else if (values[0]==alleleValues[alleleRedirect[i]]) {
+                            } else if (values[0] == alleleValues[alleleRedirect[i]]) {
                                 bw.write(i + "/");
                                 genoOne = true;
                                 break;
@@ -650,13 +652,13 @@ public class ExportUtils {
                         genoTwo = true;
                     } else {
                         for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/alt2 order (if no alt2,length=2)
-                            if (i==0 && alleleRedirect[i]==-1) {  // refAllele known but either not among genos or not in alleleValues
-                                if (values[1]==refAllele) {
+                            if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
+                                if (values[1] == refAllele) {
                                     bw.write(i + "");
                                     genoTwo = true;
                                     break;
                                 }
-                            } else if (values[1]==alleleValues[alleleRedirect[i]]) {
+                            } else if (values[1] == alleleValues[alleleRedirect[i]]) {
                                 bw.write(i + "");
                                 genoTwo = true;
                                 break;
@@ -691,15 +693,17 @@ public class ExportUtils {
                                 bw.write("0");
                                 continue;
                             }
-                            if (a != 0) bw.write(",");
-                            bw.write(((int) (siteAlleleDepths[alleleRedirect[a]]))+"");
+                            if (a != 0) {
+                                bw.write(",");
+                            }
+                            bw.write(((int) (siteAlleleDepths[alleleRedirect[a]])) + "");
                             siteTotalDepth += siteAlleleDepths[alleleRedirect[a]];
                         }
                     } else {
                         bw.write(".,.,.");
                     }
                     bw.write(":");
-                    
+
                     // DP
                     bw.write(siteTotalDepth + "");
                     bw.write(":");
@@ -710,10 +714,10 @@ public class ExportUtils {
                             scores = scoreMap.get(Integer.toString(siteAlleleDepths[alleleRedirect[0]] & 0xFF) + ",0");
                         } else {
                             if (alleleRedirect[0] == -1) {
-                                scores = scoreMap.get(Integer.toString(siteAlleleDepths[alleleRedirect[1]] & 0xFF) 
+                                scores = scoreMap.get(Integer.toString(siteAlleleDepths[alleleRedirect[1]] & 0xFF)
                                         + "," + Integer.toString(siteAlleleDepths[alleleRedirect[2]] & 0xFF));
                             } else {
-                                scores = scoreMap.get(Integer.toString(siteAlleleDepths[alleleRedirect[0]] & 0xFF) 
+                                scores = scoreMap.get(Integer.toString(siteAlleleDepths[alleleRedirect[0]] & 0xFF)
                                         + "," + Integer.toString(siteAlleleDepths[alleleRedirect[1]] & 0xFF));
                             }
                         }
