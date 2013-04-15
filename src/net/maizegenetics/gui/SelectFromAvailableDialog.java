@@ -51,9 +51,11 @@ public class SelectFromAvailableDialog extends JDialog {
 
         myAvailableListModel = availableModel;
         myAvailable = new JList(myAvailableListModel);
+        myAvailable.setPrototypeCellValue("XXXXXXXXXXXXXXXXXXXX");
 
         mySelectedListModel = new SelectedListModel();
         mySelected = new JList(mySelectedListModel);
+        mySelected.setPrototypeCellValue("XXXXXXXXXXXXXXXXXXXX");
 
         setTitle(title);
         setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
@@ -76,6 +78,7 @@ public class SelectFromAvailableDialog extends JDialog {
         validate();
 
         setResizable(true);
+
     }
 
     private JPanel getMain() {
@@ -122,7 +125,6 @@ public class SelectFromAvailableDialog extends JDialog {
         result.add(new JLabel(label), BorderLayout.NORTH);
         JTextField search = new JTextField();
         CaretListener caret = new CaretListener() {
-
             @Override
             public void caretUpdate(CaretEvent e) {
                 String text = ((JTextField) e.getSource()).getText();
@@ -142,7 +144,6 @@ public class SelectFromAvailableDialog extends JDialog {
     private JButton getAddButton() {
         JButton result = new JButton("Add ->");
         result.addActionListener(new AbstractAction() {
-
             public void actionPerformed(ActionEvent e) {
                 int[] selected = myAvailable.getSelectedIndices();
                 selected = myAvailableListModel.translateToRealIndices(selected);
@@ -171,7 +172,6 @@ public class SelectFromAvailableDialog extends JDialog {
     private JButton getSelectedButton() {
         JButton okButton = new JButton("Capture Selected");
         okButton.addActionListener(new AbstractAction() {
-
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
                 myIsCanceled = false;
@@ -184,7 +184,6 @@ public class SelectFromAvailableDialog extends JDialog {
     private JButton getUnselectedButton() {
         JButton okButton = new JButton("Capture Unselected");
         okButton.addActionListener(new AbstractAction() {
-
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
                 myIsCanceled = false;
@@ -197,7 +196,6 @@ public class SelectFromAvailableDialog extends JDialog {
     private JButton getCancelButton() {
         JButton okButton = new JButton("Cancel");
         okButton.addActionListener(new AbstractAction() {
-
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
                 myIsCanceled = true;
@@ -209,7 +207,6 @@ public class SelectFromAvailableDialog extends JDialog {
     private JButton getRemoveButton() {
         JButton result = new JButton("Remove");
         result.addActionListener(new AbstractAction() {
-
             public void actionPerformed(ActionEvent e) {
                 int[] indices = mySelected.getSelectedIndices();
                 Arrays.sort(indices);

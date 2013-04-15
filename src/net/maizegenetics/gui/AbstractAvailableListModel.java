@@ -17,6 +17,7 @@ import net.maizegenetics.util.OpenBitSet;
 public abstract class AbstractAvailableListModel extends AbstractListModel {
 
     private BitSet myShownIndices;
+    private boolean myShowAll = true;
 
     public AbstractAvailableListModel() {
         myShownIndices = new OpenBitSet(getRealSize());
@@ -30,14 +31,19 @@ public abstract class AbstractAvailableListModel extends AbstractListModel {
 
     @Override
     public Object getElementAt(int index) {
-        return getRealElementAt(myShownIndices.indexOfNthSetBit(index + 1));
+        if (myShowAll) {
+            return getRealElementAt(index);
+        } else {
+            return getRealElementAt(myShownIndices.indexOfNthSetBit(index + 1));
+        }
     }
 
     public void setShown(String search) {
 
         if ((search == null) || (search.length() == 0)) {
-            showAll();
-            fireContentsChanged(this, 0, getSize());
+            if (showAll()) {
+                fireContentsChanged(this, 0, getSize());
+            }
             return;
         }
 
@@ -58,6 +64,12 @@ public abstract class AbstractAvailableListModel extends AbstractListModel {
                 }
             }
 
+            if (myShownIndices.cardinality() == getRealSize()) {
+                myShowAll = true;
+            } else {
+                myShowAll = false;
+            }
+
         } catch (Exception e) {
             showNone();
         }
@@ -73,11 +85,23 @@ public abstract class AbstractAvailableListModel extends AbstractListModel {
         return shownIndices;
     }
 
-    private void showAll() {
-        myShownIndices.set(0, getRealSize());
+    /**
+     * Sets bits to show all elements in list.
+     *
+     * @return whether bits changed
+     */
+    private boolean showAll() {
+        myShowAll = true;
+        if (myShownIndices.cardinality() == getRealSize()) {
+            return false;
+        } else {
+            myShownIndices.set(0, getRealSize());
+            return true;
+        }
     }
 
     private void showNone() {
+        myShowAll = false;
         myShownIndices.clear(0, getRealSize());
     }
 
