@@ -46,6 +46,8 @@ public interface TOPMInterface {
     public int getStartPosition(int index);
 
     public byte getStrand(int tagIndex);
+    
+    public int getMaxNumVariants();
 
     public byte getVariantDef(int tagIndex, int variantIndex);
 

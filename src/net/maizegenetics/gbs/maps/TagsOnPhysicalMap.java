@@ -1141,6 +1141,11 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
 
     @Override
+    public int getMaxNumVariants() {
+        return maxVariants;
+    }
+
+    @Override
     public byte getStrand(int tagIndex) {
         return strand[tagIndex];
     }
