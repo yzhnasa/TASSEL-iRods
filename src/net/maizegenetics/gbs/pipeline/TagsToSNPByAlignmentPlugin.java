@@ -3,6 +3,9 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
+import cern.colt.GenericSorting;
+import cern.colt.Swapper;
+import cern.colt.function.IntComparator;
 import java.awt.Frame;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -84,7 +87,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     final static int CHR = 0, STRAND = 1, START_POS = 2;  // indices of these position attributes in array returned by theTOPM.getPositionArray(a)
     private boolean customSNPLogging = true;  // a custom SNP log that collects useful info for filtering SNPs through machine learning criteria
     private CustomSNPLog myCustomSNPLog = null;
-    private boolean customFiltering = false;
+    private boolean customFiltering = true;
     
     // variables for calculating OS and PL for VCF, might not be in the correct class
     private static double error;
@@ -164,7 +167,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
 //                + "              Use of the -LocusBorder option requires that the -ref option is also invoked.\n"
                 + "-inclRare  Include the rare alleles at site (3 or 4th states) (default: " + inclRare + ")\n"
                 + "-inclGaps  Include sites where major or minor allele is a GAP (default: " + inclGaps + ")\n"
-                + "-callBiSNPsWGap  Include sites where the third allele is a GAP (default: " + callBiallelicSNPsWithGap + ")\n"
+                + "-callBiSNPsWGap  Include sites where the third allele is a GAP (default: " + callBiallelicSNPsWithGap + ") (mutually exclusive with inclGaps)\n"
                 + "-sC       Start chromosome\n"
                 + "-eC       End chromosome\n\n\n");
     }
@@ -338,7 +341,12 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             inclGaps = true;
         }
         if (myArgsEngine.getBoolean("-callBiSNPsWGap")) {
-            callBiallelicSNPsWithGap = true;
+            if (inclGaps) {
+                printUsage();
+                throw new IllegalArgumentException("The callBiSNPsWGap option is mutually exclusive with the inclGaps option.");
+            } else {
+                callBiallelicSNPsWithGap = true;
+            }
         }
         if (myArgsEngine.getBoolean("-sC")) {
             startChr = Integer.parseInt(myArgsEngine.getString("-sC"));
@@ -519,8 +527,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             return;
         }
         int[] positionsInLocus = theTAL.getPositionsOfVariableSites();
-        boolean[] varSiteKept = new boolean[callsBySite.length];  // initializes to false
         int strand = theTAL.getStrand();
+        boolean[] varSiteKept = new boolean[callsBySite.length];  // initializes to false
+        TagLocusSiteQualityScores SiteQualityScores = new TagLocusSiteQualityScores(callsBySite.length);
         for (int s = 0; s < callsBySite.length; s++) {
             byte[] alleles = null;
             if ((alleles = isSiteGood(callsBySite[s])) == null) { // NOTE: only the maj & min1 alleles are returned, so the Prod Pipeline can only call 2 alleles
@@ -530,9 +539,11 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 continue;
             }
             int position = (strand == -1) ? theTAL.getMinStartPosition() - positionsInLocus[s] : theTAL.getMinStartPosition() + positionsInLocus[s];
+            CustomSNPLogRecord mySNPLogRecord;
             if (customSNPLogging) {
-                CustomSNPLogRecord mySNPLogRecord = new CustomSNPLogRecord(s, theTAL, position, useTaxaForMinF, refTagUsed);
+                mySNPLogRecord = new CustomSNPLogRecord(s, theTAL, position, useTaxaForMinF, refTagUsed);
                 myCustomSNPLog.writeEntry(mySNPLogRecord.toString());
+                SiteQualityScores.addSite(s, mySNPLogRecord.getInbredCoverage(), mySNPLogRecord.getInbredHetScore(), alleles, position);
                 if (customFiltering && !mySNPLogRecord.isGoodSNP()) {
                     continue;
                 }
@@ -576,7 +587,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 }
                 theMSA.setCommonAlleles(currSite, allelesForSite);
             }
-            if (this.isUpdateTOPM) {  
+            if (isUpdateTOPM & !customFiltering) {  
                 updateTOPM(theTAL, s, position, strand, alleles);
             }
             if (currSite % 100 == 0) {
@@ -584,6 +595,42 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             }
         }
         logAcceptedTagLocus(theTAL.getLocusReport(minTaxaWithLocus, varSiteKept), locusLogDOS);
+        if (isUpdateTOPM & customFiltering) {  
+            updateTOPM(theTAL, varSiteKept, SiteQualityScores);
+        }
+    }
+
+    private void updateTOPM(TagsAtLocus myTAL, boolean[] varSiteKept, TagLocusSiteQualityScores SiteQualityScores) {
+        SiteQualityScores.sortByQuality();
+        byte strand = myTAL.getStrand();
+        for (int s = 0; s < SiteQualityScores.getSize(); s++) {
+            int siteInTAL = SiteQualityScores.getSiteInTAL(s);
+            if (varSiteKept[siteInTAL]) {
+                for (int tg = 0; tg < myTAL.getSize(); tg++) {
+                    int topmTagIndex = myTAL.getTOPMIndexOfTag(tg);
+                    if (topmTagIndex == Integer.MIN_VALUE) continue; // skip the reference genome tag (which may not be in the TOPM)
+                    byte baseToAdd = myTAL.getCallAtVariableSiteForTag(siteInTAL, tg);
+                    boolean matched = false;
+                    for (byte cb : SiteQualityScores.getAlleles(s)) {
+                        if (baseToAdd == cb) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    // so that all tags in the tagAlignment have the same corresponding variants in the TOPM, add a variant no matter what (set to missing if needed)
+                    byte offset = (byte) (SiteQualityScores.getPosition(s) - myTAL.getMinStartPosition());
+                    if (!matched) {
+                        baseToAdd = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    }
+                    if (strand == -1) {
+                        baseToAdd = complementAllele(baseToAdd);  // record everything relative to the plus strand
+                    }
+                    // convert from allele from 0-15 style to IUPAC ASCII character value (e.g., (byte) 'A')
+                    baseToAdd = getIUPACAllele(baseToAdd);
+                    theTOPM.addVariant(topmTagIndex, offset, baseToAdd);
+                }
+            }
+        }
     }
 
     private void updateTOPM(TagsAtLocus myTAL, int variableSite, int position, int strand, byte[] alleles) {
@@ -621,7 +668,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
      */
     private byte[] isSiteGood(byte[] calls) {
         int[][] alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
-        if (alleles[1].length < 2) {
+        if (alleles[0].length < 2) {
             return null; // quantitative SNP calling rendered the site invariant
         }
         int aCnt = alleles[1][0] + alleles[1][1];
@@ -640,38 +687,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             double obsF = calculateF(calls, alleles, hetG1, hetG2, theMAF);
             if (obsF < minF) return null;
         }
-        if (!inclRare) {
-            if (callBiallelicSNPsWithGap) {
-                for (int i = 0; i < calls.length; i++) {
-                    // go through the possibilities in order of likelihood (so that not all have to be tested)
-                    if (calls[i] == homMaj || calls[i] == homMin || calls[i] == hetG1 || calls[i] == hetG2
-                            || calls[i] == AlignmentUtils.getDiploidValue(majAllele,NucleotideAlignmentConstants.GAP_ALLELE)
-                            || calls[i] == AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,majAllele)
-                            || calls[i] == AlignmentUtils.getDiploidValue(minAllele,NucleotideAlignmentConstants.GAP_ALLELE)
-                            || calls[i] == AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,minAllele)
-                            || calls[i] == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
-                        ) {
-                        continue;
-                    } else {
-                        calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-                    }
-                }
-            } else {
-                for (int i = 0; i < calls.length; i++) {
-                    if ((calls[i] == homMaj) || (calls[i] == homMin) || (calls[i] == hetG1) || (calls[i] == hetG2)) {
-                        continue;
-                    } else {
-                        calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-                    }
-                }
-            }
-            alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
-            if (alleles[1].length < 2) {
-                return null; // removing genotypes involving a 3rd allele (when inclRare==false) rendered the site invariant
-            }
-        }
-        byte[] majMinAlleles = {majAllele, minAllele};
-        return majMinAlleles;
+        return getGoodAlleles(calls,alleles,homMaj,homMin,hetG1,hetG2,majAllele,minAllele);
     }
 
     private double calculateF(byte[] calls, int[][] alleles, byte hetG1, byte hetG2, double theMAF) { 
@@ -725,6 +741,85 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             }
             return obsF;
         }
+    }
+    
+    private byte[] getGoodAlleles(byte[] calls,int[][] alleles,byte homMaj,byte homMin,byte hetG1,byte hetG2,byte majAllele,byte minAllele) {
+        if (inclRare) {
+            byte[] byteAlleles = new byte[alleles[0].length];
+            for (int a = 0; a < alleles[0].length; a++) {
+                byteAlleles[a] = (byte) alleles[0][a];
+            }
+            return byteAlleles;
+        } else {
+            setBadCallsToMissing(calls,homMaj,homMin,hetG1,hetG2,majAllele,minAllele);
+            alleles = AlignmentUtils.getAllelesSortedByFrequency(calls); // the allele frequency & number of alleles may have been altered by setBadCallsToMissing()
+            if (alleles[0].length < 2) {
+                return null; // setBadCallsToMissing() rendered the site invariant
+            } else if (alleles[0].length == 2) {
+                return getMajMinAllelesOnly(alleles);
+            } else {
+                if (callBiallelicSNPsWithGap) {
+                    boolean hasGap = false;
+                    for (int a = 2; a < alleles[0].length; a++) {  // NOTE: the maj & min alleles are not checked (we know that they are NOT gap (inclGaps mutually exclusive with callBiallelicSNPsWithGap)
+                        if (((byte) alleles[0][a]) == NucleotideAlignmentConstants.GAP_ALLELE) {
+                            hasGap = true;
+                            break;
+                        }
+                    }
+                    if (hasGap) {
+                        byte[] byteAlleles = new byte[3];
+                        byteAlleles[0] = (byte) alleles[0][0];
+                        byteAlleles[1] = (byte) alleles[0][1];
+                        byteAlleles[2] = NucleotideAlignmentConstants.GAP_ALLELE;
+                        return byteAlleles;
+                    } else {
+                        return getMajMinAllelesOnly(alleles);
+                    }
+                } else {
+                    return getMajMinAllelesOnly(alleles);
+                }
+            }
+        }
+    }
+    
+    private byte[] getMajMinAllelesOnly(int[][] alleles) {
+        byte[] byteAlleles = new byte[2];
+        byteAlleles[0] = (byte) alleles[0][0];
+        byteAlleles[1] = (byte) alleles[0][1];
+        return byteAlleles;
+    }
+    
+    private void setBadCallsToMissing(byte[] calls, byte homMaj, byte homMin, byte hetG1, byte hetG2, byte majAllele, byte minAllele) {
+        if (callBiallelicSNPsWithGap) {
+            for (int i = 0; i < calls.length; i++) {
+                if (isGoodBiallelicWithGapCall(calls[i],homMaj,homMin,hetG1,hetG2,majAllele,minAllele)) {
+                    continue;
+                } else {
+                    calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                }
+            }
+        } else {
+            for (int i = 0; i < calls.length; i++) {
+                if ((calls[i] == homMaj) || (calls[i] == homMin) || (calls[i] == hetG1) || (calls[i] == hetG2)) {
+                    continue;
+                } else {
+                    calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                }
+            }
+        }
+    }
+    
+    private boolean isGoodBiallelicWithGapCall(byte call, byte homMaj, byte homMin, byte hetG1, byte hetG2, byte majAllele, byte minAllele) {
+        if (call == homMaj) return true;
+        if (call == homMin) return true;
+        if (call == hetG1) return true;
+        if (call == hetG2) return true;
+        if (call == AlignmentUtils.getDiploidValue(majAllele,NucleotideAlignmentConstants.GAP_ALLELE)) return true;
+        if (call == AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,majAllele)) return true;
+        if (call == AlignmentUtils.getDiploidValue(minAllele,NucleotideAlignmentConstants.GAP_ALLELE)) return true;
+        if (call == AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,minAllele)) return true;
+        if (call == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) return true;
+        return false;
     }
 
     private DataOutputStream openLocusLog(String outHapMap) {
@@ -1074,6 +1169,20 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         return comp;
     }
+    
+    public static byte getIUPACAllele(byte allele) {
+        byte iupacAllele = (byte) 'N';
+        switch (allele) {
+            case 0x00: iupacAllele = (byte) 'A'; break;
+            case 0x01: iupacAllele = (byte) 'C'; break;
+            case 0x02: iupacAllele = (byte) 'G'; break;
+            case 0x03: iupacAllele = (byte) 'T'; break;
+            case 0x05: iupacAllele = (byte) '-'; break;
+            default:
+                iupacAllele = (byte) 'N'; break;
+        }
+        return iupacAllele;
+    }
 
     public static char complement(char geno) {
         char comp = 'X';
@@ -1104,7 +1213,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         }
         return sb.toString();
     }
-
+    
     /**
      * Resolves the appropriate IUPACNucleotide from the given callPair
      * (currCall, newCall)
@@ -1683,6 +1792,14 @@ class CustomSNPLogRecord {
         return pass;
     }
     
+    public double getInbredCoverage() {
+        return inbredCoverage;
+    }
+    
+    public double getInbredHetScore() {
+        return inbredHetScore;
+    }
+    
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
         sBuilder.append(String.valueOf(chr));
@@ -1750,5 +1867,108 @@ class CustomSNPLogRecord {
         }
         sBuilder.append("\n");
         return sBuilder.toString();
+    }
+}
+
+class TagLocusSiteQualityScores {
+    private int[] siteIndicesInTAL;
+    private double[] inbredCoverage;
+    private double[] inbredHetScore;
+    private byte[][] alleles;  // [nSites][nAlleles]
+    private int[] position;
+    private int currSize;
+    
+    public TagLocusSiteQualityScores(int nSites) {
+        siteIndicesInTAL = new int[nSites];
+        inbredCoverage = new double[nSites];
+        inbredHetScore = new double[nSites];
+        alleles = new byte[nSites][];
+        position = new int[nSites];
+        currSize = 0;
+    }
+    
+    public void addSite(int siteIndex, double inbredCov, double inbredHetS, byte[] alleles, int position) {
+        siteIndicesInTAL[currSize] = siteIndex;
+        inbredCoverage[currSize] = inbredCov;
+        inbredHetScore[currSize] = inbredHetS;
+        this.alleles[currSize] = alleles;
+        this.position[currSize] = position;
+        ++currSize;
+    }
+    
+    public int getSize() {
+        return currSize;
+    }
+    
+    public int getSiteInTAL(int site) {
+        return siteIndicesInTAL[site];
+    }
+    
+    public byte[] getAlleles(int site) {
+        return alleles[site];
+    }
+    
+    public int getPosition(int site) {
+        return position[site];
+    }
+    
+    public void sortByQuality() {
+        
+        Swapper swapperQual = new Swapper() {
+            public void swap(int a, int b) {
+                int tempInt;
+                tempInt = siteIndicesInTAL[a];
+                siteIndicesInTAL[a] = siteIndicesInTAL[b];
+                siteIndicesInTAL[b] = tempInt;
+
+                double score = inbredCoverage[a];
+                inbredCoverage[a] = inbredCoverage[b];
+                inbredCoverage[b] = score;
+
+                score = inbredHetScore[a];
+                inbredHetScore[a] = inbredHetScore[b];
+                inbredHetScore[b] = score;
+                
+                byte[] tempAlleles = alleles[a];
+                alleles[a] = alleles[b];
+                alleles[b] = tempAlleles;
+                
+                tempInt = position[a];
+                position[a] = position[b];
+                position[b] = tempInt;
+            }
+        };
+
+        IntComparator compQual = new IntComparator() {
+            public int compare(int a, int b) {
+                
+                // reverse sort (high inbredCoverage is good)
+                if (inbredCoverage[a] > inbredCoverage[b]) {
+                    return -1;
+                }
+                if (inbredCoverage[a] < inbredCoverage[b]) {
+                    return 1;
+                }
+
+                // normal sort (low inbredHetScore is good)
+                if (inbredHetScore[a] < inbredHetScore[b]) {
+                    return -1;
+                }
+                if (inbredHetScore[a] > inbredHetScore[b]) {
+                    return 1;
+                }
+
+                // normal sort (low site indices are better because closer to start of read)
+                if (siteIndicesInTAL[a] < siteIndicesInTAL[b]) {
+                    return -1;
+                }
+                if (siteIndicesInTAL[a] > siteIndicesInTAL[b]) {
+                    return 1;
+                }
+                return 0;
+            }
+        };
+
+        GenericSorting.quickSort(0, currSize, compQual, swapperQual);
     }
 }
