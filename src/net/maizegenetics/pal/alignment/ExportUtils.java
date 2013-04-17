@@ -208,8 +208,8 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 bw.write(alignment.getSNPID(site));
                 bw.write(delimChar);
-                // byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
-                // int numAlleles = alleles.length;
+//                byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
+//                int numAlleles = alleles.length;
                 int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
                 int numAlleles = sortedAlleles[0].length;
                 if (numAlleles == 0) {
@@ -218,9 +218,10 @@ public class ExportUtils {
                     bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
                 } else {
                     bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
-                    if (sortedAlleles[0][1] != Alignment.UNKNOWN_ALLELE) {
+                    for (int allele = 1; allele < sortedAlleles[0].length; allele++)
+                    if (sortedAlleles[0][allele] != Alignment.UNKNOWN_ALLELE) {
                         bw.write('/');
-                        bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][1]));  // should we write out a third allele if it exists?
+                        bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
                     }
                 }
                 bw.write(delimChar);
@@ -346,17 +347,20 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 bw.write(alignment.getSNPID(site));
                 bw.write(delimChar);
-                byte[] alleles = alignment.getAlleles(site);
-                int numAlleles = alleles.length;
+//                byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
+//                int numAlleles = alleles.length;
+                int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
+                int numAlleles = sortedAlleles[0].length;
                 if (numAlleles == 0) {
                     bw.write("NA"); //if data does not exist
                 } else if (numAlleles == 1) {
-                    bw.write(alignment.getBaseAsString(site, alleles[0]));
+                    bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
                 } else {
-                    bw.write(alignment.getBaseAsString(site, alleles[0]));
-                    if (alleles[1] != Alignment.UNKNOWN_ALLELE) {
+                    bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
+                    for (int allele = 1; allele < sortedAlleles[0].length; allele++)
+                    if (sortedAlleles[0][allele] != Alignment.UNKNOWN_ALLELE) {
                         bw.write('/');
-                        bw.write(alignment.getBaseAsString(site, alleles[1]));
+                        bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
                     }
                 }
                 bw.write(delimChar);
