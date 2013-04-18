@@ -762,7 +762,7 @@ public class TagsAtLocus {
         } else {
             max = (max > 254) ? 254 : max;
             nextMax = (nextMax > 254) ? 254 : nextMax;
-            int[] scores = genoScoreMap.get(Integer.toString(max) + Integer.toString(nextMax));
+            int[] scores = genoScoreMap.get(Integer.toString(max) + "," + Integer.toString(nextMax));
             if ((scores[1] <= scores[0]) && (scores[1] <= scores[2])) {
                 return (byte)((maxAllele << 4) | nextMaxAllele);
             } else if ((scores[0] <= scores[1]) && (scores[0] <= scores[2])) {

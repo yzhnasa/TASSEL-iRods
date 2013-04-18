@@ -1587,7 +1587,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         myGenoScoreMap = new HashMap();
         for (int i = 0; i < 255; i++) {
             for (int j = 0; j < 255; j++) {
-                myGenoScoreMap.put(Integer.toString(i) + Integer.toString(j), calcScore(i, j));
+                myGenoScoreMap.put(Integer.toString(i)+ "," + Integer.toString(j), calcScore(i, j));
             }
         }
     }
