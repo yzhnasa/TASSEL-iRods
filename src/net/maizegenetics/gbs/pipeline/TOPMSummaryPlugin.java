@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -110,7 +111,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         //}
                         int position = startPos + offset;
                         positionsOnTag.add(position);
-                        if (position > endPos) {
+                        if (position > endPos && def != NucleotideAlignmentConstants.GAP_ALLELE) {
                             myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
                         }
                         Integer count = myTagsPerSite[index].get(position);
@@ -300,7 +301,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
         File outputFile = new File(myOutputFilename);
         if (outputFile.exists()) {
             printUsage();
-            throw new IllegalArgumentException("TOPMSummaryPlugin: setParameters: The output file already exist: " + myInputFilename);
+            throw new IllegalArgumentException("TOPMSummaryPlugin: setParameters: The output file already exists: " + myOutputFilename);
         }
 
     }
