@@ -494,7 +494,9 @@ public class ExportUtils {
                 byte refAllele = (byte) (refGeno & 0xF);  // converts from diploid to haploid allele (2nd allele)
                 byte[] alleleValues = alignment.getAlleles(site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 String refAlleleStr;
+                int refUnknownOffset = 0;
                 if (refGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {  // reference allele unknown - report the alleles in maj, min1, [min2] order
+                    refUnknownOffset = 1;
                     refAlleleStr = ".";
                     int aRedirectIndex = 0;
                     for (int sortedAIndex = 0; sortedAIndex < sortedAlleles[0].length; sortedAIndex++) {
@@ -622,12 +624,13 @@ public class ExportUtils {
                         for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/[alt2] order (if no alt2,length=2)
                             if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
                                 if (values[0] == refAllele) {
-                                    bw.write(i + "/");
+                                    
+                                    bw.write((i+refUnknownOffset) + "/");
                                     genoOne = true;
                                     break;
                                 }
                             } else if (values[0] == alleleValues[alleleRedirect[i]]) {
-                                bw.write(i + "/");
+                                bw.write((i+refUnknownOffset) + "/");
                                 genoOne = true;
                                 break;
                             }
@@ -658,12 +661,12 @@ public class ExportUtils {
                         for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/alt2 order (if no alt2,length=2)
                             if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
                                 if (values[1] == refAllele) {
-                                    bw.write(i + "");
+                                    bw.write((i+refUnknownOffset) + "");
                                     genoTwo = true;
                                     break;
                                 }
                             } else if (values[1] == alleleValues[alleleRedirect[i]]) {
-                                bw.write(i + "");
+                                bw.write((i+refUnknownOffset) + "");
                                 genoTwo = true;
                                 break;
                             }

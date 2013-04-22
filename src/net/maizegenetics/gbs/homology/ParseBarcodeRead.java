@@ -103,6 +103,12 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant = new String[]{"TGCAG"};
             likelyReadEnd = new String[]{"TCGA", "CTGCAG", "TCGCTCAGG"}; // look for TaqI site, PstI site, or common adapter for TaqI
             readEndCutSiteRemnantLength = 3;
+        } else if(enzyme.matches("(?i)PaeR7[i1]-Hha[i1]")) {
+            theEnzyme = "PaeR7I-HhaI";
+            // Requested by Ye, Songqing, use same Y adapter as Polland paper  -QS
+            initialCutSiteRemnant=new String[]{"TCGAG"};
+            likelyReadEnd = new String[]{"GCGC", "CTCGAG", "GCGAGATC"}; // look for HhaI site, PaeR7I site, or common adapter for HhaI
+            readEndCutSiteRemnantLength = 3;
         } else if (enzyme.matches("(?i)sbf[i1]-msp[i1]")) {
             theEnzyme = "SbfI-MspI";
             initialCutSiteRemnant = new String[]{"TGCAGG"};
@@ -164,6 +170,11 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant=new String[]{"CGC"};
             likelyReadEnd = new String[]{"GCGC","GCGAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
             readEndCutSiteRemnantLength = 3;
+        } else if(enzyme.matches("(?i)sbf[i1]")){
+            theEnzyme = "SbfI";
+            initialCutSiteRemnant=new String[]{"TGCAGG"};
+            likelyReadEnd = new String[]{"CCTGCAGG","CCTGCAAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
+            readEndCutSiteRemnantLength = 6;
         } else if (enzyme.matches("(?i)RBSTA")) {
             theEnzyme = "RBSTA";
             initialCutSiteRemnant = new String[]{"TA"};
@@ -175,9 +186,34 @@ public class ParseBarcodeRead {
             likelyReadEnd = new String[]{"CCGC", "TCGA", "GCGC", "CCGG", "ACGT", "CCGAGAT", "TCGAGAT", "GCGAGAT", "ACGAGAT"}; // full cut site (from partial digest or chimera) of AciI, TaqaI, HinpI, HpaII, HpyCH4IV or common adapter start
             readEndCutSiteRemnantLength = 3;
         } else {
-            System.out.println("The software didn't recognize your cut site.  "
-                    + "Currently, only ApeKI, PstI, EcoT22I, PasI, HpaII, MspI, ApoI, BamHI, MseI, Sau3AI, NdeI, HinP1I, RBSTA, and RBSCG are recognized for single enzyme digests, "
-                    + "or PstI-EcoT22I, PstI-MspI, PstI-TaqI, SbfI-MspI, AsiSI-MspI, BssHII-MspI, FseI-MspI, or SalI-MspI for two-enzyme digests.");
+            System.out.println("The software didn't recognize your cut site.\n"
+                    +"Currently, only the following enzymes are recognized for single enzyme digests:\n"
+                    +"  ApeKI"    +"\n"
+                    +"  ApoI"     +"\n"
+                    +"  BamHI"    +"\n"
+                    +"  EcoT22I"  +"\n"
+                    +"  HinP1I"   +"\n"
+                    +"  HpaII"    +"\n"
+                    +"  MseI"     +"\n"
+                    +"  MspI"     +"\n"
+                    +"  NdeI"     +"\n"
+                    +"  PasI"     +"\n"
+                    +"  PstI"     +"\n"
+                    +"  Sau3AI"   +"\n"
+                    +"  SbfI"     +"\n"
+                    +"  RBSTA"    +"\n"
+                    +"  RBSCG"    +"\n"
+                    +"Or the following for two-enzyme digests:\n"
+                    +"  AsiSI-MspI"   +"\n"
+                    +"  BssHII-MspI"  +"\n"
+                    +"  FseI-MspI"    +"\n"
+                    +"  PaeR7I-HhaI"  +"\n"
+                    +"  PstI-EcoT22I" +"\n"
+                    +"  PstI-MspI"    +"\n"
+                    +"  PstI-TaqI"    +"\n"
+                    +"  SalI-MspI"    +"\n"
+                    +"  SbfI-MspI"    +"\n"
+            );
             System.out.println("For two-enzyme digest, enzyme names should be separated by a dash, e.g. PstI-MspI ");
         }
         System.out.println("Enzyme: " + theEnzyme);
