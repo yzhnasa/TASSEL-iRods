@@ -44,7 +44,7 @@ public class IBSErrorByTaxon {
                 long[][] jM=new long[2][];
                 jM[0]=a.getAllelePresenceForSitesBlock(d1, 0, window[0], window[1]);
                 jM[1]=a.getAllelePresenceForSitesBlock(d1, 1, window[0], window[1]);
-                double dist=IBSDistanceMatrix.computeHetBitDistances(iMj,iMn,jM[0],jM[1],minSites);
+                double dist=IBSDistanceMatrix.computeHetBitDistances(iMj,iMn,jM[0],jM[1],minSites)[0];
                 if(Double.isNaN(dist)) continue;
                 if(dist<maxDivergence) {
                     bestDonors.put(new Double(dist), jM);
