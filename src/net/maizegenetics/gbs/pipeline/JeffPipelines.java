@@ -4,7 +4,10 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
+import java.io.File;
+import java.util.Arrays;
 import net.maizegenetics.baseplugins.ExtractHapmapSubsetPlugin;
+import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 
 /**
  *
@@ -13,9 +16,12 @@ import net.maizegenetics.baseplugins.ExtractHapmapSubsetPlugin;
 public class JeffPipelines {
 
     public static void main(String[] args) {
-        runTagsToSNPByAlignmentPlugin();
+//        runTagsToSNPByAlignmentPlugin();
 //        runExtractHapmapSubsetPlugin();
 //        runCompareGenosBetweenHapMapFilesPlugin();
+//        expandVariantsInTOPM();
+//        getChrsFromTOPM();
+        runTOPMSummaryPlugin();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -24,12 +30,11 @@ public class JeffPipelines {
         String[] MDPLowVolArgs = new String[]{
             "-i", baseDirMDPLowVol + "C08L7ACXX_6_min2.tbt.byte",
             "-y", // use TagsByTaxaByte
-            "-o", baseDirMDPLowVol + "tassel4/hapmap/vcfRef/MDP1_low_vol_test9.chr+.hmp.txt",
-            "-vcf",
+            "-o", baseDirMDPLowVol + "tassel4/hapmap/biSNPWGap/MDP1_low_vol_WGap3rdAlleleUpdateTOPM.chr+.hmp.txt",
+//            "-vcf",
             "-m", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit.topm.bin",
-//            "-mUpd", baseDir+"",
-//            "-ref", baseDirMDPLowVol + "maize_agp_v2_chr10.fasta",
-            "-ref", "/Users/jcg233/Documents/GBS/refGenome/ZmB73_RefGen_v2.fa",
+            "-mUpd", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit_wVariants.topm.bin",
+            "-ref", "/Users/jcg233/Documents/GBS/refGenome/ZmB73_RefGen_v2.fa",  // baseDirMDPLowVol + "maize_agp_v2_chr10.fasta",
 //            "-LocusBorder", "150",
             "-p", baseDirMDPLowVol + "MDP1_betterFake_ped.txt", 
             "-mnF", "0.8",
@@ -38,7 +43,7 @@ public class JeffPipelines {
             "-mnLCov", "0.1", // Minimum locus coverage (proportion of Taxa)
 //            "-inclRare",
 //            "-inclGaps",  // Include sites where major or minor allele is a GAP
-//            "-callBiSNPsWGap",  //call sites with a biallelic SNP plus a gap (e.g., A/C/-)
+            "-callBiSNPsWGap",  // call sites with a biallelic SNP plus a gap (e.g., A/C/-)
             "-sC", "10", // Start chromosome
             "-eC", "10" // End chromosome
         };
@@ -65,8 +70,30 @@ public class JeffPipelines {
             "-eC", "7" // End chromosome
         };
 
+        String baseDirGrape = "/Users/jcg233/Documents/GBS/grape/";
+        String[] GrapeArgs = new String[]{
+            "-i", baseDirGrape + "mergedtbt/paola_test_old.tbt.byte",
+            "-y", // use TagsByTaxaByte
+            "-o", baseDirGrape + "hapmap/vcf/grapeTest_chr+.hmp.txt",
+            "-vcf",
+            "-m", baseDirGrape + "topm/paola_test_old.topm.bin",
+//            "-mUpd", baseDirGrape + "",
+//            "-ref", baseDirGrape + "Vitis_vinifera.IGGP_12x.dna.toplevel.clean_chr_name.fa",
+//            "-LocusBorder", "150",
+//            "-p", baseDirGrape + "MDP1_betterFake_ped.txt", 
+//            "-mnF", "0.8",
+            "-mnMAF", "0.005",
+            "-mnMAC", "99999", // this will never be satified: this way -mnMAF overrides it
+            "-mnLCov", "0.1", // Minimum locus coverage (proportion of Taxa)
+//            "-inclRare",
+            "-inclGaps",  // Include sites where major or minor allele is a GAP
+//            "-callBiSNPsWGap",  // call sites with a biallelic SNP plus a gap (e.g., A/C/-)
+            "-sC", "1", // Start chromosome
+            "-eC", "1" // End chromosome
+        };
+
         TagsToSNPByAlignmentPlugin plugin = new TagsToSNPByAlignmentPlugin();
-        plugin.setParameters(MDPLowVolArgs);
+        plugin.setParameters(GrapeArgs);
         plugin.performFunction(null);
 
     }
@@ -139,6 +166,40 @@ public class JeffPipelines {
 
         CompareGenosBetweenHapMapFilesPlugin plugin = new CompareGenosBetweenHapMapFilesPlugin();
         plugin.setParameters(tassel4WRefVsTassel3Args);
+        plugin.performFunction(null);
+    }
+    
+    public static void expandVariantsInTOPM() {
+        String inTOPMFile =  "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/topm/AllZeaMasterTags_c10_20120703.topm";
+        String outTOPMFile = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/topm/AllZeaMasterTags_c10_16vars_20120703.topm";
+        int newMaxVariants = 16;
+        boolean loadBinary = (inTOPMFile.endsWith(".txt")) ? false : true;
+        TagsOnPhysicalMap theTOPM = new TagsOnPhysicalMap(inTOPMFile, loadBinary);
+        theTOPM.expandMaxVariants(newMaxVariants);
+        theTOPM.writeBinaryFile(new File(outTOPMFile));
+    }
+    
+    public static void getChrsFromTOPM() {
+        String inTOPMFile =  "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/topm/AllZeaMasterTags_c10_20120703.topm";
+        boolean loadBinary = (inTOPMFile.endsWith(".txt")) ? false : true;
+        TagsOnPhysicalMap theTOPM = new TagsOnPhysicalMap(inTOPMFile, loadBinary);
+        int[] chrs = theTOPM.getChromosomes();
+        Arrays.sort(chrs);
+        System.out.println("The chromosomes in this TOPM are:");
+        for (int c=0; c<chrs.length; c++) {
+            System.out.println(chrs[c]+"");
+        }
+    }
+    
+    public static void runTOPMSummaryPlugin() {
+        String baseDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/topm/";
+        String[] TOPMSummaryArgs = new String[]{
+            "-input", baseDir+"AllZeaMasterTags_c10_16vars_UnfiltProdTOPM_chr0_20120703.topm",
+            "-output", baseDir+"AllZeaGBSBuild_v2.6_VariantModifiedTOPM_TOPM_Summary_chr0.txt",
+        };
+
+        TOPMSummaryPlugin plugin = new TOPMSummaryPlugin(null);
+        plugin.setParameters(TOPMSummaryArgs);
         plugin.performFunction(null);
     }
 }

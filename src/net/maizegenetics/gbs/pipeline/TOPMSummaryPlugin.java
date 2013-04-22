@@ -111,7 +111,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         //}
                         int position = startPos + offset;
                         positionsOnTag.add(position);
-                        if (position > endPos && def != NucleotideAlignmentConstants.GAP_ALLELE) {
+                        if (position > endPos && def != (byte) '-') {
                             myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
                         }
                         Integer count = myTagsPerSite[index].get(position);
@@ -159,7 +159,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         //}
                         int position = startPos + offset;
                         positionsOnTag.add(position);
-                        if (position < endPos) {
+                        if (position < endPos && def != (byte) '-') {
                             myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
                         }
                         Integer count = myTagsPerSite[index].get(position);
