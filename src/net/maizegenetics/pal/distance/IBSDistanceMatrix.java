@@ -97,9 +97,9 @@ public class IBSDistanceMatrix extends DistanceMatrix {
                         diffCnt += BitUtil.pop(diff);
                         hetCnt += BitUtil.pop(hets);
                     }
-                    double identity = (double) (sameCnt + (hetCnt / 2)) / (double) (sameCnt + diffCnt + hetCnt);
-                    double dist = 1 - identity;
                     int sites = sameCnt + diffCnt - hetCnt;
+                    double identity = ((double) (sameCnt) - (double)(0.5*hetCnt)) / (double) (sites);
+                    double dist = 1 - identity;
                     if (sites > minSitesComp) {
                         distance[i][j] = distance[j][i] = dist;
                     } else {
@@ -142,9 +142,9 @@ public class IBSDistanceMatrix extends DistanceMatrix {
             diffCnt += BitUtil.pop(diff);
             hetCnt += BitUtil.pop(hets);
         }
-        double identity = (double) (sameCnt + (hetCnt / 2)) / (double) (sameCnt + diffCnt + hetCnt);
-        double dist = 1 - identity;
         int sites = sameCnt + diffCnt - hetCnt;
+        double identity = ((double) (sameCnt) - (double)(0.5*hetCnt)) / (double) (sites);
+        double dist = 1 - identity;
         if (sites > minSitesCompared) {
             return dist;
         } else {
