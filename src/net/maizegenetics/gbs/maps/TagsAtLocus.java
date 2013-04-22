@@ -265,14 +265,14 @@ public class TagsAtLocus {
         status = "polymorphic";
         byte[][] callsBySite = new byte[nSites][nTaxa];
         if (includeReferenceTag) refCallsBySite = new byte[nSites];
-        populateAllelesAtVariableSitesByTag(tagAlignment, nSites, includeReferenceTag);
+        populateAllelesAtVariableSitesByTag(tagAlignment, nSites, includeReferenceTag, callBiallelicSNPsWithGap);
         positionsOfVariableSites = new int[nSites];
         myCommonAlleles = new byte[maxNumAlleles][nSites];
         myAlleleDepthsInTaxa = new byte[maxNumAlleles][nSites][nTaxa];
         for (int s = 0; s < nSites; s++) {
             positionsOfVariableSites[s] = tagAlignment.getPositionInLocus(s);
-            byte[] commonAlleles = getCommonAlleles(s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag);
-            int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag);
+            byte[] commonAlleles = getCommonAlleles(s, nTaxa, includeReferenceTag);
+            int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, includeReferenceTag);
             setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
             for (int tx = 0; tx < nTaxa; tx++) {
                 callsBySite[s][tx] = resolveVCFGeno(commonAlleles, alleleDepthsInTaxa, tx, genoScoreMap);
@@ -300,14 +300,14 @@ public class TagsAtLocus {
         status = "polymorphic";
         byte[][] callsBySite = new byte[nSites][nTaxa];
         if (includeReferenceTag) refCallsBySite = new byte[nSites];
-        populateAllelesAtVariableSitesByTag(tagAlignment, nSites, includeReferenceTag);
+        populateAllelesAtVariableSitesByTag(tagAlignment, nSites, includeReferenceTag, callBiallelicSNPsWithGap);
         positionsOfVariableSites = new int[nSites];
         myCommonAlleles = new byte[maxNumAlleles][nSites];
         myAlleleDepthsInTaxa = new byte[maxNumAlleles][nSites][nTaxa];
         for (int s = 0; s < nSites; s++) {
             positionsOfVariableSites[s] = tagAlignment.getPositionInLocus(s);
-            byte[] commonAlleles = getCommonAlleles(s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag); // NOTE: gap could be one of the common alleles (even if callBiallelicSNPsWithGap is false)
-            int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, callBiallelicSNPsWithGap, includeReferenceTag);
+            byte[] commonAlleles = getCommonAlleles(s, nTaxa, includeReferenceTag); // NOTE: gap could be one of the common alleles (even if callBiallelicSNPsWithGap is false)
+            int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, includeReferenceTag);
             setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
             for (int tx = 0; tx < nTaxa; tx++) {
                 int count = 0;
@@ -394,7 +394,7 @@ public class TagsAtLocus {
         }
     }
 
-    private void populateAllelesAtVariableSitesByTag(Alignment tagAlignment, int nSites, boolean includeReferenceTag) {
+    private void populateAllelesAtVariableSitesByTag(Alignment tagAlignment, int nSites, boolean includeReferenceTag, boolean callBiallelicSNPsWithGap) {
         int nAlignedTags = tagAlignment.getSequenceCount();
         tagIndices = new int[nAlignedTags];
         allelesAtVariableSitesByTag = new byte[nSites][theTags.size()];
@@ -404,7 +404,11 @@ public class TagsAtLocus {
                 if (includeReferenceTag && tagIndices[tg] == theTags.size()-1) {
                     refCallsBySite[s] = tagAlignment.getBase(tg, s); // diploid byte for the reference allele/geno
                 } else {
-                    allelesAtVariableSitesByTag[s][tagIndices[tg]] = tagAlignment.getBaseArray(tg, s)[0]; // tags only have one base so the 1st allele (index [0]) sufffices
+                    byte allele = tagAlignment.getBaseArray(tg, s)[0]; // tags only have one base so the 1st allele (index [0]) sufffices
+                    if (callBiallelicSNPsWithGap && allele == Alignment.UNKNOWN_ALLELE) {
+                        allele = NucleotideAlignmentConstants.GAP_ALLELE;
+                    }
+                    allelesAtVariableSitesByTag[s][tagIndices[tg]] = allele;
                 }
             }
         }
@@ -694,14 +698,11 @@ public class TagsAtLocus {
         System.out.print("\n");
     }
 
-    private byte[] getCommonAlleles(int s, int nTaxa, boolean callBiallelicSNPsWithGap, boolean includeReferenceTag) {
+    private byte[] getCommonAlleles(int s, int nTaxa, boolean includeReferenceTag) {
         int[] alleleCounts = new int[16];
         int nTags = includeReferenceTag ? theTags.size()-1 : theTags.size();
         for (int tg = 0; tg < nTags; tg++) {
             byte baseToAdd = allelesAtVariableSitesByTag[s][tg];
-            if (callBiallelicSNPsWithGap && baseToAdd == Alignment.UNKNOWN_ALLELE) {
-                baseToAdd = NucleotideAlignmentConstants.GAP_ALLELE;
-            }
             for (int tx = 0; tx < nTaxa; tx++) {
                 alleleCounts[baseToAdd] += theTags.get(tg).tagDist[tx];
             }
@@ -715,14 +716,11 @@ public class TagsAtLocus {
         return commonAlleles;
     }
 
-    private int[][] getAlleleDepthsInTaxa(byte[] commonAlleles, int s, int nTaxa, boolean callBiallelicSNPsWithGap, boolean includeReferenceTag) {
+    private int[][] getAlleleDepthsInTaxa(byte[] commonAlleles, int s, int nTaxa, boolean includeReferenceTag) {
         int[][] allelesInTaxa = new int[maxNumAlleles][nTaxa];
         int nTags = includeReferenceTag ? theTags.size()-1 : theTags.size(); // skip the reference tag (=last tag, if present), as it has no tagDist[]
         for (int tg = 0; tg < nTags; tg++) {
             byte baseToAdd = allelesAtVariableSitesByTag[s][tg];
-            if (callBiallelicSNPsWithGap && baseToAdd == Alignment.UNKNOWN_ALLELE) {
-                baseToAdd = NucleotideAlignmentConstants.GAP_ALLELE;
-            }
             for (int a = 0; a < maxNumAlleles; a++) {
                 if (baseToAdd == commonAlleles[a]) {
                     for (int tx = 0; tx < nTaxa; tx++) {

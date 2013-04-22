@@ -200,6 +200,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             myArgsEngine.add("-inclRare", "--includeRare", false);
             myArgsEngine.add("-inclGaps", "--includeGaps", false);
             myArgsEngine.add("-callBiSNPsWGap", "--callBiSNPsWGap", false);
+            myArgsEngine.add("-cF", "--customSNPFiltering", false);
             myArgsEngine.add("-sC", "--start-chromosome", true);
             myArgsEngine.add("-eC", "--end-chromosome", true);
         }
@@ -347,6 +348,9 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             } else {
                 callBiallelicSNPsWithGap = true;
             }
+        }
+        if (myArgsEngine.getBoolean("-cF")) {
+            customFiltering = true;
         }
         if (myArgsEngine.getBoolean("-sC")) {
             startChr = Integer.parseInt(myArgsEngine.getString("-sC"));
@@ -625,7 +629,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                     if (strand == -1) {
                         baseToAdd = complementAllele(baseToAdd);  // record everything relative to the plus strand
                     }
-                    // convert from allele from 0-15 style to IUPAC ASCII character value (e.g., (byte) 'A')
+                    // convert from allele from 0-15 style to IUPAC ASCII character value (e.g., (byte) 'A') (maintains compatibility with Tassel3 TOPM)
                     baseToAdd = getIUPACAllele(baseToAdd);
                     theTOPM.addVariant(topmTagIndex, offset, baseToAdd);
                 }
@@ -636,11 +640,6 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private void updateTOPM(TagsAtLocus myTAL, int variableSite, int position, int strand, byte[] alleles) {
         for (int tg = 0; tg < myTAL.getSize(); tg++) {
             byte baseToAdd = myTAL.getCallAtVariableSiteForTag(variableSite, tg);
-            
-            // NOTE:
-            //  -"alleles" contains only the maj & min1 alleles, so the Prod Pipeline can only call 2 alleles at a site
-            //  -"alleles" are coded as (byte) 0 to 15 (tassel4 encoding).  So is baseToAdd, so they are matching
-            //  -this means that a production TOPM from Tassel3 cannot be used in Tassel4
             boolean matched = false;
             for (byte cb : alleles) {
                 if (baseToAdd == cb) {
@@ -657,6 +656,8 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
             if (strand == -1) {
                 baseToAdd = complementAllele(baseToAdd);  // record everything relative to the plus strand
             }
+            // convert from allele from 0-15 style to IUPAC ASCII character value (e.g., (byte) 'A') (maintains compatibility with Tassel3 TOPM)
+            baseToAdd = getIUPACAllele(baseToAdd);
             theTOPM.addVariant(topmTagIndex, offset, baseToAdd);
         }
     }
