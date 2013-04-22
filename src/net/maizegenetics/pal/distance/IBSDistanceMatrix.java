@@ -88,24 +88,9 @@ public class IBSDistanceMatrix extends DistanceMatrix {
                 } else {
                     long[] jMj = theTBA.getAllelePresenceForAllSites(j, 0).getBits();
                     long[] jMn = theTBA.getAllelePresenceForAllSites(j, 1).getBits();
-                    int sameCnt = 0, diffCnt = 0, hetCnt = 0;
-                    for (int x = 0; x < iMj.length; x++) {
-                        long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
-                        long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
-                        long hets = same & diff;
-                        sameCnt += BitUtil.pop(same);
-                        diffCnt += BitUtil.pop(diff);
-                        hetCnt += BitUtil.pop(hets);
-                    }
-                    int sites = sameCnt + diffCnt - hetCnt;
-                    double identity = ((double) (sameCnt) - (double)(0.5*hetCnt)) / (double) (sites);
-                    double dist = 1 - identity;
-                    if (sites > minSitesComp) {
-                        distance[i][j] = distance[j][i] = dist;
-                    } else {
-                        distance[i][j] = distance[j][i] = Double.NaN;
-                    }
-                    avgTotalSites += sites;  //this assumes not hets
+                    double[] result=computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesComp);
+                    distance[i][j] = distance[j][i] = result[0];
+                    avgTotalSites += result[1];  //this assumes not hets
                     count++;
                 }
             }
