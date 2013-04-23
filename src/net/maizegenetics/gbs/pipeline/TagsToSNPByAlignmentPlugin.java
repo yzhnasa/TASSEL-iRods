@@ -174,7 +174,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
 
     @Override
     public void setParameters(String[] args) {
-        myLogger.addAppender(new ConsoleAppender(new SimpleLayout()));
+//        myLogger.addAppender(new ConsoleAppender(new SimpleLayout()));
         if (args.length == 0) {
             printUsage();
             throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
@@ -610,35 +610,15 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         for (int s = 0; s < SiteQualityScores.getSize(); s++) {
             int siteInTAL = SiteQualityScores.getSiteInTAL(s);
             if (varSiteKept[siteInTAL]) {
-                for (int tg = 0; tg < myTAL.getSize(); tg++) {
-                    int topmTagIndex = myTAL.getTOPMIndexOfTag(tg);
-                    if (topmTagIndex == Integer.MIN_VALUE) continue; // skip the reference genome tag (which may not be in the TOPM)
-                    byte baseToAdd = myTAL.getCallAtVariableSiteForTag(siteInTAL, tg);
-                    boolean matched = false;
-                    for (byte cb : SiteQualityScores.getAlleles(s)) {
-                        if (baseToAdd == cb) {
-                            matched = true;
-                            break;
-                        }
-                    }
-                    // so that all tags in the tagAlignment have the same corresponding variants in the TOPM, add a variant no matter what (set to missing if needed)
-                    byte offset = (byte) (SiteQualityScores.getPosition(s) - myTAL.getMinStartPosition());
-                    if (!matched) {
-                        baseToAdd = Alignment.UNKNOWN_DIPLOID_ALLELE;
-                    }
-                    if (strand == -1) {
-                        baseToAdd = complementAllele(baseToAdd);  // record everything relative to the plus strand
-                    }
-                    // convert from allele from 0-15 style to IUPAC ASCII character value (e.g., (byte) 'A') (maintains compatibility with Tassel3 TOPM)
-                    baseToAdd = getIUPACAllele(baseToAdd);
-                    theTOPM.addVariant(topmTagIndex, offset, baseToAdd);
-                }
+                updateTOPM(myTAL, siteInTAL, SiteQualityScores.getPosition(s), strand, SiteQualityScores.getAlleles(s));
             }
         }
     }
 
     private void updateTOPM(TagsAtLocus myTAL, int variableSite, int position, int strand, byte[] alleles) {
         for (int tg = 0; tg < myTAL.getSize(); tg++) {
+            int topmTagIndex = myTAL.getTOPMIndexOfTag(tg);
+            if (topmTagIndex == Integer.MIN_VALUE) continue; // skip the reference genome tag (which may not be in the TOPM)
             byte baseToAdd = myTAL.getCallAtVariableSiteForTag(variableSite, tg);
             boolean matched = false;
             for (byte cb : alleles) {
@@ -648,7 +628,6 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 }
             }
             // so that all tags in the tagAlignment have the same corresponding variants in the TOPM, add a variant no matter what (set to missing if needed)
-            int topmTagIndex = myTAL.getTOPMIndexOfTag(tg);
             byte offset = (byte) (position - myTAL.getMinStartPosition());
             if (!matched) {
                 baseToAdd = Alignment.UNKNOWN_DIPLOID_ALLELE;
