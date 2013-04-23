@@ -17,7 +17,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -111,9 +110,9 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         //}
                         int position = startPos + offset;
                         positionsOnTag.add(position);
-                        if (position > endPos && def != (byte) '-') {
-                            myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
-                        }
+//                        if (position > endPos && def != (byte) '-' &&  def != (byte) 'N') {
+//                            myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
+//                        }  // Jeff notes: this warning puts too much faith in the bowtie2 or BWA alignment and the correct parsing thereof
                         Integer count = myTagsPerSite[index].get(position);
                         if (count == null) {
                             myTagsPerSite[index].put(position, 1);
@@ -159,9 +158,9 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         //}
                         int position = startPos + offset;
                         positionsOnTag.add(position);
-                        if (position < endPos && def != (byte) '-') {
-                            myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
-                        }
+//                        if (position < endPos && def != (byte) '-' &&  def != (byte) 'N') {
+//                            myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
+//                        }  // Jeff notes: this warning puts too much faith in the bowtie2 or BWA alignment and the correct parsing thereof
                         Integer count = myTagsPerSite[index].get(position);
                         if (count == null) {
                             myTagsPerSite[index].put(position, 1);
@@ -229,7 +228,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
 
         try {
             writer = Utils.getBufferedWriter(myOutputFilename);
-            writer.append("Chromosome\tPosition\tNum Variants\tVariant Defs\n");
+            writer.append("Chromosome\tPosition\tNum Tags\tVariant Defs\n");
             for (int c = 0; c < myChromosomes.length; c++) {
                 Iterator itr = myTagsPerSite[c].entrySet().iterator();
                 while (itr.hasNext()) {
