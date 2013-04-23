@@ -12,18 +12,23 @@ import java.util.Map;
  */
 public final class NucleotideAlignmentConstants {
 
-    public static byte A_ALLELE = (byte) 0x0;
-    public static byte C_ALLELE = (byte) 0x1;
-    public static byte G_ALLELE = (byte) 0x2;
-    public static byte T_ALLELE = (byte) 0x3;
-    public static byte INSERT_ALLELE = (byte) 0x4;
-    public static byte GAP_ALLELE = 0x5;
-    public static byte GAP_DIPLOID_ALLELE = (byte) 0x55;
-    public static byte A_DIPLOID_ALLELE = (byte) 0x00;
-    public static byte C_DIPLOID_ALLELE = (byte) 0x11;
-    public static byte M_DIPLOID_ALLELE = (byte) 0x01;
-    public static String UNDEFINED_ALLELE_STR = "X";
-    public static String[][] NUCLEOTIDE_ALLELES = new String[][]{{"A", "C", "G", "T", "+", "-",
+    // Byte Values for Nucleotide Alleles
+    public static final byte A_ALLELE = (byte) 0x0;
+    public static final byte C_ALLELE = (byte) 0x1;
+    public static final byte G_ALLELE = (byte) 0x2;
+    public static final byte T_ALLELE = (byte) 0x3;
+    public static final byte INSERT_ALLELE = (byte) 0x4;
+    public static final byte GAP_ALLELE = (byte) 0x5;
+    // Diploid Byte Values for Nucleotide Alleles
+    public static final byte GAP_DIPLOID_ALLELE = (byte) 0x55;
+    public static final byte A_DIPLOID_ALLELE = (byte) 0x00;
+    public static final byte C_DIPLOID_ALLELE = (byte) 0x11;
+    public static final byte M_DIPLOID_ALLELE = (byte) 0x01;
+    // String Values for Nucleotide Alleles
+    public static final String INSERT_ALLELE_STR = "+";
+    public static final String GAP_ALLELE_STR = "-";
+    public static final String UNDEFINED_ALLELE_STR = "X";
+    public static final String[][] NUCLEOTIDE_ALLELES = new String[][]{{"A", "C", "G", "T", "+", "-",
             UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR,
             UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, Alignment.RARE_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR}};
     /**
@@ -31,7 +36,7 @@ public final class NucleotideAlignmentConstants {
      */
     public static final int NUMBER_NUCLEOTIDE_ALLELES = 6;
     private static final String QUESTION_MARK = "?";
-    private static final Map NUCLEOTIDE_DIPLOID_HASH = new HashMap<String, Byte>();
+    private static final Map<String, Byte> NUCLEOTIDE_DIPLOID_HASH = new HashMap<String, Byte>();
 
     static {
         NUCLEOTIDE_DIPLOID_HASH.put("AA", (byte) 0x00);
@@ -228,26 +233,42 @@ public final class NucleotideAlignmentConstants {
      * contain first allele value. And second four bits contain second allele
      * value.
      *
-     * @param value
+     * @param value diploid allele value
      *
      * @return nucleotide diploid allele byte value
      */
     public static byte getNucleotideDiploidByte(String value) {
         try {
-            return ((Byte) NUCLEOTIDE_DIPLOID_HASH.get(value)).byteValue();
+            return NUCLEOTIDE_DIPLOID_HASH.get(value).byteValue();
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideDiploidByte: unknown allele value: " + value);
         }
     }
 
+    /**
+     * Returns diploid byte value for given nucleotide value. First four bits
+     * contain first allele value. And second four bits contain second allele
+     * value.
+     *
+     * @param value diploid allele value
+     *
+     * @return nucleotide diploid allele byte value
+     */
     public static byte getNucleotideDiploidByte(char value) {
         try {
-            return ((Byte) NUCLEOTIDE_DIPLOID_HASH.get(String.valueOf(value))).byteValue();
+            return NUCLEOTIDE_DIPLOID_HASH.get(String.valueOf(value)).byteValue();
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideDiploidByte: unknown allele value: " + value);
         }
     }
 
+    /**
+     * Returns the IUPAC String for the given diploid allele value.
+     *
+     * @param value diploid allele value
+     *
+     * @return IUPAC String
+     */
     public static String getNucleotideIUPAC(byte value) {
         try {
             String result = NUCLEOTIDE_IUPAC_HASH.get(value);
@@ -261,22 +282,39 @@ public final class NucleotideAlignmentConstants {
         }
     }
 
-    public static byte getNucleotideComplement(byte geno) {
+    /**
+     * Returns the Nucleotide Complement of given byte encoded nucleotide. A
+     * returns T. T returns A. C returns G. G returns C. Otherwise given
+     * nucleotide is returned.
+     *
+     * @param nucleotide nucleotide byte value
+     *
+     * @return Nucleotide Complement
+     */
+    public static byte getNucleotideComplement(byte nucleotide) {
 
-        if (geno == A_ALLELE) {
+        if (nucleotide == A_ALLELE) {
             return T_ALLELE;
-        } else if (geno == T_ALLELE) {
+        } else if (nucleotide == T_ALLELE) {
             return A_ALLELE;
-        } else if (geno == C_ALLELE) {
+        } else if (nucleotide == C_ALLELE) {
             return G_ALLELE;
-        } else if (geno == G_ALLELE) {
+        } else if (nucleotide == G_ALLELE) {
             return C_ALLELE;
         } else {
-            return geno;
+            return nucleotide;
         }
 
     }
 
+    /**
+     * Returns the Nucleotide Complement of the given diploid byte encoded
+     * alleles.
+     *
+     * @param diploidAllele diploid allele value
+     *
+     * @return Nucleotide Complement
+     */
     public static byte getNucleotideDiploidComplement(byte diploidAllele) {
 
         byte first = (byte) ((diploidAllele >>> 4) & 0xf);
@@ -287,6 +325,13 @@ public final class NucleotideAlignmentConstants {
 
     }
 
+    /**
+     * Returns whether given allele encodings are for Nucleotide Data.
+     *
+     * @param alleleStates allele encodings
+     *
+     * @return true if nucleotide encodings
+     */
     public static boolean isNucleotideEncodings(String[][] alleleStates) {
 
         boolean isNucleotide = false;
