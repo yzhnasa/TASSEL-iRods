@@ -89,12 +89,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private CustomSNPLog myCustomSNPLog = null;
     private boolean customFiltering = false;
     
-    // variables for calculating OS and PL for VCF, might not be in the correct class
-    private static double error;
-    private static double v1;
-    private static double v2;
-    private static double v3;
-    private static HashMap<String, int[]> myGenoScoreMap;
+
 
     public TagsToSNPByAlignmentPlugin() {
         super(null, false);
@@ -273,7 +268,6 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         
         if (myArgsEngine.getBoolean("-vcf")) {
             vcf = true;
-            initVCFScoreMap();
         }
         if (myArgsEngine.getBoolean("-mxSites")) {
             maxSize = Integer.parseInt(myArgsEngine.getString("-mxSites"));
@@ -511,7 +505,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                 addRefTag(theTAL);
                 refTagUsed = true;
             }
-            callsBySite = theTAL.getSNPCallsVCF(callBiallelicSNPsWithGap, myGenoScoreMap, includeReference);
+            callsBySite = theTAL.getSNPCallsVCF(callBiallelicSNPsWithGap, includeReference);
             alleleDepths = theTAL.getAlleleDepthsInTaxa();
             commonAlleles = theTAL.getCommonAlleles();
         } else if (includeReference) {
@@ -1503,78 +1497,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         return snpByte;
     }
     
-    // Calculate QS and PL for VCF might not be in the correct class
-    public static int[] calcScore (int a, int b)
-    {   
-        int[] results= new int[4];
-        int n = a + b;
-        int m = a;
-        if (b > m) {
-            m = b;
-        }
 
-        double fact = 0;
-        if (n > m) {
-            for (int i = n; i > m; i--) {
-               fact += Math.log10(i);
-            }
-            for (int i = 1; i <= (n - m); i++){
-               fact -= Math.log10(i);
-            }
-        }
-        double aad = Math.pow(10, fact + (double)a * v1 + (double)b * v2);
-        double abd = Math.pow(10, fact + (double)n * v3);
-        double bbd = Math.pow(10, fact + (double)b * v1 + (double)a * v2);
-        double md = aad;
-        if (md < abd) {
-            md = abd;
-        }
-        if (md < bbd) {
-            md = bbd;
-        }
-        int gq = 0;
-        if ((aad + abd + bbd) > 0) {
-            gq = (int)(md / (aad + abd + bbd) * 100);
-        }
-        
-        int aa =(int) (-10 * (fact + (double)a * v1 + (double)b * v2));
-        int ab =(int) (-10 * (fact + (double)n * v3));
-        int bb =(int) (-10 * (fact + (double)b * v1 + (double)a * v2));
-        
-        m = aa;
-        if (m > ab) {
-            m = ab;
-        }
-        if (m>bb) {
-            m = bb;
-        }
-        aa -= m;
-        ab -= m;
-        bb -= m;
-        results[0] = aa > 255 ? 255 : aa;
-        results[1] = ab > 255 ? 255 : ab;
-        results[2] = bb > 255 ? 255 : bb;
-        results[3] = gq;
-        
-        return results;
-    }
-    
-    private void initVCFScoreMap() {
-        error = 0.001;
-        v1 = Math.log10(1.0 - error * 3.0 /4.0);
-        v2 = Math.log10(error/4);
-        v3 = Math.log10(0.5 - (error/4.0));
-        myGenoScoreMap = new HashMap();
-        for (int i = 0; i < 255; i++) {
-            for (int j = 0; j < 255; j++) {
-                myGenoScoreMap.put(Integer.toString(i)+ "," + Integer.toString(j), calcScore(i, j));
-            }
-        }
-    }
-    
-    public int[] getScore(String key) {
-        return myGenoScoreMap.get(key);
-    }
 }
 
 class CustomSNPLog {

@@ -27,6 +27,7 @@ import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.prefs.TasselPrefs;
+import net.maizegenetics.util.VCFUtil;
 
 /**
  *
@@ -246,7 +247,7 @@ public class TagsAtLocus {
     }
 
     // Qi's SNP caller for VCF output
-    public byte[][] getSNPCallsVCF(boolean callBiallelicSNPsWithGap, HashMap<String, int[]> genoScoreMap, boolean includeReferenceTag) {
+    public byte[][] getSNPCallsVCF(boolean callBiallelicSNPsWithGap, boolean includeReferenceTag) {
         if (theTags.size() < 2) {
             status = "invariant";
             return null;
@@ -275,7 +276,7 @@ public class TagsAtLocus {
             int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, includeReferenceTag);
             setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
             for (int tx = 0; tx < nTaxa; tx++) {
-                callsBySite[s][tx] = resolveVCFGeno(commonAlleles, alleleDepthsInTaxa, tx, genoScoreMap);
+                callsBySite[s][tx] = VCFUtil.resolveVCFGeno(commonAlleles, alleleDepthsInTaxa, tx);
             }
         }
         return callsBySite;
@@ -732,45 +733,7 @@ public class TagsAtLocus {
         return allelesInTaxa;
     }
     
-    private byte resolveVCFGeno(byte[] alleles, int[][] allelesInTaxa, int tx, HashMap<String, int[]> genoScoreMap) {
-        int depth = 0;
-        for (int i = 0; i < allelesInTaxa.length; i++) {
-            depth += allelesInTaxa[i][tx];
-        }
-        if (depth == 0) {
-            return (byte)((Alignment.UNKNOWN_ALLELE << 4) | Alignment.UNKNOWN_ALLELE);
-        }
-        int max = 0;
-        byte maxAllele = Alignment.UNKNOWN_ALLELE;
-        int nextMax = 0;
-        byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
-        for (int i = 0; i < maxNumAlleles; i++) {
-            if (allelesInTaxa[i][tx] > max) {
-                nextMax = max;
-                nextMaxAllele = maxAllele;
-                max = allelesInTaxa[i][tx];
-                maxAllele = alleles[i];
-            } else if (allelesInTaxa[i][tx] > nextMax) {
-                nextMax = allelesInTaxa[i][tx];
-                nextMaxAllele = alleles[i];
-            }
-        }
-        if (alleles.length == 1) {
-            return (byte)((alleles[0] << 4) | alleles[0]);
-        } else {
-            max = (max > 254) ? 254 : max;
-            nextMax = (nextMax > 254) ? 254 : nextMax;
-            int[] scores = genoScoreMap.get(Integer.toString(max) + "," + Integer.toString(nextMax));
-            if ((scores[1] <= scores[0]) && (scores[1] <= scores[2])) {
-                return (byte)((maxAllele << 4) | nextMaxAllele);
-            } else if ((scores[0] <= scores[1]) && (scores[0] <= scores[2])) {
-                return (byte)((maxAllele << 4) | maxAllele);
-            } else {
-                return (byte)((nextMaxAllele << 4) | nextMaxAllele);
-            }
-        }
-    }
-
+    
     private byte resolveHetGeno(byte[] alleles, int[][] allelesInTaxa, int tx) {
         int max = 0;
         byte maxAllele = Alignment.UNKNOWN_ALLELE;

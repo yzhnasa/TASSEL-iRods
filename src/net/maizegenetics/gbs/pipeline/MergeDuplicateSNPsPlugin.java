@@ -20,10 +20,15 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.alignment.MutableVCFAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.util.VCFUtil;
 
 /**
  * This class is intended to be run directly after TagsToSNPByAlignmentPlugin,
@@ -60,6 +65,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private boolean callHets = false;  // true = when two genotypes disagree at a SNP, call it a heterozygote;  false = set to missing;
     private boolean kpUnmergDups = false;  // keep unmerged SNPs (not indels) in the data file
     private int startChr = 1, endChr = 10;
+    private static enum INPUT_FORMAT {hapmap, vcf}; //input file format, acceptable values are "hapmap" "vcf" 
+    private INPUT_FORMAT inputFormat = INPUT_FORMAT.hapmap;
+    private int myMaxNumAlleles =3;
 
     public MergeDuplicateSNPsPlugin() {
         super(null, false);
@@ -73,6 +81,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         myLogger.info(
                 "\n\nUsage is as follows:\n"
                 + "-hmp           Input GBS genotype file (in HapMap format). Use a plus sign (+) as a wild card character to specify multiple chromosome numbers.\n"
+                + "-vcf           Input GBS genotype file (in VCF format). Use a plus sign (+) as a wild card character to specify multiple chromosome numbers. Options -hmp and -vcf are mutual exclusive.\n"
                 + "-o             Output HapMap file. Use a plus sign (+) as a wild card character to specify multiple chromosome numbers.\n"
                 + "-misMat        Threshold genotypic mismatch rate above which the duplicate SNPs won't be merged (default: " + maxMisMat + ")\n"
                 + "-p             Pedigree file containing full sample names (or expected names after merging) & expected inbreeding\n"
@@ -94,6 +103,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         if (myArgsEngine == null) {
             myArgsEngine = new ArgsEngine();
             myArgsEngine.add("-hmp", "--hmpFile", true);
+            myArgsEngine.add("-vcf", "--vcfFile", true);
             myArgsEngine.add("-o", "--outFile", true);
             myArgsEngine.add("-misMat", "--maxMismatchRate", true);
             myArgsEngine.add("-p", "--pedigree-file", true);
@@ -105,10 +115,18 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         }
         myArgsEngine.parse(args);
         if (myArgsEngine.getBoolean("-hmp")) {
+            if (myArgsEngine.getBoolean("-vcf")){
+                throw new IllegalArgumentException("-hmp and -vcf options are mutual exclusive!\n");
+            } 
             suppliedInputFileName = myArgsEngine.getString("-hmp");
-        } else {
+            inputFormat = INPUT_FORMAT.hapmap;
+        } else if (myArgsEngine.getBoolean("-vcf")){
+            suppliedInputFileName = myArgsEngine.getString("-hmp");
+            inputFormat = INPUT_FORMAT.vcf;
+        }
+        else {
             printUsage();
-            throw new IllegalArgumentException("Please specify a HapMap file to filter.\n");
+            throw new IllegalArgumentException("Please specify a HapMap or vcf file to filter.\n");
         }
         if (myArgsEngine.getBoolean("-o")) {
             suppliedOutputFileName = myArgsEngine.getString("-o");
@@ -162,7 +180,19 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             myLogger.info("Reading: " + infile);
             Alignment a;
             try {
-                a = ImportUtils.readFromHapmap(infile, this);
+                if (inputFormat == INPUT_FORMAT.hapmap)
+                {
+                    a = ImportUtils.readFromHapmap(infile, this);
+                }
+                else if (inputFormat == INPUT_FORMAT.vcf)
+                {
+                    a = ImportUtils.readFromVCF(infile, this);
+                }
+                else
+                {
+                     throw new IllegalArgumentException("File format " + inputFormat + " is not recognized!");
+                }
+                
                 myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
                 if (usePedigree && !maskNonInbredTaxa(a)) {
                     throw new IllegalArgumentException("Mismatch between taxa names in the input hapmap and pedigree files.");
@@ -171,7 +201,15 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 myLogger.info("Could not read input hapmap file for chr" + chr + ":\n\t" + infile + "\n\te: " + e + "\n\tSkipping...");
                 continue;
             }
-            MutableNucleotideAlignment msa = MutableNucleotideAlignment.getInstance(a.getIdGroup(), a.getSiteCount());
+            MutableNucleotideAlignment msa = null;
+            if (inputFormat == INPUT_FORMAT.hapmap)
+            {
+                msa = MutableNucleotideAlignment.getInstance(a.getIdGroup(), a.getSiteCount());
+            }
+            else if (inputFormat == INPUT_FORMAT.vcf)
+            {
+                 msa = MutableVCFAlignment.getInstance(a.getIdGroup(), a.getSiteCount());
+            }
             ArrayList<Integer> samePosAL = new ArrayList<Integer>();
             Integer[] samePos = null;
             int currentPos = a.getPositionInLocus(0);
@@ -182,13 +220,29 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 } else {
                     samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
                     if (samePosAL.size() > 1) {  // merge sets of 2 or more markers with the same position and alleles (alleles are not necessarily in the same order, maj/min)
-                        processSNPsWithSamePosition(samePos, a, chr, currentPos, msa);
+                        if (inputFormat == INPUT_FORMAT.hapmap)
+                        {
+                            processSNPsWithSamePosition(samePos, a, chr, currentPos, msa);
+                        }
+                        else if (inputFormat == INPUT_FORMAT.vcf)
+                        {
+                            processSNPsWithSamePositionForVCF(samePos, a, chr, currentPos, msa);
+                        }
                     } else {  // site has a unique position: write its genos to the msa
                         byte[] genos = new byte[a.getSequenceCount()];
                         for (int t = 0; t < a.getSequenceCount(); ++t) {
                             genos[t] = a.getBase(t, samePos[0]);
                         }
                         addSiteToMutableAlignment(chr, currentPos, genos, msa);
+                        if (inputFormat==INPUT_FORMAT.vcf)
+                        {
+                            int lastSiteIndex = msa.getSiteCount() -1;
+                            msa.setCommonAlleles(lastSiteIndex, a.getAlleles(samePos[0]));
+                            for (int tt=0; tt<a.getSequenceCount(); tt++)
+                            {
+                                msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, samePos[0]));
+                            }
+                        }
                     }
                     // start a new collection of markers
                     samePosAL = new ArrayList<Integer>();
@@ -199,20 +253,46 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             // finish last site or set of sites
             samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
             if (samePosAL.size() > 1) {
-                processSNPsWithSamePosition(samePos, a, chr, currentPos, msa);
+                //processSNPsWithSamePosition(samePos, a, chr, currentPos, msa);
+                if (inputFormat==INPUT_FORMAT.hapmap)
+                {
+                    processSNPsWithSamePosition(samePos, a, chr, currentPos, msa);
+                }
+                else if (inputFormat==INPUT_FORMAT.vcf)
+                {
+                    processSNPsWithSamePositionForVCF(samePos, a, chr, currentPos, msa);
+                }
             } else {  // site has a unique position: write its genos to the msa
                 byte[] genos = new byte[a.getSequenceCount()];
                 for (int t = 0; t < a.getSequenceCount(); ++t) {
                     genos[t] = a.getBase(t, samePos[0]);
                 }
                 addSiteToMutableAlignment(chr, currentPos, genos, msa);
+                if (inputFormat==INPUT_FORMAT.vcf)
+                {
+                    int lastSiteIndex = msa.getSiteCount() -1;
+                    msa.setCommonAlleles(lastSiteIndex, a.getAlleles(samePos[0]));
+                    for (int tt=0; tt<a.getSequenceCount(); tt++)
+                    {
+                        msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, samePos[0]));
+                    }
+                }
             }
             msa.clean();
             myLogger.info("Number of sites written after merging duplicate SNPs: " + msa.getSiteCount());
-            if (!kpUnmergDups) {
-                deleteRemainingDuplicates(msa);
+            
+            if (inputFormat==INPUT_FORMAT.hapmap)
+            {
+                if (!kpUnmergDups) {
+                    deleteRemainingDuplicates(msa);
+                }
+
+                ExportUtils.writeToHapmap(msa, false, outfile, '\t', this);
             }
-            ExportUtils.writeToHapmap(msa, false, outfile, '\t', this);
+            else if (inputFormat==INPUT_FORMAT.vcf)
+            {
+                ExportUtils.writeToVCF(msa, outfile, '\t');
+            }
         }
         return null;
     }
@@ -311,6 +391,89 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         }
     }
 
+    private void processSNPsWithSamePositionForVCF(Integer[] samePos, Alignment a, int chr, int currentPos, MutableNucleotideAlignment msa)
+    {
+        int taxaCount = a.getSequenceCount();
+        //merged depth table
+        HashMap <Byte,int[]> MergedDepthTable = new HashMap<Byte,int[]>();
+        HashMap <Byte,Integer> AllAlleleDepthTable = new HashMap<Byte,Integer>();
+        
+        for (int s:samePos)
+        {
+            //get alleles for each site
+            byte[] alleles = a.getAlleles(s);
+            
+            //initiate new alleles in the allele list into the hashmap
+            for (byte allele:alleles)
+            {
+                if (!MergedDepthTable.containsKey(allele))
+                {
+                    int[] newDepth = new int[taxaCount];
+                    Arrays.fill(newDepth, 0);
+                    MergedDepthTable.put(allele, newDepth);
+                    AllAlleleDepthTable.put(allele, 0);
+                }             
+            }
+            //add up the depth for each alleles
+            for (int t = 0; t < a.getSequenceCount(); ++t) 
+            {
+                byte[] currDepth = a.getDepthForAlleles(t, s); // get the current depth for site s taxa t 
+                for (int i=0; i < alleles.length; i++)
+                {
+                    if (currDepth[i]>0)
+                    {
+                        MergedDepthTable.get(alleles[i])[t] +=  currDepth[i];
+                        AllAlleleDepthTable.put(alleles[i], AllAlleleDepthTable.get(alleles[i]) + currDepth[i]);
+                    }
+                }
+            }
+        }           
+        
+        //sort allele by count
+        ArrayList <Byte> AllAllelesList = new ArrayList <Byte>();
+        AllAllelesList.addAll(AllAlleleDepthTable.keySet());
+        Collections.sort(AllAllelesList, new HashValueComparator(AllAlleleDepthTable));
+        
+        //get top alleles and read depth for each allele
+        int allelesCount = (AllAllelesList.size()>myMaxNumAlleles)?myMaxNumAlleles:AllAllelesList.size();
+        byte CommonAlleles[] = new byte[allelesCount]; //all alleles
+        int[][] alleleDepthsInTaxa = new int[myMaxNumAlleles][taxaCount];
+        for(int[] row: alleleDepthsInTaxa)
+        {
+            Arrays.fill(row, 0);
+        }
+        
+        for (int i=0; i<allelesCount; i++)
+        {
+            CommonAlleles[i] = AllAllelesList.get(i);
+            for (int t=0; t<taxaCount; t++)
+            {
+                alleleDepthsInTaxa[i][t] = MergedDepthTable.get(CommonAlleles[i])[t];
+            }
+        }
+        
+        //resolve genotypies
+        byte[] genos = new byte[taxaCount];
+        for (int t=0; t<taxaCount; t++)
+        {
+               genos[t] = VCFUtil.resolveVCFGeno(CommonAlleles,alleleDepthsInTaxa, t);
+        }
+        
+        addSiteToMutableAlignment(chr, currentPos, genos, msa);
+        int lastSiteIndex = msa.getSiteCount() - 1;
+        msa.setCommonAlleles(lastSiteIndex, CommonAlleles);
+        for (int t=0; t<taxaCount; t++)
+        {
+            byte[] alleleDepth = new byte[allelesCount];
+            for (int i=0; i<allelesCount; i++)
+            {
+                alleleDepth[i] = alleleDepthsInTaxa[i][t]>127?(byte)127:(byte)alleleDepthsInTaxa[i][t];
+                
+            }
+            msa.setDepthForAlleles(t, lastSiteIndex, alleleDepth);
+        }
+    }
+    
     private void addSiteToMutableAlignment(int chromosome, int position, byte[] genos, MutableNucleotideAlignment theMSA) {
         int currSite = theMSA.getSiteCount();
         //int currSite = theMSA.getNextFreeSite();
@@ -433,4 +596,22 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     public String getToolTipText() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+}
+class HashValueComparator implements Comparator {
+
+  Map base;
+  public HashValueComparator(Map base) {
+      this.base = base;
+  }
+
+  public int compare(Object a, Object b) {
+
+    if((Integer)base.get(a) < (Integer)base.get(b)) {
+      return 1;
+    } else if((Integer)base.get(a) == (Integer)base.get(b)) {
+      return 0;
+    } else {
+      return -1;
+    }
+  }
 }

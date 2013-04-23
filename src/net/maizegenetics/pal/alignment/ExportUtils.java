@@ -21,6 +21,7 @@ import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
 import net.maizegenetics.gbs.pipeline.TagsToSNPByAlignmentPlugin;
+import net.maizegenetics.util.VCFUtil;
 import org.apache.log4j.Logger;
 
 /**
@@ -443,13 +444,6 @@ public class ExportUtils {
     public static String writeToVCF(Alignment alignment, String filename, char delimChar) {
         try {
 
-            HashMap<String, int[]> scoreMap = new HashMap();
-            for (int i = 0; i < 255; i++) {
-                for (int j = 0; j < 255; j++) {
-                    scoreMap.put(Integer.toString(i) + "," + Integer.toString(j), TagsToSNPByAlignmentPlugin.calcScore(i, j));
-                }
-            }
-
             filename = Utils.addSuffixIfNeeded(filename, ".vcf", new String[]{".vcf", ".vcf.gz"});
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
@@ -718,14 +712,18 @@ public class ExportUtils {
                     if (siteAlleleDepths.length != 0) {
                         int[] scores;
                         if (siteAlleleDepths.length == 1) {
-                            scores = scoreMap.get(Integer.toString(siteAlleleDepths[alleleRedirect[0]] & 0xFF) + ",0");
+                            int score1 = siteAlleleDepths[alleleRedirect[0]] > 255 ? 255 : siteAlleleDepths[alleleRedirect[0]];
+                            scores = VCFUtil.getScore(score1 ,0); 
                         } else {
                             if (alleleRedirect[0] == -1) {
-                                scores = scoreMap.get(Integer.toString(siteAlleleDepths[alleleRedirect[1]] & 0xFF)
-                                        + "," + Integer.toString(siteAlleleDepths[alleleRedirect[2]] & 0xFF));
-                            } else {
-                                scores = scoreMap.get(Integer.toString(siteAlleleDepths[alleleRedirect[0]] & 0xFF)
-                                        + "," + Integer.toString(siteAlleleDepths[alleleRedirect[1]] & 0xFF));
+                                int score1 = siteAlleleDepths[alleleRedirect[1]] > 255 ? 255 : siteAlleleDepths[alleleRedirect[1]];
+                                int score2 = siteAlleleDepths[alleleRedirect[2]] > 255? 255 : siteAlleleDepths[alleleRedirect[2]];
+                                scores = VCFUtil.getScore(score1, score2);
+                            } else 
+                            {
+                                int score1 = siteAlleleDepths[alleleRedirect[0]] > 255 ? 255 : siteAlleleDepths[alleleRedirect[0]];
+                                int score2 = siteAlleleDepths[alleleRedirect[1]] > 255? 255 : siteAlleleDepths[alleleRedirect[1]];
+                                scores = VCFUtil.getScore(score1, score2);
                             }
                         }
 
