@@ -530,7 +530,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
         TagLocusSiteQualityScores SiteQualityScores = new TagLocusSiteQualityScores(callsBySite.length);
         for (int s = 0; s < callsBySite.length; s++) {
             byte[] alleles = null;
-            if ((alleles = isSiteGood(callsBySite[s])) == null) { // NOTE: only the maj & min1 alleles are returned, so the Prod Pipeline can only call 2 alleles
+            if ((alleles = isSiteGood(callsBySite[s])) == null) {
                 continue;
             }
             if (includeReference && !fuzzyStartPositions && theTAL.getRefGeno(s) == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
