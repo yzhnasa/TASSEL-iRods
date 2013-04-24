@@ -479,8 +479,8 @@ public class ExportUtils {
             for (int site = 0; site < alignment.getSiteCount(); site++) {
                 int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
                 int nAlleles = sortedAlleles[0].length;
-                if (nAlleles == 0) {
-                    System.out.println("no alleles at: " + site);
+                if (nAlleles <= 1) {                                                  //used to be ==0
+                    System.out.println("no alleles at: " + site + " " + alignment.getPositionInLocus(site));
                     continue;
                 }
                 int[] alleleRedirect = new int[nAlleles]; // holds the indices of alleleValues in ref, alt1, [alt2] order (max 3 alleles)

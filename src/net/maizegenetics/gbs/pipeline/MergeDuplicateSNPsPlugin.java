@@ -67,7 +67,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private int startChr = 1, endChr = 10;
     private static enum INPUT_FORMAT {hapmap, vcf}; //input file format, acceptable values are "hapmap" "vcf" 
     private INPUT_FORMAT inputFormat = INPUT_FORMAT.hapmap;
-    private int myMaxNumAlleles =3;
+    private static int myMaxNumAlleles =3;
 
     public MergeDuplicateSNPsPlugin() {
         super(null, false);
@@ -91,6 +91,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 + "-kpUnmergDups  When two duplicate SNPs were not merged (different alleles or too many mismatches), keep them (default: " + kpUnmergDups + " = delete them)\n"
                 + "-sC             Start chromosome\n"
                 + "-eC             End chromosome\n"
+                + "-maxAlleleVCF   Maximum number of alleles allowed in vcf file.\n"
                 + "-snpLog        SNPs Removed Log file name\n\n");
     }
 
@@ -111,6 +112,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             myArgsEngine.add("-kpUnmergDups", "--keepUnmergedDuplicates", false);
             myArgsEngine.add("-sC", "--startChromosome", true);
             myArgsEngine.add("-eC", "--endChromosome", true);
+            myArgsEngine.add("-maxAlleleVCF", "--maxAlleleVCF", true);
             myArgsEngine.add("-snpLog", "", true);
         }
         myArgsEngine.parse(args);
@@ -169,6 +171,16 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-snpLog")) {
             snpLogFileName = myArgsEngine.getString("-snpLog");
         }
+        
+        if (myArgsEngine.getBoolean("-maxAlleleVCF")) {
+            
+            if (! myArgsEngine.getBoolean("-vcf")){
+                throw new IllegalArgumentException("-maxAlleleVCF option only works with -vcf input.\n");
+            } 
+            myMaxNumAlleles = Integer.parseInt(myArgsEngine.getString("-maxAlleleVCF"));
+        }
+                
+                
         snpLogging = new SNPLogging(snpLogFileName, this.getClass());
     }
 
@@ -186,7 +198,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 }
                 else if (inputFormat == INPUT_FORMAT.vcf)
                 {
-                    a = ImportUtils.readFromVCF(infile, this);
+                    a = ImportUtils.readFromVCF(infile, this, myMaxNumAlleles);
                 }
                 else
                 {
@@ -208,7 +220,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             }
             else if (inputFormat == INPUT_FORMAT.vcf)
             {
-                 msa = MutableVCFAlignment.getInstance(a.getIdGroup(), a.getSiteCount());
+                 msa = MutableVCFAlignment.getInstance(a.getIdGroup(), a.getSiteCount(), myMaxNumAlleles);
             }
             ArrayList<Integer> samePosAL = new ArrayList<Integer>();
             Integer[] samePos = null;
@@ -462,6 +474,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         }
         
         addSiteToMutableAlignment(chr, currentPos, genos, msa);
+ 
         int lastSiteIndex = msa.getSiteCount() - 1;
         msa.setCommonAlleles(lastSiteIndex, CommonAlleles);
         msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));

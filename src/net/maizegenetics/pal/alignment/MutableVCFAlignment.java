@@ -24,7 +24,7 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
     // possible alleles for each site
     private byte[][] myCommonAlleles;
     
-    private final int myMaxNumAlleles = 3;
+    private static int myMaxNumAlleles = 3;
     
     private MutableVCFAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a, maxNumTaxa, maxNumSites);
@@ -53,10 +53,17 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
         return new MutableVCFAlignment(idGroup, 0, idGroup.getIdCount(), maxNumSites);
     }
     
+    public static MutableVCFAlignment getInstance(IdGroup idGroup, int maxNumSites, int NumberOfAllelesToKeep) {
+        myMaxNumAlleles=NumberOfAllelesToKeep;
+        return new MutableVCFAlignment(idGroup, 0, idGroup.getIdCount(), maxNumSites);
+    }
     public static MutableVCFAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
         return new MutableVCFAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
-    
+    public static MutableVCFAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites, int NumberOfAllelesToKeep) {
+        myMaxNumAlleles=NumberOfAllelesToKeep;
+        return new MutableVCFAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
+    }
     public static MutableVCFAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         return new MutableVCFAlignment(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
     }
