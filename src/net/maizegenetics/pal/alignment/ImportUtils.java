@@ -46,7 +46,7 @@ public class ImportUtils {
     public static final int VCF_REF_COLUMN_INDEX = 3;
     public static final int VCF_ALT_COLUMN_INDEX = 4;
     public static final int VCF_FORMAT_COLUMN_INDEX = 8;
-    private static int maxNumAlleles = 3;
+    private static final int VCF_MAX_NUM_ALLELES = 3;
 
     private ImportUtils() {
         // Utility Class - do not instantiate.
@@ -142,8 +142,8 @@ public class ImportUtils {
 
                 // find alleles for current site, check to see if number of alleles is supported
                 int numAlleles = alt.length() + 1;
-                if (numAlleles > maxNumAlleles) {
-                    throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxNumAlleles + " alleles allowed, in line " + (numHeader + site + 1));
+                if (numAlleles > VCF_MAX_NUM_ALLELES) {
+                    throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + VCF_MAX_NUM_ALLELES + " alleles allowed, in line " + (numHeader + site + 1));
                 }
 
                 String alleleString = ref + alt;
@@ -170,8 +170,7 @@ public class ImportUtils {
                     }
                 }
                 result.setCommonAlleles(site, alleles);
-                if (!ref.equals("."))
-                {
+                if (!ref.equals(".")) {
                     result.setReferenceAllele(site, NucleotideAlignmentConstants.getNucleotideDiploidByte(ref));
                 }
 
@@ -191,7 +190,7 @@ public class ImportUtils {
                         alleleDepthIndex = i;
                     }
                 }
-                
+
                 if (genoIndex == -1) {
                     throw new IllegalStateException("ImportUtils: readFromVCF: no genotype data found in this VCF file at line: " + (numHeader + site + 1));
                 }
