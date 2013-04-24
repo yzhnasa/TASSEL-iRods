@@ -624,6 +624,9 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public int[] getPhysicalPositions() {
+        if (myVariableSites == null) {
+            return null;
+        }
         return myVariableSites.clone();
     }
 
@@ -718,6 +721,9 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
+        if (myVariableSites == null) {
+            return physicalPosition;
+        }
         if (locus == null) {
             locus = myLoci[0];
         }
