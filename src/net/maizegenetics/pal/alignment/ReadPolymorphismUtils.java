@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.util.Utils;
 
 public class ReadPolymorphismUtils {
 
@@ -17,22 +18,20 @@ public class ReadPolymorphismUtils {
     }
 
     public static Alignment readPolymorphismFile(String inFile) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(inFile));
+        BufferedReader br = Utils.getBufferedReader(inFile);
         String inline = br.readLine();
-        ArrayList<String> markerNames = new ArrayList<String>();
+        String[] markerNames = null;
         ArrayList<String[]> dataList = new ArrayList<String[]>();
         int nTaxa = 0;
         int nMarkers = 0;
-        float[][] scores = null;
-        boolean isNumeric = false;
 
         if (!inline.startsWith("#") && !inline.startsWith("<")) {
             String[] data = inline.split("[:\\s]+");
             nTaxa = Integer.parseInt(data[0]);
             nMarkers = Integer.parseInt(data[1]);
-            data = WHITESPACE.split(br.readLine());
-            for (int i = 0; i < nMarkers; i++) {
-                markerNames.add(data[i]);
+            markerNames = WHITESPACE.split(br.readLine());
+            if (markerNames.length != nMarkers) {
+                throw new IllegalStateException("ReadPolymorphismUtils: readPolymorphismFile: Number markers: " + markerNames.length + " doesn't match declaration: " + nMarkers);
             }
             for (int i = 0; i < nTaxa; i++) {
                 inline = br.readLine();
@@ -44,11 +43,10 @@ public class ReadPolymorphismUtils {
                 if (!inline.startsWith("#")) {
                     if (inline.startsWith("<")) {
                         String[] data = inline.split("[<>\\s]+");
-                        if (data[1].toLowerCase().startsWith("mark")) {
+                        if (data[1].toLowerCase().startsWith("marker")) {
                             nMarkers = data.length - 2;
-                            for (int i = 0; i < nMarkers; i++) {
-                                markerNames.add(data[i + 2]);
-                            }
+                            markerNames = new String[nMarkers];
+                            System.arraycopy(data, 2, markerNames, 0, nMarkers);
                         }
                     } else {
                         dataList.add(WHITESPACE.split(inline));
@@ -62,17 +60,15 @@ public class ReadPolymorphismUtils {
         String[][] myData = new String[nTaxa][nMarkers];
         String[] taxa = new String[nTaxa];
         for (int t = 0; t < nTaxa; t++) {
-        	String[] taxonData = dataList.get(t);
-        	taxa[t] = taxonData[0];
-        	for (int s = 0; s < nMarkers; s++) {
-        		myData[t][s] = taxonData[s+1];
-        	}
+            String[] taxonData = dataList.get(t);
+            taxa[t] = taxonData[0];
+            for (int s = 0; s < nMarkers; s++) {
+                myData[t][s] = taxonData[s + 1];
+            }
         }
-        
-        String[] markers = new String[nMarkers];
-        markerNames.toArray(markers);
-        Locus[] myLoci = new Locus[]{new Locus("Unknown", "0", 0, nMarkers, null, null)};
-        return BitAlignment.getInstance(new SimpleIdGroup(taxa), myData, null, null, null, 14, myLoci, new int[]{0}, markers, true, true); 
+
+        Locus[] myLoci = new Locus[]{Locus.UNKNOWN};
+        return BitAlignment.getInstance(new SimpleIdGroup(taxa), myData, null, null, null, 14, myLoci, new int[]{0}, markerNames, true, true);
     }
 
     public static GeneticMap readGeneticMapFile(String filename) throws IOException {
