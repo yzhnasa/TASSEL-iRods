@@ -30,9 +30,9 @@ public class VCFUtil {
         v1 = Math.log10(1.0 - error * 3.0 /4.0);
         v2 = Math.log10(error/4);
         v3 = Math.log10(0.5 - (error/4.0));
-        myGenoScoreMap = new int[255][255][];
-        for (int i = 0; i < 255; i++) {
-            for (int j = 0; j < 255; j++) {
+        myGenoScoreMap = new int[128][128][];
+        for (int i = 0; i < 128; i++) {
+            for (int j = 0; j < 128; j++) {
                 myGenoScoreMap[i][j]= calcScore(i, j);
             }
         }
@@ -127,8 +127,8 @@ public class VCFUtil {
         if (alleles.length == 1) {
             return (byte)((alleles[0] << 4) | alleles[0]);
         } else {
-            max = (max > 254) ? 254 : max;
-            nextMax = (nextMax > 254) ? 254 : nextMax;
+            max = (max > 127) ? 127 : max;
+            nextMax = (nextMax > 127) ? 127 : nextMax;
             int[] scores = getScore(max, nextMax);
             if ((scores[1] <= scores[0]) && (scores[1] <= scores[2])) {
                 return (byte)((maxAllele << 4) | nextMaxAllele);
