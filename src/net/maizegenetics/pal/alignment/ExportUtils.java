@@ -687,6 +687,7 @@ public class ExportUtils {
 
                     // AD
                     byte[] siteAlleleDepths = alignment.getDepthForAlleles(taxa, site);
+
                     int siteTotalDepth = 0;
                     if (siteAlleleDepths.length != 0) {
                         for (int a = 0; a < alleleRedirect.length; a++) {
@@ -712,18 +713,18 @@ public class ExportUtils {
                     if (siteAlleleDepths.length != 0) {
                         int[] scores;
                         if (siteAlleleDepths.length == 1) {
-                            int score1 = siteAlleleDepths[alleleRedirect[0]] > 255 ? 255 : siteAlleleDepths[alleleRedirect[0]];
-                            scores = VCFUtil.getScore(score1 ,0); 
+                            int dep1 = siteAlleleDepths[alleleRedirect[0]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[0]];
+                            scores = VCFUtil.getScore(dep1 ,0); 
                         } else {
                             if (alleleRedirect[0] == -1) {
-                                int score1 = siteAlleleDepths[alleleRedirect[1]] > 255 ? 255 : siteAlleleDepths[alleleRedirect[1]];
-                                int score2 = siteAlleleDepths[alleleRedirect[2]] > 255? 255 : siteAlleleDepths[alleleRedirect[2]];
-                                scores = VCFUtil.getScore(score1, score2);
+                                int dep1 = siteAlleleDepths[alleleRedirect[1]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[1]];
+                                int dep2 = siteAlleleDepths[alleleRedirect[2]] > 127? 127 : siteAlleleDepths[alleleRedirect[2]];
+                                scores = VCFUtil.getScore(dep1, dep2);
                             } else 
                             {
-                                int score1 = siteAlleleDepths[alleleRedirect[0]] > 255 ? 255 : siteAlleleDepths[alleleRedirect[0]];
-                                int score2 = siteAlleleDepths[alleleRedirect[1]] > 255? 255 : siteAlleleDepths[alleleRedirect[1]];
-                                scores = VCFUtil.getScore(score1, score2);
+                                int dep1 = siteAlleleDepths[alleleRedirect[0]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[0]];
+                                int dep2 = siteAlleleDepths[alleleRedirect[1]] > 127? 127 : siteAlleleDepths[alleleRedirect[1]];
+                                scores = VCFUtil.getScore(dep1, dep2);
                             }
                         }
 

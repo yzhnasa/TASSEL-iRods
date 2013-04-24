@@ -121,7 +121,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             suppliedInputFileName = myArgsEngine.getString("-hmp");
             inputFormat = INPUT_FORMAT.hapmap;
         } else if (myArgsEngine.getBoolean("-vcf")){
-            suppliedInputFileName = myArgsEngine.getString("-hmp");
+            suppliedInputFileName = myArgsEngine.getString("-vcf");
             inputFormat = INPUT_FORMAT.vcf;
         }
         else {
@@ -238,6 +238,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                         {
                             int lastSiteIndex = msa.getSiteCount() -1;
                             msa.setCommonAlleles(lastSiteIndex, a.getAlleles(samePos[0]));
+                            msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
                             for (int tt=0; tt<a.getSequenceCount(); tt++)
                             {
                                 msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, samePos[0]));
@@ -272,6 +273,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 {
                     int lastSiteIndex = msa.getSiteCount() -1;
                     msa.setCommonAlleles(lastSiteIndex, a.getAlleles(samePos[0]));
+                    msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
                     for (int tt=0; tt<a.getSequenceCount(); tt++)
                     {
                         msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, samePos[0]));
@@ -462,6 +464,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         addSiteToMutableAlignment(chr, currentPos, genos, msa);
         int lastSiteIndex = msa.getSiteCount() - 1;
         msa.setCommonAlleles(lastSiteIndex, CommonAlleles);
+        msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
         for (int t=0; t<taxaCount; t++)
         {
             byte[] alleleDepth = new byte[allelesCount];

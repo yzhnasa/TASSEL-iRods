@@ -46,6 +46,7 @@ public class ImportUtils {
     public static final int VCF_REF_COLUMN_INDEX = 3;
     public static final int VCF_ALT_COLUMN_INDEX = 4;
     public static final int VCF_FORMAT_COLUMN_INDEX = 8;
+    private static int maxNumAlleles = 3;
 
     private ImportUtils() {
         // Utility Class - do not instantiate.
@@ -87,7 +88,6 @@ public class ImportUtils {
     // add support for SNP ID?
     public static Alignment readFromVCF(final String filename, ProgressListener listener) {
 
-        int maxAlleles = 3;
         int minPosition = Integer.MAX_VALUE;
         String currLocus = null;
 
@@ -142,8 +142,8 @@ public class ImportUtils {
 
                 // find alleles for current site, check to see if number of alleles is supported
                 int numAlleles = alt.length() + 1;
-                if (numAlleles > maxAlleles) {
-                    throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxAlleles + " alleles allowed, in line " + (numHeader + site + 1));
+                if (numAlleles > maxNumAlleles) {
+                    throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxNumAlleles + " alleles allowed, in line " + (numHeader + site + 1));
                 }
 
                 String alleleString = ref + alt;
@@ -170,6 +170,10 @@ public class ImportUtils {
                     }
                 }
                 result.setCommonAlleles(site, alleles);
+                if (!ref.equals("."))
+                {
+                    result.setReferenceAllele(site, NucleotideAlignmentConstants.getNucleotideDiploidByte(ref));
+                }
 
                 // get the possible alleles for each site in to an byte array
                 // result.setCommonAlleles(site, values);
@@ -259,6 +263,7 @@ public class ImportUtils {
                             }
                             depths[i] = (byte) depth;
                         }
+
                         result.setDepthForAlleles(taxa, site, depths);
                     }
                 }
