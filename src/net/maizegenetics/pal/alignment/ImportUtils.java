@@ -46,7 +46,7 @@ public class ImportUtils {
     public static final int VCF_REF_COLUMN_INDEX = 3;
     public static final int VCF_ALT_COLUMN_INDEX = 4;
     public static final int VCF_FORMAT_COLUMN_INDEX = 8;
-    private static int VCF_MAX_NUM_ALLELES = 3;
+    private static int VCF_DEFAULT_MAX_NUM_ALLELES  = 3;
 
     private ImportUtils() {
         // Utility Class - do not instantiate.
@@ -86,7 +86,7 @@ public class ImportUtils {
     }
 
     // add support for SNP ID?
-    public static Alignment readFromVCF(final String filename, ProgressListener listener) {
+    public static Alignment readFromVCF(final String filename, ProgressListener listener, int maxKeptAlleles) {
 
         int minPosition = Integer.MAX_VALUE;
         String currLocus = null;
@@ -122,7 +122,7 @@ public class ImportUtils {
 
             String[] snpID = new String[numSites];
 
-            MutableVCFAlignment result = MutableVCFAlignment.getInstance(idGroup, numSites, numTaxa, numSites, VCF_MAX_NUM_ALLELES);
+            MutableVCFAlignment result = MutableVCFAlignment.getInstance(idGroup, numSites, numTaxa, numSites, maxKeptAlleles);
             int prevPos = -1;
             int currPos = -1;
             int locusStart = 0;
@@ -142,8 +142,8 @@ public class ImportUtils {
 
                 // find alleles for current site, check to see if number of alleles is supported
                 int numAlleles = alt.length() + 1;
-                if (numAlleles > VCF_MAX_NUM_ALLELES) {
-                    throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + VCF_MAX_NUM_ALLELES + " alleles allowed, in line " + (numHeader + site + 1));
+                if (numAlleles > maxKeptAlleles) {
+                    throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxKeptAlleles + " alleles allowed, in line " + (numHeader + site + 1));
                 }
 
                 String alleleString = ref + alt;
@@ -311,10 +311,9 @@ public class ImportUtils {
         }
     }
 
-    public static Alignment readFromVCF(final String filename, ProgressListener listener, int maxKeptAlleles)
+    public static Alignment readFromVCF(final String filename, ProgressListener listener)
     {
-        VCF_MAX_NUM_ALLELES = maxKeptAlleles;
-        return readFromVCF (filename, listener);
+        return readFromVCF (filename, listener, VCF_DEFAULT_MAX_NUM_ALLELES);
     }
     public static Alignment readFromHapmap(final String filename, ProgressListener listener) {
         return readFromHapmap(filename, true, listener);

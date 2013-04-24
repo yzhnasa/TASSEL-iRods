@@ -18,7 +18,6 @@ public class VCFUtil {
     private static double v2;
     private static double v3;
     private static int[][][] myGenoScoreMap;
-    private static int maxNumAlleles = 3;
         
     private VCFUtil ()
     {
@@ -113,7 +112,7 @@ public class VCFUtil {
         byte maxAllele = Alignment.UNKNOWN_ALLELE;
         int nextMax = 0;
         byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
-        for (int i = 0; i < maxNumAlleles; i++) {
+        for (int i = 0; i < allelesInTaxa.length; i++) {
             if (allelesInTaxa[i][tx] > max) {
                 nextMax = max;
                 nextMaxAllele = maxAllele;

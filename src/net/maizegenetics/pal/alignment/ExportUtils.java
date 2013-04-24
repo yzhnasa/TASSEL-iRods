@@ -479,7 +479,7 @@ public class ExportUtils {
             for (int site = 0; site < alignment.getSiteCount(); site++) {
                 int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
                 int nAlleles = sortedAlleles[0].length;
-                if (nAlleles <= 1) {                                                  //used to be ==0
+                if (nAlleles == 0) {                                                  //used to be ==0
                     System.out.println("no alleles at: " + site + " " + alignment.getPositionInLocus(site));
                     continue;
                 }
@@ -723,7 +723,10 @@ public class ExportUtils {
                             } else 
                             {
                                 int dep1 = siteAlleleDepths[alleleRedirect[0]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[0]];
-                                int dep2 = siteAlleleDepths[alleleRedirect[1]] > 127? 127 : siteAlleleDepths[alleleRedirect[1]];
+                                int dep2 = 0;
+                                if (alleleRedirect.length>1) {
+                                    dep2 = siteAlleleDepths[alleleRedirect[1]] > 127? 127 : siteAlleleDepths[alleleRedirect[1]];
+                                }
                                 scores = VCFUtil.getScore(dep1, dep2);
                             }
                         }
