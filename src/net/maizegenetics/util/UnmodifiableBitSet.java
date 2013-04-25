@@ -207,6 +207,16 @@ public class UnmodifiableBitSet implements BitSet {
     }
     
     @Override
+	public int previousSetBit(int index) {
+		return myBitSet.previousSetBit(index);
+	}
+
+	@Override
+	public long previousSetBit(long index) {
+		return myBitSet.previousSetBit(index);
+	}
+
+	@Override
     public void intersect(BitSet other) {
         throw new UnsupportedOperationException("UnmodifiableBitSet.");
     }

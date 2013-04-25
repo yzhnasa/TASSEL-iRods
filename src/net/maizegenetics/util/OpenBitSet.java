@@ -663,7 +663,72 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
         return -1;
     }
 
-    @Override
+	@Override
+	public int previousSetBit(int index) {
+        int i = index >> 6;
+        if (i >= myNumWords) {
+            return -1;
+        }
+        int subIndex = index & 0x3f;      // index within the word
+        long word = myBits[i] << (64 - subIndex);  // skip all the bits to the left of index
+        
+        if (word != 0) {
+        	int prevIndex = subIndex - 1;
+        	while(word > 0) {
+        		word = word << 1;
+        		prevIndex--;
+        	}
+            return (i << 6) + prevIndex;
+        }
+
+        while (--i >= 0) {
+        	word = myBits[i];
+            if (word != 0) {
+            	int prevIndex = 63;
+            	while(word > 0) {
+            		word = word << 1;
+            		prevIndex--;
+            	}
+                return (i << 6) + prevIndex;
+            }
+        }
+
+        return -1;
+	}
+
+	@Override
+	public long previousSetBit(long index) {
+        int i = (int) (index >>> 6);
+        if (i >= myNumWords) {
+            return -1;
+        }
+        int subIndex = (int) index & 0x3f; // index within the word
+        long word = myBits[i] >>> subIndex;  // skip all the bits to the right of index
+
+                if (word != 0) {
+                	int prevIndex = subIndex - 1;
+                	while(word > 0) {
+                		word = word << 1;
+                		prevIndex--;
+                	}
+                    return (i << 6) + prevIndex;
+                }
+
+                while (--i >= 0) {
+                	word = myBits[i];
+                    if (word != 0) {
+                    	int prevIndex = 63;
+                    	while(word > 0) {
+                    		word = word << 1;
+                    		prevIndex--;
+                    	}
+                        return (i << 6) + prevIndex;
+                    }
+                }
+		return -1;
+	}
+
+	@Override
     public Object clone() {
         long[] bits = (long[]) getBits().clone();
         return new OpenBitSet(bits, getNumWords());

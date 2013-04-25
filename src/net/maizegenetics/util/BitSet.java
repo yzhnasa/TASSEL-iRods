@@ -228,6 +228,18 @@ public interface BitSet {
     public long nextSetBit(long index);
 
     /**
+     * Returns the index of the first set bit starting at the index specified.
+     * -1 is returned if there are no more set bits.
+     */
+    public int previousSetBit(int index);
+
+    /**
+     * Returns the index of the first set bit starting at the index specified.
+     * -1 is returned if there are no more set bits.
+     */
+    public long previousSetBit(long index);
+
+    /**
      * this = this AND other
      */
     public void intersect(BitSet other);
