@@ -228,13 +228,15 @@ public interface BitSet {
     public long nextSetBit(long index);
 
     /**
-     * Returns the index of the first set bit starting at the index specified.
+     * Returns the index of the previous set bit starting at the index specified.
+     * If the bit at index is set, index is returned, otherwise the next lower numbered set bit is returned.
      * -1 is returned if there are no more set bits.
      */
     public int previousSetBit(int index);
 
     /**
-     * Returns the index of the first set bit starting at the index specified.
+     * Returns the index of the previous set bit starting at the index specified.
+     * If the bit at index is set, index is returned, otherwise the next lower numbered set bit is returned.
      * -1 is returned if there are no more set bits.
      */
     public long previousSetBit(long index);

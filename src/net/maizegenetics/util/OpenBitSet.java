@@ -670,10 +670,10 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
             return -1;
         }
         int subIndex = index & 0x3f;      // index within the word
-        long word = myBits[i] << (64 - subIndex);  // skip all the bits to the left of index
-        
+        long word = myBits[i] << (63 - subIndex);  // skip all the bits to the left of index
+        System.out.println(Long.toBinaryString(word));
         if (word != 0) {
-        	int prevIndex = subIndex - 1;
+        	int prevIndex = subIndex;
         	while(word > 0) {
         		word = word << 1;
         		prevIndex--;
@@ -698,35 +698,36 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
 
 	@Override
 	public long previousSetBit(long index) {
-        int i = (int) (index >>> 6);
+        int i = (int) (index >> 6);
         if (i >= myNumWords) {
             return -1;
         }
-        int subIndex = (int) index & 0x3f; // index within the word
-        long word = myBits[i] >>> subIndex;  // skip all the bits to the right of index
+        int subIndex = (int) (index & 0x3f);      // index within the word
+        long word = myBits[i] << (63 - subIndex);  // skip all the bits to the left of index
+        System.out.println(Long.toBinaryString(word));
+        if (word != 0) {
+        	int prevIndex = subIndex;
+        	while(word > 0) {
+        		word = word << 1;
+        		prevIndex--;
+        	}
+            return (i << 6) + prevIndex;
+        }
 
-                if (word != 0) {
-                	int prevIndex = subIndex - 1;
-                	while(word > 0) {
-                		word = word << 1;
-                		prevIndex--;
-                	}
-                    return (i << 6) + prevIndex;
-                }
+        while (--i >= 0) {
+        	word = myBits[i];
+            if (word != 0) {
+            	int prevIndex = 63;
+            	while(word > 0) {
+            		word = word << 1;
+            		prevIndex--;
+            	}
+                return (i << 6) + prevIndex;
+            }
+        }
 
-                while (--i >= 0) {
-                	word = myBits[i];
-                    if (word != 0) {
-                    	int prevIndex = 63;
-                    	while(word > 0) {
-                    		word = word << 1;
-                    		prevIndex--;
-                    	}
-                        return (i << 6) + prevIndex;
-                    }
-                }
-		return -1;
-	}
+        return -1;
+      }
 
 	@Override
     public Object clone() {
