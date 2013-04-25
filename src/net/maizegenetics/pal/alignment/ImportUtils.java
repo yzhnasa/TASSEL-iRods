@@ -46,7 +46,7 @@ public class ImportUtils {
     public static final int VCF_REF_COLUMN_INDEX = 3;
     public static final int VCF_ALT_COLUMN_INDEX = 4;
     public static final int VCF_FORMAT_COLUMN_INDEX = 8;
-    private static int VCF_DEFAULT_MAX_NUM_ALLELES  = 3;
+    private static final int VCF_DEFAULT_MAX_NUM_ALLELES = 3;
 
     private ImportUtils() {
         // Utility Class - do not instantiate.
@@ -311,10 +311,10 @@ public class ImportUtils {
         }
     }
 
-    public static Alignment readFromVCF(final String filename, ProgressListener listener)
-    {
-        return readFromVCF (filename, listener, VCF_DEFAULT_MAX_NUM_ALLELES);
+    public static Alignment readFromVCF(final String filename, ProgressListener listener) {
+        return readFromVCF(filename, listener, VCF_DEFAULT_MAX_NUM_ALLELES);
     }
+
     public static Alignment readFromHapmap(final String filename, ProgressListener listener) {
         return readFromHapmap(filename, true, listener);
     }
