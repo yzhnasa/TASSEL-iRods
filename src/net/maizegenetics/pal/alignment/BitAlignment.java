@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
@@ -152,6 +154,12 @@ public class BitAlignment extends AbstractAlignment {
 
         return BitAlignment.getNucleotideInstance(idGroup, dataBytes, map, reference, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
 
+    }
+
+    public static Alignment getNucleotideInstance(String[] data, boolean isSBit) {
+        return BitAlignment.getNucleotideInstance(new SimpleIdGroup(data.length, true), data, null, null, null,
+                TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{Locus.UNKNOWN}, new int[]{0},
+                null, TasselPrefs.getAlignmentRetainRareAlleles(), isSBit);
     }
 
     public static Alignment getInstance(IdGroup idGroup, String[][] data, GeneticMap map, byte[] reference, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
