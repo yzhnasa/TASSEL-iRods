@@ -18,6 +18,7 @@ public class VCFUtil {
     private static double v2;
     private static double v3;
     private static int[][][] myGenoScoreMap;
+    public static final int VCF_DEFAULT_MAX_NUM_ALLELES = 3;
         
     private VCFUtil ()
     {
@@ -101,9 +102,18 @@ public class VCFUtil {
     }
     
      public static byte resolveVCFGeno(byte[] alleles, int[][] allelesInTaxa, int tx) {
+        int[] alleleDepth = new int[allelesInTaxa.length];
+        for (int i=0; i<allelesInTaxa.length; i++)
+        {
+            alleleDepth[i] = allelesInTaxa[i][tx];
+        }
+        return resolveVCFGeno(alleles, alleleDepth);
+    }
+     
+     public static byte resolveVCFGeno(byte[] alleles, int[] alleleDepth) { 
         int depth = 0;
-        for (int i = 0; i < allelesInTaxa.length; i++) {
-            depth += allelesInTaxa[i][tx];
+        for (int i = 0; i < alleleDepth.length; i++) {
+            depth += alleleDepth[i];
         }
         if (depth == 0) {
             return (byte)((Alignment.UNKNOWN_ALLELE << 4) | Alignment.UNKNOWN_ALLELE);
@@ -112,14 +122,14 @@ public class VCFUtil {
         byte maxAllele = Alignment.UNKNOWN_ALLELE;
         int nextMax = 0;
         byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
-        for (int i = 0; i < allelesInTaxa.length; i++) {
-            if (allelesInTaxa[i][tx] > max) {
+        for (int i = 0; i < alleles.length; i++) {
+            if (alleleDepth[i] > max) {
                 nextMax = max;
                 nextMaxAllele = maxAllele;
-                max = allelesInTaxa[i][tx];
+                max = alleleDepth[i];
                 maxAllele = alleles[i];
-            } else if (allelesInTaxa[i][tx] > nextMax) {
-                nextMax = allelesInTaxa[i][tx];
+            } else if (alleleDepth[i] > nextMax) {
+                nextMax = alleleDepth[i];
                 nextMaxAllele = alleles[i];
             }
         }
@@ -137,6 +147,7 @@ public class VCFUtil {
                 return (byte)((nextMaxAllele << 4) | nextMaxAllele);
             }
         }
-    }
+     }
+     
 
 }

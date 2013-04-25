@@ -42,7 +42,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
     
     private static enum INPUT_FORMAT {hapmap, vcf}; //input file format, acceptable values are "hapmap" "vcf" 
     private INPUT_FORMAT inputFormat = INPUT_FORMAT.hapmap;
-    private static int myMaxNumAlleles =3;
+    private int myMaxNumAlleles;
 
     public MergeIdenticalTaxaPlugin() {
         super(null, false);
@@ -170,7 +170,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
                         //the return result is a two day array result[x][y]
                         //y: site index
                         //x: x=0: genotype calling; x=1 to max: allele depth
-                        byte[][] genotypeAndDepth = consensusCallsForVCF(a, taxa);
+                        byte[][] genotypeAndDepth = consensusCallsForVCF(a, taxa, myMaxNumAlleles);
                         for (int s = 0; s < a.getSiteCount(); s++) {
                             theMSA.setBase(newTaxon, s, genotypeAndDepth[0][s]);
                             byte[] mydepth = new byte[theMSA.getAlleles(s).length];
@@ -252,12 +252,12 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         return calls;
     }
 
-    public static byte[][] consensusCallsForVCF  (Alignment a, List<String> taxa)
+    public static byte[][] consensusCallsForVCF  (Alignment a, List<String> taxa, int MaxNumAlleles)
     {
         //the return result is a two day array result[x][y]
         //y: site index
         //x: x=0: genotype calling; x=1 to max: allele depth
-        byte[][] result = new byte[myMaxNumAlleles+1][taxa.size()];
+        byte[][] result = new byte[MaxNumAlleles+1][taxa.size()];
         for (byte[] row: result)
         {
             Arrays.fill(row, (byte)0);
@@ -373,6 +373,10 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
                 throw new IllegalArgumentException("-maxAlleleVCF option only works with -vcf input.\n");
             } 
             myMaxNumAlleles = Integer.parseInt(myArgsEngine.getString("-maxAlleleVCF"));
+        }
+        else
+        {
+            myMaxNumAlleles = VCFUtil.VCF_DEFAULT_MAX_NUM_ALLELES;
         }
     }
 
