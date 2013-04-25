@@ -67,7 +67,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private int startChr = 1, endChr = 10;
     private static enum INPUT_FORMAT {hapmap, vcf}; //input file format, acceptable values are "hapmap" "vcf" 
     private INPUT_FORMAT inputFormat = INPUT_FORMAT.hapmap;
-    private static int myMaxNumAlleles =3;
+    private int myMaxNumAlleles;
 
     public MergeDuplicateSNPsPlugin() {
         super(null, false);
@@ -178,6 +178,10 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 throw new IllegalArgumentException("-maxAlleleVCF option only works with -vcf input.\n");
             } 
             myMaxNumAlleles = Integer.parseInt(myArgsEngine.getString("-maxAlleleVCF"));
+        }
+        else
+        {
+            myMaxNumAlleles = VCFUtil.VCF_DEFAULT_MAX_NUM_ALLELES;
         }
                 
                 
