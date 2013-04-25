@@ -671,7 +671,6 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
         }
         int subIndex = index & 0x3f;      // index within the word
         long word = myBits[i] << (63 - subIndex);  // skip all the bits to the left of index
-        System.out.println(Long.toBinaryString(word));
         if (word != 0) {
         	int prevIndex = subIndex;
         	while(word > 0) {
@@ -704,7 +703,6 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
         }
         int subIndex = (int) (index & 0x3f);      // index within the word
         long word = myBits[i] << (63 - subIndex);  // skip all the bits to the left of index
-        System.out.println(Long.toBinaryString(word));
         if (word != 0) {
         	int prevIndex = subIndex;
         	while(word > 0) {
