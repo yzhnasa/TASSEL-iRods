@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 
-	private static final Logger myLogger = Logger.getLogger(CallParentAllelesPlugin.class);
+	private static final Logger myLogger = Logger.getLogger(ViterbiAlgorithmPlugin.class);
 	private boolean fillGapsInAlignment = true;
 	private double probHeterozygous = 0.07;
 	
