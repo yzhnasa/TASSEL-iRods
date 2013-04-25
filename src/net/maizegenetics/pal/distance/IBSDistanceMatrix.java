@@ -88,24 +88,9 @@ public class IBSDistanceMatrix extends DistanceMatrix {
                 } else {
                     long[] jMj = theTBA.getAllelePresenceForAllSites(j, 0).getBits();
                     long[] jMn = theTBA.getAllelePresenceForAllSites(j, 1).getBits();
-                    int sameCnt = 0, diffCnt = 0, hetCnt = 0;
-                    for (int x = 0; x < iMj.length; x++) {
-                        long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
-                        long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
-                        long hets = same & diff;
-                        sameCnt += BitUtil.pop(same);
-                        diffCnt += BitUtil.pop(diff);
-                        hetCnt += BitUtil.pop(hets);
-                    }
-                    double identity = (double) (sameCnt + (hetCnt / 2)) / (double) (sameCnt + diffCnt + hetCnt);
-                    double dist = 1 - identity;
-                    int sites = sameCnt + diffCnt - hetCnt;
-                    if (sites > minSitesComp) {
-                        distance[i][j] = distance[j][i] = dist;
-                    } else {
-                        distance[i][j] = distance[j][i] = Double.NaN;
-                    }
-                    avgTotalSites += sites;  //this assumes not hets
+                    double[] result=computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesComp);
+                    distance[i][j] = distance[j][i] = result[0];
+                    avgTotalSites += result[1];  //this assumes not hets
                     count++;
                 }
             }
@@ -115,13 +100,13 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         avgTotalSites /= (double) count;
     }
 
-    public static double computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2) {
+    public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2) {
         return computeHetBitDistances(theTBA, taxon1, taxon2, 0, false);
     }
 
-    public static double computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
+    public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
         if (taxon2 == taxon1 && !isTrueIBS) {
-            return 0.0;
+            return new double[] {0.0,0.0};
         } else {
             theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
             long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
@@ -132,7 +117,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         }
     }
 
-    public static double computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, int minSitesCompared) {
+    public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, int minSitesCompared) {
         int sameCnt = 0, diffCnt = 0, hetCnt = 0;
         for (int x = 0; x < iMj.length; x++) {
             long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
@@ -142,13 +127,13 @@ public class IBSDistanceMatrix extends DistanceMatrix {
             diffCnt += BitUtil.pop(diff);
             hetCnt += BitUtil.pop(hets);
         }
-        double identity = (double) (sameCnt + (hetCnt / 2)) / (double) (sameCnt + diffCnt + hetCnt);
-        double dist = 1 - identity;
         int sites = sameCnt + diffCnt - hetCnt;
+        double identity = ((double) (sameCnt) - (double)(0.5*hetCnt)) / (double) (sites);
+        double dist = 1 - identity;
         if (sites > minSitesCompared) {
-            return dist;
+            return new double[] {dist,(double)sites};
         } else {
-            return Double.NaN;
+            return new double[] {Double.NaN,(double)sites};
         }
     }
 

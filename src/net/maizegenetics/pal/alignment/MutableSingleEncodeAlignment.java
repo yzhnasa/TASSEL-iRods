@@ -54,6 +54,8 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         myMaxTaxa = maxNumTaxa;
         myMaxNumSites = maxNumSites;
         myNumSites = a.getSiteCount();
+        myReference = new byte[myMaxNumSites];
+        Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
         initData();
         initTaxa(a.getIdGroup());
         loadAlleles(a);

@@ -4,6 +4,7 @@
 package net.maizegenetics.gbs.pipeline;
 
 
+import cern.colt.list.IntArrayList;
 import ch.systemsx.cisd.hdf5.HDF5DataClass;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
@@ -12,6 +13,9 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import java.awt.Frame;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 
 import java.util.ArrayList;
@@ -19,18 +23,26 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.SiteMappingInfo;
+import net.maizegenetics.gwas.imputation.NucleotideImputationUtils;
 
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.BitAlignmentHDF5;
 import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.IdGroupUtils;
+import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.popgen.IBSErrorByTaxon;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 import net.maizegenetics.pal.statistics.FisherExact;
@@ -61,7 +73,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
     private String outHapMap = null;
     private static ArgsEngine engine = new ArgsEngine();
     int start = 1, end = 1;
-    private String infile;
+    private String infile, outfileAnnoHDF5;
     private static final Logger myLogger = Logger.getLogger(AnnotateGBSHDF5Plugin.class);
     int homoweight = 1;  //weight of homozygous genotypes to heterozgyous genotypes
     //1 assumes low coverage and each homozygote is only counted once, while hets get a count for each allele
@@ -122,6 +134,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
             end = Integer.parseInt(engine.getString("-eC"));
         }
         infile = engine.getString("-hmp");
+        outfileAnnoHDF5 = engine.getString("-o");
         if (engine.getBoolean("-snpLog")) {
             snpLogFileName = engine.getString("-snpLog");
         }
@@ -169,10 +182,10 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
             }
             System.out.println("Finished Reading: " + currFile);
             String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/06_HapMap/";
-            String outfile=root+"annoA.hmp.h5";
-            annotateMAF(a,  outfile);
-            annotateIBSError(a,  outfile);
-            annotateLD(a, outfile,128,4,0.05f, 5000);
+//            String outfile=root+"annoNoHets.hmp.h5";
+//            annotateMAF(a,  outfileAnnoHDF5);
+            annotateIBSError(a,  outfileAnnoHDF5);
+//            annotateLD(a, outfileAnnoHDF5,128,4,0.05f, 5000);
             start++;
         }
         snpLogging.close();
@@ -246,8 +259,8 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
                 if(dist<minPhysDist) continue;
                 attemptTests++;
                // System.out.printf("Dist: %d %d bin: %d %n",dist, Integer.highestOneBit(dist), bin);
-                BitSet cMj = a.getAllelePresenceForAllTaxa(j, 0);
-                BitSet cMn = a.getAllelePresenceForAllTaxa(j, 1);
+                BitSet cMj = a.getAllelePresenceForAllTaxa(j, 0);  //major alleles
+                BitSet cMn = a.getAllelePresenceForAllTaxa(j, 1);  //minor alleles
                 int n = 0;
                 n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
                 n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
@@ -267,7 +280,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
                 if(rValue>minLD) {
                     float[] result={j, (float)rValue, (float)pValue, dist};
                     SiteMappingInfo smi=new SiteMappingInfo(Integer.parseInt(a.getLocusName(j)),
-                            (byte)1,a.getPositionInLocus(j),(float)rValue, (float)pValue);
+                            (byte)1,a.getPositionInLocus(j),(float)rValue, (float)pValue,j);
                     bestLDSites.put(rValue, smi);
                 }
                 if(bestLDSites.size()>20) {
@@ -309,12 +322,8 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         
     }
     
-    private void initDiploids(Alignment a) {
-        minorGenotype=new byte[a.getSiteCount()];
-        for (int i = 0; i < minorGenotype.length; i++) {
-            minorGenotype[i]=AlignmentUtils.getDiploidValue(a.getMinorAllele(i), a.getMinorAllele(i));
-        }
-    }
+   
+    
 
     private void annotateIBSError(Alignment a, String hdf5File) {
         a.optimizeForTaxa(null);
@@ -323,7 +332,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         mjCorrCnt=new int[sites];
         mnCorrCnt=new int[sites];
         for (int bt = 0; bt < a.getSequenceCount(); bt++) {
-            IBSErrorByTaxon iebt=new IBSErrorByTaxon(bt,a,75, 1500, 75,0.02);
+            IBSErrorByTaxon iebt=new IBSErrorByTaxon(bt,a,75, 2000, 400,0.01);
             mjCorrCnt=addTwoVector(mjCorrCnt,iebt.getMajorCorrectCounts());
             mnCorrCnt=addTwoVector(mnCorrCnt,iebt.getMinorCorrectCounts());
             errorCnt=addTwoVector(errorCnt,iebt.getErrorCounts());
@@ -357,13 +366,6 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         h5w.writeFloatArray(HapMapHDF5Constants.IBSMINORERRORRATE_DESC, mnErrorRate);
     }
     
-    private int sum(int[] v) {
-        int s=0;
-        for (int i : v) {
-            s+=i;
-        }
-        return s;
-    }
     
     private int[] addTwoVector(int[] src, int[] addendum) {
         for (int i = 0; i < addendum.length; i++) {
@@ -437,18 +439,314 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         return "Filters and estimates error rates from biparental populations";
     }
     
+    private static void filterOutHets(String infile, String outfile) {
+        Alignment a = ImportUtils.readFromHapmap(infile, null);
+        IntArrayList keep=new IntArrayList();
+        double siteD=a.getSiteCount();
+        for (int i = 0; i < a.getSequenceCount(); i++) {
+            double presentProp=(double)a.getTotalNotMissingForTaxon(i)/siteD;
+            double hetProp=(double)a.getHeterozygousCountForTaxon(i)/siteD;
+            double scaleHetProp=hetProp/presentProp;
+            System.out.printf("%d %g %g %g ",i,presentProp, hetProp, scaleHetProp);
+            if((presentProp>0.05)&&(scaleHetProp<0.02)) {
+                keep.add(i);
+                System.out.println("Keep:"+a.getFullTaxaName(i));
+            } else {
+                System.out.println("Delete:"+a.getFullTaxaName(i));
+            }
+        }
+        IdGroup sid=new SimpleIdGroup(keep.size());
+        for (int i = 0; i < keep.size(); i++) {
+            sid.setIdentifier(i, a.getIdGroup().getIdentifier(keep.get(i)));
+        }
+        System.out.println("Keep size:"+keep.size());
+//        System.out.println(keep.toString());
+       FilterAlignment fa = (FilterAlignment)FilterAlignment.getInstance(a, sid);
+       Alignment a2 = BitAlignment.getInstance(fa, true);
+       ExportUtils.writeToHDF5(a2, outfile);
+    }
+    
+    private static void filterOutHetMAFRatio(String infile, String outfile) {
+        Alignment a = ImportUtils.readFromHapmap(infile, null);
+        IntArrayList keep=new IntArrayList();
+        double siteD=a.getSiteCount();
+        int taxa=a.getSequenceCount();
+        for (int i = 0; i < a.getSiteCount(); i++) {
+            double maf=a.getMinorAlleleFrequency(i);
+            int siteCovCnt=a.getTotalGametesNotMissing(i)/2;
+            double scov=(double)siteCovCnt/(double)taxa;
+            double hets=(double)a.getHeterozygousCount(i)/(double)siteCovCnt;  //terry's proportion hets is off all sites
+            double hDivPresMAF=hets/(scov*maf);
+            if(hDivPresMAF<0.4) {
+                keep.add(i);
+               // System.out.println("Keep:"+a.getFullTaxaName(i));
+            } else {
+               // System.out.println("Delete:"+a.getFullTaxaName(i));
+            }
+        }
+        System.out.println("Sites Keep size:"+keep.size());
+//        System.out.println(keep.toString());
+       FilterAlignment fa = (FilterAlignment)FilterAlignment.getInstance(a, keep.elements());
+       Alignment a2 = BitAlignment.getInstance(fa, true);
+       ExportUtils.writeToHDF5(a2, outfile);
+    }
+    
+        private static void XfilterOutHets(String infile, String outfile) {
+        Alignment a = ImportUtils.readFromHapmap(infile, null);
+        IntArrayList evalLowHets=new IntArrayList();
+        double siteD=a.getSiteCount();
+        for (int i = 0; i < a.getSequenceCount(); i++) {
+            double presentProp=(double)a.getTotalNotMissingForTaxon(i)/siteD;
+            double hetProp=(double)a.getHeterozygousCountForTaxon(i)/siteD;
+            double scaleHetProp=hetProp/presentProp;
+            System.out.printf("%d %g %g %g ",i,presentProp, hetProp, scaleHetProp);
+            if((presentProp>0.05)&&(scaleHetProp<0.02)) {
+                evalLowHets.add(i);
+                System.out.println("Keep:"+a.getFullTaxaName(i));
+            } else {
+                System.out.println("Delete:"+a.getFullTaxaName(i));
+            }
+        }
+        evalLowHets.trimToSize();
+        IdGroup sid=new SimpleIdGroup(evalLowHets.size());
+        for (int i = 0; i < evalLowHets.size(); i++) {
+            sid.setIdentifier(i, a.getIdGroup().getIdentifier(evalLowHets.get(i)));
+        }
+        System.out.println("Number of Taxa Used to Count Hets:"+evalLowHets.size());
+//        System.out.println(keep.toString());
+       FilterAlignment fa = (FilterAlignment)FilterAlignment.getInstance(a, sid);
+ //      Alignment a2 = BitAlignment.getInstance(fa, true);
+ //      ExportUtils.writeToHDF5(a2, outfile);
+     //   Alignment fa = ImportUtils.readFromHapmap(infile, null);
+        IntArrayList keepSites=new IntArrayList();
+  //      double siteD=fa.getSiteCount();
+        int taxa=fa.getSequenceCount();
+        for (int i = 0; i < fa.getSiteCount(); i++) {
+            double maf=fa.getMinorAlleleFrequency(i);
+            int siteCovCnt=fa.getTotalGametesNotMissing(i)/2;
+            double scov=(double)siteCovCnt/(double)taxa;
+            double hets=(double)fa.getHeterozygousCount(i)/(double)siteCovCnt;  //terry's proportion hets is off all sites
+            double hDivPresMAF=hets/(scov*maf);
+            if(hDivPresMAF<0.5) {
+                keepSites.add(i);
+               // System.out.println("Keep:"+a.getFullTaxaName(i));
+            } else {
+               // System.out.println("Delete:"+a.getFullTaxaName(i));
+            }
+        }
+        keepSites.trimToSize();
+        System.out.println("Sites Keep size:"+keepSites.size());
+//        System.out.println(keep.toString());
+       FilterAlignment fa2 = (FilterAlignment)FilterAlignment.getInstance(a, keepSites.elements());
+       Alignment a2 = BitAlignment.getInstance(fa2, true);
+       ExportUtils.writeToHapmap(a2, false, outfile, '\t', null);
+       //ExportUtils.writeToHDF5(a2, outfile);
+    }
+    
+    public static void testNeighborLD(String infileH5) {
+        String family = "Z008";
+        int window = 20;
+        Alignment a = BitAlignmentHDF5.getInstance(infileH5);
+        IdGroup ids = a.getIdGroup();
+        double[][] avgr = new double[26][a.getSiteCount()];
+       // ArrayList<Identifier> subgroup = new ArrayList<Identifier>();
+        int n = ids.getIdCount();
+        boolean[] keep = new boolean[n];
+        for (int i = 0; i < n; i++) {
+                Identifier id = ids.getIdentifier(i);
+                if (id.getName().startsWith(family)) keep[i] = true;
+                else keep[i] = false;
+        }
+        
+        IdGroup subIdGroup = IdGroupUtils.idGroupSubset(ids, keep);
+        Alignment b = FilterAlignment.getInstance(a, subIdGroup);
+        Alignment c = BitAlignment.getInstance(b, true);
+        BitSet polybits;
+        polybits = NucleotideImputationUtils.whichSitesArePolymorphic(c, .8, .1);
+        System.out.println("polybits cardinality = " + polybits.cardinality());
+
+        OpenBitSet filteredBits = NucleotideImputationUtils.whichSnpsAreFromSameTag(c, polybits);
+        System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
+
+        System.out.printf("A:%d B:%d C:%d %n", a.getSiteCount(), b.getSiteCount(), c.getSiteCount());
+    	int nsites = c.getSiteCount();
+    	int ntests = (int) filteredBits.cardinality();
+    	int[] pos = new int[ntests];
+    	
+    	int siteCount = 0;
+    	for (int s = 0; s < nsites; s++) {
+    		if (filteredBits.fastGet(s)) {
+    			avgr[0][s] = NucleotideImputationUtils.neighborLD(c, s, window, filteredBits);
+    		}
+    	}
+        for (int i = 0; i < nsites; i++) {
+            System.out.printf("%d %d %g %n",i,a.getPositionInLocus(i),avgr[0][i]);
+            
+        }
+    }
+    
+    private static ArrayList<ArrayList<Identifier>> classifyTaxaToPops(Alignment a, String popMask) {
+        ArrayList<String> popNames = new ArrayList<String>();
+        ArrayList<ArrayList<Identifier>> result=new ArrayList<ArrayList<Identifier>>();
+        Pattern pat = Pattern.compile(popMask);
+        IdGroup idg=a.getIdGroup();
+        for (int i = 0; i < idg.getIdCount(); i++) {
+            String name=idg.getIdentifier(i).getFullName();
+            Matcher m = pat.matcher(name);
+            if (m.find()) {
+                String tn = name.substring(m.start(), m.end());
+                if (!popNames.contains(tn)) {
+                    popNames.add(tn);
+                    result.add(new ArrayList<Identifier>());
+                }
+                int popOfTaxa = popNames.indexOf(tn);
+                result.get(popOfTaxa).add(idg.getIdentifier(i));
+            }
+        }
+        return result;
+    }
+    
+    private static void calcLDByPop(String infileH5, String hdf5File) {
+        Alignment a = BitAlignmentHDF5.getInstance(infileH5);
+        FisherExact fe=new FisherExact(1000);
+        ArrayList<ArrayList<Identifier>> pops=classifyTaxaToPops(a,"Z0[0-1][0-9]E");
+        int minCntForLD = 10;
+        double[][] ld34ByPop = new double[pops.size()][a.getSiteCount()];
+        double[][] ldMaxByPop = new double[pops.size()][a.getSiteCount()];
+        IdGroup idg = a.getIdGroup();
+        for (int pop = 0; pop < pops.size(); pop++) {
+            Arrays.fill(ld34ByPop[pop], Double.NaN);
+            Arrays.fill(ldMaxByPop[pop], Double.NaN);
+            Identifier[] ids = new Identifier[pops.get(pop).size()];
+            pops.get(pop).toArray(ids);
+            Alignment pa = FilterAlignment.getInstance(a, new SimpleIdGroup(ids));
+            pa=BitAlignment.getInstance(pa, true);
+            System.out.printf("Pop");
+            IntArrayList segSites=new IntArrayList();
+            for (int i = 0; i < pa.getSiteCount(); i++) {
+                if((pa.getMinorAlleleCount(i)>5)&&(pa.getMajorAlleleCount(i)>20)) segSites.add(i);
+            }
+          //  int windowSize=10;
+            int minPhysDist = 1000000;
+            int numberOfTests=60;
+            int sites=segSites.size();
+            for (int i = 0; i < segSites.size(); i++) {
+                ArrayList<Double> obsR2 = new ArrayList<Double>();
+                int leftSite=i, rightSite=i, j=-1;
+                int attemptTests=0, completedTests=0;
+                int position=a.getPositionInLocus(segSites.get(i)), dist=-1, minSigDist=Integer.MAX_VALUE;
+                BitSet rMj = pa.getAllelePresenceForAllTaxa(segSites.get(i), 0);
+                BitSet rMn = pa.getAllelePresenceForAllTaxa(segSites.get(i), 1); 
+//                System.out.printf("%d Site:%s Position:%d rMjCard:%d %n",i,
+//                        segSites.get(i),pa.getPositionInLocus(segSites.get(i)), rMj.cardinality());
+                while((completedTests<numberOfTests)&&((leftSite>0)||(rightSite+1<sites))) {
+                    int rightDistance=(rightSite+1<sites)?a.getPositionInLocus(segSites.get(rightSite+1))-position:Integer.MAX_VALUE;
+                    int leftDistance=(leftSite>0)?position-a.getPositionInLocus(segSites.get(leftSite-1)):Integer.MAX_VALUE;
+                    if(rightDistance<leftDistance) {rightSite++; j=segSites.get(rightSite); dist=rightDistance;}
+                    else {leftSite--; j=segSites.get(leftSite); dist=leftDistance;}
+                    if(dist<minPhysDist) continue;
+                    attemptTests++;
+                    BitSet cMj = pa.getAllelePresenceForAllTaxa(j, 0);
+                    BitSet cMn = pa.getAllelePresenceForAllTaxa(j, 1);
+//                    System.out.printf("jw Site:%d Position:%d rMjCard:%d %n",j
+//                        ,pa.getPositionInLocus(j), cMj.cardinality());
+                    float[] result=LinkageDisequilibrium.getLDForSitePair(rMj,rMn,cMj,cMn,3,20,-1.0f,fe);
+                    if(Float.isNaN(result[1])) continue;
+                    obsR2.add((double)result[1]);
+                    completedTests++;
+                }
+                Collections.sort(obsR2);
+ //               System.out.printf("Pop:%d Site:%d LD:%s %n",pop,i,obsR2.toString());
+                if (obsR2.size() > 4) {
+                    ld34ByPop[pop][segSites.get(i)] = obsR2.get(obsR2.size() * 3/4);
+                    ldMaxByPop[pop][segSites.get(i)] = obsR2.get(obsR2.size()-1);
+//                    System.out.printf("Pop:%d Position:%d Site:%d 3/4LD:%g MaxLD:%g %n",pop,i,
+//                            pa.getPositionInLocus(segSites.get(i)),ld34ByPop[pop][segSites.get(i)],obsR2.get(obsR2.size()-1));
+                }
+            }
+            // System.out.println("POP:"+pop+Arrays.toString(ldByPop[pop]));
+        }
+        float[] mean34LD=new float[ldMaxByPop[0].length];
+        float[] meanMaxLD=new float[ldMaxByPop[0].length];
+        float[] maxMaxLD=new float[ldMaxByPop[0].length];  Arrays.fill(maxMaxLD, -1f);
+        float[] minMaxLD=new float[ldMaxByPop[0].length];  Arrays.fill(minMaxLD, 2f);
+        int[] cntPops=new int[ldMaxByPop[0].length];
+        for (int i = 0; i < ldMaxByPop[0].length; i++) {
+   //         int cntPops=0;
+       //     double mean34LD=0, meanMaxLD=0, maxMaxLD=-1, minMaxLD=1.5;
+            for (int j = 0; j < ldMaxByPop.length; j++) {
+                if(!Double.isNaN(ld34ByPop[j][i])) {
+                    cntPops[i]++;
+                    mean34LD[i]+=ld34ByPop[j][i];
+                    meanMaxLD[i]+=ldMaxByPop[j][i];
+                    if(ldMaxByPop[j][i]>maxMaxLD[i]) maxMaxLD[i]=(float)ldMaxByPop[j][i];
+                    if(ldMaxByPop[j][i]<minMaxLD[i]) minMaxLD[i]=(float)ldMaxByPop[j][i];
+                }
+
+            }
+            mean34LD[i]/=(float)cntPops[i];
+            meanMaxLD[i]/=(float)cntPops[i];
+            if(maxMaxLD[i]<0) maxMaxLD[i]=Float.NaN;
+            if(minMaxLD[i]>1) minMaxLD[i]=Float.NaN;
+            System.out.printf("%d %d %d %g %g %g %g %n",i,a.getPositionInLocus(i),
+                    cntPops[i],mean34LD[i],meanMaxLD[i], maxMaxLD[i], minMaxLD[i]);
+        }
+        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+        myLogger.info("Annotating HDF5 file with BiParental: " + hdf5File);
+//        config.overwrite();
+//        config.dontUseExtendableDataTypes();
+        IHDF5Writer h5w = config.writer();
+        if(!h5w.exists(HapMapHDF5Constants.LD_DESC)) h5w.createGroup(HapMapHDF5Constants.LD_DESC);
+        if(!h5w.exists(HapMapHDF5Constants.BPLDMean34)) h5w.createFloatArray(HapMapHDF5Constants.BPLDMean34, mean34LD.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.BPLDMean34, mean34LD);
+        if(!h5w.exists(HapMapHDF5Constants.BPLDMeanMax)) h5w.createFloatArray(HapMapHDF5Constants.BPLDMeanMax, meanMaxLD.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.BPLDMeanMax, meanMaxLD);
+        if(!h5w.exists(HapMapHDF5Constants.BPmaxMaxLD)) h5w.createFloatArray(HapMapHDF5Constants.BPmaxMaxLD, maxMaxLD.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.BPmaxMaxLD, maxMaxLD);
+        if(!h5w.exists(HapMapHDF5Constants.BPminMaxLD)) h5w.createFloatArray(HapMapHDF5Constants.BPminMaxLD, minMaxLD.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.BPminMaxLD, minMaxLD);
+        if(!h5w.exists(HapMapHDF5Constants.BPPopCnt)) h5w.createIntArray(HapMapHDF5Constants.BPPopCnt, cntPops.length);
+        h5w.writeIntArray(HapMapHDF5Constants.BPPopCnt, cntPops);
+        h5w.close();
+    }
+    
+    
+    
+//    
+//     public static final String BPLDMean34 = LD_DESC+"/BPLD34MedianR2";
+//    public static final String BPLDMeanMax = LD_DESC+"/BPLD34MaxR2";
+//    public static final String BPmaxMaxLD = LD_DESC+"/BPmaxMaxLDR2";
+//    public static final String BPminMaxLD = LD_DESC+"/BPminMaxLDR2";
+    
     public static void main(String[] args) {
         String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/06_HapMap/";
-//        String infile=root+"Z0NE00N_chr10S.hmp.txt.gz";
-        String infile=root+"All_chr10S.hmp.txt.gz";
-        String outfile=root+"annoA.hmp.h5";
-//        Alignment a = ImportUtils.readFromHapmap(infile, null);
-//        ExportUtils.writeToHDF5(a, outfile);
-        
- //       infile=outfile;
-        saveAnnotationsToFile(root+"annoA.hmp.h5",root+"test.txt");
+  //      String infile=root+"Z0NE00N_chr10S.hmp.txt.gz";
+  //      String infile=root+"All_chr10S.hmp.txt.gz";
+        String infile=root+"all130313.c10.hmp.txt.gz";
+        String outfile=root+"all130313.c10.anno.hmp.h5";
+ //       XfilterOutHets(root+"AllTaxa_BPEC_AllZea_GBS_Build_July_2012_FINAL_Rev1_chr10.hmp.txt.gz",root+"noHighHSM5All_chr10.hmp.txt.gz");
+//        System.exit(0);
+//        filterOutHets(infile,root+"nhzAll_chr10S");
+// //       filterOutHets(infile,root+"hzZ0NE00N_chr10S");
+//        infile=root+"hzZ0NE00N_chr10S.hmp.txt.gz";
+////        Alignment a = ImportUtils.readFromHapmap(infile, null);
+////        ExportUtils.writeToHDF5(a, outfile);
+//        System.exit(0);
+// //       infile=outfile;
+//        filterOutHetMAFRatio(infile,root+"FILTnhzAll_chr10S.hmp.txt.gz");
+        saveAnnotationsToFile(outfile,root+"test.txt");
         System.exit(0);
-
+//        Alignment align = BitAlignmentHDF5.getInstance(root+"nhzAll_chr10S.hmp.h5");
+//        ExportUtils.writeToHapmap(align, false, root+"nhzAll_chr10S.hmp.txt.gz", '\t', null);
+//        System.exit(0);
+        
+        String infileH5=root+"all130313.c10.hmp.h5";
+        String annofileH5=root+"annoNoHets.hmp.h5";
+ //       calcLDByPop(infileH5,outfile);
+ //       System.exit(0);
+ //       testNeighborLD(infileH5);
+ //       System.exit(0);
+        
         String[] args2 = new String[]{
             "-hmp", infile,
             "-o", outfile,

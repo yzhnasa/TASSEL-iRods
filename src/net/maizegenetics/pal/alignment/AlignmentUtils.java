@@ -350,6 +350,8 @@ public class AlignmentUtils {
             for (int taxon = 0; taxon < numTaxa; taxon++) {
                 if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
                     dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                } else if (data[taxon][site].equals("?")) {
+                    dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
                 } else {
                     dataBytes[taxon][site] = Alignment.RARE_DIPLOID_ALLELE;
                     for (byte k = 0; k < maxNumAlleles; k++) {
@@ -662,6 +664,26 @@ public class AlignmentUtils {
             result = alignment;
         } catch (UnsupportedOperationException e) {
             result = BitAlignment.getInstance(alignment, false);
+        }
+
+        return result;
+
+    }
+
+    public static Alignment optimizeForTaxaAndSites(Alignment alignment) {
+
+        boolean isSBit = alignment.isSBitFriendly();
+        boolean isTBit = alignment.isTBitFriendly();
+
+        Alignment result = null;
+        if (isSBit && isTBit) {
+            result = alignment;
+        } else if (isSBit) {
+            result = optimizeForTaxa(alignment);
+            result = optimizeForSites(result);
+        } else {
+            result = optimizeForSites(alignment);
+            result = optimizeForTaxa(result);
         }
 
         return result;

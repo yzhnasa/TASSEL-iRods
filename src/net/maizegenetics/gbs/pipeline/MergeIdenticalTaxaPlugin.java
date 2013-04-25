@@ -16,11 +16,13 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.pal.alignment.MutableVCFAlignment;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.util.VCFUtil;
 
 import org.apache.log4j.Logger;
 
@@ -37,6 +39,10 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
     private double majorityRule = 0.8;
     private boolean makeHetCalls = true;
     String[] lowCoverageTaxa = null;
+    
+    private static enum INPUT_FORMAT {hapmap, vcf}; //input file format, acceptable values are "hapmap" "vcf" 
+    private INPUT_FORMAT inputFormat = INPUT_FORMAT.hapmap;
+    private static int myMaxNumAlleles =3;
 
     public MergeIdenticalTaxaPlugin() {
         super(null, false);
@@ -52,13 +58,31 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             infile = suppliedInputFileName.replace("+", "" + chr);
             outfile = suppliedOutputFileName.replace("+", "" + chr);
             myLogger.info("Reading: " + infile);
-            Alignment a;
-            try {
-                a = ImportUtils.readFromHapmap(infile, this);
-            } catch (Exception e) {
-                myLogger.info("Could not read input hapmap file for chr" + chr + ":\n\t" + infile + "\n\tSkipping...");
-                continue;
+            Alignment a = null;
+            
+            if (inputFormat == INPUT_FORMAT.hapmap)
+            {
+                try {
+                    a = ImportUtils.readFromHapmap(infile, this);
+                } catch (Exception e) {
+                    myLogger.info("Could not read input hapmap file for chr" + chr + ":\n\t" + infile + "\n\tSkipping...");
+                    continue;
+                }
             }
+            else if (inputFormat == INPUT_FORMAT.vcf)
+            {
+                try {
+                    a = ImportUtils.readFromVCF(infile, this, myMaxNumAlleles);
+                } catch (Exception e) {
+                    myLogger.info("Could not read input vcf file for chr" + chr + ":\n\t" + infile + "\n\tSkipping...");
+                    continue;
+                }
+            }
+            else
+            {
+                 throw new IllegalArgumentException("File format " + inputFormat + " is not recognized!");
+            }
+            
             myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
             AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
 
@@ -87,10 +111,21 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             }
             System.out.println("Unique taxa:" + uniqueTaxa);
             //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(newGroup, a.getSiteCount(), a.getLoci());
-            MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(newGroup, a.getSiteCount());
+            MutableNucleotideAlignment theMSA = null;
+            if (inputFormat == INPUT_FORMAT.hapmap){
+                theMSA = MutableNucleotideAlignment.getInstance(newGroup, a.getSiteCount());
+            }
+            else if (inputFormat == INPUT_FORMAT.vcf){
+                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(), myMaxNumAlleles);
+            }
             for (int s = 0; s < a.getSiteCount(); s++) {
                 theMSA.setLocusOfSite(s, a.getLocus(s));
                 theMSA.setPositionOfSite(s, a.getPositionInLocus(s));
+                if (inputFormat == INPUT_FORMAT.vcf){
+                    theMSA.setReferenceAllele(s, a.getReferenceAllele(s));
+                    theMSA.setCommonAlleles(s, a.getAlleles(s));
+                }
+                
                 //theMSA.setSitePrefix(s, (byte) a.getSNPID(s).charAt(0));
                 //theMSA.setStrandOfSite(s, (byte) 1);
             }
@@ -98,34 +133,75 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             int newTaxon = -1;
             byte[] calls = null;
             for (Map.Entry<String, List<String>> entry : sortedIds2.entrySet()) {
-                if (entry.getValue().size() > 1) {
-                    calls = consensusCalls(a, entry.getValue(), makeHetCalls, majorityRule);
-                    newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
-                } else {
-                    int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));
-                    calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
-                    newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
-                }
-                for (int s = 0; s < a.getSiteCount(); s++) {
-                    theMSA.setBase(newTaxon, s, calls[s]);
-                }
-                if (entry.getValue().size() > 1) {
-                    int known = 0, hets = 0;
+                if (inputFormat == INPUT_FORMAT.hapmap)
+                {
+                    if (entry.getValue().size() > 1) {
+                        calls = consensusCalls(a, entry.getValue(), makeHetCalls, majorityRule);
+                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
+                    } else {
+                        int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));
+                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
+                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
+                    }
                     for (int s = 0; s < a.getSiteCount(); s++) {
-                        byte cb = theMSA.getBase(newTaxon, s);
-                        if (cb != Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                            known++;
+                        theMSA.setBase(newTaxon, s, calls[s]);
+                    }
+                    if (entry.getValue().size() > 1) {
+                        int known = 0, hets = 0;
+                        for (int s = 0; s < a.getSiteCount(); s++) {
+                            byte cb = theMSA.getBase(newTaxon, s);
+                            if (cb != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                                known++;
+                            }
+                            if (AlignmentUtils.isHeterozygous(cb)) {
+                                hets++;
+                            }
                         }
-                        if (AlignmentUtils.isHeterozygous(cb)) {
-                            hets++;
+                        double pctK = (double) known / (double) a.getSiteCount();
+                        double pctH = (double) hets / (double) a.getSiteCount();
+                        System.out.printf("%s %d %d %.3g %d %.3g %n", entry.getKey(), entry.getValue().size(), known, pctK, hets, pctH);
+                    }
+                }
+                else if (inputFormat == INPUT_FORMAT.vcf){
+                    if (entry.getValue().size() > 1){
+                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
+                        List<String> taxa = entry.getValue();
+                        
+                        //the return result is a two day array result[x][y]
+                        //y: site index
+                        //x: x=0: genotype calling; x=1 to max: allele depth
+                        byte[][] genotypeAndDepth = consensusCallsForVCF(a, taxa);
+                        for (int s = 0; s < a.getSiteCount(); s++) {
+                            theMSA.setBase(newTaxon, s, genotypeAndDepth[0][s]);
+                            byte[] mydepth = new byte[theMSA.getAlleles(s).length];
+                            for (int al=0; al<mydepth.length; al++)
+                            {
+                                mydepth[al] = genotypeAndDepth[al+1][s];
+                            }
+                            theMSA.setDepthForAlleles(newTaxon, s, mydepth);
+                        }
+
+                    }
+                    else {
+                        int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));
+                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
+                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
+                        for (int s = 0; s < a.getSiteCount(); s++) {
+                            theMSA.setBase(newTaxon, s, calls[s]);
+                            theMSA.setDepthForAlleles(newTaxon, s, a.getDepthForAlleles(oldTaxon, s));
                         }
                     }
-                    double pctK = (double) known / (double) a.getSiteCount();
-                    double pctH = (double) hets / (double) a.getSiteCount();
-                    System.out.printf("%s %d %d %.3g %d %.3g %n", entry.getKey(), entry.getValue().size(), known, pctK, hets, pctH);
+                        
                 }
             }
-            ExportUtils.writeToHapmap(theMSA, false, outfile, '\t', this);
+            if (inputFormat == INPUT_FORMAT.hapmap)
+            {
+                ExportUtils.writeToHapmap(theMSA, false, outfile, '\t', this);
+            }
+            else if (inputFormat == INPUT_FORMAT.vcf)
+            {
+                ExportUtils.writeToVCF(theMSA, outfile, '\t');
+            }
         }
 
         return null;
@@ -176,17 +252,59 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         return calls;
     }
 
+    public static byte[][] consensusCallsForVCF  (Alignment a, List<String> taxa)
+    {
+        //the return result is a two day array result[x][y]
+        //y: site index
+        //x: x=0: genotype calling; x=1 to max: allele depth
+        byte[][] result = new byte[myMaxNumAlleles+1][taxa.size()];
+        for (byte[] row: result)
+        {
+            Arrays.fill(row, (byte)0);
+        }
+        Arrays.fill(result[0], (byte)(-1));
+        
+        int[] taxaIndex = new int[taxa.size()];
+        for (int t = 0; t < taxa.size(); t++) {
+            taxaIndex[t] = a.getIdGroup().whichIdNumber(taxa.get(t));
+        }
+        for (int s = 0; s < a.getSiteCount(); s++) {
+            byte[] alleles = a.getAlleles(s);
+            
+            //make an array to store combined allele depth, as the VCFUtil.resolveVCFGeno function must take in a 2D array [allele][taxa]
+            //a 2D array allelesInTaxa is declared, although there will be only one taxa after merging
+            int[][] allelesInTaxa = new int[alleles.length][1];
+            for (int[] row:allelesInTaxa){
+                Arrays.fill(row, 0);
+            }
+            for (int t = 0; t < taxaIndex.length; t++) {
+                byte[] myAlleledepth = a.getDepthForAlleles(t, s);
+                for (int al=0; al<myAlleledepth.length; al++)
+                {
+                    allelesInTaxa[al][0] += (int)myAlleledepth[al];
+                }
+            }
+            result[0][s] = VCFUtil.resolveVCFGeno(alleles, allelesInTaxa, 0);
+            
+            for (int al=0; al<alleles.length; al++){
+                result[al+1][s] = (byte)(allelesInTaxa[al][0]>127?127:allelesInTaxa[al][0]);
+            }
+        }
+        return result;
+    }
     private void printUsage() {
         myLogger.info(
                 "Input format:\n"
                 + "-hmp      Input HapMap file; use a plus sign (+) as a wild card character to "
                 + "            specify multiple chromosome numbers.\n"
+                + "-vcf      Input VCF file. Use a plus sign (+) as a wild card character to specify multiple chromosome numbers. Options -hmp and -vcf are mutual exclusive.\n"
                 + "-o        Output HapMap file; use a plus sign (+) as a wild card character to "
                 + "            specify multiple chromosome numbers.\n"
                 + "-xHet     Exclude heterozygotes calls (default: " + makeHetCalls + ")"
                 + "-hetFreq  Cutoff frequency between het vs. homozygote calls (default: " + majorityRule + ")"
                 + "-sC       Start chromosome (default 1).\n"
-                + "-eC       End chromosome (default 10).\n");
+                + "-eC       End chromosome (default 10).\n"
+                + "-maxAlleleVCF   Maximum number of alleles allowed in vcf file.\n");
     }
 
     @Override
@@ -199,11 +317,13 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         if (myArgsEngine == null) {
             myArgsEngine = new ArgsEngine();
             myArgsEngine.add("-hmp", "-hmpFile", true);
+            myArgsEngine.add("-vcf", "-vcfFile", true);
             myArgsEngine.add("-o", "--outFile", true);
             myArgsEngine.add("-xHets", "--excludeHets", false);
             myArgsEngine.add("-hetFreq", "--heterozygoteFreqCutoff", true);
             myArgsEngine.add("-sC", "--startChrom", true);
             myArgsEngine.add("-eC", "--endChrom", true);
+            myArgsEngine.add("-maxAlleleVCF", "--maxAlleleVCF", true);
         }
 
         myArgsEngine.parse(args);
@@ -221,10 +341,18 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         }
 
         if (myArgsEngine.getBoolean("-hmp")) {
+            if (myArgsEngine.getBoolean("-vcf")){
+                throw new IllegalArgumentException("-hmp and -vcf options are mutual exclusive!\n");
+            }
             suppliedInputFileName = myArgsEngine.getString("-hmp");
-        } else {
+            inputFormat = INPUT_FORMAT.hapmap;
+        } else if (myArgsEngine.getBoolean("-vcf")) {
+            suppliedInputFileName = myArgsEngine.getString("-vcf");
+            inputFormat = INPUT_FORMAT.vcf;
+        } 
+        else {
             printUsage();
-            throw new IllegalArgumentException("Please specify a HapMap file to filter.\n");
+            throw new IllegalArgumentException("Please specify a HapMap file or VCF to merge taxa.\n");
         }
         if (myArgsEngine.getBoolean("-o")) {
             suppliedOutputFileName = myArgsEngine.getString("-o");
@@ -237,6 +365,14 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         }
         if (myArgsEngine.getBoolean("-hetFreq")) {
             majorityRule = Double.parseDouble(myArgsEngine.getString("-hetFreq"));
+        }
+        
+        if (myArgsEngine.getBoolean("-maxAlleleVCF")) {
+            
+            if (! myArgsEngine.getBoolean("-vcf")){
+                throw new IllegalArgumentException("-maxAlleleVCF option only works with -vcf input.\n");
+            } 
+            myMaxNumAlleles = Integer.parseInt(myArgsEngine.getString("-maxAlleleVCF"));
         }
     }
 

@@ -380,10 +380,12 @@ public interface Alignment extends Serializable {
     public int getPositionInLocus(int site);
 
     /**
-     * Return site of given physical position in locus.
+     * Return site of given physical position in locus. If the physical position
+     * doesn't exist, (-(insertion point) - 1) is returned. If locus is not
+     * found, an exception is thrown.
      *
      * @param physicalPosition physical position
-     * @param locus locus
+     * @param locus locus. if null, the first locus is used.
      *
      * @return index
      */

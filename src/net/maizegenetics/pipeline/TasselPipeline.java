@@ -320,6 +320,9 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-geneticMap")) {
                     String geneticMapFile = args[index++].trim();
                     loadFile(geneticMapFile, FileLoadPlugin.TasselFileType.GeneticMap);
+                } else if (current.equalsIgnoreCase("-vcf")) {
+                    String vcfFile = args[index++].trim();
+                    loadFile(vcfFile, FileLoadPlugin.TasselFileType.VCF);
                 } else if (current.equalsIgnoreCase("-readSerialAlignment")) {
                     String file = args[index++].trim();
                     loadFile(file, FileLoadPlugin.TasselFileType.Serial);
@@ -376,6 +379,12 @@ public class TasselPipeline implements PluginListener {
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-separate")) {
                     SeparatePlugin plugin = new SeparatePlugin(myMainFrame, false);
+                    String temp = args[index].trim();
+                    if (!temp.startsWith("-")) {
+                        String[] chromosomes = temp.split(",");
+                        plugin.setChromosomesToSeparate(chromosomes);
+                        index++;
+                    }
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-synonymizer")) {
                     SynonymizerPlugin plugin = new SynonymizerPlugin(myMainFrame, false);

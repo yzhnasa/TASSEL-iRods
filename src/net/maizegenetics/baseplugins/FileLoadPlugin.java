@@ -70,6 +70,7 @@ public class FileLoadPlugin extends AbstractPlugin {
     public static final String FILE_EXT_FLAPJACK_GENO = ".flpjk.geno";
     public static final String FILE_EXT_SERIAL_GZ = ".serial.gz";
     public static final String FILE_EXT_HDF5 = ".hmp.h5";
+    public static final String FILE_EXT_VCF = ".vcf";
 
     /**
      * Creates a new instance of FileLoadPlugin
@@ -161,6 +162,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.HDF5);
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = processDatum(myOpenFiles[i], TasselFileType.HDF5);
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_VCF) || myOpenFiles[i].endsWith(FILE_EXT_VCF + ".gz")) {
+                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.VCF);
+                            alreadyLoaded.add(myOpenFiles[i]);
+                            tds = processDatum(myOpenFiles[i], TasselFileType.VCF);
                         } else {
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = guessAtUnknowns(myOpenFiles[i]);
@@ -327,6 +332,14 @@ public class FileLoadPlugin extends AbstractPlugin {
                     result = BitAlignmentHDF5.getInstance(inFile);
                     break;
                 }
+                case VCF: {
+                    suffix = FILE_EXT_VCF;
+                    if (inFile.endsWith(".gz")) {
+                        suffix = FILE_EXT_VCF + ".gz";
+                    }
+                    result = ImportUtils.readFromVCF(inFile, this);
+                    break;
+                }
                 case Sequence: {
                     result = ReadSequenceAlignmentUtils.readBasicAlignments(inFile, 40);
                     break;
@@ -355,7 +368,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                     result = ReadPhenotypeUtils.readGenericFile(inFile);
                     break;
                 }
-
                 case GeneticMap: {
                     result = ReadPolymorphismUtils.readGeneticMapFile(inFile);
                     break;
@@ -508,6 +520,7 @@ class FileLoadPluginDialog extends JDialog {
     ButtonGroup conversionButtonGroup = new ButtonGroup();
     JRadioButton hapMapRadioButton = new JRadioButton("Load Hapmap");
     JRadioButton hdf5RadioButton = new JRadioButton("Load HDF5");
+    JRadioButton vcfRadioButton = new JRadioButton("Load VCF");
     JRadioButton plinkRadioButton = new JRadioButton("Load Plink");
     JRadioButton sequenceAlignRadioButton = new JRadioButton("Load sequence alignment (phylip, NEXUS)");
     JRadioButton fastaRadioButton = new JRadioButton("Load FASTA file");
@@ -554,6 +567,7 @@ class FileLoadPluginDialog extends JDialog {
         conversionButtonGroup.add(flapjackRadioButton);
         conversionButtonGroup.add(hapMapRadioButton);
         conversionButtonGroup.add(hdf5RadioButton);
+        conversionButtonGroup.add(vcfRadioButton);
         conversionButtonGroup.add(plinkRadioButton);
         conversionButtonGroup.add(sequenceAlignRadioButton);
         conversionButtonGroup.add(fastaRadioButton);
@@ -618,6 +632,7 @@ class FileLoadPluginDialog extends JDialog {
 
         result.add(hapMapRadioButton);
         result.add(hdf5RadioButton);
+        result.add(vcfRadioButton);
         result.add(plinkRadioButton);
         result.add(flapjackRadioButton);
         result.add(sequenceAlignRadioButton);
@@ -671,6 +686,9 @@ class FileLoadPluginDialog extends JDialog {
         }
         if (hdf5RadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.HDF5;
+        }
+        if (vcfRadioButton.isSelected()) {
+            return FileLoadPlugin.TasselFileType.VCF;
         }
         if (plinkRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Plink;

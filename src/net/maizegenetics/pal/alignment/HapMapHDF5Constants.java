@@ -24,14 +24,23 @@ public final class HapMapHDF5Constants {
     public static final String MAF_DESC = SITE_DESC+"/MAF";
     public static final String SITECOV_DESC = SITE_DESC+"/SiteCoverage";
     public static final String HET_DESC = SITE_DESC+"/HET";
+    
     public static final String LD_DESC = SITE_DESC+"/LD";
     public static final String LDR2_DESC = LD_DESC+"/R2";
     public static final String LDP_DESC = LD_DESC+"/P";
     public static final String LDPropLD_DESC = LD_DESC+"/PropLD";
     public static final String LDMinDist_DESC = LD_DESC+"/MinDist";
+    public static final String BPLDMean34 = LD_DESC+"/BPLDMean34R2";
+    public static final String BPLDMeanMax = LD_DESC+"/BPLDMeanMaxR2";
+    public static final String BPmaxMaxLD = LD_DESC+"/BPmaxMaxLDR2";
+    public static final String BPminMaxLD = LD_DESC+"/BPminMaxLDR2";
+    public static final String BPPopCnt = LD_DESC+"/BPPopCnt";
+    
+    
     public static final String ERROR_DESC = SITE_DESC+"/ERROR";
     public static final String BPECERROR_DESC = ERROR_DESC+"/BPECERROR";
     public static final String BPECAVGR2_DESC = ERROR_DESC+"/BPECR2";
+    
     public static final String IBSERRORRATE_DESC = ERROR_DESC+"/IBSErrorRate";
     public static final String IBSMINORERRORRATE_DESC = ERROR_DESC+"/IBSMinorErrorRate";
     public static final String IBSERROR_DESC = ERROR_DESC+"/IBSError";

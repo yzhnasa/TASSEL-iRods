@@ -10,44 +10,17 @@ import java.io.Serializable;
 
 import java.util.HashMap;
 
-
 /**
- * Default implementation of IdGroup interface.
- * Memory-inefficient to allow fast whichIdNumber calls.
- *
- * @version $Id: SimpleIdGroup.java,v 1.6 2009/07/07 16:19:37 tcasstevens Exp $
- *
- * @author Alexei Drummond
+ * SimpleIdGroup
  */
 public class SimpleIdGroup implements IdGroup, Serializable {
 
     private Identifier[] ids;
-    private HashMap myIndices;
-
+    private HashMap<String, Integer> myIndices;
     //
     // Serialization code
     //
     private static final long serialVersionUID = -4266575329980153075L;
-
-    //serialver -classpath ./classes net.maizegenetics.pal.ids.SimpleIdGroup
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-        out.writeByte(1); //Version number
-        out.writeObject(ids);
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
-        byte version = in.readByte();
-        switch (version) {
-            default: {
-                ids = (Identifier[]) in.readObject();
-                myIndices = new HashMap(ids.length);
-                for (int i = 0; i < ids.length; i++) {
-                    myIndices.put(ids[i].getFullName(), new Integer(i));
-                }
-                break;
-            }
-        }
-    }
 
     /**
      * Constructor taking the size of the group.
@@ -68,17 +41,18 @@ public class SimpleIdGroup implements IdGroup, Serializable {
 
     /**
      * Constructor taking the size of the group.
+     *
      * @param size - the number of ids
-     * @param createIDs - if true creates default Identifiers.
-     * Otherwise leaves blank (for user to fill in)
+     * @param createIDs - if true creates default Identifiers. Otherwise leaves
+     * blank (for user to fill in)
      */
     public SimpleIdGroup(int size, boolean createIDs) {
 
         ids = new Identifier[size];
-        myIndices = new HashMap(size);
+        myIndices = new HashMap<String, Integer>(size);
         if (createIDs) {
             for (int i = 0; i < size; i++) {
-                setIdentifier(i, new Identifier("" + i));
+                setIdentifier(i, new Identifier("Taxa" + i));
             }
         }
     }
@@ -120,7 +94,9 @@ public class SimpleIdGroup implements IdGroup, Serializable {
 
     /**
      * Impersonating Constructor.
-     * @param toIgnore - will ignore the identifier at the index specified by toIgnore
+     *
+     * @param toIgnore - will ignore the identifier at the index specified by
+     * toIgnore
      */
     public SimpleIdGroup(IdGroup a, int toIgnore) {
         this((toIgnore < 0 || toIgnore > a.getIdCount() ? a.getIdCount() : a.getIdCount() - 1));
@@ -135,6 +111,7 @@ public class SimpleIdGroup implements IdGroup, Serializable {
     /**
      * Returns the number of identifiers in this group
      */
+    @Override
     public int getIdCount() {
         return ids.length;
     }
@@ -142,6 +119,7 @@ public class SimpleIdGroup implements IdGroup, Serializable {
     /**
      * Returns the ith identifier.
      */
+    @Override
     public Identifier getIdentifier(int i) {
         return ids[i];
     }
@@ -156,7 +134,8 @@ public class SimpleIdGroup implements IdGroup, Serializable {
     /**
      * Sets the ith identifier.
      */
-    public void setIdentifier(int i, Identifier id) {
+    @Override
+    public final void setIdentifier(int i, Identifier id) {
         ids[i] = id;
         myIndices.put(id.getFullName(), new Integer(i));
     }
@@ -164,9 +143,10 @@ public class SimpleIdGroup implements IdGroup, Serializable {
     /**
      * Return index of identifier with name or -1 if not found
      */
+    @Override
     public int whichIdNumber(String name) {
 
-        Integer index = (Integer) myIndices.get(name);
+        Integer index = myIndices.get(name);
         if (index != null) {
             return index.intValue();
         }
@@ -182,22 +162,23 @@ public class SimpleIdGroup implements IdGroup, Serializable {
     }
 
     /**
-     * Returns a string representation of this IdGroup in the form of
-     * a bracketed list.
+     * Returns a string representation of this IdGroup in the form of a
+     * bracketed list.
      */
+    @Override
     public String toString() {
 
         StringBuffer sb = new StringBuffer();
         sb.append("[ ");
         for (int i = 0; i < getIdCount(); i++) {
-            sb.append(getIdentifier(i) + " ");
+            sb.append(getIdentifier(i)).append(" ");
         }
         sb.append("]");
         return new String(sb);
     }
 
+    @Override
     public int whichIdNumber(Identifier id) {
         return whichIdNumber(id.getFullName());
     }
 }
-

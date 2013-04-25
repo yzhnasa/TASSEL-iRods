@@ -88,7 +88,7 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
                 }
             } else {
                 for (int t = 0; t < numTaxa; t++) {
-                    theData[t][i] = Double.valueOf(IBSDistanceMatrix.computeHetBitDistances(alignment, interestedTaxa, t));
+                    theData[t][i] = Double.valueOf(IBSDistanceMatrix.computeHetBitDistances(alignment, interestedTaxa, t)[0]);
                 }
             }
         }

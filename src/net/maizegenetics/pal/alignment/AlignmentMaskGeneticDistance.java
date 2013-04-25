@@ -67,7 +67,7 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
             myTBitAlignment = AlignmentUtils.optimizeForTaxa(myAlignment);
         }
 
-        result = (byte) (IBSDistanceMatrix.computeHetBitDistances(myTBitAlignment, taxon, myTaxonReference) * 255.0);
+        result = (byte) (IBSDistanceMatrix.computeHetBitDistances(myTBitAlignment, taxon, myTaxonReference)[0] * 255.0);
         myCache.put(taxon, result);
         return result;
 
