@@ -902,6 +902,10 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
     }
 
     public int indexOfNthSetBit(int n) {
+        
+        if (n < 1) {
+            return -1;
+        }
 
         int result = 0;
         int count = 0;
