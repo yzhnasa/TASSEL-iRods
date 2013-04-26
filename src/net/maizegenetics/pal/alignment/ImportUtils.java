@@ -159,7 +159,7 @@ public class ImportUtils {
                 int oriNumAlleles = numAlleles;
                 String alleleString = ref + alt;
                 if (numAlleles > maxKeptAlleles) {
-                    System.out.println("ImportUtils: readFromVCF: number of Alleles at position " + currPos + " is larger than maximum number of alleles! Only top " + maxKeptAlleles + " will be kept.");
+                    System.out.println("read VCF position " + currPos + ": extra allele(s) removed.");
                     numAlleles = maxKeptAlleles;
                     alleleString = alleleString.substring(0, numAlleles);
                    //throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxKeptAlleles + " alleles allowed, in line " + (numHeader + site + 1));

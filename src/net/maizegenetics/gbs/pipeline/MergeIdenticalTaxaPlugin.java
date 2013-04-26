@@ -102,13 +102,14 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             for (List<String> l : sortedIds2.values()) {
                 if (l.size() > 1) {
                     newGroup.setIdentifier(index, new Identifier(l.get(0).split(":")[0] + ":MERGE"));
-                    System.out.println(l.size() + ": " + l);
+                    System.out.println("To be merged: " + l.size() + ": " + l);
                 } else {
                     newGroup.setIdentifier(index, new Identifier(l.get(0)));
                 }
-                System.out.println(newGroup.getIdentifier(index).getFullName());
+                //System.out.println(newGroup.getIdentifier(index).getFullName());
                 index++;
             }
+            System.out.println("Total taxa:" + idg.getIdCount());
             System.out.println("Unique taxa:" + uniqueTaxa);
             //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(newGroup, a.getSiteCount(), a.getLoci());
             MutableNucleotideAlignment theMSA = null;
@@ -116,7 +117,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
                 theMSA = MutableNucleotideAlignment.getInstance(newGroup, a.getSiteCount());
             }
             else if (inputFormat == INPUT_FORMAT.vcf){
-                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(), myMaxNumAlleles);
+                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(),newGroup.getIdCount(), a.getSiteCount(), myMaxNumAlleles);
             }
             for (int s = 0; s < a.getSiteCount(); s++) {
                 theMSA.setLocusOfSite(s, a.getLocus(s));
@@ -183,11 +184,12 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 
                     }
                     else {
-                        int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));
-                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
+                        int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));                    
+                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount());
                         newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
                         for (int s = 0; s < a.getSiteCount(); s++) {
                             theMSA.setBase(newTaxon, s, calls[s]);
+
                             theMSA.setDepthForAlleles(newTaxon, s, a.getDepthForAlleles(oldTaxon, s));
                         }
                     }
@@ -257,7 +259,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         //the return result is a two day array result[x][y]
         //y: site index
         //x: x=0: genotype calling; x=1 to max: allele depth
-        byte[][] result = new byte[MaxNumAlleles+1][taxa.size()];
+        byte[][] result = new byte[MaxNumAlleles+1][a.getSiteCount()];
         for (byte[] row: result)
         {
             Arrays.fill(row, (byte)0);
@@ -271,23 +273,21 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         for (int s = 0; s < a.getSiteCount(); s++) {
             byte[] alleles = a.getAlleles(s);
             
-            //make an array to store combined allele depth, as the VCFUtil.resolveVCFGeno function must take in a 2D array [allele][taxa]
-            //a 2D array allelesInTaxa is declared, although there will be only one taxa after merging
-            int[][] allelesInTaxa = new int[alleles.length][1];
-            for (int[] row:allelesInTaxa){
-                Arrays.fill(row, 0);
-            }
+
+            int[] alleleDepth = new int[alleles.length];
+            Arrays.fill(alleleDepth, 0);
+
             for (int t = 0; t < taxaIndex.length; t++) {
                 byte[] myAlleledepth = a.getDepthForAlleles(t, s);
                 for (int al=0; al<myAlleledepth.length; al++)
                 {
-                    allelesInTaxa[al][0] += (int)myAlleledepth[al];
+                    alleleDepth[al] += (int)myAlleledepth[al];
                 }
             }
-            result[0][s] = VCFUtil.resolveVCFGeno(alleles, allelesInTaxa, 0);
+            result[0][s] = VCFUtil.resolveVCFGeno(alleles, alleleDepth);
             
             for (int al=0; al<alleles.length; al++){
-                result[al+1][s] = (byte)(allelesInTaxa[al][0]>127?127:allelesInTaxa[al][0]);
+                result[al+1][s] = (byte)(alleleDepth[al]>127?127:alleleDepth[al]);
             }
         }
         return result;
