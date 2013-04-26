@@ -1078,4 +1078,14 @@ public class FilterAlignment extends AbstractAlignment {
             throw new UnsupportedOperationException("FilterAlignment: optimizeForSites: Taxa have been filtered.  Can't optimize for sites.  Must create a new alignment.");
         }
     }
+    
+    @Override
+    public byte[] getDepthForAlleles(int taxon, int site) {
+        int taxaIndex = translateTaxon(taxon);
+        if (taxaIndex == -1) {
+            return null;
+        } else {
+            return myBaseAlignment.getDepthForAlleles(taxaIndex, translateSite(site));
+        }
+    }
 }
