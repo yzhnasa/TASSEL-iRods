@@ -214,13 +214,11 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public byte[] getBaseRange(int taxon, int startSite, int endSite) {
-
         byte[] result = new byte[endSite - startSite];
         for (int i = startSite; i < endSite; i++) {
-            result[i] = getBase(taxon, i);
+            result[i-startSite] = getBase(taxon, i);
         }
         return result;
-
     }
 
     @Override
