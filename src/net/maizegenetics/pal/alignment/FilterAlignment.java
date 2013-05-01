@@ -1093,7 +1093,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     @Override
     public byte[] getAllelesByScope(int site) {
-        return myBaseAlignment.getAlleles(site);
+        return myBaseAlignment.getAllelesByScope(translateSite(site));
     }
 
     @Override
@@ -1106,7 +1106,7 @@ public class FilterAlignment extends AbstractAlignment {
         int numTaxa = getSequenceCount();
         BitSet result = new OpenBitSet(numTaxa);
         BitSet baseBitSet = myBaseAlignment.getAllelePresenceForAllTaxa(site, alleleNumber);
-        for (int i=0; i<numTaxa; i++) {
+        for (int i = 0; i < numTaxa; i++) {
             if (baseBitSet.fastGet(translateTaxon(i))) {
                 result.fastSet(i);
             }
