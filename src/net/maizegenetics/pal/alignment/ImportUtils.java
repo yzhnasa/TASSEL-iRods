@@ -335,7 +335,7 @@ public class ImportUtils {
                     result.setLocusOfSite(i, newLocus);
                 }
             }
-
+            result.clean();
             return result;
         } catch (Exception e) {
             e.printStackTrace();
