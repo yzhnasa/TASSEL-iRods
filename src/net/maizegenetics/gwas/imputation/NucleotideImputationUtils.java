@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.Locus;
@@ -393,9 +394,27 @@ public class NucleotideImputationUtils {
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
 		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
-		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
+		myLogger.info("filtered on snps");
+		AlignmentUtils.optimizeForTaxa(target);
+		myLogger.info("optimized for taxa");
 		
+		//remove taxa with low coverage
+		boolean[] goodCoverage = new boolean[ntaxa];
+		int minGametes = 200;
+		for (int t = 0; t < ntaxa; t++) {
+			if (target.getTotalGametesNotMissingForTaxon(t) > minGametes) goodCoverage[t] = true;
+			else goodCoverage[t] = false;
+		}
+		
+		myLogger.info("identified low coverage taxa");
+		IdGroup targetids = IdGroupUtils.idGroupSubset(target.getIdGroup(), goodCoverage);
+		Alignment target2 = FilterAlignment.getInstance(target, targetids);
+		
+		myLogger.info("Filtered on taxa.");
+		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target2);
+		myLogger.info("created mutable alignment.");
 		nsnps = snpIndex.length;
+		ntaxa = mna.getSequenceCount();
 		for (int s = 0; s < nsnps; s++) {
 			byte Aallele = popdata.alleleA[snpIndex[s]];
 			byte Callele = popdata.alleleC[snpIndex[s]];
@@ -416,7 +435,9 @@ public class NucleotideImputationUtils {
 				}
 			}
 		}
+		myLogger.info("called alleles");
 		mna.clean();
+		myLogger.info("cleaned mna");
 		popdata.imputed = BitAlignment.getInstance(mna, true); 
 	}
 	
@@ -703,7 +724,12 @@ public class NucleotideImputationUtils {
 				double pquarter = binomialProbability(Mj + Mn, Mn, 0.25);
 				double phalf = binomialProbability(Mj + Mn, Mn, 0.5);
 				if (ratio == 0.25 || ratio == 0.75) {
-					if (pquarter / (pmono + phalf) > 2) polybits.fastSet(s);
+//					if (pquarter / (pmono + phalf) > 2) polybits.fastSet(s);
+//					double poneseven = binomialProbability(Mj + Mn, Mn, .125);
+//					double pthreefive = binomialProbability(Mj + Mn, Mn, .375);
+//					if (pquarter > poneseven && pquarter > pthreefive) polybits.fastSet(s);
+					if (pquarter > phalf && pquarter > pmono) polybits.fastSet(s);
+					
 				} else {
 					if (phalf / (pmono + pquarter) > 2) polybits.fastSet(s);
 				}
@@ -1147,6 +1173,10 @@ public class NucleotideImputationUtils {
 	}
 	
 	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName) {
+		return imputeUsingViterbiFiveState(a, probHeterozygous, familyName, false);
+	}
+	
+	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName, boolean useVariableRecombitionRates) {
 		a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
 		//obs are in {A, C, M}, where M is heterozygote A/C
@@ -1169,7 +1199,13 @@ public class NucleotideImputationUtils {
 				{.0005,.0001,.0003,.0001,.999}
 		};
 		
-		TransitionProbability tp = new TransitionProbability();
+		TransitionProbability tp;
+		if (useVariableRecombitionRates) {
+			tp = new TransitionProbabilityWithVariableRecombination(a.getLocusName(0));
+		} else {
+			tp = new TransitionProbability();
+		}
+		
 		tp.setTransitionProbability(transition);
 		int chrlength = a.getPositionInLocus(nsites - 1) - a.getPositionInLocus(0);
 		tp.setAverageSegmentLength( chrlength / nsites );
