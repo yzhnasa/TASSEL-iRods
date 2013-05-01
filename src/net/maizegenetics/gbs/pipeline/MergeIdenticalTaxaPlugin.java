@@ -278,7 +278,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             Arrays.fill(alleleDepth, 0);
 
             for (int t = 0; t < taxaIndex.length; t++) {
-                byte[] myAlleledepth = a.getDepthForAlleles(t, s);
+                byte[] myAlleledepth = a.getDepthForAlleles(taxaIndex[t], s);
                 for (int al=0; al<myAlleledepth.length; al++)
                 {
                     alleleDepth[al] += (int)myAlleledepth[al];
