@@ -253,7 +253,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                         if (inputFormat==INPUT_FORMAT.vcf)
                         {
                             int lastSiteIndex = msa.getSiteCount() -1;
-                            msa.setCommonAlleles(lastSiteIndex, a.getAlleles(samePos[0]));
+                            msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(samePos[0]));
                             msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
                             for (int tt=0; tt<a.getSequenceCount(); tt++)
                             {
@@ -288,7 +288,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 if (inputFormat==INPUT_FORMAT.vcf)
                 {
                     int lastSiteIndex = msa.getSiteCount() -1;
-                    msa.setCommonAlleles(lastSiteIndex, a.getAlleles(samePos[0]));
+                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(samePos[0]));
                     msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
                     for (int tt=0; tt<a.getSequenceCount(); tt++)
                     {
@@ -419,7 +419,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         for (int s:samePos)
         {
             //get alleles for each site
-            byte[] alleles = a.getAlleles(s);
+            byte[] alleles = a.getAllelesByScope(s);
             
             //initiate new alleles in the allele list into the hashmap
             for (byte allele:alleles)

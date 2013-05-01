@@ -83,8 +83,25 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
         }
     }
     
+//    @Override
+//    public byte[] getAlleles(int site) {
+//        ArrayList<Byte> outArray = new ArrayList<Byte>();
+//        for (int i = 0; i < myCommonAlleles.length; i++) {
+//            if (myCommonAlleles[i][site] != (byte) -1) {
+//                outArray.add(myCommonAlleles[i][site]);
+//            } else {
+//                break;
+//            }
+//        }
+//        byte[] out = new byte[outArray.size()];
+//        for (int i = 0; i < outArray.size(); i++) {
+//            out[i] = outArray.get(i).byteValue();
+//        }
+//        return out;
+//    }
+    
     @Override
-    public byte[] getAlleles(int site) {
+    public byte[] getAllelesByScope(int site) {
         ArrayList<Byte> outArray = new ArrayList<Byte>();
         for (int i = 0; i < myCommonAlleles.length; i++) {
             if (myCommonAlleles[i][site] != (byte) -1) {
@@ -99,7 +116,12 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
         }
         return out;
     }
-    
+
+    @Override
+    public ALLELE_SCOPE_TYPE getAllelesScopeType() {
+        return ALLELE_SCOPE_TYPE.Depth;
+    }
+
     @Override
     public byte[] getDepthForAlleles(int taxon, int site) {
         ArrayList<Byte> outArray = new ArrayList<Byte>();

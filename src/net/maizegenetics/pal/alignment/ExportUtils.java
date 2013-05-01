@@ -486,7 +486,7 @@ public class ExportUtils {
                 int[] alleleRedirect = new int[nAlleles]; // holds the indices of alleleValues in ref, alt1, [alt2] order (max 3 alleles)
                 byte refGeno = alignment.getReferenceAllele(site);
                 byte refAllele = (byte) (refGeno & 0xF);  // converts from diploid to haploid allele (2nd allele)
-                byte[] alleleValues = alignment.getAlleles(site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
+                byte[] alleleValues = alignment.getAllelesByScope(site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 String refAlleleStr;
                 int refUnknownOffset = 0;
                 if (refGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {  // reference allele unknown - report the alleles in maj, min1, [min2] order
