@@ -11,7 +11,9 @@ import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
+import net.maizegenetics.util.UnmodifiableBitSet;
 
 import org.apache.log4j.Logger;
 
@@ -537,7 +539,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     @Override
     public int getLocusSiteCount(Locus locus) {
-        
+
         if ((!myIsSiteFilter) && (!myIsSiteFilterByRange)) {
             return myBaseAlignment.getLocusSiteCount(locus);
         }
@@ -1077,5 +1079,38 @@ public class FilterAlignment extends AbstractAlignment {
         } else {
             throw new UnsupportedOperationException("FilterAlignment: optimizeForSites: Taxa have been filtered.  Can't optimize for sites.  Must create a new alignment.");
         }
+    }
+
+    @Override
+    public byte[] getDepthForAlleles(int taxon, int site) {
+        int taxaIndex = translateTaxon(taxon);
+        if (taxaIndex == -1) {
+            return null;
+        } else {
+            return myBaseAlignment.getDepthForAlleles(taxaIndex, translateSite(site));
+        }
+    }
+
+    @Override
+    public byte[] getAllelesByScope(int site) {
+        return myBaseAlignment.getAllelesByScope(translateSite(site));
+    }
+
+    @Override
+    public ALLELE_SCOPE_TYPE getAllelesScopeType() {
+        return ALLELE_SCOPE_TYPE.Global;
+    }
+
+    @Override
+    public BitSet getAllelePresenceForAllTaxaByScope(int site, int alleleNumber) {
+        int numTaxa = getSequenceCount();
+        BitSet result = new OpenBitSet(numTaxa);
+        BitSet baseBitSet = myBaseAlignment.getAllelePresenceForAllTaxa(site, alleleNumber);
+        for (int i = 0; i < numTaxa; i++) {
+            if (baseBitSet.fastGet(translateTaxon(i))) {
+                result.fastSet(i);
+            }
+        }
+        return UnmodifiableBitSet.getInstance(result);
     }
 }

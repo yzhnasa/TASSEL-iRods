@@ -214,13 +214,11 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public byte[] getBaseRange(int taxon, int startSite, int endSite) {
-
         byte[] result = new byte[endSite - startSite];
         for (int i = startSite; i < endSite; i++) {
-            result[i] = getBase(taxon, i);
+            result[i - startSite] = getBase(taxon, i);
         }
         return result;
-
     }
 
     @Override
@@ -1062,5 +1060,20 @@ abstract public class AbstractAlignment implements Alignment {
     @Override
     public byte[] getDepthForAlleles(int taxon, int site) {
         return new byte[]{1, 1};
+    }
+
+    @Override
+    public byte[] getAllelesByScope(int site) {
+        return getAlleles(site);
+    }
+
+    @Override
+    public ALLELE_SCOPE_TYPE getAllelesScopeType() {
+        return ALLELE_SCOPE_TYPE.Frequency;
+    }
+
+    @Override
+    public BitSet getAllelePresenceForAllTaxaByScope(int site, int alleleNumber) {
+        return getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 }

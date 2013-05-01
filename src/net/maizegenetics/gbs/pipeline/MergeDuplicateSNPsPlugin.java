@@ -67,7 +67,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private int startChr = 1, endChr = 10;
     private static enum INPUT_FORMAT {hapmap, vcf}; //input file format, acceptable values are "hapmap" "vcf" 
     private INPUT_FORMAT inputFormat = INPUT_FORMAT.hapmap;
-    private static int myMaxNumAlleles =3;
+    private int myMaxNumAlleles;
 
     public MergeDuplicateSNPsPlugin() {
         super(null, false);
@@ -179,6 +179,10 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             } 
             myMaxNumAlleles = Integer.parseInt(myArgsEngine.getString("-maxAlleleVCF"));
         }
+        else
+        {
+            myMaxNumAlleles = VCFUtil.VCF_DEFAULT_MAX_NUM_ALLELES;
+        }
                 
                 
         snpLogging = new SNPLogging(snpLogFileName, this.getClass());
@@ -249,7 +253,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                         if (inputFormat==INPUT_FORMAT.vcf)
                         {
                             int lastSiteIndex = msa.getSiteCount() -1;
-                            msa.setCommonAlleles(lastSiteIndex, a.getAlleles(samePos[0]));
+                            msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(samePos[0]));
                             msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
                             for (int tt=0; tt<a.getSequenceCount(); tt++)
                             {
@@ -284,7 +288,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 if (inputFormat==INPUT_FORMAT.vcf)
                 {
                     int lastSiteIndex = msa.getSiteCount() -1;
-                    msa.setCommonAlleles(lastSiteIndex, a.getAlleles(samePos[0]));
+                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(samePos[0]));
                     msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
                     for (int tt=0; tt<a.getSequenceCount(); tt++)
                     {
@@ -415,7 +419,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         for (int s:samePos)
         {
             //get alleles for each site
-            byte[] alleles = a.getAlleles(s);
+            byte[] alleles = a.getAllelesByScope(s);
             
             //initiate new alleles in the allele list into the hashmap
             for (byte allele:alleles)
