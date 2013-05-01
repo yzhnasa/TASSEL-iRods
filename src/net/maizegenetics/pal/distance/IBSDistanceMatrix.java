@@ -16,7 +16,9 @@ package net.maizegenetics.pal.distance;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
+import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 
 /**
@@ -105,21 +107,46 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     }
 
     public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
-        if (taxon2 == taxon1 && !isTrueIBS) {
-            return new double[] {0.0,0.0};
-        } else {
-            theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
-            long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
-            long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
-            long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
-            long[] jMn = theTBA.getAllelePresenceForAllSites(taxon2, 1).getBits();
-            return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared);
+        if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
+        long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
+        long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
+        long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
+        long[] jMn = theTBA.getAllelePresenceForAllSites(taxon2, 1).getBits();
+        return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1); 
+    }
+    
+    public static double[][] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, 
+            int minSitesCompared, int startWord, int endWord, int windowWord, BitSet maskBadSet) {
+        if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
+        long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
+        long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
+        if(maskBadSet!=null) {
+            long[] maskBad=maskBadSet.getBits();
+            for (int i = 0; i < iMj.length; i++) {iMj[i]=iMj[i]& maskBad[i];}
+            for (int i = 0; i < iMn.length; i++) {iMn[i]=iMn[i]& maskBad[i];}
         }
+        long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
+        long[] jMn = theTBA.getAllelePresenceForAllSites(taxon2, 1).getBits();
+        double[][] results=new double[(endWord-startWord+1)/windowWord][2];
+        int cnt=0;
+        for (int i = startWord; i <= endWord; i+=windowWord) {
+            int endSec=(i+windowWord-1);
+            if(endSec>endWord) continue;
+            results[cnt]=computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, i, endSec);
+            cnt++;
+        }
+        return results;
+    }
+    
+    public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, 
+            int minSitesCompared) {
+        return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1);
     }
 
-    public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, int minSitesCompared) {
+    public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, 
+            int minSitesCompared, int startWord, int endWord) {
         int sameCnt = 0, diffCnt = 0, hetCnt = 0;
-        for (int x = 0; x < iMj.length; x++) {
+        for (int x = startWord; x <= endWord; x++) {
             long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
             long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
             long hets = same & diff;
@@ -136,7 +163,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
             return new double[] {Double.NaN,(double)sites};
         }
     }
-
+    
     public double getAverageTotalSites() {
         return avgTotalSites;
     }
