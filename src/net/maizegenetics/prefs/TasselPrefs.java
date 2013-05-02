@@ -26,7 +26,7 @@ public class TasselPrefs {
     public static final int TASSEL_FONT_METRICS_CHAR_WIDTH_DEFAULT = 9;
     public static final String TASSEL_IDENTIFIER_JOIN_STRICT = "idJoinStrict";
     public static final boolean TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT = false;
-    private static boolean TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = getIDJoinStrict();
+    private static boolean TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = getBooleanPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT);
     //
     // FilterAlignmentPlugin preferences
     //
@@ -49,7 +49,9 @@ public class TasselPrefs {
     public static final String ALIGNMENT_RETAIN_RARE_ALLELES = "retainRareAlleles";
     public static final boolean ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT = true;
 
-    /** Creates a new instance of TasselPrefs */
+    /**
+     * Creates a new instance of TasselPrefs
+     */
     private TasselPrefs() {
     }
 
@@ -177,7 +179,7 @@ public class TasselPrefs {
     public static void putAlignmentMaxAllelesToRetain(int value) {
         putIntPref(ALIGNMENT_TOP, ALIGNMENT_MAX_ALLELES_TO_RETAIN, value);
     }
-    
+
     public static boolean getAlignmentRetainRareAlleles() {
         return getBooleanPref(ALIGNMENT_TOP, ALIGNMENT_RETAIN_RARE_ALLELES, ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT);
     }
