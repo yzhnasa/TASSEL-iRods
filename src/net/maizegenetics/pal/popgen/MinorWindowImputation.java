@@ -15,12 +15,15 @@ import net.maizegenetics.util.ProgressListener;
 
 
 /**
- *  Imputation methods that relies on a list of possible parents, and optimized for
+ * Imputation methods that relies on a list of possible parents, and optimized for
  * highly heterozygous samples.  It works at the scale of 64 sites to accelerate searching
  * through all possible parental combinations for a window.  
  * 
  * It only begins each 64 site block and expand outward to find set number of minor
  * alleles in the target sequence, and then it looks for all possible parents.
+ * 
+ * TODO: change taxa by position, remove bad sites, test centromere, add hets back in, fuse overlapping 
+ * haplotypes into chromosome long ones
  * 
  * @author edbuckler, kswarts, aromero
  */
@@ -33,13 +36,16 @@ public class MinorWindowImputation {
     private int blocks=-1;
     int[] hSite, hTaxon;
     byte[] hState;
+    private int[] siteErrors, siteCallCnt;
     int maskSitCnt=0;
+    int minMinorCnt=15;
     boolean maskAndTest=false;
     boolean isSwapMajorMinor=false;
     private int maxDonorHypotheses=10;
     private double maximumInbredError=0.02;  //inbreds are tested first, if too much error hybrids are tested.
     private int minTestSites=20;  //minimum number of compared sites to find a hit
     private byte[][][] allDist;
+    private boolean overLapHapFile=true;
     
     private static int highMask=0xF0;
     private static int lowMask=0x0F;
@@ -56,11 +62,14 @@ public class MinorWindowImputation {
      */
     public MinorWindowImputation(String donorFile, String unImpTargetFile, 
             String exportFile, int minMinorCnt, int resolveMethod) {
+        this.minMinorCnt=minMinorCnt;
         donorAlign=ImportUtils.readFromHapmap(donorFile, false, (ProgressListener)null);
         donorAlign.optimizeForTaxa(null);
         System.out.printf("Donor taxa:%d sites:%d %n",donorAlign.getSequenceCount(),donorAlign.getSiteCount());        
         unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
         unimpAlign.optimizeForTaxa(null);
+        siteErrors=new int[unimpAlign.getSiteCount()];
+        siteCallCnt=new int[unimpAlign.getSiteCount()];
         System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.getSequenceCount(),unimpAlign.getSiteCount());
         
         System.out.println("Creating mutable alignment");
@@ -136,8 +145,12 @@ public class MinorWindowImputation {
         if(testing>0) s.append(String.format("ParentsRight:%d Wrong %d", parentsRight, parentsWrong));
         System.out.println(s.toString());
         System.out.printf("TotalRight %d  TotalWrong %d Rate%n",totalRight, totalWrong);
-        
+//        for (int i = 0; i < siteErrors.length; i++) {
+//            System.out.printf("%d %d %d %g %g %n",i,siteCallCnt[i],siteErrors[i], 
+//                    (double)siteErrors[i]/(double)siteCallCnt[i], unimpAlign.getMinorAlleleFrequency(i));
+//        }
         ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);
+        System.out.printf("%d %g %d ",minMinorCnt, maximumInbredError, maxDonorHypotheses);
     }
     
     private int countUnknown(Alignment a, int taxon) {
@@ -146,6 +159,13 @@ public class MinorWindowImputation {
             if(a.getBase(taxon, i)==Alignment.UNKNOWN_DIPLOID_ALLELE) cnt++;
         }
         return cnt;
+    }
+    
+    private int[] findTaxaOffsetForOverLap(int totalTaxa, int site) {
+        int tOff=totalTaxa/3;
+        int mod=((site-2048)/2048)%3;
+        int start=tOff*mod;
+        return (new int[] {start, start+tOff});
     }
     
     private BitSet[] arrangeMajorMinorBtwAlignments(Alignment unimpAlign, int bt) { 
@@ -303,22 +323,35 @@ public class MinorWindowImputation {
         bestDonors.put(1.0, new DonorHypoth());
         double lastKeytestPropUnmatched=1.0;
         int donorTaxaCnt=donorAlign.getSequenceCount();
-        for (int d1 = 0; d1 < donorTaxaCnt; d1++) {
+        int startDonor=0, endDonor=donorTaxaCnt;
+        if(overLapHapFile) {
+            int[] tRange=findTaxaOffsetForOverLap(donorTaxaCnt, (focusBlock*64)+32);
+            startDonor=tRange[0];
+            endDonor=tRange[1];
+            //endDonor=startDonor+500;
+        }
+//        if((targetTaxon*focusBlock*endBlock)%1000==0) System.out.printf("Focus:%d startDonor:%d endDonor:%d %n",focusBlock,startDonor, endDonor);
+        for (int d1 = startDonor; d1 < endDonor; d1++) {
             int mjUnmatched=0;
             int mnUnmatched=0;
             int testSites=0;
             for (int i = startBlock; i <=endBlock; i++) {
                 mjUnmatched+=allDist[d1][2][i];
                 testSites+=allDist[d1][0][i];
-                if(mjUnmatched>5) break;
+                if(mjUnmatched>5) break;  //TODO consider whether this is good
             }
             if(testSites<minTestSites) continue;
             int totalMendelianErrors=mjUnmatched+mnUnmatched;
             double testPropUnmatched=(double)(totalMendelianErrors)/(double)testSites;
-            if((bestDonors.size()<maxDonorHypotheses)||(testPropUnmatched<lastKeytestPropUnmatched)) {
+            if(testPropUnmatched>this.maximumInbredError) continue;  
+            testPropUnmatched+=(double)d1/(double)(donorTaxaCnt*1000);
+ //           testPropUnmatched+=(double)d1/(double)(donorTaxaCnt);
+//            if((bestDonors.size()<maxDonorHypotheses)||(testPropUnmatched<lastKeytestPropUnmatched)) {
+            if((bestDonors.size()<maxDonorHypotheses)) {
                 DonorHypoth theDH=new DonorHypoth(targetTaxon, d1, d1, startBlock,
                     focusBlock, endBlock, testSites, totalMendelianErrors);
-                bestDonors.put(new Double(testPropUnmatched), theDH);
+                DonorHypoth prev=bestDonors.put(new Double(testPropUnmatched), theDH);
+                if(prev!=null) System.out.println("TreeMap index crash:"+testPropUnmatched);
                 if(bestDonors.size()>maxDonorHypotheses) {
                     bestDonors.remove(bestDonors.lastKey());
                     lastKeytestPropUnmatched=bestDonors.lastKey();
@@ -344,6 +377,7 @@ public class MinorWindowImputation {
             result[count]=dh; 
             count++;
         }
+       // System.out.println(result.length+"lastKeytestPropUnmatched:"+lastKeytestPropUnmatched);
         return result;
     }
     
@@ -487,7 +521,7 @@ public class MinorWindowImputation {
         if (print) System.out.println("B:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         for(int cs=startSite; cs<=endSite; cs++) {
             byte donorEst=Alignment.UNKNOWN_DIPLOID_ALLELE; 
-            for (int i = 0; i < theDH.length; i++) {
+            for (int i = 0; (i < theDH.length) && (donorEst==Alignment.UNKNOWN_DIPLOID_ALLELE); i++) {
                 if((theDH[i]==null)||(theDH[i].donor1Taxon<0)) continue;
                 byte bD1=donorAlign.getBase(theDH[i].donor1Taxon, cs);
                 byte bD2=donorAlign.getBase(theDH[i].donor2Taxon, cs);
@@ -495,18 +529,22 @@ public class MinorWindowImputation {
                 if(bD1==Alignment.UNKNOWN_DIPLOID_ALLELE) {donorEst=bD2;}
                 else if(bD2==Alignment.UNKNOWN_DIPLOID_ALLELE) {donorEst=bD1;}
                 else {donorEst=(byte)((bD1&highMask)|(bD2&lowMask));}
-                if(donorEst!=Alignment.UNKNOWN_DIPLOID_ALLELE) break;
+            //    if(donorEst!=Alignment.UNKNOWN_DIPLOID_ALLELE) break;
             }
             byte knownBase=mna.getBase(theDH[0].targetTaxon, cs);
             if((knownBase!=Alignment.UNKNOWN_DIPLOID_ALLELE)&&(knownBase!=donorEst)&&(donorEst!=Alignment.UNKNOWN_DIPLOID_ALLELE)) {
 //                System.out.printf("Error %d %s %s %n",theDH.targetTaxon, mna.getBaseAsString(theDH.targetTaxon, cs),
 //                        NucleotideAlignmentConstants.getNucleotideIUPAC(donorEst));      
-                if(!AlignmentUtils.isHeterozygous(donorEst)) totalWrong++;
+                if(!AlignmentUtils.isHeterozygous(donorEst)) {
+                    totalWrong++;
+                    siteErrors[cs]++;
+                }
             }
             if((knownBase!=Alignment.UNKNOWN_DIPLOID_ALLELE)&&(knownBase==donorEst)&&(donorEst!=Alignment.UNKNOWN_DIPLOID_ALLELE)) {
 //                System.out.printf("Error %d %s %s %n",theDH.targetTaxon, mna.getBaseAsString(theDH.targetTaxon, cs),
 //                        NucleotideAlignmentConstants.getNucleotideIUPAC(donorEst));
                 totalRight++;
+                siteCallCnt[cs]++;
             }
             mna.setBase(theDH[0].targetTaxon, cs, donorEst);
         } //end of cs loop
@@ -629,13 +667,20 @@ public class MinorWindowImputation {
  //       String donorFile=root+"TaxaWMRG8FINAL_chr10.hmp.txt.gz";
  //       String donorFile2=root+"AllHFMerge20120110.hmp.txt";
 //        String donorFile2=root+"AllHFMerge_chr10L.hmp.txt.gz";
-        String donorFile=root+"masked4096Merge20130429.hmp.txt.gz";
+        
  //       String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
-        String origFile=root+"04_PivotMergedTaxaTBT.c10_s0_s4095.hmp.txt.gz";
-        String unImpTargetFile=root+"04_PivotMergedTaxaTBT.c10_s0_s4095_masked.hmp.txt.gz";
+//        String origFile=root+"04_PivotMergedTaxaTBT.c10_s0_s4095.hmp.txt.gz";
+//        String donorFile=root+"masked4096Merge20130429.hmp.txt.gz";
+//        String unImpTargetFile=root+"04_PivotMergedTaxaTBT.c10_s0_s4095_masked.hmp.txt.gz";
+//        String impTargetFile=root+"1E20Minor2MxDon.c10_s0_s4095_masked.imp.hmp.txt.gz";
+        
+        String origFile=root+"all25.c10_s0_s8191.hmp.txt.gz";
+        String donorFile=root+"masked8191Merge20130429.hmp.txt.gz";
+        String unImpTargetFile=root+"all25.c10_s0_s8191_masked.hmp.txt.gz";
+        String impTargetFile=root+"somecrash500_1E15Minor10MxDon.c10_s0_s8191_masked.imp.hmp.txt.gz";
 //        String unImpTargetFile=root+"Z0NE00N_chr10L.hmp.txt.gz";
         //String unImpTargetFile=root+"TaxaW142FINAL_chr10S.hmp.txt.gz";
-        String impTargetFile=root+"1E100MIN.c10_s0_s4095_masked.imp.hmp.txt.gz";
+        
         
      
 
@@ -650,8 +695,8 @@ public class MinorWindowImputation {
 //        System.out.println("Resolve Method 0: Minor 25");
 //        e64NNI=new MinorWindowImputation(donorFile, unImpTargetFile, impTargetFile,25,0);
 //        compareAlignment(origFile,unImpTargetFile,impTargetFile);
-        System.out.println("Resolve Method 0: Minor 15");
-        e64NNI=new MinorWindowImputation(donorFile, unImpTargetFile, impTargetFile,15,0);
+        System.out.println("Resolve Method 0: Minor 20");
+        e64NNI=new MinorWindowImputation(donorFile, unImpTargetFile, impTargetFile,20,0);
         compareAlignment(origFile,unImpTargetFile,impTargetFile);
         System.out.println("Resolve Method 1");
 //        e64NNI=new MinorWindowImputation(donorFile,
