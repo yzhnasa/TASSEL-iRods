@@ -409,7 +409,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         }
     }
 
-    private void processSNPsWithSamePositionForVCF(Integer[] samePos, Alignment a, int chr, int currentPos, MutableNucleotideAlignment msa)
+   private void processSNPsWithSamePositionForVCF(Integer[] samePos, Alignment a, int chr, int currentPos, MutableNucleotideAlignment msa)
     {
         int taxaCount = a.getSequenceCount();
         //merged depth table
@@ -477,20 +477,77 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                genos[t] = VCFUtil.resolveVCFGeno(CommonAlleles,alleleDepthsInTaxa, t);
         }
         
-        addSiteToMutableAlignment(chr, currentPos, genos, msa);
- 
-        int lastSiteIndex = msa.getSiteCount() - 1;
-        msa.setCommonAlleles(lastSiteIndex, CommonAlleles);
-        msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
-        for (int t=0; t<taxaCount; t++)
+        //calculate mismatch rate
+        int nCompared =0;
+        int nMisMatch =0;
+        for (int t=0; t<genos.length; t++)
         {
-            byte[] alleleDepth = new byte[allelesCount];
-            for (int i=0; i<allelesCount; i++)
+            byte mergedGeno = genos[t];
+            if (mergedGeno == Alignment.UNKNOWN_DIPLOID_ALLELE)
             {
-                alleleDepth[i] = alleleDepthsInTaxa[i][t]>127?(byte)127:(byte)alleleDepthsInTaxa[i][t];
-                
+                continue;
             }
-            msa.setDepthForAlleles(t, lastSiteIndex, alleleDepth);
+            for (int s:samePos)
+            {
+                byte singleBase = a.getBase(t, s);
+                if (singleBase==Alignment.UNKNOWN_DIPLOID_ALLELE)
+                {
+                    continue;
+                }
+                nCompared ++;
+                if (!AlignmentUtils.isEqual(mergedGeno, singleBase))
+                {
+                    nMisMatch ++;
+                }
+            }
+        }
+        double myMisMatchRate=0;
+        if (nCompared>0)
+        {
+            myMisMatchRate=(double)nMisMatch/nCompared;
+        }
+        if (myMisMatchRate<maxMisMat)
+        {
+            addSiteToMutableAlignment(chr, currentPos, genos, msa);
+            int lastSiteIndex = msa.getSiteCount() - 1;
+            msa.setCommonAlleles(lastSiteIndex, CommonAlleles);
+            msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
+            for (int t=0; t<taxaCount; t++)
+            {
+                byte[] alleleDepth = new byte[allelesCount];
+                for (int i=0; i<allelesCount; i++)
+                {
+                    alleleDepth[i] = alleleDepthsInTaxa[i][t]>127?(byte)127:(byte)alleleDepthsInTaxa[i][t];
+                
+                }
+                msa.setDepthForAlleles(t, lastSiteIndex, alleleDepth);
+            }
+        }
+        else 
+        {
+            System.out.println("Not merged position: " + a.getPositionInLocus(samePos[0]) +  " Mismatch: "+ (int)(myMisMatchRate *100) + "%." );
+            
+            
+            if (kpUnmergDups)
+            {
+                for (int s:samePos)
+                {
+                    genos = new byte[a.getSequenceCount()];
+                    for (int t = 0; t < a.getSequenceCount(); ++t) {
+                        genos[t] = a.getBase(t, s);
+                    }
+                    addSiteToMutableAlignment(chr, currentPos, genos, msa);
+
+                    int lastSiteIndex = msa.getSiteCount() -1;
+                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(s));
+                    msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(s));
+                    for (int tt=0; tt<a.getSequenceCount(); tt++)
+                    {
+                        msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, s));
+                    }
+
+                }
+            }
         }
     }
     
