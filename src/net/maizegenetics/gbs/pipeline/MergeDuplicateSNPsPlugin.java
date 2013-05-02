@@ -253,7 +253,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                         if (inputFormat==INPUT_FORMAT.vcf)
                         {
                             int lastSiteIndex = msa.getSiteCount() -1;
-                            msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(samePos[0]));
+                            msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
                             msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
                             for (int tt=0; tt<a.getSequenceCount(); tt++)
                             {
@@ -288,7 +288,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 if (inputFormat==INPUT_FORMAT.vcf)
                 {
                     int lastSiteIndex = msa.getSiteCount() -1;
-                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(samePos[0]));
+                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
                     msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
                     for (int tt=0; tt<a.getSequenceCount(); tt++)
                     {
@@ -419,7 +419,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         for (int s:samePos)
         {
             //get alleles for each site
-            byte[] alleles = a.getAllelesByScope(s);
+            byte[] alleles = a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s);
             
             //initiate new alleles in the allele list into the hashmap
             for (byte allele:alleles)
@@ -539,7 +539,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     addSiteToMutableAlignment(chr, currentPos, genos, msa);
 
                     int lastSiteIndex = msa.getSiteCount() -1;
-                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(s));
+                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s));
                     msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(s));
                     for (int tt=0; tt<a.getSequenceCount(); tt++)
                     {

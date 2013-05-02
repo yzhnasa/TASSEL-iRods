@@ -1063,17 +1063,22 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(int site) {
-        return getAlleles(site);
+    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+        if ((scope == ALLELE_SCOPE_TYPE.Frequency) || (scope == ALLELE_SCOPE_TYPE.Global_Frequency)) {
+            return getAlleles(site);
+        } else if (scope == ALLELE_SCOPE_TYPE.Reference) {
+            return AlignmentUtils.getDiploidValues(myReference[site]);
+        } else {
+            throw new UnsupportedOperationException("AbstractAlignment: getAllelesByScope: This Alignment does not support scope: " + scope);
+        }
     }
 
     @Override
-    public ALLELE_SCOPE_TYPE getAllelesScopeType() {
-        return ALLELE_SCOPE_TYPE.Frequency;
-    }
-
-    @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(int site, int alleleNumber) {
-        return getAllelePresenceForAllTaxa(site, alleleNumber);
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
+        if ((scope == ALLELE_SCOPE_TYPE.Frequency) || (scope == ALLELE_SCOPE_TYPE.Global_Frequency)) {
+            return getAllelePresenceForAllTaxa(site, alleleNumber);
+        } else {
+            throw new UnsupportedOperationException("AbstractAlignment: getAllelePresenceForAllTaxaByScope: This Alignment does not support scope: " + scope);
+        }
     }
 }

@@ -17,30 +17,28 @@ import net.maizegenetics.pal.ids.Identifier;
  * @author yz79
  */
 public class MutableVCFAlignment extends MutableNucleotideAlignment implements MutableAlignment {
-    
+
     // allelic depth information, byte[allele][taxa][site] = depth, max: 127
     private byte[][][] myAlleleDepth;
-    
     // possible alleles for each site
     private byte[][] myCommonAlleles;
-    
     private static int myMaxNumAlleles = 3;
-    
+
     private MutableVCFAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a, maxNumTaxa, maxNumSites);
         initAllelicDepthArrays(maxNumTaxa, maxNumSites);
     }
-    
+
     private MutableVCFAlignment(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
         super(idGroup, initNumSites, maxNumTaxa, maxNumSites);
         initAllelicDepthArrays(maxNumTaxa, maxNumSites);
     }
-    
+
     private MutableVCFAlignment(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         super(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
         initAllelicDepthArrays(idGroup.size(), siteNames.length);
     }
-    
+
     public static MutableVCFAlignment getInstance(Alignment a, int maxTaxa, int maxNumSites) {
         if (a.getAlleleEncodings() == NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES) {
             return new MutableVCFAlignment(a, maxTaxa, maxNumSites);
@@ -48,26 +46,29 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
             throw new IllegalArgumentException("MutableNucleotideAlignment: getInstance: alignment must be nucleotide data.");
         }
     }
-    
+
     public static MutableVCFAlignment getInstance(IdGroup idGroup, int maxNumSites) {
         return new MutableVCFAlignment(idGroup, 0, idGroup.getIdCount(), maxNumSites);
     }
-    
+
     public static MutableVCFAlignment getInstance(IdGroup idGroup, int maxNumSites, int NumberOfAllelesToKeep) {
-        myMaxNumAlleles=NumberOfAllelesToKeep;
+        myMaxNumAlleles = NumberOfAllelesToKeep;
         return new MutableVCFAlignment(idGroup, 0, idGroup.getIdCount(), maxNumSites);
     }
+
     public static MutableVCFAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
         return new MutableVCFAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
+
     public static MutableVCFAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites, int NumberOfAllelesToKeep) {
-        myMaxNumAlleles=NumberOfAllelesToKeep;
+        myMaxNumAlleles = NumberOfAllelesToKeep;
         return new MutableVCFAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
+
     public static MutableVCFAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         return new MutableVCFAlignment(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
     }
-    
+
     public void initAllelicDepthArrays(int numMaxTaxa, int numMaxSites) {
         myAlleleDepth = new byte[myMaxNumAlleles][numMaxTaxa][numMaxSites];
         myCommonAlleles = new byte[myMaxNumAlleles][numMaxSites];
@@ -82,44 +83,26 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
             }
         }
     }
-    
-//    @Override
-//    public byte[] getAlleles(int site) {
-//        ArrayList<Byte> outArray = new ArrayList<Byte>();
-//        for (int i = 0; i < myCommonAlleles.length; i++) {
-//            if (myCommonAlleles[i][site] != (byte) -1) {
-//                outArray.add(myCommonAlleles[i][site]);
-//            } else {
-//                break;
-//            }
-//        }
-//        byte[] out = new byte[outArray.size()];
-//        for (int i = 0; i < outArray.size(); i++) {
-//            out[i] = outArray.get(i).byteValue();
-//        }
-//        return out;
-//    }
-    
-    @Override
-    public byte[] getAllelesByScope(int site) {
-        ArrayList<Byte> outArray = new ArrayList<Byte>();
-        for (int i = 0; i < myCommonAlleles.length; i++) {
-            if (myCommonAlleles[i][site] != (byte) -1) {
-                outArray.add(myCommonAlleles[i][site]);
-            } else {
-                break;
-            }
-        }
-        byte[] out = new byte[outArray.size()];
-        for (int i = 0; i < outArray.size(); i++) {
-            out[i] = outArray.get(i).byteValue();
-        }
-        return out;
-    }
 
     @Override
-    public ALLELE_SCOPE_TYPE getAllelesScopeType() {
-        return ALLELE_SCOPE_TYPE.Depth;
+    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+        if (scope == ALLELE_SCOPE_TYPE.Depth) {
+            ArrayList<Byte> outArray = new ArrayList<Byte>();
+            for (int i = 0; i < myCommonAlleles.length; i++) {
+                if (myCommonAlleles[i][site] != (byte) -1) {
+                    outArray.add(myCommonAlleles[i][site]);
+                } else {
+                    break;
+                }
+            }
+            byte[] out = new byte[outArray.size()];
+            for (int i = 0; i < outArray.size(); i++) {
+                out[i] = outArray.get(i).byteValue();
+            }
+            return out;
+        } else {
+            return super.getAllelesByScope(scope, site);
+        }
     }
 
     @Override
@@ -138,21 +121,21 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
         }
         return out;
     }
-    
+
     @Override
     public void setCommonAlleles(int site, byte[] values) {
         for (int i = 0; i < values.length; i++) {
             myCommonAlleles[i][site] = values[i];
         }
     }
-    
+
     @Override
     public void setDepthForAlleles(int taxon, int site, byte[] values) {
         for (int i = 0; i < values.length; i++) {
             myAlleleDepth[i][taxon][site] = values[i];
         }
     }
-    
+
     @Override
     protected void sortSitesByPhysicalPosition() {
 
@@ -177,18 +160,18 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
                 String st = mySNPIDs[a];
                 mySNPIDs[a] = mySNPIDs[b];
                 mySNPIDs[b] = st;
-                
+
                 byte al;
                 for (int i = 0; i < myMaxNumAlleles; i++) {
                     al = myCommonAlleles[i][a];
                     myCommonAlleles[i][a] = myCommonAlleles[i][b];
                     myCommonAlleles[i][b] = al;
                 }
-                
+
                 bt = myReference[a];
                 myReference[a] = myReference[b];
                 myReference[b] = bt;
-                
+
                 byte dp;
                 for (int i = 0; i < myMaxNumAlleles; i++) {
                     for (int taxa = 0; taxa < getSequenceCount(); taxa++) {

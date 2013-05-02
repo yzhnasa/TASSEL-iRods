@@ -13,14 +13,12 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
-import net.maizegenetics.gbs.pipeline.TagsToSNPByAlignmentPlugin;
 import net.maizegenetics.util.VCFUtil;
 import org.apache.log4j.Logger;
 
@@ -219,10 +217,11 @@ public class ExportUtils {
                     bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
                 } else {
                     bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
-                    for (int allele = 1; allele < sortedAlleles[0].length; allele++)
-                    if (sortedAlleles[0][allele] != Alignment.UNKNOWN_ALLELE) {
-                        bw.write('/');
-                        bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
+                    for (int allele = 1; allele < sortedAlleles[0].length; allele++) {
+                        if (sortedAlleles[0][allele] != Alignment.UNKNOWN_ALLELE) {
+                            bw.write('/');
+                            bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
+                        }
                     }
                 }
                 bw.write(delimChar);
@@ -358,10 +357,11 @@ public class ExportUtils {
                     bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
                 } else {
                     bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
-                    for (int allele = 1; allele < sortedAlleles[0].length; allele++)
-                    if (sortedAlleles[0][allele] != Alignment.UNKNOWN_ALLELE) {
-                        bw.write('/');
-                        bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
+                    for (int allele = 1; allele < sortedAlleles[0].length; allele++) {
+                        if (sortedAlleles[0][allele] != Alignment.UNKNOWN_ALLELE) {
+                            bw.write('/');
+                            bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
+                        }
                     }
                 }
                 bw.write(delimChar);
@@ -486,7 +486,7 @@ public class ExportUtils {
                 int[] alleleRedirect = new int[nAlleles]; // holds the indices of alleleValues in ref, alt1, [alt2] order (max 3 alleles)
                 byte refGeno = alignment.getReferenceAllele(site);
                 byte refAllele = (byte) (refGeno & 0xF);  // converts from diploid to haploid allele (2nd allele)
-                byte[] alleleValues = alignment.getAllelesByScope(site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
+                byte[] alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 String refAlleleStr;
                 int refUnknownOffset = 0;
                 if (refGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {  // reference allele unknown - report the alleles in maj, min1, [min2] order
@@ -618,13 +618,13 @@ public class ExportUtils {
                         for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/[alt2] order (if no alt2,length=2)
                             if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
                                 if (values[0] == refAllele) {
-                                    
-                                    bw.write((i+refUnknownOffset) + "/");
+
+                                    bw.write((i + refUnknownOffset) + "/");
                                     genoOne = true;
                                     break;
                                 }
                             } else if (values[0] == alleleValues[alleleRedirect[i]]) {
-                                bw.write((i+refUnknownOffset) + "/");
+                                bw.write((i + refUnknownOffset) + "/");
                                 genoOne = true;
                                 break;
                             }
@@ -655,12 +655,12 @@ public class ExportUtils {
                         for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/alt2 order (if no alt2,length=2)
                             if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
                                 if (values[1] == refAllele) {
-                                    bw.write((i+refUnknownOffset) + "");
+                                    bw.write((i + refUnknownOffset) + "");
                                     genoTwo = true;
                                     break;
                                 }
                             } else if (values[1] == alleleValues[alleleRedirect[i]]) {
-                                bw.write((i+refUnknownOffset) + "");
+                                bw.write((i + refUnknownOffset) + "");
                                 genoTwo = true;
                                 break;
                             }
@@ -714,28 +714,24 @@ public class ExportUtils {
                         int[] scores;
                         if (siteAlleleDepths.length == 1) {
                             int dep1 = siteAlleleDepths[alleleRedirect[0]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[0]];
-                            scores = VCFUtil.getScore(dep1 ,0); 
+                            scores = VCFUtil.getScore(dep1, 0);
                         } else {
                             if (alleleRedirect[0] == -1) {
-                                int dep1=0;
-                                int dep2=0;
-                                if (alleleRedirect.length>2)
-                                {
+                                int dep1 = 0;
+                                int dep2 = 0;
+                                if (alleleRedirect.length > 2) {
                                     dep1 = siteAlleleDepths[alleleRedirect[1]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[1]];
-                                    dep2 = siteAlleleDepths[alleleRedirect[2]] > 127? 127 : siteAlleleDepths[alleleRedirect[2]];
-                                }
-                                else if (alleleRedirect.length==2)
-                                {
-                                    dep1=0;
-                                    dep2=siteAlleleDepths[alleleRedirect[1]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[1]];
+                                    dep2 = siteAlleleDepths[alleleRedirect[2]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[2]];
+                                } else if (alleleRedirect.length == 2) {
+                                    dep1 = 0;
+                                    dep2 = siteAlleleDepths[alleleRedirect[1]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[1]];
                                 }
                                 scores = VCFUtil.getScore(dep1, dep2);
-                            } else 
-                            {
+                            } else {
                                 int dep1 = siteAlleleDepths[alleleRedirect[0]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[0]];
                                 int dep2 = 0;
-                                if (alleleRedirect.length>1) {
-                                    dep2 = siteAlleleDepths[alleleRedirect[1]] > 127? 127 : siteAlleleDepths[alleleRedirect[1]];
+                                if (alleleRedirect.length > 1) {
+                                    dep2 = siteAlleleDepths[alleleRedirect[1]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[1]];
                                 }
                                 scores = VCFUtil.getScore(dep1, dep2);
                             }
