@@ -13,6 +13,7 @@ import org.apache.log4j.PatternLayout;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -53,8 +54,11 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				
 				String[] ids = new String[family.members.size()];
 				family.members.toArray(ids);
-				family.original =  FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false);
-				if (useBCFilter && (family.contribution1 == 0.75 || family.contribution2 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
+				
+				myLogger.info("creating family alignment for family " + family.name);
+				family.original =  BitAlignment.getInstance(FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false), true);
+				myLogger.info("family alignment created");
+				if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
 				else if (useMultipleBCFilter) NucleotideImputationUtils.callParentAllelesByWindowForMultipleBC(family, maxMissing, 1, windowSize);
 				else NucleotideImputationUtils.callParentAllelesByWindow(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
 				String comment = "Parent Calls for family " + family.name + " from " + d.getName() + ".";
@@ -103,7 +107,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-n") || args[i].equalsIgnoreCase("-bcn")) {
 				String param = args[++i];
-				if (param.toUpperCase().startsWith("T")) useBCFilter = true;
+				if (param.toUpperCase().startsWith("T")) useMultipleBCFilter = true;
 			}
 			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logconfig")) {
 				DOMConfigurator.configure(args[++i]);

@@ -746,4 +746,16 @@ public class CombineAlignment extends AbstractAlignment {
             myAlignments[i].optimizeForSites(listener);
         }
     }
+
+    @Override
+    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+        int translate = translateSite(site);
+        return myAlignments[translate].getAllelesByScope(scope, site - mySiteOffsets[translate]);
+    }
+
+    @Override
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
+        int translate = translateSite(site);
+        return myAlignments[translate].getAllelePresenceForAllTaxaByScope(scope, site - mySiteOffsets[translate], alleleNumber);
+    }
 }

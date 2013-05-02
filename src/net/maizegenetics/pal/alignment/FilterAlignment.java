@@ -1092,25 +1092,33 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(int site) {
-        return myBaseAlignment.getAlleles(site);
-    }
-
-    @Override
-    public ALLELE_SCOPE_TYPE getAllelesScopeType() {
-        return ALLELE_SCOPE_TYPE.Global;
-    }
-
-    @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(int site, int alleleNumber) {
-        int numTaxa = getSequenceCount();
-        BitSet result = new OpenBitSet(numTaxa);
-        BitSet baseBitSet = myBaseAlignment.getAllelePresenceForAllTaxa(site, alleleNumber);
-        for (int i=0; i<numTaxa; i++) {
-            if (baseBitSet.fastGet(translateTaxon(i))) {
-                result.fastSet(i);
-            }
+    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+        if (scope == ALLELE_SCOPE_TYPE.Frequency) {
+            return getAlleles(site);
+        } else if (scope == ALLELE_SCOPE_TYPE.Reference) {
+            return super.getAllelesByScope(scope, site);
+        } else {
+            return myBaseAlignment.getAllelesByScope(scope, translateSite(site));
         }
-        return UnmodifiableBitSet.getInstance(result);
+    }
+
+    @Override
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
+        if (scope == ALLELE_SCOPE_TYPE.Frequency) {
+            return getAllelePresenceForAllTaxa(site, alleleNumber);
+        } else if (scope == ALLELE_SCOPE_TYPE.Reference) {
+            return super.getAllelePresenceForAllTaxa(site, alleleNumber);
+        } else {
+            int numTaxa = getSequenceCount();
+            BitSet result = new OpenBitSet(numTaxa);
+            BitSet baseBitSet = myBaseAlignment.getAllelePresenceForAllTaxaByScope(scope, translateSite(site), alleleNumber);
+            for (int i = 0; i < numTaxa; i++) {
+                if (baseBitSet.fastGet(translateTaxon(i))) {
+                    result.fastSet(i);
+                }
+            }
+            return UnmodifiableBitSet.getInstance(result);
+        }
+
     }
 }

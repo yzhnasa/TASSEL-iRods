@@ -16,6 +16,8 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 	private static final Logger myLogger = Logger.getLogger(ViterbiAlgorithmPlugin.class);
 	private boolean fillGapsInAlignment = true;
 	private double probHeterozygous = 0.07;
+	private boolean useVariableTransition = false;
+	private String variableRecombFilename = "";
 	
 	public ViterbiAlgorithmPlugin(Frame parentFrame) {
 		super(parentFrame, false);
@@ -40,7 +42,7 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 				phet = probHeterozygous;
 			}
 			
-			family.imputed = NucleotideImputationUtils.imputeUsingViterbiFiveState(tba, phet, family.name);
+			family.imputed = NucleotideImputationUtils.imputeUsingViterbiFiveState(tba, phet, family.name, true);
 			
 			if (fillGapsInAlignment) NucleotideImputationUtils.fillGapsInAlignment(family);
 			
@@ -64,11 +66,14 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 				String val = args[++i];
 				if (val.toUpperCase().startsWith("T")) fillGapsInAlignment = true;
 				else fillGapsInAlignment = false;
-			}
-			else if (args[i].equals("-h") || args[i].equalsIgnoreCase("-phet")) {
+			} else if (args[i].equals("-h") || args[i].equalsIgnoreCase("-phet")) {
 				probHeterozygous = Double.parseDouble(args[++i]);
-			}
-			else if (args[i].equals("?")) myLogger.error(getUsage());
+			} else if (args[i].equals("-v") || args[i].equalsIgnoreCase("-varRecomb")) {
+				String vr = args[++i];
+				if (vr.toLowerCase().startsWith("t")) useVariableTransition = true;
+			} else if (args[i].equals("-f") || args[i].equalsIgnoreCase("-varRecombFile")) {
+				variableRecombFilename = args[++i];
+			} else if (args[i].equals("?")) myLogger.error(getUsage());
 		}
 	}
 
@@ -99,6 +104,8 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 		StringBuilder usage = new StringBuilder("The ViterbiAlgorithmPlugin can take the following optional parameters:\n");
 		usage.append("-g or -fillgaps : true if missing values between SNPs from the same parent should be imputed to that parent, false otherwise (default = true)\n");
 		usage.append("-h or -phet : expected frequency of heterozygous loci (default = 0.07). If the inbreeding coefficient is specified in the pedigree file that will used to calculate this value.\n");
+		usage.append("-v or -varRecomb : If true use recombination rates that vary along the chromosome");
+		usage.append("-f or -varRecombFile : The name of the file containing recombination rate as a function of position");
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();

@@ -76,10 +76,14 @@ public interface Alignment extends Serializable {
          */
         Depth,
         /**
-         * This uses another Alignment to determine sort order of alleles. That
-         * Alignment is usually a superset.
+         * This uses the allele frequency of a base/global Alignment determine
+         * sort order of alleles. That Alignment is usually a superset.
          */
-        Global
+        Global_Frequency,
+        /**
+         * This sorts alleles based on the reference sequence.
+         */
+        Reference
     };
 
     /**
@@ -900,27 +904,22 @@ public interface Alignment extends Serializable {
     /**
      * Returns all alleles at given site in order defined by scope.
      *
+     * @param scope scope
      * @param site site
      *
      * @return alleles
      */
-    public byte[] getAllelesByScope(int site);
-
-    /**
-     * Returns Allele Scope Type
-     *
-     * @return Allele Scope Type
-     */
-    public ALLELE_SCOPE_TYPE getAllelesScopeType();
+    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
      * taxon matches a specific allele (based on scope).
      *
+     * @param scope scope
      * @param site site
      * @param alleleNumber allele number
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresenceForAllTaxaByScope(int site, int alleleNumber);
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber);
 }
