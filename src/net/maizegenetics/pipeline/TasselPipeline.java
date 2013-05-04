@@ -954,13 +954,13 @@ public class TasselPipeline implements PluginListener {
                     }
 
                     String type = args[index++].trim();
-                    FileLoadPlugin.TasselFileType[] types = FileLoadPlugin.TasselFileType.values();
-                    for (int i = 0; i < types.length; i++) {
-                        if (type.equalsIgnoreCase(types[i].toString())) {
-                            plugin.setAlignmentFileType(types[i]);
-                            break;
-                        }
+                    FileLoadPlugin.TasselFileType fileType = null;
+                    try {
+                        fileType = FileLoadPlugin.TasselFileType.valueOf(type);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -exportType: Unknown type: " + type + "  Should be: " + Arrays.toString(FileLoadPlugin.TasselFileType.values()));
                     }
+                    plugin.setAlignmentFileType(fileType);
 
                 } else if (current.equalsIgnoreCase("-impute")) {
                     GenotypeImputationPlugin plugin = new GenotypeImputationPlugin(myMainFrame, false);
