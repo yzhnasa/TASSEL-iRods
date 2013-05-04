@@ -11,6 +11,7 @@ import java.util.Map;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 
 /**
@@ -1077,6 +1078,17 @@ abstract public class AbstractAlignment implements Alignment {
     public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
         if ((scope == ALLELE_SCOPE_TYPE.Frequency) || (scope == ALLELE_SCOPE_TYPE.Global_Frequency)) {
             return getAllelePresenceForAllTaxa(site, alleleNumber);
+        } else if (scope == ALLELE_SCOPE_TYPE.Reference) {
+            byte[] reference = AlignmentUtils.getDiploidValues(myReference[site]);
+            int numTaxa = getSequenceCount();
+            BitSet result = new OpenBitSet(numTaxa);
+            for (int i = 0; i < numTaxa; i++) {
+                byte[] current = getBaseArray(i, site);
+                if ((current[0] == reference[alleleNumber]) || (current[1] == reference[alleleNumber])) {
+                    result.fastSet(i);
+                }
+            }
+            return result;
         } else {
             throw new UnsupportedOperationException("AbstractAlignment: getAllelePresenceForAllTaxaByScope: This Alignment does not support scope: " + scope);
         }

@@ -1095,8 +1095,6 @@ public class FilterAlignment extends AbstractAlignment {
     public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
         if (scope == ALLELE_SCOPE_TYPE.Frequency) {
             return getAlleles(site);
-        } else if (scope == ALLELE_SCOPE_TYPE.Reference) {
-            return super.getAllelesByScope(scope, site);
         } else {
             return myBaseAlignment.getAllelesByScope(scope, translateSite(site));
         }
@@ -1106,8 +1104,6 @@ public class FilterAlignment extends AbstractAlignment {
     public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
         if (scope == ALLELE_SCOPE_TYPE.Frequency) {
             return getAllelePresenceForAllTaxa(site, alleleNumber);
-        } else if (scope == ALLELE_SCOPE_TYPE.Reference) {
-            return super.getAllelePresenceForAllTaxa(site, alleleNumber);
         } else {
             int numTaxa = getSequenceCount();
             BitSet result = new OpenBitSet(numTaxa);
