@@ -11,9 +11,9 @@ import java.io.Serializable;
 import net.maizegenetics.prefs.TasselPrefs;
 
 /**
- * An identifier for some sampled data. This will most often be
- * for example, the accession number of a DNA sequence, or the
- * taxonomic name that the sequence represents, et cetera.
+ * An identifier for some sampled data. This will most often be for example, the
+ * accession number of a DNA sequence, or the taxonomic name that the sequence
+ * represents, et cetera.
  *
  * @author terry
  */
@@ -28,11 +28,31 @@ public class Identifier implements Serializable, Comparable {
         myName = name;
     }
 
+    public static Identifier getMergedInstance(Identifier id1, Identifier id2) {
+        String[] first = id1.getFullName().split(DELIMITER);
+        String[] second = id2.getFullName().split(DELIMITER);
+        int count = Math.min(first.length, second.length);
+        for (int i = 0; i < count; i++) {
+            if (!first[i].equals(second[i])) {
+                StringBuilder builder = new StringBuilder();
+                for (int x = 0; x < i; x++) {
+                    if (x != 0) {
+                        builder.append(DELIMITER);
+                    }
+                    builder.append(first[x]);
+                    return new Identifier(builder.toString());
+                }
+            }
+        }
+        return id1;
+    }
+
     public String toString() {
         return getName();
     }
 
     // implements Comparable interface
+    @Override
     public int compareTo(Object c) {
         if (c instanceof Identifier) {
             return compareTo(((Identifier) c).getFullName());
@@ -41,6 +61,7 @@ public class Identifier implements Serializable, Comparable {
         }
     }
 
+    @Override
     public boolean equals(Object c) {
 
         if (c instanceof Identifier) {
