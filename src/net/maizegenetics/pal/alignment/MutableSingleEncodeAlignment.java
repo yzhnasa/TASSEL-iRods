@@ -117,7 +117,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         for (int t = 0; t < myMaxTaxa; t++) {
             Arrays.fill(myData[t], Alignment.UNKNOWN_DIPLOID_ALLELE);
         }
-        
+
         myReference = new byte[myMaxNumSites];
         Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
 
@@ -165,7 +165,15 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
             IdGroup currentIds = alignments[i].getIdGroup();
             for (int j = 0, n = currentIds.getIdCount(); j < n; j++) {
-                taxa.add(currentIds.getIdentifier(j));
+                Identifier current = currentIds.getIdentifier(j);
+                if (taxa.contains(current)) {
+                    Identifier match = taxa.floor(current);
+                    Identifier merged = Identifier.getMergedInstance(match, current);
+                    taxa.remove(match);
+                    taxa.add(merged);
+                } else {
+                    taxa.add(current);
+                }
             }
 
             for (int s = 0, m = alignments[i].getSiteCount(); s < m; s++) {
@@ -176,7 +184,15 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                 if (index == -1) {
                     siteNames.add(currentSiteName);
                     physicalPositions.add(currentPhysicalPos);
-                    int locusIndex = locusToLociIndex.indexOf(currentLocus);
+                    //int locusIndex = locusToLociIndex.indexOf(currentLocus);
+                    int locusIndex = -1;
+                    for (int li = 0; li < locusToLociIndex.size(); li++) {
+                        if (currentLocus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
+                            locusIndex = li;
+                            locusToLociIndex.set(li, Locus.getMergedInstance(currentLocus, locusToLociIndex.get(li)));
+                            break;
+                        }
+                    }
                     if (locusIndex == -1) {
                         locusIndices.add(locusToLociIndex.size());
                         locusToLociIndex.add(currentLocus);
@@ -190,8 +206,15 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                         if (currentPhysicalPos != physicalPositions.get(index)) {
                             throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Physical Positions do not match for site name: " + currentSiteName);
                         }
-                        if (locusIndices.get(index) != locusToLociIndex.indexOf(currentLocus)) {
-                            throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Loci do not match for site name: " + currentSiteName + " expecting: " + locusToLociIndex.get(index) + " but doesn't match: " + currentLocus);
+                        int locusIndex = -1;
+                        for (int li = 0; li < locusToLociIndex.size(); li++) {
+                            if (currentLocus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
+                                locusIndex = li;
+                                break;
+                            }
+                        }
+                        if (locusIndices.get(index) != locusIndex) {
+                            throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Loci do not match for site name: " + currentSiteName + " expecting: " + locusToLociIndex.get(locusIndices.get(index)) + " but doesn't match: " + currentLocus);
                         }
                     }
                 }
@@ -239,6 +262,12 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                 String siteName = currentAlignment.getSNPID(s);
                 int physicalPosition = currentAlignment.getPositionInLocus(s);
                 Locus locus = currentAlignment.getLocus(s);
+                for (int li = 0; li < locusToLociIndex.size(); li++) {
+                    if (locus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
+                        locus = locusToLociIndex.get(li);
+                        break;
+                    }
+                }
                 int site = result.getSiteOfPhysicalPosition(physicalPosition, locus);
                 if (site < 0) {
                     throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
@@ -527,7 +556,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             myData[taxon][startSite++] = newBases[i];
         }
     }
-    
+
     public void setReferenceAllele(int site, byte diploidAllele) {
         myReference[site] = diploidAllele;
     }
@@ -549,13 +578,13 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             myVariableSites[s] = myVariableSites[s - 1];
             myLocusIndices[s] = myLocusIndices[s - 1];
             mySNPIDs[s] = mySNPIDs[s - 1];
-            myReference[s] = myReference[s-1];
+            myReference[s] = myReference[s - 1];
         }
         myVariableSites[site] = -1;
         myLocusIndices[site] = Integer.MAX_VALUE;
         mySNPIDs[site] = null;
         myReference[site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
- 
+
         myNumSites++;
 
         setDirty();
@@ -700,7 +729,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                 String st = mySNPIDs[a];
                 mySNPIDs[a] = mySNPIDs[b];
                 mySNPIDs[b] = st;
-                
+
                 bt = myReference[a];
                 myReference[a] = myReference[b];
                 myReference[b] = bt;
@@ -744,7 +773,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                 String st = mySNPIDs[a];
                 mySNPIDs[a] = mySNPIDs[b];
                 mySNPIDs[b] = st;
-                
+
                 byte bt = myReference[a];
                 myReference[a] = myReference[b];
                 myReference[b] = bt;
@@ -808,7 +837,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     public void setDepthForAlleles(int taxon, int site, byte[] values) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
     public void setCommonAlleles(int site, byte[] values) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
