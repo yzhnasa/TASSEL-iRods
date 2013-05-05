@@ -329,15 +329,27 @@ public class TasselPipeline implements PluginListener {
                     loadFile(file, FileLoadPlugin.TasselFileType.Serial);
                 } else if (current.equalsIgnoreCase("-taxaJoinStrict")) {
                     String temp = args[index++].trim();
-                    boolean strict = true;
                     if (temp.equalsIgnoreCase("false")) {
-                        strict = false;
+                        temp = TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.NonStrict.toString();
                     } else if (temp.equalsIgnoreCase("true")) {
-                        strict = true;
-                    } else {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -taxaJoinStrict parameter must be true or false.");
+                        temp = TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict.toString();
                     }
-                    TasselPrefs.putIDJoinStrict(strict);
+                    TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = null;
+                    try {
+                        type = TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.valueOf(temp);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -taxaJoinStrict: Unknown type: " + temp + "  Should be: " + Arrays.toString(TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.values()));
+                    }
+                    TasselPrefs.putTempIDJoinStrict(type);
+                } else if (current.equalsIgnoreCase("-taxaJoinNumLevels")) {
+                    String temp = args[index++].trim();
+                    int numLevels = 0;
+                    try {
+                        numLevels = Integer.parseInt(temp);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing Taxa Join Number Levels: " + temp);
+                    }
+                    TasselPrefs.putTempIDJoinNumLevels(numLevels);
                 } else if (current.equalsIgnoreCase("-retainRareAlleles")) {
                     String temp = args[index++].trim();
                     boolean retain = true;

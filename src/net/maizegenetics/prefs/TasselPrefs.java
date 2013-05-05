@@ -24,9 +24,30 @@ public class TasselPrefs {
     public static final String TASSEL_OPEN_DIR_DEFAULT = "";
     public static final String TASSEL_FONT_METRICS_CHAR_WIDTH = "fontMetricsCharWidth";
     public static final int TASSEL_FONT_METRICS_CHAR_WIDTH_DEFAULT = 9;
+
+    public static enum TASSEL_IDENTIFIER_JOIN_TYPES {
+
+        /**
+         * This means taxa names must match exactly all levels. This is the same
+         * as true use to be.
+         */
+        Strict,
+        /**
+         * This means taxa names must match all levels up to the least specific
+         * taxa. This is the same as false use to be.
+         */
+        NonStrict,
+        /**
+         * This means taxa names must match specified number of levels.
+         */
+        NumLevels
+    };
     public static final String TASSEL_IDENTIFIER_JOIN_STRICT = "idJoinStrict";
-    public static final boolean TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT = false;
-    private static boolean TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = getBooleanPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT);
+    public static final TASSEL_IDENTIFIER_JOIN_TYPES TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT = TASSEL_IDENTIFIER_JOIN_TYPES.NonStrict;
+    private static TASSEL_IDENTIFIER_JOIN_TYPES TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = initIDJoin();
+    public static final String TASSEL_IDENTIFIER_JOIN_NUM_LEVELS = "idJoinNumLevels";
+    public static final int TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_DEFAULT = 1;
+    private static int TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = getIntPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_DEFAULT);
     //
     // FilterAlignmentPlugin preferences
     //
@@ -130,16 +151,61 @@ public class TasselPrefs {
         putIntPref(TASSEL_TOP, TASSEL_FONT_METRICS_CHAR_WIDTH, value);
     }
 
-    public static boolean getIDJoinStrict() {
+    private static TASSEL_IDENTIFIER_JOIN_TYPES initIDJoin() {
+
+        String value = getPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, null);
+        if (value == null) {
+            value = TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT.toString();
+        } else if (value.equalsIgnoreCase("true")) {
+            value = TASSEL_IDENTIFIER_JOIN_TYPES.Strict.toString();
+        } else if (value.equalsIgnoreCase("false")) {
+            value = TASSEL_IDENTIFIER_JOIN_TYPES.NonStrict.toString();
+        }
+
+        TASSEL_IDENTIFIER_JOIN_TYPES result = null;
+        try {
+            result = TASSEL_IDENTIFIER_JOIN_TYPES.valueOf(value);
+        } catch (Exception e) {
+            result = TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT;
+        }
+
+        putPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, result.toString());
+
+        return result;
+
+    }
+
+    public static TASSEL_IDENTIFIER_JOIN_TYPES getIDJoinStrict() {
         // This can be called many times, so to improve performance
         // this will return value without executing system call.
         return TASSEL_IDENTIFIER_JOIN_STRICT_VALUE;
-        // return getBooleanPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT);
     }
 
-    public static void putIDJoinStrict(boolean value) {
-        TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = value;
-        putBooleanPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, value);
+    public static void putIDJoinStrict(TASSEL_IDENTIFIER_JOIN_TYPES type) {
+        TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = type;
+        putPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, type.toString());
+    }
+
+    /**
+     * Sets ID Join type only for current program execution.
+     *
+     * @param type type
+     */
+    public static void putTempIDJoinStrict(TASSEL_IDENTIFIER_JOIN_TYPES type) {
+        TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = type;
+    }
+
+    public static int getIDJoinNumLevels() {
+        return TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE;
+    }
+
+    public static void putIDJoinNumLevels(int value) {
+        TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = value;
+        putIntPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS, value);
+    }
+
+    public static void putTempIDJoinNumLevels(int value) {
+        TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = value;
     }
 
     //

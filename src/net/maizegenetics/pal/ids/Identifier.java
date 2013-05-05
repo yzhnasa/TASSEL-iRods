@@ -64,14 +64,16 @@ public class Identifier implements Serializable, Comparable {
     @Override
     public boolean equals(Object c) {
 
+        TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
+
         if (c instanceof Identifier) {
-            if (TasselPrefs.getIDJoinStrict()) {
+            if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
                 return getFullName().equals(((Identifier) c).getFullName());
             } else {
                 return compareTo(c) == 0;
             }
         } else if (c instanceof String) {
-            if (TasselPrefs.getIDJoinStrict()) {
+            if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
                 return getFullName().equals(((String) c));
             } else {
                 return compareTo((String) c) == 0;
@@ -84,9 +86,14 @@ public class Identifier implements Serializable, Comparable {
 
     public int compareTo(String c) {
 
+        TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
+
         String[] first = myName.split(DELIMITER);
         String[] second = c.split(DELIMITER);
-        int count = first.length < second.length ? first.length : second.length;
+        int count = Math.min(first.length, second.length);
+        if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.NumLevels) {
+            count = Math.min(count, TasselPrefs.getIDJoinNumLevels());
+        }
         for (int i = 0; i < count; i++) {
             int current = first[i].compareTo(second[i]);
             if (current != 0) {
@@ -94,7 +101,7 @@ public class Identifier implements Serializable, Comparable {
             }
         }
 
-        if (TasselPrefs.getIDJoinStrict()) {
+        if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
             if (first.length < second.length) {
                 return -1;
             } else if (second.length < first.length) {
@@ -124,8 +131,8 @@ public class Identifier implements Serializable, Comparable {
     }
 
     /**
-     * Returns requested level of name starting at index 0.
-     * 0 will generally be most specific classification.
+     * Returns requested level of name starting at index 0. 0 will generally be
+     * most specific classification.
      *
      * @param index
      * @return Specified level.
@@ -139,8 +146,8 @@ public class Identifier implements Serializable, Comparable {
     }
 
     /**
-     * Returns name up to specified level (not including
-     * specified level.  Levels start at index 0.
+     * Returns name up to specified level (not including specified level. Levels
+     * start at index 0.
      *
      * @param index
      * @return name up to specified level exclusive.
@@ -182,4 +189,3 @@ public class Identifier implements Serializable, Comparable {
         return myName.split(DELIMITER).length;
     }
 }
-
