@@ -36,6 +36,7 @@ abstract public class AbstractAlignment implements Alignment {
     private int[] myLociOffsets;
     private String[] mySNPIDs;
     private boolean myRetainRareAlleles = false;
+    private Alignment myOriginalAlignment = null;
 
     public AbstractAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         if (idGroup.getIdCount() != data.length) {
@@ -59,6 +60,7 @@ abstract public class AbstractAlignment implements Alignment {
         myNumSites = a.getSiteCount();
         init(a.getIdGroup(), a.getGeneticMap(), a.getReference(), a.getAlleleEncodings(), a.getPhysicalPositions(), maxNumAlleles, a.getSNPIDs(), a.getLoci(), a.getLociOffsets(), retainRareAlleles);
         initAlleles(a);
+        myOriginalAlignment = a;
     }
 
     /**
@@ -1065,10 +1067,14 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
-        if ((scope == ALLELE_SCOPE_TYPE.Frequency) || (scope == ALLELE_SCOPE_TYPE.Global_Frequency)) {
+        if (scope == ALLELE_SCOPE_TYPE.Frequency) {
             return getAlleles(site);
         } else if (scope == ALLELE_SCOPE_TYPE.Reference) {
-            return AlignmentUtils.getDiploidValues(myReference[site]);
+            return AlignmentUtils.getDiploidValues(getReferenceAllele(site));
+        } else if (myOriginalAlignment != null) {
+            return myOriginalAlignment.getAllelesByScope(scope, site);
+        } else if (scope == ALLELE_SCOPE_TYPE.Global_Frequency) {
+            return getAlleles(site);
         } else {
             throw new UnsupportedOperationException("AbstractAlignment: getAllelesByScope: This Alignment does not support scope: " + scope);
         }
@@ -1076,10 +1082,10 @@ abstract public class AbstractAlignment implements Alignment {
 
     @Override
     public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
-        if ((scope == ALLELE_SCOPE_TYPE.Frequency) || (scope == ALLELE_SCOPE_TYPE.Global_Frequency)) {
+        if (scope == ALLELE_SCOPE_TYPE.Frequency) {
             return getAllelePresenceForAllTaxa(site, alleleNumber);
         } else if (scope == ALLELE_SCOPE_TYPE.Reference) {
-            byte[] reference = AlignmentUtils.getDiploidValues(myReference[site]);
+            byte[] reference = AlignmentUtils.getDiploidValues(getReferenceAllele(site));
             int numTaxa = getSequenceCount();
             BitSet result = new OpenBitSet(numTaxa);
             for (int i = 0; i < numTaxa; i++) {
@@ -1089,6 +1095,10 @@ abstract public class AbstractAlignment implements Alignment {
                 }
             }
             return result;
+        } else if (myOriginalAlignment != null) {
+            return myOriginalAlignment.getAllelePresenceForAllTaxaByScope(scope, site, alleleNumber);
+        } else if (scope == ALLELE_SCOPE_TYPE.Global_Frequency) {
+            return getAllelePresenceForAllTaxa(site, alleleNumber);
         } else {
             throw new UnsupportedOperationException("AbstractAlignment: getAllelePresenceForAllTaxaByScope: This Alignment does not support scope: " + scope);
         }
