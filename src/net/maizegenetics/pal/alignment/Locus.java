@@ -22,7 +22,7 @@ public class Locus implements Serializable {
     private final String myChromosome;
     private final int myStart;
     private final int myEnd;
-    private final Map<String, Integer> myFeatures = new HashMap();
+    private final Map<String, Integer> myFeatures = new HashMap<String, Integer>();
 
     public Locus(String name, String chromosome, int start, int end, String[] featureNames, int[] featurePositions) {
 
@@ -42,6 +42,33 @@ public class Locus implements Serializable {
             myFeatures.put(featureNames[i], featurePositions[i]);
         }
 
+    }
+
+    public static Locus getMergedInstance(Locus locus1, Locus locus2) {
+        String chromosome = locus1.getChromosomeName();
+        if (!chromosome.equals(locus2.getChromosomeName())) {
+            throw new IllegalArgumentException("Locus: getInstance: Chromosome Names must be the same.  locus 1: " + chromosome + "  locus 2: " + locus2.getChromosomeName());
+        }
+        int start = Math.min(locus1.getStart(), locus2.getStart());
+        int end = Math.max(locus1.getEnd(), locus2.getEnd());
+        Map features1 = locus1.getFeatures();
+        Map features2 = locus2.getFeatures();
+        String[] featureNames = new String[features1.size() + features2.size()];
+        int[] featurePositions = new int[features1.size() + features2.size()];
+        int count = 0;
+        Iterator itr = locus1.getFeatures().keySet().iterator();
+        while (itr.hasNext()) {
+            featureNames[count] = (String) itr.next();
+            featurePositions[count] = (Integer) features1.get(featureNames[count]);
+            count++;
+        }
+        itr = locus2.getFeatures().keySet().iterator();
+        while (itr.hasNext()) {
+            featureNames[count] = (String) itr.next();
+            featurePositions[count] = (Integer) features2.get(featureNames[count]);
+            count++;
+        }
+        return new Locus(chromosome, chromosome, start, end, featureNames, featurePositions);
     }
 
     public Locus(String name) {
