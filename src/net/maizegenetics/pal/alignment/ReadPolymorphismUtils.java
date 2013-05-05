@@ -57,18 +57,24 @@ public class ReadPolymorphismUtils {
             nTaxa = dataList.size();
         }
 
-        String[][] myData = new String[nTaxa][nMarkers];
+        String[][] finalData = new String[nTaxa][nMarkers];
         String[] taxa = new String[nTaxa];
         for (int t = 0; t < nTaxa; t++) {
             String[] taxonData = dataList.get(t);
             taxa[t] = taxonData[0];
             for (int s = 0; s < nMarkers; s++) {
-                myData[t][s] = taxonData[s + 1];
+                if (taxonData[s + 1].equals("?")) {
+                    finalData[t][s] = Alignment.UNKNOWN_ALLELE_STR;
+                } else if (taxonData[s + 1].equals("?:?")) {
+                    finalData[t][s] = Alignment.UNKNOWN_DIPLOID_ALLELE_STR;
+                } else {
+                    finalData[t][s] = taxonData[s + 1];
+                }
             }
         }
 
         Locus[] myLoci = new Locus[]{Locus.UNKNOWN};
-        return BitAlignment.getInstance(new SimpleIdGroup(taxa), myData, null, null, null, 14, myLoci, new int[]{0}, markerNames, true, true);
+        return BitAlignment.getInstance(new SimpleIdGroup(taxa), finalData, null, null, null, 14, myLoci, new int[]{0}, markerNames, true, true);
     }
 
     public static GeneticMap readGeneticMapFile(String filename) throws IOException {

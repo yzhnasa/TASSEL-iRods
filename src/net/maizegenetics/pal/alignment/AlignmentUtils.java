@@ -40,10 +40,10 @@ public class AlignmentUtils {
         for (int i = 0; i < data.length; i++) {
             byte first = (byte) ((data[i] >>> 4) & 0xf);
             byte second = (byte) (data[i] & 0xf);
-            if (first != Alignment.UNKNOWN_ALLELE) {
+            if (first < Alignment.RARE_ALLELE) {
                 stateCnt[first]++;
             }
-            if (second != Alignment.UNKNOWN_ALLELE) {
+            if (second < Alignment.RARE_ALLELE) {
                 stateCnt[second]++;
             }
         }
@@ -110,10 +110,10 @@ public class AlignmentUtils {
         for (int i = 0; i < data.length; i++) {
             byte first = (byte) ((data[i][site] >>> 4) & 0xf);
             byte second = (byte) (data[i][site] & 0xf);
-            if (first != Alignment.UNKNOWN_ALLELE) {
+            if (first < Alignment.RARE_ALLELE) {
                 stateCnt[first]++;
             }
-            if (second != Alignment.UNKNOWN_ALLELE) {
+            if (second < Alignment.RARE_ALLELE) {
                 stateCnt[second]++;
             }
         }
