@@ -6,11 +6,6 @@ import javax.swing.ImageIcon;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-
-import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.gbs.tagdist.TagCountMutable;
@@ -19,28 +14,28 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.DirectoryCrawler;
+import net.maizegenetics.util.Utils;
 
 import org.apache.log4j.Logger;
 
-/** 
+/**
  * Derives a tagCount list for each fastq file in the input directory.
  *
  * Keeps only good reads having a barcode and a cut site and no N's in the
- * useful part of the sequence.  Trims off the barcodes and truncates sequences
+ * useful part of the sequence. Trims off the barcodes and truncates sequences
  * that (1) have a second cut site, or (2) read into the common adapter.
- * 
+ *
  */
 public class FastqToTagCountPlugin extends AbstractPlugin {
 
-    static long timePoint1;
-    private ArgsEngine engine = null;
-    private Logger logger = Logger.getLogger(FastqToTagCountPlugin.class);
-    String directoryName = null;
-    String keyfile = null;
-    String enzyme = null;
-    int maxGoodReads = 200000000;
-    int minCount = 1;
-    String outputDir = null;
+    private static final Logger myLogger = Logger.getLogger(FastqToTagCountPlugin.class);
+    private ArgsEngine myArgsEngine = null;
+    private String myInputDirName = null;
+    private String myKeyfile = null;
+    private String myEnzyme = null;
+    private int myMaxGoodReads = 200000000;
+    private int myMinCount = 1;
+    private String myOutputDir = null;
 
     public FastqToTagCountPlugin() {
         super(null, false);
@@ -51,7 +46,7 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
     }
 
     private void printUsage() {
-        logger.info(
+        myLogger.info(
                 "\n\nUsage is as follows:\n"
                 + " -i  Input directory containing FASTQ files in text or gzipped text.\n"
                 + "     NOTE: Directory will be searched recursively and should\n"
@@ -64,12 +59,12 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
     }
 
     public DataSet performFunction(DataSet input) {
-        File qseqDirectory = new File(directoryName);
-        if (!qseqDirectory.isDirectory()) {
+        File fastqDirectory = new File(myInputDirName);
+        if (!fastqDirectory.isDirectory()) {
             printUsage();
-            throw new IllegalStateException("The input name you supplied is not a directory.");
+            throw new IllegalStateException("The input name you supplied is not a directory: " + myInputDirName);
         }
-        countTags(keyfile, enzyme, directoryName, outputDir, maxGoodReads, minCount);
+        countTags(myKeyfile, myEnzyme, myInputDirName, myOutputDir, myMaxGoodReads, myMinCount);
         return null;
     }
 
@@ -79,97 +74,98 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
         }
-//        try{
-        if (engine == null) {
-            engine = new ArgsEngine();
-            engine.add("-i", "--input-directory", true);
-            engine.add("-k", "--key-file", true);
-            engine.add("-e", "--enzyme", true);
-            engine.add("-s", "--max-reads", true);
-            engine.add("-c", "--min-count", true);
-            engine.add("-o", "--output-file", true);
-            engine.parse(args);
+
+        if (myArgsEngine == null) {
+            myArgsEngine = new ArgsEngine();
+            myArgsEngine.add("-i", "--input-directory", true);
+            myArgsEngine.add("-k", "--key-file", true);
+            myArgsEngine.add("-e", "--enzyme", true);
+            myArgsEngine.add("-s", "--max-reads", true);
+            myArgsEngine.add("-c", "--min-count", true);
+            myArgsEngine.add("-o", "--output-file", true);
+            myArgsEngine.parse(args);
         }
 
-        if (engine.getBoolean("-i")) {
-            directoryName = engine.getString("-i");
+        if (myArgsEngine.getBoolean("-i")) {
+            myInputDirName = myArgsEngine.getString("-i");
         } else {
             printUsage();
             throw new IllegalArgumentException("Please specify the location of your FASTQ files.");
         }
 
-        if (engine.getBoolean("-k")) {
-            keyfile = engine.getString("-k");
+        if (myArgsEngine.getBoolean("-k")) {
+            myKeyfile = myArgsEngine.getString("-k");
         } else {
             printUsage();
             throw new IllegalArgumentException("Please specify a barcode key file.");
         }
 
-        if (engine.getBoolean("-e")) {
-            enzyme = engine.getString("-e");
+        if (myArgsEngine.getBoolean("-e")) {
+            myEnzyme = myArgsEngine.getString("-e");
         } else {
-            System.out.println("No enzyme specified.  Using enzyme listed in key file.");
-//                printUsage(); throw new IllegalArgumentException("Please specify the enzyme used to create the GBS library.");
+            myLogger.warn("No enzyme specified.  Using enzyme listed in key file.");
         }
 
-        if (engine.getBoolean("-s")) {
-            maxGoodReads = Integer.parseInt(engine.getString("-s"));
+        if (myArgsEngine.getBoolean("-s")) {
+            myMaxGoodReads = Integer.parseInt(myArgsEngine.getString("-s"));
         }
 
-        if (engine.getBoolean("-c")) {
-            minCount = Integer.parseInt(engine.getString("-c"));
+        if (myArgsEngine.getBoolean("-c")) {
+            myMinCount = Integer.parseInt(myArgsEngine.getString("-c"));
         }
 
-        if (engine.getBoolean("-o")) {
-            outputDir = engine.getString("-o");
+        if (myArgsEngine.getBoolean("-o")) {
+            myOutputDir = myArgsEngine.getString("-o");
         } else {
-            outputDir = directoryName;
+            myOutputDir = myInputDirName;
         }
-//        }catch (Exception e){
-//            System.out.println("Caught exception while setting parameters of "+this.getClass()+": "+e);
-//        }
+
     }
 
     /**
      * Derives a tagCount list for each fastq file in the fastqDirectory.
      *
-     * @param keyFileS        A key file (a sample key by barcode, with a plate map included).
-     * @param enzyme          The enzyme used to create the library (currently ApeKI or PstI).
-     * @param fastqDirectory  Directory containing the fastq files (will be recursively searched).
-     * @param outputDir       Directory to which the tagCounts files (one per fastq file) will be written.
-     * @param maxGoodReads    The maximum number of barcoded reads expected in a fastq file
-     * @param minCount        The minimum number of occurrences of a tag in a fastq file for it to be included in the output tagCounts file
+     * @param keyFileS A key file (a sample key by barcode, with a plate map
+     * included).
+     * @param enzyme The enzyme used to create the library (currently ApeKI or
+     * PstI).
+     * @param fastqDirectory Directory containing the fastq files (will be
+     * recursively searched).
+     * @param outputDir Directory to which the tagCounts files (one per fastq
+     * file) will be written.
+     * @param maxGoodReads The maximum number of barcoded reads expected in a
+     * fastq file
+     * @param minCount The minimum number of occurrences of a tag in a fastq
+     * file for it to be included in the output tagCounts file
      */
     public static void countTags(String keyFileS, String enzyme, String fastqDirectory, String outputDir, int maxGoodReads, int minCount) {
-        BufferedReader br;
         String[] countFileNames = null;
 
         File inputDirectory = new File(fastqDirectory);
         File[] fastqFiles = DirectoryCrawler.listFiles("(?i).*\\.fq$|.*\\.fq\\.gz$|.*\\.fastq$|.*_fastq\\.txt$|.*_fastq\\.gz$|.*_fastq\\.txt\\.gz$|.*_sequence\\.txt$|.*_sequence\\.txt\\.gz$", inputDirectory.getAbsolutePath());
-//                                                      (?i) denotes case insensitive;                 \\. denotes escape . so it doesn't mean 'any char' & escape the backslash
+        //                                              (?i) denotes case insensitive;                 \\. denotes escape . so it doesn't mean 'any char' & escape the backslash
         if (fastqFiles.length == 0 || fastqFiles == null) {
-            System.out.println("Couldn't find any files that end with \".fq\", \".fq.gz\", \".fastq\", \"_fastq.txt\", \"_fastq.gz\", \"_fastq.txt.gz\", \"_sequence.txt\", or \"_sequence.txt.gz\" in the supplied directory.");
+            myLogger.warn("Couldn't find any files that end with \".fq\", \".fq.gz\", \".fastq\", \"_fastq.txt\", \"_fastq.gz\", \"_fastq.txt.gz\", \"_sequence.txt\", or \"_sequence.txt.gz\" in the supplied directory.");
+            return;
         } else {
-            System.out.println("Using the following FASTQ files:");
+            myLogger.info("Using the following FASTQ files:");
             countFileNames = new String[fastqFiles.length];
             for (int i = 0; i < fastqFiles.length; i++) {
                 countFileNames[i] = fastqFiles[i].getName().replaceAll("(?i)\\.fq$|\\.fq\\.gz$|\\.fastq$|_fastq\\.txt$|_fastq\\.gz$|_fastq\\.txt\\.gz$|_sequence\\.txt$|_sequence\\.txt\\.gz$", ".cnt");
-//                        \\. escape . so it doesn't mean 'any char' & escape the backslash                
-                System.out.println(fastqFiles[i].getAbsolutePath());
+                //                                                                  \\. escape . so it doesn't mean 'any char' & escape the backslash                
+                myLogger.info(fastqFiles[i].getAbsolutePath());
             }
         }
-        int allReads = 0, goodBarcodedReads = 0;
+
         for (int laneNum = 0; laneNum < fastqFiles.length; laneNum++) {
             File outputFile = new File(outputDir + File.separator + countFileNames[laneNum]);
             if (outputFile.isFile()) {
-                System.out.println(
-                        "An output file " + countFileNames[laneNum] + "\n"
+                myLogger.warn("An output file " + countFileNames[laneNum] + "\n"
                         + " already exists in the output directory for file " + fastqFiles[laneNum] + ".  Skipping.");
                 continue;
             }
 
-            TagCountMutable theTC = null;
-            System.out.println("Reading FASTQ file: " + fastqFiles[laneNum]);
+            myLogger.info("Reading FASTQ file: " + fastqFiles[laneNum]);
             String[] filenameField = fastqFiles[laneNum].getName().split("_");
             ParseBarcodeRead thePBR;  // this reads the key file and store the expected barcodes for this lane
             if (filenameField.length == 3) {
@@ -180,15 +176,15 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
             else if (filenameField.length == 5) {
                 thePBR = new ParseBarcodeRead(keyFileS, enzyme, filenameField[1], filenameField[3]);
             } else {
-                System.out.println("Error in parsing file name:");
-                System.out.println("   The filename does not contain either 3, 4, or 5 underscore-delimited values.");
-                System.out.println("   Expect: flowcell_lane_fastq.txt.gz OR flowcell_s_lane_fastq.txt.gz OR code_flowcell_s_lane_fastq.txt.gz");
-                System.out.println("   Filename: " + fastqFiles[laneNum]);
+                myLogger.error("Error in parsing file name: " + fastqFiles[laneNum]);
+                myLogger.error("   The filename does not contain either 3, 4, or 5 underscore-delimited values.");
+                myLogger.error("   Expect: flowcell_lane_fastq.txt.gz OR flowcell_s_lane_fastq.txt.gz OR code_flowcell_s_lane_fastq.txt.gz");
                 continue;
             }
-            System.out.println("Total barcodes found in lane:" + thePBR.getBarCodeCount());
+
+            myLogger.info("Total barcodes found in lane:" + thePBR.getBarCodeCount());
             if (thePBR.getBarCodeCount() == 0) {
-                System.out.println("No barcodes found.  Skipping this flowcell lane.");
+                myLogger.warn("No barcodes found.  Skipping this flowcell lane.");
                 continue;
             }
             String[] taxaNames = new String[thePBR.getBarCodeCount()];
@@ -196,28 +192,27 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
                 taxaNames[i] = thePBR.getTheBarcodes(i).getTaxaName();
             }
 
+            int goodBarcodedReads = 0;
             try {
-                //Read in qseq file as a gzipped text stream if its name ends in ".gz", otherwise read as text
-                if (fastqFiles[laneNum].getName().endsWith(".gz")) {
-                    br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(fastqFiles[laneNum]))));
-                } else {
-                    br = new BufferedReader(new FileReader(fastqFiles[laneNum]), 65536);
-                }
-                String sequence = "", qualityScore = "";
-                String temp;
+                BufferedReader br = Utils.getBufferedReader(fastqFiles[laneNum], 65536);
 
+                TagCountMutable theTC = null;
                 try {
                     theTC = new TagCountMutable(2, maxGoodReads);
                 } catch (OutOfMemoryError e) {
-                    System.out.println(
-                            "Your system doesn't have enough memory to store the number of sequences"
+                    myLogger.error("Your system doesn't have enough memory to store the number of sequences"
                             + "you specified.  Try using a smaller value for the minimum number of reads.");
+                    System.exit(1);
                 }
+
                 int currLine = 0;
-                allReads = 0;
+                int allReads = 0;
                 goodBarcodedReads = 0;
-                while (((temp = br.readLine()) != null) && goodBarcodedReads < maxGoodReads) {
+                String temp = br.readLine();
+                while ((temp != null) && goodBarcodedReads < maxGoodReads) {
                     currLine++;
+                    String sequence = "";
+                    String qualityScore = "";
                     try {
                         //The quality score is every 4th line; the sequence is every 4th line starting from the 2nd.
                         if ((currLine + 2) % 4 == 0) {
@@ -232,29 +227,31 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
                                 theTC.addReadCount(rr.getRead(), rr.getLength(), 1);
                             }
                             if (allReads % 1000000 == 0) {
-                                System.out.println("Total Reads:" + allReads + " Reads with barcode and cut site overhang:" + goodBarcodedReads);
+                                myLogger.info("Total Reads:" + allReads + " Reads with barcode and cut site overhang:" + goodBarcodedReads);
                             }
                         }
                     } catch (NullPointerException e) {
-                        System.out.println("Unable to correctly parse the sequence and "
-                                + "quality score from fastq file.  Your fastq file may have been corrupted.");
-                        System.exit(0);
+                        myLogger.error("Unable to correctly parse the sequence and: " + sequence
+                                + " and quality score: " + qualityScore + " from fastq file.  Your fastq file may have been corrupted.");
+                        System.exit(1);
                     }
+                    temp = br.readLine();
                 }
-                System.out.println("Total number of reads in lane=" + allReads);
-                System.out.println("Total number of good barcoded reads=" + goodBarcodedReads);
-                System.out.println("Timing process (sorting, collapsing, and writing TagCount to file).");
-                timePoint1 = System.currentTimeMillis();
+
+                myLogger.info("Total number of reads in lane=" + allReads);
+                myLogger.info("Total number of good barcoded reads=" + goodBarcodedReads);
+                myLogger.info("Timing process (sorting, collapsing, and writing TagCount to file).");
+                long timePoint1 = System.currentTimeMillis();
                 theTC.collapseCounts();
                 theTC.writeTagCountFile(outputDir + File.separator + countFileNames[laneNum], FilePacking.Bit, minCount);
-                System.out.println("Process took " + (System.currentTimeMillis() - timePoint1) + " milliseconds.");
+                myLogger.info("Process took " + (System.currentTimeMillis() - timePoint1) + " milliseconds.");
                 br.close();
 
             } catch (Exception e) {
-                System.out.println("Catch testBasicPipeline c=" + goodBarcodedReads + " e=" + e);
+                myLogger.error("Good Barcodes Read: " + goodBarcodedReads);
                 e.printStackTrace();
             }
-            System.out.println("Finished reading " + (laneNum + 1) + " of " + fastqFiles.length + " sequence files.");
+            myLogger.info("Finished reading " + (laneNum + 1) + " of " + fastqFiles.length + " sequence files.");
         }
     }
 
