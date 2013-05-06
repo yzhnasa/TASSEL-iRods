@@ -366,21 +366,25 @@ public final class Utils {
         }
         return null;
     }
-    
+
+    public static BufferedReader getBufferedReader(File file, int bufSize) {
+        return getBufferedReader(file.getAbsolutePath(), bufSize);
+    }
+
     public static BufferedWriter getBufferedWriter(String filename) {
         return getBufferedWriter(filename, false);
     }
-    
+
     public static BufferedWriter getBufferedWriter(String filename, boolean append) {
         return getBufferedWriter(new File(filename), append);
     }
-    
+
     public static BufferedWriter getBufferedWriter(File file) {
         return getBufferedWriter(file, false);
     }
 
     public static BufferedWriter getBufferedWriter(File file, boolean append) {
-        
+
         String filename = null;
 
         try {
@@ -455,10 +459,10 @@ public final class Utils {
 
     /**
      * Return number of lines in given file.
-     * 
+     *
      * @param filename file name
-     * 
-     * @return number of lines 
+     *
+     * @return number of lines
      */
     public static int getNumberLines(String filename) {
 
