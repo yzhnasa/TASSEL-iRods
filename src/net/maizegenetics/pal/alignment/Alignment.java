@@ -417,6 +417,20 @@ public interface Alignment extends Serializable {
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus);
 
     /**
+     * Return site of given physical position / SNP ID in locus. If the physical
+     * position doesn't exist, (-(insertion point) - 1) is returned. If locus is
+     * not found, an exception is thrown. This is to support multiple sites with
+     * the same physical position but different SNP IDs.
+     *
+     * @param physicalPosition physical position
+     * @param locus locus. if null, the first locus is used.
+     * @param snpID SNP ID
+     *
+     * @return index
+     */
+    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID);
+
+    /**
      * Returns all physical positions.
      *
      * @return physical positions.

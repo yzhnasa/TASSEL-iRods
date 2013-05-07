@@ -268,17 +268,13 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                         break;
                     }
                 }
-                int site = result.getSiteOfPhysicalPosition(physicalPosition, locus);
+                int site = result.getSiteOfPhysicalPosition(physicalPosition, locus, siteName);
                 if (site < 0) {
                     throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
-                } else {
-                    if (!siteName.equals(result.getSNPID(site))) {
-                        throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: site names at physical position: " + physicalPosition + " in locus: " + locus.getName() + " does not match: " + siteName);
-                    }
                 }
+
                 for (int t = 0; t < numSeqs; t++) {
                     result.setBase(taxaIndices[t], site, currentAlignment.getBase(t, s));
-                    //result.setBase(ids.getIdentifier(t), currentAlignment.getSNPID(s), currentAlignment.getLocus(s), currentAlignment.getPositionInLocus(s), currentAlignment.getBase(t, s));
                 }
             }
         }
@@ -498,6 +494,9 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             throw new IllegalStateException("MutableSingleEncodeAlignment: getSiteOfPhysicalPosition: this alignment is dirty.");
         }
 
+        if (myVariableSites == null) {
+            return physicalPosition;
+        }
         try {
             if (locus == null) {
                 locus = myLocusToLociIndex.get(0);
@@ -508,6 +507,47 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             e.printStackTrace();
             return -1;
         }
+    }
+
+    @Override
+    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+
+        if (isDirty()) {
+            throw new IllegalStateException("MutableSingleEncodeAlignment: getSiteOfPhysicalPosition: this alignment is dirty.");
+        }
+
+        if (myVariableSites == null) {
+            return physicalPosition;
+        }
+        if (locus == null) {
+            locus = myLocusToLociIndex.get(0);
+        }
+        int[] startEnd = getStartAndEndOfLocus(locus);
+        int result = Arrays.binarySearch(myVariableSites, startEnd[0], startEnd[1], physicalPosition);
+        if (result < 0) {
+            return result;
+        } else {
+            if (snpID.equals(getSNPID(result))) {
+                return result;
+            } else {
+                int index = result - 1;
+                while ((index >= startEnd[0]) && (getPositionInLocus(index) == physicalPosition)) {
+                    if (snpID.equals(getSNPID(index))) {
+                        return index;
+                    }
+                    index--;
+                }
+                index = result + 1;
+                while ((index < startEnd[1]) && (getPositionInLocus(index) == physicalPosition)) {
+                    if (snpID.equals(getSNPID(index))) {
+                        return index;
+                    }
+                    index++;
+                }
+                return -result - 1;
+            }
+        }
+
     }
 
     @Override
@@ -538,7 +578,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             throw new IllegalArgumentException("MutableSingleEncodeAlignment: setBase: taxon not found.");
         }
 
-        int site = getSiteOfPhysicalPosition(physicalPosition, locus);
+        int site = getSiteOfPhysicalPosition(physicalPosition, locus, siteName);
         if (site < 0) {
             throw new IllegalStateException("MutableSingleEncodeAlignment: setBase: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
         } else {

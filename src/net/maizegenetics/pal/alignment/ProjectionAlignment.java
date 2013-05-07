@@ -10,9 +10,10 @@ import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 
 /**
- * This class projects high Density markers on large group of taxa through 
- * a look up table system.  The lookup table generally needs be built through
- * some imputation approach.
+ * This class projects high Density markers on large group of taxa through a
+ * look up table system. The lookup table generally needs be built through some
+ * imputation approach.
+ *
  * @author ed, terry
  */
 public class ProjectionAlignment extends AbstractAlignment {
@@ -51,19 +52,21 @@ public class ProjectionAlignment extends AbstractAlignment {
         System.out.printf("SetComp %s %d %n", taxa, taxon);
         setCompositionOfTaxon(taxon, posBreaks, hdTaxa);
     }
-    
+
     public String getCompositionOfTaxon(int taxon) {
-        StringBuilder sb=new StringBuilder(this.getIdGroup().getIdentifier(taxon).getFullName()+"\t");
-        if(myPosBreaks[taxon]==null) {sb.append("NULL");}
-        else {
-        for (int i = 0; i < myPosBreaks[taxon].length; i++) {
-            sb.append(myPosBreaks[taxon][i]+":");
-            sb.append(mySiteBreaks[taxon][i]+":");
-            sb.append(myHDTaxa[taxon][i]+"\t");
-        }}
+        StringBuilder sb = new StringBuilder(this.getIdGroup().getIdentifier(taxon).getFullName() + "\t");
+        if (myPosBreaks[taxon] == null) {
+            sb.append("NULL");
+        } else {
+            for (int i = 0; i < myPosBreaks[taxon].length; i++) {
+                sb.append(myPosBreaks[taxon][i] + ":");
+                sb.append(mySiteBreaks[taxon][i] + ":");
+                sb.append(myHDTaxa[taxon][i] + "\t");
+            }
+        }
         return sb.toString();
     }
-    
+
     public void reportPAComposition() {
         for (int i = 0; i < this.getSequenceCount(); i++) {
             System.out.println(getCompositionOfTaxon(i));
@@ -71,21 +74,23 @@ public class ProjectionAlignment extends AbstractAlignment {
     }
 
     private int translateTaxon(int taxon, int site) {
-        if(mySiteBreaks[taxon]==null) { 
+        if (mySiteBreaks[taxon] == null) {
             return -1;
         }
         int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
-        if (b<0) {
-            b=-(b+2);  //this will not work if it does not start with zero.
+        if (b < 0) {
+            b = -(b + 2);  //this will not work if it does not start with zero.
         }
- //       if(myHDTaxa[taxon]==null) return 0;//this should be a missing taxon.
+        //       if(myHDTaxa[taxon]==null) return 0;//this should be a missing taxon.
         return myHDTaxa[taxon][b];
     }
 
     @Override
     public String getBaseAsString(int taxon, int site) {
-        int t=translateTaxon(taxon, site);
-        if(t<0) return Alignment.UNKNOWN_ALLELE_STR;
+        int t = translateTaxon(taxon, site);
+        if (t < 0) {
+            return Alignment.UNKNOWN_ALLELE_STR;
+        }
         return myBaseAlignment.getBaseAsString(t, site);
     }
 
@@ -96,13 +101,16 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     @Override
     /**
-     * This is the slow implementation of this.  Most of these should be buffered bit
-     * sets.  Note the imputation of the taxon is likely to be the the same for 64 or more sites
-     * in a row (potentially, 10,000s of sites in many cases).
+     * This is the slow implementation of this. Most of these should be buffered
+     * bit sets. Note the imputation of the taxon is likely to be the the same
+     * for 64 or more sites in a row (potentially, 10,000s of sites in many
+     * cases).
      */
     public byte getBase(int taxon, int site) {
-        int t=translateTaxon(taxon, site);
-        if(t<0) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        int t = translateTaxon(taxon, site);
+        if (t < 0) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
         return myBaseAlignment.getBase(t, site);
     }
 
@@ -307,6 +315,11 @@ public class ProjectionAlignment extends AbstractAlignment {
     }
 
     @Override
+    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+        return myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+    }
+
+    @Override
     public byte getPositionType(int site) {
         return myBaseAlignment.getPositionType(site);
     }
@@ -373,10 +386,10 @@ public class ProjectionAlignment extends AbstractAlignment {
         return result;
 
     }
-    
+
     @Override
     public int getTotalNotMissingForTaxon(int taxon) {
-        
+
         int numBreaks = mySiteBreaks[taxon].length;
         int result = 0;
         for (int i = 0; i < numBreaks - 1; i++) {
@@ -398,7 +411,7 @@ public class ProjectionAlignment extends AbstractAlignment {
         }
 
         return result;
-        
+
     }
 
     // TERRY - This Needs Work.

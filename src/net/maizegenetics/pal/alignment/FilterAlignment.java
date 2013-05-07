@@ -669,6 +669,16 @@ public class FilterAlignment extends AbstractAlignment {
         return reverseTranslateSite(temp);
     }
 
+    @Override
+    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+        if (temp < 0) {
+            temp = -(temp + 1);
+            return -(reverseTranslateSite(temp) + 1);
+        }
+        return reverseTranslateSite(temp);
+    }
+
     public Alignment getBaseAlignment() {
         return myBaseAlignment;
     }

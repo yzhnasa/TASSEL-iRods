@@ -733,6 +733,41 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
+    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+        if (myVariableSites == null) {
+            return physicalPosition;
+        }
+        if (locus == null) {
+            locus = myLoci[0];
+        }
+        int[] startEnd = getStartAndEndOfLocus(locus);
+        int result = Arrays.binarySearch(myVariableSites, startEnd[0], startEnd[1], physicalPosition);
+        if (result < 0) {
+            return result;
+        } else {
+            if (snpID.equals(getSNPID(result))) {
+                return result;
+            } else {
+                int index = result - 1;
+                while ((index >= startEnd[0]) && (getPositionInLocus(index) == physicalPosition)) {
+                    if (snpID.equals(getSNPID(index))) {
+                        return index;
+                    }
+                    index--;
+                }
+                index = result + 1;
+                while ((index < startEnd[1]) && (getPositionInLocus(index) == physicalPosition)) {
+                    if (snpID.equals(getSNPID(index))) {
+                        return index;
+                    }
+                    index++;
+                }
+                return -result - 1;
+            }
+        }
+    }
+
+    @Override
     public byte getPositionType(int site) {
         return Alignment.POSITION_TYPE_ALL_GROUP;
     }

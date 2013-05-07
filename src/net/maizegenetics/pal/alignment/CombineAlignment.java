@@ -276,6 +276,22 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
+    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+        Alignment align = ((Alignment) myLoci.get(locus));
+        int i = -1;
+        for (int j = 0; j < myAlignments.length; j++) {
+            if (myAlignments[j] == align) {
+                i = j;
+                break;
+            }
+        }
+        if (i == -1) {
+            return -1;
+        }
+        return mySiteOffsets[i] + align.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+    }
+
+    @Override
     public byte getPositionType(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getPositionType(site - mySiteOffsets[translate]);
