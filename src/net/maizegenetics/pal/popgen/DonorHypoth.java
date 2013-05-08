@@ -48,6 +48,10 @@ class DonorHypoth {
     public double getErrorRate() {
         return (double) mendelianErrors / (double) totalSites;
     }
+    
+    public boolean isInbred() {
+        return (donor1Taxon==donor2Taxon);
+    }
 
     @Override
     public boolean equals(Object obj) {
