@@ -210,7 +210,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
      * @return String
      */
     public String getButtonName() {
-        return "Taxa";
+        return "Taxa Names";
     }
 
     /**
