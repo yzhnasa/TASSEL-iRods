@@ -269,15 +269,14 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         for (int i = 0; i < outMSA.length; i++) {
             int currSite = 0;
             for (int j = 0; j < uniquePositions.get(i).length; j++) {
-                //outMSA[i].setLocusOfSite(currSite, Integer.toString(chromosomes[i]));
                 String chromosome = Integer.toString(chromosomes[i]);
+                outMSA[i].addSite(currSite);
                 outMSA[i].setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
                 //outMSA[i].setStrandOfSite(currSite, (byte) '+');
                 outMSA[i].setPositionOfSite(currSite, uniquePositions.get(i)[j]);
                 currSite++;
             }
             outMSA[i].clean();
-            //outMSA[i].sortSiteByPhysicalPosition();
         }
         return outMSA;
     }
@@ -392,7 +391,6 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
 
     private void writeHapMapFiles(MutableNucleotideAlignment[] outMSA, String outputDir, String[] rawSeqFileNames, int laneNum, int[] counters) {
         for (int i = 0; i < outMSA.length; i++) {
-            //outMSA[i].sortSiteByPhysicalPosition();
             outMSA[i].clean();
             AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(outMSA[i], false);
             String outFileS = outputDir + rawSeqFileNames[laneNum].substring(rawSeqFileNames[laneNum].lastIndexOf(File.separator));
