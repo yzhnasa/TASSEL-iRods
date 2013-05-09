@@ -62,6 +62,16 @@ public class TasselPrefs {
     public static final String FILTER_ALIGN_PLUGIN_MIN_COUNT = "minCount";
     public static final int FILTER_ALIGN_PLUGIN_MIN_COUNT_DEFAULT = 1;
     //
+    // FilterTaxaPropertiesPlugin preferences
+    //
+    public static final String FILTER_TAXA_PROPS_PLUGIN_TOP = "/tassel/plugins/filterTaxaAlign";
+    // Min. Not Missing Gametes Proportion
+    public static final String FILTER_TAXA_PROPS_PLUGIN_MIN_NOT_MISSING = "minNotMissingFreq";
+    public static final double FILTER_TAXA_PROPS_PLUGIN_MIN_NOT_MISSING_DEFAULT = 0.1;
+    //Max. Heterozygotes Proportion
+    public static final String FILTER_TAXA_PROPS_PLUGIN_MAX_HET = "maxHetFreq";
+    public static final double FILTER_TAXA_PROPS_PLUGIN_MAX_HET_DEFAULT = 0.1;
+    //
     // Alignment preferences
     //
     public static final String ALIGNMENT_TOP = "/tassel/alignment";
@@ -233,6 +243,25 @@ public class TasselPrefs {
 
     public static void putFilterAlignPluginMinCount(int value) {
         putIntPref(FILTER_ALIGN_PLUGIN_TOP, FILTER_ALIGN_PLUGIN_MIN_COUNT, value);
+    }
+
+    //
+    // FilterTaxaPropertiesPlugin preferences
+    //
+    public static double getFilterTaxaPropsMinNotMissingFreq() {
+        return getDoublePref(FILTER_TAXA_PROPS_PLUGIN_TOP, FILTER_TAXA_PROPS_PLUGIN_MIN_NOT_MISSING, FILTER_TAXA_PROPS_PLUGIN_MIN_NOT_MISSING_DEFAULT);
+    }
+
+    public static void putFilterTaxaPropsMinNotMissingFreq(double value) {
+        putDoublePref(FILTER_TAXA_PROPS_PLUGIN_TOP, FILTER_TAXA_PROPS_PLUGIN_MIN_NOT_MISSING, value);
+    }
+
+    public static double getFilterTaxaPropsMaxHetFreq() {
+        return getDoublePref(FILTER_TAXA_PROPS_PLUGIN_TOP, FILTER_TAXA_PROPS_PLUGIN_MAX_HET, FILTER_TAXA_PROPS_PLUGIN_MAX_HET_DEFAULT);
+    }
+
+    public static void putFilterTaxaPropsMaxHetFreq(double value) {
+        putDoublePref(FILTER_TAXA_PROPS_PLUGIN_TOP, FILTER_TAXA_PROPS_PLUGIN_MAX_HET, value);
     }
 
     //

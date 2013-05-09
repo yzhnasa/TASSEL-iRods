@@ -34,6 +34,7 @@ public class DataControlPanel extends AbstractControlPanel {
             addPlugin(new FilterAlignmentPlugin(theTASSELMainFrame, true));
             addPlugin(new FilterSiteNamePlugin(theTASSELMainFrame, true));
             addPlugin(new FilterTaxaAlignmentPlugin(theTASSELMainFrame, true));
+            addPlugin(new FilterTaxaPropertiesPlugin(theTASSELMainFrame, true));
             addPlugin(new FilterTraitsPlugin(theTASSELMainFrame, true));
             //todo the kinship filtering needs to be reworked
             //kinship need to changed to matrices, and MLM should just work without filtering
