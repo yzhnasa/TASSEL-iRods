@@ -68,9 +68,12 @@ public class TasselPrefs {
     // Min. Not Missing Gametes Proportion
     public static final String FILTER_TAXA_PROPS_PLUGIN_MIN_NOT_MISSING = "minNotMissingFreq";
     public static final double FILTER_TAXA_PROPS_PLUGIN_MIN_NOT_MISSING_DEFAULT = 0.1;
+    //Min. Heterozygotes Proportion
+    public static final String FILTER_TAXA_PROPS_PLUGIN_MIN_HET = "minHetFreq";
+    public static final double FILTER_TAXA_PROPS_PLUGIN_MIN_HET_DEFAULT = 0.0;
     //Max. Heterozygotes Proportion
     public static final String FILTER_TAXA_PROPS_PLUGIN_MAX_HET = "maxHetFreq";
-    public static final double FILTER_TAXA_PROPS_PLUGIN_MAX_HET_DEFAULT = 0.1;
+    public static final double FILTER_TAXA_PROPS_PLUGIN_MAX_HET_DEFAULT = 1.0;
     //
     // Alignment preferences
     //
@@ -254,6 +257,14 @@ public class TasselPrefs {
 
     public static void putFilterTaxaPropsMinNotMissingFreq(double value) {
         putDoublePref(FILTER_TAXA_PROPS_PLUGIN_TOP, FILTER_TAXA_PROPS_PLUGIN_MIN_NOT_MISSING, value);
+    }
+
+    public static double getFilterTaxaPropsMinHetFreq() {
+        return getDoublePref(FILTER_TAXA_PROPS_PLUGIN_TOP, FILTER_TAXA_PROPS_PLUGIN_MIN_HET, FILTER_TAXA_PROPS_PLUGIN_MIN_HET_DEFAULT);
+    }
+
+    public static void putFilterTaxaPropsMinHetFreq(double value) {
+        putDoublePref(FILTER_TAXA_PROPS_PLUGIN_TOP, FILTER_TAXA_PROPS_PLUGIN_MIN_HET, value);
     }
 
     public static double getFilterTaxaPropsMaxHetFreq() {
