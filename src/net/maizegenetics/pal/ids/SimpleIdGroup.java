@@ -9,6 +9,7 @@ package net.maizegenetics.pal.ids;
 import java.io.Serializable;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * SimpleIdGroup
@@ -64,6 +65,13 @@ public class SimpleIdGroup implements IdGroup, Serializable {
         this(id.length);
         for (int i = 0; i < id.length; i++) {
             setIdentifier(i, id[i]);
+        }
+    }
+
+    public SimpleIdGroup(List<Identifier> ids) {
+        this(ids.size());
+        for (int i = 0, n = ids.size(); i < n; i++) {
+            setIdentifier(i, ids.get(i));
         }
     }
 
