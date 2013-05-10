@@ -14,11 +14,10 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.ReadPolymorphismUtils;
@@ -27,6 +26,7 @@ import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
@@ -41,11 +41,15 @@ public class MergeIdenticalGametes {
     private double[] propMissing;
     private int[] siteErrors, siteCallCnt;
     private double minJointGapProb=0.01;
-    private boolean callGaps=false;
+    private boolean callGaps=true;
     private GeneticMap gm=null;
     private BitSet badMask=null;
     private double minimumMissing=0.4;
-    private int maxHaplotypes=1000;
+    private int maxHaplotypes=2000;
+    private int siteWindow=1024*4;
+    private int minSitesForSectionComp=50;
+    private double maxHetFreq=0.02;
+    private int minTaxaInGroup=2;
 
     public MergeIdenticalGametes(String inFile, String exportFile, String errorInFile,
             String errorExportFile, double maxDistance, int minSites) {        
@@ -67,31 +71,33 @@ public class MergeIdenticalGametes {
         siteCallCnt=new int[inAlign.getSiteCount()];
         propMissing=new double[inAlign.getSequenceCount()];
         //Develop lists of the modest coverage, homozygous taxa
-        TreeMap<Integer,Integer> presentRanking=new TreeMap<Integer,Integer>(Collections.reverseOrder());
-        for (int i = 0; i < inAlign.getSequenceCount(); i++) {
-            int totalSitesNotMissing = inAlign.getTotalNotMissingForTaxon(i);
-            double hetFreq=(double)inAlign.getHeterozygousCountForTaxon(i)/(double)totalSitesNotMissing;
-            propMissing[i]=(double)(1+sites-totalSitesNotMissing)/(double)sites; //1 prevents error in joint missing calculations
-            double propPresent=1.0-propMissing[i];
-//            System.out.printf("%s %d %g %g %n",inAlign.getTaxaName(i),totalSitesNotMissing,hetFreq, propMissing[i]);
-            if((hetFreq>0.01)||(totalSitesNotMissing<minSites)) continue;
-            int index=(1000000*((int)(propPresent*100)))+i;
-//            System.out.println(index);
-            presentRanking.put(index, i);
-        }
-        System.out.println("Inbred and modest coverage:"+presentRanking.size());
+//        TreeMap<Integer,Integer> presentRanking=new TreeMap<Integer,Integer>(Collections.reverseOrder());
+//        for (int i = 0; i < inAlign.getSequenceCount(); i++) {
+//            int totalSitesNotMissing = inAlign.getTotalNotMissingForTaxon(i);
+//            double hetFreq=(double)inAlign.getHeterozygousCountForTaxon(i)/(double)totalSitesNotMissing;
+//            propMissing[i]=(double)(1+sites-totalSitesNotMissing)/(double)sites; //1 prevents error in joint missing calculations
+//            double propPresent=1.0-propMissing[i];
+////            System.out.printf("%s %d %g %g %n",inAlign.getTaxaName(i),totalSitesNotMissing,hetFreq, propMissing[i]);
+//            if((hetFreq>maxHetFreq)||(totalSitesNotMissing<minSites)) continue;
+//            int index=(1000000*((int)(propPresent*100)))+i;
+////            System.out.println(index);
+//            presentRanking.put(index, i);
+//        }
+        
         MutableNucleotideAlignment mna=createEmptyHaplotypeAlignment(maxHaplotypes);
-        int siteWindow=4096;
+        int siteWindow=this.siteWindow;
         int startBlock=0;
         int blockWindow=siteWindow/64;
         int blockStep=blockWindow/2;
-        int sections=blockWindow/4;
+        int sections=blockWindow;// sometimes /4
         int lastBlock= inAlign.getAllelePresenceForAllSites(0, 0).getNumWords()-1;
-        for(startBlock=0; startBlock<=(lastBlock-blockWindow); startBlock+=blockStep) {
+        for(startBlock=0; startBlock<=(lastBlock-blockWindow+1); startBlock+=blockStep) {
             int startSite=startBlock*64;
             int endBlock=startBlock+blockWindow-1;
             int mod=(startBlock/blockStep)%3;
             if((lastBlock-endBlock)<blockStep) endBlock=lastBlock;
+            TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(startBlock, endBlock, minSites, maxHetFreq);
+            System.out.printf("Block %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
             System.out.printf("Current Site %d Current block %d EndBlock: %d LastBlock:%d %n",startSite, startBlock, endBlock, lastBlock);
             TreeMap<Integer,byte[]> results=mergeWithinWindow( presentRanking, startBlock, endBlock, sections, maxDistance);
             int index=mod*maxHaplotypes;
@@ -107,6 +113,31 @@ public class MergeIdenticalGametes {
 //            System.out.printf("%d %d %d %g %g %n",i,siteCallCnt[i],siteErrors[i], 
 //                    (double)siteErrors[i]/(double)siteCallCnt[i], inAlign.getMinorAlleleFrequency(i));
 //        }
+    }
+    
+    private TreeMap<Integer,Integer> createPresentRankingForWindow(int startBlock, int endBlock, 
+            int minSites, double maxHetFreq) {
+        int sites=64*(endBlock-startBlock+1);
+        TreeMap<Integer,Integer> presentRanking=new TreeMap<Integer,Integer>(Collections.reverseOrder());
+        for (int i = 0; i < inAlign.getSequenceCount(); i++) {
+            long[] mj=inAlign.getAllelePresenceForSitesBlock(i, 0, startBlock, endBlock);
+            long[] mn=inAlign.getAllelePresenceForSitesBlock(i, 1, startBlock, endBlock);
+            int totalSitesNotMissing = 0;
+            int hetCnt=0;
+            for (int j = 0; j < mj.length; j++) {
+                totalSitesNotMissing+=BitUtil.pop(mj[j]|mn[j]);
+                hetCnt+=BitUtil.pop(mj[j]&mn[j]);
+            }
+            double hetFreq=(double)hetCnt/(double)totalSitesNotMissing;
+            propMissing[i]=(double)(1+sites-totalSitesNotMissing)/(double)sites; //1 prevents error in joint missing calculations
+            double propPresent=1.0-propMissing[i];
+//            System.out.printf("%s %d %g %g %n",inAlign.getTaxaName(i),totalSitesNotMissing,hetFreq, propMissing[i]);
+            if((hetFreq>maxHetFreq)||(totalSitesNotMissing<minSites)) continue;
+            int index=(1000000*((int)(propPresent*100)))+i;
+//            System.out.println(index);
+            presentRanking.put(index, i);
+        }
+        return presentRanking;
     }
     
     private MutableNucleotideAlignment createEmptyHaplotypeAlignment(int maxHaplotypes) {
@@ -177,7 +208,7 @@ public class MergeIdenticalGametes {
             unmatched.remove(taxon1);
             for(int taxon2 : unmatched) {
                double[][] dist=IBSDistanceMatrix.computeHetBitDistances(inAlign, 
-                       taxon1, taxon2, 100, startBlock, endBlock, sections, badMask);
+                       taxon1, taxon2, minSitesForSectionComp, startBlock, endBlock, sections, badMask);
                double maxDist=0;
                for (double[] ds : dist) {
                    if(Double.isNaN(ds[0])) {maxDist=1.0;}
@@ -189,6 +220,7 @@ public class MergeIdenticalGametes {
             }
             byte[] calls=null;
             //System.out.println("Unk"+countUnknown(calls));
+            if((hits.size()+1)<this.minTaxaInGroup) continue;
             if(hits.size()>0) {
                 ArrayList<String> mergeNames=new ArrayList<String>();
                 mergeNames.add(inIDG.getIdentifier(taxon1).getFullName());
@@ -253,7 +285,7 @@ public class MergeIdenticalGametes {
             if (totalCnt == 0) {
                 double missingProp=1.0;
                 for (int t : taxaIndex) {missingProp*=propMissing[t];}
-                if(callGaps&(missingProp<minJointGapProb)) calls[s]=NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
+                if(callGaps&(missingProp<minJointGapProb)) calls[s-startSite]=NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
                 continue;
             }
             double errorRate;
@@ -322,13 +354,15 @@ public class MergeIdenticalGametes {
         String infile=root+"Z0NE00N_chr10.hmp.txt.gz";
         String infile12228=root+"all25f12288.c10.hmp.txt.gz";
         String infile24K=root+"04_PivotMergedTaxaTBT.c10_s0_s24575_masked.hmp.txt.gz";
-        String infile4097=root+"all25f4097.c10.hmp.txt.gz";
+        String infile4097=root+"all25.c10_s4096_s8191_masked.hmp.txt.gz";
+        String infileCN=root+"CNNAM_Filt_2_6.c10.hmp.txt.gz";
        // String infileS=root+"Z0NE00N_chr10S.hmp.txt.gz";
         String infileS=root+"All_chr10S.hmp.txt.gz";
         String infileL=root+"All_chr10L.hmp.txt.gz";
  //       String donorFile=root+"AllTaxa_BPEC_AllZea_GBS_Build_July_2012_FINAL_chr10.hmp.txt.gz";
  //       String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
-        String mergeFile=root+"maskedMerge20130429.hmp.txt.gz";
+ //       String mergeFile=root+"maskedMerge20130429.hmp.txt.gz";
+        String mergeFile=root+"w4096GapOf24KMerge20130507.hmp.txt.gz";
         String errorFile=root+"mcErrorXMerge20130425.txt";
         String errorFile2=root+"mcErrorXMerge20130425.txt";
         errorFile=errorFile2=null;
@@ -336,10 +370,30 @@ public class MergeIdenticalGametes {
 
         System.out.println("Resolve Method 0");
         MergeIdenticalGametes e64NNI;
+//        Alignment a=ImportUtils.readFromHapmap(infileCN, false, (ProgressListener)null);
+//        a.optimizeForTaxa(null);
+//        ArrayList<Identifier> al=new ArrayList<Identifier>();
+//        int sites=a.getSiteCount();
+//        for (int i = 0; i < a.getSequenceCount(); i++) {
+//            int totalSitesNotMissing = a.getTotalNotMissingForTaxon(i);
+//            double propMissing=(double)(1+sites-totalSitesNotMissing)/(double)sites; //1 prevents error in joint missing calculations
+//            if(propMissing<0.8) al.add(a.getIdGroup().getIdentifier(i));
+//        }
+//        SimpleIdGroup ids=new SimpleIdGroup(al.size());
+//        for (int i = 0; i < al.size(); i++) {
+//            ids.setIdentifier(i, al.get(i));
+//        }
+//        Alignment fa=FilterAlignment.getInstance(a, ids,false);
+//    //    fa.optimizeForSites(null);
+//        ExportUtils.writeToHapmap(fa, false, root+"hcovCN10Merge20130505.hmp.txt.gz", '\t', null);
+//        System.exit(0);
+        
       //  e64NNI=new MergeIdenticalGametes(infile, mergeFile,0.02,1000);
 //        e64NNI=new MergeIdenticalGametes(infile12228, mergeFile,0.02,1000);
 //        e64NNI=new MergeIdenticalGametes(infile4097, mergeFile, errorFile, errorFile2, 0.01,500);
         e64NNI=new MergeIdenticalGametes(infile24K, mergeFile, errorFile, errorFile2, 0.01,500);
+//        e64NNI=new MergeIdenticalGametes(infile4097, mergeFile, errorFile, errorFile2, 0.01,100);
+//        e64NNI=new MergeIdenticalGametes(infileCN, mergeFile, errorFile, errorFile2, 0.01,500);
 //        e64NNI=new MergeIdenticalGametes(infileS, mergeFile,0.02,500);
 //        e64NNI=new MergeIdenticalGametes(infileL, mergeFile,0.02,1000);
 
