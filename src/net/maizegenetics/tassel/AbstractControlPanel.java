@@ -5,9 +5,7 @@ import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.plugindef.ThreadedPluginListener;
 import net.maizegenetics.progress.ProgressPanel;
 
-import javax.swing.AbstractAction;
 import javax.swing.JButton;
-import javax.swing.JMenu;
 import javax.swing.JPanel;
 
 import java.awt.Color;
@@ -41,7 +39,6 @@ public abstract class AbstractControlPanel extends JPanel implements ActionListe
         theTASSELMainFrame = theQAF;
         theDataTreePanel = theDTP;
         FlowLayout layout = new FlowLayout(FlowLayout.CENTER, 0, 0) {
-
             @Override
             public Dimension preferredLayoutSize(Container target) {
 
@@ -90,31 +87,6 @@ public abstract class AbstractControlPanel extends JPanel implements ActionListe
         theTP.addListener(theDataTreePanel);
         this.add(theButton);
         buttonHash.put(theButton, theTP);
-    }
-
-    /**
-     * This is to add plugins which will have a JPanel displayed
-     * in TASSEL's main workspace.
-     */
-    protected void addMainDisplayPlugin(final Plugin theTP) {
-
-        JButton theButton = createButton(theTP);
-
-        theButton.addActionListener(new AbstractAction() {
-
-            public void actionPerformed(ActionEvent e) {
-                theTASSELMainFrame.updateMainDisplayPanel(theTP.getPanel());
-            }
-        });
-
-        this.add(theButton);
-        buttonHash.put(theButton, theTP);
-
-        JMenu menu = theTP.getMenu();
-        if (menu != null) {
-            theTASSELMainFrame.addMenu(menu);
-        }
-
     }
 
     private JButton createButton(Plugin theTP) {
