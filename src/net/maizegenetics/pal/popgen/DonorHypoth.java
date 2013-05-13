@@ -8,7 +8,7 @@ package net.maizegenetics.pal.popgen;
  *
  * @author edbuckler
  */
-class DonorHypoth {
+class DonorHypoth implements Comparable{
     int targetTaxon = -1;
     int donor1Taxon = -1;
     int donor2Taxon = -1;
@@ -21,6 +21,9 @@ class DonorHypoth {
     double pHomoD2 = -11;
     int totalSites = 0;
     int mendelianErrors = 0;
+    int startSite=-1;
+    int endSite=-1;
+    byte[] phasedResults=null;
 
     public DonorHypoth() {
     }
@@ -43,6 +46,8 @@ class DonorHypoth {
         this.startBlock = startBlock;
         this.focusBlock = focusBlock;
         this.endBlock = endBlock;
+        this.startSite=startBlock+0;
+        this.endSite=(endBlock*64)+63;
     }
 
     public double getErrorRate() {
@@ -71,10 +76,18 @@ class DonorHypoth {
         if (this.donor2Taxon != other.donor2Taxon) {
             return false;
         }
-        if (this.focusBlock != other.focusBlock) {
-            return false;
-        }
+//        if (this.focusBlock != other.focusBlock) {
+//            return false;
+//        }
         return true;
+    }
+    
+    public int compareTo(Object o) {
+        if(o.equals(this)) {return 0;}
+        DonorHypoth aDH=(DonorHypoth)o;
+        if(aDH.donor1Taxon<this.donor1Taxon) return 1;
+        return -1;
+        
     }
 
     @Override
