@@ -74,60 +74,57 @@ public class TASSELMainFrame extends JFrame {
     private static final Logger myLogger = Logger.getLogger(TASSELMainFrame.class);
     public static final String version = "4.1.30";
     public static final String versionDate = "May 9, 2013";
-    DataTreePanel theDataTreePanel;
-    DataControlPanel theDataControlPanel;
-    AnalysisControlPanel theAnalysisControlPanel;
-    ResultControlPanel theResultControlPanel;
+    private DataTreePanel theDataTreePanel;
+    private DataControlPanel theDataControlPanel;
+    private AnalysisControlPanel theAnalysisControlPanel;
+    private ResultControlPanel theResultControlPanel;
     private String tasselDataFile = "TasselDataFile";
     //a variable to control when the progress bar was last updated
     private String dataTreeLoadFailed = "Unable to open the saved data tree.  The file format of this version is "
             + "incompatible with other versions.";
-    static final String GENOTYPE_DATA_NEEDED = "Please select genotypic data from the data tree.";
-    static final String RESULTS_DATA_NEEDED = "Please select results data from the data tree.";
-    JFileChooser filerSave = new JFileChooser();
-    JFileChooser filerOpen = new JFileChooser();
-    JPanel mainPanel = new JPanel();
-    JPanel dataTreePanelPanel = new JPanel();
-    JPanel reportPanel = new JPanel();
-    JPanel optionsPanel = new JPanel();
-    JPanel optionsPanelPanel = new JPanel();
-    JPanel modeSelectorsPanel = new JPanel();
-    JPanel buttonPanel = new JPanel();
-    JSplitPane dataTreeReportMainPanelsSplitPanel = new JSplitPane();
-    JSplitPane dataTreeReportPanelsSplitPanel = new JSplitPane();
-    JScrollPane reportPanelScrollPane = new JScrollPane();
-    JTextArea reportPanelTextArea = new JTextArea();
+    private JFileChooser filerSave = new JFileChooser();
+    private JFileChooser filerOpen = new JFileChooser();
+    private JPanel mainPanel = new JPanel();
+    private JPanel dataTreePanelPanel = new JPanel();
+    private JPanel reportPanel = new JPanel();
+    private JPanel optionsPanel = new JPanel();
+    private JPanel optionsPanelPanel = new JPanel();
+    private JPanel modeSelectorsPanel = new JPanel();
+    private JPanel buttonPanel = new JPanel();
+    private JSplitPane dataTreeReportMainPanelsSplitPanel = new JSplitPane();
+    private JSplitPane dataTreeReportPanelsSplitPanel = new JSplitPane();
+    private JScrollPane reportPanelScrollPane = new JScrollPane();
+    private JTextArea reportPanelTextArea = new JTextArea();
     JScrollPane mainPanelScrollPane = new JScrollPane();
     JPanel mainDisplayPanel = new JPanel();
     //mainPanelTextArea corresponds to what is called Main Panel in the user documentation
-    ThreadedJTextArea mainPanelTextArea = new ThreadedJTextArea();
-    JTextField statusBar = new JTextField();
-    JButton resultButton = new JButton();
-    JButton dataButton = new JButton();
-    JButton deleteButton = new JButton();
-    JButton printButton = new JButton();
-    JButton analysisButton = new JButton();
-    JPopupMenu mainPopupMenu = new JPopupMenu();
-    JMenuBar jMenuBar = new JMenuBar();
-    JMenu fileMenu = new JMenu();
-    JMenu toolsMenu = new JMenu();
-    JMenuItem saveMainMenuItem = new JMenuItem();
-    JCheckBoxMenuItem matchCheckBoxMenuItem = new JCheckBoxMenuItem();
-    JMenuItem openCompleteDataTreeMenuItem = new JMenuItem();
-    JMenuItem openDataMenuItem = new JMenuItem();
-    JMenuItem saveAsDataTreeMenuItem = new JMenuItem();
-    JMenuItem saveCompleteDataTreeMenuItem = new JMenuItem();
-    JMenuItem saveDataTreeAsMenuItem = new JMenuItem();
-    JMenuItem exitMenuItem = new JMenuItem();
-    JMenu helpMenu = new JMenu();
-    JMenuItem helpMenuItem = new JMenuItem();
-    JMenuItem preferencesMenuItem = new JMenuItem();
-    JMenuItem aboutMenuItem = new JMenuItem();
-    PreferencesDialog thePreferencesDialog;
-    String UserComments = "";
+    private ThreadedJTextArea mainPanelTextArea = new ThreadedJTextArea();
+    private JTextField statusBar = new JTextField();
+    private JButton resultButton = new JButton();
+    private JButton dataButton = new JButton();
+    private JButton deleteButton = new JButton();
+    private JButton printButton = new JButton();
+    private JButton analysisButton = new JButton();
+    private JPopupMenu mainPopupMenu = new JPopupMenu();
+    private JMenuBar jMenuBar = new JMenuBar();
+    private JMenu fileMenu = new JMenu();
+    private JMenu toolsMenu = new JMenu();
+    private JMenuItem saveMainMenuItem = new JMenuItem();
+    private JCheckBoxMenuItem matchCheckBoxMenuItem = new JCheckBoxMenuItem();
+    private JMenuItem openCompleteDataTreeMenuItem = new JMenuItem();
+    private JMenuItem openDataMenuItem = new JMenuItem();
+    private JMenuItem saveAsDataTreeMenuItem = new JMenuItem();
+    private JMenuItem saveCompleteDataTreeMenuItem = new JMenuItem();
+    private JMenuItem saveDataTreeAsMenuItem = new JMenuItem();
+    private JMenuItem exitMenuItem = new JMenuItem();
+    private JMenu helpMenu = new JMenu();
+    private JMenuItem helpMenuItem = new JMenuItem();
+    private JMenuItem preferencesMenuItem = new JMenuItem();
+    private JMenuItem aboutMenuItem = new JMenuItem();
+    private PreferencesDialog thePreferencesDialog;
     private final ProgressPanel myProgressPanel = ProgressPanel.getInstance();
-    JButton wizardButton = new JButton();
-    ExportPlugin myExportPlugin = null;
+    private JButton wizardButton = new JButton();
+    private ExportPlugin myExportPlugin = null;
 
     public TASSELMainFrame(boolean debug) {
         try {
@@ -936,10 +933,6 @@ public class TASSELMainFrame extends JFrame {
         mainDisplayPanel.add(panel, BorderLayout.CENTER);
         mainDisplayPanel.repaint();
         mainDisplayPanel.validate();
-    }
-
-    public void addMenu(JMenu menu) {
-        jMenuBar.add(menu);
     }
 
     public DataTreePanel getDataTreePanel() {
