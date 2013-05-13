@@ -123,6 +123,8 @@ public class ImportUtils {
             String[] snpID = new String[numSites];
 
             MutableVCFAlignment result = MutableVCFAlignment.getInstance(idGroup, numSites, numTaxa, numSites, maxKeptAlleles);
+            
+         
             int prevPos = -1;
             int currPos = -1;
             int locusStart = 0;
@@ -217,9 +219,9 @@ public class ImportUtils {
                     throw new IllegalStateException("ImportUtils: readFromVCF: no genotype data found in this VCF file at line: " + (numHeader + site + 1));
                 }
 
-                if (alleleDepthIndex == -1) {
-                    throw new IllegalStateException("ImportUtils: readFromVCF: no allele depth data found in this VCF file at line: " + (numHeader + site + 1));
-                }
+                //if (alleleDepthIndex == -1) {
+                    //throw new IllegalStateException("ImportUtils: readFromVCF: no allele depth data found in this VCF file at line: " + (numHeader + site + 1));
+                //}
 
 
                 for (int taxa = 0; taxa < numTaxa; taxa++) {
@@ -276,33 +278,36 @@ public class ImportUtils {
                         }
 
                         //the called genotype will be set later, incase the genotype needs to be recalled
-
-                        String alleleDepths = dataSplit[alleleDepthIndex];
-                        String[] stringDepths = commaPattern.split(alleleDepths);
-                        if (stringDepths.length != oriNumAlleles)
+                        if (alleleDepthIndex>=0)
                         {
-                            throw new IllegalStateException("ImportUtils: readFromVCF: number of allele depth values does not match number of alleles in line: " + (numHeader + site + 1) + " taxa number: " + taxa);
-                        }
-                        
-                        byte[] depths = new byte[numAlleles];
-                        int[] intDepths = new int[numAlleles];
-                        for (int i = 0; i < numAlleles; i++) {
-                            int depth = Integer.parseInt(stringDepths[i]);
-                            intDepths[i] = depth;
-                            if (depth > 127) {
-                                myLogger.info("Depth value for genotype " + i + " had an original value of " + depth + ". Converted to the maximum of 127. In line: " + (numHeader + site + 1) + " taxa number: " + taxa);
-                                depth = 127;
+                            String alleleDepths = dataSplit[alleleDepthIndex];
+                            String[] stringDepths = commaPattern.split(alleleDepths);
+                            if (stringDepths.length != oriNumAlleles)
+                            {
+                                throw new IllegalStateException("ImportUtils: readFromVCF: number of allele depth values does not match number of alleles in line: " + (numHeader + site + 1) + " taxa number: " + taxa);
                             }
-                            depths[i] = (byte) depth;
-                        }
-                        if (recallgenotypeflag==true)
-                        {
-                            //recall genotype now
-                            calledGenotypeValue = VCFUtil.resolveVCFGeno(alleles, intDepths);
+
+                            byte[] depths = new byte[numAlleles];
+                            int[] intDepths = new int[numAlleles];
+                            for (int i = 0; i < numAlleles; i++) {
+                                int depth = Integer.parseInt(stringDepths[i]);
+                                intDepths[i] = depth;
+                                if (depth > 127) {
+                                    myLogger.info("Depth value for genotype " + i + " had an original value of " + depth + ". Converted to the maximum of 127. In line: " + (numHeader + site + 1) + " taxa number: " + taxa);
+                                    depth = 127;
+                                }
+                                depths[i] = (byte) depth;
+                            }
+                            if (recallgenotypeflag==true)
+                            {
+                                //recall genotype now
+                                calledGenotypeValue = VCFUtil.resolveVCFGeno(alleles, intDepths);
+                            }
+                            result.setDepthForAlleles(taxa, site, depths);
                         }
                         
                         result.setBase(taxa, site, calledGenotypeValue);
-                        result.setDepthForAlleles(taxa, site, depths);
+                        
                     }
                 }
 
