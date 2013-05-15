@@ -46,8 +46,13 @@ class DonorHypoth implements Comparable{
         this.startBlock = startBlock;
         this.focusBlock = focusBlock;
         this.endBlock = endBlock;
-        this.startSite=startBlock+0;
+        this.startSite=startBlock*64;
         this.endSite=(endBlock*64)+63;
+    }
+    
+    public byte getPhaseForSite(int site) {
+        if(phasedResults==null) return (byte)1;
+        return phasedResults[site-startSite];
     }
 
     public double getErrorRate() {
@@ -56,6 +61,14 @@ class DonorHypoth implements Comparable{
     
     public boolean isInbred() {
         return (donor1Taxon==donor2Taxon);
+    }
+    
+    public int getFocusStartSite() {
+        return focusBlock*64;
+    }
+    
+    public int getFocusEndSite() {
+        return (focusBlock*64)+63;
     }
 
     @Override
