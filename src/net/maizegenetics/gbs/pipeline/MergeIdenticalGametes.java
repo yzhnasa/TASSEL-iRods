@@ -34,6 +34,14 @@ import net.maizegenetics.util.Utils;
 
 /**
  *
+ * 
+ * TODO IDEAS:  
+ * Chunk chromosomes into 50Mb segments
+ * Make Base HapMapV2 - use real names
+ * Try to make full length haplotypes
+ * plus add short inbred segments not present full ones
+ * 
+ * 
  * @author edbuckler
  */
 public class MergeIdenticalGametes {
@@ -41,12 +49,12 @@ public class MergeIdenticalGametes {
     private double[] propMissing;
     private int[] siteErrors, siteCallCnt;
     private double minJointGapProb=0.01;
-    private boolean callGaps=true;
+    private boolean callGaps=false;
     private GeneticMap gm=null;
     private BitSet badMask=null;
     private double minimumMissing=0.4;
     private int maxHaplotypes=2000;
-    private int siteWindow=1024*4;
+    private int siteWindow=1024*4*6;
     private int minSitesForSectionComp=50;
     private double maxHetFreq=0.02;
     private int minTaxaInGroup=2;
@@ -362,7 +370,7 @@ public class MergeIdenticalGametes {
  //       String donorFile=root+"AllTaxa_BPEC_AllZea_GBS_Build_July_2012_FINAL_chr10.hmp.txt.gz";
  //       String donorFile=root+"DTMAfounder20120110.imp.hmp.txt";
  //       String mergeFile=root+"maskedMerge20130429.hmp.txt.gz";
-        String mergeFile=root+"w4096GapOf24KMerge20130507.hmp.txt.gz";
+        String mergeFile=root+"w24575Of24KMerge20130513.hmp.txt.gz";
         String errorFile=root+"mcErrorXMerge20130425.txt";
         String errorFile2=root+"mcErrorXMerge20130425.txt";
         errorFile=errorFile2=null;
