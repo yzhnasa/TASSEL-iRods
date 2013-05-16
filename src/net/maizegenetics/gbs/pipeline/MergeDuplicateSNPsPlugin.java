@@ -615,7 +615,11 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                         nInbredTaxa++;
                     }
                 } else {
-                    throw new Exception("Taxon " + a.getFullTaxaName(taxon) + " not found in the pedigree file");
+                    if (a.getFullTaxaName(taxon).contentEquals("REFERENCE_GENOME")) {
+                        useTaxaForCompare[taxon] = false;
+                    } else {
+                        throw new Exception("Taxon " + a.getFullTaxaName(taxon) + " not found in the pedigree file");
+                    }
                 }
             }
             myLogger.info(nInbredTaxa + " highly inbred taxa (with an expected F >= 0.8) were found in the input hapmap file (according to the pedigree file)");

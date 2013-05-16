@@ -7,6 +7,7 @@ package net.maizegenetics.gbs.pipeline;
 import java.io.File;
 import java.util.Arrays;
 import net.maizegenetics.baseplugins.ExtractHapmapSubsetPlugin;
+import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 
 /**
@@ -21,7 +22,8 @@ public class JeffPipelines {
 //        runCompareGenosBetweenHapMapFilesPlugin();
 //        expandVariantsInTOPM();
 //        getChrsFromTOPM();
-        runTOPMSummaryPlugin();
+//        runTOPMSummaryPlugin();
+        convertTOPMtoHDF5();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -30,10 +32,10 @@ public class JeffPipelines {
         String[] MDPLowVolArgs = new String[]{
             "-i", baseDirMDPLowVol + "C08L7ACXX_6_min2.tbt.byte",
             "-y", // use TagsByTaxaByte
-            "-o", baseDirMDPLowVol + "tassel4/hapmap/biSNPWGap/MDP1_low_vol_WGap3rdAlleleUpdateTOPM.chr+.hmp.txt",
+            "-o", baseDirMDPLowVol + "tassel4/hapmap/biSNPWGap/MDP1_low_vol_WGap3rdAlleleUpdateTOPM2.chr+.hmp.txt",
 //            "-vcf",
             "-m", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit.topm.bin",
-            "-mUpd", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit_wVariants.topm.bin",
+            "-mUpd", baseDirMDPLowVol + "MGP1_low_vol_min2_wPosit_wVariants2.topm.bin",
             "-ref", "/Users/jcg233/Documents/GBS/refGenome/ZmB73_RefGen_v2.fa",  // baseDirMDPLowVol + "maize_agp_v2_chr10.fasta",
 //            "-LocusBorder", "150",
             "-p", baseDirMDPLowVol + "MDP1_betterFake_ped.txt", 
@@ -44,6 +46,7 @@ public class JeffPipelines {
 //            "-inclRare",
 //            "-inclGaps",  // Include sites where major or minor allele is a GAP
             "-callBiSNPsWGap",  // call sites with a biallelic SNP plus a gap (e.g., A/C/-)
+            "-cF", // customFiltering (inbredCoverage & inbredHetScore)
             "-sC", "10", // Start chromosome
             "-eC", "10" // End chromosome
         };
@@ -93,9 +96,20 @@ public class JeffPipelines {
         };
 
         TagsToSNPByAlignmentPlugin plugin = new TagsToSNPByAlignmentPlugin();
-        plugin.setParameters(GrapeArgs);
+        plugin.setParameters(MDPLowVolArgs);
         plugin.performFunction(null);
+    }
+    
+    public static void runMergeDuplicateSNPsPlugin() {
+        String Dir = "";
+        
+        String[] Args = new String[] {
+            ""
+        };
 
+        MergeDuplicateSNPsPlugin plugin = new MergeDuplicateSNPsPlugin();
+        plugin.setParameters(Args);
+        plugin.performFunction(null);
     }
     
     public static void runExtractHapmapSubsetPlugin() {
@@ -164,8 +178,18 @@ public class JeffPipelines {
             "-o",    baseDir+"tassel4WRefVsTassel3WRefGenoCompare.txt",
         };
 
+        String prodTestDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/";
+        String[] prodTestArgs = new String[]{
+            "-hmp1", prodTestDir+"ProductionTest/tassel3_RawReadsToHapMap/C08L7ACXX_6_c+.hmp.txt",
+            "-hmp2", prodTestDir+"02_MergeDupSNPs/AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz",
+            "-sC",   "1",
+            "-eC",   "10",
+            "-syn",  prodTestDir+"ProductionTest/tassel3_RawReadsToHapMap/C08L7ACXX_6_c1_Synonyms.txt",
+            "-o",    prodTestDir+"ProductionTest/tassel3_RawReadsToHapMap/productionTestMDPLowVolGenoCompare.txt",
+        };
+
         CompareGenosBetweenHapMapFilesPlugin plugin = new CompareGenosBetweenHapMapFilesPlugin();
-        plugin.setParameters(tassel4WRefVsTassel3Args);
+        plugin.setParameters(prodTestArgs);
         plugin.performFunction(null);
     }
     
@@ -194,12 +218,22 @@ public class JeffPipelines {
     public static void runTOPMSummaryPlugin() {
         String baseDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/topm/";
         String[] TOPMSummaryArgs = new String[]{
-            "-input", baseDir+"AllZeaMasterTags_c10_16vars_UnfiltProdTOPM_chr0_20120703.topm",
-            "-output", baseDir+"AllZeaGBSBuild_v2.6_VariantModifiedTOPM_TOPM_Summary_chr0.txt",
+            "-input", baseDir+"AllZeaMasterTags_c10_16vars_UnfiltProdTOPM_chr4_20120703.topm",
+            "-output", baseDir+"AllZeaGBSBuild_v2.6_VariantModifiedTOPM_TOPM_Summary_chr4.txt",
         };
 
         TOPMSummaryPlugin plugin = new TOPMSummaryPlugin(null);
         plugin.setParameters(TOPMSummaryArgs);
         plugin.performFunction(null);
+    }
+    
+    public static void convertTOPMtoHDF5() {
+        String inTOPMFileStr =  "/Volumes/nextgen/Zea/AllZeaBuild_2.X/04_TOPM/2.6_production/02_MergedTOPM/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm";
+        String outTOPMFileStr = "/Volumes/nextgen/Zea/AllZeaBuild_2.X/04_TOPM/2.6_production/02_MergedTOPM/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130515.topm.h5";
+        boolean loadBinary = (inTOPMFileStr.endsWith(".txt")) ? false : true;
+        TagsOnPhysicalMap inTOPM = new TagsOnPhysicalMap(inTOPMFileStr, loadBinary);
+        int maxMapping = 1;
+        int maxVariants = 16;
+        TagsOnPhysMapHDF5.createFile(inTOPM, outTOPMFileStr, maxMapping, maxVariants);
     }
 }
