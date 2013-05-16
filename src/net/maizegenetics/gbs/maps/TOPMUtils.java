@@ -3,6 +3,9 @@
  */
 package net.maizegenetics.gbs.maps;
 
+import java.io.File;
+import net.maizegenetics.util.Utils;
+
 /**
  *
  * @author terry
@@ -32,6 +35,24 @@ public class TOPMUtils {
             return new TagsOnPhysMapHDF5(filename);
         } else {
             throw new IllegalArgumentException("TOPMUtils: readTOPM: Unknown file extension: " + filename);
+        }
+
+    }
+
+    public static void writeTOPM(TOPMInterface topm, String filename) {
+
+        filename = Utils.addSuffixIfNeeded(filename, ".topm.h5", new String[]{".topm.bin", ".topm.txt", ".topm.h5"});
+
+        String temp = filename.trim().toLowerCase();
+
+        if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.bin"))) {
+            ((TagsOnPhysicalMap) topm).writeBinaryFile(new File(filename));
+        } else if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.txt"))) {
+            ((TagsOnPhysicalMap) topm).writeTextFile(new File(filename));
+        } else if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.h5"))) {
+            TagsOnPhysMapHDF5.createFile((TagsOnPhysicalMap) topm, filename, 1, topm.getMaxNumVariants());
+        } else {
+            // TBD
         }
 
     }
