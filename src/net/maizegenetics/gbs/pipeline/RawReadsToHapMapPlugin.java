@@ -370,8 +370,8 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         Locus locus = theTOPM.getLocus(tagIndex);
         int startPos = theTOPM.getStartPosition(tagIndex);
         for (int variant = 0; variant < theTOPM.maxVariants; variant++) {
-            byte currBase = theTOPM.getVariantDef(tagIndex, variant);
-            if ((currBase == theTOPM.byteMissing) || (currBase == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
+            byte currBase = theTOPM.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 encodings
+            if ((currBase == theTOPM.BYTE_MISSING) || (currBase == Alignment.UNKNOWN_ALLELE)) {
                 continue;
             }
             int offset = theTOPM.getVariantPosOff(tagIndex, variant);
