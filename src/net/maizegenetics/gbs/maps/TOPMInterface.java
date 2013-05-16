@@ -3,13 +3,14 @@
  */
 package net.maizegenetics.gbs.maps;
 
+import net.maizegenetics.gbs.tagdist.Tags;
 import net.maizegenetics.pal.alignment.Locus;
 
 /**
  *
  * @author edbuckler
  */
-public interface TOPMInterface {
+public interface TOPMInterface extends Tags {
 
     public int addVariant(int tagIndex, byte offset, byte base);
 
@@ -46,7 +47,7 @@ public interface TOPMInterface {
     public int getStartPosition(int index);
 
     public byte getStrand(int tagIndex);
-    
+
     public int getMaxNumVariants();
 
     public byte getVariantDef(int tagIndex, int variantIndex);
@@ -65,6 +66,10 @@ public interface TOPMInterface {
      */
     public byte[] getVariantPosOffArray(int tagIndex);
 
+    public byte[][] getVariantOff();
+
+    public byte[][] getVariantDef();
+
     public void setChromoPosition(int index, int chromosome, byte strand, int positionMin, int positionMax);
 
     public void setDivergence(int index, byte divergence);
@@ -76,4 +81,6 @@ public interface TOPMInterface {
     public void setVariantDef(int tagIndex, int variantIndex, byte def);
 
     public void setVariantPosOff(int tagIndex, int variantIndex, byte offset);
+    
+    public void clearVariants();
 }

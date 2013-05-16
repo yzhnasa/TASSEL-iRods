@@ -564,5 +564,19 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
             }
         }
         topm.getFileReadyForClosing();
+
+    @Override
+    public byte[][] getVariantOff() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public byte[][] getVariantDef() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void clearVariants() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
