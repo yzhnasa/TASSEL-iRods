@@ -564,6 +564,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
             }
         }
         topm.getFileReadyForClosing();
+    }
 
     @Override
     public byte[][] getVariantOff() {
