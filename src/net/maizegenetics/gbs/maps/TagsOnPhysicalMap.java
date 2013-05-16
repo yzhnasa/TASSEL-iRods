@@ -45,7 +45,7 @@ import net.maizegenetics.util.MultiMemberGZIPInputStream;
  */
 public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
-    public final static byte byteMissing = Byte.MIN_VALUE;
+    public final static byte BYTE_MISSING = Byte.MIN_VALUE;
     public final static int intMissing = Integer.MIN_VALUE;
     public int maxVariants = 8;
     byte[] multimaps;  // number of locations this tagSet maps to; unknown = Byte.MIN_VALUE; multiple, but unknown number = 99
@@ -1254,7 +1254,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 for (int outVar = 0; outVar < output.maxVariants; outVar++) {
 
                     byte outOff = output.getVariantPosOff(outTag, outVar);
-                    if (outOff != byteMissing) {//Skip filled output variants or re-initialize them
+                    if (outOff != BYTE_MISSING) {//Skip filled output variants or re-initialize them
                         varsSkipped++;
                         continue;
                     }
@@ -1262,7 +1262,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                     for (int inVar = 0; inVar < file.maxVariants; inVar++) {
                         byte offset = file.getVariantPosOff(inTag, outVar);
                         byte def = file.getVariantDef(inTag, outVar);
-                        if (offset == byteMissing) {
+                        if (offset == BYTE_MISSING) {
                             continue;                            //Skip blank input variants
                         }
                         //If we get here, output variant is blank and input variant is non-blank at the same tag & variant indices
@@ -1302,8 +1302,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
      */
     public void clearVariants() {
         for (int i = 0; i < getTagCount(); i++) {
-            Arrays.fill(variantDef[i], byteMissing);
-            Arrays.fill(variantPosOff[i], byteMissing);
+            Arrays.fill(variantDef[i], BYTE_MISSING);
+            Arrays.fill(variantPosOff[i], BYTE_MISSING);
         }
     }
 
@@ -1312,8 +1312,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
      * of "byteMissing".
      */
     private void clearVariant(int tag, int variant) {
-        setVariantDef(tag, variant, byteMissing);
-        setVariantPosOff(tag, variant, byteMissing);
+        setVariantDef(tag, variant, BYTE_MISSING);
+        setVariantPosOff(tag, variant, BYTE_MISSING);
     }
 
     /**
@@ -1438,7 +1438,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
             for (int variant = 0; variant < maxVariants; variant++) {                //Visit each variant in TOPM
                 byte off = getVariantPosOff(tag, variant);
-                if (off == byteMissing) {
+                if (off == BYTE_MISSING) {
                     continue;
                 }
 
@@ -1476,7 +1476,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             if (multimaps[i] > (result.length - 1)) {
                 result[127]++;
             }
-            if (multimaps[i] == byteMissing) {
+            if (multimaps[i] == BYTE_MISSING) {
                 result[0]++;
                 continue;
             } else {
