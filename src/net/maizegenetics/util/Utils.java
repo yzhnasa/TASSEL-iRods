@@ -273,16 +273,17 @@ public final class Utils {
      */
     public static String addSuffixIfNeeded(String filename, String suffix) {
 
+        String temp = filename.toLowerCase();
+
         if (suffix.charAt(0) != '.') {
             suffix = '.' + suffix;
         }
 
-        int periodIndex = filename.lastIndexOf(suffix);
-        if (periodIndex == -1) {
-            filename = filename + suffix;
+        if (temp.endsWith(suffix)) {
+            return filename;
+        } else {
+            return filename + suffix;
         }
-
-        return filename;
 
     }
 
@@ -297,14 +298,15 @@ public final class Utils {
      */
     public static String addSuffixIfNeeded(String filename, String defaultSuffix, String[] possible) {
 
+        String temp = filename.toLowerCase();
+
         for (int i = 0; i < possible.length; i++) {
-            String current = possible[i];
+            String current = possible[i].toLowerCase();
             if (current.charAt(0) != '.') {
                 current = '.' + current;
             }
 
-            int periodIndex = filename.lastIndexOf(current);
-            if (periodIndex != -1) {
+            if (temp.endsWith(current)) {
                 return filename;
             }
 
