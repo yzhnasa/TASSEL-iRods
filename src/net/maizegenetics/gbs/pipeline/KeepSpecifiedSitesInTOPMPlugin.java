@@ -11,7 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.swing.ImageIcon;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.gbs.maps.TOPMInterface;
+import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -33,7 +34,7 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
     private String[] mySiteListFileNames = null;
     private String myOutputFilename = null;
     private String myOrigFilename = null;
-    private TagsOnPhysicalMap myOrigTOPM = null;
+    private TOPMInterface myOrigTOPM = null;
     private int myOrigTagCount = 0;
     private byte[][] myOrigVariantOff = null;
     private byte[][] myOrigVariantDef = null;
@@ -47,7 +48,7 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
     @Override
     public DataSet performFunction(DataSet input) {
 
-        myOrigTOPM = new TagsOnPhysicalMap(myOrigFilename, true);
+        myOrigTOPM = TOPMUtils.readTOPM(myOrigFilename);
         myOrigTagCount = myOrigTOPM.getTagCount();
         myLogger.info("performFunction: Number of Original Tags: " + myOrigTagCount);
         myOrigVariantOff = myOrigTOPM.getVariantOff();
@@ -72,7 +73,7 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
             }
         }
 
-        myOrigTOPM.writeBinaryFile(new File(myOutputFilename));
+        TOPMUtils.writeTOPM(myOrigTOPM, myOutputFilename);
 
         return null;
     }
@@ -172,7 +173,9 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
             }
             Arrays.sort(orderedPositions);
 
-            int numVariants = myOrigVariantOff.length;
+            int[] numTagsWithUnfoundSitesAndMaxVariants = new int[numPositions];
+
+            int numVariants = myOrigVariantOff[0].length;
             int chrInt = Integer.valueOf(chr);
             int tagCount = myOrigTOPM.getTagCount();
             for (int i = 0; i < tagCount; i++) {
@@ -194,18 +197,26 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
                         }
                         int variantAdded = 0;
                         while ((posIndex < numPositions) && (orderedPositions[posIndex] <= startPos + PAD_POSITION)) {
+                            boolean found = false;
                             int currentPosition = orderedPositions[posIndex];
                             for (int x = 0; x < numVariants; x++) {
-                                if ((myOrigVariantOff[x][i] != Byte.MIN_VALUE) && (myOrigVariantDef[x][i] != Byte.MIN_VALUE)) {
-                                    int tagPosition = myOrigVariantOff[x][i] + startPos;
+                                if ((myOrigVariantOff[i][x] != Byte.MIN_VALUE) && (myOrigVariantDef[i][x] != Byte.MIN_VALUE)) {
+                                    int tagPosition = myOrigVariantOff[i][x] + startPos;
                                     if (tagPosition == currentPosition) {
-                                        myOrigTOPM.addVariant(i, myOrigVariantOff[x][i], myOrigVariantDef[x][i]);
+                                        found = true;
+                                        myOrigTOPM.addVariant(i, myOrigVariantOff[i][x], myOrigVariantDef[i][x]);
                                         variantAdded = 1;
                                         if (chrInt < myNumVariantsKeptPerChrom.length) {
                                             myNumVariantsKeptPerChrom[chrInt]++;
                                         }
                                     }
                                 }
+                            }
+                            if (found) {
+                                numTagsWithUnfoundSitesAndMaxVariants[posIndex] = -1;
+                            } else if ((!found) && (numVariants == myOrigTOPM.getMaxNumVariants()) && (numTagsWithUnfoundSitesAndMaxVariants[posIndex] != -1)
+                                    && (currentPosition <= startPos) && (currentPosition >= endPos)) {
+                                numTagsWithUnfoundSitesAndMaxVariants[posIndex]++;
                             }
                             posIndex++;
                         }
@@ -222,18 +233,26 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
                         }
                         int variantAdded = 0;
                         while ((posIndex < numPositions) && (orderedPositions[posIndex] <= endPos + PAD_POSITION)) {
+                            boolean found = false;
                             int currentPosition = orderedPositions[posIndex];
                             for (int x = 0; x < numVariants; x++) {
-                                if ((myOrigVariantOff[x][i] != Byte.MIN_VALUE) && (myOrigVariantDef[x][i] != Byte.MIN_VALUE)) {
-                                    int tagPosition = myOrigVariantOff[x][i] + startPos;
+                                if ((myOrigVariantOff[i][x] != Byte.MIN_VALUE) && (myOrigVariantDef[i][x] != Byte.MIN_VALUE)) {
+                                    int tagPosition = myOrigVariantOff[i][x] + startPos;
                                     if (tagPosition == currentPosition) {
-                                        myOrigTOPM.addVariant(i, myOrigVariantOff[x][i], myOrigVariantDef[x][i]);
+                                        found = true;
+                                        myOrigTOPM.addVariant(i, myOrigVariantOff[i][x], myOrigVariantDef[i][x]);
                                         variantAdded = 1;
                                         if (chrInt < myNumVariantsKeptPerChrom.length) {
                                             myNumVariantsKeptPerChrom[chrInt]++;
                                         }
                                     }
                                 }
+                            }
+                            if (found) {
+                                numTagsWithUnfoundSitesAndMaxVariants[posIndex] = -1;
+                            } else if ((!found) && (numVariants == myOrigTOPM.getMaxNumVariants()) && (numTagsWithUnfoundSitesAndMaxVariants[posIndex] != -1)
+                                    && (currentPosition >= startPos) && (currentPosition <= endPos)) {
+                                numTagsWithUnfoundSitesAndMaxVariants[posIndex]++;
                             }
                             posIndex++;
                         }
@@ -243,6 +262,12 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
                         throw new IllegalStateException("KeepSpecifiedSitesInTOPMPlugin: processSiteList: tag: " + i + " unknown strand: " + strand);
                     }
 
+                }
+            }
+
+            for (int i = 0; i < numPositions; i++) {
+                if (numTagsWithUnfoundSitesAndMaxVariants[i] > 0) {
+                    myLogger.info("chromosome: " + chrInt + " position: " + orderedPositions[i] + " tags with no variant info: " + numTagsWithUnfoundSitesAndMaxVariants[i]);
                 }
             }
 

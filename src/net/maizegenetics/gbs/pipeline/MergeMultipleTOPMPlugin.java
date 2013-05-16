@@ -11,7 +11,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import javax.swing.ImageIcon;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.gbs.maps.TOPMInterface;
+import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -30,7 +31,7 @@ public class MergeMultipleTOPMPlugin extends AbstractPlugin {
     private String[] myTOPMFileNames = null;
     private String myOutputFilename = null;
     private String myOrigFilename = null;
-    private TagsOnPhysicalMap myOrigTOPM = null;
+    private TOPMInterface myOrigTOPM = null;
     private int myOrigTagCount = 0;
     private byte[][] myOrigVariantOff = null;
     private byte[][] myOrigVariantDef = null;
@@ -44,7 +45,7 @@ public class MergeMultipleTOPMPlugin extends AbstractPlugin {
     @Override
     public DataSet performFunction(DataSet input) {
 
-        myOrigTOPM = new TagsOnPhysicalMap(myOrigFilename, true);
+        myOrigTOPM = TOPMUtils.readTOPM(myOrigFilename);
         myOrigTagCount = myOrigTOPM.getTagCount();
         myLogger.info("performFunction: Number of Original Tags: " + myOrigTagCount);
         myOrigVariantOff = myOrigTOPM.getVariantOff();
@@ -64,7 +65,7 @@ public class MergeMultipleTOPMPlugin extends AbstractPlugin {
             }
         }
 
-        myOrigTOPM.writeBinaryFile(new File(myOutputFilename));
+        TOPMUtils.writeTOPM(myOrigTOPM, myOutputFilename);
 
         return null;
     }
@@ -227,11 +228,11 @@ public class MergeMultipleTOPMPlugin extends AbstractPlugin {
         boolean variantsEqual = true;
 
         for (int i = 0; i < maxVariants; i++) {
-            if (myOrigVariantDef[i][row] != variantDef[i]) {
+            if (myOrigVariantDef[row][i] != variantDef[i]) {
                 variantsEqual = false;
                 break;
             }
-            if (myOrigVariantOff[i][row] != variantPosOff[i]) {
+            if (myOrigVariantOff[row][i] != variantPosOff[i]) {
                 variantsEqual = false;
                 break;
             }
