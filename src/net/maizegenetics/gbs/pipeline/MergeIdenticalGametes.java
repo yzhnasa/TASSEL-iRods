@@ -15,7 +15,6 @@ import java.util.TreeSet;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
@@ -149,11 +148,11 @@ public class MergeIdenticalGametes {
     }
     
     private MutableNucleotideAlignment createEmptyHaplotypeAlignment(int maxHaplotypes) {
-        IdGroup outIDG=new SimpleIdGroup(maxHaplotypes*3);
+        IdGroup outIDG=new SimpleIdGroup(maxHaplotypes);
         for (int i = 0; i < maxHaplotypes; i++) {
             outIDG.setIdentifier(i, new Identifier("Hap"+i+"mod0"));
-            outIDG.setIdentifier(i+maxHaplotypes, new Identifier("Hap"+i+"mod1"));
-            outIDG.setIdentifier(i+(2*maxHaplotypes), new Identifier("Hap"+i+"mod2"));
+//            outIDG.setIdentifier(i+maxHaplotypes, new Identifier("Hap"+i+"mod1"));
+//            outIDG.setIdentifier(i+(2*maxHaplotypes), new Identifier("Hap"+i+"mod2"));
         }
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(outIDG, inAlign.getSiteCount());
         for (int i = 0; i < inAlign.getSiteCount(); i++) {
