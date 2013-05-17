@@ -4,6 +4,7 @@
  */
 package net.maizegenetics.pal.popgen;
 
+
 /**
  *
  * @author edbuckler
@@ -49,6 +50,20 @@ class DonorHypoth implements Comparable{
         this.startSite=startBlock*64;
         this.endSite=(endBlock*64)+63;
     }
+    
+//    public double getMutationalErrorP() {
+//        double dd=(double)totalSites*0.004;
+//        PoissonDistribution pd=new PoissonDistribution(dd, 10);
+//        double prob=1;
+//        try{prob=pd.cumulativeProbability(mendelianErrors); 
+////               System.out.println(dd+","+oo+","+prob);
+//        }
+//        catch(Exception e) {
+//           // System.out.printf("testSites:%d diffCnt:%d %n",testSites, diffCnt);
+//            prob=1;
+//        }
+//         return prob;
+//    }
     
     public byte getPhaseForSite(int site) {
         if(phasedResults==null) return (byte)1;
