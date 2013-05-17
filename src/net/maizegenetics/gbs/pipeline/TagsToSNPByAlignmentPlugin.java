@@ -406,7 +406,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
                     }
                 } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
                 currPos = newPos; // start a new TAL with the current tag
-                if ((currPos[STRAND] != TagsOnPhysicalMap.byteMissing) && (currPos[START_POS] != TagsOnPhysicalMap.intMissing)) {  // we already know that currPos[CHR]==targetChromo
+                if ((currPos[STRAND] != TagsOnPhysicalMap.BYTE_MISSING) && (currPos[START_POS] != TagsOnPhysicalMap.intMissing)) {  // we already know that currPos[CHR]==targetChromo
                     currTAL = new TagsAtLocus(currPos[CHR],(byte) currPos[STRAND],currPos[START_POS],theTOPM.getTagLength(ri),includeReference,fuzzyStartPositions,errorRate);
                     currTAL.addTag(ri, theTOPM, theTBT, includeReference, fuzzyStartPositions);
                 } else {
