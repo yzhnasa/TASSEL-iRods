@@ -1508,6 +1508,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 return NucleotideAlignmentConstants.GAP_ALLELE;
             case '+':
                 return NucleotideAlignmentConstants.INSERT_ALLELE;
+            case BYTE_MISSING:
+                return BYTE_MISSING;
             default:
                 throw new IllegalArgumentException("asciiToNucleotideByte: unknown ascii: " + Byte.toString(ascii));
         }
