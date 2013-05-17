@@ -17,7 +17,6 @@ import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
-import org.apache.commons.math3.distribution.PoissonDistribution;
 
 
 /**
