@@ -654,6 +654,11 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     public byte getMultiMaps(int index) {
         return multimaps[index];
     }
+    
+    @Override
+    public byte getByteMissing() {
+        return BYTE_MISSING;
+    }
 
     @Override
     public int getChromosome(int index) {
@@ -1157,7 +1162,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return strand[tagIndex];
     }
 
-    public int[] uniquePositions(int chromosome) {
+    @Override
+    public int[] getUniquePositions(int chromosome) {
         HashSet<Integer> positions = new HashSet<Integer>();
 //        int[] positions = new int[getTagCount()];
         for (int i = 0; i < getTagCount(); i++) {

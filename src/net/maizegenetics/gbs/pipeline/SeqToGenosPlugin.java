@@ -32,8 +32,8 @@ import net.maizegenetics.pal.ids.SimpleIdGroup;
 import org.apache.log4j.Logger;
 
 /**
- * This pipeline converts all of the fastq (and/or qseq) files in the input
- * folder to genotypes and adds these to a genotype file in HDF5 format.
+ * This plugin converts all of the fastq (and/or qseq) files in the input
+ * folder and keyfile to genotypes and adds these to a genotype file in HDF5 format.
  * We refer to this step as the "Production Pipeline".
  * 
  * The output format is HDF5 genotypes with allelic depth stored. SNP calling 
@@ -44,7 +44,7 @@ import org.apache.log4j.Logger;
  * SNP calling (so that SNP calling is based upon all available reads).
  *
  * It requires a TOPM with variants added from a previous "Discovery Pipeline"
- * run.  In binary topm or HDF5 format.
+ * run.  In binary topm or HDF5 format (TOPMInterface).
  *
  * @author jcg233
  */
@@ -59,9 +59,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private TOPMInterface topm = null;
     private int maxDivergence = 0;
     private int[] chromosomes = null;
-    private Locus[] loci = null;
     private boolean fastq = true;
-    private IdGroup taxaNameIndices = null;
+    private IdGroup taxaIDGroup = null;
 
     public SeqToGenosPlugin() {
         super(null, false);
@@ -163,24 +162,6 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         return null;
     }
 
-    /**
-     * Creates one hapmap genotype file for each fastq or qseq file in the input
-     * directory. Output hapmap genotype files written to the outputDir, using
-     * fastq/qseq file names with extension changed to .hmp.txt
-     *
-     * @param rawSeqFileNames Array of fastq AND/OR qseq file names
-     * (Illumina-created files with raw read sequence, quality score, machine
-     * name, etc.)
-     * @param keyFileS A key file (list of taxa by barcode, lane & flow cell,
-     * including plate maps)
-     * @param enzyme The enzyme used to make the library
-     * @param outputDir String containing the path of the output directory where
-     * the HapMap files will be written
-     * @param theTOPM TagsOnPhysicalMap object with variants added from a
-     * previous Discovery Pipeline run (filtered SNPs removed)
-     * @param maxDiv Maximum divergence (edit distance) between new read and
-     * previously mapped read (Default: 0 = perfect matches only)
-     */
     private void translateRawReadsToHapmap() {
         for (int laneNum = 0; laneNum < myRawSeqFileNames.length; laneNum++) {
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
@@ -212,8 +193,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                             continue;
                         }
                         counters[2]++;  // goodMatched++;
-                        //recordVariantsFromTag(theTOPM, outMSA, tagIndex, taxaNameIndices.get(rr.getTaxonName()));
-                        recordVariantsFromTag(outMSA, tagIndex, taxaNameIndices.whichIdNumber(rr.getTaxonName()));
+                        recordVariantsFromTag(outMSA, tagIndex, taxaIDGroup.whichIdNumber(rr.getTaxonName()));
                     }
                 }
                 br.close();
@@ -257,17 +237,14 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     }
 
     private MutableNucleotideAlignment[] setUpMutableNucleotideAlignments(ParseBarcodeRead thePBR) {
-        myLogger.info("\nCounting sites in TOPM file.  Here's the first 500 tags on chromosome 1:");
-//        topm.printRows(500, true, 1);  // need this method in TOPMInterface
-//        ArrayList<int[]> uniquePositions = getUniquePositions(topm);  // need this method in TOPMInterface
-        ArrayList<int[]> uniquePositions = null;  // temporary fix so this class compiles
+        myLogger.info("\nCounting sites in TOPM file.");
+        ArrayList<int[]> uniquePositions = getUniquePositions();  // need this method in TOPMInterface
         myLogger.info("Creating alignment objects to hold the genotypic data (one per chromosome in the TOPM).");
         MutableNucleotideAlignment[] outMSA = new MutableNucleotideAlignment[chromosomes.length];
         for (int i = 0; i < outMSA.length; i++) {
-            //outMSA[i] = new MutableNucleotideAlignment(thePBR.getTaxaNames(), uniquePositions.get(i).length, new Locus[]{loci[i]});
             outMSA[i] = MutableNucleotideAlignment.getInstance(new SimpleIdGroup(thePBR.getTaxaNames()), uniquePositions.get(i).length);
         }
-        taxaNameIndices = outMSA[0].getIdGroup(); //Find the indices of taxa names within the MSA for quick lookup
+        taxaIDGroup = outMSA[0].getIdGroup();
         myLogger.info("Adding sites from the TOPM file to the alignment objects.");
         for (int i = 0; i < outMSA.length; i++) {
             int currSite = 0;
@@ -275,7 +252,6 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 String chromosome = Integer.toString(chromosomes[i]);
                 outMSA[i].addSite(currSite);
                 outMSA[i].setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
-                //outMSA[i].setStrandOfSite(currSite, (byte) '+');
                 outMSA[i].setPositionOfSite(currSite, uniquePositions.get(i)[j]);
                 currSite++;
             }
@@ -284,12 +260,11 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         return outMSA;
     }
 
-    private ArrayList<int[]> getUniquePositions(TagsOnPhysicalMap theTOPM) {
+    private ArrayList<int[]> getUniquePositions() {
         ArrayList<int[]> uniquePositions = new ArrayList<int[]>();
-        chromosomes = theTOPM.getChromosomes();
-        loci = theTOPM.getLoci();
+        chromosomes = topm.getChromosomes();
         for (int i = 0; i < chromosomes.length; i++) {
-            uniquePositions.add(theTOPM.uniquePositions(chromosomes[i]));
+            uniquePositions.add(topm.getUniquePositions(chromosomes[i]));
         }
         return uniquePositions;
     }
@@ -331,7 +306,6 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             } else {  // qseq
                 String[] jj = temp.split("\\s");
                 sl = jj[8];
-                //  qualS=jj[9];  // the quality score is not used
                 rr = thePBR.parseReadIntoTagAndTaxa(sl, null, false, 0);
             }
         } catch (Exception e) {
@@ -374,9 +348,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         int startPos = topm.getStartPosition(tagIndex);
         for (int variant = 0; variant < topm.getMaxNumVariants(); variant++) {
             byte currBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 encodings
-//            if ((currBase == topm.byteMissing) || (currBase == Alignment.UNKNOWN_ALLELE)) { // need to change to topm.getByteMissing()
-//                continue;
-//            }
+            if ((currBase == topm.getByteMissing()) || (currBase == Alignment.UNKNOWN_ALLELE)) {
+                continue;
+            }
             int offset = topm.getVariantPosOff(tagIndex, variant);
             int pos = startPos + offset;
             int currSite = outMSA[chrIndex].getSiteOfPhysicalPosition(pos, locus);

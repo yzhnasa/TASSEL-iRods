@@ -286,7 +286,7 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         chromosomes = theTOPM.getChromosomes();
         loci = theTOPM.getLoci();
         for (int i = 0; i < chromosomes.length; i++) {
-            uniquePositions.add(theTOPM.uniquePositions(chromosomes[i]));
+            uniquePositions.add(theTOPM.getUniquePositions(chromosomes[i]));
         }
         return uniquePositions;
     }
