@@ -1,5 +1,5 @@
 /*
- * RawReadsToHapMapQuantPlugin
+ * SeqToGenosPlugin
  */
 package net.maizegenetics.gbs.pipeline;
 
@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
@@ -21,36 +20,37 @@ import net.maizegenetics.gbs.homology.TagMatchFinder;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.Locus;
-
 import java.awt.Frame;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.TreeMap;
-
 import javax.swing.ImageIcon;
-
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-import org.apache.commons.math.distribution.BinomialDistributionImpl;
-
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
 import org.apache.log4j.SimpleLayout;
 
 /**
- * This pipeline converts all of the fastq AND/OR qseq files in the input folder to hapmap genotype files
- * (nOutputHapMapFiles = nChrs X nRawSeqFiles).  We refer to this step as the "Production Pipeline".
+ * This pipeline converts all of the fastq (and/or qseq) files in the input
+ * folder to genotypes and adds these to a genotype file in HDF5 format.
+ * We refer to this step as the "Production Pipeline".
+ * 
+ * The output format is HDF5 genotypes with allelic depth stored. SNP calling 
+ * is quantitative with the option of using either the Buckler/Glaubitz binomial
+ * method (pHet/pErr > 1 = het), or the VCF/Stacks method.
+ * 
+ * Samples on multiple lanes with the same LibraryPrepID are merged prior to 
+ * SNP calling (so that SNP calling is based upon all available reads).
  *
- * It requires a TOPM with variants added from a previous "Discovery Pipeline" run.
+ * It requires a TOPM with variants added from a previous "Discovery Pipeline"
+ * run.  In binary topm or HDF5 format.
  *
  * @author jcg233
  */
-public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
+public class SeqToGenosPlugin extends AbstractPlugin {
 
-    private final Logger myLogger = Logger.getLogger(RawReadsToHapMapQuantPlugin.class);
+    private final Logger myLogger = Logger.getLogger(SeqToGenosPlugin.class);
     private ArgsEngine myArgsEngine = null;
     private String[] myRawSeqFileNames = null;
     private String myKeyFile = null;
@@ -61,60 +61,14 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
     private int[] chromosomes = null;
     private Locus[] loci = null;
     private boolean fastq = true;
-    //private HashMap<String, Integer> taxaNameIndices = null;
     private IdGroup taxaNameIndices = null;
-    private byte[] byteAlleleToIndex = null;
-    private byte[] indexToByteAllele = null;
-    private final static double errorRate = 0.01;  // NB: should be dividing this by 3
-    private final static int maxCountAtGeno = 500;
-    private final static int[] likelihoodRatioThreshAlleleCnt = new int[maxCountAtGeno];  // index = sample size; value = min count of less tagged allele for likelihood ratio > 1
-    // if less tagged allele has counts < likelihoodRatioThreshAlleleCnt[totalCount], call it a homozygote
-    // where likelihood ratio = (binomial likelihood het) / (binomial likelihood all less tagged alleles are errors)
 
-    static {   // initialize the likelihood ratio cutoffs for quantitative SNP calling
-        System.out.println("\n\nInitializing the cutoffs for quantitative SNP calling likelihood ratio (pHet/pErr) >1\n");
-        System.out.println("totalReadsForSNPInIndiv\tminLessTaggedAlleleCountForHet");
-        for (int trials = 0; trials < 2; ++trials) {
-            likelihoodRatioThreshAlleleCnt[trials] = 1;
-        }
-        int lastThresh = 1;
-        for (int trials = 2; trials < likelihoodRatioThreshAlleleCnt.length; ++trials) {
-            BinomialDistributionImpl binomHet = new BinomialDistributionImpl(trials, 0.5);
-            BinomialDistributionImpl binomErr = new BinomialDistributionImpl(trials, errorRate);
-            double LikeRatio;
-            try {
-                LikeRatio = binomHet.cumulativeProbability(lastThresh) / (1 - binomErr.cumulativeProbability(lastThresh) + binomErr.probability(lastThresh));
-                while (LikeRatio <= 1.0) {
-                    ++lastThresh;
-                    LikeRatio = binomHet.cumulativeProbability(lastThresh) / (1 - binomErr.cumulativeProbability(lastThresh) + binomErr.probability(lastThresh));
-                }
-                likelihoodRatioThreshAlleleCnt[trials] = lastThresh;
-                System.out.println(trials + "\t" + lastThresh);
-            } catch (Exception e) {
-                System.err.println("Error in the TagsAtLocus.BinomialDistributionImpl");
-            }
-        }
-        System.out.println("\n");
-    }
-
-    public RawReadsToHapMapQuantPlugin() {
+    public SeqToGenosPlugin() {
         super(null, false);
     }
 
-    public RawReadsToHapMapQuantPlugin(Frame parentFrame) {
+    public SeqToGenosPlugin(Frame parentFrame) {
         super(parentFrame, false);
-    }
-
-    @Override
-    public DataSet performFunction(DataSet input) {
-        myLogger.addAppender(new ConsoleAppender(new SimpleLayout()));
-        if ((myEnzyme == null) || (myEnzyme.length() == 0)) {
-            printUsage();
-            throw new IllegalStateException("performFunction: enzyme must be set.");
-        }
-        // TODO - More checks to validate parameters...
-        translateRawReadsToHapmap(myRawSeqFileNames, myKeyFile, myEnzyme, myOutputDir, topm, maxDivergence);
-        return null;
     }
 
     private void printUsage() {
@@ -197,16 +151,35 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
         }
     }
 
+    @Override
+    public DataSet performFunction(DataSet input) {
+//        myLogger.addAppender(new ConsoleAppender(new SimpleLayout()));
+        if ((myEnzyme == null) || (myEnzyme.length() == 0)) {
+            printUsage();
+            throw new IllegalStateException("performFunction: enzyme must be set.");
+        }
+        // TODO - More checks to validate parameters...
+        translateRawReadsToHapmap(myRawSeqFileNames, myKeyFile, myEnzyme, myOutputDir, topm, maxDivergence);
+        return null;
+    }
+
     /**
-     * Creates one hapmap genotype file for each fastq or qseq file in the input directory.
-     * Output hapmap genotype files written to the outputDir, using fastq/qseq file names with extension changed to .hmp.txt
+     * Creates one hapmap genotype file for each fastq or qseq file in the input
+     * directory. Output hapmap genotype files written to the outputDir, using
+     * fastq/qseq file names with extension changed to .hmp.txt
      *
-     * @param rawSeqFileNames Array of fastq AND/OR qseq file names (Illumina-created files with raw read sequence, quality score, machine name, etc.)
-     * @param keyFileS        A key file (list of taxa by barcode, lane & flow cell, including plate maps)
-     * @param enzyme          The enzyme used to make the library
-     * @param outputDir       String containing the path of the output directory where the HapMap files will be written
-     * @param theTOPM         TagsOnPhysicalMap object with variants added from a previous Discovery Pipeline run (filtered SNPs removed)
-     * @param maxDiv          Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)
+     * @param rawSeqFileNames Array of fastq AND/OR qseq file names
+     * (Illumina-created files with raw read sequence, quality score, machine
+     * name, etc.)
+     * @param keyFileS A key file (list of taxa by barcode, lane & flow cell,
+     * including plate maps)
+     * @param enzyme The enzyme used to make the library
+     * @param outputDir String containing the path of the output directory where
+     * the HapMap files will be written
+     * @param theTOPM TagsOnPhysicalMap object with variants added from a
+     * previous Discovery Pipeline run (filtered SNPs removed)
+     * @param maxDiv Maximum divergence (edit distance) between new read and
+     * previously mapped read (Default: 0 = perfect matches only)
      */
     public void translateRawReadsToHapmap(String[] rawSeqFileNames, String keyFileS, String enzyme, String outputDir, TagsOnPhysicalMap theTOPM, int maxDiv) {
         for (int laneNum = 0; laneNum < rawSeqFileNames.length; laneNum++) {
@@ -217,14 +190,6 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
                 continue;
             }
             MutableNucleotideAlignment[] outMSA = setUpMutableNucleotideAlignments(thePBR, theTOPM);
-            ArrayList[][] alleleList = new ArrayList[outMSA.length][outMSA[0].getSequenceCount()];
-            for (int chr = 0; chr < outMSA.length; chr++) {
-                for (int taxon = 0; taxon < outMSA[0].getSequenceCount(); taxon++) {
-                    ArrayList<String> nullArray = new ArrayList<String>();
-                    alleleList[chr][taxon] = nullArray;
-                }
-            }
-//            short[][][][] alleleCounts = setUpAlleleCounts(outMSA);
             myLogger.info("Looking for known SNPs in sequence reads...");
             String temp = "";
             BufferedReader br = getBufferedReader(laneNum, rawSeqFileNames);
@@ -247,8 +212,8 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
                             continue;
                         }
                         counters[2]++;  // goodMatched++;
-                        recordVariantsFromTag(alleleList, theTOPM, outMSA, tagIndex, taxaNameIndices.whichIdNumber(rr.getTaxonName()));
-                        //recordVariantsFromTag(alleleList, theTOPM, outMSA, tagIndex, taxaNameIndices.get(rr.getTaxonName()));
+                        //recordVariantsFromTag(theTOPM, outMSA, tagIndex, taxaNameIndices.get(rr.getTaxonName()));
+                        recordVariantsFromTag(theTOPM, outMSA, tagIndex, taxaNameIndices.whichIdNumber(rr.getTaxonName()));
                     }
                 }
                 br.close();
@@ -257,7 +222,6 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
                 System.out.println(temp);
                 e.printStackTrace();
             }
-            callSNPsQuantitatively(alleleList, outMSA);
             writeHapMapFiles(outMSA, outputDir, rawSeqFileNames, laneNum, counters);
         }
     }
@@ -293,20 +257,6 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
     }
 
     private MutableNucleotideAlignment[] setUpMutableNucleotideAlignments(ParseBarcodeRead thePBR, TagsOnPhysicalMap theTOPM) {
-        byteAlleleToIndex = new byte[Byte.MAX_VALUE];
-        byteAlleleToIndex[65] = 0;  // A (byte 65)
-        byteAlleleToIndex[67] = 1;  // C (byte 67)
-        byteAlleleToIndex[71] = 2;  // G (byte 71)
-        byteAlleleToIndex[84] = 3;  // T (byte 84)
-        byteAlleleToIndex[45] = 4;  // - (byte 45)
-
-        indexToByteAllele = new byte[5];
-        indexToByteAllele[0] = 65;  // A (byte 65)
-        indexToByteAllele[1] = 67;  // C (byte 67)
-        indexToByteAllele[2] = 71;  // G (byte 71)
-        indexToByteAllele[3] = 84;  // T (byte 84)
-        indexToByteAllele[4] = 45;  // - (byte 45)
-
         myLogger.info("\nCounting sites in TOPM file.  Here's the first 500 tags on chromosome 1:");
         theTOPM.printRows(500, true, 1);
         ArrayList<int[]> uniquePositions = getUniquePositions(theTOPM);
@@ -316,37 +266,21 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
             //outMSA[i] = new MutableNucleotideAlignment(thePBR.getTaxaNames(), uniquePositions.get(i).length, new Locus[]{loci[i]});
             outMSA[i] = MutableNucleotideAlignment.getInstance(new SimpleIdGroup(thePBR.getTaxaNames()), uniquePositions.get(i).length);
         }
-        taxaNameIndices = outMSA[0].getIdGroup();
-        //taxaNameIndices = outMSA[0].taxonMap(); //Find the indices of taxa names within the MSA for quick lookup
+        taxaNameIndices = outMSA[0].getIdGroup(); //Find the indices of taxa names within the MSA for quick lookup
         myLogger.info("Adding sites from the TOPM file to the alignment objects.");
         for (int i = 0; i < outMSA.length; i++) {
             int currSite = 0;
             for (int j = 0; j < uniquePositions.get(i).length; j++) {
                 String chromosome = Integer.toString(chromosomes[i]);
+                outMSA[i].addSite(currSite);
                 outMSA[i].setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
-                //outMSA[i].setLocusOfSite(currSite, Integer.toString(chromosomes[i]));
                 //outMSA[i].setStrandOfSite(currSite, (byte) '+');
                 outMSA[i].setPositionOfSite(currSite, uniquePositions.get(i)[j]);
                 currSite++;
             }
-            //outMSA[i].sortSiteByPhysicalPosition();
             outMSA[i].clean();
         }
         return outMSA;
-    }
-
-    private short[][][][] setUpAlleleCounts(MutableNucleotideAlignment[] outMSA) {
-        myLogger.info("\nSetting up a multidimensional array to hold the allele counts...");
-
-        short[][][][] alleleCounts = new short[5][outMSA[0].getSequenceCount()][outMSA.length][]; //[allele][taxon][chr][site]
-        for (int allele = 0; allele < 5; allele++) {
-            for (int taxon = 0; taxon < outMSA[0].getSequenceCount(); taxon++) {
-                for (int chrIndex = 0; chrIndex < outMSA.length; chrIndex++) {
-                    alleleCounts[allele][taxon][chrIndex] = new short[outMSA[chrIndex].getSiteCount()];
-                }
-            }
-        }
-        return alleleCounts;
     }
 
     private ArrayList<int[]> getUniquePositions(TagsOnPhysicalMap theTOPM) {
@@ -457,171 +391,8 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
         }
     }
 
-    private void recordVariantsFromTag(short[][][][] alleleCounts, TagsOnPhysicalMap theTOPM, MutableNucleotideAlignment[] outMSA, int tagIndex, int taxonIndex) {
-        int chromosome = theTOPM.getChromosome(tagIndex);
-        if (chromosome == Integer.MIN_VALUE) {
-            return;
-        }
-        int chrIndex = 0;
-        for (int i = 0; i < chromosomes.length; i++) {
-            if (chromosomes[i] == chromosome) {
-                chrIndex = i;
-                break;
-            }
-        }
-        Locus locus = theTOPM.getLocus(tagIndex);
-        int startPos = theTOPM.getStartPosition(tagIndex);
-        for (int variant = 0; variant < theTOPM.maxVariants; variant++) {
-            byte base = theTOPM.getVariantDef(tagIndex, variant);
-            if ((base == theTOPM.BYTE_MISSING) || (base == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
-                continue;
-            }
-            int offset = theTOPM.getVariantPosOff(tagIndex, variant);
-            int pos = startPos + offset;
-            int currSite = outMSA[chrIndex].getSiteOfPhysicalPosition(pos, locus);
-            if (currSite < 0) {
-                continue;
-            }
-            alleleCounts[byteAlleleToIndex[base]][taxonIndex][chrIndex][currSite]++;
-        }
-    }
-
-    private void recordVariantsFromTag(ArrayList<String>[][] alleleList, TagsOnPhysicalMap theTOPM, MutableNucleotideAlignment[] outMSA, int tagIndex, int taxonIndex) {
-        int chromosome = theTOPM.getChromosome(tagIndex);
-        if (chromosome == Integer.MIN_VALUE) {
-            return;
-        }
-        int chrIndex = 0;
-        for (int i = 0; i < chromosomes.length; i++) {
-            if (chromosomes[i] == chromosome) {
-                chrIndex = i;
-                break;
-            }
-        }
-        Locus locus = theTOPM.getLocus(tagIndex);
-        int startPos = theTOPM.getStartPosition(tagIndex);
-        for (int variant = 0; variant < theTOPM.maxVariants; variant++) {
-            byte base = theTOPM.getVariantDef(tagIndex, variant);
-            if ((base == theTOPM.BYTE_MISSING) || (base == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
-                continue;
-            }
-            int offset = theTOPM.getVariantPosOff(tagIndex, variant);
-            int pos = startPos + offset;
-            int currSite = outMSA[chrIndex].getSiteOfPhysicalPosition(pos, locus);
-            if (currSite < 0) {
-                continue;
-            }
-            alleleList[chrIndex][taxonIndex].add(currSite + "_" + base);
-        }
-    }
-
-    private void callSNPsQuantitatively(short[][][][] alleleCounts, MutableNucleotideAlignment[] outMSA) {
-        myLogger.info("\nPerforming quantitative SNP calling...");
-        for (int taxon = 0; taxon < alleleCounts[0].length; taxon++) {
-            for (int chrIndex = 0; chrIndex < alleleCounts[0][taxon].length; chrIndex++) {
-                for (int site = 0; site < alleleCounts[0][taxon][chrIndex].length; site++) {
-                    short[] alleleCountsTaxonSite = new short[5];
-                    for (int allele = 0; allele < 5; allele++) {
-                        alleleCountsTaxonSite[allele] = alleleCounts[allele][taxon][chrIndex][site];
-                    }
-                    outMSA[chrIndex].setBase(taxon, site, resolveQuantGeno(alleleCountsTaxonSite));
-                }
-            }
-        }
-    }
-
-    private void callSNPsQuantitatively(ArrayList<String>[][] alleleList, MutableNucleotideAlignment[] outMSA) {
-        myLogger.info("\nPerforming quantitative SNP calling...");
-        int nSites = 0;
-        for (int chrIndex = 0; chrIndex < alleleList.length; chrIndex++) {
-            for (int taxon = 0; taxon < alleleList[chrIndex].length; taxon++) {
-                String[] siteAlleles = new String[10];
-                alleleList[chrIndex][taxon].toArray(siteAlleles);
-                Arrays.sort(siteAlleles);
-                short[] alleleCountsTaxonSite = null;
-                int currSite = Integer.MIN_VALUE;
-                for (int record = 0; record < siteAlleles.length; record++) {
-                    String[] parse = siteAlleles[record].split("_");
-                    int site = Integer.parseInt(parse[0]);
-                    byte base = Byte.parseByte(parse[1]);
-                    if (site == currSite) {  // collect the allele call from the site
-                        alleleCountsTaxonSite[byteAlleleToIndex[base]]++;
-                    } else {  // finish off the previous site and start a new one
-                        if (currSite > -1) {
-                            outMSA[chrIndex].setBase(taxon, currSite, resolveQuantGeno(alleleCountsTaxonSite));
-                            ++nSites;
-                        }
-                        alleleCountsTaxonSite = new short[5];
-                        alleleCountsTaxonSite[byteAlleleToIndex[base]]++;
-                        currSite = site;
-                    }
-                }
-                // finish the final site
-                outMSA[chrIndex].setBase(taxon, currSite, resolveQuantGeno(alleleCountsTaxonSite));
-                ++nSites;
-            }
-        }
-        myLogger.info("...quantitative SNP calling performed for " + nSites + " sites\n");
-    }
-
-    private byte resolveQuantGeno(short[] alleleCounts) {
-        short[][] sortedAlleleCounts = sortAllelesByCount(alleleCounts);
-        short a1Count = sortedAlleleCounts[1][0];
-        if (a1Count == 0) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        }
-        short a2Count = sortedAlleleCounts[1][1];  // What if a3Count = a2Count? -- this situation is not dealt with
-        byte a1 = indexToByteAllele[(byte) sortedAlleleCounts[0][0]];
-        if (a2Count == 0) {
-            return a1;
-        }
-        byte a2 = indexToByteAllele[(byte) sortedAlleleCounts[0][1]];
-        int totCount = a1Count + a2Count;
-        if (totCount < maxCountAtGeno) {
-            if (a2Count < likelihoodRatioThreshAlleleCnt[totCount]) {
-                return a1;  // call it a homozygote
-            } else {
-                //return IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(a1, a2); // call it a het
-                return AlignmentUtils.getDiploidValue(a1, a2);
-            }
-        } else {
-            if (a2Count / totCount < 0.1) {
-                return a1;  // call it a homozygote
-            } else {
-                //return IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(a1, a2); // call it a het
-                return AlignmentUtils.getDiploidValue(a1, a2);
-            }
-        }
-    }
-
-    private short[][] sortAllelesByCount(short[] alleleCounts) {
-        short[][] result = new short[2][indexToByteAllele.length]; // result[0][i]=alleleIndex; result[1][i]=count
-        for (short i = 0; i < indexToByteAllele.length; i++) {
-            result[0][i] = i;
-            result[1][i] = alleleCounts[i];
-        }
-        boolean change = true;
-        while (change) { // sort the alleles by descending frequency
-            change = false;
-            for (int k = 0; k < indexToByteAllele.length - 1; k++) {
-                if (result[1][k] < result[1][k + 1]) {
-                    short temp = result[0][k];
-                    result[0][k] = result[0][k + 1];
-                    result[0][k + 1] = temp;
-                    short tempCount = result[1][k];
-                    result[1][k] = result[1][k + 1];
-                    result[1][k + 1] = tempCount;
-                    change = true;
-                }
-            }
-        }
-        return result;
-    }
-
     private void writeHapMapFiles(MutableNucleotideAlignment[] outMSA, String outputDir, String[] rawSeqFileNames, int laneNum, int[] counters) {
-        myLogger.info("\nWriting genotypes to output HapMap files...");
         for (int i = 0; i < outMSA.length; i++) {
-            //outMSA[i].sortSiteByPhysicalPosition();
             outMSA[i].clean();
             AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(outMSA[i], false);
             String outFileS = outputDir + rawSeqFileNames[laneNum].substring(rawSeqFileNames[laneNum].lastIndexOf(File.separator));

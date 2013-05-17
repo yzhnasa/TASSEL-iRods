@@ -371,7 +371,7 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         int startPos = theTOPM.getStartPosition(tagIndex);
         for (int variant = 0; variant < theTOPM.maxVariants; variant++) {
             byte currBase = theTOPM.getVariantDef(tagIndex, variant);
-            if ((currBase == theTOPM.byteMissing) || (currBase == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
+            if ((currBase == theTOPM.BYTE_MISSING) || (currBase == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                 continue;
             }
             int offset = theTOPM.getVariantPosOff(tagIndex, variant);

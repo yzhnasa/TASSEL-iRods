@@ -129,19 +129,19 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
             }
 
             h5.createByteMatrix("variantDef", NUM_UNITS_TO_CACHE_ON_GET, maxVariants);
-            byte[][] variantDef = inTags.variantDef;
-            int numVariants = variantDef.length;
+            byte[][] variantDef = inTags.getVariantDef();
+            int numVariants = variantDef[0].length;
             if (numVariants > maxVariants) {
                 throw new IllegalArgumentException("TagsOnPhysMapHDF5: createFile: max variants can't be less than original TOPM Variant Defs: " + numVariants);
             }
-            if (variantDef[0].length != tagCount) {
-                throw new IllegalStateException("TagsOnPhysMapHDF5: createFile: variant def dimension: " + variantDef[0].length + " doesn't match tag count: " + tagCount);
+            if (variantDef.length != tagCount) {
+                throw new IllegalStateException("TagsOnPhysMapHDF5: createFile: variant def dimension: " + variantDef.length + " doesn't match tag count: " + tagCount);
             }
             byte[][] temp = new byte[tagCount][maxVariants];
             for (int i = 0; i < tagCount; i++) {
                 for (int j = 0; j < maxVariants; j++) {
                     if (j < numVariants) {
-                        temp[i][j] = variantDef[j][i];
+                        temp[i][j] = variantDef[i][j];
                     } else {
                         temp[i][j] = BYTE_MISSING;
                     }
@@ -150,19 +150,19 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
             h5.writeByteMatrix("variantDef", temp);
 
             h5.createByteMatrix("variantPosOff", NUM_UNITS_TO_CACHE_ON_GET, maxVariants);
-            byte[][] variantPosOff = inTags.variantPosOff;
-            numVariants = variantPosOff.length;
+            byte[][] variantPosOff = inTags.getVariantOff();
+            numVariants = variantPosOff[0].length;
             if (numVariants > maxVariants) {
                 throw new IllegalArgumentException("TagsOnPhysMapHDF5: createFile: max variants can't be less than original TOPM Variant Offsets: " + numVariants);
             }
-            if (variantDef[0].length != tagCount) {
-                throw new IllegalStateException("TagsOnPhysMapHDF5: createFile: variant def dimension: " + variantDef[0].length + " doesn't match tag count: " + tagCount);
+            if (variantPosOff.length != tagCount) {
+                throw new IllegalStateException("TagsOnPhysMapHDF5: createFile: variant def offset dimension: " + variantPosOff.length + " doesn't match tag count: " + tagCount);
             }
             temp = new byte[tagCount][maxVariants];
             for (int i = 0; i < tagCount; i++) {
                 for (int j = 0; j < maxVariants; j++) {
                     if (j < numVariants) {
-                        temp[i][j] = variantPosOff[j][i];
+                        temp[i][j] = variantPosOff[i][j];
                     } else {
                         temp[i][j] = BYTE_MISSING;
                     }
@@ -564,5 +564,20 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
             }
         }
         topm.getFileReadyForClosing();
+    }
+
+    @Override
+    public byte[][] getVariantOff() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public byte[][] getVariantDef() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void clearVariants() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

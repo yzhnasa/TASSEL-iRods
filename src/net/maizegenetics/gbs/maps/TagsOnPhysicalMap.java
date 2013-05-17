@@ -30,6 +30,7 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
 /**
@@ -44,7 +45,7 @@ import net.maizegenetics.util.MultiMemberGZIPInputStream;
  */
 public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
-    public final static byte byteMissing = Byte.MIN_VALUE;
+    public final static byte BYTE_MISSING = Byte.MIN_VALUE;
     public final static int intMissing = Integer.MIN_VALUE;
     public int maxVariants = 8;
     byte[] multimaps;  // number of locations this tagSet maps to; unknown = Byte.MIN_VALUE; multiple, but unknown number = 99
@@ -53,8 +54,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     int[] startPosition;  // chromosomal position of the barcoded end of the tag  // 4 bytes
     int[] endPosition;  // chromosomal position of the common adapter end of the tag (smaller than startPosition if tag matches minus strand)  // 4 bytes
     byte[] divergence;  // number of diverging bp (edit distance) from reference, unknown = Byte.MIN_VALUE
-    byte[][] variantPosOff;  // offset from position minimum, maximum number of variants is defined above  // maxVariants bytes
-    byte[][] variantDef; // allele state - A, C, G, T or some indel definition  // maxVariants bytes
+    byte[][] variantPosOff;  // offset from position minimum, maximum number of variants is defined above  // maxVariants bytes [tag][variant]
+    byte[][] variantDef; // allele state - A, C, G, T or some indel definition  // maxVariants bytes [tag][variant]  
     byte[] dcoP, mapP;  //Round(Log2(P)), unknown Byte.MIN_VALUE
     //if these disagree with the location, then set the p to negative
     // 1+4+1+4+4+1+8+8+1+1 = 33 bytes per position + 16 bytes for a two long tag + 1 byte for tagLength in bases = 50 bytes
@@ -139,8 +140,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         startPosition = new int[rows];  // chromosomal position of the barcoded end of the tag  // 4 bytes
         endPosition = new int[rows];  // chromosomal position of the common adapter end of the tag (smaller than startPosition if tag matches minus strand)  // 4 bytes
         divergence = new byte[rows];  // number of diverging bp from reference, unknown = Byte.MIN_VALUE
-        variantPosOff = new byte[maxVariants][rows];  // offset from position minimum, maximum number of variants is defined above  // maxVariants bytes
-        variantDef = new byte[maxVariants][rows];     // allele state - A, C, G, T or some indel definition  // maxVariants bytes
+        variantPosOff = new byte[rows][maxVariants];  // offset from position minimum, maximum number of variants is defined above  // maxVariants bytes
+        variantDef = new byte[rows][maxVariants];     // allele state - A, C, G, T or some indel definition  // maxVariants bytes
         dcoP = new byte[rows];
         mapP = new byte[rows];  // Round(Log2(P)), unknown = Byte.MIN_VALUE;  if these disagree with the location, then set the p to negative
         tagNum = rows;
@@ -153,16 +154,16 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             return;
         }
         int oldMaxVariants = this.maxVariants;
-        byte[][] newVariantPosOff = new byte[newMaxVariants][tagNum];
-        byte[][] newVariantDef = new byte[newMaxVariants][tagNum];
+        byte[][] newVariantPosOff = new byte[tagNum][newMaxVariants];
+        byte[][] newVariantDef = new byte[tagNum][newMaxVariants];
         for (int t = 0; t < tagNum; ++t) {
             for (int v = 0; v < this.maxVariants; ++v) {
-                newVariantPosOff[v][t] = this.variantPosOff[v][t];
-                newVariantDef[v][t] = this.variantDef[v][t];
+                newVariantPosOff[t][v] = this.variantPosOff[t][v];
+                newVariantDef[t][v] = this.variantDef[t][v];
             }
             for (int v = this.maxVariants; v < newMaxVariants; ++v) {
-                newVariantPosOff[v][t] = Byte.MIN_VALUE;
-                newVariantDef[v][t] = Byte.MIN_VALUE;
+                newVariantPosOff[t][v] = Byte.MIN_VALUE;
+                newVariantDef[t][v] = Byte.MIN_VALUE;
             }
         }
         this.maxVariants = newMaxVariants;
@@ -250,8 +251,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             endPosition[destRow] = sourceTOPM.endPosition[sourceRow];
             divergence[destRow] = sourceTOPM.divergence[sourceRow];
             for (int j = 0; j < maxVariants; j++) {
-                variantPosOff[j][destRow] = sourceTOPM.variantPosOff[j][sourceRow];
-                variantDef[j][destRow] = sourceTOPM.variantPosOff[j][sourceRow];
+                variantPosOff[destRow][j] = sourceTOPM.variantPosOff[sourceRow][j];
+                variantDef[destRow][j] = sourceTOPM.variantPosOff[sourceRow][j];
             }
             dcoP[destRow] = sourceTOPM.dcoP[sourceRow];
             mapP[destRow] = sourceTOPM.mapP[sourceRow];
@@ -283,8 +284,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         sb.append(printWithMissing(endPosition[row]) + "\t");
         sb.append(printWithMissing(divergence[row]) + "\t");
         for (int j = 0; j < maxVariants; j++) {
-            sb.append(printWithMissing(variantPosOff[j][row]) + "\t");
-            sb.append(printWithMissing(variantDef[j][row]) + "\t");
+            sb.append(printWithMissing(variantPosOff[row][j]) + "\t");
+            sb.append(printWithMissing(variantDef[row][j]) + "\t");
         }
         sb.append(printWithMissing(dcoP[row]) + "\t");
         sb.append(printWithMissing(mapP[row]) + "\t");
@@ -365,8 +366,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 endPosition[row] = dis.readInt();
                 divergence[row] = dis.readByte();
                 for (int j = 0; j < maxVariants; j++) {
-                    variantPosOff[j][row] = dis.readByte();
-                    variantDef[j][row] = dis.readByte();
+                    variantPosOff[row][j] = dis.readByte();
+                    variantDef[row][j] = dis.readByte();
                 }
                 dcoP[row] = dis.readByte();
                 mapP[row] = dis.readByte();
@@ -384,7 +385,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     public boolean variantsDefined(int tagIndex) {
         for (int i = 0; i < maxVariants; i++) {
-            if ((variantPosOff[i][tagIndex] != Byte.MIN_VALUE) && (variantDef[i][tagIndex] != Byte.MIN_VALUE)) {
+            if ((variantPosOff[tagIndex][i] != Byte.MIN_VALUE) && (variantDef[tagIndex][i] != Byte.MIN_VALUE)) {
                 return true;
             }
         }
@@ -429,8 +430,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                     fw.writeInt(endPosition[row]);
                     fw.writeByte(divergence[row]);
                     for (int j = 0; j < maxVariants; j++) {
-                        fw.writeByte(variantPosOff[j][row]);
-                        fw.writeByte(variantDef[j][row]);
+                        fw.writeByte(variantPosOff[row][j]);
+                        fw.writeByte(variantDef[row][j]);
                     }
                     fw.writeByte(dcoP[row]);
                     fw.writeByte(mapP[row]);
@@ -475,8 +476,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 fw.writeInt(endPosition[row]);
                 fw.writeByte(divergence[row]);
                 for (int j = 0; j < maxVariants; j++) {
-                    fw.writeByte(variantPosOff[j][row]);
-                    fw.writeByte(variantDef[j][row]);
+                    fw.writeByte(variantPosOff[row][j]);
+                    fw.writeByte(variantDef[row][j]);
                 }
                 fw.writeByte(dcoP[row]);
                 fw.writeByte(mapP[row]);
@@ -550,8 +551,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 endPosition[row] = parseIntWMissing(inputLine[c++]);
                 divergence[row] = parseByteWMissing(inputLine[c++]);
                 for (int j = 0; j < maxVariants; j++) {
-                    variantPosOff[j][row] = parseByteWMissing(inputLine[c++]);
-                    variantDef[j][row] = parseByteWMissing(inputLine[c++]);
+                    variantPosOff[row][j] = parseByteWMissing(inputLine[c++]);
+                    variantDef[row][j] = parseByteWMissing(inputLine[c++]);
                 }
                 dcoP[row] = parseByteWMissing(inputLine[c++]);
                 mapP[row] = parseByteWMissing(inputLine[c++]);
@@ -685,17 +686,19 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
 
     public byte[][] getVariantOff() {
-        byte[][] result = new byte[maxVariants][getTagCount()];
-        for (int i = 0; i < maxVariants; i++) {
-            System.arraycopy(variantPosOff[i], 0, result[i], 0, getTagCount());
+        byte[][] result = new byte[getTagCount()][maxVariants];
+        for (int i = 0; i < getTagCount(); i++) {
+            System.arraycopy(variantPosOff[i], 0, result[i], 0, maxVariants);
         }
         return result;
     }
 
     public byte[][] getVariantDef() {
-        byte[][] result = new byte[maxVariants][getTagCount()];
-        for (int i = 0; i < maxVariants; i++) {
-            System.arraycopy(variantDef[i], 0, result[i], 0, getTagCount());
+        byte[][] result = new byte[getTagCount()][maxVariants];
+        for (int i = 0; i < getTagCount(); i++) {
+            for (int j = 0; j < maxVariants; j++) {
+                result[i][j] = getVariantDef(i, j);
+            }
         }
         return result;
     }
@@ -739,9 +742,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     @Override
     public int addVariant(int tagIndex, byte offset, byte base) {
         for (int i = 0; i < maxVariants; i++) {
-            if ((variantPosOff[i][tagIndex] <= 0) && (variantDef[i][tagIndex] <= 0)) {
-                variantPosOff[i][tagIndex] = offset;
-                variantDef[i][tagIndex] = base;
+            if ((variantPosOff[tagIndex][i] == Byte.MIN_VALUE) && (variantDef[tagIndex][i] == Byte.MIN_VALUE)) {
+                variantPosOff[tagIndex][i] = offset;
+                variantDef[tagIndex][i] = base;
                 return i;
             }
         }
@@ -906,8 +909,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         endPosition[tagIndex] = Integer.MIN_VALUE;
         divergence[tagIndex] = Byte.MIN_VALUE;
         for (int var = 0; var < maxVariants; var++) {
-            variantPosOff[var][tagIndex] = Byte.MIN_VALUE;
-            variantDef[var][tagIndex] = Byte.MIN_VALUE;
+            variantPosOff[tagIndex][var] = Byte.MIN_VALUE;
+            variantDef[tagIndex][var] = Byte.MIN_VALUE;
         }
         dcoP[tagIndex] = Byte.MIN_VALUE;
         mapP[tagIndex] = Byte.MIN_VALUE;
@@ -928,8 +931,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         }
         divergence[tagIndex] = editDist;
         for (int var = 0; var < maxVariants; var++) {
-            variantPosOff[var][tagIndex] = Byte.MIN_VALUE;
-            variantDef[var][tagIndex] = Byte.MIN_VALUE;
+            variantPosOff[tagIndex][var] = Byte.MIN_VALUE;
+            variantDef[tagIndex][var] = Byte.MIN_VALUE;
         }
         dcoP[tagIndex] = Byte.MIN_VALUE;
         mapP[tagIndex] = Byte.MIN_VALUE;
@@ -1017,12 +1020,12 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         divergence[index1] = divergence[index2];
         divergence[index2] = (byte) tb;
         for (int j = 0; j < maxVariants; j++) {
-            tb = variantPosOff[j][index1];
-            variantPosOff[j][index1] = variantPosOff[j][index2];
-            variantPosOff[j][index2] = (byte) tb;
-            tb = variantDef[j][index1];
-            variantDef[j][index1] = variantDef[j][index2];
-            variantDef[j][index2] = (byte) tb;
+            tb = variantPosOff[index1][j];
+            variantPosOff[index1][j] = variantPosOff[index2][j];
+            variantPosOff[index2][j] = (byte) tb;
+            tb = variantDef[index1][j];
+            variantDef[index1][j] = variantDef[index2][j];
+            variantDef[index2][j] = (byte) tb;
         }
         tb = dcoP[index1];
         dcoP[index1] = dcoP[index2];
@@ -1117,27 +1120,31 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
      */
     @Override
     public byte[] getVariantDefArray(int tagIndex) {
-        return variantDef[tagIndex];
+        byte[] result = new byte[maxVariants];
+        for (int i = 0; i < maxVariants; i++) {
+            result[i] = getVariantDef(tagIndex, i);
+        }
+        return result;
     }
 
     @Override
     public byte getVariantDef(int tagIndex, int variantIndex) {
-        return variantDef[variantIndex][tagIndex];
+        return asciiToNucleotideByte(variantDef[tagIndex][variantIndex]);
     }
 
     @Override
     public void setVariantDef(int tagIndex, int variantIndex, byte def) {
-        variantDef[variantIndex][tagIndex] = def;
+        variantDef[tagIndex][variantIndex] = (byte) NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][def].charAt(0);
     }
 
     @Override
     public byte getVariantPosOff(int tagIndex, int variantIndex) {
-        return variantPosOff[variantIndex][tagIndex];
+        return variantPosOff[tagIndex][variantIndex];
     }
 
     @Override
     public void setVariantPosOff(int tagIndex, int variantIndex, byte offset) {
-        variantPosOff[variantIndex][tagIndex] = offset;
+        variantPosOff[tagIndex][variantIndex] = offset;
     }
 
     @Override
@@ -1247,7 +1254,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 for (int outVar = 0; outVar < output.maxVariants; outVar++) {
 
                     byte outOff = output.getVariantPosOff(outTag, outVar);
-                    if (outOff != byteMissing) {//Skip filled output variants or re-initialize them
+                    if (outOff != BYTE_MISSING) {//Skip filled output variants or re-initialize them
                         varsSkipped++;
                         continue;
                     }
@@ -1255,7 +1262,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                     for (int inVar = 0; inVar < file.maxVariants; inVar++) {
                         byte offset = file.getVariantPosOff(inTag, outVar);
                         byte def = file.getVariantDef(inTag, outVar);
-                        if (offset == byteMissing) {
+                        if (offset == BYTE_MISSING) {
                             continue;                            //Skip blank input variants
                         }
                         //If we get here, output variant is blank and input variant is non-blank at the same tag & variant indices
@@ -1294,9 +1301,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
      * "byteMissing".
      */
     public void clearVariants() {
-        for (int i = 0; i < maxVariants; i++) {
-            Arrays.fill(variantDef[i], byteMissing);
-            Arrays.fill(variantPosOff[i], byteMissing);
+        for (int i = 0; i < getTagCount(); i++) {
+            Arrays.fill(variantDef[i], BYTE_MISSING);
+            Arrays.fill(variantPosOff[i], BYTE_MISSING);
         }
     }
 
@@ -1305,8 +1312,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
      * of "byteMissing".
      */
     private void clearVariant(int tag, int variant) {
-        setVariantDef(tag, variant, byteMissing);
-        setVariantPosOff(tag, variant, byteMissing);
+        setVariantDef(tag, variant, BYTE_MISSING);
+        setVariantPosOff(tag, variant, BYTE_MISSING);
     }
 
     /**
@@ -1431,7 +1438,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
             for (int variant = 0; variant < maxVariants; variant++) {                //Visit each variant in TOPM
                 byte off = getVariantPosOff(tag, variant);
-                if (off == byteMissing) {
+                if (off == BYTE_MISSING) {
                     continue;
                 }
 
@@ -1469,7 +1476,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             if (multimaps[i] > (result.length - 1)) {
                 result[127]++;
             }
-            if (multimaps[i] == byteMissing) {
+            if (multimaps[i] == BYTE_MISSING) {
                 result[0]++;
                 continue;
             } else {
@@ -1477,5 +1484,26 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             }
         }
         return result;
+    }
+
+    private byte asciiToNucleotideByte(byte ascii) {
+        switch (ascii) {
+            case 'A':
+                return NucleotideAlignmentConstants.A_ALLELE;
+            case 'C':
+                return NucleotideAlignmentConstants.C_ALLELE;
+            case 'G':
+                return NucleotideAlignmentConstants.G_ALLELE;
+            case 'T':
+                return NucleotideAlignmentConstants.T_ALLELE;
+            case 'N':
+                return Alignment.UNKNOWN_ALLELE;
+            case '-':
+                return NucleotideAlignmentConstants.GAP_ALLELE;
+            case '+':
+                return NucleotideAlignmentConstants.INSERT_ALLELE;
+            default:
+                throw new IllegalArgumentException("asciiToNucleotideByte: unknown ascii: " + Byte.toString(ascii));
+        }
     }
 }

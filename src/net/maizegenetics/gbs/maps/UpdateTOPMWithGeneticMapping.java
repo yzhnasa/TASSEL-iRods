@@ -77,7 +77,7 @@ public class UpdateTOPMWithGeneticMapping {
                         revisedGeneticPositions++;
                     }
                     updateTOPM(tag, chrLD, positionLD, positionLD,
-                            TagsOnPhysicalMap.byteMissing, TagsOnPhysicalMap.byteMissing, bestPValue);
+                            TagsOnPhysicalMap.BYTE_MISSING, TagsOnPhysicalMap.BYTE_MISSING, bestPValue);
                     readCountMap += tagCount;
                 } else {
                     //                   System.out.println(temp);
