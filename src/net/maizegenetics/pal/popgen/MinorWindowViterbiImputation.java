@@ -7,7 +7,6 @@ package net.maizegenetics.pal.popgen;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Random;
 import java.util.TreeMap;
 import net.maizegenetics.gwas.imputation.EmissionProbability;
 import net.maizegenetics.gwas.imputation.TransitionProbability;
@@ -18,6 +17,7 @@ import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
+import org.apache.commons.math3.distribution.PoissonDistribution;
 
 
 /**
@@ -29,9 +29,10 @@ import net.maizegenetics.util.ProgressListener;
  * alleles in the target sequence, and then it looks for all possible parents.
  * 
  * TODO: remove bad sites, add hets back in
- * 3. Fuse getBest2Donors and getBestHybridDonors - do this passing array of d1 and array of d2
  * 4. Viterbi between sub-chromosome segments
- * 5. Pre-compute IBD probabilities for different number of sites and divergences, and use this rank best hybrid or inbred
+ * 5. Pre-compute IBD probabilities for different number of sites and divergences 
+ * (Doing this by poisson on the fly is too slow, and use this rank best hybrid or inbred
+ * 6. Error rates by taxon
  * 
  * TESTS:
  * 1.  Do not impute the invariant sites - tested doesn't matter
@@ -60,6 +61,7 @@ public class MinorWindowViterbiImputation {
     private int maxDonorHypotheses=10;  //number of hypotheses of record from an inbred or hybrid search of a focus block
     
     private double maximumInbredError=0.02;  //inbreds are tested first, if too much error hybrids are tested.
+  //  private double maxViterbiErro
     private int minTestSites=100;  //minimum number of compared sites to find a hit
     
     //matrix to hold divergence comparisons between the target taxon and donor haplotypes for each block
@@ -84,6 +86,8 @@ public class MinorWindowViterbiImputation {
     };
     TransitionProbability tp = new TransitionProbability();
     EmissionProbability ep = new EmissionProbability();
+    
+    int[] donorIndices;
        
     private static int highMask=0xF0;
     private static int lowMask=0x0F;
@@ -105,6 +109,8 @@ public class MinorWindowViterbiImputation {
         donorAlign=ImportUtils.readFromHapmap(donorFile, false, (ProgressListener)null);
         donorAlign.optimizeForTaxa(null);
         System.out.printf("Donor taxa:%d sites:%d %n",donorAlign.getSequenceCount(),donorAlign.getSiteCount());        
+        donorIndices=new int[donorAlign.getSequenceCount()];
+        for (int i = 0; i < donorIndices.length; i++) {donorIndices[i]=i;}
         unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
         unimpAlign.optimizeForTaxa(null);
         siteErrors=new int[unimpAlign.getSiteCount()];
@@ -134,7 +140,7 @@ public class MinorWindowViterbiImputation {
                 int[] resultRange=getBlockWithMinMinorCount(maskedTargetBits[0].getBits(),maskedTargetBits[1].getBits(), focusBlock, minMinorCnt);
                 if(resultRange==null) continue; //no data in the focus Block
                 //search for the best inbred donors for a segment
-                regionHypth[focusBlock]=getBestInbredDonors(taxon, resultRange[0],resultRange[2], focusBlock);
+                regionHypth[focusBlock]=getBestInbredDonors(taxon, resultRange[0],resultRange[2], focusBlock, donorIndices);
             }
             boolean foundit=apply1or2Haplotypes(taxon, regionHypth,  mna, maskedTargetBits);
             if(foundit) {
@@ -167,28 +173,16 @@ public class MinorWindowViterbiImputation {
             BitSet[] maskedTargetBits) {
         DonorHypoth vdh=null;
         //do flanking search 
-        int[] d=getAllBestDonorsAcrossChromosome(regionHypth,maximumInbredError,5);
-        DonorHypoth[] best2donors=getBest2Donors(taxon, maskedTargetBits[0].getBits(),
-                maskedTargetBits[1].getBits(), 0, blocks-1, blocks/2, d,false);
-        if(testing==1) System.out.println(Arrays.toString(best2donors));
-        if(best2donors[0].donor1Taxon>=0) {   
-            if(best2donors[0].isInbred()){
-                vdh=best2donors[0];
-            } else {
-                vdh=getStateBasedOnViterbi(best2donors[0]);
-            }
-            if(vdh!=null) {
-                setAlignmentWithDonors(new DonorHypoth[] {vdh},false,mna);
-                return true;
-            }
-        }
         if(testing==1) System.out.println("Starting complete hybrid search");
-        d=getAllBestDonorsAcrossChromosome(regionHypth,0.1,5);
-        best2donors=getBest2Donors(taxon, maskedTargetBits[0].getBits(),
-                maskedTargetBits[1].getBits(), 0, blocks-1, blocks/2, d,false);
+        int[] d=getAllBestDonorsAcrossChromosome(regionHypth,5);
+        DonorHypoth[] best2donors=getBestHybridDonors(taxon, maskedTargetBits[0].getBits(),
+                maskedTargetBits[1].getBits(), 0, blocks-1, blocks/2, d, d, true);
         if(testing==1) System.out.println(Arrays.toString(best2donors));
+        if(best2donors[0]==null) return false;
+        if(best2donors[0].getErrorRate()>maximumInbredError) return false;
         if(best2donors[0].donor1Taxon>=0) {
             if(best2donors[0].isInbred()){
+               // System.out.println("vdh says inbred");
                 vdh=best2donors[0];
             } else {
                 vdh=getStateBasedOnViterbi(best2donors[0]);
@@ -199,8 +193,7 @@ public class MinorWindowViterbiImputation {
             }
         }
         return false;
-    }
-            
+    }      
     
     
     /**
@@ -283,7 +276,7 @@ public class MinorWindowViterbiImputation {
                 long[] mjTRange=maskedTargetBits[0].getBits(resultRange[0],resultRange[2]);
                 long[] mnTRange=maskedTargetBits[1].getBits(resultRange[0],resultRange[2]);
                 regionHypth[focusBlock]=getBestHybridDonors(targetTaxon, mjTRange, mnTRange, resultRange[0],resultRange[2], 
-                        focusBlock, regionHypth[focusBlock]);
+                        focusBlock, regionHypth[focusBlock], false);
                 //hybrid++;
             }
         }
@@ -350,7 +343,6 @@ public class MinorWindowViterbiImputation {
                 setAlignmentWithDonors(regionHypth[focusBlock],true,mna);
                 focusBlockdone++; 
                 inbred++;
-                
             }  else {
                 int[] resultRange=getBlockWithMinMinorCount(maskedTargetBits[0].getBits(),
                         maskedTargetBits[1].getBits(), focusBlock, minMinorCnt);
@@ -360,7 +352,7 @@ public class MinorWindowViterbiImputation {
                     long[] mjTRange=maskedTargetBits[0].getBits(resultRange[0],resultRange[2]);
                     long[] mnTRange=maskedTargetBits[1].getBits(resultRange[0],resultRange[2]);
                     regionHypth[focusBlock]=getBestHybridDonors(targetTaxon, mjTRange, mnTRange, resultRange[0],resultRange[2], 
-                            focusBlock, regionHypth[focusBlock]);
+                            focusBlock, regionHypth[focusBlock], false);
                 }
           //      if((regionHypth[focusBlock][0]!=null)) System.out.printf("%d %d %g %n",targetTaxon, focusBlock, regionHypth[focusBlock][0].getErrorRate() );
                 if((regionHypth[focusBlock][0]!=null)&&(regionHypth[focusBlock][0].getErrorRate()<maxHybridErrorRate)) {
@@ -521,12 +513,11 @@ public class MinorWindowViterbiImputation {
      * @return int[] array of {donor1, donor2, testSites}
      */
     private DonorHypoth[] getBestInbredDonors(int targetTaxon, int startBlock, int endBlock, 
-            int focusBlock) {
+            int focusBlock, int[] donor1indices) {
         TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
         double lastKeytestPropUnmatched=1.0;
         int donorTaxaCnt=donorAlign.getSequenceCount();
-        int startDonor=0, endDonor=donorTaxaCnt;
-        for (int d1 = startDonor; d1 < endDonor; d1++) {
+        for (int d1 : donor1indices) {
             int testSites=0;
             int sameCnt = 0, diffCnt = 0, hetCnt = 0;
             for (int i = startBlock; i <=endBlock; i++) {
@@ -535,7 +526,7 @@ public class MinorWindowViterbiImputation {
                 hetCnt+=allDist[d1][3][i];
             }
             testSites= sameCnt + diffCnt - hetCnt;
-            if(testSites<minTestSites) continue;
+            if(testSites<minTestSites) continue;     
             double testPropUnmatched = 1.0-(((double) (sameCnt) - (double)(0.5*hetCnt)) / (double) (testSites));
             int totalMendelianErrors=(int)((double)testSites*testPropUnmatched);
             testPropUnmatched+=(double)d1/(double)(donorTaxaCnt*1000);  //this looks strange, but makes the keys unique and ordered
@@ -550,6 +541,7 @@ public class MinorWindowViterbiImputation {
                 }
             }  
         }
+        //TODO consider reranking by Poisson.  The calculating Poisson on the fly is too slow.
         DonorHypoth[] result=new DonorHypoth[maxDonorHypotheses];
         int count=0;
         for (DonorHypoth dh : bestDonors.values()) {
@@ -559,19 +551,16 @@ public class MinorWindowViterbiImputation {
         return result;
     }
     
-    private int[] getAllBestDonorsAcrossChromosome(DonorHypoth[][] allDH, double maxError, int minHypotheses) {
+    private int[] getAllBestDonorsAcrossChromosome(DonorHypoth[][] allDH, int minHypotheses) {
         TreeMap<Integer,Integer> bd=new TreeMap<Integer,Integer>();
         for (int i = 0; i < allDH.length; i++) {
-            for (int j = 0; j < allDH[i].length; j++) {
-                DonorHypoth dh=allDH[i][0];
-                if(dh==null) continue;
-                if(dh.getErrorRate()>maxError) continue;
-                if(bd.containsKey(dh.donor1Taxon)) {
-                    bd.put(dh.donor1Taxon, bd.get(dh.donor1Taxon)+1);
-                } else {
-                    bd.put(dh.donor1Taxon, 1);
-                }   
-            } 
+            DonorHypoth dh=allDH[i][0];
+            if(dh==null) continue;
+            if(bd.containsKey(dh.donor1Taxon)) {
+                bd.put(dh.donor1Taxon, bd.get(dh.donor1Taxon)+1);
+            } else {
+                bd.put(dh.donor1Taxon, 1);
+            }   
         }
         if(testing==1) System.out.println(bd.size()+":"+bd.toString());
         if(testing==1) System.out.println("");
@@ -585,6 +574,16 @@ public class MinorWindowViterbiImputation {
         return result;
     }
   
+    private DonorHypoth[] getBestHybridDonors(int targetTaxon, long[] mjT, long[] mnT, 
+            int startBlock, int endBlock, int focusBlock, DonorHypoth[] inbredHypoth, boolean compareDonorDist) {
+        int[] inbredIndices=new int[inbredHypoth.length];
+        for (int i = 0; i < inbredIndices.length; i++) {
+            inbredIndices[i]=inbredHypoth[i].donor1Taxon;   
+        }
+        return getBestHybridDonors(targetTaxon, mjT, mnT, startBlock,  endBlock, focusBlock, 
+                inbredIndices, donorIndices, compareDonorDist);
+    }
+    
     /**
      * Simple algorithm that tests every possible two donor combination to minimize
      * the number of unmatched informative alleles.  Currently, there is litte tie
@@ -596,29 +595,31 @@ public class MinorWindowViterbiImputation {
      * @return int[] array of {donor1, donor2, testSites}
      */
     private DonorHypoth[] getBestHybridDonors(int targetTaxon, long[] mjT, long[] mnT, 
-            int startBlock, int endBlock, int focusBlock, DonorHypoth[] inbredHypoth) {
+            int startBlock, int endBlock, int focusBlock, int[] donor1Indices, int[] donor2Indices,
+            boolean viterbiSearch) {
         TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
-//        bestDonors.put(1.0, new DonorHypoth());
         double lastKeytestPropUnmatched=1.0;
-        int donorTaxaCnt=donorAlign.getSequenceCount();
-        int startDonor=0, endDonor=donorTaxaCnt;
-        Random r=new Random(1);
-        for (int iH = 0; iH < inbredHypoth.length; iH++) {
-            if(inbredHypoth[iH]==null) continue;
-            int d1 = inbredHypoth[iH].donor1Taxon; 
-            if(d1<0)    { 
-       //         System.out.printf("d1: %d startBlock:%d  endBlock:%d mjT.len:%d %n",d1, startBlock,  endBlock, mjT.length);
-                continue;
-            }
+        double inc=1e-9;
+        double[] donorDist={1.0,100.0};
+       // Random r=new Random(1);
+        for (int d1: donor1Indices) {
             long[] mj1=donorAlign.getAllelePresenceForSitesBlock(d1, 0, startBlock, endBlock+1);
             long[] mn1=donorAlign.getAllelePresenceForSitesBlock(d1, 1, startBlock, endBlock+1);
-            for (int d2 = startDonor; d2 < endDonor; d2++) {
+            for (int d2 : donor2Indices) {
+                if((!viterbiSearch)&&(d1==d2)) continue;
                 long[] mj2=donorAlign.getAllelePresenceForSitesBlock(d2, 0, startBlock, endBlock+1);
                 long[] mn2=donorAlign.getAllelePresenceForSitesBlock(d2, 1, startBlock, endBlock+1);
-                int[] mendErr=mendelErrorComparison(mjT, mnT, mj1, mn1, mj2, mn2);
+                if(viterbiSearch) {
+                    donorDist=IBSDistanceMatrix.computeHetBitDistances(mj1, mn1, mj2, mn2, minTestSites);
+                    if((d1!=d2)&&(donorDist[0]<this.maximumInbredError)) continue;
+                }
+               // System.out.printf("%d %d %g %n",d1,d2,donorDist[0]);
+    //            if(donorDist[0]<this.maximumInbredError) continue;  
+                int[] mendErr=mendelErrorComparison(mjT, mnT, mj1, mn1, mj2, mn2);        
                 if(mendErr[1]<minTestSites) continue;
                 double testPropUnmatched=(double)(mendErr[0])/(double)mendErr[1];
-                testPropUnmatched+=(r.nextDouble()/10000.0); 
+                inc+=1e-9;
+                testPropUnmatched+=inc; 
                 if(testPropUnmatched<lastKeytestPropUnmatched) {
                     DonorHypoth theDH=new DonorHypoth(targetTaxon, d1, d2, startBlock,
                         focusBlock, endBlock, mendErr[1], mendErr[0]);
@@ -645,77 +646,6 @@ public class MinorWindowViterbiImputation {
         return result;
     }
     
-      /**
-     * Simple algorithm that tests every possible two donor combination to minimize
-     * the number of unmatched informative alleles.  Currently, there is litte tie
-     * breaking, longer matches are favored.
-     * @param targetTaxon
-     * @param startBlock
-     * @param endBlock
-     * @param focusBlock
-     * @return int[] array of {donor1, donor2, testSites}
-     */
-    private DonorHypoth[] getBest2Donors(int targetTaxon, long[] mjT, long[] mnT, 
-            int startBlock, int endBlock, int focusBlock, int[] donorHap, boolean testInbred) {
-        TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
-        bestDonors.put(1.0, new DonorHypoth());
-        double lastKeytestPropUnmatched=1.0;
-        for (int i=0; i<donorHap.length; i++) {
-            int d1=donorHap[i];
-            long[] mj1=donorAlign.getAllelePresenceForSitesBlock(d1, 0, startBlock, endBlock+1);
-            long[] mn1=donorAlign.getAllelePresenceForSitesBlock(d1, 1, startBlock, endBlock+1);
-            for (int j=0; j<=i; j++) {
-                if(testInbred&&(i!=j)) continue;
-                int d2=donorHap[j];
-                long[] mj2=donorAlign.getAllelePresenceForSitesBlock(d2, 0, startBlock, endBlock+1);
-                long[] mn2=donorAlign.getAllelePresenceForSitesBlock(d2, 1, startBlock, endBlock+1);
-                double[] donorDist=IBSDistanceMatrix.computeHetBitDistances(mj1, mn1, mj2, mn2, minTestSites);
-                if((d1!=d2)&&(donorDist[0]<this.maximumInbredError)) continue;
-                if(targetTaxon==685) {
- //                   System.out.println("It is getting interesting");
-                }
-                int[] mendErr=mendelErrorComparison(mjT, mnT, mj1, mn1, mj2, mn2);
-                
-//                System.out.printf("getBest2Donors t:%d (%d) d1:%d (%d) d2:%d (%d) %s %n",
-//                        targetTaxon,unimpAlign.getTotalNotMissingForTaxon(targetTaxon),
-//                        d1,donorAlign.getTotalNotMissingForTaxon(d1),
-//                        d2,donorAlign.getTotalNotMissingForTaxon(d2),
-//                        Arrays.toString(mendErr));
-                if(mendErr[1]<minTestSites) continue;
-                double testPropUnmatched=(double)(mendErr[0])/(double)mendErr[1];
-                if(testPropUnmatched>this.maximumInbredError) continue; //toss all matches above the inbred threshold 
-                testPropUnmatched+=(double)i/(double)(donorHap.length*1000);  //this looks strange, but makes the keys unique and ordered
-                testPropUnmatched+=(double)j/(double)(donorHap.length*1000000);
-                if((bestDonors.size()<maxDonorHypotheses)) {
-                    DonorHypoth theDH=new DonorHypoth(targetTaxon, d1, d2, startBlock,
-                        focusBlock, endBlock, mendErr[1], mendErr[0]);
-                    DonorHypoth prev=bestDonors.put(new Double(testPropUnmatched), theDH);
-                    if(prev!=null) {
-                        System.out.println("2 inbred TreeMap index crash:"+testPropUnmatched);
-                    }
-                    if(bestDonors.size()>maxDonorHypotheses) {
-                        bestDonors.remove(bestDonors.lastKey());
-                        lastKeytestPropUnmatched=bestDonors.lastKey();
-                    }
-                }  
-            }
-        }
-//        System.out.println("Hybrid Calc");
-//        for (int iH = 0; iH < inbredHypoth.length; iH++) {
-//            if(inbredHypoth[iH]==null) continue;
-//            System.out.print(iH+":"+inbredHypoth[iH].toString()+";");
-//        }
-//        System.out.println("");
-//        System.out.println(bestDonors.toString());
-        DonorHypoth[] result=new DonorHypoth[maxDonorHypotheses];
-        int count=0;
-        for (DonorHypoth dh : bestDonors.values()) {
-            result[count]=dh; 
-            count++;
-        }
-        return result;
-    }
-    
     private int[] mendelErrorComparison(long[] mjT, long[] mnT, long[] mj1, long[] mn1, 
             long[] mj2, long[] mn2) {
         int mjUnmatched=0;
@@ -731,8 +661,6 @@ public class MinorWindowViterbiImputation {
        // double testPropUnmatched=(double)(totalMendelianErrors)/(double)testSites;
         return (new int[] {totalMendelianErrors, testSites});       
     }
-    
- 
     
         /**
      * Takes a donor hypothesis and applies it to the output alignment 
@@ -854,7 +782,6 @@ public class MinorWindowViterbiImputation {
 //        //String donorFile=rootIn+"w24575Of24KMerge20130513b.hmp.txt.gz";
 //        String donorFile=rootIn+"IMPw24575Of24KMerge20130513b.hmp.txt.gz";
 //        String unImpTargetFile=rootIn+"Z0CNtest.c10_s0_s24575_masked.hmp.txt.gz";
-//        String impTargetFile=root+"Z0CNtest.imp.hmp.txt.gz";
 //        String impTargetFile2=root+"HybridZ0CNtest.imp.hmp.txt.gz";
         
         String origFile=rootIn+"10psample25.c10_s0_s24575.hmp.txt.gz";
@@ -872,7 +799,6 @@ public class MinorWindowViterbiImputation {
         
 //        String origFile=rootIn+"10psample25.c10_s0_s24575.hmp.txt.gz";
 //        String donorFile=rootIn+"Xw24575Of24KMerge20130513b.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"w24575Of24KMerge20130513b.hmp.txt.gz";
 //        String impTargetFile2=root+"IMPw24575Of24KMerge20130513b.hmp.txt.gz";
 //        
 //        String origFile=rootIn+"ABQTL25.c10_s0_s24575.hmp.txt.gz";
