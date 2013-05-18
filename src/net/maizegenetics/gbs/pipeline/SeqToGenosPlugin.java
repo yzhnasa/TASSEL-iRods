@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -23,10 +22,12 @@ import net.maizegenetics.pal.alignment.Locus;
 import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TOPMInterface;
 import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import org.apache.log4j.Logger;
@@ -347,8 +348,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         Locus locus = topm.getLocus(tagIndex);
         int startPos = topm.getStartPosition(tagIndex);
         for (int variant = 0; variant < topm.getMaxNumVariants(); variant++) {
-            byte currBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 encodings
-            if ((currBase == topm.getByteMissing()) || (currBase == Alignment.UNKNOWN_ALLELE)) {
+            byte newBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 allele encodings
+            if ((newBase == topm.getByteMissing()) || (newBase == Alignment.UNKNOWN_ALLELE)) {
                 continue;
             }
             int offset = topm.getVariantPosOff(tagIndex, variant);
@@ -357,11 +358,12 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             if (currSite < 0) {
                 continue;
             }
-            byte prevBase = outMSA[chrIndex].getBase(taxonIndex, currSite);
-            if (prevBase == Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                outMSA[chrIndex].setBase(taxonIndex, currSite, currBase);
-            } else if (currBase != prevBase) {
-                outMSA[chrIndex].setBase(taxonIndex, currSite, TagsToSNPByAlignmentPlugin.resolveSNPByteFromCallPair(prevBase, currBase));
+            byte newGeno = AlignmentUtils.getDiploidValue(newBase, newBase);
+            byte prevGeno = outMSA[chrIndex].getBase(taxonIndex, currSite);
+            if (prevGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                outMSA[chrIndex].setBase(taxonIndex, currSite, newGeno);
+            } else if (newGeno != prevGeno) {
+                outMSA[chrIndex].setBase(taxonIndex, currSite, resolveGenoFromCallPair(prevGeno, newBase));
             }
         }
     }
@@ -437,6 +439,26 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             + "\"_qseq.txt.gz\" "
             + "in the supplied directory: ";
 
+    private byte resolveGenoFromCallPair(byte currGeno, byte newAllele) {
+        TreeSet<Byte> alleles = new TreeSet<Byte>();
+        byte[] currAlleles = AlignmentUtils.getDiploidValues(currGeno);
+        alleles.add(currAlleles[0]);
+        alleles.add(currAlleles[1]);
+        alleles.add(newAllele);
+        if (alleles.size() > 2) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        byte[] alleleArray = new byte[alleles.size()];
+        int i = 0;
+        for (Byte allele : alleles) {
+            alleleArray[i++] = allele.byteValue();
+        }
+        if (alleleArray.length == 2) {
+            return AlignmentUtils.getDiploidValue(alleleArray[0], alleleArray[1]);
+        }
+        return AlignmentUtils.getDiploidValue(alleleArray[0], alleleArray[0]);
+    }
+    
     @Override
     public ImageIcon getIcon() {
         throw new UnsupportedOperationException("Not supported yet.");
