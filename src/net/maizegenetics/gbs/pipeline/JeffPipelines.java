@@ -23,7 +23,9 @@ public class JeffPipelines {
 //        expandVariantsInTOPM();
 //        getChrsFromTOPM();
 //        runTOPMSummaryPlugin();
-        convertTOPMtoHDF5();
+//        convertTOPMtoHDF5();
+        runRawReadsToHapMapPlugin();
+//        runSeqToGenosPlugin();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -235,5 +237,35 @@ public class JeffPipelines {
         int maxMapping = 1;
         int maxVariants = 16;
         TagsOnPhysMapHDF5.createFile(inTOPM, outTOPMFileStr, maxMapping, maxVariants);
+    }
+    
+    public static void runRawReadsToHapMapPlugin() {
+        String baseDir = "/Users/jcg233/Documents/GBS/";
+        String[] MDPLowVolArgs = new String[]{
+            "-i", "/Users/jcg233/largeFiles/fastq/",
+            "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_key.txt",
+            "-m", "/Volumes/nextgen/Zea/AllZeaBuild_2.X/04_TOPM/2.6_production/02_MergedTOPM/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm",
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_RawReadsToHapMap",
+            "-e", "ApeKI",
+        };
+
+        RawReadsToHapMapPlugin plugin = new RawReadsToHapMapPlugin(null);
+        plugin.setParameters(MDPLowVolArgs);
+        plugin.performFunction(null);
+    }
+    
+    public static void runSeqToGenosPlugin() {
+        String baseDir = "/Users/jcg233/Documents/GBS/";
+        String[] MDPLowVolArgs = new String[]{
+            "-i", "/Users/jcg233/largeFiles/fastq/",
+            "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_key.txt",
+            "-m", "/Volumes/nextgen/Zea/AllZeaBuild_2.X/04_TOPM/2.6_production/02_MergedTOPM/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm",
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos",
+            "-e", "ApeKI",
+        };
+
+        SeqToGenosPlugin plugin = new SeqToGenosPlugin(null);
+        plugin.setParameters(MDPLowVolArgs);
+        plugin.performFunction(null);
     }
 }
