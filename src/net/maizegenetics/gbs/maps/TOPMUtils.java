@@ -29,7 +29,7 @@ public class TOPMUtils {
 
         if (temp.endsWith(".topm.txt")) {
             return new TagsOnPhysicalMap(filename, false);
-        } else if (temp.endsWith(".topm.bin")) {
+        } else if (temp.endsWith(".topm.bin") || temp.endsWith(".topm")) {
             return new TagsOnPhysicalMap(filename, true);
         } else if (temp.endsWith(".topm.h5")) {
             return new TagsOnPhysMapHDF5(filename);
