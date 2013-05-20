@@ -78,8 +78,8 @@ private static final String HAS_DATA = "HasData"; // summary index where if any 
            // which version? String[][] ?
            
            // write minor allele frequencies
-           writer.createFloatArray(PDAnnotation.MINOR_ALLELE_FREQUENCY, maf.length);
-           writer.writeFloatArray(PDAnnotation.MINOR_ALLELE_FREQUENCY, maf);
+           writer.createFloatArray(PDAnnotation.MINOR_ALLELE_FREQUENCY + (i + 1), maf.length);
+           writer.writeFloatArray(PDAnnotation.MINOR_ALLELE_FREQUENCY + (i + 1), maf);
             
            FolderParser fp = new FolderParser(gwasDirIn);
            String[] traits = fp.getAllTraits();
@@ -108,7 +108,7 @@ private static final String HAS_DATA = "HasData"; // summary index where if any 
            
            // write
            writer.createIntArray(PDAnnotation.HAS_DATA + PDAnnotation.CHROMOSOME + (i + 1), hasData.length);
-           writer.writeIntArray(PDAnnotation.PHYSICAL_POSITIONS, hasData);
+          
            
         } // end of chromosome loop
         writer.close();
