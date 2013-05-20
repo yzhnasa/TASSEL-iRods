@@ -8,11 +8,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -21,20 +19,18 @@ import net.maizegenetics.gbs.homology.TagMatchFinder;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.Locus;
-
 import java.awt.Frame;
-
 import java.util.ArrayList;
 import java.util.TreeMap;
-
+import java.util.TreeSet;
 import javax.swing.ImageIcon;
-
+import net.maizegenetics.gbs.maps.TOPMInterface;
+import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
-import org.apache.log4j.SimpleLayout;
 
 /**
  * This pipeline converts all of the fastq AND/OR qseq files in the input folder
@@ -54,12 +50,11 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
     private String myKeyFile = null;
     private String myEnzyme = null;
     private String myOutputDir = null;
-    private TagsOnPhysicalMap topm = null;
+    private TOPMInterface topm = null;
     private int maxDivergence = 0;
     private int[] chromosomes = null;
-    private Locus[] loci = null;
     private boolean fastq = true;
-    private IdGroup taxaNameIndices = null;
+    private IdGroup taxaIDGroup = null;
 
     public RawReadsToHapMapPlugin() {
         super(null, false);
@@ -67,18 +62,6 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
 
     public RawReadsToHapMapPlugin(Frame parentFrame) {
         super(parentFrame, false);
-    }
-
-    @Override
-    public DataSet performFunction(DataSet input) {
-        myLogger.addAppender(new ConsoleAppender(new SimpleLayout()));
-        if ((myEnzyme == null) || (myEnzyme.length() == 0)) {
-            printUsage();
-            throw new IllegalStateException("performFunction: enzyme must be set.");
-        }
-        // TODO - More checks to validate parameters...
-        translateRawReadsToHapmap(myRawSeqFileNames, myKeyFile, myEnzyme, myOutputDir, topm, maxDivergence);
-        return null;
     }
 
     private void printUsage() {
@@ -151,7 +134,7 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
             throw new IllegalArgumentException("Please specify an output directory (option -o).");
         }
         if (myArgsEngine.getBoolean("-m")) {
-            topm = new TagsOnPhysicalMap(myArgsEngine.getString("-m"), true);
+            topm = TOPMUtils.readTOPM(myArgsEngine.getString("-m"));
         } else {
             printUsage();
             throw new IllegalArgumentException("Please specify a TagsOnPhysicalMap file (-m)");
@@ -161,36 +144,30 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         }
     }
 
-    /**
-     * Creates one hapmap genotype file for each fastq or qseq file in the input
-     * directory. Output hapmap genotype files written to the outputDir, using
-     * fastq/qseq file names with extension changed to .hmp.txt
-     *
-     * @param rawSeqFileNames Array of fastq AND/OR qseq file names
-     * (Illumina-created files with raw read sequence, quality score, machine
-     * name, etc.)
-     * @param keyFileS A key file (list of taxa by barcode, lane & flow cell,
-     * including plate maps)
-     * @param enzyme The enzyme used to make the library
-     * @param outputDir String containing the path of the output directory where
-     * the HapMap files will be written
-     * @param theTOPM TagsOnPhysicalMap object with variants added from a
-     * previous Discovery Pipeline run (filtered SNPs removed)
-     * @param maxDiv Maximum divergence (edit distance) between new read and
-     * previously mapped read (Default: 0 = perfect matches only)
-     */
-    public void translateRawReadsToHapmap(String[] rawSeqFileNames, String keyFileS, String enzyme, String outputDir, TagsOnPhysicalMap theTOPM, int maxDiv) {
-        for (int laneNum = 0; laneNum < rawSeqFileNames.length; laneNum++) {
+    @Override
+    public DataSet performFunction(DataSet input) {
+//        myLogger.addAppender(new ConsoleAppender(new SimpleLayout()));
+        if ((myEnzyme == null) || (myEnzyme.length() == 0)) {
+            printUsage();
+            throw new IllegalStateException("performFunction: enzyme must be set.");
+        }
+        // TODO - More checks to validate parameters...
+        translateRawReadsToHapmap();
+        return null;
+    }
+
+    private void translateRawReadsToHapmap() {
+        for (int laneNum = 0; laneNum < myRawSeqFileNames.length; laneNum++) {
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
-            ParseBarcodeRead thePBR = setUpBarcodes(laneNum, rawSeqFileNames, keyFileS, enzyme);
+            ParseBarcodeRead thePBR = setUpBarcodes(laneNum);
             if (thePBR == null || thePBR.getBarCodeCount() == 0) {
                 System.out.println("No barcodes found. Skipping this flowcell lane.");
                 continue;
             }
-            MutableNucleotideAlignment[] outMSA = setUpMutableNucleotideAlignments(thePBR, theTOPM);
+            MutableNucleotideAlignment[] outMSA = setUpMutableNucleotideAlignments(thePBR);
             myLogger.info("Looking for known SNPs in sequence reads...");
             String temp = "";
-            BufferedReader br = getBufferedReader(laneNum, rawSeqFileNames);
+            BufferedReader br = getBufferedReader(laneNum);
             try {
                 while ((temp = br.readLine()) != null) {
                     if (counters[0] % 1000000 == 0) {
@@ -199,19 +176,18 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
                     ReadBarcodeResult rr = readSequenceRead(br, temp, thePBR, counters);
                     if (rr != null) {
                         counters[1]++;  // goodBarcodedReads
-                        int tagIndex = theTOPM.getTagIndex(rr.getRead());
+                        int tagIndex = topm.getTagIndex(rr.getRead());
                         if (tagIndex >= 0) {
                             counters[3]++;  // perfectMatches
                         }
-                        if (tagIndex < 0 && maxDiv > 0) {
-                            tagIndex = findBestImperfectMatch(theTOPM, rr.getRead(), counters, maxDiv);
+                        if (tagIndex < 0 && maxDivergence > 0) {
+                            tagIndex = findBestImperfectMatch(rr.getRead(), counters);
                         }
                         if (tagIndex < 0) {
                             continue;
                         }
                         counters[2]++;  // goodMatched++;
-                        //recordVariantsFromTag(theTOPM, outMSA, tagIndex, taxaNameIndices.get(rr.getTaxonName()));
-                        recordVariantsFromTag(theTOPM, outMSA, tagIndex, taxaNameIndices.whichIdNumber(rr.getTaxonName()));
+                        recordVariantsFromTag(outMSA, tagIndex, taxaIDGroup.whichIdNumber(rr.getTaxonName()));
                     }
                 }
                 br.close();
@@ -220,15 +196,15 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
                 System.out.println(temp);
                 e.printStackTrace();
             }
-            writeHapMapFiles(outMSA, outputDir, rawSeqFileNames, laneNum, counters);
+            writeHapMapFiles(outMSA, laneNum, counters);
         }
     }
 
-    private ParseBarcodeRead setUpBarcodes(int laneNum, String[] rawSeqFileNames, String keyFileS, String enzyme) {
+    private ParseBarcodeRead setUpBarcodes(int laneNum) {
         System.gc();
-        System.out.println("\nWorking on GBS raw sequence file: " + rawSeqFileNames[laneNum]);
+        System.out.println("\nWorking on GBS raw sequence file: " + myRawSeqFileNames[laneNum]);
         fastq = true;
-        if (rawSeqFileNames[laneNum].substring(rawSeqFileNames[laneNum].lastIndexOf(File.separator)).contains("qseq")) {
+        if (myRawSeqFileNames[laneNum].substring(myRawSeqFileNames[laneNum].lastIndexOf(File.separator)).contains("qseq")) {
             fastq = false;
         }
         if (fastq) {
@@ -236,35 +212,33 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         } else {
             System.out.println("\tThis file contains 'qseq' in its name so is assumed to be in qseq format");
         }
-        File rawSeqFile = new File(rawSeqFileNames[laneNum]);
+        File rawSeqFile = new File(myRawSeqFileNames[laneNum]);
         String[] np = rawSeqFile.getName().split("_");
 
         ParseBarcodeRead thePBR = null;
         if (np.length == 3) {
-            thePBR = new ParseBarcodeRead(keyFileS, enzyme, np[0], np[1]);
+            thePBR = new ParseBarcodeRead(myKeyFile, myEnzyme, np[0], np[1]);
         } else if (np.length == 4) {
-            thePBR = new ParseBarcodeRead(keyFileS, enzyme, np[0], np[2]);
+            thePBR = new ParseBarcodeRead(myKeyFile, myEnzyme, np[0], np[2]);
         } else if (np.length == 5) {
-            thePBR = new ParseBarcodeRead(keyFileS, enzyme, np[1], np[3]);
+            thePBR = new ParseBarcodeRead(myKeyFile, myEnzyme, np[1], np[3]);
         } else {
-            printFileNameConventions(rawSeqFileNames[laneNum]);
+            printFileNameConventions(myRawSeqFileNames[laneNum]);
             return thePBR;
         }
         System.out.println("Total barcodes found in key file for this lane:" + thePBR.getBarCodeCount());
         return thePBR;
     }
 
-    private MutableNucleotideAlignment[] setUpMutableNucleotideAlignments(ParseBarcodeRead thePBR, TagsOnPhysicalMap theTOPM) {
-        myLogger.info("\nCounting sites in TOPM file.  Here's the first 500 tags on chromosome 1:");
-        theTOPM.printRows(500, true, 1);
-        ArrayList<int[]> uniquePositions = getUniquePositions(theTOPM);
+    private MutableNucleotideAlignment[] setUpMutableNucleotideAlignments(ParseBarcodeRead thePBR) {
+        myLogger.info("\nCounting sites in TOPM file.");
+        ArrayList<int[]> uniquePositions = getUniquePositions();  // need this method in TOPMInterface
         myLogger.info("Creating alignment objects to hold the genotypic data (one per chromosome in the TOPM).");
         MutableNucleotideAlignment[] outMSA = new MutableNucleotideAlignment[chromosomes.length];
         for (int i = 0; i < outMSA.length; i++) {
-            //outMSA[i] = new MutableNucleotideAlignment(thePBR.getTaxaNames(), uniquePositions.get(i).length, new Locus[]{loci[i]});
             outMSA[i] = MutableNucleotideAlignment.getInstance(new SimpleIdGroup(thePBR.getTaxaNames()), uniquePositions.get(i).length);
         }
-        taxaNameIndices = outMSA[0].getIdGroup(); //Find the indices of taxa names within the MSA for quick lookup
+        taxaIDGroup = outMSA[0].getIdGroup();
         myLogger.info("Adding sites from the TOPM file to the alignment objects.");
         for (int i = 0; i < outMSA.length; i++) {
             int currSite = 0;
@@ -272,7 +246,6 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
                 String chromosome = Integer.toString(chromosomes[i]);
                 outMSA[i].addSite(currSite);
                 outMSA[i].setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
-                //outMSA[i].setStrandOfSite(currSite, (byte) '+');
                 outMSA[i].setPositionOfSite(currSite, uniquePositions.get(i)[j]);
                 currSite++;
             }
@@ -281,23 +254,22 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         return outMSA;
     }
 
-    private ArrayList<int[]> getUniquePositions(TagsOnPhysicalMap theTOPM) {
+    private ArrayList<int[]> getUniquePositions() {
         ArrayList<int[]> uniquePositions = new ArrayList<int[]>();
-        chromosomes = theTOPM.getChromosomes();
-        loci = theTOPM.getLoci();
+        chromosomes = topm.getChromosomes();
         for (int i = 0; i < chromosomes.length; i++) {
-            uniquePositions.add(theTOPM.getUniquePositions(chromosomes[i]));
+            uniquePositions.add(topm.getUniquePositions(chromosomes[i]));
         }
         return uniquePositions;
     }
 
-    private BufferedReader getBufferedReader(int laneNum, String[] rawSeqFileNames) {
+    private BufferedReader getBufferedReader(int laneNum) {
         BufferedReader br = null;
         try {
-            if (rawSeqFileNames[laneNum].endsWith(".gz")) {
-                br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(rawSeqFileNames[laneNum]))));
+            if (myRawSeqFileNames[laneNum].endsWith(".gz")) {
+                br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(myRawSeqFileNames[laneNum]))));
             } else {
-                br = new BufferedReader(new FileReader(rawSeqFileNames[laneNum]), 65536);
+                br = new BufferedReader(new FileReader(myRawSeqFileNames[laneNum]), 65536);
             }
         } catch (Exception e) {
             System.out.println("Catch in getBufferedReader(): e=" + e);
@@ -328,7 +300,6 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
             } else {  // qseq
                 String[] jj = temp.split("\\s");
                 sl = jj[8];
-                //  qualS=jj[9];  // the quality score is not used
                 rr = thePBR.parseReadIntoTagAndTaxa(sl, null, false, 0);
             }
         } catch (Exception e) {
@@ -340,11 +311,11 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         return rr;
     }
 
-    private int findBestImperfectMatch(TagsOnPhysicalMap theTOPM, long[] read, int[] counters, int maxDiv) {
+    private int findBestImperfectMatch(long[] read, int[] counters) {
         // this method is not ready for prime time -- to resolve a tie, it currently chooses a random tag out of the tied tags
         int tagIndex = -1;
-        TagMatchFinder tmf = new TagMatchFinder(theTOPM);
-        TreeMap<Integer, Integer> bestHitsAndDiv = tmf.findMatchesWithIntLengthWords(read, maxDiv, true);
+        TagMatchFinder tmf = new TagMatchFinder(topm);
+        TreeMap<Integer, Integer> bestHitsAndDiv = tmf.findMatchesWithIntLengthWords(read, maxDivergence, true);
         if (bestHitsAndDiv.size() > 0) {
             counters[4]++; // imperfectMatches
             if (bestHitsAndDiv.size() == 1) {
@@ -355,8 +326,8 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         return tagIndex;
     }
 
-    private void recordVariantsFromTag(TagsOnPhysicalMap theTOPM, MutableNucleotideAlignment[] outMSA, int tagIndex, int taxonIndex) {
-        int chromosome = theTOPM.getChromosome(tagIndex);
+    private void recordVariantsFromTag(MutableNucleotideAlignment[] outMSA, int tagIndex, int taxonIndex) {
+        int chromosome = topm.getChromosome(tagIndex);
         if (chromosome == Integer.MIN_VALUE) {
             return;
         }
@@ -367,40 +338,41 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
                 break;
             }
         }
-        Locus locus = theTOPM.getLocus(tagIndex);
-        int startPos = theTOPM.getStartPosition(tagIndex);
-        for (int variant = 0; variant < theTOPM.maxVariants; variant++) {
-            byte currBase = theTOPM.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 encodings
-            if ((currBase == theTOPM.BYTE_MISSING) || (currBase == Alignment.UNKNOWN_ALLELE)) {
+        Locus locus = topm.getLocus(tagIndex);
+        int startPos = topm.getStartPosition(tagIndex);
+        for (int variant = 0; variant < topm.getMaxNumVariants(); variant++) {
+            byte newBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 allele encodings
+            if ((newBase == topm.getByteMissing()) || (newBase == Alignment.UNKNOWN_ALLELE)) {
                 continue;
             }
-            int offset = theTOPM.getVariantPosOff(tagIndex, variant);
+            int offset = topm.getVariantPosOff(tagIndex, variant);
             int pos = startPos + offset;
             int currSite = outMSA[chrIndex].getSiteOfPhysicalPosition(pos, locus);
             if (currSite < 0) {
                 continue;
             }
-            byte prevBase = outMSA[chrIndex].getBase(taxonIndex, currSite);
-            if (prevBase == Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                outMSA[chrIndex].setBase(taxonIndex, currSite, currBase);
-            } else if (currBase != prevBase) {
-                outMSA[chrIndex].setBase(taxonIndex, currSite, TagsToSNPByAlignmentPlugin.resolveSNPByteFromCallPair(prevBase, currBase));
+            byte newGeno = AlignmentUtils.getDiploidValue(newBase, newBase);
+            byte prevGeno = outMSA[chrIndex].getBase(taxonIndex, currSite);
+            if (prevGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                outMSA[chrIndex].setBase(taxonIndex, currSite, newGeno);
+            } else if (newGeno != prevGeno) {
+                outMSA[chrIndex].setBase(taxonIndex, currSite, resolveGenoFromCallPair(prevGeno, newBase));
             }
         }
     }
 
-    private void writeHapMapFiles(MutableNucleotideAlignment[] outMSA, String outputDir, String[] rawSeqFileNames, int laneNum, int[] counters) {
+    private void writeHapMapFiles(MutableNucleotideAlignment[] outMSA, int laneNum, int[] counters) {
         for (int i = 0; i < outMSA.length; i++) {
             outMSA[i].clean();
             AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(outMSA[i], false);
-            String outFileS = outputDir + rawSeqFileNames[laneNum].substring(rawSeqFileNames[laneNum].lastIndexOf(File.separator));
+            String outFileS = myOutputDir + myRawSeqFileNames[laneNum].substring(myRawSeqFileNames[laneNum].lastIndexOf(File.separator));
             outFileS = outFileS.replaceAll(rawSeqFileNameReplaceRegex, "_c" + chromosomes[i]); // ".hmp.txt" gets added by ExportUtils.writeToHapmap
             ExportUtils.writeToHapmap(outMSA[i], false, outFileS, '\t', this);
         }
         System.out.println("Total number of reads in lane=" + counters[0]);
         System.out.println("Total number of good, barcoded reads=" + counters[1]);
         int filesDone = laneNum + 1;
-        System.out.println("Finished reading " + filesDone + " of " + rawSeqFileNames.length + " sequence files: " + rawSeqFileNames[laneNum] + "\n");
+        System.out.println("Finished reading " + filesDone + " of " + myRawSeqFileNames.length + " sequence files: " + myRawSeqFileNames[laneNum] + "\n");
     }
 
     private void printFileNameConventions(String actualFileName) {
@@ -460,6 +432,26 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
             + "\"_qseq.txt.gz\" "
             + "in the supplied directory: ";
 
+    private byte resolveGenoFromCallPair(byte currGeno, byte newAllele) {
+        TreeSet<Byte> alleles = new TreeSet<Byte>();
+        byte[] currAlleles = AlignmentUtils.getDiploidValues(currGeno);
+        alleles.add(currAlleles[0]);
+        alleles.add(currAlleles[1]);
+        alleles.add(newAllele);
+        if (alleles.size() > 2) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        byte[] alleleArray = new byte[alleles.size()];
+        int i = 0;
+        for (Byte allele : alleles) {
+            alleleArray[i++] = allele.byteValue();
+        }
+        if (alleleArray.length == 2) {
+            return AlignmentUtils.getDiploidValue(alleleArray[0], alleleArray[1]);
+        }
+        return AlignmentUtils.getDiploidValue(alleleArray[0], alleleArray[0]);
+    }
+    
     @Override
     public ImageIcon getIcon() {
         throw new UnsupportedOperationException("Not supported yet.");
