@@ -32,6 +32,8 @@ public class PDAnnotation {
     private static final int PHYSICAL_POSITION_COLUMN = 0;
     private static final int MINOR_ALLELE_FREQUENCY_COLUMN = 1;
     private static final int COLUMN_OFFSET = 1; // one for physical position column and another for minor allele frequency column
+    
+    private int[][] allPositions;
 
     //private 
     public PDAnnotation(String hapMapPath, String pathGwas, String annoPath, String outputFile,
@@ -97,21 +99,24 @@ public class PDAnnotation {
         IHDF5Writer writer = HDF5Factory.open(outputFile);
 //        FolderParser fp = new FolderParser(gwasDirIn);
         
-        int traitIndex = 1; 
+        int traitIndex = 0; 
         int chrIndex = 1;
         int physPosIndex = 2;
         int resultIndex = 5;
         String[] traits =getGWASTraits(gwasFileIn, traitIndex, "\t");
         String chrGroup = "chr" + currChr + "/";
+        //read in all chromosome position
+        //create a method to hold this memory
         int[] positions = writer.readIntArray(chrGroup + HapMapHDF5Constants.POSITIONS);
+        
 
         for (int j = 0; j < traits.length; j++) {
-            
+           
             System.out.println(gwasFileIn.toString());
             // pull out the physical location and p-value
             int posMatch = 0, posMisMatch = 0;
-            float[] pVals = new float[positions.length];
-            Arrays.fill(pVals, Float.NaN);
+            float[] rmip = new float[positions.length];
+            Arrays.fill(rmip, Float.NaN);
             try {
                 BufferedReader fileIn = Utils.getBufferedReader(gwasFileIn, 1000000);
                 String s;
@@ -120,15 +125,18 @@ public class PDAnnotation {
                     try {
                         int theChr = Integer.parseInt(fields[chrIndex]);
                         int position = Integer.parseInt(fields[physPosIndex]);
-                        float pvalue = Float.parseFloat(fields[resultIndex]);
-                        int site = Arrays.binarySearch(positions, position);
+                        float rmipValue = Float.parseFloat(fields[resultIndex]);
+                        if(theChr!=9) continue;
+                        if(position>3600000) continue;
+                        //int site = Arrays.binarySearch(allPositions[theChr-1], position);
+                        int site = Arrays.binarySearch(positions, position); 
                         if (site < 0) {
-                            //                          System.out.println("Error Position not found:"+position);
+                            System.out.println("Error Position not found:"+position);
                             posMisMatch++;
                         } else {
                             posMatch++;
-                            pVals[site] = pvalue;
-                            System.out.println("Hit Position found:" + position + " sites:" + site);
+                            rmip[site] = rmipValue;
+                            System.out.printf("Hit Chr:%d Position:%d site:%d %n ",theChr,position, site);
                         }
 
                     } catch (Exception e) {
@@ -141,8 +149,8 @@ public class PDAnnotation {
             }
             System.out.printf("Position matches:%d errors:%d %n", posMatch, posMisMatch);
             String dataSetName = chrGroup + "GWAS/" + traits[j];
-            writer.createFloatArray(dataSetName, pVals.length);
-            writer.writeFloatArray(dataSetName, pVals);
+            writer.createFloatArray(dataSetName, rmip.length);
+            writer.writeFloatArray(dataSetName, rmip);
         } // end of traits loop
     }
     
@@ -166,13 +174,16 @@ public class PDAnnotation {
     }
 
     public static void main(String[] args) {
-        String hapMapPath = "/local/workdir/dek29/pad/pad/HapMapV2RefGenV2/";
-//        String pathGwas = "/local/workdir/dek29/pd/gwas_results/";
-//        String hapMapPath = "/Volumes/LaCie/HapMapV2/compressed/";
-//        String pathGwas = "/Volumes/LaCie/PolymorphismDescriptors/gwas_results/";
-        String pathGwas = "/home/dek29/Documents/PolyDesc/20130521_fromJason/gwas_hits_all.txt";
+//        String hapMapPath = "/local/workdir/dek29/pad/pad/HapMapV2RefGenV2/";
+////        String pathGwas = "/local/workdir/dek29/pd/gwas_results/";
+//        String PDfile = "/home/dek29/Documents/PolyDesc/output/testPD.h5";
+//        String pathGwas = "/home/dek29/Documents/PolyDesc/20130521_fromJason/gwas_hits_all.txt";
+        
+         String hapMapPath = "/Volumes/LaCie/HapMapV2/compressed/";
+        String pathGwas = "/Volumes/LaCie/PolymorphismDescriptors/gwas_hits_all.txt";
         String annoPath = "/Volumes/LaCie/HapMapV2/compressed/";
-        String PDfile = "/home/dek29/Documents/PolyDesc/output/testPD.h5";
+        String PDfile = "/Volumes/LaCie/PolymorphismDescriptors/testPD.h5";
+
         PDAnnotation p = new PDAnnotation(hapMapPath, pathGwas, annoPath, PDfile, 9, 9);
         //       p.init();
     }
