@@ -342,7 +342,7 @@ public class RawReadsToHapMapPlugin extends AbstractPlugin {
         int startPos = topm.getStartPosition(tagIndex);
         for (int variant = 0; variant < topm.getMaxNumVariants(); variant++) {
             byte newBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 allele encodings
-            if ((newBase == topm.getByteMissing()) || (newBase == Alignment.UNKNOWN_ALLELE)) {
+            if ((newBase == TOPMInterface.BYTE_MISSING) || (newBase == Alignment.UNKNOWN_ALLELE)) {
                 continue;
             }
             int offset = topm.getVariantPosOff(tagIndex, variant);

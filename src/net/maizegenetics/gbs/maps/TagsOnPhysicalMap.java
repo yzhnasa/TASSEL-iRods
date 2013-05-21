@@ -45,8 +45,6 @@ import net.maizegenetics.util.MultiMemberGZIPInputStream;
  */
 public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
-    public final static byte BYTE_MISSING = Byte.MIN_VALUE;
-    public final static int intMissing = Integer.MIN_VALUE;
     public int maxVariants = 8;
     byte[] multimaps;  // number of locations this tagSet maps to; unknown = Byte.MIN_VALUE; multiple, but unknown number = 99
     int[] chromosome;  // 4 bytes
@@ -656,11 +654,6 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
     
     @Override
-    public byte getByteMissing() {
-        return BYTE_MISSING;
-    }
-
-    @Override
     public int getChromosome(int index) {
         return chromosome[index];
     }
@@ -1104,7 +1097,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     @Override
     public Locus getLocus(int tagIndex) {
-        if (chromosome[tagIndex] == intMissing) {
+        if (chromosome[tagIndex] == TOPMInterface.INT_MISSING) {
             return null;
         } //Return null for unmapped tags
         return new Locus(chromosome[tagIndex] + "", chromosome[tagIndex] + "", -1, -1, null, null);

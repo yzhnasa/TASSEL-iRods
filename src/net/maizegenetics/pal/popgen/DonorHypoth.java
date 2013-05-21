@@ -8,22 +8,22 @@ package net.maizegenetics.pal.popgen;
  *
  * @author edbuckler
  */
-class DonorHypoth implements Comparable{
-    int targetTaxon = -1;
-    int donor1Taxon = -1;
-    int donor2Taxon = -1;
-    int startBlock = -1;
-    int focusBlock = -1;
-    int endBlock = -1;
-    double pError = 1;
-    double pHeterozygous = -1;
-    double pHomoD1 = -1;
-    double pHomoD2 = -11;
-    int totalSites = 0;
-    int mendelianErrors = 0;
-    int startSite=-1;
-    int endSite=-1;
-    byte[] phasedResults=null;
+public class DonorHypoth implements Comparable{
+    public int targetTaxon = -1;
+    public int donor1Taxon = -1;
+    public int donor2Taxon = -1;
+    public int startBlock = -1;
+    public int focusBlock = -1;
+    public int endBlock = -1;
+    public double pError = 1;
+    public double pHeterozygous = -1;
+    public double pHomoD1 = -1;
+    public double pHomoD2 = -11;
+    public int totalSites = 0;
+    public int mendelianErrors = 0;
+    public int startSite=-1;
+    public int endSite=-1;
+    public byte[] phasedResults=null;
 
     public DonorHypoth() {
     }

@@ -12,11 +12,9 @@ import org.apache.log4j.Logger;
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
-import net.maizegenetics.pal.alignment.MutableSingleEncodeAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.distance.DistanceMatrix;
@@ -1210,14 +1208,13 @@ public class NucleotideImputationUtils {
 		int chrlength = a.getPositionInLocus(nsites - 1) - a.getPositionInLocus(0);
 		tp.setAverageSegmentLength( chrlength / nsites );
 		
-		
-		//initialize the emission matrix, states (5) in rows, observations (3) in columns
+                //initialize the emission matrix, states (5) in rows, observations (3) in columns
 		double[][] emission = new double[][] {
-				{.98,.001,.001},
+				{.998,.001,.001},
 				{.6,.2,.2},
 				{.4,.2,.4},
 				{.2,.2,.6},
-				{.001,.001,.98}
+				{.001,.001,.998}
 		};
 		
 		EmissionProbability ep = new EmissionProbability();
