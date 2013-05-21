@@ -69,6 +69,7 @@ public class MergeIdenticalGametes {
             String errorExportFile, double maxDistance, int minSites, int appoxSitesPerHaplotype, String hapMapNames) {
         this.hapMapNames=hapMapNames;
         Alignment baseAlign=null;
+        System.out.println("Reading: "+inFile);
         if(inFile.contains(".h5")) {
             baseAlign=BitAlignmentHDF5.getInstance(inFile);
         } else {
@@ -85,7 +86,7 @@ public class MergeIdenticalGametes {
         for (int i = 0; i < divisions.length; i++) {
             MutableNucleotideAlignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
              minSites,  maxDistance);
-            String newExport=exportFile.replace(".c10.", ".c10s"+i+".");
+            String newExport=exportFile.replace("s+.hmp", "s"+i+".hmp");
             ExportUtils.writeToHapmap(mna, false, newExport, '\t', null);
   //          if(errorExportFile!=null) exportBadSites(errorExportFile, 0.01);   
         }
@@ -373,7 +374,8 @@ public class MergeIdenticalGametes {
      * @param args
      */
     public static void main(String[] args) {
-        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/impOrig/";
+       // String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/impOrig/";
+        String root="/Volumes/LaCie/build20120701/IMP26/orig/";
 
   //      String root="/Volumes/LaCie/build20120701/impOrig/";
 
@@ -382,6 +384,8 @@ public class MergeIdenticalGametes {
   //      String infileH5=root+"all26HM2.c10_s0_24575.hmp.h5";
         String infileH5=root+"all26HM2.hmp.h5";
         String infile24K=root+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
+        String infile26v=root+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
+        String secFile26v=root+"all26_8k.c+s+.hmp.txt.gz";
 
         String mergeFile=root+"all26HM2_8k.c10.hmp.txt.gz";
         String errorFile=root+"mcErrorXMerge20130425.txt";
@@ -393,7 +397,13 @@ public class MergeIdenticalGametes {
 
 
 //        e64NNI=new MergeIdenticalGametes(infile24K, mergeFile, errorFile, errorFile2, 0.01,500,"CappyMap");
-        e64NNI=new MergeIdenticalGametes(infileH5, mergeFile, errorFile, errorFile2, 0.01,500,8192, "CappyMap");
+        for (int chr = 9; chr <= 9; chr++) {
+            String infile26vMod=infile26v.replace("chr+.hmp", "chr"+chr+".hmp");
+            String outfiles=secFile26v.replace(".c+s+.", ".c"+chr+"s+.");
+            e64NNI=new MergeIdenticalGametes(infile26vMod, outfiles, errorFile, errorFile2, 0.01,500,8192, "CappyMap");
+            
+        }
+       // e64NNI=new MergeIdenticalGametes(infileH5, mergeFile, errorFile, errorFile2, 0.01,500,8192, "CappyMap");
 
 
     }

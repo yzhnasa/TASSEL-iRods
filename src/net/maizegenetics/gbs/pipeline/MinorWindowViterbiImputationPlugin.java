@@ -115,7 +115,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
      */
     public MinorWindowViterbiImputationPlugin(String donorFile, String unImpTargetFile, 
             String exportFile, int minMinorCnt, int minTestSites, int minSitesPresent, 
-            double maxHybridErrorRate, boolean hybridMode, boolean imputeDonorFile) {
+            double maxHybridErrorRate, boolean hybridMode, boolean imputeDonorFile, int hapSecs) {
         this.minTestSites=minTestSites;
         if(unImpTargetFile.contains(".h5")) {
             unimpAlign=BitAlignmentHDF5.getInstance(unImpTargetFile);
@@ -124,7 +124,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         }
     //    unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
         unimpAlign.optimizeForTaxa(null);
-        Alignment[] donorAlign=new Alignment[8];
+        Alignment[] donorAlign=new Alignment[hapSecs];
         for (int i = 0; i < donorAlign.length; i++) {
             String donorFileSec=donorFile.replace("s+.", "s"+i+".");
             donorAlign[i]=ImportUtils.readFromHapmap(donorFileSec, false, (ProgressListener)null);
@@ -887,15 +887,33 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //        String unImpTargetFile=rootIn+"NAMs26HM2.hmp.txt.gz";
 //        String impTargetFile2=root+"NAMs26HM2.imp.hmp.txt.gz";
         
-        String origFile=rootIn+"all26HM2.c10.hmp.txt.gz";
-        String donorFile=rootIn+"all26HM2_8k.c10s+.hmp.txt.gz";
-        String unImpTargetFile=rootIn+"all26HM2.c10.hmp.txt.gz";
-        String impTargetFile2=root+"all26HM2.c10.imp.hmp.txt.gz";
+//        String origFile=rootIn+"all26HM2.c10.hmp.txt.gz";
+//        String donorFile=rootIn+"all26HM2_8k.c10s+.hmp.txt.gz";
+//        String unImpTargetFile=rootIn+"all26HM2.c10.hmp.txt.gz";
+//        String impTargetFile2=root+"all26HM2.c10.imp.hmp.txt.gz";
+        
+        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
+        String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
+        String impTargetFile=rootImp+"all26.c+.imp.hmp.txt.gz";
+        
+        for (int chr = 8; chr <= 9; chr++) {
+            String unImpTargetFileC=unImpTargetFile.replace("chr+", "chr"+chr);
+            String donorFileC=donorFile.replace(".c+s", ".c"+chr+"s");
+            String impTargetFileC=impTargetFile.replace(".c+.", ".c"+chr+".");
+            int chrSec=(chr==8)?10:9;
+            MinorWindowViterbiImputationPlugin e64NNI=new MinorWindowViterbiImputationPlugin(donorFileC, unImpTargetFileC, 
+                    impTargetFileC, 20, 50, 100, 0.005, true, false,chrSec);
+            
+        }
+        
 
 
-        MinorWindowViterbiImputationPlugin e64NNI=new MinorWindowViterbiImputationPlugin(donorFile, unImpTargetFile, 
-                impTargetFile2, 20, 50, 100, 0.005, true, false);
-        compareAlignment(origFile,unImpTargetFile,impTargetFile2);
+//        MinorWindowViterbiImputationPlugin e64NNI=new MinorWindowViterbiImputationPlugin(donorFile, unImpTargetFile, 
+//                impTargetFile, 20, 50, 100, 0.005, true, false);
+     //   compareAlignment(origFile,unImpTargetFile,impTargetFile2);
         
 //        String origFile=rootIn+"10psample25.c10_s0_s24575.hmp.txt.gz";
 //        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
