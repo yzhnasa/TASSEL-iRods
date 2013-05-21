@@ -106,19 +106,22 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                 }
                 monomorphicSnps = Arrays.copyOf(monomorphicSnps, snpCount);
                 Alignment fa = FilterAlignment.getInstance(popdata.original, monomorphicSnps);
-                MutableAlignment outMono = MutableNucleotideAlignment.getInstance(fa);
-
-                // fill in all values with the major allele
-                nsnps = outMono.getSiteCount();
-                int ntaxa = outMono.getSequenceCount();
-                for (int s = 0; s < nsnps; s++) {
-                    byte majorAllele = outMono.getMajorAllele(s);
-                    byte major = (byte) ((majorAllele << 4) | majorAllele);
-                    for (int t = 0; t < ntaxa; t++) {
-                        outMono.setBase(t, s, major);
+                if (fa.getSiteCount() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
+                    out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly});
+                } else { //Return both monomorphic and polymorphic sites
+                    MutableAlignment outMono = MutableNucleotideAlignment.getInstance(fa);
+                    // fill in all values with the major allele
+                    nsnps = outMono.getSiteCount();
+                    int ntaxa = outMono.getSequenceCount();
+                    for (int s = 0; s < nsnps; s++) {
+                        byte majorAllele = outMono.getMajorAllele(s);
+                        byte major = (byte) ((majorAllele << 4) | majorAllele);
+                        for (int t = 0; t < ntaxa; t++) {
+                            outMono.setBase(t, s, major);
+                        }
                     }
+                    out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly, outMono});
                 }
-                out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly, outMono});
             }
         }
         return out;
