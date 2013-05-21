@@ -14,7 +14,10 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.BitAlignment;
+import net.maizegenetics.pal.alignment.BitAlignmentHDF5;
 import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
@@ -40,6 +43,9 @@ import net.maizegenetics.util.Utils;
  * Try to make full length haplotypes
  * plus add short inbred segments not present full ones
  * 
+ * TODO:
+ * 1.  Add names back in
+ * 2.  Cluster and choose haplotypes by cluster and number of new minor alleles (or information)
  * 
  * @author edbuckler
  */
@@ -53,62 +59,83 @@ public class MergeIdenticalGametes {
     private BitSet badMask=null;
     private double minimumMissing=0.4;
     private int maxHaplotypes=2000;
-    private int siteWindow=1024*4*6;
     private int minSitesForSectionComp=50;
     private double maxHetFreq=0.02;
+    private double maxErrorInCreatingConsensus=0.05;
     private int minTaxaInGroup=2;
-    private String hapMapNames="HappyMap";
+    private String hapMapNames="CrappyMap";
 
     public MergeIdenticalGametes(String inFile, String exportFile, String errorInFile,
-            String errorExportFile, double maxDistance, int minSites,String hapMapNames) {
+            String errorExportFile, double maxDistance, int minSites, int appoxSitesPerHaplotype, String hapMapNames) {
         this.hapMapNames=hapMapNames;
-        inAlign=ImportUtils.readFromHapmap(inFile, false, (ProgressListener)null);
-        inAlign.optimizeForTaxa(null);
-        try{
-            gm=ReadPolymorphismUtils.readGeneticMapFile(errorInFile);
-            badMask=maskBadSites(gm,inAlign);
-            badMask=null;
+        Alignment baseAlign=null;
+        if(inFile.contains(".h5")) {
+            baseAlign=BitAlignmentHDF5.getInstance(inFile);
+        } else {
+            baseAlign=ImportUtils.readFromHapmap(inFile, false, (ProgressListener)null);
         }
-        catch(Exception e) {
-            System.out.println("No map file with bad sites");
-            badMask=null;
-        }
+        //inAlign.optimizeForTaxa(null);
+        int[][] divisions=divideChromosome(baseAlign, appoxSitesPerHaplotype);
+       // System.exit(0);
+        inAlign=baseAlign;
+        
         
         System.out.printf("In taxa:%d sites:%d %n",inAlign.getSequenceCount(),inAlign.getSiteCount());
-        int sites=inAlign.getSiteCount();
-        siteErrors=new int[inAlign.getSiteCount()];
-        siteCallCnt=new int[inAlign.getSiteCount()];
-        propMissing=new double[inAlign.getSequenceCount()];
         
-        MutableNucleotideAlignment mna=createEmptyHaplotypeAlignment(maxHaplotypes);
-        int siteWindow=this.siteWindow;
-        int startBlock=0;
-        int blockWindow=siteWindow/64;
-        int blockStep=blockWindow/2;
-        int sections=blockWindow;// sometimes /4
-        int lastBlock= inAlign.getAllelePresenceForAllSites(0, 0).getNumWords()-1;
-        for(startBlock=0; startBlock<=(lastBlock-blockWindow+1); startBlock+=blockStep) {
-            int startSite=startBlock*64;
-            int endBlock=startBlock+blockWindow-1;
-            int mod=(startBlock/blockStep)%3;
-            if((lastBlock-endBlock)<blockStep) endBlock=lastBlock;
-            TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(startBlock, endBlock, minSites, maxHetFreq);
-            System.out.printf("Block %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
-            System.out.printf("Current Site %d Current block %d EndBlock: %d LastBlock:%d %n",startSite, startBlock, endBlock, lastBlock);
-            TreeMap<Integer,byte[]> results=mergeWithinWindow(presentRanking, startBlock, endBlock, sections, maxDistance);
-            int index=mod*maxHaplotypes;
-            for (byte[] calls : results.values()) {
-                mna.setBaseRange(index, startSite, calls);
-                index++;
-            }
+        for (int i = 0; i < divisions.length; i++) {
+            MutableNucleotideAlignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
+             minSites,  maxDistance);
+            String newExport=exportFile.replace(".c10.", ".c10s"+i+".");
+            ExportUtils.writeToHapmap(mna, false, newExport, '\t', null);
+  //          if(errorExportFile!=null) exportBadSites(errorExportFile, 0.01);   
         }
-        mna.clean();
-        ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);
-        if(errorExportFile!=null) exportBadSites(errorExportFile, 0.01);
+        
 //        for (int i = 0; i < siteErrors.length; i++) {
 //            System.out.printf("%d %d %d %g %g %n",i,siteCallCnt[i],siteErrors[i], 
 //                    (double)siteErrors[i]/(double)siteCallCnt[i], inAlign.getMinorAlleleFrequency(i));
 //        }
+    }
+    
+    private MutableNucleotideAlignment createHaplotypeAlignment(int startSite, int endSite, Alignment baseAlign,
+            int minSites, double maxDistance) {
+        Alignment fa=FilterAlignment.getInstance(baseAlign, startSite, endSite);
+        inAlign=BitAlignment.getInstance(fa, true);
+        inAlign.optimizeForTaxa(null);
+        int sites=inAlign.getSiteCount();
+        System.out.printf("SubInAlign taxa:%d sites:%d %n",inAlign.getSequenceCount(),inAlign.getSiteCount());
+        siteErrors=new int[inAlign.getSiteCount()];
+        siteCallCnt=new int[inAlign.getSiteCount()];
+        propMissing=new double[inAlign.getSequenceCount()];
+        int startBlock=0;
+        int endBlock=inAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
+        int sections=endBlock;  //need to remove sections
+        TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(startBlock, endBlock, minSites, maxHetFreq);
+        System.out.printf("Block %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
+        System.out.printf("Current Site %d Current block %d EndBlock: %d %n",startSite, startBlock, endBlock);
+        TreeMap<Integer,byte[]> results=mergeWithinWindow(presentRanking, startBlock, endBlock, sections, maxDistance);
+        MutableNucleotideAlignment mna=createEmptyHaplotypeAlignment(results.size());
+        int index=0;
+        for (byte[] calls : results.values()) {
+            mna.setBaseRange(index, 0, calls);
+            index++;
+        }
+        mna.clean();
+        return mna;
+    }
+    
+    private int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
+        int subAlignCnt=(int)Math.round((double)a.getSiteCount()/(double)appoxSitesPerHaplotype);
+        int prefBlocks=(a.getSiteCount()/(subAlignCnt*64));
+        int[][] divisions=new int[subAlignCnt][2];
+        int cnt=0;
+        for (int i = 0; i < subAlignCnt; i++) {
+            divisions[i][0]=i*prefBlocks*64;
+            divisions[i][1]=divisions[i][0]+(prefBlocks*64)-1;
+        }
+        divisions[subAlignCnt-1][1]=a.getSiteCount()-1;
+        System.out.printf("Alignment Sites:%d ApproxSites:%d RealSites:%d %n",a.getSiteCount(),appoxSitesPerHaplotype, prefBlocks*64);
+        System.out.println("Chromosome Divisions:"+Arrays.deepToString(divisions));
+        return divisions;
     }
     
     private TreeMap<Integer,Integer> createPresentRankingForWindow(int startBlock, int endBlock, 
@@ -232,7 +259,7 @@ public class MergeIdenticalGametes {
                     mergeNames.add(inIDG.getIdentifier(taxon2).getFullName());
                 }
                 System.out.println("");              
-                calls=consensusGameteCalls(inAlign, mergeNames, startSite, endSite, 0.05);
+                calls=consensusGameteCalls(inAlign, mergeNames, startSite, endSite, maxErrorInCreatingConsensus);
             } else {
                 calls=inAlign.getBaseRange(taxon1, startSite, endSite+1);
             }
@@ -351,9 +378,12 @@ public class MergeIdenticalGametes {
   //      String root="/Volumes/LaCie/build20120701/impOrig/";
 
    //     String infile24K=root+"04_PivotMergedTaxaTBT.c10_s0_s24575_masked.hmp.txt.gz";
-        String infile24K=root+"all26HM2.c10_s0_24575.hmp.txt.gz";
+  //      String infile24K=root+"all26HM2.c10_s0_24575.hmp.txt.gz";
+  //      String infileH5=root+"all26HM2.c10_s0_24575.hmp.h5";
+        String infileH5=root+"all26HM2.hmp.h5";
+        String infile24K=root+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
 
-        String mergeFile=root+"TestHMw24575OfHM224KMerge20130517.hmp.txt.gz";
+        String mergeFile=root+"all26HM2_8k.c10.hmp.txt.gz";
         String errorFile=root+"mcErrorXMerge20130425.txt";
         String errorFile2=root+"mcErrorXMerge20130425.txt";
         errorFile=errorFile2=null;
@@ -362,7 +392,8 @@ public class MergeIdenticalGametes {
         MergeIdenticalGametes e64NNI;
 
 
-        e64NNI=new MergeIdenticalGametes(infile24K, mergeFile, errorFile, errorFile2, 0.01,500,"HappyMap");
+//        e64NNI=new MergeIdenticalGametes(infile24K, mergeFile, errorFile, errorFile2, 0.01,500,"CappyMap");
+        e64NNI=new MergeIdenticalGametes(infileH5, mergeFile, errorFile, errorFile2, 0.01,500,8192, "CappyMap");
 
 
     }
