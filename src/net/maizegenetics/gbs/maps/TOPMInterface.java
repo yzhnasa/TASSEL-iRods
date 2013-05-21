@@ -12,19 +12,20 @@ import net.maizegenetics.pal.alignment.Locus;
  */
 public interface TOPMInterface extends Tags {
 
+    public final static byte BYTE_MISSING = Byte.MIN_VALUE;
+    public final static int INT_MISSING = Integer.MIN_VALUE;
+
     /**
      * Adds Variant definition.
      *
      * @param tagIndex tag index
      * @param offset offset
-     * @param base base value one of: 
-     * NucleotideAlignmentConstants.A_ALLELE,
+     * @param base base value one of: NucleotideAlignmentConstants.A_ALLELE,
      * NucleotideAlignmentConstants.C_ALLELE,
      * NucleotideAlignmentConstants.G_ALLELE,
      * NucleotideAlignmentConstants.T_ALLELE,
      * NucleotideAlignmentConstants.GAP_ALLELE,
-     * NucleotideAlignmentConstants.INSERT_ALLELE, 
-     * Alignment.UNKNOWN_ALLELE
+     * NucleotideAlignmentConstants.INSERT_ALLELE, Alignment.UNKNOWN_ALLELE
      *
      * @return variant index or -1 if max number variants reached at this tag.
      */
@@ -40,12 +41,6 @@ public interface TOPMInterface extends Tags {
      * at first index greater. 0 if equal.
      */
     public int compare(int index1, int index2);
-    
-    /**
-     * Returns the byte value of BYTE_MISSING (=undefined variant, etc)
-     * @return BYTE_MISSING
-     */
-    public byte getByteMissing();
 
     /**
      * Returns chromosome at give tag index.
@@ -167,9 +162,10 @@ public interface TOPMInterface extends Tags {
      * @return variant definition (see addVariant())
      */
     public byte getVariantDef(int tagIndex, int variantIndex);
-    
+
     /**
      * Returns the set of unique positions for the given chromosome
+     *
      * @param chromosome
      * @return unique positions on chromosome
      */

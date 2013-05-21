@@ -25,8 +25,6 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
     private static final int MAX_CACHE_SIZE = 20;
     private static final int BITS_TO_SHIFT_FOR_CHUNK = 16;
     private static final int CHUNK_SIZE = 1 << BITS_TO_SHIFT_FOR_CHUNK;
-    private final static byte BYTE_MISSING = Byte.MIN_VALUE;
-    private final static int intMissing = Integer.MIN_VALUE;
     private int myMaxVariants = 8;
     private final Map<Integer, byte[][]> myCachedVariantDefs = new LinkedHashMap<Integer, byte[][]>((MAX_CACHE_SIZE * 3) / 2) {
         @Override
@@ -379,11 +377,6 @@ public class TagsOnPhysMapHDF5 extends AbstractTags implements TOPMInterface {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
-    @Override
-    public byte getByteMissing() {
-        return BYTE_MISSING;
-    }
-
     @Override
     public int getChromosome(int index) {
         if (cachedMappingIndex != index) {
