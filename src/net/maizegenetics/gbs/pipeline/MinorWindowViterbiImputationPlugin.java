@@ -37,8 +37,8 @@ import net.maizegenetics.util.ProgressListener;
 import org.apache.log4j.Logger;
 
 /**
- * Tools for characterizing and correcting SNPs segregating in bi-parental
- * populations.
+ * Imputation approach that relies on nearest neighbor searches of defined haplotypes, 
+ * followed by HMM Viterbi resolution or block-based resolution.
  *
  * Error rates are bounded away from zero, but adding 0.5 error to all error
  * rates that that were observed to be zero.
@@ -46,8 +46,23 @@ import org.apache.log4j.Logger;
  * @author edbuckler
  */
 public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
+    private int startChr, endChr;
+    private String hmpFile;
+    private String donorFile;
+    private String outFileBase;
+    private String errFile=null;
+    private boolean inbredNN=true;
+    private boolean hybridNN=true;
+    private int minMinorCnt=20;
+    private int minMajorRatioToMinorCnt=10;  //refinement of minMinorCnt to account for regions with all major
+    private int maxDonorHypotheses=10;  //number of hypotheses of record from an inbred or hybrid search of a focus block
+    
+    private double maximumInbredError=0.02;  //inbreds are tested first, if too much error hybrids are tested.
+    private double maxHybridErrorRate=0.005;
+    private int minTestSites=100;  //minimum number of compared sites to find a hit
+    
+    
     private Alignment unimpAlign;  //the unimputed alignment to be imputed, unphased
-   // private Alignment[] donorAlign;  //these are the reference haplotypes, that must be homozygous
     private int testing=0;  //level of reporting to stdout
     //major and minor alleles can be differ between the donor and unimp alignment 
     //these Bit sets keep track of the differences
@@ -61,13 +76,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     private int blocks=-1;  //total number 64 site words in the alignment
     
-    private int minMajorRatioToMinorCnt=10;  //refinement of minMinorCnt to account for regions with all major
-    private int maxDonorHypotheses=10;  //number of hypotheses of record from an inbred or hybrid search of a focus block
-    
-    private double maximumInbredError=0.02;  //inbreds are tested first, if too much error hybrids are tested.
-  //  private double maxViterbiErro
-    private int minTestSites=100;  //minimum number of compared sites to find a hit
-    
+
     //matrix to hold divergence comparisons between the target taxon and donor haplotypes for each block
     //dimensions: [donor taxa][sites, same count, diff count, het count][blocks] 
     private byte[][][] allDist;
@@ -113,9 +122,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
      * @param minMinorCnt determines the size of the search window, low recombination 20-30, high recombination 10-15
      * @param hybridMode true=do hybrid search
      */
-    public MinorWindowViterbiImputationPlugin(String donorFile, String unImpTargetFile, 
+    public void runMinorWindowViterbiImputation(String donorFile, String unImpTargetFile, 
             String exportFile, int minMinorCnt, int minTestSites, int minSitesPresent, 
-            double maxHybridErrorRate, boolean hybridMode, boolean imputeDonorFile, int hapSecs) {
+            double maxHybridErrorRate, boolean imputeDonorFile, int hapSecs) {
         this.minTestSites=minTestSites;
         if(unImpTargetFile.contains(".h5")) {
             unimpAlign=BitAlignmentHDF5.getInstance(unImpTargetFile);
@@ -133,8 +142,6 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
 
-
-        
         siteErrors=new int[unimpAlign.getSiteCount()];
         siteCallCnt=new int[unimpAlign.getSiteCount()];
         taxonErrors=new int[unimpAlign.getSequenceCount()];
@@ -181,8 +188,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 boolean foundit=apply1or2Haplotypes(taxon, donorAlign[da], donorOffset, regionHypth,  mna, maskedTargetBits, maxHybridErrorRate);
                 if(foundit) {
                     countFullLength++;
-                } else {
-                    blocksSolved+=solveRegionally3(mna, taxon, donorAlign[da], donorOffset, regionHypth, hybridMode, maskedTargetBits, 
+                } else if(inbredNN) {
+                    blocksSolved+=solveRegionally3(mna, taxon, donorAlign[da], donorOffset, regionHypth, hybridNN, maskedTargetBits, 
                             minMinorCnt, maxHybridErrorRate);
                 }
                 
@@ -616,9 +623,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 }  
             }
         }
-        if(bestDonors.size()<1) {
-            System.out.println("Houston problem here");
-        }
+//        if(bestDonors.size()<1) {
+//            System.out.println("Houston -- we have a problem here");
+//        }
         DonorHypoth[] result=new DonorHypoth[maxDonorHypotheses];
         int count=0;
         for (DonorHypoth dh : bestDonors.values()) {
@@ -737,32 +744,50 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 
     @Override
     public void setParameters(String[] args) {
-//        if (args.length == 0) {
-//            printUsage();
-//            throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
-//        }
-//
-//        engine.add("-hmp", "-hmpFile", true);
-//        engine.add("-o", "--outFile", true);
-//        engine.add("-oE", "--outErrorFile", true);
-//        engine.add("-oB", "--outBinDistFile", true);
-//        engine.add("-sC", "--startChrom", true);
-//        engine.add("-eC", "--endChrom", true);
-//        engine.add("-mxE", "--maxError", true);
-//        engine.add("-kpUT", "--keepUntested", false);
-//        engine.add("-snpLog", "", true);
-//        engine.parse(args);
-//        if (engine.getBoolean("-sC")) {
-//            start = Integer.parseInt(engine.getString("-sC"));
-//        }
-//        if (engine.getBoolean("-eC")) {
-//            end = Integer.parseInt(engine.getString("-eC"));
-//        }
-//        infile = engine.getString("-hmp");
-//        if (engine.getBoolean("-snpLog")) {
-//            snpLogFileName = engine.getString("-snpLog");
-//        }
-        performFunction(null);
+        if (args.length == 0) {
+            printUsage();
+            throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
+        }
+
+        engine.add("-hmp", "-hmpFile", true);
+        engine.add("-o", "--outFile", true);
+        engine.add("-d", "--donorH", true);
+        engine.add("-sC", "--startChrom", true);
+        engine.add("-eC", "--endChrom", true);
+        engine.add("-minMnCnt", "--minMnCnt", true);
+        engine.add("-mxInbErr", "--mxInbErr", true);
+        engine.add("-mxHybErr", "--mxHybErr", true);
+        engine.add("-inbNNOff", "--inbNNOff", false);
+        engine.add("-hybNNOff", "--hybNNOff", false);
+        engine.add("-mxDonH", "--mxDonH", true);
+        engine.add("-mnTestSite", "--mnTestSite", true);
+        engine.parse(args);
+        hmpFile = engine.getString("-hmp");
+        outFileBase = engine.getString("-o");
+        donorFile = engine.getString("-d");
+        if (engine.getBoolean("-sC")) {
+            startChr = Integer.parseInt(engine.getString("-sC"));
+        }
+        if (engine.getBoolean("-eC")) {
+            endChr = Integer.parseInt(engine.getString("-eC"));
+        }
+        if (engine.getBoolean("-mxInbErr")) {
+            maximumInbredError = Double.parseDouble(engine.getString("-mxInbErr"));
+        }
+        if (engine.getBoolean("-mxHybErr")) {
+            maxHybridErrorRate = Double.parseDouble(engine.getString("-mxHybErr"));
+        }
+        if (engine.getBoolean("-minMnCnt")) {
+            minMinorCnt = Integer.parseInt(engine.getString("-minMnCnt"));
+        }
+        if (engine.getBoolean("-inbNNOff")) inbredNN=false;
+        if (engine.getBoolean("-hybNNOff")) hybridNN=false;
+        if (engine.getBoolean("-mxDonH")) {
+            maxDonorHypotheses = Integer.parseInt(engine.getString("-mxDonH"));
+        }
+        if (engine.getBoolean("-mnTestSite")) {
+            minTestSites = Integer.parseInt(engine.getString("-mnTestSite"));
+        }
     }
 
 
@@ -770,33 +795,36 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private void printUsage() {
         myLogger.info(
                 "\n\n\nAvailable options for the BiParentalErrorCorrectionPlugin are as follows:\n"
-                + "-hmp   Input HapMap file\n"
-                + "-o     Output HapMap file\n"
+                + "-hmp   Input HapMap file(s) 'c+' to denote variable chromosomes\n"
+                + "-d    Donor haplotype files 'c+s+' to denote sections\n"
+                + "-o     Output HapMap file(s) 'c+' to denote variable chromosomes\n"
                 + "-sC    Start chromosome\n"
                 + "-eC    End chromosome\n"
-                + "-mxE    Maximum error\n"
-                + "-kpUT   Keep untested SNPs for error (default remove)\n"
-                + "-snpLog  SNPs Removed Log file name\n\n");
+                + "-minMnCnt    Minor number of minor alleles in the search window (or "+minMajorRatioToMinorCnt+"X major)\n"
+                + "-mxInbErr    Maximum inbred error rate\n"
+                + "-mxHybErr    Maximum hybrid error rate\n"
+                + "-inbNNOff    Whether to use inbred NN (default:"+inbredNN+")\n"
+                + "-hybNNOff    Whether to use both the hybrid NN (default:"+hybridNN+")\n"
+                + "-mxDonH   Maximum number of donor hypotheses to be explored (default: "+maxDonorHypotheses+")\n"
+                + "-mnTestSite   Minimum number of sites to test for NN IBD (default:"+minTestSites+")\n"
+ //               + "-impDonor   impute donor files (false)\n"
+                );
     }
 
     @Override
     public DataSet performFunction(DataSet input) {
-//        while (start <= end) {
-//
-//            ArrayList<Datum> dList = new ArrayList<Datum>();
-//            String currFile = infile.replace("+", "" + chr);
-//            System.out.println("Reading: " + currFile);
-//            Alignment align;
-//            try {
-//                align = ImportUtils.readFromHapmap(currFile, this);
-//            } catch (Exception e) {
-//                myLogger.info("Could not read input hapmap file for chr" + chr + ":\n\t" + currFile + "\n\tSkipping...");
-//                continue;
-//            }
-//            System.out.println("Finished Reading: " + currFile);
-//            
-//        }
-        
+        for (int chr = startChr; chr <=endChr; chr++) {
+           String chrHmpFile=hmpFile.replace("chr+", "chr"+chr);
+           chrHmpFile=chrHmpFile.replace("c+", "c"+chr);
+           String chrDonorFile=donorFile.replace("chr+", "chr"+chr);
+           chrDonorFile=chrDonorFile.replace("c+", "c"+chr);
+           String chrOutFile=outFileBase.replace("chr+", "chr"+chr);
+           chrOutFile=chrOutFile.replace("c+", "c"+chr);
+//           public void runMinorWindowViterbiImputation(String donorFile, String unImpTargetFile, 
+//            String exportFile, int minMinorCnt, int minTestSites, int minSitesPresent, 
+//            double maxHybridErrorRate, boolean imputeDonorFile, int hapSecs) {
+           runMinorWindowViterbiImputation(chrDonorFile, chrHmpFile, chrOutFile, minMinorCnt, minTestSites, 100, maxHybridErrorRate, false, 10);
+        }
         return null;
     }
     
@@ -809,20 +837,20 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 
     @Override
     public String getButtonName() {
-        return "FilterErrorForBiparental";
+        return "ImputeByNN&HMM";
     }
 
     @Override
     public String getToolTipText() {
-        return "Filters and estimates error rates from biparental populations";
+        return "Imputation that relies on a combination of HMM and Nearest Neighbor";
     }
     
     public static void main(String[] args) {
-        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/impResults/";
-      String rootIn="/Users/edbuckler/SolexaAnal/GBS/build20120701/impOrig/";
+//        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/impResults/";
+//      String rootIn="/Users/edbuckler/SolexaAnal/GBS/build20120701/impOrig/";
       
-//      String root="/Volumes/LaCie/build20120701/impResults/";
-//      String rootIn="/Volumes/LaCie/build20120701/impOrig/";
+      String root="/Volumes/LaCie/build20120701/impResults/";
+      String rootIn="/Volumes/LaCie/build20120701/impOrig/";
 
       
 //        String origFile=rootIn+"all25.c10_s4096_s8191.hmp.txt.gz";
@@ -868,12 +896,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //        String impTargetFile2=root+"HybridABQTLtest.imp.hmp.txt.gz";
       
 //        String origFile=rootIn+"Z0CN26.c10_s0_s24575.hmp.txt.gz";
-////        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.imp.hmp.txt.gz";
-////        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
-////        String donorFile=rootIn+"subTest.c10.hmp.txt.gz";
+//        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.imp.hmp.txt.gz";
+//        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
+//        String donorFile=rootIn+"subTest.c10.hmp.txt.gz";
 //        String donorFile=rootIn+"SectionTestSmall.c10s+.hmp.txt.gz";
 //        String unImpTargetFile=rootIn+"Z0CN26.c10_s0_s24575.hmp.txt.gz";
-//        String impTargetFile2=root+"Z0CN26.c10_s0_s24575.imp.hmp.txt.gz";
+//        String impTargetFile=root+"Z0CN26.c10_s0_s24575.imp.hmp.txt.gz";
         
 //        String origFile=rootIn+"10psample26.c10_s0_s24575.hmp.txt.gz";
 ////        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.imp.hmp.txt.gz";
@@ -895,59 +923,37 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
         String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
         String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
+        //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
+        String unImpTargetFile=rootOrig+"First19v26.chr8.hmp.txt.gz";
         String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
-        String impTargetFile=rootImp+"all26.c+.imp.hmp.txt.gz";
+        String impTargetFile=rootImp+"Tall26.c+.imp.hmp.txt.gz";
         
-        for (int chr = 8; chr <= 9; chr++) {
-            String unImpTargetFileC=unImpTargetFile.replace("chr+", "chr"+chr);
-            String donorFileC=donorFile.replace(".c+s", ".c"+chr+"s");
-            String impTargetFileC=impTargetFile.replace(".c+.", ".c"+chr+".");
-            int chrSec=(chr==8)?10:9;
-            MinorWindowViterbiImputationPlugin e64NNI=new MinorWindowViterbiImputationPlugin(donorFileC, unImpTargetFileC, 
-                    impTargetFileC, 20, 50, 100, 0.005, true, false,chrSec);
-            
-        }
-        
-
-
-//        MinorWindowViterbiImputationPlugin e64NNI=new MinorWindowViterbiImputationPlugin(donorFile, unImpTargetFile, 
-//                impTargetFile, 20, 50, 100, 0.005, true, false);
-     //   compareAlignment(origFile,unImpTargetFile,impTargetFile2);
-        
-//        String origFile=rootIn+"10psample25.c10_s0_s24575.hmp.txt.gz";
-//        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
-//        String unImpTargetFile=donorFile;
-//        String impTargetFile2=root+"JustHMw24575OfHM224KMerge20130517b.imp.hmp.txt.gz";
-//
-//        MinorWindowViterbiImputation e64NNI=new MinorWindowViterbiImputation(donorFile, unImpTargetFile, impTargetFile2, 20, 50, 100, 0.01, true, true);
-//        
-        System.out.println("Resolve Method 0: Minor 20");
-        
-//        e64NNI=new MinorWindowViterbiImputation(donorFile, unImpTargetFile, impTargetFile, 20, false);
-//        compareAlignment(origFile,unImpTargetFile,impTargetFile);
-        
-//        e64NNI=new MinorWindowViterbiImputation(donorFile, impTargetFile, impTargetFile2, 20, true);
-//        compareAlignment(origFile,unImpTargetFile,impTargetFile2);
-        
-        
-        
-        
-//        e64NNI=new MinorWindowViterbiImputation(donorFile, unImpTargetFile, impTargetFile2, 20, 100, true);
-//        compareAlignment(origFile,unImpTargetFile,impTargetFile2);
-        
-
-//        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/06_HapMap/";
-// //       String infile=root+"Z0NE00N_chr10S.hmp.txt.gz";
-//        String infile=root+"All_chr10S.hmp.txt.gz";
-//        String outfile=root+"xMinor10PerAll_chr10S.hmp.txt.gz";
-//
-//        String[] args2 = new String[]{
-//            "-hmp", infile,
-//            "-o", outfile,
-//            "-mxE", "0.01",
+//        for (int chr = 8; chr <= 8; chr++) {
+//            String unImpTargetFileC=unImpTargetFile.replace("chr+", "chr"+chr);
+//            String donorFileC=donorFile.replace(".c+s", ".c"+chr+"s");
+//            String impTargetFileC=impTargetFile.replace(".c+.", ".c"+chr+".");
+//            int chrSec=(chr==8)?10:9;
+//            MinorWindowViterbiImputationPlugin e64NNI=new MinorWindowViterbiImputationPlugin(donorFileC, unImpTargetFileC, 
+//                    impTargetFileC, 20, 50, 100, 0.005, false,chrSec);
 //            
-//        };
+//        }
+        
+        String[] args2 = new String[]{
+            "-hmp", unImpTargetFile,
+            "-d",donorFile,
+            "-o", impTargetFile,
+            "-sC","8",
+            "-eC","8",
+//            "-mxDiv", "0.01",
+//            "-hapSize", "8000",
+//            "-minPres", "500",
+//            "-maxOutMiss","0.4",
+//            "-maxHap", "2000",
+        };
+
+        MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
+        plugin.setParameters(args2);
+        plugin.performFunction(null);
 //
 //        MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
 //        plugin.setParameters(args2);

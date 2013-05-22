@@ -409,7 +409,6 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         if (engine.getBoolean("-maxHap")) {
             maxHaplotypes = Integer.parseInt(engine.getString("-maxHap"));
         }
-        performFunction(null);
     }
 
 
