@@ -57,6 +57,17 @@ public final class HapMapHDF5Constants {
     public static final String RETAIN_RARE_ALLELES = "retainRareAlleles";
     public static final String NUM_LD_BINS = LD_DESC+"/numLDBins";
     public static final String LD_BINS = LD_DESC+"/binsLD";
+
+    public static final String MINOR_ALLELE_FREQUENCY = "MAF";
+    public static final String MAJOR_ALLELE = "MajorAllele";
+    public static final String MINOR_ALLELE = "MinorAllele";
+
+    // Annotations
+    public static final String GWAS = "GWAS";
+    public static final String GENOMIC = "GenomeAnno";
+    public static final String POP_GEN = "PopGenAnno";
+
+
     
     private HapMapHDF5Constants() {
         // do not instantiate
