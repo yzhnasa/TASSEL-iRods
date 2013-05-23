@@ -13,20 +13,25 @@ import java.util.Arrays;
 public abstract class AbstractPETags implements PETags {
 
     protected int tagLengthInLong;  //TODO fully implement on reading
+    //tagLengthInLong should be much larger than normal e.g. 8
     protected long[][] tagsF;  // for memory efficiency the rows first and second half of the read
                                // columns are the index of the reads.
     protected long[][] tagsB;
     protected short[] tagFLength;  // length of tag (number of bases)  // 1 byte
     protected short[] tagBLength;
-    protected String[] taxaName;
+    protected long[][] contig;
+    protected short[] f2blength;  //entire length of PE tags (cutsite to cutsite), negative could be use to indicate minimum when not overlapping
+    
+    
+    protected String[] taxaName; //TODO REMOVE
 
    
-    @Override
+    @Override  //TODO REMOVE
     public int getTaxaCount () {
         return taxaName.length;
     }
     
-    @Override
+    @Override  //TODO REMOVE
     public String getTaxaName (int index) {
         return taxaName[index];
     }
