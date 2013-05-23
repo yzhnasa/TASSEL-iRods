@@ -21,6 +21,8 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import java.awt.Frame;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.swing.ImageIcon;
@@ -62,6 +64,10 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private int[] chromosomes = null;
     private boolean fastq = true;
     private IdGroup taxaIDGroup = null;
+    private HashMap<String,Integer> KeyFileColumns = new HashMap<String,Integer>();
+    private TreeMap<String,Boolean> FlowcellLanes = new TreeMap<String,Boolean>();  // true = corresponding fastq (or qseq) file is present in input directory
+    private TreeMap<String,Integer> FullNameToLibPrepID = new TreeMap<String,Integer>();
+    private TreeMap<Integer,ArrayList<String>> LibraryPrepIDToFullNames = new TreeMap<Integer,ArrayList<String>>();
 
     public SeqToGenosPlugin() {
         super(null, false);
@@ -73,13 +79,14 @@ public class SeqToGenosPlugin extends AbstractPlugin {
 
     private void printUsage() {
         myLogger.info(
-                "\nThe options for the RawReadsToHapMapPlugin TASSEL plugin are as follows:\n"
-                + "-i  Input directory containing fastq AND/OR qseq files\n"
-                + "-k  Barcode key file\n"
-                + "-e  Enzyme used to create the GBS library\n"
-                + "-o  Output directory\n"
-                + "-m  Physical map file containing alignments and variants (production TOPM)\n");
-//                + "-d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n");  // NOT IMPLEMENTED YET
+            "\nThe options for the TASSEL SeqToGenosPlugin are as follows:\n"
+            + "  -i  Input directory containing fastq AND/OR qseq files\n"
+            + "  -k  Barcode key file\n"
+            + "  -m  Physical map file containing alignments and variants (production TOPM)\n"
+            + "  -e  Enzyme used to create the GBS library\n"
+            + "  -o  Output directory\n"
+//            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
+        );
     }
 
     @Override
@@ -92,9 +99,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             myArgsEngine = new ArgsEngine();
             myArgsEngine.add("-i", "--input-directory", true);
             myArgsEngine.add("-k", "--key-file", true);
+            myArgsEngine.add("-m", "--physical-map", true);
             myArgsEngine.add("-e", "--enzyme", true);
             myArgsEngine.add("-o", "--output-directory", true);
-            myArgsEngine.add("-m", "--physical-map", true);
             myArgsEngine.add("-d", "--divergence", true);
         }
         myArgsEngine.parse(args);
@@ -110,11 +117,16 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 printUsage();
                 throw new IllegalArgumentException(noMatchingRawSeqFileNamesMessage + tempDirectory);
             } else {
-                myLogger.info("RawReadsToHapMapPlugin: setParameters: Using the following GBS raw sequence data files:");
+                Arrays.sort(myRawSeqFileNames);
+                myLogger.info("RawReadsToHapMapPlugin: setParameters: /n/nThe following GBS raw sequence data files were found in the input folder (and sub-folders):");
                 for (String filename : myRawSeqFileNames) {
                     myLogger.info(filename);
                 }
+                System.out.println("\n");
             }
+        } else {
+            printUsage();
+            throw new IllegalArgumentException("Please specify an input directory containing fastq (or qseq) files (option -i).");
         }
         if (myArgsEngine.getBoolean("-k")) {
             myKeyFile = myArgsEngine.getString("-k");
@@ -142,6 +154,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
         if (myArgsEngine.getBoolean("-m")) {
             topm = TOPMUtils.readTOPM(myArgsEngine.getString("-m"));
+            if (topm.getSize()==0) {
+                throw new IllegalStateException("TagsOnPhysicalMap file not available or is empty");
+            }
         } else {
             printUsage();
             throw new IllegalArgumentException("Please specify a TagsOnPhysicalMap file (-m)");
@@ -158,23 +173,24 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalStateException("performFunction: enzyme must be set.");
         }
-        // TODO - More checks to validate parameters...
+        readKeyFile();
+        matchKeyFileToAvailableRawSeqFiles();
         translateRawReadsToHapmap();
         return null;
     }
 
     private void translateRawReadsToHapmap() {
-        for (int laneNum = 0; laneNum < myRawSeqFileNames.length; laneNum++) {
+        for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
-            ParseBarcodeRead thePBR = setUpBarcodes(laneNum);
+            ParseBarcodeRead thePBR = setUpBarcodes(fileNum);
             if (thePBR == null || thePBR.getBarCodeCount() == 0) {
                 System.out.println("No barcodes found. Skipping this flowcell lane.");
                 continue;
             }
             MutableNucleotideAlignment[] outMSA = setUpMutableNucleotideAlignments(thePBR);
             myLogger.info("Looking for known SNPs in sequence reads...");
-            String temp = "";
-            BufferedReader br = getBufferedReader(laneNum);
+            String temp = "Nothing has been read from the raw sequence file yet";
+            BufferedReader br = getBufferedReaderForRawSeqFile(fileNum);
             try {
                 while ((temp = br.readLine()) != null) {
                     if (counters[0] % 1000000 == 0) {
@@ -200,18 +216,132 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 br.close();
             } catch (Exception e) {
                 System.out.println("Catch in translateRawReadsToHapmap() at nReads=" + counters[0] + " e=" + e);
-                System.out.println(temp);
+                System.out.println("Last line read: "+temp);
                 e.printStackTrace();
             }
-            writeHapMapFiles(outMSA, laneNum, counters);
+            writeHapMapFiles(outMSA, fileNum, counters);
+        }
+    }
+    
+    private void readKeyFile() {
+        FlowcellLanes.clear();
+        FullNameToLibPrepID.clear();
+        LibraryPrepIDToFullNames.clear();
+        String inputLine = "Nothing has been read from the keyfile yet";
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(myKeyFile), 65536);
+            int currLine = 0;
+            while ((inputLine = br.readLine()) != null) {
+                if (currLine == 0) {
+                    parseKeyFileHeader(inputLine);
+                } else {
+                    populateKeyFileFields(inputLine);
+                }
+                currLine++;
+            }
+        } catch (Exception e) {
+            System.out.println("Couldn't read key file: " + e);
+            System.out.println("Last line read from key file: " + inputLine);
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+    
+    private void parseKeyFileHeader(String headerLine) {
+        headerLine.trim();
+        String[] header = headerLine.split("\\t");
+        KeyFileColumns.clear();
+        for (int col = 0; col < header.length; col++) {
+            if (header[col].equalsIgnoreCase("Flowcell")) {
+                KeyFileColumns.put("Flowcell", col);
+            } else if (header[col].equalsIgnoreCase("Lane")) {
+                KeyFileColumns.put("Lane", col);
+            } else if (header[col].equalsIgnoreCase("Barcode")) {
+                KeyFileColumns.put("Barcode", col);
+            } else if (header[col].equalsIgnoreCase("DNASample") || header[col].equalsIgnoreCase("Sample")) {
+                KeyFileColumns.put("Sample", col);
+            } else if (header[col].equalsIgnoreCase("LibraryPrepID")) {
+                KeyFileColumns.put("LibPrepID", col);
+            } else if (header[col].equalsIgnoreCase("Enzyme")) {
+                KeyFileColumns.put("Enzyme", col);
+            }
+        }
+        if (!confirmKeyFileHeader()) {
+            throwBadKeyFileError();
+        }
+    }
+    
+    private boolean confirmKeyFileHeader() {
+        if (!KeyFileColumns.containsKey("Flowcell"))
+            return false;
+        if (!KeyFileColumns.containsKey("Lane"))
+            return false;
+        if (!KeyFileColumns.containsKey("Barcode"))
+            return false;
+        if (!KeyFileColumns.containsKey("Sample"))
+            return false;
+        if (!KeyFileColumns.containsKey("LibPrepID"))
+            return false;
+        if (!KeyFileColumns.containsKey("Enzyme"))
+            return false;
+        return true;
+    }
+    
+    private void throwBadKeyFileError() {
+        String badKeyFileMessage =
+            "The keyfile does not conform to expections.\n" +
+            "It must contain columns with the following (exact) headers:\n"+
+            "   Flowcell\n"+
+            "   Lane\n" +
+            "   Barcode\n" +
+            "   DNASample (or \"Sample\")\n" +
+            "   LibraryPrepID\n" +
+            "   Enzyme\n" +
+            "\n";
+        try {
+            throw new IllegalStateException(badKeyFileMessage);
+        } catch (Exception e) {
+            System.out.println("Couldn't read key file: " + e);
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+    
+    private void populateKeyFileFields(String keyFileLine) {
+        keyFileLine.trim();
+        String[] cells = keyFileLine.split("\\t");
+
+        String flowcellLane = cells[KeyFileColumns.get("Flowcell")]+":"+cells[KeyFileColumns.get("Lane")];  // is .intValue() needed?
+        FlowcellLanes.put(flowcellLane, false);
+ 
+        int libPrepID = KeyFileColumns.get("LibPrepID");
+        String fullName = cells[KeyFileColumns.get("Sample")]+":"+cells[KeyFileColumns.get("Flowcell")]
+                +":"+cells[KeyFileColumns.get("Lane")]+":"+libPrepID;
+        FullNameToLibPrepID.put(fullName, libPrepID);
+
+        ArrayList<String> replicateSamples = LibraryPrepIDToFullNames.get(libPrepID);
+        if (replicateSamples == null) {
+            LibraryPrepIDToFullNames.put(libPrepID, replicateSamples = new ArrayList<String>());
+        }
+        replicateSamples.add(fullName);
+    }
+    
+    private void matchKeyFileToAvailableRawSeqFiles() {
+        myLogger.info("\nThe following raw sequence files in the input directory conform to our file naming conventions and have corresponding samples in the key file:");
+        for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
+            String[] flowcellLane = parseRawSeqFileName(myRawSeqFileNames[fileNum]);
+            if (flowcellLane != null && FlowcellLanes.containsKey(flowcellLane[0]+":"+flowcellLane[1])) {
+                FlowcellLanes.put(flowcellLane[0]+":"+flowcellLane[1], true);
+                System.out.println("  "+myRawSeqFileNames[fileNum]);
+            }
         }
     }
 
-    private ParseBarcodeRead setUpBarcodes(int laneNum) {
+    private ParseBarcodeRead setUpBarcodes(int fileNum) {
         System.gc();
-        System.out.println("\nWorking on GBS raw sequence file: " + myRawSeqFileNames[laneNum]);
+        System.out.println("\nWorking on GBS raw sequence file: " + myRawSeqFileNames[fileNum]);
         fastq = true;
-        if (myRawSeqFileNames[laneNum].substring(myRawSeqFileNames[laneNum].lastIndexOf(File.separator)).contains("qseq")) {
+        if (myRawSeqFileNames[fileNum].substring(myRawSeqFileNames[fileNum].lastIndexOf(File.separator)).contains("qseq")) {
             fastq = false;
         }
         if (fastq) {
@@ -219,22 +349,34 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         } else {
             System.out.println("\tThis file contains 'qseq' in its name so is assumed to be in qseq format");
         }
-        File rawSeqFile = new File(myRawSeqFileNames[laneNum]);
-        String[] np = rawSeqFile.getName().split("_");
-
-        ParseBarcodeRead thePBR = null;
-        if (np.length == 3) {
-            thePBR = new ParseBarcodeRead(myKeyFile, myEnzyme, np[0], np[1]);
-        } else if (np.length == 4) {
-            thePBR = new ParseBarcodeRead(myKeyFile, myEnzyme, np[0], np[2]);
-        } else if (np.length == 5) {
-            thePBR = new ParseBarcodeRead(myKeyFile, myEnzyme, np[1], np[3]);
+        String[] flowcellLane = parseRawSeqFileName(myRawSeqFileNames[fileNum]);
+        if (flowcellLane == null) {
+            return null;
         } else {
-            printFileNameConventions(myRawSeqFileNames[laneNum]);
+            ParseBarcodeRead thePBR = new ParseBarcodeRead(myKeyFile, myEnzyme, flowcellLane[0], flowcellLane[1]);
+            System.out.println("Total barcodes found in key file for this lane:" + thePBR.getBarCodeCount());
             return thePBR;
         }
-        System.out.println("Total barcodes found in key file for this lane:" + thePBR.getBarCodeCount());
-        return thePBR;
+    }
+    
+    /**
+     * Parses out the flowcell and lane from the raw GBS sequence filename (fastq or qseq file)
+     * @param rawSeqFileName
+     * @return String[2] where element[0]=flowcell and element[1]=lane
+     */
+    private String[] parseRawSeqFileName(String rawSeqFileName) {
+        File rawSeqFile = new File(rawSeqFileName);
+        String[] FileNameParts = rawSeqFile.getName().split("_");
+        if (FileNameParts.length == 3) {
+            return new String[] {FileNameParts[0], FileNameParts[1]};
+        } else if (FileNameParts.length == 4) {
+            return new String[] {FileNameParts[0], FileNameParts[2]};
+        } else if (FileNameParts.length == 5) {
+            return new String[] {FileNameParts[1], FileNameParts[3]};
+        } else {
+            printFileNameConventions(rawSeqFileName);
+            return null;
+        }
     }
 
     private MutableNucleotideAlignment[] setUpMutableNucleotideAlignments(ParseBarcodeRead thePBR) {
@@ -270,13 +412,13 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         return uniquePositions;
     }
 
-    private BufferedReader getBufferedReader(int laneNum) {
+    private BufferedReader getBufferedReaderForRawSeqFile(int fileNum) {
         BufferedReader br = null;
         try {
-            if (myRawSeqFileNames[laneNum].endsWith(".gz")) {
-                br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(myRawSeqFileNames[laneNum]))));
+            if (myRawSeqFileNames[fileNum].endsWith(".gz")) {
+                br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(myRawSeqFileNames[fileNum]))));
             } else {
-                br = new BufferedReader(new FileReader(myRawSeqFileNames[laneNum]), 65536);
+                br = new BufferedReader(new FileReader(myRawSeqFileNames[fileNum]), 65536);
             }
         } catch (Exception e) {
             System.out.println("Catch in getBufferedReader(): e=" + e);
@@ -335,7 +477,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
 
     private void recordVariantsFromTag(MutableNucleotideAlignment[] outMSA, int tagIndex, int taxonIndex) {
         int chromosome = topm.getChromosome(tagIndex);
-        if (chromosome == Integer.MIN_VALUE) {
+        if (chromosome == TOPMInterface.INT_MISSING) {
             return;
         }
         int chrIndex = 0;
