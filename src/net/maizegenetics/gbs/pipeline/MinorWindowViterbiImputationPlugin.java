@@ -127,7 +127,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             double maxHybridErrorRate, boolean imputeDonorFile, int hapSecs) {
         this.minTestSites=minTestSites;
         if(unImpTargetFile.contains(".h5")) {
-            unimpAlign=BitAlignmentHDF5.getInstance(unImpTargetFile);
+            unimpAlign=BitAlignmentHDF5.getInstance(unImpTargetFile, false);
         } else {
             unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
         }
@@ -148,21 +148,25 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         taxonCallCnt=new int[unimpAlign.getSequenceCount()];
         tp.setTransitionProbability(transition);
         ep.setEmissionProbability(emission);
-        System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.getSequenceCount(),unimpAlign.getSiteCount());
-        
+        System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.getSequenceCount(),unimpAlign.getSiteCount());       
         System.out.println("Creating mutable alignment");
+        MutableNucleotideAlignment mna;
+        if(unImpTargetFile.contains(".h5")) {
+            mna=MutableNucleotideAlignment.getInstance(BitAlignmentHDF5.getInstance(unImpTargetFile, true));  //output data matrix
+        } else {
+            mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
+        }
         
-
-        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);  //output data matrix
         long time=System.currentTimeMillis();
-       
         for (int taxon = 0; taxon < unimpAlign.getSequenceCount(); taxon+=1) {
             String name=unimpAlign.getIdGroup().getIdentifier(taxon).getFullName();
-
             System.out.printf("Imputing %d:%s Mj:%d, Mn:%d Unk:%d ... ", taxon,name,
                     unimpAlign.getAllelePresenceForAllSites(taxon, 0).cardinality(),
                     unimpAlign.getAllelePresenceForAllSites(taxon, 1).cardinality(), countUnknown(mna,taxon));
-            if(unimpAlign.getTotalNotMissingForTaxon(taxon)<minSitesPresent) continue;
+            if(unimpAlign.getTotalNotMissingForTaxon(taxon)<minSitesPresent) {
+                System.out.println("Too much missing data");
+                continue;
+            }
             int blocksSolved=0;
             int countFullLength=0;
             for (int da = 0; da < donorAlign.length; da++) {
@@ -195,9 +199,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 
             }
             int unk=countUnknown(mna,taxon);
-            System.out.printf("Viterbi: %d BlocksSolved:%d Done Unk: %d PropMissing:%g ", countFullLength, blocksSolved, unk, (double)unk/(double)mna.getSiteCount());
+            System.out.printf("Viterbi:%d BlocksSolved:%d Done Unk:%d PropMissing:%g ", countFullLength, blocksSolved, unk, (double)unk/(double)mna.getSiteCount());
             double errRate=(double)taxonErrors[taxon]/(double)(taxonCallCnt[taxon]+taxonErrors[taxon]); 
-            System.out.printf("ErR:%g %n", errRate);
+            System.out.printf("ErR:%g ", errRate);
+            double rate=(double)taxon/(double)(System.currentTimeMillis()-time);
+            double remaining=(unimpAlign.getSequenceCount()-taxon)/(rate*1000);
+            System.out.printf("TimeLeft:%.1fs %n", remaining);
         }
         System.out.println("");
         System.out.println("Time:"+(time-System.currentTimeMillis()));
@@ -234,7 +241,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 if(dh!=null) goodDH.add(dh);
             }
         }
-        if(goodDH.size()==0) return false;
+        if(goodDH.isEmpty()) return false;
         DonorHypoth[] vdh=new DonorHypoth[goodDH.size()];
         for (int i = 0; i < vdh.length; i++) {vdh[i]=goodDH.get(i);}
         setAlignmentWithDonors(donorAlign,vdh, donorOffset,false,mna);
@@ -589,8 +596,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
         double lastKeytestPropUnmatched=1.0;
         double inc=1e-9;
-        double[] donorDist={1.0,100.0};
-       // Random r=new Random(1);
+        double[] donorDist;
         for (int d1: donor1Indices) {
             long[] mj1=donorAlign.getAllelePresenceForSitesBlock(d1, 0, startBlock, endBlock+1);
             long[] mn1=donorAlign.getAllelePresenceForSitesBlock(d1, 1, startBlock, endBlock+1);
@@ -601,9 +607,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 if(viterbiSearch) {
                     donorDist=IBSDistanceMatrix.computeHetBitDistances(mj1, mn1, mj2, mn2, minTestSites);
                     if((d1!=d2)&&(donorDist[0]<this.maximumInbredError)) continue;
-                }
-               // System.out.printf("%d %d %g %n",d1,d2,donorDist[0]);
-    //            if(donorDist[0]<this.maximumInbredError) continue;  
+                } 
                 int[] mendErr=mendelErrorComparison(mjT, mnT, mj1, mn1, mj2, mn2);        
                 if(mendErr[1]<minTestSites) continue;
                 double testPropUnmatched=(double)(mendErr[0])/(double)mendErr[1];
@@ -623,9 +627,6 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 }  
             }
         }
-//        if(bestDonors.size()<1) {
-//            System.out.println("Houston -- we have a problem here");
-//        }
         DonorHypoth[] result=new DonorHypoth[maxDonorHypotheses];
         int count=0;
         for (DonorHypoth dh : bestDonors.values()) {
@@ -761,6 +762,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         engine.add("-hybNNOff", "--hybNNOff", false);
         engine.add("-mxDonH", "--mxDonH", true);
         engine.add("-mnTestSite", "--mnTestSite", true);
+        engine.add("-smpSkip", "--smpSkip", true);
         engine.parse(args);
         hmpFile = engine.getString("-hmp");
         outFileBase = engine.getString("-o");
@@ -820,10 +822,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
            chrDonorFile=chrDonorFile.replace("c+", "c"+chr);
            String chrOutFile=outFileBase.replace("chr+", "chr"+chr);
            chrOutFile=chrOutFile.replace("c+", "c"+chr);
-//           public void runMinorWindowViterbiImputation(String donorFile, String unImpTargetFile, 
-//            String exportFile, int minMinorCnt, int minTestSites, int minSitesPresent, 
-//            double maxHybridErrorRate, boolean imputeDonorFile, int hapSecs) {
-           runMinorWindowViterbiImputation(chrDonorFile, chrHmpFile, chrOutFile, minMinorCnt, minTestSites, 100, maxHybridErrorRate, false, 10);
+
+           runMinorWindowViterbiImputation(chrDonorFile, chrHmpFile, chrOutFile, 
+                   minMinorCnt, minTestSites, 100, maxHybridErrorRate, false, 10);
         }
         return null;
     }
@@ -846,117 +847,35 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     }
     
     public static void main(String[] args) {
-//        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/impResults/";
-//      String rootIn="/Users/edbuckler/SolexaAnal/GBS/build20120701/impOrig/";
-      
-      String root="/Volumes/LaCie/build20120701/impResults/";
-      String rootIn="/Volumes/LaCie/build20120701/impOrig/";
-
-      
-//        String origFile=rootIn+"all25.c10_s4096_s8191.hmp.txt.gz";
-// //       String donorFile=rootIn+"w4096GapOf4_8KMerge20130507.hmp.txt.gz";
-//        String donorFile=rootIn+"w4096Of4_8KMerge20130507.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"all25.c10_s4096_s8191_masked.hmp.txt.gz";
-//        String impTargetFile=root+"allInbredtest.c10_s4096_s8191.imp.hmp.txt.gz";
-//        String impTargetFile2=root+"allHybridTest.c10_s4096_s8191.imp.hmp.txt.gz";
         
-
-//        String origFile=rootIn+"Z0CNtest.c10_s0_s24575.hmp.txt.gz";
-//        //String donorFile=rootIn+"w24575Of24KMerge20130513b.hmp.txt.gz";
-//        String donorFile=rootIn+"IMPw24575Of24KMerge20130513b.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"Z0CNtest.c10_s0_s24575_masked.hmp.txt.gz";
-//        String impTargetFile2=root+"HybridZ0CNtest.imp.hmp.txt.gz";
-        
-//        String origFile=rootIn+"10psample25.c10_s0_s24575.hmp.txt.gz";
-//        String donorFile=rootIn+"IMPw24575Of24KMerge20130513b.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"10psample25.c10_s0_s24575_masked.hmp.txt.gz";
-//        String impTargetFile2=root+"10psample25.c10_s0_s24575_masked.imp.hmp.txt.gz";
-        
-//        String origFile=rootIn+"10psample25.c10_s0_s24575.hmp.txt.gz";
-//        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
-//        String unImpTargetFile=donorFile;
-//        String impTargetFile2=root+"XJustHMw24575OfHM224KMerge20130517b.imp.hmp.txt.gz";
-        
-//        String origFile=rootIn+"SEEDsamp25.c10_s0_s24575.hmp.txt.gz";
-//        String donorFile=rootIn+"IMPw24575Of24KMerge20130513b.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"SEEDsamp25.c10_s0_s24575_masked.hmp.txt.gz";
-//        String impTargetFile=root+"InbredSEED25.imp.hmp.txt.gz";
-//        String impTargetFile2=root+"HybridSEED25.imp.hmp.txt.gz";
-        
-       
-//      String origFile=rootIn+"10psample25.c10_s0_s24575.hmp.txt.gz";
-//      String donorFile=rootIn+"Xw24575Of24KMerge20130513b.hmp.txt.gz";
-//      String impTargetFile2=root+"IMPw24575Of24KMerge20130513b.hmp.txt.gz";
-
-//        
-//        String origFile=rootIn+"ABQTL25.c10_s0_s24575.hmp.txt.gz";
-//        String donorFile=rootIn+"w24575Of24KMerge20130513b.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"ABQTL25.c10_s0_s24575_masked.hmp.txt.gz";
-//        String impTargetFile=root+"ABQTLtest.imp.hmp.txt.gz";
-//        String impTargetFile2=root+"HybridABQTLtest.imp.hmp.txt.gz";
-      
-//        String origFile=rootIn+"Z0CN26.c10_s0_s24575.hmp.txt.gz";
-//        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.imp.hmp.txt.gz";
-//        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
-//        String donorFile=rootIn+"subTest.c10.hmp.txt.gz";
-//        String donorFile=rootIn+"SectionTestSmall.c10s+.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"Z0CN26.c10_s0_s24575.hmp.txt.gz";
-//        String impTargetFile=root+"Z0CN26.c10_s0_s24575.imp.hmp.txt.gz";
-        
-//        String origFile=rootIn+"10psample26.c10_s0_s24575.hmp.txt.gz";
-////        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.imp.hmp.txt.gz";
-////        String donorFile=rootIn+"JustHMw24575OfHM224KMerge20130517b.hmp.txt.gz";
-//        String donorFile=rootIn+"SectionTestSmall.c10s+.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"10psample26.c10_s0_s24575.hmp.txt.gz";
-//        String impTargetFile2=root+"10psample26.c10_s0_s24575.imp.hmp.txt.gz";
-        
-//        String origFile=rootIn+"NAMs26HM2.hmp.txt.gz";
-//        String donorFile=rootIn+"all26HM2_8k.c10s+.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"NAMs26HM2.hmp.txt.gz";
-//        String impTargetFile2=root+"NAMs26HM2.imp.hmp.txt.gz";
-        
-//        String origFile=rootIn+"all26HM2.c10.hmp.txt.gz";
-//        String donorFile=rootIn+"all26HM2_8k.c10s+.hmp.txt.gz";
-//        String unImpTargetFile=rootIn+"all26HM2.c10.hmp.txt.gz";
-//        String impTargetFile2=root+"all26HM2.c10.imp.hmp.txt.gz";
-        
-        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
-        String unImpTargetFile=rootOrig+"First19v26.chr8.hmp.txt.gz";
+     //   String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
+  //      String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr8.hmp.h5";
+        String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.h5";
         String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
         String impTargetFile=rootImp+"Tall26.c+.imp.hmp.txt.gz";
         
-//        for (int chr = 8; chr <= 8; chr++) {
-//            String unImpTargetFileC=unImpTargetFile.replace("chr+", "chr"+chr);
-//            String donorFileC=donorFile.replace(".c+s", ".c"+chr+"s");
-//            String impTargetFileC=impTargetFile.replace(".c+.", ".c"+chr+".");
-//            int chrSec=(chr==8)?10:9;
-//            MinorWindowViterbiImputationPlugin e64NNI=new MinorWindowViterbiImputationPlugin(donorFileC, unImpTargetFileC, 
-//                    impTargetFileC, 20, 50, 100, 0.005, false,chrSec);
-//            
-//        }
-        
+      
         String[] args2 = new String[]{
             "-hmp", unImpTargetFile,
             "-d",donorFile,
             "-o", impTargetFile,
             "-sC","8",
             "-eC","8",
-//            "-mxDiv", "0.01",
-//            "-hapSize", "8000",
-//            "-minPres", "500",
-//            "-maxOutMiss","0.4",
-//            "-maxHap", "2000",
+            "-minMnCnt","20",
+            "-mxInbErr","0.02",
+            "-mxHybErr","0.005",
+            "-mnTestSite","50",
         };
 
         MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
         plugin.setParameters(args2);
         plugin.performFunction(null);
-//
-//        MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
-//        plugin.setParameters(args2);
-//        plugin.performFunction(null);
     }
 }
