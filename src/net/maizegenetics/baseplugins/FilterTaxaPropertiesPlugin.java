@@ -106,7 +106,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
 
         StringBuilder builder = new StringBuilder();
         builder.append("Filter Alignment by Taxa Properties...\n");
-        builder.append("   Min. Not Missing Proportion: ");
+        builder.append("   Min. Proportion of Sites Present: ");
         builder.append(myMinNotMissing);
         builder.append("\n");
         builder.append("   Heterozygous Proportion: ");
@@ -142,7 +142,6 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
     private Alignment getFilteredAlignment(Alignment alignment) {
         int numSites = alignment.getSiteCount();
         int numTaxa = alignment.getSequenceCount();
-        int totalGametes = numSites * 2;
         IdGroup ids = alignment.getIdGroup();
 
         List<Identifier> keepTaxaList = new ArrayList<Identifier>();
@@ -151,9 +150,9 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             progress((int) ((double) t / (double) numTaxa * 100.0), null);
 
             if (myMinNotMissing != 0.0) {
-                int totalGametesNotMissing = alignment.getTotalGametesNotMissingForTaxon(t);
-                double percentGametesNotMissing = (double) totalGametesNotMissing / (double) totalGametes;
-                if (percentGametesNotMissing < myMinNotMissing) {
+                int totalNotMissing = alignment.getTotalNotMissingForTaxon(t);
+                double percentNotMissing = (double) totalNotMissing / (double) numSites;
+                if (percentNotMissing < myMinNotMissing) {
                     continue;
                 }
             }
@@ -281,7 +280,7 @@ class FilterTaxaPropertiesDialog extends JDialog {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        panel.add(getLine("Min Gametes Not Missing Proportion", myMinNotMissingField));
+        panel.add(getLine("Min Proportion of Sites Present", myMinNotMissingField));
         panel.add(getLine("Min Heterozygous Proportion", myMinHeterozygousField));
         panel.add(getLine("Max Heterozygous Proportion", myMaxHeterozygousField));
 
