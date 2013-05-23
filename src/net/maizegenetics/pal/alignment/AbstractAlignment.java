@@ -834,6 +834,20 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
+    public int getTotalNotMissing(int site) {
+
+        int result = 0;
+        for (int i = 0, n = getSequenceCount(); i < n; i++) {
+            byte current = getBase(i, site);
+            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                result++;
+            }
+        }
+        return result;
+
+    }
+
+    @Override
     public int getTotalGametesNotMissingForTaxon(int taxon) {
 
         int result = 0;

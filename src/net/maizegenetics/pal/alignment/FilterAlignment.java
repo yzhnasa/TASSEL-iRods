@@ -975,6 +975,15 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
+    public int getTotalNotMissing(int site) {
+        if (myIsTaxaFilter) {
+            return super.getTotalNotMissing(site);
+        } else {
+            return myBaseAlignment.getTotalNotMissing(translateSite(site));
+        }
+    }
+
+    @Override
     public int getMinorAlleleCount(int site) {
         if (myIsTaxaFilter) {
             return super.getMinorAlleleCount(site);

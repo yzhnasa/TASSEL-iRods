@@ -321,6 +321,19 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
         return ((int) temp.cardinality()) * 2;
 
     }
+    
+    @Override
+    public int getTotalNotMissing(int site) {
+
+        OpenBitSet[] sBitData = getCachedSite(site);
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 0; i < myNumDataRows; i++) {
+            temp.or(sBitData[i]);
+        }
+        return (int) temp.cardinality();
+
+    }
 
     @Override
     public int getMinorAlleleCount(int site) {
