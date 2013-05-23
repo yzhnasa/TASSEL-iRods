@@ -677,7 +677,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
         OpenBitSet[] tBitData = getCachedTaxon(taxon);
 
-        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        OpenBitSet temp = new OpenBitSet(getSiteCount());
         for (int i = 0; i < myNumDataRows; i++) {
             temp.or(tBitData[i]);
         }
@@ -705,7 +705,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
         OpenBitSet[] tBitData = getCachedTaxon(taxon);
 
-        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        OpenBitSet temp = new OpenBitSet(getSiteCount());
         for (int i = 0; i < myNumDataRows; i++) {
             temp.or(tBitData[i]);
         }

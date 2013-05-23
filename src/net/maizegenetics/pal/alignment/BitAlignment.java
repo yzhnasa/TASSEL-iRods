@@ -570,7 +570,7 @@ public class BitAlignment extends AbstractAlignment {
             return super.getTotalGametesNotMissingForTaxon(taxon);
         }
 
-        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        OpenBitSet temp = new OpenBitSet(getSiteCount());
         for (int i = 0; i < myNumDataRows; i++) {
             temp.or(myTBitData[i][taxon]);
         }
@@ -585,7 +585,7 @@ public class BitAlignment extends AbstractAlignment {
             return super.getTotalNotMissingForTaxon(taxon);
         }
 
-        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        OpenBitSet temp = new OpenBitSet(getSiteCount());
         for (int i = 0; i < myNumDataRows; i++) {
             temp.or(myTBitData[i][taxon]);
         }
