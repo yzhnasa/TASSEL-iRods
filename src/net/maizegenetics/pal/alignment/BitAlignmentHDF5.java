@@ -59,6 +59,10 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     }
 
     public static BitAlignmentHDF5 getInstance(String filename) {
+        return getInstance(filename, true);
+    }
+
+    public static BitAlignmentHDF5 getInstance(String filename, boolean iterateSites) {
         IHDF5Reader reader = HDF5Factory.openForReading(filename);
 
         String[] taxa = reader.readStringArray(HapMapHDF5Constants.TAXA);
@@ -95,7 +99,11 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
         String[] snpIds = reader.readStringArray(HapMapHDF5Constants.SNP_IDS);
 
         if (NucleotideAlignmentConstants.isNucleotideEncodings(alleleStates)) {
-            return new BitNucleotideAlignmentHDF5(reader, idgroup, alleles, null, null, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
+            if (iterateSites) {
+                return new BitNucleotideAlignmentHDF5(reader, idgroup, alleles, null, null, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
+            } else {
+                return new TBitNucleotideAlignmentHDF5(reader, idgroup, alleles, null, null, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
+            }
         } else if (alleleStates.length == 1) {
             return new BitAlignmentHDF5(reader, idgroup, alleles, null, null, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
         } else {
@@ -176,7 +184,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
         }
     }
 
-    private OpenBitSet[] getCachedTaxon(int taxon) {
+    protected OpenBitSet[] getCachedTaxon(int taxon) {
 
         OpenBitSet[] result = myCachedTaxa.get(taxon);
         if (result != null) {
@@ -245,7 +253,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
         }
     }
-    
+
     @Override
     public byte getBase(int taxon, int site) {
         byte[] temp = getBaseArray(taxon, site);
