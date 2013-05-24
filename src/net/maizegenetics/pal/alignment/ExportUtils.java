@@ -5,6 +5,7 @@ package net.maizegenetics.pal.alignment;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import java.io.BufferedWriter;
@@ -137,6 +138,94 @@ public class ExportUtils {
                 }
                 h5w.writeLongMatrix(currentTBitPath, lgarray);
 
+            }
+
+            return newHDF5file;
+
+        } finally {
+            try {
+                h5w.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+    }
+
+    public static String writeToMutableHDF5(Alignment a, String newHDF5file) {
+
+        IHDF5Writer h5w = null;
+        try {
+
+            int numSites = a.getSiteCount();
+            int numTaxa = a.getSequenceCount();
+
+            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, "mutable.hmp.h5");
+            File hdf5File = new File(newHDF5file);
+            if (hdf5File.exists()) {
+                throw new IllegalArgumentException("ExportUtils: writeToMutableHDF5: File already exists: " + newHDF5file);
+            }
+            IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+            myLogger.info("Writing Mutable HDF5 file: " + newHDF5file);
+            config.overwrite();
+            config.dontUseExtendableDataTypes();
+            h5w = config.writer();
+
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
+
+            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
+
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
+
+            String[][] aEncodings = a.getAlleleEncodings();
+            int numEncodings = aEncodings.length;
+            int numStates = aEncodings[0].length;
+            MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, numStates});
+            for (int s = 0; s < numEncodings; s++) {
+                for (int x = 0; x < numStates; x++) {
+                    alleleEncodings.set(aEncodings[s][x], s, x);
+                }
+            }
+
+            h5w.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
+            h5w.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
+            MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
+            if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
+                throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
+            }
+
+            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());
+
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
+
+            String[] lociNames = new String[a.getNumLoci()];
+            Locus[] loci = a.getLoci();
+            for (int i = 0; i < a.getNumLoci(); i++) {
+                lociNames[i] = loci[i].getName();
+            }
+            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumLoci());
+            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
+
+            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
+            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
+
+            h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
+            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
+
+            h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
+            byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
+            for (int i = 0; i < numSites; i++) {
+                alleles[i] = a.getAlleles(i);
+            }
+            h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
+
+            // Write Bases
+            HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
+            HDF5IntStorageFeatures.createDeflationDelete(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
+            for (int t = 0; t < numTaxa; t++) {
+                String basesPath = HapMapHDF5Constants.BASES + "/" + a.getFullTaxaName(t);
+                h5w.createByteArray(basesPath, numSites, features);
+                byte[] bases = a.getBaseRow(t);
+                h5w.writeByteArray(basesPath, bases, features);
             }
 
             return newHDF5file;
@@ -448,8 +537,7 @@ public class ExportUtils {
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
-            if (alignment.getReferenceAllele(0)==Alignment.UNKNOWN_DIPLOID_ALLELE)
-            {
+            if (alignment.getReferenceAllele(0) == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                 bw.write("##Reference allele is not known. The major allele was used as reference allele.");
                 bw.newLine();
             }
@@ -467,7 +555,7 @@ public class ExportUtils {
             bw.newLine();
             bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">");
             bw.newLine();
-            
+
 
             bw.write("##INFO=<ID=AF,Number=.,Type=Float,Description=\"Allele Frequency\">");
             bw.newLine();
@@ -485,35 +573,30 @@ public class ExportUtils {
 
             for (int site = 0; site < alignment.getSiteCount(); site++) {
                 int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
-                
-                                
+
+
                 int nAlleles = sortedAlleles[0].length;
-                
-                
+
+
                 if (nAlleles == 0) {                                                  //used to be ==0
                     System.out.println("no alleles at: " + site + " " + alignment.getPositionInLocus(site));
                     continue;
                 }
-                
+
                 byte refGeno = alignment.getReferenceAllele(site);
-                if (refGeno==Alignment.UNKNOWN_DIPLOID_ALLELE)
-                {
+                if (refGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     String myMajorAllele = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][sortedAlleles[0][0]];
                     String MajorGenotype = myMajorAllele + myMajorAllele;
-                    refGeno = NucleotideAlignmentConstants.getNucleotideDiploidByte(MajorGenotype);                    
+                    refGeno = NucleotideAlignmentConstants.getNucleotideDiploidByte(MajorGenotype);
                 }
                 byte refAllele = (byte) (refGeno & 0xF);  // converts from diploid to haploid allele (2nd allele)
                 //System.out.println(alignment.getPositionInLocus(site) + " " + refAllele);
                 byte[] alleleValues = null;
-                if (alignment instanceof MutableVCFAlignment)
-                {
+                if (alignment instanceof MutableVCFAlignment) {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
-                }
-                else
-                {
+                } else {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Frequency, site);
-                    if (nAlleles>alignment.getMaxNumAlleles())
-                    {
+                    if (nAlleles > alignment.getMaxNumAlleles()) {
                         nAlleles = alignment.getMaxNumAlleles();
                     }
                 }
@@ -620,8 +703,7 @@ public class ExportUtils {
                 bw.write("PASS"); // filter
                 bw.write(delimChar);
 
-                if (alignment instanceof MutableVCFAlignment)
-                {
+                if (alignment instanceof MutableVCFAlignment) {
                     int totalDepth = 0;
                     for (int i = 0; i < alignment.getSequenceCount(); i++) {
                         byte[] depth = alignment.getDepthForAlleles(i, site);
@@ -632,19 +714,14 @@ public class ExportUtils {
                         }
                     }
                     bw.write("DP=" + totalDepth); // DP
-                }
-                else
-                {
+                } else {
                     bw.write("."); // DP
                 }
                 bw.write(delimChar);
 
-                if (alignment instanceof MutableVCFAlignment)
-                {
+                if (alignment instanceof MutableVCFAlignment) {
                     bw.write("GT:AD:DP:GQ:PL");
-                }
-                else
-                {
+                } else {
                     bw.write("GT");
                 }
                 for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
@@ -659,7 +736,7 @@ public class ExportUtils {
 
                     boolean genoOne = false;
                     if (values[0] == Alignment.UNKNOWN_ALLELE) {
-                        GTstr +="./";
+                        GTstr += "./";
                         genoOne = true;
                     } else {
                         for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/[alt2] order (if no alt2,length=2)
@@ -671,14 +748,14 @@ public class ExportUtils {
                                     break;
                                 }
                             } else if (values[0] == alleleValues[alleleRedirect[i]]) {
-                                GTstr +=(i + refUnknownOffset) + "/";
+                                GTstr += (i + refUnknownOffset) + "/";
                                 genoOne = true;
                                 break;
                             }
                         }
                     }
 //                    if (!genoOne) { 
-                        //bw.write("./.");
+                    //bw.write("./.");
 //                        if (values[0] == NucleotideAlignmentConstants.A_ALLELE) {
 //                            bw.write("A/");
 //                        } else if (values[0] == NucleotideAlignmentConstants.C_ALLELE) {
@@ -697,18 +774,18 @@ public class ExportUtils {
 
                     boolean genoTwo = false;
                     if (values[1] == Alignment.UNKNOWN_ALLELE) {
-                        GTstr +=".";
+                        GTstr += ".";
                         genoTwo = true;
                     } else {
                         for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/alt2 order (if no alt2,length=2)
                             if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
                                 if (values[1] == refAllele) {
-                                    GTstr +=(i + refUnknownOffset) + "";
+                                    GTstr += (i + refUnknownOffset) + "";
                                     genoTwo = true;
                                     break;
                                 }
                             } else if (values[1] == alleleValues[alleleRedirect[i]]) {
-                                GTstr +=(i + refUnknownOffset) + "";
+                                GTstr += (i + refUnknownOffset) + "";
                                 genoTwo = true;
                                 break;
                             }
@@ -730,16 +807,12 @@ public class ExportUtils {
 //                            // throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
 //                        }
 //                    }
-                    if (genoOne && genoTwo)
-                    {
+                    if (genoOne && genoTwo) {
                         bw.write(GTstr);
-                    }
-                    else
-                    {
+                    } else {
                         bw.write("./.");
                     }
-                    if (!(alignment instanceof MutableVCFAlignment))
-                    {
+                    if (!(alignment instanceof MutableVCFAlignment)) {
                         continue;
                     }
                     bw.write(":");
