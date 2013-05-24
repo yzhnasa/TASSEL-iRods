@@ -704,14 +704,30 @@ public class BitPhasedAlignment extends AbstractAlignment {
     }
 
     @Override
+    public int getTotalNotMissing(int site) {
+
+        if (mySBitData0 == null) {
+            return super.getTotalNotMissing(site);
+        }
+
+        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        for (int i = 0; i < myNumDataRows; i++) {
+            temp.or(mySBitData0[i][site]);
+            temp.or(mySBitData1[i][site]);
+        }
+        return (int) temp.cardinality();
+
+    }
+
+    @Override
     public int getTotalGametesNotMissingForTaxon(int taxon) {
 
         if (myTBitData0 == null) {
             return super.getTotalGametesNotMissingForTaxon(taxon);
         }
 
-        OpenBitSet temp0 = new OpenBitSet(getSequenceCount());
-        OpenBitSet temp1 = new OpenBitSet(getSequenceCount());
+        OpenBitSet temp0 = new OpenBitSet(getSiteCount());
+        OpenBitSet temp1 = new OpenBitSet(getSiteCount());
         for (int i = 0; i < myNumDataRows; i++) {
             temp0.or(myTBitData0[i][taxon]);
             temp1.or(myTBitData1[i][taxon]);
@@ -727,7 +743,7 @@ public class BitPhasedAlignment extends AbstractAlignment {
             return super.getTotalNotMissingForTaxon(taxon);
         }
 
-        OpenBitSet temp = new OpenBitSet(getSequenceCount());
+        OpenBitSet temp = new OpenBitSet(getSiteCount());
         for (int i = 0; i < myNumDataRows; i++) {
             temp.or(myTBitData0[i][taxon]);
             temp.or(myTBitData1[i][taxon]);

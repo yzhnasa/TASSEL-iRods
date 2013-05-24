@@ -12,12 +12,15 @@ import net.maizegenetics.pal.alignment.Locus;
  */
 public interface TOPMInterface extends Tags {
 
+    public final static byte BYTE_MISSING = Byte.MIN_VALUE;
+    public final static int INT_MISSING = Integer.MIN_VALUE;
+
     /**
      * Adds Variant definition.
      *
      * @param tagIndex tag index
      * @param offset offset
-     * @param base base value one of NucleotideAlignmentConstants.A_ALLELE,
+     * @param base base value one of: NucleotideAlignmentConstants.A_ALLELE,
      * NucleotideAlignmentConstants.C_ALLELE,
      * NucleotideAlignmentConstants.G_ALLELE,
      * NucleotideAlignmentConstants.T_ALLELE,
@@ -101,6 +104,13 @@ public interface TOPMInterface extends Tags {
 
     public byte getMapP(int index);
 
+    /**
+     * Returns maximum number of variants stored per tag.
+     *
+     * @return maximum number of variants
+     */
+    public int getMaxNumVariants();
+
     public byte getMultiMaps(int index);
 
     /**
@@ -144,13 +154,6 @@ public interface TOPMInterface extends Tags {
     public byte getStrand(int tagIndex);
 
     /**
-     * Returns maximum number of variants stored per tag.
-     *
-     * @return maximum number of variants
-     */
-    public int getMaxNumVariants();
-
-    /**
      * Returns variant definition at given tag and variant index.
      *
      * @param tagIndex tag index
@@ -159,6 +162,14 @@ public interface TOPMInterface extends Tags {
      * @return variant definition (see addVariant())
      */
     public byte getVariantDef(int tagIndex, int variantIndex);
+
+    /**
+     * Returns the set of unique positions for the given chromosome
+     *
+     * @param chromosome
+     * @return unique positions on chromosome
+     */
+    public int[] getUniquePositions(int chromosome);
 
     /**
      * Returns an array containing all variant definitions for given tag.

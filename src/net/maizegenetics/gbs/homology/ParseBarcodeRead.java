@@ -19,12 +19,12 @@ public class ParseBarcodeRead {
 
     private static int chunkSize = BaseEncoder.chunkSize;
     //String baseDir="E:/SolexaAnal/";
-    private int maximumMismatchInBarcodeAndOverhang = 0;
-    private static String[] initialCutSiteRemnant = null;
-    private static int readEndCutSiteRemnantLength;
+    protected int maximumMismatchInBarcodeAndOverhang = 0;
+    protected static String[] initialCutSiteRemnant = null;
+    protected static int readEndCutSiteRemnantLength;
     static String nullS = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-    private static String[] likelyReadEnd = null;
-    private static String theEnzyme = null;
+    protected static String[] likelyReadEnd = null;
+    protected static String theEnzyme = null;
     //Original design CWGGATCGGAAGAGCGGTTCAGCAGGAATGCCGAG  -- Common Adapter
     //Redesign  CWGAGATCGGAAGAGCGGTTCAGCAGGAATGCCGAG  -- Common Adapter
     static int maxBarcodeLength = 10;
@@ -301,7 +301,7 @@ public class ParseBarcodeRead {
         return theBarcodes.length;
     }
 
-    private Barcode findBestBarcode(String queryS, int maxDivergence) {
+    Barcode findBestBarcode(String queryS, int maxDivergence) {
         long query = BaseEncoder.getLongFromSeq(queryS.substring(0, chunkSize));
         //note because the barcodes are polyA after the sequence, they should always
         //sort ahead of the hit, this is the reason for the -(closestHit+2)

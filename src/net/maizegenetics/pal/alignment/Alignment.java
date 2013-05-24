@@ -812,6 +812,16 @@ public interface Alignment extends Serializable {
      * @return number of non-missing allele values.
      */
     public int getTotalGametesNotMissing(int site);
+    
+    /**
+     * Returns total number of non-missing taxa for given site. Taxa are
+     * considered missing only if both allele values are Unknown (N).
+     *
+     * @param site site
+     *
+     * @return number of non-missing taxa..
+     */
+    public int getTotalNotMissing(int site);
 
     /**
      * Returns the minor allele count for given site.

@@ -45,8 +45,6 @@ import net.maizegenetics.util.MultiMemberGZIPInputStream;
  */
 public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
-    public final static byte BYTE_MISSING = Byte.MIN_VALUE;
-    public final static int intMissing = Integer.MIN_VALUE;
     public int maxVariants = 8;
     byte[] multimaps;  // number of locations this tagSet maps to; unknown = Byte.MIN_VALUE; multiple, but unknown number = 99
     int[] chromosome;  // 4 bytes
@@ -654,7 +652,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     public byte getMultiMaps(int index) {
         return multimaps[index];
     }
-
+    
     @Override
     public int getChromosome(int index) {
         return chromosome[index];
@@ -1099,7 +1097,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     @Override
     public Locus getLocus(int tagIndex) {
-        if (chromosome[tagIndex] == intMissing) {
+        if (chromosome[tagIndex] == TOPMInterface.INT_MISSING) {
             return null;
         } //Return null for unmapped tags
         return new Locus(chromosome[tagIndex] + "", chromosome[tagIndex] + "", -1, -1, null, null);
@@ -1157,7 +1155,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return strand[tagIndex];
     }
 
-    public int[] uniquePositions(int chromosome) {
+    @Override
+    public int[] getUniquePositions(int chromosome) {
         HashSet<Integer> positions = new HashSet<Integer>();
 //        int[] positions = new int[getTagCount()];
         for (int i = 0; i < getTagCount(); i++) {
@@ -1502,6 +1501,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 return NucleotideAlignmentConstants.GAP_ALLELE;
             case '+':
                 return NucleotideAlignmentConstants.INSERT_ALLELE;
+            case BYTE_MISSING:
+                return BYTE_MISSING;
             default:
                 throw new IllegalArgumentException("asciiToNucleotideByte: unknown ascii: " + Byte.toString(ascii));
         }

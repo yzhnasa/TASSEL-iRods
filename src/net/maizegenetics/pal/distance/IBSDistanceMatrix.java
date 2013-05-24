@@ -115,8 +115,8 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1); 
     }
     
-    public static double[][] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, 
-            int minSitesCompared, int startWord, int endWord, int windowWord, BitSet maskBadSet) {
+    public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, 
+            int minSitesCompared, int startWord, int endWord, BitSet maskBadSet) {
         if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
         long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
         long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
@@ -127,15 +127,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         }
         long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
         long[] jMn = theTBA.getAllelePresenceForAllSites(taxon2, 1).getBits();
-        double[][] results=new double[(endWord-startWord+1)/windowWord][2];
-        int cnt=0;
-        for (int i = startWord; i <= endWord; i+=windowWord) {
-            int endSec=(i+windowWord-1);
-            if(endSec>endWord) continue;
-            results[cnt]=computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, i, endSec);
-            cnt++;
-        }
-        return results;
+        return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1);
     }
     
     public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, 

@@ -102,6 +102,11 @@ public class OpenBitSet implements BitSet, Cloneable, Serializable {
         myNumWords = numWords;
     }
     
+    public OpenBitSet(long[] bits) {
+        myBits = bits;
+        myNumWords = bits.length;
+    }
+    
     public OpenBitSet(BitSet cloneOBS) {
         myBits = cloneOBS.getBits().clone();
         myNumWords = cloneOBS.getNumWords();

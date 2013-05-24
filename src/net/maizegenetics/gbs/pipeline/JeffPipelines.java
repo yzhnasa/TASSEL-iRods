@@ -9,6 +9,7 @@ import java.util.Arrays;
 import net.maizegenetics.baseplugins.ExtractHapmapSubsetPlugin;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.prefs.TasselPrefs;
 
 /**
  *
@@ -23,7 +24,9 @@ public class JeffPipelines {
 //        expandVariantsInTOPM();
 //        getChrsFromTOPM();
 //        runTOPMSummaryPlugin();
-        convertTOPMtoHDF5();
+//        convertTOPMtoHDF5();
+        runRawReadsToHapMapPlugin();
+//        runSeqToGenosPlugin();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -188,8 +191,19 @@ public class JeffPipelines {
             "-o",    prodTestDir+"ProductionTest/tassel3_RawReadsToHapMap/productionTestMDPLowVolGenoCompare.txt",
         };
 
+        String tassel3v4ProdDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/";
+        String[] tassel3v4ProdArgs = new String[]{
+            "-hmp1", tassel3v4ProdDir+"tassel3_RawReadsToHapMap/C08L7ACXX_6_c+.hmp.txt",
+            "-hmp2", tassel3v4ProdDir+"tassel4_RawReadsToHapMap/C08L7ACXX_6_c+.hmp.txt",
+            "-sC",   "1",
+            "-eC",   "10",
+            "-syn",  tassel3v4ProdDir+"tassel4_RawReadsToHapMap/C08L7ACXX_6_SynonymsProd.txt",
+            "-o",    tassel3v4ProdDir+"tassel4_RawReadsToHapMap/tassel3v4ProdMDPLowVolGenoCompare.txt",
+        };
+
+        TasselPrefs.putAlignmentRetainRareAlleles(true);
         CompareGenosBetweenHapMapFilesPlugin plugin = new CompareGenosBetweenHapMapFilesPlugin();
-        plugin.setParameters(prodTestArgs);
+        plugin.setParameters(tassel3v4ProdArgs);
         plugin.performFunction(null);
     }
     
@@ -235,5 +249,35 @@ public class JeffPipelines {
         int maxMapping = 1;
         int maxVariants = 16;
         TagsOnPhysMapHDF5.createFile(inTOPM, outTOPMFileStr, maxMapping, maxVariants);
+    }
+    
+    public static void runRawReadsToHapMapPlugin() {
+        String baseDir = "/Users/jcg233/Documents/GBS/";
+        String[] MDPLowVolArgs = new String[]{
+            "-i", "/Users/jcg233/largeFiles/fastq/",
+            "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_key.txt",
+            "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm",
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_RawReadsToHapMap",
+            "-e", "ApeKI",
+        };
+
+        RawReadsToHapMapPlugin plugin = new RawReadsToHapMapPlugin(null);
+        plugin.setParameters(MDPLowVolArgs);
+        plugin.performFunction(null);
+    }
+    
+    public static void runSeqToGenosPlugin() {
+        String baseDir = "/Users/jcg233/Documents/GBS/";
+        String[] MDPLowVolArgs = new String[]{
+            "-i", "/Users/jcg233/largeFiles/fastq/",
+            "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_key.txt",
+            "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm",
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos",
+            "-e", "ApeKI",
+        };
+
+        SeqToGenosPlugin plugin = new SeqToGenosPlugin(null);
+        plugin.setParameters(MDPLowVolArgs);
+        plugin.performFunction(null);
     }
 }
