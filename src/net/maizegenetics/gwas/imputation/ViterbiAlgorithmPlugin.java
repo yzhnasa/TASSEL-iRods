@@ -42,7 +42,7 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 				phet = probHeterozygous;
 			}
 			
-			family.imputed = NucleotideImputationUtils.imputeUsingViterbiFiveState(tba, phet, family.name, true);
+			family.imputed = NucleotideImputationUtils.imputeUsingViterbiFiveState(tba, phet, family.name, useVariableTransition);
 			
 			if (fillGapsInAlignment) NucleotideImputationUtils.fillGapsInAlignment(family);
 			
