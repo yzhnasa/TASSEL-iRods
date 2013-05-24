@@ -4,8 +4,11 @@
 package net.maizegenetics.pal.alignment;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 
@@ -16,10 +19,10 @@ import net.maizegenetics.util.OpenBitSet;
  *
  * @author ed, terry
  */
-public class ProjectionAlignment extends AbstractAlignment {
+public class ProjectionAlignment extends AbstractAlignment implements MutableAlignment {
 
     private int[][] mySiteBreaks;  //temporary - saving not needed
-    private int[][] myHDTaxa;  //taxa ids should be saved
+    private int[][][] myHDTaxa;  //taxa ids should be saved
     private int[][] myPosBreaks;  //positions should be saved
     private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
 
@@ -28,10 +31,10 @@ public class ProjectionAlignment extends AbstractAlignment {
         myBaseAlignment = AlignmentUtils.optimizeForSites(hdAlign);
         mySiteBreaks = new int[getSequenceCount()][];
         myPosBreaks = new int[getSequenceCount()][];
-        myHDTaxa = new int[getSequenceCount()][];
+        myHDTaxa = new int[getSequenceCount()][][];
     }
 
-    public void setCompositionOfTaxon(int taxon, int[] posBreaks, int[] hdTaxa) {
+    public void setCompositionOfTaxon(int taxon, int[] posBreaks, int[][] hdTaxa) {
         if (posBreaks.length != hdTaxa.length) {
             throw new IllegalArgumentException("ProjectionAlignment: setCompositionOfTaxon: number of positions should equal number taxa.");
         }
@@ -46,8 +49,27 @@ public class ProjectionAlignment extends AbstractAlignment {
             this.mySiteBreaks[taxon][i] = site;
         }
     }
+    
+    public void setCompositionOfTaxon(int taxon, TreeMap<Integer,int[]> breakPoints) {
+        int breaks=breakPoints.size();
+        myPosBreaks[taxon]=new int[breaks];
+        myHDTaxa[taxon] = new int[breaks][2];
+        mySiteBreaks[taxon] = new int[breaks];
+        int cnt=0;
+        for (Map.Entry<Integer,int[]> bp : breakPoints.entrySet()) {
+            myPosBreaks[taxon][cnt]=bp.getKey();
+            myHDTaxa[taxon][cnt]=bp.getValue();
+            int site = myBaseAlignment.getSiteOfPhysicalPosition( myPosBreaks[taxon][cnt], null);
+            if (site < 0) {
+                site = -(site + 1);
+            }
+            this.mySiteBreaks[taxon][cnt] = site;    
+        }
+    }
+    
+    
 
-    public void setCompositionOfTaxon(String taxa, int[] posBreaks, int[] hdTaxa) {
+    public void setCompositionOfTaxon(String taxa, int[] posBreaks, int[][] hdTaxa) {
         int taxon = getIdGroup().whichIdNumber(taxa);
         System.out.printf("SetComp %s %d %n", taxa, taxon);
         setCompositionOfTaxon(taxon, posBreaks, hdTaxa);
@@ -73,9 +95,9 @@ public class ProjectionAlignment extends AbstractAlignment {
         }
     }
 
-    private int translateTaxon(int taxon, int site) {
+    private int[] translateTaxon(int taxon, int site) {
         if (mySiteBreaks[taxon] == null) {
-            return -1;
+            return null;
         }
         int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
         if (b < 0) {
@@ -87,16 +109,12 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     @Override
     public String getBaseAsString(int taxon, int site) {
-        int t = translateTaxon(taxon, site);
-        if (t < 0) {
-            return Alignment.UNKNOWN_ALLELE_STR;
-        }
-        return myBaseAlignment.getBaseAsString(t, site);
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
     }
 
     @Override
     public String getDiploidAsString(int site, byte value) {
-        return myBaseAlignment.getDiploidAsString(site, value);
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
 
     @Override
@@ -107,11 +125,8 @@ public class ProjectionAlignment extends AbstractAlignment {
      * cases).
      */
     public byte getBase(int taxon, int site) {
-        int t = translateTaxon(taxon, site);
-        if (t < 0) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        }
-        return myBaseAlignment.getBase(t, site);
+        int[] t = translateTaxon(taxon, site);
+        return AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(t[0], site), myBaseAlignment.getBase(t[1], site));
     }
 
     @Override
@@ -126,13 +141,13 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     @Override
     public byte[] getBaseArray(int taxon, int site) {
-        return myBaseAlignment.getBaseArray(translateTaxon(taxon, site), site);
+        int[] t=translateTaxon(taxon, site);
+        byte[] result=new byte[2];
+        result[0]=myBaseAlignment.getBase(t[0], site);
+        result[1]=myBaseAlignment.getBase(t[1], site);
+        return result;
     }
 
-    @Override
-    public String[] getBaseAsStringArray(int taxon, int site) {
-        return myBaseAlignment.getBaseAsStringArray(translateTaxon(taxon, site), site);
-    }
 
     @Override
     public byte[] getBaseRow(int taxon) {
@@ -140,15 +155,17 @@ public class ProjectionAlignment extends AbstractAlignment {
         int numBreaks = mySiteBreaks[taxon].length;
         byte[] result = new byte[myNumSites];
         for (int i = 0; i < numBreaks - 1; i++) {
-            int hdTaxon = myHDTaxa[taxon][i];
+            int[] hdTaxon = myHDTaxa[taxon][i];
             for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
-                result[j] = myBaseAlignment.getBase(hdTaxon, j);
+               // result[j] = myBaseAlignment.getBase(hdTaxon, j);
+                result[j]=AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(hdTaxon[0], j), myBaseAlignment.getBase(hdTaxon[1], j));
             }
         }
 
-        int hdTaxon = myHDTaxa[taxon][numBreaks - 1];
+        int[] hdTaxon = myHDTaxa[taxon][numBreaks - 1];
         for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
-            result[j] = myBaseAlignment.getBase(hdTaxon, j);
+ //           result[j] = myBaseAlignment.getBase(hdTaxon, j);
+            result[j]=AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(hdTaxon[0], j), myBaseAlignment.getBase(hdTaxon[1], j));
         }
 
         return result;
@@ -176,18 +193,18 @@ public class ProjectionAlignment extends AbstractAlignment {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        BitSet baseBitSet = myBaseAlignment.getAllelePresenceForAllTaxa(site, alleleNumber);
-        BitSet result = new OpenBitSet(getSequenceCount());
-        for (int i = 0, n = getSequenceCount(); i < n; i++) {
-            int index = translateTaxon(i, site);
-            if (baseBitSet.fastGet(index)) {
-                result.fastSet(i);
-            }
-        }
-        return result;
-    }
+//    @Override
+//    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
+//        BitSet baseBitSet = myBaseAlignment.getAllelePresenceForAllTaxa(site, alleleNumber);
+//        BitSet result = new OpenBitSet(getSequenceCount());
+//        for (int i = 0, n = getSequenceCount(); i < n; i++) {
+//            int index = translateTaxon(i, site);
+//            if (baseBitSet.fastGet(index)) {
+//                result.fastSet(i);
+//            }
+//        }
+//        return result;
+//    }
 
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
@@ -206,7 +223,8 @@ public class ProjectionAlignment extends AbstractAlignment {
 
     @Override
     public float getSiteScore(int seq, int site) {
-        return myBaseAlignment.getSiteScore(translateTaxon(seq, site), site);
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //return myBaseAlignment.getSiteScore(translateTaxon(seq, site), site);
     }
 
     @Override
@@ -354,65 +372,65 @@ public class ProjectionAlignment extends AbstractAlignment {
         return myBaseAlignment.getMaxNumAlleles();
     }
 
-    @Override
-    public int getTotalGametesNotMissingForTaxon(int taxon) {
-
-        int numBreaks = mySiteBreaks[taxon].length;
-        int result = 0;
-        for (int i = 0; i < numBreaks - 1; i++) {
-            int hdTaxon = myHDTaxa[taxon][i];
-            for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
-                byte[] current = myBaseAlignment.getBaseArray(hdTaxon, j);
-                if (current[0] != Alignment.UNKNOWN_ALLELE) {
-                    result++;
-                }
-                if (current[1] != Alignment.UNKNOWN_ALLELE) {
-                    result++;
-                }
-            }
-        }
-
-        int hdTaxon = myHDTaxa[taxon][numBreaks - 1];
-        for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
-            byte[] current = myBaseAlignment.getBaseArray(hdTaxon, j);
-            if (current[0] != Alignment.UNKNOWN_ALLELE) {
-                result++;
-            }
-            if (current[1] != Alignment.UNKNOWN_ALLELE) {
-                result++;
-            }
-        }
-
-        return result;
-
-    }
-
-    @Override
-    public int getTotalNotMissingForTaxon(int taxon) {
-
-        int numBreaks = mySiteBreaks[taxon].length;
-        int result = 0;
-        for (int i = 0; i < numBreaks - 1; i++) {
-            int hdTaxon = myHDTaxa[taxon][i];
-            for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
-                byte current = myBaseAlignment.getBase(hdTaxon, j);
-                if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                    result++;
-                }
-            }
-        }
-
-        int hdTaxon = myHDTaxa[taxon][numBreaks - 1];
-        for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
-            byte current = myBaseAlignment.getBase(hdTaxon, j);
-            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                result++;
-            }
-        }
-
-        return result;
-
-    }
+//    @Override
+//    public int getTotalGametesNotMissingForTaxon(int taxon) {
+//
+//        int numBreaks = mySiteBreaks[taxon].length;
+//        int result = 0;
+//        for (int i = 0; i < numBreaks - 1; i++) {
+//            int hdTaxon = myHDTaxa[taxon][i];
+//            for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
+//                byte[] current = myBaseAlignment.getBaseArray(hdTaxon, j);
+//                if (current[0] != Alignment.UNKNOWN_ALLELE) {
+//                    result++;
+//                }
+//                if (current[1] != Alignment.UNKNOWN_ALLELE) {
+//                    result++;
+//                }
+//            }
+//        }
+//
+//        int hdTaxon = myHDTaxa[taxon][numBreaks - 1];
+//        for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
+//            byte[] current = myBaseAlignment.getBaseArray(hdTaxon, j);
+//            if (current[0] != Alignment.UNKNOWN_ALLELE) {
+//                result++;
+//            }
+//            if (current[1] != Alignment.UNKNOWN_ALLELE) {
+//                result++;
+//            }
+//        }
+//
+//        return result;
+//
+//    }
+//
+//    @Override
+//    public int getTotalNotMissingForTaxon(int taxon) {
+//
+//        int numBreaks = mySiteBreaks[taxon].length;
+//        int result = 0;
+//        for (int i = 0; i < numBreaks - 1; i++) {
+//            int hdTaxon = myHDTaxa[taxon][i];
+//            for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
+//                byte current = myBaseAlignment.getBase(hdTaxon, j);
+//                if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+//                    result++;
+//                }
+//            }
+//        }
+//
+//        int hdTaxon = myHDTaxa[taxon][numBreaks - 1];
+//        for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
+//            byte current = myBaseAlignment.getBase(hdTaxon, j);
+//            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+//                result++;
+//            }
+//        }
+//
+//        return result;
+//
+//    }
 
     // TERRY - This Needs Work.
     public Object[][] getMajorMinorCounts() {
@@ -564,5 +582,80 @@ public class ProjectionAlignment extends AbstractAlignment {
     @Override
     public int getTotalNumAlleles() {
         return myBaseAlignment.getTotalNumAlleles();
+    }
+
+    @Override
+    public void setBase(int taxon, int site, byte newBase) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setBaseRange(int taxon, int startSite, byte[] newBases) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void addSite(int site) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void removeSite(int site) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void clearSiteForRemoval(int site) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void addTaxon(Identifier id) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setTaxonName(int taxon, Identifier id) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void removeTaxon(int taxon) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setPositionOfSite(int site, int position) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setLocusOfSite(int site, Locus locus) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setDepthForAlleles(int taxon, int site, byte[] values) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setCommonAlleles(int site, byte[] values) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void clean() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setReferenceAllele(int site, byte diploidAllele) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isDirty() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
