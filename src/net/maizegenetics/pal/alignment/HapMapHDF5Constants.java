@@ -16,6 +16,7 @@ public final class HapMapHDF5Constants {
     public static final String ALLELES = "Alleles";
     public static final String TBIT = "TBit";
     public static final String SBIT = "SBit";
+    public static final String BASES = "Bases";
     public static final String LOCI = "SeqRegion";
     public static final String LOCUS_OFFSETS = "SeqRegionOffsets";
     public static final String SNP_IDS = "SnpIds";
