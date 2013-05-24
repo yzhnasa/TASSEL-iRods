@@ -5,6 +5,8 @@ package net.maizegenetics.gbs.pipeline;
 
 
 import java.awt.Frame;
+import java.io.File;
+import java.io.FilenameFilter;
 
 
 import java.util.ArrayList;
@@ -124,23 +126,16 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
      */
     public void runMinorWindowViterbiImputation(String donorFile, String unImpTargetFile, 
             String exportFile, int minMinorCnt, int minTestSites, int minSitesPresent, 
-            double maxHybridErrorRate, boolean imputeDonorFile, int hapSecs) {
+            double maxHybridErrorRate, boolean imputeDonorFile) {
         this.minTestSites=minTestSites;
         if(unImpTargetFile.contains(".h5")) {
             unimpAlign=BitAlignmentHDF5.getInstance(unImpTargetFile, false);
         } else {
             unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
         }
-    //    unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
         unimpAlign.optimizeForTaxa(null);
-        Alignment[] donorAlign=new Alignment[hapSecs];
-        for (int i = 0; i < donorAlign.length; i++) {
-            String donorFileSec=donorFile.replace("s+.", "s"+i+".");
-            donorAlign[i]=ImportUtils.readFromHapmap(donorFileSec, false, (ProgressListener)null);
-            donorAlign[i].optimizeForTaxa(null); 
-            System.out.printf("Donor taxa:%d sites:%d %n",donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
-            createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
-        }
+        Alignment[] donorAlign=loadDonors(donorFile);
+        
 
         siteErrors=new int[unimpAlign.getSiteCount()];
         siteCallCnt=new int[unimpAlign.getSiteCount()];
@@ -220,6 +215,23 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
         
+    }
+    
+     public Alignment[] loadDonors(String donorFileRoot){
+        File theDF=new File(donorFileRoot);
+        String prefilter=theDF.getName().split("s+")[0]+"s"; //grabs the left side of the file
+        ArrayList<File> d=new ArrayList<File>();
+        for (File file : theDF.getParentFile().listFiles()) {
+             if(file.getName().startsWith(prefilter)) {d.add(file);}
+         }
+        Alignment[] donorAlign=new Alignment[d.size()];
+        for (int i = 0; i < donorAlign.length; i++) {
+            donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), false, (ProgressListener)null);
+            donorAlign[i].optimizeForTaxa(null); 
+            System.out.printf("Donor taxa:%d sites:%d %n",donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
+            createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
+        }
+    	return donorAlign;
     }
 
     private boolean apply1or2Haplotypes(int taxon, Alignment donorAlign, int donorOffset, 
@@ -824,7 +836,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
            chrOutFile=chrOutFile.replace("c+", "c"+chr);
 
            runMinorWindowViterbiImputation(chrDonorFile, chrHmpFile, chrOutFile, 
-                   minMinorCnt, minTestSites, 100, maxHybridErrorRate, false, 10);
+                   minMinorCnt, minTestSites, 100, maxHybridErrorRate, false);
         }
         return null;
     }
@@ -857,7 +869,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
      //   String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr8.hmp.h5";
-        String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.h5";
+        String unImpTargetFile=rootOrig+"Samp82v26.chr+.hmp.h5";
         String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
         String impTargetFile=rootImp+"Tall26.c+.imp.hmp.txt.gz";
         
