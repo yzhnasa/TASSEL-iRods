@@ -25,6 +25,7 @@ import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.BitAlignmentHDF5;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.ProjectionAlignment;
@@ -32,6 +33,7 @@ import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.popgen.DonorHypoth;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
@@ -170,7 +172,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 System.out.println("Too much missing data");
                 continue;
             }
-            if(isOutputProjection) breakPoints=new TreeMap<Integer,int[]>();
+            if(isOutputProjection) {
+                breakPoints=new TreeMap<Integer,int[]>();
+                breakPoints.put(0, new int[]{-1,-1});
+            }
             int blocksSolved=0;
             int countFullLength=0;
             for (int da = 0; da < donorAlign.length; da++) {
@@ -202,16 +207,18 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 }
                 
             }
-            int unk=countUnknown(mna,taxon);
             System.out.printf("Viterbi:%d BlocksSolved:%d ", countFullLength, blocksSolved);
-            if(!isOutputProjection) System.out.printf("Unk:%d PropMissing:%g ", unk, (double)unk/(double)mna.getSiteCount());
+            if(!isOutputProjection) {
+                int unk=countUnknown(mna,taxon);
+                System.out.printf("Unk:%d PropMissing:%g ", unk, (double)unk/(double)mna.getSiteCount());
+            }
             double errRate=(double)taxonErrors[taxon]/(double)(taxonCallCnt[taxon]+taxonErrors[taxon]); 
             System.out.printf("ErR:%g ", errRate);
             double rate=(double)taxon/(double)(System.currentTimeMillis()-time);
             double remaining=(unimpAlign.getSequenceCount()-taxon)/(rate*1000);
             System.out.printf("TimeLeft:%.1fs %n", remaining);
             if(isOutputProjection) {
-                System.out.println(breakPoints.toString());
+               // System.out.println(breakPoints.toString());
                 ((ProjectionAlignment)mna).setCompositionOfTaxon(taxon, breakPoints);
             }
         }
@@ -226,7 +233,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //            System.out.printf("%d %d %d %g %g %n",i,siteCallCnt[i],siteErrors[i], 
 //                    (double)siteErrors[i]/(double)siteCallCnt[i], unimpAlign.getMinorAlleleFrequency(i));
 //        }
-        ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);
+        if(isOutputProjection) {
+           ((ProjectionAlignment)mna).save(exportFile);
+        } else {ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);}
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
         
     }
@@ -722,8 +731,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                     byte bD2=donorAlign.getBase(theDH[i].donor2Taxon, cs);
                     if(theDH[i].getPhaseForSite(cs)==2) {
                         donorEst=bD2;}
-                    else if((bD1!=Alignment.UNKNOWN_DIPLOID_ALLELE)&&(bD2!=Alignment.UNKNOWN_DIPLOID_ALLELE)) {
-                        donorEst=(byte)((bD1&highMask)|(bD2&lowMask));
+                    else {
+                        donorEst=AlignmentUtils.getDiploidValueForPotentialHets(bD1, bD2);
                     }
                 }
             }
@@ -763,13 +772,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         } else {
             prevDonors=breakPoints.lastEntry().getValue();
         }
-        int[] currDonors=prevDonors;
-        
+        int[] currDonors=prevDonors;       
         for(int cs=startSite; cs<=endSite; cs++) {
             byte donorEst=Alignment.UNKNOWN_DIPLOID_ALLELE; 
             for (int i = 0; (i < maxDonors) && (donorEst==Alignment.UNKNOWN_DIPLOID_ALLELE); i++) {
-                if((theDH[i]==null)||(theDH[i].donor1Taxon<0)) continue;
-                if(theDH[i].getErrorRate()>this.maximumInbredError) continue;
                 byte bD1=donorAlign.getBase(theDH[i].donor1Taxon, cs);
                 if(theDH[i].getPhaseForSite(cs)==0) {
                     donorEst=bD1;
@@ -781,8 +787,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                         donorEst=bD2;
                         currDonors=new int[]{theDH[0].donor2Taxon, theDH[0].donor2Taxon};
                     }
-                    else if((bD1!=Alignment.UNKNOWN_DIPLOID_ALLELE)&&(bD2!=Alignment.UNKNOWN_DIPLOID_ALLELE)) {
-                        donorEst=(byte)((bD1&highMask)|(bD2&lowMask));
+                    else {
+                        donorEst=AlignmentUtils.getDiploidValueForPotentialHets(bD1, bD2);
                         currDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor2Taxon};
                     }
                 }
@@ -797,28 +803,30 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                     taxonCallCnt[theDH[0].targetTaxon]++;
                 } else {
                     totalWrong++;
-  //                  System.out.printf("Known:%d donorEst: %d donorEst0:%d het:%s %n",knownBase,donorEst,donorEst0, AlignmentUtils.isHeterozygous(donorEst));
                     siteErrors[cs]++;
                     taxonErrors[theDH[0].targetTaxon]++;
                 }
             }
-            //TODO consider fixing the obvious errors.
             if(!Arrays.equals(prevDonors, currDonors)) {
                 breakPoints.put(donorAlign.getPositionInLocus(cs), currDonors);
-                System.out.printf("T:%d P:%d SD1:%d D2:%d %n", theDH[0].targetTaxon, donorAlign.getPositionInLocus(cs), currDonors[0], currDonors[1]);
                 prevDonors=currDonors;
             }
-            //if(knownBase==Alignment.UNKNOWN_DIPLOID_ALLELE) mna.setBase(theDH[0].targetTaxon, cs+donorOffset, donorEst);
         } //end of cs loop
+        //enter a stop of the DH at the beginning of the next block
+        int lastDApos=donorAlign.getPositionInLocus(endSite);
+        int nextSite=unimpAlign.getSiteOfPhysicalPosition(lastDApos, null)+1;
+        if(nextSite<unimpAlign.getSiteCount()) breakPoints.put(unimpAlign.getPositionInLocus(nextSite), new int[]{-1,-1});
         if (print) System.out.println("E:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
     }
     
-    private static void compareAlignment(String origFile, String maskFile, String impFile) {
+    private static void compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
         boolean taxaOut=false;
         Alignment oA=ImportUtils.readFromHapmap(origFile, false, (ProgressListener)null);
         System.out.printf("Orig taxa:%d sites:%d %n",oA.getSequenceCount(),oA.getSiteCount());        
-        Alignment mA=ImportUtils.readFromHapmap(maskFile, false, (ProgressListener)null);
-        System.out.printf("Mask taxa:%d sites:%d %n",mA.getSequenceCount(),mA.getSiteCount());
+        Alignment mA=null;
+        if(noMask==false) {mA=ImportUtils.readFromHapmap(maskFile, false, (ProgressListener)null);
+            System.out.printf("Mask taxa:%d sites:%d %n",mA.getSequenceCount(),mA.getSiteCount());
+        }
         Alignment iA=ImportUtils.readFromHapmap(impFile, false, (ProgressListener)null);
         System.out.printf("Imp taxa:%d sites:%d %n",iA.getSequenceCount(),iA.getSiteCount());
         int correct=0;
@@ -830,10 +838,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             int e=0,c=0,u=0,h=0;
             int oATaxa=oA.getIdGroup().whichIdNumber(iA.getFullTaxaName(t));
             for (int s = 0; s < iA.getSiteCount(); s++) {
-                if(oA.getBase(oATaxa, s)!=mA.getBase(t, s)) {
+                if(noMask||(oA.getBase(oATaxa, s)!=mA.getBase(t, s))) {
                     byte ib=iA.getBase(t, s);
                     byte ob=oA.getBase(oATaxa, s);
-                    if(ib==Alignment.UNKNOWN_DIPLOID_ALLELE) {unimp++; u++;}
+                    if((ib==Alignment.UNKNOWN_DIPLOID_ALLELE)||(ob==Alignment.UNKNOWN_DIPLOID_ALLELE)) {unimp++; u++;}
                     else if(ib==NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {gaps++;}
                     else if(ib==ob) {
                         correct++;
@@ -842,7 +850,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                         if(AlignmentUtils.isHeterozygous(ob)||AlignmentUtils.isHeterozygous(ib)) {hets++; h++;}
                         else {errors++; 
                             e++;
-                            System.out.printf("%d %d %s %s %n",t,s,oA.getBaseAsString(oATaxa, s), iA.getBaseAsString(t, s));
+//                            System.out.printf("%d %d %s %s %n",t,s,oA.getBaseAsString(oATaxa, s), iA.getBaseAsString(t, s));
                         }
                     }
                 }       
@@ -872,7 +880,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         engine.add("-hybNNOff", "--hybNNOff", false);
         engine.add("-mxDonH", "--mxDonH", true);
         engine.add("-mnTestSite", "--mnTestSite", true);
-        engine.add("-smpSkip", "--smpSkip", true);
+        engine.add("-projA", "--projAlign", false);
         engine.parse(args);
         hmpFile = engine.getString("-hmp");
         outFileBase = engine.getString("-o");
@@ -900,6 +908,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         if (engine.getBoolean("-mnTestSite")) {
             minTestSites = Integer.parseInt(engine.getString("-mnTestSite"));
         }
+        if (engine.getBoolean("-projA")) isOutputProjection=true;
     }
 
 
@@ -919,7 +928,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 + "-hybNNOff    Whether to use both the hybrid NN (default:"+hybridNN+")\n"
                 + "-mxDonH   Maximum number of donor hypotheses to be explored (default: "+maxDonorHypotheses+")\n"
                 + "-mnTestSite   Minimum number of sites to test for NN IBD (default:"+minTestSites+")\n"
- //               + "-impDonor   impute donor files (false)\n"
+                + "-projA   Create a projection alignment for high density markers (default off)\n"
                 );
     }
 
@@ -934,7 +943,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
            chrOutFile=chrOutFile.replace("c+", "c"+chr);
 
            runMinorWindowViterbiImputation(chrDonorFile, chrHmpFile, chrOutFile, 
-                   minMinorCnt, minTestSites, 100, maxHybridErrorRate, false, false);
+                   minMinorCnt, minTestSites, 100, maxHybridErrorRate, isOutputProjection, false);
         }
         return null;
     }
@@ -958,20 +967,21 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     public static void main(String[] args) {
         
-        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-//        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-//        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-//        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
+//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
      //   String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr8.hmp.h5";
-//       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
-        String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
-        String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
-//        String donorFile=rootHaplos+"HM26_Allk.c10s0.hmp.txt.gz";
-        String impTargetFile=rootImp+"Tall26.c+.imp.hmp.txt.gz";
+       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
+//       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
+//        String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
+        String donorFile=rootHaplos+"HM26_Allk.c10s0.hmp.txt.gz";
+//        String impTargetFile=rootImp+"Tall26.c+.imp.hmp.txt.gz";
+        String impTargetFile=rootImp+"Tall26.c+.imp.pa.txt.gz";
         
       
         String[] args2 = new String[]{
@@ -985,10 +995,15 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             "-mxHybErr","0.005",
             "-mnTestSite","50",
             "-mxDonH","10",
+//            "-projA",
         };
 
         MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
         plugin.setParameters(args2);
         plugin.performFunction(null);
+//        TasselPrefs.putAlignmentRetainRareAlleles(false);
+//        ProjectionAlignment pa=ProjectionAlignment.getInstance(rootImp+"Tall26.c10.imp.pa.txt.gz", donorFile);
+//        ExportUtils.writeToHapmap(pa, false, rootImp+"PostPATall26.c10.hmp.txt.gz", '\t', null);
+//        compareAlignment(unImpTargetFile, null, rootImp+"PostPATall26.c10.hmp.txt.gz", true);
     }
 }

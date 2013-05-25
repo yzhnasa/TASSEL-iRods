@@ -3,14 +3,19 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.OpenBitSet;
+import net.maizegenetics.util.ExceptionUtils;
+import net.maizegenetics.util.Utils;
 
 /**
  * This class projects high Density markers on large group of taxa through a
@@ -25,6 +30,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     private int[][][] myHDTaxa;  //taxa ids should be saved
     private int[][] myPosBreaks;  //positions should be saved
     private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
+    
 
     public ProjectionAlignment(Alignment hdAlign, IdGroup ldIDGroup) {
         super(ldIDGroup, hdAlign.getAlleleEncodings());
@@ -33,6 +39,115 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         myPosBreaks = new int[getSequenceCount()][];
         myHDTaxa = new int[getSequenceCount()][][];
     }
+    
+    public ProjectionAlignment(Alignment hdAlign, IdGroup ldIDGroup, int[][] myPosBreaks, 
+            int[][][] myHDTaxa) {
+        super(ldIDGroup, hdAlign.getAlleleEncodings());
+        myBaseAlignment = AlignmentUtils.optimizeForSites(hdAlign);
+        this.myPosBreaks = myPosBreaks;
+        this.myHDTaxa = myHDTaxa;
+        mySiteBreaks = new int[getSequenceCount()][];
+        myNumSites=myBaseAlignment.getSiteCount();
+        for (int taxon = 0; taxon < myHDTaxa.length; taxon++) {
+            mySiteBreaks[taxon] = new int[myPosBreaks[taxon].length];
+            for (int i = 0; i < myPosBreaks[taxon].length; i++) {
+                int site = myBaseAlignment.getSiteOfPhysicalPosition(myPosBreaks[taxon][i], null);
+                if (site < 0) {
+                    site = -(site + 1);
+                }
+                this.mySiteBreaks[taxon][i] = site;
+            }   
+        }
+        
+//        for (int i = 0; i < this.myNumSites; i++) {
+//            int[] t=translateTaxon(0, i);
+//            System.out.printf("T1Map: %d %d %d %d %d %s%n", i, getPositionInLocus(i), t[0],t[1], getBase(0,i),getBaseAsString(0, i));           
+//        }
+    }
+    
+    public static ProjectionAlignment getInstance(String paFile, String baseHighDensityAlignmentFile) {
+        return getInstance(paFile, ImportUtils.readFromHapmap(baseHighDensityAlignmentFile, null));
+    } 
+    
+    
+    public static ProjectionAlignment getInstance(String paFile, Alignment baseHighDensityAlignment) {
+        BufferedReader br = null;
+        String s;
+        try {
+            br = Utils.getBufferedReader(paFile);
+            String[] sl=Utils.readLineSkipComments(br).split("\t");
+            int baseTaxaCnt=Integer.parseInt(sl[0]);
+            if(baseTaxaCnt!=baseHighDensityAlignment.getSequenceCount()) {
+                System.err.println("Error in number of base taxa"); return null;
+            }
+            int taxaCnt=Integer.parseInt(sl[1]);
+            IdGroup aIDG=new SimpleIdGroup(taxaCnt);
+            for (int i = 0; i < baseTaxaCnt; i++) {
+                sl=Utils.readLineSkipComments(br).split("\t");
+                //change to hash map 
+                int index=Integer.parseInt(sl[0]);
+                if(!baseHighDensityAlignment.getFullTaxaName(index).equals(sl[1])) {
+                    System.err.println("Names or order does not agree with base taxa"); return null;
+                }
+            }
+            int[][] myPosBreaks = new int[taxaCnt][];
+            int[][][] myHDTaxa = new int[taxaCnt][][];
+            for (int i = 0; i < taxaCnt; i++) {
+                sl=Utils.readLineSkipComments(br).split("\t");
+                aIDG.setIdentifier(i, new Identifier(sl[0]));
+                myPosBreaks[i]=new int[sl.length-1];
+                myHDTaxa[i]=new int[sl.length-1][2];
+                for (int bp = 0; bp < myHDTaxa[i].length; bp++) {
+                    String[] bptext=sl[bp+1].split(":");
+                    myPosBreaks[i][bp]=Integer.parseInt(bptext[0]);
+                    myHDTaxa[i][bp][0]=Integer.parseInt(bptext[1]);
+                    myHDTaxa[i][bp][1]=Integer.parseInt(bptext[2]);
+                }
+            }
+            return (new ProjectionAlignment(baseHighDensityAlignment, aIDG, myPosBreaks, myHDTaxa));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Error reading Projection file: " + paFile + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {br.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } 
+        //return null;
+    }
+    
+    public void save(String outfile) {
+        BufferedWriter bw = null;
+        try {
+            String fullFileName = Utils.addSuffixIfNeeded(outfile, ".pa.txt.gz", new String[]{".pa.txt", ".pa.txt.gz"});
+            bw = Utils.getBufferedWriter(fullFileName);
+            bw.write(myBaseAlignment.getSequenceCount()+"\t"+getSequenceCount()+"\n");
+            bw.write("#Donor Haplotypes\n");
+            for (int i = 0; i < myBaseAlignment.getSequenceCount(); i++) {
+                bw.write(i+"\t"+myBaseAlignment.getFullTaxaName(i)+"\n");
+            }
+            bw.write("#Taxa Breakpoints\n");
+            bw.write("#Block are defined position:donor1:donor2 (-1 means no hypothesis)\n");
+            for (int i = 0; i < getSequenceCount(); i++) {
+                bw.write(getFullTaxaName(i)+"\t");
+                for (int p = 0; p < myPosBreaks[i].length; p++) {
+                    bw.write(myPosBreaks[i][p]+":"+myHDTaxa[i][p][0]+":"+myHDTaxa[i][p][1]+"\t");
+                }
+                bw.write("\n");
+            }   
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Error writing Projection file: " + outfile + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {bw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } 
+    }
+    
+
 
     public void setCompositionOfTaxon(int taxon, int[] posBreaks, int[][] hdTaxa) {
         if (posBreaks.length != hdTaxa.length) {
@@ -51,6 +166,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     }
     
     public void setCompositionOfTaxon(int taxon, TreeMap<Integer,int[]> breakPoints) {
+        breakPoints=removeBreakPointReduncdancy(breakPoints);
         int breaks=breakPoints.size();
         myPosBreaks[taxon]=new int[breaks];
         myHDTaxa[taxon] = new int[breaks][2];
@@ -63,12 +179,25 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
             if (site < 0) {
                 site = -(site + 1);
             }
-            this.mySiteBreaks[taxon][cnt] = site;    
+            this.mySiteBreaks[taxon][cnt] = site;
+            cnt++;
         }
     }
     
+    private TreeMap<Integer,int[]> removeBreakPointReduncdancy(TreeMap<Integer,int[]> breakPoints) {
+        int[] lastP=new int[]{-2,-2};
+        ArrayList<Integer> posToRemove=new ArrayList<Integer>();
+        for (Map.Entry<Integer,int[]> bp : breakPoints.entrySet()) {
+            if(Arrays.equals(lastP,bp.getValue())) {
+                  posToRemove.add(bp.getKey());
+            } else {
+                lastP=bp.getValue();
+            }
+        }
+        for (Integer pos : posToRemove) {breakPoints.remove(pos);}
+        return breakPoints;
+    }
     
-
     public void setCompositionOfTaxon(String taxa, int[] posBreaks, int[][] hdTaxa) {
         int taxon = getIdGroup().whichIdNumber(taxa);
         System.out.printf("SetComp %s %d %n", taxa, taxon);
@@ -103,12 +232,13 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         if (b < 0) {
             b = -(b + 2);  //this will not work if it does not start with zero.
         }
+        if(b==-1) b=0;
         //       if(myHDTaxa[taxon]==null) return 0;//this should be a missing taxon.
         return myHDTaxa[taxon][b];
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
+    public String getBaseAsString(int taxon, int site) { 
         return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
     }
 
@@ -126,7 +256,12 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
      */
     public byte getBase(int taxon, int site) {
         int[] t = translateTaxon(taxon, site);
-        return AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(t[0], site), myBaseAlignment.getBase(t[1], site));
+        if(t[0]<0) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        byte b0, b1;
+        b0=myBaseAlignment.getBase(t[0], site);
+        if(t[0]==t[1]) {b1=b0;}
+        else {b1=myBaseAlignment.getBase(t[1], site);}
+        return AlignmentUtils.getDiploidValueForPotentialHets(b0, b1);
     }
 
     @Override
@@ -139,37 +274,27 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         return false;
     }
 
-    @Override
-    public byte[] getBaseArray(int taxon, int site) {
-        int[] t=translateTaxon(taxon, site);
-        byte[] result=new byte[2];
-        result[0]=myBaseAlignment.getBase(t[0], site);
-        result[1]=myBaseAlignment.getBase(t[1], site);
-        return result;
-    }
-
-
-    @Override
-    public byte[] getBaseRow(int taxon) {
-
-        int numBreaks = mySiteBreaks[taxon].length;
-        byte[] result = new byte[myNumSites];
-        for (int i = 0; i < numBreaks - 1; i++) {
-            int[] hdTaxon = myHDTaxa[taxon][i];
-            for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
-               // result[j] = myBaseAlignment.getBase(hdTaxon, j);
-                result[j]=AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(hdTaxon[0], j), myBaseAlignment.getBase(hdTaxon[1], j));
-            }
-        }
-
-        int[] hdTaxon = myHDTaxa[taxon][numBreaks - 1];
-        for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
- //           result[j] = myBaseAlignment.getBase(hdTaxon, j);
-            result[j]=AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(hdTaxon[0], j), myBaseAlignment.getBase(hdTaxon[1], j));
-        }
-
-        return result;
-    }
+//    @Override
+//    public byte[] getBaseRow(int taxon) {
+//
+//        int numBreaks = mySiteBreaks[taxon].length;
+//        byte[] result = new byte[myNumSites];
+//        for (int i = 0; i < numBreaks - 1; i++) {
+//            int[] hdTaxon = myHDTaxa[taxon][i];
+//            for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
+//               // result[j] = myBaseAlignment.getBase(hdTaxon, j);
+//                result[j]=AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(hdTaxon[0], j), myBaseAlignment.getBase(hdTaxon[1], j));
+//            }
+//        }
+//
+//        int[] hdTaxon = myHDTaxa[taxon][numBreaks - 1];
+//        for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
+// //           result[j] = myBaseAlignment.getBase(hdTaxon, j);
+//            result[j]=AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(hdTaxon[0], j), myBaseAlignment.getBase(hdTaxon[1], j));
+//        }
+//
+//        return result;
+//    }
 
     @Override
     // TERRY - This Could be Optimized like getBaseRow()
@@ -503,81 +628,81 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         return result;
     }
 
-    @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
-
-        int maxNumAlleles = myBaseAlignment.getMaxNumAlleles();
-        int numDataRows = myBaseAlignment.getTotalNumAlleles();
-        BitSet[] data = new BitSet[numDataRows];
-        for (int i = 0; i < numDataRows; i++) {
-            data[i] = getAllelePresenceForAllTaxa(site, i);
-        }
-        byte[] alleles = myBaseAlignment.getAlleles(site);
-
-        int[] counts = new int[16];
-        for (int i = 0; i < numDataRows; i++) {
-            byte indexI;
-            if ((retainsRareAlleles()) && (i == maxNumAlleles)) {
-                indexI = Alignment.RARE_ALLELE;
-            } else {
-                indexI = alleles[i];
-            }
-            counts[indexI] += (int) data[i].cardinality() * 2;
-            for (int j = i + 1; j < numDataRows; j++) {
-                byte indexJ;
-                if ((retainsRareAlleles()) && (j == maxNumAlleles)) {
-                    indexJ = Alignment.RARE_ALLELE;
-                } else {
-                    indexJ = alleles[j];
-                }
-                int ijHet = (int) OpenBitSet.intersectionCount(data[i], data[j]);
-                counts[indexI] -= ijHet;
-                counts[indexJ] -= ijHet;
-            }
-        }
-
-        int numAlleles = 0;
-        for (byte x = 0; x < Alignment.UNKNOWN_ALLELE; x++) {
-            if (counts[x] != 0) {
-                numAlleles++;
-            }
-        }
-
-        int current = 0;
-        int[][] result = new int[2][numAlleles];
-        for (byte x = 0; x < Alignment.UNKNOWN_ALLELE; x++) {
-            if (counts[x] != 0) {
-                result[0][current] = x;
-                result[1][current++] = counts[x];
-            }
-        }
-
-        boolean change = true;
-        while (change) {
-
-            change = false;
-
-            for (int k = 0; k < numAlleles - 1; k++) {
-
-                if (result[1][k] < result[1][k + 1]) {
-
-                    int temp = result[0][k];
-                    result[0][k] = result[0][k + 1];
-                    result[0][k + 1] = temp;
-
-                    int tempCount = result[1][k];
-                    result[1][k] = result[1][k + 1];
-                    result[1][k + 1] = tempCount;
-
-                    change = true;
-                }
-            }
-
-        }
-
-        return result;
-
-    }
+//    @Override
+//    public int[][] getAllelesSortedByFrequency(int site) {
+//
+//        int maxNumAlleles = myBaseAlignment.getMaxNumAlleles();
+//        int numDataRows = myBaseAlignment.getTotalNumAlleles();
+//        BitSet[] data = new BitSet[numDataRows];
+//        for (int i = 0; i < numDataRows; i++) {
+//            data[i] = getAllelePresenceForAllTaxa(site, i);
+//        }
+//        byte[] alleles = myBaseAlignment.getAlleles(site);
+//
+//        int[] counts = new int[16];
+//        for (int i = 0; i < numDataRows; i++) {
+//            byte indexI;
+//            if ((retainsRareAlleles()) && (i == maxNumAlleles)) {
+//                indexI = Alignment.RARE_ALLELE;
+//            } else {
+//                indexI = alleles[i];
+//            }
+//            counts[indexI] += (int) data[i].cardinality() * 2;
+//            for (int j = i + 1; j < numDataRows; j++) {
+//                byte indexJ;
+//                if ((retainsRareAlleles()) && (j == maxNumAlleles)) {
+//                    indexJ = Alignment.RARE_ALLELE;
+//                } else {
+//                    indexJ = alleles[j];
+//                }
+//                int ijHet = (int) OpenBitSet.intersectionCount(data[i], data[j]);
+//                counts[indexI] -= ijHet;
+//                counts[indexJ] -= ijHet;
+//            }
+//        }
+//
+//        int numAlleles = 0;
+//        for (byte x = 0; x < Alignment.UNKNOWN_ALLELE; x++) {
+//            if (counts[x] != 0) {
+//                numAlleles++;
+//            }
+//        }
+//
+//        int current = 0;
+//        int[][] result = new int[2][numAlleles];
+//        for (byte x = 0; x < Alignment.UNKNOWN_ALLELE; x++) {
+//            if (counts[x] != 0) {
+//                result[0][current] = x;
+//                result[1][current++] = counts[x];
+//            }
+//        }
+//
+//        boolean change = true;
+//        while (change) {
+//
+//            change = false;
+//
+//            for (int k = 0; k < numAlleles - 1; k++) {
+//
+//                if (result[1][k] < result[1][k + 1]) {
+//
+//                    int temp = result[0][k];
+//                    result[0][k] = result[0][k + 1];
+//                    result[0][k + 1] = temp;
+//
+//                    int tempCount = result[1][k];
+//                    result[1][k] = result[1][k + 1];
+//                    result[1][k + 1] = tempCount;
+//
+//                    change = true;
+//                }
+//            }
+//
+//        }
+//
+//        return result;
+//
+//    }
 
     @Override
     public int getTotalNumAlleles() {
