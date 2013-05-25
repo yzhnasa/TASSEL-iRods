@@ -25,8 +25,8 @@ public class JeffPipelines {
 //        getChrsFromTOPM();
 //        runTOPMSummaryPlugin();
 //        convertTOPMtoHDF5();
-        runRawReadsToHapMapPlugin();
-//        runSeqToGenosPlugin();
+//        runRawReadsToHapMapPlugin();
+        runSeqToGenosPlugin();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -270,7 +270,7 @@ public class JeffPipelines {
         String baseDir = "/Users/jcg233/Documents/GBS/";
         String[] MDPLowVolArgs = new String[]{
             "-i", "/Users/jcg233/largeFiles/fastq/",
-            "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_key.txt",
+            "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_2reps_key.txt",
             "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm",
             "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos",
             "-e", "ApeKI",
