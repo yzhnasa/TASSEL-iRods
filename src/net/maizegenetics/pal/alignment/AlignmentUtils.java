@@ -583,6 +583,25 @@ public class AlignmentUtils {
     public static byte getDiploidValue(byte a, byte b) {
         return (byte) ((a << 4) | b);
     }
+    
+    /**
+     * Combines two allele values into one diploid value.  Returns unknown if either 
+     * parent is heterozygous, or alleles are swapped.
+     * @param a allele 1
+     * @param b allele 2
+     * @return diploid value
+     */
+    public static byte getDiploidValueForPotentialHets(byte a, byte b) {
+        if(isHeterozygous(a)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if(isHeterozygous(b)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if(b==a) return a;
+        byte h1=getDiploidValue(a,b);
+        byte h2=getDiploidValue(b,a);
+        if(h1==h2) return h1;
+        return Alignment.UNKNOWN_DIPLOID_ALLELE;
+    }
+    
+    
 
     /**
      * Separates diploid allele value into it's two values.
