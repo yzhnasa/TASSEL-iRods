@@ -23,6 +23,7 @@ import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.swing.ImageIcon;
@@ -30,6 +31,7 @@ import net.maizegenetics.gbs.maps.TOPMInterface;
 import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.MutableVCFAlignment;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import org.apache.log4j.Logger;
@@ -63,11 +65,13 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private int maxDivergence = 0;
     private int[] chromosomes = null;
     private boolean fastq = true;
-    private IdGroup taxaIDGroup = null;
     private HashMap<String,Integer> KeyFileColumns = new HashMap<String,Integer>();
     private TreeMap<String,Boolean> FlowcellLanes = new TreeMap<String,Boolean>();  // true = corresponding fastq (or qseq) file is present in input directory
-    private TreeMap<String,Integer> FullNameToLibPrepID = new TreeMap<String,Integer>();
-    private TreeMap<Integer,ArrayList<String>> LibraryPrepIDToFullNames = new TreeMap<Integer,ArrayList<String>>();
+    private TreeMap<String,String> FullNameToFinalName = new TreeMap<String,String>();
+    private TreeMap<String,ArrayList<String>> LibraryPrepIDToFlowCellLanes = new TreeMap<String,ArrayList<String>>();
+    private TreeMap<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
+    private HashMap<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
+    MutableVCFAlignment[] genos = null;
 
     public SeqToGenosPlugin() {
         super(null, false);
@@ -118,9 +122,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 throw new IllegalArgumentException(noMatchingRawSeqFileNamesMessage + tempDirectory);
             } else {
                 Arrays.sort(myRawSeqFileNames);
-                myLogger.info("RawReadsToHapMapPlugin: setParameters: /n/nThe following GBS raw sequence data files were found in the input folder (and sub-folders):");
+                myLogger.info("RawReadsToHapMapPlugin: setParameters: \n\nThe following GBS raw sequence data files were found in the input folder (and sub-folders):");
                 for (String filename : myRawSeqFileNames) {
-                    myLogger.info(filename);
+                    System.out.println("   "+filename);
                 }
                 System.out.println("\n");
             }
@@ -175,6 +179,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
         readKeyFile();
         matchKeyFileToAvailableRawSeqFiles();
+        setUpMutableNucleotideAlignmentsWithDepth();
         translateRawReadsToHapmap();
         return null;
     }
@@ -187,7 +192,6 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 System.out.println("No barcodes found. Skipping this flowcell lane.");
                 continue;
             }
-            MutableNucleotideAlignment[] outMSA = setUpMutableNucleotideAlignments(thePBR);
             myLogger.info("Looking for known SNPs in sequence reads...");
             String temp = "Nothing has been read from the raw sequence file yet";
             BufferedReader br = getBufferedReaderForRawSeqFile(fileNum);
@@ -210,7 +214,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                             continue;
                         }
                         counters[2]++;  // goodMatched++;
-                        recordVariantsFromTag(outMSA, tagIndex, taxaIDGroup.whichIdNumber(rr.getTaxonName()));
+                        int taxonIndex = FinalNameToTaxonIndex.get(FullNameToFinalName.get(rr.getTaxonName()));
+                        recordVariantsFromTag(tagIndex, taxonIndex);
                     }
                 }
                 br.close();
@@ -219,14 +224,15 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 System.out.println("Last line read: "+temp);
                 e.printStackTrace();
             }
-            writeHapMapFiles(outMSA, fileNum, counters);
+            writeHapMapFiles(genos, fileNum, counters);
         }
     }
     
     private void readKeyFile() {
         FlowcellLanes.clear();
-        FullNameToLibPrepID.clear();
-        LibraryPrepIDToFullNames.clear();
+        FullNameToFinalName.clear();
+        LibraryPrepIDToFlowCellLanes.clear();
+        LibraryPrepIDToSampleName.clear();
         String inputLine = "Nothing has been read from the keyfile yet";
         try {
             BufferedReader br = new BufferedReader(new FileReader(myKeyFile), 65536);
@@ -310,31 +316,44 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private void populateKeyFileFields(String keyFileLine) {
         keyFileLine.trim();
         String[] cells = keyFileLine.split("\\t");
-
-        String flowcellLane = cells[KeyFileColumns.get("Flowcell")]+":"+cells[KeyFileColumns.get("Lane")];  // is .intValue() needed?
-        FlowcellLanes.put(flowcellLane, false);
  
-        int libPrepID = KeyFileColumns.get("LibPrepID");
-        String fullName = cells[KeyFileColumns.get("Sample")]+":"+cells[KeyFileColumns.get("Flowcell")]
-                +":"+cells[KeyFileColumns.get("Lane")]+":"+libPrepID;
-        FullNameToLibPrepID.put(fullName, libPrepID);
+        String sample = cells[KeyFileColumns.get("Sample")];
+        String libPrepID = cells[KeyFileColumns.get("LibPrepID")];
+        String fullName=sample+":"+cells[KeyFileColumns.get("Flowcell")]+":"+cells[KeyFileColumns.get("Lane")]+":"+libPrepID;
+        FullNameToFinalName.put(fullName, fullName);
 
-        ArrayList<String> replicateSamples = LibraryPrepIDToFullNames.get(libPrepID);
-        if (replicateSamples == null) {
-            LibraryPrepIDToFullNames.put(libPrepID, replicateSamples = new ArrayList<String>());
+        String flowCellLane = cells[KeyFileColumns.get("Flowcell")]+":"+cells[KeyFileColumns.get("Lane")];
+        FlowcellLanes.put(flowCellLane, false);
+        ArrayList<String> flowcellLanesForLibPrep = LibraryPrepIDToFlowCellLanes.get(libPrepID);
+        if (flowcellLanesForLibPrep == null) {
+            LibraryPrepIDToFlowCellLanes.put(libPrepID, flowcellLanesForLibPrep = new ArrayList<String>());
         }
-        replicateSamples.add(fullName);
+        flowcellLanesForLibPrep.add(flowCellLane);
+
+        String prevSample = LibraryPrepIDToSampleName.get(libPrepID);
+        if (prevSample == null) {
+            LibraryPrepIDToSampleName.put(libPrepID, sample);
+        } else if (!prevSample.contentEquals(sample)) {
+            try {
+                throw new IllegalStateException("\nThe key file contains different Sample names (\""+prevSample+"\" and \""+sample+"\") for the sample LibraryPrepID ("+libPrepID+")\n\n");
+            } catch (Exception e) {
+                System.out.println("Error in key file: " + e);
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
     }
     
     private void matchKeyFileToAvailableRawSeqFiles() {
-        myLogger.info("\nThe following raw sequence files in the input directory conform to our file naming conventions and have corresponding samples in the key file:");
+        myLogger.info("\nThe following raw sequence files in the input directory conform to one of our file naming conventions and have corresponding samples in the key file:");
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             String[] flowcellLane = parseRawSeqFileName(myRawSeqFileNames[fileNum]);
             if (flowcellLane != null && FlowcellLanes.containsKey(flowcellLane[0]+":"+flowcellLane[1])) {
-                FlowcellLanes.put(flowcellLane[0]+":"+flowcellLane[1], true);
+                FlowcellLanes.put(flowcellLane[0]+":"+flowcellLane[1], true);  // change from false to true
                 System.out.println("  "+myRawSeqFileNames[fileNum]);
             }
         }
+        System.out.println("\n");
     }
 
     private ParseBarcodeRead setUpBarcodes(int fileNum) {
@@ -379,28 +398,77 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
     }
 
-    private MutableNucleotideAlignment[] setUpMutableNucleotideAlignments(ParseBarcodeRead thePBR) {
+    private MutableNucleotideAlignment[] setUpMutableNucleotideAlignmentsWithDepth() {
+        String[] finalSampleNames = getFinalSampleNames();
         myLogger.info("\nCounting sites in TOPM file.");
-        ArrayList<int[]> uniquePositions = getUniquePositions();  // need this method in TOPMInterface
-        myLogger.info("Creating alignment objects to hold the genotypic data (one per chromosome in the TOPM).");
-        MutableNucleotideAlignment[] outMSA = new MutableNucleotideAlignment[chromosomes.length];
-        for (int i = 0; i < outMSA.length; i++) {
-            outMSA[i] = MutableNucleotideAlignment.getInstance(new SimpleIdGroup(thePBR.getTaxaNames()), uniquePositions.get(i).length);
+        ArrayList<int[]> uniquePositions = getUniquePositions();
+        myLogger.info("\nCreating alignment objects to hold the genotypic data (one per chromosome in the TOPM).");
+        genos = new MutableVCFAlignment[chromosomes.length];
+        for (int i = 0; i < genos.length; i++) {
+            genos[i] = MutableVCFAlignment.getInstance(new SimpleIdGroup(finalSampleNames), uniquePositions.get(i).length);
         }
-        taxaIDGroup = outMSA[0].getIdGroup();
-        myLogger.info("Adding sites from the TOPM file to the alignment objects.");
-        for (int i = 0; i < outMSA.length; i++) {
+        generateQuickTaxaLookup(finalSampleNames);
+        myLogger.info("   Adding sites from the TOPM file to the alignment objects.");
+        for (int i = 0; i < genos.length; i++) {
             int currSite = 0;
             for (int j = 0; j < uniquePositions.get(i).length; j++) {
                 String chromosome = Integer.toString(chromosomes[i]);
-                outMSA[i].addSite(currSite);
-                outMSA[i].setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
-                outMSA[i].setPositionOfSite(currSite, uniquePositions.get(i)[j]);
+                genos[i].addSite(currSite);
+                genos[i].setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
+                genos[i].setPositionOfSite(currSite, uniquePositions.get(i)[j]);
                 currSite++;
             }
-            outMSA[i].clean();
+            genos[i].clean();
         }
-        return outMSA;
+        return genos;
+    }
+    
+    private void generateQuickTaxaLookup(String[] finalSampleNames) {
+        for (int taxonIndex=0; taxonIndex<finalSampleNames.length; taxonIndex++) {
+            FinalNameToTaxonIndex.put(finalSampleNames[taxonIndex], taxonIndex);
+        }
+    }
+    
+    private String[] getFinalSampleNames() {
+        TreeSet<String> finalSampleNamesTS = new TreeSet<String>(); // this will keep the names sorted
+        TreeSet<String> samplesInKeyFileWithNoRawSeqFile = new TreeSet<String>();
+        for (String LibPrepID : LibraryPrepIDToSampleName.keySet()) {
+            String sample = LibraryPrepIDToSampleName.get(LibPrepID);
+            ArrayList<String> flowcellLanesForLibPrep = LibraryPrepIDToFlowCellLanes.get(LibPrepID);
+            String tempFullName="(NoCorrespondingRawSeqFileForLibPrepID):"+LibPrepID;
+            int nRepSamplesWithRawSeqFile = 0;
+            for (String flowcellLane : flowcellLanesForLibPrep) {
+                if (FlowcellLanes.get(flowcellLane)) { // is fastq (or qseq) file available?
+                    nRepSamplesWithRawSeqFile++;
+                    tempFullName = sample+":"+flowcellLane+":"+LibPrepID;
+                } else {
+                    samplesInKeyFileWithNoRawSeqFile.add(sample+":"+flowcellLane+":"+LibPrepID);
+                }
+            }
+            if (nRepSamplesWithRawSeqFile == 1) {
+                finalSampleNamesTS.add(tempFullName);
+            } else if (nRepSamplesWithRawSeqFile > 1) {
+                String finalName = sample+":MRG:"+nRepSamplesWithRawSeqFile+":"+LibPrepID;
+                finalSampleNamesTS.add(finalName);
+                for (String flowcellLane : flowcellLanesForLibPrep) {
+                    if (FlowcellLanes.get(flowcellLane)) {
+                        FullNameToFinalName.put(sample+":"+flowcellLane+":"+LibPrepID, finalName);
+                    }
+                }
+            }
+            if (samplesInKeyFileWithNoRawSeqFile.size() > 0) {
+                reportOnMissingSamples(samplesInKeyFileWithNoRawSeqFile);
+            }
+        }
+        return finalSampleNamesTS.toArray(new String[0]);
+    }
+    
+    private void reportOnMissingSamples(TreeSet<String> samplesInKeyFileWithNoRawSeqFile) {
+        myLogger.info("The follow samples in the key file will be absent from the results because there is no corresponding raw sequence (fastq or qseq) file in the input directory:");
+        for (String missingSample : samplesInKeyFileWithNoRawSeqFile) {
+            System.out.println("   "+missingSample);
+        }
+        System.out.println("\n");
     }
 
     private ArrayList<int[]> getUniquePositions() {
@@ -475,7 +543,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         return tagIndex;
     }
 
-    private void recordVariantsFromTag(MutableNucleotideAlignment[] outMSA, int tagIndex, int taxonIndex) {
+    private void recordVariantsFromTag(int tagIndex, int taxonIndex) {
         int chromosome = topm.getChromosome(tagIndex);
         if (chromosome == TOPMInterface.INT_MISSING) {
             return;
@@ -496,16 +564,16 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             }
             int offset = topm.getVariantPosOff(tagIndex, variant);
             int pos = startPos + offset;
-            int currSite = outMSA[chrIndex].getSiteOfPhysicalPosition(pos, locus);
+            int currSite = genos[chrIndex].getSiteOfPhysicalPosition(pos, locus);
             if (currSite < 0) {
                 continue;
             }
             byte newGeno = AlignmentUtils.getDiploidValue(newBase, newBase);
-            byte prevGeno = outMSA[chrIndex].getBase(taxonIndex, currSite);
+            byte prevGeno = genos[chrIndex].getBase(taxonIndex, currSite);
             if (prevGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                outMSA[chrIndex].setBase(taxonIndex, currSite, newGeno);
+                genos[chrIndex].setBase(taxonIndex, currSite, newGeno);
             } else if (newGeno != prevGeno) {
-                outMSA[chrIndex].setBase(taxonIndex, currSite, resolveGenoFromCallPair(prevGeno, newBase));
+                genos[chrIndex].setBase(taxonIndex, currSite, resolveGenoFromCallPair(prevGeno, newBase));
             }
         }
     }
