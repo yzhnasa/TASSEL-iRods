@@ -18,6 +18,7 @@ import net.maizegenetics.util.ProgressListener;
 public class AlignmentUtils {
 
     private static final Integer ONE = Integer.valueOf(1);
+    private static final byte HIGHMASK=(byte)0x0F;
 
     private AlignmentUtils() {
         // utility class
@@ -573,7 +574,19 @@ public class AlignmentUtils {
     }
 
     /**
-     * Combines two allele values into one diploid value.
+     * Combines two allele values into one diploid value.  Assumed phased.
+     *
+     * @param a allele 1
+     * @param b allele 2
+     *
+     * @return diploid value
+     */
+    public static byte getDiploidValuePhased(byte a, byte b) {
+        return (byte) ((a<<4) | (HIGHMASK&b));
+    }
+    
+        /**
+     * Combines two allele values into one diploid value.  Assumed phased.
      *
      * @param a allele 1
      * @param b allele 2
@@ -581,24 +594,42 @@ public class AlignmentUtils {
      * @return diploid value
      */
     public static byte getDiploidValue(byte a, byte b) {
-        return (byte) ((a << 4) | b);
+        return getDiploidValuePhased(a, b);
+    }
+    
+    
+    
+        /**
+     * Combines two allele values into one diploid value. In alphabetical order
+     *
+     * @param a allele 1
+     * @param b allele 2
+     *
+     * @return diploid value sorted by order A < C < G < T
+     */
+    public static byte getUnphasedDiploidValue(byte a, byte b) {
+        a=(byte)(HIGHMASK&a);
+        b=(byte)(HIGHMASK&b);
+        if(a<b) return (byte) ((a << 4) | b);
+        return (byte) ((b << 4) | a);
     }
     
     /**
-     * Combines two allele values into one diploid value.  Returns unknown if either 
+     * Combines two genotype values into one diploid value.  Returns unknown if either 
      * parent is heterozygous, or alleles are swapped.
-     * @param a allele 1
-     * @param b allele 2
+     * @param g1 genotype 1
+     * @param g2 genotype 2
      * @return diploid value
      */
-    public static byte getDiploidValueForPotentialHets(byte a, byte b) {
-        if(isHeterozygous(a)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        if(isHeterozygous(b)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        if(b==a) return a;
-        byte h1=getDiploidValue(a,b);
-        byte h2=getDiploidValue(b,a);
-        if(h1==h2) return h1;
-        return Alignment.UNKNOWN_DIPLOID_ALLELE;
+    public static byte getUnphasedDiploidValueNoHets(byte g1, byte g2) {
+        if(isHeterozygous(g1)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if(isHeterozygous(g2)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if(g2==g1) return g1;
+        return getUnphasedDiploidValue(g1,g2);
+//        byte h1=getUnphasedDiploidValue(a,b);
+//        byte h2=getUnphasedDiploidValue(b,a);
+//        if(h1==h2) return h1;
+//        return Alignment.UNKNOWN_DIPLOID_ALLELE;
     }
     
     

@@ -291,9 +291,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         for (int s = startSite; s <= endSite; s++) {
             byte mjAllele = a.getMajorAllele(s);
             byte mnAllele = a.getMinorAllele(s);
-            byte mj=AlignmentUtils.getDiploidValue(mjAllele,mjAllele);
-            byte mn=AlignmentUtils.getDiploidValue(mnAllele,mnAllele);
-            byte het = AlignmentUtils.getDiploidValue(mjAllele, mnAllele);
+            byte mj=AlignmentUtils.getUnphasedDiploidValue(mjAllele,mjAllele);
+            byte mn=AlignmentUtils.getUnphasedDiploidValue(mnAllele,mnAllele);
+            byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
             int mjCnt=0, mnCnt=0;
             for (int t = 0; t < taxaIndex.length; t++) {
                 byte ob = a.getBase(taxaIndex[t], s);
@@ -304,7 +304,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                     mjCnt++;
                 } else if (ob == mn) {
                     mnCnt++;
-                } else if (ob == het) {
+                } else if (AlignmentUtils.isEqual(ob, het)) {
                     mjCnt++;
                     mnCnt++;
                 }
@@ -464,8 +464,10 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
      */
     public static void main(String[] args) {
        // String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/impOrig/";
-        String root="/Volumes/LaCie/build20120701/IMP26/orig/";
-        String rootOut="/Volumes/LaCie/build20120701/IMP26/haplos/";
+        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+        String rootOut="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+//        String root="/Volumes/LaCie/build20120701/IMP26/orig/";
+//        String rootOut="/Volumes/LaCie/build20120701/IMP26/haplos/";
 
         
         String infileH5=root+"AllZeaGBS_v2.6.chr+.hmp.h5";

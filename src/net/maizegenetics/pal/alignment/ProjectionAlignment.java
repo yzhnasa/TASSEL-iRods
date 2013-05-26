@@ -49,6 +49,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         mySiteBreaks = new int[getSequenceCount()][];
         myNumSites=myBaseAlignment.getSiteCount();
         for (int taxon = 0; taxon < myHDTaxa.length; taxon++) {
+            if(myHDTaxa[taxon]==null) continue;
             mySiteBreaks[taxon] = new int[myPosBreaks[taxon].length];
             for (int i = 0; i < myPosBreaks[taxon].length; i++) {
                 int site = myBaseAlignment.getSiteOfPhysicalPosition(myPosBreaks[taxon][i], null);
@@ -95,6 +96,8 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
             for (int i = 0; i < taxaCnt; i++) {
                 sl=Utils.readLineSkipComments(br).split("\t");
                 aIDG.setIdentifier(i, new Identifier(sl[0]));
+                int breakTotal=sl.length-1;
+                if(breakTotal==0) continue;  //no data
                 myPosBreaks[i]=new int[sl.length-1];
                 myHDTaxa[i]=new int[sl.length-1][2];
                 for (int bp = 0; bp < myHDTaxa[i].length; bp++) {
@@ -131,7 +134,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
             bw.write("#Block are defined position:donor1:donor2 (-1 means no hypothesis)\n");
             for (int i = 0; i < getSequenceCount(); i++) {
                 bw.write(getFullTaxaName(i)+"\t");
-                for (int p = 0; p < myPosBreaks[i].length; p++) {
+                for (int p = 0; (myPosBreaks[i]!=null)&&(p < myPosBreaks[i].length); p++) {
                     bw.write(myPosBreaks[i][p]+":"+myHDTaxa[i][p][0]+":"+myHDTaxa[i][p][1]+"\t");
                 }
                 bw.write("\n");
@@ -233,7 +236,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
             b = -(b + 2);  //this will not work if it does not start with zero.
         }
         if(b==-1) b=0;
-        //       if(myHDTaxa[taxon]==null) return 0;//this should be a missing taxon.
+        if(myHDTaxa[taxon]==null) return null;//this should be a missing taxon.
         return myHDTaxa[taxon][b];
     }
 
@@ -256,12 +259,12 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
      */
     public byte getBase(int taxon, int site) {
         int[] t = translateTaxon(taxon, site);
-        if(t[0]<0) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if((t==null)||(t[0]<0)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
         byte b0, b1;
         b0=myBaseAlignment.getBase(t[0], site);
         if(t[0]==t[1]) {b1=b0;}
         else {b1=myBaseAlignment.getBase(t[1], site);}
-        return AlignmentUtils.getDiploidValueForPotentialHets(b0, b1);
+        return AlignmentUtils.getUnphasedDiploidValueNoHets(b0, b1);
     }
 
     @Override

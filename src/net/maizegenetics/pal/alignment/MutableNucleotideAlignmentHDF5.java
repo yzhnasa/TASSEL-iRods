@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author terry
+ * @author terry & ed
  */
 public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements MutableAlignment {
 

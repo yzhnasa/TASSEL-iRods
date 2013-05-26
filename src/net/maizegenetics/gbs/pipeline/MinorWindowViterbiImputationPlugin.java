@@ -732,7 +732,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                     if(theDH[i].getPhaseForSite(cs)==2) {
                         donorEst=bD2;}
                     else {
-                        donorEst=AlignmentUtils.getDiploidValueForPotentialHets(bD1, bD2);
+                        donorEst=AlignmentUtils.getUnphasedDiploidValueNoHets(bD1, bD2);
                     }
                 }
             }
@@ -788,7 +788,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                         currDonors=new int[]{theDH[0].donor2Taxon, theDH[0].donor2Taxon};
                     }
                     else {
-                        donorEst=AlignmentUtils.getDiploidValueForPotentialHets(bD1, bD2);
+                        donorEst=AlignmentUtils.getUnphasedDiploidValueNoHets(bD1, bD2);
                         currDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor2Taxon};
                     }
                 }
@@ -974,36 +974,36 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
         String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
-     //   String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
-  //      String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr8.hmp.h5";
-       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
+        String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
+  //      String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
+   //    String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
 //       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
-//        String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
+  //      String donorFile=rootHaplos+"Tall26_8k.c+s+.hmp.txt.gz";
         String donorFile=rootHaplos+"HM26_Allk.c10s0.hmp.txt.gz";
 //        String impTargetFile=rootImp+"Tall26.c+.imp.hmp.txt.gz";
-        String impTargetFile=rootImp+"Tall26.c+.imp.pa.txt.gz";
+        String impTargetFile=rootImp+"TAllZeaGBSv2_6.c+.pa.txt.gz";
         
       
         String[] args2 = new String[]{
             "-hmp", unImpTargetFile,
             "-d",donorFile,
             "-o", impTargetFile,
-            "-sC","10",
-            "-eC","10",
+            "-sC","8",
+            "-eC","8",
             "-minMnCnt","20",
             "-mxInbErr","0.02",
             "-mxHybErr","0.005",
             "-mnTestSite","50",
             "-mxDonH","10",
-//            "-projA",
+        //    "-projA",
         };
 
-        MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
-        plugin.setParameters(args2);
-        plugin.performFunction(null);
-//        TasselPrefs.putAlignmentRetainRareAlleles(false);
-//        ProjectionAlignment pa=ProjectionAlignment.getInstance(rootImp+"Tall26.c10.imp.pa.txt.gz", donorFile);
-//        ExportUtils.writeToHapmap(pa, false, rootImp+"PostPATall26.c10.hmp.txt.gz", '\t', null);
-//        compareAlignment(unImpTargetFile, null, rootImp+"PostPATall26.c10.hmp.txt.gz", true);
+//        MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
+//        plugin.setParameters(args2);
+//        plugin.performFunction(null);
+        TasselPrefs.putAlignmentRetainRareAlleles(false);
+        ProjectionAlignment pa=ProjectionAlignment.getInstance(rootImp+"AllZeaGBSv2_6.c10.pa.txt.gz", donorFile);
+        ExportUtils.writeToHapmap(pa, false, rootImp+"PostPATall26.c10.hmp.txt.gz", '\t', null);
+        compareAlignment(unImpTargetFile, null, rootImp+"PostPATall26.c10.hmp.txt.gz", true);
     }
 }
