@@ -850,7 +850,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                         if(AlignmentUtils.isHeterozygous(ob)||AlignmentUtils.isHeterozygous(ib)) {hets++; h++;}
                         else {errors++; 
                             e++;
-//                            System.out.printf("%d %d %s %s %n",t,s,oA.getBaseAsString(oATaxa, s), iA.getBaseAsString(t, s));
+//                            if(t==0) System.out.printf("%d %d %s %s %n",t,s,oA.getBaseAsString(oATaxa, s), iA.getBaseAsString(t, s));
                         }
                     }
                 }       
@@ -974,11 +974,11 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
         String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
-        String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
+  //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
-   //    String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
-//       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
-  //      String donorFile=rootHaplos+"Tall26_8k.c+s+.hmp.txt.gz";
+ //      String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
+       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
+ //       String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
         String donorFile=rootHaplos+"HM26_Allk.c10s0.hmp.txt.gz";
 //        String impTargetFile=rootImp+"Tall26.c+.imp.hmp.txt.gz";
         String impTargetFile=rootImp+"TAllZeaGBSv2_6.c+.pa.txt.gz";
@@ -988,22 +988,26 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             "-hmp", unImpTargetFile,
             "-d",donorFile,
             "-o", impTargetFile,
-            "-sC","8",
-            "-eC","8",
+            "-sC","10",
+            "-eC","10",
             "-minMnCnt","20",
             "-mxInbErr","0.02",
             "-mxHybErr","0.005",
             "-mnTestSite","50",
             "-mxDonH","10",
-        //    "-projA",
+            "-projA",
         };
 
 //        MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
 //        plugin.setParameters(args2);
 //        plugin.performFunction(null);
         TasselPrefs.putAlignmentRetainRareAlleles(false);
+        System.out.println("Reading PA file");
+//        ProjectionAlignment pa=ProjectionAlignment.getInstance(rootImp+"TAllZeaGBSv2_6.c10.pa.txt.gz", donorFile);
         ProjectionAlignment pa=ProjectionAlignment.getInstance(rootImp+"AllZeaGBSv2_6.c10.pa.txt.gz", donorFile);
+        System.out.println("Writing PA file to HapMap");
         ExportUtils.writeToHapmap(pa, false, rootImp+"PostPATall26.c10.hmp.txt.gz", '\t', null);
+        System.out.printf("Cache:%d Lookup:%d %n",pa.cacheUseCnt, pa.lookupCnt);
         compareAlignment(unImpTargetFile, null, rootImp+"PostPATall26.c10.hmp.txt.gz", true);
     }
 }

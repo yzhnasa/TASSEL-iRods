@@ -616,12 +616,14 @@ public class AlignmentUtils {
     
     /**
      * Combines two genotype values into one diploid value.  Returns unknown if either 
-     * parent is heterozygous, or alleles are swapped.
+     * parent is heterozygous or unknown, or alleles are swapped.
      * @param g1 genotype 1
      * @param g2 genotype 2
      * @return diploid value
      */
     public static byte getUnphasedDiploidValueNoHets(byte g1, byte g2) {
+        if(g1==Alignment.UNKNOWN_DIPLOID_ALLELE) return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if(g2==Alignment.UNKNOWN_DIPLOID_ALLELE) return Alignment.UNKNOWN_DIPLOID_ALLELE;
         if(isHeterozygous(g1)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
         if(isHeterozygous(g2)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
         if(g2==g1) return g1;

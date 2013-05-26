@@ -31,6 +31,9 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     private int[][] myPosBreaks;  //positions should be saved
     private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
     
+    private int[][] cacheTaxonSiteBound, cacheTaxonDonors; 
+    public long cacheUseCnt=0, lookupCnt=0;
+    
 
     public ProjectionAlignment(Alignment hdAlign, IdGroup ldIDGroup) {
         super(ldIDGroup, hdAlign.getAlleleEncodings());
@@ -38,6 +41,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         mySiteBreaks = new int[getSequenceCount()][];
         myPosBreaks = new int[getSequenceCount()][];
         myHDTaxa = new int[getSequenceCount()][][];
+        init();
     }
     
     public ProjectionAlignment(Alignment hdAlign, IdGroup ldIDGroup, int[][] myPosBreaks, 
@@ -47,7 +51,6 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         this.myPosBreaks = myPosBreaks;
         this.myHDTaxa = myHDTaxa;
         mySiteBreaks = new int[getSequenceCount()][];
-        myNumSites=myBaseAlignment.getSiteCount();
         for (int taxon = 0; taxon < myHDTaxa.length; taxon++) {
             if(myHDTaxa[taxon]==null) continue;
             mySiteBreaks[taxon] = new int[myPosBreaks[taxon].length];
@@ -59,11 +62,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
                 this.mySiteBreaks[taxon][i] = site;
             }   
         }
-        
-//        for (int i = 0; i < this.myNumSites; i++) {
-//            int[] t=translateTaxon(0, i);
-//            System.out.printf("T1Map: %d %d %d %d %d %s%n", i, getPositionInLocus(i), t[0],t[1], getBase(0,i),getBaseAsString(0, i));           
-//        }
+        init();
     }
     
     public static ProjectionAlignment getInstance(String paFile, String baseHighDensityAlignmentFile) {
@@ -118,6 +117,23 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
             }
         } 
         //return null;
+    }
+    
+    private void init() {
+        myNumSites=myBaseAlignment.getSiteCount();
+        cacheTaxonSiteBound=new int[getSequenceCount()][2];
+        cacheTaxonDonors=new int[getSequenceCount()][2];
+        for (int i = 0; i < getSequenceCount(); i++) {
+         //   translateTaxon(i,0);
+            cacheNewTaxonSiteRange(i,0);
+        }
+//        System.out.println(Arrays.toString(mySiteBreaks[0]));
+//        for (int i = 0; i < 16000; i++) {
+//            System.out.println(i);
+//            System.out.println("TOrig"+Arrays.toString(translateTaxon(0,i)));
+//            System.out.println("TNew"+Arrays.toString(translateTaxonX(0,i)));
+//            System.out.println("cacheB:"+Arrays.toString(cacheTaxonSiteBound[0]));
+//        }
     }
     
     public void save(String outfile) {
@@ -231,12 +247,44 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         if (mySiteBreaks[taxon] == null) {
             return null;
         }
+        if((cacheTaxonSiteBound[taxon][0]<=site)&&(site<=cacheTaxonSiteBound[taxon][1])) {
+            cacheUseCnt++;
+            return cacheTaxonDonors[taxon];
+        } else {
+            lookupCnt++;
+            return cacheNewTaxonSiteRange(taxon, site);
+        }
+//        int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
+//        if (b < 0) {
+//            b = -(b + 2);  //this will not work if it does not start with zero.
+//        }
+//        return myHDTaxa[taxon][b];
+    }
+    
+    private int[] translateTaxonX(int taxon, int site) {
+        if (mySiteBreaks[taxon] == null) {
+            return null;
+        }
         int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
         if (b < 0) {
             b = -(b + 2);  //this will not work if it does not start with zero.
         }
-        if(b==-1) b=0;
-        if(myHDTaxa[taxon]==null) return null;//this should be a missing taxon.
+        return myHDTaxa[taxon][b];
+    }
+    
+    private int[] cacheNewTaxonSiteRange(int taxon, int site){
+        if (mySiteBreaks[taxon] == null) return null;
+        int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
+        if (b < 0) {
+            b = -(b + 2);  //this will not work if it does not start with zero.
+        }
+        cacheTaxonSiteBound[taxon][0]=mySiteBreaks[taxon][b];
+        if((b+1)<mySiteBreaks[taxon].length) {
+            cacheTaxonSiteBound[taxon][1]=mySiteBreaks[taxon][b+1];
+        } else {
+            cacheTaxonSiteBound[taxon][1]=myNumSites;
+        }
+        cacheTaxonDonors[taxon]=myHDTaxa[taxon][b];
         return myHDTaxa[taxon][b];
     }
 
