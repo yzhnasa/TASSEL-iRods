@@ -3,13 +3,17 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import cern.colt.GenericSorting;
-import cern.colt.Swapper;
-import cern.colt.function.IntComparator;
+import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
+import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.TreeSet;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -25,15 +29,20 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private boolean myIsDirty = true;
     private byte[][] myData;
     private List<Identifier> myIdentifiers = new ArrayList<Identifier>();
-    private final int myMaxTaxa;
+//    private final int myMaxTaxa;
     private final int myMaxNumSites;
     private int myNumSites = 0;
     private int myNumSitesStagedToRemove = 0;
     protected int[] myVariableSites;
     private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
-    protected int[] myLocusIndices;
+//    protected int[] myLocusIndices;
     private int[] myLocusOffsets = null;
     protected String[] mySNPIDs;
+    IHDF5Writer myWriter=null;
+    private HashMap<Integer,byte[]> myDataHashMap;
+    private byte[] singleCache=null;
+    private int taxonCached=-1;
+    HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
 
     protected MutableNucleotideAlignmentHDF5(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a.getAlleleEncodings());
@@ -50,8 +59,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         if (a.getSequenceCount() > maxNumTaxa) {
             throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: initial number of taxa can't be more than max number of taxa.");
         }
-
-        myMaxTaxa = maxNumTaxa;
         myMaxNumSites = maxNumSites;
         myNumSites = a.getSiteCount();
         myReference = new byte[myMaxNumSites];
@@ -59,7 +66,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         initData();
         initTaxa(a.getIdGroup());
         loadAlleles(a);
-        loadLoci(a);
+        //loadLoci(a);
         System.arraycopy(a.getSNPIDs(), 0, mySNPIDs, 0, a.getSiteCount());
         System.arraycopy(a.getPhysicalPositions(), 0, myVariableSites, 0, a.getSiteCount());
     }
@@ -72,216 +79,82 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return getInstance(a, a.getSequenceCount(), a.getSiteCount());
     }
 
-    protected MutableNucleotideAlignmentHDF5(String[][] encodings, IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
-        super(encodings);
 
-        if (initNumSites > maxNumSites) {
-            throw new IllegalArgumentException("MutableNucleotideAlignment: init: initial number of sites can't be more than max number of sites.");
-        }
+    protected MutableNucleotideAlignmentHDF5(IHDF5Writer reader, List<Identifier> idGroup, int[] variableSites, 
+            List<Locus> locusToLociIndex, int[] lociOffsets, String[] siteNames) {
+        super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
 
-        if (idGroup.getIdCount() > maxNumTaxa) {
-            throw new IllegalArgumentException("MutableNucleotideAlignment: init: initial number of taxa can't be more than max number of taxa.");
-        }
-
-        myMaxTaxa = maxNumTaxa;
-        myMaxNumSites = maxNumSites;
-        myNumSites = initNumSites;
-        myReference = new byte[myMaxNumSites];
-        Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
-
-        initData();
-        initTaxa(idGroup);
-    }
-
-    protected MutableNucleotideAlignmentHDF5(String[][] encodings, List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
-        super(encodings);
-
-        if ((variableSites.length != locusIndices.length) || (variableSites.length != siteNames.length)) {
+        if (variableSites.length != siteNames.length) {
             throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: number variable sites, loci, and site names must be same.");
         }
-
-        myMaxTaxa = idGroup.size();
+        myWriter=reader;
         myMaxNumSites = siteNames.length;
         myNumSites = siteNames.length;
 
         myVariableSites = variableSites;
         myLocusToLociIndex = locusToLociIndex;
-        myLocusIndices = locusIndices;
+        myLocusOffsets=lociOffsets;
+      //  myLocusIndices = locusIndices;
         mySNPIDs = siteNames;
-
-        myData = new byte[myMaxTaxa][myMaxNumSites];
-        for (int t = 0; t < myMaxTaxa; t++) {
-            Arrays.fill(myData[t], Alignment.UNKNOWN_DIPLOID_ALLELE);
-        }
 
         myReference = new byte[myMaxNumSites];
         Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
-
+        Collections.sort(idGroup);
+       // idGroup
+        
         myIdentifiers = idGroup;
     }
 
-    public static MutableNucleotideAlignmentHDF5 getInstance(String[][] encodings, IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
-        return new MutableNucleotideAlignmentHDF5(encodings, idGroup, initNumSites, maxNumTaxa, maxNumSites);
-    }
+//    public static MutableNucleotideAlignmentHDF5 getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
+//        return new MutableNucleotideAlignmentHDF5(idGroup, initNumSites, maxNumTaxa, maxNumSites);
+//    }
+//
+//    public static MutableNucleotideAlignmentHDF5 getInstance(IdGroup idGroup, int initNumSites) {
+//        return MutableNucleotideAlignmentHDF5.getInstance(idGroup, initNumSites, 
+//                idGroup.getIdCount(), initNumSites);
+//    }
 
-    public static MutableNucleotideAlignmentHDF5 getInstance(String[][] encodings, IdGroup idGroup, int initNumSites) {
-        return MutableNucleotideAlignmentHDF5.getInstance(encodings, idGroup, initNumSites, idGroup.getIdCount(), initNumSites);
-    }
-
-    public static MutableNucleotideAlignmentHDF5 getInstance(String[][] encodings, List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
-        return new MutableNucleotideAlignmentHDF5(encodings, idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
-    }
-
-    public static MutableNucleotideAlignmentHDF5 getInstance(Alignment[] alignments) {
-
-        if ((alignments == null) || (alignments.length == 0)) {
-            return null;
+    public static MutableNucleotideAlignmentHDF5 getInstance(String filename) {
+        IHDF5Writer reader = HDF5Factory.open(filename);
+        
+        //derive the taxa list on the fly 
+        List<HDF5LinkInformation> fields=reader.getAllGroupMemberInformation(HapMapHDF5Constants.GENOTYPES, true);
+        ArrayList<Identifier> taxaList=new ArrayList<Identifier>();
+        for (HDF5LinkInformation is : fields) {
+            if(is.isDataSet()==false) continue;
+   //         System.out.println(is.getName());
+            taxaList.add(new Identifier(is.getName()));
         }
 
-        String[][] resultEncodings = alignments[0].getAlleleEncodings();
-        if (resultEncodings.length != 1) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: getInstance: Alignments must have single allele encoding.");
-        }
+ //       IdGroup idgroup = new SimpleIdGroup(taxa);
 
-        String[][][] encodings = new String[alignments.length][][];
-        for (int i = 0; i < alignments.length; i++) {
-            encodings[i] = alignments[i].getAlleleEncodings();
-        }
-        if (!AlignmentUtils.areEncodingsEqual(encodings)) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: getInstance: Alignments must have same allele encoding.");
-        }
+        byte[][] alleles = reader.readByteMatrix(HapMapHDF5Constants.ALLELES);
 
-        TreeSet<Identifier> taxa = new TreeSet<Identifier>();
-        List<String> siteNames = new ArrayList<String>();
-        List<Integer> physicalPositions = new ArrayList<Integer>();
-        List<Locus> locusToLociIndex = new ArrayList<Locus>();
-        List<Integer> locusIndices = new ArrayList<Integer>();
-
-        for (int i = 0; i < alignments.length; i++) {
-
-            IdGroup currentIds = alignments[i].getIdGroup();
-            for (int j = 0, n = currentIds.getIdCount(); j < n; j++) {
-                Identifier current = currentIds.getIdentifier(j);
-                if (taxa.contains(current)) {
-                    Identifier match = taxa.floor(current);
-                    Identifier merged = Identifier.getMergedInstance(match, current);
-                    taxa.remove(match);
-                    taxa.add(merged);
-                } else {
-                    taxa.add(current);
-                }
-            }
-
-            for (int s = 0, m = alignments[i].getSiteCount(); s < m; s++) {
-                String currentSiteName = alignments[i].getSNPID(s);
-                int currentPhysicalPos = alignments[i].getPositionInLocus(s);
-                Locus currentLocus = alignments[i].getLocus(s);
-                int index = siteNames.indexOf(currentSiteName);
-                if (index == -1) {
-                    siteNames.add(currentSiteName);
-                    physicalPositions.add(currentPhysicalPos);
-                    //int locusIndex = locusToLociIndex.indexOf(currentLocus);
-                    int locusIndex = -1;
-                    for (int li = 0; li < locusToLociIndex.size(); li++) {
-                        if (currentLocus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
-                            locusIndex = li;
-                            locusToLociIndex.set(li, Locus.getMergedInstance(currentLocus, locusToLociIndex.get(li)));
-                            break;
-                        }
-                    }
-                    if (locusIndex == -1) {
-                        locusIndices.add(locusToLociIndex.size());
-                        locusToLociIndex.add(currentLocus);
-                    } else {
-                        locusIndices.add(locusIndex);
-                    }
-                } else {
-                    if (i == 0) {
-                        throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getInstance: Duplicate site name in alignment: " + currentSiteName);
-                    } else {
-                        if (currentPhysicalPos != physicalPositions.get(index)) {
-                            throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getInstance: Physical Positions do not match for site name: " + currentSiteName);
-                        }
-                        int locusIndex = -1;
-                        for (int li = 0; li < locusToLociIndex.size(); li++) {
-                            if (currentLocus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
-                                locusIndex = li;
-                                break;
-                            }
-                        }
-                        if (locusIndices.get(index) != locusIndex) {
-                            throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getInstance: Loci do not match for site name: " + currentSiteName + " expecting: " + locusToLociIndex.get(locusIndices.get(index)) + " but doesn't match: " + currentLocus);
-                        }
-                    }
-                }
-            }
-
-        }
-
-        int[] variableSites = new int[physicalPositions.size()];
-        for (int i = 0, n = physicalPositions.size(); i < n; i++) {
-            variableSites[i] = physicalPositions.get(i);
-        }
-
-        int[] locusIndicesArray = new int[locusIndices.size()];
-        for (int i = 0, n = locusIndices.size(); i < n; i++) {
-            locusIndicesArray[i] = (int) locusIndices.get(i);
-        }
-
-        String[] siteNamesArray = new String[siteNames.size()];
-        siteNames.toArray(siteNamesArray);
-
-        List<Identifier> taxaList = new ArrayList<Identifier>(taxa);
-        MutableNucleotideAlignmentHDF5 result = null;
-
-        encodings = new String[2][][];
-        encodings[0] = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
-        encodings[1] = resultEncodings;
-        result = getInstance(resultEncodings, taxaList, variableSites, locusToLociIndex, locusIndicesArray, siteNamesArray);
-
-        result.sortSitesByPhysicalPositionEmptyData();
-        result.setClean();
-
-        for (int i = 0; i < alignments.length; i++) {
-            myLogger.info("Merging Alignment: " + (i + 1) + " of " + alignments.length);
-            Alignment currentAlignment = alignments[i];
-            IdGroup ids = currentAlignment.getIdGroup();
-            int numSeqs = ids.getIdCount();
-            int[] taxaIndices = new int[numSeqs];
-            for (int t = 0; t < numSeqs; t++) {
-                taxaIndices[t] = taxaList.indexOf(ids.getIdentifier(t));
-            }
-            for (int s = 0, n = currentAlignment.getSiteCount(); s < n; s++) {
-                String siteName = currentAlignment.getSNPID(s);
-                int physicalPosition = currentAlignment.getPositionInLocus(s);
-                Locus locus = currentAlignment.getLocus(s);
-                for (int li = 0; li < locusToLociIndex.size(); li++) {
-                    if (locus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
-                        locus = locusToLociIndex.get(li);
-                        break;
-                    }
-                }
-                int site = result.getSiteOfPhysicalPosition(physicalPosition, locus, siteName);
-                if (site < 0) {
-                    throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getInstance: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
-                }
-
-                for (int t = 0; t < numSeqs; t++) {
-                    result.setBase(taxaIndices[t], site, currentAlignment.getBase(t, s));
-                }
+        MDArray<String> alleleStatesMDArray = reader.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
+        int[] dimensions = alleleStatesMDArray.dimensions();
+        int numEncodings = dimensions[0];
+        int numStates = dimensions[1];
+        String[][] alleleStates = new String[numEncodings][numStates];
+        for (int e = 0; e < numEncodings; e++) {
+            for (int s = 0; s < numStates; s++) {
+                alleleStates[e][s] = alleleStatesMDArray.get(e, s);
             }
         }
 
-        return result;
+        int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
+        int maxNumAlleles = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES);
+        boolean retainRare = reader.getBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES);
+        String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
+        int numLoci = lociStrings.length;
+       // Locus[] loci = new Locus[numLoci];
+        ArrayList<Locus> loci=new ArrayList<Locus>();
+        for (String lS : lociStrings) {loci.add(new Locus(lS));}
+        int[] lociOffsets = reader.readIntArray(HapMapHDF5Constants.LOCUS_OFFSETS);
+        String[] snpIds = reader.readStringArray(HapMapHDF5Constants.SNP_IDS);
+        return new MutableNucleotideAlignmentHDF5(reader, taxaList, variableSites, loci, lociOffsets, snpIds);
     }
-
+    
     private void initData() {
-        myData = new byte[myMaxTaxa][myMaxNumSites];
-        for (int t = 0; t < myMaxTaxa; t++) {
-            Arrays.fill(myData[t], Alignment.UNKNOWN_DIPLOID_ALLELE);
-        }
-        myLocusIndices = new int[myMaxNumSites];
-        Arrays.fill(myLocusIndices, Integer.MAX_VALUE);
         myVariableSites = new int[myMaxNumSites];
         Arrays.fill(myVariableSites, -1);
         mySNPIDs = new String[myMaxNumSites];
@@ -295,7 +168,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
 
     private void loadAlleles(Alignment a) {
-
         int numSites = a.getSiteCount();
         int numSeqs = a.getSequenceCount();
 
@@ -304,29 +176,17 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
                 myData[t][s] = a.getBase(t, s);
             }
         }
-
-    }
-
-    private void loadLoci(Alignment a) {
-
-        Locus[] loci = a.getLoci();
-        for (int i = 0; i < loci.length; i++) {
-            myLocusToLociIndex.add(loci[i]);
-        }
-
-        int[] offsets = a.getLociOffsets();
-        for (int i = 0; i < offsets.length - 1; i++) {
-            for (int j = offsets[i]; j < offsets[i + 1]; j++) {
-                myLocusIndices[j] = i;
-            }
-        }
-        for (int j = offsets[offsets.length - 1], n = a.getSiteCount(); j < n; j++) {
-            myLocusIndices[j] = offsets.length - 1;
-        }
     }
 
     public byte getBase(int taxon, int site) {
-        return myData[taxon][site];
+        if(taxon!=taxonCached) {
+            singleCache=myWriter.readByteArray(HapMapHDF5Constants.GENOTYPES + "/" + getFullTaxaName(taxon));
+            taxonCached=taxon;
+        }
+        return singleCache[site];
+       // return myData[taxon][site];
+        
+        //http://stackoverflow.com/questions/12319741/limited-size-hash-map
     }
 
     public boolean isSBitFriendly() {
@@ -396,10 +256,10 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         }
     }
 
-    @Override
-    public Locus getLocus(int site) {
-        return myLocusToLociIndex.get(myLocusIndices[site]);
-    }
+//    @Override
+//    public Locus getLocus(int site) {
+//        return myLocusToLociIndex.get(myLocusIndices[site]);
+//    }
 
     @Override
     public Locus[] getLoci() {
@@ -415,33 +275,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return myLocusToLociIndex.size();
     }
 
-    @Override
-    public int[] getLociOffsets() {
 
-        if (isDirty()) {
-            throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getLociOffsets: this alignment is dirty.");
-        }
-
-        if (myLocusOffsets != null) {
-            return myLocusOffsets;
-        }
-
-        List<Integer> result = new ArrayList<Integer>();
-        int current = myLocusIndices[0];
-        result.add(0);
-        for (int i = 0, n = getSiteCount(); i < n; i++) {
-            if (myLocusIndices[i] != current) {
-                result.add(i);
-                current = myLocusIndices[i];
-            }
-        }
-        myLocusOffsets = new int[result.size()];
-        for (int i = 0, n = result.size(); i < n; i++) {
-            myLocusOffsets[i] = result.get(i);
-        }
-        return myLocusOffsets;
-
-    }
 
     @Override
     public int[] getStartAndEndOfLocus(Locus locus) {
@@ -550,6 +384,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public byte[] getAlleles(int site) {
+        //TODO this should be just stored in the HDF5 file
+        //reprocess as needed if taxa added
         int[][] alleles = getAllelesSortedByFrequency(site);
         int resultSize = alleles[0].length;
         byte[] result = new byte[resultSize];
@@ -594,79 +430,9 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myReference[site] = diploidAllele;
     }
 
-    public void addSite(int site) {
-
-        if (myMaxNumSites < myNumSites + 1) {
-            throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: addSite: this exceeds max num of sites: " + myMaxNumSites);
-        }
-
-        for (int t = 0, n = getSequenceCount(); t < n; t++) {
-            for (int s = myNumSites; s > site; s--) {
-                myData[t][s] = myData[t][s - 1];
-            }
-            myData[t][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-        }
-
-        for (int s = myNumSites; s > site; s--) {
-            myVariableSites[s] = myVariableSites[s - 1];
-            myLocusIndices[s] = myLocusIndices[s - 1];
-            mySNPIDs[s] = mySNPIDs[s - 1];
-            myReference[s] = myReference[s - 1];
-        }
-        myVariableSites[site] = -1;
-        myLocusIndices[site] = Integer.MAX_VALUE;
-        mySNPIDs[site] = null;
-        myReference[site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-
-        myNumSites++;
-
-        setDirty();
-
-    }
-
-    public void removeSite(int site) {
-
-        myNumSites--;
-
-        for (int t = 0, n = getSequenceCount(); t < n; t++) {
-            for (int s = site; s < myNumSites; s++) {
-                myData[t][s] = myData[t][s + 1];
-            }
-            myData[t][myNumSites] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-        }
-
-        for (int s = site; s < myNumSites; s++) {
-            myVariableSites[s] = myVariableSites[s + 1];
-            myLocusIndices[s] = myLocusIndices[s + 1];
-            mySNPIDs[s] = mySNPIDs[s + 1];
-            myReference[s] = myReference[s + 1];
-        }
-        myVariableSites[myNumSites] = -1;
-        myLocusIndices[myNumSites] = Integer.MAX_VALUE;
-        mySNPIDs[myNumSites] = null;
-        myReference[myNumSites] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-
-    }
-
-    public void clearSiteForRemoval(int site) {
-
-        myNumSitesStagedToRemove++;
-
-        for (int t = 0, n = getSequenceCount(); t < n; t++) {
-            myData[t][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-        }
-
-        myVariableSites[site] = Integer.MAX_VALUE;
-        myLocusIndices[site] = Integer.MAX_VALUE;
-        mySNPIDs[site] = null;
-        myReference[site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-
-    }
-
     public void addTaxon(Identifier id) {
-        if (getSequenceCount() + 1 > myMaxTaxa) {
-            throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: addTaxon: this exceeds max num of taxa: " + myMaxTaxa);
-        }
+        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
+        myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
         myIdentifiers.add(id);
     }
 
@@ -674,26 +440,21 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         if (taxon >= myIdentifiers.size()) {
             throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: setTaxonName: this taxa index does not exist: " + taxon);
         }
+        String currentPath = HapMapHDF5Constants.GENOTYPES + "/" + myIdentifiers.get(taxon);
+        String newPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
+        myWriter.move(currentPath, newPath);
         myIdentifiers.set(taxon, id);
     }
 
     public void removeTaxon(int taxon) {
-
         myIdentifiers.remove(taxon);
-
-        int numTaxa = getSequenceCount();
-        for (int s = 0; s < myNumSites; s++) {
-            for (int t = taxon; t < numTaxa; t--) {
-                myData[t][s] = myData[t + 1][s];
-            }
-            myData[numTaxa][s] = Alignment.UNKNOWN_DIPLOID_ALLELE;
-        }
+        String currentPath = HapMapHDF5Constants.GENOTYPES + "/" + myIdentifiers.get(taxon);
+        myWriter.delete(currentPath);
+        //TODO remove from cache
 
     }
 
     public void clean() {
-        sortSitesByPhysicalPosition();
-        removeUnusedLoci();
         myIsDirty = false;
         myNumSites -= myNumSitesStagedToRemove;
         myNumSitesStagedToRemove = 0;
@@ -712,151 +473,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myIsDirty = false;
     }
 
-    private void removeUnusedLoci() {
-        boolean[] isUsed = new boolean[myLocusToLociIndex.size()];
-        Arrays.fill(isUsed, false);
-        for (int i = 0; i < myLocusIndices.length; i++) {
-            if ((myLocusIndices[i] >= 0) && (myLocusIndices[i] != Integer.MAX_VALUE)) {
-                isUsed[myLocusIndices[i]] = true;
-            }
-        }
-        int removed = 0;
-        for (int i = 0; i < isUsed.length; i++) {
-            if (!isUsed[i]) {
-                myLocusToLociIndex.remove(i - removed);
-                decrementAllHigherLociIndices(i - removed);
-                removed++;
-            }
-        }
 
-    }
-
-    private void decrementAllHigherLociIndices(int starting) {
-        for (int i = 0; i < myLocusIndices.length; i++) {
-            if (myLocusIndices[i] > starting) {
-                myLocusIndices[i]--;
-            }
-        }
-    }
-
-    protected void sortSitesByPhysicalPosition() {
-
-        Swapper swapperPos = new Swapper() {
-            public void swap(int a, int b) {
-                int it;
-                it = myLocusIndices[a];
-                myLocusIndices[a] = myLocusIndices[b];
-                myLocusIndices[b] = it;
-
-                byte bt;
-                for (int t = 0, n = getSequenceCount(); t < n; t++) {
-                    bt = getBase(t, a);
-                    setBase(t, a, getBase(t, b));
-                    setBase(t, b, bt);
-                }
-
-                it = myVariableSites[a];
-                myVariableSites[a] = myVariableSites[b];
-                myVariableSites[b] = it;
-
-                String st = mySNPIDs[a];
-                mySNPIDs[a] = mySNPIDs[b];
-                mySNPIDs[b] = st;
-
-                bt = myReference[a];
-                myReference[a] = myReference[b];
-                myReference[b] = bt;
-            }
-        };
-        IntComparator compPos = new IntComparator() {
-            public int compare(int a, int b) {
-                if (myLocusIndices[a] < myLocusIndices[b]) {
-                    return -1;
-                }
-                if (myLocusIndices[a] > myLocusIndices[b]) {
-                    return 1;
-                }
-                if (myVariableSites[a] < myVariableSites[b]) {
-                    return -1;
-                }
-                if (myVariableSites[a] > myVariableSites[b]) {
-                    return 1;
-                }
-                return 0;
-            }
-        };
-
-        GenericSorting.quickSort(0, getSiteCount(), compPos, swapperPos);
-
-    }
-
-    private void sortSitesByPhysicalPositionEmptyData() {
-
-        Swapper swapperPos = new Swapper() {
-            public void swap(int a, int b) {
-                int it;
-                it = myLocusIndices[a];
-                myLocusIndices[a] = myLocusIndices[b];
-                myLocusIndices[b] = it;
-
-                it = myVariableSites[a];
-                myVariableSites[a] = myVariableSites[b];
-                myVariableSites[b] = it;
-
-                String st = mySNPIDs[a];
-                mySNPIDs[a] = mySNPIDs[b];
-                mySNPIDs[b] = st;
-
-                byte bt = myReference[a];
-                myReference[a] = myReference[b];
-                myReference[b] = bt;
-            }
-        };
-        IntComparator compPos = new IntComparator() {
-            public int compare(int a, int b) {
-                if (myLocusIndices[a] < myLocusIndices[b]) {
-                    return -1;
-                }
-                if (myLocusIndices[a] > myLocusIndices[b]) {
-                    return 1;
-                }
-                if (myVariableSites[a] < myVariableSites[b]) {
-                    return -1;
-                }
-                if (myVariableSites[a] > myVariableSites[b]) {
-                    return 1;
-                }
-                return 0;
-            }
-        };
-
-        GenericSorting.quickSort(0, this.getSiteCount(), compPos, swapperPos);
-
-    }
-
-    public void setPositionOfSite(int site, int position) {
-        if ((site < 0) || (site >= getSiteCount())) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: setPositionOfSite: site outside of range: " + site);
-        }
-        myVariableSites[site] = position;
-
-        setDirty();
-    }
-
-    public void setLocusOfSite(int site, Locus locus) {
-        if ((site < 0) || (site >= getSiteCount())) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: setLocusOfSite: site outside of range: " + site);
-        }
-        int index = getLocusIndex(locus);
-        if (index < 0) {
-            myLocusToLociIndex.add(locus);
-            myLocusIndices[site] = myLocusToLociIndex.size() - 1;
-        } else {
-            myLocusIndices[site] = index;
-        }
-
-        setDirty();
-    }
 
     private int getLocusIndex(Locus locus) {
         for (int i = 0; i < myLocusToLociIndex.size(); i++) {
@@ -872,6 +489,31 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
 
     public void setCommonAlleles(int site, byte[] values) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void addSite(int site) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void removeSite(int site) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void clearSiteForRemoval(int site) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void setPositionOfSite(int site, int position) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void setLocusOfSite(int site, Locus locus) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }
