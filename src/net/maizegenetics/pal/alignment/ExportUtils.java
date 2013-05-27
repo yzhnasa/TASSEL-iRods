@@ -222,7 +222,7 @@ public class ExportUtils {
             HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
             HDF5IntStorageFeatures.createDeflationDelete(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
             for (int t = 0; t < numTaxa; t++) {
-                String basesPath = HapMapHDF5Constants.BASES + "/" + a.getFullTaxaName(t);
+                String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + a.getFullTaxaName(t);
                 h5w.createByteArray(basesPath, numSites, features);
                 byte[] bases = a.getBaseRow(t);
                 h5w.writeByteArray(basesPath, bases, features);
