@@ -16,14 +16,12 @@ import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.gbs.homology.TagMatchFinder;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.swing.ImageIcon;
@@ -31,8 +29,7 @@ import net.maizegenetics.gbs.maps.TOPMInterface;
 import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.MutableVCFAlignment;
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.alignment.MutableNucleotideDepthAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import org.apache.log4j.Logger;
 
@@ -71,7 +68,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private TreeMap<String,ArrayList<String>> LibraryPrepIDToFlowCellLanes = new TreeMap<String,ArrayList<String>>();
     private TreeMap<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
     private HashMap<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
-    MutableVCFAlignment[] genos = null;
+    private MutableNucleotideDepthAlignment[] genos = null;
 
     public SeqToGenosPlugin() {
         super(null, false);
@@ -181,6 +178,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         matchKeyFileToAvailableRawSeqFiles();
         setUpMutableNucleotideAlignmentsWithDepth();
         translateRawReadsToHapmap();
+        writeHapMapFiles();
         return null;
     }
 
@@ -224,7 +222,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 System.out.println("Last line read: "+temp);
                 e.printStackTrace();
             }
-            writeHapMapFiles(genos, fileNum, counters);
+            System.out.println("Total number of reads in lane=" + counters[0]);
+            System.out.println("Total number of good, barcoded reads=" + counters[1]);
+            System.out.println("Finished reading " + (fileNum+1) + " of " + myRawSeqFileNames.length + " sequence files: " + myRawSeqFileNames[fileNum] + "\n");
         }
     }
     
@@ -398,14 +398,14 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
     }
 
-    private MutableNucleotideAlignment[] setUpMutableNucleotideAlignmentsWithDepth() {
+    private void setUpMutableNucleotideAlignmentsWithDepth() {
         String[] finalSampleNames = getFinalSampleNames();
         myLogger.info("\nCounting sites in TOPM file.");
         ArrayList<int[]> uniquePositions = getUniquePositions();
         myLogger.info("\nCreating alignment objects to hold the genotypic data (one per chromosome in the TOPM).");
-        genos = new MutableVCFAlignment[chromosomes.length];
+        genos = new MutableNucleotideDepthAlignment[chromosomes.length];
         for (int i = 0; i < genos.length; i++) {
-            genos[i] = MutableVCFAlignment.getInstance(new SimpleIdGroup(finalSampleNames), uniquePositions.get(i).length);
+            genos[i] = MutableNucleotideDepthAlignment.getInstance(new SimpleIdGroup(finalSampleNames), uniquePositions.get(i).length); // keeps depth for all 6 alleles
         }
         generateQuickTaxaLookup(finalSampleNames);
         myLogger.info("   Adding sites from the TOPM file to the alignment objects.");
@@ -420,7 +420,6 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             }
             genos[i].clean();
         }
-        return genos;
     }
     
     private void generateQuickTaxaLookup(String[] finalSampleNames) {
@@ -568,6 +567,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             if (currSite < 0) {
                 continue;
             }
+            genos[chrIndex].incrementDepthForAllele(taxonIndex, currSite, newBase);
             byte newGeno = AlignmentUtils.getDiploidValue(newBase, newBase);
             byte prevGeno = genos[chrIndex].getBase(taxonIndex, currSite);
             if (prevGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {
@@ -578,18 +578,14 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
     }
 
-    private void writeHapMapFiles(MutableNucleotideAlignment[] outMSA, int laneNum, int[] counters) {
-        for (int i = 0; i < outMSA.length; i++) {
-            outMSA[i].clean();
-            AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(outMSA[i], false);
-            String outFileS = myOutputDir + myRawSeqFileNames[laneNum].substring(myRawSeqFileNames[laneNum].lastIndexOf(File.separator));
+    private void writeHapMapFiles() {
+        for (int i = 0; i < genos.length; i++) {
+            genos[i].clean();
+            AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(genos[i], false);
+            String outFileS = myOutputDir + myRawSeqFileNames[0].substring(myRawSeqFileNames[0].lastIndexOf(File.separator));
             outFileS = outFileS.replaceAll(rawSeqFileNameReplaceRegex, "_c" + chromosomes[i]); // ".hmp.txt" gets added by ExportUtils.writeToHapmap
-            ExportUtils.writeToHapmap(outMSA[i], false, outFileS, '\t', this);
+            ExportUtils.writeToHapmap(genos[i], false, outFileS, '\t', this);
         }
-        System.out.println("Total number of reads in lane=" + counters[0]);
-        System.out.println("Total number of good, barcoded reads=" + counters[1]);
-        int filesDone = laneNum + 1;
-        System.out.println("Finished reading " + filesDone + " of " + myRawSeqFileNames.length + " sequence files: " + myRawSeqFileNames[laneNum] + "\n");
     }
 
     private void printFileNameConventions(String actualFileName) {
