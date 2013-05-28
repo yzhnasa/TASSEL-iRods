@@ -201,9 +201,29 @@ public class JeffPipelines {
             "-o",    tassel3v4ProdDir+"tassel4_RawReadsToHapMap/tassel3v4ProdMDPLowVolGenoCompare.txt",
         };
 
+        String rawReadsVsSeqToGenosDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/";
+        String[] rawReadsVsSeqToGenosArgs = new String[]{
+            "-hmp1", rawReadsVsSeqToGenosDir+"tassel4_RawReadsToHapMap/C08L7ACXX_6_c+.hmp.txt",
+            "-hmp2", rawReadsVsSeqToGenosDir+"tassel4_SeqToGenos/C08L7ACXX_6_c+.hmp.txt",
+            "-sC",   "1",
+            "-eC",   "10",
+            "-syn",  rawReadsVsSeqToGenosDir+"tassel4_SeqToGenos/C08L7ACXX_6_SynonymsProd.txt",
+            "-o",    rawReadsVsSeqToGenosDir+"tassel4_SeqToGenos/rawReadsVsSeqToGenosMDPLowVolGenoCompare.txt",
+        };
+
+        String XXvsZZDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/";
+        String[] XXvsZZArgs = new String[]{
+            "-hmp1", XXvsZZDir+"tassel4_SeqToGenos/C08L7ACXX_6_c+.hmp.txt",
+            "-hmp2", XXvsZZDir+"tassel4_SeqToGenos/C08L7ACZZ_9_c+.hmp.txt",
+            "-sC",   "1",
+            "-eC",   "10",
+            "-syn",  XXvsZZDir+"tassel4_SeqToGenos/C08L7ACXX_6_XXvZZSynonymsProd.txt",
+            "-o",    XXvsZZDir+"tassel4_SeqToGenos/XXvZZGenoCompare.txt",
+        };
+
         TasselPrefs.putAlignmentRetainRareAlleles(true);
         CompareGenosBetweenHapMapFilesPlugin plugin = new CompareGenosBetweenHapMapFilesPlugin();
-        plugin.setParameters(tassel3v4ProdArgs);
+        plugin.setParameters(XXvsZZArgs);
         plugin.performFunction(null);
     }
     
