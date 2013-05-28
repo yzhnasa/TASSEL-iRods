@@ -151,14 +151,11 @@ public class ExportUtils {
         }
     }
 
-    public static String writeToMutableHDF5(Alignment a, String newHDF5file) {
-
+        public static String writeToMutableHDF5(Alignment a, String newHDF5file, boolean includeGenotypes) {
         IHDF5Writer h5w = null;
         try {
-
             int numSites = a.getSiteCount();
             int numTaxa = a.getSequenceCount();
-
             newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, "mutable.hmp.h5");
             File hdf5File = new File(newHDF5file);
             if (hdf5File.exists()) {
@@ -185,14 +182,12 @@ public class ExportUtils {
                     alleleEncodings.set(aEncodings[s][x], s, x);
                 }
             }
-
             h5w.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
             h5w.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
             MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
             if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
                 throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
             }
-
             h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
@@ -221,13 +216,14 @@ public class ExportUtils {
             // Write Bases
             HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
             HDF5IntStorageFeatures.createDeflationDelete(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
-            for (int t = 0; t < numTaxa; t++) {
-                String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + a.getFullTaxaName(t);
-                h5w.createByteArray(basesPath, numSites, features);
-                byte[] bases = a.getBaseRow(t);
-                h5w.writeByteArray(basesPath, bases, features);
+            if(includeGenotypes) {
+                for (int t = 0; t < numTaxa; t++) {
+                    String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + a.getFullTaxaName(t);
+                    h5w.createByteArray(basesPath, numSites, features);
+                    byte[] bases = a.getBaseRow(t);
+                    h5w.writeByteArray(basesPath, bases, features);
+                }
             }
-
             return newHDF5file;
 
         } finally {
