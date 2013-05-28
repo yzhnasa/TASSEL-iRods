@@ -7,27 +7,56 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import org.apache.log4j.Logger;
 
+
 /**
- *
- * @author terry & ed
+ * MutableNucleotideAlignmentHDF5 is a byte based HDF5 mutable alignment.  The mutability 
+ * only allows for the addition and deletion of taxa, and for the modification of genotypes.
+ * It does NOT permit the insertion or deletion of sites.  
+ * <p>
+ * The class uses a local cache to provide performance.  The default cache is defined by 
+ * defaultCacheSize, and is set 4096 chunks.  The genotypes in the cache are chunked based 
+ * on defaultSiteCache also set to default of 4096 sites (4096 * 4096 = 16M sites).
+ * The cache be filled with any balance of chunks, and the first added are the first 
+ * removed if the cache fills.  If there will be lots of reading from the alignment, set the 
+ * defaultCacheSize > the number of taxa.  If you will only be writing to the object,
+ * then set the defaultCacheSize small.
+ * <p>
+ * This class is very speed efficient at most operations, but it is slow at setBase() because it 
+ * does not cache the bases being written for thread safety.  Write genotypes in bulk with
+ * setBaseRange().
+ * <p>
+ * To create this file format use:
+ * ExportUtils.writeToMutableHDF5(Alignment a, String newHDF5file, boolean includeGenotypes)
+ * To instantiate it:
+ * MutableNucleotideAlignmentHDF5.
+ * <p>
+ * If you use this in a research publication - cite Bradbury et al
+ * 
+ * <p>
+ * TODO:
+ * <li>Support multiple chromosomes per HDF5 file
+ * <li>Precompute alleles, MAF, Coverage
+ * <li>Add support for read depth
+ * <li>Add support for bit encoding - but just two states (Major/Minor) or (Ref/Alt)
+ * 
+ * @author Ed Buckler & Terry Casstevens
  */
 public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements MutableAlignment {
 
     private static final Logger myLogger = Logger.getLogger(MutableNucleotideAlignmentHDF5.class);
     private boolean myIsDirty = true;
-    private byte[][] myData;
     private List<Identifier> myIdentifiers = new ArrayList<Identifier>();
 //    private final int myMaxTaxa;
     private final int myMaxNumSites;
@@ -39,50 +68,17 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private int[] myLocusOffsets = null;
     protected String[] mySNPIDs;
     IHDF5Writer myWriter=null;
-    private HashMap<Integer,byte[]> myDataHashMap;
-    private byte[] singleCache=null;
-    private int taxonCached=-1;
+    private LRUCache<Long,byte[]> myDataCache;  //key (taxa <<< 32)+startSite
     HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
-
-    protected MutableNucleotideAlignmentHDF5(Alignment a, int maxNumTaxa, int maxNumSites) {
-        super(a.getAlleleEncodings());
-        myMaxNumAlleles = a.getMaxNumAlleles();
-
-        if (a.getAlleleEncodings().length != 1) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: must only have one allele encoding.");
-        }
-
-        if (a.getSiteCount() > maxNumSites) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: initial number of sites can't be more than max number of sites.");
-        }
-
-        if (a.getSequenceCount() > maxNumTaxa) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: initial number of taxa can't be more than max number of taxa.");
-        }
-        myMaxNumSites = maxNumSites;
-        myNumSites = a.getSiteCount();
-        myReference = new byte[myMaxNumSites];
-        Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
-        initData();
-        initTaxa(a.getIdGroup());
-        loadAlleles(a);
-        //loadLoci(a);
-        System.arraycopy(a.getSNPIDs(), 0, mySNPIDs, 0, a.getSiteCount());
-        System.arraycopy(a.getPhysicalPositions(), 0, myVariableSites, 0, a.getSiteCount());
-    }
-
-    public static MutableNucleotideAlignmentHDF5 getInstance(Alignment a, int maxTaxa, int maxNumSites) {
-        return MutableNucleotideAlignmentHDF5.getInstance(a, maxTaxa, maxNumSites);
-    }
-
-    public static MutableNucleotideAlignmentHDF5 getInstance(Alignment a) {
-        return getInstance(a, a.getSequenceCount(), a.getSiteCount());
-    }
+    private int defaultCacheSize=4096;
+    private int defaultSiteCache=4096;  
+    
 
 
     protected MutableNucleotideAlignmentHDF5(IHDF5Writer reader, List<Identifier> idGroup, int[] variableSites, 
-            List<Locus> locusToLociIndex, int[] lociOffsets, String[] siteNames) {
+            List<Locus> locusToLociIndex, int[] lociOffsets, String[] siteNames, int defaultCacheSize) {
         super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
+        this.defaultCacheSize=defaultCacheSize;
 
         if (variableSites.length != siteNames.length) {
             throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: number variable sites, loci, and site names must be same.");
@@ -100,21 +96,16 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myReference = new byte[myMaxNumSites];
         Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
         Collections.sort(idGroup);
-       // idGroup
         
         myIdentifiers = idGroup;
+        initCache();
     }
 
-//    public static MutableNucleotideAlignmentHDF5 getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
-//        return new MutableNucleotideAlignmentHDF5(idGroup, initNumSites, maxNumTaxa, maxNumSites);
-//    }
-//
-//    public static MutableNucleotideAlignmentHDF5 getInstance(IdGroup idGroup, int initNumSites) {
-//        return MutableNucleotideAlignmentHDF5.getInstance(idGroup, initNumSites, 
-//                idGroup.getIdCount(), initNumSites);
-//    }
-
     public static MutableNucleotideAlignmentHDF5 getInstance(String filename) {
+        return MutableNucleotideAlignmentHDF5.getInstance(filename, 4096);
+    }
+    
+    public static MutableNucleotideAlignmentHDF5 getInstance(String filename, int defaultCacheSize) {
         IHDF5Writer reader = HDF5Factory.open(filename);
         
         //derive the taxa list on the fly 
@@ -125,9 +116,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
    //         System.out.println(is.getName());
             taxaList.add(new Identifier(is.getName()));
         }
-
- //       IdGroup idgroup = new SimpleIdGroup(taxa);
-
+        
+        //TODO this is a good idea, it should be passed into the constructor and stored
         byte[][] alleles = reader.readByteMatrix(HapMapHDF5Constants.ALLELES);
 
         MDArray<String> alleleStatesMDArray = reader.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
@@ -142,51 +132,54 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         }
 
         int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
-        int maxNumAlleles = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES);
-        boolean retainRare = reader.getBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES);
         String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
-        int numLoci = lociStrings.length;
-       // Locus[] loci = new Locus[numLoci];
         ArrayList<Locus> loci=new ArrayList<Locus>();
         for (String lS : lociStrings) {loci.add(new Locus(lS));}
         int[] lociOffsets = reader.readIntArray(HapMapHDF5Constants.LOCUS_OFFSETS);
         String[] snpIds = reader.readStringArray(HapMapHDF5Constants.SNP_IDS);
-        return new MutableNucleotideAlignmentHDF5(reader, taxaList, variableSites, loci, lociOffsets, snpIds);
+        return new MutableNucleotideAlignmentHDF5(reader, taxaList, variableSites, loci, lociOffsets, snpIds, defaultCacheSize);
+    }
+
+    
+    private void initCache() {
+        myDataCache=new LRUCache<Long, byte[]>(defaultCacheSize);
+        int minLoad=(defaultCacheSize<getSequenceCount())?defaultCacheSize:getSequenceCount();
+        int start=(0/defaultSiteCache)*defaultSiteCache;
+        for (int i = 0; i<minLoad; i++) {
+            myDataCache.put(getCacheKey(i,0), myWriter.readAsByteArrayBlockWithOffset(getTaxaPath(i),defaultSiteCache,start));
+        }
     }
     
-    private void initData() {
-        myVariableSites = new int[myMaxNumSites];
-        Arrays.fill(myVariableSites, -1);
-        mySNPIDs = new String[myMaxNumSites];
-        Arrays.fill(mySNPIDs, null);
+    private long getCacheKey(int taxon, int site) {
+        return ((long)taxon<<32)+(site/defaultSiteCache);
     }
-
-    private void initTaxa(IdGroup idGroup) {
-        for (int i = 0, n = idGroup.getIdCount(); i < n; i++) {
-            myIdentifiers.add(idGroup.getIdentifier(i));
-        }
+    
+    private byte[] cacheTaxonSiteBlock(int taxon, int site, long key) {
+        int start=(site/defaultSiteCache)*defaultSiteCache;
+        byte[] data=myWriter.readAsByteArrayBlockWithOffset(getTaxaPath(taxon),defaultSiteCache,start);
+        if(data==null) return null;
+        myDataCache.put(key, data);
+        return data;
     }
-
-    private void loadAlleles(Alignment a) {
-        int numSites = a.getSiteCount();
-        int numSeqs = a.getSequenceCount();
-
-        for (int s = 0; s < numSites; s++) {
-            for (int t = 0; t < numSeqs; t++) {
-                myData[t][s] = a.getBase(t, s);
-            }
-        }
+    
+    private byte[] cacheTaxonSiteBlock(int taxon, int site) {
+        return cacheTaxonSiteBlock(taxon, site, getCacheKey(taxon, site));
+    }
+    
+    private void removeCacheTaxonSiteBlock(int taxon, int site) {
+        long key=getCacheKey(taxon, site);
+        myDataCache.remove(key);
+    }
+    
+    private String getTaxaPath(int taxon) {
+        return HapMapHDF5Constants.GENOTYPES + "/" + getFullTaxaName(taxon);
     }
 
     public byte getBase(int taxon, int site) {
-        if(taxon!=taxonCached) {
-            singleCache=myWriter.readByteArray(HapMapHDF5Constants.GENOTYPES + "/" + getFullTaxaName(taxon));
-            taxonCached=taxon;
-        }
-        return singleCache[site];
-       // return myData[taxon][site];
-        
-        //http://stackoverflow.com/questions/12319741/limited-size-hash-map
+        long key=getCacheKey(taxon,site);
+        byte[] data=myDataCache.get(key);
+        if(data==null) {data=cacheTaxonSiteBlock(taxon, site, key);}
+        return data[site%defaultSiteCache];
     }
 
     public boolean isSBitFriendly() {
@@ -275,8 +268,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return myLocusToLociIndex.size();
     }
 
-
-
     @Override
     public int[] getStartAndEndOfLocus(Locus locus) {
 
@@ -338,7 +329,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
-
         if (isDirty()) {
             throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getSiteOfPhysicalPosition: this alignment is dirty.");
         }
@@ -394,10 +384,17 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         }
         return result;
     }
+    
+    public void setCacheHints(int numberOfTaxa, int numberOfSites) {
+        //Number of taxa to keep in the cache
+        //size of the block of sequence to cache.
+        //linkedHashList <Taxon, <startSite,byte[]>>
+    }
 
     // Mutable Methods...
     public void setBase(int taxon, int site, byte newBase) {
-        myData[taxon][site] = newBase;
+        this.myWriter.writeByteArrayBlock(getTaxaPath(taxon),new byte[]{newBase},site);
+        cacheTaxonSiteBlock(taxon, site);
     }
 
     public void setBase(Identifier taxon, String siteName, Locus locus, int physicalPosition, byte newBase) {
@@ -415,15 +412,17 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
                 throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: setBase: site names at physical position: " + physicalPosition + " in locus: " + locus.getName() + " does not match: " + siteName);
             }
         }
-
-        myData[taxonIndex][site] = newBase;
+        setBase(taxonIndex,site,newBase);
+        //myData[taxonIndex][site] = newBase;
 
     }
 
     public void setBaseRange(int taxon, int startSite, byte[] newBases) {
-        for (int i = 0; i < newBases.length; i++) {
-            myData[taxon][startSite++] = newBases[i];
+        this.myWriter.writeByteArrayBlock(getTaxaPath(taxon),newBases,startSite);
+        for (int site = startSite; site < (startSite+newBases.length); site+=defaultSiteCache) {
+            cacheTaxonSiteBlock(taxon, site);
         }
+        
     }
 
     public void setReferenceAllele(int site, byte diploidAllele) {
@@ -433,6 +432,9 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     public void addTaxon(Identifier id) {
         String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
         myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
+        byte[] unkArray=new byte[getSiteCount()];
+        Arrays.fill(unkArray, UNKNOWN_DIPLOID_ALLELE);
+        myWriter.writeByteArray(basesPath, unkArray);
         myIdentifiers.add(id);
     }
 
@@ -440,24 +442,29 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         if (taxon >= myIdentifiers.size()) {
             throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: setTaxonName: this taxa index does not exist: " + taxon);
         }
-        String currentPath = HapMapHDF5Constants.GENOTYPES + "/" + myIdentifiers.get(taxon);
+        String currentPath = getTaxaPath(taxon);
         String newPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
         myWriter.move(currentPath, newPath);
         myIdentifiers.set(taxon, id);
     }
 
     public void removeTaxon(int taxon) {
-        myIdentifiers.remove(taxon);
-        String currentPath = HapMapHDF5Constants.GENOTYPES + "/" + myIdentifiers.get(taxon);
+        String currentPath = getTaxaPath(taxon);
+        System.out.println(currentPath);
         myWriter.delete(currentPath);
-        //TODO remove from cache
-
+        myIdentifiers.remove(taxon);
+        System.out.println(getTaxaPath(taxon));
+        initCache();
+        
     }
 
     public void clean() {
         myIsDirty = false;
         myNumSites -= myNumSitesStagedToRemove;
         myNumSitesStagedToRemove = 0;
+        //save the out cache to file
+        //re-sort the taxa names
+        //
     }
 
     public boolean isDirty() {
@@ -484,6 +491,26 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return -1;
     }
 
+    public int getDefaultCacheSize() {
+        return defaultCacheSize;
+    }
+
+    public void setDefaultCacheSize(int defaultCacheSize) {
+        this.defaultCacheSize = defaultCacheSize;
+        initCache();
+    }
+
+    public int getDefaultSiteCache() {
+        return defaultSiteCache;
+    }
+
+    public void setDefaultSiteCache(int defaultSiteCache) {
+        this.defaultSiteCache = defaultSiteCache;
+        initCache();
+    }
+    
+    
+
     public void setDepthForAlleles(int taxon, int site, byte[] values) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -494,12 +521,12 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public void addSite(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Will not be supported");
     }
 
     @Override
     public void removeSite(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Will not be supported.");
     }
 
     @Override
@@ -515,5 +542,18 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public void setLocusOfSite(int site, Locus locus) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+}
+class LRUCache<K, V> extends LinkedHashMap<K, V> {
+    private final int limit;
+    public LRUCache(int limit) {
+      super(16, 0.75f, true);
+      this.limit = limit;
+    }
+    
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
+      return size() > limit;
     }
 }
