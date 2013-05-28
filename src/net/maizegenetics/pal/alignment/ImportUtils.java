@@ -51,6 +51,26 @@ public class ImportUtils {
     private ImportUtils() {
         // Utility Class - do not instantiate.
     }
+    
+    public static Alignment readGuessFormat(String fileName, boolean readSBit) {
+        try{
+            if(fileName.endsWith("mhmp.h5")) {
+                return MutableNucleotideAlignmentHDF5.getInstance(fileName);
+            } else if(fileName.endsWith("hmp.h5")) {
+                return BitAlignmentHDF5.getInstance(fileName, readSBit);
+            } else if(fileName.endsWith("hmp.txt.gz")||fileName.endsWith("hmp.txt")) {
+                return readFromHapmap(fileName, readSBit, null);
+            } else if(fileName.endsWith(".vcf")||fileName.endsWith(".vcf.gz")) {
+                return readFromVCF(fileName, null);
+            } else {
+                return readFasta(fileName, readSBit);
+            }
+        }catch(Exception e) {
+            System.err.println("Error reading:"+fileName);
+            return null;
+        } 
+        
+    }
 
     /*
      * Counts number of Header rows in a VCF files

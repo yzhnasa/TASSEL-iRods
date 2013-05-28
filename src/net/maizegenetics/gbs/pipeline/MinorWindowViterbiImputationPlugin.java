@@ -27,6 +27,7 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableAlignment;
+import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.ProjectionAlignment;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
@@ -147,8 +148,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         }
         unimpAlign.optimizeForTaxa(null);
         Alignment[] donorAlign=loadDonors(donorFile);
-        OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, true);
-        
+        OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, true);   
 
         siteErrors=new int[unimpAlign.getSiteCount()];
         siteCorrectCnt=new int[unimpAlign.getSiteCount()];
@@ -162,11 +162,15 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         if(isOutputProjection) {
             mna=new ProjectionAlignment(donorAlign[0], unimpAlign.getIdGroup());
         } else {
-            if(unImpTargetFile.contains(".h5")) {
+            if(exportFile.contains("mhmp.h5")) {
+                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, false);
+                mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
+            }else if(unImpTargetFile.contains(".h5")) {
                 mna=MutableNucleotideAlignment.getInstance(BitAlignmentHDF5.getInstance(unImpTargetFile, true));  //output data matrix
             } else {
                 mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
             }
+
         }
         long time=System.currentTimeMillis();
         for (int taxon = 0; taxon < unimpAlign.getSequenceCount(); taxon+=1) {
@@ -213,7 +217,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             int unk=countUnknown(impTaxon.resolveGeno);
             System.out.printf("Unk:%d PropMissing:%g ", unk, (double)unk/(double)mna.getSiteCount());
             if(!isOutputProjection) {
-                mna.setBaseRange(taxon, 0, impTaxon.resolveGeno);    
+                if(mna instanceof MutableNucleotideAlignmentHDF5) mna.addTaxon(unimpAlign.getIdGroup().getIdentifier(taxon));
+                ((MutableNucleotideAlignmentHDF5)mna).setAllBases(taxon, impTaxon.resolveGeno);    
             }
             double errRate=calcErrorForTaxonAndSite(impTaxon); 
             System.out.printf("ErR:%g ", errRate);
@@ -238,7 +243,11 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //        }
         if(isOutputProjection) {
            ((ProjectionAlignment)mna).save(exportFile);
-        } else {ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);}
+        } else {
+            if(mna instanceof MutableNucleotideAlignmentHDF5) {
+                mna.clean();
+            } else {ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);}
+        }
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
         
     }
@@ -784,13 +793,13 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     private static void compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
         boolean taxaOut=false;
-        Alignment oA=ImportUtils.readFromHapmap(origFile, false, (ProgressListener)null);
+        Alignment oA=ImportUtils.readGuessFormat(origFile, false);
         System.out.printf("Orig taxa:%d sites:%d %n",oA.getSequenceCount(),oA.getSiteCount());        
         Alignment mA=null;
-        if(noMask==false) {mA=ImportUtils.readFromHapmap(maskFile, false, (ProgressListener)null);
+        if(noMask==false) {mA=ImportUtils.readGuessFormat(maskFile, false);
             System.out.printf("Mask taxa:%d sites:%d %n",mA.getSequenceCount(),mA.getSiteCount());
         }
-        Alignment iA=ImportUtils.readFromHapmap(impFile, false, (ProgressListener)null);
+        Alignment iA=ImportUtils.readGuessFormat(impFile, false);
         System.out.printf("Imp taxa:%d sites:%d %n",iA.getSequenceCount(),iA.getSiteCount());
         int correct=0;
         int errors=0;
@@ -939,11 +948,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
-       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
-//       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
-        String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
-  //      String donorFile=rootHaplos+"HM26_Allk.c10s+.hmp.txt.gz";
-        String impTargetFile=rootImp+"newmnaTall26.c+.imp.hmp.txt.gz";
+//       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
+       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
+//        String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
+        String donorFile=rootHaplos+"HM26_Allk.c10s+.hmp.txt.gz";
+//        String impTargetFile=rootImp+"newmnaTall26.c+.imp.hmp.txt.gz";
+       String impTargetFile=rootImp+"newmnaTall26.c+.imp.mhmp.h5";
   //      String impTargetFile=rootImp+"T3AllZeaGBSv2_6.c+.pa.txt.gz";
         
       
@@ -964,7 +974,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
         plugin.setParameters(args2);
         plugin.performFunction(null);
-//        compareAlignment(rootImp+"newmnaTall26.c10.imp.hmp.txt.gz", null, rootImp+"Tall26.c10.imp.hmp.txt.gz", true);
+        compareAlignment(rootImp+"newmnaTall26.c10.imp.hmp.txt.gz", null, rootImp+"newmnaTall26.c10.imp.mhmp.h5", true);
 //        TasselPrefs.putAlignmentRetainRareAlleles(false);
 //        System.out.println("Reading PA file");
 ////        ProjectionAlignment pa=ProjectionAlignment.getInstance(rootImp+"TAllZeaGBSv2_6.c10.pa.txt.gz", donorFile);

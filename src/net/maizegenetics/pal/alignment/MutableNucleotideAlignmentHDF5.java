@@ -424,6 +424,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         }
         
     }
+    
+    public void setAllBases(int taxon, byte[] newBases) {
+            myWriter.writeByteArray(getTaxaPath(taxon), newBases, genoFeatures);
+            for (int site = 0; site < newBases.length; site+=defaultSiteCache) {
+            cacheTaxonSiteBlock(taxon, site);
+        }
+    }
 
     public void setReferenceAllele(int site, byte diploidAllele) {
         myReference[site] = diploidAllele;
