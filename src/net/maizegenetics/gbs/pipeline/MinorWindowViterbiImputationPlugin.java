@@ -179,12 +179,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             System.out.printf("Imputing %d:%s Mj:%d, Mn:%d Unk:%d ... ", taxon,name,
                     unimpAlign.getAllelePresenceForAllSites(taxon, 0).cardinality(),
                     unimpAlign.getAllelePresenceForAllSites(taxon, 1).cardinality(), countUnknown(impTaxon.getOrigGeno()));
-            if(unimpAlign.getTotalNotMissingForTaxon(taxon)<minSitesPresent) {
-                System.out.println("Too much missing data");
-                continue;
-            }
+            boolean enoughData=(unimpAlign.getTotalNotMissingForTaxon(taxon)>minSitesPresent);
+//                System.out.println("Too much missing data");
+//                continue;
+//            }
             int countFullLength=0;
-            for (int da = 0; da < donorAlign.length; da++) {
+            for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
                 int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInLocus(0), null);
                 blocks=donorAlign[da].getAllelePresenceForAllSites(0, 0).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
@@ -947,9 +947,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
-  //      String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
+        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
 //       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
-       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
+//       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
 //        String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
         String donorFile=rootHaplos+"HM26_Allk.c10s+.hmp.txt.gz";
 //        String impTargetFile=rootImp+"newmnaTall26.c+.imp.hmp.txt.gz";
