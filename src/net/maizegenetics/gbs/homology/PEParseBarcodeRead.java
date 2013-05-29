@@ -11,13 +11,17 @@ import net.maizegenetics.gbs.util.BaseEncoder;
  * @author Fei Lu
  */
 public class PEParseBarcodeRead extends ParseBarcodeRead {
-    
+    String[] bLikelyReadEnd;
     public PEParseBarcodeRead(String keyFile, String enzyme, String flowcell, String lane) {
         super(keyFile, enzyme, flowcell, lane);
+        bLikelyReadEnd = new String[likelyReadEnd.length/2];
+        for (int i = 0; i < bLikelyReadEnd.length; i++) {
+            bLikelyReadEnd[i] = likelyReadEnd[i];
+        }
     }
     
     public PEReadBarcodeResult parseReadIntoTagAndTaxa(String seqSF, String qualSF, String seqSB, String qualSB, boolean fastq, int minQual, int tagLengthInLong) {
-        boolean ifMatch = false;;
+        boolean ifMatch = false;
         for (int i = 0; i < initialCutSiteRemnant.length; i++) {
             if (seqSB.startsWith(initialCutSiteRemnant[i])) {
                 ifMatch = true;
@@ -55,19 +59,26 @@ public class PEParseBarcodeRead extends ParseBarcodeRead {
         if (bestBarcode == null) {
             return null;  //overhang missing so skip
         }
-        String genomicSeq1 = seqSF.substring(bestBarcode.barLength, seqSF.length());
-        ShortReadBarcodeResult tagProcessingResults1 = removeSeqAfterSecondCutSite(genomicSeq1, (short)(tagLengthInLong * BaseEncoder.chunkSize), tagLengthInLong, bestBarcode.getTaxaName());
-        String genomicSeq2 = seqSB;
-        ShortReadBarcodeResult tagProcessingResults2 = removeSeqAfterSecondCutSite(genomicSeq2, (short)(tagLengthInLong * BaseEncoder.chunkSize), tagLengthInLong, bestBarcode.getTaxaName());
-        return new PEReadBarcodeResult(tagProcessingResults1, tagProcessingResults2);
+        String genomicSeqF = seqSF.substring(bestBarcode.barLength, seqSF.length());
+        ShortReadBarcodeResult tagProcessingResultsF = removeSeqAfterSecondCutSite(genomicSeqF, (short)(tagLengthInLong * BaseEncoder.chunkSize), tagLengthInLong, bestBarcode.getTaxaName(), true);
+        String genomicSeqB = this.removeSeqAfterBarcode(bestBarcode.barcodeS, genomicSeqF, seqSB);
+        ShortReadBarcodeResult tagProcessingResultsB = removeSeqAfterSecondCutSite(genomicSeqB, (short)(tagLengthInLong * BaseEncoder.chunkSize), tagLengthInLong, bestBarcode.getTaxaName(), false);
+        return new PEReadBarcodeResult(tagProcessingResultsF, tagProcessingResultsB);
     }
     
-    public ShortReadBarcodeResult removeSeqAfterSecondCutSite(String seq, short maxLength, int tagLengthInLong, String taxaName) {
+    private String removeSeqAfterBarcode (String bestBarcodeS, String genomicSeqF, String seqSB) {
+        String barcodeGenomicS = bestBarcodeS+genomicSeqF.substring(0, readEndCutSiteRemnantLength);
+        String rBarcodeGenomicS = BaseEncoder.getReverseComplement(barcodeGenomicS);
+        int index = seqSB.indexOf(rBarcodeGenomicS);
+        if (index == -1) return seqSB;
+        return seqSB.substring(0, index+readEndCutSiteRemnantLength);
+    }
+    
+    public ShortReadBarcodeResult removeSeqAfterSecondCutSite(String seq, short maxLength, int tagLengthInLong, String taxaName, boolean ifForward) {
         //this looks for a second restriction site or the common adapter start, and then turns the remaining sequence to AAAA
         int cutSitePosition = 9999;
         ShortReadBarcodeResult returnValue = new ShortReadBarcodeResult(seq);
         returnValue.taxonName = taxaName;
-
         //Look for cut sites, starting at a point past the length of the initial cut site remnant that all reads begin with
         String match = null;
         for (String potentialCutSite : likelyReadEnd) {
@@ -82,17 +93,28 @@ public class PEParseBarcodeRead extends ParseBarcodeRead {
             seq = seq.substring(3, seq.length());  // trim off the initial GCW from GCWGCWGC
             cutSitePosition = 9999;
             returnValue.unprocessedSequence = seq;
-            for (String potentialCutSite : likelyReadEnd) {
-                int p = seq.indexOf(potentialCutSite, 1);
-                if ((p > 1) && (p < cutSitePosition)) {
-                    cutSitePosition = p;
+            if (ifForward) {
+                for (String potentialCutSite : likelyReadEnd) {
+                    int p = seq.indexOf(potentialCutSite, 1);
+                    if ((p > 1) && (p < cutSitePosition)) {
+                        cutSitePosition = p;
+                    }
                 }
             }
+            else {
+                for (String potentialCutSite : bLikelyReadEnd) {
+                    int p = seq.indexOf(potentialCutSite, 1);
+                    if ((p > 1) && (p < cutSitePosition)) {
+                        cutSitePosition = p;
+                    }
+                }
+            }
+            
         }
 
         if (cutSitePosition < maxLength) {  // Cut site found
             //Trim tag to sequence up to & including the cut site
-            returnValue.length = (byte) (cutSitePosition + readEndCutSiteRemnantLength);
+            returnValue.length = (short) (cutSitePosition + readEndCutSiteRemnantLength);
             returnValue.processedSequence = seq.substring(0, cutSitePosition + readEndCutSiteRemnantLength);
         } else {
             if (seq.length() <= 0) {
@@ -101,7 +123,7 @@ public class PEParseBarcodeRead extends ParseBarcodeRead {
                 returnValue.length = 0;
             } else {
                 //If cut site is missing because it is beyond the end of the sequence (or not present at all)
-                returnValue.length = (byte) Math.min(seq.length(), maxLength);
+                returnValue.length = (short) Math.min(seq.length(), maxLength);
                 returnValue.processedSequence = (seq.substring(0, returnValue.length));
             }
         }
