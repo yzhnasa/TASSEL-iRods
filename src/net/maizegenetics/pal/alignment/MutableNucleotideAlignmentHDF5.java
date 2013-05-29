@@ -417,7 +417,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     }
 
-    public void setBaseRange(int taxon, int startSite, byte[] newBases) {
+    public synchronized void setBaseRange(int taxon, int startSite, byte[] newBases) {
         this.myWriter.writeByteArrayBlock(getTaxaPath(taxon),newBases,startSite);
         for (int site = startSite; site < (startSite+newBases.length); site+=defaultSiteCache) {
             cacheTaxonSiteBlock(taxon, site);
@@ -425,7 +425,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         
     }
     
-    public void setAllBases(int taxon, byte[] newBases) {
+    public synchronized void setAllBases(int taxon, byte[] newBases) {
             myWriter.writeByteArray(getTaxaPath(taxon), newBases, genoFeatures);
             for (int site = 0; site < newBases.length; site+=defaultSiteCache) {
             cacheTaxonSiteBlock(taxon, site);
@@ -436,7 +436,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myReference[site] = diploidAllele;
     }
 
-    public void addTaxon(Identifier id) {
+    public synchronized void addTaxon(Identifier id) {
         String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
         myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
         byte[] unkArray=new byte[getSiteCount()];
@@ -445,7 +445,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myIdentifiers.add(id);
     }
 
-    public void setTaxonName(int taxon, Identifier id) {
+    public synchronized void setTaxonName(int taxon, Identifier id) {
         if (taxon >= myIdentifiers.size()) {
             throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: setTaxonName: this taxa index does not exist: " + taxon);
         }
@@ -455,7 +455,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myIdentifiers.set(taxon, id);
     }
 
-    public void removeTaxon(int taxon) {
+    public synchronized void removeTaxon(int taxon) {
         String currentPath = getTaxaPath(taxon);
         System.out.println(currentPath);
         myWriter.delete(currentPath);
