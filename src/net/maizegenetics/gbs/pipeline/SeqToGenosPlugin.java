@@ -70,6 +70,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private TreeMap<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
     private HashMap<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
     private MutableNucleotideDepthAlignment[] genos = null;
+    private TreeMap<String,Integer> RawReadCountsForFullSampleName = new TreeMap<String,Integer>();
+    private TreeMap<String,Integer> RawReadCountsForFinalSampleName = new TreeMap<String,Integer>();
     private boolean vcf = false;  // if true, use "vcf" (STACKS) method for calling hets
     private double errorRate = 0.01;
     private final static int maxCountAtGeno = 500;  // maximum value for likelihoodRatioThreshAlleleCnt[] lookup table
@@ -212,6 +214,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                     ReadBarcodeResult rr = readSequenceRead(br, temp, thePBR, counters);
                     if (rr != null) {
                         counters[1]++;  // goodBarcodedReads
+                        RawReadCountsForFullSampleName.put(rr.getTaxonName(),RawReadCountsForFullSampleName.get(rr.getTaxonName())+1);
+                        RawReadCountsForFinalSampleName.put(FullNameToFinalName.get(rr.getTaxonName()),RawReadCountsForFinalSampleName.get(FullNameToFinalName.get(rr.getTaxonName()))+1);
                         int tagIndex = topm.getTagIndex(rr.getRead());
                         if (tagIndex >= 0) {
                             counters[3]++;  // perfectMatches
@@ -451,15 +455,18 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 if (FlowcellLanes.get(flowcellLane)) { // is fastq (or qseq) file available?
                     nRepSamplesWithRawSeqFile++;
                     tempFullName = sample+":"+flowcellLane+":"+LibPrepID;
+                    RawReadCountsForFullSampleName.put(tempFullName, 0);
                 } else {
                     samplesInKeyFileWithNoRawSeqFile.add(sample+":"+flowcellLane+":"+LibPrepID);
                 }
             }
             if (nRepSamplesWithRawSeqFile == 1) {
                 finalSampleNamesTS.add(tempFullName);
+                RawReadCountsForFinalSampleName.put(tempFullName, 0);
             } else if (nRepSamplesWithRawSeqFile > 1) {
                 String finalName = sample+":MRG:"+nRepSamplesWithRawSeqFile+":"+LibPrepID;
                 finalSampleNamesTS.add(finalName);
+                RawReadCountsForFinalSampleName.put(finalName, 0);
                 for (String flowcellLane : flowcellLanesForLibPrep) {
                     if (FlowcellLanes.get(flowcellLane)) {
                         FullNameToFinalName.put(sample+":"+flowcellLane+":"+LibPrepID, finalName);
