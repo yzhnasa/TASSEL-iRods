@@ -31,6 +31,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.MutableNucleotideDepthAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import org.apache.commons.math.distribution.BinomialDistributionImpl;
 import org.apache.log4j.Logger;
 
 /**
@@ -69,6 +70,12 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private TreeMap<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
     private HashMap<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
     private MutableNucleotideDepthAlignment[] genos = null;
+    private boolean vcf = false;  // if true, use "vcf" (STACKS) method for calling hets
+    private double errorRate = 0.01;
+    private final static int maxCountAtGeno = 500;  // maximum value for likelihoodRatioThreshAlleleCnt[] lookup table
+    private static int[] likelihoodRatioThreshAlleleCnt = null;  // index = sample size; value = min count of less tagged allele for likelihood ratio > 1
+    // if less tagged allele has counts < likelihoodRatioThreshAlleleCnt[totalCount], call it a homozygote
+    // where likelihood ratio = (binomial likelihood het) / (binomial likelihood all less tagged alleles are errors)
 
     public SeqToGenosPlugin() {
         super(null, false);
@@ -174,15 +181,19 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalStateException("performFunction: enzyme must be set.");
         }
+        if (!vcf) {
+            setLikelihoodThresh(errorRate);
+        }
         readKeyFile();
         matchKeyFileToAvailableRawSeqFiles();
         setUpMutableNucleotideAlignmentsWithDepth();
-        translateRawReadsToHapmap();
+        readRawSequencesAndRecordDepth();
+        callGenotypes();
         writeHapMapFiles();
         return null;
     }
 
-    private void translateRawReadsToHapmap() {
+    private void readRawSequencesAndRecordDepth() {
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
             ParseBarcodeRead thePBR = setUpBarcodes(fileNum);
@@ -213,12 +224,12 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                         }
                         counters[2]++;  // goodMatched++;
                         int taxonIndex = FinalNameToTaxonIndex.get(FullNameToFinalName.get(rr.getTaxonName()));
-                        recordVariantsFromTag(tagIndex, taxonIndex);
+                        incrementDepthForTagVariants(tagIndex, taxonIndex);
                     }
                 }
                 br.close();
             } catch (Exception e) {
-                System.out.println("Catch in translateRawReadsToHapmap() at nReads=" + counters[0] + " e=" + e);
+                System.out.println("Catch in readRawSequencesAndRecordDepth() at nReads=" + counters[0] + " e=" + e);
                 System.out.println("Last line read: "+temp);
                 e.printStackTrace();
             }
@@ -542,7 +553,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         return tagIndex;
     }
 
-    private void recordVariantsFromTag(int tagIndex, int taxonIndex) {
+    private void incrementDepthForTagVariants(int tagIndex, int taxonIndex) {
         int chromosome = topm.getChromosome(tagIndex);
         if (chromosome == TOPMInterface.INT_MISSING) {
             return;
@@ -577,15 +588,111 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             }
         }
     }
+    
+    private void callGenotypes() {
+        for (int chrIndex = 0; chrIndex < genos.length; chrIndex++) {
+            for (int site = 0; site < genos[chrIndex].getSiteCount(); site++) {
+                for (int taxon = 0; taxon < genos[chrIndex].getSequenceCount(); taxon++) {
+                    byte[] depths = genos[chrIndex].getDepthForAlleles(taxon, site);
+                    genos[chrIndex].setBase(taxon, site, resolveGeno(depths));
+                }
+            }
+        }
+    }
+    
+    private byte resolveGeno(byte[] depths) {
+        int count = 0;
+        for (int a = 0; a < depths.length; a++) {
+            count += depths[a];
+        }
+        if (count == 0) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        // check for each possible homozygote
+        for (int a = 0; a < depths.length; a++) {
+            if ((count - depths[a]) == 0) {
+                byte byteA = (byte) a;
+                return (byte) ((byteA << 4) | byteA);
+            }
+        }
+        return resolveHetGeno(depths);
+    }
+    
+    private byte resolveHetGeno(byte[] depths) {
+        int max = 0;
+        byte maxAllele = Alignment.UNKNOWN_ALLELE;
+        int nextMax = 0;
+        byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
+        for (int a = 0; a < depths.length; a++) {
+            if (depths[a] > max) {
+                nextMax = max;
+                nextMaxAllele = maxAllele;
+                max = depths[a];
+                maxAllele = (byte) a;
+            } else if (depths[a] > nextMax) {
+                nextMax = depths[a];
+                nextMaxAllele = (byte) a;
+            }
+        }
+        if (vcf) {
+            return Alignment.UNKNOWN_ALLELE; // ToDo: resolve the het with the vcf (STACKS) method
+        } else {
+            // use the Buckler/Glaubitz LR method (if binomialPHet/binomialPErr > 1, call it a het)
+            int totCount = max + nextMax;
+            if (totCount < maxCountAtGeno) {
+                if (nextMax < likelihoodRatioThreshAlleleCnt[totCount]) {
+                    return (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
+                } else {
+                    return (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
+                }
+            } else {
+                if (nextMax / totCount < 0.1) {
+                    return (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
+                } else {
+                    return (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
+                }
+            }
+        }
+    }
 
     private void writeHapMapFiles() {
         for (int i = 0; i < genos.length; i++) {
             genos[i].clean();
+            System.out.println("\n\nDistribution of site summary stats for chromosome "+chromosomes[i]+":\n");
             AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(genos[i], false);
-            String outFileS = myOutputDir + myRawSeqFileNames[0].substring(myRawSeqFileNames[0].lastIndexOf(File.separator));
-            outFileS = outFileS.replaceAll(rawSeqFileNameReplaceRegex, "_c" + chromosomes[i]); // ".hmp.txt" gets added by ExportUtils.writeToHapmap
+            String outFileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
+            outFileS = outFileS.replaceAll(".txt", "_chr" + chromosomes[i] + ".hmp.txt.gz");
+            outFileS = outFileS.replaceAll("_key", "");
             ExportUtils.writeToHapmap(genos[i], false, outFileS, '\t', this);
+            System.out.println("Genotypes written to:\n"+outFileS+"\n\n");
         }
+    }
+
+    static void setLikelihoodThresh(double errorRate) {   // initialize the likelihood ratio cutoffs for quantitative SNP calling
+        likelihoodRatioThreshAlleleCnt = new int[maxCountAtGeno];
+        System.out.println("\n\nInitializing the cutoffs for quantitative SNP calling likelihood ratio (pHet/pErr) >1\n");
+        System.out.println("totalReadsForSNPInIndiv\tminLessTaggedAlleleCountForHet");
+        for (int trials = 0; trials < 2; ++trials) {
+            likelihoodRatioThreshAlleleCnt[trials] = 1;
+        }
+        int lastThresh = 1;
+        for (int trials = 2; trials < likelihoodRatioThreshAlleleCnt.length; ++trials) {
+            BinomialDistributionImpl binomHet = new BinomialDistributionImpl(trials, 0.5);
+            BinomialDistributionImpl binomErr = new BinomialDistributionImpl(trials, errorRate);
+            double LikeRatio;
+            try {
+                LikeRatio = binomHet.cumulativeProbability(lastThresh) / (1 - binomErr.cumulativeProbability(lastThresh) + binomErr.probability(lastThresh));
+                while (LikeRatio <= 1.0) {
+                    ++lastThresh;
+                    LikeRatio = binomHet.cumulativeProbability(lastThresh) / (1 - binomErr.cumulativeProbability(lastThresh) + binomErr.probability(lastThresh));
+                }
+                likelihoodRatioThreshAlleleCnt[trials] = lastThresh;
+                System.out.println(trials + "\t" + lastThresh);
+            } catch (Exception e) {
+                System.err.println("Error in the TagsAtLocus.BinomialDistributionImpl");
+            }
+        }
+        System.out.println("\n");
     }
 
     private void printFileNameConventions(String actualFileName) {
