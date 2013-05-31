@@ -32,7 +32,7 @@ public class TOPMUtils {
         } else if (temp.endsWith(".topm.bin") || temp.endsWith(".topm")) {
             return new TagsOnPhysicalMap(filename, true);
         } else if (temp.endsWith(".topm.h5")) {
-            return new TagsOnPhysMapHDF5(filename);
+            return new TagsOnPhysMapHDF5(filename, true);
         } else {
             throw new IllegalArgumentException("TOPMUtils: readTOPM: Unknown file extension: " + filename);
         }
@@ -49,10 +49,10 @@ public class TOPMUtils {
             ((TagsOnPhysicalMap) topm).writeBinaryFile(new File(filename));
         } else if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.txt"))) {
             ((TagsOnPhysicalMap) topm).writeTextFile(new File(filename));
-        } else if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.h5"))) {
-            TagsOnPhysMapHDF5.createFile((TagsOnPhysicalMap) topm, filename, 1, topm.getMaxNumVariants());
+        } else if ((topm instanceof TOPMInterface) && (temp.endsWith(".topm.h5"))) {
+            TagsOnPhysMapHDF5.createFile(topm, filename, 1, topm.getMaxNumVariants());
         } else {
-            // TBD
+           // TagsOnPhysMapHDF5.createFile(topm, filename, 1, topm.getMaxNumVariants());
         }
 
     }
