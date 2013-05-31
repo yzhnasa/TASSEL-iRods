@@ -19,6 +19,9 @@ import net.maizegenetics.gbs.homology.TagMatchFinder;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import java.awt.Frame;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -192,6 +195,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         readRawSequencesAndRecordDepth();
         callGenotypes();
         writeHapMapFiles();
+        writeReadsPerSampleReports();
         return null;
     }
 
@@ -673,6 +677,39 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             ExportUtils.writeToHapmap(genos[i], false, outFileS, '\t', this);
             System.out.println("Genotypes written to:\n"+outFileS+"\n\n");
         }
+    }
+    
+    private void writeReadsPerSampleReports() {
+        System.out.print("\nWriting ReadsPerSample log files...");
+        String outFileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));;
+        outFileS = outFileS.replaceAll(".txt", "_ReadsPerSample.log");
+        outFileS = outFileS.replaceAll("_key", "");
+        try {
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outFileS))), 65536);
+            bw.write("FullSampleName\tgoodBarcodedReads\n");
+            for (String fullSampleName : RawReadCountsForFullSampleName.keySet()) {
+                bw.write(fullSampleName+"\t"+RawReadCountsForFullSampleName.get(fullSampleName)+"\n");
+            }
+            bw.close();
+        } catch (Exception e) {
+            System.out.println("Couldn't write to ReadsPerSample log file: " + e);
+            e.printStackTrace();
+            System.exit(1);
+        }
+        outFileS = outFileS.replaceAll("_ReadsPerSample.log", "_ReadsPerLibPrepID.log");
+        try {
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outFileS))), 65536);
+            bw.write("FinalSampleName\tgoodBarcodedReads\n");
+            for (String finalSampleName : RawReadCountsForFinalSampleName.keySet()) {
+                bw.write(finalSampleName+"\t"+RawReadCountsForFinalSampleName.get(finalSampleName)+"\n");
+            }
+            bw.close();
+        } catch (Exception e) {
+            System.out.println("Couldn't write to ReadsPerLibPrepID log file: " + e);
+            e.printStackTrace();
+            System.exit(1);
+        }
+        System.out.print("   ...done\n");
     }
 
     static void setLikelihoodThresh(double errorRate) {   // initialize the likelihood ratio cutoffs for quantitative SNP calling
