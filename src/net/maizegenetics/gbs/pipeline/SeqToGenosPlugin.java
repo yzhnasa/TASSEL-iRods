@@ -40,7 +40,7 @@ import org.apache.log4j.Logger;
  * We refer to this step as the "Production Pipeline".
  * 
  * The output format is HDF5 genotypes with allelic depth stored. SNP calling 
- * is quantitative with the option of using either the Buckler/Glaubitz binomial
+ * is quantitative with the option of using either the Glaubitz/Buckler binomial
  * method (pHet/pErr > 1 = het), or the VCF/Stacks method.
  * 
  * Samples on multiple lanes with the same LibraryPrepID are merged prior to 
