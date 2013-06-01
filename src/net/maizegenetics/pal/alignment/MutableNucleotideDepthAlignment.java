@@ -84,13 +84,23 @@ public class MutableNucleotideDepthAlignment extends MutableNucleotideAlignment 
         }
     }
 
+    public byte[][] getDepthsForAllSites(int taxon) {
+        int nSites = this.getSiteCount();
+        byte[][] depthsForTaxon = new byte[MAX_NUM_ALLELES][nSites];
+        for (int allele = 0; allele < myAlleleDepth.length; allele++) {
+            for (int site = 0; site < nSites; site++) {
+                depthsForTaxon[allele][site] = myAlleleDepth[allele][taxon][site];
+            }
+        }
+        return depthsForTaxon;
+    }
+    
     // Return depth for all 6 alleles, even if they have never been set (Jeff G)
     @Override 
     public byte[] getDepthForAlleles(int taxon, int site) {
         byte[] alleleDepths = new byte[myAlleleDepth.length];
         for (int i = 0; i < myAlleleDepth.length; i++) {
             alleleDepths[i] = myAlleleDepth[i][taxon][site];
-
         }
         return alleleDepths;
     }
