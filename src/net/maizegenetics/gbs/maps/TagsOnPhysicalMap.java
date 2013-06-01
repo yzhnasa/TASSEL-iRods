@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeSet;
 
 import net.maizegenetics.gbs.tagdist.AbstractTags;
 import net.maizegenetics.gbs.tagdist.TagCountMutable;
@@ -1066,20 +1067,21 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     /**
      * Returns an array whose <i>values</i> are the distinct chromosomes in this
-     * file, as stored in the chromosome[] array. The indices are arbitrary.
+     * file, as stored in the chromosome[] array. The indices are arbitrary, but
+     * the array is sorted by chromosome number.
      */
     @Override
     public int[] getChromosomes() {
-        ArrayList<Integer> chrs = new ArrayList<Integer>();
+        TreeSet<Integer> chrs = new TreeSet<Integer>();
         for (int i = 0; i < chromosome.length; i++) {
             if (!chrs.contains(chromosome[i]) && chromosome[i] != Integer.MIN_VALUE) {
                 chrs.add(chromosome[i]);
-                int x = 1;
             }
         }
         int[] result = new int[chrs.size()];
-        for (int i = 0; i < chrs.size(); i++) {
-            result[i] = chrs.get(i);
+        int i = 0;
+        for (int chr : chrs) {
+            result[i++] = chr;
         }
         return result;
     }
