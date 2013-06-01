@@ -40,8 +40,8 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
     // 1 = same sense as reference FASTA file.  -1 = opposite sense.  unknown = Byte.MIN_VALUE  // 1 byte
     protected int myNumTags = 0;
     //TODO
-    public int tagNum;  //remove this and set to above
-    public int maxVariants;
+//    public int tagNum;  //remove this and set to above
+//    public int maxVariants;
     
     protected byte[][] variantDefs; // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes [tag][variant]
     // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes [tag][variant]

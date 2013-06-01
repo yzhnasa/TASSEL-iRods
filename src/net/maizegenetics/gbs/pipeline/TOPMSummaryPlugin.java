@@ -57,7 +57,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
         myChromosomes = myInputTOPM.getChromosomes();
         Arrays.sort(myChromosomes);
 
-        myNumTagsPerVariantsDefined = new int[myInputTOPM.maxVariants + 1];
+        myNumTagsPerVariantsDefined = new int[myInputTOPM.getMaxNumVariants() + 1];
 
         myPositionsOnMaxVariantTags = new TreeSet[myChromosomes.length];
         for (int m = 0; m < myChromosomes.length; m++) {
@@ -97,7 +97,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                 //}
                 List<Integer> positionsOnTag = new ArrayList<Integer>();
                 int numDefinedVariants = 0;
-                for (int j = 0; j < myInputTOPM.maxVariants; j++) {
+                for (int j = 0; j < myInputTOPM.getMaxNumVariants(); j++) {
                     int offset = myInputTOPM.getVariantPosOff(i, j);
                     byte def = myInputTOPM.getVariantDef(i, j);
                     //if (offset != Byte.MIN_VALUE) {
@@ -126,7 +126,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         }
                     }
                 }
-                if (numDefinedVariants == myInputTOPM.maxVariants) {
+                if (numDefinedVariants == myInputTOPM.getMaxNumVariants()) {
                     myPositionsOnMaxVariantTags[index].addAll(positionsOnTag);
                 }
                 myNumTagsPerVariantsDefined[numDefinedVariants]++;
@@ -145,7 +145,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                 //}
                 List<Integer> positionsOnTag = new ArrayList<Integer>();
                 int numDefinedVariants = 0;
-                for (int j = 0; j < myInputTOPM.maxVariants; j++) {
+                for (int j = 0; j < myInputTOPM.getMaxNumVariants(); j++) {
                     int offset = myInputTOPM.getVariantPosOff(i, j);
                     byte def = myInputTOPM.getVariantDef(i, j);
                     //if (offset != Byte.MIN_VALUE) {
@@ -174,7 +174,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         }
                     }
                 }
-                if (numDefinedVariants == myInputTOPM.maxVariants) {
+                if (numDefinedVariants == myInputTOPM.getMaxNumVariants()) {
                     myPositionsOnMaxVariantTags[index].addAll(positionsOnTag);
                 }
                 myNumTagsPerVariantsDefined[numDefinedVariants]++;
@@ -215,7 +215,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
         }
         myLogger.info("performFunction: Total SNPs: " + totalSNPs);
         
-        for (int i = 0; i <= myInputTOPM.maxVariants; i++) {
+        for (int i = 0; i <= myInputTOPM.getMaxNumVariants(); i++) {
             myLogger.info("performFunction: Number of Tags: " + myNumTagsPerVariantsDefined[i] + " Has: " + i + " Variants Defined");
         }
 

@@ -437,7 +437,7 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
         }
         Locus locus = theTOPM.getLocus(tagIndex);
         int startPos = theTOPM.getStartPosition(tagIndex);
-        for (int variant = 0; variant < theTOPM.maxVariants; variant++) {
+        for (int variant = 0; variant < theTOPM.getMaxNumVariants(); variant++) {
             byte currBase = theTOPM.getVariantDef(tagIndex, variant);
             if ((currBase == theTOPM.BYTE_MISSING) || (currBase == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                 continue;
@@ -471,7 +471,7 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
         }
         Locus locus = theTOPM.getLocus(tagIndex);
         int startPos = theTOPM.getStartPosition(tagIndex);
-        for (int variant = 0; variant < theTOPM.maxVariants; variant++) {
+        for (int variant = 0; variant < theTOPM.getMaxNumVariants(); variant++) {
             byte base = theTOPM.getVariantDef(tagIndex, variant);
             if ((base == theTOPM.BYTE_MISSING) || (base == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                 continue;
@@ -500,7 +500,7 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
         }
         Locus locus = theTOPM.getLocus(tagIndex);
         int startPos = theTOPM.getStartPosition(tagIndex);
-        for (int variant = 0; variant < theTOPM.maxVariants; variant++) {
+        for (int variant = 0; variant < theTOPM.getMaxNumVariants(); variant++) {
             byte base = theTOPM.getVariantDef(tagIndex, variant);
             if ((base == theTOPM.BYTE_MISSING) || (base == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
                 continue;

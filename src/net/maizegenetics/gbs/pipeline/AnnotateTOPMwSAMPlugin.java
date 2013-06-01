@@ -134,11 +134,11 @@ public final class AnnotateTOPMwSAMPlugin extends AbstractPlugin{
             DataOutputStream report = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(topmFileName+".log"), 65536));
             int[] aligned=topm.mappedTags();
             int unique=0, multi=1;  // the indices of aligned
-            int unaligned=topm.tagNum-aligned[unique]-aligned[multi];
+            int unaligned=topm.getTagCount()-aligned[unique]-aligned[multi];
             report.writeBytes(
                 "Input file: "+inputFileName+"\n"+
                 "Output file: "+topmFileName+"\n"+
-                "Total "+topm.tagNum+" tags\n\t"
+                "Total "+topm.getTagCount()+" tags\n\t"
                     +aligned[unique]+" were aligned to unique postions\n\t"
                     +aligned[multi]+" were aligned to multiple postions\n\t"
                     +unaligned+" could not be aligned.\n\n"
