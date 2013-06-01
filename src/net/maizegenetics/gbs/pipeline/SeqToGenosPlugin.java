@@ -590,42 +590,49 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 continue;
             }
             genos[chrIndex].incrementDepthForAllele(taxonIndex, currSite, newBase);
-            byte newGeno = AlignmentUtils.getDiploidValue(newBase, newBase);
-            byte prevGeno = genos[chrIndex].getBase(taxonIndex, currSite);
-            if (prevGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                genos[chrIndex].setBase(taxonIndex, currSite, newGeno);
-            } else if (newGeno != prevGeno) {
-                genos[chrIndex].setBase(taxonIndex, currSite, resolveGenoFromCallPair(prevGeno, newBase));
-            }
         }
     }
     
     private void callGenotypes() {
-        for (int chrIndex = 0; chrIndex < genos.length; chrIndex++) {
-            for (int site = 0; site < genos[chrIndex].getSiteCount(); site++) {
-                for (int taxon = 0; taxon < genos[chrIndex].getSequenceCount(); taxon++) {
-                    byte[] depths = genos[chrIndex].getDepthForAlleles(taxon, site);
-                    genos[chrIndex].setBase(taxon, site, resolveGeno(depths));
-                }
+        System.out.print("\nCalling genotypes...");
+        for (int taxon = 0, nTaxa = genos[0].getSequenceCount(); taxon < nTaxa; taxon++) {
+            for (int chrIndex = 0, nChrs = genos.length; chrIndex < nChrs; chrIndex++) {
+                byte[] callsForTaxon = resolveGenosForTaxon(genos[chrIndex].getDepthsForAllSites(taxon));
+                genos[chrIndex].setBaseRange(taxon, 0, callsForTaxon);
             }
         }
+        System.out.print("   ...done\n");
+    }
+    
+    private byte[] resolveGenosForTaxon(byte[][] depthsForTaxon) {
+        int nAlleles = depthsForTaxon.length;
+        byte[] depthsAtSite = new byte[nAlleles];
+        int nSites = depthsForTaxon[0].length;
+        byte[] genos = new byte[nSites];
+        for (int site = 0; site < nSites; site++) {
+            for (int allele = 0; allele < nAlleles; allele++) {
+                depthsAtSite[allele] = depthsForTaxon[allele][site];
+            }
+            genos[site] = resolveGeno(depthsAtSite);
+        }
+        return genos;
     }
     
     private byte resolveGeno(byte[] depths) {
         int count = 0;
         for (int a = 0; a < depths.length; a++) {
             count += depths[a];
-        }
-        if (count == 0) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        }
-        // check for each possible homozygote
+            }
+            if (count == 0) {
+                return Alignment.UNKNOWN_DIPLOID_ALLELE;
+            }
+            // check for each possible homozygote
         for (int a = 0; a < depths.length; a++) {
             if ((count - depths[a]) == 0) {
-                byte byteA = (byte) a;
-                return (byte) ((byteA << 4) | byteA);
+                    byte byteA = (byte) a;
+                    return (byte) ((byteA << 4) | byteA);
+                }
             }
-        }
         return resolveHetGeno(depths);
     }
     
