@@ -3,11 +3,18 @@
  */
 package net.maizegenetics.gbs.maps;
 
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import net.maizegenetics.gbs.tagdist.Tags;
 import net.maizegenetics.pal.alignment.Locus;
 
 /**
- *
+ * Tags on Physical Map (TOPM) Interface.  Define methods for the TOPM classes.
+ * The TOPM class holds information relating tags to the physical map, variants (SNPs)
+ * called by the tag, and quality of mapping information.
+ * 
  * @author Ed and Terry
  */
 public interface TOPMInterface extends Tags {
@@ -267,4 +274,6 @@ public interface TOPMInterface extends Tags {
      * Clears all variant definitions and position offsets.
      */
     public void clearVariants();
+    
+    public void writeTextFile(File outfile);
 }

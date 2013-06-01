@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.TreeSet;
 
 import net.maizegenetics.gbs.tagdist.AbstractTags;
 import net.maizegenetics.gbs.tagdist.TagCountMutable;
@@ -44,23 +43,10 @@ import net.maizegenetics.util.MultiMemberGZIPInputStream;
  *
  * User: ed
  */
-public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
-
-    public int maxVariants = 8;
-    byte[] multimaps;  // number of locations this tagSet maps to; unknown = Byte.MIN_VALUE; multiple, but unknown number = 99
-    int[] chromosome;  // 4 bytes
-    byte[] strand; // 1 = same sense as reference FASTA file.  -1 = opposite sense.  unknown = Byte.MIN_VALUE  // 1 byte
-    int[] startPosition;  // chromosomal position of the barcoded end of the tag  // 4 bytes
-    int[] endPosition;  // chromosomal position of the common adapter end of the tag (smaller than startPosition if tag matches minus strand)  // 4 bytes
+public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
+    int[] endPosition;  // chromosomal position of the common adapter end of the tag (smaller than bestStartPos if tag matches minus bestStrand)  // 4 bytes
     byte[] divergence;  // number of diverging bp (edit distance) from reference, unknown = Byte.MIN_VALUE
-    byte[][] variantPosOff;  // offset from position minimum, maximum number of variants is defined above  // maxVariants bytes [tag][variant]
-    byte[][] variantDef; // allele state - A, C, G, T or some indel definition  // maxVariants bytes [tag][variant]  
     byte[] dcoP, mapP;  //Round(Log2(P)), unknown Byte.MIN_VALUE
-    //if these disagree with the location, then set the p to negative
-    // 1+4+1+4+4+1+8+8+1+1 = 33 bytes per position + 16 bytes for a two long tag + 1 byte for tagLength in bases = 50 bytes
-    // ~50 bytes per position.  If we have 10 million tags then this will be at 500M byte data structure.
-    int[] indicesOfSortByPosition;
-    public int tagNum = 0;
     boolean redundantTags = true;  // this field has not been utilized yet
 
     public static enum SAMFormat {
@@ -87,7 +73,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     public TagsOnPhysicalMap(int rows, int tagLengthInLong, int maxVariants) {
         this.tagLengthInLong = tagLengthInLong;
-        this.maxVariants = maxVariants;
+        this.myMaxVariants = maxVariants;
         initMatrices(rows);
     }
 
@@ -103,7 +89,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     public TagsOnPhysicalMap(TagsOnPhysicalMap oldTOPM, boolean filterDuplicates) {
         this.tagLengthInLong = oldTOPM.tagLengthInLong;
-        this.maxVariants = oldTOPM.maxVariants;
+        this.myMaxVariants = oldTOPM.myMaxVariants;
         oldTOPM.sortTable(true);
         int uniqueCnt = 1;
         for (int i = 1; i < oldTOPM.getSize(); i++) {
@@ -113,7 +99,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         }
         System.out.println("The Physical Map File has UniqueTags:" + uniqueCnt + " TotalLocations:" + oldTOPM.getSize());
         initMatrices(uniqueCnt);
-        this.tagNum = uniqueCnt;
+        this.myNumTags = uniqueCnt;
         uniqueCnt = 0;
         this.copyTagMapRow(oldTOPM, 0, 0, filterDuplicates);
         for (int i = 1; i < oldTOPM.getTagCount(); i++) {
@@ -134,93 +120,41 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         tags = new long[tagLengthInLong][rows];  // 16 bytes
         tagLength = new byte[rows];   // length of tag (number of bases)  // 1 byte
         multimaps = new byte[rows];   // number of locations this tagSet maps to, unknown = Byte.MIN_VALUE
-        chromosome = new int[rows];   // 4 bytes
-        strand = new byte[rows];      // 1 = same sense as reference FASTA file.  -1 = opposite sense.  unknown = Byte.MIN_VALUE  // 1 byte
-        startPosition = new int[rows];  // chromosomal position of the barcoded end of the tag  // 4 bytes
-        endPosition = new int[rows];  // chromosomal position of the common adapter end of the tag (smaller than startPosition if tag matches minus strand)  // 4 bytes
+        bestChr = new int[rows];   // 4 bytes
+        bestStrand = new byte[rows];      // 1 = same sense as reference FASTA file.  -1 = opposite sense.  unknown = Byte.MIN_VALUE  // 1 byte
+        bestStartPos = new int[rows];  // chromosomal position of the barcoded end of the tag  // 4 bytes
+        endPosition = new int[rows];  // chromosomal position of the common adapter end of the tag (smaller than bestStartPos if tag matches minus bestStrand)  // 4 bytes
         divergence = new byte[rows];  // number of diverging bp from reference, unknown = Byte.MIN_VALUE
-        variantPosOff = new byte[rows][maxVariants];  // offset from position minimum, maximum number of variants is defined above  // maxVariants bytes
-        variantDef = new byte[rows][maxVariants];     // allele state - A, C, G, T or some indel definition  // maxVariants bytes
+        variantOffsets = new byte[rows][myMaxVariants];  // offset from position minimum, maximum number of variants is defined above  // myMaxVariants bytes
+        variantDefs = new byte[rows][myMaxVariants];     // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes
         dcoP = new byte[rows];
         mapP = new byte[rows];  // Round(Log2(P)), unknown = Byte.MIN_VALUE;  if these disagree with the location, then set the p to negative
-        tagNum = rows;
+        myNumTags = rows;
     }
 
     public void expandMaxVariants(int newMaxVariants) {
-        if (newMaxVariants <= this.maxVariants) {
+        if (newMaxVariants <= this.myMaxVariants) {
             System.out.println("TagsOnPhysicalMap.expandMaxVariants(" + newMaxVariants + ") not performed because newMaxVariants (" + newMaxVariants
-                    + ") <= current maxVariants (" + this.maxVariants + ")");
+                    + ") <= current maxVariants (" + this.myMaxVariants + ")");
             return;
         }
-        int oldMaxVariants = this.maxVariants;
-        byte[][] newVariantPosOff = new byte[tagNum][newMaxVariants];
-        byte[][] newVariantDef = new byte[tagNum][newMaxVariants];
-        for (int t = 0; t < tagNum; ++t) {
-            for (int v = 0; v < this.maxVariants; ++v) {
-                newVariantPosOff[t][v] = this.variantPosOff[t][v];
-                newVariantDef[t][v] = this.variantDef[t][v];
+        int oldMaxVariants = this.myMaxVariants;
+        byte[][] newVariantPosOff = new byte[myNumTags][newMaxVariants];
+        byte[][] newVariantDef = new byte[myNumTags][newMaxVariants];
+        for (int t = 0; t < myNumTags; ++t) {
+            for (int v = 0; v < this.myMaxVariants; ++v) {
+                newVariantPosOff[t][v] = this.variantOffsets[t][v];
+                newVariantDef[t][v] = this.variantDefs[t][v];
             }
-            for (int v = this.maxVariants; v < newMaxVariants; ++v) {
+            for (int v = this.myMaxVariants; v < newMaxVariants; ++v) {
                 newVariantPosOff[t][v] = Byte.MIN_VALUE;
                 newVariantDef[t][v] = Byte.MIN_VALUE;
             }
         }
-        this.maxVariants = newMaxVariants;
-        this.variantPosOff = newVariantPosOff;
-        this.variantDef = newVariantDef;
+        this.myMaxVariants = newMaxVariants;
+        this.variantOffsets = newVariantPosOff;
+        this.variantDefs = newVariantDef;
         System.out.println("TagsOnPhysicalMap maxVariants expanded from " + oldMaxVariants + " to " + newMaxVariants);
-    }
-
-    void initPhysicalSort() {
-        System.out.println("initPhysicalSort");
-        indicesOfSortByPosition = new int[tagNum];
-        for (int i = 0; i < indicesOfSortByPosition.length; i++) {
-            indicesOfSortByPosition[i] = i;
-        }
-        Swapper swapperPos = new Swapper() {
-            public void swap(int a, int b) {
-                int t1;
-                t1 = indicesOfSortByPosition[a];
-                indicesOfSortByPosition[a] = indicesOfSortByPosition[b];
-                indicesOfSortByPosition[b] = t1;
-            }
-        };
-        IntComparator compPos = new IntComparator() {
-            public int compare(int a, int b) {
-                int index1 = indicesOfSortByPosition[a];
-                int index2 = indicesOfSortByPosition[b];
-                if (chromosome[index1] < chromosome[index2]) {
-                    return -1;
-                }
-                if (chromosome[index1] > chromosome[index2]) {
-                    return 1;
-                }
-                if (startPosition[index1] < startPosition[index2]) {
-                    return -1;
-                }
-                if (startPosition[index1] > startPosition[index2]) {
-                    return 1;
-                }
-                if (strand[index1] < strand[index2]) {
-                    return -1;
-                }
-                if (strand[index1] > strand[index2]) {
-                    return 1;
-                }
-                for (int i = 0; i < tagLengthInLong; i++) {
-                    if (tags[i][index1] < tags[i][index2]) {
-                        return -1;
-                    }
-                    if (tags[i][index1] > tags[i][index2]) {
-                        return 1;
-                    }
-                }
-                return 0;
-            }
-        };
-        System.out.println("Position index sort begin.");
-        GenericSorting.quickSort(0, indicesOfSortByPosition.length, compPos, swapperPos);
-        System.out.println("Position index sort end.");
     }
 
     /**
@@ -244,52 +178,33 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         if (overwrite) {
             tagLength[destRow] = sourceTOPM.tagLength[sourceRow];
             multimaps[destRow] = sourceTOPM.multimaps[sourceRow];
-            chromosome[destRow] = sourceTOPM.chromosome[sourceRow];
-            strand[destRow] = sourceTOPM.strand[sourceRow];
-            startPosition[destRow] = sourceTOPM.startPosition[sourceRow];
+            bestChr[destRow] = sourceTOPM.bestChr[sourceRow];
+            bestStrand[destRow] = sourceTOPM.bestStrand[sourceRow];
+            bestStartPos[destRow] = sourceTOPM.bestStartPos[sourceRow];
             endPosition[destRow] = sourceTOPM.endPosition[sourceRow];
             divergence[destRow] = sourceTOPM.divergence[sourceRow];
-            for (int j = 0; j < maxVariants; j++) {
-                variantPosOff[destRow][j] = sourceTOPM.variantPosOff[sourceRow][j];
-                variantDef[destRow][j] = sourceTOPM.variantPosOff[sourceRow][j];
+            for (int j = 0; j < myMaxVariants; j++) {
+                variantOffsets[destRow][j] = sourceTOPM.variantOffsets[sourceRow][j];
+                variantDefs[destRow][j] = sourceTOPM.variantOffsets[sourceRow][j];
             }
             dcoP[destRow] = sourceTOPM.dcoP[sourceRow];
             mapP[destRow] = sourceTOPM.mapP[sourceRow];
         } else {
             //tagLength[destRow]=tagLength[sourceRow];
-            if ((chromosome[destRow] != sourceTOPM.chromosome[sourceRow])
-                    || (strand[destRow] != sourceTOPM.strand[sourceRow])
-                    || (startPosition[destRow] != sourceTOPM.startPosition[sourceRow])
+            if ((bestChr[destRow] != sourceTOPM.bestChr[sourceRow])
+                    || (bestStrand[destRow] != sourceTOPM.bestStrand[sourceRow])
+                    || (bestStartPos[destRow] != sourceTOPM.bestStartPos[sourceRow])
                     || (endPosition[destRow] != sourceTOPM.endPosition[sourceRow])) {
                 multimaps[destRow] += sourceTOPM.multimaps[sourceRow];
-                chromosome[destRow] = strand[destRow] = Byte.MIN_VALUE;
-                startPosition[destRow] = endPosition[destRow] = Integer.MIN_VALUE;
+                bestChr[destRow] = bestStrand[destRow] = Byte.MIN_VALUE;
+                bestStartPos[destRow] = endPosition[destRow] = Integer.MIN_VALUE;
             }
             //dcoP[destRow]=dcoP[sourceRow];
             //mapP[destRow]=mapP[sourceRow];
         }
     }
 
-    public String printRow(int row) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(sb);
-        //long
-        sb.append(BaseEncoder.getSequenceFromLong(this.getTag(row)) + "\t");
-        sb.append(printWithMissing(tagLength[row]) + "\t");
-        sb.append(printWithMissing(multimaps[row]) + "\t");
-        sb.append(printWithMissing(chromosome[row]) + "\t");
-        sb.append(printWithMissing(strand[row]) + "\t");
-        sb.append(printWithMissing(startPosition[row]) + "\t");
-        sb.append(printWithMissing(endPosition[row]) + "\t");
-        sb.append(printWithMissing(divergence[row]) + "\t");
-        for (int j = 0; j < maxVariants; j++) {
-            sb.append(printWithMissing(variantPosOff[row][j]) + "\t");
-            sb.append(printWithMissing(variantDef[row][j]) + "\t");
-        }
-        sb.append(printWithMissing(dcoP[row]) + "\t");
-        sb.append(printWithMissing(mapP[row]) + "\t");
-        return sb.toString();
-    }
+    
 
     public String printRow(int row, boolean byPosition) {
         if (byPosition) {
@@ -308,7 +223,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         int outCount = 0;
         for (int i = 0; outCount < numRows; i++) {
             int r = (byPosition) ? indicesOfSortByPosition[i] : i;
-            if ((requirePhysPosition == true) && (chromosome[r] < 1)) {
+            if ((requirePhysPosition == true) && (bestChr[r] < 1)) {
                 continue;
             }
             System.out.println(printRow(r));
@@ -321,7 +236,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         boolean byPosition = true;
         for (int i = 0; outCount < numRows; i++) {
             int r = (byPosition) ? indicesOfSortByPosition[i] : i;
-            if ((requirePhysPosition == true) && (chromosome[r] != printChr)) {
+            if ((requirePhysPosition == true) && (bestChr[r] != printChr)) {
                 continue;
             }
             System.out.println(printRow(r));
@@ -349,24 +264,28 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         try {
             DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(currentFile), 65536));
             System.out.println("File = " + currentFile);
-            tagNum = dis.readInt();
+            myNumTags = dis.readInt();
+            myNumTags=100000;
             tagLengthInLong = dis.readInt();
-            maxVariants = dis.readInt();
-            initMatrices(tagNum);
-            for (int row = 0; row < tagNum; row++) {
+            myMaxVariants = dis.readInt();
+            initMatrices(myNumTags);
+            for (int row = 0; row < myNumTags; row++) {
                 for (int j = 0; j < tagLengthInLong; j++) {
                     tags[j][row] = dis.readLong();
                 }
                 tagLength[row] = dis.readByte();
                 multimaps[row] = dis.readByte();
-                chromosome[row] = dis.readInt();
-                strand[row] = dis.readByte();
-                startPosition[row] = dis.readInt();
+                bestChr[row] = dis.readInt();
+                bestStrand[row] = dis.readByte();
+                bestStartPos[row] = dis.readInt();
                 endPosition[row] = dis.readInt();
                 divergence[row] = dis.readByte();
-                for (int j = 0; j < maxVariants; j++) {
-                    variantPosOff[row][j] = dis.readByte();
-                    variantDef[row][j] = dis.readByte();
+                for (int j = 0; j < myMaxVariants; j++) {
+                    variantOffsets[row][j] = dis.readByte();
+                    variantDefs[row][j] = dis.readByte();
+                    if(variantDefs[row][j]>0xf) {//ascii bytes need to be converted to TASSEL 4
+                        variantDefs[row][j]=NucleotideAlignmentConstants.getNucleotideDiploidByte((char)variantDefs[row][j]);
+                    }
                 }
                 dcoP[row] = dis.readByte();
                 mapP[row] = dis.readByte();
@@ -383,8 +302,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
 
     public boolean variantsDefined(int tagIndex) {
-        for (int i = 0; i < maxVariants; i++) {
-            if ((variantPosOff[tagIndex][i] != Byte.MIN_VALUE) && (variantDef[tagIndex][i] != Byte.MIN_VALUE)) {
+        for (int i = 0; i < myMaxVariants; i++) {
+            if ((variantOffsets[tagIndex][i] != Byte.MIN_VALUE) && (variantDefs[tagIndex][i] != Byte.MIN_VALUE)) {
                 return true;
             }
         }
@@ -397,7 +316,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         try {
             int[] numTagsWithDefinedVariantsPerChr = new int[20];
             int numTagsWithDefinedVariants = 0;
-            for (int row = 0; row < tagNum; row++) {
+            for (int row = 0; row < myNumTags; row++) {
                 if (variantsDefined(row)) {
                     numTagsWithDefinedVariantsPerChr[getChromosome(row)]++;
                     numTagsWithDefinedVariants++;
@@ -415,22 +334,22 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
             fw.writeInt(numTagsWithDefinedVariants);
             fw.writeInt(tagLengthInLong);
-            fw.writeInt(maxVariants);
-            for (int row = 0; row < tagNum; row++) {
+            fw.writeInt(myMaxVariants);
+            for (int row = 0; row < myNumTags; row++) {
                 if (variantsDefined(row)) {
                     for (int j = 0; j < tagLengthInLong; j++) {
                         fw.writeLong(tags[j][row]);
                     }
                     fw.writeByte(tagLength[row]);
                     fw.writeByte(multimaps[row]);
-                    fw.writeInt(chromosome[row]);
-                    fw.writeByte(strand[row]);
-                    fw.writeInt(startPosition[row]);
+                    fw.writeInt(bestChr[row]);
+                    fw.writeByte(bestStrand[row]);
+                    fw.writeInt(bestStartPos[row]);
                     fw.writeInt(endPosition[row]);
                     fw.writeByte(divergence[row]);
-                    for (int j = 0; j < maxVariants; j++) {
-                        fw.writeByte(variantPosOff[row][j]);
-                        fw.writeByte(variantDef[row][j]);
+                    for (int j = 0; j < myMaxVariants; j++) {
+                        fw.writeByte(variantOffsets[row][j]);
+                        fw.writeByte(variantDefs[row][j]);
                     }
                     fw.writeByte(dcoP[row]);
                     fw.writeByte(mapP[row]);
@@ -456,12 +375,12 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 fw.writeInt(mappedTags()[0]);
             } // the index 0 provides the number of tags with unique positions
             else {
-                fw.writeInt(tagNum);
+                fw.writeInt(myNumTags);
             }
             fw.writeInt(tagLengthInLong);
-            fw.writeInt(maxVariants);
-            for (int row = 0; row < tagNum; row++) {
-                if ((requirePhysPosition == true) && (chromosome[row] == Integer.MIN_VALUE)) {
+            fw.writeInt(myMaxVariants);
+            for (int row = 0; row < myNumTags; row++) {
+                if ((requirePhysPosition == true) && (bestChr[row] == Integer.MIN_VALUE)) {
                     continue;
                 }
                 for (int j = 0; j < tagLengthInLong; j++) {
@@ -469,14 +388,14 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 }
                 fw.writeByte(tagLength[row]);
                 fw.writeByte(multimaps[row]);
-                fw.writeInt(chromosome[row]);
-                fw.writeByte(strand[row]);
-                fw.writeInt(startPosition[row]);
+                fw.writeInt(bestChr[row]);
+                fw.writeByte(bestStrand[row]);
+                fw.writeInt(bestStartPos[row]);
                 fw.writeInt(endPosition[row]);
                 fw.writeByte(divergence[row]);
-                for (int j = 0; j < maxVariants; j++) {
-                    fw.writeByte(variantPosOff[row][j]);
-                    fw.writeByte(variantDef[row][j]);
+                for (int j = 0; j < myMaxVariants; j++) {
+                    fw.writeByte(variantOffsets[row][j]);
+                    fw.writeByte(variantDefs[row][j]);
                 }
                 fw.writeByte(dcoP[row]);
                 fw.writeByte(mapP[row]);
@@ -494,15 +413,15 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     /**
      * @return An int[] result where : result[0] = The number of tags with a
      * unique physical positions in this file (i.e. , tags for which the
-     * chromosome number is known). result[1] = The number of tags which align
+     * bestChr number is known). result[1] = The number of tags which align
      * to multiple positions (i.e., where multimaps[tagIndex] > 0)
      *
      */
     public int[] mappedTags() {
         int[] result = {0, 0};
         int unique = 0, multi = 1;  // the indices of result
-        for (int row = 0; row < tagNum; row++) {
-            if (chromosome[row] == Integer.MIN_VALUE) {
+        for (int row = 0; row < myNumTags; row++) {
+            if (bestChr[row] == Integer.MIN_VALUE) {
                 if (multimaps[row] > 0) {
                     result[multi]++;
                 }
@@ -529,13 +448,13 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             inputLine = br.readLine().split("\t");
 
             //Parse header line (Number of tags, number of Long ints per tag, maximum variant bases per tag).
-            this.tagNum = Integer.parseInt(inputLine[0]);
+            this.myNumTags = Integer.parseInt(inputLine[0]);
             this.tagLengthInLong = Integer.parseInt(inputLine[1]);
-            this.maxVariants = Integer.parseInt(inputLine[2]);
+            this.myMaxVariants = Integer.parseInt(inputLine[2]);
             // initMatrices(9000000);
-            initMatrices(tagNum);
+            initMatrices(myNumTags);
             //Loop through remaining lines, store contents in a series of arrays indexed by row number
-            for (int row = 0; row < tagNum; row++) {
+            for (int row = 0; row < myNumTags; row++) {
                 inputLine = br.readLine().split("\t");
                 int c = 0;
                 long[] tt = BaseEncoder.getLongArrayFromSeq(inputLine[c++]);
@@ -544,14 +463,14 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 }
                 tagLength[row] = parseByteWMissing(inputLine[c++]);
                 multimaps[row] = parseByteWMissing(inputLine[c++]);
-                chromosome[row] = parseIntWMissing(inputLine[c++]);
-                strand[row] = parseByteWMissing(inputLine[c++]);
-                startPosition[row] = parseIntWMissing(inputLine[c++]);
+                bestChr[row] = parseIntWMissing(inputLine[c++]);
+                bestStrand[row] = parseByteWMissing(inputLine[c++]);
+                bestStartPos[row] = parseIntWMissing(inputLine[c++]);
                 endPosition[row] = parseIntWMissing(inputLine[c++]);
                 divergence[row] = parseByteWMissing(inputLine[c++]);
-                for (int j = 0; j < maxVariants; j++) {
-                    variantPosOff[row][j] = parseByteWMissing(inputLine[c++]);
-                    variantDef[row][j] = parseByteWMissing(inputLine[c++]);
+                for (int j = 0; j < myMaxVariants; j++) {
+                    variantOffsets[row][j] = parseByteWMissing(inputLine[c++]);
+                    variantDefs[row][j] = parseCharWMissing(inputLine[c++]);
                 }
                 dcoP[row] = parseByteWMissing(inputLine[c++]);
                 mapP[row] = parseByteWMissing(inputLine[c++]);
@@ -562,25 +481,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         } catch (Exception e) {
             System.out.println("Catch in reading TagOnPhysicalMap file e=" + e);
             e.printStackTrace();
-            System.out.println(Arrays.toString(inputLine));
+            System.out.println("Line:"+Arrays.toString(inputLine));
         }
-        System.out.println("Number of tags in file:" + tagNum);
-    }
-
-    public void writeTextFile(File outfile) {
-        try {
-            DataOutputStream fw = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outfile), 65536));
-            fw.writeBytes(tagNum + "\t" + tagLengthInLong + "\t" + maxVariants + "\n");
-            for (int row = 0; row < tagNum; row++) {
-                fw.writeBytes(printRow(row) + "\n");
-            }
-            fw.flush();
-            fw.close();
-        } catch (Exception e) {
-            System.out.println("Catch in writeTextFile file e=" + e);
-        }
-        System.out.println("Number of tags in file:" + tagNum);
-
+        System.out.println("Number of tags in file:" + myNumTags);
     }
 
     @Override
@@ -590,31 +493,33 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     @Override
     public int[] getPositionArray(int index) {
-        int[] r = {chromosome[index], strand[index], startPosition[index]};
+        int[] r = {bestChr[index], bestStrand[index], bestStartPos[index]};
         return r;
     }
 
-//    public int getReadIndex(byte chr, byte strand, int posMin) {
-//   //     dep_ReadWithPositionInfo querySHP=new dep_ReadWithPositionInfo(chromosome, strand, posMin);
+//    public int getReadIndex(byte chr, byte bestStrand, int posMin) {
+//   //     dep_ReadWithPositionInfo querySHP=new dep_ReadWithPositionInfo(bestChr, bestStrand, posMin);
 //   //     PositionComparator posCompare = new PositionComparator();
 //    //    int hit1=Arrays.binarySearch(shp, querySHP, posCompare);
 //        int hit1=-1;  //redo
 //        return hit1;
 //    }
-    public static String printWithMissing(byte b) {
-        if (b == Byte.MIN_VALUE) {
-            return "*";
-        }
-        return Byte.toString(b);
-    }
 
-    public static String printWithMissing(int i) {
-        if (i == Integer.MIN_VALUE) {
-            return "*";
+    public static byte parseCharWMissing(String s) {
+        if (s.equals("*")) {
+            return Byte.MIN_VALUE;
         }
-        return Integer.toString(i);
+        try{
+            byte r=NucleotideAlignmentConstants.getNucleotideDiploidByte(s);
+            return r;
+        } catch(IllegalArgumentException e) {
+            int i = Integer.parseInt(s);
+            if (i > 127) {return 127;}
+            byte r=NucleotideAlignmentConstants.getNucleotideDiploidByte((char)i);
+            return r;
+        }
     }
-
+    
     public static byte parseByteWMissing(String s) {
         if (s.equals("*")) {
             return Byte.MIN_VALUE;
@@ -645,23 +550,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
 
     @Override
-    public int getSize() {
-        return tagNum;
-    }
-
-    @Override
     public byte getMultiMaps(int index) {
         return multimaps[index];
-    }
-    
-    @Override
-    public int getChromosome(int index) {
-        return chromosome[index];
-    }
-
-    @Override
-    public int getStartPosition(int index) {
-        return startPosition[index];
     }
 
     @Override
@@ -684,30 +574,12 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         return dcoP[index];
     }
 
-    public byte[][] getVariantOff() {
-        byte[][] result = new byte[getTagCount()][maxVariants];
-        for (int i = 0; i < getTagCount(); i++) {
-            System.arraycopy(variantPosOff[i], 0, result[i], 0, maxVariants);
-        }
-        return result;
-    }
-
-    public byte[][] getVariantDef() {
-        byte[][] result = new byte[getTagCount()][maxVariants];
-        for (int i = 0; i < getTagCount(); i++) {
-            for (int j = 0; j < maxVariants; j++) {
-                result[i][j] = getVariantDef(i, j);
-            }
-        }
-        return result;
-    }
-
     @Override
     public void setChromoPosition(int index, int chromosome, byte strand, int positionMin,
             int positionMax) {
-        this.chromosome[index] = chromosome;
-        this.strand[index] = strand;
-        this.startPosition[index] = positionMin;
+        this.bestChr[index] = chromosome;
+        this.bestStrand[index] = strand;
+        this.bestStartPos[index] = positionMin;
         this.endPosition[index] = positionMax;
     }
 
@@ -740,10 +612,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     @Override
     public int addVariant(int tagIndex, byte offset, byte base) {
-        for (int i = 0; i < maxVariants; i++) {
-            if ((variantPosOff[tagIndex][i] == Byte.MIN_VALUE) && (variantDef[tagIndex][i] == Byte.MIN_VALUE)) {
-                variantPosOff[tagIndex][i] = offset;
-                variantDef[tagIndex][i] = base;
+        for (int i = 0; i < myMaxVariants; i++) {
+            if ((variantOffsets[tagIndex][i] == Byte.MIN_VALUE) && (variantDefs[tagIndex][i] == Byte.MIN_VALUE)) {
+                variantOffsets[tagIndex][i] = offset;
+                variantDefs[tagIndex][i] = base;
                 return i;
             }
         }
@@ -780,7 +652,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             for (int i = 0; i < nHeaderLines; i++) {
                 br.readLine();
             } // Skip over the header
-            for (tagIndex = 0; tagIndex < tagNum; tagIndex++) {
+            for (tagIndex = 0; tagIndex < myNumTags; tagIndex++) {
                 inputStr = br.readLine();
                 parseSAMAlignment(inputStr, tagIndex);
                 if (tagIndex % 1000000 == 0) {
@@ -797,7 +669,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
     private int countTagsInSAMfile(String inputFileName) {
         mySAMFormat = SAMFormat.BWA;  // format is BWA by default
-        tagNum = 0;
+        myNumTags = 0;
         int nHeaderLines = 0;
         String currLine = null;
         try {
@@ -822,20 +694,20 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                     if (!chrNames.contains(chr)) {
                         chrNames.add(chr);
                     }
-                    tagNum++;
-                    if (tagNum % 1000000 == 0) {
-                        System.out.println("Counted " + tagNum + " tags.");
+                    myNumTags++;
+                    if (myNumTags % 1000000 == 0) {
+                        System.out.println("Counted " + myNumTags + " tags.");
                     }
                 }
             }
             br.close();
-            System.out.println("Found " + tagNum + " tags in SAM file.  Assuming " + mySAMFormat + " file format.");
+            System.out.println("Found " + myNumTags + " tags in SAM file.  Assuming " + mySAMFormat + " file format.");
         } catch (Exception e) {
             System.out.println("Catch in counting lines of alignment file at line " + currLine + ": " + e);
             e.printStackTrace();
             System.exit(1);
         }
-        initMatrices(tagNum);
+        initMatrices(myNumTags);
         return nHeaderLines;
     }
 
@@ -902,14 +774,14 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     private void recordLackOfSAMAlign(int tagIndex, String tagS, String tagName, String nullS) {
         recordTagFromSAMAlignment(tagIndex, tagS, tagName, nullS, (byte) 1);
         multimaps[tagIndex] = 0;   // or should this be unknown = Byte.MIN_VALUE???
-        chromosome[tagIndex] = Integer.MIN_VALUE;
-        strand[tagIndex] = Byte.MIN_VALUE;
-        startPosition[tagIndex] = Integer.MIN_VALUE;
+        bestChr[tagIndex] = Integer.MIN_VALUE;
+        bestStrand[tagIndex] = Byte.MIN_VALUE;
+        bestStartPos[tagIndex] = Integer.MIN_VALUE;
         endPosition[tagIndex] = Integer.MIN_VALUE;
         divergence[tagIndex] = Byte.MIN_VALUE;
-        for (int var = 0; var < maxVariants; var++) {
-            variantPosOff[tagIndex][var] = Byte.MIN_VALUE;
-            variantDef[tagIndex][var] = Byte.MIN_VALUE;
+        for (int var = 0; var < myMaxVariants; var++) {
+            variantOffsets[tagIndex][var] = Byte.MIN_VALUE;
+            variantDefs[tagIndex][var] = Byte.MIN_VALUE;
         }
         dcoP[tagIndex] = Byte.MIN_VALUE;
         mapP[tagIndex] = Byte.MIN_VALUE;
@@ -919,19 +791,19 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         recordTagFromSAMAlignment(tagIndex, tagS, tagName, nullS, strand);
         multimaps[tagIndex] = nBestHits;
         if (nBestHits == 1) {
-            chromosome[tagIndex] = parseChrString(chrS);
-            this.strand[tagIndex] = strand;
+            bestChr[tagIndex] = parseChrString(chrS);
+            this.bestStrand[tagIndex] = strand;
             recordStartEndPostionFromSAMAlign(tagIndex, strand, pos, cigar);
         } else {
-            chromosome[tagIndex] = Integer.MIN_VALUE;
-            this.strand[tagIndex] = Byte.MIN_VALUE;
-            startPosition[tagIndex] = Integer.MIN_VALUE;
+            bestChr[tagIndex] = Integer.MIN_VALUE;
+            this.bestStrand[tagIndex] = Byte.MIN_VALUE;
+            bestStartPos[tagIndex] = Integer.MIN_VALUE;
             endPosition[tagIndex] = Integer.MIN_VALUE;
         }
         divergence[tagIndex] = editDist;
-        for (int var = 0; var < maxVariants; var++) {
-            variantPosOff[tagIndex][var] = Byte.MIN_VALUE;
-            variantDef[tagIndex][var] = Byte.MIN_VALUE;
+        for (int var = 0; var < myMaxVariants; var++) {
+            variantOffsets[tagIndex][var] = Byte.MIN_VALUE;
+            variantDefs[tagIndex][var] = Byte.MIN_VALUE;
         }
         dcoP[tagIndex] = Byte.MIN_VALUE;
         mapP[tagIndex] = Byte.MIN_VALUE;
@@ -972,10 +844,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         int[] alignSpan = SAMUtils.adjustCoordinates(cigar, pos);
         try {
             if (strand == 1) {
-                startPosition[tagIndex] = alignSpan[0];
+                bestStartPos[tagIndex] = alignSpan[0];
                 endPosition[tagIndex] = alignSpan[1];
             } else if (strand == -1) {
-                startPosition[tagIndex] = alignSpan[1];
+                bestStartPos[tagIndex] = alignSpan[1];
                 endPosition[tagIndex] = alignSpan[0];
             } else {
                 throw new Exception("Unexpected value for strand: " + strand + "(expect 1 or -1)");
@@ -1002,29 +874,29 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         tb = multimaps[index1];
         multimaps[index1] = multimaps[index2];
         multimaps[index2] = (byte) tb;
-        tb = chromosome[index1];
-        chromosome[index1] = chromosome[index2];
-        chromosome[index2] = tb;
-        tb = strand[index1];
-        strand[index1] = strand[index2];
-        strand[index2] = (byte) tb;
+        tb = bestChr[index1];
+        bestChr[index1] = bestChr[index2];
+        bestChr[index2] = tb;
+        tb = bestStrand[index1];
+        bestStrand[index1] = bestStrand[index2];
+        bestStrand[index2] = (byte) tb;
         int ti;
-        ti = startPosition[index1];
-        startPosition[index1] = startPosition[index2];
-        startPosition[index2] = ti;
+        ti = bestStartPos[index1];
+        bestStartPos[index1] = bestStartPos[index2];
+        bestStartPos[index2] = ti;
         ti = endPosition[index1];
         endPosition[index1] = endPosition[index2];
         endPosition[index2] = ti;
         tb = divergence[index1];
         divergence[index1] = divergence[index2];
         divergence[index2] = (byte) tb;
-        for (int j = 0; j < maxVariants; j++) {
-            tb = variantPosOff[index1][j];
-            variantPosOff[index1][j] = variantPosOff[index2][j];
-            variantPosOff[index2][j] = (byte) tb;
-            tb = variantDef[index1][j];
-            variantDef[index1][j] = variantDef[index2][j];
-            variantDef[index2][j] = (byte) tb;
+        for (int j = 0; j < myMaxVariants; j++) {
+            tb = variantOffsets[index1][j];
+            variantOffsets[index1][j] = variantOffsets[index2][j];
+            variantOffsets[index2][j] = (byte) tb;
+            tb = variantDefs[index1][j];
+            variantDefs[index1][j] = variantDefs[index2][j];
+            variantDefs[index2][j] = (byte) tb;
         }
         tb = dcoP[index1];
         dcoP[index1] = dcoP[index2];
@@ -1044,146 +916,42 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                 return 1;
             }
         }
-        if (chromosome[index1] < chromosome[index2]) {
+        if (bestChr[index1] < bestChr[index2]) {
             return -1;
         }
-        if (chromosome[index1] > chromosome[index2]) {
+        if (bestChr[index1] > bestChr[index2]) {
             return 1;
         }
-        if (startPosition[index1] < startPosition[index2]) {
+        if (bestStartPos[index1] < bestStartPos[index2]) {
             return -1;
         }
-        if (startPosition[index1] > startPosition[index2]) {
+        if (bestStartPos[index1] > bestStartPos[index2]) {
             return 1;
         }
-        if (strand[index1] < strand[index2]) {
+        if (bestStrand[index1] < bestStrand[index2]) {
             return -1;
         }
-        if (strand[index1] > strand[index2]) {
+        if (bestStrand[index1] > bestStrand[index2]) {
             return 1;
         }
         return 0;
     }
 
-    /**
-     * Returns an array whose <i>values</i> are the distinct chromosomes in this
-     * file, as stored in the chromosome[] array. The indices are arbitrary, but
-     * the array is sorted by chromosome number.
-     */
-    @Override
-    public int[] getChromosomes() {
-        TreeSet<Integer> chrs = new TreeSet<Integer>();
-        for (int i = 0; i < chromosome.length; i++) {
-            if (!chrs.contains(chromosome[i]) && chromosome[i] != Integer.MIN_VALUE) {
-                chrs.add(chromosome[i]);
-            }
-        }
-        int[] result = new int[chrs.size()];
-        int i = 0;
-        for (int chr : chrs) {
-            result[i++] = chr;
-        }
-        return result;
-    }
 
-    @Override
-    public Locus[] getLoci() {
-        int[] chrs = getChromosomes();
-        Locus[] result = new Locus[chrs.length];
-
-        for (int i = 0; i < result.length; i++) {
-            result[i] = new Locus(chrs[i] + "", chrs[i] + "", -1, -1, null, null);
-        }
-        return result;
-    }
-
-    @Override
-    public Locus getLocus(int tagIndex) {
-        if (chromosome[tagIndex] == TOPMInterface.INT_MISSING) {
-            return null;
-        } //Return null for unmapped tags
-        return new Locus(chromosome[tagIndex] + "", chromosome[tagIndex] + "", -1, -1, null, null);
-    }
-
-    /**
-     * Returns an array containing all variant position offsets for the tag at
-     * the supplied index.
-     */
-    @Override
-    public byte[] getVariantPosOffArray(int tagIndex) {
-        return variantPosOff[tagIndex];
-    }
-
-    /**
-     * Returns an array containing all variant definitions for the tag at the
-     * supplied index.
-     */
-    @Override
-    public byte[] getVariantDefArray(int tagIndex) {
-        byte[] result = new byte[maxVariants];
-        for (int i = 0; i < maxVariants; i++) {
-            result[i] = getVariantDef(tagIndex, i);
-        }
-        return result;
-    }
-
-    @Override
-    public byte getVariantDef(int tagIndex, int variantIndex) {
-        return asciiToNucleotideByte(variantDef[tagIndex][variantIndex]);
-    }
 
     @Override
     public void setVariantDef(int tagIndex, int variantIndex, byte def) {
-        variantDef[tagIndex][variantIndex] = (byte) NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][def].charAt(0);
-    }
-
-    @Override
-    public byte getVariantPosOff(int tagIndex, int variantIndex) {
-        return variantPosOff[tagIndex][variantIndex];
+        variantDefs[tagIndex][variantIndex] = (byte) NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][def].charAt(0);
     }
 
     @Override
     public void setVariantPosOff(int tagIndex, int variantIndex, byte offset) {
-        variantPosOff[tagIndex][variantIndex] = offset;
+        variantOffsets[tagIndex][variantIndex] = offset;
     }
 
     @Override
     public int getMaxNumVariants() {
-        return maxVariants;
-    }
-
-    @Override
-    public byte getStrand(int tagIndex) {
-        return strand[tagIndex];
-    }
-
-    @Override
-    public int[] getUniquePositions(int chromosome) {
-        HashSet<Integer> positions = new HashSet<Integer>();
-//        int[] positions = new int[getTagCount()];
-        for (int i = 0; i < getTagCount(); i++) {
-            int tagIndex = getReadIndexForPositionIndex(i);
-            if (getChromosome(tagIndex) != chromosome) {
-                continue;
-            }
-            int startPos = getStartPosition(tagIndex);
-            for (int varIndex = 0; varIndex < maxVariants; varIndex++) {
-                int offset = getVariantPosOff(tagIndex, varIndex);
-                if (offset == Byte.MIN_VALUE) {
-                    continue;
-                }
-                int position = startPos + offset;
-                positions.add(position);
-            }
-        }
-
-        int[] result = new int[positions.size()];//new int[positions.size()];
-        int i = 0;
-        for (Integer position : positions) {
-            result[i] = position.intValue();
-            i++;
-        }
-        return result;
+        return myMaxVariants;
     }
 
     /**
@@ -1196,9 +964,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         int tagLengthInLong = 0, maxVariants = 0, tagNum = 0;
         for (String name : filenames) {
             TagsOnPhysicalMap file = new TagsOnPhysicalMap(name, true);
-            tagNum += file.tagNum;
-            if (file.maxVariants > maxVariants) {
-                maxVariants = file.maxVariants;
+            tagNum += file.myNumTags;
+            if (file.myMaxVariants > maxVariants) {
+                maxVariants = file.myMaxVariants;
             }
             if (file.getTagSizeInLong() > tagLengthInLong) {
                 tagLengthInLong = file.getTagSizeInLong();
@@ -1209,7 +977,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         TagCountMutable tc = new TagCountMutable(tagLengthInLong, tagNum);
         for (String name : filenames) {
             TagsOnPhysicalMap file = new TagsOnPhysicalMap(name, true);
-            for (int i = 0; i < file.tagNum; i++) {
+            for (int i = 0; i < file.myNumTags; i++) {
                 tc.addReadCount(file.getTag(i), file.getTagLength(i), 1);
             }
         }
@@ -1237,22 +1005,22 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
         System.out.println(
                 "Output file will contain "
-                + output.tagNum + " unique tags, "
+                + output.myNumTags + " unique tags, "
                 + output.getTagSizeInLong() + " longs/tag, "
-                + output.maxVariants + " variants. ");
+                + output.myMaxVariants + " variants. ");
 
         for (String name : filenames) {
             TagsOnPhysicalMap file = new TagsOnPhysicalMap(name, true);
 
             int varsAdded = 0, varsSkipped = 0;
-            for (int inTag = 0; inTag < file.tagNum; inTag++) {  //Loop over tags in input
+            for (int inTag = 0; inTag < file.myNumTags; inTag++) {  //Loop over tags in input
 
                 //Find index of corresponding tag in output file, and copy attributes from input to output
                 int outTag = output.getTagIndex(file.getTag(inTag));
                 copyTagAttributes(file, inTag, output, outTag);
 
                 //For corresponding tags, compare variants
-                for (int outVar = 0; outVar < output.maxVariants; outVar++) {
+                for (int outVar = 0; outVar < output.myMaxVariants; outVar++) {
 
                     byte outOff = output.getVariantPosOff(outTag, outVar);
                     if (outOff != BYTE_MISSING) {//Skip filled output variants or re-initialize them
@@ -1260,7 +1028,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
                         continue;
                     }
 
-                    for (int inVar = 0; inVar < file.maxVariants; inVar++) {
+                    for (int inVar = 0; inVar < file.myMaxVariants; inVar++) {
                         byte offset = file.getVariantPosOff(inTag, outVar);
                         byte def = file.getVariantDef(inTag, outVar);
                         if (offset == BYTE_MISSING) {
@@ -1288,9 +1056,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     private static void copyTagAttributes(TagsOnPhysicalMap input, int inTag, TagsOnPhysicalMap output, int outTag) {
         output.tagLength[outTag] = input.tagLength[inTag];
         output.multimaps[outTag] = input.multimaps[inTag];
-        output.chromosome[outTag] = input.chromosome[inTag];
-        output.strand[outTag] = input.strand[inTag];
-        output.startPosition[outTag] = input.startPosition[inTag];
+        output.bestChr[outTag] = input.bestChr[inTag];
+        output.bestStrand[outTag] = input.bestStrand[inTag];
+        output.bestStartPos[outTag] = input.bestStartPos[inTag];
         output.endPosition[outTag] = input.endPosition[inTag];
         output.divergence[outTag] = input.divergence[inTag];
         output.dcoP[outTag] = input.dcoP[inTag];
@@ -1303,8 +1071,8 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
      */
     public void clearVariants() {
         for (int i = 0; i < getTagCount(); i++) {
-            Arrays.fill(variantDef[i], BYTE_MISSING);
-            Arrays.fill(variantPosOff[i], BYTE_MISSING);
+            Arrays.fill(variantDefs[i], BYTE_MISSING);
+            Arrays.fill(variantOffsets[i], BYTE_MISSING);
         }
     }
 
@@ -1334,7 +1102,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
         HashMap<String, Integer> topmSites = uniqueSites(); //Map tag variant positions to bases
 
         //Sites should be a subset of tag variants, so check that there are fewer of them.
-        System.out.println("Found " + topmSites.size() + " unique sites in " + tagNum + " tags in TOPM.");
+        System.out.println("Found " + topmSites.size() + " unique sites in " + myNumTags + " tags in TOPM.");
         if (topmSites.size() < hapmapSites.size()) {
             System.out.println("Warning: more unique sites exist in hapmap file.");
         }
@@ -1385,10 +1153,10 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
 
         //Remove any sites from the TOPM that are absent in the alignment
         int removedSites = 0;
-        for (int tag = 0; tag < tagNum; tag++) {
+        for (int tag = 0; tag < myNumTags; tag++) {
             int chr = getChromosome(tag);
             int pos = getStartPosition(tag);
-            for (int variant = 0; variant < maxVariants; variant++) {
+            for (int variant = 0; variant < myMaxVariants; variant++) {
 
                 byte off = getVariantPosOff(tag, variant);
                 String site = chr + "\t" + (pos + off);
@@ -1412,9 +1180,9 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
      */
     public HashSet<Integer> fullTagPositions() {
         HashSet<Integer> result = new HashSet<Integer>();
-        for (int i = 0; i < tagNum; i++) {
+        for (int i = 0; i < myNumTags; i++) {
             boolean variantsFull = true;
-            for (int j = 0; j < maxVariants; j++) {
+            for (int j = 0; j < myMaxVariants; j++) {
                 byte off = getVariantPosOff(i, j);
                 if (off == Byte.MIN_VALUE) {
                     variantsFull = false;
@@ -1430,14 +1198,14 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
     }
 
     /**
-     * Maps unique sites (i.e. chromosome and position) to the indices of the
+     * Maps unique sites (i.e. bestChr and position) to the indices of the
      * tags in which they are found.
      */
     public HashMap<String, Integer> uniqueSites() {
         HashMap<String, Integer> snps = new HashMap<String, Integer>();
-        for (int tag = 0; tag < tagNum; tag++) {        //Visit each tag in TOPM
+        for (int tag = 0; tag < myNumTags; tag++) {        //Visit each tag in TOPM
 
-            for (int variant = 0; variant < maxVariants; variant++) {                //Visit each variant in TOPM
+            for (int variant = 0; variant < myMaxVariants; variant++) {                //Visit each variant in TOPM
                 byte off = getVariantPosOff(tag, variant);
                 if (off == BYTE_MISSING) {
                     continue;
@@ -1473,7 +1241,7 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
      */
     public int[] mappingDistribution() {
         int[] result = new int[128]; //Only up to 127 multiple mappings are stored.
-        for (int i = 0; i < tagNum; i++) {
+        for (int i = 0; i < myNumTags; i++) {
             if (multimaps[i] > (result.length - 1)) {
                 result[127]++;
             }
@@ -1485,28 +1253,5 @@ public class TagsOnPhysicalMap extends AbstractTags implements TOPMInterface {
             }
         }
         return result;
-    }
-
-    private byte asciiToNucleotideByte(byte ascii) {
-        switch (ascii) {
-            case 'A':
-                return NucleotideAlignmentConstants.A_ALLELE;
-            case 'C':
-                return NucleotideAlignmentConstants.C_ALLELE;
-            case 'G':
-                return NucleotideAlignmentConstants.G_ALLELE;
-            case 'T':
-                return NucleotideAlignmentConstants.T_ALLELE;
-            case 'N':
-                return Alignment.UNKNOWN_ALLELE;
-            case '-':
-                return NucleotideAlignmentConstants.GAP_ALLELE;
-            case '+':
-                return NucleotideAlignmentConstants.INSERT_ALLELE;
-            case BYTE_MISSING:
-                return BYTE_MISSING;
-            default:
-                throw new IllegalArgumentException("asciiToNucleotideByte: unknown ascii: " + Byte.toString(ascii));
-        }
     }
 }
