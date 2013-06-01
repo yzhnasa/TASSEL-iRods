@@ -211,19 +211,19 @@ public class JeffPipelines {
             "-o",    rawReadsVsSeqToGenosDir+"tassel4_SeqToGenos/rawReadsVsSeqToGenosMDPLowVolGenoCompare.txt",
         };
 
-        String XXvsZZDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/";
-        String[] XXvsZZArgs = new String[]{
-            "-hmp1", XXvsZZDir+"tassel4_SeqToGenos/C08L7ACXX_6_c+.hmp.txt",
-            "-hmp2", XXvsZZDir+"tassel4_SeqToGenos/C08L7ACZZ_9_c+.hmp.txt",
+        String QualVsQuantDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/";
+        String[] QualVsQuantArgs = new String[]{
+            "-hmp1", QualVsQuantDir+"tassel4_SeqToGenos/C08L7ACXX_6_c+.hmp.txt",
+            "-hmp2", QualVsQuantDir+"tassel4_SeqToGenos/quant/MGP1_low_vol_2reps_chr+.hmp.txt.gz",
             "-sC",   "1",
             "-eC",   "10",
-            "-syn",  XXvsZZDir+"tassel4_SeqToGenos/C08L7ACXX_6_XXvZZSynonymsProd.txt",
-            "-o",    XXvsZZDir+"tassel4_SeqToGenos/XXvZZGenoCompare.txt",
+            "-syn",  QualVsQuantDir+"tassel4_SeqToGenos/C08L7ACXX_6_XXvZZSynonymsProd.txt",
+            "-o",    QualVsQuantDir+"tassel4_SeqToGenos/quant/QualVsQuantGenoCompare.txt",
         };
 
         TasselPrefs.putAlignmentRetainRareAlleles(true);
         CompareGenosBetweenHapMapFilesPlugin plugin = new CompareGenosBetweenHapMapFilesPlugin();
-        plugin.setParameters(XXvsZZArgs);
+        plugin.setParameters(QualVsQuantArgs);
         plugin.performFunction(null);
     }
     
@@ -289,10 +289,10 @@ public class JeffPipelines {
     public static void runSeqToGenosPlugin() {
         String baseDir = "/Users/jcg233/Documents/GBS/";
         String[] MDPLowVolArgs = new String[]{
-            "-i", "/Users/jcg233/largeFiles/fastq/",
-            "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_2reps_key.txt",
+            "-i", "/Users/jcg233/largeFiles/testFastq/",
+            "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_2smallReps_key.txt",
             "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm",
-            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos",
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/quant/testFastq2",
             "-e", "ApeKI",
         };
 
