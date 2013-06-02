@@ -46,10 +46,11 @@ import org.apache.log4j.Logger;
  * 
  * <p>
  * TODO:
- * <li>Support multiple chromosomes per HDF5 file 
+ * <li>Support multiple chromosomes per HDF5 file, sequential
  * <li>Precompute alleles, MAF, Coverage
  * <li>Add support for read depth
  * <li>Add support for bit encoding - but just two states (Major/Minor) or (Ref/Alt)
+ * <li>Add efficient support for merging chromosomes
  * 
  * @author Ed Buckler & Terry Casstevens
  */
