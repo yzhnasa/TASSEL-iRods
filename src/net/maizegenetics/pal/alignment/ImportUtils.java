@@ -3,6 +3,8 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -57,6 +59,10 @@ public class ImportUtils {
             if(fileName.endsWith("mhmp.h5")) {
                 return MutableNucleotideAlignmentHDF5.getInstance(fileName);
             } else if(fileName.endsWith("hmp.h5")) {
+                IHDF5Reader reader = HDF5Factory.openForReading(fileName);
+                boolean geno=reader.exists(HapMapHDF5Constants.GENOTYPES);
+                reader.close();
+                if(geno) {return MutableNucleotideAlignmentHDF5.getInstance(fileName);}
                 return BitAlignmentHDF5.getInstance(fileName, readSBit);
             } else if(fileName.endsWith("hmp.txt.gz")||fileName.endsWith("hmp.txt")) {
                 return readFromHapmap(fileName, readSBit, null);

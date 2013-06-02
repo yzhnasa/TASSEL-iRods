@@ -156,7 +156,7 @@ public class ExportUtils {
         try {
             int numSites = a.getSiteCount();
             int numTaxa = a.getSequenceCount();
-            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, "mhmp.h5");
+            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, "hmp.h5");
             File hdf5File = new File(newHDF5file);
             if (hdf5File.exists()) {
                 throw new IllegalArgumentException("ExportUtils: writeToMutableHDF5: File already exists: " + newHDF5file);
@@ -215,7 +215,8 @@ public class ExportUtils {
 
             // Write Bases
             HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
-  //          HDF5IntStorageFeatures.createDeflationDelete(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
+  //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
+
             h5w.createGroup(HapMapHDF5Constants.GENOTYPES);
             if(includeGenotypes) {
                 for (int t = 0; t < numTaxa; t++) {
@@ -223,6 +224,7 @@ public class ExportUtils {
                     h5w.createByteArray(basesPath, numSites, features);
                     byte[] bases = a.getBaseRow(t);
                     h5w.writeByteArray(basesPath, bases, features);
+                    if(t%1000==0) System.out.println("Out Taxa "+t);
                 }
             }
             return newHDF5file;
