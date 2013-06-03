@@ -252,7 +252,10 @@ public class ImportUtils {
 
                 for (int taxa = 0; taxa < numTaxa; taxa++) {
                     String[] dataSplit = colonPattern.split(dataByTaxa[taxa]);
-
+                    if (dataSplit[0].startsWith("./."))
+                    {
+                        continue;
+                    }
                     // for whatever reason if the actual data fields do not match up with the format column
                     // assume the data is unknown
                     byte calledGenotypeValue = (byte) 0xFF;
