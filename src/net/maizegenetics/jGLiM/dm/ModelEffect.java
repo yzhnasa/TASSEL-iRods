@@ -2,6 +2,10 @@ package net.maizegenetics.jGLiM.dm;
 
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 
+/**
+ * @author pbradbury
+ *
+ */
 public interface ModelEffect {
 	/**
 	 * @return	an identifier for this factor
@@ -55,6 +59,12 @@ public interface ModelEffect {
 	 * @return	the number of levels in this factor
 	 */
 	int getNumberOfLevels();
+	
+	/**
+	 * @return the number of columns in the design matrix.
+	 * This will be the number of levels in this factor, if unrestricted. 1 - the number of levels, if restricted.
+	 */
+	int getEffectSize();
 	
 	/**
 	 * @return	a copy of this model effect

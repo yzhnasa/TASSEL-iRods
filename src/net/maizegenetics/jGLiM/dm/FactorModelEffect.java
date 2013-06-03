@@ -216,4 +216,10 @@ public class FactorModelEffect implements ModelEffect {
 				restricted);
 	}
 
+	@Override
+	public int getEffectSize() {
+		if (restricted) return numberOfLevels - 1;
+		else return numberOfLevels;
+	}
+
 }
