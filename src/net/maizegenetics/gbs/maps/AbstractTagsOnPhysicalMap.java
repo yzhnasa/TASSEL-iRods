@@ -144,7 +144,7 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
         sb.append(sb);
         //long
         sb.append(BaseEncoder.getSequenceFromLong(this.getTag(row)) + "\t");
-        sb.append(printWithMissing(tagLength[row]) + "\t");
+        sb.append(printWithMissing(tagLength[row])); sb.append("\t");
         sb.append(printWithMissing(multimaps[row]) + "\t");
         sb.append(printWithMissing(bestChr[row]) + "\t");
         sb.append(printWithMissing(bestStrand[row]) + "\t");
@@ -177,6 +177,7 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
         return Integer.toString(i);
     }
 
+    @Override
     public void writeTextFile(File outfile) {
         try {
             DataOutputStream fw = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outfile), 65536));
@@ -233,7 +234,7 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
                 myUniquePositions[cnt][p++] = ls;
             }
             myChromosomes[cnt++] = aChr.getKey();
-            System.out.printf("Chr:%d TagStart:%d %n", myChromosomes[cnt - 1], myUniquePositions[cnt - 1].length);
+//            System.out.printf("Chr:%d TagStart:%d %n", myChromosomes[cnt - 1], myUniquePositions[cnt - 1].length);
         }
     }
     
@@ -306,6 +307,127 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
         System.out.println("Position index sort begin.");
         GenericSorting.quickSort(0, indicesOfSortByPosition.length, compPos, swapperPos);
         System.out.println("Position index sort end.");
+    }
+
+    public void writeBinaryFile(File outFile) {
+        writeBinaryFile(outFile, Integer.MAX_VALUE, false, false, Float.NaN, true);
+    }
+
+    protected void writeBinaryFile(File outFile, boolean binary) {
+        writeBinaryFile(outFile, Integer.MAX_VALUE, false, false, Float.NaN, binary);
+    }
+
+    /**
+     * TODO need to add LocusList to test, whether to include in output, move this to abstract
+     * @param outFile
+     * @param minResolution
+     * @param requirePhysPosition
+     * @param requireDCOMap
+     * @param minDCOP
+     * @param binary
+     */
+    public void writeBinaryFile(File outFile, int minResolution, boolean requirePhysPosition, boolean requireDCOMap, float minDCOP, boolean binary) {
+        int hapsOutput = 0;
+        try {
+            DataOutputStream fw = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile), 4000000));
+            if (requirePhysPosition) {
+                fw.writeInt(mappedTags()[0]);
+            } // the index 0 provides the number of tags with unique positions
+            else {
+                fw.writeInt(myNumTags);
+            }
+            fw.writeInt(tagLengthInLong);
+            fw.writeInt(myMaxVariants);
+            for (int row = 0; row < myNumTags; row++) {
+                if ((requirePhysPosition == true) && (bestChr[row] == Integer.MIN_VALUE)) {
+                    continue;
+                }
+                for (int j = 0; j < tagLengthInLong; j++) {
+                    fw.writeLong(tags[j][row]);
+                }
+                fw.writeByte(tagLength[row]);
+                fw.writeByte(multimaps[row]);
+                fw.writeInt(bestChr[row]);
+                fw.writeByte(bestStrand[row]);
+                fw.writeInt(bestStartPos[row]);
+                fw.writeInt(getEndPosition(row));
+                fw.writeByte(getDivergence(row));
+                for (int j = 0; j < myMaxVariants; j++) {
+                    fw.writeByte(variantOffsets[row][j]);
+                    fw.writeByte(variantDefs[row][j]);
+                }
+                fw.writeByte(getDcoP(row));
+                fw.writeByte(getMapP(row));
+                hapsOutput++;
+            }
+            fw.flush();
+            fw.close();
+            System.out.println("Tag positions written to:" + outFile.toString());
+            System.out.println("Number of tags in file:" + hapsOutput);
+        } catch (Exception e) {
+            System.out.println("Catch in writing output file e=" + e);
+        }
+    }
+
+    /**
+     * @return An int[] result where : result[0] = The number of tags with a
+     * unique physical positions in this file (i.e. , tags for which the
+     * bestChr number is known). result[1] = The number of tags which align
+     * to multiple positions (i.e., where multimaps[tagIndex] > 0)
+     *
+     */
+    public int[] mappedTags() {
+        int[] result = {0, 0};
+        int unique = 0;
+        int multi = 1; // the indices of result
+        for (int row = 0; row < myNumTags; row++) {
+            if (bestChr[row] == Integer.MIN_VALUE) {
+                if (multimaps[row] > 0) {
+                    result[multi]++;
+                }
+            } else {
+                result[unique]++;
+            }
+        }
+        return result;
+    }
+
+    public void printRows(int numRows) {
+        for (int i = 0; i < numRows; i++) {
+            System.out.println(printRow(i));
+        }
+    }
+    
+    public String printRow(int row, boolean byPosition) {
+        if (byPosition) {
+            return printRow(indicesOfSortByPosition[row]);
+        }
+        return printRow(row);
+    }
+
+    public void printRows(int numRows, boolean requirePhysPosition, boolean byPosition) {
+        int outCount = 0;
+        for (int i = 0; outCount < numRows; i++) {
+            int r = (byPosition) ? indicesOfSortByPosition[i] : i;
+            if ((requirePhysPosition == true) && (bestChr[r] < 1)) {
+                continue;
+            }
+            System.out.println(printRow(r));
+            outCount++;
+        }
+    }
+
+    public void printRows(int numRows, boolean requirePhysPosition, int printChr) {
+        int outCount = 0;
+        boolean byPosition = true;
+        for (int i = 0; outCount < numRows; i++) {
+            int r = (byPosition) ? indicesOfSortByPosition[i] : i;
+            if ((requirePhysPosition == true) && (bestChr[r] != printChr)) {
+                continue;
+            }
+            System.out.println(printRow(r));
+            outCount++;
+        }
     }
     
 }

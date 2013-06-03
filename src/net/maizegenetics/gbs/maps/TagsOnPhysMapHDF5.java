@@ -13,8 +13,8 @@ import org.apache.log4j.Logger;
 /**
  *
  * TODO:
- * <li> createFile - needs to deal with inputing just TAGS or TOPM with compression
- * <li> create indicesOfSortByPosition, myChromosomes, myUniquePositions to work
+ * <li> createFile - needs to deal with inputing just TAGS 
+ * TODO: createFile that includes a Locus filter, only exports positions on the same locus and position range
  * 
  * 
  * @author Ed, Terry
@@ -61,7 +61,6 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
             // config.dontUseExtendableDataTypes();
             config.useUTF8CharacterEncoding();
             h5 = config.writer();
-
             h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGCOUNT, tagCount);
             h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXVARIANTS, maxVariants);
             h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING, maxMapping);
