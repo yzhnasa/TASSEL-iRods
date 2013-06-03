@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -493,5 +494,13 @@ public final class Utils {
                 // do nothing
             }
         }
+    }
+    
+    public static String readLineSkipComments(BufferedReader br) throws IOException {
+        String s=br.readLine();
+        while((s.startsWith("#"))) {
+            s=br.readLine();
+        }
+        return s;
     }
 }

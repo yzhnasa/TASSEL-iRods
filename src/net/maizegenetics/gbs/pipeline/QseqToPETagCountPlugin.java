@@ -234,9 +234,8 @@ public class QseqToPETagCountPlugin extends AbstractPlugin {
             taxonoutfile = new File (parentDir, taxonName.replaceAll(":", "_")+".pe.cnt");
             try {
                 dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(taxonoutfile), 65536));
-                dos.writeInt(1);
                 dos.writeInt(tagLengthInLong);
-                dos.writeUTF(taxonName);    
+                dos.writeInt(-1); // -1 means parsed read without sorting, merging and contiging, tagNum is not known neither
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -253,6 +252,8 @@ public class QseqToPETagCountPlugin extends AbstractPlugin {
                     dos.writeLong(rr.getReadB()[i]);
                 }
                 dos.writeShort(rr.getLengthB());
+                dos.writeByte(0); // 0 means contig doesn't exist.
+                dos.writeShort(0);
                 dos.writeInt(1);
             }
             catch (Exception e) {

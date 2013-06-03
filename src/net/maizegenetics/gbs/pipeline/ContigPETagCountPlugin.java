@@ -9,7 +9,6 @@ import java.io.File;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.tagdist.PETagCounts;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -19,41 +18,39 @@ import org.apache.log4j.Logger;
  *
  * @author Fei Lu
  */
-public class MergePETagCountPlugin extends AbstractPlugin {
+public class ContigPETagCountPlugin extends AbstractPlugin {
+
     static long timePoint1;
     private ArgsEngine engine = null;
     private Logger logger = Logger.getLogger(MergePETagCountPlugin.class);
-    private String inputDirS = null;
+    private String inputFileS = null;
     private String outputFileS = null;
     
-    public MergePETagCountPlugin() {
+    public ContigPETagCountPlugin() {
         super(null, false);
     }
 
-    public MergePETagCountPlugin(Frame parentFrame) {
+    public ContigPETagCountPlugin(Frame parentFrame) {
         super(parentFrame, false);
     }
 
     private void printUsage() {
         logger.info(
                 "\n\nUsage is as follows:\n"
-                + " -i  input directory containing .pe.cnt for each taxa\n"
-                + " -o  output filename for merged PETagCounts file\n");
+                + " -i  input PETagCount filename\n"
+                + " -o  output PETagCount filename\n");
     }
 
     @Override
     public DataSet performFunction(DataSet input) {
-        mergePETagCount();
+        contigPETagCount();
         return null;
     }
     
-    public void mergePETagCount () {
-        File[] infiles = new File(inputDirS).listFiles();
-        PETagCounts prime = new PETagCounts(infiles[0].getAbsolutePath(), FilePacking.Bit).getCollapsedPETagCounts();
-        for (int i = 1; i < infiles.length; i++) {
-            prime = prime.getMergedPETagCounts(new PETagCounts(infiles[i].getAbsolutePath(), FilePacking.Bit), false);
-        }
-        prime.writeDistFile(outputFileS, FilePacking.Bit, 0);
+    public void contigPETagCount () {
+        PETagCounts p = new PETagCounts(inputFileS, TagsByTaxa.FilePacking.Bit).getCollapsedPETagCounts();
+        p.contigPETags();
+        p.writeDistFile(outputFileS, TagsByTaxa.FilePacking.Bit, 0);
     }
     
     @Override
@@ -65,13 +62,13 @@ public class MergePETagCountPlugin extends AbstractPlugin {
 
         if (engine == null) {
             engine = new ArgsEngine();
-            engine.add("-i", "--input-directory", true);
+            engine.add("-i", "--input-file", true);
             engine.add("-o", "--output-file", true);
             engine.parse(args);
         }
 
         if (engine.getBoolean("-i")) {
-            inputDirS = engine.getString("-i");
+            inputFileS = engine.getString("-i");
         } else {
             printUsage();
             throw new IllegalArgumentException("Please specify the input directory of PETagCounts files");
@@ -100,4 +97,5 @@ public class MergePETagCountPlugin extends AbstractPlugin {
     public String getToolTipText() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
 }

@@ -14,9 +14,10 @@ public final class HapMapHDF5Constants {
     public static final String ALLELE_STATES = "AlleleStates";
     public static final String POSITIONS = "Positions";
     public static final String ALLELES = "Alleles";
-    public static final String TBIT = "TBit";
-    public static final String SBIT = "SBit";
-    public static final String BASES = "Bases";
+    public static final String TBIT = "TBit";  //Taxa optimized bit alignment
+    public static final String SBIT = "SBit";  //Site optimized bit alignment
+    public static final String DEPTH = "Depth";  //taxa optimized depth of the base calls
+    public static final String GENOTYPES = "Genotypes";  //Taxa based byte alignment
     public static final String LOCI = "SeqRegion";
     public static final String LOCUS_OFFSETS = "SeqRegionOffsets";
     public static final String SNP_IDS = "SnpIds";

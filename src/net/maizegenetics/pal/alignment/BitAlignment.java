@@ -17,7 +17,14 @@ import net.maizegenetics.util.UnmodifiableBitSet;
 import org.apache.log4j.Logger;
 
 /**
- *
+ * Bit Alignment holds alleles or taxa in BitSets.  TBit holds the data organized by taxon, 
+ * while SBit is organized by site.  TBit is efficient for comparison for large numbers of sites
+ * between taxa (e.g. Genetic distance or imputation).  Sbit is efficient for comparisons
+ * between sites (e.g LD, and better for accessing for GWAS but GWAS efficiency is 
+ * determined by the linear algebra).
+ * 
+ * TODO:  Need to create cache system for a long at a time.
+ * 
  * @author terry
  */
 public class BitAlignment extends AbstractAlignment {

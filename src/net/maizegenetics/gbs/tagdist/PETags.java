@@ -63,19 +63,20 @@ public interface PETags extends Swapper, IntComparator {
      */
     public int getTagCount();
     
-    /**
-     * This is the number of taxa
-     * @return number of taxa
+    /*
+     * @return contig of a PE tag, if there is no contig, return null
      */
-    public int getTaxaCount ();
+    public long[] getContig (int index);
     
-    /**
-     * This is the taxa name of a particular taxa
-     * @param index
-     * @return the name of that taxa
+    /*
+     * @return contig length
      */
+    public short getContigLength (int index);
     
-    public String getTaxaName (int index);
+    /*
+     * @return contig lengthInLong
+     */
+    public byte getContigLengthInLong (int index);
     
     /**
      * Read PE tag distribution

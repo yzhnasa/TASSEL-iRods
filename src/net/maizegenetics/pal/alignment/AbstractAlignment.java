@@ -420,7 +420,7 @@ abstract public class AbstractAlignment implements Alignment {
     @Override
     public byte[] getAlleles(int site) {
         if (myAlleles != null) {
-            return myAlleles[site];
+            return myAlleles[site];  //TODO this may not be correct for BitAlignment, as it returns UNKNOWN as one of the alleles
         } else {
             int[][] alleles = getAllelesSortedByFrequency(site);
             int resultSize = alleles[0].length;
@@ -429,7 +429,6 @@ abstract public class AbstractAlignment implements Alignment {
             for (int i = 0; i < maxNumAlleles; i++) {
                 result[i] = (i < resultSize) ? (byte) alleles[0][i] : Alignment.UNKNOWN_ALLELE;
             }
-
             return result;
         }
     }

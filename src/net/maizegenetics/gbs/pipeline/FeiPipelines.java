@@ -13,20 +13,31 @@ import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 
 /**
  *
- * @author Fei
+ * @author Fei Lu
  */
 public class FeiPipelines {
     
     public FeiPipelines () {
-        parseQseq();
+        //parseQseq();
         this.parseFastq();
         this.checkPETagCounts();
-        
         this.mergePETagCounts();
+        this.contigPETagCounts();
     }
     
     public static void main (String[] args) {
         new FeiPipelines();
+        
+    }
+    
+    public void contigPETagCounts () {
+        String infileS = "M:/af/mergePETagCounts/merge.pe.cnt";
+        String outfileS = "M:/af/mergePETagCounts/merge.con.pe.cnt";
+        String arguments = "-i " + infileS + " -o " + outfileS;
+        String[] args = arguments.split(" ");
+        ContigPETagCountPlugin m = new ContigPETagCountPlugin();
+        m.setParameters(args);
+		m.performFunction(null);
     }
     
     public void mergePETagCounts () {
@@ -44,7 +55,7 @@ public class FeiPipelines {
         String infile2 = "M:/af/Illumina/test/ImputationP15_1_2_fastq.txt";
         String keyfile = "M:/af/key/ImputationP15_key.txt";
         String outputDirS = "M:/af/PETagCounts/";
-        String arguments = "-iF " + infile1 + " -iB " + infile2 + " -k " + keyfile + " -e ApekI -o " + outputDirS;
+        String arguments = "-iF " + infile1 + " -iB " + infile2 + " -k " + keyfile + " -e ApekI -l 8 -o " + outputDirS;
         String[] args = arguments.split(" ");
         FastqToPETagCountPlugin q = new FastqToPETagCountPlugin();
         q.setParameters(args);
@@ -60,12 +71,11 @@ public class FeiPipelines {
             String out = txtDirS + "/" + files[i].getName();
             p.writeDistFile(out, FilePacking.Text, 0);
         }
-        
     }
      
     public void parseQseq () {
-        String infile1 = "M:/af/Illumina/test/81546ABXX_8_1_qseq.txt";
-        String infile2 = "M:/af/Illumina/test/81546ABXX_8_2_qseq.txt";
+        String infile1 = "M:/af/Illumina/81546ABXX_8_1_qseq.txt";
+        String infile2 = "M:/af/Illumina/81546ABXX_8_2_qseq.txt";
         String keyfile = "M:/af/key/81546ABXX_key.txt";
         String outputDirS = "M:/af/PETagCounts/";
         String arguments = "-iF " + infile1 + " -iB " + infile2 + " -k " + keyfile + " -e ApekI -o " + outputDirS;

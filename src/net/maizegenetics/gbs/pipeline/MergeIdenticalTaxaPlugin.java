@@ -224,7 +224,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             byte mn=AlignmentUtils.getDiploidValue(mnAllele,mnAllele);
        //     byte[] snpValue = {mj, mn};
             //byte het = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(snpValue);
-            byte het = AlignmentUtils.getDiploidValue(mjAllele, mnAllele);
+            byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
             for (int t = 0; t < taxaIndex.length; t++) {
                 byte ob = a.getBase(taxaIndex[t], s);
                 if (ob == Alignment.UNKNOWN_DIPLOID_ALLELE) {
@@ -234,7 +234,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
                     siteCnt[0][s]++;
                 } else if (ob == mn) {
                     siteCnt[1][s]++;
-                } else if (ob == het) {
+                } else if (AlignmentUtils.isEqual(ob, het)) {
                     siteCnt[0][s]++;
                     siteCnt[1][s]++;
                 }
