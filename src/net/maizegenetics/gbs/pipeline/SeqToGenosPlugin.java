@@ -111,13 +111,13 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
         if (myArgsEngine == null) {
             myArgsEngine = new ArgsEngine();
-            myArgsEngine.add("-i", "--input-directory", true);
-            myArgsEngine.add("-k", "--key-file", true);
-            myArgsEngine.add("-m", "--physical-map", true);
-            myArgsEngine.add("-e", "--enzyme", true);
+            myArgsEngine.add("-i",  "--input-directory", true);
+            myArgsEngine.add("-k",  "--key-file", true);
+            myArgsEngine.add("-m",  "--physical-map", true);
+            myArgsEngine.add("-e",  "--enzyme", true);
             myArgsEngine.add("-vL", "--VCF-likelihood", false);
-            myArgsEngine.add("-o", "--output-directory", true);
-            myArgsEngine.add("-d", "--divergence", true);
+            myArgsEngine.add("-o",  "--output-directory", true);
+            myArgsEngine.add("-d",  "--divergence", true);
         }
         myArgsEngine.parse(args);
         String tempDirectory = myArgsEngine.getString("-i");
@@ -216,24 +216,16 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             BufferedReader br = getBufferedReaderForRawSeqFile(fileNum);
             try {
                 while ((temp = br.readLine()) != null) {
-                    if (counters[0] % 1000000 == 0) {
-                        reportProgress(counters);
-                    }
+                    if (counters[0] % 1000000 == 0)  reportProgress(counters);
                     ReadBarcodeResult rr = readSequenceRead(br, temp, thePBR, counters);
                     if (rr != null) {
                         counters[1]++;  // goodBarcodedReads
                         RawReadCountsForFullSampleName.put(rr.getTaxonName(),RawReadCountsForFullSampleName.get(rr.getTaxonName())+1);
                         RawReadCountsForFinalSampleName.put(FullNameToFinalName.get(rr.getTaxonName()),RawReadCountsForFinalSampleName.get(FullNameToFinalName.get(rr.getTaxonName()))+1);
                         int tagIndex = topm.getTagIndex(rr.getRead());
-                        if (tagIndex >= 0) {
-                            counters[3]++;  // perfectMatches
-                        }
-                        if (tagIndex < 0 && maxDivergence > 0) {
-                            tagIndex = findBestImperfectMatch(rr.getRead(), counters);
-                        }
-                        if (tagIndex < 0) {
-                            continue;
-                        }
+                        if (tagIndex >= 0)  counters[3]++;  // perfectMatches
+                        if (tagIndex < 0 && maxDivergence > 0)  tagIndex = findBestImperfectMatch(rr.getRead(), counters);
+                        if (tagIndex < 0)  continue;
                         counters[2]++;  // goodMatched++;
                         int taxonIndex = FinalNameToTaxonIndex.get(FullNameToFinalName.get(rr.getTaxonName()));
                         incrementDepthForTagVariants(tagIndex, taxonIndex);
@@ -245,10 +237,26 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 System.out.println("Last line read: "+temp);
                 e.printStackTrace();
             }
-            System.out.println("Total number of reads in lane=" + counters[0]);
-            System.out.println("Total number of good, barcoded reads=" + counters[1]);
-            System.out.println("Finished reading " + (fileNum+1) + " of " + myRawSeqFileNames.length + " sequence files: " + myRawSeqFileNames[fileNum] + "\n");
+            reportTotals(fileNum, counters);
         }
+    }
+ 
+    private void reportProgress(int[] counters) {
+        System.out.println(
+            "totalReads:" + counters[0]
+            + "  goodBarcodedReads:" + counters[1]
+            + "  goodMatchedToTOPM:" + counters[2]
+//            + "  perfectMatches:" + counters[3]
+//            + "  nearMatches:" + counters[4]
+//            + "  uniqueNearMatches:" + counters[5]
+        );
+    }
+   
+    private void reportTotals(int fileNum, int[] counters) {
+        System.out.println("Total number of reads in lane=" + counters[0]);
+        System.out.println("Total number of good, barcoded reads=" + counters[1]);
+        System.out.println("Total number of good, barcoded reads matched to the TOPM=" + counters[2]);
+        System.out.println("Finished reading " + (fileNum+1) + " of " + myRawSeqFileNames.length + " sequence files: " + myRawSeqFileNames[fileNum] + "\n");
     }
     
     private void readKeyFile() {
@@ -518,17 +526,6 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             e.printStackTrace();
         }
         return br;
-    }
-
-    private void reportProgress(int[] counters) {
-        System.out.println(
-            "totalReads:" + counters[0]
-            + "  goodBarcodedReads:" + counters[1]
-            + "  goodMatchedToTOPM:" + counters[2]
-//            + "  perfectMatches:" + counters[3]
-//            + "  nearMatches:" + counters[4]
-//            + "  uniqueNearMatches:" + counters[5]
-        );
     }
 
     private ReadBarcodeResult readSequenceRead(BufferedReader br, String temp, ParseBarcodeRead thePBR, int[] counters) {
