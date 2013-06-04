@@ -258,7 +258,7 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
                     currVD[j] = dis.readByte();
                     if((currVD[j]>0xf)&&(AlignmentUtils.isHeterozygous(currVD[j]))) {//ascii bytes need to be converted to TASSEL 4
  //                       System.out.printf("row:%d vd:%d %n", row, variantDefs[row][j]);
-                        currVD[j]=NucleotideAlignmentConstants.getNucleotideDiploidByte((char)currVD[j]);
+                        currVD[j]=NucleotideAlignmentConstants.getNucleotideAlleleByte(String.valueOf((char)currVD[j]));
                     }
                     if(currVO[j]!=TOPMInterface.BYTE_MISSING) numWithData++;
                 }
