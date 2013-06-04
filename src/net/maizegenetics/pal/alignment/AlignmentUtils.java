@@ -639,14 +639,14 @@ public class AlignmentUtils {
     /**
      * Separates diploid allele value into it's two values.
      *
-     * @param diploidAllele diploid value
+     * @param genotype diploid value
      *
      * @return separated allele values
      */
-    public static byte[] getDiploidValues(byte diploidAllele) {
+    public static byte[] getDiploidValues(byte genotype) {
         byte[] result = new byte[2];
-        result[0] = (byte) ((diploidAllele >>> 4) & 0xf);
-        result[1] = (byte) (diploidAllele & 0xf);
+        result[0] = (byte) ((genotype >>> 4) & 0xf);
+        result[1] = (byte) (genotype & 0xf);
         return result;
     }
 

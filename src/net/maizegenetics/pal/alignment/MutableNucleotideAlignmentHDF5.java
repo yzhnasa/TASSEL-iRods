@@ -74,7 +74,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private int defaultSiteCache=4096;
     
     private boolean cacheDepth=false;
-    private LRUCache<Long,byte[]> myDepthCache=null;  //key (taxa <<< 32)+startSite
+    private LRUCache<Long,byte[][]> myDepthCache=null;  //key (taxa <<< 32)+startSite
     
 
 
@@ -159,6 +159,20 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         }
     }
     
+    private void initDepthCache() {
+        myDepthCache=new LRUCache<Long, byte[][]>(defaultCacheSize);
+        int minLoad=(defaultCacheSize<getSequenceCount())?defaultCacheSize:getSequenceCount();
+        int start=(0/defaultSiteCache)*defaultSiteCache;
+        int xSizeCache=3000;
+        for (int i = 0; i<minLoad; i++) {
+            byte[][] test2=myWriter.readByteMatrix(getTaxaDepthPath(i));
+            System.out.println(Arrays.deepToString(test2));
+            byte[][] test=myWriter.readByteMatrixBlockWithOffset(getTaxaDepthPath(i), xSizeCache, 6, start, 0);
+            System.out.println(Arrays.deepToString(test));
+            myDepthCache.put(getCacheKey(i,0), myWriter.readByteMatrixBlockWithOffset(getTaxaDepthPath(i), xSizeCache, 6, start, 0));
+        }
+    }
+    
     private long getCacheKey(int taxon, int site) {
         return ((long)taxon<<32)+(site/defaultSiteCache);
     }
@@ -175,10 +189,22 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return cacheTaxonSiteBlock(taxon, site, getCacheKey(taxon, site));
     }
     
-    private void removeCacheTaxonSiteBlock(int taxon, int site) {
-        long key=getCacheKey(taxon, site);
-        myDataCache.remove(key);
+    private byte[][] cacheDepthBlock(int taxon, int site, long key) {
+        int start=(site/defaultSiteCache)*defaultSiteCache;
+        byte[][] data=myWriter.readByteMatrixBlockWithOffset(getTaxaDepthPath(taxon), defaultSiteCache, 6, start, 0);
+        if(data==null) return null;
+        myDepthCache.put(key, data);
+        return data;
     }
+    
+    private byte[][] cacheDepthBlock(int taxon, int site) {
+        return cacheDepthBlock(taxon, site, getCacheKey(taxon, site));
+    }
+    
+//    private void removeCacheTaxonSiteBlock(int taxon, int site) {
+//        long key=getCacheKey(taxon, site);
+//        myDataCache.remove(key);
+//    }
     
     private String getTaxaGenoPath(int taxon) {
         return HapMapHDF5Constants.GENOTYPES + "/" + getFullTaxaName(taxon);
@@ -192,6 +218,14 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         long key=getCacheKey(taxon,site);
         byte[] data=myDataCache.get(key);
         if(data==null) {data=cacheTaxonSiteBlock(taxon, site, key);}
+        return data[site%defaultSiteCache];
+    }
+    
+    public byte[] getDepthForAlleles(int taxon, int site) {
+        if(myDepthCache==null) initDepthCache();
+        long key=getCacheKey(taxon,site);
+        byte[][] data=myDepthCache.get(key);
+        if(data==null) {data=cacheDepthBlock(taxon, site, key);}
         return data[site%defaultSiteCache];
     }
 
