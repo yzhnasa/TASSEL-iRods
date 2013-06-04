@@ -198,13 +198,13 @@ public class SweepFastLinearModel {
 		double[] beta = getBeta();
 		int start = 0;
 		ModelEffect me = modelEffects.get(0);
-		int effectSize = me.getNumberOfLevels();
+		int effectSize = me.getEffectSize();
 		double[] thisbeta = Arrays.copyOfRange(beta, start, start + effectSize);
 		DoubleMatrix p = me.getyhat(thisbeta);
 		start += effectSize;
 		for (int i = 1; i < numberOfEffects; i++) {
 			me = modelEffects.get(i);
-			effectSize = me.getNumberOfLevels();
+			effectSize = me.getEffectSize();
 			thisbeta = Arrays.copyOfRange(beta, start, start + effectSize);
 			p.plusEquals(me.getyhat(thisbeta));
 			start += effectSize;

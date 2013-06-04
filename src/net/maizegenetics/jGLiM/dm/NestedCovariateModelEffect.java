@@ -67,7 +67,6 @@ public class NestedCovariateModelEffect implements ModelEffect {
 
 	@Override
 	public int getNumberOfLevels() {
-		if (fme.getRestricted()) return fme.getNumberOfLevels() + 1;
 		return fme.getNumberOfLevels();
 	}
 
@@ -146,6 +145,11 @@ public class NestedCovariateModelEffect implements ModelEffect {
 	@Override
 	public ModelEffect getCopy() {
 		return new NestedCovariateModelEffect(id, size, covariate, fme);
+	}
+
+	@Override
+	public int getEffectSize() {
+		return getNumberOfLevels();
 	}
 	
 }

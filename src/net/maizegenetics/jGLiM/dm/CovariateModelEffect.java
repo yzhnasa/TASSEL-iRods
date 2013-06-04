@@ -117,5 +117,10 @@ public class CovariateModelEffect implements ModelEffect {
 	public ModelEffect getCopy() {
 		return new CovariateModelEffect(covariate, size, sum, sumsq, id);
 	}
+
+	@Override
+	public int getEffectSize() {
+		return 1;
+	}
     
 }
