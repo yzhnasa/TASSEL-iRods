@@ -67,7 +67,8 @@ public class ModelFitter extends Thread {
 		importResiduals(files.residuals);
 		importNamMarkersforMap(files.namMarkersByChr);
 		
-		if (files.randomizeSnpOrder) snpdata = new SnpDataRandomOrder(files);
+		if (files.useB73asReference) snpdata = new SnpDataB73Ref(files);
+		else if (files.randomizeSnpOrder) snpdata = new SnpDataRandomOrder(files);
 		else snpdata = new SnpData(files);
 		maxmarker = genotypes[0].length - 1;
 		int nSamples = residualSamples.length;
