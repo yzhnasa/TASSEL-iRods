@@ -316,7 +316,7 @@ public class ModelFitterBootstrapForward extends ModelFitter {
 	//for the next term (max modelss) need pos, allele, projection, F, p
 	protected SnpInfo findNextTerm(LinearModelForStepwiseRegression lmsr) {
 		int chromosome = files.chromosome;
-		SnpInfo bestSnp = null;
+		SnpInfo bestSnp = new SnpInfo(chromosome, -1, "n/a", new double[]{}, 0,1);
 		double bestSS = 0;
 		snpdata.reset();
 		while (snpdata.next()) {
