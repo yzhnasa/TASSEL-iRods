@@ -31,9 +31,9 @@ import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TOPMInterface;
 import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.MutableNucleotideDepthAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.util.VCFUtil;
 import org.apache.commons.math.distribution.BinomialDistributionImpl;
 import org.apache.log4j.Logger;
 
@@ -75,7 +75,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private MutableNucleotideDepthAlignment[] genos = null;
     private TreeMap<String,Integer> RawReadCountsForFullSampleName = new TreeMap<String,Integer>();
     private TreeMap<String,Integer> RawReadCountsForFinalSampleName = new TreeMap<String,Integer>();
-    private boolean vcf = false;  // if true, use "vcf" (STACKS) method for calling hets
+    private boolean vcfL = false;  // if true, use vcf likelihood method for calling hets
     private double errorRate = 0.01;
     private final static int maxCountAtGeno = 500;  // maximum value for likelihoodRatioThreshAlleleCnt[] lookup table
     private static int[] likelihoodRatioThreshAlleleCnt = null;  // index = sample size; value = min count of less tagged allele for likelihood ratio > 1
@@ -93,11 +93,12 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private void printUsage() {
         myLogger.info(
             "\nThe options for the TASSEL SeqToGenosPlugin are as follows:\n"
-            + "  -i  Input directory containing fastq AND/OR qseq files\n"
-            + "  -k  Barcode key file\n"
-            + "  -m  Physical map file containing alignments and variants (production TOPM)\n"
-            + "  -e  Enzyme used to create the GBS library\n"
-            + "  -o  Output directory\n"
+            + "  -i   Input directory containing fastq AND/OR qseq files\n"
+            + "  -k   Barcode key file\n"
+            + "  -m   Physical map file containing alignments and variants (production TOPM)\n"
+            + "  -e   Enzyme used to create the GBS library\n"
+            + "  -vL  Use VCF likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)"
+            + "  -o   Output directory\n"
 //            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
         );
     }
@@ -114,6 +115,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             myArgsEngine.add("-k", "--key-file", true);
             myArgsEngine.add("-m", "--physical-map", true);
             myArgsEngine.add("-e", "--enzyme", true);
+            myArgsEngine.add("-vL", "--VCF-likelihood", false);
             myArgsEngine.add("-o", "--output-directory", true);
             myArgsEngine.add("-d", "--divergence", true);
         }
@@ -153,6 +155,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalArgumentException("Please specify the enzyme used to create the GBS library.");
         }
+        if (myArgsEngine.getBoolean("-vL")) {
+            vcfL = true;
+        }
         if (myArgsEngine.getBoolean("-o")) {
             myOutputDir = myArgsEngine.getString("-o");
             File outDirectory = new File(myOutputDir);
@@ -181,12 +186,11 @@ public class SeqToGenosPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
-//        myLogger.addAppender(new ConsoleAppender(new SimpleLayout()));
         if ((myEnzyme == null) || (myEnzyme.length() == 0)) {
             printUsage();
             throw new IllegalStateException("performFunction: enzyme must be set.");
         }
-        if (!vcf) {
+        if (!vcfL) {
             setLikelihoodThresh(errorRate);
         }
         readKeyFile();
@@ -364,7 +368,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     }
     
     private void matchKeyFileToAvailableRawSeqFiles() {
-        myLogger.info("\nThe following raw sequence files in the input directory conform to one of our file naming conventions and have corresponding samples in the key file:");
+        System.out.println("\nThe following raw sequence files in the input directory conform to one of our file naming conventions and have corresponding samples in the barcode key file:");
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             String[] flowcellLane = parseRawSeqFileName(myRawSeqFileNames[fileNum]);
             if (flowcellLane != null && FlowcellLanes.containsKey(flowcellLane[0]+":"+flowcellLane[1])) {
@@ -485,7 +489,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     }
     
     private void reportOnMissingSamples(TreeSet<String> samplesInKeyFileWithNoRawSeqFile) {
-        myLogger.info("The follow samples in the key file will be absent from the results because there is no corresponding raw sequence (fastq or qseq) file in the input directory:");
+        System.out.println("\nThe follow samples in the barcode key file will be absent from the results because there is no corresponding raw sequence (fastq or qseq) file in the input directory:");
         for (String missingSample : samplesInKeyFileWithNoRawSeqFile) {
             System.out.println("   "+missingSample);
         }
@@ -518,12 +522,13 @@ public class SeqToGenosPlugin extends AbstractPlugin {
 
     private void reportProgress(int[] counters) {
         System.out.println(
-                "totalReads:" + counters[0]
-                + " goodBarcodedReads:" + counters[1]
-                + " goodMatchedToTOPM:" + counters[2]
-                + " perfectMatches:" + counters[3]
-                + " nearMatches:" + counters[4]
-                + " uniqueNearMatches:" + counters[5]);
+            "totalReads:" + counters[0]
+            + "  goodBarcodedReads:" + counters[1]
+            + "  goodMatchedToTOPM:" + counters[2]
+//            + "  perfectMatches:" + counters[3]
+//            + "  nearMatches:" + counters[4]
+//            + "  uniqueNearMatches:" + counters[5]
+        );
     }
 
     private ReadBarcodeResult readSequenceRead(BufferedReader br, String temp, ParseBarcodeRead thePBR, int[] counters) {
@@ -619,20 +624,30 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     }
     
     private byte resolveGeno(byte[] depths) {
+        if (vcfL) {
+            int nAlleles = depths.length;
+            byte[] alleles = new byte[nAlleles];
+            int[] intDepths = new int[nAlleles];
+            for (byte a = 0; a < nAlleles; a++) {
+                alleles[a] = a;
+                intDepths[a] = depths[a];
+            }
+            return VCFUtil.resolveVCFGeno(alleles, intDepths);
+        }
         int count = 0;
         for (int a = 0; a < depths.length; a++) {
             count += depths[a];
-            }
-            if (count == 0) {
-                return Alignment.UNKNOWN_DIPLOID_ALLELE;
-            }
-            // check for each possible homozygote
+        }
+        if (count == 0) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        // check for each possible homozygote
         for (int a = 0; a < depths.length; a++) {
             if ((count - depths[a]) == 0) {
-                    byte byteA = (byte) a;
-                    return (byte) ((byteA << 4) | byteA);
-                }
+                byte byteA = (byte) a;
+                return (byte) ((byteA << 4) | byteA);
             }
+        }
         return resolveHetGeno(depths);
     }
     
@@ -652,23 +667,19 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 nextMaxAllele = (byte) a;
             }
         }
-        if (vcf) {
-            return Alignment.UNKNOWN_ALLELE; // ToDo: resolve the het with the vcf (STACKS) method
-        } else {
-            // use the Buckler/Glaubitz LR method (if binomialPHet/binomialPErr > 1, call it a het)
-            int totCount = max + nextMax;
-            if (totCount < maxCountAtGeno) {
-                if (nextMax < likelihoodRatioThreshAlleleCnt[totCount]) {
-                    return (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
-                } else {
-                    return (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
-                }
+        // use the Glaubitz/Buckler LR method (if binomialPHet/binomialPErr > 1, call it a het)
+        int totCount = max + nextMax;
+        if (totCount < maxCountAtGeno) {
+            if (nextMax < likelihoodRatioThreshAlleleCnt[totCount]) {
+                return (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
             } else {
-                if (nextMax / totCount < 0.1) {
-                    return (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
-                } else {
-                    return (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
-                }
+                return (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
+            }
+        } else {
+            if (nextMax / totCount < 0.1) {
+                return (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
+            } else {
+                return (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
             }
         }
     }
@@ -802,26 +813,6 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             + "\"_qseq.txt\", or "
             + "\"_qseq.txt.gz\" "
             + "in the supplied directory: ";
-
-    private byte resolveGenoFromCallPair(byte currGeno, byte newAllele) {
-        TreeSet<Byte> alleles = new TreeSet<Byte>();
-        byte[] currAlleles = AlignmentUtils.getDiploidValues(currGeno);
-        alleles.add(currAlleles[0]);
-        alleles.add(currAlleles[1]);
-        alleles.add(newAllele);
-        if (alleles.size() > 2) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        }
-        byte[] alleleArray = new byte[alleles.size()];
-        int i = 0;
-        for (Byte allele : alleles) {
-            alleleArray[i++] = allele.byteValue();
-        }
-        if (alleleArray.length == 2) {
-            return AlignmentUtils.getDiploidValue(alleleArray[0], alleleArray[1]);
-        }
-        return AlignmentUtils.getDiploidValue(alleleArray[0], alleleArray[0]);
-    }
     
     @Override
     public ImageIcon getIcon() {
