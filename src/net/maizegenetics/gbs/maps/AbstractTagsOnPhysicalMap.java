@@ -17,6 +17,7 @@ import java.util.TreeSet;
 import net.maizegenetics.gbs.tagdist.AbstractTags;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 
@@ -94,6 +95,18 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
         return result;
     }
     
+    /**
+     * Provides the reference
+     * @return 
+     */
+    protected byte[][] getVariantDefByReference() {
+        return variantDefs;
+    }
+    
+    protected byte[][] getVariantOffByReference() {
+        return variantOffsets;
+    }
+    
 
     @Override
     public byte getVariantDef(int tagIndex, int variantIndex) {
@@ -107,12 +120,13 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
      */
     @Override
     public byte[] getVariantDefArray(int tagIndex) {
-        if(variantDefs[tagIndex]==null) return null;
-        byte[] result = new byte[variantDefs[tagIndex].length];
-        for (int i = 0; i < variantDefs[tagIndex].length; i++) {
-            result[i] = getVariantDef(tagIndex, i);
-        }
-        return result;
+        return variantDefs[tagIndex];
+//        if(variantDefs[tagIndex]==null) return null;
+//        byte[] result = new byte[variantDefs[tagIndex].length];
+//        for (int i = 0; i < variantDefs[tagIndex].length; i++) {
+//            result[i] = getVariantDef(tagIndex, i);
+//        }
+//        return result;
     }
 
     @Override
@@ -155,7 +169,10 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
             sb.append(printWithMissing(getVariantPosOff(row, j)) + "\t");
             byte vd=getVariantDef(row, j);
             if(vd==TOPMInterface.BYTE_MISSING) {sb.append(printWithMissing(vd) + "\t");}
-            else {sb.append(NucleotideAlignmentConstants.getNucleotideIUPAC(vd) + "\t");}
+            else {
+                byte genotype=AlignmentUtils.getDiploidValue(vd, vd);
+                sb.append(NucleotideAlignmentConstants.getNucleotideIUPAC(genotype) + "\t");
+            }
         }
         sb.append(printWithMissing(getDcoP(row)) + "\t");
         sb.append(printWithMissing(getMapP(row)) + "\t");
@@ -219,6 +236,7 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
                 TreeSet<Integer> thePos = theChrs.get(chr);
                 int startPos = getStartPosition(i);
                 byte[] varOffs = getVariantPosOffArray(i);
+                if(varOffs==null) continue;
                 for (byte b : varOffs) {
                     thePos.add((int) (startPos + b));
                 }
@@ -353,8 +371,8 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
                 fw.writeInt(getEndPosition(row));
                 fw.writeByte(getDivergence(row));
                 for (int j = 0; j < myMaxVariants; j++) {
-                    fw.writeByte(variantOffsets[row][j]);
-                    fw.writeByte(variantDefs[row][j]);
+                    fw.writeByte(getVariantPosOff(row,j));
+                    fw.writeByte(getVariantDef(row,j));
                 }
                 fw.writeByte(getDcoP(row));
                 fw.writeByte(getMapP(row));
@@ -365,7 +383,7 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
             System.out.println("Tag positions written to:" + outFile.toString());
             System.out.println("Number of tags in file:" + hapsOutput);
         } catch (Exception e) {
-            System.out.println("Catch in writing output file e=" + e);
+            System.err.println("Catch in writing output file e=" + e);
         }
     }
 
@@ -428,6 +446,14 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
             System.out.println(printRow(r));
             outCount++;
         }
+    }
+    
+    protected long[][] getTagsArray() {
+        return tags;
+    }
+    
+    protected byte[] getTagLengthArray() {
+        return tagLength;
     }
     
 }

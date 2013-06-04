@@ -7,6 +7,7 @@ import ch.systemsx.cisd.hdf5.*;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Random;
+import static net.maizegenetics.gbs.maps.TOPMInterface.BYTE_MISSING;
 import net.maizegenetics.gbs.util.GBSHDF5Constants;
 import org.apache.log4j.Logger;
 
@@ -39,23 +40,31 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
     private HDF5CompoundType<TagMappingInfo> tmiType = null;
     private boolean hasDetailedMapping=false;
 
-    public static void createFile(TOPMInterface inTags, String newHDF5file, int maxMapping, int maxVariants) {
+    public static void createFile(AbstractTagsOnPhysicalMap inTags, String newHDF5file, int maxMapping, int maxVariants) {
         int tagLengthInLong = inTags.getTagSizeInLong();
         int tagCount = inTags.getTagCount();
      //   tagCount=tagCount;
-        long[][] tags = new long[tagLengthInLong][tagCount];
-        byte[] tagLength = new byte[tagCount];
-        for (int i = 0; i < tagCount; i++) {
-            long[] ct = inTags.getTag(i);
-            for (int j = 0; j < tagLengthInLong; j++) {
-                tags[j][i] = ct[j];
+        System.gc();
+        long[][] tags;
+        byte[] tagLength;
+        if(inTags instanceof AbstractTagsOnPhysicalMap) {
+            tags=((AbstractTagsOnPhysicalMap)inTags).getTagsArray();
+            tagLength=((AbstractTagsOnPhysicalMap)inTags).getTagLengthArray();
+        } else {
+            tags = new long[tagLengthInLong][tagCount];
+            tagLength = new byte[tagCount];
+            for (int i = 0; i < tagCount; i++) {
+                long[] ct = inTags.getTag(i);
+                for (int j = 0; j < tagLengthInLong; j++) {
+                    tags[j][i] = ct[j];
+                }
+                tagLength[i] = (byte) inTags.getTagLength(i);
             }
-            tagLength[i] = (byte) inTags.getTagLength(i);
         }
-
         IHDF5Writer h5 = null;
         try {
             myLogger.info("Creating HDF5 File: " + newHDF5file);
+            System.out.println("Creating HDF5 File: " + newHDF5file);
             IHDF5WriterConfigurator config = HDF5Factory.configure(new File(newHDF5file));
             config.overwrite();
             // config.dontUseExtendableDataTypes();
@@ -73,6 +82,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
             System.out.println("...Tags written");
             h5.createByteArray(GBSHDF5Constants.TAGLENGTH, tagCount, vectorFeatures);
             h5.writeByteArray(GBSHDF5Constants.TAGLENGTH, tagLength, vectorFeatures);
+            tagLength=null;
             System.out.println("...Tags lengths written");
             
             //need to create branch between instance of Tags and TOPM
@@ -98,16 +108,22 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
             h5.writeIntArray(GBSHDF5Constants.BEST_CHR, chrOut, vectorFeatures);
             h5.createIntArray(GBSHDF5Constants.BEST_STARTPOS, tagCount, vectorFeatures);
             h5.writeIntArray(GBSHDF5Constants.BEST_STARTPOS, posOut, vectorFeatures);
+            mmOut=null;
+            strandOut=null;
+            chrOut=null;
+            posOut=null;
+            System.gc();
             System.out.println("...multimapping, strand, chr, position  written");
                         
             HDF5CompoundType<TagMappingInfo> tmiType = h5.compounds().getInferredType(TagMappingInfo.class);
-            myLogger.info("Chunk Size for Tags: " + CHUNK_SIZE);
+            System.out.println("Chunk Size for Tags: " + CHUNK_SIZE);
             int numOfChunks = tagsToChunks(tagCount);
-            myLogger.info("Number of Chunks: " + numOfChunks);
+            System.out.println("Number of Chunks: " + numOfChunks);
             int numTagsPadded = numOfChunks * CHUNK_SIZE;
-            for (int mi = 0; mi < maxMapping; mi++) {
+            for (int mi = 0; mi < 1; mi++) {
+ //           for (int mi = 0; mi < maxMapping; mi++) {
  //               h5.compounds().createArray("map" + mi, tmiType, numTagsPadded, CHUNK_SIZE);
-                h5.compounds().createArray(GBSHDF5Constants.MAPBASE + mi, tmiType, numTagsPadded, CHUNK_SIZE,genoFeatures);
+                h5.compounds().createArray(GBSHDF5Constants.MAPBASE + mi, tmiType, numTagsPadded, CHUNK_SIZE);
                 TagMappingInfo[] thTMI = new TagMappingInfo[CHUNK_SIZE];
                 int block = 0;
                 for (int i = 0; i < numTagsPadded; i++) {
@@ -123,42 +139,69 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
                         h5.compounds().writeArrayBlock(GBSHDF5Constants.MAPBASE + mi, tmiType, thTMI, block);
                         thTMI = new TagMappingInfo[CHUNK_SIZE];
                         block++;
-                        myLogger.info("Tag locations written: " + (i + 1));
+                        System.out.println("Tag locations written: " + (i + 1));
                     }
                 }
-                myLogger.info("...map" + mi + " positions written");
+                System.out.println("...map" + mi + " positions written");
             }
             
-            h5.createByteMatrix(GBSHDF5Constants.VARIANTDEF, NUM_UNITS_TO_CACHE_ON_GET, maxVariants);
+            h5.createByteMatrix(GBSHDF5Constants.VARIANTDEF, tagCount, maxVariants);
             int numVariants = inTags.getMaxNumVariants();
             if (numVariants > maxVariants) {
                 throw new IllegalArgumentException("TagsOnPhysMapHDF5: createFile: max variants can't be less than original TOPM Variant Defs: " + numVariants);
             }
-            byte[][] temp = new byte[tagCount][maxVariants];
-            for (int i = 0; i < tagCount; i++) {
-                for (int j = 0; j < maxVariants; j++) {
-                    if (j < numVariants) {
-                        temp[i][j] = inTags.getVariantDef(i, j);
-                    } else {
-                        temp[i][j] = BYTE_MISSING;
-                    }
-                }
-            }
-            h5.writeByteMatrix(GBSHDF5Constants.VARIANTDEF, temp);
-
-            h5.createByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, NUM_UNITS_TO_CACHE_ON_GET, maxVariants);
-            temp = new byte[tagCount][maxVariants];
-            for (int i = 0; i < tagCount; i++) {
-                for (int j = 0; j < maxVariants; j++) {
-                    if (j < numVariants) {
-                        temp[i][j] = inTags.getVariantPosOff(i, j);
-                    } else {
-                        temp[i][j] = BYTE_MISSING;
-                    }
-                }
-            }
-            h5.writeByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, temp);
-             
+            writeVariantsToHDF5(h5, inTags);
+//            byte[][] temp = new byte[tagCount][maxVariants];
+////            for (int i = 0; i < tagCount; i++) {
+////                for (int j = 0; j < maxVariants; j++) {
+////                    if (j < numVariants) {
+////                        temp[i][j] = inTags.getVariantDef(i, j);
+////                    } else {
+////                        temp[i][j] = BYTE_MISSING;
+////                    }
+////                }
+////            }
+////            h5.writeByteMatrix(GBSHDF5Constants.VARIANTDEF, temp);
+////            
+//            byte[][] tempR = new byte[1][maxVariants];
+//            for (int i = 0; i < tagCount; i++) {
+//                for (int j = 0; j < maxVariants; j++) {
+//                    if (j < numVariants) {
+//                        tempR[0][j] = inTags.getVariantDef(i, j);
+//                    } else {
+//                        tempR[0][j] = BYTE_MISSING;
+//                    }
+//                }
+//                h5.writeByteMatrixBlockWithOffset(GBSHDF5Constants.VARIANTDEF, tempR, i,0);
+//            }
+//  //          h5.writeByteMatrix(GBSHDF5Constants.VARIANTDEF, temp);
+// //           h5.writeByteMatrix(GBSHDF5Constants.VARIANTDEF, inTags.variantDefs);
+//            System.out.println("Variant defs written");
+//            h5.createByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, tagCount, maxVariants);
+////            temp = new byte[tagCount][maxVariants];
+////            for (int i = 0; i < tagCount; i++) {
+////                for (int j = 0; j < maxVariants; j++) {
+////                    if (j < numVariants) {
+////                        temp[i][j] = inTags.getVariantPosOff(i, j);
+////                    } else {
+////                        temp[i][j] = BYTE_MISSING;
+////                    }
+////                }
+////            }
+////            h5.writeByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, temp);
+//            for (int i = 0; i < tagCount; i++) {
+//                for (int j = 0; j < maxVariants; j++) {
+//                    if (j < numVariants) {
+//                        tempR[0][j] = inTags.getVariantDef(i, j);
+//                    } else {
+//                        tempR[0][j] = BYTE_MISSING;
+//                    }
+//                }
+//                h5.writeByteMatrixBlockWithOffset(GBSHDF5Constants.VARIANTPOSOFF, tempR, i,0);
+//            }
+            
+//             h5.writeByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, inTags.variantOffsets);
+            System.out.println("Variant offsets written");
 
         } finally {
             try {
@@ -242,6 +285,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
             for (int j = 0; j < blockSize; j++) {
                 int cnt=0;
                 for (byte bs : vd[j]) {if (bs!=TOPMInterface.BYTE_MISSING) cnt++;}
+                if(cnt==0) continue;
                 byte[] vdReDim=new byte[cnt];
                 byte[] voReDim=new byte[cnt];
                 for (int i = 0; i < cnt; i++) {
@@ -253,6 +297,37 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
                 variantOffsets[blockStep+j]=voReDim;
             }
             
+            //byte[] vd=myHDF5.readByteArrayBlockWithOffset(null, i, i)
+        }
+        System.out.println("Real Variant Defs:"+howManyDef);
+        return true;
+    }
+    
+    private static boolean writeVariantsToHDF5(IHDF5Writer aHDF5, AbstractTagsOnPhysicalMap aTOPM) {
+        int howManyDef=0;
+        int readBlock=4096*16;
+        
+        int myNumTags=aTOPM.myNumTags;
+        int myMaxVariants=aTOPM.myMaxVariants;
+        aHDF5.createByteMatrix(GBSHDF5Constants.VARIANTDEF, myNumTags, myMaxVariants);
+        aHDF5.createByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, myNumTags, myMaxVariants);
+//        variantDefs=new byte[myNumTags][];
+//        variantOffsets=new byte[myNumTags][];
+        if(!aHDF5.exists(GBSHDF5Constants.VARIANTDEF)) return false;
+        byte[][] vd=new byte[readBlock][myMaxVariants];
+        byte[][] vo=new byte[readBlock][myMaxVariants];
+        for (int blockStep = 0; blockStep < myNumTags; blockStep+=readBlock) {
+            int blockSize=(myNumTags-blockStep<readBlock)?myNumTags-blockStep:readBlock;
+            vd=new byte[blockSize][myMaxVariants];
+            vo=new byte[blockSize][myMaxVariants];
+            for (int j = 0; j < blockSize; j++) {
+                for (int v = 0; v < vo[0].length; v++) {
+                    vd[j][v]=aTOPM.getVariantDef(blockStep+j, v);
+                    vo[j][v]=aTOPM.getVariantPosOff(blockStep+j, v);
+                }
+            }
+            aHDF5.writeByteMatrixBlockWithOffset(GBSHDF5Constants.VARIANTDEF,vd,blockStep,0);
+            aHDF5.writeByteMatrixBlockWithOffset(GBSHDF5Constants.VARIANTPOSOFF,vo,blockStep,0);
             //byte[] vd=myHDF5.readByteArrayBlockWithOffset(null, i, i)
         }
         System.out.println("Real Variant Defs:"+howManyDef);

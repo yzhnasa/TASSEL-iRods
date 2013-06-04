@@ -49,8 +49,8 @@ public class TOPMUtils {
             ((TagsOnPhysicalMap) topm).writeBinaryFile(new File(filename));
         } else if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.txt"))) {
             ((TagsOnPhysicalMap) topm).writeTextFile(new File(filename));
-        } else if ((topm instanceof TOPMInterface) && (temp.endsWith(".topm.h5"))) {
-            TagsOnPhysMapHDF5.createFile(topm, filename, 1, topm.getMaxNumVariants());
+        } else if ((topm instanceof AbstractTagsOnPhysicalMap) && (temp.endsWith(".topm.h5"))) {
+            TagsOnPhysMapHDF5.createFile((AbstractTagsOnPhysicalMap)topm, filename, 1, topm.getMaxNumVariants());
         } else {
            // TagsOnPhysMapHDF5.createFile(topm, filename, 1, topm.getMaxNumVariants());
         }

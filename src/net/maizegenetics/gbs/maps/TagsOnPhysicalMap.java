@@ -126,11 +126,18 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         bestStartPos = new int[rows];  // chromosomal position of the barcoded end of the tag  // 4 bytes
         endPosition = new int[rows];  // chromosomal position of the common adapter end of the tag (smaller than bestStartPos if tag matches minus bestStrand)  // 4 bytes
         divergence = new byte[rows];  // number of diverging bp from reference, unknown = Byte.MIN_VALUE
-        variantOffsets = new byte[rows][myMaxVariants];  // offset from position minimum, maximum number of variants is defined above  // myMaxVariants bytes
-        variantDefs = new byte[rows][myMaxVariants];     // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes
+        variantOffsets = new byte[rows][];  // offset from position minimum, maximum number of variants is defined above  // myMaxVariants bytes
+        variantDefs = new byte[rows][];     // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes
         dcoP = new byte[rows];
         mapP = new byte[rows];  // Round(Log2(P)), unknown = Byte.MIN_VALUE;  if these disagree with the location, then set the p to negative
         myNumTags = rows;
+        
+//        try{
+//            System.out.println("Sleeping after memory creation");
+//            Thread.sleep(100000);
+//        } catch(Exception e) {
+//            System.out.println(e);
+//        }
     }
 
     public void expandMaxVariants(int newMaxVariants) {
@@ -243,13 +250,21 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
                 bestStartPos[row] = dis.readInt();
                 endPosition[row] = dis.readInt();
                 divergence[row] = dis.readByte();
+                byte[] currVD=new byte[myMaxVariants];
+                byte[] currVO=new byte[myMaxVariants];
+                int numWithData=0;
                 for (int j = 0; j < myMaxVariants; j++) {
-                    variantOffsets[row][j] = dis.readByte();
-                    variantDefs[row][j] = dis.readByte();
-                    if((variantDefs[row][j]>0xf)&&(AlignmentUtils.isHeterozygous(variantDefs[row][j]))) {//ascii bytes need to be converted to TASSEL 4
+                    currVO[j] = dis.readByte();
+                    currVD[j] = dis.readByte();
+                    if((currVD[j]>0xf)&&(AlignmentUtils.isHeterozygous(currVD[j]))) {//ascii bytes need to be converted to TASSEL 4
  //                       System.out.printf("row:%d vd:%d %n", row, variantDefs[row][j]);
-                        variantDefs[row][j]=NucleotideAlignmentConstants.getNucleotideDiploidByte((char)variantDefs[row][j]);
+                        currVD[j]=NucleotideAlignmentConstants.getNucleotideDiploidByte((char)currVD[j]);
                     }
+                    if(currVO[j]!=TOPMInterface.BYTE_MISSING) numWithData++;
+                }
+                if(numWithData>0) {
+                    variantDefs[row]=Arrays.copyOf(currVD, numWithData);
+                    variantOffsets[row]=Arrays.copyOf(currVO, numWithData);
                 }
                 dcoP[row] = dis.readByte();
                 mapP[row] = dis.readByte();
@@ -302,10 +317,16 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
                 bestStartPos[row] = parseIntWMissing(inputLine[c++]);
                 endPosition[row] = parseIntWMissing(inputLine[c++]);
                 divergence[row] = parseByteWMissing(inputLine[c++]);
+                byte[] currVD=new byte[myMaxVariants];
+                byte[] currVO=new byte[myMaxVariants];
+                int numWithData=0;
                 for (int j = 0; j < myMaxVariants; j++) {
-                    variantOffsets[row][j] = parseByteWMissing(inputLine[c++]);
-                    variantDefs[row][j] = parseCharWMissing(inputLine[c++]);
+                    currVO[j] = parseByteWMissing(inputLine[c++]);
+                    currVD[j] = parseCharWMissing(inputLine[c++]);
+                    if(currVO[j]!=TOPMInterface.BYTE_MISSING) numWithData++;
                 }
+                variantDefs[row]=Arrays.copyOf(currVD, numWithData);
+                variantOffsets[row]=Arrays.copyOf(currVO, numWithData);
                 dcoP[row] = parseByteWMissing(inputLine[c++]);
                 mapP[row] = parseByteWMissing(inputLine[c++]);
                 if (row % 1000000 == 0) {
@@ -344,12 +365,12 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
             return Byte.MIN_VALUE;
         }
         try{
-            byte r=NucleotideAlignmentConstants.getNucleotideDiploidByte(s);
+            byte r=NucleotideAlignmentConstants.getNucleotideAlleleByte(s);
             return r;
         } catch(IllegalArgumentException e) {
             int i = Integer.parseInt(s);
             if (i > 127) {return 127;}
-            byte r=NucleotideAlignmentConstants.getNucleotideDiploidByte((char)i);
+            byte r=NucleotideAlignmentConstants.getNucleotideAlleleByte(String.valueOf((char)i));
             return r;
         }
     }
