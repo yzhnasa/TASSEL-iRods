@@ -244,6 +244,16 @@ public final class NucleotideAlignmentConstants {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideDiploidByte: unknown allele value: " + value);
         }
     }
+    
+    public static byte getNucleotideAlleleByte(String value) {
+        try {
+            byte result=NUCLEOTIDE_DIPLOID_HASH.get(value).byteValue();
+            result=(byte)(result&0xf);
+            return result;
+        } catch (NullPointerException e) {
+            throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideAlleleByte: unknown allele value: " + value);
+        }
+    }
 
     /**
      * Returns diploid byte value for given nucleotide value. First four bits
