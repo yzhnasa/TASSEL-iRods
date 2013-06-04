@@ -34,6 +34,8 @@ import org.apache.log4j.Logger;
  * of these approaches has never been clear. Additionally with the moving away
  * from SSR to SNPs these methods are less relevant. Researchers should convert
  * to biallelic - either by ignoring rarer classes or collapsing rarer states.
+ * 
+ * TODO: Shift between 2x2 (haplotype) and 3x3 (diploid) mode.
  *
  * @version $Id: LinkageDisequilibrium.java,v 1
  *
