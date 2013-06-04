@@ -6,8 +6,8 @@ package net.maizegenetics.gbs.maps;
 import ch.systemsx.cisd.hdf5.*;
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Random;
-import static net.maizegenetics.gbs.maps.TOPMInterface.BYTE_MISSING;
 import net.maizegenetics.gbs.util.GBSHDF5Constants;
 import org.apache.log4j.Logger;
 
@@ -151,56 +151,6 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
                 throw new IllegalArgumentException("TagsOnPhysMapHDF5: createFile: max variants can't be less than original TOPM Variant Defs: " + numVariants);
             }
             writeVariantsToHDF5(h5, inTags);
-//            byte[][] temp = new byte[tagCount][maxVariants];
-////            for (int i = 0; i < tagCount; i++) {
-////                for (int j = 0; j < maxVariants; j++) {
-////                    if (j < numVariants) {
-////                        temp[i][j] = inTags.getVariantDef(i, j);
-////                    } else {
-////                        temp[i][j] = BYTE_MISSING;
-////                    }
-////                }
-////            }
-////            h5.writeByteMatrix(GBSHDF5Constants.VARIANTDEF, temp);
-////            
-//            byte[][] tempR = new byte[1][maxVariants];
-//            for (int i = 0; i < tagCount; i++) {
-//                for (int j = 0; j < maxVariants; j++) {
-//                    if (j < numVariants) {
-//                        tempR[0][j] = inTags.getVariantDef(i, j);
-//                    } else {
-//                        tempR[0][j] = BYTE_MISSING;
-//                    }
-//                }
-//                h5.writeByteMatrixBlockWithOffset(GBSHDF5Constants.VARIANTDEF, tempR, i,0);
-//            }
-//  //          h5.writeByteMatrix(GBSHDF5Constants.VARIANTDEF, temp);
-// //           h5.writeByteMatrix(GBSHDF5Constants.VARIANTDEF, inTags.variantDefs);
-//            System.out.println("Variant defs written");
-//            h5.createByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, tagCount, maxVariants);
-////            temp = new byte[tagCount][maxVariants];
-////            for (int i = 0; i < tagCount; i++) {
-////                for (int j = 0; j < maxVariants; j++) {
-////                    if (j < numVariants) {
-////                        temp[i][j] = inTags.getVariantPosOff(i, j);
-////                    } else {
-////                        temp[i][j] = BYTE_MISSING;
-////                    }
-////                }
-////            }
-////            h5.writeByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, temp);
-//            for (int i = 0; i < tagCount; i++) {
-//                for (int j = 0; j < maxVariants; j++) {
-//                    if (j < numVariants) {
-//                        tempR[0][j] = inTags.getVariantDef(i, j);
-//                    } else {
-//                        tempR[0][j] = BYTE_MISSING;
-//                    }
-//                }
-//                h5.writeByteMatrixBlockWithOffset(GBSHDF5Constants.VARIANTPOSOFF, tempR, i,0);
-//            }
-            
-//             h5.writeByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, inTags.variantOffsets);
             System.out.println("Variant offsets written");
 
         } finally {
@@ -246,11 +196,6 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         populateChrAndVarPositions();
         initPhysicalSort();
         System.gc();
-        Random r=new Random();
-//        for (int i = 0; i < 10; i++) {
-//            int tag=r.nextInt(myNumTags);
-//            System.out.println(Arrays.toString(getVariantDefArray(tag)));
-//        }
     }
     
     private boolean populateBestMappings() {
