@@ -30,6 +30,6 @@ public class FileNames {
 	public boolean fullModel = false;
 	public int startIteration = 1;
 	public int chromosome = 0;
-	
+	public boolean useB73asReference = true;
 	
 }

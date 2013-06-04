@@ -149,6 +149,9 @@ public class NamGwasPlugin extends AbstractPlugin {
 			else if (args[i].equals("-fullmodel")) {
 				parameters.fullModel = true;
 			}
+			else if (args[i].equals("-noref")) { //does not use B73 as reference, assumes alleles coded as 0 are from B73
+				parameters.useB73asReference = false;
+			}
 			else if (args[i].equals("?")) myLogger.info(getUsage());
 			else {
 				myLogger.info(getUsage());
@@ -170,7 +173,7 @@ public class NamGwasPlugin extends AbstractPlugin {
 		usage.append("-i or -iterations : the number of resampling iterations (default = 100)\n");
 		usage.append("-d or -start : the number of the first iteration in this sequence (default = 1)\n");
 		usage.append("-g or -maxsnps : the maximum number of snps that will be fit (default = 1000)\n");
-		usage.append("-noresample : do not resample (default = resample)\n");
+//		usage.append("-noresample : do not resample (default = resample)\n");
 //		usage.append("-enablethreads : have application use multiple cores if available. (default is single threaded.)\n");
 		usage.append("-fullmodel : test snps for entry using the full model (default = use residuals from the previous model)\n");
 		usage.append("? : print the parameter list.\n");
