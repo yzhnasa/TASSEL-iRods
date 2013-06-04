@@ -28,6 +28,7 @@ import net.maizegenetics.gbs.util.SAMUtils;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
@@ -206,44 +207,6 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
 
     
 
-    public String printRow(int row, boolean byPosition) {
-        if (byPosition) {
-            return printRow(indicesOfSortByPosition[row]);
-        }
-        return printRow(row);
-    }
-
-    public void printRows(int numRows) {
-        for (int i = 0; i < numRows; i++) {
-            System.out.println(printRow(i));
-        }
-    }
-
-    public void printRows(int numRows, boolean requirePhysPosition, boolean byPosition) {
-        int outCount = 0;
-        for (int i = 0; outCount < numRows; i++) {
-            int r = (byPosition) ? indicesOfSortByPosition[i] : i;
-            if ((requirePhysPosition == true) && (bestChr[r] < 1)) {
-                continue;
-            }
-            System.out.println(printRow(r));
-            outCount++;
-        }
-    }
-
-    public void printRows(int numRows, boolean requirePhysPosition, int printChr) {
-        int outCount = 0;
-        boolean byPosition = true;
-        for (int i = 0; outCount < numRows; i++) {
-            int r = (byPosition) ? indicesOfSortByPosition[i] : i;
-            if ((requirePhysPosition == true) && (bestChr[r] != printChr)) {
-                continue;
-            }
-            System.out.println(printRow(r));
-            outCount++;
-        }
-    }
-
     public long sortTable(boolean byHaplotype) {
         System.out.print("Starting Read Table Sort ...");
         if (byHaplotype == false) {
@@ -265,7 +228,7 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
             DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(currentFile), 65536));
             System.out.println("File = " + currentFile);
             myNumTags = dis.readInt();
-            myNumTags=100000;
+//            myNumTags=100000;
             tagLengthInLong = dis.readInt();
             myMaxVariants = dis.readInt();
             initMatrices(myNumTags);
@@ -283,7 +246,8 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
                 for (int j = 0; j < myMaxVariants; j++) {
                     variantOffsets[row][j] = dis.readByte();
                     variantDefs[row][j] = dis.readByte();
-                    if(variantDefs[row][j]>0xf) {//ascii bytes need to be converted to TASSEL 4
+                    if((variantDefs[row][j]>0xf)&&(AlignmentUtils.isHeterozygous(variantDefs[row][j]))) {//ascii bytes need to be converted to TASSEL 4
+ //                       System.out.printf("row:%d vd:%d %n", row, variantDefs[row][j]);
                         variantDefs[row][j]=NucleotideAlignmentConstants.getNucleotideDiploidByte((char)variantDefs[row][j]);
                     }
                 }
@@ -308,136 +272,6 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
             }
         }
         return false;
-    }
-
-    public void writeBinaryWVariantsFile(File outFile) {
-
-        int hapsOutput = 0;
-        try {
-            int[] numTagsWithDefinedVariantsPerChr = new int[20];
-            int numTagsWithDefinedVariants = 0;
-            for (int row = 0; row < myNumTags; row++) {
-                if (variantsDefined(row)) {
-                    numTagsWithDefinedVariantsPerChr[getChromosome(row)]++;
-                    numTagsWithDefinedVariants++;
-                }
-            }
-
-            System.out.println("writeBinaryWVariantsFile: number tags with defined variants: " + numTagsWithDefinedVariants);
-            for (int i = 0; i < numTagsWithDefinedVariantsPerChr.length; i++) {
-                if (numTagsWithDefinedVariantsPerChr[i] != 0) {
-                    System.out.println("writeBinaryWVariantsFile: Chromosome: " + i + " Has Number Tags with Variants: " + numTagsWithDefinedVariantsPerChr[i]);
-                }
-            }
-
-            DataOutputStream fw = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile), 4000000));
-
-            fw.writeInt(numTagsWithDefinedVariants);
-            fw.writeInt(tagLengthInLong);
-            fw.writeInt(myMaxVariants);
-            for (int row = 0; row < myNumTags; row++) {
-                if (variantsDefined(row)) {
-                    for (int j = 0; j < tagLengthInLong; j++) {
-                        fw.writeLong(tags[j][row]);
-                    }
-                    fw.writeByte(tagLength[row]);
-                    fw.writeByte(multimaps[row]);
-                    fw.writeInt(bestChr[row]);
-                    fw.writeByte(bestStrand[row]);
-                    fw.writeInt(bestStartPos[row]);
-                    fw.writeInt(endPosition[row]);
-                    fw.writeByte(divergence[row]);
-                    for (int j = 0; j < myMaxVariants; j++) {
-                        fw.writeByte(variantOffsets[row][j]);
-                        fw.writeByte(variantDefs[row][j]);
-                    }
-                    fw.writeByte(dcoP[row]);
-                    fw.writeByte(mapP[row]);
-                    hapsOutput++;
-                }
-            }
-            fw.flush();
-            fw.close();
-            System.out.println("writeBinaryWVariantsFile: Tag positions written to: " + outFile.toString());
-            System.out.println("writeBinaryWVariantsFile: Number of tags in file: " + hapsOutput);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Catch in writing output file e=" + e);
-        }
-    }
-
-    public void writeBinaryFile(File outFile, int minResolution, boolean requirePhysPosition,
-            boolean requireDCOMap, float minDCOP, boolean binary) {
-        int hapsOutput = 0;
-        try {
-            DataOutputStream fw = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile), 4000000));
-            if (requirePhysPosition) {
-                fw.writeInt(mappedTags()[0]);
-            } // the index 0 provides the number of tags with unique positions
-            else {
-                fw.writeInt(myNumTags);
-            }
-            fw.writeInt(tagLengthInLong);
-            fw.writeInt(myMaxVariants);
-            for (int row = 0; row < myNumTags; row++) {
-                if ((requirePhysPosition == true) && (bestChr[row] == Integer.MIN_VALUE)) {
-                    continue;
-                }
-                for (int j = 0; j < tagLengthInLong; j++) {
-                    fw.writeLong(tags[j][row]);
-                }
-                fw.writeByte(tagLength[row]);
-                fw.writeByte(multimaps[row]);
-                fw.writeInt(bestChr[row]);
-                fw.writeByte(bestStrand[row]);
-                fw.writeInt(bestStartPos[row]);
-                fw.writeInt(endPosition[row]);
-                fw.writeByte(divergence[row]);
-                for (int j = 0; j < myMaxVariants; j++) {
-                    fw.writeByte(variantOffsets[row][j]);
-                    fw.writeByte(variantDefs[row][j]);
-                }
-                fw.writeByte(dcoP[row]);
-                fw.writeByte(mapP[row]);
-                hapsOutput++;
-            }
-            fw.flush();
-            fw.close();
-            System.out.println("Tag positions written to:" + outFile.toString());
-            System.out.println("Number of tags in file:" + hapsOutput);
-        } catch (Exception e) {
-            System.out.println("Catch in writing output file e=" + e);
-        }
-    }
-
-    /**
-     * @return An int[] result where : result[0] = The number of tags with a
-     * unique physical positions in this file (i.e. , tags for which the
-     * bestChr number is known). result[1] = The number of tags which align
-     * to multiple positions (i.e., where multimaps[tagIndex] > 0)
-     *
-     */
-    public int[] mappedTags() {
-        int[] result = {0, 0};
-        int unique = 0, multi = 1;  // the indices of result
-        for (int row = 0; row < myNumTags; row++) {
-            if (bestChr[row] == Integer.MIN_VALUE) {
-                if (multimaps[row] > 0) {
-                    result[multi]++;
-                }
-            } else {
-                result[unique]++;
-            }
-        }
-        return result;
-    }
-
-    public void writeBinaryFile(File outFile) {
-        writeBinaryFile(outFile, Integer.MAX_VALUE, false, false, Float.NaN, true);
-    }
-
-    protected void writeBinaryFile(File outFile, boolean binary) {
-        writeBinaryFile(outFile, Integer.MAX_VALUE, false, false, Float.NaN, binary);
     }
 
     public void readTextFile(File inFile) {
