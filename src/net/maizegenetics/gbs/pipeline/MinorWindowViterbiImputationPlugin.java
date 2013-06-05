@@ -166,12 +166,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         if(isOutputProjection) {
             mna=new ProjectionAlignment(donorAlign[0], unimpAlign.getIdGroup());
         } else {
-            if(exportFile.contains("mhmp.h5")) {
+            if(exportFile.contains("hmp.h5")) {
                 ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, false);
                 mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
-            }else if(unImpTargetFile.contains(".h5")) {
-                mna=MutableNucleotideAlignment.getInstance(BitAlignmentHDF5.getInstance(unImpTargetFile, true));  //output data matrix
-            } else {
+            }else {
                 mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
             }
 
@@ -1057,7 +1055,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //        String donorFile=rootHaplos+"HM26_Allk.c10s+.hmp.txt.gz";
 //        String impTargetFile=rootImp+"newmnaTall26.c+.imp.hmp.txt.gz";
        Random r=new Random();
-       String impTargetFile=rootImp+r.nextInt()+"newmnaTall26.c+.imp.mhmp.h5";
+       String impTargetFile=rootImp+r.nextInt()+"newmnaTall26.c+.imp.hmp.h5";
   //      String impTargetFile=rootImp+"T3AllZeaGBSv2_6.c+.pa.txt.gz";
         
       
