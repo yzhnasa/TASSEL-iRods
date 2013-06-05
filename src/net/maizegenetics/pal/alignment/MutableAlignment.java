@@ -97,6 +97,8 @@ public interface MutableAlignment extends Alignment {
      */
     public void setReferenceAllele(int site, byte diploidAllele);
     
+    public void setSNPID(int site, String name);
+    
     /**
      * True if changes since last clean().
      *

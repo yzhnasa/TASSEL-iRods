@@ -21,6 +21,7 @@ public final class HapMapHDF5Constants {
     public static final String GENOTYPES = "Genotypes";  //Taxa based byte alignment
     public static final String LOCI = "SeqRegion";
     public static final String LOCUS_OFFSETS = "SeqRegionOffsets";
+    public static final String LOCUS_INDICES = "SeqRegionIndices";
     public static final String SNP_IDS = "SnpIds";
     public static final String SITE_DESC = "SiteDesc/";
  

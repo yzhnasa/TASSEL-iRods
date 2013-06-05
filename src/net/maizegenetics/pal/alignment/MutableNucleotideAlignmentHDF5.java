@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -23,7 +25,8 @@ import org.apache.log4j.Logger;
 /**
  * MutableNucleotideAlignmentHDF5 is a byte based HDF5 mutable alignment.  The mutability 
  * only allows for the addition and deletion of taxa, and for the modification of genotypes.
- * It does NOT permit the insertion or deletion of sites.  
+ * It does NOT permit the insertion or deletion of sites (although it does allow merging of
+ * alignments).  Deletion may be possible in the future.
  * <p>
  * The class uses a local cache to provide performance.  The default cache is defined by 
  * defaultCacheSize, and is set 4096 chunks.  The genotypes in the cache are chunked based 
@@ -59,21 +62,24 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private String fileName;
     private boolean myIsDirty = true;
     private List<Identifier> myIdentifiers = new ArrayList<Identifier>();
-//    private final int myMaxTaxa;
-    private final int myMaxNumSites;
- //   private int myNumSites = 0;
-    private int myNumSitesStagedToRemove = 0;
+  
+    
+    private final int myMaxNumSites;  //try to delete
+    private int myNumSitesStagedToRemove = 0;  //try to delete
+    
+    
     protected int[] myVariableSites;
+    private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
+    protected int[] myLocusIndices;  //consider changing to byte or short to save memory, generally on 10 chromosomes
+ //   private int[] myLocusOffsets = null;
+    
     //Site descriptor in memory
     private byte[] majorAlleles=null;
     private byte[] minorAlleles=null;
     private float[] maf=null;
     private float[] siteCov=null;
+    protected String[] mySNPIDs;  //perhaps don't keep in memory, consider compressed
     
-    private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
-//    protected int[] myLocusIndices;
-    private int[] myLocusOffsets = null;
-    protected String[] mySNPIDs;
     IHDF5Writer myWriter=null;
     private LRUCache<Long,byte[]> myDataCache;  //key (taxa <<< 32)+startSite
     HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
@@ -86,11 +92,14 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
 
     protected MutableNucleotideAlignmentHDF5(String fileName, IHDF5Writer reader, List<Identifier> idGroup, int[] variableSites, 
-            List<Locus> locusToLociIndex, int[] lociOffsets, String[] siteNames, int defaultCacheSize) {
+            List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames, int defaultCacheSize) {
         super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         this.fileName=fileName;
         this.defaultCacheSize=defaultCacheSize;
 
+        if (variableSites.length != siteNames.length) {
+            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: number variable sites, loci, and site names must be same.");
+        }
         if (variableSites.length != siteNames.length) {
             throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: number variable sites, loci, and site names must be same.");
         }
@@ -100,8 +109,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
         myVariableSites = variableSites;
         myLocusToLociIndex = locusToLociIndex;
-        myLocusOffsets=lociOffsets;
-      //  myLocusIndices = locusIndices;
+     //   myLocusOffsets=lociOffsets;
+        myLocusIndices = locusIndices;
         mySNPIDs = siteNames;
 
         myReference = new byte[myMaxNumSites];
@@ -145,10 +154,11 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
         ArrayList<Locus> loci=new ArrayList<Locus>();
         for (String lS : lociStrings) {loci.add(new Locus(lS));}
-        int[] lociOffsets = reader.readIntArray(HapMapHDF5Constants.LOCUS_OFFSETS);
+        int[] locusIndices = reader.readIntArray(HapMapHDF5Constants.LOCUS_INDICES);
         String[] snpIds = reader.readStringArray(HapMapHDF5Constants.SNP_IDS);
-        return new MutableNucleotideAlignmentHDF5(filename, reader, taxaList, variableSites, loci, lociOffsets, snpIds, defaultCacheSize);
+        return new MutableNucleotideAlignmentHDF5(filename, reader, taxaList, variableSites, loci, locusIndices, snpIds, defaultCacheSize);
     }
+    
     
     private void initAllDataSupport() {
         if(!myWriter.exists(HapMapHDF5Constants.SBIT)) myWriter.createGroup(HapMapHDF5Constants.SBIT);
@@ -328,6 +338,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     public int getNumLoci() {
         return myLocusToLociIndex.size();
     }
+
+    @Override
+    public Locus getLocus(int site) {
+        return myLocusToLociIndex.get(myLocusIndices[site]); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
 
     @Override
     public int[] getStartAndEndOfLocus(Locus locus) {
@@ -602,7 +619,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
 
     private void setDirty() {
-        myLocusOffsets = null;
         myIsDirty = true;
     }
 
@@ -610,16 +626,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myIsDirty = false;
     }
 
-
-
-    private int getLocusIndex(Locus locus) {
-        for (int i = 0; i < myLocusToLociIndex.size(); i++) {
-            if (myLocusToLociIndex.get(i).equals(locus)) {
-                return i;
-            }
-        }
-        return -1;
-    }
 
     public int getDefaultCacheSize() {
         return defaultCacheSize;
@@ -678,6 +684,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     public void setLocusOfSite(int site, Locus locus) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public void setSNPID(int site, String name) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
     
 }
 class LRUCache<K, V> extends LinkedHashMap<K, V> {
