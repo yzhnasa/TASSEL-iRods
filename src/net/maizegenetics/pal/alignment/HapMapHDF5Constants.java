@@ -13,7 +13,8 @@ public final class HapMapHDF5Constants {
     public static final String TAXA = "Taxa";
     public static final String ALLELE_STATES = "AlleleStates";
     public static final String POSITIONS = "Positions";
-    public static final String ALLELES = "Alleles";
+    public static final String ALLELES = "Alleles";  //TODO - like to move this into SITE_DESC
+
     public static final String TBIT = "TBit";  //Taxa optimized bit alignment
     public static final String SBIT = "SBit";  //Site optimized bit alignment
     public static final String DEPTH = "Depth";  //taxa optimized depth of the base calls
@@ -21,11 +22,20 @@ public final class HapMapHDF5Constants {
     public static final String LOCI = "SeqRegion";
     public static final String LOCUS_OFFSETS = "SeqRegionOffsets";
     public static final String SNP_IDS = "SnpIds";
-    public static final String SITE_DESC = "SiteDesc";
-    public static final String TAXA_DESC = "TaxaDesc";
-    public static final String MAF_DESC = SITE_DESC+"/MAF";
-    public static final String SITECOV_DESC = SITE_DESC+"/SiteCoverage";
-    public static final String HET_DESC = SITE_DESC+"/HET";
+    public static final String SITE_DESC = "SiteDesc/";
+ 
+    public static final String ALLELE_CNT = SITE_DESC+"AlleleCnt";
+    public static final String MAF = SITE_DESC+"MAF";
+    public static final String SITECOV = SITE_DESC+"SiteCoverage";
+    public static final String SITEHET = SITE_DESC+"SiteHET";
+ //   public static final String MINOR_ALLELE_FREQUENCY = "MAF";
+    public static final String MAJOR_ALLELE = SITE_DESC+"MajorAllele";
+    public static final String MINOR_ALLELE = SITE_DESC+"MinorAllele";
+    public static final String REF_ALLELE = SITE_DESC+"REFAllele";
+    
+    public static final String TAXA_DESC = "TaxaDesc/";
+    public static final String TAXACOV = TAXA_DESC+"TaxaCoverage";
+    public static final String TAXAHET = TAXA_DESC+"TaxaHet";
     
     public static final String LD_DESC = SITE_DESC+"/LD";
     public static final String LDR2_DESC = LD_DESC+"/R2";
@@ -60,9 +70,7 @@ public final class HapMapHDF5Constants {
     public static final String NUM_LD_BINS = LD_DESC+"/numLDBins";
     public static final String LD_BINS = LD_DESC+"/binsLD";
 
-    public static final String MINOR_ALLELE_FREQUENCY = "MAF";
-    public static final String MAJOR_ALLELE = "MajorAllele";
-    public static final String MINOR_ALLELE = "MinorAllele";
+
 
     // Annotations
     public static final String GWAS = "GWAS";

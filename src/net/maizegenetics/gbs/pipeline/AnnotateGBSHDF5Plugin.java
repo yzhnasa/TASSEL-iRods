@@ -209,12 +209,12 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
 //        config.dontUseExtendableDataTypes();
         IHDF5Writer h5w = config.writer();
         if(!h5w.exists(HapMapHDF5Constants.SITE_DESC)) h5w.createGroup(HapMapHDF5Constants.SITE_DESC);
-        if(!h5w.exists(HapMapHDF5Constants.MAF_DESC)) h5w.createFloatArray(HapMapHDF5Constants.MAF_DESC, maf.length);
-        h5w.writeFloatArray(HapMapHDF5Constants.MAF_DESC, maf);
-        if(!h5w.exists(HapMapHDF5Constants.HET_DESC)) h5w.createFloatArray(HapMapHDF5Constants.HET_DESC, hets.length);
-        h5w.writeFloatArray(HapMapHDF5Constants.HET_DESC, hets);
-        if(!h5w.exists(HapMapHDF5Constants.SITECOV_DESC)) h5w.createFloatArray(HapMapHDF5Constants.SITECOV_DESC, scov.length);
-        h5w.writeFloatArray(HapMapHDF5Constants.SITECOV_DESC, scov);
+        if(!h5w.exists(HapMapHDF5Constants.MAF)) h5w.createFloatArray(HapMapHDF5Constants.MAF, maf.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.MAF, maf);
+        if(!h5w.exists(HapMapHDF5Constants.SITEHET)) h5w.createFloatArray(HapMapHDF5Constants.SITEHET, hets.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.SITEHET, hets);
+        if(!h5w.exists(HapMapHDF5Constants.SITECOV)) h5w.createFloatArray(HapMapHDF5Constants.SITECOV, scov.length);
+        h5w.writeFloatArray(HapMapHDF5Constants.SITECOV, scov);
     }
     
     
