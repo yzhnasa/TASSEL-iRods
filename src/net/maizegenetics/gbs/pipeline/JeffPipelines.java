@@ -7,6 +7,8 @@ package net.maizegenetics.gbs.pipeline;
 import java.io.File;
 import java.util.Arrays;
 import net.maizegenetics.baseplugins.ExtractHapmapSubsetPlugin;
+import net.maizegenetics.gbs.maps.AbstractTagsOnPhysicalMap;
+import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.prefs.TasselPrefs;
@@ -24,9 +26,9 @@ public class JeffPipelines {
 //        expandVariantsInTOPM();
 //        getChrsFromTOPM();
 //        runTOPMSummaryPlugin();
-//        convertTOPMtoHDF5();
+        convertTOPMtoHDF5();
 //        runRawReadsToHapMapPlugin();
-        runSeqToGenosPlugin();
+//        runSeqToGenosPlugin();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -262,11 +264,10 @@ public class JeffPipelines {
     }
     
     public static void convertTOPMtoHDF5() {
-        String inTOPMFileStr =  "/Volumes/nextgen/Zea/AllZeaBuild_2.X/04_TOPM/2.6_production/02_MergedTOPM/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm";
-        String outTOPMFileStr = "/Volumes/nextgen/Zea/AllZeaBuild_2.X/04_TOPM/2.6_production/02_MergedTOPM/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130515.topm.h5";
-        boolean loadBinary = (inTOPMFileStr.endsWith(".txt")) ? false : true;
-        TagsOnPhysicalMap inTOPM = new TagsOnPhysicalMap(inTOPMFileStr, loadBinary);
-        int maxMapping = 1;
+        String inTOPMFileStr =  "/Users/jcg233/largeFiles/topm/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm";
+        String outTOPMFileStr = "/Users/jcg233/largeFiles/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5";
+        AbstractTagsOnPhysicalMap inTOPM=(AbstractTagsOnPhysicalMap)TOPMUtils.readTOPM(inTOPMFileStr);
+        int maxMapping = 4;
         int maxVariants = 16;
         TagsOnPhysMapHDF5.createFile(inTOPM, outTOPMFileStr, maxMapping, maxVariants);
     }
@@ -291,9 +292,10 @@ public class JeffPipelines {
         String[] MDPLowVolArgs = new String[]{
             "-i", "/Users/jcg233/largeFiles/testFastq/",
             "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_2smallReps_key.txt",
-            "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm",
-            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/quant/testFastq2",
+            "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBSProdTOPM_20130603.topm.h5",
             "-e", "ApeKI",
+//            "-vL", // VCF likelihood-based calling of hets
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/quant/testTOPMHDF5",
         };
 
         SeqToGenosPlugin plugin = new SeqToGenosPlugin(null);
