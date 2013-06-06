@@ -7,6 +7,7 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,8 +15,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -50,7 +49,7 @@ import org.apache.log4j.Logger;
  * <p>
  * TODO:
  * <li>Support multiple chromosomes per HDF5 file, sequential
- * <li>Pre-compute alleles, MAF, Coverage
+ * <li>Pre-compute alleles, public int[][] getAllelesSortedByFrequency(int site)
  * <li>Add support for bit encoding - but just two states (Major/Minor) or (Ref/Alt)
  * <li>Add efficient support for merging chromosomes
  * 
@@ -69,13 +68,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     
     protected int[] myVariableSites;
-    private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
+    private List<Locus> myLocusList = new ArrayList<Locus>();
     protected int[] myLocusIndices;  //consider changing to byte or short to save memory, generally on 10 chromosomes
- //   private int[] myLocusOffsets = null;
-    
+    private int[] myLociOffsets = null;
+
     //Site descriptor in memory
-    private byte[] majorAlleles=null;
-    private byte[] minorAlleles=null;
+    private byte[][] myAlleleFreqOrder=null;
+    private int[][] myAlleleCnt=null;
     private float[] maf=null;
     private float[] siteCov=null;
     protected String[] mySNPIDs;  //perhaps don't keep in memory, consider compressed
@@ -92,8 +91,9 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
 
     protected MutableNucleotideAlignmentHDF5(String fileName, IHDF5Writer reader, List<Identifier> idGroup, int[] variableSites, 
-            List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames, int defaultCacheSize) {
+            List<Locus> locusList, int[] locusIndices, String[] siteNames, int defaultCacheSize) {
         super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
+        myMaxNumAlleles=NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
         this.fileName=fileName;
         this.defaultCacheSize=defaultCacheSize;
 
@@ -108,8 +108,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myNumSites = siteNames.length;
 
         myVariableSites = variableSites;
-        myLocusToLociIndex = locusToLociIndex;
-     //   myLocusOffsets=lociOffsets;
+        myLocusList = locusList;
         myLocusIndices = locusIndices;
         mySNPIDs = siteNames;
 
@@ -118,6 +117,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         Collections.sort(idGroup);
         
         myIdentifiers = idGroup;
+        recalcLocusCoordinates();
         initAllDataSupport();
         loadSiteDescriptorsToMemory();
         initGenotypeCache();
@@ -125,6 +125,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     public static MutableNucleotideAlignmentHDF5 getInstance(String filename) {
         return MutableNucleotideAlignmentHDF5.getInstance(filename, 4096);
+    }
+    
+    public static boolean isMutableNucleotideAlignmentHDF5(String filename) {
+        IHDF5Reader reader = HDF5Factory.open(filename);
+        boolean result=reader.exists(HapMapHDF5Constants.GENOTYPES);
+        reader.close();
+        return result;
     }
     
     public static MutableNucleotideAlignmentHDF5 getInstance(String filename, int defaultCacheSize) {
@@ -140,16 +147,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         //TODO this is a good idea, it should be passed into the constructor and stored
 //        byte[][] alleles = reader.readByteMatrix(HapMapHDF5Constants.ALLELES);
 
-        MDArray<String> alleleStatesMDArray = reader.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
-        int[] dimensions = alleleStatesMDArray.dimensions();
-        int numEncodings = dimensions[0];
-        int numStates = dimensions[1];
-        String[][] alleleStates = new String[numEncodings][numStates];
-        for (int e = 0; e < numEncodings; e++) {
-            for (int s = 0; s < numStates; s++) {
-                alleleStates[e][s] = alleleStatesMDArray.get(e, s);
-            }
-        }
         int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
         String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
         ArrayList<Locus> loci=new ArrayList<Locus>();
@@ -234,6 +231,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return HapMapHDF5Constants.DEPTH + "/" + getFullTaxaName(taxon);
     }
 
+    @Override
     public byte getBase(int taxon, int site) {
         long key=getCacheKey(taxon,site);
         byte[] data=myDataCache.get(key);
@@ -241,6 +239,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return data[site%defaultSiteCache];
     }
     
+    @Override
     public byte[] getDepthForAlleles(int taxon, int site) {
         if(myDepthCache==null) initDepthCache();
         long key=getCacheKey(taxon,site);
@@ -253,13 +252,22 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return result;
     }
 
+    @Override
     public boolean isSBitFriendly() {
         return false;
     }
 
+    @Override
     public boolean isTBitFriendly() {
         return false;
     }
+
+    @Override
+    public int getTotalNumAlleles() {
+        return 6; 
+    }
+    
+    
 
     @Override
     public int getSiteCount() {
@@ -319,55 +327,55 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
             return site;
         }
     }
+    
+    private void recalcLocusCoordinates() {
+        myLociOffsets=new int[myLocusList.size()];
+        int currStart=0;
+        int currLIndex=myLocusIndices[currStart];
+        myLociOffsets[0]=currStart;
+        for (int s = 0; s < myNumSites; s++) {
+            if(currLIndex!=myLocusIndices[s]) {
+                String name=getLocus(currStart).getName();
+                myLocusList.set(currLIndex, new Locus(name, name, currStart, s-1, null, null));
+                currStart=s;
+                currLIndex=myLocusIndices[s];
+                myLociOffsets[currLIndex]=currStart;
+            }   
+        }
+        String name=getLocus(currStart).getName();
+        myLocusList.set(currLIndex, new Locus(name, name, currStart, myNumSites-1, null, null));
+    }
 
-//    @Override
-//    public Locus getLocus(int site) {
-//        return myLocusToLociIndex.get(myLocusIndices[site]);
-//    }
 
     @Override
     public Locus[] getLoci() {
-        Locus[] result = new Locus[myLocusToLociIndex.size()];
-        for (int i = 0; i < myLocusToLociIndex.size(); i++) {
-            result[i] = myLocusToLociIndex.get(i);
-        }
+        Locus[] result = new Locus[myLocusList.size()];
+        for (int i = 0; i < myLocusList.size(); i++) result[i] = myLocusList.get(i);
         return result;
     }
 
     @Override
     public int getNumLoci() {
-        return myLocusToLociIndex.size();
+        return myLocusList.size();
     }
 
     @Override
     public Locus getLocus(int site) {
-        return myLocusToLociIndex.get(myLocusIndices[site]); //To change body of generated methods, choose Tools | Templates.
+        return myLocusList.get(myLocusIndices[site]);
     }
     
+    @Override
+    public int[] getLociOffsets() {
+        return myLociOffsets;
+    }
     
 
     @Override
     public int[] getStartAndEndOfLocus(Locus locus) {
-
-        if (isDirty()) {
-            throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getStartAndEndOfLocus: this alignment is dirty.");
+        for (Locus mL : myLocusList) {
+            if(mL.getName().equals(locus.getName())) return new int[]{mL.getStart(),mL.getEnd()};
         }
-
-        Locus[] loci = getLoci();
-        int[] lociOffsets = getLociOffsets();
-        int numLoci = getNumLoci();
-        for (int i = 0; i < numLoci; i++) {
-            if (locus.equals(loci[i])) {
-                int end = 0;
-                if (i == numLoci - 1) {
-                    end = getSiteCount();
-                } else {
-                    end = lociOffsets[i + 1];
-                }
-                return new int[]{lociOffsets[i], end};
-            }
-        }
-        throw new IllegalArgumentException("AbstractAlignment: getStartAndEndOfLocus: this locus not defined: " + locus.getName());
+        return null;
     }
 
     @Override
@@ -395,7 +403,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         }
         try {
             if (locus == null) {
-                locus = myLocusToLociIndex.get(0);
+                locus = myLocusList.get(0);
             }
             int[] startEnd = getStartAndEndOfLocus(locus);
             return Arrays.binarySearch(myVariableSites, startEnd[0], startEnd[1], physicalPosition);
@@ -415,7 +423,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
             return physicalPosition;
         }
         if (locus == null) {
-            locus = myLocusToLociIndex.get(0);
+            locus = myLocusList.get(0);
         }
         int[] startEnd = getStartAndEndOfLocus(locus);
         int result = Arrays.binarySearch(myVariableSites, startEnd[0], startEnd[1], physicalPosition);
@@ -452,13 +460,25 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public byte[] getAlleles(int site) {
-        byte mj=majorAlleles[site];
-        byte mn=minorAlleles[site];
-        if(mn==Alignment.UNKNOWN_ALLELE) {
-            if(mj==Alignment.UNKNOWN_ALLELE) return null;
-            return new byte[]{mj};
+        byte[] result=new byte[6];
+        int i;
+        for (i = 0; (myAlleleFreqOrder[i][site]!=Alignment.UNKNOWN_ALLELE)&&(i<6); i++) {
+            result[i]=myAlleleFreqOrder[i][site];
         }
-        return new byte[]{mj,mn};
+        return Arrays.copyOf(result, i);
+    }
+    
+   @Override
+    public int[][] getAllelesSortedByFrequency(int site) {
+        byte[] alleles=getAlleles(site);
+        int result[][] = new int[2][alleles.length];
+//        System.out.printf("gASBF AL:%d s:%d %d %d %d %d %n", alleles.length, site, myAlleleCnt[0][site], myAlleleCnt[1][site],  myAlleleCnt[2][site], myAlleleCnt[3][site]);
+        for (int i = 0; i < alleles.length; i++) {
+           result[0][i]=alleles[i];
+            
+           result[1][i]=myAlleleCnt[alleles[i]][site];
+       }
+       return result;
     }
     
     public void setCacheHints(int numberOfTaxa, int numberOfSites) {
@@ -568,19 +588,20 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
     
     private void loadSiteDescriptorsToMemory() {
-        majorAlleles=myWriter.readByteArray(HapMapHDF5Constants.MAJOR_ALLELE);
-        minorAlleles=myWriter.readByteArray(HapMapHDF5Constants.MINOR_ALLELE);
+        myAlleleCnt=myWriter.readIntMatrix(HapMapHDF5Constants.ALLELE_CNT);
+        myAlleleFreqOrder=myWriter.readByteMatrix(HapMapHDF5Constants.ALLELE_FREQ_ORD);
         maf=myWriter.readFloatArray(HapMapHDF5Constants.MAF);
         siteCov=myWriter.readFloatArray(HapMapHDF5Constants.SITECOV);
     }
 
     @Override
     public void clean() {
-        System.out.print("Starting clean ...");
+        //System.out.print("Starting clean ...");
+        recalcLocusCoordinates();
         HDF5AlignmentAnnotator faCalc=new HDF5AlignmentAnnotator(this, fileName, 
                 HDF5AlignmentAnnotator.AnnoType.ALLELEFreq);
         faCalc.run();
-        System.out.println("finished");
+        //System.out.println("finished");
         myIsDirty = false;
         myNumSites -= myNumSitesStagedToRemove;
         myNumSitesStagedToRemove = 0;
@@ -601,12 +622,12 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public byte getMajorAllele(int site) {
-        return majorAlleles[site]; 
+        return myAlleleFreqOrder[0][site]; 
     }
 
     @Override
     public byte getMinorAllele(int site) {
-        return minorAlleles[site];
+        return myAlleleFreqOrder[0][site];
     }
     
     public float getSiteCoverage(int site) {
@@ -649,11 +670,10 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
-    protected void setCalcAlleleFreq(int[][] af, byte[] majAlleles, byte[] minAlleles,
+    protected void setCalcAlleleFreq(int[][] af, byte[][] afOrder,
             float[] maf, float[] paf, float[] coverage, float[] hets) {
         myWriter.writeIntMatrix(HapMapHDF5Constants.ALLELE_CNT, af);
-        myWriter.writeByteArray(HapMapHDF5Constants.MAJOR_ALLELE, majAlleles);
-        myWriter.writeByteArray(HapMapHDF5Constants.MINOR_ALLELE, minAlleles);
+        myWriter.writeByteMatrix(HapMapHDF5Constants.ALLELE_FREQ_ORD, afOrder);
         myWriter.writeFloatArray(HapMapHDF5Constants.MAF, maf);
         myWriter.writeFloatArray(HapMapHDF5Constants.SITECOV, paf);
         myWriter.writeFloatArray(HapMapHDF5Constants.TAXACOV, coverage);

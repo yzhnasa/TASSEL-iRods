@@ -22,7 +22,9 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
+import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.IdGroup;
@@ -90,7 +92,11 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         Alignment baseAlign=null;
         System.out.println("Reading: "+inFile);
         if(inFile.contains(".h5")) {
-            baseAlign=BitAlignmentHDF5.getInstance(inFile);
+            if(MutableNucleotideAlignmentHDF5.isMutableNucleotideAlignmentHDF5(inFile)) {
+                baseAlign=MutableNucleotideAlignmentHDF5.getInstance(inFile);}
+            else {
+                baseAlign=BitAlignmentHDF5.getInstance(inFile);
+            }
         } else {
             baseAlign=ImportUtils.readFromHapmap(inFile, false, (ProgressListener)null);
         }
@@ -112,7 +118,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     private MutableNucleotideAlignment createHaplotypeAlignment(int startSite, int endSite, Alignment baseAlign,
             int minSites, double maxDistance) {
         Alignment fa=FilterAlignment.getInstance(baseAlign, startSite, endSite);
-        Alignment inAlign=BitAlignment.getInstance(fa, true);
+        Alignment inAlign=BitAlignment.getInstance(fa, false);  //load for Taxa
         inAlign.optimizeForTaxa(null);
         int sites=inAlign.getSiteCount();
         System.out.printf("SubInAlign taxa:%d sites:%d %n",inAlign.getSequenceCount(),inAlign.getSiteCount());
@@ -136,18 +142,28 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     }
     
     private int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
-        int subAlignCnt=(int)Math.round((double)a.getSiteCount()/(double)appoxSitesPerHaplotype);
-        int prefBlocks=(a.getSiteCount()/(subAlignCnt*64));
-        int[][] divisions=new int[subAlignCnt][2];
-        int cnt=0;
-        for (int i = 0; i < subAlignCnt; i++) {
-            divisions[i][0]=i*prefBlocks*64;
-            divisions[i][1]=divisions[i][0]+(prefBlocks*64)-1;
+        Locus[] theL=a.getLoci();
+        ArrayList<int[]> allDivisions=new ArrayList<int[]>();
+        for (Locus aL: theL) {
+            int locusSites=aL.getEnd()-aL.getStart()+1;
+            int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
+            int prefBlocks=(locusSites/(subAlignCnt*64));
+            for (int i = 0; i < subAlignCnt; i++) {
+                int[] divs=new int[2];
+                divs[0]=(i*prefBlocks*64)+aL.getStart();
+                divs[1]=divs[0]+(prefBlocks*64)-1;
+                if(i==subAlignCnt-1) divs[1]=aL.getEnd();
+                allDivisions.add(divs);
+            }
         }
-        divisions[subAlignCnt-1][1]=a.getSiteCount()-1;
-        System.out.printf("Alignment Sites:%d ApproxSites:%d RealSites:%d %n",a.getSiteCount(),appoxSitesPerHaplotype, prefBlocks*64);
-        System.out.println("Chromosome Divisions:"+Arrays.deepToString(divisions));
-        return divisions;
+        int[][] result=new int[allDivisions.size()][2];
+        for (int i = 0; i < result.length; i++) {
+            result[i]=allDivisions.get(i);
+           // System.out.printf("Alignment Sites:%d ApproxSites:%d RealSites:%d %n",a.getSiteCount(),appoxSitesPerHaplotype, prefBlocks*64);
+            System.out.printf("Chromosome Divisions: %s start:%d end:%d %n", a.getLocus(result[i][0]).getName(),
+                    result[i][0], result[i][1]);
+        }
+        return result;
     }
     
     private TreeMap<Integer,Integer> createPresentRankingForWindow(Alignment inAlign, int startBlock, int endBlock, 
@@ -431,14 +447,17 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
 
    @Override
     public DataSet performFunction(DataSet input) {
+       if(!hmpFile.contains("+")) {
+           runFindMergeHaplotypes(hmpFile, outFileBase, errFile, maxDistFromFounder, minSitesPresentPerHap, appoxSitesPerHaplotype);
+           return null;
+       }
        for (int chr = startChr; chr <=endChr; chr++) {
            String chrHmpFile=hmpFile.replace("chr+", "chr"+chr);
            chrHmpFile=chrHmpFile.replace("c+", "c"+chr);
            String chrOutfiles=outFileBase.replace("chr+", "chr"+chr);
            chrOutfiles=chrOutfiles.replace("c+", "c"+chr);
            runFindMergeHaplotypes(chrHmpFile, chrOutfiles, errFile, maxDistFromFounder, minSitesPresentPerHap, appoxSitesPerHaplotype);
-       }
-       
+       }     
        return null;
     }
 

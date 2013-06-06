@@ -223,12 +223,12 @@ public class ExportUtils {
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
 
-            h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
-            byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
-            for (int i = 0; i < numSites; i++) {
-                alleles[i] = a.getAlleles(i);
-            }
-            h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
+//            h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
+//            byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
+//            for (int i = 0; i < numSites; i++) {
+//                alleles[i] = a.getAlleles(i);
+//            }
+//            h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
 
             // Write Bases
 
@@ -241,7 +241,7 @@ public class ExportUtils {
                     h5w.createByteArray(basesPath, numSites, features);
                     byte[] bases = a.getBaseRow(t);
                     h5w.writeByteArray(basesPath, bases, features);
-                    if(t%1000==0) System.out.println("Out Taxa "+t);
+                    //if(t%1000==0) System.out.println("Out Taxa "+t);
                 }
             }
             return newHDF5file;

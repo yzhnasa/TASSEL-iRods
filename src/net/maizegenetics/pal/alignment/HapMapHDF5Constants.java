@@ -32,6 +32,7 @@ public final class HapMapHDF5Constants {
  //   public static final String MINOR_ALLELE_FREQUENCY = "MAF";
     public static final String MAJOR_ALLELE = SITE_DESC+"MajorAllele";
     public static final String MINOR_ALLELE = SITE_DESC+"MinorAllele";
+    public static final String ALLELE_FREQ_ORD = SITE_DESC+"AlleleFreqOrder";
     public static final String REF_ALLELE = SITE_DESC+"REFAllele";
     
     public static final String TAXA_DESC = "TaxaDesc/";

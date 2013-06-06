@@ -6,6 +6,7 @@ package net.maizegenetics.pal.alignment;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import java.util.Arrays;
 
 /**
  * Class that provide methods for calculating many of the key computed statics
@@ -47,6 +48,7 @@ public class HDF5AlignmentAnnotator implements Runnable {
         int sites=ma.getSiteCount();
         int taxa=ma.getSequenceCount();
         int[][] af=new int[6][sites];
+        byte[][] afOrder=new byte[6][sites];
         float[] coverage=new float[ma.getSequenceCount()];
         float[] hets=new float[ma.getSequenceCount()];
         for (int taxon = 0; taxon < taxa; taxon++) {
@@ -67,31 +69,48 @@ public class HDF5AlignmentAnnotator implements Runnable {
         byte[] mnAlleles=new byte[sites];
         float[] maf=new float[sites];
         float[] paf=new float[sites];
+//        
+//        for (int s = 0; s < sites; s++) {
+//            int majCnt=0; 
+//            byte majA=Alignment.UNKNOWN_ALLELE;
+//            int minCnt=0; 
+//            byte minA=Alignment.UNKNOWN_ALLELE;
+//            int sum=0;
+//            for (byte i = 0; i < 6; i++) {
+//                sum+=af[i][s];
+//                if(af[i][s]>majCnt) {
+//                    minA=majA;
+//                    minCnt=majCnt;
+//                    majCnt=af[i][s];
+//                    majA=i;
+//                } else if(af[i][s]>minCnt) {
+//                    minCnt=af[i][s];
+//                    minA=i;
+//                }
+//            }
+//            mjAlleles[s]=majA;
+//            mnAlleles[s]=minA;
+//            maf[s]=(float)minCnt/(float)sum;
+//            paf[s]=(float)sum/(float)(2*taxa);
+//        }
         
-        for (int s = 0; s < sites; s++) {
-            int majCnt=0; 
-            byte majA=Alignment.UNKNOWN_ALLELE;
-            int minCnt=0; 
-            byte minA=Alignment.UNKNOWN_ALLELE;
+        int baseMask=0xF;
+        for (int s = 0; s < sites; s++) { 
             int sum=0;
+            int[] cntAndAllele=new int[6];
             for (byte i = 0; i < 6; i++) {
+                cntAndAllele[i]=(af[i][s]<<4)|i;  //size | allele
                 sum+=af[i][s];
-                if(af[i][s]>majCnt) {
-                    minA=majA;
-                    minCnt=majCnt;
-                    majCnt=af[i][s];
-                    majA=i;
-                } else if(af[i][s]>minCnt) {
-                    minCnt=af[i][s];
-                    minA=i;
-                }
             }
-            mjAlleles[s]=majA;
-            mnAlleles[s]=minA;
-            maf[s]=(float)minCnt/(float)sum;
+            Arrays.sort(cntAndAllele);  //ascending quick sort, there are faster ways
+            //http://stackoverflow.com/questions/2786899/fastest-sort-of-fixed-length-6-int-array
+            for (byte i = 0; i < 6; i++) {
+                afOrder[5-i][s]=(cntAndAllele[i]>0xF)?((byte)(baseMask&cntAndAllele[i])):Alignment.UNKNOWN_ALLELE;
+            }
+            if(afOrder[1][s]!=Alignment.UNKNOWN_ALLELE) maf[s]=(float)af[afOrder[1][s]][s]/(float)sum;
             paf[s]=(float)sum/(float)(2*taxa);
-        }
-        ma.setCalcAlleleFreq(af, mjAlleles, mnAlleles, maf, paf, coverage, hets);
+        } 
+        ma.setCalcAlleleFreq(af, afOrder, maf, paf, coverage, hets);
     }
     
     

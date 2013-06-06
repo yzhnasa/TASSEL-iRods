@@ -139,6 +139,11 @@ abstract public class AbstractAlignment implements Alignment {
         } else {
             myLoci = loci;
             myLociOffsets = lociOffsets;
+            for (int i = 0; i < lociOffsets.length; i++) {
+                String name=myLoci[i].getName();
+                int end=(i<myLoci.length-1)?myLociOffsets[i+1]-1:myNumSites-1;
+                myLoci[i]=new Locus(name, name, myLociOffsets[i], end, null, null);
+            }
         }
 
         myRetainRareAlleles = retainRareAlleles;
