@@ -26,9 +26,9 @@ public class JeffPipelines {
 //        expandVariantsInTOPM();
 //        getChrsFromTOPM();
 //        runTOPMSummaryPlugin();
-        convertTOPMtoHDF5();
+//        convertTOPMtoHDF5();
 //        runRawReadsToHapMapPlugin();
-//        runSeqToGenosPlugin();
+        runSeqToGenosPlugin();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -222,10 +222,20 @@ public class JeffPipelines {
             "-syn",  QualVsQuantDir+"tassel4_SeqToGenos/C08L7ACXX_6_XXvZZSynonymsProd.txt",
             "-o",    QualVsQuantDir+"tassel4_SeqToGenos/quant/QualVsQuantGenoCompare.txt",
         };
+        
+        String QuantVsOneHapMapDir = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/";
+        String[] QuantVsOneHapMapArgs = new String[]{
+            "-hmp1", QuantVsOneHapMapDir+"quant/testFastq2/MGP1_low_vol_2smallReps_chr+.hmp.txt.gz",
+            "-hmp2", QuantVsOneHapMapDir+  "quant/oneAlign/MGP1_low_vol_2smallReps_chr+.hmp.txt.gz",
+            "-sC",   "1",
+            "-eC",   "10",
+            "-syn",  QuantVsOneHapMapDir+"C08L7ACXX_6_XXvZZSynonymsProd.txt",
+            "-o",    QuantVsOneHapMapDir+"quant/oneAlign/Quant2VsOneAlignGenoCompare.txt",
+        };
 
         TasselPrefs.putAlignmentRetainRareAlleles(true);
         CompareGenosBetweenHapMapFilesPlugin plugin = new CompareGenosBetweenHapMapFilesPlugin();
-        plugin.setParameters(QualVsQuantArgs);
+        plugin.setParameters(QuantVsOneHapMapArgs);
         plugin.performFunction(null);
     }
     
@@ -292,10 +302,10 @@ public class JeffPipelines {
         String[] MDPLowVolArgs = new String[]{
             "-i", "/Users/jcg233/largeFiles/testFastq/",
             "-k", baseDir+"MDP1_low_vol/MGP1_low_vol_2smallReps_key.txt",
-            "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBSProdTOPM_20130603.topm.h5",
+            "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5",
             "-e", "ApeKI",
 //            "-vL", // VCF likelihood-based calling of hets
-            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/quant/testTOPMHDF5",
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/quant/oneAlign",
         };
 
         SeqToGenosPlugin plugin = new SeqToGenosPlugin(null);
