@@ -92,8 +92,8 @@ public class PDAnnotation {
         writer.createByteArray(chrGroup + HapMapHDF5Constants.MINOR_ALLELE, mnAllele.length);
         writer.writeByteArray(chrGroup + HapMapHDF5Constants.MINOR_ALLELE, mnAllele);
         // write minor allele frequencies
-        writer.createFloatArray(chrGroup + HapMapHDF5Constants.MINOR_ALLELE_FREQUENCY, maf.length);
-        writer.writeFloatArray(chrGroup + HapMapHDF5Constants.MINOR_ALLELE_FREQUENCY, maf);
+        writer.createFloatArray(chrGroup + HapMapHDF5Constants.MAF, maf.length);
+        writer.writeFloatArray(chrGroup + HapMapHDF5Constants.MAF, maf);
 
         writer.createGroup(chrGroup + HapMapHDF5Constants.GWAS);
         writer.createGroup(chrGroup + HapMapHDF5Constants.GENOMIC);

@@ -33,7 +33,8 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
     protected int[] myLocusIndices;
     private int[] myLocusOffsets = null;
-    protected String[] mySNPIDs;
+//    protected String[] mySNPIDs;  //already declared in AbstractAlignment
+//    protected String[] mySNPIDs2;
 
     protected MutableSingleEncodeAlignment(Alignment a, int maxNumTaxa, int maxNumSites) {
         super(a.getAlleleEncodings());
@@ -630,6 +631,13 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         setDirty();
 
     }
+
+    @Override
+    public void setSNPID(int site, String name) {
+        mySNPIDs[site]=name;
+    }
+    
+    
 
     public void removeSite(int site) {
 

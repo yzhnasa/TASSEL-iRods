@@ -14,8 +14,14 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
+import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
@@ -166,6 +172,7 @@ public class ExportUtils {
             config.overwrite();
             config.dontUseExtendableDataTypes();
             h5w = config.writer();
+            HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
 
@@ -188,20 +195,30 @@ public class ExportUtils {
             if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
                 throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
             }
-            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());
+            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());  //consider adding compression
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
             String[] lociNames = new String[a.getNumLoci()];
+            HashMap<Locus, Integer> locusToIndex=new HashMap<Locus, Integer>(10);
             Locus[] loci = a.getLoci();
             for (int i = 0; i < a.getNumLoci(); i++) {
                 lociNames[i] = loci[i].getName();
+                locusToIndex.put(loci[i],i);
             }
             h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumLoci());
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
 
-            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
-            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
+//            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
+//            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
+            
+            int[] locusIndicesArray = new int[a.getSiteCount()];
+            for (int i = 0; i < locusIndicesArray.length; i++) {
+                locusIndicesArray[i] = locusToIndex.get(a.getLocus(i));
+            }
+            
+            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),features);
+            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_INDICES, locusIndicesArray,features);
 
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
@@ -214,7 +231,7 @@ public class ExportUtils {
             h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
 
             // Write Bases
-            HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
+
   //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
 
             h5w.createGroup(HapMapHDF5Constants.GENOTYPES);
@@ -236,6 +253,75 @@ public class ExportUtils {
                 // do nothing
             }
         }
+    }
+        
+        /**
+     * This merge multiple alignment together
+     * @param a
+     * @param newMerge 
+     */
+    public static void mergeToMutableHDF5(MutableNucleotideAlignmentHDF5[] a, String newMerge) {
+        if ((a == null) || (a.length == 0)) {
+            return ;
+        }
+        TreeSet<String> taxa = new TreeSet<String>();
+        TreeMap<Long, Long> siteMap=new TreeMap<Long, Long>();  //key = (chr<<36)+(dup<<32)+(physicalPos)); value = (align<<32+site)
+
+        for (Alignment ai : a) {
+            IdGroup currentIds = ai.getIdGroup();
+            for (int t = 0; t < currentIds.getIdCount(); t++) {
+                taxa.add(currentIds.getIdentifier(t).getFullName());
+            }
+        }     
+        for (int i=0; i<a.length; i++) {
+            
+            for (int s = 0; s < a[i].getSiteCount(); s++) {
+                long chrNum=Integer.parseInt(a[i].getLocus(s).getChromosomeName());
+                long phys=a[i].getPositionInLocus(s);
+                long value=((long)i<<32)+s;
+                long dupIndex=0;
+                long key=(chrNum<<36)+(dupIndex<<32)+(phys);
+                while(siteMap.containsKey(key)) {
+                    dupIndex++;
+                    key=(chrNum<<36)+(dupIndex<<32)+(phys);
+                }
+                siteMap.put(key, value);
+            }
+        }
+        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(new SimpleIdGroup(1),siteMap.size(),1,siteMap.size());
+        int s=0;
+        int[] alignOfSite=new int[siteMap.size()];
+        int[] siteOfSite=new int[siteMap.size()];
+        for (long ent : siteMap.values()) {
+            int site=(int)ent;
+            int ai=(int)(ent>>>32);
+            mna.setLocusOfSite(s, a[ai].getLocus(site));
+            mna.setPositionOfSite(s, a[ai].getPositionInLocus(site));
+            mna.setSNPID(s, a[ai].getSNPID(site));
+            alignOfSite[s]=ai;
+            siteOfSite[s]=site;
+            s++;
+        }
+        ExportUtils.writeToMutableHDF5(mna, newMerge, false);
+        MutableNucleotideAlignmentHDF5 base=MutableNucleotideAlignmentHDF5.getInstance(newMerge, 4096);
+        for (String tn: taxa) {
+            int[] tind=new int[a.length];
+            for (int i=0; i<a.length; i++) {
+                tind[i]=a[i].getIdGroup().whichIdNumber(tn);
+            }
+            byte[] geno=new byte[alignOfSite.length];
+            for (int ns = 0; ns < geno.length; ns++) {
+                if(tind[alignOfSite[ns]]<0) {
+                    geno[ns]=Alignment.UNKNOWN_DIPLOID_ALLELE;
+                } else {
+                    geno[ns]=a[alignOfSite[ns]].getBase(tind[alignOfSite[ns]], siteOfSite[ns]);
+                }
+            }
+            base.addTaxon(new Identifier(tn));
+            int newTaxaIndex=base.getIdGroup().whichIdNumber(tn);
+            base.setAllBases(newTaxaIndex, geno);
+        }
+        base.clean();
     }
 
     /**

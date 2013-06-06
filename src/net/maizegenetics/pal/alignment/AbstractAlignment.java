@@ -34,7 +34,7 @@ abstract public class AbstractAlignment implements Alignment {
      * Loci offsets hold first site of each locus.
      */
     private int[] myLociOffsets;
-    private String[] mySNPIDs;
+    protected String[] mySNPIDs;  //Ed this was private, but it messes up the subclasses.
     private boolean myRetainRareAlleles = false;
     private Alignment myOriginalAlignment = null;
 

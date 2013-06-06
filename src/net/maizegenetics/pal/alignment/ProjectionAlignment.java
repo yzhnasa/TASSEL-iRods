@@ -829,6 +829,11 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     public void setReferenceAllele(int site, byte diploidAllele) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    @Override
+    public void setSNPID(int site, String name) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public boolean isDirty() {

@@ -72,10 +72,11 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private TreeMap<String,ArrayList<String>> LibraryPrepIDToFlowCellLanes = new TreeMap<String,ArrayList<String>>();
     private TreeMap<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
     private HashMap<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
-    private MutableNucleotideDepthAlignment[] genos = null;
+    private MutableNucleotideDepthAlignment genos = null;
+    private int totalNSites = 0;
     private TreeMap<String,Integer> RawReadCountsForFullSampleName = new TreeMap<String,Integer>();
     private TreeMap<String,Integer> RawReadCountsForFinalSampleName = new TreeMap<String,Integer>();
-    private boolean vcfL = false;  // if true, use vcf likelihood method for calling hets
+    private boolean stacksL = false;  // if true, use vcf likelihood method for calling hets
     private double errorRate = 0.01;
     private final static int maxCountAtGeno = 500;  // maximum value for likelihoodRatioThreshAlleleCnt[] lookup table
     private static int[] likelihoodRatioThreshAlleleCnt = null;  // index = sample size; value = min count of less tagged allele for likelihood ratio > 1
@@ -97,7 +98,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             + "  -k   Barcode key file\n"
             + "  -m   Physical map file containing alignments and variants (production TOPM)\n"
             + "  -e   Enzyme used to create the GBS library\n"
-            + "  -vL  Use VCF likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)"
+            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)"
             + "  -o   Output directory\n"
 //            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
         );
@@ -115,7 +116,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             myArgsEngine.add("-k",  "--key-file", true);
             myArgsEngine.add("-m",  "--physical-map", true);
             myArgsEngine.add("-e",  "--enzyme", true);
-            myArgsEngine.add("-vL", "--VCF-likelihood", false);
+            myArgsEngine.add("-sL", "--STACKS-likelihood", false);
             myArgsEngine.add("-o",  "--output-directory", true);
             myArgsEngine.add("-d",  "--divergence", true);
         }
@@ -155,8 +156,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalArgumentException("Please specify the enzyme used to create the GBS library.");
         }
-        if (myArgsEngine.getBoolean("-vL")) {
-            vcfL = true;
+        if (myArgsEngine.getBoolean("-sL")) {
+            stacksL = true;
         }
         if (myArgsEngine.getBoolean("-o")) {
             myOutputDir = myArgsEngine.getString("-o");
@@ -190,15 +191,15 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalStateException("performFunction: enzyme must be set.");
         }
-        if (!vcfL) {
+        if (!stacksL) {
             setLikelihoodThresh(errorRate);
         }
         readKeyFile();
         matchKeyFileToAvailableRawSeqFiles();
-        setUpMutableNucleotideAlignmentsWithDepth();
+        setUpMutableNucleotideAlignmentWithDepth();
         readRawSequencesAndRecordDepth();
         callGenotypes();
-        writeHapMapFiles();
+        writeGenotypes();
         writeReadsPerSampleReports();
         return null;
     }
@@ -429,27 +430,24 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
     }
 
-    private void setUpMutableNucleotideAlignmentsWithDepth() {
+    private void setUpMutableNucleotideAlignmentWithDepth() {
         String[] finalSampleNames = getFinalSampleNames();
-        myLogger.info("\nCounting sites in TOPM file.");
-        ArrayList<int[]> uniquePositions = getUniquePositions();
-        myLogger.info("\nCreating alignment objects to hold the genotypic data (one per chromosome in the TOPM).");
-        genos = new MutableNucleotideDepthAlignment[chromosomes.length];
-        for (int i = 0; i < genos.length; i++) {
-            genos[i] = MutableNucleotideDepthAlignment.getInstance(new SimpleIdGroup(finalSampleNames), uniquePositions.get(i).length); // keeps depth for all 6 alleles
-        }
         generateQuickTaxaLookup(finalSampleNames);
-        myLogger.info("   Adding sites from the TOPM file to the alignment objects.");
-        for (int i = 0; i < genos.length; i++) {
-            int currSite = 0;
-            for (int j = 0; j < uniquePositions.get(i).length; j++) {
-                String chromosome = Integer.toString(chromosomes[i]);
-                genos[i].addSite(currSite);
-                genos[i].setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
-                genos[i].setPositionOfSite(currSite, uniquePositions.get(i)[j]);
+        myLogger.info("\nCounting sites in TOPM file");
+        ArrayList<int[]> uniquePositions = getUniquePositions();
+        genos = MutableNucleotideDepthAlignment.getInstance(new SimpleIdGroup(finalSampleNames), totalNSites); // keeps depth for all 6 alleles
+        System.out.println("\nAdding sites from the TOPM file to the alignment (genotypes) object");
+        int currSite = 0;
+        for (int i = 0; i < uniquePositions.size(); i++) {
+            String chromosome = Integer.toString(chromosomes[i]);
+            int[] positsOnChr = uniquePositions.get(i);
+            for (int j=0, nSitesOnChr=positsOnChr.length; j<nSitesOnChr; j++) {
+                genos.addSite(currSite);
+                genos.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
+                genos.setPositionOfSite(currSite, positsOnChr[j]);
                 currSite++;
             }
-            genos[i].clean();
+            genos.clean();
         }
     }
     
@@ -505,11 +503,17 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     }
 
     private ArrayList<int[]> getUniquePositions() {
+        totalNSites = 0;
         ArrayList<int[]> uniquePositions = new ArrayList<int[]>();
         chromosomes = topm.getChromosomes();
+        System.out.println("\nThe TOPM contains the following chromosomes (and # sites per chromosome):");
         for (int i = 0; i < chromosomes.length; i++) {
             uniquePositions.add(topm.getUniquePositions(chromosomes[i]));
+            int nSitesInChr = uniquePositions.get(i).length;
+            totalNSites += nSitesInChr;
+            System.out.println("   "+chromosomes[i]+"   ("+nSitesInChr+" sites)");
         }
+        System.out.println("In total, the TOPM contains "+chromosomes.length+" chromosomes and "+totalNSites+" sites.");
         return uniquePositions;
     }
 
@@ -571,14 +575,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         if (chromosome == TOPMInterface.INT_MISSING) {
             return;
         }
-        int chrIndex = 0;
-        for (int i = 0; i < chromosomes.length; i++) {
-            if (chromosomes[i] == chromosome) {
-                chrIndex = i;
-                break;
-            }
-        }
-        Locus locus = topm.getLocus(tagIndex);
+        Locus locus = new Locus(chromosome + "", chromosome + "", -1, -1, null, null);
         int startPos = topm.getStartPosition(tagIndex);
         for (int variant = 0; variant < topm.getMaxNumVariants(); variant++) {
             byte newBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 allele encodings
@@ -587,26 +584,25 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             }
             int offset = topm.getVariantPosOff(tagIndex, variant);
             int pos = startPos + offset;
-            int currSite = genos[chrIndex].getSiteOfPhysicalPosition(pos, locus);
+            int currSite = genos.getSiteOfPhysicalPosition(pos, locus);
             if (currSite < 0) {
                 continue;
             }
-            genos[chrIndex].incrementDepthForAllele(taxonIndex, currSite, newBase);
+            genos.incrementDepthForAllele(taxonIndex, currSite, newBase);
         }
     }
     
     private void callGenotypes() {
         System.out.print("\nCalling genotypes...");
-        for (int taxon = 0, nTaxa = genos[0].getSequenceCount(); taxon < nTaxa; taxon++) {
-            for (int chrIndex = 0, nChrs = genos.length; chrIndex < nChrs; chrIndex++) {
-                byte[] callsForTaxon = resolveGenosForTaxon(genos[chrIndex].getDepthsForAllSites(taxon));
-                genos[chrIndex].setBaseRange(taxon, 0, callsForTaxon);
-            }
+        for (int taxon = 0, nTaxa = genos.getSequenceCount(); taxon < nTaxa; taxon++) {
+            byte[] callsForTaxon = resolveGenosForTaxon(taxon);
+            genos.setBaseRange(taxon, 0, callsForTaxon);
         }
         System.out.print("   ...done\n");
     }
     
-    private byte[] resolveGenosForTaxon(byte[][] depthsForTaxon) {
+    private byte[] resolveGenosForTaxon(int taxon) {
+        byte[][] depthsForTaxon = genos.getDepthsForAllSites(taxon);
         int nAlleles = depthsForTaxon.length;
         byte[] depthsAtSite = new byte[nAlleles];
         int nSites = depthsForTaxon[0].length;
@@ -621,7 +617,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     }
     
     private byte resolveGeno(byte[] depths) {
-        if (vcfL) {
+        if (stacksL) {
             int nAlleles = depths.length;
             byte[] alleles = new byte[nAlleles];
             int[] intDepths = new int[nAlleles];
@@ -681,17 +677,15 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
     }
 
-    private void writeHapMapFiles() {
-        for (int i = 0; i < genos.length; i++) {
-            genos[i].clean();
-            System.out.println("\n\nDistribution of site summary stats for chromosome "+chromosomes[i]+":\n");
-            AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(genos[i], false);
-            String outFileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
-            outFileS = outFileS.replaceAll(".txt", "_chr" + chromosomes[i] + ".hmp.txt.gz");
-            outFileS = outFileS.replaceAll("_key", "");
-            ExportUtils.writeToHapmap(genos[i], false, outFileS, '\t', this);
-            System.out.println("Genotypes written to:\n"+outFileS+"\n\n");
-        }
+    private void writeGenotypes() {
+        genos.clean();
+        System.out.println("\n\nDistribution of site summary stats:\n");
+        AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(genos, false);
+        String outFileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
+        outFileS = outFileS.replaceAll(".txt", ".hmp.txt.gz");
+        outFileS = outFileS.replaceAll("_key", "");
+        ExportUtils.writeToHapmap(genos, false, outFileS, '\t', this);
+        System.out.println("\nGenotypes written to:\n"+outFileS+"\n");
     }
     
     private void writeReadsPerSampleReports() {
