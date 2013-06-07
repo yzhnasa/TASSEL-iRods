@@ -65,47 +65,22 @@ public class HDF5AlignmentAnnotator implements Runnable {
             coverage[taxon]=(float)covSum/(float)sites;
             hets[taxon]=(float)hetSum/(float)sites;
         }
-        byte[] mjAlleles=new byte[sites];
-        byte[] mnAlleles=new byte[sites];
+//        byte[] mjAlleles=new byte[sites];
+//        byte[] mnAlleles=new byte[sites];
         float[] maf=new float[sites];
-        float[] paf=new float[sites];
-//        
-//        for (int s = 0; s < sites; s++) {
-//            int majCnt=0; 
-//            byte majA=Alignment.UNKNOWN_ALLELE;
-//            int minCnt=0; 
-//            byte minA=Alignment.UNKNOWN_ALLELE;
-//            int sum=0;
-//            for (byte i = 0; i < 6; i++) {
-//                sum+=af[i][s];
-//                if(af[i][s]>majCnt) {
-//                    minA=majA;
-//                    minCnt=majCnt;
-//                    majCnt=af[i][s];
-//                    majA=i;
-//                } else if(af[i][s]>minCnt) {
-//                    minCnt=af[i][s];
-//                    minA=i;
-//                }
-//            }
-//            mjAlleles[s]=majA;
-//            mnAlleles[s]=minA;
-//            maf[s]=(float)minCnt/(float)sum;
-//            paf[s]=(float)sum/(float)(2*taxa);
-//        }
-        
+        float[] paf=new float[sites];        
         int baseMask=0xF;
         for (int s = 0; s < sites; s++) { 
             int sum=0;
             int[] cntAndAllele=new int[6];
             for (byte i = 0; i < 6; i++) {
-                cntAndAllele[i]=(af[i][s]<<4)|i;  //size | allele
+                cntAndAllele[i]=(af[i][s]<<4)|(5-i);  //size | allele (the 5-i is to get the sort right, so if case of ties A is first)
                 sum+=af[i][s];
             }
             Arrays.sort(cntAndAllele);  //ascending quick sort, there are faster ways
             //http://stackoverflow.com/questions/2786899/fastest-sort-of-fixed-length-6-int-array
             for (byte i = 0; i < 6; i++) {
-                afOrder[5-i][s]=(cntAndAllele[i]>0xF)?((byte)(baseMask&cntAndAllele[i])):Alignment.UNKNOWN_ALLELE;
+                afOrder[5-i][s]=(cntAndAllele[i]>0xF)?((byte)(5-(baseMask&cntAndAllele[i]))):Alignment.UNKNOWN_ALLELE;
             }
             if(afOrder[1][s]!=Alignment.UNKNOWN_ALLELE) maf[s]=(float)af[afOrder[1][s]][s]/(float)sum;
             paf[s]=(float)sum/(float)(2*taxa);
