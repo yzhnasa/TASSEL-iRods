@@ -1055,9 +1055,17 @@ public class BitUtil {
         builder.append(str);
         return builder.toString();
     }
+    
+    /**
+     * Returns the bits in the same order that we store them for TASSEL
+     * @param A
+     * @return 
+     */
+    public static String toPadStringLowSiteToHighSite(long A) {       
+        return new StringBuffer(toPadString(A)).reverse().toString();
+    }
 
     public static void printBitMatrix(long[] A) {
-
         for (int i = 0; i < A.length; i++) {
             System.out.println(toPadString(A[i]));
         }
