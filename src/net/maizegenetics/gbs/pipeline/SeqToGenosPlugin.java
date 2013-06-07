@@ -199,7 +199,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         setUpMutableNucleotideAlignmentWithDepth();
         readRawSequencesAndRecordDepth();
         callGenotypes();
-        writeGenotypes();
+//        QualityControlOnGenotypes();  // not written yet (e.g., check that blanks are blank, inbreds not heterozygous)
+        writeHapMapGenotypes();
+        writeHDF5Genotypes();
         writeReadsPerSampleReports();
         return null;
     }
@@ -445,6 +447,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 genos.addSite(currSite);
                 genos.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
                 genos.setPositionOfSite(currSite, positsOnChr[j]);
+                genos.setSNPID(currSite, genos.getSNPID(currSite));  
                 currSite++;
             }
             genos.clean();
@@ -594,11 +597,16 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     
     private void callGenotypes() {
         System.out.print("\nCalling genotypes...");
+        topm = null;  // no longer needed in memory
+        System.gc();
         for (int taxon = 0, nTaxa = genos.getSequenceCount(); taxon < nTaxa; taxon++) {
             byte[] callsForTaxon = resolveGenosForTaxon(taxon);
             genos.setBaseRange(taxon, 0, callsForTaxon);
         }
         System.out.print("   ...done\n");
+        genos.clean();
+        System.out.println("\n\nDistribution of site summary stats:\n");
+        AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(genos, false);
     }
     
     private byte[] resolveGenosForTaxon(int taxon) {
@@ -677,15 +685,29 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         }
     }
 
-    private void writeGenotypes() {
-        genos.clean();
-        System.out.println("\n\nDistribution of site summary stats:\n");
-        AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(genos, false);
+    private void writeHapMapGenotypes() {
         String outFileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
         outFileS = outFileS.replaceAll(".txt", ".hmp.txt.gz");
         outFileS = outFileS.replaceAll("_key", "");
         ExportUtils.writeToHapmap(genos, false, outFileS, '\t', this);
         System.out.println("\nGenotypes written to:\n"+outFileS+"\n");
+    }
+    
+    private void writeHDF5Genotypes() {
+        String outFileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
+        outFileS = outFileS.replaceAll(".txt", ".hmp.h5");
+        outFileS = outFileS.replaceAll("_key", "");
+        ExportUtils.writeToMutableHDF5(genos, outFileS, true);
+        addDepthToHDF5();
+        addReferenceAllelesToHDF5();
+    }
+    
+    private void addDepthToHDF5() {
+        ;
+    }
+    
+    private void addReferenceAllelesToHDF5() {
+        ;
     }
     
     private void writeReadsPerSampleReports() {
