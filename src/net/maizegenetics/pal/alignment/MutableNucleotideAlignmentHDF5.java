@@ -3,7 +3,6 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
@@ -18,6 +17,9 @@ import java.util.Map;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.OpenBitSet;
+import net.maizegenetics.util.ProgressListener;
 import org.apache.log4j.Logger;
 
 
@@ -88,6 +90,9 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private boolean cacheDepth=false;
     private LRUCache<Long,byte[][]> myDepthCache=null;  //key (taxa <<< 32)+startSite
     
+    private BitSet[] tBitCache=null;
+    private int tBitCacheTaxon=-1;
+    
 
 
     protected MutableNucleotideAlignmentHDF5(String fileName, IHDF5Writer reader, List<Identifier> idGroup, int[] variableSites, 
@@ -121,6 +126,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         initAllDataSupport();
         loadSiteDescriptorsToMemory();
         initGenotypeCache();
+        myIsDirty=false;
     }
 
     public static MutableNucleotideAlignmentHDF5 getInstance(String filename) {
@@ -240,6 +246,20 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
     
     @Override
+    public String getBaseAsString(int taxon, int site) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon,site));
+    }
+    
+   @Override
+    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = startSite; i < endSite; i++) {
+            builder.append(getBaseAsString(taxon, i));
+        }
+        return builder.toString();
+    }
+    
+    @Override
     public byte[] getDepthForAlleles(int taxon, int site) {
         if(myDepthCache==null) initDepthCache();
         long key=getCacheKey(taxon,site);
@@ -251,6 +271,33 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         }
         return result;
     }
+    
+    
+
+    @Override
+    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
+        //if(inTheFile) grab it and return
+        if(alleleNumber>1) throw new UnsupportedOperationException("Will not be supported.  Only top two allele reported");
+        if(taxon==tBitCacheTaxon) return tBitCache[alleleNumber];
+        tBitCache=AlignmentUtils.calcBitPresenceFromGenotype(getBaseRow(taxon), myAlleleFreqOrder[0], myAlleleFreqOrder[1]);
+        tBitCacheTaxon=taxon;
+        return tBitCache[alleleNumber];
+    }
+    
+
+    @Override
+    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+        BitSet result=getAllelePresenceForAllSites(taxon, alleleNumber);
+        return result.getBits(startBlock, endBlock-1);
+    }
+
+    @Override
+    public void optimizeForTaxa(ProgressListener listener) {
+        //do nothing now, later setup 
+        
+    }
+    
+    
 
     @Override
     public boolean isSBitFriendly() {
@@ -259,15 +306,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public boolean isTBitFriendly() {
-        return false;
+        return true;
     }
 
     @Override
     public int getTotalNumAlleles() {
         return 6; 
-    }
-    
-    
+    }  
 
     @Override
     public int getSiteCount() {
@@ -584,7 +629,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         System.out.println(getTaxaGenoPath(taxon));
         initGenotypeCache();
         myIsDirty=true;
-        
     }
     
     private void loadSiteDescriptorsToMemory() {
@@ -627,7 +671,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public byte getMinorAllele(int site) {
-        return myAlleleFreqOrder[0][site];
+        return myAlleleFreqOrder[1][site];
     }
     
     public float getSiteCoverage(int site) {

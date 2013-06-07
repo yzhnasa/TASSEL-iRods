@@ -146,11 +146,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         System.out.println("Retain Rare alleles is:"+TasselPrefs.getAlignmentRetainRareAlleles());
         this.minTestSites=minTestSites;
         this.isOutputProjection=isOutputProjection;
-        if(unImpTargetFile.contains(".h5")) {
-            unimpAlign=BitAlignmentHDF5.getInstance(unImpTargetFile, false);
-        } else {
-            unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
-        }
+        unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile, false);
+//        if(unImpTargetFile.contains(".h5")) {
+//            unimpAlign=BitAlignmentHDF5.getInstance(unImpTargetFile, false);
+//        } else {
+//            unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
+//        }
         unimpAlign.optimizeForTaxa(null);
         Alignment[] donorAlign=loadDonors(donorFile);
         OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, true);   
@@ -179,8 +180,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
         for (int taxon = 0; taxon < unimpAlign.getSequenceCount(); taxon+=1) {
             ImputeOneTaxon theTaxon=new ImputeOneTaxon(taxon, donorAlign, minSitesPresent, conflictMasks,imputeDonorFile, mna);
-      //      theTaxon.run();
-            pool.execute(theTaxon);
+            theTaxon.run();
+      //      pool.execute(theTaxon);
         }
         pool.shutdown();
         try{
@@ -247,7 +248,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //            }
             int countFullLength=0;
             for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
-                int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInLocus(0), null);
+                int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInLocus(0), donorAlign[da].getLocus(0));
                 int blocks=donorAlign[da].getAllelePresenceForAllSites(0, 0).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
                         donorAlign[da].getSiteCount(),conflictMasks[da][0],conflictMasks[da][1]); 
@@ -312,10 +313,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
      public Alignment[] loadDonors(String donorFileRoot){
         File theDF=new File(donorFileRoot);
-        String prefilter=theDF.getName().split("s\\+")[0]+"s"; //grabs the left side of the file
+        String prefilter=theDF.getName().split(".gX.")[0]+".gc"; //grabs the left side of the file
+        String prefilterOld=theDF.getName().split("s\\+")[0]+"s"; //grabs the left side of the file
         ArrayList<File> d=new ArrayList<File>();
         for (File file : theDF.getParentFile().listFiles()) {
              if(file.getName().startsWith(prefilter)) {d.add(file);}
+             if(file.getName().startsWith(prefilterOld)) {d.add(file);}
          }
         Alignment[] donorAlign=new Alignment[d.size()];
         for (int i = 0; i < donorAlign.length; i++) {
@@ -388,7 +391,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private OpenBitSet[][] createMaskForAlignmentConflicts(Alignment unimpAlign, Alignment[] donorAlign, boolean print) {
         OpenBitSet[][] result=new OpenBitSet[donorAlign.length][4];
         for (int da = 0; da < result.length; da++) {
-            int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInLocus(0), null);
+            int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInLocus(0), donorAlign[da].getLocus(0));
             OpenBitSet goodMask=new OpenBitSet(donorAlign[da].getSiteCount());
             OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].getSiteCount());
             OpenBitSet errorMask=new OpenBitSet(donorAlign[da].getSiteCount());
@@ -864,7 +867,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         } //end of cs loop
         //enter a stop of the DH at the beginning of the next block
         int lastDApos=donorAlign.getPositionInLocus(endSite);
-        int nextSite=unimpAlign.getSiteOfPhysicalPosition(lastDApos, null)+1;
+        int nextSite=unimpAlign.getSiteOfPhysicalPosition(lastDApos, donorAlign.getLocus(0))+1;
         if(nextSite<unimpAlign.getSiteCount()) impT.breakPoints.put(unimpAlign.getPositionInLocus(nextSite), new int[]{-1,-1});
     //    if (print) System.out.println("E:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         return impT;
@@ -1049,9 +1052,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
 //        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
-//       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
-       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
-        String donorFile=rootHaplos+"all26_8k.c+s+.hmp.txt.gz";
+       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
+//       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
+        String donorFile=rootHaplos+"all26_8k.c10s+.hmp.txt.gz";
 //        String donorFile=rootHaplos+"HM26_Allk.c10s+.hmp.txt.gz";
 //        String impTargetFile=rootImp+"newmnaTall26.c+.imp.hmp.txt.gz";
        Random r=new Random();

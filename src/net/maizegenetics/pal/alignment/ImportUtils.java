@@ -56,9 +56,7 @@ public class ImportUtils {
     
     public static Alignment readGuessFormat(String fileName, boolean readSBit) {
         try{
-            if(fileName.endsWith("mhmp.h5")) {
-                return MutableNucleotideAlignmentHDF5.getInstance(fileName);
-            } else if(fileName.endsWith("hmp.h5")) {
+            if(fileName.endsWith("hmp.h5")||fileName.endsWith("mhmp.h5")) {
                 IHDF5Reader reader = HDF5Factory.openForReading(fileName);
                 boolean geno=reader.exists(HapMapHDF5Constants.GENOTYPES);
                 reader.close();

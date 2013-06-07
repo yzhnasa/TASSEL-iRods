@@ -107,6 +107,27 @@ public class Locus implements Serializable {
         return getName();
     }
 
+    public boolean equalName(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof Locus)) {
+            return false;
+        }
+        Locus other = (Locus) obj;
+
+        if (!myName.equals(other.getName())) {
+            return false;
+        }
+
+        if (!myChromosome.equals(other.getChromosomeName())) {
+            return false;
+        }
+        return true;
+    }
+    
+    
     @Override
     public boolean equals(Object obj) {
 

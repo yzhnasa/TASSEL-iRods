@@ -27,6 +27,15 @@ public class BitNucleotideAlignment extends BitAlignment {
     }
 
     @Override
+    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = startSite; i < endSite; i++) {
+            builder.append(getBaseAsString(taxon, i));
+        }
+        return builder.toString();
+    }
+    
+    @Override
     public String getBaseAsString(int taxon, int site) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
     }

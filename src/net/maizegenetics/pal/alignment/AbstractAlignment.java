@@ -697,7 +697,8 @@ abstract public class AbstractAlignment implements Alignment {
     @Override
     public int[] getStartAndEndOfLocus(Locus locus) {
         for (int i = 0; i < getNumLoci(); i++) {
-            if (locus.equals(myLoci[i])) {
+            if (locus.equalName(myLoci[i])) {
+ //           if (locus.equals(myLoci[i])) {  //this equals is testing for same name and start and endsite
                 int end = 0;
                 if (i == getNumLoci() - 1) {
                     end = getSiteCount();
