@@ -108,7 +108,8 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         for (int i = 0; i < divisions.length; i++) {
             MutableNucleotideAlignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
              minSites,  maxDistance);
-            String newExport=exportFile.replace("s+.hmp", "s"+i+".hmp");
+            String newExport=exportFile.replace("sX.hmp", "s"+i+".hmp");
+            newExport=newExport.replace("gX", "gc"+mna.getLocusName(0)+"s"+i);
             ExportUtils.writeToHapmap(mna, false, newExport, '\t', null);
             if(errorExportFile!=null) exportBadSites(baseAlign, errorExportFile, 0.01);   
         }
@@ -145,9 +146,12 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         Locus[] theL=a.getLoci();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Locus aL: theL) {
+            System.out.println("");
             int locusSites=aL.getEnd()-aL.getStart()+1;
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
             int prefBlocks=(locusSites/(subAlignCnt*64));
+            System.out.printf("Chr:%s Alignment Sites:%d subAlignCnt:%d RealSites:%d %n",
+                    aL.getChromosomeName(),locusSites, subAlignCnt, prefBlocks*64);
             for (int i = 0; i < subAlignCnt; i++) {
                 int[] divs=new int[2];
                 divs[0]=(i*prefBlocks*64)+aL.getStart();
@@ -159,7 +163,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         int[][] result=new int[allDivisions.size()][2];
         for (int i = 0; i < result.length; i++) {
             result[i]=allDivisions.get(i);
-           // System.out.printf("Alignment Sites:%d ApproxSites:%d RealSites:%d %n",a.getSiteCount(),appoxSitesPerHaplotype, prefBlocks*64);
+           // 
             System.out.printf("Chromosome Divisions: %s start:%d end:%d %n", a.getLocus(result[i][0]).getName(),
                     result[i][0], result[i][1]);
         }
@@ -447,15 +451,15 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
 
    @Override
     public DataSet performFunction(DataSet input) {
-       if(!hmpFile.contains("+")) {
+       if(outFileBase.contains(".gX.")) {
            runFindMergeHaplotypes(hmpFile, outFileBase, errFile, maxDistFromFounder, minSitesPresentPerHap, appoxSitesPerHaplotype);
            return null;
        }
        for (int chr = startChr; chr <=endChr; chr++) {
-           String chrHmpFile=hmpFile.replace("chr+", "chr"+chr);
-           chrHmpFile=chrHmpFile.replace("c+", "c"+chr);
-           String chrOutfiles=outFileBase.replace("chr+", "chr"+chr);
-           chrOutfiles=chrOutfiles.replace("c+", "c"+chr);
+           String chrHmpFile=hmpFile.replace("chrX", "chr"+chr);
+           chrHmpFile=chrHmpFile.replace("cX", "c"+chr);
+           String chrOutfiles=outFileBase.replace("chrX", "chr"+chr);
+           chrOutfiles=chrOutfiles.replace("cX", "c"+chr);
            runFindMergeHaplotypes(chrHmpFile, chrOutfiles, errFile, maxDistFromFounder, minSitesPresentPerHap, appoxSitesPerHaplotype);
        }     
        return null;
@@ -489,8 +493,8 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
 //        String rootOut="/Volumes/LaCie/build20120701/IMP26/haplos/";
 
         
-        String infileH5=root+"AllZeaGBS_v2.6.chr+.hmp.h5";
-        String secFile26v=rootOut+"Tall26_8k.c+s+.hmp.txt.gz";
+        String infileH5=root+"AllZeaGBS_v2.6.chrX.hmp.h5";
+        String secFile26v=rootOut+"Tall26_8k.cXsX.hmp.txt.gz";
 
         String errorFile=rootOut+"mcErrorXMerge20130425.txt";
 
