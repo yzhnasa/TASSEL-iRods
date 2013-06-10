@@ -31,6 +31,7 @@ import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TOPMInterface;
 import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.alignment.MutableNucleotideDepthAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.VCFUtil;
@@ -461,7 +462,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     }
     
     private String[] getFinalSampleNames() {
-        TreeSet<String> finalSampleNamesTS = new TreeSet<String>(); // this will keep the names sorted
+        TreeSet<String> finalSampleNamesTS = new TreeSet<String>(); // this will keep the names sorted (by short name, then remainder)
         TreeSet<String> samplesInKeyFileWithNoRawSeqFile = new TreeSet<String>();
         for (String LibPrepID : LibraryPrepIDToSampleName.keySet()) {
             String sample = LibraryPrepIDToSampleName.get(LibPrepID);
@@ -478,23 +479,29 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 }
             }
             if (nRepSamplesWithRawSeqFile == 1) {
-                finalSampleNamesTS.add(tempFullName);
                 RawReadCountsForFinalSampleName.put(tempFullName, 0);
+                tempFullName = tempFullName.replaceAll(":", " "); // for sorting of taxa based on the short name (" " sorts before any acceptable chars) (matches HDF5 sorting)
+                finalSampleNamesTS.add(tempFullName);
             } else if (nRepSamplesWithRawSeqFile > 1) {
                 String finalName = sample+":MRG:"+nRepSamplesWithRawSeqFile+":"+LibPrepID;
-                finalSampleNamesTS.add(finalName);
                 RawReadCountsForFinalSampleName.put(finalName, 0);
                 for (String flowcellLane : flowcellLanesForLibPrep) {
                     if (FlowcellLanes.get(flowcellLane)) {
                         FullNameToFinalName.put(sample+":"+flowcellLane+":"+LibPrepID, finalName);
                     }
                 }
+                finalName = finalName.replaceAll(":", " "); // for sorting of taxa based on the short name (" " sorts before any other acceptable chars) (matches HDF5 sorting)
+                finalSampleNamesTS.add(finalName);
             }
             if (samplesInKeyFileWithNoRawSeqFile.size() > 0) {
                 reportOnMissingSamples(samplesInKeyFileWithNoRawSeqFile);
             }
         }
-        return finalSampleNamesTS.toArray(new String[0]);
+        String[] finalNames = finalSampleNamesTS.toArray(new String[0]);
+        for (int i = 0; i < finalNames.length; i++) {
+            finalNames[i] = finalNames[i].replaceAll(" ", ":");
+        }
+        return finalNames;
     }
     
     private void reportOnMissingSamples(TreeSet<String> samplesInKeyFileWithNoRawSeqFile) {
@@ -694,19 +701,68 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     }
     
     private void writeHDF5Genotypes() {
-        String outFileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
-        outFileS = outFileS.replaceAll(".txt", ".hmp.h5");
-        outFileS = outFileS.replaceAll("_key", "");
-        ExportUtils.writeToMutableHDF5(genos, outFileS, true);
-        addDepthToHDF5();
-        addReferenceAllelesToHDF5();
+        String hdf5FileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
+        hdf5FileS = hdf5FileS.replaceAll(".txt", ".hmp.h5");
+        hdf5FileS = hdf5FileS.replaceAll("_key", "");
+        File hdf5File = new File(hdf5FileS);
+        if (hdf5File.exists()) {
+            if(!hdf5File.delete()) {
+                System.out.println("Can't delete exitsting HDF5 genotypes file");
+            }
+        }
+        ExportUtils.writeToMutableHDF5(genos, hdf5FileS, true);
+        MutableNucleotideAlignmentHDF5 hdf5Genos = MutableNucleotideAlignmentHDF5.getInstance(hdf5FileS);
+        addDepthToHDF5(hdf5Genos);
+//        addReferenceAllelesToHDF5(hdf5Genos);
     }
     
-    private void addDepthToHDF5() {
-        ;
+    private void addDepthToHDF5(MutableNucleotideAlignmentHDF5 hdf5Genos) {
+        System.out.print("\nAdding allele depths at each genotype to HDF5 genotypes file...");
+        int nSNPIDMismatches = 0;
+        for (int s=0, nSites=genos.getSiteCount(); s < nSites; s++) {
+            if (!genos.getSNPID(s).equals(hdf5Genos.getSNPID(s))) {
+                nSNPIDMismatches++;
+            }
+        }
+        if (nSNPIDMismatches > 0) {
+            throwSNPIDMismatchError(nSNPIDMismatches);
+        }
+        for (int taxon = 0, nTaxa = genos.getSequenceCount(); taxon < nTaxa; taxon++) {
+            int hdf5Taxon = hdf5Genos.getIdGroup().whichIdNumber(genos.getFullTaxaName(taxon));
+            if (hdf5Taxon == -1) {
+                throwMissingTaxonInHDF5Error(genos.getFullTaxaName(taxon));
+            } else {
+                hdf5Genos.setAllDepth(hdf5Taxon, genos.getDepthsForAllSites(taxon));
+            }
+        }
+        System.out.print("   ...finished\n");
     }
     
-    private void addReferenceAllelesToHDF5() {
+    private void throwSNPIDMismatchError(int nMismatches) {
+        String SNPIDMismatchMessage =
+            nMismatches+" mismatches between site indices in MutableNucleotideDepthAlignment and MutableNucleotideAlignmentHDF5\n";
+        try {
+            throw new IllegalStateException(SNPIDMismatchMessage);
+        } catch (Exception e) {
+            System.out.println("Problem writing to HDF5: " + e);
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+    
+    private void throwMissingTaxonInHDF5Error(String taxonName) {
+        String TaxonNotFoundMessage =
+            "The taxon \""+taxonName+"\" was not found in the MutableNucleotideAlignmentHDF5\n";
+        try {
+            throw new IllegalStateException(TaxonNotFoundMessage);
+        } catch (Exception e) {
+            System.out.println("Problem writing to HDF5: " + e);
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+    
+    private void addReferenceAllelesToHDF5(MutableNucleotideAlignmentHDF5 hdf5Genos) {
         ;
     }
     
