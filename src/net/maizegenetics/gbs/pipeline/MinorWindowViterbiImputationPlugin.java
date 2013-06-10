@@ -262,17 +262,22 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 }
                 DonorHypoth[][] regionHypth=new DonorHypoth[blocks][maxDonorHypotheses];
                 calcInbredDist(impTaxon,maskedTargetBits, donorAlign[da]);
+                System.out.println(Arrays.deepToString(impTaxon.allDist));
                 for (int focusBlock = 0; focusBlock < blocks; focusBlock++) {
                     int[] resultRange=getBlockWithMinMinorCount(maskedTargetBits[0].getBits(),maskedTargetBits[1].getBits(), focusBlock, minMinorCnt);
                     if(resultRange==null) continue; //no data in the focus Block
                     //search for the best inbred donors for a segment
                     regionHypth[focusBlock]=getBestInbredDonors(taxon, impTaxon, resultRange[0],resultRange[2], focusBlock, donorAlign[da], donorIndices);
+                    System.out.printf("donorOff:%d regionHypth[focusBlock] %d:%d:%s %n",donorOffset,da,focusBlock,regionHypth[focusBlock][0]==null);
+                    if(regionHypth[focusBlock][0]!=null) System.out.println(regionHypth[focusBlock][0].toString());
                 }
                 impTaxon.setSegmentSolved(false);
                 //tries to solve the entire donorAlign region with 1 or 2 donor haplotypes
                 //consider also running it backwards
                 impTaxon=apply1or2Haplotypes(taxon, donorAlign[da], donorOffset, regionHypth,  impTaxon, maskedTargetBits, maxHybridErrorRate);
-                if(impTaxon.isSegmentSolved()) {countFullLength++; continue;}
+                if(impTaxon.isSegmentSolved()) {
+                    System.out.printf("VertSolved da:%d L:%s%n",da, donorAlign[da].getLocus(0));
+                    countFullLength++; continue;}
                 //Kelly try to do something better
            //     impTaxon=applyKellyHaplotypes();
                 if(impTaxon.isSegmentSolved()) {countFullLength++; continue;}
@@ -337,7 +342,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int blocks=maskedTargetBits[0].getNumWords();
         //do flanking search 
         if(testing==1) System.out.println("Starting complete hybrid search");
-        int[] d=getAllBestDonorsAcrossChromosome(regionHypth,5);
+        int[] d=getAllBestDonorsAcrossChromosome(regionHypth,blocks/20);  //TODO 
         DonorHypoth[] best2donors=getBestHybridDonors(taxon, maskedTargetBits[0].getBits(),
                 maskedTargetBits[1].getBits(), 0, blocks-1, blocks/2, donorAlign, d, d, true);
         if(testing==1) System.out.println(Arrays.toString(best2donors));
@@ -895,7 +900,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         return (double)taxonErrors[impT.taxon]/(double)(taxonCorrectCnt[impT.taxon]+taxonErrors[impT.taxon]);
     }
     
-    private static void compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
+    public static void compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
         boolean taxaOut=false;
         Alignment oA=ImportUtils.readGuessFormat(origFile, false);
         System.out.printf("Orig taxa:%d sites:%d %n",oA.getSequenceCount(),oA.getSiteCount());        
@@ -1043,12 +1048,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     public static void main(String[] args) {
         
-        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-//        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-//        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-//        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
+//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
 //        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";

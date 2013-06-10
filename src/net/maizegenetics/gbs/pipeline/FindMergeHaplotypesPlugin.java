@@ -50,6 +50,7 @@ import org.apache.log4j.Logger;
  * TODO:
  * 1.  plus add short inbred segments not present full ones
  * 2.  Cluster and choose haplotypes by cluster and number of new minor alleles (or information)
+ * 3.  Set max het frequency as a setting
  * 
  * @author edbuckler
  */
@@ -122,7 +123,8 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         Alignment inAlign=BitAlignment.getInstance(fa, false);  //load for Taxa
         inAlign.optimizeForTaxa(null);
         int sites=inAlign.getSiteCount();
-        System.out.printf("SubInAlign taxa:%d sites:%d %n",inAlign.getSequenceCount(),inAlign.getSiteCount());
+        System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.getLocus(0),
+                inAlign.getPositionInLocus(0),inAlign.getSequenceCount(),inAlign.getSiteCount());
 
         propMissing=new double[inAlign.getSequenceCount()];
         int startBlock=0;
@@ -400,6 +402,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         engine.add("-sC", "--startChrom", true);
         engine.add("-eC", "--endChrom", true);
         engine.add("-mxDiv", "--mxDiv", true);
+        engine.add("-mxHet", "--mxHet", true);
         engine.add("-hapSize", "--hapSize", true);
         engine.add("-minPres", "--minPres", true);
         engine.add("-maxHap", "--maxHap", true);
@@ -416,6 +419,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         errFile = engine.getString("-oE");
         if (engine.getBoolean("-mxDiv")) {
             maxDistFromFounder = Double.parseDouble(engine.getString("-mxDiv"));
+        }
+        if (engine.getBoolean("-mxHet")) {
+            maxHetFreq = Double.parseDouble(engine.getString("-mxHet"));
         }
         if (engine.getBoolean("-maxOutMiss")) {
             maximumMissing = Double.parseDouble(engine.getString("-maxOutMiss"));
@@ -442,6 +448,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 + "-sC    Start chromosome\n"
                 + "-eC    End chromosome\n"
                 + "-mxDiv    Maximum divergence from founder haplotype\n"
+                + "-mxHet    Maximum heterozygosity of haplotype to even scanned\n"
                 + "-hapSize    Preferred haplotype block size in sites\n"
                 + "-minPres    Minimum number of present sites within input sequence to do the search\n"
                 + "-maxHap    Maximum number of haplotypes per segment\n"
@@ -504,6 +511,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             "-sC","8",
             "-eC","8",
             "-mxDiv", "0.01",
+            "-mxHet", "0.01",
             "-hapSize", "8000",
             "-minPres", "500",
             "-maxOutMiss","0.4",
