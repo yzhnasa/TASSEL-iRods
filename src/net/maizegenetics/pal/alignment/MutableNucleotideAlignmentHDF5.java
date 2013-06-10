@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import static net.maizegenetics.pal.alignment.Alignment.UNKNOWN_DIPLOID_ALLELE;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -605,6 +606,22 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         Arrays.fill(unkArray, UNKNOWN_DIPLOID_ALLELE);
         myWriter.writeByteArray(basesPath, unkArray);
         myIdentifiers.add(id);
+        myIsDirty=true;
+    }
+    
+    public synchronized void addTaxon(Identifier id, byte[] genotype, byte[][] depth) {
+        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
+        if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
+        if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
+        myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
+        myWriter.writeByteArray(basesPath, genotype);
+        int taxonIndex=myIdentifiers.size();
+        myIdentifiers.add(id);
+        if(depth!=null) {
+            if(depth.length!=6) throw new IllegalStateException("Just set A, C, G, T, -, + all at once");
+            if(depth[0].length!=myNumSites) throw new IllegalStateException("Setting all depth in addTaxon.  Wrong number of sites");
+            myWriter.writeByteMatrix(getTaxaDepthPath(taxonIndex), depth, genoFeatures);
+        }
         myIsDirty=true;
     }
 

@@ -329,7 +329,8 @@ public class FileLoadPlugin extends AbstractPlugin {
                 }
                 case HDF5: {
                     suffix = FILE_EXT_HDF5;
-                    result = BitAlignmentHDF5.getInstance(inFile);
+//                    result = BitAlignmentHDF5.getInstance(inFile);
+                    result = ImportUtils.readGuessFormat(inFile, true);
                     break;
                 }
                 case VCF: {

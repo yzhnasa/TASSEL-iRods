@@ -92,14 +92,6 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private int[] siteErrors, siteCorrectCnt, taxonErrors, taxonCorrectCnt;  //error recorded by sites
     
     
-//    private int blocks=-1;  //total number 64 site words in the alignment
-    
-
-    //matrix to hold divergence comparisons between the target taxon and donor haplotypes for each block
-    //dimensions: [donor taxa][sites, same count, diff count, het count][blocks] 
-//    private byte[][][] allDist;
-  //  private TreeMap<Integer,int[]> breakPoints; // 
-    
     //initialize the transition matrix
     double[][] transition = new double[][] {
                     {.999,.0001,.0003,.0001,.0005},
@@ -180,8 +172,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
         for (int taxon = 0; taxon < unimpAlign.getSequenceCount(); taxon+=1) {
             ImputeOneTaxon theTaxon=new ImputeOneTaxon(taxon, donorAlign, minSitesPresent, conflictMasks,imputeDonorFile, mna);
-            theTaxon.run();
-      //      pool.execute(theTaxon);
+      //      theTaxon.run();
+            pool.execute(theTaxon);
         }
         pool.shutdown();
         try{
@@ -262,21 +254,18 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 }
                 DonorHypoth[][] regionHypth=new DonorHypoth[blocks][maxDonorHypotheses];
                 calcInbredDist(impTaxon,maskedTargetBits, donorAlign[da]);
-                System.out.println(Arrays.deepToString(impTaxon.allDist));
                 for (int focusBlock = 0; focusBlock < blocks; focusBlock++) {
                     int[] resultRange=getBlockWithMinMinorCount(maskedTargetBits[0].getBits(),maskedTargetBits[1].getBits(), focusBlock, minMinorCnt);
                     if(resultRange==null) continue; //no data in the focus Block
                     //search for the best inbred donors for a segment
                     regionHypth[focusBlock]=getBestInbredDonors(taxon, impTaxon, resultRange[0],resultRange[2], focusBlock, donorAlign[da], donorIndices);
-                    System.out.printf("donorOff:%d regionHypth[focusBlock] %d:%d:%s %n",donorOffset,da,focusBlock,regionHypth[focusBlock][0]==null);
-                    if(regionHypth[focusBlock][0]!=null) System.out.println(regionHypth[focusBlock][0].toString());
                 }
                 impTaxon.setSegmentSolved(false);
                 //tries to solve the entire donorAlign region with 1 or 2 donor haplotypes
                 //consider also running it backwards
                 impTaxon=apply1or2Haplotypes(taxon, donorAlign[da], donorOffset, regionHypth,  impTaxon, maskedTargetBits, maxHybridErrorRate);
                 if(impTaxon.isSegmentSolved()) {
-                    System.out.printf("VertSolved da:%d L:%s%n",da, donorAlign[da].getLocus(0));
+//                    System.out.printf("VertSolved da:%d L:%s%n",da, donorAlign[da].getLocus(0));
                     countFullLength++; continue;}
                 //Kelly try to do something better
            //     impTaxon=applyKellyHaplotypes();
@@ -293,10 +282,11 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             if(!isOutputProjection) {
                 if(mna instanceof MutableNucleotideAlignmentHDF5) {
                     Identifier tID=unimpAlign.getIdGroup().getIdentifier(taxon);
-                    mna.addTaxon(tID);
-                    int newTaxaIndex=mna.getIdGroup().whichIdNumber(tID);
- //                   if(taxon!=newTaxaIndex) System.out.println(taxon+":"+newTaxaIndex);
-                    ((MutableNucleotideAlignmentHDF5)mna).setAllBases(newTaxaIndex, impTaxon.resolveGeno);
+//                    mna.addTaxon(tID);
+//                    int newTaxaIndex=mna.getIdGroup().whichIdNumber(tID);
+// //                   if(taxon!=newTaxaIndex) System.out.println(taxon+":"+newTaxaIndex);
+//                    ((MutableNucleotideAlignmentHDF5)mna).setAllBases(newTaxaIndex, impTaxon.resolveGeno);
+                    ((MutableNucleotideAlignmentHDF5)mna).addTaxon(tID, impTaxon.resolveGeno, null);
                 } else {
                     mna.setBaseRange(taxon, 0, impTaxon.resolveGeno);
                 }
@@ -448,9 +438,16 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private BitSet[] arrangeMajorMinorBtwAlignments(Alignment unimpAlign, int bt, int donorOffset, int donorLength,
             OpenBitSet goodMask, OpenBitSet swapMjMnMask) { 
         int unimpAlignStartBlock=donorOffset/64;
-        int unimpAlignEndBlock=unimpAlignStartBlock+((donorLength-1)/64);
-        OpenBitSet mjTbs=new OpenBitSet(unimpAlign.getAllelePresenceForSitesBlock(bt, 0, unimpAlignStartBlock, unimpAlignEndBlock+1));
-        OpenBitSet mnTbs=new OpenBitSet(unimpAlign.getAllelePresenceForSitesBlock(bt, 1, unimpAlignStartBlock, unimpAlignEndBlock+1));
+        int shift=(donorOffset-(unimpAlignStartBlock*64));
+        int unimpAlignEndBlock=unimpAlignStartBlock+((donorLength+shift-1)/64);
+        OpenBitSet mjUnImp=new OpenBitSet(unimpAlign.getAllelePresenceForSitesBlock(bt, 0, unimpAlignStartBlock, unimpAlignEndBlock+1));
+        OpenBitSet mnUnImp=new OpenBitSet(unimpAlign.getAllelePresenceForSitesBlock(bt, 1, unimpAlignStartBlock, unimpAlignEndBlock+1));
+        OpenBitSet mjTbs=new OpenBitSet(donorLength);
+        OpenBitSet mnTbs=new OpenBitSet(donorLength);
+        for (int i = 0; i < donorLength; i++) {
+            if(mjUnImp.fastGet(i+shift)) mjTbs.set(i);
+            if(mnUnImp.fastGet(i+shift)) mnTbs.set(i);
+        }
         OpenBitSet newmj=new OpenBitSet(mjTbs);
         OpenBitSet newmn=new OpenBitSet(mnTbs);
         mjTbs.and(goodMask);
@@ -462,6 +459,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             mjTbs.or(newmn);
             mnTbs.or(newmj);
         }
+//        System.out.printf("Arrange shift:%d finalEnd:%d totalBits:%d DesiredLength:%d %n", shift, finalEnd, totalBits, donorLength);
         BitSet[] result={mjTbs,mnTbs};
         return result;
     }
@@ -900,7 +898,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         return (double)taxonErrors[impT.taxon]/(double)(taxonCorrectCnt[impT.taxon]+taxonErrors[impT.taxon]);
     }
     
-    public static void compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
+    public static int[] compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
         boolean taxaOut=false;
         Alignment oA=ImportUtils.readGuessFormat(origFile, false);
         System.out.printf("Orig taxa:%d sites:%d %n",oA.getSequenceCount(),oA.getSiteCount());        
@@ -938,8 +936,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             }
             if(taxaOut) System.out.printf("%s %d %d %d %d %n",iA.getTaxaName(t),u,h,c,e);
         }
-        System.out.println("MFile\tIFile\tGap\tUnimp\tHets\tCorrect\tErrors");   
-        System.out.printf("%s\t%s\t%d\t%d\t%d\t%d\t%d%n",maskFile, impFile, gaps, unimp,hets,correct,errors);        
+        System.out.println("MFile\tIFile\tGap\tUnimp\tUnimpHets\tCorrect\tErrors");   
+        System.out.printf("%s\t%s\t%d\t%d\t%d\t%d\t%d%n",maskFile, impFile, gaps, unimp,hets,correct,errors);   
+        return new int[]{gaps, unimp,hets,correct,errors};
     }
 
     @Override
@@ -1048,12 +1047,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     public static void main(String[] args) {
         
-//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
+        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+//        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+//        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+//        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
 //        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
