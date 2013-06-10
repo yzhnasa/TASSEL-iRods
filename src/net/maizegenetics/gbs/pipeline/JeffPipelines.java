@@ -11,6 +11,9 @@ import net.maizegenetics.gbs.maps.AbstractTagsOnPhysicalMap;
 import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.prefs.TasselPrefs;
 
 /**
@@ -29,6 +32,7 @@ public class JeffPipelines {
 //        convertTOPMtoHDF5();
 //        runRawReadsToHapMapPlugin();
         runSeqToGenosPlugin();
+        convertHDF5ToHapMap();
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -305,11 +309,26 @@ public class JeffPipelines {
             "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5",
             "-e", "ApeKI",
 //            "-vL", // VCF likelihood-based calling of hets
-            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/quant/oneAlign",
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/hdf5",
         };
 
         SeqToGenosPlugin plugin = new SeqToGenosPlugin(null);
         plugin.setParameters(MDPLowVolArgs);
         plugin.performFunction(null);
+    }
+    
+    public static void convertHDF5ToHapMap() {
+        String hdf5File = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/hdf5/MGP1_low_vol_2smallReps.hmp.h5";
+        String hmpFile  = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/hdf5/MGP1_low_vol_2smallRepsCompare.hmp.txt.gz";
+        System.out.println("Converting from *.hmp.h5 to *.hmp.txt.gz");
+        System.out.println("   Reading hmp.h5 file:     "+hdf5File);
+        Alignment a = ImportUtils.readGuessFormat(hdf5File, false);
+        System.out.println("   Writing hmp.txt.gz file: "+hmpFile);
+        if (a == null) {
+            System.out.println("Better luck next time!");
+        } else {
+            ExportUtils.writeToHapmap(a, false, hmpFile, '\t', null);
+        }
+        System.out.println("Done!");
     }
 }
