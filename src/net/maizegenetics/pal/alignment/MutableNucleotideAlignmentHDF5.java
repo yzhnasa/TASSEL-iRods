@@ -94,7 +94,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private BitSet[] tBitCache=null;
     private int tBitCacheTaxon=-1;
     
-
+    private IdGroup myIdGroup;  //set to null whenever dirty
 
     protected MutableNucleotideAlignmentHDF5(String fileName, IHDF5Writer reader, List<Identifier> idGroup, int[] variableSites, 
             List<Locus> locusList, int[] locusIndices, String[] siteNames, int defaultCacheSize) {
@@ -158,7 +158,12 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
         ArrayList<Locus> loci=new ArrayList<Locus>();
         for (String lS : lociStrings) {loci.add(new Locus(lS));}
-        int[] locusIndices = reader.readIntArray(HapMapHDF5Constants.LOCUS_INDICES);
+        int[] locusIndices;
+        if(reader.exists(HapMapHDF5Constants.LOCUS_INDICES)) {
+            locusIndices = reader.readIntArray(HapMapHDF5Constants.LOCUS_INDICES);}
+        else {locusIndices = new int[variableSites.length];  //this to support an old format.
+            Arrays.fill(locusIndices, 0); //fill with zero
+        }
         String[] snpIds = reader.readStringArray(HapMapHDF5Constants.SNP_IDS);
         return new MutableNucleotideAlignmentHDF5(filename, reader, taxaList, variableSites, loci, locusIndices, snpIds, defaultCacheSize);
     }
@@ -327,9 +332,12 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public IdGroup getIdGroup() {
-        Identifier[] ids = new Identifier[myIdentifiers.size()];
-        myIdentifiers.toArray(ids);
-        return new SimpleIdGroup(ids);
+        if(myIdGroup==null) {
+            Identifier[] ids = new Identifier[myIdentifiers.size()];
+            myIdentifiers.toArray(ids);
+            myIdGroup=new SimpleIdGroup(ids);
+        } 
+        return myIdGroup;
     }
 
     @Override
@@ -606,6 +614,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         Arrays.fill(unkArray, UNKNOWN_DIPLOID_ALLELE);
         myWriter.writeByteArray(basesPath, unkArray);
         myIdentifiers.add(id);
+        myIdGroup=null;
         myIsDirty=true;
     }
     
@@ -617,6 +626,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myWriter.writeByteArray(basesPath, genotype);
         int taxonIndex=myIdentifiers.size();
         myIdentifiers.add(id);
+        myIdGroup=null;
         if(depth!=null) {
             if(depth.length!=6) throw new IllegalStateException("Just set A, C, G, T, -, + all at once");
             if(depth[0].length!=myNumSites) throw new IllegalStateException("Setting all depth in addTaxon.  Wrong number of sites");
@@ -634,6 +644,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         String newPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
         myWriter.move(currentPath, newPath);
         myIdentifiers.set(taxon, id);
+        myIdGroup=null;
         myIsDirty=true;
     }
 
@@ -642,6 +653,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         String currentPath = getTaxaGenoPath(taxon);
         System.out.println(currentPath);
         myWriter.delete(currentPath);
+        myIdGroup=null;
         myIdentifiers.remove(taxon);
         System.out.println(getTaxaGenoPath(taxon));
         initGenotypeCache();
