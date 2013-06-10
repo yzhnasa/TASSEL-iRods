@@ -195,15 +195,15 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         if (!stacksL) {
             setLikelihoodThresh(errorRate);
         }
-        readKeyFile();
+        readKeyFile();  // TODO: read/write full set of metadata
         matchKeyFileToAvailableRawSeqFiles();
         setUpMutableNucleotideAlignmentWithDepth();
-        readRawSequencesAndRecordDepth();
+        readRawSequencesAndRecordDepth();  // TODO: read the machine name from the fastq/qseq file
         callGenotypes();
-//        QualityControlOnGenotypes();  // not written yet (e.g., check that blanks are blank, inbreds not heterozygous)
+//        QualityControlOnGenotypes();  // TODO: not written yet (e.g., check that blanks are blank, inbreds not heterozygous, etc?)
         writeHapMapGenotypes();
-        writeHDF5Genotypes();
-        writeReadsPerSampleReports();
+        writeHDF5Genotypes();  // TODO: ensure that reference allele gets added at some point
+        writeReadsPerSampleReports();  // TODO: also report on #reads matching TOPM for each sample
         return null;
     }
 
