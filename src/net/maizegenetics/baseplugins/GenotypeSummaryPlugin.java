@@ -251,7 +251,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         }
 
         return new SimpleTableReport[]{new SimpleTableReport("Overall Summary", firstColumnNames, data),
-                    new SimpleTableReport("Allele Summary", alleleColumnNames, data2)};
+            new SimpleTableReport("Allele Summary", alleleColumnNames, data2)};
     }
 
     private SimpleTableReport getSiteSummary(Alignment alignment) {
@@ -290,6 +290,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         for (int i = 0; i < numSites; i++) {
 
+            int totalNotMissing = alignment.getTotalNotMissing(i);
             int totalGametesNotMissing = alignment.getTotalGametesNotMissing(i);
             int count = 0;
 
@@ -331,7 +332,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             int numHeterozygous = alignment.getHeterozygousCount(i);
             myNumHeterozygous = myNumHeterozygous + (long) numHeterozygous;
             data[i][count++] = numHeterozygous;
-            data[i][count++] = (double) numHeterozygous / (double) totalGametes;
+            data[i][count++] = (double) numHeterozygous / (double) totalNotMissing;
 
             data[i][count++] = "TBD";
             data[i][count++] = "TBD";
