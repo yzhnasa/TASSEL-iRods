@@ -34,7 +34,7 @@ abstract public class AbstractAlignment implements Alignment {
      * Loci offsets hold first site of each locus.
      */
     private int[] myLociOffsets;
-    protected String[] mySNPIDs;  //Ed this was private, but it messes up the subclasses.
+    private String[] mySNPIDs;
     private boolean myRetainRareAlleles = false;
     private Alignment myOriginalAlignment = null;
 
@@ -140,9 +140,9 @@ abstract public class AbstractAlignment implements Alignment {
             myLoci = loci;
             myLociOffsets = lociOffsets;
             for (int i = 0; i < lociOffsets.length; i++) {
-                String name=myLoci[i].getName();
-                int end=(i<myLoci.length-1)?myLociOffsets[i+1]-1:myNumSites-1;
-                myLoci[i]=new Locus(name, name, myLociOffsets[i], end, null, null);
+                String name = myLoci[i].getName();
+                int end = (i < myLoci.length - 1) ? myLociOffsets[i + 1] - 1 : myNumSites - 1;
+                myLoci[i] = new Locus(name, name, myLociOffsets[i], end, null, null);
             }
         }
 
@@ -698,7 +698,6 @@ abstract public class AbstractAlignment implements Alignment {
     public int[] getStartAndEndOfLocus(Locus locus) {
         for (int i = 0; i < getNumLoci(); i++) {
             if (locus.equalName(myLoci[i])) {
- //           if (locus.equals(myLoci[i])) {  //this equals is testing for same name and start and endsite
                 int end = 0;
                 if (i == getNumLoci() - 1) {
                     end = getSiteCount();
