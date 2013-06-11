@@ -74,6 +74,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private TreeMap<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
     private HashMap<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
     private MutableNucleotideDepthAlignment genos = null;
+    private HashMap<Integer,Integer>[] PositionToSite = null;  // indices = chrIndices.  For a given position (key), eaach HashMap provides the site in the MutableNucleotideDepthAlignment (value)
     private int totalNSites = 0;
     private TreeMap<String,Integer> RawReadCountsForFullSampleName = new TreeMap<String,Integer>();
     private TreeMap<String,Integer> RawReadCountsForFinalSampleName = new TreeMap<String,Integer>();
@@ -451,8 +452,11 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 genos.setSNPID(currSite, genos.getSNPID(currSite));  
                 currSite++;
             }
-            genos.clean();
         }
+        uniquePositions = null;
+        System.gc();
+        genos.clean();
+        generateFastSiteLookup();
     }
     
     private void generateQuickTaxaLookup(String[] finalSampleNames) {
@@ -517,14 +521,26 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         ArrayList<int[]> uniquePositions = new ArrayList<int[]>();
         chromosomes = topm.getChromosomes();
         System.out.println("\nThe TOPM contains the following chromosomes (and # sites per chromosome):");
+        int maxChr = Integer.MIN_VALUE;
         for (int i = 0; i < chromosomes.length; i++) {
+            if (chromosomes[i] > maxChr) maxChr = chromosomes[i];
             uniquePositions.add(topm.getUniquePositions(chromosomes[i]));
             int nSitesInChr = uniquePositions.get(i).length;
             totalNSites += nSitesInChr;
             System.out.println("   "+chromosomes[i]+"   ("+nSitesInChr+" sites)");
         }
+        PositionToSite = new HashMap[maxChr+1];
+        for (int c = 0; c <= maxChr; c++) {
+            PositionToSite[c] = new HashMap<Integer,Integer>();
+        }
         System.out.println("In total, the TOPM contains "+chromosomes.length+" chromosomes and "+totalNSites+" sites.");
         return uniquePositions;
+    }
+    
+    private void generateFastSiteLookup() {
+        for (int site=0, nSites=genos.getSiteCount(); site<nSites; site++) {
+            PositionToSite[Integer.parseInt(genos.getLocus(site).getChromosomeName())].put(genos.getPositionInLocus(site), site);
+        }
     }
 
     private BufferedReader getBufferedReaderForRawSeqFile(int fileNum) {
@@ -594,7 +610,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             }
             int offset = topm.getVariantPosOff(tagIndex, variant);
             int pos = startPos + offset;
-            int currSite = genos.getSiteOfPhysicalPosition(pos, locus);
+//            int currSite = genos.getSiteOfPhysicalPosition(pos, locus);
+            int currSite = PositionToSite[chromosome].get(pos);
             if (currSite < 0) {
                 continue;
             }
