@@ -63,6 +63,7 @@ import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
 
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.popgen.LinkageDisequilibrium.HetTreatment;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -770,6 +771,26 @@ public class TasselPipeline implements PluginListener {
                         plugin.setLDType(testDesign.SiteByAll);
                     } else {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Type parameter must be All, SlidingWindow, or SiteByAll.");
+                    }
+
+                } else if (current.equalsIgnoreCase("-ldHetTreatment")) {
+
+                    LinkageDisequilibriumPlugin plugin = null;
+                    try {
+                        plugin = (LinkageDisequilibriumPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No LinkageDisequilibriumPlugin step defined: " + current);
+                    }
+
+                    String temp = args[index++].trim();
+                    if (temp.equalsIgnoreCase("Ignore")) {
+                        plugin.setHetTreatment(HetTreatment.IGNORE);
+                    } else if (temp.equalsIgnoreCase("Missing")) {
+                        plugin.setHetTreatment(HetTreatment.SET_TO_MISSING);
+                    } else if (temp.equalsIgnoreCase("Thirdstate")) {
+                        plugin.setHetTreatment(HetTreatment.USE_THREE_STATES);
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Het Treatment parameter must be Ignore, Missing, or Thirdstate.");
                     }
 
                 } else if (current.equalsIgnoreCase("-ldd")) {

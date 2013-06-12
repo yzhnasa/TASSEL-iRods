@@ -45,6 +45,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     private FilterAlignment myPossibleAlignmentForSiteList;
     private String myPossibleAlignmentName;
     private int[] myPossibleSiteList;
+    private LinkageDisequilibrium.HetTreatment myHetTreatment = LinkageDisequilibrium.HetTreatment.IGNORE;
 
     /**
      * Creates a new instance of LinkageDisequilibriumPlugin
@@ -103,6 +104,8 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
                     myPossibleSiteList = myPossibleAlignmentForSiteList.getBaseSitesShown();
 
                 }
+
+                myHetTreatment = myDialog.getHetTreatment();
             }
 
             List result = new ArrayList();
@@ -123,7 +126,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 
     private DataSet processDatum(Datum input) {
         Alignment aa = (Alignment) input.getData();
-        LinkageDisequilibrium theLD = new LinkageDisequilibrium(aa, myWindowSize, myLDType, myTestSite, this, myIsAccumulateResults, myNumAccumulateIntervals, myPossibleSiteList);
+        LinkageDisequilibrium theLD = new LinkageDisequilibrium(aa, myWindowSize, myLDType, myTestSite, this, myIsAccumulateResults, myNumAccumulateIntervals, myPossibleSiteList, myHetTreatment);
         try {
             theLD.run();
             Datum td = new Datum("LD:" + input.getName(), theLD, "LD Analysis");
@@ -200,6 +203,14 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
         return myTestSite;
     }
 
+    public void setHetTreatment(LinkageDisequilibrium.HetTreatment treatment) {
+        myHetTreatment = treatment;
+    }
+
+    public LinkageDisequilibrium.HetTreatment getHetTreatment() {
+        return myHetTreatment;
+    }
+
     /**
      * Icon for this plugin to be used in buttons, etc.
      *
@@ -268,6 +279,9 @@ class LinkageDiseqDialog extends JDialog {
     private JTextField myAccumulativeResultsTextField = new JTextField();
     private JLabel myAccumulativeResultsLabel = new JLabel("Number Of Intervals: ");
     private int myNumAccumulativeInterval = 100;
+    private JPanel myHetTreatmentPanel = new JPanel();
+    private JLabel myHetTreatmentLabel = new JLabel("How to treat heterozygous calls:");
+    private JComboBox myHetTreatment;
     private JPanel myButtonsPanel = new JPanel();
     private JButton myRunButton = new JButton("Run");
     private JButton myCloseButton = new JButton("Close");
@@ -365,6 +379,19 @@ class LinkageDiseqDialog extends JDialog {
         myLDOptionsPanel.add(mySiteListLabel, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(10, 0, 0, 0), 0, 0));
         mySiteListLabel.setVisible(false);
 
+        //Heterozygous treatment options
+        String[] hetTypes = {"Ignore (inbred lines only)", "Set to missing", "Treat as third state"};
+        myHetTreatment = new JComboBox(hetTypes);
+        /*myHetTreatment.addActionListener(new java.awt.event.ActionListener() {	//Nothing reall happens when switch option, only at running, so no action listener needed
+         public void actionPerformed(ActionEvent e) {
+         hetTreatment_actionPerformed(e);
+         }
+         });*/
+        myHetTreatmentPanel.setLayout(new GridBagLayout());
+        myHetTreatmentPanel.add(myHetTreatmentLabel, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        myHetTreatmentPanel.add(myHetTreatment, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+
+        //Accumulate R2 results panel
         myAccumulativeResultsTextField.setText(myNumAccumulativeInterval + "");
         myAccumulateOptionsPanel.setLayout(new GridBagLayout());
         myAccumulateOptionsPanel.add(myAccumulativeResultsBox, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(25, 7, 0, 7), 0, 0));
@@ -377,9 +404,10 @@ class LinkageDiseqDialog extends JDialog {
         myButtonsPanel.add(myRunButton, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.PAGE_END, GridBagConstraints.NONE, new Insets(0, 150, -5, 0), 0, 0));
         myButtonsPanel.add(myCloseButton, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.PAGE_END, GridBagConstraints.NONE, new Insets(0, 0, -5, 0), 0, 0));
 
-        myPanel.setLayout(new GridLayout(4, 1));
+        myPanel.setLayout(new GridLayout(5, 1));
         myPanel.add(myLDSelectionPanel);
         myPanel.add(myLDOptionsPanel);
+        myPanel.add(myHetTreatmentPanel);
         myPanel.add(myAccumulateOptionsPanel);
         myPanel.add(myButtonsPanel);
 
@@ -395,7 +423,7 @@ class LinkageDiseqDialog extends JDialog {
             }
         });
         getContentPane().add(myPanel);
-        getContentPane().setPreferredSize(new Dimension(320, 300));
+        getContentPane().setPreferredSize(new Dimension(320, 375));
     }
 
     private void hideOptions() {
@@ -450,6 +478,18 @@ class LinkageDiseqDialog extends JDialog {
 
     public int getNumAccumulateIntervals() {
         return myNumAccumulativeInterval;
+    }
+
+    public LinkageDisequilibrium.HetTreatment getHetTreatment() {
+        if (myHetTreatment.getSelectedIndex() == 0) {
+            return LinkageDisequilibrium.HetTreatment.IGNORE;
+        } else if (myHetTreatment.getSelectedIndex() == 1) {
+            return LinkageDisequilibrium.HetTreatment.SET_TO_MISSING;
+        } else if (myHetTreatment.getSelectedIndex() == 2) {
+            return LinkageDisequilibrium.HetTreatment.USE_THREE_STATES;
+        } else {
+            throw new IllegalStateException("LinkageDisequilibriumPlugin: getLDType: No known LD Type selected.");
+        }
     }
 
     void ldType_actionPerformed(ActionEvent e) {

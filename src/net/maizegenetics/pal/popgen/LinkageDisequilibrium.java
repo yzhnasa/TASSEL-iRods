@@ -12,6 +12,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
@@ -34,7 +35,7 @@ import org.apache.log4j.Logger;
  * of these approaches has never been clear. Additionally with the moving away
  * from SSR to SNPs these methods are less relevant. Researchers should convert
  * to biallelic - either by ignoring rarer classes or collapsing rarer states.
- * 
+ *
  * TODO: Shift between 2x2 (haplotype) and 3x3 (diploid) mode.
  *
  * @version $Id: LinkageDisequilibrium.java,v 1
@@ -46,6 +47,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     public static enum testDesign {
 
         All, SlidingWindow, SiteByAll, SiteList
+    };
+
+    public static enum HetTreatment {
+
+        IGNORE, SET_TO_MISSING, USE_THREE_STATES
     };
     private static final Logger myLogger = Logger.getLogger(LinkageDisequilibrium.class);
     private Alignment myAlignment;
@@ -69,6 +75,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     private static String NotImplemented = "NotImplemented";
     private static String NA = "N/A";
     private static Integer IntegerTwo = Integer.valueOf(2);
+    private HetTreatment myHetTreatment = HetTreatment.IGNORE;
 
     /**
      * Compute LD based on alignment.
@@ -82,7 +89,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param windowSize The size of the LD window, determined by user.
      * @param myTestSite
      */
-    public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList) {
+    public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList) {	//For backwards-compatability with calls before HetTreatment was added
+        this(alignment, windowSize, LDType, testSite, listener, isAccumulativeReport, numAccumulateIntervals, sitesList, HetTreatment.IGNORE);
+    }
+
+    public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
         myAlignment = alignment;
         //if (myAlignment instanceof SBitAlignment) {
         //    mySBitAlignment = (SBitAlignment) myAlignment;
@@ -103,6 +114,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (mySiteList != null) {
             Arrays.sort(mySiteList);
         }
+        myHetTreatment = hetTreatment;
     }
 
     /**
@@ -110,7 +122,20 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public void run() {
         initMatrices();
-        calculateBitLDForInbred(true);
+        switch (myHetTreatment) {
+            case IGNORE:
+                calculateBitLDForInbred(true, false);
+                break;
+            case SET_TO_MISSING:
+                calculateBitLDForInbred(true, true);
+                break;
+            case USE_THREE_STATES:
+                calculateBitLDWithHets();
+                break;
+            default:
+                myLogger.error("Unknown LD analysis type selected for heterozygotes; skipping");
+                break;
+        }
     }
 
     private void initMatrices() {
@@ -147,7 +172,31 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
     }
 
-    private void calculateBitLDForInbred(boolean collapseMinor) {  //only calculates disequilibrium for inbreds
+    private void calculateBitLDForInbred(boolean collapseMinor) {  //Wrapper to preserve backwards-compatibility for calls that use only 1 arguments
+        calculateBitLDForInbred(collapseMinor, false);
+    }
+
+    private void calculateBitLDForInbred(boolean collapseMinor, boolean ignoreHets) {  //only calculates disequilibrium for inbreds
+
+        //If will ignore hets, make a new Alignment and set all het calls to missing. Otherwise set the pointer to the old alignment
+        Alignment workingAlignment;
+        if (ignoreHets) {
+            MutableNucleotideAlignment tempAlignment = MutableNucleotideAlignment.getInstance(mySBitAlignment);
+            for (int taxon = 0; taxon < tempAlignment.getSequenceCount(); taxon++) {
+                for (int site = 0; site < tempAlignment.getSiteCount(); site++) {
+                    if (tempAlignment.isHeterozygous(taxon, site)) {
+                        tempAlignment.setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                    }
+                }
+            }
+            tempAlignment.clean();
+            workingAlignment = AlignmentUtils.optimizeForSites(tempAlignment);
+        } else {
+            workingAlignment = mySBitAlignment;
+        }
+        /*if(collapseMinor){	//Not sure if this does what it's supposed to, so leaving commented out for now
+         workingAlignment=BitAlignment.getInstance(myAlignment, 2, false, true);
+         }*/
 
         int[][] contig;
         for (long currTest = 0; currTest < myTotalTests; currTest++) {
@@ -156,10 +205,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             int currentProgress = (int) ((double) 100.0 * ((double) currTest / (double) myTotalTests));
             fireProgress(currentProgress);
             contig = new int[2][2];
-            BitSet rMj = mySBitAlignment.getAllelePresenceForAllTaxa(r, 0);
-            BitSet rMn = mySBitAlignment.getAllelePresenceForAllTaxa(r, 1);
-            BitSet cMj = mySBitAlignment.getAllelePresenceForAllTaxa(c, 0);
-            BitSet cMn = mySBitAlignment.getAllelePresenceForAllTaxa(c, 1);
+            BitSet rMj = workingAlignment.getAllelePresenceForAllTaxa(r, 0);
+            BitSet rMn = workingAlignment.getAllelePresenceForAllTaxa(r, 1);
+            BitSet cMj = workingAlignment.getAllelePresenceForAllTaxa(c, 0);
+            BitSet cMn = workingAlignment.getAllelePresenceForAllTaxa(c, 1);
             int n = 0;
             n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
             n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
@@ -206,6 +255,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
         } //end of currTest
 
+    }
+
+    private void calculateBitLDWithHets() {
+        //Do nothing; not implemented yet
+        myLogger.error("Calculating LD with hets as a third state is not implemented yet; skipping");
+        throw new IllegalStateException("LinkageDisequilibrium: calculateBitLDWithHets: Treating hets as a third state is not yet implemented");
     }
 
     public static double calculateDPrime(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {
