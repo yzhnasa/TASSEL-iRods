@@ -33,9 +33,8 @@ import org.apache.log4j.Logger;
  * @author Ed Buckler
  */
 public class LinkageDisequilibriumPlugin extends AbstractPlugin {
-    
-    private static final Logger myLogger = Logger.getLogger(LinkageDisequilibriumPlugin.class);
 
+    private static final Logger myLogger = Logger.getLogger(LinkageDisequilibriumPlugin.class);
     private boolean myIsRapidAnalysis = true;
     private int myPermutationNumber = 1000;
     private int myWindowSize = 50;
@@ -47,7 +46,9 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     private String myPossibleAlignmentName;
     private int[] myPossibleSiteList;
 
-    /** Creates a new instance of LinkageDisequilibriumPlugin */
+    /**
+     * Creates a new instance of LinkageDisequilibriumPlugin
+     */
     public LinkageDisequilibriumPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
@@ -76,7 +77,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
             }
 
             if (isInteractive()) {
-                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(((Alignment)current.getData()).getSiteCount(), myPossibleAlignmentName);
+                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(((Alignment) current.getData()).getSiteCount(), myPossibleAlignmentName);
                 myDialog.setLocationRelativeTo(getParentFrame());
                 myDialog.setVisible(true);
                 if (myDialog.isCancel()) {
@@ -233,10 +234,9 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 }
 
 /**
- * Title:        TASSEL
- * Description:  A java program to deal with diversity
- * Copyright:    Copyright (c) 2000
- * Company:      USDA-ARS/NCSU
+ * Title: TASSEL Description: A java program to deal with diversity Copyright:
+ * Copyright (c) 2000 Company: USDA-ARS/NCSU
+ *
  * @author Ed Buckler
  * @version 1.0
  */
@@ -248,15 +248,11 @@ class LinkageDiseqDialog extends JDialog {
     // private JLabel jLabel1 = new JLabel();
     private int myTestSite = 0;
     private String myAlignmentForSiteList;
-
     private int myNumSites;
-
     private JPanel myPanel = new JPanel();
-
     private JPanel myLDSelectionPanel = new JPanel();
     private JLabel myLDTypeLabel = new JLabel("Select LD type: ");
     private JComboBox myLDType;
-
     private JPanel myLDOptionsPanel = new JPanel();
     private JLabel myFullMatrixLabel = new JLabel();
     private JTextField myWindowSizeTextField = new JTextField();
@@ -267,13 +263,11 @@ class LinkageDiseqDialog extends JDialog {
     private JLabel mySiteByAllLabel = new JLabel("Site: ");
     private JLabel mySiteByAllCountLabel = new JLabel();
     private JLabel mySiteListLabel = new JLabel();
-
     private JPanel myAccumulateOptionsPanel = new JPanel();
     private JCheckBox myAccumulativeResultsBox = new JCheckBox("Accumulate R2 Results");
     private JTextField myAccumulativeResultsTextField = new JTextField();
     private JLabel myAccumulativeResultsLabel = new JLabel("Number Of Intervals: ");
     private int myNumAccumulativeInterval = 100;
-
     private JPanel myButtonsPanel = new JPanel();
     private JButton myRunButton = new JButton("Run");
     private JButton myCloseButton = new JButton("Close");
@@ -294,7 +288,7 @@ class LinkageDiseqDialog extends JDialog {
     private void jbInit() throws Exception {
 
         String[] ldTypes;
-        if ( myAlignmentForSiteList != null ) {
+        if (myAlignmentForSiteList != null) {
             ldTypes = new String[4];
             ldTypes[0] = "Full Matrix";
             ldTypes[1] = "Sliding Window";
@@ -310,14 +304,14 @@ class LinkageDiseqDialog extends JDialog {
         myLDType = new JComboBox(ldTypes);
         myLDType.setSelectedIndex(1);
 
-        myFullMatrixLabel.setText("Full LD with " + myNumSites*((myNumSites-1)/2) + " comparisons.");
+        myFullMatrixLabel.setText("Full LD with " + myNumSites * ((myNumSites - 1) / 2) + " comparisons.");
 
         long n = Math.min(myNumSites - 1, myWindowSize);
 
         myWindowSizeCountLabel.setText("Sliding Window LD with " + (((n * (n + 1)) / 2) + (myNumSites - n - 1) * n) + " comparisons.");
         mySiteByAllCountLabel.setText("Site by All LD with " + (myNumSites - 1) + " comparisons.");
 
-        if ( myAlignmentForSiteList != null ) {
+        if (myAlignmentForSiteList != null) {
             mySiteListLabel.setText("Sites From: " + myAlignmentForSiteList);
         }
 
@@ -327,14 +321,12 @@ class LinkageDiseqDialog extends JDialog {
 //        myLDSelectionPanel.add(myAccumulativeResultsBox, new GridBagConstraints(0, 1, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 
         myLDType.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 ldType_actionPerformed(e);
             }
         });
 
         myAccumulativeResultsBox.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 accumulativeResultsBox_actionPerformed(e);
             }
@@ -350,7 +342,6 @@ class LinkageDiseqDialog extends JDialog {
         myLDOptionsPanel.add(myWindowSizeCountLabel, new GridBagConstraints(0, 1, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(7, 7, 0, 7), 0, 0));
 
         myWindowSizeTextField.addKeyListener(new java.awt.event.KeyListener() {
-
             public void keyTyped(KeyEvent e) {
 //                windowSizeTextField_actionPerformed(e);
             }
@@ -393,14 +384,12 @@ class LinkageDiseqDialog extends JDialog {
         myPanel.add(myButtonsPanel);
 
         myRunButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 runButton_actionPerformed(e);
             }
         });
 
         myCloseButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 closeButton_actionPerformed(e);
             }
@@ -434,17 +423,23 @@ class LinkageDiseqDialog extends JDialog {
         }
     }
 
-    /** Returns whether the run button was chosen*/
+    /**
+     * Returns whether the run button was chosen
+     */
     public boolean isRunAnalysis() {
         return myRunAnalysis;
     }
 
-    /** Returns whether the run button was chosen*/
+    /**
+     * Returns whether the run button was chosen
+     */
     public boolean isCancel() {
         return !myRunAnalysis;
     }
 
-    /** Return the window size */
+    /**
+     * Return the window size
+     */
     public int getWindowSize() {
         return myWindowSize;
     }
@@ -458,7 +453,7 @@ class LinkageDiseqDialog extends JDialog {
     }
 
     void ldType_actionPerformed(ActionEvent e) {
-        if ( myLDType.getSelectedIndex() == 0 ) {
+        if (myLDType.getSelectedIndex() == 0) {
             myFullMatrixLabel.setVisible(true);
             myWindowSizeLabel.setVisible(false);
             myWindowSizeCountLabel.setVisible(false);
@@ -467,7 +462,7 @@ class LinkageDiseqDialog extends JDialog {
             mySiteByAllCountLabel.setVisible(false);
             mySiteByAllTextField.setVisible(false);
             mySiteListLabel.setVisible(false);
-        } else if ( myLDType.getSelectedIndex() == 1 ) {
+        } else if (myLDType.getSelectedIndex() == 1) {
             myFullMatrixLabel.setVisible(false);
             myWindowSizeLabel.setVisible(true);
             myWindowSizeCountLabel.setVisible(true);
@@ -476,7 +471,7 @@ class LinkageDiseqDialog extends JDialog {
             mySiteByAllCountLabel.setVisible(false);
             mySiteByAllTextField.setVisible(false);
             mySiteListLabel.setVisible(false);
-        } else if ( myLDType.getSelectedIndex() == 2 ) {
+        } else if (myLDType.getSelectedIndex() == 2) {
             myFullMatrixLabel.setVisible(false);
             myWindowSizeLabel.setVisible(false);
             myWindowSizeCountLabel.setVisible(false);
@@ -485,7 +480,7 @@ class LinkageDiseqDialog extends JDialog {
             mySiteByAllCountLabel.setVisible(true);
             mySiteByAllTextField.setVisible(true);
             mySiteListLabel.setVisible(false);
-        } else if ( myLDType.getSelectedIndex() == 3 ) {
+        } else if (myLDType.getSelectedIndex() == 3) {
             myFullMatrixLabel.setVisible(false);
             myWindowSizeLabel.setVisible(false);
             myWindowSizeCountLabel.setVisible(false);
@@ -504,13 +499,13 @@ class LinkageDiseqDialog extends JDialog {
             long n = Math.min(myNumSites - 1, newSize);
             myWindowSizeCountLabel.setText("Sliding Window LD with " + (((n * (n + 1)) / 2) + (myNumSites - n - 1) * n) + " comparisons.");
 
-        } catch ( Exception err ) {
+        } catch (Exception err) {
             System.out.println("error!");
         }
     }
 
     void accumulativeResultsBox_actionPerformed(ActionEvent e) {
-        if ( myAccumulativeResultsBox.isSelected() ) {
+        if (myAccumulativeResultsBox.isSelected()) {
             myAccumulativeResultsLabel.setVisible(true);
             myAccumulativeResultsTextField.setVisible(true);
         } else {
