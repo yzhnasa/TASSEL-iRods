@@ -90,7 +90,7 @@ public class ParseBarcodeRead {
             theEnzyme = "PstI-ApeKI";
             initialCutSiteRemnant = new String[]{"TGCAG"};
             likelyReadEnd = new String[]{"GCAGC", "GCTGC", "CTGCAG", "GCAGAGAT", "GCTGAGAT"}; // look for ApeKI site, PstI site, or common adapter for ApeKI
-            readEndCutSiteRemnantLength = 3;
+            readEndCutSiteRemnantLength = 4;
         } else if (enzyme.matches("(?i)pst[i1]-ecot22[i1]")) {
             theEnzyme = "PstI-EcoT22I";
             initialCutSiteRemnant = new String[]{"TGCAG", "TGCAT"};
