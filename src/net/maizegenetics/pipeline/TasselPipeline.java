@@ -54,6 +54,8 @@ import net.maizegenetics.baseplugins.SynonymizerPlugin;
 import net.maizegenetics.baseplugins.TableDisplayPlugin;
 import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
+import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
+import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
@@ -327,6 +329,20 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-readSerialAlignment")) {
                     String file = args[index++].trim();
                     loadFile(file, FileLoadPlugin.TasselFileType.Serial);
+                } else if (current.equalsIgnoreCase("-convertTOPMtoHDF5")) {
+                    String filename = args[index++].trim();
+                    TagsOnPhysicalMap topm = null;
+                    String h5Filename = null;
+                    if (filename.endsWith(".topm.txt")) {
+                        topm = new TagsOnPhysicalMap(filename, false);
+                        h5Filename = filename.replaceAll(".topm.txt", ".topm.h5");
+                    } else if (filename.endsWith(".topm.bin")) {
+                        topm = new TagsOnPhysicalMap(filename, true);
+                        h5Filename = filename.replaceAll(".topm.bin", ".topm.h5");
+                    } else {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -convertTOPMtoHDF5: Unknown file extension: " + filename);
+                    }
+                    TagsOnPhysMapHDF5.createFile(topm, h5Filename, 4, 8);
                 } else if (current.equalsIgnoreCase("-taxaJoinStrict")) {
                     String temp = args[index++].trim();
                     if (temp.equalsIgnoreCase("false")) {
