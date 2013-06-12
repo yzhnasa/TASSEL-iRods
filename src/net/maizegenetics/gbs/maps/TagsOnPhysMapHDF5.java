@@ -26,8 +26,8 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
     private static final int NUM_UNITS_TO_CACHE_ON_GET = 64;
     private static final int BITS_TO_SHIFT_FOR_CHUNK = 16;
     private static final int CHUNK_SIZE = 1 << BITS_TO_SHIFT_FOR_CHUNK;
-    private static HDF5GenericStorageFeatures genoFeatures = HDF5GenericStorageFeatures.createDeflation(HDF5GenericStorageFeatures.MAX_DEFLATION_LEVEL); //used by mapping object
-    private static HDF5IntStorageFeatures vectorFeatures = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.DEFAULT_DEFLATION_LEVEL); //used by vectors
+    private static HDF5GenericStorageFeatures genoFeatures = HDF5GenericStorageFeatures.createDeflation(5); //used by mapping object
+    private static HDF5IntStorageFeatures vectorFeatures = HDF5IntStorageFeatures.createDeflation(5); //used by vectors
     
     private int maxMapping = 4;
     private IHDF5Writer myHDF5 = null;
@@ -209,10 +209,18 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
             return false;
         }
         for (int i = 0; i < myNumTags; i++) {
-            bestStrand[i]=getStrand(i);
-            bestChr[i]=getChromosome(i);
-            bestStartPos[i]=getStartPosition(i);
+            int[] posArray=getPositionArray(i);
+           // {cachedTMI.chromosome, cachedTMI.strand, cachedTMI.startPosition}
+            bestStrand[i]=(byte)posArray[1];
+            bestChr[i]=posArray[0];
+            bestStartPos[i]=posArray[2];
         }
+        myHDF5.createByteArray(GBSHDF5Constants.BEST_STRAND, myNumTags);
+        myHDF5.writeByteArray(GBSHDF5Constants.BEST_STRAND, bestStrand, vectorFeatures);
+        myHDF5.createIntArray(GBSHDF5Constants.BEST_CHR, myNumTags, vectorFeatures);
+        myHDF5.writeIntArray(GBSHDF5Constants.BEST_CHR, bestChr, vectorFeatures);
+        myHDF5.createIntArray(GBSHDF5Constants.BEST_STARTPOS, myNumTags, vectorFeatures);
+        myHDF5.writeIntArray(GBSHDF5Constants.BEST_STARTPOS, bestStartPos, vectorFeatures);
         return true;
     }
     
