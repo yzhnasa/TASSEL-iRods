@@ -223,6 +223,17 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0xFF, "N"); // NN
 
     }
+    private static final Map<String, Byte> NUCLEOTIDE_HOMOZYGOUS_HASH = new HashMap<String, Byte>();
+
+    static {
+        NUCLEOTIDE_HOMOZYGOUS_HASH.put("A", A_ALLELE); // A
+        NUCLEOTIDE_HOMOZYGOUS_HASH.put("C", C_ALLELE); // C
+        NUCLEOTIDE_HOMOZYGOUS_HASH.put("G", G_ALLELE); // G
+        NUCLEOTIDE_HOMOZYGOUS_HASH.put("T", T_ALLELE); // T
+        NUCLEOTIDE_HOMOZYGOUS_HASH.put("+", INSERT_ALLELE); // +
+        NUCLEOTIDE_HOMOZYGOUS_HASH.put("-", GAP_ALLELE); // -
+        NUCLEOTIDE_HOMOZYGOUS_HASH.put("N", Alignment.UNKNOWN_ALLELE); // N
+    }
 
     private NucleotideAlignmentConstants() {
         // do not instantiate
@@ -244,12 +255,18 @@ public final class NucleotideAlignmentConstants {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideDiploidByte: unknown allele value: " + value);
         }
     }
-    
+
+    /**
+     * Returns haploid byte value for given nucleotide value. Only right-most
+     * four bits used.
+     *
+     * @param value haploid allele value
+     *
+     * @return nucleotide haploid allele byte value
+     */
     public static byte getNucleotideAlleleByte(String value) {
         try {
-            byte result=NUCLEOTIDE_DIPLOID_HASH.get(value).byteValue();
-            result=(byte)(result&0xf);
-            return result;
+            return NUCLEOTIDE_HOMOZYGOUS_HASH.get(value).byteValue();
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideAlleleByte: unknown allele value: " + value);
         }
