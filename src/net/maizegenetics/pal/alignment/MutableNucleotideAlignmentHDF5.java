@@ -84,7 +84,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     IHDF5Writer myWriter=null;
     private LRUCache<Long,byte[]> myDataCache;  //key (taxa <<< 32)+startSite
-    HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
+//    HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
+    HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(2);
     private int defaultCacheSize=4096;
     private int defaultSiteCache=4096;
     
@@ -623,7 +624,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
         if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
         myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
-        myWriter.writeByteArray(basesPath, genotype);
+        myWriter.writeByteArray(basesPath, genotype, genoFeatures);
         int taxonIndex=myIdentifiers.size();
         myIdentifiers.add(id);
         myIdGroup=null;

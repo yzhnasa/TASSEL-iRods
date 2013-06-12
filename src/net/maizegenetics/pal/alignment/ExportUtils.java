@@ -261,7 +261,7 @@ public class ExportUtils {
      * @param a
      * @param newMerge 
      */
-    public static void mergeToMutableHDF5(MutableNucleotideAlignmentHDF5[] a, String newMerge) {
+    public static void mergeToMutableHDF5(Alignment[] a, String newMerge) {
         if ((a == null) || (a.length == 0)) {
             return ;
         }
@@ -305,6 +305,8 @@ public class ExportUtils {
         }
         ExportUtils.writeToMutableHDF5(mna, newMerge, false);
         MutableNucleotideAlignmentHDF5 base=MutableNucleotideAlignmentHDF5.getInstance(newMerge, 4096);
+        int cnt=0;
+        long startTime=System.currentTimeMillis();
         for (String tn: taxa) {
             int[] tind=new int[a.length];
             for (int i=0; i<a.length; i++) {
@@ -318,9 +320,17 @@ public class ExportUtils {
                     geno[ns]=a[alignOfSite[ns]].getBase(tind[alignOfSite[ns]], siteOfSite[ns]);
                 }
             }
-            base.addTaxon(new Identifier(tn));
-            int newTaxaIndex=base.getIdGroup().whichIdNumber(tn);
-            base.setAllBases(newTaxaIndex, geno);
+            base.addTaxon(new Identifier(tn),geno,null);
+//            int newTaxaIndex=base.getIdGroup().whichIdNumber(tn);
+//            base.setAllBases(newTaxaIndex, geno);
+            if(cnt++%100==0) {
+                long time=System.currentTimeMillis()-startTime;
+                double milliPerTaxon=time/cnt;
+                double minRemaining=((double)(taxa.size()-cnt)*(double)milliPerTaxon)/60000d;
+                System.out.println(cnt+": out:"+tn+" TimePerTaxon:"+milliPerTaxon+"ms   TimeRemaining:"+minRemaining+"min");
+ //               if(cnt>1000) {base.clean();return;}  //for timing purposes
+            }
+                
         }
         base.clean();
     }
