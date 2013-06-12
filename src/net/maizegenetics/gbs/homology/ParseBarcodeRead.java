@@ -86,6 +86,11 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant = new String[]{"CGG"};
             likelyReadEnd = new String[]{"CCGG", "CCGAGATCGG"}; // full cut site (from partial digest or chimera) or common adapter start
             readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)pst[i1]-apek[i1]")) {
+            theEnzyme = "PstI-ApeKI";
+            initialCutSiteRemnant = new String[]{"TGCAG"};
+            likelyReadEnd = new String[]{"GCAGC", "GCTGC", "CTGCAG", "GCAGAGAT", "GCTGAGAT"}; // look for ApeKI site, PstI site, or common adapter for ApeKI
+            readEndCutSiteRemnantLength = 3;
         } else if (enzyme.matches("(?i)pst[i1]-ecot22[i1]")) {
             theEnzyme = "PstI-EcoT22I";
             initialCutSiteRemnant = new String[]{"TGCAG", "TGCAT"};
@@ -208,6 +213,7 @@ public class ParseBarcodeRead {
                     +"  BssHII-MspI"  +"\n"
                     +"  FseI-MspI"    +"\n"
                     +"  PaeR7I-HhaI"  +"\n"
+                    +"  PstI-ApeKI"   +"\n"
                     +"  PstI-EcoT22I" +"\n"
                     +"  PstI-MspI"    +"\n"
                     +"  PstI-TaqI"    +"\n"
@@ -434,12 +440,17 @@ public class ParseBarcodeRead {
             }
         }
         int miss = -1;
+//        if (fastq) {
+//            miss = seqS.indexOf('N');
+//        } else {
+//            miss = seqS.indexOf('.');
+//        }
         if (fastq) {
-            miss = seqS.indexOf('N');
+            miss = seqS.lastIndexOf('N', maxBarcodeLength + 2*chunkSize - 1);
         } else {
-            miss = seqS.indexOf('.');
+            miss = seqS.lastIndexOf('.', maxBarcodeLength + 2*chunkSize - 1);
         }
-        if ((miss != -1) && (miss < (maxBarcodeLength + 2 * chunkSize))) {
+        if (miss != -1) {
             return null;  //bad sequence so skip
         }
         Barcode bestBarcode = findBestBarcode(seqS, maximumMismatchInBarcodeAndOverhang);
@@ -455,9 +466,7 @@ public class ParseBarcodeRead {
         //TODO this instantiation should also include the orginal unprocessedSequence, processedSequence, and paddedSequence - the the object encode it 
 
         ReadBarcodeResult rbr = new ReadBarcodeResult(read, (byte) pos, bestBarcode.getTaxaName());
-
         return rbr;
-
     }
 
     public int getBarCodeCount() {

@@ -78,6 +78,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     private int totalNSites = 0;
     private TreeMap<String,Integer> RawReadCountsForFullSampleName = new TreeMap<String,Integer>();
     private TreeMap<String,Integer> RawReadCountsForFinalSampleName = new TreeMap<String,Integer>();
+    private TreeMap<String,Integer> MatchedReadCountsForFullSampleName = new TreeMap<String,Integer>();
+    private TreeMap<String,Integer> MatchedReadCountsForFinalSampleName = new TreeMap<String,Integer>();
     private boolean stacksL = false;  // if true, use vcf likelihood method for calling hets
     private double errorRate = 0.01;
     private final static int maxCountAtGeno = 500;  // maximum value for likelihoodRatioThreshAlleleCnt[] lookup table
@@ -232,6 +234,8 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                         if (tagIndex < 0 && maxDivergence > 0)  tagIndex = findBestImperfectMatch(rr.getRead(), counters);
                         if (tagIndex < 0)  continue;
                         counters[2]++;  // goodMatched++;
+                        MatchedReadCountsForFullSampleName.put(rr.getTaxonName(),MatchedReadCountsForFullSampleName.get(rr.getTaxonName())+1);
+                        MatchedReadCountsForFinalSampleName.put(FullNameToFinalName.get(rr.getTaxonName()),MatchedReadCountsForFinalSampleName.get(FullNameToFinalName.get(rr.getTaxonName()))+1);
                         int taxonIndex = FinalNameToTaxonIndex.get(FullNameToFinalName.get(rr.getTaxonName()));
                         incrementDepthForTagVariants(tagIndex, taxonIndex);
                     }
@@ -478,17 +482,20 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                     nRepSamplesWithRawSeqFile++;
                     tempFullName = sample+":"+flowcellLane+":"+LibPrepID;
                     RawReadCountsForFullSampleName.put(tempFullName, 0);
+                    MatchedReadCountsForFullSampleName.put(tempFullName, 0);
                 } else {
                     samplesInKeyFileWithNoRawSeqFile.add(sample+":"+flowcellLane+":"+LibPrepID);
                 }
             }
             if (nRepSamplesWithRawSeqFile == 1) {
                 RawReadCountsForFinalSampleName.put(tempFullName, 0);
+                MatchedReadCountsForFinalSampleName.put(tempFullName, 0);
                 tempFullName = tempFullName.replaceAll(":", " "); // for sorting of taxa based on the short name (" " sorts before any acceptable chars) (matches HDF5 sorting)
                 finalSampleNamesTS.add(tempFullName);
             } else if (nRepSamplesWithRawSeqFile > 1) {
                 String finalName = sample+":MRG:"+nRepSamplesWithRawSeqFile+":"+LibPrepID;
                 RawReadCountsForFinalSampleName.put(finalName, 0);
+                MatchedReadCountsForFinalSampleName.put(finalName, 0);
                 for (String flowcellLane : flowcellLanesForLibPrep) {
                     if (FlowcellLanes.get(flowcellLane)) {
                         FullNameToFinalName.put(sample+":"+flowcellLane+":"+LibPrepID, finalName);
@@ -522,16 +529,21 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         chromosomes = topm.getChromosomes();
         System.out.println("\nThe TOPM contains the following chromosomes (and # sites per chromosome):");
         int maxChr = Integer.MIN_VALUE;
+        HashMap<Integer,Integer> ChrToNSites = new HashMap<Integer,Integer>();
         for (int i = 0; i < chromosomes.length; i++) {
             if (chromosomes[i] > maxChr) maxChr = chromosomes[i];
             uniquePositions.add(topm.getUniquePositions(chromosomes[i]));
             int nSitesInChr = uniquePositions.get(i).length;
+            ChrToNSites.put(chromosomes[i], nSitesInChr);
             totalNSites += nSitesInChr;
             System.out.println("   "+chromosomes[i]+"   ("+nSitesInChr+" sites)");
         }
         PositionToSite = new HashMap[maxChr+1];
         for (int c = 0; c <= maxChr; c++) {
-            PositionToSite[c] = new HashMap<Integer,Integer>();
+            if (ChrToNSites.containsKey(c)) {
+                int capacity = (int) ((double) ChrToNSites.get(c) * 1.25);
+                PositionToSite[c] = new HashMap<Integer,Integer>(capacity);
+            }
         }
         System.out.println("In total, the TOPM contains "+chromosomes.length+" chromosomes and "+totalNSites+" sites.");
         return uniquePositions;
@@ -790,9 +802,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         outFileS = outFileS.replaceAll("_key", "");
         try {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outFileS))), 65536);
-            bw.write("FullSampleName\tgoodBarcodedReads\n");
+            bw.write("FullSampleName\tgoodBarcodedReads\tgoodReadsMatchedToTOPM\n");
             for (String fullSampleName : RawReadCountsForFullSampleName.keySet()) {
-                bw.write(fullSampleName+"\t"+RawReadCountsForFullSampleName.get(fullSampleName)+"\n");
+                bw.write(fullSampleName+"\t"+RawReadCountsForFullSampleName.get(fullSampleName)+"\t"+MatchedReadCountsForFullSampleName.get(fullSampleName)+"\n");
             }
             bw.close();
         } catch (Exception e) {
@@ -803,9 +815,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         outFileS = outFileS.replaceAll("_ReadsPerSample.log", "_ReadsPerLibPrepID.log");
         try {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outFileS))), 65536);
-            bw.write("FinalSampleName\tgoodBarcodedReads\n");
+            bw.write("FinalSampleName\tgoodBarcodedReads\tgoodReadsMatchedToTOPM\n");
             for (String finalSampleName : RawReadCountsForFinalSampleName.keySet()) {
-                bw.write(finalSampleName+"\t"+RawReadCountsForFinalSampleName.get(finalSampleName)+"\n");
+                bw.write(finalSampleName+"\t"+RawReadCountsForFinalSampleName.get(finalSampleName)+"\t"+MatchedReadCountsForFinalSampleName.get(finalSampleName)+"\n");
             }
             bw.close();
         } catch (Exception e) {

@@ -309,7 +309,7 @@ public class JeffPipelines {
             "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5",
             "-e", "ApeKI",
 //            "-vL", // VCF likelihood-based calling of hets
-            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/posToSite",
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/lastIndexOf",
         };
 
         SeqToGenosPlugin plugin = new SeqToGenosPlugin(null);
@@ -318,8 +318,8 @@ public class JeffPipelines {
     }
     
     public static void convertHDF5ToHapMap() {
-        String hdf5File = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/posToSite/MGP1_low_vol_2smallReps.hmp.h5";
-        String hmpFile  = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/posToSite/MGP1_low_vol_2smallRepsCompare.hmp.txt.gz";
+        String hdf5File = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/lastIndexOf/MGP1_low_vol_2smallReps.hmp.h5";
+        String hmpFile  = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/lastIndexOf/MGP1_low_vol_2smallRepsCompare.hmp.txt.gz";
         System.out.println("Converting from *.hmp.h5 to *.hmp.txt.gz");
         System.out.println("   Reading hmp.h5 file:     "+hdf5File);
         Alignment a = ImportUtils.readGuessFormat(hdf5File, false);
