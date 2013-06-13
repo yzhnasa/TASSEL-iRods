@@ -17,14 +17,15 @@ import net.maizegenetics.util.UnmodifiableBitSet;
 import org.apache.log4j.Logger;
 
 /**
- * Bit Alignment holds alleles or taxa in BitSets.  TBit holds the data organized by taxon, 
- * while SBit is organized by site.  TBit is efficient for comparison for large numbers of sites
- * between taxa (e.g. Genetic distance or imputation).  Sbit is efficient for comparisons
- * between sites (e.g LD, and better for accessing for GWAS but GWAS efficiency is 
- * determined by the linear algebra).
- * 
- * TODO:  Need to create cache system for a long at a time.
- * 
+ * Bit Alignment holds alleles or taxa in BitSets. TBit holds the data organized
+ * by taxon, while SBit is organized by site. TBit is efficient for comparison
+ * for large numbers of sites between taxa (e.g. Genetic distance or
+ * imputation). Sbit is efficient for comparisons between sites (e.g LD, and
+ * better for accessing for GWAS but GWAS efficiency is determined by the linear
+ * algebra).
+ *
+ * TODO: Need to create cache system for a long at a time.
+ *
  * @author terry
  */
 public class BitAlignment extends AbstractAlignment {
@@ -188,6 +189,57 @@ public class BitAlignment extends AbstractAlignment {
         byte[][] dataBytes = AlignmentUtils.getDataBytes(data, alleleStates, maxNumAlleles);
 
         return BitAlignment.getInstance(idGroup, dataBytes, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
+
+    }
+
+    /**
+     * Create new alignment from given alignment that only retains two alleles
+     * per site and only homozygous values. Heterzygous values are changed to
+     * Unknown.
+     *
+     * @param a alignment
+     * @param isSBit whether new alignment optimized for sites
+     *
+     * @return homozygous alignment
+     */
+    public static Alignment getHomozygousNucleotideInstance(Alignment a, boolean isSBit) {
+
+        int numSites = a.getSiteCount();
+        int numTaxa = a.getSequenceCount();
+
+        BitSet[][] theData;
+        int numAlleles = 2;
+        byte[][] alleles = new byte[numSites][numAlleles];
+        int numDataRows = a.getTotalNumAlleles();
+        if (isSBit) {
+            theData = new OpenBitSet[numAlleles][numSites];
+            for (int s = 0; s < numSites; s++) {
+                BitSet homo = new OpenBitSet(numTaxa);
+                for (int al = 0; al < numDataRows; al++) {
+                    BitSet current = a.getAllelePresenceForAllTaxa(s, al);
+                    homo.xor(current);
+                }
+                theData[0][s] = new OpenBitSet(a.getAllelePresenceForAllTaxa(s, 0));
+                theData[0][s].and(homo);
+                theData[1][s] = new OpenBitSet(a.getAllelePresenceForAllTaxa(s, 1));
+                theData[1][s].and(homo);
+            }
+        } else {
+            theData = new OpenBitSet[numAlleles][numTaxa];
+            for (int t = 0; t < numTaxa; t++) {
+                BitSet homo = new OpenBitSet(numSites);
+                for (int al = 0; al < numDataRows; al++) {
+                    BitSet current = a.getAllelePresenceForAllSites(t, al);
+                    homo.xor(current);
+                }
+                theData[0][t] = new OpenBitSet(a.getAllelePresenceForAllSites(t, 0));
+                theData[0][t].and(homo);
+                theData[1][t] = new OpenBitSet(a.getAllelePresenceForAllSites(t, 1));
+                theData[1][t].and(homo);
+            }
+        }
+
+        return getNucleotideInstance(a.getIdGroup(), alleles, theData, a.getGeneticMap(), a.getReference(), a.getPhysicalPositions(), numAlleles, a.getLoci(), a.getLociOffsets(), a.getSNPIDs(), false, isSBit);
 
     }
 
