@@ -207,9 +207,16 @@ public class BitAlignment extends AbstractAlignment {
         int numSites = a.getSiteCount();
         int numTaxa = a.getSequenceCount();
 
-        BitSet[][] theData;
         int numAlleles = 2;
         byte[][] alleles = new byte[numSites][numAlleles];
+        byte[] all = a.getAlleles(numSites);
+        for (int s = 0; s < numSites; s++) {
+            byte[] current = a.getAlleles(s);
+            alleles[s][0] = current[0];
+            alleles[s][1] = current[1];
+        }
+
+        BitSet[][] theData;
         int numDataRows = a.getTotalNumAlleles();
         if (isSBit) {
             theData = new OpenBitSet[numAlleles][numSites];
