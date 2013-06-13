@@ -87,13 +87,13 @@ public interface Alignment extends Serializable {
     };
 
     /**
-     * Returns diploid values for given taxon and site.
+     * Returns diploid value (genotype) for a given taxon and site.
      *
      * @param taxon taxon
      * @param site site
      *
-     * @return first four bits are the first allele value and the second four
-     * bits are the second allele value.
+     * @return high four bits generally encode the more frequent allele and the
+     * lower four bits encode the less frequent allele.
      */
     public byte getBase(int taxon, int site);
 
@@ -812,7 +812,7 @@ public interface Alignment extends Serializable {
      * @return number of non-missing allele values.
      */
     public int getTotalGametesNotMissing(int site);
-    
+
     /**
      * Returns total number of non-missing taxa for given site. Taxa are
      * considered missing only if both allele values are Unknown (N).
