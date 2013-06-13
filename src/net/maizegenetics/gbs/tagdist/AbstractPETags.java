@@ -4,6 +4,8 @@
 package net.maizegenetics.gbs.tagdist;
 
 import cern.colt.GenericSorting;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.Arrays;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import org.biojava3.alignment.Alignments;
@@ -25,7 +27,7 @@ public abstract class AbstractPETags implements PETags {
     protected long[][] tagsB;
     protected short[] tagFLength;  // length of tag (number of bases)
     protected short[] tagBLength;
-    protected byte[] contigLengthInLong;
+    protected byte[] contigLengthInLong; //entire length of PE tags (cutsite to cutsite) in long, 0 means contig doesn't exist
     protected long[][] contig;
     protected short[] contigLength;  //entire length of PE tags (cutsite to cutsite), 0 means contig doesn't exist
      
@@ -73,6 +75,16 @@ public abstract class AbstractPETags implements PETags {
     }
     
     @Override
+    public int getContigCount () {
+        int sum = 0;
+        for (int i = 0; i < this.getTagCount(); i++) {
+            if (this.getContigLengthInLong(i) == 0) continue;
+            sum++;
+        }
+        return sum;
+    }
+    
+    @Override
     public short getContigLength (int index) {
         return contigLength[index];
     }
@@ -80,6 +92,38 @@ public abstract class AbstractPETags implements PETags {
     @Override
     public byte getContigLengthInLong (int index) {
         return contigLengthInLong[index];
+    }
+    
+    public void mkFastaFile (String tagsFFastaFileS, String tagsBFastaFileS, String contigFastaFileS) {
+        try {
+            BufferedWriter bwf = new BufferedWriter (new FileWriter (tagsFFastaFileS), 65536);
+            BufferedWriter bwb = new BufferedWriter (new FileWriter (tagsBFastaFileS), 65536);
+            BufferedWriter bwc = new BufferedWriter (new FileWriter (contigFastaFileS), 65536);
+            for (int i = 0; i < this.getTagCount(); i++) {
+                bwf.write(">"+String.valueOf(i));
+                bwf.newLine();
+                bwf.write(BaseEncoder.getSequenceFromLong(this.getTagF(i)).substring(0, this.getTagFLength(i)));
+                bwf.newLine();
+                bwb.write(">"+String.valueOf(i));
+                bwb.newLine();
+                bwb.write(BaseEncoder.getSequenceFromLong(this.getTagB(i)).substring(0, this.getTagBLength(i)));
+                bwb.newLine();
+                if (this.getContigLength(i) == 0) continue;
+                bwc.write(">"+String.valueOf(i));
+                bwc.newLine();
+                bwc.write(BaseEncoder.getSequenceFromLong(this.getContig(i)).substring(0, this.getContigLength(i)));
+                bwc.newLine();
+            }
+            bwf.flush();
+            bwf.close();
+            bwb.flush();
+            bwb.close();
+            bwc.flush();
+            bwc.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }  
     }
     
     public void orderTagsFTagsB () {
@@ -124,6 +168,11 @@ public abstract class AbstractPETags implements PETags {
             int hitEnd = psa.getIndexInTargetAt(psa.getLength());
             int overlap = psa.getLength();
             int idenNum = psa.getNumIdenticals();
+            
+            if (i%10000 == 0) {
+                System.out.println("Contigged " + i + " PETags. Total: " + this.getTagCount());
+            }
+            
             if (hitStart != 1) continue;
             if (queryEnd != this.getTagFLength(i)) continue;
             if (overlap < minOverlap) continue;
@@ -166,9 +215,6 @@ public abstract class AbstractPETags implements PETags {
             String contigS = sb.toString();
             long[] temp = BaseEncoder.getLongArrayFromSeq(contigS);
             contig[i] = temp;
-            if (i%10000 == 0) {
-                System.out.println("Contigged " + i + " PETags");
-            }
         }
     }
     
@@ -280,5 +326,4 @@ public abstract class AbstractPETags implements PETags {
         GenericSorting.quickSort(0, this.getTagCount(), this, this);
         System.out.println("Position index sort end.");
     }
-    
 }

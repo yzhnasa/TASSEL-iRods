@@ -69,6 +69,10 @@ public interface PETags extends Swapper, IntComparator {
     public long[] getContig (int index);
     
     /*
+     * @return count of contigs
+     */
+    public int getContigCount ();
+    /*
      * @return contig length
      */
     public short getContigLength (int index);
@@ -78,19 +82,5 @@ public interface PETags extends Swapper, IntComparator {
      */
     public byte getContigLengthInLong (int index);
     
-    /**
-     * Read PE tag distribution
-     * @param infileS is the file name
-     * @param format is the file format in FilePacking
-     */
     
-    public void readDistFile (String infileS, FilePacking format);
-    
-    /**
-     * Write PE tag distribution
-     * @param outfileS is the file name
-     * @param format is the file format in FilePacking
-     * @param minCount is the minimum count of a PE tag
-     */
-    public void writeDistFile (String outfileS, FilePacking format, int minCount);
 }

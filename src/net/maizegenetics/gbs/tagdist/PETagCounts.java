@@ -102,6 +102,14 @@ public class PETagCounts extends AbstractPETags {
         return petc.getCollapsedPETagCounts();
     }
     
+    public int getTotalReadCount () {
+        int sum = 0;
+        for (int i = 0; i < this.getTagCount(); i++) {
+            sum += this.getReadCount(i);
+        }
+        return sum;
+    }
+    
     public int getReadCount (int index) {
         return readCount[index];
     }
@@ -114,7 +122,6 @@ public class PETagCounts extends AbstractPETags {
         return num;
     }
     
-    @Override
     public void readDistFile (String infileS, FilePacking format) {
         System.out.println("Reading PETagCounts file to " + infileS);
         File infile = new File (infileS);
@@ -126,7 +133,7 @@ public class PETagCounts extends AbstractPETags {
                 readBinaryPETagCountsFile(infile);
                 break;
         }
-        System.out.println("PETagCounts file read");
+        System.out.println("PETagCounts file read. Tatol: " + this.getTagCount() + " PETags");
     }
     
     private void readBinaryPETagCountsFile (File infile) {
@@ -199,7 +206,6 @@ public class PETagCounts extends AbstractPETags {
         }
     }
     
-    @Override
     public void writeDistFile (String outfileS, FilePacking format, int minCount) {
         System.out.println("Writing PETagCounts file to " + outfileS);
         int outTagNum = this.getTagNumWithMincount(minCount);
