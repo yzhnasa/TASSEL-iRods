@@ -38,7 +38,9 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
     private String[] mySiteNamesToKeep = null;
     private String[] mySiteNamesToRemove = null;
 
-    /** Creates a new instance of FilterSiteNamePlugin */
+    /**
+     * Creates a new instance of FilterSiteNamePlugin
+     */
     public FilterSiteNamePlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
@@ -79,7 +81,6 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
 
         if (isInteractive) {
             AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
-
                 @Override
                 public int getRealSize() {
                     return alignment.getSiteCount();
@@ -142,7 +143,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
     }
 
     public void setSiteNamesToRemove(String[] sitesToRemove) {
-        mySiteNamesToKeep = sitesToRemove;
+        mySiteNamesToRemove = sitesToRemove;
         validItemsSet();
     }
 
