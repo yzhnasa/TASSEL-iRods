@@ -86,8 +86,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private LRUCache<Long,byte[]> myDataCache;  //key (taxa <<< 32)+startSite
 //    HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
     HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(2);
-    private int defaultCacheSize=4096;
-    private int defaultSiteCache=4096;
+    private int defaultCacheSize=1<<16;
+    private int defaultSiteCache=1<<16;
     
     private boolean cacheDepth=false;
     private LRUCache<Long,byte[][]> myDepthCache=null;  //key (taxa <<< 32)+startSite
@@ -208,9 +208,17 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     private byte[] cacheTaxonSiteBlock(int taxon, int site, long key) {
         int start=(site/defaultSiteCache)*defaultSiteCache;
-        byte[] data=myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(taxon),defaultSiteCache,start);
-        if(data==null) return null;
-        myDataCache.put(key, data);
+        byte[] data=null;
+  //      byte[] data=myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(taxon),defaultSiteCache,start);
+        long block=site>>16;
+        try{
+            data=myWriter.readByteArrayBlock(getTaxaGenoPath(taxon),1<<16,block);
+            if(data==null) return null;
+            myDataCache.put(key, data);
+        } catch(Exception e) {
+            System.out.printf("Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
+            e.printStackTrace();
+        }
         return data;
     }
     
@@ -620,11 +628,21 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
     
     public synchronized void addTaxon(Identifier id, byte[] genotype, byte[][] depth) {
+        int chunk=1<<16;
         String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
         if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
         if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
-        myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
-        myWriter.writeByteArray(basesPath, genotype, genoFeatures);
+        myWriter.createByteArray(basesPath, myNumSites, chunk, genoFeatures);
+//        myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
+//        myWriter.writeByteArray(basesPath, genotype, genoFeatures);
+        int blocks=((myNumSites-1)/chunk)+1;
+        for (int i = 0; i < blocks; i++) {
+            int startPos=i*chunk;
+            int length=(i<(blocks-1))?chunk:myNumSites-startPos;
+            byte[] sub=new byte[length];
+            System.arraycopy(genotype, startPos, sub, 0, length);
+            myWriter.writeByteArrayBlock(basesPath, sub, i);
+        }
         int taxonIndex=myIdentifiers.size();
         myIdentifiers.add(id);
         myIdGroup=null;
