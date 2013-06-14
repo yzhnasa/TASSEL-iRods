@@ -51,7 +51,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
     public static enum HetTreatment {
 
-        IGNORE, SET_TO_MISSING, USE_THREE_STATES
+        Haplotype, Homozygous, Genotype
     };
     private static final Logger myLogger = Logger.getLogger(LinkageDisequilibrium.class);
     private Alignment myAlignment;
@@ -75,7 +75,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     private static String NotImplemented = "NotImplemented";
     private static String NA = "N/A";
     private static Integer IntegerTwo = Integer.valueOf(2);
-    private HetTreatment myHetTreatment = HetTreatment.IGNORE;
+    private HetTreatment myHetTreatment = HetTreatment.Haplotype;
 
     /**
      * Compute LD based on alignment.
@@ -90,7 +90,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param myTestSite
      */
     public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList) {	//For backwards-compatability with calls before HetTreatment was added
-        this(alignment, windowSize, LDType, testSite, listener, isAccumulativeReport, numAccumulateIntervals, sitesList, HetTreatment.IGNORE);
+        this(alignment, windowSize, LDType, testSite, listener, isAccumulativeReport, numAccumulateIntervals, sitesList, HetTreatment.Haplotype);
     }
 
     public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
@@ -123,13 +123,13 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     public void run() {
         initMatrices();
         switch (myHetTreatment) {
-            case IGNORE:
+            case Haplotype:
                 calculateBitLDForInbred(true, false);
                 break;
-            case SET_TO_MISSING:
+            case Homozygous:
                 calculateBitLDForInbred(true, true);
                 break;
-            case USE_THREE_STATES:
+            case Genotype:
                 calculateBitLDWithHets();
                 break;
             default:

@@ -783,12 +783,12 @@ public class TasselPipeline implements PluginListener {
                     }
 
                     String temp = args[index++].trim();
-                    if (temp.equalsIgnoreCase("Ignore")) {
-                        plugin.setHetTreatment(HetTreatment.IGNORE);
-                    } else if (temp.equalsIgnoreCase("Missing")) {
-                        plugin.setHetTreatment(HetTreatment.SET_TO_MISSING);
-                    } else if (temp.equalsIgnoreCase("Thirdstate")) {
-                        plugin.setHetTreatment(HetTreatment.USE_THREE_STATES);
+                    if (temp.equalsIgnoreCase("Haplotype")) {
+                        plugin.setHetTreatment(HetTreatment.Haplotype);
+                    } else if (temp.equalsIgnoreCase("Homozygous")) {
+                        plugin.setHetTreatment(HetTreatment.Homozygous);
+                    } else if (temp.equalsIgnoreCase("Genotype")) {
+                        plugin.setHetTreatment(HetTreatment.Genotype);
                     } else {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Het Treatment parameter must be Ignore, Missing, or Thirdstate.");
                     }

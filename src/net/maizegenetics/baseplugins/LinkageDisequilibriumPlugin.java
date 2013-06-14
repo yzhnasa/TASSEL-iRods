@@ -45,7 +45,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     private FilterAlignment myPossibleAlignmentForSiteList;
     private String myPossibleAlignmentName;
     private int[] myPossibleSiteList;
-    private LinkageDisequilibrium.HetTreatment myHetTreatment = LinkageDisequilibrium.HetTreatment.IGNORE;
+    private LinkageDisequilibrium.HetTreatment myHetTreatment = LinkageDisequilibrium.HetTreatment.Haplotype;
 
     /**
      * Creates a new instance of LinkageDisequilibriumPlugin
@@ -482,11 +482,11 @@ class LinkageDiseqDialog extends JDialog {
 
     public LinkageDisequilibrium.HetTreatment getHetTreatment() {
         if (myHetTreatment.getSelectedIndex() == 0) {
-            return LinkageDisequilibrium.HetTreatment.IGNORE;
+            return LinkageDisequilibrium.HetTreatment.Haplotype;
         } else if (myHetTreatment.getSelectedIndex() == 1) {
-            return LinkageDisequilibrium.HetTreatment.SET_TO_MISSING;
+            return LinkageDisequilibrium.HetTreatment.Homozygous;
         } else if (myHetTreatment.getSelectedIndex() == 2) {
-            return LinkageDisequilibrium.HetTreatment.USE_THREE_STATES;
+            return LinkageDisequilibrium.HetTreatment.Genotype;
         } else {
             throw new IllegalStateException("LinkageDisequilibriumPlugin: getLDType: No known LD Type selected.");
         }
