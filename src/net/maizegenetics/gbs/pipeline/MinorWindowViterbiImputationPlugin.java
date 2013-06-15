@@ -56,13 +56,10 @@ import org.apache.log4j.Logger;
  * TODO:
  * <li>Smaller scale Viterbi, evaluate whether there are regions where 1 or 2 haplotypes are very common (>50% blocks)
  * <li>Use a diversity index of the DHs to determine what transition/emmission matrices to use
- * <li>Remove need to access MNA during imputation process
  * <li>Move accuracy to one method outside of setAlignmentWithDonors
- * <li>Multi-thread
- * <li>Shift MutableNucleotideAlignmentHDF5
- * <li>Create JUnit test
  *
  * @author Edward Buckler
+ * @cite 
  */
 public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private int startChr, endChr;
