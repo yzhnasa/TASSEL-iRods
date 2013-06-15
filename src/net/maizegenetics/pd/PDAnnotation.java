@@ -3,7 +3,6 @@ package net.maizegenetics.pd;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
-import com.sun.media.sound.AudioFloatInputStream;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import java.io.BufferedReader;
 import java.io.File;
