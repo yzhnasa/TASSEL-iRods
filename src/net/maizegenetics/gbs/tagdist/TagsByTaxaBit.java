@@ -10,8 +10,11 @@ import java.util.BitSet;
 /**
  * A bit implementation of TagByTaxa, so only presence or absence of a tags is known.
  *
+ * @deprecated While efficient for memory storage that lack of depth is a problem for certain algorithms.  HDF5 classes
+ * are a better alternatives {@link TagsByTaxaByteHDF5TagGroups} and {@link TagsByTaxaByteHDF5TaxaGroups}
  * @author edbuckler
  */
+@Deprecated
 public class TagsByTaxaBit extends AbstractTagsByTaxa {
 
     private BitSet[] tagDist;
