@@ -6,6 +6,7 @@ package net.maizegenetics.gbs.tagdist;
 import java.io.File;
 
 /**
+ * Tags by taxa that supports depths captured by a short (max 32767)
  *
  * @author jcg233
  */

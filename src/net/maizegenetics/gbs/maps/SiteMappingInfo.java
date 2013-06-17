@@ -1,13 +1,12 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package net.maizegenetics.gbs.maps;
 
 /**
- *
+ * Container class for passing information on where a tags maps.
+ * @deprecated Should use {@link TagMappingInfo}
  * @author edbuckler
  */
+@Deprecated
 public class SiteMappingInfo {
     public int chromosome=Integer.MIN_VALUE;  // 4 bytes
     public byte strand=Byte.MIN_VALUE; // 1 = same sense as reference FASTA file.  -1 = opposite sense.  unknown = Byte.MIN_VALUE  // 1 byte

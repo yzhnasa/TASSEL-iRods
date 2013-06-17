@@ -12,13 +12,19 @@ import net.maizegenetics.gbs.util.GBSHDF5Constants;
 import org.apache.log4j.Logger;
 
 /**
+ * HDF5 version of TagsOnPhysical Map.  This is the preferred version of physical map as it uses less
+ * memory, loads faster, and is more flexible with mapping positions.
+ * <p>
+ * Multiple mapping positions can be stored for each Tag.  For example, separate aligners could record their
+ * positions in the {@link TagMappingInfo} objects.  Then the genetic mapping algorithm could be used to resolve,
+ * which is the true mapping position.  MapPosition0 is used as the best mapping position, and used by the SNP caller.
  *
- * TODO:
- * <li> createFile - needs to deal with inputing just TAGS 
+ * <p>
+ * TODO: createFile - needs to instantiate a TOPM just using a Tag Object
  * TODO: createFile that includes a Locus filter, only exports positions on the same locus and position range
  * 
  * 
- * @author Ed, Terry
+ * @author Ed Buckler, Terry Casstevens
  */
 public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPMInterface {
 

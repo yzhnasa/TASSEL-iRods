@@ -22,6 +22,12 @@ import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 
 /**
+ * Abstract TagsOnPhysicalMap object.  Abstract alignment is implemented by two types of TOPM classes
+ * {@link TagsOnPhysicalMap} and {@link TagsOnPhysMapHDF5}.   TagsOnPhysicalMap is fully loaded into memory when
+ * read, and it can only support one mapping position (the files are either binary or text).  TagsOnPhysMapHDF5
+ * can support a large number of mapping position, and only a portion of the data is loaded into memory.
+ *
+ * In most cases, TagsOnPhysMapHDF5 should be preferred going forward.
  *
  * @author edbuckler
  */
@@ -222,7 +228,12 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
         if(myUniquePositions==null) populateChrAndVarPositions();
         return myUniquePositions[chromosome];
     }
-    
+
+    /**
+     * Creates the arrays for the all the positions for each chromosome as defined
+     * by the variants.  Call this method after remapping or after loading the file, and
+     * it will be used for SNP calling.
+     */
     protected void populateChrAndVarPositions() {
         long chrSum = 0;
         System.out.println("chrSum" + chrSum);
