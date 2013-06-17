@@ -209,7 +209,6 @@ public class BitAlignment extends AbstractAlignment {
 
         int numAlleles = 2;
         byte[][] alleles = new byte[numSites][numAlleles];
-        byte[] all = a.getAlleles(numSites);
         for (int s = 0; s < numSites; s++) {
             byte[] current = a.getAlleles(s);
             alleles[s][0] = current[0];
