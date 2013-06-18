@@ -30,8 +30,10 @@ import net.maizegenetics.pal.statistics.ChiSquareTest;
  * Perhaps we should scan for massive nearly identical regions
  * Need to decide whether P or Length/Identity approach is better
  *
+ * @deprecated Replaced by better methods {@link MinorWindowViterbiImputationPlugin}
  * @author ed
  */
+@Deprecated  
 public class FastImputationBitFixedWindow {
 
     short[][] matchInWin, diffInWin;

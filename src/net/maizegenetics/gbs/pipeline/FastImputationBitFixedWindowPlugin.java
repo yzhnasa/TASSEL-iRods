@@ -7,11 +7,9 @@ import net.maizegenetics.util.ArgsEngine;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-
 import java.awt.Frame;
 import java.io.File;
 import java.util.HashMap;
-
 import javax.swing.ImageIcon;
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
@@ -21,9 +19,11 @@ import net.maizegenetics.pal.alignment.ImportUtils;
 import org.apache.log4j.Logger;
 
 /**
- *
- * @author terry
+ * 
+ * @deprecated Replaced by better methods {@link MinorWindowViterbiImputationPlugin}
+ * @author Ed Buckler
  */
+@Deprecated
 public class FastImputationBitFixedWindowPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(FastImputationBitFixedWindowPlugin.class);

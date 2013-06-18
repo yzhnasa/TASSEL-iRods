@@ -26,8 +26,11 @@ import org.apache.poi.util.IntList;
  * appropriate for a general solution. GBSHapMapFilters are working towards the
  * more general filters.
  *
- * @author edbuckler
+ * If there are useful methods they should be move to pal.
+ * 
+ * @author  Ed Buckler
  */
+@Deprecated
 public class AlignmentFilterByGBSUtils {
 
     public static final byte refAllele = NucleotideAlignmentConstants.REF_DIPLOID_ALLELE; //A

@@ -48,9 +48,13 @@ import org.apache.log4j.Logger;
  *
  * Error rates are bounded away from zero, but adding 0.5 error to all error
  * rates that that were observed to be zero.
- *
+ * 
+ *@deprecated approach are too specific for bi-parental RIL populations.  Imputation approaches
+ * are more generalized and provide a better way for characterizing error and correcting them.
+ * 
  * @author edbuckler
  */
+@Deprecated
 public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
 
     private double[] errorRate;
