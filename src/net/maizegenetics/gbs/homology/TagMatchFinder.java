@@ -15,21 +15,24 @@ import net.maizegenetics.gbs.util.BaseEncoder;
  * Very simple but fast homology finder.  Very similar to BLAT, with long word searches.
  * A in memory index is created from any set of Tags, and this list many then be
  * quickly queried for high homology hits.
- *
+ *<p>
  * With the current code no indels will be discovered, however, this could be easily changed.
+ * Currently, tuned to a word length of 16.  If you are going to use this please 
+ * read this code.
+ * <p>
+ * The lookup match tables are based on 2-bit encoded long sequences, and the query also needs to
+ * in a 2-bit long
  * 
- * User: ed
+ * @author Ed Buckler
  */
 public class TagMatchFinder {
 
-    private static final int chunkSize = BaseEncoder.chunkSize;
     Tags refTags;
     private static int[][] lookups;
     public static final int wordLength = 16;        //best results 8 for sensitivity
     public static final int maxDivergence = 15;
-    private long sTime, cTime, aTime;
     private SmithWaterman pa;
-    private Thread liveThread = null; //use to keep this alive while another thread is alive
+//    private Thread liveThread = null; //use to keep this alive while another thread is alive
 
     public int[][] getTagLookTable() {
         return lookups;
@@ -63,13 +66,6 @@ public class TagMatchFinder {
                 lookups[0][count] = word[1];
                 lookups[1][count] = i;
                 count++;
-                //    System.out.println(BaseEncoder.getSequenceFromLong(refTags[0][i]));
-//                if(word[0]==-2147483648) {System.out.println(BaseEncoder.getSequenceFromLong(refTags[0][i])+BaseEncoder.getSequenceFromLong(refTags[1][i]));
-//                System.out.println(BaseEncoder.getSequenceFromInt(word[0])+" "+BaseEncoder.getSequenceFromInt(word[1]));
-//                }
-//                if(word[0]==0) {System.out.println(BaseEncoder.getSequenceFromLong(refTags[0][i])+BaseEncoder.getSequenceFromLong(refTags[1][i]));
-//                System.out.println(BaseEncoder.getSequenceFromInt(word[0])+" "+BaseEncoder.getSequenceFromInt(word[1]));
-//                }
             }
         }
         System.out.println("Sorting index");
@@ -107,11 +103,13 @@ public class TagMatchFinder {
     }
 
     /**
-     *
-     * @param query
-     * @param maxDiv
-     * @param keepOnlyBest
-     * @return
+     * Return a TreeMap good hits based on a sequence query.  The returned tree map
+     * is the list of tag indices as key, divergence as value.  
+     * Ed- It seems like the key & value should perhaps be reversed.
+     * @param query array of 2-bit encoded long query
+     * @param maxDiv maximum divergence to look for
+     * @param keepOnlyBest result only includes the best result
+     * @return hit map (tagIndex, divergence)
      */
     public TreeMap<Integer, Integer> findMatchesWithIntLengthWords(long[] query, int maxDiv, boolean keepOnlyBest) {
         TreeMap<Integer, Integer> hitsAndDiv = new TreeMap<Integer, Integer>();

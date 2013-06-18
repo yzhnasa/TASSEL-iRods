@@ -1,5 +1,5 @@
 /*
- * BiParentalErrorCorrectionPlugin
+ * MinorWindowViterbiImputationPlugin
  */
 package net.maizegenetics.gbs.pipeline;
 

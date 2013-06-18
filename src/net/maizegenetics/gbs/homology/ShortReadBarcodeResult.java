@@ -9,8 +9,11 @@ import net.maizegenetics.gbs.util.BaseEncoder;
  * Container class for returning the results of parsed barcoded sequencing read.
  * The length of read is in short. Max length is 32767 bp.
  * 
+ * @deprecated Fei should remove this class and use ReadBarcodeResult with length replaced
+ * with short.
  * @author Fei Lu
  */
+@Deprecated
 public class ShortReadBarcodeResult {
 
     public String unprocessedSequence = null;

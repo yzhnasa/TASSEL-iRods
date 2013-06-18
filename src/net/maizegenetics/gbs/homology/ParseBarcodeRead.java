@@ -10,28 +10,35 @@ import java.util.HashMap;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**
- * Takes a key file and then sets up the methods to decode a tag
+ * Takes a key file and then sets up the methods to decode a read from the sequencer.
+ * The key file decribes how barcodes are related to their taxon.  Generally, a keyfile
+ * with all flowcells is included, and then the flowcell and lane to be processed are
+ * indicated in the constructor.
  *
- * Developer: ed
+ * @author Ed Buckler, Jeff Glaubitz, and James Harriman
  *
  */
 public class ParseBarcodeRead {
 
     private static int chunkSize = BaseEncoder.chunkSize;
-    //String baseDir="E:/SolexaAnal/";
     protected int maximumMismatchInBarcodeAndOverhang = 0;
     protected static String[] initialCutSiteRemnant = null;
     protected static int readEndCutSiteRemnantLength;
     static String nullS = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
     protected static String[] likelyReadEnd = null;
     protected static String theEnzyme = null;
-    //Original design CWGGATCGGAAGAGCGGTTCAGCAGGAATGCCGAG  -- Common Adapter
-    //Redesign  CWGAGATCGGAAGAGCGGTTCAGCAGGAATGCCGAG  -- Common Adapter
     static int maxBarcodeLength = 10;
     private Barcode[] theBarcodes;
     private long[] quickBarcodeList;
     private HashMap<Long, Integer> quickMap;
 
+    /**
+     * Create the barcode parsing object
+     * @param keyFile file location for the keyfile
+     * @param enzyme name of the enzyme
+     * @param flowcell name of the flowcell to be processed
+     * @param lane name of the lane to be processed
+     */
     public ParseBarcodeRead(String keyFile, String enzyme, String flowcell, String lane) {
         if (enzyme != null) {
             chooseEnzyme(enzyme);
@@ -254,7 +261,8 @@ public class ParseBarcodeRead {
         return result;
     }
 
-    /* Reads in an Illumina key file, creates a linear array of {@link Barcode} objects
+    /**
+     * Reads in an Illumina key file, creates a linear array of {@link Barcode} objects
      * representing the barcodes in the key file, then creates a hash map containing
      * indices from the linear array indexed by sequence.  The names of barcode objects
      * follow the pattern samplename:flowcell:lane:well, since sample names alone are not unique.
@@ -262,7 +270,8 @@ public class ParseBarcodeRead {
      * @param keyFile Illumina key file.
      * @param flowcell Only barcodes from this flowcell will be added to the array.
      * @param lane Only barcodes from this lane will be added to the array.
-     * @return Number of barcodes in the array.  */
+     * @return Number of barcodes in the array.  
+     */
     private int setupBarcodeFiles(File keyFile, String flowcell, String lane) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(keyFile), 65536);
@@ -307,6 +316,12 @@ public class ParseBarcodeRead {
         return theBarcodes.length;
     }
 
+    /**
+     * Returns the best barcode match for a given sequence.  
+     * @param queryS query sequence to be tested against all barcodes
+     * @param maxDivergence maximum divergence to permit
+     * @return best barcode match (null if no good match)
+     */
     Barcode findBestBarcode(String queryS, int maxDivergence) {
         long query = BaseEncoder.getLongFromSeq(queryS.substring(0, chunkSize));
         //note because the barcodes are polyA after the sequence, they should always
@@ -422,11 +437,12 @@ public class ParseBarcodeRead {
     }
 
     /**
-     *
-     * @param seqS
-     * @param qualS
-     * @param fastq
-     * @param minQual
+     * Return a {@link ReadBarcodeResult} that captures the processed read and taxa
+     * inferred by the barcode
+     * @param seqS DNA sequence from the sequencer
+     * @param qualS quality score string from the sequencer
+     * @param fastq (fastq = true?; qseq=false?)
+     * @param minQual minimum quality score
      * @return If barcode and cut site was found returns the result and
      * processed sequence, if the barcode and cut site were not found return
      * null
@@ -440,11 +456,6 @@ public class ParseBarcodeRead {
             }
         }
         int miss = -1;
-//        if (fastq) {
-//            miss = seqS.indexOf('N');
-//        } else {
-//            miss = seqS.indexOf('.');
-//        }
         if (fastq) {
             miss = seqS.lastIndexOf('N', maxBarcodeLength + 2*chunkSize - 1);
         } else {
@@ -468,15 +479,18 @@ public class ParseBarcodeRead {
         ReadBarcodeResult rbr = new ReadBarcodeResult(read, (byte) pos, bestBarcode.getTaxaName());
         return rbr;
     }
-
+    
+   /**Returns the number of barcodes for the flowcell and lane*/
     public int getBarCodeCount() {
         return theBarcodes.length;
     }
 
+    /**Returns the {@link Barcode} for the flowcell and lane*/
     public Barcode getTheBarcodes(int index) {
         return theBarcodes[index];
     }
 
+    /**Returns the taxaNames for the flowcell and lane*/
     public String[] getTaxaNames() {
         String[] result = new String[getBarCodeCount()];
         for (int i = 0; i < result.length; i++) {
@@ -485,7 +499,4 @@ public class ParseBarcodeRead {
         return result;
     }
 
-    static public String[] getInitialCutSiteRemnant() {
-        return initialCutSiteRemnant;
-    }
 }

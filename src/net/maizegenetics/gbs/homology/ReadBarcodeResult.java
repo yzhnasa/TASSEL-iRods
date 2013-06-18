@@ -7,16 +7,28 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**
  * Container class for returning the results of parsed barcoded sequencing read.
+ * <p>
+ * {@link #unprocessedSequence} is the original sequence with the barcode still attached
+ * <p>
+ * {@link #processedSequence} is the sequence with the barcode removed and cut down to the given {@link length}.
+ * <p>
+ * {@link #paddedSequence} is the {@link #processedSequence} padded with polyA to length if the 
+ * {@link #processedSequence} was shorter than {@link length}.
  * 
- * @author edbuckler
+ * @author Ed Buckler
  */
 public class ReadBarcodeResult {
-
+    /**Original sequence from sequencer*/
     public String unprocessedSequence = null;
+    /**Processed sequence with barcode removed*/
     public String processedSequence = null;
+    /**Processed sequence padded with polyA*/
     public String paddedSequence = null;
+    /**length of the processed sequence*/
     byte length;
+    /**Sequence encoded in 2-bit long array*/
     long[] read;
+    /**Taxon name implied by the barcode sequence*/
     String taxonName;
 
     //TODO this instantiation should also include the orginal unprocessedSequence, processedSequence, and paddedSequence - the the object encode it
@@ -43,6 +55,7 @@ public class ReadBarcodeResult {
         return read;
     }
 
+    /**Return taxon name implied by the barcode sequence*/
     public String getTaxonName() {
         return taxonName;
     }

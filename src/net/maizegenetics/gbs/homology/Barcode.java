@@ -5,18 +5,37 @@ import java.util.Arrays;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**
- * Contains methods and information on a barcode used in encoding tags.
+ * Container class for storing information on GBS barcodes.
  * 
- * @author edbuckler
+ * @author Ed Buckler
  */
 public class Barcode implements Comparable<Barcode> {
-
+    /**Barcode sequence */
     String barcodeS;
+    /**Overhang sequence from the restriction enzyme */
     String[] overhangS;
-    String taxaName, flowcell, lane;
+    /**Taxon (sample) name */
+    String taxaName;
+    /**Flowcell name */
+    String flowcell;
+     /**Flowcell lane name */
+    String lane;
+    /**Barcode  encoded in 2-bit long*/
     long[] barOverLong;
-    int barOverLength, barLength;
+    /**Length of barcode plus overhang*/
+    int barOverLength;
+     /**Length of barcode*/
+    int barLength;
 
+    /**
+     * Constructor creating a barcode
+     * @param barcodeS barcode sequence
+     * @param overhangSunsort overhang sequence array unsorted (array size is 1 for
+     * non-degerate restriction enzymes, degenerate enzymes >1)
+     * @param taxa name of taxon (sample) 
+     * @param flowcell name of the flowcell
+     * @param lane name of the lane
+     */
     public Barcode(String barcodeS, String[] overhangSunsort, String taxa, String flowcell, String lane) {
         this.barcodeS = barcodeS;
         Arrays.sort(overhangSunsort);
@@ -32,6 +51,13 @@ public class Barcode implements Comparable<Barcode> {
         barLength = barcodeS.length();
     }
 
+    /**
+     * Return the minimum sequence divergence between a query sequence and 
+     * barcode with its overhang 
+     * @param queryLong query sequence encoded in 2-bit long
+     * @param maxDivCheck maximum divergence to search upto
+     * @return minimum divergence between barcode and query
+     */
     public int compareSequence(long queryLong, int maxDivCheck) {
         int div = barOverLength;
         for (long targetLong : barOverLong) {
