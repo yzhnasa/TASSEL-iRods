@@ -218,6 +218,7 @@ public class BitAlignment extends AbstractAlignment {
         BitSet[][] theData;
         int numDataRows = a.getTotalNumAlleles();
         if (isSBit) {
+            a = AlignmentUtils.optimizeForSites(a);
             theData = new OpenBitSet[numAlleles][numSites];
             for (int s = 0; s < numSites; s++) {
                 BitSet homo = new OpenBitSet(numTaxa);
@@ -231,6 +232,7 @@ public class BitAlignment extends AbstractAlignment {
                 theData[1][s].and(homo);
             }
         } else {
+            a = AlignmentUtils.optimizeForTaxa(a);
             theData = new OpenBitSet[numAlleles][numTaxa];
             for (int t = 0; t < numTaxa; t++) {
                 BitSet homo = new OpenBitSet(numSites);
