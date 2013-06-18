@@ -13,6 +13,7 @@ import net.maizegenetics.pal.io.InputSource;
 
 import java.io.IOException;
 import java.io.PushbackReader;
+import net.maizegenetics.prefs.TasselPrefs;
 
 /**
  * reads aligned sequence data from plain text files.<p>
@@ -158,9 +159,7 @@ public class ReadSequenceAlignmentUtils {
             positions[i] = i;
             sites[i] = Integer.toString(i);
         }
-        //SimpleAlignment saa = new SimpleAlignment(idGroup, s, new IUPACNucleotides(), null, positions, new byte[0], "", new float[0][0], sites);
-        //return saa;
-        throw new UnsupportedOperationException();
+        return BitAlignment.getNucleotideInstance(idGroup, s, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[] {Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
     }
 
     private static int readSeqLineP(PushbackReader in, int s, int pos, int maxPos, char[][] data, String[] identifiers,
