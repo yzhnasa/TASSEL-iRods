@@ -12,7 +12,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
@@ -178,19 +178,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
     private void calculateBitLDForInbred(boolean collapseMinor, boolean ignoreHets) {  //only calculates disequilibrium for inbreds
 
-        //If will ignore hets, make a new Alignment and set all het calls to missing. Otherwise set the pointer to the old alignment
+        //It will ignore hets, make a new Alignment and set all het calls to missing. Otherwise set the pointer to the old alignment
         Alignment workingAlignment;
         if (ignoreHets) {
-            MutableNucleotideAlignment tempAlignment = MutableNucleotideAlignment.getInstance(mySBitAlignment);
-            for (int taxon = 0; taxon < tempAlignment.getSequenceCount(); taxon++) {
-                for (int site = 0; site < tempAlignment.getSiteCount(); site++) {
-                    if (tempAlignment.isHeterozygous(taxon, site)) {
-                        tempAlignment.setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
-                    }
-                }
-            }
-            tempAlignment.clean();
-            workingAlignment = AlignmentUtils.optimizeForSites(tempAlignment);
+            workingAlignment = BitAlignment.getHomozygousNucleotideInstance(myAlignment, true);
         } else {
             workingAlignment = mySBitAlignment;
         }
