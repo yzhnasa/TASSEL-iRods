@@ -330,6 +330,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         String prefilterOld=theDF.getName().split("s\\+")[0]+"s"; //grabs the left side of the file
         ArrayList<File> d=new ArrayList<File>();
         for (File file : theDF.getParentFile().listFiles()) {
+            if(file.getName().equals(theDF.getName())) {d.add(file);}
              if(file.getName().startsWith(prefilter)) {d.add(file);}
              if(file.getName().startsWith(prefilterOld)) {d.add(file);}
          }
