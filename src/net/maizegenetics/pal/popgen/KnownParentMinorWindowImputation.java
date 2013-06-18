@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package net.maizegenetics.pal.popgen;
 
 import java.util.ArrayList;
@@ -22,8 +18,10 @@ import net.maizegenetics.util.ProgressListener;
  * It only begins each 64 site block and expand outward to find set number of minor
  * alleles in the target sequence, and then it looks for all possible parents.
  * 
+ * @deprecated Use MinorWindowViterbiImputationPlugin {@link net.maizegenetics.gbs.pipeline.MinorWindowViterbiImputationPlugin}
  * @author edbuckler, kswarts, aromero
  */
+@Deprecated
 public class KnownParentMinorWindowImputation {
     private Alignment unimpAlign;
     private Alignment donorAlign;

@@ -11,8 +11,16 @@ import net.maizegenetics.pal.alignment.Locus;
  * Tags on Physical Map (TOPM) Interface. Define methods for the TOPM classes.
  * The TOPM class holds information relating tags to the physical map, variants
  * (SNPs) called by the tag, and quality of mapping information.
+ * <p>
+ * Physical map information is recorded with chromosome, strand, start and end positions.  If a tags maps to multiple
+ * locations with equal quality it is recorded in multimaps with the count of multi-mapping.
+ * <p>
+ * Each SNP call for a tag is record in the variant fields.  The position by the variant offset,
+ * which is added to the startPosition (negative values indicate before the startPosition).  Each variant is also
+ * defined by the SNP call implied by the given tag.  The called are stored in a byte using the
+ * NucleotideAlignmentConstants (A=00, C=01, G=02, T=03).
  *
- * @author Ed and Terry
+ * @author Ed Buckler and Terry Casstevens
  */
 public interface TOPMInterface extends Tags {
 

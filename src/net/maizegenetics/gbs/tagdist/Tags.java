@@ -6,12 +6,16 @@ import cern.colt.function.IntComparator;
 /**
  * Basic interface for holding sets of sequence tag (these are compressed into 2-bit codings
  * of tags).  The length of tag in good sequence is also tracked.
- * @author edbuckler
+ * <p>
+ * Tags are encoded in longs with a 2-bit encoding see the package description for details
+ * {@link net.maizegenetics.gbs.tagdist}.
+ * <p>
+ * @author Ed Buckler
  */
 public interface Tags extends Swapper, IntComparator {
 
     /**
-     * Returns the number of long use to represent the sequence
+     * Returns the number of longs use to represent the sequence
      * @return
      */
     public int getTagSizeInLong();

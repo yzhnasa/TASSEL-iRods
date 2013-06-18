@@ -7,7 +7,8 @@ import java.io.File;
 import net.maizegenetics.util.Utils;
 
 /**
- *
+ * Utility method for reading and writing TOPM files based on their file name
+ * suffixes.
  * @author terry
  */
 public class TOPMUtils {

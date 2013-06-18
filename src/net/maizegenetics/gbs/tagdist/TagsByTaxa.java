@@ -13,7 +13,7 @@ import java.io.File;
  * also maintained by this interface.
  *
  *
- * @author edbuckler
+ * @author Ed Buckler
  */
 public interface TagsByTaxa extends Tags {
 
@@ -27,25 +27,59 @@ public interface TagsByTaxa extends Tags {
         Bit, Byte, Short, Int, Text
     };
 
+    /**
+     * Method for incrementing the read depth for the specified tag and taxon.
+     * @param tagIndex
+     * @param taxaIndex
+     * @param addValue value to add to the current value
+     */
     void addReadsToTagTaxon(int tagIndex, int taxaIndex, int addValue);
 
+    /**
+     * Get the index of a taxon based on its name
+     * @param taxon name of the taxon (sample)
+     * @return  taxon index
+     */
     int getIndexOfTaxaName(String taxon);
 
+    /**
+     * Returns the read count for a specified tag and taxon
+     * @param tagIndex
+     * @param taxaIndex
+     * @return read depth
+     */
     int getReadCountForTagTaxon(int tagIndex, int taxaIndex);
 
-    byte[] getTaxaReadCountsForTag(int readIndex);
+    /**
+     * Returns all read counts for a specified tag index.
+     * @param tagIndex  index of the tag
+     * @return array of read depths in order of taxa
+     */
+    byte[] getTaxaReadCountsForTag(int tagIndex);
 
+    /**
+     * TODO: Jeff annotate this
+     */
     public void truncateTaxonNames();
 
+
+    /**
+     *
+     * @param rowSetMethod
+     */
     public void setMethodByRows(boolean rowSetMethod);
 
     /**
-     * The presence/absence of the taxa in a bitSet format
-     * @param readIndex
-     * @return distribution of taxa
+     * The presence/absence of the taxa in a bitSet format (1=present, 0=absent)
+     * @param tagIndex the index of the tag
+     * @return BitSet representing distribution of taxa
      */
-    OpenBitSet getTaxaReadBitsForTag(int readIndex);
+    OpenBitSet getTaxaReadBitsForTag(int tagIndex);
 
+    /**
+     * Returns the number of taxa (samples)
+     * @return
+     */
     int getTaxaCount();
 
     /**
@@ -56,14 +90,36 @@ public interface TagsByTaxa extends Tags {
      */
     int getNumberOfTaxaWithTag(int readIndex);
 
+    /**
+     * Returns the name of a taxon
+     * @param taxaIndex the index of the taxon
+     * @return taxon name
+     */
     String getTaxaName(int taxaIndex);
 
+    /**
+     * Returns an array of taxa names
+     */
     String[] getTaxaNames();
 
+    /**
+     * Set the read depth for a specific tag and taxon.  Overwrite the depth that was previously there.
+     * @param tagIndex index of the tag
+     * @param taxaIndex  index of the taxon
+     * @param value  read depth
+     */
     void setReadCountForTagTaxon(int tagIndex, int taxaIndex, int value);
 
+    /**
+     * Write the TagsByTaxa object to a file in one of the FilePacking formats.  MinCount is useful for excluding the low
+     * depth tags (many of these are sequencing errors).
+     * @param outFile File for saving this object
+     * @param fileType  Determine how to output the depth
+     * @param minCount  Only tags greater than minCount are output
+     */
     void writeDistFile(File outFile, FilePacking fileType, int minCount);
 
+    /**Initializes the storage matrices for reading (unclear why in interface)*/
     void initMatrices(int taxaNum, int tagNum);
 
     /**

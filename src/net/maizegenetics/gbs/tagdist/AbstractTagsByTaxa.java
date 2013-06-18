@@ -68,20 +68,20 @@ public abstract class AbstractTagsByTaxa extends AbstractTags implements TagsByT
         setReadCountForTagTaxon(tagIndex, taxaIndex, addValue + getReadCountForTagTaxon(tagIndex, taxaIndex));
     }
 
-    public byte[] getTaxaReadCountsForTag(int readIndex) {
+    public byte[] getTaxaReadCountsForTag(int tagIndex) {
         byte[] r = new byte[getTaxaCount()];
         for (int i = 0; i < getTaxaCount(); i++) {
-            r[i] = (byte) getReadCountForTagTaxon(readIndex, i);
+            r[i] = (byte) getReadCountForTagTaxon(tagIndex, i);
         }
         return r;
     }
 
-    /**@param readIndex Number of organisms/bits that must be stored in the bitset.
+    /**@param tagIndex Number of organisms/bits that must be stored in the bitset.
      *@return r A new OpenBitSet object containing the tag distribution of its parent TagsByTaxa object.*/
-    public OpenBitSet getTaxaReadBitsForTag(int readIndex) {
+    public OpenBitSet getTaxaReadBitsForTag(int tagIndex) {
         OpenBitSet r = new OpenBitSet(getTaxaCount());
         for (int i = 0; i < getTaxaCount(); i++) {
-            if (getReadCountForTagTaxon(readIndex, i) > 0) {
+            if (getReadCountForTagTaxon(tagIndex, i) > 0) {
                 r.fastSet(i);
             }
         }

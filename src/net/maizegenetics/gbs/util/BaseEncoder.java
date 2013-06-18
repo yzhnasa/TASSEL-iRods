@@ -7,9 +7,14 @@ import java.io.FileReader;
 import java.util.Arrays;
 
 /**
- * User: ed
- * Date: Jan 22, 2007
- * Time: 9:43:05 PM
+ * Utility class for encoding tags into longs.
+ * <p>
+ * Sequencing reads are chunked into 32bp and recorded in a 64-bit long.  Only 
+ * A (00), C (01), G (10), T (11) are encoded.  Any other character sets the entire long to -1.
+ * Missing data at the end is padded with poly-A or (0).  This missing end, is tracked
+ * by the tag length attribute.
+ * 
+ * @author Ed Buckler
  */
 public class BaseEncoder {
     //todo count the fraction of MAGIs hit

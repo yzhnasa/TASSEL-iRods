@@ -24,8 +24,11 @@ import net.maizegenetics.util.BitUtil;
  *
  * If possible, it holds the current row cached in memory, so try to work with the files
  * sequentially.
+ * @deprecated While efficient for memory storage that lack of depth is a problem for certain algorithms.  HDF5 classes
+ * are a better alternatives {@link TagsByTaxaByteHDF5TagGroups} and {@link TagsByTaxaByteHDF5TaxaGroups}
  * @author edbuckler
  */
+@Deprecated
 public class TagsByTaxaBitFileMap extends AbstractTagsByTaxa {
 
     private RandomAccessFile theRAF;

@@ -30,7 +30,8 @@ import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.VCFUtil;
 
 /**
- *
+ * Aligns and calls SNPs for all tags at a given locus.
+ * 
  * @author jcg233
  */
 public class TagsAtLocus {

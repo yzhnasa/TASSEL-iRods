@@ -30,9 +30,9 @@ import org.apache.poi.util.IntList;
  */
 public class AlignmentFilterByGBSUtils {
 
-    public static final byte refAllele = NucleotideAlignmentConstants.A_DIPLOID_ALLELE; //A
-    public static final byte altAllele = NucleotideAlignmentConstants.C_DIPLOID_ALLELE; //C
-    public static final byte hetAllele = NucleotideAlignmentConstants.M_DIPLOID_ALLELE; //M
+    public static final byte refAllele = NucleotideAlignmentConstants.REF_DIPLOID_ALLELE; //A
+    public static final byte altAllele = NucleotideAlignmentConstants.ALT_DIPLOID_ALLELE; //C
+    public static final byte hetAllele = NucleotideAlignmentConstants.HET_DIPLOID_ALLELE; //M
 
     private AlignmentFilterByGBSUtils() {
     }
