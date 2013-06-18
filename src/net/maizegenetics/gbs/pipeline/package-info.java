@@ -29,4 +29,4 @@
  * This effort was funded by the NSF Plant Genome, NSF BREAD program, and the USDA.
  * 
  */
-package net.maizegenetics.gbs;
+package net.maizegenetics.gbs.pipeline;

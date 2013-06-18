@@ -1,11 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package net.maizegenetics.gbs.util;
 
 /**
- *
+ * Path definitions for the HDF5 GBS file formats.
+ * 
  * @author edbuckler
  */
 public class GBSHDF5Constants {

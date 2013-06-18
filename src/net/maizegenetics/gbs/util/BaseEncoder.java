@@ -1,11 +1,5 @@
 package net.maizegenetics.gbs.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-
-import java.util.Arrays;
-
 /**
  * Utility class for encoding tags into longs.
  * <p>
@@ -13,84 +7,28 @@ import java.util.Arrays;
  * A (00), C (01), G (10), T (11) are encoded.  Any other character sets the entire long to -1.
  * Missing data at the end is padded with poly-A or (0).  This missing end, is tracked
  * by the tag length attribute.
+ * <p>
+ * Some of these methods should be transitioned to {@link net.maizegenetics.pal.alignment.NucleotideAlignmentConstants},
+ * however, BaseEncoder only supports four states, while NucleotideAlignment includes gaps, insertions, and missing.
  * 
  * @author Ed Buckler
  */
 public class BaseEncoder {
-    //todo count the fraction of MAGIs hit
 
+    /** defines the number of bases fitting with a long */
     public static final int chunkSize = 32;
     public static final int chunkSizeForInt = 16;
+    /** defines the base order */
     public static final char[] bases = {'A', 'C', 'G', 'T'};
 
     private BaseEncoder() {
     }
 
-    public static long[] readTag(File inputFile, int skipLines, int maxTags) {
-        int c = 0;
-        long[] tempTags = new long[maxTags];
-        String temp, tagNumText;
-        try {
-            FileReader fr = new FileReader(inputFile);
-            BufferedReader br = new BufferedReader(fr);
-            for (int i = 0; i < skipLines; i++) {
-                br.readLine();
-            }
-            while (br.ready()) {
-                temp = br.readLine();
-                if (temp.indexOf(' ') < 0) {
-                    tempTags[c] = Long.parseLong(temp);
-                } else {
-                    tagNumText = temp.substring(0, temp.indexOf(' '));
-                    tempTags[c] = Long.parseLong(tagNumText);
-                }
-                c++;
-                if (c % 100000 < 1) {
-                    System.out.println("read number = " + c);
-                }
-            }
-            fr.close();
-            System.out.println("read number = " + c);
-        } catch (Exception e) {
-            System.out.println("Catch c=" + c + " e=" + e);
-        }
-        return Arrays.copyOfRange(tempTags, 0, c);
-    }
-
-    public static long[] uniqueReads(long[] allSeqs) {
-        int uniqueCnt = 1, c = 0;
-        for (int i = 0; i < allSeqs.length - 1; i++) {
-            if (allSeqs[i] != allSeqs[i + 1]) {
-                uniqueCnt++;
-            }
-        }
-        long[] uniSeqs = new long[uniqueCnt];
-        // System.out.println("uniqueCnt = " + uniqueCnt);
-        for (int i = 1; i < allSeqs.length - 1; i++) {
-            // System.out.println("c = " + c + " i="+i);
-            if (allSeqs[i] != allSeqs[i + 1]) {
-                uniSeqs[c] = allSeqs[i];
-                c++;
-            }
-        }
-        return uniSeqs;
-    }
-
-    public static char getCharBase(byte base) {
-        char c = 'N';
-        switch (base) {
-            case 0:
-                return 'A';  //00
-            case 1:
-                return 'C';  //01
-            case 2:
-                return 'G';  //10
-            case 3:
-                return 'T';  //11
-        }
-        return c;
-    }
-
+    /**
+     * Returns a long for a sequence in a String
+     * @param seq
+     * @return 2-bit encode sequence (-1 if an invalid sequence state is provided e.g. N)
+     */
     public static long getLongFromSeq(String seq) {
         int seqLength = seq.length();
         long v = 0;
@@ -128,7 +66,7 @@ public class BaseEncoder {
 
     /**
      * @param seq A String containing a DNA sequence.
-     * @return result A array of Long ints containing the binary representation of the sequence.
+     * @return result A array of Long containing the binary representation of the sequence.
      * null if sequence length is not a multiple of BaseEncoder.chunksize.
      */
     public static long[] getLongArrayFromSeq(String seq) {
@@ -144,7 +82,7 @@ public class BaseEncoder {
     
     /**
      * @param seq A String containing a DNA sequence.
-     * @return result A array of Long ints containing the binary representation of the sequence.
+     * @return result A array of Long containing the binary representation of the sequence.
      * if sequence length is shorter than padded Length adds A to the end.
      */
     public static long[] getLongArrayFromSeq(String seq, int paddedLength) {
@@ -155,9 +93,17 @@ public class BaseEncoder {
         return getLongArrayFromSeq(seq);
     }
 
-    //polyA is used represent unknown, but reverse complement will change it to polyT
-    //which does not mean the same
-    //sometimes it is best to reverseComplement by text below
+
+
+    /**
+     * Returns the reverse complement of a sequence already encoded in a 2-bit long.
+     * <p>
+     * Note: polyA is used represent unknown, but reverse complement will change it to polyT which does not mean the same
+     * sometimes it is best to reverseComplement by text below
+     * @param seq  2-bit encoded sequence
+     * @param len  length of the sequence
+     * @return  2-bit reverse complement
+     */
     public static long getReverseComplement(long seq, byte len) {
         // if(seq==-1) return -1;
         long rev = 0;
@@ -172,10 +118,28 @@ public class BaseEncoder {
         return rev;
     }
 
+    /**
+     * Returns the reverse complement of a sequence already encoded in a 2-bit long.
+     * The entire long (32-bp) is reverse complemented.
+     * <p>
+     * Note: polyA is used represent unknown, but reverse complement will change it to polyT which does not mean the same
+     * sometimes it is best to reverseComplement by text below
+     * @param seq  2-bit encoded sequence
+     * @return  2-bit reverse complement
+     */
     public static long getReverseComplement(long seq) {
         return getReverseComplement(seq, (byte) chunkSize);
     }
 
+
+    /**
+     * Returns the reverse complement of a arrays of sequences already encoded in a 2-bit long.
+     * <p>
+     * Note: polyA is used represent unknown, but reverse complement will change it to polyT which does not mean the same
+     * sometimes it is best to reverseComplement by text below
+     * @param seq  array of 2-bit encoded sequences
+     * @return  array of 2-bit reverse complements
+     */
     public static long[] getReverseComplement(long[] seq) {
         long[] rev = new long[seq.length];
         for (int i = 0; i < rev.length; i++) {
@@ -184,6 +148,12 @@ public class BaseEncoder {
         return rev;
     }
 
+    /**
+     * Returns a string based reverse complement.  Get around issues with the poly-A tailing in the 2-bit encoding approach.
+     *
+     * @param seq  DNA sequence
+     * @return  reverse complement DNA sequence
+     */
     public static String getReverseComplement(String seq) {
         StringBuilder sb = new StringBuilder(seq.length());
         for (int i = seq.length() - 1; i >= 0; i--) {
@@ -192,6 +162,11 @@ public class BaseEncoder {
         return sb.toString();
     }
 
+    /**
+     * Returns reverse complement for a sequence.
+     * @param base
+     * @return  reverse complement of base
+     */
     public static char getComplementBase(char base) {
         switch (base) {
             case 'A':
@@ -206,6 +181,14 @@ public class BaseEncoder {
         return 'N';
     }
 
+    /**
+     * Returns the byte {@link net.maizegenetics.pal.alignment.NucleotideAlignmentConstants} representation
+     * used by TASSEL for the 2-bit encoded long.
+     * <p>
+     * e.g. A > 2-bit encode 00 > byte (0)
+     * @param val 2-bit encoded DNA sequence
+     * @return array of bytes for the DNA sequence
+     */
     public static byte[] getByteSeqFromLong(long val) {
         byte[] b = new byte[chunkSize];
         long mask = 3;
@@ -216,6 +199,14 @@ public class BaseEncoder {
         return b;
     }
 
+    /**
+     * Returns the byte {@link net.maizegenetics.pal.alignment.NucleotideAlignmentConstants} representation
+     * used by TASSEL for the 2-bit encoded long.
+     * <p>
+     * e.g. A > 2-bit encode 00 > byte (0)
+     * @param valA array of 2-bit encoded DNA sequence
+     * @return array of bytes for the DNA sequence
+     */
     public static byte[] getByteSeqFromLong(long[] valA) {
         byte[] b = new byte[chunkSize * valA.length];
         long mask = 3;
@@ -230,6 +221,13 @@ public class BaseEncoder {
         return b;
     }
 
+    /**
+     * Returns the 2-bit encoded long represented by 32 bytes representing {@link net.maizegenetics.pal.alignment.NucleotideAlignmentConstants} 
+     * representation
+     * <p>
+     * @param b array of bytes encoding NucleotideAlignmentConstants
+     * @return 2-bit encoded long
+     */
     public static long getLongSeqFromByteArray(byte[] b) {
         //the byte array must be in 0-3 coding for A, C, G, T
         long v = 0;
@@ -241,7 +239,13 @@ public class BaseEncoder {
         }
         return v;
     }
-
+    
+     /**
+     * Return a string representation of the 2-bit encoded long.
+     * @param val 2-bit encoded sequence
+     * @param len length of the sequence
+     * @return DNA sequence as a string
+     */
     public static String getSequenceFromLong(long val, byte len) {
         StringBuilder seq = new StringBuilder(chunkSize + 4);
         long mask = 3;
@@ -253,6 +257,11 @@ public class BaseEncoder {
         return seq.toString();
     }
 
+     /**
+     * Return a string representation of an array of 2-bit encoded longs.
+     * @param val array of 2-bit encoded sequences
+     * @return DNA sequence as a string
+     */
     public static String getSequenceFromLong(long[] val) {
         StringBuilder seq = new StringBuilder();
         for (long v : val) {
@@ -261,6 +270,11 @@ public class BaseEncoder {
         return seq.toString();
     }
 
+    /**
+     * Split a 2-bit encoded long into 2 integers.
+     * @param val 2-bit encoded long sequence
+     * @return array of 2-bit encoded integers
+     */
     public static int[] getIntFromLong(long val) {
         int[] ival = new int[2];
         ival[0] = (int) (val >> chunkSize);
@@ -268,6 +282,11 @@ public class BaseEncoder {
         return ival;
     }
 
+    /**
+     * Return a string representation of the 2-bit encoded Integer (16bp).
+     * @param val 2-bit encoded sequence
+     * @return DNA sequence as a string
+     */
     public static String getSequenceFromInt(int val) {
         StringBuilder seq = new StringBuilder(chunkSizeForInt + 1);
         long mask = 3;
@@ -279,49 +298,14 @@ public class BaseEncoder {
         return seq.toString();
     }
 
-    public static String[] createDegenerateTags(String site, boolean onlyMethylMutations) {
-        String[] ps = new String[site.length() * 4];
-        StringBuilder sb;
-        int numDegenTags = 0;
-
-        if (onlyMethylMutations) {
-            ps[numDegenTags++] = site;
-            for (int i = 0; i < site.length(); i++) {
-                if (site.charAt(i) == 'C') {
-                    sb = new StringBuilder(site);
-                    ps[numDegenTags++] = sb.replace(i, i + 1, "T").toString();
-                }
-                if (site.charAt(i) == 'G') {
-                    sb = new StringBuilder(site);
-                    ps[numDegenTags++] = sb.replace(i, i + 1, "A").toString();
-                }
-            }
-        } else {
-            ps[numDegenTags++] = site;
-            for (int i = 0; i < site.length(); i++) {
-                for (int j = 0; j < bases.length; j++) {
-                    if (site.charAt(i) != bases[j]) {
-                        sb = new StringBuilder(site);
-                        ps[numDegenTags++] = sb.replace(i, i + 1, "" + bases[j]).toString();
-                    }
-                }
-            }
-        }
-        return Arrays.copyOf(ps, numDegenTags);
-    }
-
-    public static int getAvgQuality(String quality) {
-        int sum = 0;
-        for (int i = 0; i < quality.length(); i++) {
-            sum += (int) quality.charAt(i) - 64;
-        }
-        int avg = sum / quality.length();
-        if ((avg < 50) && (avg > -1)) {
-            return avg;
-        }
-        return -1;
-    }
-
+    /**
+     * Returns the position of the first low quality positions based on a quality
+     * fastq (?) string.
+     * @param quality fastq quality string
+     * @param minQual minimum quality threshold
+     * @return position of first low quality position (quality length is returned is not low 
+     * quality base is found.
+     */
     public static int getFirstLowQualityPos(String quality, int minQual) {
         int qualInt = 0;
         for (int i = 0; i < quality.length(); i++) {
@@ -333,10 +317,25 @@ public class BaseEncoder {
         return quality.length();
     }
 
+
+    /**
+     * Return a string representation of the 2-bit encoded long.
+     * @param val 2-bit encoded sequence
+     * @return DNA sequence as a string
+     */
     public static String getSequenceFromLong(long val) {
         return getSequenceFromLong(val, (byte) chunkSize);
     }
 
+    /**
+     * Returns the number of bp differences between two 2-bit encoded longs.
+     * Maximum divergence is used to save time when only interested in very similar 
+     * sequences.
+     * @param seq1 2-bit encoded sequence
+     * @param seq2 2-bit encoded sequence
+     * @param maxDivergence threshold for counting divergence upto
+     * @return count of the divergence (above the maxDivergence, chunkSize is returned)
+     */
     public static byte seqDifferences(long seq1, long seq2, int maxDivergence) {
         long mask = 3;
         byte cnt = 0;
@@ -355,6 +354,13 @@ public class BaseEncoder {
         return cnt;
     }
 
+    
+    /**
+     * Returns the number of bp differences between two 2-bit encoded longs.
+     * @param seq1 2-bit encoded sequence
+     * @param seq2 2-bit encoded sequence
+     * @return count of the divergence 
+     */
     public static byte seqDifferences(long seq1, long seq2) {
         long mask = 3;
         byte cnt = 0;
@@ -368,7 +374,16 @@ public class BaseEncoder {
         }
         return cnt;
     }
-
+    /**
+     * Returns the number of sequencing differences between two 2-bit encoded longs.
+     * Maximum divergence is used to save time when only interested in very similar 
+     * sequences.
+     * @param seq1 2-bit encoded sequence
+     * @param seq2 2-bit encoded sequence
+     * @param lengthOfComp number of sites to compare
+     * @param maxDivergence threshold for counting divergence upto
+     * @return count of the divergence (above the maxDivergence, chunkSize is returned)
+     */
     public static byte seqDifferencesForSubset(long seq1, long seq2, int lengthOfComp, int maxDivergence) {
         long mask = 3;
         byte cnt = 0;
@@ -383,21 +398,11 @@ public class BaseEncoder {
         return cnt;
     }
 
-    public static byte seqDifferencesWithGapWrong(long seq1, long seq2) {
-        //allow a single gap, identify gap by two adjacent mismatches
-        long mask = 3;
-        byte cnt = 0;
-        long diff = seq1 ^ seq2;
-        for (int x = 0; x < chunkSize; x++) {
-            if ((diff & mask) > 0) {
-                cnt++;
-            }
-            diff = diff >> 2;
-            // System.out.println("v = " + v);
-        }
-        return cnt;
-    }
-
+    /**
+     * Trim the poly-A off the sequence string
+     * @param s input sequence
+     * @return sequence with polyA removed
+     */
     public static String removePolyAFromEnd(String s) {
         int index = s.length() - 1;
         while (s.charAt(index) == 'A') {
