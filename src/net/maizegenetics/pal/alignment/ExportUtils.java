@@ -236,14 +236,19 @@ public class ExportUtils {
 
             h5w.createGroup(HapMapHDF5Constants.GENOTYPES);
             if(includeGenotypes) {
+                h5w.close();
+                MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
                 for (int t = 0; t < numTaxa; t++) {
-                    String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + a.getFullTaxaName(t);
-                    if(h5w.exists(basesPath)) System.err.println("Taxa Name Already Exists:"+basesPath);
-                    h5w.createByteArray(basesPath, numSites, features);
-                    byte[] bases = a.getBaseRow(t);
-                    h5w.writeByteArray(basesPath, bases, features);
-//                    if(t%1==0) System.out.println("Out Taxa "+t+" :"+basesPath);
+                      byte[] bases = a.getBaseRow(t);
+                      addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
+//                    String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + a.getFullTaxaName(t);
+//                    if(h5w.exists(basesPath)) System.err.println("Taxa Name Already Exists:"+basesPath);
+//                    h5w.createByteArray(basesPath, numSites, features);
+//                    byte[] bases = a.getBaseRow(t);
+//                    h5w.writeByteArray(basesPath, bases, features);
+//                    if(t%1==0) System.out.println("Out Taxa "+t+" :"+a.getFullTaxaName(t));
                 }
+                addA.clean();
             }
             return newHDF5file;
 
