@@ -38,7 +38,7 @@ public interface IdGroup extends java.io.Serializable {
      *
      * @param name full name of identifier
      *
-     * @return index
+     * @return index (-1 if not found)
      */
     public int whichIdNumber(String name);
 
@@ -46,7 +46,7 @@ public interface IdGroup extends java.io.Serializable {
      * Returns the index of the identifier.
      *
      * @param id identifier
-     * @return index
+     * @return index (-1 if not found)
      */
     public int whichIdNumber(Identifier id);
 }

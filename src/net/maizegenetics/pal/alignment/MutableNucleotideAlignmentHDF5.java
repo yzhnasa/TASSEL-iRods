@@ -255,6 +255,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public byte getBase(int taxon, int site) {
         long key=getCacheKey(taxon,site);
+        if(myDataCache==null) initGenotypeCache();
         byte[] data=myDataCache.get(key);
         if(data==null) {data=cacheTaxonSiteBlock(taxon, site, key);}
         return data[site%defaultSiteCache];
@@ -672,12 +673,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public synchronized void removeTaxon(int taxon) {
         String currentPath = getTaxaGenoPath(taxon);
-        System.out.println(currentPath);
+     //   System.out.println(currentPath);
         myWriter.delete(currentPath);
         myIdGroup=null;
         myIdentifiers.remove(taxon);
-        System.out.println(getTaxaGenoPath(taxon));
-        initGenotypeCache();
+       // System.out.println(getTaxaGenoPath(taxon));
+        myDataCache=null;
+      //  initGenotypeCache();
         myIsDirty=true;
     }
     
