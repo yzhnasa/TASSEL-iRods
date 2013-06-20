@@ -180,26 +180,26 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     private void initGenotypeCache() {
         myDataCache=new LRUCache<Long, byte[]>(defaultCacheSize);
-        int minLoad=(defaultCacheSize<getSequenceCount())?defaultCacheSize:getSequenceCount();
-        int start=(0/defaultSiteCache)*defaultSiteCache;
-        for (int i = 0; i<minLoad; i++) {
-            myDataCache.put(getCacheKey(i,0), myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(i),defaultSiteCache,start));
-        }
+//        int minLoad=(defaultCacheSize<getSequenceCount())?defaultCacheSize:getSequenceCount();
+//        int start=(0/defaultSiteCache)*defaultSiteCache;
+//        for (int i = 0; i<minLoad; i++) {
+//            myDataCache.put(getCacheKey(i,0), myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(i),defaultSiteCache,start));
+//        }
     }
     
     private void initDepthCache() {
         myDepthCache=new LRUCache<Long, byte[][]>(defaultCacheSize);
-        int minLoad=(defaultCacheSize<getSequenceCount())?defaultCacheSize:getSequenceCount();
-        int start=(0/defaultSiteCache)*defaultSiteCache;
-        int realSiteCache=(myNumSites-start<defaultSiteCache)?myNumSites-start:defaultSiteCache;
-     //   int xSizeCache=3000;
-        for (int i = 0; i<minLoad; i++) {
-//            byte[][] test2=myWriter.readByteMatrix(getTaxaDepthPath(i));
-//            System.out.println(Arrays.deepToString(test2));
-//            byte[][] test=myWriter.readByteMatrixBlockWithOffset(getTaxaDepthPath(i), 6, xSizeCache, 0, start);
-//            System.out.println(Arrays.deepToString(test));
-            myDepthCache.put(getCacheKey(i,0), myWriter.readByteMatrixBlockWithOffset(getTaxaDepthPath(i), 6, realSiteCache, 0, start));
-        }
+//        int minLoad=(defaultCacheSize<getSequenceCount())?defaultCacheSize:getSequenceCount();
+//        int start=(0/defaultSiteCache)*defaultSiteCache;
+//        int realSiteCache=(myNumSites-start<defaultSiteCache)?myNumSites-start:defaultSiteCache;
+//     //   int xSizeCache=3000;
+//        for (int i = 0; i<minLoad; i++) {
+////            byte[][] test2=myWriter.readByteMatrix(getTaxaDepthPath(i));
+////            System.out.println(Arrays.deepToString(test2));
+////            byte[][] test=myWriter.readByteMatrixBlockWithOffset(getTaxaDepthPath(i), 6, xSizeCache, 0, start);
+////            System.out.println(Arrays.deepToString(test));
+//            myDepthCache.put(getCacheKey(i,0), myWriter.readByteMatrixBlockWithOffset(getTaxaDepthPath(i), 6, realSiteCache, 0, start));
+//        }
     }
     
     private long getCacheKey(int taxon, int site) {
@@ -255,7 +255,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public byte getBase(int taxon, int site) {
         long key=getCacheKey(taxon,site);
-        if(myDataCache==null) initGenotypeCache();
         byte[] data=myDataCache.get(key);
         if(data==null) {data=cacheTaxonSiteBlock(taxon, site, key);}
         return data[site%defaultSiteCache];
@@ -678,8 +677,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myIdGroup=null;
         myIdentifiers.remove(taxon);
        // System.out.println(getTaxaGenoPath(taxon));
-        myDataCache=null;
-      //  initGenotypeCache();
+        myDataCache.clear();
         myIsDirty=true;
     }
     
@@ -692,12 +690,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public void clean() {
-        //System.out.print("Starting clean ...");
+        long time=System.currentTimeMillis();
+        System.out.print("Starting clean ...");
         recalcLocusCoordinates();
         HDF5AlignmentAnnotator faCalc=new HDF5AlignmentAnnotator(this, fileName, 
                 HDF5AlignmentAnnotator.AnnoType.ALLELEFreq);
         faCalc.run();
-        //System.out.println("finished");
+        System.out.printf("finished in %dms%n",System.currentTimeMillis()-time);
         myIsDirty = false;
         myNumSites -= myNumSitesStagedToRemove;
         myNumSitesStagedToRemove = 0;

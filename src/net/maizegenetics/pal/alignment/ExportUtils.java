@@ -157,7 +157,14 @@ public class ExportUtils {
         }
     }
 
-        public static String writeToMutableHDF5(Alignment a, String newHDF5file, boolean includeGenotypes) {
+   /**
+    * Exports a alignment into the Byte HDF5 format.  
+    * @param a
+    * @param newHDF5file
+    * @param exportTaxa  
+    * @return 
+    */ 
+   public static String writeToMutableHDF5(Alignment a, String newHDF5file, IdGroup exportTaxa) {
         IHDF5Writer h5w = null;
         try {
             int numSites = a.getSiteCount();
@@ -173,13 +180,9 @@ public class ExportUtils {
             config.dontUseExtendableDataTypes();
             h5w = config.writer();
             HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
-
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
-
             h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
-
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
-
             String[][] aEncodings = a.getAlleleEncodings();
             int numEncodings = aEncodings.length;
             int numStates = aEncodings[0].length;
@@ -235,18 +238,13 @@ public class ExportUtils {
   //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
 
             h5w.createGroup(HapMapHDF5Constants.GENOTYPES);
-            if(includeGenotypes) {
+            if(exportTaxa!=null) {
                 h5w.close();
                 MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
                 for (int t = 0; t < numTaxa; t++) {
+                      if(exportTaxa.whichIdNumber(a.getFullTaxaName(t))<0) continue;  //taxon not in export list
                       byte[] bases = a.getBaseRow(t);
                       addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
-//                    String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + a.getFullTaxaName(t);
-//                    if(h5w.exists(basesPath)) System.err.println("Taxa Name Already Exists:"+basesPath);
-//                    h5w.createByteArray(basesPath, numSites, features);
-//                    byte[] bases = a.getBaseRow(t);
-//                    h5w.writeByteArray(basesPath, bases, features);
-//                    if(t%1==0) System.out.println("Out Taxa "+t+" :"+a.getFullTaxaName(t));
                 }
                 addA.clean();
             }
@@ -308,7 +306,7 @@ public class ExportUtils {
             siteOfSite[s]=site;
             s++;
         }
-        ExportUtils.writeToMutableHDF5(mna, newMerge, false);
+        ExportUtils.writeToMutableHDF5(mna, newMerge, null);
         MutableNucleotideAlignmentHDF5 base=MutableNucleotideAlignmentHDF5.getInstance(newMerge, 4096);
         int cnt=0;
         long startTime=System.currentTimeMillis();
