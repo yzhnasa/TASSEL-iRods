@@ -178,7 +178,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             mna=new ProjectionAlignment(donorAlign[0], unimpAlign.getIdGroup());
         } else {
             if(exportFile.contains("hmp.h5")) {
-                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, false);
+                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, null);
                 mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
             }else {
                 mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);

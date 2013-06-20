@@ -317,7 +317,7 @@ public class ExportPlugin extends AbstractPlugin {
         } else if (myFileType == FileLoadPlugin.TasselFileType.HDF5) {
             resultFile = ExportUtils.writeToHDF5(inputAlignment, mySaveFile);
         }  else if (myFileType == FileLoadPlugin.TasselFileType.ByteHDF5) {
-            resultFile = ExportUtils.writeToMutableHDF5(inputAlignment, mySaveFile,true);
+            resultFile = ExportUtils.writeToMutableHDF5(inputAlignment, mySaveFile,inputAlignment.getIdGroup());
         } else if (myFileType == FileLoadPlugin.TasselFileType.VCF) {
             resultFile = ExportUtils.writeToVCF(inputAlignment, mySaveFile, '\t');
         } else {
