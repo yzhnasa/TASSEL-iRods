@@ -2,6 +2,7 @@ package net.maizegenetics.pal.ids;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import net.maizegenetics.util.Utils;
 
 /**
@@ -18,8 +19,25 @@ public class IdGroupIOUtils {
         BufferedReader fileIn = null;
         try {
             fileIn = Utils.getBufferedReader(fileName, 1000000);
+            fileIn.mark(1<<16);
             String line;
             ArrayList<Identifier> taxaNames=new ArrayList<Identifier>();
+            line=fileIn.readLine();
+            if(line.contains("<Name>")) {
+                //parse headers
+                String[] s=line.split("\\t");
+                int countCat=0, countNum=0;
+                for (String si : s) {
+                    if(si.startsWith("<#")) {countNum++;}
+                    else if(si.startsWith("<")) {countCat++;}
+                }
+                HashMap<String, String>[] catHash=new HashMap[countCat];
+                HashMap<String, String>[] numHash=new HashMap[countNum];
+                
+                
+            } else {
+               fileIn.reset();
+            }
             while((line=fileIn.readLine())!=null) {
                 String[] s=line.split("\\t");
                 taxaNames.add(new Identifier(s[0]));

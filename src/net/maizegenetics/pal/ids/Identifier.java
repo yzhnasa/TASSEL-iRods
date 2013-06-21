@@ -88,8 +88,8 @@ public class Identifier implements Serializable, Comparable {
 
         TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
 
-        String[] first = myName.split(DELIMITER);
-        String[] second = c.split(DELIMITER);
+        String[] first = myName.split(DELIMITER);  //these split commands are taking 99% of time, when testing a 32K taxa set
+        String[] second = c.split(DELIMITER);  //these split commands are taking 99% of time, when testing a 32K taxa set
         int count = Math.min(first.length, second.length);
         if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.NumLevels) {
             count = Math.min(count, TasselPrefs.getIDJoinNumLevels());
