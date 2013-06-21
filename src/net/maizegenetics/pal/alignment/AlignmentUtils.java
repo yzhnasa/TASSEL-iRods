@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 
@@ -21,7 +20,7 @@ import net.maizegenetics.util.ProgressListener;
 public class AlignmentUtils {
 
     private static final Integer ONE = Integer.valueOf(1);
-    private static final byte HIGHMASK=(byte)0x0F;
+    private static final byte HIGHMASK = (byte) 0x0F;
 
     private AlignmentUtils() {
         // utility class
@@ -577,7 +576,7 @@ public class AlignmentUtils {
     }
 
     /**
-     * Combines two allele values into one diploid value.  Assumed phased.
+     * Combines two allele values into one diploid value. Assumed phased.
      *
      * @param a allele 1
      * @param b allele 2
@@ -585,11 +584,11 @@ public class AlignmentUtils {
      * @return diploid value
      */
     public static byte getDiploidValuePhased(byte a, byte b) {
-        return (byte) ((a<<4) | (HIGHMASK&b));
+        return (byte) ((a << 4) | (HIGHMASK & b));
     }
-    
-        /**
-     * Combines two allele values into one diploid value.  Assumed phased.
+
+    /**
+     * Combines two allele values into one diploid value. Assumed phased.
      *
      * @param a allele 1
      * @param b allele 2
@@ -599,10 +598,8 @@ public class AlignmentUtils {
     public static byte getDiploidValue(byte a, byte b) {
         return getDiploidValuePhased(a, b);
     }
-    
-    
-    
-        /**
+
+    /**
      * Combines two allele values into one diploid value. In alphabetical order
      *
      * @param a allele 1
@@ -611,33 +608,40 @@ public class AlignmentUtils {
      * @return diploid value sorted by order A < C < G < T
      */
     public static byte getUnphasedDiploidValue(byte a, byte b) {
-        a=(byte)(HIGHMASK&a);
-        b=(byte)(HIGHMASK&b);
-        if(a<b) return (byte) ((a << 4) | b);
+        a = (byte) (HIGHMASK & a);
+        b = (byte) (HIGHMASK & b);
+        if (a < b) {
+            return (byte) ((a << 4) | b);
+        }
         return (byte) ((b << 4) | a);
     }
-    
+
     /**
-     * Combines two genotype values into one diploid value.  Returns unknown if either 
-     * parent is heterozygous or unknown, or alleles are swapped.
+     * Combines two genotype values into one diploid value. Returns unknown if
+     * either parent is heterozygous or unknown, or alleles are swapped.
+     *
      * @param g1 genotype 1
      * @param g2 genotype 2
      * @return diploid value
      */
     public static byte getUnphasedDiploidValueNoHets(byte g1, byte g2) {
-        if(g1==Alignment.UNKNOWN_DIPLOID_ALLELE) return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        if(g2==Alignment.UNKNOWN_DIPLOID_ALLELE) return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        if(isHeterozygous(g1)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        if(isHeterozygous(g2)) return Alignment.UNKNOWN_DIPLOID_ALLELE;
-        if(g2==g1) return g1;
-        return getUnphasedDiploidValue(g1,g2);
-//        byte h1=getUnphasedDiploidValue(a,b);
-//        byte h2=getUnphasedDiploidValue(b,a);
-//        if(h1==h2) return h1;
-//        return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if (g1 == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        if (g2 == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        if (isHeterozygous(g1)) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        if (isHeterozygous(g2)) {
+            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        }
+        if (g2 == g1) {
+            return g1;
+        }
+        return getUnphasedDiploidValue(g1, g2);
     }
-    
-    
 
     /**
      * Separates diploid allele value into it's two values.
@@ -652,105 +656,157 @@ public class AlignmentUtils {
         result[1] = (byte) (genotype & 0xf);
         return result;
     }
-    
+
     /**
      * Method for getting TBits rapidly from major and minor allele arrays
+     *
      * @param genotype
      * @param mjA
      * @param mnA
-     * @return 
+     * @return
      */
     public static BitSet[] calcBitPresenceFromGenotype(byte[] genotype, byte[] mjA, byte[] mnA) {
-        int sites=genotype.length;
-        if((genotype.length!=mjA.length)||(genotype.length!=mnA.length)) throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
-        OpenBitSet rMj=new OpenBitSet(genotype.length);
-        OpenBitSet rMn=new OpenBitSet(genotype.length);
-        for (int i = 0; i < sites; i++) {
-            byte g=genotype[i];
-            byte mj=mjA[i];
-            byte mn=mnA[i];
- //           System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
-            if(mj==Alignment.UNKNOWN_ALLELE) continue;
-            if(g==AlignmentUtils.getDiploidValuePhased(mj, mj)) {rMj.fastSet(i); continue;}       
-            if(mn==Alignment.UNKNOWN_ALLELE) continue;
-            if(g==AlignmentUtils.getDiploidValuePhased(mn, mn)) {rMn.fastSet(i); continue;}
-            byte het=AlignmentUtils.getUnphasedDiploidValue(mj, mn);
-            if(AlignmentUtils.isEqual(g, het)) {rMj.fastSet(i); rMn.fastSet(i);}
+        int sites = genotype.length;
+        if ((genotype.length != mjA.length) || (genotype.length != mnA.length)) {
+            throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
         }
-        return new BitSet[]{rMj,rMn};
+        OpenBitSet rMj = new OpenBitSet(genotype.length);
+        OpenBitSet rMn = new OpenBitSet(genotype.length);
+        for (int i = 0; i < sites; i++) {
+            byte g = genotype[i];
+            byte mj = mjA[i];
+            byte mn = mnA[i];
+            //           System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
+            if (mj == Alignment.UNKNOWN_ALLELE) {
+                continue;
+            }
+            if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
+                rMj.fastSet(i);
+                continue;
+            }
+            if (mn == Alignment.UNKNOWN_ALLELE) {
+                continue;
+            }
+            if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
+                rMn.fastSet(i);
+                continue;
+            }
+            byte het = AlignmentUtils.getUnphasedDiploidValue(mj, mn);
+            if (AlignmentUtils.isEqual(g, het)) {
+                rMj.fastSet(i);
+                rMn.fastSet(i);
+            }
+        }
+        return new BitSet[]{rMj, rMn};
     }
+
     /**
      * Try to set by bit shifting entirely.
+     *
      * @param genotype
      * @param mjA
      * @param mnA
-     * @return 
+     * @return
      */
     public static BitSet[] calcBitPresenceFromGenotype2(byte[] genotype, byte[] mjA, byte[] mnA) {
-        int sites=genotype.length;
-        if((genotype.length!=mjA.length)||(genotype.length!=mnA.length)) throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
-        OpenBitSet rMj=new OpenBitSet(genotype.length);
-        OpenBitSet rMn=new OpenBitSet(genotype.length);
-        int wordNum=rMj.getNumWords();
-        int inc=0;
-        long highM=1L<<63;
+        int sites = genotype.length;
+        if ((genotype.length != mjA.length) || (genotype.length != mnA.length)) {
+            throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
+        }
+        OpenBitSet rMj = new OpenBitSet(genotype.length);
+        OpenBitSet rMn = new OpenBitSet(genotype.length);
+        int wordNum = rMj.getNumWords();
+        int inc = 0;
+        long highM = 1L << 63;
         for (int w = 0; w < wordNum; w++) {
-            long rMjw=0;
-            long rMnw=0;
-            int i=0;
-            for (i = 0; (i < 64)&&(inc<sites); i++) {
+            long rMjw = 0;
+            long rMnw = 0;
+            int i = 0;
+            for (i = 0; (i < 64) && (inc < sites); i++) {
 //                if(inc<64) System.out.println("mjs"+i+"  :"+ BitUtil.toPadStringLowSiteToHighSite(rMjw));
 //                if(inc<64) System.out.println("mns"+i+"  :"+BitUtil.toPadStringLowSiteToHighSite(rMnw));
-                byte g=genotype[inc];
-                byte mj=mjA[inc];
-                byte mn=mnA[inc];
+                byte g = genotype[inc];
+                byte mj = mjA[inc];
+                byte mn = mnA[inc];
                 inc++;
 //                if(inc<65) System.out.printf("inc:%d g:%d mj:%d mn:%d %n", inc, g, mj, mn);
-                if((g==Alignment.UNKNOWN_DIPLOID_ALLELE)||(mj==Alignment.UNKNOWN_ALLELE)) {
-                    rMjw>>>=1; rMnw>>>=1; continue;}
-                if(g==AlignmentUtils.getDiploidValuePhased(mj, mj)) {
-                    rMjw=(rMjw>>>1)|highM; rMnw>>>=1; continue;}
-                if(mn==Alignment.UNKNOWN_ALLELE) {
-                    rMjw>>>=1; rMnw>>>=1; continue;}
-                if(g==AlignmentUtils.getDiploidValuePhased(mn, mn)) {
-                    rMjw>>>=1; rMnw=(rMnw>>>1)|highM; continue;}
-                byte het=AlignmentUtils.getUnphasedDiploidValue(mj, mn);
-                if(AlignmentUtils.isEqual(g, het)) {
-                    rMjw=(rMjw>>>1)|highM; rMnw=(rMnw>>>1)|highM;continue;}
-                
+                if ((g == Alignment.UNKNOWN_DIPLOID_ALLELE) || (mj == Alignment.UNKNOWN_ALLELE)) {
+                    rMjw >>>= 1;
+                    rMnw >>>= 1;
+                    continue;
+                }
+                if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
+                    rMjw = (rMjw >>> 1) | highM;
+                    rMnw >>>= 1;
+                    continue;
+                }
+                if (mn == Alignment.UNKNOWN_ALLELE) {
+                    rMjw >>>= 1;
+                    rMnw >>>= 1;
+                    continue;
+                }
+                if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
+                    rMjw >>>= 1;
+                    rMnw = (rMnw >>> 1) | highM;
+                    continue;
+                }
+                byte het = AlignmentUtils.getUnphasedDiploidValue(mj, mn);
+                if (AlignmentUtils.isEqual(g, het)) {
+                    rMjw = (rMjw >>> 1) | highM;
+                    rMnw = (rMnw >>> 1) | highM;
+                    continue;
+                }
+
             }
-            if(i!=63) {rMjw=(rMjw>>>(64-i));rMnw=(rMnw>>>(64-i));}
+            if (i != 63) {
+                rMjw = (rMjw >>> (64 - i));
+                rMnw = (rMnw >>> (64 - i));
+            }
             rMj.setLong(w, rMjw);
             rMn.setLong(w, rMnw);
-        }   
-        return new BitSet[]{rMj,rMn};
+        }
+        return new BitSet[]{rMj, rMn};
     }
-    
+
     /**
      * Set all majors first, and then fix everything else
+     *
      * @param genotype
      * @param mjA
      * @param mnA
-     * @return 
+     * @return
      */
-     public static BitSet[] calcBitPresenceFromGenotype3(byte[] genotype, byte[] mjA, byte[] mnA) {
-        int sites=genotype.length;
-        if((genotype.length!=mjA.length)||(genotype.length!=mnA.length)) throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
-        OpenBitSet rMj=new OpenBitSet(genotype.length);
-        rMj.set(0, genotype.length);
-        OpenBitSet rMn=new OpenBitSet(genotype.length);
-        for (int i = 0; i < sites; i++) {
-            byte g=genotype[i];
-            byte mj=mjA[i];
-            byte mn=mnA[i];
- //           System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
-            if((g==Alignment.UNKNOWN_DIPLOID_ALLELE)||(mj==Alignment.UNKNOWN_ALLELE)) {rMj.clear(i); continue;}
-            if(mn==Alignment.UNKNOWN_ALLELE) continue;
-            if(g==AlignmentUtils.getDiploidValuePhased(mn, mn)) {rMj.clear(i); rMn.fastSet(i); continue;}                      
-            byte het=AlignmentUtils.getUnphasedDiploidValue(mj, mn);
-            if(AlignmentUtils.isEqual(g, het)) {rMn.fastSet(i);}
+    public static BitSet[] calcBitPresenceFromGenotype3(byte[] genotype, byte[] mjA, byte[] mnA) {
+        int sites = genotype.length;
+        if ((genotype.length != mjA.length) || (genotype.length != mnA.length)) {
+            throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
         }
-        return new BitSet[]{rMj,rMn};
+        OpenBitSet rMj = new OpenBitSet(genotype.length);
+        rMj.set(0, genotype.length);
+        OpenBitSet rMn = new OpenBitSet(genotype.length);
+        for (int i = 0; i < sites; i++) {
+            byte g = genotype[i];
+            byte mj = mjA[i];
+            byte mn = mnA[i];
+            //           System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
+            if ((g == Alignment.UNKNOWN_DIPLOID_ALLELE) || (mj == Alignment.UNKNOWN_ALLELE)) {
+                rMj.clear(i);
+                continue;
+            }
+            if (mn == Alignment.UNKNOWN_ALLELE) {
+                continue;
+            }
+            if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
+                rMj.clear(i);
+                rMn.fastSet(i);
+                continue;
+            }
+            byte het = AlignmentUtils.getUnphasedDiploidValue(mj, mn);
+            if (AlignmentUtils.isEqual(g, het)) {
+                rMn.fastSet(i);
+            }
+        }
+        return new BitSet[]{rMj, rMn};
     }
 
     /**
