@@ -22,15 +22,17 @@ public class Identifier implements Serializable, Comparable {
     private static final long serialVersionUID = -7873729831795750538L;
     public static final String DELIMITER = ":";
     private final String myName;
+    private final String[] myNameTokens;
     public static Identifier ANONYMOUS = new Identifier("");
 
     public Identifier(String name) {
         myName = name;
+        myNameTokens = name.split(DELIMITER);
     }
 
     public static Identifier getMergedInstance(Identifier id1, Identifier id2) {
-        String[] first = id1.getFullName().split(DELIMITER);
-        String[] second = id2.getFullName().split(DELIMITER);
+        String[] first = id1.getFullNameTokens();
+        String[] second = id2.getFullNameTokens();
         int count = Math.min(first.length, second.length);
         for (int i = 0; i < count; i++) {
             if (!first[i].equals(second[i])) {
@@ -55,7 +57,7 @@ public class Identifier implements Serializable, Comparable {
     @Override
     public int compareTo(Object c) {
         if (c instanceof Identifier) {
-            return compareTo(((Identifier) c).getFullName());
+            return compareTo(((Identifier) c).getFullNameTokens());
         } else {
             throw new ClassCastException();
         }
@@ -85,26 +87,28 @@ public class Identifier implements Serializable, Comparable {
     }
 
     public int compareTo(String c) {
+        return compareTo(c.split(DELIMITER));
+    }
+
+    public int compareTo(String[] fullNameTokens) {
 
         TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
 
-        String[] first = myName.split(DELIMITER);  //these split commands are taking 99% of time, when testing a 32K taxa set
-        String[] second = c.split(DELIMITER);  //these split commands are taking 99% of time, when testing a 32K taxa set
-        int count = Math.min(first.length, second.length);
+        int count = Math.min(myNameTokens.length, fullNameTokens.length);
         if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.NumLevels) {
             count = Math.min(count, TasselPrefs.getIDJoinNumLevels());
         }
         for (int i = 0; i < count; i++) {
-            int current = first[i].compareTo(second[i]);
+            int current = myNameTokens[i].compareTo(fullNameTokens[i]);
             if (current != 0) {
                 return current;
             }
         }
 
         if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
-            if (first.length < second.length) {
+            if (myNameTokens.length < fullNameTokens.length) {
                 return -1;
-            } else if (second.length < first.length) {
+            } else if (fullNameTokens.length < myNameTokens.length) {
                 return 1;
             } else {
                 return 0;
@@ -130,6 +134,10 @@ public class Identifier implements Serializable, Comparable {
         return myName.replaceAll(DELIMITER, delimiter);
     }
 
+    public String[] getFullNameTokens() {
+        return myNameTokens;
+    }
+
     /**
      * Returns requested level of name starting at index 0. 0 will generally be
      * most specific classification.
@@ -138,9 +146,8 @@ public class Identifier implements Serializable, Comparable {
      * @return Specified level.
      */
     public String getNameLevel(int index) {
-        String[] temp = myName.split(DELIMITER);
-        if (index < temp.length) {
-            return temp[index];
+        if (index < myNameTokens.length) {
+            return myNameTokens[index];
         }
         return null;
     }
@@ -158,10 +165,9 @@ public class Identifier implements Serializable, Comparable {
 
     public String getNameToLevel(int index, String delimiter) {
 
-        String[] temp = myName.split(DELIMITER);
         int upto = 0;
-        if (index > temp.length) {
-            upto = temp.length;
+        if (index > myNameTokens.length) {
+            upto = myNameTokens.length;
         } else {
             upto = index;
         }
@@ -174,7 +180,7 @@ public class Identifier implements Serializable, Comparable {
             if (i != 0) {
                 builder.append(delimiter);
             }
-            builder.append(temp[i]);
+            builder.append(myNameTokens[i]);
         }
 
         return builder.toString();
@@ -186,6 +192,6 @@ public class Identifier implements Serializable, Comparable {
      * @return number of name levels.
      */
     public int getNumNameLevels() {
-        return myName.split(DELIMITER).length;
+        return myNameTokens.length;
     }
 }
