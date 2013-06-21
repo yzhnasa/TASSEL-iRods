@@ -88,6 +88,15 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         super(parentFrame, false);
     }
     
+    /**
+     * Produces donor haplotypes that can be used for imputation.
+     * @param inFile Input DNA sequence alignment file name in either HapMap or HDF5
+     * @param exportFile
+     * @param errorExportFile
+     * @param maxDistance maximum distance between founder haplotype and other haplotype
+     * @param minSites
+     * @param appoxSitesPerHaplotype 
+     */
     public void runFindMergeHaplotypes(String inFile, String exportFile,
             String errorExportFile, double maxDistance, int minSites, int appoxSitesPerHaplotype) {
         Alignment baseAlign=null;
@@ -494,10 +503,10 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
      */
     public static void main(String[] args) {
        // String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/impOrig/";
-        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-        String rootOut="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-//        String root="/Volumes/LaCie/build20120701/IMP26/orig/";
-//        String rootOut="/Volumes/LaCie/build20120701/IMP26/haplos/";
+//        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+//        String rootOut="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+        String root="/Volumes/LaCie/build20120701/IMP26/orig/";
+        String rootOut="/Volumes/LaCie/build20120701/IMP26/haplos/";
 
         
         String infileH5=root+"AllZeaGBS_v2.6.chrX.hmp.h5";

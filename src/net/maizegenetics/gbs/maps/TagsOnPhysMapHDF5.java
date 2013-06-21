@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
  * <p>
  * TODO: createFile - needs to instantiate a TOPM just using a Tag Object
  * TODO: createFile that includes a Locus filter, only exports positions on the same locus and position range
+ * TODO: Resort map positions by quality
  * 
  * 
  * @author Ed Buckler, Terry Casstevens

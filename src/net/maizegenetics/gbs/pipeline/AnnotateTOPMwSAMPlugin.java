@@ -29,7 +29,12 @@ import org.apache.log4j.Logger;
  * This class reads in SAM mapping results tests them against an anchor map 
  * and creates a updated HDF5 TOPM file.
  *
- * 
+ * TODO:
+ * <li> Add mapping information from Bowtie2
+ * <li> Add mapping information from BWA
+ * <li> Add mapping information from BLAST?
+ * <li> Run genetic to compare hypotheses
+ * <li> Call resort
  * @author Ed Buckler and Fei Lu
  *
  */
