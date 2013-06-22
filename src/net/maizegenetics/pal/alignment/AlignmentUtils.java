@@ -554,6 +554,24 @@ public class AlignmentUtils {
         return true;
 
     }
+    
+    /**
+     * Return true if either at least one allele agree
+     * @param genotype1
+     * @param genotype2
+     * @return true if at least one allele is equal
+     */
+    public static boolean isPartiallyEqual(byte genotype1, byte genotype2) {
+        int low1=0xF&genotype1;
+        int low2=0xF&genotype2;
+        if(low1==low2) return true;
+        int high1=genotype1>>>4;
+        if(high1==low2) return true;
+        int high2=genotype2>>>4;
+        if(low1==high2) return true;
+        if(high1==high2) return true;
+        return false;
+    }
 
     public static boolean areEncodingsEqual(String[][][] encodings) {
         int numEncodings = encodings.length;
