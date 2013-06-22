@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.ImageIcon;
+import net.maizegenetics.annotation.Citation;
 import net.maizegenetics.gwas.imputation.EmissionProbability;
 import net.maizegenetics.gwas.imputation.TransitionProbability;
 import net.maizegenetics.gwas.imputation.ViterbiAlgorithm;
@@ -26,7 +27,6 @@ import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.BitAlignmentHDF5;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.MutableAlignment;
@@ -82,6 +82,8 @@ import org.apache.log4j.Logger;
  * @author Edward Buckler
  * @cite 
  */
+@Citation("Two papers: Viterbi from Bradbury, et al (in prep) Recombination patterns in maize\n"+
+        "NearestNeighborSearch Swarts,...,Buckler (in prep) Imputation with large genotyping by sequencing data\n")
 public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private int startChr, endChr;
     private String hmpFile;
@@ -105,6 +107,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     //major and minor alleles can be differ between the donor and unimp alignment 
     private boolean isSwapMajorMinor=true;  //if swapped try to fix it
     
+    private boolean resolveHetIfUndercalled=true;
     //variables for tracking accuracy 
     private int totalRight=0, totalWrong=0, totalHets=0; //global variables tracking errors on the fly
     private int[] siteErrors, siteCorrectCnt, taxonErrors, taxonCorrectCnt;  //error recorded by sites
@@ -190,8 +193,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
         for (int taxon = 0; taxon < unimpAlign.getSequenceCount(); taxon+=1) {
             ImputeOneTaxon theTaxon=new ImputeOneTaxon(taxon, donorAlign, minSitesPresent, conflictMasks,imputeDonorFile, mna);
-      //      theTaxon.run();
-            pool.execute(theTaxon);
+            theTaxon.run();
+      //      pool.execute(theTaxon);
         }
         pool.shutdown();
         try{
@@ -249,9 +252,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             StringBuilder sb=new StringBuilder();
             String name=unimpAlign.getIdGroup().getIdentifier(taxon).getFullName();
             ImputedTaxon impTaxon=new ImputedTaxon(taxon, unimpAlign.getBaseRow(taxon),isOutputProjection);
-            sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d ... ", taxon,name,
+            int[] unkHets=countUnknownAndHets(impTaxon.getOrigGeno());
+            sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d Hets:%d... ", taxon,name,
                     unimpAlign.getAllelePresenceForAllSites(taxon, 0).cardinality(),
-                    unimpAlign.getAllelePresenceForAllSites(taxon, 1).cardinality(), countUnknown(impTaxon.getOrigGeno())));
+                    unimpAlign.getAllelePresenceForAllSites(taxon, 1).cardinality(), unkHets[0], unkHets[1]));
             boolean enoughData=(unimpAlign.getTotalNotMissingForTaxon(taxon)>minSitesPresent);
 //                System.out.println("Too much missing data");
 //                continue;
@@ -295,8 +299,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 }   
             }          
             sb.append(String.format("Viterbi:%d BlocksSolved:%d ", countFullLength, impTaxon.getBlocksSolved()));
-            int unk=countUnknown(impTaxon.resolveGeno);
-            sb.append(String.format("Unk:%d PropMissing:%g ", unk, (double)unk/(double)mna.getSiteCount()));
+            int[] unk=countUnknownAndHets(impTaxon.resolveGeno);
+            sb.append(String.format("Unk:%d PropMissing:%g ", unk[0], (double)unk[0]/(double)mna.getSiteCount()));
+            sb.append(String.format("Het:%d PropHet:%g ", unk[1], (double)unk[1]/(double)mna.getSiteCount()));
             if(!isOutputProjection) {
                 if(mna instanceof MutableNucleotideAlignmentHDF5) {
                     Identifier tID=unimpAlign.getIdGroup().getIdentifier(taxon);
@@ -446,12 +451,13 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     
     
-    private int countUnknown(byte[] a) {
-        int cnt=0;
+    private int[] countUnknownAndHets(byte[] a) {
+        int cnt=0, cntHets=0;
         for (int i = 0; i < a.length; i++) {
-            if(a[i]==Alignment.UNKNOWN_DIPLOID_ALLELE) cnt++;
+            if(a[i]==Alignment.UNKNOWN_DIPLOID_ALLELE) {cnt++;}
+            else if(AlignmentUtils.isHeterozygous(a[i])) {cntHets++;}
         }
-        return cnt;
+        return new int[]{cnt,cntHets};
     }
     
     private BitSet[] arrangeMajorMinorBtwAlignments(Alignment unimpAlign, int bt, int donorOffset, int donorLength,
@@ -885,7 +891,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             else {impT.chgHis[cs+donorOffset]=(byte)neighbor;}
             
             impT.impGeno[cs+donorOffset]= donorEst;  //predicted based on neighbor
-            if(knownBase==Alignment.UNKNOWN_DIPLOID_ALLELE) impT.resolveGeno[cs+donorOffset]= donorEst;
+            if(knownBase==Alignment.UNKNOWN_DIPLOID_ALLELE) {impT.resolveGeno[cs+donorOffset]= donorEst;}
+            else {if(AlignmentUtils.isHeterozygous(donorEst)) {
+                if(resolveHetIfUndercalled&&AlignmentUtils.isPartiallyEqual(knownBase,donorEst)) 
+                {//System.out.println(theDH[0].targetTaxon+":"+knownBase+":"+donorEst);
+                    impT.resolveGeno[cs+donorOffset]= donorEst;}
+            }}
         } //end of cs loop
         //enter a stop of the DH at the beginning of the next block
         int lastDApos=donorAlign.getPositionInLocus(endSite);
@@ -1066,12 +1077,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     public static void main(String[] args) {
         
-        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-//        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-//        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-//        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
+//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
 //        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";

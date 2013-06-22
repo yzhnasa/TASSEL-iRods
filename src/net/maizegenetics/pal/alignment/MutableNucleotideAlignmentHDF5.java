@@ -103,7 +103,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myMaxNumAlleles=NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
         this.fileName=fileName;
         this.defaultCacheSize=defaultCacheSize;
-
+        
         if (variableSites.length != siteNames.length) {
             throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: init: number variable sites, loci, and site names must be same.");
         }
@@ -113,6 +113,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myWriter=reader;
         myMaxNumSites = siteNames.length;
         myNumSites = siteNames.length;
+        this.defaultSiteCache=(myNumSites<defaultSiteCache)?myNumSites:defaultSiteCache;
 
         myVariableSites = variableSites;
         myLocusList = locusList;
@@ -132,7 +133,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
 
     public static MutableNucleotideAlignmentHDF5 getInstance(String filename) {
-        return MutableNucleotideAlignmentHDF5.getInstance(filename, 4096);
+        return MutableNucleotideAlignmentHDF5.getInstance(filename, 1<<16);
     }
     
     public static boolean isMutableNucleotideAlignmentHDF5(String filename) {
@@ -206,17 +207,21 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return ((long)taxon<<32)+(site/defaultSiteCache);
     }
     
-    private byte[] cacheTaxonSiteBlock(int taxon, int site, long key) {
-        int start=(site/defaultSiteCache)*defaultSiteCache;
+    private synchronized byte[] cacheTaxonSiteBlock(int taxon, int site, long key) {
         byte[] data=null;
-  //      byte[] data=myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(taxon),defaultSiteCache,start);
         long block=site>>16;
         try{
-            data=myWriter.readByteArrayBlock(getTaxaGenoPath(taxon),1<<16,block);
+            while(data==null) {
+                try{data=myWriter.readByteArrayBlock(getTaxaGenoPath(taxon),defaultSiteCache,block);}
+                catch(Exception e) {
+                    Thread.sleep(10);
+                    System.out.printf("Loop cacheTaxonSiteBlock Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
+                }
+            }
             if(data==null) return null;
             myDataCache.put(key, data);
         } catch(Exception e) {
-            System.out.printf("Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
+            System.out.printf("cacheTaxonSiteBlock Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
             e.printStackTrace();
         }
         return data;
