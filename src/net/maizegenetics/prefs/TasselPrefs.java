@@ -22,8 +22,6 @@ public class TasselPrefs {
     public static final String TASSEL_SAVE_DIR_DEFAULT = "";
     public static final String TASSEL_OPEN_DIR = "openDir";
     public static final String TASSEL_OPEN_DIR_DEFAULT = "";
-    public static final String TASSEL_FONT_METRICS_CHAR_WIDTH = "fontMetricsCharWidth";
-    public static final int TASSEL_FONT_METRICS_CHAR_WIDTH_DEFAULT = 9;
 
     public static enum TASSEL_IDENTIFIER_JOIN_TYPES {
 
@@ -154,14 +152,6 @@ public class TasselPrefs {
 
     public static void putOpenDir(String value) {
         putPref(TASSEL_TOP, TASSEL_OPEN_DIR, value);
-    }
-
-    public static int getFontMetricsCharWidth() {
-        return getIntPref(TASSEL_TOP, TASSEL_FONT_METRICS_CHAR_WIDTH, TASSEL_FONT_METRICS_CHAR_WIDTH_DEFAULT);
-    }
-
-    public static void putFontMetricsCharWidth(int value) {
-        putIntPref(TASSEL_TOP, TASSEL_FONT_METRICS_CHAR_WIDTH, value);
     }
 
     private static TASSEL_IDENTIFIER_JOIN_TYPES initIDJoin() {

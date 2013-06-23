@@ -71,7 +71,6 @@ public class TASSELMainApp {
         }
         frame.setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
         frame.setVisible(true);
-        TasselPrefs.putFontMetricsCharWidth(frame.getGraphics().getFontMetrics().charWidth('G'));
     }
 
     public TASSELMainFrame getTASSELMainFrame() {
