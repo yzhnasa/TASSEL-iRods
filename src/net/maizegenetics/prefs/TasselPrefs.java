@@ -79,7 +79,7 @@ public class TasselPrefs {
     public static final String ALIGNMENT_MAX_ALLELES_TO_RETAIN = "maxAllelesToRetain";
     public static final int ALIGNMENT_MAX_ALLELES_TO_RETAIN_DEFAULT = 2;
     public static final String ALIGNMENT_RETAIN_RARE_ALLELES = "retainRareAlleles";
-    public static final boolean ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT = true;
+    public static final boolean ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT = false;
 
     /**
      * Creates a new instance of TasselPrefs
