@@ -12,12 +12,10 @@
  * public license.
  *
  */
-
 //Title:      TASSELMainApp
 //Version:
 //Copyright:  Copyright (c) 1998
 //Author:     Ed Buckler
-
 package net.maizegenetics.tassel;
 
 import javax.swing.*;
@@ -29,11 +27,9 @@ import net.maizegenetics.util.ExceptionUtils;
 
 import org.apache.log4j.PropertyConfigurator;
 
-
 public class TASSELMainApp {
 
     private static boolean DEBUG = false;
-    private boolean packFrame = false;
     private final TASSELMainFrame frame;
 
     //Construct the application
@@ -52,14 +48,11 @@ public class TASSELMainApp {
         } catch (Exception e) {
         }
 
+        TasselPrefs.setPersistPreferences(true);
+
         frame = new TASSELMainFrame(DEBUG);
-        //Pack frames that have useful preferred size info, e.g. from their layout
-        //Validate frames that have preset sizes
-        if (packFrame) {
-            frame.pack();
-        } else {
-            frame.validate();
-        }
+        frame.validate();
+
         //Center the window
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Dimension frameSize = frame.getSize();
@@ -88,16 +81,15 @@ public class TASSELMainApp {
                 new TasselPipeline(args, mainApp.getTASSELMainFrame());
             }
         } catch (Throwable e) {
-            String userMessage = "TASSEL has experienced an error.  " +
-                    ExceptionUtils.getExceptionCauses(e);
+            String userMessage = "TASSEL has experienced an error.  "
+                    + ExceptionUtils.getExceptionCauses(e);
             if (e instanceof java.lang.OutOfMemoryError) {
-                userMessage = "You have used up all of the memory allocated to the Java Virtual Machine.  " +
-                        "It is recommneded that you adjust your heap settings and possibly add more memory to the computer.  " +
-                        "Additionally, some operations are not recommended on a full dataset, i.e., select SNPs *before* determining LD";
+                userMessage = "You have used up all of the memory allocated to the Java Virtual Machine.  "
+                        + "It is recommneded that you adjust your heap settings and possibly add more memory to the computer.  "
+                        + "Additionally, some operations are not recommended on a full dataset, i.e., select SNPs *before* determining LD";
             }
             JOptionPane.showMessageDialog(null, userMessage, "Fatal Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
 }
-

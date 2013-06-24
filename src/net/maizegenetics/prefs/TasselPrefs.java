@@ -6,6 +6,8 @@
  */
 package net.maizegenetics.prefs;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
 /**
@@ -14,6 +16,8 @@ import java.util.prefs.Preferences;
  */
 public class TasselPrefs {
 
+    private static boolean PERSIST_PREFERENCES = false;
+    private static Map<String, Object> TEMP_CACHED_VALUES = new HashMap<String, Object>();
     //
     // Top level preferences
     //
@@ -42,10 +46,10 @@ public class TasselPrefs {
     };
     public static final String TASSEL_IDENTIFIER_JOIN_STRICT = "idJoinStrict";
     public static final TASSEL_IDENTIFIER_JOIN_TYPES TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT = TASSEL_IDENTIFIER_JOIN_TYPES.NonStrict;
-    private static TASSEL_IDENTIFIER_JOIN_TYPES TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = initIDJoin();
+    private static TASSEL_IDENTIFIER_JOIN_TYPES TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = null;
     public static final String TASSEL_IDENTIFIER_JOIN_NUM_LEVELS = "idJoinNumLevels";
     public static final int TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_DEFAULT = 1;
-    private static int TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = getIntPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_DEFAULT);
+    private static int TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = -1;
     //
     // FilterAlignmentPlugin preferences
     //
@@ -87,52 +91,129 @@ public class TasselPrefs {
     private TasselPrefs() {
     }
 
+    public static boolean getPersistPreferences() {
+        return PERSIST_PREFERENCES;
+    }
+
+    /**
+     * Whether to Persist Preferences. Preference changes should be persisted
+     * when executing GUI and set only temporarily from Command Line Flags. Also
+     * getting preferences should use stored values when executing GUI. And
+     * should use default values (if not temporarily set) when executing from
+     * Command Line.
+     *
+     * @param persist whether to persist preferences
+     */
+    public static void setPersistPreferences(boolean persist) {
+        PERSIST_PREFERENCES = persist;
+    }
+
     public static String getPref(String path, String key, String def) {
-        Preferences node = Preferences.userRoot();
-        node = node.node(path);
-        return node.get(key, def);
+        String pref = path + "/" + key;
+        String result = (String) TEMP_CACHED_VALUES.get(pref);
+        if (result != null) {
+            return result;
+        }
+        if (PERSIST_PREFERENCES) {
+            Preferences node = Preferences.userRoot();
+            node = node.node(path);
+            result = node.get(key, def);
+        } else {
+            result = def;
+        }
+        TEMP_CACHED_VALUES.put(pref, result);
+        return result;
     }
 
     public static void putPref(String path, String key, String value) {
-        Preferences node = Preferences.userRoot();
-        node = node.node(path);
-        node.put(key, value);
+        String pref = path + "/" + key;
+        TEMP_CACHED_VALUES.put(pref, value);
+        if (PERSIST_PREFERENCES) {
+            Preferences node = Preferences.userRoot();
+            node = node.node(path);
+            node.put(key, value);
+        }
     }
 
     public static double getDoublePref(String path, String key, double def) {
-        Preferences node = Preferences.userRoot();
-        node = node.node(path);
-        return node.getDouble(key, def);
+        String pref = path + "/" + key;
+        Double result = (Double) TEMP_CACHED_VALUES.get(pref);
+        if (result != null) {
+            return result;
+        }
+        if (PERSIST_PREFERENCES) {
+            Preferences node = Preferences.userRoot();
+            node = node.node(path);
+            result = node.getDouble(key, def);
+        } else {
+            result = def;
+        }
+        TEMP_CACHED_VALUES.put(pref, result);
+        return result;
     }
 
     public static void putDoublePref(String path, String key, double value) {
-        Preferences node = Preferences.userRoot();
-        node = node.node(path);
-        node.putDouble(key, value);
+        String pref = path + "/" + key;
+        TEMP_CACHED_VALUES.put(pref, value);
+        if (PERSIST_PREFERENCES) {
+            Preferences node = Preferences.userRoot();
+            node = node.node(path);
+            node.putDouble(key, value);
+        }
     }
 
     public static int getIntPref(String path, String key, int def) {
-        Preferences node = Preferences.userRoot();
-        node = node.node(path);
-        return node.getInt(key, def);
+        String pref = path + "/" + key;
+        Integer result = (Integer) TEMP_CACHED_VALUES.get(pref);
+        if (result != null) {
+            return result;
+        }
+        if (PERSIST_PREFERENCES) {
+            Preferences node = Preferences.userRoot();
+            node = node.node(path);
+            result = node.getInt(key, def);
+        } else {
+            result = def;
+        }
+        TEMP_CACHED_VALUES.put(pref, result);
+        return result;
     }
 
     public static void putIntPref(String path, String key, int value) {
-        Preferences node = Preferences.userRoot();
-        node = node.node(path);
-        node.putInt(key, value);
+        String pref = path + "/" + key;
+        TEMP_CACHED_VALUES.put(pref, value);
+        if (PERSIST_PREFERENCES) {
+            Preferences node = Preferences.userRoot();
+            node = node.node(path);
+            node.putInt(key, value);
+        }
     }
 
     public static boolean getBooleanPref(String path, String key, boolean def) {
-        Preferences node = Preferences.userRoot();
-        node = node.node(path);
-        return node.getBoolean(key, def);
+        String pref = path + "/" + key;
+        Boolean result = (Boolean) TEMP_CACHED_VALUES.get(pref);
+        if (result != null) {
+            return result;
+        }
+        if (PERSIST_PREFERENCES) {
+            Preferences node = Preferences.userRoot();
+            node = node.node(path);
+            result = node.getBoolean(key, def);
+        } else {
+            result = def;
+        }
+        TEMP_CACHED_VALUES.put(pref, result);
+        return result;
     }
 
     public static void putBooleanPref(String path, String key, boolean value) {
-        Preferences node = Preferences.userRoot();
-        node = node.node(path);
-        node.putBoolean(key, value);
+        String pref = path + "/" + key;
+        TEMP_CACHED_VALUES.put(pref, value);
+        if (PERSIST_PREFERENCES) {
+            Preferences node = Preferences.userRoot();
+            node = node.node(path);
+            node.putBoolean(key, value);
+        }
     }
 
     //
@@ -179,6 +260,9 @@ public class TasselPrefs {
     }
 
     public static TASSEL_IDENTIFIER_JOIN_TYPES getIDJoinStrict() {
+        if (TASSEL_IDENTIFIER_JOIN_STRICT_VALUE == null) {
+            TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = initIDJoin();
+        }
         // This can be called many times, so to improve performance
         // this will return value without executing system call.
         return TASSEL_IDENTIFIER_JOIN_STRICT_VALUE;
@@ -189,26 +273,16 @@ public class TasselPrefs {
         putPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, type.toString());
     }
 
-    /**
-     * Sets ID Join type only for current program execution.
-     *
-     * @param type type
-     */
-    public static void putTempIDJoinStrict(TASSEL_IDENTIFIER_JOIN_TYPES type) {
-        TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = type;
-    }
-
     public static int getIDJoinNumLevels() {
+        if (TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE == -1) {
+            TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = getIntPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_DEFAULT);
+        }
         return TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE;
     }
 
     public static void putIDJoinNumLevels(int value) {
         TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = value;
         putIntPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS, value);
-    }
-
-    public static void putTempIDJoinNumLevels(int value) {
-        TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = value;
     }
 
     //

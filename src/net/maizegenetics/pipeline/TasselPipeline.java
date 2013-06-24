@@ -169,6 +169,7 @@ public class TasselPipeline implements PluginListener {
             }
             System.out.println("");
         } else {
+            TasselPrefs.setPersistPreferences(false);
             new TasselPipeline(args, null);
         }
     }
@@ -357,7 +358,7 @@ public class TasselPipeline implements PluginListener {
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: -taxaJoinStrict: Unknown type: " + temp + "  Should be: " + Arrays.toString(TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.values()));
                     }
-                    TasselPrefs.putTempIDJoinStrict(type);
+                    TasselPrefs.putIDJoinStrict(type);
                 } else if (current.equalsIgnoreCase("-taxaJoinNumLevels")) {
                     String temp = args[index++].trim();
                     int numLevels = 0;
@@ -366,7 +367,7 @@ public class TasselPipeline implements PluginListener {
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing Taxa Join Number Levels: " + temp);
                     }
-                    TasselPrefs.putTempIDJoinNumLevels(numLevels);
+                    TasselPrefs.putIDJoinNumLevels(numLevels);
                 } else if (current.equalsIgnoreCase("-retainRareAlleles")) {
                     String temp = args[index++].trim();
                     boolean retain = true;
