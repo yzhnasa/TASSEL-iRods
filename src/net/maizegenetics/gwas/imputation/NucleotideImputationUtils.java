@@ -1763,7 +1763,7 @@ public class NucleotideImputationUtils {
 			boolean skip = !polybits.fastGet(nextSite) || ( firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64 && computeRForMissingness(firstSite, nextSite, sba)  > 0.8) ;
 			
 			while (skip)  {
-				boolean validSite = true;
+				boolean validSite = nextSite < nsites;
                                 while (validSite && !polybits.fastGet(nextSite)) {
 					nextSite++;
 					validSite = nextSite < nsites;
