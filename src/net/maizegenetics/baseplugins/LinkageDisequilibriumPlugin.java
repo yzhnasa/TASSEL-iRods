@@ -216,6 +216,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
      *
      * @return ImageIcon
      */
+    @Override
     public ImageIcon getIcon() {
         URL imageURL = LinkageDisequilibriumPlugin.class.getResource("images/LDPlot.gif");
         if (imageURL == null) {
@@ -230,8 +231,9 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
      *
      * @return String
      */
+    @Override
     public String getButtonName() {
-        return "Link. Diseq.";
+        return "Linkage Disequilibrium";
     }
 
     /**
@@ -239,6 +241,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
      *
      * @return String
      */
+    @Override
     public String getToolTipText() {
         return "Linkage Disequilibrium";
     }
