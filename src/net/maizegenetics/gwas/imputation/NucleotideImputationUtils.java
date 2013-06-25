@@ -1764,7 +1764,7 @@ public class NucleotideImputationUtils {
 			
 			while (skip)  {
 				boolean validSite = true;
-				while (!polybits.fastGet(nextSite) && validSite) {
+                                while (validSite && !polybits.fastGet(nextSite)) {
 					nextSite++;
 					validSite = nextSite < nsites;
 				}
