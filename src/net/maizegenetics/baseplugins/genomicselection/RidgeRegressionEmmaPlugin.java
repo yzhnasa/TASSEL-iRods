@@ -38,37 +38,41 @@ public class RidgeRegressionEmmaPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
-        List<Datum> datasets = input.getDataOfType(Phenotype.class);
-        if (datasets.size() < 1) {
-            String msg = "No datasets of an appropriate type were selected for the GS analysis.";
-            myLogger.error(msg);
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), msg, "GS Error", JOptionPane.ERROR_MESSAGE);
-            }
-            return null;
-        }
-
-        LinkedList<Datum> results = new LinkedList<Datum>();
-        for (Datum dataset : datasets) {
-            try {
-                LinkedList<Datum> aResult = null;
-                aResult = processData(dataset);
-                if (aResult != null) {
-                    results.addAll(aResult);
-                    fireDataSetReturned(new DataSet(aResult, this));
-                }
-            } catch (Exception e) {
-                StringBuilder msg = new StringBuilder("Error in GS processing " + dataset.getName());
-                msg.append(". ").append(e.getMessage());
-                myLogger.error(msg.toString());
-                e.printStackTrace();
+        try {
+            List<Datum> datasets = input.getDataOfType(Phenotype.class);
+            if (datasets.size() < 1) {
+                String msg = "No datasets of an appropriate type were selected for the GS analysis.";
+                myLogger.error(msg);
                 if (isInteractive()) {
-                    JOptionPane.showMessageDialog(getParentFrame(), msg.toString(), "GS Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(getParentFrame(), msg, "GS Error", JOptionPane.ERROR_MESSAGE);
+                }
+                return null;
+            }
+
+            LinkedList<Datum> results = new LinkedList<Datum>();
+            for (Datum dataset : datasets) {
+                try {
+                    LinkedList<Datum> aResult = null;
+                    aResult = processData(dataset);
+                    if (aResult != null) {
+                        results.addAll(aResult);
+                        fireDataSetReturned(new DataSet(aResult, this));
+                    }
+                } catch (Exception e) {
+                    StringBuilder msg = new StringBuilder("Error in GS processing " + dataset.getName());
+                    msg.append(". ").append(e.getMessage());
+                    myLogger.error(msg.toString());
+                    e.printStackTrace();
+                    if (isInteractive()) {
+                        JOptionPane.showMessageDialog(getParentFrame(), msg.toString(), "GS Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
-        }
 
-        return new DataSet(results, this);
+            return new DataSet(results, this);
+        } finally {
+            fireProgress(100);
+        }
     }
 
     public LinkedList<Datum> processData(Datum dataset) {
@@ -209,11 +213,11 @@ public class RidgeRegressionEmmaPlugin extends AbstractPlugin {
 
     @Override
     public String getButtonName() {
-        return "GS";
+        return "Genomic Selection";
     }
 
     @Override
     public String getToolTipText() {
-        return "Predict phenotypes using ridge regression for genomic selection";
+        return "Predict Phenotypes using Ridge Regression for Genomic Selection";
     }
 }
