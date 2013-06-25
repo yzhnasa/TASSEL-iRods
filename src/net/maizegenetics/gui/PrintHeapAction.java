@@ -16,6 +16,7 @@ import javax.swing.*;
 import java.text.NumberFormat;
 
 import net.maizegenetics.util.Sizeof;
+import net.maizegenetics.util.Utils;
 
 /**
  *
@@ -55,8 +56,8 @@ public class PrintHeapAction extends AbstractAction implements Runnable {
     }
 
     /**
-     * Method executed when this thread starts that removes
-     * all items from the associated tree.
+     * Method executed when this thread starts that removes all items from the
+     * associated tree.
      */
     public void run() {
 
@@ -64,13 +65,16 @@ public class PrintHeapAction extends AbstractAction implements Runnable {
         try {
             buffer.append("Current Heap Size: ");
             long current = Sizeof.getMemoryUse();
-            String currentStr = myFormat.format((double) current / 1024.0);
+            String currentStr = myFormat.format(current / 1048576l);
             buffer.append(currentStr);
-            buffer.append(" KB");
+            buffer.append(" MB");
+            buffer.append("\nMax Available Heap: ");
+            buffer.append(Utils.getMaxHeapSizeMB());
+            buffer.append(" MB");
             buffer.append("\nDelta Since Last Record: ");
-            String delta = myFormat.format((double) (current - myLastRecordedHeap) / 1024.0);
+            String delta = myFormat.format((current - myLastRecordedHeap) / 1048576l);
             buffer.append(delta);
-            buffer.append(" KB\n");
+            buffer.append(" MB\n");
             myLastRecordedHeap = current;
         } catch (Exception ex) {
             buffer.append("\n");
