@@ -24,13 +24,11 @@ import net.maizegenetics.plugindef.Datum;
 
 import net.maizegenetics.prefs.TasselPrefs;
 
-import net.maizegenetics.gui.PrintTextArea;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Event;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -43,15 +41,49 @@ import java.awt.image.ImageProducer;
 import java.io.*;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import net.maizegenetics.baseplugins.ArchaeopteryxPlugin;
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
+import net.maizegenetics.baseplugins.CreateTreePlugin;
 
 import net.maizegenetics.baseplugins.ExportPlugin;
+import net.maizegenetics.baseplugins.FileLoadPlugin;
+import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
+import net.maizegenetics.baseplugins.FilterSiteNamePlugin;
+import net.maizegenetics.baseplugins.FilterTaxaAlignmentPlugin;
+import net.maizegenetics.baseplugins.FilterTaxaPropertiesPlugin;
+import net.maizegenetics.baseplugins.FilterTraitsPlugin;
+import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
+import net.maizegenetics.baseplugins.FlapjackLoadPlugin;
+import net.maizegenetics.baseplugins.GenotypeImputationPlugin;
+import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
+import net.maizegenetics.baseplugins.Grid2dDisplayPlugin;
+import net.maizegenetics.baseplugins.IntersectionAlignmentPlugin;
+import net.maizegenetics.baseplugins.KinshipPlugin;
+import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
+import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
+import net.maizegenetics.baseplugins.MLMPlugin;
+import net.maizegenetics.baseplugins.ManhattanDisplayPlugin;
+import net.maizegenetics.baseplugins.MergeAlignmentsPlugin;
+import net.maizegenetics.baseplugins.PlinkLoadPlugin;
+import net.maizegenetics.baseplugins.QQDisplayPlugin;
+import net.maizegenetics.baseplugins.SeparatePlugin;
+import net.maizegenetics.baseplugins.SequenceDiversityPlugin;
+import net.maizegenetics.baseplugins.SynonymizerPlugin;
+import net.maizegenetics.baseplugins.TableDisplayPlugin;
+import net.maizegenetics.baseplugins.TreeDisplayPlugin;
+import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
+import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
+import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
+import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
 import net.maizegenetics.gui.PrintHeapAction;
+import net.maizegenetics.plugindef.Plugin;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.plugindef.ThreadedPluginListener;
 import net.maizegenetics.progress.ProgressPanel;
@@ -69,7 +101,7 @@ import org.apache.log4j.Logger;
  * TASSELMainFrame
  *
  */
-public class TASSELMainFrame extends JFrame {
+public class TASSELMainFrame extends JFrame implements ActionListener {
 
     private static final Logger myLogger = Logger.getLogger(TASSELMainFrame.class);
     public static final String version = "4.1.33";
@@ -103,35 +135,27 @@ public class TASSELMainFrame extends JFrame {
     private JButton resultButton = new JButton();
     private JButton dataButton = new JButton();
     private JButton deleteButton = new JButton();
-    private JButton printButton = new JButton();
     private JButton analysisButton = new JButton();
-    private JPopupMenu mainPopupMenu = new JPopupMenu();
-    private JMenuBar jMenuBar = new JMenuBar();
-    private JMenu fileMenu = new JMenu();
-    private JMenu toolsMenu = new JMenu();
-    private JMenuItem saveMainMenuItem = new JMenuItem();
-    private JCheckBoxMenuItem matchCheckBoxMenuItem = new JCheckBoxMenuItem();
     private JMenuItem openCompleteDataTreeMenuItem = new JMenuItem();
     private JMenuItem openDataMenuItem = new JMenuItem();
     private JMenuItem saveAsDataTreeMenuItem = new JMenuItem();
     private JMenuItem saveCompleteDataTreeMenuItem = new JMenuItem();
     private JMenuItem saveDataTreeAsMenuItem = new JMenuItem();
     private JMenuItem exitMenuItem = new JMenuItem();
-    private JMenu helpMenu = new JMenu();
     private JMenuItem helpMenuItem = new JMenuItem();
-    private JMenuItem preferencesMenuItem = new JMenuItem();
     private JMenuItem aboutMenuItem = new JMenuItem();
     private PreferencesDialog thePreferencesDialog;
     private final ProgressPanel myProgressPanel = ProgressPanel.getInstance();
     private JButton wizardButton = new JButton();
     private ExportPlugin myExportPlugin = null;
+    private HashMap<JMenuItem, Plugin> myMenuItemHash = new HashMap<JMenuItem, Plugin>();
 
-    public TASSELMainFrame(boolean debug) {
+    public TASSELMainFrame() {
         try {
             loadSettings();
-            addMenuBar();
-            theDataTreePanel = new DataTreePanel(this, true, debug);
+            theDataTreePanel = new DataTreePanel(this);
             theDataTreePanel.setToolTipText("Data Tree Panel");
+            addMenuBar();
             theDataControlPanel = new DataControlPanel(this, theDataTreePanel);
             theAnalysisControlPanel = new AnalysisControlPanel(this, theDataTreePanel);
             theResultControlPanel = new ResultControlPanel(this, theDataTreePanel);
@@ -264,14 +288,9 @@ public class TASSELMainFrame extends JFrame {
         mainPanelTextArea.setEditable(false);
         mainPanelTextArea.setFont(new java.awt.Font("Monospaced", 0, 12));
         mainPanelTextArea.setToolTipText("Main Panel");
-        mainPanelTextArea.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                mainTextArea_mouseClicked(e);
-            }
-        });
+
         statusBar.setBackground(Color.lightGray);
         statusBar.setBorder(null);
-        statusBar.setText("Program Status");
         modeSelectorsPanel.setLayout(new GridBagLayout());
         modeSelectorsPanel.setMinimumSize(new Dimension(380, 32));
         modeSelectorsPanel.setPreferredSize(new Dimension(700, 32));
@@ -344,31 +363,6 @@ public class TASSELMainFrame extends JFrame {
             }
         });
 
-        printButton.setBackground(Color.white);
-
-        printButton.setToolTipText("Print selected datum");
-
-        imageURL = TASSELMainFrame.class.getResource("images/print1.gif");
-
-        ImageIcon printIcon = null;
-
-        if (imageURL != null) {
-            printIcon = new ImageIcon(imageURL);
-        }
-
-        if (printIcon != null) {
-            printButton.setIcon(printIcon);
-        }
-
-        printButton.setMargin(new Insets(0, 0, 0, 0));
-
-        printButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-
-                printButton_actionPerformed(e);
-            }
-        });
-
         analysisButton.setText("Analysis");
 
         analysisButton.addActionListener(new java.awt.event.ActionListener() {
@@ -421,16 +415,6 @@ public class TASSELMainFrame extends JFrame {
 
         optionsPanel.setToolTipText("Options Panel");
 
-        mainPopupMenu.setInvoker(this);
-        saveMainMenuItem.setText("Save");
-        matchCheckBoxMenuItem.setText("Match");
-        matchCheckBoxMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                matchCheckBoxMenuItem_actionPerformed(e);
-            }
-        });
-        fileMenu.setText("File");
-        toolsMenu.setText("Tools");
         saveCompleteDataTreeMenuItem.setText("Save Data Tree");
         saveCompleteDataTreeMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -478,21 +462,10 @@ public class TASSELMainFrame extends JFrame {
             }
         });
 
-        helpMenu.setText("Help");
         helpMenuItem.setText("Help Manual");
         helpMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 helpButton_actionPerformed(e);
-            }
-        });
-
-        preferencesMenuItem.setText("Set Preferences");
-
-        preferencesMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-
-                preferencesMenuItem_actionPerformed(e);
-
             }
         });
 
@@ -543,9 +516,9 @@ public class TASSELMainFrame extends JFrame {
 
         this.getContentPane().add(statusBar, BorderLayout.SOUTH);
 
-        this.getContentPane().add(optionsPanel, BorderLayout.NORTH);
+        //this.getContentPane().add(optionsPanel, BorderLayout.NORTH);
 
-        optionsPanel.add(modeSelectorsPanel, BorderLayout.NORTH);
+        //optionsPanel.add(modeSelectorsPanel, BorderLayout.NORTH);
 
         modeSelectorsPanel.add(resultButton, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
 
@@ -553,9 +526,7 @@ public class TASSELMainFrame extends JFrame {
 
         modeSelectorsPanel.add(analysisButton, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
 
-        modeSelectorsPanel.add(helpButton, new GridBagConstraints(7, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 2), 0, 0));
-
-        modeSelectorsPanel.add(printButton, new GridBagConstraints(6, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
+        modeSelectorsPanel.add(helpButton, new GridBagConstraints(6, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 2), 0, 0));
 
         modeSelectorsPanel.add(deleteButton, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 20, 1, 2), 0, 0));
 
@@ -564,12 +535,6 @@ public class TASSELMainFrame extends JFrame {
         modeSelectorsPanel.add(getHeapButton(), new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 30, 1, 0), 0, 0));
 
         optionsPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        mainPopupMenu.add(matchCheckBoxMenuItem);
-
-        mainPopupMenu.add(saveMainMenuItem);
-
-
 
         dataTreeReportMainPanelsSplitPanel.setDividerLocation(this.getSize().width / 4);
 
@@ -587,32 +552,14 @@ public class TASSELMainFrame extends JFrame {
 
     private void addMenuBar() {
 
-        jMenuBar.add(fileMenu);
+        JMenuBar jMenuBar = new JMenuBar();
 
-        jMenuBar.add(toolsMenu);
-
-        jMenuBar.add(helpMenu);
-
-        fileMenu.add(saveCompleteDataTreeMenuItem);
-
-        fileMenu.add(openCompleteDataTreeMenuItem);
-
-        fileMenu.add(saveDataTreeAsMenuItem);
-
-        fileMenu.add(openDataMenuItem);
-
-        fileMenu.add(saveAsDataTreeMenuItem);
-
-        fileMenu.addSeparator();
-
-        fileMenu.add(exitMenuItem);
-
-
-        toolsMenu.add(preferencesMenuItem);
-
-        helpMenu.add(helpMenuItem);
-
-        helpMenu.add(aboutMenuItem);
+        jMenuBar.add(getFileMenu());
+        jMenuBar.add(getDataMenu());
+        jMenuBar.add(getFiltersMenu());
+        jMenuBar.add(getAnalysisMenu());
+        jMenuBar.add(getResultsMenu());
+        jMenuBar.add(getHelpMenu());
 
         this.setJMenuBar(jMenuBar);
 
@@ -638,35 +585,25 @@ public class TASSELMainFrame extends JFrame {
 
     public void sendMessage(String text) {
         statusBar.setForeground(Color.BLACK);
-
         statusBar.setText(text);
-
     }
 
     public void sendErrorMessage(String text) {
         statusBar.setForeground(Color.RED);
-
         statusBar.setText(text);
     }
 
     public void setMainText(String text) {
-
         mainPanelTextArea.start(text);
-
     }
 
     public void setMainText(StringBuffer text) {
-
         mainPanelTextArea.setDoubleBuffered(false);
-
         mainPanelTextArea.start(text.toString());
-
     }
 
     public void setNoteText(String text) {
-
         reportPanelTextArea.setText(text);
-
     }
 
     private void loadSettings() {
@@ -842,41 +779,10 @@ public class TASSELMainFrame extends JFrame {
         initWizard();
     }
 
-    private void printButton_actionPerformed(ActionEvent e) {
-        DataSet ds = theDataTreePanel.getSelectedTasselDataSet();
-        try {
-            for (int i = 0; i < ds.getSize(); i++) {
-                PrintTextArea pta = new PrintTextArea(this);
-                pta.printThis(ds.getData(i).getData().toString());
-            }
-        } catch (Exception ee) {
-            System.err.println("printButton_actionPerformed:" + ee);
-        }
-        this.statusBar.setText("Datasets were sent to the printer");
-    }
-
     private void helpButton_actionPerformed(ActionEvent e) {
         HelpDialog theHelpDialog = new HelpDialog(this);
         theHelpDialog.setLocationRelativeTo(this);
         theHelpDialog.setVisible(true);
-    }
-
-    private void mainTextArea_mouseClicked(MouseEvent e) {
-
-        // For this example event, we are checking for right-mouse click.
-
-        if (e.getModifiers() == Event.META_MASK) {
-
-            mainPanelTextArea.add(mainPopupMenu); // JPopupMenu must be added to the component whose event is chosen.
-
-            // Make the jPopupMenu visible relative to the current mouse position in the container.
-
-            mainPopupMenu.show(mainPanelTextArea, e.getX(), e.getY());
-        }
-    }
-
-    private void matchCheckBoxMenuItem_actionPerformed(ActionEvent e) {
-        //theSettings.matchChar = matchCheckBoxMenuItem.isSelected();
     }
 
     private void openCompleteDataTreeMenuItem_actionPerformed(ActionEvent e) {
@@ -941,5 +847,157 @@ public class TASSELMainFrame extends JFrame {
 
     public ProgressPanel getProgressPanel() {
         return myProgressPanel;
+    }
+
+    private JMenuItem createMenuItem(Plugin theTP) {
+        return createMenuItem(theTP, -1);
+    }
+
+    private JMenuItem createMenuItem(Plugin theTP, int mnemonic) {
+        ImageIcon icon = theTP.getIcon();
+        JMenuItem menuItem = new JMenuItem(theTP.getButtonName(), icon);
+        if (mnemonic != -1) {
+            menuItem.setMnemonic(mnemonic);
+        }
+        int pixels = 30;
+        if (icon != null) {
+            pixels -= icon.getIconWidth();
+            pixels /= 2;
+        }
+        menuItem.setIconTextGap(pixels);
+        menuItem.setBackground(Color.white);
+        menuItem.setMargin(new Insets(2, 2, 2, 2));
+        menuItem.setToolTipText(theTP.getToolTipText());
+        menuItem.addActionListener(this);
+        theTP.addListener(theDataTreePanel);
+        myMenuItemHash.put(menuItem, theTP);
+        return menuItem;
+    }
+
+    private JMenu getFiltersMenu() {
+        JMenu result = new JMenu("Filter");
+        result.setMnemonic(KeyEvent.VK_F);
+        result.add(createMenuItem(new FilterAlignmentPlugin(this, true)));
+        result.add(createMenuItem(new FilterSiteNamePlugin(this, true)));
+        result.add(createMenuItem(new FilterTaxaAlignmentPlugin(this, true)));
+        result.add(createMenuItem(new FilterTaxaPropertiesPlugin(this, true)));
+        result.add(createMenuItem(new FilterTraitsPlugin(this, true)));
+        return result;
+    }
+
+    private JMenu getDataMenu() {
+
+        JMenu result = new JMenu("Data");
+        result.setMnemonic(KeyEvent.VK_D);
+
+        PlinkLoadPlugin plinkLoadPlugin = new PlinkLoadPlugin(this, true);
+        plinkLoadPlugin.addListener(theDataTreePanel);
+
+        FlapjackLoadPlugin flapjackLoadPlugin = new FlapjackLoadPlugin(this, true);
+        flapjackLoadPlugin.addListener(theDataTreePanel);
+
+        result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, flapjackLoadPlugin), KeyEvent.VK_L));
+        result.add(createMenuItem(new ExportPlugin(this, true)));
+        result.add(createMenuItem(new ConvertSBitTBitPlugin(this, true)));
+        result.add(createMenuItem(new GenotypeImputationPlugin(this, true)));
+        result.add(createMenuItem(new NumericalTransformPlugin(this, true)));
+        result.add(createMenuItem(new SynonymizerPlugin(this, true)));
+        result.add(createMenuItem(new IntersectionAlignmentPlugin(this, true)));
+        result.add(createMenuItem(new UnionAlignmentPlugin(this, true)));
+        result.add(createMenuItem(new MergeAlignmentsPlugin(this, true)));
+        result.add(createMenuItem(new SeparatePlugin(this, true)));
+        return result;
+    }
+
+    private JMenu getAnalysisMenu() {
+
+        JMenu result = new JMenu("Analysis");
+        result.setMnemonic(KeyEvent.VK_A);
+
+        result.add(createMenuItem(new SequenceDiversityPlugin(this, true)));
+        result.add(createMenuItem(new LinkageDisequilibriumPlugin(this, true)));
+        result.add(createMenuItem(new CreateTreePlugin(this, true)));
+        result.add(createMenuItem(new KinshipPlugin(this, true)));
+        result.add(createMenuItem(new FixedEffectLMPlugin(this, true)));
+        result.add(createMenuItem(new MLMPlugin(this, true)));
+        result.add(createMenuItem(new RidgeRegressionEmmaPlugin(this, true)));
+        result.add(createMenuItem(new GenotypeSummaryPlugin(this, true)));
+        return result;
+    }
+
+    private JMenu getResultsMenu() {
+
+        JMenu result = new JMenu("Results");
+        result.setMnemonic(KeyEvent.VK_R);
+
+        result.add(createMenuItem(new TableDisplayPlugin(this, true)));
+        result.add(createMenuItem(new ArchaeopteryxPlugin(this, true)));
+        result.add(createMenuItem(new Grid2dDisplayPlugin(this, true)));
+        result.add(createMenuItem(new LinkageDiseqDisplayPlugin(this, true)));
+        result.add(createMenuItem(new ChartDisplayPlugin(this, true)));
+        result.add(createMenuItem(new QQDisplayPlugin(this, true)));
+        result.add(createMenuItem(new ManhattanDisplayPlugin(this, true)));
+        result.add(createMenuItem(new TreeDisplayPlugin(this, true)));
+        return result;
+
+    }
+
+    private JMenu getFileMenu() {
+        JMenu fileMenu = new JMenu();
+        fileMenu.setText("File");
+        fileMenu.add(saveCompleteDataTreeMenuItem);
+        fileMenu.add(openCompleteDataTreeMenuItem);
+        fileMenu.add(saveDataTreeAsMenuItem);
+        fileMenu.add(openDataMenuItem);
+        //fileMenu.add(saveAsDataTreeMenuItem);
+        JMenuItem preferencesMenuItem = new JMenuItem();
+        preferencesMenuItem.setText("Set Preferences");
+
+        preferencesMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+
+                preferencesMenuItem_actionPerformed(e);
+
+            }
+        });
+        fileMenu.add(preferencesMenuItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitMenuItem);
+        return fileMenu;
+    }
+
+    private JMenu getHelpMenu() {
+        JMenu helpMenu = new JMenu();
+        helpMenu.setMnemonic(KeyEvent.VK_H);
+        helpMenu.setText("Help");
+        helpMenu.add(helpMenuItem);
+        helpMenu.add(aboutMenuItem);
+
+        JMenuItem memoryUsage = new JMenuItem("Show Memory");
+        memoryUsage.addActionListener(PrintHeapAction.getInstance(this));
+        memoryUsage.setToolTipText("Show Memory Usage");
+        helpMenu.add(memoryUsage);
+
+        JMenuItem delete = new JMenuItem("Delete Dataset");
+        delete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                theDataTreePanel.deleteSelectedNodes();
+            }
+        });
+        delete.setToolTipText("Delete Dataset");
+        helpMenu.add(delete);
+
+        return helpMenu;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        JMenuItem theMenuItem = (JMenuItem) e.getSource();
+        Plugin theTP = this.myMenuItemHash.get(theMenuItem);
+        PluginEvent event = new PluginEvent(theDataTreePanel.getSelectedTasselDataSet());
+        ProgressPanel progressPanel = getProgressPanel();
+        progressPanel.addPlugin(theTP);
+        ThreadedPluginListener thread = new ThreadedPluginListener(theTP, event);
+        thread.start();
     }
 }

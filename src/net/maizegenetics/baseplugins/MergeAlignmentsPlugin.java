@@ -4,6 +4,7 @@
 package net.maizegenetics.baseplugins;
 
 import java.awt.Frame;
+import java.net.URL;
 
 import java.util.List;
 
@@ -62,14 +63,22 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 
     }
 
+    @Override
     public ImageIcon getIcon() {
-        return null;
+        URL imageURL = SeparatePlugin.class.getResource("images/Merge.gif");
+        if (imageURL == null) {
+            return null;
+        } else {
+            return new ImageIcon(imageURL);
+        }
     }
 
+    @Override
     public String getButtonName() {
-        return "Merge";
+        return "Merge Alignments";
     }
 
+    @Override
     public String getToolTipText() {
         return "Merge Alignments";
     }

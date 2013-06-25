@@ -62,7 +62,7 @@ import org.apache.batik.util.gui.MemoryMonitor;
 
 import org.apache.log4j.Logger;
 
-public class DataTreePanel extends JPanel implements PluginListener, Serializable {
+public class DataTreePanel extends JPanel implements PluginListener {
 
     private static final Logger myLogger = Logger.getLogger(DataTreePanel.class);
     public static final String NODE_TYPE_DATA = "Data";
@@ -82,7 +82,6 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
     public static final String NODE_TYPE_SYNONYMIZER = "Synonymizer";
     public static final String NODE_TYPE_STEPWISE = "Stepwise";
     public static final String NODE_TYPE_DEFAULT = NODE_TYPE_DATA;
-    private static boolean DEBUG = false;
     //Possible line styles...
     //"Angled", "Horizontal", and "None" (the default).
     private String myLineStyle = "Angled";
@@ -98,20 +97,7 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
     private DefaultMutableTreeNode myLastNode = null;
     private TreeSelectionListener myTreeSelectionListener = null;
 
-    /**
-     * This constructor is for debugging purposes. It allows tracking of the
-     * type of object being held by the DataTreePanel.
-     *
-     * @param theQAF
-     * @param dataOrResultMode
-     * @param debug
-     */
-    public DataTreePanel(TASSELMainFrame theQAF, boolean dataOrResultMode, boolean debug) {
-        this(theQAF, dataOrResultMode);
-        DEBUG = debug;
-    }
-
-    public DataTreePanel(TASSELMainFrame theQAF, boolean dataOrResultMode) {
+    public DataTreePanel(TASSELMainFrame theQAF) {
         super();
 
         myTASSELMainFrame = theQAF;
@@ -467,9 +453,7 @@ public class DataTreePanel extends JPanel implements PluginListener, Serializabl
                             myTASSELMainFrame.setMainText(s);
                         }
 
-                        if (DEBUG) {
-                            myTASSELMainFrame.sendMessage(book.getClass().toString());
-                        }
+                        myTASSELMainFrame.sendMessage(book.getData().getClass().toString());
 
                         myTASSELMainFrame.mainDisplayPanel.revalidate();
                         myTASSELMainFrame.mainDisplayPanel.repaint();

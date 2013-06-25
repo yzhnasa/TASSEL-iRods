@@ -4,7 +4,6 @@
  * Created on December 13, 2010
  *
  */
-
 package net.maizegenetics.baseplugins;
 
 import java.awt.BorderLayout;
@@ -16,12 +15,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.net.URL;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import net.maizegenetics.plugindef.DataSet;
 import java.util.List;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -41,41 +40,50 @@ import net.maizegenetics.plugindef.Datum;
  *
  * @author yz79
  */
-public class QQDisplayPlugin extends AbstractDisplayPlugin{
+public class QQDisplayPlugin extends AbstractDisplayPlugin {
 
-    /** Creates a new instance of QQDisplayPlugin */
+    /**
+     * Creates a new instance of QQDisplayPlugin
+     */
     public QQDisplayPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
 
     public DataSet performFunction(DataSet input) {
-        List <Datum> tableInList=input.getDataOfType(TableReport.class);
-        if(tableInList.size()!=1) {
-            String message="Invalid selection.  Please select one table result.";
-            if(isInteractive()) {JOptionPane.showMessageDialog(getParentFrame(), message);} else {System.out.println(message);}
-            return null;
-        }
-        TableReport myTableReport = (TableReport)tableInList.get(0).getData();
-        if(isInteractive()) {
-            try {
-                PlotOptionsQQDialog myOptions = new PlotOptionsQQDialog(this.getParentFrame(), getTraits(myTableReport), splitTable(myTableReport));
-                myOptions.setLocationRelativeTo(getParentFrame());
-                myOptions.setVisible(true);
-                if (myOptions.isCanceled() == false) {
-                    QQDisplayPluginDialog myDialog = new QQDisplayPluginDialog(this.getParentFrame(), this, myTableReport, myOptions.getSliderValue(), splitTable(myTableReport), myOptions.getTraitIndices());
-                    myDialog.setLocationRelativeTo(getParentFrame());
-                    myDialog.setVisible(true);
+        try {
+            List<Datum> tableInList = input.getDataOfType(TableReport.class);
+            if (tableInList.size() != 1) {
+                String message = "Invalid selection.  Please select one table result.";
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), message);
+                } else {
+                    System.out.println(message);
+                }
+                return null;
+            }
+            TableReport myTableReport = (TableReport) tableInList.get(0).getData();
+            if (isInteractive()) {
+                try {
+                    PlotOptionsQQDialog myOptions = new PlotOptionsQQDialog(this.getParentFrame(), getTraits(myTableReport), splitTable(myTableReport));
+                    myOptions.setLocationRelativeTo(getParentFrame());
+                    myOptions.setVisible(true);
+                    if (myOptions.isCanceled() == false) {
+                        QQDisplayPluginDialog myDialog = new QQDisplayPluginDialog(this.getParentFrame(), this, myTableReport, myOptions.getSliderValue(), splitTable(myTableReport), myOptions.getTraitIndices());
+                        myDialog.setLocationRelativeTo(getParentFrame());
+                        myDialog.setVisible(true);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create QQ plot " + ex);
+                } catch (Error er) {
+                    er.printStackTrace();
+                    JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create QQ plot " + er);
                 }
             }
-            catch(Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create QQ plot " + ex);
-            } catch(Error er) {
-                er.printStackTrace();
-                JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create QQ plot " + er);
-            }
+            return null;
+        } finally {
+            fireProgress(100);
         }
-        return null;
     }
 
     private ArrayList<Integer> splitTable(TableReport table) {
@@ -83,17 +91,17 @@ public class QQDisplayPlugin extends AbstractDisplayPlugin{
         int numRows = table.getRowCount();
         String previousTrait = "";
         for (int i = 0; i < numRows; i++) {
-            if (!previousTrait.equals((String)table.getValueAt(i, 0))) {
-                if (!((String)table.getValueAt(i, 1)).equals("None")) {
+            if (!previousTrait.equals((String) table.getValueAt(i, 0))) {
+                if (!((String) table.getValueAt(i, 1)).equals("None")) {
                     indexes.add(new Integer(i));
-                    previousTrait = (String)table.getValueAt(i, 0);
+                    previousTrait = (String) table.getValueAt(i, 0);
                     if (i > 1) {
                         indexes.add(new Integer(i));
                     }
                 } else if (i != 0) {
                     indexes.add(new Integer(i));
-                    indexes.add(new Integer(i+1));
-                    previousTrait = (String)table.getValueAt(i + 1, 0);
+                    indexes.add(new Integer(i + 1));
+                    previousTrait = (String) table.getValueAt(i + 1, 0);
                 }
             }
         }
@@ -106,8 +114,8 @@ public class QQDisplayPlugin extends AbstractDisplayPlugin{
         int numRows = table.getRowCount();
         String previousTrait = "";
         for (int i = 0; i < numRows; i++) {
-            if (!previousTrait.equals((String)table.getValueAt(i, 0))) {
-                previousTrait = (String)table.getValueAt(i, 0);
+            if (!previousTrait.equals((String) table.getValueAt(i, 0))) {
+                previousTrait = (String) table.getValueAt(i, 0);
                 traitArray.add(previousTrait);
             }
         }
@@ -124,8 +132,14 @@ public class QQDisplayPlugin extends AbstractDisplayPlugin{
      *
      * @return ImageIcon
      */
+    @Override
     public ImageIcon getIcon() {
-        return null;
+        URL imageURL = QQDisplayPlugin.class.getResource("images/QQPlot.gif");
+        if (imageURL == null) {
+            return null;
+        } else {
+            return new ImageIcon(imageURL);
+        }
     }
 
     /**
@@ -133,6 +147,7 @@ public class QQDisplayPlugin extends AbstractDisplayPlugin{
      *
      * @return String
      */
+    @Override
     public String getButtonName() {
         return "QQ Plot";
     }
@@ -142,21 +157,19 @@ public class QQDisplayPlugin extends AbstractDisplayPlugin{
      *
      * @return String
      */
+    @Override
     public String getToolTipText() {
         return "Display QQ Plot";
     }
-
 }
 
 class QQDisplayPluginDialog extends JDialog {
 
     XYScatterAndLinePanel myQQPlot;
     TableReport myTableReport;
-
     JButton myCloseButton = new JButton();
     JPanel myMainPanel;
     JPanel myOptionPanel = new JPanel();
-    
 
     public QQDisplayPluginDialog(Frame f, QQDisplayPlugin plugin, TableReport theTableReport, int countToDisplay, ArrayList<Integer> tableIndices, int[] indices) {
         super(f, "QQ Plot", false);
@@ -167,7 +180,7 @@ class QQDisplayPluginDialog extends JDialog {
 //            myQQFigurePanel = new QQComponent(theTableReport);
             getContentPane().add(myQQPlot, BorderLayout.CENTER);
             pack();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this.getParent(), "Unable to create QQ plot " + ex);
         }
@@ -177,29 +190,24 @@ class QQDisplayPluginDialog extends JDialog {
     void jbInit() throws Exception {
         myCloseButton.setText("Close");
         myCloseButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 closeButton_actionPerformed(e);
             }
         });
 
-        myOptionPanel.add(myCloseButton, new GridBagConstraints(0, 0, 0, 0, 0.0, 0.0
-                ,GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        myOptionPanel.add(myCloseButton, new GridBagConstraints(0, 0, 0, 0, 0.0, 0.0, GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         getContentPane().add(myOptionPanel);
     }
 
     void closeButton_actionPerformed(ActionEvent e) {
         dispose();
     }
-
 }
 
 class PlotOptionsQQDialog extends JDialog {
 
     boolean isCanceled = true;
-
     String[] myTraits;
-
     private JPanel mainPanel = new JPanel();
     private JButton okayButton = new JButton();
     private JButton cancelButton = new JButton();
@@ -210,7 +218,6 @@ class PlotOptionsQQDialog extends JDialog {
     private JLabel listLabel2 = new JLabel();
     private JTextField countTextField = new JTextField();
     private GridBagLayout gridBagLayout2 = new GridBagLayout();
-
     private JList list1 = new JList();
     private JList list2 = new JList();
     private JButton addAllButton = new JButton();
@@ -226,8 +233,8 @@ class PlotOptionsQQDialog extends JDialog {
         int numSites = indexes.get(1) - indexes.get(0);
         slider.setMinimum(1);
         slider.setMaximum(numSites);
-        slider.setValue((int)(numSites * 0.01));
-        countTextField.setText("" + (int)(numSites * 0.01));
+        slider.setValue((int) (numSites * 0.01));
+        countTextField.setText("" + (int) (numSites * 0.01));
 
         try {
             initUI();
@@ -264,7 +271,6 @@ class PlotOptionsQQDialog extends JDialog {
         addAllButton.setMaximumSize(new Dimension(63, 27));
         addAllButton.setMinimumSize(new Dimension(63, 27));
         addAllButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 addAllButton_actionPerformed(e);
             }
@@ -274,7 +280,6 @@ class PlotOptionsQQDialog extends JDialog {
         addOneButton.setMaximumSize(new Dimension(63, 27));
         addOneButton.setMinimumSize(new Dimension(63, 27));
         addOneButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 addOneButton_actionPerformed(e);
             }
@@ -284,7 +289,6 @@ class PlotOptionsQQDialog extends JDialog {
         removeOneButton.setMaximumSize(new Dimension(63, 27));
         removeOneButton.setMinimumSize(new Dimension(63, 27));
         removeOneButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 removeOneButton_actionPerformed(e);
             }
@@ -294,7 +298,6 @@ class PlotOptionsQQDialog extends JDialog {
         removeAllButton.setMaximumSize(new Dimension(63, 27));
         removeAllButton.setMinimumSize(new Dimension(63, 27));
         removeAllButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 removeAllButton_actionPerformed(e);
             }
@@ -304,7 +307,6 @@ class PlotOptionsQQDialog extends JDialog {
         sliderLabel1.setToolTipText("Plot Density is then number of Significant Points plotted without removing data. The rest of the data is plotted at a regular interval to maintain the trend without drawing all the points.");
 
         slider.addChangeListener(new javax.swing.event.ChangeListener() {
-
             public void stateChanged(ChangeEvent ce) {
                 slider_actionPerformed(ce);
             }
@@ -324,7 +326,6 @@ class PlotOptionsQQDialog extends JDialog {
         }
 
         countTextField.addKeyListener(new java.awt.event.KeyListener() {
-
             public void keyTyped(KeyEvent ke) {
 //                countTextField_keyTyped(ke);
             }
@@ -344,7 +345,6 @@ class PlotOptionsQQDialog extends JDialog {
         okayButton.setMinimumSize(new Dimension(95, 27));
         okayButton.setText("Okay");
         okayButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 okayButton_actionPerformed(e);
             }
@@ -354,7 +354,6 @@ class PlotOptionsQQDialog extends JDialog {
         cancelButton.setMinimumSize(new Dimension(95, 27));
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 cancelButton_actionPerformed(e);
             }

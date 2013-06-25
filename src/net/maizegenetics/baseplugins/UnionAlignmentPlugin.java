@@ -25,7 +25,9 @@ import java.util.List;
  */
 public class UnionAlignmentPlugin extends AbstractPlugin {
 
-    /** Creates a new instance of UnionAlignmentPlugin */
+    /**
+     * Creates a new instance of UnionAlignmentPlugin
+     */
     public UnionAlignmentPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
@@ -113,6 +115,7 @@ public class UnionAlignmentPlugin extends AbstractPlugin {
      *
      * @return ImageIcon
      */
+    @Override
     public ImageIcon getIcon() {
         URL imageURL = UnionAlignmentPlugin.class.getResource("images/UnionJoin.gif");
         if (imageURL == null) {
@@ -127,8 +130,9 @@ public class UnionAlignmentPlugin extends AbstractPlugin {
      *
      * @return String
      */
+    @Override
     public String getButtonName() {
-        return "\u222a Join";
+        return "Union Join";
     }
 
     /**
@@ -136,7 +140,8 @@ public class UnionAlignmentPlugin extends AbstractPlugin {
      *
      * @return String
      */
+    @Override
     public String getToolTipText() {
-        return "Join Datasets Together By Union of Taxa";
+        return "Join Datasets by Union of Taxa";
     }
 }

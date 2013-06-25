@@ -29,21 +29,25 @@ public class ArchaeopteryxPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
-        List<Datum> treeInList = input.getDataOfType(Tree.class);
-        if (treeInList.size() != 1) {
-            String message = "Invalid selection.  Please select one tree.";
-            if (isInteractive()) {
-                JOptionPane.showMessageDialog(getParentFrame(), message);
-            } else {
-                System.out.println(message);
+        try {
+            List<Datum> treeInList = input.getDataOfType(Tree.class);
+            if (treeInList.size() != 1) {
+                String message = "Invalid selection.  Please select one tree.";
+                if (isInteractive()) {
+                    JOptionPane.showMessageDialog(getParentFrame(), message);
+                } else {
+                    System.out.println(message);
+                }
+                return null;
             }
+
+            Tree myTree = (Tree) treeInList.get(0).getData();
+
+            makeTree(myTree, isInteractive(), getParentFrame());
             return null;
+        } finally {
+            fireProgress(100);
         }
-
-        Tree myTree = (Tree) treeInList.get(0).getData();
-
-        makeTree(myTree, isInteractive(), getParentFrame());
-        return null;
     }
 
     @Override
@@ -58,12 +62,12 @@ public class ArchaeopteryxPlugin extends AbstractPlugin {
 
     @Override
     public String getButtonName() {
-        return "Tree2";
+        return "Archaeopteryx Tree";
     }
 
     @Override
     public String getToolTipText() {
-        return "Tree View using Archaeopteryx viewer";
+        return "Archaeopteryx Tree Viewer";
     }
 
     public static void makeTree(Tree theTree, boolean isInteractive, Frame frame) {
