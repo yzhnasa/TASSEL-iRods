@@ -193,6 +193,6 @@ public class SeparatePlugin extends AbstractPlugin {
      */
     @Override
     public String getToolTipText() {
-        return "Separate Data into Components";
+        return "Separate Data (i.e. into Chromosomes)";
     }
 }
