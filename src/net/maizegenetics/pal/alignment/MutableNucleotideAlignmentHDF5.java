@@ -181,11 +181,12 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     private void initGenotypeCache() {
         myDataCache=new LRUCache<Long, byte[]>(defaultCacheSize);
-//        int minLoad=(defaultCacheSize<getSequenceCount())?defaultCacheSize:getSequenceCount();
-//        int start=(0/defaultSiteCache)*defaultSiteCache;
-//        for (int i = 0; i<minLoad; i++) {
-//            myDataCache.put(getCacheKey(i,0), myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(i),defaultSiteCache,start));
-//        }
+      //  System.out.println("initGenotypeCache sized to:"+1024);
+        int minLoad=(1024<getSequenceCount())?1024:getSequenceCount();
+        int start=(0/defaultSiteCache)*defaultSiteCache;
+        for (int i = 0; i<minLoad; i++) {
+            myDataCache.put(getCacheKey(i,0), myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(i),defaultSiteCache,start));
+        }
     }
     
     private void initDepthCache() {
@@ -207,21 +208,40 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return ((long)taxon<<32)+(site/defaultSiteCache);
     }
     
-    private synchronized byte[] cacheTaxonSiteBlock(int taxon, int site, long key) {
+    private synchronized byte[] cacheTaxonSiteBlockX(int taxon, int site, long key) {
         byte[] data=null;
         long block=site>>16;
+        int cnt=0;
         try{
-            while(data==null) {
+            while((data==null)&&(cnt<16)) {
                 try{data=myWriter.readByteArrayBlock(getTaxaGenoPath(taxon),defaultSiteCache,block);}
                 catch(Exception e) {
-                    Thread.sleep(10);
+                    cnt++;
+                 //   Thread.sleep(10);
+                    e.printStackTrace();
                     System.out.printf("Loop cacheTaxonSiteBlock Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
+                    
                 }
             }
             if(data==null) return null;
             myDataCache.put(key, data);
         } catch(Exception e) {
             System.out.printf("cacheTaxonSiteBlock Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
+            e.printStackTrace();
+        }
+        return data;
+    }
+    
+    private synchronized byte[] cacheTaxonSiteBlock(int taxon, int site, long key) {
+        int start=(site/defaultSiteCache)*defaultSiteCache;
+        byte[] data=null;
+        long block=site>>16;
+        try{
+            data=myWriter.readByteArrayBlock(getTaxaGenoPath(taxon),1<<16,block);
+            if(data==null) return null;
+            myDataCache.put(key, data);
+        } catch(Exception e) {
+            System.out.printf("Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
             e.printStackTrace();
         }
         return data;

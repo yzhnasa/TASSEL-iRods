@@ -193,8 +193,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
         for (int taxon = 0; taxon < unimpAlign.getSequenceCount(); taxon+=1) {
             ImputeOneTaxon theTaxon=new ImputeOneTaxon(taxon, donorAlign, minSitesPresent, conflictMasks,imputeDonorFile, mna);
-            theTaxon.run();
-      //      pool.execute(theTaxon);
+    //        theTaxon.run();
+            pool.execute(theTaxon);
         }
         pool.shutdown();
         try{
