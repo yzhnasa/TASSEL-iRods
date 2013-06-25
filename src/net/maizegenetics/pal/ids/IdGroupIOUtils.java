@@ -1,8 +1,8 @@
 package net.maizegenetics.pal.ids;
 
+import com.google.common.collect.TreeMultimap;
 import java.io.BufferedReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import net.maizegenetics.util.Utils;
 
 /**
@@ -15,6 +15,19 @@ public class IdGroupIOUtils {
     private IdGroupIOUtils() {
     }
     
+    public static TreeMultimap<String,String> getMapOfTextAnnotatedIds(IdGroup annoIdGroup, String annoName) {
+        TreeMultimap<String,String> annoMap=TreeMultimap.create();
+        for (int i = 0; i < annoIdGroup.getIdCount(); i++) {
+            if(annoIdGroup.getIdentifier(i) instanceof AnnotatedIdentifier) {
+                AnnotatedIdentifier ai=(AnnotatedIdentifier)annoIdGroup.getIdentifier(i);
+                for (String value : ai.getTextAnnotation(annoName)) {
+                    annoMap.put(value,ai.getFullName());
+                } 
+            }
+        }
+        return annoMap;
+    }
+    
     public static IdGroup readPedigree(String fileName) {
         BufferedReader fileIn = null;
         try {
@@ -23,24 +36,46 @@ public class IdGroupIOUtils {
             String line;
             ArrayList<Identifier> taxaNames=new ArrayList<Identifier>();
             line=fileIn.readLine();
+            int indexOfName=0;
+            String[] headers=null;
+            boolean[] isQuant=null;
             if(line.contains("<Name>")) {
                 //parse headers
-                String[] s=line.split("\\t");
-                int countCat=0, countNum=0;
-                for (String si : s) {
-                    if(si.startsWith("<#")) {countNum++;}
-                    else if(si.startsWith("<")) {countCat++;}
+                headers=line.split("\\t");
+                isQuant=new boolean[headers.length];
+                for (int i = 0; i < headers.length; i++) {
+                    if(headers[i].equals("<Name>")) {indexOfName=i; continue;}
+                    headers[i]=headers[i].replace(">", "");
+                    headers[i]=headers[i].replace("<", "");
+                    if(headers[i].startsWith("#")) {
+                        isQuant[i]=true;
+                        headers[i]=headers[i].replace("#", "");
+                    } else {
+                        isQuant[i]=false;
+                    }
+                    
                 }
-                HashMap<String, String>[] catHash=new HashMap[countCat];
-                HashMap<String, String>[] numHash=new HashMap[countNum];
-                
-                
             } else {
                fileIn.reset();
             }
             while((line=fileIn.readLine())!=null) {
                 String[] s=line.split("\\t");
-                taxaNames.add(new Identifier(s[0]));
+                if(headers!=null) {
+                    AnnotatedIdentifier anID=new AnnotatedIdentifier(s[indexOfName]);
+                    for (int i = 0; i < s.length; i++) {
+                        if(i==indexOfName) continue;
+                        if(isQuant[i]) {
+                           // System.out.println(line);
+                            
+                            if(s[i].equals("NA")) {anID.addAnnotation(headers[i], Double.NaN);}
+                            else {anID.addAnnotation(headers[i], Double.parseDouble(s[i]));}
+                        }
+                        else {anID.addAnnotation(headers[i], s[i]);}
+                    }
+                    taxaNames.add(anID);
+                } else {
+                    taxaNames.add(new Identifier(s[indexOfName]));
+                }
             }
             return new SimpleIdGroup(taxaNames);
         } catch(Exception e) {

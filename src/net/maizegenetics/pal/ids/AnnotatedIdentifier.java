@@ -1,25 +1,30 @@
 
 package net.maizegenetics.pal.ids;
 
-import java.util.HashMap;
-
+import com.google.common.collect.HashMultimap;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
+ * Identifiers normally only track a name, while the AnnotatedIdentifier provides support
+ * for numerous other characteristics about the taxon (sample).  This could be used
+ * to store information on secondary IDs, species, genus, parents, family, other sets, 
+ * expected inbreeding coefficients, etc.
  * 
- * @author Ed Buckler
+ * @author  Ed Buckler
  */
-
 public class AnnotatedIdentifier extends Identifier {
-    private HashMap<String, String> textAnnotations=null;
-    private HashMap<String, Double> quantAnnotations=null;
+    private HashMultimap<String, String> textAnnotations=null;
+    private HashMultimap<String, Double> quantAnnotations=null;
 
     public AnnotatedIdentifier(String name) {
         super(name);
-        
+        textAnnotations=HashMultimap.create(10,2);
+        quantAnnotations=HashMultimap.create(10,2);
     }
     
-    public AnnotatedIdentifier(String name, HashMap<String, String> textAnnotations, 
-            HashMap<String, Double> quantAnnotations) {
+    public AnnotatedIdentifier(String name, HashMultimap<String, String> textAnnotations, 
+            HashMultimap<String, Double> quantAnnotations) {
         super(name);
         this.textAnnotations=textAnnotations;
         this.quantAnnotations=quantAnnotations;
@@ -33,12 +38,36 @@ public class AnnotatedIdentifier extends Identifier {
         quantAnnotations.put(annoName, value);
     }
     
-    public String getTextAnnotation(String annoName) {
-        return textAnnotations.get(annoName);
+    public String[] getTextAnnotation(String annoName) {
+        return textAnnotations.get(annoName).toArray(new String[0]);
     }
     
-    public double getQuantAnnotation(String annoName) {
-        return quantAnnotations.get(annoName);
+    public Double[] getQuantAnnotation(String annoName) {
+        return quantAnnotations.get(annoName).toArray(new Double[0]);
+    }
+    
+    public String toString() {
+        StringBuilder sb=new StringBuilder(super.toString());
+        for (String key : textAnnotations.keySet()) {
+            for (String value : textAnnotations.get(key)) {
+               sb.append("\t");
+               sb.append("<");
+               sb.append(key);
+               sb.append(">");
+               sb.append(value); 
+            }
+            
+        }
+        for (String key : quantAnnotations.keySet()) {
+            for (Double value : quantAnnotations.get(key)) {
+            sb.append("\t");
+            sb.append("<#");
+            sb.append(key);
+            sb.append(">");
+            sb.append(value); 
+            }
+        }
+        return sb.toString();
     }
     
     
