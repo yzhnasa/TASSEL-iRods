@@ -35,6 +35,7 @@ import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.ProjectionAlignment;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.popgen.DonorHypoth;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -181,7 +182,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             mna=new ProjectionAlignment(donorAlign[0], unimpAlign.getIdGroup());
         } else {
             if(exportFile.contains("hmp.h5")) {
-                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, null);
+                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, new SimpleIdGroup(0));
                 mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
             }else {
                 mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);

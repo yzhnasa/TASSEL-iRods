@@ -157,11 +157,15 @@ public class ExportUtils {
         }
     }
 
+    public static String writeToMutableHDF5(Alignment a, String newHDF5file) {
+        return writeToMutableHDF5(a, newHDF5file, null);
+    }
+    
    /**
     * Exports a alignment into the Byte HDF5 format.  
-    * @param a
-    * @param newHDF5file
-    * @param exportTaxa  
+    * @param a alignment to be exported
+    * @param newHDF5file filename for the new file (should end with "hmp.h5")
+    * @param exportTaxa  subset of taxa (if null exports ALL taxa)
     * @return 
     */ 
    public static String writeToMutableHDF5(Alignment a, String newHDF5file, IdGroup exportTaxa) {
@@ -226,28 +230,20 @@ public class ExportUtils {
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
 
-//            h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
-//            byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
-//            for (int i = 0; i < numSites; i++) {
-//                alleles[i] = a.getAlleles(i);
-//            }
-//            h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
-
             // Write Bases
 
   //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
 
-            h5w.createGroup(HapMapHDF5Constants.GENOTYPES);
-            if(exportTaxa!=null) {
-                h5w.close();
-                MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
-                for (int t = 0; t < numTaxa; t++) {
-                      if(exportTaxa.whichIdNumber(a.getFullTaxaName(t))<0) continue;  //taxon not in export list
-                      byte[] bases = a.getBaseRow(t);
-                      addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
-                }
-                addA.clean();
+            h5w.createGroup(HapMapHDF5Constants.GENOTYPES);            
+            if((exportTaxa!=null)&&(exportTaxa.getIdCount()==0)) {h5w.close(); return newHDF5file;}
+            h5w.close();
+            MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
+            for (int t = 0; t < numTaxa; t++) {
+                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.getFullTaxaName(t))<0)) continue;  //taxon not in export list
+                  byte[] bases = a.getBaseRow(t);
+                  addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
             }
+            addA.clean();           
             return newHDF5file;
 
         } finally {
@@ -306,7 +302,7 @@ public class ExportUtils {
             siteOfSite[s]=site;
             s++;
         }
-        ExportUtils.writeToMutableHDF5(mna, newMerge, null);
+        ExportUtils.writeToMutableHDF5(mna, newMerge, new SimpleIdGroup(0));
         MutableNucleotideAlignmentHDF5 base=MutableNucleotideAlignmentHDF5.getInstance(newMerge, 4096);
         int cnt=0;
         long startTime=System.currentTimeMillis();

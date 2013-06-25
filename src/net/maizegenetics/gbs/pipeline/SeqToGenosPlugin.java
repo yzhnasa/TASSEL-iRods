@@ -739,7 +739,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 System.out.println("Can't delete exitsting HDF5 genotypes file");
             }
         }
-        ExportUtils.writeToMutableHDF5(genos, hdf5FileS, genos.getIdGroup());
+        ExportUtils.writeToMutableHDF5(genos, hdf5FileS);
         MutableNucleotideAlignmentHDF5 hdf5Genos = MutableNucleotideAlignmentHDF5.getInstance(hdf5FileS);
         addDepthToHDF5(hdf5Genos);
 //        addReferenceAllelesToHDF5(hdf5Genos);
