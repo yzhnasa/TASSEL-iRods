@@ -12,10 +12,10 @@
  * public license.
  *
  */
-//Title:      TASSELMainApp
-//Version:
-//Copyright:  Copyright (c) 1998
-//Author:     Ed Buckler
+// Title:      TASSELMainApp
+// Version:
+// Copyright:  Copyright (c) 1998
+// Author:     Ed Buckler
 package net.maizegenetics.tassel;
 
 import javax.swing.*;
@@ -29,7 +29,6 @@ import org.apache.log4j.PropertyConfigurator;
 
 public class TASSELMainApp {
 
-    private static boolean DEBUG = false;
     private final TASSELMainFrame frame;
 
     //Construct the application
@@ -50,7 +49,7 @@ public class TASSELMainApp {
 
         TasselPrefs.setPersistPreferences(true);
 
-        frame = new TASSELMainFrame(DEBUG);
+        frame = new TASSELMainFrame();
         frame.validate();
 
         //Center the window
@@ -72,9 +71,6 @@ public class TASSELMainApp {
 
     //Main method
     static public void main(String[] args) {
-        if (args.length > 0) {
-            DEBUG = true;
-        }
         try {
             TASSELMainApp mainApp = new TASSELMainApp();
             if (args.length > 0) {
