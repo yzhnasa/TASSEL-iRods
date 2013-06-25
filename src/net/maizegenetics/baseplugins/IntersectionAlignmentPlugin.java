@@ -21,7 +21,9 @@ import java.net.URL;
  */
 public class IntersectionAlignmentPlugin extends UnionAlignmentPlugin {
 
-    /** Creates a new instance of IntersectionAlignmentPlugin */
+    /**
+     * Creates a new instance of IntersectionAlignmentPlugin
+     */
     public IntersectionAlignmentPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
@@ -42,6 +44,7 @@ public class IntersectionAlignmentPlugin extends UnionAlignmentPlugin {
      *
      * @return ImageIcon
      */
+    @Override
     public ImageIcon getIcon() {
         URL imageURL = IntersectionAlignmentPlugin.class.getResource("images/IntersectJoin.gif");
         if (imageURL == null) {
@@ -56,8 +59,9 @@ public class IntersectionAlignmentPlugin extends UnionAlignmentPlugin {
      *
      * @return String
      */
+    @Override
     public String getButtonName() {
-        return "\u2229 Join";
+        return "Intersect Join";
     }
 
     /**
@@ -65,7 +69,8 @@ public class IntersectionAlignmentPlugin extends UnionAlignmentPlugin {
      *
      * @return String
      */
+    @Override
     public String getToolTipText() {
-        return "Join Datasets Together by Intersecting Taxa";
+        return "Join Datasets by Intersecting Taxa";
     }
 }
