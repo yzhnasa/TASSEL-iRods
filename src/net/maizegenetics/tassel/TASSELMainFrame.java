@@ -24,7 +24,6 @@ import net.maizegenetics.plugindef.Datum;
 
 import net.maizegenetics.prefs.TasselPrefs;
 
-
 import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -43,10 +42,10 @@ import java.util.Map;
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
 import net.maizegenetics.baseplugins.ArchaeopteryxPlugin;
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.baseplugins.CreateTreePlugin;
-
 import net.maizegenetics.baseplugins.ExportPlugin;
 import net.maizegenetics.baseplugins.FileLoadPlugin;
 import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
@@ -95,26 +94,18 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     private static final Logger myLogger = Logger.getLogger(TASSELMainFrame.class);
     public static final String version = "4.1.33";
     public static final String versionDate = "June 13, 2013";
-    private DataTreePanel theDataTreePanel;
+    private DataTreePanel myDataTreePanel;
     private String tasselDataFile = "TasselDataFile";
     //a variable to control when the progress bar was last updated
-    private String dataTreeLoadFailed = "Unable to open the saved data tree.  The file format of this version is "
-            + "incompatible with other versions.";
     private JFileChooser filerSave = new JFileChooser();
     private JFileChooser filerOpen = new JFileChooser();
-    private JPanel mainPanel = new JPanel();
-    private JPanel dataTreePanelPanel = new JPanel();
-    private JPanel reportPanel = new JPanel();
-    private JPanel optionsPanelPanel = new JPanel();
-    private JSplitPane dataTreeReportMainPanelsSplitPanel = new JSplitPane();
-    private JSplitPane dataTreeReportPanelsSplitPanel = new JSplitPane();
     private JScrollPane reportPanelScrollPane = new JScrollPane();
     private JTextArea reportPanelTextArea = new JTextArea();
     JScrollPane mainPanelScrollPane = new JScrollPane();
     JPanel mainDisplayPanel = new JPanel();
     //mainPanelTextArea corresponds to what is called Main Panel in the user documentation
     private ThreadedJTextArea mainPanelTextArea = new ThreadedJTextArea();
-    private JTextField statusBar = new JTextField();
+    private JTextField myStatusTextField = new JTextField();
     private JMenuItem openCompleteDataTreeMenuItem = new JMenuItem();
     private JMenuItem openDataMenuItem = new JMenuItem();
     private JMenuItem saveCompleteDataTreeMenuItem = new JMenuItem();
@@ -126,8 +117,8 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     public TASSELMainFrame() {
         try {
             loadSettings();
-            theDataTreePanel = new DataTreePanel(this);
-            theDataTreePanel.setToolTipText("Data Tree Panel");
+            myDataTreePanel = new DataTreePanel(this);
+            myDataTreePanel.setToolTipText("Data Tree Panel");
             addMenuBar();
             initializeMyFrame();
 
@@ -142,7 +133,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
     //Component initialization
     private void initializeMyFrame() throws Exception {
-        this.getContentPane().setLayout(new BorderLayout());
+        getContentPane().setLayout(new BorderLayout());
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
         // it is time for TASSEL to claim more (almost all) of the screen real estate for itself
@@ -157,12 +148,10 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         });
 
         filerSave.setDialogType(JFileChooser.SAVE_DIALOG);
-        mainPanel.setLayout(new BorderLayout());
+
+        JSplitPane dataTreeReportPanelsSplitPanel = new JSplitPane();
         dataTreeReportPanelsSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        optionsPanelPanel.setLayout(new BorderLayout());
-        dataTreePanelPanel.setLayout(new BorderLayout());
-        dataTreePanelPanel.setToolTipText("Data Tree Panel");
-        reportPanel.setLayout(new BorderLayout());
+
         reportPanelTextArea.setEditable(false);
         reportPanelTextArea.setToolTipText("Report Panel");
         mainPanelTextArea.setDoubleBuffered(true);
@@ -170,8 +159,8 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         mainPanelTextArea.setFont(new java.awt.Font("Monospaced", 0, 12));
         mainPanelTextArea.setToolTipText("Main Panel");
 
-        statusBar.setBackground(Color.lightGray);
-        statusBar.setBorder(null);
+        myStatusTextField.setBackground(Color.lightGray);
+        myStatusTextField.setBorder(null);
         saveCompleteDataTreeMenuItem.setText("Save Data Tree");
         saveCompleteDataTreeMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -200,48 +189,43 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
             }
         });
 
-        this.getContentPane().add(dataTreeReportMainPanelsSplitPanel, BorderLayout.CENTER);
+        JSplitPane dataTreeReportMainPanelsSplitPanel = new JSplitPane();
 
-        dataTreeReportMainPanelsSplitPanel.add(optionsPanelPanel, JSplitPane.TOP);
+        getContentPane().add(dataTreeReportMainPanelsSplitPanel, BorderLayout.CENTER);
 
-        optionsPanelPanel.add(dataTreeReportPanelsSplitPanel, BorderLayout.CENTER);
+        dataTreeReportMainPanelsSplitPanel.add(dataTreeReportPanelsSplitPanel, JSplitPane.LEFT);
 
-        dataTreeReportPanelsSplitPanel.add(dataTreePanelPanel, JSplitPane.TOP);
+        dataTreeReportPanelsSplitPanel.add(myDataTreePanel, JSplitPane.TOP);
 
-        dataTreePanelPanel.add(theDataTreePanel, BorderLayout.CENTER);
+        JSplitPane reportProgressSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-        JSplitPane reportProgress = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        JPanel reportPanel = new JPanel(new BorderLayout());
 
-        reportProgress.add(reportPanel, JSplitPane.TOP);
+        reportProgressSplitPane.add(reportPanel, JSplitPane.TOP);
 
         reportPanel.add(reportPanelScrollPane, BorderLayout.CENTER);
 
         reportPanelScrollPane.getViewport().add(reportPanelTextArea, null);
 
-        reportProgress.add(new JScrollPane(myProgressPanel), JSplitPane.BOTTOM);
+        reportProgressSplitPane.add(new JScrollPane(myProgressPanel), JSplitPane.BOTTOM);
 
-        dataTreeReportPanelsSplitPanel.add(reportProgress, JSplitPane.BOTTOM);
+        dataTreeReportPanelsSplitPanel.add(reportProgressSplitPane, JSplitPane.BOTTOM);
 
-        dataTreeReportMainPanelsSplitPanel.add(mainPanel, JSplitPane.BOTTOM);
+        dataTreeReportMainPanelsSplitPanel.add(mainDisplayPanel, JSplitPane.RIGHT);
 
-//********************************************************************************************************
-        // set up so that the TASSELMainFrame can display the new alignment viewer
-        //mainPanel.add(mainPanelScrollPane, BorderLayout.CENTER);
-        mainPanel.add(mainDisplayPanel, BorderLayout.CENTER);
         mainDisplayPanel.setLayout(new BorderLayout());
         mainPanelScrollPane.getViewport().add(mainPanelTextArea, null);
         mainDisplayPanel.add(mainPanelScrollPane, BorderLayout.CENTER);
-//********************************************************************************************************
 
         mainPanelScrollPane.getViewport().add(mainPanelTextArea, null);
 
-        this.getContentPane().add(statusBar, BorderLayout.SOUTH);
+        getContentPane().add(myStatusTextField, BorderLayout.SOUTH);
 
-        dataTreeReportMainPanelsSplitPanel.setDividerLocation(this.getSize().width / 4);
+        dataTreeReportMainPanelsSplitPanel.setDividerLocation(getSize().width / 4);
 
-        dataTreeReportPanelsSplitPanel.setDividerLocation((int) (this.getSize().height / 3.5));
+        dataTreeReportPanelsSplitPanel.setDividerLocation((int) (getSize().height / 3.5));
 
-        reportProgress.setDividerLocation((int) (this.getSize().height / 3.5));
+        reportProgressSplitPane.setDividerLocation((int) (getSize().height / 3.5));
     }
 
     private void addMenuBar() {
@@ -261,30 +245,23 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
     //Help | About action performed
     private void helpAbout_actionPerformed(ActionEvent e) {
-
         AboutBox dlg = new AboutBox(this);
-
         Dimension dlgSize = dlg.getPreferredSize();
-
         Dimension frmSize = getSize();
-
         Point loc = getLocation();
-
         dlg.setLocation((frmSize.width - dlgSize.width) / 2 + loc.x, (frmSize.height - dlgSize.height) / 2 + loc.y);
-
         dlg.setModal(true);
-
         dlg.setVisible(true);
     }
 
     public void sendMessage(String text) {
-        statusBar.setForeground(Color.BLACK);
-        statusBar.setText(text);
+        myStatusTextField.setForeground(Color.BLACK);
+        myStatusTextField.setText(text);
     }
 
     public void sendErrorMessage(String text) {
-        statusBar.setForeground(Color.RED);
-        statusBar.setText(text);
+        myStatusTextField.setForeground(Color.RED);
+        myStatusTextField.setText(text);
     }
 
     public void setMainText(String text) {
@@ -309,7 +286,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
      * Provides a save filer that remembers the last location something was
      * saved to
      */
-    public File getSaveFile() {
+    private File getSaveFile() {
 
         File saveFile = null;
         int returnVal = filerSave.showSaveDialog(this);
@@ -326,7 +303,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
      * Provides a open filer that remember the last location something was
      * opened from
      */
-    public File getOpenFile() {
+    private File getOpenFile() {
 
         File openFile = null;
 
@@ -345,13 +322,13 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     }
 
     public void addDataSet(DataSet theDataSet, String defaultNode) {
-        theDataTreePanel.addDataSet(theDataSet, defaultNode);
+        myDataTreePanel.addDataSet(theDataSet, defaultNode);
     }
 
     private void saveDataTree(String file) {
 
         Map dataToSerialize = new LinkedHashMap();
-        Map dataFromTree = theDataTreePanel.getDataList();
+        Map dataFromTree = myDataTreePanel.getDataList();
         StringBuilder builder = new StringBuilder();
 
         Iterator itr = dataFromTree.keySet().iterator();
@@ -412,6 +389,9 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
     private boolean readDataTree(String file) {
 
+        String dataTreeLoadFailed = "Unable to open the saved data tree.  The file format of this version is "
+                + "incompatible with other versions.";
+
         boolean loadedDataTreePanel = false;
         try {
 
@@ -437,7 +417,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
                 while (itr.hasNext()) {
                     Datum currentDatum = (Datum) itr.next();
                     String currentNode = (String) data.get(currentDatum);
-                    theDataTreePanel.addDatum(currentNode, currentDatum);
+                    myDataTreePanel.addDatum(currentNode, currentDatum);
                 }
                 loadedDataTreePanel = true;
             } catch (InvalidClassException ice) {
@@ -472,7 +452,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
     private void openCompleteDataTreeMenuItem_actionPerformed(ActionEvent e) {
 
-        String dataFileName = this.tasselDataFile + ".zip";
+        String dataFileName = tasselDataFile + ".zip";
         File dataFile = new File(dataFileName);
         if (dataFile.exists()) {
             readDataTree(dataFileName);
@@ -502,7 +482,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     }
 
     private void saveCompleteDataTreeMenuItem_actionPerformed(ActionEvent e) {
-        saveDataTree(this.tasselDataFile + ".zip");
+        saveDataTree(tasselDataFile + ".zip");
     }
 
     private void preferencesMenuItem_actionPerformed(ActionEvent e) {
@@ -523,7 +503,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     }
 
     public DataTreePanel getDataTreePanel() {
-        return theDataTreePanel;
+        return myDataTreePanel;
     }
 
     public ProgressPanel getProgressPanel() {
@@ -550,7 +530,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         menuItem.setMargin(new Insets(2, 2, 2, 2));
         menuItem.setToolTipText(theTP.getToolTipText());
         menuItem.addActionListener(this);
-        theTP.addListener(theDataTreePanel);
+        theTP.addListener(myDataTreePanel);
         myMenuItemHash.put(menuItem, theTP);
         return menuItem;
     }
@@ -572,10 +552,10 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         result.setMnemonic(KeyEvent.VK_D);
 
         PlinkLoadPlugin plinkLoadPlugin = new PlinkLoadPlugin(this, true);
-        plinkLoadPlugin.addListener(theDataTreePanel);
+        plinkLoadPlugin.addListener(myDataTreePanel);
 
         FlapjackLoadPlugin flapjackLoadPlugin = new FlapjackLoadPlugin(this, true);
-        flapjackLoadPlugin.addListener(theDataTreePanel);
+        flapjackLoadPlugin.addListener(myDataTreePanel);
 
         result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, flapjackLoadPlugin), KeyEvent.VK_L));
         result.add(createMenuItem(new ExportPlugin(this, true)));
@@ -683,7 +663,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         JMenuItem delete = new JMenuItem("Delete Dataset");
         delete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                theDataTreePanel.deleteSelectedNodes();
+                myDataTreePanel.deleteSelectedNodes();
             }
         });
         delete.setToolTipText("Delete Dataset");
@@ -696,7 +676,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         JMenuItem theMenuItem = (JMenuItem) e.getSource();
         Plugin theTP = this.myMenuItemHash.get(theMenuItem);
-        PluginEvent event = new PluginEvent(theDataTreePanel.getSelectedTasselDataSet());
+        PluginEvent event = new PluginEvent(myDataTreePanel.getSelectedTasselDataSet());
         ProgressPanel progressPanel = getProgressPanel();
         progressPanel.addPlugin(theTP);
         ThreadedPluginListener thread = new ThreadedPluginListener(theTP, event);
