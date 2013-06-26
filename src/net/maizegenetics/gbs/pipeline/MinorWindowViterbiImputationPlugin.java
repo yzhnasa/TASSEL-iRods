@@ -97,6 +97,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private int minMajorRatioToMinorCnt=10;  //refinement of minMinorCnt to account for regions with all major
     private int maxDonorHypotheses=10;  //number of hypotheses of record from an inbred or hybrid search of a focus block
     private boolean isOutputProjection=false;
+    private boolean isChromosomeMode=false;  //deprecated approach to run one chromosome at a time to separate files
     
     private double maximumInbredError=0.02;  //inbreds are tested first, if too much error hybrids are tested.
     private double maxHybridErrorRate=0.005;
@@ -221,7 +222,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         } else {
             if(mna instanceof MutableNucleotideAlignmentHDF5) {
                 mna.clean();
-            } else {ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);}
+            } else {
+                ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);}
         }
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
         
@@ -992,6 +994,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         engine.add("-mxDonH", "--mxDonH", true);
         engine.add("-mnTestSite", "--mnTestSite", true);
         engine.add("-projA", "--projAlign", false);
+        engine.add("-runChrMode", "--runChrMode", false);
         engine.parse(args);
         hmpFile = engine.getString("-hmp");
         outFileBase = engine.getString("-o");
@@ -1020,6 +1023,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             minTestSites = Integer.parseInt(engine.getString("-mnTestSite"));
         }
         if (engine.getBoolean("-projA")) isOutputProjection=true;
+        if (engine.getBoolean("-runChrMode")) isChromosomeMode=true;
     }
 
 
@@ -1027,9 +1031,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private void printUsage() {
         myLogger.info(
                 "\n\n\nAvailable options for the BiParentalErrorCorrectionPlugin are as follows:\n"
-                + "-hmp   Input HapMap file(s) 'c+' to denote variable chromosomes\n"
-                + "-d    Donor haplotype files 'c+s+' to denote sections\n"
+                + "-hmp   Input HapMap file(s) 'c+' or 'gX' to denote variable chromosomes\n"
+                + "-d    Donor haplotype files 'c+s+' or 'gX' to denote sections\n"
                 + "-o     Output HapMap file(s) 'c+' to denote variable chromosomes\n"
+                + "-runChrMode Deprecated mode to run individual chromosomes\n"
                 + "-sC    Start chromosome\n"
                 + "-eC    End chromosome\n"
                 + "-minMnCnt    Minor number of minor alleles in the search window (or "+minMajorRatioToMinorCnt+"X major)\n"
@@ -1045,16 +1050,21 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
-        for (int chr = startChr; chr <=endChr; chr++) {
-           String chrHmpFile=hmpFile.replace("chr+", "chr"+chr);
-           chrHmpFile=chrHmpFile.replace("c+", "c"+chr);
-           String chrDonorFile=donorFile.replace("chr+", "chr"+chr);
-           chrDonorFile=chrDonorFile.replace("c+", "c"+chr);
-           String chrOutFile=outFileBase.replace("chr+", "chr"+chr);
-           chrOutFile=chrOutFile.replace("c+", "c"+chr);
+        if(isChromosomeMode) {
+            for (int chr = startChr; chr <=endChr; chr++) {
+               String chrHmpFile=hmpFile.replace("chr+", "chr"+chr);
+               chrHmpFile=chrHmpFile.replace("c+", "c"+chr);
+               String chrDonorFile=donorFile.replace("chr+", "chr"+chr);
+               chrDonorFile=chrDonorFile.replace("c+", "c"+chr);
+               String chrOutFile=outFileBase.replace("chr+", "chr"+chr);
+               chrOutFile=chrOutFile.replace("c+", "c"+chr);
 
-           runMinorWindowViterbiImputation(chrDonorFile, chrHmpFile, chrOutFile, 
-                   minMinorCnt, minTestSites, 100, maxHybridErrorRate, isOutputProjection, false);
+               runMinorWindowViterbiImputation(chrDonorFile, chrHmpFile, chrOutFile, 
+                       minMinorCnt, minTestSites, 100, maxHybridErrorRate, isOutputProjection, false);
+            }
+        } else {
+            runMinorWindowViterbiImputation(donorFile, hmpFile, outFileBase, 
+                       minMinorCnt, minTestSites, 100, maxHybridErrorRate, isOutputProjection, false);
         }
         return null;
     }
@@ -1078,12 +1088,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     public static void main(String[] args) {
         
-//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
+        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+//        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+//        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+//        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
 //        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
@@ -1108,6 +1118,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             "-mxHybErr","0.005",
             "-mnTestSite","50",
             "-mxDonH","10",
+            "-runChrMode",
  //           "-projA",
         };
         System.out.println("TasselPrefs:"+TasselPrefs.getAlignmentRetainRareAlleles());
