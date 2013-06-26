@@ -29,18 +29,13 @@ import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.*;
-import java.awt.image.ImageProducer;
 
 import java.io.*;
 
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -88,12 +83,6 @@ import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.plugindef.ThreadedPluginListener;
 import net.maizegenetics.progress.ProgressPanel;
 import net.maizegenetics.util.Utils;
-import net.maizegenetics.wizard.Wizard;
-import net.maizegenetics.wizard.WizardPanelDescriptor;
-import net.maizegenetics.wizard.panels.TestPanel1Descriptor;
-import net.maizegenetics.wizard.panels.TestPanel2Descriptor;
-import net.maizegenetics.wizard.panels.TestPanel3Descriptor;
-import net.maizegenetics.wizard.panels.TestPanel4Descriptor;
 
 import org.apache.log4j.Logger;
 
@@ -107,9 +96,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     public static final String version = "4.1.33";
     public static final String versionDate = "June 13, 2013";
     private DataTreePanel theDataTreePanel;
-    private DataControlPanel theDataControlPanel;
-    private AnalysisControlPanel theAnalysisControlPanel;
-    private ResultControlPanel theResultControlPanel;
     private String tasselDataFile = "TasselDataFile";
     //a variable to control when the progress bar was last updated
     private String dataTreeLoadFailed = "Unable to open the saved data tree.  The file format of this version is "
@@ -119,10 +105,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     private JPanel mainPanel = new JPanel();
     private JPanel dataTreePanelPanel = new JPanel();
     private JPanel reportPanel = new JPanel();
-    private JPanel optionsPanel = new JPanel();
     private JPanel optionsPanelPanel = new JPanel();
-    private JPanel modeSelectorsPanel = new JPanel();
-    private JPanel buttonPanel = new JPanel();
     private JSplitPane dataTreeReportMainPanelsSplitPanel = new JSplitPane();
     private JSplitPane dataTreeReportPanelsSplitPanel = new JSplitPane();
     private JScrollPane reportPanelScrollPane = new JScrollPane();
@@ -132,22 +115,12 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     //mainPanelTextArea corresponds to what is called Main Panel in the user documentation
     private ThreadedJTextArea mainPanelTextArea = new ThreadedJTextArea();
     private JTextField statusBar = new JTextField();
-    private JButton resultButton = new JButton();
-    private JButton dataButton = new JButton();
-    private JButton deleteButton = new JButton();
-    private JButton analysisButton = new JButton();
     private JMenuItem openCompleteDataTreeMenuItem = new JMenuItem();
     private JMenuItem openDataMenuItem = new JMenuItem();
-    private JMenuItem saveAsDataTreeMenuItem = new JMenuItem();
     private JMenuItem saveCompleteDataTreeMenuItem = new JMenuItem();
     private JMenuItem saveDataTreeAsMenuItem = new JMenuItem();
-    private JMenuItem exitMenuItem = new JMenuItem();
-    private JMenuItem helpMenuItem = new JMenuItem();
-    private JMenuItem aboutMenuItem = new JMenuItem();
     private PreferencesDialog thePreferencesDialog;
     private final ProgressPanel myProgressPanel = ProgressPanel.getInstance();
-    private JButton wizardButton = new JButton();
-    private ExportPlugin myExportPlugin = null;
     private HashMap<JMenuItem, Plugin> myMenuItemHash = new HashMap<JMenuItem, Plugin>();
 
     public TASSELMainFrame() {
@@ -156,107 +129,15 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
             theDataTreePanel = new DataTreePanel(this);
             theDataTreePanel.setToolTipText("Data Tree Panel");
             addMenuBar();
-            theDataControlPanel = new DataControlPanel(this, theDataTreePanel);
-            theAnalysisControlPanel = new AnalysisControlPanel(this, theDataTreePanel);
-            theResultControlPanel = new ResultControlPanel(this, theDataTreePanel);
-            theResultControlPanel.setToolTipText("Report Panel");
             initializeMyFrame();
-            setIcon();
-            initDataMode();
 
-            this.setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage) " + this.version);
+            this.setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage) " + version);
 
             myLogger.info("Tassel Version: " + version + "  Date: " + versionDate);
             myLogger.info("Max Available Memory Reported by JVM: " + Utils.getMaxHeapSizeMB() + " MB");
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void setIcon() {
-        URL url = this.getClass().getResource("Logo_small.png");
-        if (url == null) {
-            return;
-        }
-        Image img = null;
-        try {
-            img = createImage((ImageProducer) url.getContent());
-        } catch (Exception e) {
-        }
-        if (img != null) {
-            setIconImage(img);
-        }
-    }
-
-    private void initWizard() {
-        Wizard wizard = new Wizard(theDataTreePanel);
-        wizard.getDialog().setTitle("TASSEL Wizard (In development)");
-
-        WizardPanelDescriptor descriptor1 = new TestPanel1Descriptor();
-        wizard.registerWizardPanel(TestPanel1Descriptor.IDENTIFIER, descriptor1);
-
-        WizardPanelDescriptor descriptor2 = new TestPanel2Descriptor();
-        wizard.registerWizardPanel(TestPanel2Descriptor.IDENTIFIER, descriptor2);
-
-        WizardPanelDescriptor descriptor3 = new TestPanel3Descriptor();
-        wizard.registerWizardPanel(TestPanel3Descriptor.IDENTIFIER, descriptor3);
-
-        WizardPanelDescriptor descriptor4 = new TestPanel4Descriptor();
-        wizard.registerWizardPanel(TestPanel4Descriptor.IDENTIFIER, descriptor4);
-
-        wizard.setCurrentPanel(TestPanel1Descriptor.IDENTIFIER);
-
-        wizard.getDialog().setLocationRelativeTo(this);
-    }
-
-    private JButton getHeapButton() {
-
-        JButton heapButton = new JButton(PrintHeapAction.getInstance(this));
-        heapButton.setText("Show Memory");
-        heapButton.setToolTipText("Show Memory Usage");
-
-        return heapButton;
-
-    }
-
-    private void initDataMode() {
-
-        buttonPanel.removeAll();
-
-        buttonPanel.add(theDataControlPanel, BorderLayout.NORTH);
-
-        dataTreePanelPanel.removeAll();
-
-        dataTreePanelPanel.add(theDataTreePanel, BorderLayout.CENTER);
-
-        this.validate();
-
-        repaint();
-
-    }
-
-    private void initAnalysisMode() {
-
-        buttonPanel.removeAll();
-
-        buttonPanel.add(theAnalysisControlPanel, BorderLayout.NORTH);
-
-        dataTreePanelPanel.removeAll();
-
-        dataTreePanelPanel.add(theDataTreePanel, BorderLayout.CENTER);
-
-        this.validate();
-
-        repaint();
-    }
-
-    private void initResultMode() {
-        buttonPanel.removeAll();
-        buttonPanel.add(theResultControlPanel, BorderLayout.NORTH);
-        dataTreePanelPanel.removeAll();
-        dataTreePanelPanel.add(theDataTreePanel, BorderLayout.CENTER);
-        this.validate();
-        repaint();
     }
 
     //Component initialization
@@ -267,11 +148,11 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         // it is time for TASSEL to claim more (almost all) of the screen real estate for itself
         // this size was selected so as to encourage the user to resize to full screen,  thereby
         // insuring that all parts of the frame are visible.
-        this.setSize(new Dimension(screenSize.width * 19 / 20, screenSize.height * 19 / 20));
-        this.setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage)");
-        this.addWindowListener(new java.awt.event.WindowAdapter() {
+        setSize(new Dimension(screenSize.width * 19 / 20, screenSize.height * 19 / 20));
+        setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage)");
+        addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                this_windowClosing(e);
+                System.exit(0);
             }
         });
 
@@ -291,130 +172,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         statusBar.setBackground(Color.lightGray);
         statusBar.setBorder(null);
-        modeSelectorsPanel.setLayout(new GridBagLayout());
-        modeSelectorsPanel.setMinimumSize(new Dimension(380, 32));
-        modeSelectorsPanel.setPreferredSize(new Dimension(700, 32));
-        URL imageURL = TASSELMainFrame.class.getResource("images/help1.gif");
-        ImageIcon helpIcon = null;
-        if (imageURL != null) {
-            helpIcon = new ImageIcon(imageURL);
-        }
-        JButton helpButton = new JButton();
-        helpButton.setIcon(helpIcon);
-        helpButton.setMargin(new Insets(0, 0, 0, 0));
-        helpButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                helpButton_actionPerformed(e);
-            }
-        });
-        helpButton.setBackground(Color.white);
-        helpButton.setMinimumSize(new Dimension(20, 20));
-        helpButton.setToolTipText("Help me!!");
-        resultButton.setText("Results");
-        resultButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                initResultMode();
-            }
-        });
-        resultButton.setMargin(new Insets(2, 2, 2, 2));
-        imageURL = TASSELMainFrame.class.getResource("images/Results.gif");
-        ImageIcon resultsIcon = null;
-        if (imageURL != null) {
-            resultsIcon = new ImageIcon(imageURL);
-        }
-        if (resultsIcon != null) {
-            resultButton.setIcon(resultsIcon);
-        }
-        resultButton.setPreferredSize(new Dimension(90, 25));
-        resultButton.setMinimumSize(new Dimension(87, 25));
-        resultButton.setMaximumSize(new Dimension(90, 25));
-        resultButton.setBackground(Color.white);
-
-        wizardButton.setText("Wizard");
-        wizardButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                wizardButton_actionPerformed(e);
-            }
-        });
-        wizardButton.setMargin(new Insets(2, 2, 2, 2));
-
-        wizardButton.setPreferredSize(new Dimension(90, 25));
-        wizardButton.setMinimumSize(new Dimension(87, 25));
-        wizardButton.setMaximumSize(new Dimension(90, 25));
-        wizardButton.setBackground(Color.white);
-
-        dataButton.setBackground(Color.white);
-        dataButton.setMaximumSize(new Dimension(90, 25));
-        dataButton.setMinimumSize(new Dimension(87, 25));
-        dataButton.setPreferredSize(new Dimension(90, 25));
-        imageURL = TASSELMainFrame.class.getResource("images/DataSeq.gif");
-        ImageIcon dataSeqIcon = null;
-        if (imageURL != null) {
-            dataSeqIcon = new ImageIcon(imageURL);
-        }
-        if (dataSeqIcon != null) {
-            dataButton.setIcon(dataSeqIcon);
-        }
-        dataButton.setMargin(new Insets(2, 2, 2, 2));
-        dataButton.setText("Data");
-        dataButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                initDataMode();
-            }
-        });
-
-        analysisButton.setText("Analysis");
-
-        analysisButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                initAnalysisMode();
-            }
-        });
-
-        analysisButton.setMargin(new Insets(2, 2, 2, 2));
-
-        imageURL = TASSELMainFrame.class.getResource("images/Analysis.gif");
-
-        ImageIcon analysisIcon = null;
-
-        if (imageURL != null) {
-            analysisIcon = new ImageIcon(imageURL);
-        }
-
-        if (analysisIcon != null) {
-            analysisButton.setIcon(analysisIcon);
-        }
-
-        analysisButton.setPreferredSize(new Dimension(90, 25));
-
-        analysisButton.setMinimumSize(new Dimension(87, 25));
-
-        analysisButton.setMaximumSize(new Dimension(90, 25));
-
-        analysisButton.setBackground(Color.white);
-
-        // delete button added moved from data panel by yogesh.
-        deleteButton.setOpaque(true);
-        deleteButton.setForeground(Color.RED);
-        deleteButton.setText("Delete");
-        deleteButton.setFont(new java.awt.Font("Dialog", 1, 12));
-        deleteButton.setToolTipText("Delete Dataset");
-        deleteButton.setMargin(new Insets(2, 2, 2, 2));
-
-
-        deleteButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                theDataTreePanel.deleteSelectedNodes();
-            }
-        });
-
-
-        optionsPanel.setLayout(new BorderLayout(0, 0));
-
-        buttonPanel.setLayout(new BorderLayout(0, 0));
-
-        optionsPanel.setToolTipText("Options Panel");
-
         saveCompleteDataTreeMenuItem.setText("Save Data Tree");
         saveCompleteDataTreeMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -440,42 +197,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
             public void actionPerformed(ActionEvent e) {
 
                 openDataMenuItem_actionPerformed(e);
-            }
-        });
-
-        saveAsDataTreeMenuItem.setText("Save Selected As...");
-        saveAsDataTreeMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ExportPlugin plugin = getExportPlugin();
-                PluginEvent event = new PluginEvent(theDataTreePanel.getSelectedTasselDataSet());
-                ProgressPanel progressPanel = getProgressPanel();
-                ThreadedPluginListener thread = new ThreadedPluginListener(plugin, event);
-                thread.start();
-                progressPanel.addPlugin(plugin);
-            }
-        });
-
-        exitMenuItem.setText("Exit");
-        exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                exitMenuItem_actionPerformed(e);
-            }
-        });
-
-        helpMenuItem.setText("Help Manual");
-        helpMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                helpButton_actionPerformed(e);
-            }
-        });
-
-        aboutMenuItem.setText("About");
-
-        aboutMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-
-                helpAbout_actionPerformed(e);
-
             }
         });
 
@@ -516,38 +237,11 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         this.getContentPane().add(statusBar, BorderLayout.SOUTH);
 
-        //this.getContentPane().add(optionsPanel, BorderLayout.NORTH);
-
-        //optionsPanel.add(modeSelectorsPanel, BorderLayout.NORTH);
-
-        modeSelectorsPanel.add(resultButton, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
-
-        modeSelectorsPanel.add(dataButton, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 4, 1, 0), 0, 0));
-
-        modeSelectorsPanel.add(analysisButton, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(2, 0, 1, 0), 0, 0));
-
-        modeSelectorsPanel.add(helpButton, new GridBagConstraints(6, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 0, 1, 2), 0, 0));
-
-        modeSelectorsPanel.add(deleteButton, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 20, 1, 2), 0, 0));
-
-        modeSelectorsPanel.add(wizardButton, new GridBagConstraints(4, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 10, 1, 0), 0, 0));
-
-        modeSelectorsPanel.add(getHeapButton(), new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(2, 30, 1, 0), 0, 0));
-
-        optionsPanel.add(buttonPanel, BorderLayout.SOUTH);
-
         dataTreeReportMainPanelsSplitPanel.setDividerLocation(this.getSize().width / 4);
 
         dataTreeReportPanelsSplitPanel.setDividerLocation((int) (this.getSize().height / 3.5));
 
         reportProgress.setDividerLocation((int) (this.getSize().height / 3.5));
-    }
-
-    private ExportPlugin getExportPlugin() {
-        if (myExportPlugin == null) {
-            myExportPlugin = new ExportPlugin(this, true);
-        }
-        return myExportPlugin;
     }
 
     private void addMenuBar() {
@@ -650,10 +344,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         return openFile;
     }
 
-    void this_windowClosing(WindowEvent e) {
-        exitMenuItem_actionPerformed(null);
-    }
-
     public void addDataSet(DataSet theDataSet, String defaultNode) {
         theDataTreePanel.addDataSet(theDataSet, defaultNode);
     }
@@ -700,7 +390,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
             FileOutputStream fos = new FileOutputStream(theFile);
             java.util.zip.ZipOutputStream zos = new ZipOutputStream(fos);
 
-            Map data = theDataTreePanel.getDataList();
             ZipEntry thisEntry = new ZipEntry("DATA");
             zos.putNextEntry(thisEntry);
             ObjectOutputStream oos = new ObjectOutputStream(zos);
@@ -775,10 +464,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
     }
 
-    private void wizardButton_actionPerformed(ActionEvent e) {
-        initWizard();
-    }
-
     private void helpButton_actionPerformed(ActionEvent e) {
         HelpDialog theHelpDialog = new HelpDialog(this);
         theHelpDialog.setLocationRelativeTo(this);
@@ -818,10 +503,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
     private void saveCompleteDataTreeMenuItem_actionPerformed(ActionEvent e) {
         saveDataTree(this.tasselDataFile + ".zip");
-    }
-
-    private void exitMenuItem_actionPerformed(ActionEvent e) {
-        System.exit(0);
     }
 
     private void preferencesMenuItem_actionPerformed(ActionEvent e) {
@@ -949,7 +630,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         fileMenu.add(openCompleteDataTreeMenuItem);
         fileMenu.add(saveDataTreeAsMenuItem);
         fileMenu.add(openDataMenuItem);
-        //fileMenu.add(saveAsDataTreeMenuItem);
         JMenuItem preferencesMenuItem = new JMenuItem();
         preferencesMenuItem.setText("Set Preferences");
 
@@ -962,7 +642,15 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         });
         fileMenu.add(preferencesMenuItem);
         fileMenu.addSeparator();
+
+        JMenuItem exitMenuItem = new JMenuItem("Exit");
+        exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
         fileMenu.add(exitMenuItem);
+
         return fileMenu;
     }
 
@@ -970,7 +658,21 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         JMenu helpMenu = new JMenu();
         helpMenu.setMnemonic(KeyEvent.VK_H);
         helpMenu.setText("Help");
+
+        JMenuItem helpMenuItem = new JMenuItem("Help Manual");
+        helpMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                helpButton_actionPerformed(e);
+            }
+        });
         helpMenu.add(helpMenuItem);
+
+        JMenuItem aboutMenuItem = new JMenuItem("About");
+        aboutMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                helpAbout_actionPerformed(e);
+            }
+        });
         helpMenu.add(aboutMenuItem);
 
         JMenuItem memoryUsage = new JMenuItem("Show Memory");
