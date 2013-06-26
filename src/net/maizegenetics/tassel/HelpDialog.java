@@ -55,7 +55,7 @@ public class HelpDialog extends JDialog {
 
     private void displayURL(String url) {
         try {
-            htmlPane.setPage(TASSELMainFrame.class.getResource(url));
+            htmlPane.setPage(HelpDialog.class.getResource(url));
             htmlPane.addHyperlinkListener(new HyperlinkListener() {
                 public void hyperlinkUpdate(HyperlinkEvent hyperlinkEvent) {
                     HyperlinkEvent.EventType type = hyperlinkEvent.getEventType();
