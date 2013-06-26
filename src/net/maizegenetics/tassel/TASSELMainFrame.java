@@ -103,8 +103,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     private JTextArea reportPanelTextArea = new JTextArea();
     JScrollPane mainPanelScrollPane = new JScrollPane();
     JPanel mainDisplayPanel = new JPanel();
-    //mainPanelTextArea corresponds to what is called Main Panel in the user documentation
-    private ThreadedJTextArea mainPanelTextArea = new ThreadedJTextArea();
+    private JTextArea mainPanelTextArea = new JTextArea();
     private JTextField myStatusTextField = new JTextField();
     private JMenuItem openCompleteDataTreeMenuItem = new JMenuItem();
     private JMenuItem openDataMenuItem = new JMenuItem();
@@ -265,12 +264,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     }
 
     public void setMainText(String text) {
-        mainPanelTextArea.start(text);
-    }
-
-    public void setMainText(StringBuffer text) {
-        mainPanelTextArea.setDoubleBuffered(false);
-        mainPanelTextArea.start(text.toString());
+        mainPanelTextArea.setText(text);
     }
 
     public void setNoteText(String text) {
