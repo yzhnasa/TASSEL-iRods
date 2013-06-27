@@ -160,6 +160,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             System.out.println("");
             int locusSites=aL.getEnd()-aL.getStart()+1;
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
+            if(subAlignCnt==0) subAlignCnt++;
             int prefBlocks=(locusSites/(subAlignCnt*64));
             System.out.printf("Chr:%s Alignment Sites:%d subAlignCnt:%d RealSites:%d %n",
                     aL.getChromosomeName(),locusSites, subAlignCnt, prefBlocks*64);
