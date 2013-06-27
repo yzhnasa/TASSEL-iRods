@@ -56,6 +56,7 @@ import org.apache.log4j.Logger;
  */
 public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     private int startChr, endChr;
+    private int startDiv=-1, endDiv=-1;
     private String hmpFile;
     private String outFileBase;
     private String errFile=null;
@@ -114,14 +115,17 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         System.out.printf("In taxa:%d sites:%d %n",baseAlign.getSequenceCount(),baseAlign.getSiteCount());
         siteErrors=new int[baseAlign.getSiteCount()];
         siteCallCnt=new int[baseAlign.getSiteCount()];
-        
-        for (int i = 0; i < divisions.length; i++) {
+        if(startDiv==-1) startDiv=0;
+        if(endDiv==-1) endDiv=divisions.length-1;
+        for (int i = startDiv; i <=endDiv; i++) {
             MutableNucleotideAlignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
              minSites,  maxDistance);
             String newExport=exportFile.replace("sX.hmp", "s"+i+".hmp");
             newExport=newExport.replace("gX", "gc"+mna.getLocusName(0)+"s"+i);
             ExportUtils.writeToHapmap(mna, false, newExport, '\t', null);
-            if(errorExportFile!=null) exportBadSites(baseAlign, errorExportFile, 0.01);   
+            if(errorExportFile!=null) exportBadSites(baseAlign, errorExportFile, 0.01);  
+            mna=null;
+            System.gc();
         }
         
     }
@@ -150,6 +154,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             index++;
         }
         mna.clean();
+        fa=inAlign=null;
         return mna;
     }
     
@@ -283,13 +288,13 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 ArrayList<String> mergeNames=new ArrayList<String>();
                 mergeNames.add(inIDG.getIdentifier(taxon1).getFullName());
                 mergeSets.put(taxon1, hits);         
-                System.out.print(inAlign.getFullTaxaName(taxon1)+"=");
+               // System.out.print(inAlign.getFullTaxaName(taxon1)+"=");
                 for (Integer taxon2 : hits) {
                     unmatched.remove(taxon2);
-                    System.out.print(inAlign.getFullTaxaName(taxon2)+"=");
+                   // System.out.print(inAlign.getFullTaxaName(taxon2)+"=");
                     mergeNames.add(inIDG.getIdentifier(taxon2).getFullName());
                 }
-                System.out.println("");              
+              //  System.out.println("");              
                 calls=consensusGameteCalls(inAlign, mergeNames, startSite, endSite, maxErrorInCreatingConsensus, siteOffsetForError);
             } else {
                 calls=inAlign.getBaseRange(taxon1, startSite, endSite+1);
@@ -417,12 +422,20 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         engine.add("-minPres", "--minPres", true);
         engine.add("-maxHap", "--maxHap", true);
         engine.add("-maxOutMiss", "--maxOutMiss", true);
+        engine.add("-sD", "--startDivision", true);
+        engine.add("-eD", "--endDivision", true);
         engine.parse(args);
         if (engine.getBoolean("-sC")) {
             startChr = Integer.parseInt(engine.getString("-sC"));
         }
         if (engine.getBoolean("-eC")) {
             endChr = Integer.parseInt(engine.getString("-eC"));
+        }
+        if (engine.getBoolean("-sD")) {
+            startDiv = Integer.parseInt(engine.getString("-sD"));
+        }
+        if (engine.getBoolean("-eD")) {
+            endDiv = Integer.parseInt(engine.getString("-eD"));
         }
         hmpFile = engine.getString("-hmp");
         outFileBase = engine.getString("-o");
