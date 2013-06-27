@@ -45,6 +45,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
             return size() > MAX_CACHE_SIZE;
         }
     };
+    private boolean myOptimizeSiteIteration = true;
 
     protected BitAlignmentHDF5(IHDF5Reader hdf5, IdGroup idGroup, byte[][] alleles, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(alleles, idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
@@ -98,17 +99,17 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
         String[] snpIds = reader.readStringArray(HapMapHDF5Constants.SNP_IDS);
 
+        BitAlignmentHDF5 result = null;
         if (NucleotideAlignmentConstants.isNucleotideEncodings(alleleStates)) {
-            if (iterateSites) {
-                return new BitNucleotideAlignmentHDF5(reader, idgroup, alleles, null, null, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
-            } else {
-                return new TBitNucleotideAlignmentHDF5(reader, idgroup, alleles, null, null, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
-            }
+            result = new BitNucleotideAlignmentHDF5(reader, idgroup, alleles, null, null, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
         } else if (alleleStates.length == 1) {
-            return new BitAlignmentHDF5(reader, idgroup, alleles, null, null, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
+            result = new BitAlignmentHDF5(reader, idgroup, alleles, null, null, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
         } else {
-            return new BitTextAlignmentHDF5(reader, idgroup, alleles, null, null, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
+            result = new BitTextAlignmentHDF5(reader, idgroup, alleles, null, null, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIds, retainRare);
         }
+
+        result.setOptimizeSiteIteration(iterateSites);
+        return result;
 
     }
 
@@ -262,6 +263,14 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
     @Override
     public byte[] getBaseArray(int taxon, int site) {
+        if (myOptimizeSiteIteration) {
+            return getBaseArrayS(taxon, site);
+        } else {
+            return getBaseArrayT(taxon, site);
+        }
+    }
+
+    public byte[] getBaseArrayS(int taxon, int site) {
         OpenBitSet[] sBitData = getCachedSite(site);
         byte[] result = new byte[2];
         result[0] = Alignment.UNKNOWN_ALLELE;
@@ -286,7 +295,37 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
             }
 
         } catch (IndexOutOfBoundsException e) {
-            throw new IllegalStateException("BitAlignmentHDF5: getBaseArray: bit sets indicate more than two alleles for taxon: " + taxon + "   site: " + site);
+            throw new IllegalStateException("BitAlignmentHDF5: getBaseArrayS: bit sets indicate more than two alleles for taxon: " + taxon + "   site: " + site);
+        }
+        return result;
+    }
+
+    public byte[] getBaseArrayT(int taxon, int site) {
+        OpenBitSet[] tBitData = getCachedTaxon(taxon);
+        byte[] result = new byte[2];
+        result[0] = Alignment.UNKNOWN_ALLELE;
+        result[1] = Alignment.UNKNOWN_ALLELE;
+        try {
+            int count = 0;
+            for (int i = 0; i < myMaxNumAlleles; i++) {
+                if (tBitData[i].fastGet(site)) {
+                    if (count == 0) {
+                        result[1] = myAlleles[site][i];
+                    }
+                    result[count++] = myAlleles[site][i];
+                }
+            }
+
+            // Check For Rare Allele
+            if (retainsRareAlleles() && tBitData[myMaxNumAlleles].fastGet(site)) {
+                if (count == 0) {
+                    result[1] = Alignment.RARE_ALLELE;
+                }
+                result[count] = Alignment.RARE_ALLELE;
+            }
+
+        } catch (IndexOutOfBoundsException e) {
+            throw new IllegalStateException("BitNucleotideAlignmentHDF5: getBaseArrayT: bit sets indicate more than two alleles for taxon: " + taxon + "   site: " + site);
         }
         return result;
     }
@@ -321,7 +360,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
         return ((int) temp.cardinality()) * 2;
 
     }
-    
+
     @Override
     public int getTotalNotMissing(int site) {
 
@@ -734,5 +773,16 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     @Override
     public void optimizeForSites(ProgressListener listener) {
         // do nothing
+    }
+
+    /**
+     * Sets whether this BitAlignmentHDF5 caches bit sets to optimize for site
+     * iteration or taxa iteration.
+     *
+     * @param optimizeSiteIteration true to optimize for site iteration or false
+     * to optimize for taxa iteration
+     */
+    public void setOptimizeSiteIteration(boolean optimizeSiteIteration) {
+        myOptimizeSiteIteration = optimizeSiteIteration;
     }
 }
