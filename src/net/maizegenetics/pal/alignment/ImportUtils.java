@@ -53,27 +53,29 @@ public class ImportUtils {
     private ImportUtils() {
         // Utility Class - do not instantiate.
     }
-    
+
     public static Alignment readGuessFormat(String fileName, boolean readSBit) {
-        try{
-            if(fileName.endsWith("hmp.h5")||fileName.endsWith("mhmp.h5")) {
+        try {
+            if (fileName.endsWith("hmp.h5") || fileName.endsWith("mhmp.h5")) {
                 IHDF5Reader reader = HDF5Factory.openForReading(fileName);
-                boolean geno=reader.exists(HapMapHDF5Constants.GENOTYPES);
+                boolean geno = reader.exists(HapMapHDF5Constants.GENOTYPES);
                 reader.close();
-                if(geno) {return MutableNucleotideAlignmentHDF5.getInstance(fileName);}
+                if (geno) {
+                    return MutableNucleotideAlignmentHDF5.getInstance(fileName);
+                }
                 return BitAlignmentHDF5.getInstance(fileName, readSBit);
-            } else if(fileName.endsWith("hmp.txt.gz")||fileName.endsWith("hmp.txt")) {
+            } else if (fileName.endsWith("hmp.txt.gz") || fileName.endsWith("hmp.txt")) {
                 return readFromHapmap(fileName, readSBit, null);
-            } else if(fileName.endsWith(".vcf")||fileName.endsWith(".vcf.gz")) {
+            } else if (fileName.endsWith(".vcf") || fileName.endsWith(".vcf.gz")) {
                 return readFromVCF(fileName, null);
             } else {
                 return readFasta(fileName, readSBit);
             }
-        }catch(Exception e) {
-            System.err.println("Error reading:"+fileName);
+        } catch (Exception e) {
+            System.err.println("Error reading:" + fileName);
             return null;
-        } 
-        
+        }
+
     }
 
     /*
@@ -147,8 +149,8 @@ public class ImportUtils {
             String[] snpID = new String[numSites];
 
             MutableVCFAlignment result = MutableVCFAlignment.getInstance(idGroup, numSites, numTaxa, numSites, maxKeptAlleles);
-            
-         
+
+
             int prevPos = -1;
             int currPos = -1;
             int locusStart = 0;
@@ -168,18 +170,17 @@ public class ImportUtils {
 
                 //Currently this code can only support alleles that are encoded in single charactor, 
                 //Indels need to be encoded as "+" or "-", multi-charactor indels are not supported 
-                if (ref.length()>1){
+                if (ref.length() > 1) {
                     throw new IllegalStateException("ImportUtils: readFromVCF: the reference allele must be in single charactor. Multi-character indels need to be converted to '+' or '-'. At position " + currPos + ", the ref allele '" + ref + "' is not supported.");
                 }
                 String[] altsplitted = alt.split(",");
-                for (String t:altsplitted)
-                {
-                    if (t.length()!=1){
+                for (String t : altsplitted) {
+                    if (t.length() != 1) {
                         throw new IllegalStateException("ImportUtils: readFromVCF: the alternative allele must be in single charactor. Multi-character indels need to be converted to '+' or '-'. At position " + currPos + ", the alternative allele '" + t + "' is not supported.");
                     }
                 }
                 alt = alt.replaceAll(",", "");
-                
+
                 // find alleles for current site, check to see if number of alleles is supported
                 int numAlleles = alt.length() + 1;
                 int oriNumAlleles = numAlleles;
@@ -188,10 +189,10 @@ public class ImportUtils {
                     System.out.println("read VCF position " + currPos + ": extra allele(s) removed.");
                     numAlleles = maxKeptAlleles;
                     alleleString = alleleString.substring(0, numAlleles);
-                   //throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxKeptAlleles + " alleles allowed, in line " + (numHeader + site + 1));
+                    //throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxKeptAlleles + " alleles allowed, in line " + (numHeader + site + 1));
                 }
-            
-                
+
+
                 byte[] alleles = new byte[numAlleles];
 
                 for (int allele = 0; allele < numAlleles; allele++) {
@@ -214,11 +215,11 @@ public class ImportUtils {
                         throw new IllegalStateException("ImportUtils: readFromVCF: a unsupported allele detected in this VCF file: " + currAllele + " in line " + (numHeader + site + 1));
                     }
                 }
-                
-                
+
+
                 result.setCommonAlleles(site, alleles);
                 result.setPositionOfSite(site, currPos);
-                if (!ref.equals(".")){
+                if (!ref.equals(".")) {
                     result.setReferenceAllele(site, NucleotideAlignmentConstants.getNucleotideDiploidByte(ref));
                 }
 
@@ -244,16 +245,15 @@ public class ImportUtils {
                 }
 
                 //if (alleleDepthIndex == -1) {
-                    //throw new IllegalStateException("ImportUtils: readFromVCF: no allele depth data found in this VCF file at line: " + (numHeader + site + 1));
+                //throw new IllegalStateException("ImportUtils: readFromVCF: no allele depth data found in this VCF file at line: " + (numHeader + site + 1));
                 //}
 
 
                 for (int taxa = 0; taxa < numTaxa; taxa++) {
                     String[] dataSplit = colonPattern.split(dataByTaxa[taxa]);
-                    if (dataSplit[0].startsWith("./."))
-                    {
+                    if (dataSplit[0].startsWith("./.")) {
                         byte[] depths = new byte[numAlleles];
-                        java.util.Arrays.fill(depths, (byte)0);
+                        java.util.Arrays.fill(depths, (byte) 0);
                         result.setDepthForAlleles(taxa, site, depths);
                         continue;
                     }
@@ -279,13 +279,10 @@ public class ImportUtils {
                                 if (currGenoInt == 14) {
                                     calledGenotypeValue |= 0x0E;
                                 } else {
-                                    if (currGenoInt>(numAlleles-1))
-                                    {
-                                        recallgenotypeflag=true;
+                                    if (currGenoInt > (numAlleles - 1)) {
+                                        recallgenotypeflag = true;
                                         break;
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         currGenotype = alleleString.substring(currGenoInt, currGenoInt + 1);
                                         if (currGenotype.equalsIgnoreCase("A")) {
                                             calledGenotypeValue |= 0x00;
@@ -308,12 +305,10 @@ public class ImportUtils {
                         }
 
                         //the called genotype will be set later, incase the genotype needs to be recalled
-                        if (alleleDepthIndex>=0)
-                        {
+                        if (alleleDepthIndex >= 0) {
                             String alleleDepths = dataSplit[alleleDepthIndex];
                             String[] stringDepths = commaPattern.split(alleleDepths);
-                            if (stringDepths.length != oriNumAlleles)
-                            {
+                            if (stringDepths.length != oriNumAlleles) {
                                 throw new IllegalStateException("ImportUtils: readFromVCF: number of allele depth values does not match number of alleles in line: " + (numHeader + site + 1) + " taxa number: " + taxa);
                             }
 
@@ -328,16 +323,15 @@ public class ImportUtils {
                                 }
                                 depths[i] = (byte) depth;
                             }
-                            if (recallgenotypeflag==true)
-                            {
+                            if (recallgenotypeflag == true) {
                                 //recall genotype now
                                 calledGenotypeValue = VCFUtil.resolveVCFGeno(alleles, intDepths);
                             }
                             result.setDepthForAlleles(taxa, site, depths);
                         }
-                        
+
                         result.setBase(taxa, site, calledGenotypeValue);
-                        
+
                     }
                 }
 
