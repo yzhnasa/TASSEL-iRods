@@ -668,7 +668,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
             int length=(i<(blocks-1))?chunk:myNumSites-startPos;
             byte[] sub=new byte[length];
             System.arraycopy(genotype, startPos, sub, 0, length);
-            myWriter.writeByteArrayBlock(basesPath, sub, i);
+            myWriter.writeByteArrayBlockWithOffset(basesPath, sub, sub.length, (long)startPos);
         }
         int taxonIndex=myIdentifiers.size();
         myIdentifiers.add(id);
