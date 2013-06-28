@@ -55,6 +55,7 @@ public class FileLoadPlugin extends AbstractPlugin {
     private PlinkLoadPlugin myPlinkLoadPlugin = null;
     private FlapjackLoadPlugin myFlapjackLoadPlugin = null;
     private boolean myIsSBit = true;
+    private JFileChooser myOpenFileChooser = new JFileChooser(TasselPrefs.getOpenDir());
 
     public enum TasselFileType {
 
@@ -421,13 +422,13 @@ public class FileLoadPlugin extends AbstractPlugin {
      * opened from
      */
     private File[] getOpenFilesByChooser() {
-        JFileChooser filerOpen = new JFileChooser(TasselPrefs.getOpenDir());
-        filerOpen.setMultiSelectionEnabled(true);
+        myOpenFileChooser.setMultiSelectionEnabled(true);
         File[] lopenFiles = null;
-        int returnVal = filerOpen.showOpenDialog(getParentFrame());
+        myOpenFileChooser.setVisible(true);
+        int returnVal = myOpenFileChooser.showOpenDialog(getParentFrame());
         if (returnVal == JFileChooser.OPEN_DIALOG || returnVal == JFileChooser.APPROVE_OPTION) {
-            lopenFiles = filerOpen.getSelectedFiles();
-            TasselPrefs.putOpenDir(filerOpen.getCurrentDirectory().getPath());
+            lopenFiles = myOpenFileChooser.getSelectedFiles();
+            TasselPrefs.putOpenDir(myOpenFileChooser.getCurrentDirectory().getPath());
         }
         return lopenFiles;
     }
@@ -512,9 +513,10 @@ public class FileLoadPlugin extends AbstractPlugin {
  * <p>Description: </p>
  * <p>Copyright: Copyright (c) 2005</p>
  * <p>Company: USDA-ARS</p>
+ *
  * @author Edward Buckler
  * @version 1.0
- * z */
+ */
 class FileLoadPluginDialog extends JDialog {
 
     boolean isCancel = true;
