@@ -340,26 +340,26 @@ public class ExportUtils {
      * This is designed for putting multiple chromosomes together into one whole genome file.  The
      * sites must be exactly the same.
      * <p>
-     * TODO:  Need to pass in array of source file, and only clean once.  Cleaning can take as much time
-     * as adding once things are big.
-     * <p>
      * TODO:  Need to add option for merging depth.
-     * @param sourceFile name of ByteNucleotideHDF5 with the new taxa
+     * @param sourceFile array of sourcefile names in ByteNucleotideHDF5 format with the new taxa
      * @param targetFile name of ByteNucleotideHDF5 file to receive the new taxa
      */
-    public static void addTaxaFromExistingByteHDF5File(String sourceFile, String targetFile) {
-        System.out.println("Opening:"+sourceFile);
-        MutableNucleotideAlignmentHDF5 srcA=(MutableNucleotideAlignmentHDF5)ImportUtils.readGuessFormat(sourceFile, false);
+    public static void addTaxaFromExistingByteHDF5File(String[] sourceFiles, String targetFile) {
         System.out.println("Opening:"+targetFile);
         MutableNucleotideAlignmentHDF5 trgA=(MutableNucleotideAlignmentHDF5)ImportUtils.readGuessFormat(targetFile, false);
-        System.out.println("Target now has taxon:"+trgA.getSequenceCount());
-        if(srcA.getSiteCount()!=trgA.getSiteCount()) {
-            throw new IllegalStateException("ExportUtils: addTaxaFromExistingByteHDF5File: Mismatch in number of sites");
+        for (String srcFile : sourceFiles) {
+           System.out.println("Opening:"+srcFile);
+            MutableNucleotideAlignmentHDF5 srcA=(MutableNucleotideAlignmentHDF5)ImportUtils.readGuessFormat(srcFile, false);
+            System.out.println("Target now has taxon:"+trgA.getSequenceCount());
+            if(srcA.getSiteCount()!=trgA.getSiteCount()) {
+                throw new IllegalStateException("ExportUtils: addTaxaFromExistingByteHDF5File: Mismatch in number of sites");
+            }
+            System.out.println("Copying first taxon:"+srcA.getTaxaName(0));
+            for (int i = 0; i < srcA.getSequenceCount(); i++) {
+                trgA.addTaxon(srcA.getIdGroup().getIdentifier(i), srcA.getBaseRow(i), null);
+            } 
         }
-        System.out.println("Copying first taxon:"+srcA.getTaxaName(0));
-        for (int i = 0; i < srcA.getSequenceCount(); i++) {
-            trgA.addTaxon(srcA.getIdGroup().getIdentifier(i), srcA.getBaseRow(i), null);
-        }
+        
         trgA.clean();
         System.out.println("Target now has taxon:"+trgA.getSequenceCount());
     }
