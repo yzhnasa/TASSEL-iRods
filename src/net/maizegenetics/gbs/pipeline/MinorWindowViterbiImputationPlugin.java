@@ -346,7 +346,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         for (int i = 0; i < donorAlign.length; i++) {
             donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), false, (ProgressListener)null);
             donorAlign[i].optimizeForTaxa(null); 
-            System.out.printf("Donor taxa:%d sites:%d %n",donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
+            System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
     	return donorAlign;
@@ -1088,16 +1088,16 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     public static void main(String[] args) {
         
-        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-//        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-//        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-//        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
+//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
-//        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
-       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
+        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
+//       String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
 //       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
         String donorFile=rootHaplos+"all26_8k.c10s+.hmp.txt.gz";
 //        String donorFile=rootHaplos+"HM26_Allk.c10s+.hmp.txt.gz";
