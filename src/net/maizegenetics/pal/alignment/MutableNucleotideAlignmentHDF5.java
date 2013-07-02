@@ -263,12 +263,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     public int getCacheSize() {
         return (int)myGenoCache.size();
     }
-    
-//    private void removeCacheTaxonSiteBlock(int taxon, int site) {
-//        long key=getCacheKey(taxon, site);
-//        myDataCache.remove(key);
-//    }
-    
+        
     protected String getTaxaGenoPath(int taxon) {
         return HapMapHDF5Constants.GENOTYPES + "/" + getFullTaxaName(taxon);
     }
@@ -287,9 +282,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
            e.printStackTrace();
            throw new UnsupportedOperationException("Error in getBase from cache");
         }
-        //if((taxon==100)&&(site==100)) System.out.println("Called Get in getBase");
-//        if(data==null) {data=cacheTaxonSiteBlock(taxon, site, key);}
-//        return data[site%hdf5GenoBlock];
     }
     
     @Override
