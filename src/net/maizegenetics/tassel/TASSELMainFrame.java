@@ -34,6 +34,7 @@ import java.awt.Toolkit;
 import java.awt.event.*;
 
 import java.io.*;
+import java.net.URL;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -561,6 +562,25 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         result.add(createMenuItem(new UnionAlignmentPlugin(this, true)));
         result.add(createMenuItem(new MergeAlignmentsPlugin(this, true)));
         result.add(createMenuItem(new SeparatePlugin(this, true)));
+        result.addSeparator();
+
+        JMenuItem delete = new JMenuItem("Delete Dataset");
+        delete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                myDataTreePanel.deleteSelectedNodes();
+            }
+        });
+        delete.setToolTipText("Delete Dataset");
+        URL imageURL = TASSELMainFrame.class.getResource("images/trash.gif");
+        if (imageURL == null) {
+            delete.setIconTextGap(30);
+        } else {
+            delete.setIcon(new ImageIcon(imageURL));
+            delete.setIconTextGap(6);
+        }
+        delete.setIconTextGap(6);
+        result.add(delete);
+
         return result;
     }
 
@@ -653,15 +673,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         memoryUsage.addActionListener(PrintHeapAction.getInstance(this));
         memoryUsage.setToolTipText("Show Memory Usage");
         helpMenu.add(memoryUsage);
-
-        JMenuItem delete = new JMenuItem("Delete Dataset");
-        delete.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                myDataTreePanel.deleteSelectedNodes();
-            }
-        });
-        delete.setToolTipText("Delete Dataset");
-        helpMenu.add(delete);
 
         return helpMenu;
     }
