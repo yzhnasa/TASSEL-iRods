@@ -293,8 +293,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     public byte[] getBaseRange(int taxon, int startSite, int endSite) {
         byte[] result = new byte[endSite - startSite];
         ByteBuffer bbR=ByteBuffer.wrap(result);
-        for (int site = startSite; site < endSite; site+=hdf5GenoBlock) {
-            long key=getCacheKey(taxon,site);
+        for (int blockStart = startSite&hdf5GenoBlockMask; blockStart < endSite; blockStart+=hdf5GenoBlock) {
+            long key=getCacheKey(taxon,blockStart);
             byte[] data;
             try{data=myGenoCache.get(key);
             } catch(ExecutionException e) {
@@ -302,11 +302,24 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
                throw new UnsupportedOperationException("Error in getBaseRange from cache");
             }
             if(data==null) return null;
-            int blockStart=site&hdf5GenoBlockMask;
+            int blockEnd=blockStart+data.length;
+       //     int blockStart=site&hdf5GenoBlockMask;
             int offset=(blockStart<startSite)?(startSite-blockStart):0;
-            int length=(endSite-site>hdf5GenoBlock)?data.length:(endSite-site);
-            bbR.put(data, offset, length);
+          //  int length=(endSite-site>hdf5GenoBlock)?data.length:(endSite-site);
+            int length=0;
+            if(blockEnd>endSite) {
+                length=endSite-(blockStart+offset);
+            } else {
+                length=blockEnd-(blockStart+offset); 
+            }    
+            //int length=(endSite>data.length+blockStart)?data.length:(endSite-blockStart-offset);
+            try{bbR.put(data, offset, length);}
+            catch(IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                System.err.printf("Error getBaseRange for taxon:%d startSite:%d endSite:%d %n",taxon, startSite, endSite);
+            }
         }
+        if(bbR.position()!=result.length) System.err.printf("Error getBaseRange Length not right");
         return result;
     }
     
@@ -604,45 +617,33 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     // Mutable Methods...
     public void setBase(int taxon, int site, byte newBase) {
-        this.myWriter.writeByteArrayBlock(getTaxaGenoPath(taxon),new byte[]{newBase},site);
+        throw new UnsupportedOperationException("Not supported.  Set all genotypes at once using setAllBases.");
+        //this.myWriter.writeByteArrayBlock(getTaxaGenoPath(taxon),new byte[]{newBase},site);
         //cacheTaxonSiteBlock(taxon, site);
     }
 
     public void setBase(Identifier taxon, String siteName, Locus locus, int physicalPosition, byte newBase) {
-
-        int taxonIndex = myIdentifiers.indexOf(taxon);
-        if (taxonIndex == -1) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: setBase: taxon not found.");
-        }
-
-        int site = getSiteOfPhysicalPosition(physicalPosition, locus, siteName);
-        if (site < 0) {
-            throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: setBase: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
-        } else {
-            if (!siteName.equals(getSNPID(site))) {
-                throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: setBase: site names at physical position: " + physicalPosition + " in locus: " + locus.getName() + " does not match: " + siteName);
-            }
-        }
-        setBase(taxonIndex,site,newBase);
-        myIsDirty=true;
-        //myData[taxonIndex][site] = newBase;
-
+        throw new UnsupportedOperationException("Not supported.  Set all genotypes at once using setAllBases.");
     }
 
     public synchronized void setBaseRange(int taxon, int startSite, byte[] newBases) {
-        myWriter.writeByteArrayBlock(getTaxaGenoPath(taxon),newBases,startSite);
-        for (int site = startSite; site < (startSite+newBases.length); site+=defaultSiteCache) {
-            //cacheTaxonSiteBlock(taxon, site);
-        }
-        myIsDirty=true;
-        
+        throw new UnsupportedOperationException("Not supported.  Set all genotypes at once using setAllBases.");        
     }
     
-    public synchronized void setAllBases(int taxon, byte[] newBases) {
-       myWriter.writeByteArray(getTaxaGenoPath(taxon), newBases, genoFeatures);
-       for (int site = 0; site < newBases.length; site+=defaultSiteCache) {
-//            cacheTaxonSiteBlock(taxon, site);
+     public synchronized void setAllBases(int taxon, byte[] newBases) {
+         setAllBases(getTaxaGenoPath(taxon), newBases);
+     }
+     
+    private synchronized void setAllBases(String taxonGenoPath, byte[] newBases) {
+        int blocks=((myNumSites-1)/hdf5GenoBlock)+1;
+        for (int i = 0; i < blocks; i++) {
+            int startPos=i*hdf5GenoBlock;
+            int length=(i<(blocks-1))?hdf5GenoBlock:myNumSites-startPos;
+            byte[] sub=new byte[length];
+            System.arraycopy(newBases, startPos, sub, 0, length);
+            myWriter.writeByteArrayBlockWithOffset(taxonGenoPath, sub, sub.length, (long)startPos);
         }
+       myGenoCache.invalidateAll();
        myIsDirty=true;
     }
     
@@ -659,7 +660,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     @Override
     public void setDepthForAlleles(int taxon, int site, byte[] values) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Not supported.  Set all depths at once using setAllDepth.");
     }
 
     @Override
@@ -687,16 +688,15 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
         
         myWriter.createByteArray(basesPath, myNumSites, chunk, genoFeatures);
-//        myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
-//        myWriter.writeByteArray(basesPath, genotype, genoFeatures);
-        int blocks=((myNumSites-1)/chunk)+1;
-        for (int i = 0; i < blocks; i++) {
-            int startPos=i*chunk;
-            int length=(i<(blocks-1))?chunk:myNumSites-startPos;
-            byte[] sub=new byte[length];
-            System.arraycopy(genotype, startPos, sub, 0, length);
-            myWriter.writeByteArrayBlockWithOffset(basesPath, sub, sub.length, (long)startPos);
-        }
+        setAllBases(basesPath, genotype);
+//        int blocks=((myNumSites-1)/chunk)+1;
+//        for (int i = 0; i < blocks; i++) {
+//            int startPos=i*chunk;
+//            int length=(i<(blocks-1))?chunk:myNumSites-startPos;
+//            byte[] sub=new byte[length];
+//            System.arraycopy(genotype, startPos, sub, 0, length);
+//            myWriter.writeByteArrayBlockWithOffset(basesPath, sub, sub.length, (long)startPos);
+//        }
         int taxonIndex=myIdentifiers.size();
         myIdentifiers.add(id);
         myIdGroup=null;
