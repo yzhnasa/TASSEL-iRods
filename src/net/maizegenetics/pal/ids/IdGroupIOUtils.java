@@ -64,13 +64,14 @@ public class IdGroupIOUtils {
                     AnnotatedIdentifier anID=new AnnotatedIdentifier(s[indexOfName]);
                     for (int i = 0; i < s.length; i++) {
                         if(i==indexOfName) continue;
-                        if(isQuant[i]) {
-                           // System.out.println(line);
-                            
-                            if(s[i].equals("NA")) {anID.addAnnotation(headers[i], Double.NaN);}
-                            else {anID.addAnnotation(headers[i], Double.parseDouble(s[i]));}
+                        String[] cs=s[i].split(";");
+                        for(String ta: cs) {
+                            if(isQuant[i]) {
+                                if(ta.equals("NA")) {anID.addAnnotation(headers[i], Double.NaN);}
+                                else {anID.addAnnotation(headers[i], Double.parseDouble(ta));}
+                            }
+                            else {anID.addAnnotation(headers[i], ta);}
                         }
-                        else {anID.addAnnotation(headers[i], s[i]);}
                     }
                     taxaNames.add(anID);
                 } else {
