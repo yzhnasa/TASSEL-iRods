@@ -1,4 +1,4 @@
-package net.maizegenetics.stats.MLM;
+package net.maizegenetics.pal.distance;
 
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
@@ -52,7 +52,7 @@ public class Kinship extends DistanceMatrix {
     public void buildFromMarker() {
 
     	IBSDistanceMatrix adm = new IBSDistanceMatrix(mar, 0, true, null);
-    	dm = new DistanceMatrix(adm.getDistance(), mar.getIdGroup());
+    	dm = new DistanceMatrix(adm.getDistances(), mar.getIdGroup());
     	toSimilarity();
     	getKStatistics();
 //    	pullBackExtrem();
