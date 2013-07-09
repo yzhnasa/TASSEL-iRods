@@ -350,7 +350,19 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return result;
     }
     
-    
+    public byte[][] getDepthForAlleles(int taxon) {
+        if(myDepthCache==null) initDepthCache();
+        byte[][]result= new byte[6][myNumSites];
+        for (int site = 0; site < myNumSites; site++) {
+            long key=getCacheKey(taxon,site);
+            byte[][] data=myDepthCache.get(key);
+            if(data==null) {data=cacheDepthBlock(taxon, site, key);}
+            for (int i = 0; i < 6; i++) {
+                result[i][site]=data[i][site%defaultSiteCache];
+            }
+        }
+        return result;
+    }
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
