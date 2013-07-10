@@ -37,7 +37,7 @@ public class QseqToTagCountPlugin extends AbstractPlugin {
     String directoryName = null;
     String keyfile = null;
     String enzyme = null;
-    int maxGoodReads = 200000000;
+    int maxGoodReads = 300000000;
     int minCount = 1;
     String outputDir = null;
 
@@ -57,7 +57,7 @@ public class QseqToTagCountPlugin extends AbstractPlugin {
                 + "     be written WITHOUT a slash after its name.\n\n"
                 + " -k  Key file listing barcodes for each sample\n"
                 + " -e  Enzyme used to create the GBS library, if it differs from the one listed in the key file.\n"
-                + " -s  Max good reads per lane. (Optional. Default is 200,000,000).\n"
+                + " -s  Max good reads per lane. (Optional. Default is 300,000,000).\n"
                 + " -c  Minimum tag count (default is 1).\n"
                 + " -o  Output directory to contain .cnt files (one per qseq file, defaults to input directory).\n\n");
     }

@@ -33,7 +33,7 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
     private String myInputDirName = null;
     private String myKeyfile = null;
     private String myEnzyme = null;
-    private int myMaxGoodReads = 200000000;
+    private int myMaxGoodReads = 300000000;
     private int myMinCount = 1;
     private String myOutputDir = null;
 
@@ -53,7 +53,7 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
                 + "     be written WITHOUT a slash after its name.\n\n"
                 + " -k  Key file listing barcodes distinguishing the samples\n"
                 + " -e  Enzyme used to create the GBS library, if it differs from the one listed in the key file.\n"
-                + " -s  Max good reads per lane. (Optional. Default is 200,000,000).\n"
+                + " -s  Max good reads per lane. (Optional. Default is 300,000,000).\n"
                 + " -c  Minimum tag count (default is 1).\n"
                 + " -o  Output directory to contain .cnt files (one per FASTQ file, defaults to input directory).\n\n");
     }
