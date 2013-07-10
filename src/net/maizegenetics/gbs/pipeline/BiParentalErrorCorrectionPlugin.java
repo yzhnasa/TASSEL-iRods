@@ -178,7 +178,8 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
             // minCntForLD, windowSize, LinkageDisequilibrium.testDesign.SlidingWindow);
 
             LinkageDisequilibrium theLD = new LinkageDisequilibrium(paf, windowSize,
-                    LinkageDisequilibrium.testDesign.SlidingWindow, -1, this, false, -1, null);
+                    LinkageDisequilibrium.testDesign.SlidingWindow, -1, this, false, -1, null,
+                    LinkageDisequilibrium.HetTreatment.Homozygous);
             theLD.run();
             for (int i = 0; i < paf.getSiteCount(); i++) {
                 ArrayList<Double> obsR2 = new ArrayList<Double>();
@@ -189,7 +190,7 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                     if (Math.abs(paf.getPositionInLocus(i) - paf.getPositionInLocus(j)) < 100000) {
                         continue;
                     }
-                    obsR2.add(theLD.getRSqr(i, j));
+                    obsR2.add((double)theLD.getRSqr(i, j));
                 }
                 Collections.sort(obsR2);
                 if (obsR2.size() > 4) {

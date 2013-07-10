@@ -385,6 +385,7 @@ class LinkageDiseqDialog extends JDialog {
         //Heterozygous treatment options
         String[] hetTypes = {"Ignore (inbred lines only)", "Set to missing", "Treat as third state"};
         myHetTreatment = new JComboBox(hetTypes);
+        myHetTreatment.setSelectedIndex(1);
         /*myHetTreatment.addActionListener(new java.awt.event.ActionListener() {	//Nothing reall happens when switch option, only at running, so no action listener needed
          public void actionPerformed(ActionEvent e) {
          hetTreatment_actionPerformed(e);

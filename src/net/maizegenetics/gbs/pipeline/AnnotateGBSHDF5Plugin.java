@@ -650,9 +650,9 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
                     BitSet cMn = pa.getAllelePresenceForAllTaxa(j, 1);
 //                    System.out.printf("jw Site:%d Position:%d rMjCard:%d %n",j
 //                        ,pa.getPositionInLocus(j), cMj.cardinality());
-                    float[] result=LinkageDisequilibrium.getLDForSitePair(rMj,rMn,cMj,cMn,3,20,-1.0f,fe);
-                    if(Float.isNaN(result[1])) continue;
-                    obsR2.add((double)result[1]);
+//                    LDResult result=LinkageDisequilibrium.getLDForSitePair(rMj,rMn,cMj,cMn,3,20,-1.0f,fe);
+//                    if(Float.isNaN(result[1])) continue;
+//                    obsR2.add((double)result[1]);
                     completedTests++;
                 }
                 Collections.sort(obsR2);
