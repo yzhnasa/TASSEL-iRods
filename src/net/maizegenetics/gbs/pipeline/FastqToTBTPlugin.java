@@ -52,7 +52,6 @@ public class FastqToTBTPlugin extends AbstractPlugin {
     private String myOutputDir = null;
     private int myMinCount = 1;
     private Tags myMasterTags = null;
-    private static int maxGoodReads = 200000000; // maximum number of good barcoded reads expected in a fastq file
     private boolean useTBTByte = false;
     private boolean useTBTShort = false;
 
@@ -77,7 +76,6 @@ public class FastqToTBTPlugin extends AbstractPlugin {
                 + "-k  Barcode key file\n"
                 + "-e  Enzyme used to create the GBS library, if it differs from the one listed in the key file.\n"
                 + "-o  Output directory\n"
-                + "-s  Max good reads per lane. (Optional. Default is 200,000,000).\n"
                 + "-c  Minimum taxa count within a fastq file for a tag to be output (default 1)\n" // Nb: using TagsByTaxaBit, so max count PER TAXON = 1
                 + "-y  Output to tagsByTaxaByte (tag counts per taxon from 0 to 127) instead of tagsByTaxaBit (0 or 1)\n"
                 + "One of either:\n"
@@ -98,7 +96,6 @@ public class FastqToTBTPlugin extends AbstractPlugin {
             myArgsEngine.add("-k", "--key-file", true);
             myArgsEngine.add("-e", "--enzyme", true);
             myArgsEngine.add("-o", "--output-directory", true);
-            myArgsEngine.add("-s", "--max-reads", true);
             myArgsEngine.add("-c", "--min-count", true);
             myArgsEngine.add("-y", "--TBTByte", false);
             myArgsEngine.add("-sh", "--TBTShort", false);
@@ -108,11 +105,6 @@ public class FastqToTBTPlugin extends AbstractPlugin {
         myArgsEngine.parse(args);
 
         String tempDirectory = myArgsEngine.getString("-i");
-
-        if (myArgsEngine.getBoolean("-s")) {
-            maxGoodReads = Integer.parseInt(myArgsEngine.getString("-s"));
-        }
-
         if (tempDirectory != null) {
             File fastqDirectory = new File(tempDirectory);
             if (!fastqDirectory.isDirectory()) {
@@ -309,7 +301,7 @@ public class FastqToTBTPlugin extends AbstractPlugin {
                     br = new BufferedReader(new FileReader(fastqFileS[laneNum]), 65536);
                 }
                 String sl = "", qualS = "";
-                while (((temp = br.readLine()) != null) && (goodBarcodedReads < maxGoodReads)) {
+                while ((temp = br.readLine()) != null) {
                     currLine++;
                     //The quality score is every 4th line; the sequence is every 4th line starting from the 2nd.
                     if ((currLine + 2) % 4 == 0) {
