@@ -238,7 +238,6 @@ public class QseqToTBTPlugin extends AbstractPlugin {
             }
 
             // Read the qseq file and assign reads to tags and taxa
-            int max = 200000000;  // maximum number of good barcoded reads expected in a qseq file
             String temp = "";
             goodBarcodedReads = 0;
             allReads = 0;
@@ -252,7 +251,7 @@ public class QseqToTBTPlugin extends AbstractPlugin {
                     br = new BufferedReader(new FileReader(qseqFileS[laneNum]), 65536);
                 }
                 String sl, qualS = "";
-                while (((temp = br.readLine()) != null) && (goodBarcodedReads < max)) {
+                while ((temp = br.readLine()) != null) {
                     String[] jj = temp.split("\\s");
                     allReads++;
                     if (allReads % 1000000 == 0) {
