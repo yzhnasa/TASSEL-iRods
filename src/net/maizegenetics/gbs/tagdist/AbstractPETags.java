@@ -94,6 +94,12 @@ public abstract class AbstractPETags implements PETags {
         return contigLengthInLong[index];
     }
     
+    /**
+     * Write fasta files of PE tag for alignment
+     * @param tagsFFastaFileS
+     * @param tagsBFastaFileS
+     * @param contigFastaFileS 
+     */
     public void mkFastaFile (String tagsFFastaFileS, String tagsBFastaFileS, String contigFastaFileS) {
         try {
             BufferedWriter bwf = new BufferedWriter (new FileWriter (tagsFFastaFileS), 65536);
@@ -126,12 +132,20 @@ public abstract class AbstractPETags implements PETags {
         }  
     }
     
+    /**
+     * Order forward and backward tags
+     */
     public void orderTagsFTagsB () {
         for (int i = 0; i < this.getTagCount(); i++) {
             this.orderTagFTagB(i);
         }
     }
     
+    /**
+     * Order forward and backward tags for a particular PE tag
+     * @param index
+     * @return boolean value of that if the forward and backward is switched.
+     */
     private boolean orderTagFTagB (int index) {
         if (this.compareTagFTagB(index) == 1) {
             this.switchTagFTagB(index);
@@ -140,6 +154,10 @@ public abstract class AbstractPETags implements PETags {
         return false;
     }
     
+    /**
+     * Switch forward and backward tags
+     * @param index 
+     */
     private void switchTagFTagB (int index) {
         long[] temp = tagsF[index];
         tagsF[index] = tagsB[index];
@@ -149,6 +167,9 @@ public abstract class AbstractPETags implements PETags {
         tagBLength[index] = tl;
     }
     
+    /**
+     * Make contigs from forward and backward tags
+     */
     public void contigPETags () {
         SimpleGapPenalty gapPen = new SimpleGapPenalty((short) 10, (short) 10);
         SubstitutionMatrix<NucleotideCompound> subMatrix = SubstitutionMatrixHelper.getNuc4_4();
@@ -218,6 +239,11 @@ public abstract class AbstractPETags implements PETags {
         }
     }
     
+    /**
+     * 
+     * @param index
+     * @return result of comparison from forward tag and backward tag -1(<), 0(=), 1(>) 
+     */
     private int compareTagFTagB (int index) {
         for (int i = 0; i < tagLengthInLong; i++) {
             if (tagsF[index][i] < tagsB[index][i]) return -1;
@@ -226,6 +252,13 @@ public abstract class AbstractPETags implements PETags {
         return 0;
     }
     
+    /**
+     * 
+     * @param index
+     * @param tagF
+     * @param tagB
+     * @return result of comparison from different PE tags -1(<), 0(=), 1(>) 
+     */
     private int compareTags(int index, long[] tagF, long[] tagB) {
         for (int i = 0; i < tagLengthInLong; i++) {
             if (tagsF[index][i] < tagF[i]) {
@@ -262,6 +295,11 @@ public abstract class AbstractPETags implements PETags {
         return tagLengthInLong;
     }
 
+    /**
+     * Initialize the matrix of data structure extending AbstractPETags
+     * @param tagLengthInLong
+     * @param tagNum 
+     */
     protected void iniMatrix (int tagLengthInLong, int tagNum) {
         this.tagLengthInLong = tagLengthInLong;
         tagsF = new long[tagNum][tagLengthInLong];
@@ -273,6 +311,11 @@ public abstract class AbstractPETags implements PETags {
         contigLength = new short[tagNum];
     }
     
+    /**
+     * Swap two PE tags
+     * @param index1
+     * @param index2
+     */
     @Override
     public void swap(int index1, int index2) {
         long[] temp;
@@ -299,7 +342,15 @@ public abstract class AbstractPETags implements PETags {
         contigLength[index1] = contigLength[index2];
         contigLength[index2] = tl;
     }
-
+    
+    /**
+     * 
+     * @param index1
+     *        index of the first PE tag
+     * @param index2
+     *        index of the second PE tag
+     * @return result of comparison from two PE tags -1(<), 0(=), 1(>)
+     */
     @Override
     public int compare(int index1, int index2) {
         for (int i = 0; i < tagLengthInLong; i++) {
@@ -321,6 +372,9 @@ public abstract class AbstractPETags implements PETags {
         return 0;
     }
 
+    /**
+     *  sort PE tags by Long primitive data type value
+     */
     public void sort() {
         System.out.println("Position index sort begin.");
         GenericSorting.quickSort(0, this.getTagCount(), this, this);

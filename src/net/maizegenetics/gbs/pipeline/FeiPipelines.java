@@ -10,7 +10,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import net.maizegenetics.gbs.maps.PETagsOnPhysicalMap;
+import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
+import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
+import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.gbs.tagdist.PETagCounts;
+import net.maizegenetics.gbs.tagdist.TagCounts;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 
@@ -22,11 +26,59 @@ public class FeiPipelines {
     
     public FeiPipelines () {
         this.pipelinePE();
+        this.testPipeline();
     }
     
     public static void main (String[] args) {
         new FeiPipelines();
         
+    }
+    
+    public void testPipeline () {
+        //this.mkSmallTagCount();
+        //this.mkFastq();
+        //this.mkFasta();
+        this.mkTOPM();
+        //this.mkTOPMHDF5();
+    }
+    
+    public void mkTOPMHDF5 () {
+        String infileS = "M:/GBStest/topm/bowtie2.topm.bin";
+        String outfileS = "M:/GBStest/topm/bowtie2.topm.h5";
+        TagsOnPhysicalMap topm = new TagsOnPhysicalMap (infileS, false);
+        TagsOnPhysMapHDF5.createFile(topm, outfileS, 4, 16);
+    }
+    
+    public void mkTOPM () {
+        String inputFileS = "M:/GBStest/alignment/bowtie2.sam";
+        String outputFileS = "M:/GBStest/topm/bowtie2.topm.bin";
+        new FeiUtils ().convertSAM2TOPM(inputFileS, outputFileS);
+    }
+    
+    /**
+     * Make FASTA file and do alignment using Blast, -m 8 -e 1e-10
+     */
+    public void mkFasta () {
+        String inputFileS = "M:/GBStest/tagCount/small.cnt";
+        String outputFileS = "M:/GBStest/alignment/small.fa";
+        TagCounts tc = new TagCounts(inputFileS, FilePacking.Bit);
+        tc.toFASTA(outputFileS);
+    }
+    
+    /**
+     * Make Fastq file and do alignment using Bowtie2 and BWA
+     * Alignment files should be in the alignment folder
+     */
+    public void mkFastq () {
+        String inputFileS = "M:/GBStest/tagCount/small.cnt";
+        String outputFileS = "M:/GBStest/alignment/small.fq";
+        new FeiUtils ().convertTagCount2Fastq(inputFileS, outputFileS);
+    }
+    
+    public void mkSmallTagCount () {
+        String inputFileS = "M:/GBStest/tagCount/434GFAAXX_s_4.cnt";
+        String outputFileS = "M:/GBStest/tagCount/small.cnt";
+        new FeiUtils ().mkSmallTagCountsFile(inputFileS, outputFileS, 10001, 500);
     }
     
     public void pipelinePE () {
@@ -36,11 +88,21 @@ public class FeiPipelines {
         //this.mergePETagCounts();
         //this.contigPETagCounts();
         //this.mkPEstatistics();//for presentation, not included in pipeline.
-        //this.alignment1();
-        this.alignment2();
+        //this.alignmentStep1();
+        //this.alignmentStep2();
+        //this.checkAlignmentOfPE(); //check alignment of longer sequence
     }
     
-    public void alignment2 () {
+    public void checkAlignmentOfPE () {
+        String TOGMFileS = "M:/pav/PhyGenMapping/v1.togm.txt";
+        String topmFileS = "N:/Zea/AllZeaBuild_2.X/04_TOPM/2.6_production/02_MergedTOPM/AllZeaGBS_v2.6_MergedUnfiltProdTOPM_20130425.topm";
+        String ptopmFileS = "M:/af/ptopm/merge.ptopm";
+        String compareTableS = "E:/Research/af/alignmentImprovement/alignmentCompare.txt";
+        FeiUtils fu = new FeiUtils ();
+        fu.mkAlignmentCompareTable(TOGMFileS, topmFileS, ptopmFileS, compareTableS);
+    }
+    
+    public void alignmentStep2 () {
         String fSamFileS = "M:/af/alignment/f.sam";
         String bSamFileS = "M:/af/alignment/b.sam";
         String contigSamFileS = "M:/af/alignment/c.sam";
@@ -51,7 +113,7 @@ public class FeiPipelines {
         topm.writeDistFile(ptopmFileS, FilePacking.Text);
     }
     
-    public void alignment1 () {
+    public void alignmentStep1 () {
         String infileS = "M:/af/mergePETagCounts/merge.con.pe.cnt";
         PETagCounts ptc = new PETagCounts (infileS, FilePacking.Bit);
         String fastaFFileS = "M:/af/alignment/f.fasta.txt";

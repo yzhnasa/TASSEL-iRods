@@ -5,12 +5,14 @@ import cern.colt.GenericSorting;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
@@ -60,7 +62,28 @@ public class TagCounts extends AbstractTags {
         tagLength = new byte[tagNum];
         readCount = new int[tagNum];
     }
-
+    
+    /**
+     * Convert TagCounts to FASTA file for alignment using Blast
+     * @param outfile 
+     */
+    public void toFASTA (String outfile) {
+        try {
+            BufferedWriter bw = new BufferedWriter (new FileWriter(outfile), 65536);
+            for (int i = 0; i < this.getTagCount(); i++) {
+                bw.write(">"+String.valueOf(i));
+                bw.newLine();
+                bw.write(BaseEncoder.getSequenceFromLong(this.getTag(i)).substring(0, this.getTagLength(i)));
+                bw.newLine();
+            }
+            bw.flush();
+            bw.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     /** Reads in a binary tag count file line-by-line and constructs a FASTQ file for alignment. */
     public void toFASTQ(String infile, String outfile) {
         int tagsRead = 0;
@@ -98,7 +121,7 @@ public class TagCounts extends AbstractTags {
                         + textSequence + "\n"
                         + "+\n"
                         + "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
-
+                
             }
             rw.close();
             fw.close();

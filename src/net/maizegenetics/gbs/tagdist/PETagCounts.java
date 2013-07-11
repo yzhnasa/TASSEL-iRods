@@ -26,14 +26,32 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 public class PETagCounts extends AbstractPETags {
     int[] readCount;
     
+    /**
+     * 
+     * @param inFile
+     *        Filename of PETagCounts
+     * @param format 
+     *        FilePacking format
+     */
     public PETagCounts (String inFile, FilePacking format) {
         this.readDistFile(inFile, format);
     }
     
+    /**
+     * Initialize PETagCounts with empty matrix
+     * @param tagLengthInLong
+     *        Tag length In Long primitive data type
+     * @param tagNum 
+     *        Tag number
+     */
     public PETagCounts (int tagLengthInLong, int tagNum) {
         this.iniMatrix(tagLengthInLong, tagNum);
     }
     
+    /**
+     * Collapse the PETagCounts and return a new collapsed PETagCounts object
+     * @return Collapsed PETagCounts object 
+     */
     public PETagCounts getCollapsedPETagCounts () {
         int tagNum = this.getTagCount() - this.collapseCounts();
         PETagCounts petc = new PETagCounts (this.getTagSizeInLong(), tagNum);
@@ -55,6 +73,10 @@ public class PETagCounts extends AbstractPETags {
         return petc;
     }
     
+    /**
+     * Collapse PETagCounts, the tag count of collapsed tags is set to 0
+     * @return total read count of collapsed PE tags  
+     */
     public int collapseCounts () {
         this.sort();
         int collapsedRows = 0;
@@ -69,6 +91,14 @@ public class PETagCounts extends AbstractPETags {
         return collapsedRows;
     }
     
+    /**
+     * Merge two PETagCounts objects
+     * @param another
+     *        Another PETagCounts object
+     * @param ifCollapsed
+     *        Boolean value of another PETagCounts object (If it is collapsed). Both objects should be collapsed first
+     * @return 
+     */
     public PETagCounts getMergedPETagCounts (PETagCounts another, boolean ifCollapsed) {
         if (!ifCollapsed) another = another.getCollapsedPETagCounts();
         PETagCounts petc = new PETagCounts(this.tagLengthInLong, this.getTagCount()+another.getTagCount());
@@ -102,6 +132,10 @@ public class PETagCounts extends AbstractPETags {
         return petc.getCollapsedPETagCounts();
     }
     
+    /**
+     * 
+     * @return Total read count of this PETagCounts object 
+     */
     public int getTotalReadCount () {
         int sum = 0;
         for (int i = 0; i < this.getTagCount(); i++) {
@@ -110,10 +144,21 @@ public class PETagCounts extends AbstractPETags {
         return sum;
     }
     
+    /**
+     * 
+     * @param index
+     * @return Read count of a PE tag 
+     */
     public int getReadCount (int index) {
         return readCount[index];
     }
     
+    /**
+     * 
+     * @param minCount
+     *        Minimum count of PE tag
+     * @return Total number of tags with a count greater than minCount
+     */
     private int getTagNumWithMincount (int minCount) {
         int num = 0;
         for (int i = 0; i < this.getTagCount(); i++) {
@@ -122,6 +167,13 @@ public class PETagCounts extends AbstractPETags {
         return num;
     }
     
+    /**
+     * Read PETagCounts file
+     * @param infileS
+     *        File name of PETagCounts file
+     * @param format 
+     *        FilePacking format
+     */
     public void readDistFile (String infileS, FilePacking format) {
         System.out.println("Reading PETagCounts file to " + infileS);
         File infile = new File (infileS);
@@ -136,6 +188,10 @@ public class PETagCounts extends AbstractPETags {
         System.out.println("PETagCounts file read. Tatol: " + this.getTagCount() + " PETags");
     }
     
+    /**
+     * Read binary PETagCounts file
+     * @param infile 
+     */
     private void readBinaryPETagCountsFile (File infile) {
         try {
             DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(infile), 65536));
@@ -170,6 +226,11 @@ public class PETagCounts extends AbstractPETags {
         }
     }
     
+    /**
+     * Read text PETagCounts file
+     * @param infile 
+     *        File name of input file
+     */
     private void readTextPETagCountsFile (File infile) {
         try {
             BufferedReader br = new BufferedReader (new FileReader(infile), 65536);
@@ -206,6 +267,15 @@ public class PETagCounts extends AbstractPETags {
         }
     }
     
+    /**
+     * Write PETagCounts file
+     * @param outfileS
+     *        File name of output PETagCounts file
+     * @param format
+     *        FilePakcing format
+     * @param minCount 
+     *        Minimum count of PE Tag in the output
+     */
     public void writeDistFile (String outfileS, FilePacking format, int minCount) {
         System.out.println("Writing PETagCounts file to " + outfileS);
         int outTagNum = this.getTagNumWithMincount(minCount);
@@ -220,6 +290,15 @@ public class PETagCounts extends AbstractPETags {
         System.out.println("PETagCounts file written");
     }
     
+    /**
+     * Write binary PETagCounts file
+     * @param outfileS
+     *        File name of output PETagCounts file
+     * @param outTagNum
+     *        Total number of PE tags in the output
+     * @param minCount 
+     *        Minimum count of PE Tag in the output
+     */
     private void writeBinaryPETagCountsFile (String outfileS, int outTagNum, int minCount) {
         try {
             DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outfileS), 65536));
@@ -251,6 +330,15 @@ public class PETagCounts extends AbstractPETags {
         }
     }
     
+    /**
+     * Write text PETagCounts file
+     * @param outfileS
+     *        File name of output PETagCounts file
+     * @param outTagNum
+     *        Total number of PE tags in the output
+     * @param minCount 
+     *        Minimum count of PE Tag in the output
+     */
     private void writeTextPETagCountsFile (String outfileS, int outTagNum, int minCount) {
         try {
             BufferedWriter bw = new BufferedWriter (new FileWriter(outfileS), 65536);

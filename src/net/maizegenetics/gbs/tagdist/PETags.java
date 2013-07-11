@@ -13,44 +13,47 @@ public interface PETags extends Swapper, IntComparator {
 
     /**
      * Returns the number of long use to represent the sequence
-     * @return
+     * @return Tag Length in Long primitive data type
      */
     public int getTagSizeInLong();
 
     /**
-     * Returns the length in bp of a particular forward tag
+     * Returns the length in bp of a forward tag
      * @param index
      * @return length
      */
     public short getTagFLength(int index);
     
     /**
-     * Returns the length in bp of a particular backward tag
+     * Returns the length in bp of a backward tag
      * @param index
      * @return length
      */
     public short getTagBLength(int index);
 
     /**
-     * Get the compressed forward read sequence in a long array for a given index
+     * Get the compressed forward tag sequence in a long array for a given index
      * @param index
      * @return compressed read sequence in long array
      */
     public long[] getTagF(int index);
     
     /**
-     * Get the compressed backward read sequence in a long array for a given index
+     * Get the compressed backward tag sequence in a long array for a given index
      * @param index
      * @return compressed read sequence in long array
      */
     public long[] getTagB(int index);
 
     /**
-     * Gets the first index of a read (the only one if a unique list).
+     * Gets the index of a PE tag (including forward and backward) (the only one if a unique list).
      * If the read is not found then it return
      * a negative value indicating its insertion point.
-     * @param read as a compressed long array
-     * @return index of the read in the array
+     * @param tagF
+     *        Long array of forward tag
+     * @param tagB
+     *        Long array of backward tag
+     * @return index of the PE tag
      */
     public int getTagIndex(long[] tagF, long[] tagB);
 
@@ -63,22 +66,27 @@ public interface PETags extends Swapper, IntComparator {
      */
     public int getTagCount();
     
-    /*
-     * @return contig of a PE tag, if there is no contig, return null
+    /**
+     * @param index
+     * @return Contig of a PE tag, if there is no contig, return null
      */
     public long[] getContig (int index);
     
-    /*
-     * @return count of contigs
+    /**
+     * @return Total count of PE Contig
      */
+    
     public int getContigCount ();
-    /*
-     * @return contig length
+    
+    /**
+     * @param index
+     * @return PE contig length
      */
     public short getContigLength (int index);
     
-    /*
-     * @return contig lengthInLong
+    /**
+     * @param index
+     * @return contig length in Long primitive data type
      */
     public byte getContigLengthInLong (int index);
     

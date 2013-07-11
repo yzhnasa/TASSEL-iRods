@@ -112,7 +112,7 @@ public class TagCountToFastqPlugin extends AbstractPlugin {
             myLogger.info("Opened the input file: " + inFileName + "  nTags=" + nTags);
             outStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFileName), 655360));
             int tagsWritten = 0;
-            while (fileOpen) {
+            while (inStream.available()!=0) {
                 readNextTag();
                 if (tagCount >= minCount) {
                     writeFASTQ();

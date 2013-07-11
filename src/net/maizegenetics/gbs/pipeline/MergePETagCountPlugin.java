@@ -47,6 +47,9 @@ public class MergePETagCountPlugin extends AbstractPlugin {
         return null;
     }
     
+    /**
+     * Merge each individual PETagCounts file into one master PETagCounts file
+     */
     public void mergePETagCount () {
         File[] infiles = new File(inputDirS).listFiles();
         PETagCounts prime = new PETagCounts(infiles[0].getAbsolutePath(), FilePacking.Bit).getCollapsedPETagCounts();

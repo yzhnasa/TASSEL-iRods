@@ -126,8 +126,8 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         bestStartPos = new int[rows];  // chromosomal position of the barcoded end of the tag  // 4 bytes
         endPosition = new int[rows];  // chromosomal position of the common adapter end of the tag (smaller than bestStartPos if tag matches minus bestStrand)  // 4 bytes
         divergence = new byte[rows];  // number of diverging bp from reference, unknown = Byte.MIN_VALUE
-        variantOffsets = new byte[rows][];  // offset from position minimum, maximum number of variants is defined above  // myMaxVariants bytes
-        variantDefs = new byte[rows][];     // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes
+        variantOffsets = new byte[rows][myMaxVariants];  // offset from position minimum, maximum number of variants is defined above  // myMaxVariants bytes
+        variantDefs = new byte[rows][myMaxVariants];     // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes
         dcoP = new byte[rows];
         mapP = new byte[rows];  // Round(Log2(P)), unknown = Byte.MIN_VALUE;  if these disagree with the location, then set the p to negative
         myNumTags = rows;
