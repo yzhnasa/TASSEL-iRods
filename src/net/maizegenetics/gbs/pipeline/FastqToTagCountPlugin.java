@@ -208,11 +208,12 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
                 int currLine = 0;
                 int allReads = 0;
                 goodBarcodedReads = 0;
+                String sequence = "";
+                String qualityScore = "";
                 String temp = br.readLine();
                 while ((temp != null) && goodBarcodedReads < maxGoodReads) {
                     currLine++;
-                    String sequence = "";
-                    String qualityScore = "";
+
                     try {
                         //The quality score is every 4th line; the sequence is every 4th line starting from the 2nd.
                         if ((currLine + 2) % 4 == 0) {
