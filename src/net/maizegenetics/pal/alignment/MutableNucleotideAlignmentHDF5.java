@@ -8,18 +8,22 @@ import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import static net.maizegenetics.pal.alignment.Alignment.UNKNOWN_DIPLOID_ALLELE;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 import org.apache.log4j.Logger;
 
@@ -51,8 +55,6 @@ import org.apache.log4j.Logger;
  * 
  * <p>
  * TODO:
- * <li>Support multiple chromosomes per HDF5 file, sequential
- * <li>Pre-compute alleles, public int[][] getAllelesSortedByFrequency(int site)
  * <li>Add support for bit encoding - but just two states (Major/Minor) or (Ref/Alt)
  * <li>Add efficient support for merging chromosomes
  * 
@@ -83,17 +85,38 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     protected String[] mySNPIDs;  //perhaps don't keep in memory, consider compressed
     
     IHDF5Writer myWriter=null;
-    private LRUCache<Long,byte[]> myDataCache;  //key (taxa <<< 32)+startSite
-//    HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
+    
+
     HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(2);
     private int defaultCacheSize=1<<16;
     private int defaultSiteCache=1<<16;
     
+    /*Byte representations of DNA sequences are stored in blocks of 65536 sites*/
+    public static final int hdf5GenoBlock=1<<16;
+    public static final int hdf5GenoBlockMask=~(hdf5GenoBlock-1);
+//    public boolean favorCachingOfEntireTaxon=true;
+
+    private LoadingCache<Long,byte[]> myGenoCache; //key (taxa <<< 32)+BLOCK
+    private CacheLoader<Long,byte[]> genoLoader = new CacheLoader<Long,byte[]>() {
+        public byte[] load(Long key) {
+            int[] taxonSite=getTaxonSiteFromKey(key);
+            long offset=taxonSite[1]<<16;
+            byte[] data=new byte[0];
+            synchronized(myWriter) {
+                data=myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(taxonSite[0]),1<<16,offset);}
+            return data;
+    } };
+        
     private boolean cacheDepth=false;
     private LRUCache<Long,byte[][]> myDepthCache=null;  //key (taxa <<< 32)+startSite
     
-    private BitSet[] tBitCache=null;
-    private int tBitCacheTaxon=-1;
+  
+    private LoadingCache<Integer,BitSet[]> tBitCache; //taxon id number, Bitset[2] = {MajorBitSet, MinorBitSet}    
+    private CacheLoader<Integer,BitSet[]> tBitLoader = new CacheLoader<Integer,BitSet[]>() {
+        public BitSet[] load(Integer key) {
+            BitSet[] bs=AlignmentUtils.calcBitPresenceFromGenotype(getBaseRow(key), myAlleleFreqOrder[0], myAlleleFreqOrder[1]);
+            return bs;
+    } };
     
     private IdGroup myIdGroup;  //set to null whenever dirty
 
@@ -180,13 +203,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     
     private void initGenotypeCache() {
-        myDataCache=new LRUCache<Long, byte[]>(defaultCacheSize);
-      //  System.out.println("initGenotypeCache sized to:"+1024);
-        int minLoad=(1024<getSequenceCount())?1024:getSequenceCount();
-        int start=(0/defaultSiteCache)*defaultSiteCache;
-        for (int i = 0; i<minLoad; i++) {
-            myDataCache.put(getCacheKey(i,0), myWriter.readAsByteArrayBlockWithOffset(getTaxaGenoPath(i),defaultSiteCache,start));
-        }
+        int minLoad=(3*getSequenceCount())/2;
+        myGenoCache= CacheBuilder.newBuilder()
+            .maximumSize(minLoad)
+            .build(genoLoader);
+        tBitCache = CacheBuilder.newBuilder()
+            .maximumSize(1024)
+            .build(tBitLoader);
     }
     
     private void initDepthCache() {
@@ -204,52 +227,25 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 //        }
     }
     
-    private long getCacheKey(int taxon, int site) {
-        return ((long)taxon<<32)+(site/defaultSiteCache);
+    protected static long getCacheKey(int taxon, int site) {
+        return ((long)taxon<<32)+(site/hdf5GenoBlock);
     }
     
-    private synchronized byte[] cacheTaxonSiteBlockX(int taxon, int site, long key) {
-        byte[] data=null;
-        long block=site>>16;
-        int cnt=0;
-        try{
-            while((data==null)&&(cnt<16)) {
-                try{data=myWriter.readByteArrayBlock(getTaxaGenoPath(taxon),defaultSiteCache,block);}
-                catch(Exception e) {
-                    cnt++;
-                 //   Thread.sleep(10);
-                    e.printStackTrace();
-                    System.out.printf("Loop cacheTaxonSiteBlock Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
-                    
-                }
-            }
-            if(data==null) return null;
-            myDataCache.put(key, data);
-        } catch(Exception e) {
-            System.out.printf("cacheTaxonSiteBlock Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
-            e.printStackTrace();
-        }
-        return data;
+    protected static int[] getTaxonSiteFromKey(long key) {
+        return new int[]{(int)(key>>>32),(int)((key<<32)>>>32)};
     }
     
-    private synchronized byte[] cacheTaxonSiteBlock(int taxon, int site, long key) {
-        int start=(site/defaultSiteCache)*defaultSiteCache;
-        byte[] data=null;
-        long block=site>>16;
-        try{
-            data=myWriter.readByteArrayBlock(getTaxaGenoPath(taxon),1<<16,block);
-            if(data==null) return null;
-            myDataCache.put(key, data);
-        } catch(Exception e) {
-            System.out.printf("Error With: Taxon:%d Path:%s Site:%d Key:%d Block:%d %n",taxon, getTaxaGenoPath(taxon), site, key, block);
-            e.printStackTrace();
-        }
-        return data;
+    public void clearGenotypeCache() {
+        //myGenoCache.clear();
+        myGenoCache.invalidateAll();
     }
     
-    private byte[] cacheTaxonSiteBlock(int taxon, int site) {
-        return cacheTaxonSiteBlock(taxon, site, getCacheKey(taxon, site));
-    }
+
+
+    
+//    private byte[] cacheTaxonSiteBlock(int taxon, int site) {
+//        return cacheTaxonSiteBlock(taxon, site, getCacheKey(taxon, site));
+//    }
     
     private byte[][] cacheDepthBlock(int taxon, int site, long key) {
         int start=(site/defaultSiteCache)*defaultSiteCache;
@@ -264,11 +260,10 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return cacheDepthBlock(taxon, site, getCacheKey(taxon, site));
     }
     
-//    private void removeCacheTaxonSiteBlock(int taxon, int site) {
-//        long key=getCacheKey(taxon, site);
-//        myDataCache.remove(key);
-//    }
-    
+    public int getCacheSize() {
+        return (int)myGenoCache.size();
+    }
+        
     protected String getTaxaGenoPath(int taxon) {
         return HapMapHDF5Constants.GENOTYPES + "/" + getFullTaxaName(taxon);
     }
@@ -280,9 +275,52 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public byte getBase(int taxon, int site) {
         long key=getCacheKey(taxon,site);
-        byte[] data=myDataCache.get(key);
-        if(data==null) {data=cacheTaxonSiteBlock(taxon, site, key);}
-        return data[site%defaultSiteCache];
+        try{
+            byte[] data=myGenoCache.get(key);
+            return data[site%hdf5GenoBlock];
+        } catch(ExecutionException e) {
+           e.printStackTrace();
+           throw new UnsupportedOperationException("Error in getBase from cache");
+        }
+    }
+    
+    @Override
+    public byte[] getBaseRow(int taxon) {
+        return getBaseRange(taxon, 0, myNumSites);
+    }
+    
+    @Override
+    public byte[] getBaseRange(int taxon, int startSite, int endSite) {
+        byte[] result = new byte[endSite - startSite];
+        ByteBuffer bbR=ByteBuffer.wrap(result);
+        for (int blockStart = startSite&hdf5GenoBlockMask; blockStart < endSite; blockStart+=hdf5GenoBlock) {
+            long key=getCacheKey(taxon,blockStart);
+            byte[] data;
+            try{data=myGenoCache.get(key);
+            } catch(ExecutionException e) {
+               e.printStackTrace();
+               throw new UnsupportedOperationException("Error in getBaseRange from cache");
+            }
+            if(data==null) return null;
+            int blockEnd=blockStart+data.length;
+       //     int blockStart=site&hdf5GenoBlockMask;
+            int offset=(blockStart<startSite)?(startSite-blockStart):0;
+          //  int length=(endSite-site>hdf5GenoBlock)?data.length:(endSite-site);
+            int length=0;
+            if(blockEnd>endSite) {
+                length=endSite-(blockStart+offset);
+            } else {
+                length=blockEnd-(blockStart+offset); 
+            }    
+            //int length=(endSite>data.length+blockStart)?data.length:(endSite-blockStart-offset);
+            try{bbR.put(data, offset, length);}
+            catch(IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                System.err.printf("Error getBaseRange for taxon:%d startSite:%d endSite:%d %n",taxon, startSite, endSite);
+            }
+        }
+        if(bbR.position()!=result.length) System.err.printf("Error getBaseRange Length not right");
+        return result;
     }
     
     @Override
@@ -312,16 +350,30 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         return result;
     }
     
-    
+    public byte[][] getDepthForAlleles(int taxon) {
+        if(myDepthCache==null) initDepthCache();
+        byte[][]result= new byte[6][myNumSites];
+        for (int site = 0; site < myNumSites; site++) {
+            long key=getCacheKey(taxon,site);
+            byte[][] data=myDepthCache.get(key);
+            if(data==null) {data=cacheDepthBlock(taxon, site, key);}
+            for (int i = 0; i < 6; i++) {
+                result[i][site]=data[i][site%defaultSiteCache];
+            }
+        }
+        return result;
+    }
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        //if(inTheFile) grab it and return
         if(alleleNumber>1) throw new UnsupportedOperationException("Will not be supported.  Only top two allele reported");
-        if(taxon==tBitCacheTaxon) return tBitCache[alleleNumber];
-        tBitCache=AlignmentUtils.calcBitPresenceFromGenotype(getBaseRow(taxon), myAlleleFreqOrder[0], myAlleleFreqOrder[1]);
-        tBitCacheTaxon=taxon;
-        return tBitCache[alleleNumber];
+        try {
+            BitSet[] bs=tBitCache.get(taxon);
+            return bs[alleleNumber];
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
     
 
@@ -577,45 +629,33 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     // Mutable Methods...
     public void setBase(int taxon, int site, byte newBase) {
-        this.myWriter.writeByteArrayBlock(getTaxaGenoPath(taxon),new byte[]{newBase},site);
-        cacheTaxonSiteBlock(taxon, site);
+        throw new UnsupportedOperationException("Not supported.  Set all genotypes at once using setAllBases.");
+        //this.myWriter.writeByteArrayBlock(getTaxaGenoPath(taxon),new byte[]{newBase},site);
+        //cacheTaxonSiteBlock(taxon, site);
     }
 
     public void setBase(Identifier taxon, String siteName, Locus locus, int physicalPosition, byte newBase) {
-
-        int taxonIndex = myIdentifiers.indexOf(taxon);
-        if (taxonIndex == -1) {
-            throw new IllegalArgumentException("MutableBitNucleotideAlignmentHDF5: setBase: taxon not found.");
-        }
-
-        int site = getSiteOfPhysicalPosition(physicalPosition, locus, siteName);
-        if (site < 0) {
-            throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: setBase: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
-        } else {
-            if (!siteName.equals(getSNPID(site))) {
-                throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: setBase: site names at physical position: " + physicalPosition + " in locus: " + locus.getName() + " does not match: " + siteName);
-            }
-        }
-        setBase(taxonIndex,site,newBase);
-        myIsDirty=true;
-        //myData[taxonIndex][site] = newBase;
-
+        throw new UnsupportedOperationException("Not supported.  Set all genotypes at once using setAllBases.");
     }
 
     public synchronized void setBaseRange(int taxon, int startSite, byte[] newBases) {
-        myWriter.writeByteArrayBlock(getTaxaGenoPath(taxon),newBases,startSite);
-        for (int site = startSite; site < (startSite+newBases.length); site+=defaultSiteCache) {
-            cacheTaxonSiteBlock(taxon, site);
-        }
-        myIsDirty=true;
-        
+        throw new UnsupportedOperationException("Not supported.  Set all genotypes at once using setAllBases.");        
     }
     
-    public synchronized void setAllBases(int taxon, byte[] newBases) {
-       myWriter.writeByteArray(getTaxaGenoPath(taxon), newBases, genoFeatures);
-       for (int site = 0; site < newBases.length; site+=defaultSiteCache) {
-            cacheTaxonSiteBlock(taxon, site);
+     public synchronized void setAllBases(int taxon, byte[] newBases) {
+         setAllBases(getTaxaGenoPath(taxon), newBases);
+     }
+     
+    private synchronized void setAllBases(String taxonGenoPath, byte[] newBases) {
+        int blocks=((myNumSites-1)/hdf5GenoBlock)+1;
+        for (int i = 0; i < blocks; i++) {
+            int startPos=i*hdf5GenoBlock;
+            int length=(i<(blocks-1))?hdf5GenoBlock:myNumSites-startPos;
+            byte[] sub=new byte[length];
+            System.arraycopy(newBases, startPos, sub, 0, length);
+            myWriter.writeByteArrayBlockWithOffset(taxonGenoPath, sub, sub.length, (long)startPos);
         }
+       myGenoCache.invalidateAll();
        myIsDirty=true;
     }
     
@@ -632,7 +672,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     @Override
     public void setDepthForAlleles(int taxon, int site, byte[] values) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Not supported.  Set all depths at once using setAllDepth.");
     }
 
     @Override
@@ -660,16 +700,15 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
         
         myWriter.createByteArray(basesPath, myNumSites, chunk, genoFeatures);
-//        myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
-//        myWriter.writeByteArray(basesPath, genotype, genoFeatures);
-        int blocks=((myNumSites-1)/chunk)+1;
-        for (int i = 0; i < blocks; i++) {
-            int startPos=i*chunk;
-            int length=(i<(blocks-1))?chunk:myNumSites-startPos;
-            byte[] sub=new byte[length];
-            System.arraycopy(genotype, startPos, sub, 0, length);
-            myWriter.writeByteArrayBlockWithOffset(basesPath, sub, sub.length, (long)startPos);
-        }
+        setAllBases(basesPath, genotype);
+//        int blocks=((myNumSites-1)/chunk)+1;
+//        for (int i = 0; i < blocks; i++) {
+//            int startPos=i*chunk;
+//            int length=(i<(blocks-1))?chunk:myNumSites-startPos;
+//            byte[] sub=new byte[length];
+//            System.arraycopy(genotype, startPos, sub, 0, length);
+//            myWriter.writeByteArrayBlockWithOffset(basesPath, sub, sub.length, (long)startPos);
+//        }
         int taxonIndex=myIdentifiers.size();
         myIdentifiers.add(id);
         myIdGroup=null;
@@ -702,7 +741,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myIdGroup=null;
         myIdentifiers.remove(taxon);
        // System.out.println(getTaxaGenoPath(taxon));
-        myDataCache.clear();
+        myGenoCache.invalidateAll();
         myIsDirty=true;
     }
     

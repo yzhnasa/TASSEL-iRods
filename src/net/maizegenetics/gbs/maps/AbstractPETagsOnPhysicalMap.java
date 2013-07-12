@@ -23,13 +23,16 @@ import net.maizegenetics.gbs.util.BaseEncoder;
  *
  * @author Fei Lu
  */
-public class AbstractPETagsOnPhysicalMap extends AbstractPETags {
+public abstract class AbstractPETagsOnPhysicalMap extends AbstractPETags {
     protected int[] chrF;//Integer.MIN_VALUE means the tag is not physically mapped
     protected int[] chrB;
     protected int[] chrContig;
     protected int[] posStartF;//Integer.MIN_VALUE means the tag is not physically mapped
     protected int[] posStartB;
     protected int[] posStartContig;
+    protected int[] posEndF;
+    protected int[] posEndB;
+    protected int[] posEndContig;
     protected byte[] strandF; //Byte.MIN_VALUE means the tag is not physically mapped
     protected byte[] strandB;
     protected byte[] strandContig;
@@ -46,8 +49,59 @@ public class AbstractPETagsOnPhysicalMap extends AbstractPETags {
         posStartF = new int[tagNum];
         posStartB = new int[tagNum];
         posStartContig = new int[tagNum];
+        posEndF = new int[tagNum];
+        posEndB = new int[tagNum];
+        posEndContig = new int[tagNum];
         strandF = new byte[tagNum];
         strandB = new byte[tagNum];
         strandContig = new byte[tagNum];
+    }
+    
+    public int getChrF (int index) {
+        return chrF[index];
+    }
+    
+    public int getChrB (int index) {
+        return chrB[index];
+    }
+    
+    public int getChrContig (int index) {
+        return chrContig[index];
+    }
+    
+    public int getPosStartF (int index) {
+        return posStartF[index];
+    }
+    
+    public int getPosStartB (int index) {
+        return posStartB[index];
+    }
+    
+    public int getPosStartContig (int index) {
+        return posStartContig[index];
+    }
+    
+    public int getPosEndF (int index) {
+        return posEndF[index];
+    }
+    
+    public int getPosEndB (int index) {
+        return posEndB[index];
+    }
+    
+    public int getPosEndContig (int index) {
+        return posEndContig[index];
+    }
+    
+    public byte getStrandF (int index) {
+        return strandF[index];
+    }
+    
+    public byte getStrandB (int index) {
+        return strandB[index];
+    }
+    
+    public byte getStrandContig (int index) {
+        return strandContig[index];
     }
 }

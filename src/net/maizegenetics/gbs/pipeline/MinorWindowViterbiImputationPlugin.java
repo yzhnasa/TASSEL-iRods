@@ -159,6 +159,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             double maxHybridErrorRate, boolean isOutputProjection, boolean imputeDonorFile) {
         TasselPrefs.putAlignmentRetainRareAlleles(false);
         System.out.println("Retain Rare alleles is:"+TasselPrefs.getAlignmentRetainRareAlleles());
+        Alignment[] donorAlign=loadDonors(donorFile);
         this.minTestSites=minTestSites;
         this.isOutputProjection=isOutputProjection;
         unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile, false);
@@ -168,7 +169,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //            unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
 //        }
         unimpAlign.optimizeForTaxa(null);
-        Alignment[] donorAlign=loadDonors(donorFile);
+        
         OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, true);   
 
         siteErrors=new int[unimpAlign.getSiteCount()];
@@ -344,9 +345,11 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
          }
         Alignment[] donorAlign=new Alignment[d.size()];
         for (int i = 0; i < donorAlign.length; i++) {
-            donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), false, (ProgressListener)null);
-            donorAlign[i].optimizeForTaxa(null); 
-            System.out.printf("Donor taxa:%d sites:%d %n",donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
+            System.out.println("Starting Read");
+            donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), true, (ProgressListener)null);     
+            System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
+            donorAlign[i].optimizeForTaxa(null);
+            System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
     	return donorAlign;
@@ -1088,12 +1091,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     public static void main(String[] args) {
         
-        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-//        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-//        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-//        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
+//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
+//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
+//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
+        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
+        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
+        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
         //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
   //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
 //        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";

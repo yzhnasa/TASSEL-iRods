@@ -28,7 +28,7 @@ import net.maizegenetics.util.DirectoryCrawler;
 import org.apache.log4j.Logger;
 
 /** 
- * Derives a tagCount list for each qseq file in the qseqDirectory.
+ * Derives a PETagCount list for a pair of Fastq files. The forward and backward tags are ordered during processing
  *
  * Keeps only good reads having a barcode and a cut site and no N's in the
  * useful part of the sequence.  Trims off the barcodes and truncates sequences
@@ -44,7 +44,7 @@ public class QseqToPETagCountPlugin extends AbstractPlugin {
     String inputFileSWithoutBarcode = null;
     String keyfile = null;
     String enzyme = null;
-    int tagLengthInLong = 2;
+    int tagLengthInLong = 8;
     int minCount = 1;
     String outputDirS = null;
 
@@ -137,13 +137,14 @@ public class QseqToPETagCountPlugin extends AbstractPlugin {
     }
 
     /**
-     * Derives a tagCount list for each Illumina file in the qseqDirectory.
+     * Derives a PETagCount list for each Illumina file in the qseqDirectory.
      *
      * @param keyFileS  A key file (a sample key by barcode, with a plate map included).
      * @param enzyme  The enzyme used to create the library (currently ApeKI or PstI).
-     * @param outputDir  Directory to which the PETagCounts files (one per taxa) will be written.
-     * @param maxGoodReads  The maximum number of barcoded reads expected in a Illumina file
+     * @param inputFileSWithBarcode  Filename of input Qseq file with barcode
+     * @param inputFileSWithoutBarcode  Filename of input Qseq file without barcode
      * @param minCount  The minimum number of occurrences of a tag in a Illumina file for it to be included in the output tagCounts file
+     * @param tagLengthInLong  Tag Length in Long primitive data type, the default is 8 (8*32=256 bp)
      */
     public void countTags(String keyFileS, String enzyme, String inputFileSWithBarcode, String inputFileSWithoutBarcode, int minCount, int tagLengthInLong) {
         BufferedReader brF;
@@ -222,7 +223,7 @@ public class QseqToPETagCountPlugin extends AbstractPlugin {
         }
     }
     
-    public class TaxonOutput {
+    private class TaxonOutput {
         File taxonoutfile;
         DataOutputStream dos;
         

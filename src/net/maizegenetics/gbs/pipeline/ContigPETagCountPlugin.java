@@ -47,6 +47,9 @@ public class ContigPETagCountPlugin extends AbstractPlugin {
         return null;
     }
     
+    /**
+     * Make contigs of PETagCounts from forward and backward tags
+     */
     public void contigPETagCount () {
         PETagCounts p = new PETagCounts(inputFileS, TagsByTaxa.FilePacking.Bit).getCollapsedPETagCounts();
         p.contigPETags();

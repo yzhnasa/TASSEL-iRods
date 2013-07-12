@@ -18,14 +18,22 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
-import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 
 /**
  * This class calculates an identity by state matrix. It is scaled so only
- * non-missing data is used. Class needs to be updated to use TBit alignment,
- * and then bit calculations
- *
+ * non-missing comparison are used.  It conducts bit level calculations of IBS for genotypes.
+ * Only the two most common alleles are used in the distance calculations.
+ * <p>
+ * Please note that when heterozygous genotypes are used, Het to Het distance is 0.5 NOT 0.0. The default
+ * along the identity diagonal is 0 (isTrueIBS = false), but changing isTrueIBS = true will calculate
+ * the identity.
+ * <p>
+ * The distance estimates become wildly inaccuate when two few sites are used to calculate
+ * distance.  The minSiteComp parameter can be used to control the minimum number of sites
+ * used for a calculation.  If there are insufficient sites in the estimate, then Double.NaN
+ * is returned.
+ * 
  * @author Ed Buckler
  * @version 1.0
  */
@@ -42,23 +50,43 @@ public class IBSDistanceMatrix extends DistanceMatrix {
     private boolean isTrueIBS = false;
 
     /**
-     * Compute observed distances. Missing sites are ignored. This is no
-     * weighting for ambiguous bases.
+     * Compute observed distances for all taxa. Missing sites are ignored.
      *
-     * @param theAlignment Alignment used to computed proportion that
+     * @param theAlignment Alignment used to computed distances
      */
     public IBSDistanceMatrix(Alignment theAlignment) {
         this(theAlignment, 0, null);
     }
 
+    /**
+     * Compute observed distances for all taxa. Missing sites are ignored.
+     * 
+     * @param theAlignment Alignment used to computed distances
+     * @param listener Listener to track progress in calculations
+     */
     public IBSDistanceMatrix(Alignment theAlignment, ProgressListener listener) {
         this(theAlignment, 0, listener);
     }
 
+    /**
+     * Compute observed distances for all taxa. Missing sites are ignored.
+     * 
+     * @param theAlignment Alignment used to computed distances
+     * @param minSiteComp Minimum number of sites needed to estimate distance
+     * @param listener Listener to track progress in calculations
+     */
     public IBSDistanceMatrix(Alignment theAlignment, int minSiteComp, ProgressListener listener) {
         this(theAlignment, minSiteComp, false, listener);
     }
 
+    /**
+     * Compute observed distances for all taxa. Missing sites are ignored.
+     * 
+     * @param theAlignment Alignment used to computed distances
+     * @param minSiteComp Minimum number of sites needed to estimate distance
+     * @param trueIBS estimate diagonal distance based IBS (default = false, i=i=0.0)
+     * @param listener Listener to track progress in calculations
+     */
     public IBSDistanceMatrix(Alignment theAlignment, int minSiteComp, boolean trueIBS, ProgressListener listener) {
         super();
         this.minSitesComp = minSiteComp;
@@ -73,9 +101,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 
     /**
      * This is a cleanest, fastest and most accurate way to calculate distance.
-     * It includes a simple approach for hets. This method is actually 10%
-     * faster than the inbred approach. Key reason for the speed increase is
-     * only 3 bit counts versus the 4 above.
      */
     private void computeHetBitDistances() {
         avgTotalSites = 0;
@@ -102,10 +127,27 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         avgTotalSites /= (double) count;
     }
 
+    /**
+     * Compute distance for a pair of taxa.
+     * @param theTBA input alignment
+     * @param taxon1 index of taxon 1
+     * @param taxon2 index of taxon 2
+     * @return array of {distance, number of sites used in comparison}
+     */
     public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2) {
         return computeHetBitDistances(theTBA, taxon1, taxon2, 0, false);
     }
 
+    /**
+     * Compute distance for a pair of taxa.
+     * @param theTBA input alignment
+     * @param taxon1 index of taxon 1
+     * @param taxon2 index of taxon 2
+     * @param minSitesCompared Minimum number of sites needed to estimate distance
+     * @param trueIBS estimate diagonal distance based IBS (default = false, i=i=0.0)
+     * 
+     * @return array of {distance, number of sites used in comparison}
+     */
     public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
         if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
         long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
@@ -115,6 +157,20 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1); 
     }
     
+    
+    /**
+     * Compute distance for a pair of taxa.  Optimized for calculations sites within a certain 
+     * range of underlying word (64 sites chunks) in the TBit array
+     * @param theTBA input alignment
+     * @param taxon1 index of taxon 1
+     * @param taxon2 index of taxon 2
+     * @param minSitesCompared Minimum number of sites needed to estimate distance
+     * @param startWord starting word for calculating distance site=(startWord*64)
+     * @param endWord ending word for calculating distance inclusive site=(endWord*64+63)
+     * @param maskBadSet Optional mask for sites (those set to 1 are kept) 
+     * 
+     * @return array of {distance, number of sites used in comparison}
+     */
     public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, 
             int minSitesCompared, int startWord, int endWord, BitSet maskBadSet) {
         if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
@@ -130,11 +186,31 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1);
     }
     
+    /**
+     * Calculation of distance using the bit vector of major and minor alleles.
+     * @param iMj Vector of major alleles for taxon i
+     * @param iMn Vector of minor alleles for taxon i
+     * @param jMj Vector of major alleles for taxon j
+     * @param jMn Vector of minor alleles for taxon j
+     * @param minSitesCompared Minimum number of sites needed to estimate distance
+     * @return array of {distance, number of sites used in comparison}
+     */
     public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, 
             int minSitesCompared) {
         return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1);
     }
 
+     /**
+     * Calculation of distance using the bit vector of major and minor alleles.
+     * @param iMj Vector of major alleles for taxon i
+     * @param iMn Vector of minor alleles for taxon i
+     * @param jMj Vector of major alleles for taxon j
+     * @param jMn Vector of minor alleles for taxon j
+     * @param minSitesCompared Minimum number of sites needed to estimate distance
+     * @param endWord ending word for calculating distance inclusive site=(endWord*64+63)
+     * @param maskBadSet Optional mask for sites (those set to 1 are kept) 
+     * @return array of {distance, number of sites used in comparison}
+     */
     public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, 
             int minSitesCompared, int startWord, int endWord) {
         int sameCnt = 0, diffCnt = 0, hetCnt = 0;
@@ -156,16 +232,15 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         }
     }
     
+    /*
+     * Average number of sites used in calculating the distance matrix
+     */
     public double getAverageTotalSites() {
         return avgTotalSites;
     }
 
-    public double[][] getDistance() {
-        return super.getDistances();
-    }
-
     public String toString(int d) {
-        double[][] distance = this.getDistance();
+        double[][] distance = this.getDistances();
         /*Return a string representation of this matrix with 'd'
          displayed digits*/
         String newln = System.getProperty("line.separator");
@@ -189,18 +264,21 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         return outPut;
     }
 
+    @Override
     public String toString() {
         return this.toString(6);
     }
 
     protected void fireProgress(int percent) {
-
         if (myListener != null) {
             myListener.progress(percent, null);
         }
 
     }
 
+    /*
+     * Returns whether true IBS is calculated for the diagonal 
+     */
     public boolean isTrueIBS() {
         return isTrueIBS;
     }

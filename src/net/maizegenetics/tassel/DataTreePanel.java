@@ -735,10 +735,10 @@ public class DataTreePanel extends JPanel implements PluginListener {
         TreePath[] currentSelection = myTree.getSelectionPaths();
         if (currentSelection != null) {
             for (int i = 0; i < currentSelection.length; i++) {
-                System.out.println("currentSelection: " + currentSelection[i]);
+                myLogger.info("Start Deleting at Selection: " + currentSelection[i]);
                 if (currentSelection[i] != null) {
                     DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) (currentSelection[i].getLastPathComponent());
-                    System.out.println("currentNode: " + currentNode);
+                    myLogger.info("Deleting Node : " + currentNode);
                     deleteNode(currentNode);
                 }
 

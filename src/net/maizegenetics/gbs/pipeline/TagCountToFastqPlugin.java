@@ -34,7 +34,7 @@ import org.apache.log4j.Logger;
  */
 public class TagCountToFastqPlugin extends AbstractPlugin {
 
-    private final Logger myLogger = Logger.getLogger(TagCountToFastqPlugin.class);
+    private static final Logger myLogger = Logger.getLogger(TagCountToFastqPlugin.class);
     private ArgsEngine myArgsEngine = null;
     private String inFileName;
     private DataInputStream inStream;
@@ -112,7 +112,7 @@ public class TagCountToFastqPlugin extends AbstractPlugin {
             myLogger.info("Opened the input file: " + inFileName + "  nTags=" + nTags);
             outStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFileName), 655360));
             int tagsWritten = 0;
-            while (fileOpen) {
+            while (inStream.available()!=0) {
                 readNextTag();
                 if (tagCount >= minCount) {
                     writeFASTQ();

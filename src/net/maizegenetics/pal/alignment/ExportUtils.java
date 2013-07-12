@@ -344,7 +344,7 @@ public class ExportUtils {
      * @param sourceFile array of sourcefile names in ByteNucleotideHDF5 format with the new taxa
      * @param targetFile name of ByteNucleotideHDF5 file to receive the new taxa
      */
-    public static void addTaxaFromExistingByteHDF5File(String[] sourceFiles, String targetFile) {
+    public static void addTaxaFromExistingByteHDF5File(String[] sourceFiles, String targetFile, boolean addDepth) {
         System.out.println("Opening:"+targetFile);
         MutableNucleotideAlignmentHDF5 trgA=(MutableNucleotideAlignmentHDF5)ImportUtils.readGuessFormat(targetFile, false);
         for (String srcFile : sourceFiles) {
@@ -356,7 +356,8 @@ public class ExportUtils {
             }
             System.out.println("Copying first taxon:"+srcA.getTaxaName(0));
             for (int i = 0; i < srcA.getSequenceCount(); i++) {
-                trgA.addTaxon(srcA.getIdGroup().getIdentifier(i), srcA.getBaseRow(i), null);
+                if (addDepth==true) trgA.addTaxon(srcA.getIdGroup().getIdentifier(i), srcA.getBaseRow(i), srcA.getDepthForAlleles(i));
+                else trgA.addTaxon(srcA.getIdGroup().getIdentifier(i), srcA.getBaseRow(i), null);
             } 
         }
         
