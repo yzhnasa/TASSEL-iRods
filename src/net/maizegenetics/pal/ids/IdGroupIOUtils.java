@@ -20,8 +20,25 @@ public class IdGroupIOUtils {
         for (int i = 0; i < annoIdGroup.getIdCount(); i++) {
             if(annoIdGroup.getIdentifier(i) instanceof AnnotatedIdentifier) {
                 AnnotatedIdentifier ai=(AnnotatedIdentifier)annoIdGroup.getIdentifier(i);
-                for (String value : ai.getTextAnnotation(annoName)) {
-                    annoMap.put(value,ai.getFullName());
+                for (String key : ai.getTextAnnotation(annoName)) {
+                    annoMap.put(key,ai.getFullName());
+                } 
+            }
+        }
+        return annoMap;
+    }
+    
+    public static TreeMultimap<String,String> getMapOfTextAnnotatedIds(IdGroup annoIdGroup, String keyAnnoName, String valueAnnoName) {
+        TreeMultimap<String,String> annoMap=TreeMultimap.create();
+        for (int i = 0; i < annoIdGroup.getIdCount(); i++) {
+            if(annoIdGroup.getIdentifier(i) instanceof AnnotatedIdentifier) {
+                AnnotatedIdentifier ai=(AnnotatedIdentifier)annoIdGroup.getIdentifier(i);
+                for (String key : ai.getTextAnnotation(keyAnnoName)) {
+                    String[] values=ai.getTextAnnotation(valueAnnoName);
+                    for (String value : values) {
+                        annoMap.put(key,value);
+                    }
+                    
                 } 
             }
         }
