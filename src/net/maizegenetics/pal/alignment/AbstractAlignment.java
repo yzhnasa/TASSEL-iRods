@@ -283,6 +283,11 @@ abstract public class AbstractAlignment implements Alignment {
     public int getSequenceCount() {
         return getIdGroup().getIdCount();
     }
+    
+    @Override
+    public int getTaxaCount() {
+        return getSequenceCount();
+    }
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {

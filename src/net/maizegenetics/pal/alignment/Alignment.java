@@ -394,6 +394,13 @@ public interface Alignment extends Serializable {
      * @return number of sequences
      */
     public int getSequenceCount();
+    
+    /**
+     * Returns number of taxa (same as getSequenceCount()
+     * 
+     * @return number of taxa
+     */
+    public int getTaxaCount();
 
     /**
      * Returns the physical position at given site.
