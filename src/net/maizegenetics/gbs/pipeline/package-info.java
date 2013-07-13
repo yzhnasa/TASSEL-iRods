@@ -7,6 +7,7 @@
  * <p>
  * The TASSEL GBS pipeline grew out of a protocol developed out of efficient and 
  * inexpensive approach published in 2011.  
+ * The TASSEL GBS PE(pair end) pipeline is used to improve physical alignment of GBS tags.
  * <p>
  * Elshire RJ, Glaubitz JC, Sun Q, Poland JA, Kawamoto K, Buckler ES, Mitchell SE. 
  * (2011) A robust, simple genotyping-by-sequencing (GBS) approach for high diversity species. 

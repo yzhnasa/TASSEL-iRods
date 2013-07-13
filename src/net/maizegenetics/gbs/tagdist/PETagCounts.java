@@ -20,14 +20,15 @@ import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**
- *
+ * Hold PE tags and their counts, also including contigs
  * @author Fei Lu
  */
 public class PETagCounts extends AbstractPETags {
+    /** Read counts of PE tags*/
     int[] readCount;
     
     /**
-     * 
+     * Construct PETagCounts from a file
      * @param inFile
      *        Filename of PETagCounts
      * @param format 
@@ -133,7 +134,7 @@ public class PETagCounts extends AbstractPETags {
     }
     
     /**
-     * 
+     * Return total read count of PE tags
      * @return Total read count of this PETagCounts object 
      */
     public int getTotalReadCount () {
@@ -145,7 +146,7 @@ public class PETagCounts extends AbstractPETags {
     }
     
     /**
-     * 
+     * Return read count of a PE tag
      * @param index
      * @return Read count of a PE tag 
      */
@@ -154,7 +155,7 @@ public class PETagCounts extends AbstractPETags {
     }
     
     /**
-     * 
+     * Return total number of tags with a count greater than minimum count
      * @param minCount
      *        Minimum count of PE tag
      * @return Total number of tags with a count greater than minCount

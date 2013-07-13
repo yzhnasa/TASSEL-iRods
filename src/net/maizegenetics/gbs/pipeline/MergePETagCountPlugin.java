@@ -16,7 +16,7 @@ import net.maizegenetics.util.ArgsEngine;
 import org.apache.log4j.Logger;
 
 /**
- *
+ * Merge PETagCounts file of each taxon into one master PETagCounts file
  * @author Fei Lu
  */
 public class MergePETagCountPlugin extends AbstractPlugin {

@@ -29,7 +29,11 @@ public class ShortReadBarcodeResult {
         this.length = length;
         this.taxonName = taxon;
     }
-
+    
+    /**
+     * Construct object with genomic sequence
+     * @param sequence 
+     */
     public ShortReadBarcodeResult(String sequence) {
         unprocessedSequence = sequence;
     }
@@ -39,6 +43,10 @@ public class ShortReadBarcodeResult {
         return BaseEncoder.getSequenceFromLong(read) + ":" + (int) length + ":" + taxonName;
     }
 
+    /**
+     * Return the length of the genomic sequence
+     * @return Length of the genomic sequence
+     */
     public short getLength() {
         return length;
     }

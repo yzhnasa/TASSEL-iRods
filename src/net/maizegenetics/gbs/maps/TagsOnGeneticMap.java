@@ -20,7 +20,7 @@ import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**
- *
+ * Class that hold genetic position of tags, genetic positions are the position of markers associated with tags
  * @author Fei Lu
  */
 public class TagsOnGeneticMap extends AbstractTags {
@@ -28,7 +28,7 @@ public class TagsOnGeneticMap extends AbstractTags {
     protected int[] gPos;
     
     /**
-     * 
+     * Construct TOGM from a file
      * @param infileS
      *        File name of input TagsOnGeneticMap file
      * @param format 
@@ -39,7 +39,7 @@ public class TagsOnGeneticMap extends AbstractTags {
     }
     
     /**
-     * 
+     * Return chromosome of genetic position
      * @param index
      * @return Chromosome of genetic position 
      */
@@ -48,7 +48,7 @@ public class TagsOnGeneticMap extends AbstractTags {
     }
     
     /**
-     * 
+     * Return site of genetic position
      * @param index
      * @return Genetic position 
      */
@@ -125,6 +125,13 @@ public class TagsOnGeneticMap extends AbstractTags {
         }
     }
     
+    /**
+     * Initialize the matrix of TOGM
+     * @param tagLengthInLong
+     *        Tag length in Long primitive data type
+     * @param tagNum 
+     *        Total tag number
+     */
     protected void iniMatrix (int tagLengthInLong, int tagNum) {
         tags = new long[tagLengthInLong][tagNum];
         tagLength = new byte[tagNum];
@@ -135,7 +142,9 @@ public class TagsOnGeneticMap extends AbstractTags {
     /**
      * Write TagsOnGeneticMap file
      * @param outfileS
+     *        File name of output file
      * @param format 
+     *        FilePacking format
      */
     public void writeDistFile (String outfileS, FilePacking format) {
         System.out.println("Writing TOGM file to " + outfileS);

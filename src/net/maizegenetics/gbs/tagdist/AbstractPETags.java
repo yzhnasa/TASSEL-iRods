@@ -21,14 +21,29 @@ import org.biojava3.core.sequence.compound.NucleotideCompound;
  * @author Fei Lu
  */
 public abstract class AbstractPETags implements PETags {
-
+    /**Tag length in Long primitive data type*/
     protected int tagLengthInLong; 
-    protected long[][] tagsF; //columns are sequence, rows are index of sequence. This is faster
+    /**
+     * Forward tags in Long array
+     * Columns are sequence, rows are index of sequence. This is faster than the other way
+     */
+    protected long[][] tagsF;
+    /**
+     * Backward tags in Long array
+     * Columns are sequence, rows are index of sequence. This is faster than the other way
+     */
     protected long[][] tagsB;
+    /**Length of forward tags*/
     protected short[] tagFLength;  // length of tag (number of bases)
+    /**Length of backward tags*/
     protected short[] tagBLength;
-    protected byte[] contigLengthInLong; //entire length of PE tags (cutsite to cutsite) in long, 0 means contig doesn't exist
+    /**
+     * Length of contigs in Long primitive data type, 0 means contig doesn't exist
+     */
+    protected byte[] contigLengthInLong;
+    /** Contigs in Long array*/
     protected long[][] contig;
+    /**Length of contigs, 0 means contig doesn't exist*/
     protected short[] contigLength;  //entire length of PE tags (cutsite to cutsite), 0 means contig doesn't exist
      
     @Override
@@ -240,7 +255,7 @@ public abstract class AbstractPETags implements PETags {
     }
     
     /**
-     * 
+     * Compare forward tag and backward tag
      * @param index
      * @return result of comparison from forward tag and backward tag -1(<), 0(=), 1(>) 
      */
@@ -253,7 +268,7 @@ public abstract class AbstractPETags implements PETags {
     }
     
     /**
-     * 
+     * Compare PE tag with another PE tag
      * @param index
      * @param tagF
      * @param tagB
@@ -344,7 +359,7 @@ public abstract class AbstractPETags implements PETags {
     }
     
     /**
-     * 
+     * Compare two PE tags
      * @param index1
      *        index of the first PE tag
      * @param index2

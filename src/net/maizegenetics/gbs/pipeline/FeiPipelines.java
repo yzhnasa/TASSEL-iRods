@@ -26,7 +26,7 @@ public class FeiPipelines {
     
     public FeiPipelines () {
         this.pipelinePE();
-        this.testPipeline();
+        //this.testPipeline();
     }
     
     public static void main (String[] args) {
@@ -38,7 +38,7 @@ public class FeiPipelines {
         //this.mkSmallTagCount();
         //this.mkFastq();
         //this.mkFasta();
-        this.mkTOPM();
+        //this.mkTOPM();
         //this.mkTOPMHDF5();
     }
     
@@ -86,7 +86,7 @@ public class FeiPipelines {
         //this.parseFastq();
         //this.checkPETagCounts(); //for checking, not in the pipeline.
         //this.mergePETagCounts();
-        //this.contigPETagCounts();
+        this.contigPETagCounts();
         //this.mkPEstatistics();//for presentation, not included in pipeline.
         //this.alignmentStep1();
         //this.alignmentStep2();

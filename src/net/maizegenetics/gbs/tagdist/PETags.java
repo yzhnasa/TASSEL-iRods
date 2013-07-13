@@ -20,28 +20,28 @@ public interface PETags extends Swapper, IntComparator {
     /**
      * Returns the length in bp of a forward tag
      * @param index
-     * @return length
+     * @return length of the forward tag
      */
     public short getTagFLength(int index);
     
     /**
      * Returns the length in bp of a backward tag
      * @param index
-     * @return length
+     * @return length of the backward tag
      */
     public short getTagBLength(int index);
 
     /**
      * Get the compressed forward tag sequence in a long array for a given index
      * @param index
-     * @return compressed read sequence in long array
+     * @return compressed forward tag sequence in long array
      */
     public long[] getTagF(int index);
     
     /**
      * Get the compressed backward tag sequence in a long array for a given index
      * @param index
-     * @return compressed read sequence in long array
+     * @return compressed backward tag sequence in long array
      */
     public long[] getTagB(int index);
 
@@ -59,7 +59,7 @@ public interface PETags extends Swapper, IntComparator {
 
 
     /**
-     * This is the number of different tags in the list (NOT THE SUM OF THE COUNTS)
+     * This is the number of different PE tags in the list (NOT THE SUM OF THE COUNTS)
      * The index will vary from 0 to (ReadTotal-1)
      * This is the number of distinct tags if readUnique is true
      * @return total number of tags
@@ -67,24 +67,28 @@ public interface PETags extends Swapper, IntComparator {
     public int getTagCount();
     
     /**
+     * Return the contig of PE tag
      * @param index
      * @return Contig of a PE tag, if there is no contig, return null
      */
     public long[] getContig (int index);
     
     /**
+     * Return total number of PE contigs
      * @return Total count of PE Contig
      */
     
     public int getContigCount ();
     
     /**
+     * Return the length of a contig
      * @param index
      * @return PE contig length
      */
     public short getContigLength (int index);
     
     /**
+     * Return the contig length in Long primitive data type
      * @param index
      * @return contig length in Long primitive data type
      */

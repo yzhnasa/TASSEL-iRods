@@ -28,11 +28,13 @@ import net.maizegenetics.util.DirectoryCrawler;
 import org.apache.log4j.Logger;
 
 /** 
- * Derives a PETagCount list for a pair of Qseq files. The forward and backward tags are ordered during processing
+ * Derives a PETagCount list for a pair of Fastq files. The forward and backward tags are ordered during processing
  *
- * Keeps only good reads having a barcode and a cut site and no N's in the
- * useful part of the sequence.  Trims off the barcodes and truncates sequences
+ * Keeps only good reads having a barcode and a cut site and no N's in the useful part of the sequence. 
+ * For the barcoded end, trims off the barcodes and truncates sequences
  * that (1) have a second cut site, or (2) read into the common adapter.
+ * For the unbarcoded end, trims off the barcodes and truncates sequences
+ * that (1) have a second cut site, or (2) read into the barcode adapter.
  * 
  */
 public class FastqToPETagCountPlugin extends AbstractPlugin {
@@ -137,7 +139,7 @@ public class FastqToPETagCountPlugin extends AbstractPlugin {
     }
 
     /**
-     * Derives a PETagCount list for each Illumina file in the qseqDirectory.
+     * Derives a PETagCount list for a pair of Fastq files.
      *
      * @param keyFileS  A key file (a sample key by barcode, with a plate map included).
      * @param enzyme  The enzyme used to create the library (currently ApeKI or PstI).
