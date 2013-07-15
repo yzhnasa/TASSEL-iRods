@@ -7,7 +7,7 @@ import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix2D;
 
 public class DoubleMatrixFactory {
-	public enum FactoryType {ejml, jblas, colt};
+	public enum FactoryType {ejml, jblas, colt, blas};
 	private FactoryType myType;
 	public static DoubleMatrixFactory DEFAULT = new DoubleMatrixFactory(FactoryType.ejml);
 	
@@ -29,8 +29,24 @@ public class DoubleMatrixFactory {
 	}
 	
 	public DoubleMatrix make(int row, int col, double[] values) {
-		if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(row, col, values);
-		if (myType == FactoryType.colt) return new ColtDoubleMatrix(row, col, values);
+		return this.make(row, col, values, false);
+	}
+
+	public DoubleMatrix make(int row, int col, double[] values, boolean columnMajor) {
+		if (columnMajor) {
+			if (myType == FactoryType.ejml){
+				DoubleMatrix temp = new EJMLDoubleMatrix(col, row, values);
+				return temp.transpose();
+			} else if (myType == FactoryType.colt) {
+				return new ColtDoubleMatrix(row, col, values);
+			}
+		} else {
+			if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(row, col, values);
+			if (myType == FactoryType.colt) {
+				DoubleMatrix temp =  new ColtDoubleMatrix(col, row, values);
+				return temp.transpose();
+			}
+		}
 		if (myType == FactoryType.jblas) return null;
 		return null;
 	}
