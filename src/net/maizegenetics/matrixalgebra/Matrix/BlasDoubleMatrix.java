@@ -354,19 +354,65 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 		bdm.nrows = rows.length;
 		bdm.ncols = columns.length;
 		bdm.size = bdm.nrows * bdm.ncols;
-		bdm.myMatrix = new double[bdm.size];
-		int ptr = 0;
-		int myptr = 0;
-		for (int c : columns) {
-			int colstart = c * nrows;
-			for (int r : rows) {
-				myptr = colstart + r;
-				bdm.myMatrix[ptr++] = myMatrix[myptr];
-			}
-		}
+		bdm.myMatrix = getSelectionFromDoubleArray(myMatrix, nrows, ncols, rows, columns);
 		return bdm;
 	}
 
+	/**
+	 * @param original	the original matrix as a one dimensional double array in column-major order
+	 * @param nrows	the number of rows in the original matrix
+	 * @param ncols	the number of columns in the original matrix
+	 * @param rows	an int array of the selected rows
+	 * @param columns	an int array of the selected columns
+	 * @return the resulting double array, column-major order
+	 */
+	public static double[] getSelectionFromDoubleArray(double[] original, int nrows, int ncols, int[] rows, int[] columns) {
+		if (rows == null && columns == null) return Arrays.copyOf(original, original.length);
+		
+		double[] selectedArray; 
+		if (rows == null) {
+			int numberOfSelectedRows = nrows;
+			int numberOfSelectedColumns = columns.length;
+			selectedArray = new double[numberOfSelectedRows * numberOfSelectedColumns];
+			int ptr = 0;
+			int myptr = 0;
+			for (int c : columns) {
+				int colstart = c * nrows;
+				for (int r = 0; r < nrows; r++) {
+					myptr = colstart + r;
+					selectedArray[ptr++] = original[myptr];
+				}
+			}
+		} else if (columns == null) {
+			int numberOfSelectedRows = rows.length;
+			int numberOfSelectedColumns = ncols;
+			selectedArray = new double[numberOfSelectedRows * numberOfSelectedColumns];
+			int ptr = 0;
+			int myptr = 0;
+			for (int c = 0; c < ncols; c++) {
+				int colstart = c * nrows;
+				for (int r : rows) {
+					myptr = colstart + r;
+					selectedArray[ptr++] = original[myptr];
+				}
+			}
+		} else {
+			int numberOfSelectedRows = rows.length;
+			int numberOfSelectedColumns = columns.length;
+			selectedArray = new double[numberOfSelectedRows * numberOfSelectedColumns];
+			int ptr = 0;
+			int myptr = 0;
+			for (int c : columns) {
+				int colstart = c * nrows;
+				for (int r : rows) {
+					myptr = colstart + r;
+					selectedArray[ptr++] = original[myptr];
+				}
+			}
+		}
+		return selectedArray;
+	}
+	
 	@Override
 	public double rowSum(int row) {
 		double sum = 0;
@@ -394,6 +440,8 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 	}
 
 	public double[] getMatrix() { return myMatrix; }
+	
+	public double[] getMatrixCopy() { return Arrays.copyOf(myMatrix, size); }
 	
 	public int getSize() { return size; }
 	
