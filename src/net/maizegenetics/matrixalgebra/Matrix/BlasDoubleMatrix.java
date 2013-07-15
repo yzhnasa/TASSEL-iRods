@@ -2,6 +2,8 @@ package net.maizegenetics.matrixalgebra.Matrix;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import net.maizegenetics.matrixalgebra.decomposition.BlasEigenvalueDecomposition;
 import net.maizegenetics.matrixalgebra.decomposition.BlasSingularValueDecomposition;
 import net.maizegenetics.matrixalgebra.decomposition.EigenvalueDecomposition;
@@ -9,11 +11,13 @@ import net.maizegenetics.matrixalgebra.decomposition.QRDecomposition;
 import net.maizegenetics.matrixalgebra.decomposition.SingularValueDecomposition;
 
 public class BlasDoubleMatrix implements DoubleMatrix {
+	private static Logger myLogger = Logger.getLogger(BlasDoubleMatrix.class);
 	public static native void multMatrices(double[] A, int nrowsA, int ncolsA, double[] B, int ncolsB, double[] C, double alpha, double beta, 
 			boolean transA, boolean transB); 
-	public static native void invertMatrix(double[] A, int nrowsA);
-	public static native int solveLS(double[] A, int nrowsA, int ncolsA, double[] Y, int ncolsY);  //solves AB = Y for B, returns error code (0 = ran successfully) and B in Y 
-	public static native int singularValueDecomposition(char jobu, char jobvt, int nrows, int ncols, int ns, double[] A, double[] S, double[] U, double[] VT);
+	public static native int solveLSdgelsd(double[] A, int Arows, int Acols, double[] B, int Bcols, double rcond, int[] rank);
+	public static native int solveLSdgelsy(double[] A, int Arows, int Acols, double[] B, int Bcols, double rcond, int[] rank);
+	public static native int singularValueDecompositionDgesvd(char jobu, char jobvt, int m, int n, double[] A, int lda, double[] S, double[] U, int ldu, double[] VT, int ldvt);
+	public static native int singularValueDecompositionDgesdd(char jobz, int m, int n, double[] A, int lda, double[] S, double[] U, int ldu, double[] VT, int ldvt);
 	public static native int eigenValueSymmetricDecomposition(int order, double[] A, double[] eigval); //A is the matrix on entry, eigenvectors on exit; returns error code
 	
 	//column major implementation
@@ -192,7 +196,8 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 
 	@Override
 	public void invert() {
-		invertMatrix(myMatrix, nrows);
+		BlasDoubleMatrix inv = (BlasDoubleMatrix) generalizedInverseWithRank(new int[]{0});
+		myMatrix = inv.myMatrix;
 	}
 
 	@Override
@@ -202,15 +207,18 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 
 	@Override
 	public DoubleMatrix generalizedInverseWithRank(int[] rank) {
-		//use SVD
+		//use solve
 		return null;
 	}
 
 	@Override
 	public DoubleMatrix solve(DoubleMatrix Y) {
 		BlasDoubleMatrix bdy = (BlasDoubleMatrix) Y.copy();
-		solveLS(myMatrix, nrows, ncols, bdy.myMatrix, bdy.ncols);
-		return bdy;
+		int[] rank = new int[]{0};
+		int info = solveLSdgelsd(myMatrix, nrows, ncols, bdy.myMatrix, bdy.ncols, 1e-10, rank);
+		if (info == 0) return bdy;
+		myLogger.error(String.format("solve failed in BlasDoubleMatrix, info = %d\n",info));
+		return null;
 	}
 
 	@Override
@@ -381,7 +389,7 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 
 	@Override
 	public int columnRank() {
-		BlasSingularValueDecomposition svd = new BlasSingularValueDecomposition(this, false, false);
+		BlasSingularValueDecomposition svd = new BlasSingularValueDecomposition(this, 'N');
 		return svd.getRank();
 	}
 

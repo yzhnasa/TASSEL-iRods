@@ -16,12 +16,7 @@ public class BlasSingularValueDecomposition implements
 	private static final Logger myLogger = Logger.getLogger(BlasSingularValueDecomposition.class);
 	private double tol = 1e-12;
 	
-	public BlasSingularValueDecomposition(BlasDoubleMatrix bdm, boolean computeU, boolean computeVT) {
-		char jobu, jobvt;
-		if (computeU) jobu = 'S';
-		else jobu = 'N';
-		if (computeVT) jobvt = 'S';
-		else jobvt = 'N';
+	public BlasSingularValueDecomposition(BlasDoubleMatrix bdm, char jobz) {
 		int nrows = bdm.numberOfRows();
 		int ncols = bdm.numberOfColumns();
 		int ns = Math.min(nrows, ncols);
@@ -34,7 +29,8 @@ public class BlasSingularValueDecomposition implements
 		int vtcols = ncols;
 		int vtsize = vtrows * vtcols;
 		double[] VT = new double[vtsize];
-		int result = BlasDoubleMatrix.singularValueDecomposition(jobu, jobvt, nrows, ncols, ns, bdm.getMatrix(), S, U, VT);
+
+		int result = BlasDoubleMatrix.singularValueDecompositionDgesdd(jobz, nrows, ncols, bdm.getMatrix(), nrows, S, U, nrows, VT, ncols);
 		if (result == 0) {
 			successful = true;
 			bdS = new BlasDoubleMatrix(ns, 1, S, true);
@@ -46,7 +42,7 @@ public class BlasSingularValueDecomposition implements
 	}
 	
 	public BlasSingularValueDecomposition(BlasDoubleMatrix bdm) {
-		this(bdm, true, true);
+		this(bdm, 'A');
 	}
 
 	@Override
