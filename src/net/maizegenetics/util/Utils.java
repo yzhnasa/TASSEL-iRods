@@ -495,11 +495,11 @@ public final class Utils {
             }
         }
     }
-    
+
     public static String readLineSkipComments(BufferedReader br) throws IOException {
-        String s=br.readLine();
-        while((s.startsWith("#"))) {
-            s=br.readLine();
+        String s = br.readLine();
+        while ((s.startsWith("#"))) {
+            s = br.readLine();
         }
         return s;
     }
