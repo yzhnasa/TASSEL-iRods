@@ -1,8 +1,6 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * XYScatterAndLinePanel
  */
-
 package net.maizegenetics.baseplugins.chart;
 
 import java.awt.Color;
@@ -10,10 +8,8 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import javax.swing.BoxLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
 import net.maizegenetics.baseplugins.QQDisplayPlugin;
 import net.maizegenetics.pal.report.TableReport;
 import org.jfree.chart.ChartFactory;
@@ -40,7 +36,6 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
     ChartPanel myChartPanel;
     JButton saveButton = new JButton("save...");
     TableReportQQDataset[] datasets;
-
     TableReport myTableReport;
 
     public XYScatterAndLinePanel(QQDisplayPlugin plugin, TableReport table, int countToDisplay, ArrayList<Integer> tableIndices, int[] indices) {
@@ -60,18 +55,16 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
             }
             createLine(chart.getXYPlot(), datasets[0], 0, Color.BLACK);
             jbInit();
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
     private void jbInit() throws Exception {
-        this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS ));
+        this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         this.add(myChartPanel);
         saveButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
         saveButton.addActionListener(new java.awt.event.ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 saveButton_actionPerformed(e);
             }
@@ -84,28 +77,27 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
     }
 
     public JFreeChart createChart(TableReportQQDataset dataset) {
-        String name="Please select numeric variables";
-        String xName="X";
-        String y1Name="Y";
-        String y2Name="Y2";
-        if(dataset!=null) {
-            xName=dataset.getXName();
-            y1Name="-Log(P-Value)";
-            name=xName+" vs. "+y1Name;
-            if(dataset.getSeriesCount()==2) {
-                y2Name=dataset.getSeriesName(1);
-                name+=" and "+y2Name;
+        String name = "Please select numeric variables";
+        String xName = "X";
+        String y1Name = "Y";
+        String y2Name = "Y2";
+        if (dataset != null) {
+            xName = dataset.getXName();
+            y1Name = "-Log(P-Value)";
+            name = xName + " vs. " + y1Name;
+            if (dataset.getSeriesCount() == 2) {
+                y2Name = dataset.getSeriesName(1);
+                name += " and " + y2Name;
             }
         }
         chart = ChartFactory.createScatterPlot(
-        name,
-        xName,y1Name,
-        dataset,
-        PlotOrientation.VERTICAL,
-        true,
-        true,
-        false
-        );
+                name,
+                xName, y1Name,
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false);
         chart.getXYPlot().setForegroundAlpha(0.75f);
         chart.getXYPlot().getRenderer().setToolTipGenerator(new XYAndLineToolTipGenerator());
         return chart;
@@ -113,14 +105,13 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
 
     private void createLine(XYPlot plot, XYDataset data, int series, Color theColor) {
         Function2D curve = new LineFunction2D(0, 1);
-        double max=DatasetUtilities.findMaximumDomainValue(data).doubleValue();
-        double min=DatasetUtilities.findMinimumDomainValue(data).doubleValue();
+        double max = DatasetUtilities.findMaximumDomainValue(data).doubleValue();
+        double min = DatasetUtilities.findMinimumDomainValue(data).doubleValue();
         XYDataset regressionData = DatasetUtilities.sampleFunction2D(
-            curve,
-            min,max, 2,
-            "Expected Values"
-        );
-        int datasetCount=plot.getDatasetCount();
+                curve,
+                min, max, 2,
+                "Expected Values");
+        int datasetCount = plot.getDatasetCount();
         plot.setDataset(datasetCount, regressionData);
         XYItemRenderer renderer2 = new StandardXYItemRenderer(StandardXYItemRenderer.LINES);
         renderer2.setSeriesPaint(0, theColor);
@@ -160,17 +151,17 @@ public class XYScatterAndLinePanel extends BasicChartPanel {
         int numRows = table.getRowCount();
         String previousTrait = "";
         for (int i = 0; i < numRows; i++) {
-            if (!previousTrait.equals((String)table.getValueAt(i, 0))) {
-                if (!((String)table.getValueAt(i, 1)).equals("None")) {
+            if (!previousTrait.equals((String) table.getValueAt(i, 0))) {
+                if (!((String) table.getValueAt(i, 1)).equals("None")) {
                     indexes.add(new Integer(i));
-                    previousTrait = (String)table.getValueAt(i, 0);
+                    previousTrait = (String) table.getValueAt(i, 0);
                     if (i > 1) {
                         indexes.add(new Integer(i));
                     }
                 } else if (i != 0) {
                     indexes.add(new Integer(i));
-                    indexes.add(new Integer(i+1));
-                    previousTrait = (String)table.getValueAt(i + 1, 0);
+                    indexes.add(new Integer(i + 1));
+                    previousTrait = (String) table.getValueAt(i + 1, 0);
                 }
             }
         }
