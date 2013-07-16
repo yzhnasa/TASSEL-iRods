@@ -1,12 +1,10 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * XYAndLineToolTipGenerator
  */
-
 package net.maizegenetics.baseplugins.chart;
 
 import java.text.DecimalFormat;
-import java.util.Hashtable;
+import java.util.Map;
 import org.jfree.chart.labels.AbstractXYItemLabelGenerator;
 import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.data.xy.XYDataset;
@@ -18,15 +16,15 @@ import org.jfree.data.xy.XYDataset;
 public class XYAndLineToolTipGenerator extends AbstractXYItemLabelGenerator implements XYToolTipGenerator {
 
     public void XYAndLineToolTipGenerator() {
-
     }
 
+    @Override
     public String generateToolTip(XYDataset dataset, int series, int item) {
-        TableReportQQDataset myDataset = (TableReportQQDataset)dataset;
+        TableReportQQDataset myDataset = (TableReportQQDataset) dataset;
         int[] positions = myDataset.getPositions();
         String[] markers = myDataset.getMarkers();
-        Hashtable myTable = myDataset.getLookupTable();
-        int index = (Integer)myTable.get(myDataset.getYValue(series, item));
+        Map myTable = myDataset.getLookupTable();
+        int index = (Integer) myTable.get(myDataset.getYValue(series, item));
         DecimalFormat df = new DecimalFormat("#0.000");
         StringBuilder sb = new StringBuilder("SNP ID: ");
         sb.append(markers[index]);
@@ -38,5 +36,4 @@ public class XYAndLineToolTipGenerator extends AbstractXYItemLabelGenerator impl
         sb.append(positions[index]);
         return sb.toString();
     }
-
 }

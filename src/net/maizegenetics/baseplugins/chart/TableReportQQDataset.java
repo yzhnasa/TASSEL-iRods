@@ -1,12 +1,11 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * TableReportQQDataset
  */
-
 package net.maizegenetics.baseplugins.chart;
 
 import java.util.Arrays;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import net.maizegenetics.pal.report.TableReport;
 import org.jfree.data.xy.DefaultTableXYDataset;
 
@@ -15,12 +14,12 @@ import org.jfree.data.xy.DefaultTableXYDataset;
  * @author yz79
  */
 public class TableReportQQDataset extends DefaultTableXYDataset {
+
     double[][] theData;
     String[] seriesNames;
     String xName;
     String myTrait;
     int numberYAxes;
-
     Object[] myColumnNames;
     double[] myPValues;
     double[] myLogPValues;
@@ -28,8 +27,7 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     double[] myLogExpectedPValues;
     int[] myPositions;
     String[] myMarkers;
-    Hashtable myLookupTable;
-
+    HashMap myLookupTable;
     int myPValueColumnIndex = -1;
     int myPositionColumnIndex = -1;
     int myTraitColumnIndex = -1;
@@ -41,7 +39,7 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     double myDistance = 0.01;
 
     public TableReportQQDataset(TableReport table) {
-        numberYAxes=1;
+        numberYAxes = 1;
         setTableReport(table);
     }
 
@@ -60,7 +58,6 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         //throw new java.lang.UnsupportedOperationException("Method getItemCount() not yet implemented.");
     }
 
-
     public Number getX(int series, int item) {
         Double x = new Double(theData[item][0]);
         return x;
@@ -72,26 +69,32 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         //throw new java.lang.UnsupportedOperationException("Method getSeriesCount() not yet implemented.");
     }
 
-
     public Number getY(int series, int item) {
-        Double y = new Double(theData[item][1+series]);
+        Double y = new Double(theData[item][1 + series]);
         return y;
         //    throw new java.lang.UnsupportedOperationException("Method getYValue() not yet implemented.");
     }
+
     public String getSeriesName(int series) {
-        /**current*/
+        /**
+         * current
+         */
         return seriesNames[series];
         //    throw new java.lang.UnsupportedOperationException("Method getSeriesName() not yet implemented.");
     }
 
     public String getSeriesKey(int series) {
-        /**current*/
+        /**
+         * current
+         */
         return seriesNames[series];
         //    throw new java.lang.UnsupportedOperationException("Method getSeriesName() not yet implemented.");
     }
 
     public String getXName() {
-        /**current*/
+        /**
+         * current
+         */
         return xName;
         //    throw new java.lang.UnsupportedOperationException("Method getSeriesName() not yet implemented.");
     }
@@ -134,16 +137,29 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     }
 
     private void setTrait(TableReport table) {
-        myTrait = (String)table.getValueAt(myStartIndex, myTraitColumnIndex);
+        myTrait = (String) table.getValueAt(myStartIndex, myTraitColumnIndex);
     }
 
     private void setPValues(TableReport myTableReport) {
-        for (int i = 0; i < myPValues.length; i++) {
-            myPValues[i] = ((Double)myTableReport.getValueAt(myStartIndex + i, myPValueColumnIndex)).doubleValue();
-            if (myPValues[i] == 0) {
-                myPValues[i] = Double.MIN_VALUE;
+        Object temp = myTableReport.getValueAt(myStartIndex, myPValueColumnIndex);
+        if (temp instanceof Double) {
+            for (int i = 0; i < myPValues.length; i++) {
+                myPValues[i] = ((Double) myTableReport.getValueAt(myStartIndex + i, myPValueColumnIndex)).doubleValue();
+                if (myPValues[i] == 0) {
+                    myPValues[i] = Double.MIN_VALUE;
+                }
+                myLookupTable.put(-Math.log10(myPValues[i]), i);
             }
-            myLookupTable.put(-Math.log10(myPValues[i]), i);
+        } else if (temp instanceof String) {
+            for (int i = 0; i < myPValues.length; i++) {
+                myPValues[i] = Double.parseDouble((String) myTableReport.getValueAt(myStartIndex + i, myPValueColumnIndex));
+                if (myPValues[i] == 0) {
+                    myPValues[i] = Double.MIN_VALUE;
+                }
+                myLookupTable.put(-Math.log10(myPValues[i]), i);
+            }
+        } else {
+            throw new IllegalStateException("TableReportQQDataset: setPValues: Unknown data type of P values: " + temp.getClass().getName());
         }
     }
 
@@ -162,7 +178,7 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
 
     private void setMarkers(TableReport myTableReport) {
         for (int i = 0; i < myMarkers.length; i++) {
-            myMarkers[i] = ((String)myTableReport.getValueAt(myStartIndex + i, myMarkerColumnIndex));
+            myMarkers[i] = ((String) myTableReport.getValueAt(myStartIndex + i, myMarkerColumnIndex));
         }
     }
 
@@ -170,7 +186,7 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         return myPositions;
     }
 
-    public Hashtable getLookupTable() {
+    public Map getLookupTable() {
         return myLookupTable;
     }
 
@@ -189,9 +205,9 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
     }
 
     private void setExpectedPValues() {
-        double increment = 1/(double)myNumRows;
+        double increment = 1 / (double) myNumRows;
         for (int i = 0; i < myExpectedPValues.length; i++) {
-            myExpectedPValues[i] = increment * ((double)(i + 1));
+            myExpectedPValues[i] = increment * ((double) (i + 1));
         }
     }
 
@@ -212,7 +228,7 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
         myLogExpectedPValues = new double[myNumRows];
         myPositions = new int[myNumRows];
         myMarkers = new String[myNumRows];
-        myLookupTable = new Hashtable(myNumRows);
+        myLookupTable = new HashMap(myNumRows);
         setPValues(theTable);
         setPositions(theTable);
         setMarkers(theTable);
@@ -242,16 +258,15 @@ public class TableReportQQDataset extends DefaultTableXYDataset {
                         theData[i][1] = Double.NaN;
                     }
                 }
-            }
-            catch (NumberFormatException ex) {
+            } catch (NumberFormatException ex) {
                 System.out.println("throw new NumberFormatException();");
             }
         }
 
         theData[0][0] = myLogExpectedPValues[0];
         theData[myNumRows - 1][0] = myLogExpectedPValues[myNumRows - 1];
-        seriesNames=new String[1];
-        xName= "Expected -Log(P-Value)";
+        seriesNames = new String[1];
+        xName = "Expected -Log(P-Value)";
         seriesNames[0] = myTrait;
     }
 }
