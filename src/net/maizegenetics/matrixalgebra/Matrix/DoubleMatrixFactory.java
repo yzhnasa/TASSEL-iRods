@@ -21,9 +21,15 @@ public class DoubleMatrixFactory {
 	
 	public FactoryType getType() { return myType; }
 	
+	/**
+	 * @param row	the number of rows in the matrix
+	 * @param col	the number of columns in the matrix
+	 * @return	a matrix with all elements equal to 0
+	 */
 	public DoubleMatrix make(int row, int col) {
 		if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(row, col);
 		if (myType == FactoryType.colt) return new ColtDoubleMatrix(row, col);
+		if (myType == FactoryType.blas) return new BlasDoubleMatrix(row, col);
 		if (myType == FactoryType.jblas) return null;
 		return null;
 	}
@@ -37,30 +43,33 @@ public class DoubleMatrixFactory {
 			if (myType == FactoryType.ejml){
 				DoubleMatrix temp = new EJMLDoubleMatrix(col, row, values);
 				return temp.transpose();
-			} else if (myType == FactoryType.colt) {
-				return new ColtDoubleMatrix(row, col, values);
-			}
+			} 
+			else if (myType == FactoryType.colt) return new ColtDoubleMatrix(row, col, values);
+			else if (myType == FactoryType.blas) return BlasDoubleMatrix.getInstance(row, col, values, true);
 		} else {
 			if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(row, col, values);
 			if (myType == FactoryType.colt) {
 				DoubleMatrix temp =  new ColtDoubleMatrix(col, row, values);
 				return temp.transpose();
 			}
+			else if (myType == FactoryType.blas) return BlasDoubleMatrix.getInstance(row, col, values, false);
 		}
 		if (myType == FactoryType.jblas) return null;
 		return null;
 	}
 
-	public DoubleMatrix make(int row, int col, double value) {
-		if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(row, col, value);
-		if (myType == FactoryType.colt) return new ColtDoubleMatrix(row, col, value);
+	public DoubleMatrix make(double[][] values) {
+		if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(values);
+		if (myType == FactoryType.colt) return new ColtDoubleMatrix(values);
+		if (myType == FactoryType.blas) return new BlasDoubleMatrix(values);
 		if (myType == FactoryType.jblas) return null;
 		return null;
 	}
 	
-	public DoubleMatrix make(double[][] values) {
-		if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(values);
-		if (myType == FactoryType.colt) return new ColtDoubleMatrix(values);
+	public DoubleMatrix make(int row, int col, double val) {
+		if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(row, col, val);
+		if (myType == FactoryType.colt) return new ColtDoubleMatrix(row, col, val);
+		if (myType == FactoryType.blas) return BlasDoubleMatrix.getInstance(row, col, val);
 		if (myType == FactoryType.jblas) return null;
 		return null;
 	}
@@ -68,6 +77,7 @@ public class DoubleMatrixFactory {
 	public DoubleMatrix identity(int n) {
 		if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(n);
 		if (myType == FactoryType.colt) return new ColtDoubleMatrix(n);
+		if (myType == FactoryType.blas) return BlasDoubleMatrix.getIdentityMatrix(n);
 		if (myType == FactoryType.jblas) return null;
 		return null;
 	}
@@ -75,6 +85,7 @@ public class DoubleMatrixFactory {
 	public DoubleMatrix diagonal(double[] diag) {
 		if (myType == FactoryType.ejml) return new EJMLDoubleMatrix(diag);
 		if (myType == FactoryType.colt) return new ColtDoubleMatrix(diag);
+		if (myType == FactoryType.blas) return BlasDoubleMatrix.getDiagonalMatrix(diag);
 		if (myType == FactoryType.jblas) return null;
 		return null;
 	}
@@ -113,6 +124,10 @@ public class DoubleMatrixFactory {
 				}
 			}
 			return new ColtDoubleMatrix(DoubleFactory2D.dense.compose(coltComponents));
+		}
+		
+		if (myType == FactoryType.blas) {
+			
 		}
 		
 		if (myType == FactoryType.jblas) return null;

@@ -37,7 +37,7 @@ public class BlasEigenvalueDecomposition implements EigenvalueDecomposition {
 	@Override
 	public DoubleMatrix getEigenvectors() {
 		int nrows = bdm.numberOfRows();
-		return new BlasDoubleMatrix(nrows, nrows, eigenvalues, true);
+		return BlasDoubleMatrix.getInstance(nrows, nrows, eigenvectors, true);
 	}  
 
 	@Override

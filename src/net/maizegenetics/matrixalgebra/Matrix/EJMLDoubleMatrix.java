@@ -220,8 +220,7 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 
 	@Override
 	public SingularValueDecomposition getSingularValueDecomposition() {
-		// TODO Auto-generated method stub
-		return null;
+		return new EJMLSingularValueDecomposition(myMatrix);
 	}
 
 	@Override

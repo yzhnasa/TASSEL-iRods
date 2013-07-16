@@ -79,9 +79,11 @@ public class ColtDoubleMatrix implements DoubleMatrix {
 	public DoubleMatrix multadd(DoubleMatrix A, DoubleMatrix B, double alpha,
 			double beta, boolean transpose, boolean transposeA) {
 		DoubleMatrix2D C = ((ColtDoubleMatrix) A).myMatrix;
-		DoubleMatrix2D D = ((ColtDoubleMatrix) B).myMatrix;
-		myMatrix.zMult(C, D, alpha, beta, transpose, transposeA);
-		return B;
+		DoubleMatrix2D D;
+		if (B == null) D = null;
+		else D = ((ColtDoubleMatrix) B).myMatrix;
+		DoubleMatrix2D result = myMatrix.zMult(C, D, alpha, beta, transpose, transposeA);
+		return new ColtDoubleMatrix(result);
 	}
 
 	@Override
@@ -321,6 +323,11 @@ public class ColtDoubleMatrix implements DoubleMatrix {
         DoubleMatrix2D minv = A.mult(A.mult(svd.getV(), invS), A.transpose(svd.getU()));
         if (transposeMatrix) minv = A.transpose(minv);
         return new ColtDoubleMatrix(minv);
+	}
+
+	@Override
+	public String toString() {
+		return myMatrix.toString();
 	}
 
 }

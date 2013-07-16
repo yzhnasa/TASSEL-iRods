@@ -12,7 +12,7 @@ import net.maizegenetics.matrixalgebra.decomposition.SingularValueDecomposition;
 
 public class BlasDoubleMatrix implements DoubleMatrix {
 	private static Logger myLogger = Logger.getLogger(BlasDoubleMatrix.class);
-	public static native void multMatrices(double[] A, int nrowsA, int ncolsA, double[] B, int ncolsB, double[] C, double alpha, double beta, 
+	public static native void multMatrices(double[] A, int nrowsA, int ncolsA, double[] B, int nrowsB, int ncolsB, double[] C, double alpha, double beta, 
 			boolean transA, boolean transB); 
 	public static native int solveLSdgelsd(double[] A, int Arows, int Acols, double[] B, int Bcols, double rcond, int[] rank);
 	public static native int solveLSdgelsy(double[] A, int Arows, int Acols, double[] B, int Bcols, double rcond, int[] rank);
@@ -34,26 +34,48 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 		
 	}
 	
-	public BlasDoubleMatrix(int nrows, int ncols, double[] values, boolean columnMajor) {
-		this.nrows = nrows;
-		this.ncols = ncols;
-		size = nrows * ncols;
-		if (values == null) myMatrix = new double[size];
-		else myMatrix = values;
-		if (!columnMajor) transposeInPlace();
-	}
-	
 	public BlasDoubleMatrix(double[][] values) {
-		nrows = values[0].length;
-		ncols = values.length;
+		nrows = values.length;
+		ncols = values[0].length;
 		size = nrows * ncols;
 		myMatrix = new double[size];
 		int ptr = 0;
 		for (int c = 0; c < ncols; c++) {
 			for (int r = 0; r < nrows; r++) {
-				myMatrix[ptr++] = values[c][r];
+				myMatrix[ptr++] = values[r][c];
 			}
 		}
+	}
+	
+	public BlasDoubleMatrix(int nrows, int ncols) {
+		this.nrows = nrows;
+		this.ncols = ncols;
+		size = nrows * ncols;
+		myMatrix = new double[size];
+	}
+	
+	public static BlasDoubleMatrix getInstance(int nrows, int ncols, double[] values, boolean columnMajor) {
+		if (columnMajor) {
+			BlasDoubleMatrix bdm = new BlasDoubleMatrix();
+			bdm.nrows = nrows;
+			bdm.ncols = ncols;
+			bdm.myMatrix = values;
+			bdm.size = nrows * ncols;
+			return bdm;
+		} else {
+			BlasDoubleMatrix bdm = new BlasDoubleMatrix();
+			bdm.nrows = ncols;
+			bdm.ncols = nrows;
+			bdm.myMatrix = values;
+			bdm.size = nrows * ncols;
+			return (BlasDoubleMatrix) bdm.transpose();
+		}
+	}
+	
+	public static BlasDoubleMatrix getInstance(int nrows, int ncols, double dblValue) {
+		BlasDoubleMatrix bdm = new BlasDoubleMatrix(nrows, ncols);
+		Arrays.fill(bdm.myMatrix, dblValue);
+		return bdm;
 	}
 	
 	@Override
@@ -83,24 +105,27 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 
 	@Override
 	public DoubleMatrix transpose() {
-		BlasDoubleMatrix bdm = (BlasDoubleMatrix) copy();
-		bdm.ncols = nrows;
-		bdm.nrows = ncols;
+		BlasDoubleMatrix bdm;
 		if (nrows > 1 && ncols > 1) {
+			bdm = new BlasDoubleMatrix(ncols, nrows);
 			int ptr = 0;
 			for (int i = 0; i < size; i++) {
 				bdm.myMatrix[ptr] = myMatrix[i];
 				ptr += bdm.nrows;
 				if (ptr >= size) ptr -= size - 1;
 			}
+		} else {
+			bdm = (BlasDoubleMatrix) copy();
+			bdm.nrows = ncols;
+			bdm.ncols = nrows;
 		}
 		return bdm;
 	}
 
 	public void transposeInPlace() {
 		BlasDoubleMatrix bdm = (BlasDoubleMatrix) transpose();
-		nrows = bdm.ncols;
-		ncols = bdm.nrows;
+		ncols = bdm.ncols;
+		nrows = bdm.nrows;
 		myMatrix = bdm.myMatrix;
 	}
 	
@@ -117,7 +142,7 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 		C.size = C.nrows * C.ncols;
 		C.myMatrix = new double[C.size];
 		
-		multMatrices(myMatrix, nrows, ncols, B.myMatrix, B.nrows, C.myMatrix, 1.0, 0.0, transpose, transposedm);
+		multMatrices(myMatrix, nrows, ncols, B.myMatrix, B.nrows, B.ncols, C.myMatrix, 1.0, 0.0, transpose, transposedm);
 		return C;
 	}
 
@@ -125,8 +150,18 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 	public DoubleMatrix multadd(DoubleMatrix A, DoubleMatrix B, double alpha,
 			double beta, boolean transpose, boolean transposeA) {
 		BlasDoubleMatrix C = (BlasDoubleMatrix) A;
-		BlasDoubleMatrix D = (BlasDoubleMatrix) B.copy();
-		multMatrices(myMatrix, nrows, ncols, C.myMatrix, C.nrows, D.myMatrix, alpha, beta, transpose, transposeA);
+		BlasDoubleMatrix D;
+		if (B == null) {
+			int drows,dcols;
+			if (transpose) drows = ncols;
+			else drows = nrows;
+			if (transposeA) dcols = C.nrows;
+			else dcols = C.ncols;
+			D = new BlasDoubleMatrix(drows, dcols);
+		} else {
+			D = (BlasDoubleMatrix) B.copy();
+		}
+		multMatrices(myMatrix, nrows, ncols, C.myMatrix, C.nrows, C.ncols, D.myMatrix, alpha, beta, transpose, transposeA);
 		
 		return D;
 	}
@@ -267,7 +302,7 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 		DoubleMatrix g = inverse();
 		BlasDoubleMatrix xg = (BlasDoubleMatrix) mult(g);
 		BlasDoubleMatrix m = getIdentityMatrix(nrows);
-		multMatrices(xg.myMatrix, xg.nrows, xg.ncols, myMatrix, nrows, m.myMatrix, -1, 1, false, true);
+		multMatrices(xg.myMatrix, xg.nrows, xg.ncols, myMatrix, nrows, ncols, m.myMatrix, -1, 1, false, true);
 		
 		return new DoubleMatrix[]{xtx, g, m};
 	}
@@ -467,5 +502,71 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 		bdm.myMatrix = new double[bdm.size];
 		for (int i = 0; i < bdm.size; i += dim + 1)  bdm.myMatrix[i] = 1;
 		return bdm;
+	}
+	
+	public static DoubleMatrix compose(DoubleMatrix[][] input) {
+		//convert to BlasDoubleMatrices and check for congruence
+		int nr = input.length;
+		int nc = input[0].length;
+		int[] numberOfColumns = new int[nc];
+		int[] numberOfRows = new int[nr];
+		int totalrows = 0;
+		int totalcols = 0;
+		
+		for (int r = 0; r < nr; r++) {
+			numberOfRows[r] = input[r][0].numberOfRows();
+			totalrows += numberOfRows[r];
+		}
+
+		for (int c = 0; c < nc; c++) {
+			numberOfColumns[c] = input[0][c].numberOfColumns();
+			totalcols += numberOfColumns[c];
+		}
+
+		BlasDoubleMatrix[][] matrices = new BlasDoubleMatrix[nr][nc];
+		for (int r = 0; r < nr; r++) {
+			for (int c = 0; c < nc; c++) {
+				if (input[r][c].numberOfRows() != numberOfRows[r] || input[r][c].numberOfColumns() != numberOfColumns[c]) 
+					throw new IllegalArgumentException("Incongruent matrices input to BlasDoubleMatrix.compose");
+				matrices[r][c] = (BlasDoubleMatrix) input[r][c];
+			}
+		}
+		
+		//create the new double[] and copy the old stuff to it
+		int resultSize = totalrows * totalcols;
+		double[] result = new double[resultSize];
+		int ptr0 = 0;
+		for (int c = 0; c < nc; c++) {
+			int nc2 = numberOfColumns[c];
+			int ptr1 = 0;
+			for (int r = 0; r < nr; r++) {
+				int srcptr = 0;
+				int destptr = ptr0 + ptr1; 
+				for (int c2 = 0; c2 < nc2; c2++) {
+					System.arraycopy(matrices[r][c].myMatrix, srcptr, result, destptr, numberOfRows[r]);
+					srcptr += numberOfRows[r];
+					destptr += totalrows;
+				}
+				ptr1 += numberOfRows[r];
+			}
+			ptr0 += totalrows * numberOfColumns[c];
+		}
+		
+		return BlasDoubleMatrix.getInstance(totalrows, totalcols, result, true);
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		int maxrow = Math.min(20,nrows);
+		int maxcol = Math.min(20, ncols);
+		for (int r = 0; r < maxrow; r++) {
+			sb.append(get(r,0));
+			for (int c = 1; c < maxcol; c++) {
+				sb.append(" ").append(get(r,c));
+			}
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 }

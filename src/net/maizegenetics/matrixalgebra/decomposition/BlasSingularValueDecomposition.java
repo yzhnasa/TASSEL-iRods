@@ -41,40 +41,40 @@ public class BlasSingularValueDecomposition implements SingularValueDecompositio
 		int result = BlasDoubleMatrix.singularValueDecompositionDgesdd(jobz, nrows, ncols, A, nrows, S, U, nrows, VT, ncols);
 		if (result == 0) {
 			successful = true;
-			bdS = new BlasDoubleMatrix(ns, 1, S, true);
+			bdS = BlasDoubleMatrix.getInstance(ns, 1, S, true);
 			if (jobz == 'A') {
-				bdU = new BlasDoubleMatrix(nrows, nrows, U, true);
-				bdVT = new BlasDoubleMatrix(ncols, ncols, VT, true);
+				bdU = BlasDoubleMatrix.getInstance(nrows, nrows, U, true);
+				bdVT = BlasDoubleMatrix.getInstance(ncols, ncols, VT, true);
 			} else if (jobz == 'S') {
 				if (nrows < ncols) {
-					bdU = new BlasDoubleMatrix(nrows, nrows, U, true);
+					bdU = BlasDoubleMatrix.getInstance(nrows, nrows, U, true);
 					int[] selection = new int[nrows];
 					for (int i = 0; i < nrows; i++) selection[i] = i;
 					double[] subvt = BlasDoubleMatrix.getSelectionFromDoubleArray(VT, ncols, ncols, selection, null);
-					bdVT = new BlasDoubleMatrix(nrows, ncols, subvt, true);
+					bdVT = BlasDoubleMatrix.getInstance(nrows, ncols, subvt, true);
 				} else if (nrows > ncols) {
 					int[] selection = new int[ncols];
 					for (int i = 0; i < ncols; i++) selection[i] = i;
 					double[] subu = BlasDoubleMatrix.getSelectionFromDoubleArray(U, nrows, nrows, null, selection);
-					bdU = new BlasDoubleMatrix(nrows, ncols, subu, true);
-					bdVT = new BlasDoubleMatrix(ncols, ncols, VT, true);
+					bdU = BlasDoubleMatrix.getInstance(nrows, ncols, subu, true);
+					bdVT = BlasDoubleMatrix.getInstance(ncols, ncols, VT, true);
 				} else {
-					bdU = new BlasDoubleMatrix(nrows, nrows, U, true);
-					bdVT = new BlasDoubleMatrix(ncols, ncols, VT, true);
+					bdU = BlasDoubleMatrix.getInstance(nrows, nrows, U, true);
+					bdVT = BlasDoubleMatrix.getInstance(ncols, ncols, VT, true);
 				}
 			} else if (jobz == 'O') {
 				if (nrows >= ncols) {
-					bdVT = new BlasDoubleMatrix(ncols, ncols, VT, true);
+					bdVT = BlasDoubleMatrix.getInstance(ncols, ncols, VT, true);
 					int[] selection = new int[ncols];
 					for (int i = 0; i < ncols; i++) selection[i] = i;
 					U = BlasDoubleMatrix.getSelectionFromDoubleArray(A, nrows, ncols, null, selection);
-					bdU = new BlasDoubleMatrix(nrows, ncols, U, true);
+					bdU = BlasDoubleMatrix.getInstance(nrows, ncols, U, true);
 				} else {
-					bdU = new BlasDoubleMatrix(nrows, nrows, U, true);
+					bdU = BlasDoubleMatrix.getInstance(nrows, nrows, U, true);
 					int[] selection = new int[nrows];
 					for (int i = 0; i < nrows; i++) selection[i] = i;
 					VT = BlasDoubleMatrix.getSelectionFromDoubleArray(A, nrows, ncols, selection, null);
-					bdVT = new BlasDoubleMatrix(nrows, ncols, VT, true);
+					bdVT = BlasDoubleMatrix.getInstance(nrows, ncols, VT, true);
 				}
 			}
 			
@@ -84,7 +84,7 @@ public class BlasSingularValueDecomposition implements SingularValueDecompositio
 	}
 	
 	public BlasSingularValueDecomposition(BlasDoubleMatrix bdm) {
-		this(bdm, 'A');
+		this(bdm, 'O');
 	}
 
 	@Override
