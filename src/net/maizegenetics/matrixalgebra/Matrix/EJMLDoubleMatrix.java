@@ -295,34 +295,13 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 	@Override
 	public DoubleMatrix multadd(DoubleMatrix A, DoubleMatrix B, double alpha,
 			double beta, boolean transpose, boolean transposeA) {
-		DenseMatrix64F a  = ((EJMLDoubleMatrix) A).myMatrix;
-		DenseMatrix64F b = ((EJMLDoubleMatrix) B).myMatrix;
 		
-		if (beta != 1) {
-			CommonOps.scale(beta, b);
-		}
-		int nrow, ncol;
-		if (transpose) {
-			nrow = myMatrix.numCols;
-			if (transposeA) {
-				ncol = b.numRows;
-				CommonOps.multAddTransAB(alpha, myMatrix, a, b);
-			} else {
-				ncol = b.numCols;
-				CommonOps.multTransA(alpha, myMatrix, a, b);
-			}	
-		} else {
-			nrow = myMatrix.numRows;
-			if (transposeA) {
-				ncol = b.numRows;
-				CommonOps.multTransB(alpha, myMatrix, a, b);
-			} else {
-				ncol = b.numCols;
-				CommonOps.mult(alpha, myMatrix, a, b);
-			}
-		}
-		
-		return new EJMLDoubleMatrix(b);
+		DoubleMatrix result = mult(A, transpose, transposeA);
+		if (alpha != 1) result.scalarMultEquals(alpha);
+		if (B == null) return result;
+
+		if (beta == 1) return result.plus(B);
+		return result.plus(B.scalarMult(beta));
 	}
 
 	@Override
