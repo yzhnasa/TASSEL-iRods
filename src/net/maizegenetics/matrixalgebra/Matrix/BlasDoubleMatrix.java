@@ -26,11 +26,6 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 	protected int ncols;
 	protected int size;
 	
-	static {
-//		System.load("/Users/pbradbury/Library/Developer/Xcode/DerivedData/blasDoubleMatrix-dmcmknsflfaowuhbtbkyulkmarvk/Build/Products/Debug/libblasDoubleMatrix.dylib");
-		System.loadLibrary("blasDoubleMatrix");
-	}
-	
 	public BlasDoubleMatrix() {
 		
 	}
