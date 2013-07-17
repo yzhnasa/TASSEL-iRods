@@ -325,6 +325,9 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-geneticMap")) {
                     String geneticMapFile = args[index++].trim();
                     loadFile(geneticMapFile, FileLoadPlugin.TasselFileType.GeneticMap);
+                } else if (current.equalsIgnoreCase("-table")) {
+                    String tableFile = args[index++].trim();
+                    loadFile(tableFile, FileLoadPlugin.TasselFileType.Table);
                 } else if (current.equalsIgnoreCase("-vcf")) {
                     String vcfFile = args[index++].trim();
                     loadFile(vcfFile, FileLoadPlugin.TasselFileType.VCF);
