@@ -19,9 +19,11 @@ public class BlasEigenvalueDecomposition implements EigenvalueDecomposition {
 	}
 	
 	protected void init() {
-		eigenvectors = Arrays.copyOf(bdm.getMatrix(), bdm.getSize());
-		eigenvalues = new double[bdm.numberOfRows()];
-		info = BlasDoubleMatrix.eigenValueSymmetricDecomposition(bdm.numberOfRows(), eigenvectors, eigenvalues);
+		double[] originalMatrix = Arrays.copyOf(bdm.getMatrix(), bdm.getSize());
+		int order = bdm.numberOfRows();
+		eigenvalues = new double[order];
+		eigenvectors = new double[order * order];
+		info = BlasDoubleMatrix.eigenValueSymmetricDecomposition(order, originalMatrix, eigenvalues, eigenvectors);
 	}
 	
 	@Override

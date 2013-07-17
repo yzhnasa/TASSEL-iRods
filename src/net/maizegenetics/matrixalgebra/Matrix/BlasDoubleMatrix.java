@@ -18,7 +18,7 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 	public static native int solveLSdgelsy(double[] A, int Arows, int Acols, double[] B, int Bcols, double rcond, int[] rank);
 	public static native int singularValueDecompositionDgesvd(char jobu, char jobvt, int m, int n, double[] A, int lda, double[] S, double[] U, int ldu, double[] VT, int ldvt);
 	public static native int singularValueDecompositionDgesdd(char jobz, int m, int n, double[] A, int lda, double[] S, double[] U, int ldu, double[] VT, int ldvt);
-	public static native int eigenValueSymmetricDecomposition(int order, double[] A, double[] eigval); //A is the matrix on entry, eigenvectors on exit; returns error code
+	public static native int eigenValueSymmetricDecomposition(int order, double[] A, double[] eigval, double[] eigvector); //A is the matrix on entry, eigenvectors on exit; returns error code
 	
 	//column major implementation
 	protected double[] myMatrix;
@@ -27,7 +27,8 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 	protected int size;
 	
 	static {
-		System.load("/Users/pbradbury/Library/Developer/Xcode/DerivedData/MatrixAlgebraInterface-eeqitqwzxwogzifyqbgzjzcqincb/Build/Products/Debug/libMatrixAlgebraInterface.dylib");
+//		System.load("/Users/pbradbury/Library/Developer/Xcode/DerivedData/blasDoubleMatrix-dmcmknsflfaowuhbtbkyulkmarvk/Build/Products/Debug/libblasDoubleMatrix.dylib");
+		System.loadLibrary("blasDoubleMatrix");
 	}
 	
 	public BlasDoubleMatrix() {
