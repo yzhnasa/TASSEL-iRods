@@ -113,7 +113,8 @@ public class BlasSingularValueDecomposition implements SingularValueDecompositio
 	public int getRank() {
 		int rank = 0;
 		double[] sv = bdS.getMatrix();
-		while (sv[rank] > tol) rank++;
+		int n = sv.length;
+		for (int i = 0; i < n; i++) if (sv[i] > tol) rank++;
 		return rank;
 	}
 
