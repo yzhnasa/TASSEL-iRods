@@ -6,12 +6,10 @@ package net.maizegenetics.gbs.pipeline;
 import java.awt.Frame;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import javax.swing.ImageIcon;
@@ -20,6 +18,7 @@ import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.util.Utils;
 
 import org.apache.log4j.Logger;
 
@@ -40,7 +39,6 @@ public class TagCountToFastqPlugin extends AbstractPlugin {
     private DataInputStream inStream;
     private String outputFileName = null;
     private DataOutputStream outStream;
-    private boolean fileOpen = false;
     private int nTags, tagLengthInLong;
     private long[] tag = new long[2]; // [indexOfTagLong], emptyLong=0, fileFinish=Long.MAX
     private int tagCount; // tag count
@@ -106,11 +104,11 @@ public class TagCountToFastqPlugin extends AbstractPlugin {
     public DataSet performFunction(DataSet input) {
         try {
             inStream = new DataInputStream(new BufferedInputStream(new FileInputStream(inFileName), 655360));
-            fileOpen = true;
             nTags = inStream.readInt();
             tagLengthInLong = inStream.readInt();
             myLogger.info("Opened the input file: " + inFileName + "  nTags=" + nTags);
-            outStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFileName), 655360));
+            //outStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFileName), 655360));
+            outStream = Utils.getDataOutputStream(outputFileName, 655360);
             int tagsWritten = 0;
             while (inStream.available()!=0) {
                 readNextTag();
@@ -149,7 +147,6 @@ public class TagCountToFastqPlugin extends AbstractPlugin {
                 myLogger.info("Finished reading input file.");
                 inStream.close();
                 inStream = null;
-                fileOpen = false;
             } catch (IOException eof2) {
                 myLogger.info("Catch closing" + eof2);
                 inStream = null;
