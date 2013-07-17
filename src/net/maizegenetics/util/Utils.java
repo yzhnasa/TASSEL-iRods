@@ -5,8 +5,10 @@
  */
 package net.maizegenetics.util;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -402,6 +404,22 @@ public final class Utils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static DataOutputStream getDataOutputStream(String filename, int bufSize) {
+
+        try {
+            if (filename.endsWith(".gz")) {
+                return new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(filename), bufSize)));
+            } else {
+                return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(filename), bufSize));
+            }
+        } catch (Exception e) {
+            myLogger.error("getDataOutputStream: Error getting reader for: " + filename);
+            e.printStackTrace();
+        }
+        return null;
+
     }
 
     /**
