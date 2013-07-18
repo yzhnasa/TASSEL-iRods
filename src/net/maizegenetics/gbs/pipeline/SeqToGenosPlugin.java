@@ -138,7 +138,7 @@ public class SeqToGenosPlugin extends AbstractPlugin {
                 throw new IllegalArgumentException(noMatchingRawSeqFileNamesMessage + tempDirectory);
             } else {
                 Arrays.sort(myRawSeqFileNames);
-                myLogger.info("RawReadsToHapMapPlugin: setParameters: \n\nThe following GBS raw sequence data files were found in the input folder (and sub-folders):");
+                myLogger.info("SeqToGenosPlugin: setParameters: \n\nThe following GBS raw sequence data files were found in the input folder (and sub-folders):");
                 for (String filename : myRawSeqFileNames) {
                     System.out.println("   "+filename);
                 }
@@ -203,10 +203,9 @@ public class SeqToGenosPlugin extends AbstractPlugin {
         setUpMutableNucleotideAlignmentWithDepth();
         readRawSequencesAndRecordDepth();  // TODO: read the machine name from the fastq/qseq file
         callGenotypes();
-//        QualityControlOnGenotypes();  // TODO: not written yet (e.g., check that blanks are blank, inbreds not heterozygous, etc?)
         writeHapMapGenotypes();
         writeHDF5Genotypes();  // TODO: ensure that reference allele gets added at some point
-        writeReadsPerSampleReports();  // TODO: also report on #reads matching TOPM for each sample
+        writeReadsPerSampleReports();
         return null;
     }
 
@@ -789,10 +788,6 @@ public class SeqToGenosPlugin extends AbstractPlugin {
             e.printStackTrace();
             System.exit(1);
         }
-    }
-    
-    private void addReferenceAllelesToHDF5(MutableNucleotideAlignmentHDF5 hdf5Genos) {
-        ;
     }
     
     private void writeReadsPerSampleReports() {
