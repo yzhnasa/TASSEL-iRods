@@ -15,7 +15,7 @@ public class DoubleMatrixFactory {
 	
 	static{
 		try {
-			System.loadLibrary("blasDoubleMatrix");
+			System.loadLibrary("MatrixAlgebraInterface");
 			DEFAULT = new DoubleMatrixFactory(FactoryType.blas);
 			myLogger.info("Using BLAS/LAPACK for DoubleMatrix operations");
 		} catch (UnsatisfiedLinkError err) {
@@ -145,7 +145,7 @@ public class DoubleMatrixFactory {
 		}
 		
 		if (myType == FactoryType.blas) {
-			
+			return BlasDoubleMatrix.compose(components);
 		}
 		
 		if (myType == FactoryType.jblas) return null;
