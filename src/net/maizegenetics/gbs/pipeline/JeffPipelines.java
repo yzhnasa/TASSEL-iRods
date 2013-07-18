@@ -23,6 +23,7 @@ import net.maizegenetics.prefs.TasselPrefs;
 public class JeffPipelines {
 
     public static void main(String[] args) {
+//        helloWorld();
 //        runTagsToSNPByAlignmentPlugin();
 //        runExtractHapmapSubsetPlugin();
 //        runCompareGenosBetweenHapMapFilesPlugin();
@@ -31,8 +32,12 @@ public class JeffPipelines {
 //        runTOPMSummaryPlugin();
 //        convertTOPMtoHDF5();
 //        runRawReadsToHapMapPlugin();
-        runSeqToGenosPlugin();
+//        runSeqToGenosPlugin();
         convertHDF5ToHapMap();
+    }
+    
+    public static void helloWorld() {
+        System.out.println("Hello world!");
     }
 
     public static void runTagsToSNPByAlignmentPlugin() {
@@ -237,7 +242,7 @@ public class JeffPipelines {
             "-o",    QuantVsOneHapMapDir+"quant/oneAlign/Quant2VsOneAlignGenoCompare.txt",
         };
 
-        TasselPrefs.putAlignmentRetainRareAlleles(true);
+        TasselPrefs.putAlignmentRetainRareAlleles(false);
         CompareGenosBetweenHapMapFilesPlugin plugin = new CompareGenosBetweenHapMapFilesPlugin();
         plugin.setParameters(QuantVsOneHapMapArgs);
         plugin.performFunction(null);
@@ -312,14 +317,32 @@ public class JeffPipelines {
             "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/lastIndexOf",
         };
 
+        String[] AnnaObrienArgs = new String[]{
+            "-i", baseDir+"AllZeaBuild2.X/v2.7/AnnaOBrien/fastq",
+            "-k", baseDir+"AllZeaBuild2.X/v2.7/AnnaOBrien/C08L7ACXX_5_key.txt",
+            "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5",
+            "-e", "ApeKI",
+//            "-vL", // VCF likelihood-based calling of hets
+            "-o", baseDir+"AllZeaBuild2.X/v2.7/AnnaOBrien/genos",
+        };
+
+        String[] DallasArgs = new String[]{
+            "-i", "/Volumes/group/E/SoftwareTesting/GBS/ProductionPipeline/MGP1LowVol2SmallReps/testFastq",
+            "-k", "/Volumes/group/E/SoftwareTesting/GBS/ProductionPipeline/MGP1LowVol2SmallReps/MGP1_low_vol_2smallReps_key.txt",
+            "-m", "/Volumes/nextgen/Zea/AllZeaBuild_2.X/04_TOPM/2.6_production/02_MergedTOPM/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5",
+            "-e", "ApeKI",
+//            "-vL", // VCF likelihood-based calling of hets
+            "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/Dallas",
+        };
+
         SeqToGenosPlugin plugin = new SeqToGenosPlugin(null);
-        plugin.setParameters(MDPLowVolArgs);
+        plugin.setParameters(DallasArgs);
         plugin.performFunction(null);
     }
     
     public static void convertHDF5ToHapMap() {
         String hdf5File = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/lastIndexOf/MGP1_low_vol_2smallReps.hmp.h5";
-        String hmpFile  = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/lastIndexOf/MGP1_low_vol_2smallRepsCompare.hmp.txt.gz";
+        String hmpFile  = "/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/lastIndexOf/MGP1_low_vol_2smallRepsCompare2.hmp.txt.gz";
         System.out.println("Converting from *.hmp.h5 to *.hmp.txt.gz");
         System.out.println("   Reading hmp.h5 file:     "+hdf5File);
         Alignment a = ImportUtils.readGuessFormat(hdf5File, false);
@@ -330,5 +353,21 @@ public class JeffPipelines {
             ExportUtils.writeToHapmap(a, false, hmpFile, '\t', null);
         }
         System.out.println("Done!");
+    }
+    
+    public static void testAllZeaGBSv27Genos() {
+        // compare the h5 output to the hmp.txt.gz output
+        String baseDir="/Users/jcg233/Documents/GBS/AllZeaBuild2.X/v2.7/genos/part";
+        String genoBase="AllZeaGBS_v2.7_SeqToGenos_part";
+        int nParts = 28;
+        for (int part = 1; part<=nParts; part++) {
+            String partS = part<10? "0"+part : ""+part;
+            String hmpFile = baseDir+partS+"/"+genoBase+partS+".hmp.txt.gz";
+            Alignment hmp = ImportUtils.readFromHapmap(hmpFile, null);
+            String hdf5File = baseDir+partS+"/"+genoBase+partS+".hmp.h5";
+            Alignment hdf5 = ImportUtils.readGuessFormat(hdf5File, false);
+ //           AlignmentTestingUtils.alignmentsEqual();
+            
+        }
     }
 }
