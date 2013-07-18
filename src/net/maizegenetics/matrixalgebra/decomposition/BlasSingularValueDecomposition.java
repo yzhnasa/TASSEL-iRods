@@ -22,23 +22,29 @@ public class BlasSingularValueDecomposition implements SingularValueDecompositio
 		double[] A = bdm.getMatrixCopy();
 		double[] S = new double[ns];
 		int usize = nrows * nrows;
+		int lda, ldu, ldvt;
+		lda = nrows;
 		
 		double[] U;
 		if (jobz == 'N' || (jobz == 'O'& nrows >= ncols)) {
 			U = new double[]{0};
+			ldu = 1;
 		} else {
 			U = new double[usize];
+			ldu = nrows;
 		}
 		
 		double[] VT;
 		int vtsize = ncols * ncols;
 		if (jobz == 'N' || (jobz == 'O'& nrows < ncols)) {
 			VT = new double[]{0};
+			ldvt = 1;
 		} else {
 			VT = new double[vtsize];
+			ldvt = ncols;
 		}
 		
-		int result = BlasDoubleMatrix.singularValueDecompositionDgesdd(jobz, nrows, ncols, A, nrows, S, U, nrows, VT, ncols);
+		int result = BlasDoubleMatrix.singularValueDecompositionDgesdd(jobz, nrows, ncols, A, lda, S, U, ldu, VT, ldvt);
 		if (result == 0) {
 			successful = true;
 			bdS = BlasDoubleMatrix.getInstance(ns, 1, S, true);
