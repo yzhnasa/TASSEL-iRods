@@ -259,13 +259,13 @@ public class SeqToTBTHDF5Plugin extends AbstractPlugin {
             }
             System.out.println("Timing process (writing TagsByTaxa file)...");
             long timePoint1 = System.currentTimeMillis();
+            writeReport(fastqFileS[laneNum], outputLog);
+            writeTBT(outputTBT);
             System.out.println("...process (writing TagsByTaxa file) took " + (System.currentTimeMillis() - timePoint1) + " milliseconds.");
             System.out.println("Total number of reads in lane=" + allReads);
             System.out.println("Total number of good, barcoded reads=" + goodBarcodedReads);
             int filesDone = laneNum + 1;
             System.out.println("Finished reading " + filesDone + " of " + fastqFileS.length + " sequence files: " + fastqFileS[laneNum] + "\n");
-            writeReport(fastqFileS[laneNum], outputLog);
-            writeTBT(outputTBT);
 //            //Write report to a file named after the TBT file, with the extension ".log"
 //            float goodPct = ((float) goodBarcodedReads) / ((float) allReads);
 //            float goodMappedPct = ((float) goodMatched) / ((float) allReads);
