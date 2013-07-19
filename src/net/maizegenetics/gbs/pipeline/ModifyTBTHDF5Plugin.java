@@ -92,7 +92,7 @@ public class ModifyTBTHDF5Plugin extends AbstractPlugin {
                 + "Depending on the modification that you wish to make, one of either:\n"
                 + "    -i  TBT HDF5 (*tbt.h5) file containing additional taxa to be added to the target TBT HDF5 file\n"
                 + "    -c  Merge taxa in the target TBT HDF5 file with same LibraryPrepID\n"
-                + "    -p  Merge taxa in the target TBT HDF5 file with same LibraryPrepID\n"
+                + "    -p  Pivot (transpose) the target TBT HDF5 file into a tag-optimized orientation\n"
 //                + "For creating an emptry TBT HDF4, one of either:\n"
 //                + "    -t  Tag count file, OR A\n"
 //                + "    -m  Physical map file containing alignments\n"
