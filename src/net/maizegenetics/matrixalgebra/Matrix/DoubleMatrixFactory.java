@@ -15,13 +15,13 @@ public class DoubleMatrixFactory {
 	
 	static{
 		try {
-			System.loadLibrary("MatrixAlgebraInterface");
+			System.loadLibrary("TasselBlas");
 			DEFAULT = new DoubleMatrixFactory(FactoryType.blas);
 			myLogger.info("Using BLAS/LAPACK for DoubleMatrix operations");
 		} catch (UnsatisfiedLinkError err) {
 			//err.printStackTrace();
 			DEFAULT = new DoubleMatrixFactory(FactoryType.ejml);
-			myLogger.info("blasDoubleMatrix library not found. Using EJML for DoubleMatrix operations.");
+			myLogger.info("TasselBlas library for BLAS/LAPACK not found. Using EJML for DoubleMatrix operations.");
 		} catch (SecurityException se) {
 			//se.printStackTrace();
 			DEFAULT = new DoubleMatrixFactory(FactoryType.ejml);
