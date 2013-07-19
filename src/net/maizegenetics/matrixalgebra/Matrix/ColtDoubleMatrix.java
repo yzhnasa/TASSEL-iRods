@@ -196,7 +196,7 @@ public class ColtDoubleMatrix implements DoubleMatrix {
 		DoubleMatrix[] result = new DoubleMatrix[3];
 		DoubleMatrix2D xtx = myMatrix.viewDice().zMult(myMatrix, null);
 		DoubleMatrix2D g = Algebra.DEFAULT.inverse(xtx);
-		DoubleMatrix2D m = DoubleFactory2D.dense.identity(xtx.rows());
+		DoubleMatrix2D m = DoubleFactory2D.dense.identity(myMatrix.rows());
 		DoubleMatrix2D xgxt = myMatrix.zMult(g.zMult(myMatrix.viewDice(), null), null);
 		m.assign(xgxt, Functions.minus);
 		result[0] = new ColtDoubleMatrix(xtx);
@@ -268,7 +268,7 @@ public class ColtDoubleMatrix implements DoubleMatrix {
 
 	@Override
 	public void scalarMultEquals(double s) {
-		myMatrix.assign(Functions.plus(s));
+		myMatrix.assign(Functions.mult(s));
 	}
 
 	@Override

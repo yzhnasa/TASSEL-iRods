@@ -1,5 +1,6 @@
 package net.maizegenetics.matrixalgebra.Matrix;
 
+import org.apache.log4j.Logger;
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.ops.SpecializedOps;
 
@@ -7,9 +8,26 @@ import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix2D;
 
 public class DoubleMatrixFactory {
+	private static Logger myLogger = Logger.getLogger(DoubleMatrixFactory.class);
 	public enum FactoryType {ejml, jblas, colt, blas};
 	private FactoryType myType;
-	public static DoubleMatrixFactory DEFAULT = new DoubleMatrixFactory(FactoryType.ejml);
+	public static DoubleMatrixFactory DEFAULT;
+	
+	static{
+		try {
+			System.loadLibrary("TasselBlas");
+			DEFAULT = new DoubleMatrixFactory(FactoryType.blas);
+			myLogger.info("Using BLAS/LAPACK for DoubleMatrix operations");
+		} catch (UnsatisfiedLinkError err) {
+			//err.printStackTrace();
+			DEFAULT = new DoubleMatrixFactory(FactoryType.ejml);
+			myLogger.info("TasselBlas library for BLAS/LAPACK not found. Using EJML for DoubleMatrix operations.");
+		} catch (SecurityException se) {
+			//se.printStackTrace();
+			DEFAULT = new DoubleMatrixFactory(FactoryType.ejml);
+			myLogger.info("No permission to load blasDoubleMatrix library. Using EJML for DoubleMatrix operations.");
+		}
+	}
 	
 	public DoubleMatrixFactory(FactoryType type) {
 		myType = type;
@@ -127,7 +145,7 @@ public class DoubleMatrixFactory {
 		}
 		
 		if (myType == FactoryType.blas) {
-			
+			return BlasDoubleMatrix.compose(components);
 		}
 		
 		if (myType == FactoryType.jblas) return null;

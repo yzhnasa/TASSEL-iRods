@@ -18,17 +18,13 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 	public static native int solveLSdgelsy(double[] A, int Arows, int Acols, double[] B, int Bcols, double rcond, int[] rank);
 	public static native int singularValueDecompositionDgesvd(char jobu, char jobvt, int m, int n, double[] A, int lda, double[] S, double[] U, int ldu, double[] VT, int ldvt);
 	public static native int singularValueDecompositionDgesdd(char jobz, int m, int n, double[] A, int lda, double[] S, double[] U, int ldu, double[] VT, int ldvt);
-	public static native int eigenValueSymmetricDecomposition(int order, double[] A, double[] eigval); //A is the matrix on entry, eigenvectors on exit; returns error code
+	public static native int eigenValueSymmetricDecomposition(int order, double[] A, double[] eigval, double[] eigvector); //A is the matrix on entry, eigenvectors on exit; returns error code
 	
 	//column major implementation
 	protected double[] myMatrix;
 	protected int nrows;
 	protected int ncols;
 	protected int size;
-	
-	static {
-		System.load("/Users/pbradbury/Library/Developer/Xcode/DerivedData/MatrixAlgebraInterface-eeqitqwzxwogzifyqbgzjzcqincb/Build/Products/Debug/libMatrixAlgebraInterface.dylib");
-	}
 	
 	public BlasDoubleMatrix() {
 		
@@ -219,14 +215,12 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 			System.arraycopy(myMatrix, 0, bdm.myMatrix, 0, size);
 			System.arraycopy(B.myMatrix, 0, bdm.myMatrix, size, B.size);
 		}
-		return null;
+		return bdm;
 	}
 
 	@Override
 	public DoubleMatrix inverse() {
-		BlasDoubleMatrix A = (BlasDoubleMatrix) this.copy();
-		A.invert();
-		return A;
+		return generalizedInverse();
 	}
 
 	@Override
@@ -242,7 +236,11 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 
 	@Override
 	public DoubleMatrix generalizedInverseWithRank(int[] rank) {
-		//use solve
+		//the native function overwrites B (the data) with the solution
+		BlasDoubleMatrix B = getIdentityMatrix(nrows);
+		int info = solveLSdgelsd(Arrays.copyOf(myMatrix,  size), nrows, ncols, B.myMatrix, B.ncols, 1e-10, rank);
+		if (info == 0) return B;
+		myLogger.error(String.format("inverse failed in BlasDoubleMatrix, info = %d\n",info));
 		return null;
 	}
 
@@ -299,7 +297,7 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 	@Override
 	public DoubleMatrix[] getXtXGM() {
 		DoubleMatrix xtx = crossproduct();
-		DoubleMatrix g = inverse();
+		DoubleMatrix g = xtx.inverse();
 		BlasDoubleMatrix xg = (BlasDoubleMatrix) mult(g);
 		BlasDoubleMatrix m = getIdentityMatrix(nrows);
 		multMatrices(xg.myMatrix, xg.nrows, xg.ncols, myMatrix, nrows, ncols, m.myMatrix, -1, 1, false, true);
@@ -386,8 +384,10 @@ public class BlasDoubleMatrix implements DoubleMatrix {
 	@Override
 	public DoubleMatrix getSelection(int[] rows, int[] columns) {
 		BlasDoubleMatrix bdm = new BlasDoubleMatrix();
-		bdm.nrows = rows.length;
-		bdm.ncols = columns.length;
+		if (rows == null) bdm.nrows = nrows;
+		else bdm.nrows = rows.length;
+		if (columns == null) bdm.ncols = ncols;
+		else bdm.ncols = columns.length;
 		bdm.size = bdm.nrows * bdm.ncols;
 		bdm.myMatrix = getSelectionFromDoubleArray(myMatrix, nrows, ncols, rows, columns);
 		return bdm;

@@ -317,7 +317,7 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 	public DoubleMatrix plus(DoubleMatrix dm) {
 		DenseMatrix64F result = new DenseMatrix64F(myMatrix.numRows, myMatrix.numCols);
 		CommonOps.add(myMatrix, ((EJMLDoubleMatrix) dm).myMatrix, result);
-		return null;
+		return new EJMLDoubleMatrix(result);
 	}
 
 	@Override
