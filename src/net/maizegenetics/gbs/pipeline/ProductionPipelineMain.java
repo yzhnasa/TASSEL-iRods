@@ -25,7 +25,8 @@ import com.google.common.base.Splitter;
  * should be set up to run the run_pipeline.pl which has been modified to make this class the main() to be run.  The
  * JVM memory settings within run_pipeline.pl should also be adjusted upwards.
  *
- * 20130718 Note from Jeff Glaubitz: A minor (and not yet documented) detail:  SeqToGenos needs the key file name to end with "_key.txt".  All the output files are named after the key file but replacing "_key.txt" with the appropriate extension.
+ * 20130718 Note from Jeff Glaubitz: A minor (and not yet documented) detail:  SeqToGenos needs the key file name to end with "_key.txt".
+ * All the output files are named after the key file but replacing "_key.txt" with the appropriate extension.
  * User: dkroon
  * Date: 4/8/13
  */
@@ -39,7 +40,7 @@ public class ProductionPipelineMain {
     private String emailHost = "appsmtp.mail.cornell.edu";        // server to be used to send email notifications
     private String[] emailAddresses = {"dek29@cornell.edu"};            // to whom the email notifications should be sent.
 
-    private String emailAddressDelimiters = "[.,;:]";           // any of these are acceptable delimiters between email addresses
+    private String emailAddressDelimiters = ";";    // "[.,;:]";           // any of these are acceptable delimiters between email addresses
 
     private String runDirectory = "/workdir/prop_pipeline/run/";  // directory into which the key and run files are placed for pickup by cron job
     private String archiveDirectory = "/workdir/prop_pipeline/done/";  // directory into which the key and run files are placed after being run
@@ -56,12 +57,20 @@ public class ProductionPipelineMain {
     private String keyFile= null;
     private String hostName = "host unknown";
 
+
+    private String exampleAppConfigFile =
+            "runFileSuffix=.run\n" +
+            "emailHost=appsmtp.mail.cornell.edu\n" +
+            "emailAddress=dek29@cornell.edu\n" +
+            "runDirectory=/workdir/prop_pipeline/run/\n" +
+            "archiveDirectory=/workdir/prop_pipeline/arcv/\n";
+
     private String exampleRunFile =
-                    "inputFolder=/workdir/tassel/tassel4-src/20130716test/raw_seq\n" +
-                    "enzyme=ApeKI\n" +
-                    "topmFile=/workdir/tassel/tassel4-src/20130716test/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5\n" +
-                    "outputFolder=/workdir/tassel/tassel4-src/20130716test/hap_maps\n" +
-                    "keyFile=/workdir/tassel/tassel4-src/20130716test/keyfile/MGP1_low_vol_2smallReps_key.txt";
+            "inputFolder=/workdir/tassel/tassel4-src/20130716test/raw_seq\n" +
+            "enzyme=ApeKI\n" +
+            "topmFile=/workdir/tassel/tassel4-src/20130716test/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5\n" +
+            "outputFolder=/workdir/tassel/tassel4-src/20130716test/hap_maps\n" +
+            "keyFile=/workdir/tassel/tassel4-src/20130716test/keyfile/MGP1_low_vol_2smallReps_key.txt";
 
 
     public ProductionPipelineMain(boolean runCheckSumIn){
@@ -71,19 +80,24 @@ public class ProductionPipelineMain {
 
     private void init(){
         loadApplicationConfiguration(applicationConfiguration);
-        // obtain directory in which the jar is being executed
-        File baseLocation = new File(runDirectory);
-            System.out.println("baseLocation = " + baseLocation);
 
+        loadRunFiles(runDirectory);
 
-        File dir = new File(baseLocation.getPath());
+    }
+
+    /**
+     *
+     * @param runDirectoryIn  Directory containing any number of .run files
+     */
+    private void loadRunFiles(String runDirectoryIn){
+
+        File dir = new File(runDirectoryIn);
 
         if(!dir.exists()){
-            System.out.println("Could not find the directory containing .run files: " + baseLocation.getPath());
+            System.out.println("Could not find the directory containing .run files: " + dir.getPath());
             System.out.println("Exiting program.");
             System.exit(1);
         }
-
 
         // get all property files in the directory
         File[] files = dir.listFiles(new FilenameFilter() {
@@ -132,18 +146,30 @@ public class ProductionPipelineMain {
 
             String xmlFilename = fileNameBase + ".xml";
 
-            for(String address: emailAddresses){
-                SMTPClient sc = new SMTPClient(emailHost, address);
-                String emailMsg = "Ran " + fileNameBase + ".xml";
+
+            String xmlFilePath = outputFolder  + "/" + xmlFilename;
+            System.out.println("xmlFilePath = " + xmlFilePath);
+            Date start = new Date();
+            runTassel(xmlFilePath);
+            Date stop = new Date();
+
+            long startTime = start.getTime();
+            long stopTime = stop.getTime();
+            long diff = stopTime - startTime;
+            long elapsedSeconds = diff / 1000;
+
+
+                SMTPClient sc = new SMTPClient(emailHost, emailAddresses);
+                String emailSubject = "GBS Production Pipeline " + xmlFilename;
+                String emailMsg = "Ran:\n " + xmlFilePath +
+                                   "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds" +
+                                   "\n\n Attachment:\n " + logFile.getAbsolutePath();
                 try{
-                    sc.sendMessage("Ran job", emailMsg);
+                    sc.sendMessageWithAttachment(emailSubject, emailMsg, fileNameBase + ".log");
                 }catch (javax.mail.MessagingException me) {
                     me.printStackTrace();
                 }
-            }
-            String xmlFilePath = outputFolder  + "/" + xmlFilename;
-            System.out.println("xmlFilePath = " + xmlFilePath);
-           runTassel(xmlFilePath);
+
         }
     }
 
@@ -197,7 +223,9 @@ public class ProductionPipelineMain {
         try{
             props.load(new FileInputStream(aFileIn));
         }catch(IOException ioe){
-            System.err.println("Problem loading application configuration file:"  + aFileIn);
+            System.out.println("Problem loading application configuration file:"  + aFileIn);
+            System.out.println("************** Example .properties file: ");
+            System.out.println(exampleAppConfigFile);
             ioe.printStackTrace();
         }
 
@@ -386,7 +414,7 @@ public class ProductionPipelineMain {
     
     public static void main(String[] args){
 
-         boolean checkSumWanted = false;
+         boolean checkSumWanted = true;
     	 new ProductionPipelineMain(checkSumWanted);
     }
 }
