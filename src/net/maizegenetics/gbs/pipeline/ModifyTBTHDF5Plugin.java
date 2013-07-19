@@ -45,7 +45,7 @@ public class ModifyTBTHDF5Plugin extends AbstractPlugin {
     private String myAdditionalTBTHDF5 = null;
     private String myTargetTBTHDF5 = null;
     private String myOutputTransposeTagTBTHDF5 = null;
-    private String myOutputLogFile = null;
+//    private String myOutputLogFile = null;
     private boolean combineTaxa = false;
     private Tags myMasterTags = null;
     private static int maxGoodReads = 500000000; // maximum number of good barcoded reads expected in a fastq file
@@ -87,15 +87,17 @@ public class ModifyTBTHDF5Plugin extends AbstractPlugin {
 
     private void printUsage() {
         myLogger.info(
-                "\nUsage is as follows:\n"
-                + "-i  Addition Taxa TBT HDF5 file for combining\n"
-                + "-o  Target HDF5 file\n"
-                + "-L  Output log file \n"
-                + "-c  Combine taxa with same sampleID \n"
-                + "-p  Transpose to Tag TBT HDF5 file,  \n"
-                + "For creating an emptry TBT HDF4, one of either:\n"
-                + "    -t  Tag count file, OR A\n"
-                + "    -m  Physical map file containing alignments\n");
+                "\n\n\nThe ModifyTBTHDF5Plugin accepts the following arguments:\n"
+                + "-o  Target TBT HDF5 (*tbt.h5) file to be modified\n"
+                + "Depending on the modification that you wish to make, one of either:\n"
+                + "    -i  TBT HDF5 (*tbt.h5) file containing additional taxa to be added to the target TBT HDF5 file\n"
+                + "    -c  Merge taxa in the target TBT HDF5 file with same LibraryPrepID\n"
+                + "    -p  Pivot (transpose) the target TBT HDF5 file into a tag-optimized orientation\n"
+//                + "For creating an emptry TBT HDF4, one of either:\n"
+//                + "    -t  Tag count file, OR A\n"
+//                + "    -m  Physical map file containing alignments\n"
+//                + "-L  Output log file \n"
+                +"\n\n\n");
     }
 
     @Override
@@ -109,11 +111,11 @@ public class ModifyTBTHDF5Plugin extends AbstractPlugin {
             myArgsEngine = new ArgsEngine();
             myArgsEngine.add("-i", "--addition-file", true);
             myArgsEngine.add("-o", "--target-HDF5", true);
-            myArgsEngine.add("-L", "--outputlogfile", true);
+//            myArgsEngine.add("-L", "--outputlogfile", true);
             myArgsEngine.add("-c", "--combine-taxa", false);
             myArgsEngine.add("-p", "--taghdf-file", true);
-            myArgsEngine.add("-t", "--tagcount-file", true);
-            myArgsEngine.add("-m", "--physical-map", true);
+//            myArgsEngine.add("-t", "--tagcount-file", true);
+//            myArgsEngine.add("-m", "--physical-map", true);
         }
         myArgsEngine.parse(args);
         if (myArgsEngine.getBoolean("-o")) {
@@ -131,26 +133,26 @@ public class ModifyTBTHDF5Plugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-c")) {
             combineTaxa = true;
         }
-        if (myArgsEngine.getBoolean("-L")) {
-            myOutputLogFile = myArgsEngine.getString("-L");
-        } else {
-            printUsage();
-            throw new IllegalArgumentException("Please specify a log file (option -L).");
-        }
-        // Create Tags object from tag count file with option -t, or from TOPM file with option -m
-        if (myArgsEngine.getBoolean("-t")) {
-            if (myArgsEngine.getBoolean("-m")) {
-                printUsage();
-                throw new IllegalArgumentException("Options -t and -m are mutually exclusive.");
-            }
-            myMasterTags = new TagCounts(myArgsEngine.getString("-t"), FilePacking.Bit);
-        } else if (myArgsEngine.getBoolean("-m")) {
-            if (myArgsEngine.getBoolean("-t")) {
-                printUsage();
-                throw new IllegalArgumentException("Options -t and -m are mutually exclusive.");
-            }
-            myMasterTags = new TagsOnPhysicalMap(myArgsEngine.getString("-m"), true);
-        }
+//        if (myArgsEngine.getBoolean("-L")) {
+//            myOutputLogFile = myArgsEngine.getString("-L");
+//        } else {
+//            printUsage();
+//            throw new IllegalArgumentException("Please specify a log file (option -L).");
+//        }
+//        // Create Tags object from tag count file with option -t, or from TOPM file with option -m
+//        if (myArgsEngine.getBoolean("-t")) {
+//            if (myArgsEngine.getBoolean("-m")) {
+//                printUsage();
+//                throw new IllegalArgumentException("Options -t and -m are mutually exclusive.");
+//            }
+//            myMasterTags = new TagCounts(myArgsEngine.getString("-t"), FilePacking.Bit);
+//        } else if (myArgsEngine.getBoolean("-m")) {
+//            if (myArgsEngine.getBoolean("-t")) {
+//                printUsage();
+//                throw new IllegalArgumentException("Options -t and -m are mutually exclusive.");
+//            }
+//            myMasterTags = new TagsOnPhysicalMap(myArgsEngine.getString("-m"), true);
+//        }
     }
 
     private boolean addAllTaxaToNewHDF5(String addTBTName) {
