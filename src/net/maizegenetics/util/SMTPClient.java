@@ -18,7 +18,7 @@ public class SMTPClient {
     private String toAddress;
     private static MimeMessage message; 
     
-    public SMTPClient(String host, String toAddress){
+    public SMTPClient(String host, String[] toAddresses){
         
         Properties properties = System.getProperties();
         properties.setProperty("mail.smtp.host", host);
@@ -27,17 +27,20 @@ public class SMTPClient {
         Session session = Session.getDefaultInstance(properties);
         message = new MimeMessage(session); 
 
-        try{
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
-            message.setFrom(new InternetAddress(toAddress));
-        }catch(javax.mail.internet.AddressException ae){ /* ignore */  }
-         catch(javax.mail.MessagingException me){  /* ignore */  }
+        for(int i = 0; i < toAddresses.length; i++){
+            try{
+                message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddresses[i]));
+                message.setFrom(new InternetAddress(toAddresses[0]));  // just use first address as From
+            }catch(javax.mail.internet.AddressException ae){ /* ignore */  }
+             catch(javax.mail.MessagingException me){  /* ignore */  }
+        }
     }
 
     public void sendMessageWithAttachment(String subject, String msg, String fileAttachment) throws javax.mail.MessagingException{
         
         MimeBodyPart messageBodyPart = new MimeBodyPart();
         messageBodyPart.setText(msg);
+        message.setSubject(subject);
         
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(messageBodyPart);
