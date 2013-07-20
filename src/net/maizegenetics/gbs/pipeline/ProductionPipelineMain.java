@@ -465,11 +465,13 @@ public class ProductionPipelineMain {
      * may keep pipeline from successfully completing, e.g., cannot load .properties file,
      * or send notification of how many times the pipeline should run, i.e., how many
      * .run files are present.
+     * @param subject   Subject line of email
+     * @param message   Message body of email
      */
-    private void sendAlertNotification(String subject, String message, String attachment){
+    private void sendAlertNotification(String subject, String message){
         SMTPClient sc = new SMTPClient(emailHost, emailAddresses);
         try{
-            sc.sendMessageWithAttachment(subject, message, attachment);
+            sc.sendMessage(subject, message);
         }catch (javax.mail.MessagingException me) { /* ignore */  }
     }
 
