@@ -38,36 +38,47 @@ public class CheckSum {
 
 
     private static String getMD5ChecksumByFile(File aFile)  {
-        byte[] b = null;
+
+        String result = "";
         try{
-         b = createChecksum(aFile, "MD5");
-        }catch(Exception e){ /* ignore */ } 
-        String result = null;
-        if(b != null){
+            byte[] b = createChecksum(aFile, "MD5");
+
             for (int i=0; i < b.length; i++) {
                 result += Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
             }
-        }
+        }catch(Exception e){ /* ignore */ }
         return result;
     }
 
 
     public static String getMD5Checksum(File aFile) {
+
         if(aFile.isDirectory()){
             StringBuffer sb = new StringBuffer();
-                File[] topmFiles = aFile.listFiles();
-                for(int i=0; i<topmFiles.length; i++){
-                    if(topmFiles[i].isDirectory()){ sb.append(getMD5Checksum(topmFiles[i])); }
-                    String checksum = null;
-                    try{
-                        checksum = getMD5ChecksumByFile(topmFiles[i]);
-                    }catch(Exception e){ /* ignore */  }
-
-                    sb.append(topmFiles[i].getAbsolutePath() + " checksum: " + checksum + "\n");
+                File[] dirFiles = aFile.listFiles();
+                for(int i=0; i<dirFiles.length; i++){
+                    if(dirFiles[i].isDirectory()){
+                        sb.append(getMD5Checksum(dirFiles[i]));
+                    }else{
+                         sb.append(getAnnotatedMD5ChecksumByFile(dirFiles[i]));
+                    }
                 }
             return sb.toString();
         }else{
-            return getMD5ChecksumByFile(aFile);
+            return getAnnotatedMD5ChecksumByFile(aFile);
         }
+    }
+
+    private static String getAnnotatedMD5ChecksumByFile(File fileIn ){
+        String checksum = getMD5ChecksumByFile(fileIn);
+
+        // get canonical path if possible so symbolic links are resolved
+        String path = null;
+        try{
+            path = fileIn.getCanonicalPath();
+        }catch(IOException ioe){ /* ignore */ }
+        if(path == null) path = fileIn.getAbsolutePath();
+
+        return path + " checksum: " + checksum;
     }
 }
