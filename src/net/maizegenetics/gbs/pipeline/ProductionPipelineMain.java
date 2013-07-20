@@ -102,7 +102,7 @@ public class ProductionPipelineMain {
         if(!dir.exists()){
             System.out.println("Could not find the directory containing .run files: " + dir.getPath());
             System.out.println("Exiting program.");
-            sendAlertNotification(emailSubjectBase + "- Error", "Could not find directory: " + dir.getAbsolutePath(), null);
+            sendAlertNotification(emailSubjectBase + "- Error", "Could not find directory: " + dir.getAbsolutePath());
             System.exit(1);
         }
 
@@ -117,7 +117,7 @@ public class ProductionPipelineMain {
             System.out.println("************** Could not find a valid .run file ***************");
             System.out.println("************** Example .run file: ");
             System.out.println(exampleRunFile);   // display properly configured run file
-            sendAlertNotification(emailSubjectBase + "- No Files", "No .run files found", null);
+            sendAlertNotification(emailSubjectBase + "- No Files", "No .run files found");
         }
 
         for(File aFile: files){
@@ -186,7 +186,7 @@ public class ProductionPipelineMain {
             }else{
                 String msg = "******* COULD NOT MOVE FILE " + aFile.getAbsolutePath() + " TO " + toFile.getAbsolutePath();
                 System.out.println(msg);
-                sendAlertNotification(emailSubjectBase + "- Error", msg, null);
+                sendAlertNotification(emailSubjectBase + "- Error", msg);
             }
 
             // send email notification that a .run file has been processed
@@ -259,7 +259,7 @@ public class ProductionPipelineMain {
 
         // the properties file must load successfully or exit with email notification
         if(!loaded){
-            sendAlertNotification(emailSubjectBase + "- Error", "Properties file could not be loaded: " + aFileIn, null);
+            sendAlertNotification(emailSubjectBase + "- Error", "Properties file could not be loaded: " + aFileIn);
             System.exit(1);
         }
 
