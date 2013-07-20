@@ -9,15 +9,16 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.net.InetAddress;
-import java.util.Calendar;
 import java.util.Properties;
 
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 import net.maizegenetics.pipeline.TasselPipeline;
 import net.maizegenetics.util.CheckSum;
 import net.maizegenetics.util.SMTPClient;
 import com.google.common.base.Splitter;
-
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 
 
 /**
@@ -36,20 +37,20 @@ public class ProductionPipelineMain {
     // these could reasonably be contents of a properties file
     private String applicationConfiguration = "production_pipeline.properties";
 
-    private String runFileSuffix = ".run";
-    private String emailHost = "appsmtp.mail.cornell.edu";        // server to be used to send email notifications
-    private String[] emailAddresses = {"dek29@cornell.edu"};            // to whom the email notifications should be sent.
+    private String runFileSuffix = ".run";                        // default run file suffix
+    private String emailHost = "appsmtp.mail.cornell.edu";        // default server to be used to send email notifications
+    private String[] emailAddresses = {"dek29@cornell.edu"};      // pipeline admin default email address
+    private String emailAddressDelimiters = ";";                  // delimiter between email addresses
+    private String emailSubjectBase = "GBS Production Pipeline "; // standard subject line
 
-    private String emailAddressDelimiters = ";";    // "[.,;:]";           // any of these are acceptable delimiters between email addresses
-
-    private String runDirectory = "/workdir/prop_pipeline/run/";  // directory into which the key and run files are placed for pickup by cron job
-    private String archiveDirectory = "/workdir/prop_pipeline/done/";  // directory into which the key and run files are placed after being run
-                                                                       // a dated directory will be created within this directory and artifacts
-                                                                       // such as the .log and .xml file will be placed there
-    private boolean runCheckSum = true;             // running the md5 checksum is time consuming so skip for testing
+    private String runDirectory = "/workdir/prop_pipeline/run/";        // directory into which the key and run files are placed for pickup by cron job
+    private String archiveDirectory = "/workdir/prop_pipeline/done/";   // directory into which the key and run files are placed after being run
+                                                                        // a dated directory will be created within this directory and artifacts
+                                                                        // such as the .log and .xml file will be placed there
+    private boolean runCheckSum = true;             // switch for turning off checksum when appropriate
 
     private String todayDate = null;
-    private String fileNameBase = null;  //  todayDate + property filename   to be used for XML and Log files//
+    private String fileNameBase = null;     //  todayDate + property filename   to be used for XML and Log files
     private String anInputFolder= null;
     private String enzyme= null;
     private String topmFile= null;
@@ -57,6 +58,11 @@ public class ProductionPipelineMain {
     private String keyFile= null;
     private String hostName = "host unknown";
 
+
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");      // make dateFormat uniform for all logging
+    private String propertiesFileContents = null;
+
+    //todo: log canonical paths and absolute paths of fastq files so as to resolve symlinks and document them
 
     private String exampleAppConfigFile =
             "runFileSuffix=.run\n" +
@@ -79,10 +85,10 @@ public class ProductionPipelineMain {
     }
 
     private void init(){
-        loadApplicationConfiguration(applicationConfiguration);
+
+        propertiesFileContents = loadApplicationConfiguration(applicationConfiguration);
 
         loadRunFiles(runDirectory);
-
     }
 
     /**
@@ -96,6 +102,7 @@ public class ProductionPipelineMain {
         if(!dir.exists()){
             System.out.println("Could not find the directory containing .run files: " + dir.getPath());
             System.out.println("Exiting program.");
+            sendAlertNotification(emailSubjectBase + "- Error", "Could not find directory: " + dir.getAbsolutePath(), null);
             System.exit(1);
         }
 
@@ -110,26 +117,31 @@ public class ProductionPipelineMain {
             System.out.println("************** Could not find a valid .run file ***************");
             System.out.println("************** Example .run file: ");
             System.out.println(exampleRunFile);   // display properly configured run file
+            sendAlertNotification(emailSubjectBase + "- No Files", "No .run files found", null);
         }
 
         for(File aFile: files){
 
-            String propFileContents = loadRunConfiguration(aFile);
+            String runFileContents = loadRunConfiguration(aFile);
             SimpleDateFormat yyyyMMdd_format = new SimpleDateFormat("yyyyMMdd");
             todayDate = yyyyMMdd_format.format(new Date());
 
-            fileNameBase =   todayDate + "_"  + aFile.getName();
+            String fileName = FilenameUtils.removeExtension(aFile.getName());
+            fileNameBase =   todayDate + "_"  + fileName;
+            String logFileName = fileNameBase + ".log";
 
-            String contextLog = recordContext(new File(outputFolder));    // get file checksums
-            String propFileMsg = "Contents of the properties file: ";
+            String contextLog = recordContext(new File(outputFolder), runCheckSum);    // get file MD5sum
 
-            File logFile = new File(outputFolder + "/" + fileNameBase + ".log");
+            String runFileMsg = getTimeStamp() + ": Contents of the .run file: ";
+
+            File logFile = new File(outputFolder + "/" + logFileName);
             try {
                 if (!logFile.exists()) {
                     logFile.createNewFile();
                 }
                 BufferedWriter bw = new BufferedWriter(new FileWriter(logFile.getAbsolutePath()));
-                bw.write(propFileMsg + "\n" + propFileContents);
+                bw.write("Contents of the .properties file:\n" + propertiesFileContents);
+                bw.write(runFileMsg + "\n" + runFileContents);
                 bw.write(contextLog);
                 bw.close();
 
@@ -137,21 +149,23 @@ public class ProductionPipelineMain {
                 ioe.printStackTrace();
             }
 
+            // redirect System.out and System.err to the log file
             PrintStream ps = null;
             try{
-                ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(fileNameBase + ".log", true)));
+                ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFileName, true)));
             }catch(FileNotFoundException fnfe) { /* ignore */ };
             System.setOut(ps);
             System.setErr(ps);
 
             String xmlFilename = fileNameBase + ".xml";
-
-
             String xmlFilePath = outputFolder  + "/" + xmlFilename;
             System.out.println("xmlFilePath = " + xmlFilePath);
+
+            System.out.println(getTimeStamp() + " ***********Now initializing TasselPipeline*********");
             Date start = new Date();
             runTassel(xmlFilePath);
             Date stop = new Date();
+            System.out.println(getTimeStamp() + " *********** TasselPipeline has completed*********");
 
             long startTime = start.getTime();
             long stopTime = stop.getTime();
@@ -159,22 +173,36 @@ public class ProductionPipelineMain {
             long elapsedSeconds = diff / 1000;
 
 
-                SMTPClient sc = new SMTPClient(emailHost, emailAddresses);
-                String emailSubject = "GBS Production Pipeline " + xmlFilename;
-                String emailMsg = "Ran:\n " + xmlFilePath +
-                                   "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds" +
-                                   "\n\n Attachment:\n " + logFile.getAbsolutePath();
-                try{
-                    sc.sendMessageWithAttachment(emailSubject, emailMsg, fileNameBase + ".log");
-                }catch (javax.mail.MessagingException me) {
-                    me.printStackTrace();
-                }
+            File toFile = new File(archiveDirectory + "/" + aFile.getName());
 
+            boolean movedFile = false;
+            try{
+                Files.copy(aFile, toFile);
+                movedFile = true;
+            }catch (IOException ioe){}
+
+            if(movedFile){
+                System.out.println("Moved file " + aFile.getAbsolutePath() + " to " + toFile.getAbsolutePath());
+            }else{
+                String msg = "******* COULD NOT MOVE FILE " + aFile.getAbsolutePath() + " TO " + toFile.getAbsolutePath();
+                System.out.println(msg);
+                sendAlertNotification(emailSubjectBase + "- Error", msg, null);
+            }
+
+            // send email notification that a .run file has been processed
+            SMTPClient sc = new SMTPClient(emailHost, emailAddresses);
+            String emailSubject = "GBS Production Pipeline " + xmlFilename;
+            String emailMsg = "Ran:\n " + xmlFilePath +
+                               "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds" +
+                               "\n\n Attachment:\n " + logFile.getAbsolutePath();
+            try{
+                sc.sendMessageWithAttachment(emailSubject, emailMsg, logFileName);
+            }catch (javax.mail.MessagingException me) {   /* ignore */ }
         }
     }
 
     /*
-     *  write out XML file for each chromosome being run
+     *  Write out XML file for each instance of the TasselPipeline
      *
      * @param anXMLFile
      */
@@ -196,7 +224,7 @@ public class ProductionPipelineMain {
         sb.append("</TasselPipeline>\n");
 
 
-        File xmlFile = new File(this.outputFolder + "/" + anXMLFile);
+        File xmlFile = new File(outputFolder + "/" + anXMLFile);
         try {
             if (!xmlFile.exists()) {
                 xmlFile.createNewFile();
@@ -208,8 +236,6 @@ public class ProductionPipelineMain {
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
-
-
         return sb.toString();
     }
 
@@ -219,9 +245,11 @@ public class ProductionPipelineMain {
      * @return
      */
     private String loadApplicationConfiguration(String aFileIn){
+        boolean loaded = false;
         Properties props = new Properties();
         try{
             props.load(new FileInputStream(aFileIn));
+            loaded = true;
         }catch(IOException ioe){
             System.out.println("Problem loading application configuration file:"  + aFileIn);
             System.out.println("************** Example .properties file: ");
@@ -229,27 +257,29 @@ public class ProductionPipelineMain {
             ioe.printStackTrace();
         }
 
+        // the properties file must load successfully or exit with email notification
+        if(!loaded){
+            sendAlertNotification(emailSubjectBase + "- Error", "Properties file could not be loaded: " + aFileIn, null);
+            System.exit(1);
+        }
+
         String configurationElement =  "runFileSuffix";
         runFileSuffix =    props.getProperty(configurationElement);
 
-        configurationElement =  "emailHost";     // to whom the email notifications should be sent
+        configurationElement =  "emailHost";     // server used for sending email
         emailHost =    props.getProperty(configurationElement);
 
-
-        // directory into which the key and run files are placed for pickup by cron job
         configurationElement =  "emailAddress";     // to whom the email notifications should be sent
         String address =    props.getProperty(configurationElement);;
         Iterable<String> results = Splitter.on(emailAddressDelimiters).split(address);
         emailAddresses = Iterables.toArray(results, String.class);
 
-
-        // directory into which the key and run files are placed after being run
-        configurationElement =  "runDirectory";     // to whom the email notifications should be sent
+        configurationElement =  "runDirectory";     // directory where the .run files are expected to be
         runDirectory =    props.getProperty(configurationElement);
         String response = testInputDirectory(aFileIn, runDirectory, configurationElement);
         if(response != null)  System.out.println(response);
 
-        configurationElement =  "archiveDirectory";     // to whom the email notifications should be sent
+        configurationElement =  "archiveDirectory";   // directory into which the key and run files are placed after being run
         archiveDirectory =    props.getProperty(configurationElement);
         response = testInputDirectory(aFileIn, archiveDirectory, configurationElement);
         if(response != null)  System.out.println(response);
@@ -350,18 +380,25 @@ public class ProductionPipelineMain {
     }
 
 
-    // record files used in run_pipeline
-    // create XML file and records its contents
+    /**
+     * Collect information about the context in which the pipeline is being run.
+     * This information includes the following:
+     *      1) Current date and time.
+     *      2) Name of the machine on which run occurs.
+     *      3) User account used
+     *      4) Files used and their MD5sums
+     *      5) Contents of XML configuration file used to run TasselPipeline
+     * @param outputFolder
+     * @param calculateChecksum  Calculating MD5sum can be time consuming.  This allows it to be skipped when appropriate.
+     * @return
+     */
 
-    private String recordContext(File outputFolder){
+    private String recordContext(File outputFolder, boolean calculateChecksum){
 
         StringBuffer sb = new StringBuffer();
         
         // date
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-        String dateMsg = "Date: ";
-        sb.append(dateMsg + sdf.format(cal.getTime()) + "\n");
+        sb.append(getTimeStamp()  + "\n");
 
         // user account name
         String userMsg = "User Account Name: ";
@@ -379,42 +416,82 @@ public class ProductionPipelineMain {
 
 
         // for each file in a directory, include the md5sum
-        if(runCheckSum){
-            File prodFile = new File(topmFile);
-            sb.append(CheckSum.getMD5Checksum(prodFile) + "\n") ;
+        if(calculateChecksum){
+            File aKeyFile = new File(keyFile);
+            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(aKeyFile) + "\n");
             File inputFolder = new File(anInputFolder);
-            if(inputFolder.isDirectory()){
-                File[] fastqFile = inputFolder.listFiles();
-                for(File aFile: fastqFile){
-                    sb.append(CheckSum.getMD5Checksum(aFile) + "\n");
-                }
-            }
-            sb.append(CheckSum.getMD5Checksum(inputFolder)+ "\n");
-            File keyfileFile = new File(keyFile);
-            sb.append(CheckSum.getMD5Checksum(keyfileFile) + "\n");
+            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(inputFolder)+ "\n");
+            File prodFile = new File(topmFile);
+            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(prodFile) + "\n") ;
         }else{
-            sb.append("Checksum calculation has been switched off.  To turn it back on, please edit the pipeline.properties file.\n");
+            sb.append(getTimeStamp() + "MD5sum checking has been switched off using the --skipCheckSum argument");
         }
 
         sb.append("XML file used to run the pipeline:\n" );
         String xmlFileContents = createXMLFile(fileNameBase + ".xml");
 
-        sb.append(xmlFileContents + "\n");
+        sb.append(getTimeStamp() + "\n" + xmlFileContents + "\n");
         return sb.toString();
     }
 
+
+
+    /**
+     * Run the TasselPipeline by passing it an XML configuration file.  The configuration file
+     * is used because it provides an artifact that can be referred to later.
+     *
+     * @param xmlFile
+     */
     private void runTassel(String xmlFile){
 
         System.out.println("The XML file for the TASSEL Pipeline to run: " + xmlFile);
         String[] args = { "-configFile", xmlFile};
-
         TasselPipeline tp = new TasselPipeline(args, null);
         tp.main(args);
     }
-    
+
+    /**
+     * Convenience method to provide uniformly labelled timestamps
+     * @return
+     */
+    private String getTimeStamp(){
+        String label = "Timestamp: ";
+        Date now = new Date();
+        return label + dateFormat.format(now) + " ";
+    }
+
+    /**
+     * Send email to pipeline administrator when issue is encountered that
+     * may keep pipeline from successfully completing, e.g., cannot load .properties file,
+     * or send notification of how many times the pipeline should run, i.e., how many
+     * .run files are present.
+     */
+    private void sendAlertNotification(String subject, String message, String attachment){
+        SMTPClient sc = new SMTPClient(emailHost, emailAddresses);
+        try{
+            sc.sendMessageWithAttachment(subject, message, attachment);
+        }catch (javax.mail.MessagingException me) { /* ignore */  }
+    }
+
+
     public static void main(String[] args){
 
-         boolean checkSumWanted = true;
-    	 new ProductionPipelineMain(checkSumWanted);
+        String msg = "--skipCheckSum flag allows MD5sum checking to be skipped. Use with discretion.";
+
+        boolean doCheckSum = true;
+        String skipCheckSum = "skipCheckSum";
+        if(args != null){
+            for(String arg: args){
+                StringUtils.containsIgnoreCase(skipCheckSum, arg);
+                if(arg.equalsIgnoreCase(skipCheckSum)){
+                    doCheckSum = false;
+                    break;
+                }
+            }
+        }else{
+            System.out.println(skipCheckSum);
+        }
+
+    	 new ProductionPipelineMain(doCheckSum);
     }
 }
