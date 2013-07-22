@@ -97,7 +97,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
 
     private void printUsage() {
         myLogger.info(
-            "\nThe options for the TASSEL SeqToGenosPlugin are as follows:\n"
+            "\nThe options for the TASSEL ProductionSNPCallerPlugin are as follows:\n"
             + "  -i   Input directory containing fastq AND/OR qseq files\n"
             + "  -k   Barcode key file\n"
             + "  -m   Physical map file containing alignments and variants (production TOPM)\n"
@@ -138,7 +138,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 throw new IllegalArgumentException(noMatchingRawSeqFileNamesMessage + tempDirectory);
             } else {
                 Arrays.sort(myRawSeqFileNames);
-                myLogger.info("SeqToGenosPlugin: setParameters: \n\nThe following GBS raw sequence data files were found in the input folder (and sub-folders):");
+                myLogger.info("ProductionSNPCallerPlugin:\n\nThe following GBS raw sequence data files were found in the input folder (and sub-folders):");
                 for (String filename : myRawSeqFileNames) {
                     System.out.println("   "+filename);
                 }
