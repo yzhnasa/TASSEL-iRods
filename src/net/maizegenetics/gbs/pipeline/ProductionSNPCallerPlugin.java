@@ -1,5 +1,5 @@
 /*
- * SeqToGenosPlugin
+ * ProductionSNPCallerPlugin
  */
 package net.maizegenetics.gbs.pipeline;
 
@@ -55,9 +55,9 @@ import org.apache.log4j.Logger;
  *
  * @author jcg233
  */
-public class SeqToGenosPlugin extends AbstractPlugin {
+public class ProductionSNPCallerPlugin extends AbstractPlugin {
 
-    private final Logger myLogger = Logger.getLogger(SeqToGenosPlugin.class);
+    private final Logger myLogger = Logger.getLogger(ProductionSNPCallerPlugin.class);
     private ArgsEngine myArgsEngine = null;
     private String[] myRawSeqFileNames = null;
     private String myKeyFile = null;
@@ -87,11 +87,11 @@ public class SeqToGenosPlugin extends AbstractPlugin {
     // if less tagged allele has counts < likelihoodRatioThreshAlleleCnt[totalCount], call it a homozygote
     // where likelihood ratio = (binomial likelihood het) / (binomial likelihood all less tagged alleles are errors)
 
-    public SeqToGenosPlugin() {
+    public ProductionSNPCallerPlugin() {
         super(null, false);
     }
 
-    public SeqToGenosPlugin(Frame parentFrame) {
+    public ProductionSNPCallerPlugin(Frame parentFrame) {
         super(parentFrame, false);
     }
 

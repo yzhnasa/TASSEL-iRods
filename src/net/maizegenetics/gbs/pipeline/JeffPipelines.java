@@ -31,7 +31,7 @@ public class JeffPipelines {
 //        getChrsFromTOPM();
 //        runTOPMSummaryPlugin();
 //        convertTOPMtoHDF5();
-//        runSeqToGenosPlugin();
+//        runProductionSNPCallerPlugin();
         convertHDF5ToHapMap();
     }
     
@@ -290,7 +290,7 @@ public class JeffPipelines {
         TagsOnPhysMapHDF5.createFile(inTOPM, outTOPMFileStr, maxMapping, maxVariants);
     }
     
-    public static void runSeqToGenosPlugin() {
+    public static void runProductionSNPCallerPlugin() {
         String baseDir = "/Users/jcg233/Documents/GBS/";
         String[] MDPLowVolArgs = new String[]{
             "-i", "/Users/jcg233/largeFiles/testFastq/",
@@ -319,7 +319,7 @@ public class JeffPipelines {
             "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/Dallas",
         };
 
-        SeqToGenosPlugin plugin = new SeqToGenosPlugin(null);
+        ProductionSNPCallerPlugin plugin = new ProductionSNPCallerPlugin(null);
         plugin.setParameters(DallasArgs);
         plugin.performFunction(null);
     }
