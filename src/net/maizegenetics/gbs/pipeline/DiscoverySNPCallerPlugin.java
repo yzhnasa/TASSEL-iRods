@@ -1,5 +1,5 @@
 /*
- * TagsToSNPByAlignmentPlugin
+ * DiscoverySNPCallerPlugin
  */
 package net.maizegenetics.gbs.pipeline;
 
@@ -41,6 +41,7 @@ import net.maizegenetics.util.Utils;
 import org.apache.log4j.Logger;
 import org.biojava3.core.util.ConcurrencyTools;
 
+
 /**
  * This class aligns tags at the same physical location against one another,
  * calls SNPs, and then outputs the SNPs to a HapMap file.
@@ -49,7 +50,7 @@ import org.biojava3.core.util.ConcurrencyTools;
  *
  * @author edbuckler
  */
-public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
+public class DiscoverySNPCallerPlugin extends AbstractPlugin {
 
     static int maxSize = 200000;  //normally 200K;
     private double minF = -2.0, minMAF = 0.01;
@@ -61,7 +62,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     private boolean isUpdateTOPM = false;
     private boolean useTBTByte = false;
     static double defaultMinPropTaxaWithLocus = 0.1;
-    private static Logger myLogger = Logger.getLogger(TagsToSNPByAlignmentPlugin.class);
+    private static Logger myLogger = Logger.getLogger(DiscoverySNPCallerPlugin.class);
     TagsOnPhysicalMap theTOPM = null;
     TagsByTaxa theTBT = null;
     File inputFile = null;
@@ -90,11 +91,11 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     
 
 
-    public TagsToSNPByAlignmentPlugin() {
+    public DiscoverySNPCallerPlugin() {
         super(null, false);
     }
 
-    public TagsToSNPByAlignmentPlugin(Frame parentFrame) {
+    public DiscoverySNPCallerPlugin(Frame parentFrame) {
         super(parentFrame, false);
     }
 
@@ -133,7 +134,7 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
 
     private void printUsage() {
         myLogger.info(
-                "\n\n\nThe available options for the TagsToSNPByAlignmentPlugin are as follows:\n"
+                "\n\n\nThe available options for the DiscoverySNPCallerPlugin are as follows:\n"
                 + "-i       Input .tbt file\n"
                 + "-y       Use byte-formatted TBT file (*.tbt.byte)\n"
                 + "-m       TagsOnPhysicalMap file containing genomic positions of tags\n"
@@ -1498,7 +1499,6 @@ public class TagsToSNPByAlignmentPlugin extends AbstractPlugin {
     
 
 }
-
 class CustomSNPLog {
     private final BufferedWriter myWriter;
     private final String HEADER =
@@ -1619,8 +1619,8 @@ class CustomSNPLogRecord {
         tagLocusStrand = myTAL.getStrand();
         snpPosition = position;
         byte[][] byteAlleles = myTAL.getCommonAlleles();
-        majAllele= tagLocusStrand==-1? TagsToSNPByAlignmentPlugin.complementAllele(byteAlleles[0][site]) : byteAlleles[0][site];
-        minAllele= tagLocusStrand==-1? TagsToSNPByAlignmentPlugin.complementAllele(byteAlleles[1][site]) : byteAlleles[1][site];
+        majAllele= tagLocusStrand==-1? DiscoverySNPCallerPlugin.complementAllele(byteAlleles[0][site]) : byteAlleles[0][site];
+        minAllele= tagLocusStrand==-1? DiscoverySNPCallerPlugin.complementAllele(byteAlleles[1][site]) : byteAlleles[1][site];
         alleles = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][majAllele] + "/" 
                 + NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][minAllele];
         nTagsAtLocus = (includeReference) ? myTAL.getSize()-1 :  myTAL.getSize();

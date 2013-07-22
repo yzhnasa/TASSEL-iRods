@@ -105,7 +105,7 @@ public class FastImputationBitFixedWindowPlugin extends AbstractPlugin {
                 printUsage();
                 throw new IllegalArgumentException("Can't find the pedigree input file (-p option: " + pedigreeFileStr + ").");
             }
-            taxaFs = TagsToSNPByAlignmentPlugin.readTaxaFsFromFile(pedigreeFile);
+            taxaFs = DiscoverySNPCallerPlugin.readTaxaFsFromFile(pedigreeFile);
             if (taxaFs == null) {
                 throw new IllegalArgumentException("Problem reading the pedigree file. Progam aborted.");
             }

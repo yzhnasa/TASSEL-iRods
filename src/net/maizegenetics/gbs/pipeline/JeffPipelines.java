@@ -24,7 +24,7 @@ public class JeffPipelines {
 
     public static void main(String[] args) {
 //        helloWorld();
-//        runTagsToSNPByAlignmentPlugin();
+//        runDiscoverySNPCallerPlugin();
 //        runExtractHapmapSubsetPlugin();
 //        runCompareGenosBetweenHapMapFilesPlugin();
 //        expandVariantsInTOPM();
@@ -40,7 +40,7 @@ public class JeffPipelines {
         System.out.println("Hello world!");
     }
 
-    public static void runTagsToSNPByAlignmentPlugin() {
+    public static void runDiscoverySNPCallerPlugin() {
 
         String baseDirMDPLowVol = "/Users/jcg233/Documents/GBS/MDP1_low_vol/";
         String[] MDPLowVolArgs = new String[]{
@@ -109,7 +109,7 @@ public class JeffPipelines {
             "-eC", "1" // End chromosome
         };
 
-        TagsToSNPByAlignmentPlugin plugin = new TagsToSNPByAlignmentPlugin();
+        DiscoverySNPCallerPlugin plugin = new DiscoverySNPCallerPlugin();
         plugin.setParameters(MDPLowVolArgs);
         plugin.performFunction(null);
     }

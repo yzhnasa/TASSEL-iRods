@@ -10,7 +10,7 @@ package net.maizegenetics.gbs.pipeline;
  */
 public class TerryPipelines {
 
-    public static void runTagsToSNPByAlignmentPlugin() {
+    public static void runDiscoverySNPCallerPlugin() {
 
         String baseDirTestFuzzyPoz282 = "/Users/terry/users/jeff/";
         String[] testFuzzyPoz282Args = new String[]{
@@ -31,13 +31,13 @@ public class TerryPipelines {
             "-e", "10" // End chromosome
         };
 
-        TagsToSNPByAlignmentPlugin plugin = new TagsToSNPByAlignmentPlugin();
+        DiscoverySNPCallerPlugin plugin = new DiscoverySNPCallerPlugin();
         plugin.setParameters(testFuzzyPoz282Args);
         plugin.performFunction(null);
 
     }
 
     public static void main(String[] args) {
-        runTagsToSNPByAlignmentPlugin();
+        runDiscoverySNPCallerPlugin();
     }
 }

@@ -452,7 +452,7 @@ public class RawReadsToHapMapQuantPlugin extends AbstractPlugin {
             if (prevBase == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                 outMSA[chrIndex].setBase(taxonIndex, currSite, currBase);
             } else if (currBase != prevBase) {
-                outMSA[chrIndex].setBase(taxonIndex, currSite, TagsToSNPByAlignmentPlugin.resolveSNPByteFromCallPair(prevBase, currBase));
+                outMSA[chrIndex].setBase(taxonIndex, currSite, DiscoverySNPCallerPlugin.resolveSNPByteFromCallPair(prevBase, currBase));
             }
         }
     }
