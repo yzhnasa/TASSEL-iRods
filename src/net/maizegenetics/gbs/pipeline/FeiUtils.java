@@ -44,8 +44,7 @@ public class FeiUtils {
 		String arguments = "-i " + inputFileS + " -o " + outputFileS;
 		String[] args = arguments.split(" ");
 		umithm.setParameters(args);
-		umithm.performFunction(null);
-        
+		umithm.performFunction(null);       
     }
             
     /**

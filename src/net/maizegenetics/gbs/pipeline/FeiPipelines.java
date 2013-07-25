@@ -4,6 +4,7 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
+import ch.systemsx.cisd.hdf5.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -13,6 +14,7 @@ import net.maizegenetics.gbs.maps.PETagsOnPhysicalMap;
 import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.gbs.maps.TagsOnPhysicalMapV3;
 import net.maizegenetics.gbs.tagdist.PETagCounts;
 import net.maizegenetics.gbs.tagdist.TagCounts;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
@@ -25,8 +27,8 @@ import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 public class FeiPipelines {
     
     public FeiPipelines () {
-        this.pipelinePE();
-        //this.testPipeline();
+        //this.pipelinePE();
+        this.testPipeline();
     }
     
     public static void main (String[] args) {
@@ -40,6 +42,26 @@ public class FeiPipelines {
         //this.mkFasta();
         //this.mkTOPM();
         //this.mkTOPMHDF5();
+        this.initializeTOPMHDF5();
+        this.annotateTOPMHDF5WithAligner();
+        
+        
+    }
+    
+    public void annotateTOPMHDF5WithAligner () {
+        String inputFileS = "M:/GBStest/topm/ini.topm.h5";
+
+        String bowtie2SamFileS = "M:/GBStest/alignment/bowtie2-K5.sam";
+        TagsOnPhysicalMapV3 topm = new TagsOnPhysicalMapV3(inputFileS);
+        AnnotateTOPM anno = new AnnotateTOPM (topm);
+        anno.annotateWithBowtie2(bowtie2SamFileS, 5);
+    }
+    
+    public void initializeTOPMHDF5 () {
+        String inputFileS = "M:/GBStest/tagCount/small.cnt";
+        String outputFileS = "M:/GBStest/topm/ini.topm.h5";
+        TagCounts tc = new TagCounts(inputFileS, FilePacking.Bit);
+        TagsOnPhysicalMapV3.createFile(tc, outputFileS);
     }
     
     public void mkTOPMHDF5 () {

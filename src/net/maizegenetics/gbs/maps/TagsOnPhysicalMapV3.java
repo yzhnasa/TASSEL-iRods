@@ -6,8 +6,7 @@ package net.maizegenetics.gbs.maps;
 import ch.systemsx.cisd.hdf5.*;
 import java.io.File;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
+import net.maizegenetics.gbs.tagdist.Tags;
 import net.maizegenetics.gbs.util.GBSHDF5Constants;
 import org.apache.log4j.Logger;
 
@@ -25,184 +24,127 @@ import org.apache.log4j.Logger;
  * TODO: Resort map positions by quality
  * 
  * 
- * @author Ed Buckler, Terry Casstevens
+ * @author Ed Buckler, Terry Casstevens, Fei Lu
  */
-public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPMInterface {
+public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TOPMInterface {
 
-    private static final Logger myLogger = Logger.getLogger(TagsOnPhysMapHDF5.class);
-    private static final int NUM_UNITS_TO_CACHE_ON_GET = 64;
+    private static final Logger myLogger = Logger.getLogger(TagsOnPhysicalMapV3.class);
+    /**Shift 2^16*/
     private static final int BITS_TO_SHIFT_FOR_CHUNK = 16;
+    /**65536 tags in a truck*/
     private static final int CHUNK_SIZE = 1 << BITS_TO_SHIFT_FOR_CHUNK;
+    /**gzip format compression for TagMappingInfo*/
     private static HDF5GenericStorageFeatures genoFeatures = HDF5GenericStorageFeatures.createDeflation(5); //used by mapping object
+    /**gzip format compression for other datasets*/
     private static HDF5IntStorageFeatures vectorFeatures = HDF5IntStorageFeatures.createDeflation(5); //used by vectors
     
-    private int maxMapping = 4;
+    /**Number of physical positions from different aligner or aligner with different parameters*/
+    protected int maxMapping = 0;
+    /**Writer/Reader of TagsOnPhysicalMapV3*/
     private IHDF5Writer myHDF5 = null;
-    private int cachedMappingIndex = -1;
+    /**Tag index in block*/
+    private int cachedTagIndex = -1;
     private TagMappingInfo cachedTMI = null;
-    private int cachedMappingBlock = -1;
-    private TagMappingInfo[][] cachedTMIBlock = null;
+    /**Block index where the tag belongs to. Max: TagCount>>BITS_TO_SHIFT_FOR_CHUNK+1*/
+    private int cachedBlockIndex = -1;
+    private TagMappingInfo[][] cachedTMIBlocks = null;
     private boolean cleanMap = true;
     private boolean cacheAllMappingBlocks = false;
-    private HDF5CompoundType<TagMappingInfo> tmiType = null;
+    private HDF5CompoundType<TagMappingInfoV3> tmiType = null;
     private boolean hasDetailedMapping=false;
 
-    public static void createFile(AbstractTagsOnPhysicalMap inTags, String newHDF5file, int maxMapping, int maxVariants) {
+     
+    /**
+     * Initialize HDF5 TOPM from TagCounts file. The "MAXMAPPING"(set to 0), "TAGLENGTHINLONG", "tags" and "tagLength" are added.
+     * @param inTags
+     * @param newHDF5file 
+     */
+    public static void createFile (Tags inTags, String newHDF5file) {
         int tagLengthInLong = inTags.getTagSizeInLong();
         int tagCount = inTags.getTagCount();
-     //   tagCount=tagCount;
-        System.gc();
-        long[][] tags;
-        byte[] tagLength;
-        if(inTags instanceof AbstractTagsOnPhysicalMap) {
-            tags=((AbstractTagsOnPhysicalMap)inTags).getTagsArray();
-            tagLength=((AbstractTagsOnPhysicalMap)inTags).getTagLengthArray();
-        } else {
-            tags = new long[tagLengthInLong][tagCount];
-            tagLength = new byte[tagCount];
-            for (int i = 0; i < tagCount; i++) {
-                long[] ct = inTags.getTag(i);
-                for (int j = 0; j < tagLengthInLong; j++) {
-                    tags[j][i] = ct[j];
-                }
-                tagLength[i] = (byte) inTags.getTagLength(i);
+        long[][] tags = new long[tagLengthInLong][tagCount];
+        byte[] tagLength = new byte[tagCount];
+        for (int i = 0; i < tagCount; i++) {
+            long[] ct = inTags.getTag(i);
+            for (int j = 0; j < tagLengthInLong; j++) {
+                tags[j][i] = ct[j];
             }
+            tagLength[i] = (byte) inTags.getTagLength(i);
         }
         IHDF5Writer h5 = null;
         try {
             myLogger.info("Creating HDF5 File: " + newHDF5file);
-            System.out.println("Creating HDF5 File: " + newHDF5file);
             IHDF5WriterConfigurator config = HDF5Factory.configure(new File(newHDF5file));
             config.overwrite();
-            // config.dontUseExtendableDataTypes();
             config.useUTF8CharacterEncoding();
             h5 = config.writer();
-            h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGCOUNT, tagCount);
-            h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXVARIANTS, maxVariants);
-            h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING, maxMapping);
+            h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING, 0);
             h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGLENGTHINLONG, tagLengthInLong);
-            //create tag matrix
+            h5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGCOUNT, tagCount);
             h5.createLongMatrix(GBSHDF5Constants.TAGS, inTags.getTagSizeInLong(), tagCount, inTags.getTagSizeInLong(), tagCount, vectorFeatures);
             h5.writeLongMatrix(GBSHDF5Constants.TAGS, tags, vectorFeatures);
             tags=null;
-            System.gc();
             System.out.println("...Tags written");
             h5.createByteArray(GBSHDF5Constants.TAGLENGTH, tagCount, vectorFeatures);
             h5.writeByteArray(GBSHDF5Constants.TAGLENGTH, tagLength, vectorFeatures);
             tagLength=null;
             System.out.println("...Tags lengths written");
-            
-            //need to create branch between instance of Tags and TOPM
-            
-            
-            //creating fast bestChr and bestPosition
-            byte[] mmOut=new byte[tagCount];
-            byte[] strandOut=new byte[tagCount];
-            int[] chrOut=new int[tagCount];
-            int[] posOut=new int[tagCount];
-            
-            for (int i = 0; i < tagCount; i++) {
-                mmOut[i]=inTags.getMultiMaps(i);
-                strandOut[i]=inTags.getStrand(i);
-                chrOut[i]=inTags.getChromosome(i);
-                posOut[i]=inTags.getStartPosition(i);
-            }
-            h5.createByteArray(GBSHDF5Constants.MULTIMAPS, tagCount);
-            h5.writeByteArray(GBSHDF5Constants.MULTIMAPS, mmOut, vectorFeatures);
-            h5.createByteArray(GBSHDF5Constants.BEST_STRAND, tagCount);
-            h5.writeByteArray(GBSHDF5Constants.BEST_STRAND, strandOut, vectorFeatures);
-            h5.createIntArray(GBSHDF5Constants.BEST_CHR, tagCount, vectorFeatures);
-            h5.writeIntArray(GBSHDF5Constants.BEST_CHR, chrOut, vectorFeatures);
-            h5.createIntArray(GBSHDF5Constants.BEST_STARTPOS, tagCount, vectorFeatures);
-            h5.writeIntArray(GBSHDF5Constants.BEST_STARTPOS, posOut, vectorFeatures);
-            mmOut=null;
-            strandOut=null;
-            chrOut=null;
-            posOut=null;
             System.gc();
-            System.out.println("...multimapping, strand, chr, position  written");
-                        
-            HDF5CompoundType<TagMappingInfo> tmiType = h5.compounds().getInferredType(TagMappingInfo.class);
-            System.out.println("Chunk Size for Tags: " + CHUNK_SIZE);
-            int numOfChunks = tagsToChunks(tagCount);
-            System.out.println("Number of Chunks: " + numOfChunks);
-            int numTagsPadded = numOfChunks * CHUNK_SIZE;
-            for (int mi = 0; mi < 1; mi++) {
- //           for (int mi = 0; mi < maxMapping; mi++) {
- //               h5.compounds().createArray("map" + mi, tmiType, numTagsPadded, CHUNK_SIZE);
-                h5.compounds().createArray(GBSHDF5Constants.MAPBASE + mi, tmiType, numTagsPadded, CHUNK_SIZE);
-                TagMappingInfo[] thTMI = new TagMappingInfo[CHUNK_SIZE];
-                int block = 0;
-                for (int i = 0; i < numTagsPadded; i++) {
-                    if ((mi == 0) && (i < tagCount)) {
-                        thTMI[i % CHUNK_SIZE] = (new TagMappingInfo(inTags.getChromosome(i),
-                                inTags.getStrand(i), inTags.getStartPosition(i),
-                                inTags.getEndPosition(i), inTags.getDivergence(i)));
-                    } else {
-                        thTMI[i % CHUNK_SIZE] = new TagMappingInfo();
-                    }
-                    if ((i + 1) % CHUNK_SIZE == 0) {
-//                        h5.compounds().writeArrayBlock("map" + mi, tmiType, thTMI, block);
-                        h5.compounds().writeArrayBlock(GBSHDF5Constants.MAPBASE + mi, tmiType, thTMI, block);
-                        thTMI = new TagMappingInfo[CHUNK_SIZE];
-                        block++;
-                        System.out.println("Tag locations written: " + (i + 1));
-                    }
-                }
-                System.out.println("...map" + mi + " positions written");
-            }
-            
-            h5.createByteMatrix(GBSHDF5Constants.VARIANTDEF, tagCount, maxVariants);
-            int numVariants = inTags.getMaxNumVariants();
-            if (numVariants > maxVariants) {
-                throw new IllegalArgumentException("TagsOnPhysMapHDF5: createFile: max variants can't be less than original TOPM Variant Defs: " + numVariants);
-            }
-            writeVariantsToHDF5(h5, inTags);
-            System.out.println("Variant offsets written");
-
-        } finally {
-            try {
-                h5.close();
-            } catch (Exception e) {
-                // do nothing
-            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            h5.close();
+            System.exit(1);
         }
     }
-
-    private static int tagsToChunks(long tags) {
-        return (int) (((tags - 1) >>> BITS_TO_SHIFT_FOR_CHUNK) + 1);
-    }
-
-    public TagsOnPhysMapHDF5(String filename) {
-        this(filename, true);
-    }
-   
-    public TagsOnPhysMapHDF5(String theHDF5file, boolean cacheAllMappingBlocks) {
-        myMaxVariants = 16;
-        this.cacheAllMappingBlocks = cacheAllMappingBlocks;
+ 
+    public TagsOnPhysicalMapV3 (String theHDF5file) {
         System.out.println("Opening :" + theHDF5file);
         myHDF5 = HDF5Factory.open(theHDF5file);
-        hasDetailedMapping=myHDF5.exists(GBSHDF5Constants.MAPBASE+"0");
-        myNumTags = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGCOUNT);
+        tmiType = myHDF5.compounds().getInferredType(TagMappingInfoV3.class);
         this.tagLengthInLong = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGLENGTHINLONG);
+        this.myNumTags = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGCOUNT);
         this.tags = myHDF5.readLongMatrix(GBSHDF5Constants.TAGS);
         this.tagLength = myHDF5.readByteArray(GBSHDF5Constants.TAGLENGTH);
-        this.multimaps = myHDF5.readByteArray(GBSHDF5Constants.MULTIMAPS);
         this.maxMapping = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING);
-        tmiType = myHDF5.compounds().getInferredType(TagMappingInfo.class);
-        cachedTMIBlock = new TagMappingInfo[maxMapping][];
-        if(hasDetailedMapping) cacheMappingInfo(0);
-        if(!myHDF5.exists(GBSHDF5Constants.BEST_STRAND)) {populateBestMappings();}
-        else {
-            bestStrand=myHDF5.readByteArray("bestStrand");
-            bestChr= myHDF5.readIntArray("bestChr");
-            bestStartPos= myHDF5.readIntArray("bestStartPos");
+        if(myHDF5.exists(GBSHDF5Constants.BEST_STRAND)) {
+            bestStrand=myHDF5.readByteArray(GBSHDF5Constants.BEST_STRAND);
+            bestChr= myHDF5.readIntArray(GBSHDF5Constants.BEST_CHR);
+            bestStartPos= myHDF5.readIntArray(GBSHDF5Constants.BEST_STARTPOS);  
         }
-        loadVariantsIntoMemory();
-        System.out.println(theHDF5file + " read with tags:" + myNumTags);
-        populateChrAndVarPositions();
-        initPhysicalSort();
+        if (myHDF5.exists(GBSHDF5Constants.MULTIMAPS)) {
+            multimaps = myHDF5.readByteArray(GBSHDF5Constants.MULTIMAPS);
+        }
+        if(myHDF5.exists(GBSHDF5Constants.VARIANTDEF)) {
+            loadVariantsIntoMemory();
+        }
+        if(myHDF5.exists(GBSHDF5Constants.BEST_STRAND)) {
+            this.populateChrAndVarPositions();
+        }
         System.gc();
+    }
+    
+    public String[] creatTagMappingInfoDatasets (int startIndex, int size) {
+        int chunkCount = this.getChunkCount(); 
+        int chunkSize = this.getChunkSize();
+        String[] dataSetNames = new String[size];
+        for (int i = startIndex; i < size; i++) {
+            dataSetNames[i] = GBSHDF5Constants.MAPBASE + this.getThreeFigureString(i);
+            myHDF5.compounds().createArray(dataSetNames[i], tmiType, chunkSize*chunkCount, chunkSize, genoFeatures);
+            
+        }
+        System.out.println("Created new TagMappingInfo datasets. They are");
+        for (int i = 0; i < dataSetNames.length; i++) {
+            System.out.println(dataSetNames[i]);
+        }
+        return dataSetNames;
+    }
+    
+    public void writeTagMappingInfoDataSets (String[] dataSetNames, TagMappingInfoV3[][] tmiChunk, int chunkIndex) {
+        for (int i = 0; i < dataSetNames.length; i++) {   
+            myHDF5.compounds().writeArrayBlock(dataSetNames[i], tmiType, tmiChunk[i], chunkIndex);
+        }
+ 
     }
     
     private boolean populateBestMappings() {
@@ -229,6 +171,21 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         myHDF5.createIntArray(GBSHDF5Constants.BEST_STARTPOS, myNumTags, vectorFeatures);
         myHDF5.writeIntArray(GBSHDF5Constants.BEST_STARTPOS, bestStartPos, vectorFeatures);
         return true;
+    }
+    
+    private boolean populateMultimaps () {
+        if (myHDF5.exists(GBSHDF5Constants.MULTIMAPS)) return false;
+        this.multimaps = new byte[this.getTagCount()];
+        Arrays.fill(multimaps, TOPMInterface.BYTE_MISSING);
+        myHDF5.createByteArray(GBSHDF5Constants.MULTIMAPS, this.getTagCount());
+        myHDF5.writeByteArray(GBSHDF5Constants.MULTIMAPS, multimaps, vectorFeatures);
+        return true;
+    }
+    
+    public void setMaxMapping (int maxMapping) {
+        this.maxMapping = maxMapping;
+        myHDF5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING, maxMapping); 
+        System.out.println("TOPM maxMapping attibute was set to " + String.valueOf(maxMapping));
     }
     
     private boolean loadVariantsIntoMemory() {
@@ -293,34 +250,35 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         System.out.println("Real Variant Defs:"+howManyDef);
         return true;
     }
-
+    
+    
     private void cacheMappingInfo(int index) {
-        if (index == cachedMappingIndex) {
+        if (index == cachedTagIndex) {
             return;
         }
         int block = index >> BITS_TO_SHIFT_FOR_CHUNK;
-        if (cachedMappingBlock != block) {
+        if (cachedBlockIndex != block) {
             if (cleanMap == false) {
                 saveCacheBackToFile();
             }
             for (int mi = 0; mi < maxMapping; mi++) {
-                cachedTMIBlock[mi] = myHDF5.compounds().readArrayBlock(GBSHDF5Constants.MAPBASE+"0", tmiType, CHUNK_SIZE, block);
-                cachedMappingBlock = block;
+//f                cachedTMIBlocks[mi] = myHDF5.compounds().readArrayBlock(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(mi), tmiType, CHUNK_SIZE, block);
+                cachedBlockIndex = block;
                 if (cacheAllMappingBlocks == false) {
                     break;
                 }
             }
         }
-        this.cachedTMI = cachedTMIBlock[0][index % CHUNK_SIZE];
-        this.cachedMappingIndex = index;
+        this.cachedTMI = cachedTMIBlocks[0][index % CHUNK_SIZE];
+        this.cachedTagIndex = index;
     }
 
     private void saveCacheBackToFile() {
-        int block = cachedMappingIndex >> BITS_TO_SHIFT_FOR_CHUNK;
-        if (cachedMappingBlock != block) {
+        int block = cachedTagIndex >> BITS_TO_SHIFT_FOR_CHUNK;
+        if (cachedBlockIndex != block) {
             for (int mi = 0; mi < maxMapping; mi++) {
                 if (cleanMap == false) {
-                    myHDF5.compounds().writeArrayBlock(GBSHDF5Constants.MAPBASE+"0", tmiType, cachedTMIBlock[mi], block);
+//f                    myHDF5.compounds().writeArrayBlock(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(mi), tmiType, cachedTMIBlocks[mi], block);
                 }
                 if (cacheAllMappingBlocks == false) {
                     break;
@@ -333,22 +291,33 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         }
     }
 
+    public int getChunkCount () {
+        return (this.getTagCount()>>BITS_TO_SHIFT_FOR_CHUNK) + 1;
+    }
+    
+    public int getChunkSize () {
+        return this.CHUNK_SIZE;
+    }
+    
     public void getFileReadyForClosing() {
 //        writeCachedVariantDefs();
 //        writeCachedVariantOffsets();
 //        saveCacheBackToFile();
     }
 
+    public int getMaxMappingCount () {
+        return this.maxMapping; 
+    }
 
     public TagMappingInfo getAlternateTagMappingInfo(int index, int mapIndex) {
         if(hasDetailedMapping) return null;
         if (cacheAllMappingBlocks == false) {
             cacheMappingInfo(index);
         }
-        if (cachedMappingIndex != index) {
+        if (cachedTagIndex != index) {
             cacheMappingInfo(index);
         }
-        return cachedTMIBlock[mapIndex][index % CHUNK_SIZE];
+        return cachedTMIBlocks[mapIndex][index % CHUNK_SIZE];
     }
 
     public void setAlternateTagMappingInfo(int index, int mapIndex, TagMappingInfo theTMI) {
@@ -356,10 +325,10 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         if (cacheAllMappingBlocks == false) {
             cacheMappingInfo(index);
         }
-        if (cachedMappingIndex != index) {
+        if (cachedTagIndex != index) {
             cacheMappingInfo(index);
         }
-        cachedTMIBlock[mapIndex][index % CHUNK_SIZE] = theTMI;
+        cachedTMIBlocks[mapIndex][index % CHUNK_SIZE] = theTMI;
         if (multimaps[index] >= mapIndex) {
             multimaps[index] = (byte) (mapIndex + 1);
         }
@@ -371,12 +340,12 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         if (cacheAllMappingBlocks == false) {
             cacheMappingInfo(index);
         }
-        if (cachedMappingIndex != index) {
+        if (cachedTagIndex != index) {
             cacheMappingInfo(index);
         }
-        TagMappingInfo tempTMI = cachedTMIBlock[mapIndex][index % CHUNK_SIZE];
-        cachedTMIBlock[mapIndex][index % CHUNK_SIZE] = cachedTMIBlock[mapIndex2][index % CHUNK_SIZE];
-        cachedTMIBlock[mapIndex2][index % CHUNK_SIZE] = tempTMI;
+        TagMappingInfo tempTMI = cachedTMIBlocks[mapIndex][index % CHUNK_SIZE];
+        cachedTMIBlocks[mapIndex][index % CHUNK_SIZE] = cachedTMIBlocks[mapIndex2][index % CHUNK_SIZE];
+        cachedTMIBlocks[mapIndex2][index % CHUNK_SIZE] = tempTMI;
         cleanMap = false;
     }
 
@@ -388,16 +357,16 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
     @Override
     public byte getDcoP(int index) {
         if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
-        if (cachedMappingIndex != index) {
+        if (cachedTagIndex != index) {
             cacheMappingInfo(index);
         }
         return cachedTMI.dcoP;
     }
-
+    
     @Override
     public byte getDivergence(int index) {
         if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
-        if (cachedMappingIndex != index) {
+        if (cachedTagIndex != index) {
             cacheMappingInfo(index);
         }
         return cachedTMI.divergence;
@@ -406,7 +375,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
     @Override
     public int getEndPosition(int index) {
         if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
-        if (cachedMappingIndex != index) {
+        if (cachedTagIndex != index) {
             cacheMappingInfo(index);
         }
         return cachedTMI.endPosition;
@@ -415,7 +384,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
     @Override
     public byte getMapP(int index) {
         if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
-        if (cachedMappingIndex != index) {
+        if (cachedTagIndex != index) {
             cacheMappingInfo(index);
         }
         return cachedTMI.mapP;
@@ -423,7 +392,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
 
     @Override
     public int[] getPositionArray(int index) {
-        if (cachedMappingIndex != index) {
+        if (cachedTagIndex != index) {
             cacheMappingInfo(index);
         }
         int[] r = {cachedTMI.chromosome, cachedTMI.strand, cachedTMI.startPosition};
@@ -435,6 +404,15 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         return indicesOfSortByPosition[posIndex];
     }
 
+    private String getThreeFigureString (int number) {
+        String s = String.valueOf(number);
+        int length = s.length();
+        for (int i = 0; i < 3-length; i++) {
+            s = "0"+s;
+        }
+        return s;
+    }
+    
     @Override
     public int[] getUniquePositions(int chromosome) {
         if(myUniquePositions==null) populateChrAndVarPositions();

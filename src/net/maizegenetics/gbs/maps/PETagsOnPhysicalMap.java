@@ -36,23 +36,23 @@ public class PETagsOnPhysicalMap extends AbstractPETagsOnPhysicalMap {
     public PETagsOnPhysicalMap (PETagCounts ptc, String fSamFileS, String bSamFileS, String contigSamFileS) {
         this.iniMatrix(ptc.getTagSizeInLong(), ptc.getTagCount());
         this.initializeValue(ptc);
-        this.readSamFile(fSamFileS, TagType.Forward);
-        this.readSamFile(bSamFileS, TagType.Backward);
-        this.readSamFile(contigSamFileS, TagType.Contig);
+        this.readSamFile(fSamFileS, PETagType.Forward);
+        this.readSamFile(bSamFileS, PETagType.Backward);
+        this.readSamFile(contigSamFileS, PETagType.Contig);
     }
     
-    private void readSamFile (String samFileS, TagType t) {
+    private void readSamFile (String samFileS, PETagType t) {
         int[] chromosome;
         int[] posStart;
         int[] posEnd;
         byte[] strand;
-        if (t == TagType.Forward) {
+        if (t == PETagType.Forward) {
             chromosome = this.chrF;
             posStart = this.posStartF;
             posEnd = this.posEndF;
             strand = this.strandF;
         }
-        else if (t == TagType.Backward) {
+        else if (t == PETagType.Backward) {
             chromosome = this.chrB;
             posStart = this.posStartB;
             posEnd = this.posEndB;
