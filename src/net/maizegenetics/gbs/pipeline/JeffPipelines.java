@@ -31,8 +31,8 @@ public class JeffPipelines {
 //        getChrsFromTOPM();
 //        runTOPMSummaryPlugin();
 //        convertTOPMtoHDF5();
-//        runProductionSNPCallerPlugin();
-        convertHDF5ToHapMap();
+        runProductionSNPCallerPlugin();
+//        convertHDF5ToHapMap();
     }
     
     public static void helloWorld() {
@@ -319,8 +319,17 @@ public class JeffPipelines {
             "-o", baseDir+"AllZeaBuild2.X/v2.6/ProductionTest/tassel4_SeqToGenos/Dallas",
         };
 
+        String[] MooseP1Args = new String[]{
+            "-i", "/Users/jcg233/largeFiles/fastq/Moose",
+            "-k", "/Users/jcg233/largeFiles/fastq/Moose/C12B2ACXX_5_key.txt",
+            "-m", "/Users/jcg233/largeFiles/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5",
+            "-e", "ApeKI",
+//            "-vL", // VCF likelihood-based calling of hets
+            "-o", baseDir+"AllZeaBuild2.X/v2.7/MooseP1",
+        };
+
         ProductionSNPCallerPlugin plugin = new ProductionSNPCallerPlugin(null);
-        plugin.setParameters(DallasArgs);
+        plugin.setParameters(MooseP1Args);
         plugin.performFunction(null);
     }
     
