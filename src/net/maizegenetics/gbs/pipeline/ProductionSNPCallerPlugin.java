@@ -204,8 +204,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         readRawSequencesAndRecordDepth();  // TODO: read the machine name from the fastq/qseq file
         callGenotypes();
         writeHapMapGenotypes();
-        writeHDF5Genotypes();  // TODO: ensure that reference allele gets added at some point
         writeReadsPerSampleReports();
+        writeHDF5Genotypes();  // TODO: ensure that reference allele gets added at some point
         return null;
     }
 
