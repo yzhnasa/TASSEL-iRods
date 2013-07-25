@@ -14,6 +14,7 @@ import java.util.Properties;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import net.maizegenetics.pipeline.TasselPipeline;
+import net.maizegenetics.pipeline.TasselPipelineXMLUtil;
 import net.maizegenetics.util.CheckSum;
 import net.maizegenetics.util.SMTPClient;
 import com.google.common.base.Splitter;
@@ -58,6 +59,7 @@ public class ProductionPipelineMain {
     private String keyFile= null;
     private String hostName = "host unknown";
 
+    private String[] tasselPipelineArgs;        // replacement for using an XML config file to pass relevant parameter to TasselPipeline
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");      // make dateFormat uniform for all logging
     private String propertiesFileContents = null;
@@ -118,6 +120,12 @@ public class ProductionPipelineMain {
             System.out.println("************** Example .run file: ");
             System.out.println(exampleRunFile);   // display properly configured run file
             sendAlertNotification(emailSubjectBase + "- No Files", "No .run files found");
+        }else{
+            StringBuffer sb = new StringBuffer();
+            for(File f: files){
+                sb.append(f + "\n");
+            }
+            sendAlertNotification(emailSubjectBase + "- File Count: " + files.length, sb.toString());
         }
 
         for(File aFile: files){
@@ -152,8 +160,10 @@ public class ProductionPipelineMain {
             // redirect System.out and System.err to the log file
             PrintStream ps = null;
             try{
-                ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFileName, true)));
-            }catch(FileNotFoundException fnfe) { /* ignore */ };
+                ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputFolder + "/" + logFileName, true)));
+            }catch(FileNotFoundException fnfe) {
+                fnfe.printStackTrace();
+            };
             System.setOut(ps);
             System.setErr(ps);
 
@@ -163,7 +173,8 @@ public class ProductionPipelineMain {
 
             System.out.println(getTimeStamp() + " ***********Now initializing TasselPipeline*********");
             Date start = new Date();
-            runTassel(xmlFilePath);
+//            runTassel(xmlFilePath);
+            runTassel(tasselPipelineArgs);
             Date stop = new Date();
             System.out.println(getTimeStamp() + " *********** TasselPipeline has completed*********");
 
@@ -206,19 +217,19 @@ public class ProductionPipelineMain {
      *
      * @param anXMLFile
      */
-    private String createXMLFile( String anXMLFile){
+    private String[] createXMLFile( String anXMLFile){
 
         StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
         sb.append(" <TasselPipeline>\n");
         sb.append("    <fork1>\n");
-        sb.append("        <SeqToGenosPlugin>\n");
+        sb.append("        <ProductionSNPCallerPlugin>\n");
         sb.append("            <i>" + this.anInputFolder + "</i>\n");
         sb.append("            <k>" + this.keyFile + "</k>\n");
         sb.append("            <e>" + this.enzyme + "</e>\n");
         sb.append("            <o>" + this.outputFolder + "</o>\n");
         sb.append("            <m>" + this.topmFile + "</m>\n");
-        sb.append("        </SeqToGenosPlugin>\n");
+        sb.append("        </ProductionSNPCallerPlugin>\n");
         sb.append("    </fork1>\n");
         sb.append("    <runfork1/>\n");
         sb.append("</TasselPipeline>\n");
@@ -236,7 +247,7 @@ public class ProductionPipelineMain {
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
-        return sb.toString();
+        return TasselPipelineXMLUtil.readXMLAsArgs(xmlFile.getAbsolutePath());
     }
 
     /**
@@ -428,24 +439,19 @@ public class ProductionPipelineMain {
         }
 
         sb.append("XML file used to run the pipeline:\n" );
-        String xmlFileContents = createXMLFile(fileNameBase + ".xml");
+        String[] xmlFileContents = createXMLFile(fileNameBase + ".xml");
+        tasselPipelineArgs = createXMLFile(fileNameBase + ".xml");
+        for(String arg: xmlFileContents) System.out.println("arg = " + arg);
 
         sb.append(getTimeStamp() + "\n" + xmlFileContents + "\n");
         return sb.toString();
     }
 
-
-
     /**
-     * Run the TasselPipeline by passing it an XML configuration file.  The configuration file
-     * is used because it provides an artifact that can be referred to later.
-     *
-     * @param xmlFile
+     * Run the TasselPipeline by passing it the flags and values.
+     * @param args  String[] containing flags and values
      */
-    private void runTassel(String xmlFile){
-
-        System.out.println("The XML file for the TASSEL Pipeline to run: " + xmlFile);
-        String[] args = { "-configFile", xmlFile};
+    private void runTassel(String[] args){
         TasselPipeline tp = new TasselPipeline(args, null);
         tp.main(args);
     }
