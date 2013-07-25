@@ -906,12 +906,12 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
      */
     protected void setCalcAlleleFreq(int[][] af, byte[][] afOrder,
             float[] maf, float[] paf, float[] coverage, float[] hets) {
-        writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_CNT,af);
-        writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_FREQ_ORD,afOrder);
-        writeHDF5EntireArray(HapMapHDF5Constants.MAF,maf);
-        writeHDF5EntireArray(HapMapHDF5Constants.SITECOV,paf);
-        writeHDF5EntireArray(HapMapHDF5Constants.TAXACOV,coverage);
-        writeHDF5EntireArray(HapMapHDF5Constants.TAXAHET,hets);
+        if(af[0].length>0) writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_CNT,af);
+        if(afOrder[0].length>0) writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_FREQ_ORD,afOrder);
+        if(maf.length>0) writeHDF5EntireArray(HapMapHDF5Constants.MAF,maf);
+        if(paf.length>0) writeHDF5EntireArray(HapMapHDF5Constants.SITECOV,paf);
+        if(coverage.length>0) writeHDF5EntireArray(HapMapHDF5Constants.TAXACOV,coverage);
+        if(hets.length>0) writeHDF5EntireArray(HapMapHDF5Constants.TAXAHET,hets);
     }
     
     protected void writeHDF5EntireArray(String objectPath, Object val) {
