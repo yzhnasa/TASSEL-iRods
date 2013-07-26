@@ -80,10 +80,10 @@ public class KeepSpecifiedSitesInTOPMPlugin extends AbstractPlugin {
 
     private void printUsage() {
         myLogger.info(
-                "\nThe options for the KeepSpecifiedSitesInTOPMPlugin:\n"
-                + "-input  Input directory containing Site List files\n"
-                + "-orig Original TOPM"
-                + "-result  TOPM Output Filename\n");
+                "\n\n\nThe options for the KeepSpecifiedSitesInTOPMPlugin are:\n"
+                + "   -input   Input directory containing Site List files\n"
+                + "   -orig    Original TOPM\n"
+                + "   -result  Output, site-filtered TOPM\n\n\n");
     }
 
     @Override

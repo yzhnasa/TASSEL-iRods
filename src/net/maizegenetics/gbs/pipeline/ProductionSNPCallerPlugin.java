@@ -102,7 +102,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             + "  -k   Barcode key file\n"
             + "  -m   Physical map file containing alignments and variants (production TOPM)\n"
             + "  -e   Enzyme used to create the GBS library\n"
-            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)"
+            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)\n"
             + "  -o   Output directory\n"
 //            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
         );
@@ -204,8 +204,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         readRawSequencesAndRecordDepth();  // TODO: read the machine name from the fastq/qseq file
         callGenotypes();
         writeHapMapGenotypes();
-        writeHDF5Genotypes();  // TODO: ensure that reference allele gets added at some point
         writeReadsPerSampleReports();
+        writeHDF5Genotypes();  // TODO: ensure that reference allele gets added at some point
         return null;
     }
 

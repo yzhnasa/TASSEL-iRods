@@ -267,7 +267,7 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
         }
     }
     
-        @Override
+    @Override
     public Locus[] getLoci() {
         int[] chrs = getChromosomes();
         Locus[] result = new Locus[chrs.length];

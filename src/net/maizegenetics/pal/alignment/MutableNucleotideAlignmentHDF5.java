@@ -4,6 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -78,16 +79,59 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private int[] myLociOffsets = null;
 
     //Site descriptor in memory
-    private byte[][] myAlleleFreqOrder=null;
-    private int[][] myAlleleCnt=null;
-    private float[] maf=null;
-    private float[] siteCov=null;
-    protected String[] mySNPIDs;  //perhaps don't keep in memory, consider compressed
+    private byte[][] myAlleleFreqOrder=null;  //we probably need all these in memory for rapid bit conversions
+
+ //   protected String[] mySNPIDs;  //perhaps don't keep in memory, consider compressed
+    private LoadingCache<Integer,SiteAnnotation> mySiteAnnoCache; //key = site
+    private CacheLoader<Integer,SiteAnnotation> siteAnnotLoader = new CacheLoader<Integer,SiteAnnotation>() {
+        int lastCachedStartSite=Integer.MIN_VALUE;
+        int[][] af;
+        byte[][] afOrder;
+        float[] maf;
+        float[] paf;
+        String[] snpIDs;
+        public SiteAnnotation load(Integer key) {
+            int startSite=key&hdf5GenoBlockMask;
+            if(startSite!=lastCachedStartSite) {
+                int length=((myNumSites-startSite)<hdf5GenoBlock)?myNumSites-startSite:hdf5GenoBlock;
+                System.out.println("Reading from HDF5 site anno:"+startSite);
+                System.out.println("");
+                synchronized(myWriter) {
+                    af= myWriter.readIntMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_CNT, 6, length, 0l, startSite);
+                    afOrder = myWriter.readByteMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_FREQ_ORD, 6, length, 0l, startSite);
+                    maf= myWriter.readFloatArrayBlockWithOffset(HapMapHDF5Constants.MAF,length, startSite);
+                    paf= myWriter.readFloatArrayBlockWithOffset(HapMapHDF5Constants.SITECOV,length, startSite);
+                    snpIDs=myWriter.readStringArrayBlockWithOffset(HapMapHDF5Constants.SNP_IDS,length, startSite);
+                    //TODO cache SNPIDs
+                    lastCachedStartSite=startSite;
+                }
+                //perhaps kickoff a process to load the rest
+            }
+            int offset=key-startSite;
+            int numAlleles=0;
+            for (int i = 0; i < af.length; i++) {
+                if(afOrder[i][offset]!=Alignment.UNKNOWN_ALLELE) numAlleles++;
+            }
+            int[] theAf=new int[numAlleles];
+            byte[] theAfOrder=new byte[numAlleles];
+            for (int i = 0; i < numAlleles; i++) {
+                theAfOrder[i] = afOrder[i][offset];
+                theAf[i] = af[theAfOrder[i]][offset]; 
+            }
+            //TODO add SNPIDs
+            SiteAnnotation sa=new SiteAnnotation(myVariableSites[key], 
+                        theAfOrder, theAf, maf[offset], paf[offset], snpIDs[offset]);
+            return sa;
+        }
+        
+    };
+    
     
     IHDF5Writer myWriter=null;
     
 
     HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(2);
+    HDF5FloatStorageFeatures floatFeatures = HDF5FloatStorageFeatures.createDeflation(2);
     private int defaultCacheSize=1<<16;
     private int defaultSiteCache=1<<16;
     
@@ -96,7 +140,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     public static final int hdf5GenoBlockMask=~(hdf5GenoBlock-1);
 //    public boolean favorCachingOfEntireTaxon=true;
 
-    private LoadingCache<Long,byte[]> myGenoCache; //key (taxa <<< 32)+BLOCK
+    private LoadingCache<Long,byte[]> myGenoCache; //key (taxa <<< 33)+BLOCK
     private CacheLoader<Long,byte[]> genoLoader = new CacheLoader<Long,byte[]>() {
         public byte[] load(Long key) {
             int[] taxonSite=getTaxonSiteFromKey(key);
@@ -141,7 +185,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         myVariableSites = variableSites;
         myLocusList = locusList;
         myLocusIndices = locusIndices;
-        mySNPIDs = siteNames;
+//        mySNPIDs = siteNames;
 
         myReference = new byte[myMaxNumSites];
         Arrays.fill(myReference, Alignment.UNKNOWN_DIPLOID_ALLELE);
@@ -198,7 +242,10 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         if(!myWriter.exists(HapMapHDF5Constants.SBIT)) myWriter.createGroup(HapMapHDF5Constants.SBIT);
         if(!myWriter.exists(HapMapHDF5Constants.TBIT)) myWriter.createGroup(HapMapHDF5Constants.TBIT);
         if(!myWriter.exists(HapMapHDF5Constants.DEPTH)) myWriter.createGroup(HapMapHDF5Constants.DEPTH);
-        if(!myWriter.exists(HapMapHDF5Constants.SITE_DESC)) clean();
+        if(!myWriter.exists(HapMapHDF5Constants.SITE_DESC)) {
+            myWriter.createGroup(HapMapHDF5Constants.SITE_DESC);
+            clean();
+        }
     }
 
     
@@ -210,6 +257,9 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         tBitCache = CacheBuilder.newBuilder()
             .maximumSize(1024)
             .build(tBitLoader);
+        mySiteAnnoCache= CacheBuilder.newBuilder()
+            .maximumSize(2000000)
+            .build(siteAnnotLoader);
     }
     
     private void initDepthCache() {
@@ -228,11 +278,11 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
     
     protected static long getCacheKey(int taxon, int site) {
-        return ((long)taxon<<32)+(site/hdf5GenoBlock);
+        return ((long)taxon<<33)+(site/hdf5GenoBlock);
     }
     
     protected static int[] getTaxonSiteFromKey(long key) {
-        return new int[]{(int)(key>>>32),(int)((key<<32)>>>32)};
+        return new int[]{(int)(key>>>33),(int)((key<<32)>>>32)};
     }
     
     public void clearGenotypeCache() {
@@ -520,20 +570,26 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public String[] getSNPIDs() {
-        return mySNPIDs;
+        String[] rsi=new String[myNumSites];
+        for (int i = 0; i < rsi.length; i++) {
+            rsi[i]=getSNPID(i);  
+        }
+        return rsi;
     }
 
     @Override
     public String getSNPID(int site) {
-        if ((mySNPIDs == null) || (mySNPIDs.length == 0) || (mySNPIDs[site] == null)) {
-            return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
+        try{
+            SiteAnnotation sa=mySiteAnnoCache.get(site);
+            if(sa.mySNPIDs!=null) return sa.mySNPIDs; 
+        } catch(ExecutionException e) {
+           return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
         }
-        return mySNPIDs[site];
+        return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
     }
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
-
         if (isDirty()) {
             throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getSiteOfPhysicalPosition: this alignment is dirty.");
         }
@@ -600,25 +656,35 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public byte[] getAlleles(int site) {
-        byte[] result=new byte[6];
-        int i;
-        for (i = 0; (myAlleleFreqOrder[i][site]!=Alignment.UNKNOWN_ALLELE)&&(i<6); i++) {
-            result[i]=myAlleleFreqOrder[i][site];
+        try{
+            SiteAnnotation sa=mySiteAnnoCache.get(site);
+            return sa.myAlleleFreqOrder;
+        } catch(ExecutionException e) {
+           e.printStackTrace();
+           throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");
         }
-        return Arrays.copyOf(result, i);
     }
     
    @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        byte[] alleles=getAlleles(site);
-        int result[][] = new int[2][alleles.length];
-//        System.out.printf("gASBF AL:%d s:%d %d %d %d %d %n", alleles.length, site, myAlleleCnt[0][site], myAlleleCnt[1][site],  myAlleleCnt[2][site], myAlleleCnt[3][site]);
-        for (int i = 0; i < alleles.length; i++) {
-           result[0][i]=alleles[i];
-            
-           result[1][i]=myAlleleCnt[alleles[i]][site];
-       }
-       return result;
+       try{
+            SiteAnnotation sa=mySiteAnnoCache.get(site);
+            return sa.getAllelesSortedByFrequency();
+        } catch(ExecutionException e) {
+           e.printStackTrace();
+           throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");
+        }
+    }
+   
+    @Override
+    public int getTotalGametesNotMissing(int site) {
+        try{
+            SiteAnnotation sa=mySiteAnnoCache.get(site);
+            return sa.getAlleleTotal();
+        } catch(ExecutionException e) {
+           e.printStackTrace();
+           throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");
+        }
     }
     
     public void setCacheHints(int numberOfTaxa, int numberOfSites) {
@@ -647,14 +713,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
      }
      
     private synchronized void setAllBases(String taxonGenoPath, byte[] newBases) {
-        int blocks=((myNumSites-1)/hdf5GenoBlock)+1;
-        for (int i = 0; i < blocks; i++) {
-            int startPos=i*hdf5GenoBlock;
-            int length=(i<(blocks-1))?hdf5GenoBlock:myNumSites-startPos;
-            byte[] sub=new byte[length];
-            System.arraycopy(newBases, startPos, sub, 0, length);
-            myWriter.writeByteArrayBlockWithOffset(taxonGenoPath, sub, sub.length, (long)startPos);
-        }
+        writeHDF5EntireArray(taxonGenoPath, newBases, newBases.length);
        myGenoCache.invalidateAll();
        myIsDirty=true;
     }
@@ -682,14 +741,9 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public synchronized void addTaxon(Identifier id) {
-        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
-        myWriter.createByteArray(basesPath, myNumSites, genoFeatures);
         byte[] unkArray=new byte[getSiteCount()];
         Arrays.fill(unkArray, UNKNOWN_DIPLOID_ALLELE);
-        myWriter.writeByteArray(basesPath, unkArray);
-        myIdentifiers.add(id);
-        myIdGroup=null;
-        myIsDirty=true;
+        addTaxon(id, unkArray, null);
     }
     
     public synchronized void addTaxon(Identifier id, byte[] genotype, byte[][] depth) {
@@ -698,17 +752,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
         if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
         if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
-        
         myWriter.createByteArray(basesPath, myNumSites, chunk, genoFeatures);
         setAllBases(basesPath, genotype);
-//        int blocks=((myNumSites-1)/chunk)+1;
-//        for (int i = 0; i < blocks; i++) {
-//            int startPos=i*chunk;
-//            int length=(i<(blocks-1))?chunk:myNumSites-startPos;
-//            byte[] sub=new byte[length];
-//            System.arraycopy(genotype, startPos, sub, 0, length);
-//            myWriter.writeByteArrayBlockWithOffset(basesPath, sub, sub.length, (long)startPos);
-//        }
         int taxonIndex=myIdentifiers.size();
         myIdentifiers.add(id);
         myIdGroup=null;
@@ -746,10 +791,10 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
     
     private void loadSiteDescriptorsToMemory() {
-        myAlleleCnt=myWriter.readIntMatrix(HapMapHDF5Constants.ALLELE_CNT);
+//        myAlleleCnt=myWriter.readIntMatrix(HapMapHDF5Constants.ALLELE_CNT);
         myAlleleFreqOrder=myWriter.readByteMatrix(HapMapHDF5Constants.ALLELE_FREQ_ORD);
-        maf=myWriter.readFloatArray(HapMapHDF5Constants.MAF);
-        siteCov=myWriter.readFloatArray(HapMapHDF5Constants.SITECOV);
+//        maf=myWriter.readFloatArray(HapMapHDF5Constants.MAF);
+//        siteCov=myWriter.readFloatArray(HapMapHDF5Constants.SITECOV);
     }
 
     @Override
@@ -757,9 +802,19 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         long time=System.currentTimeMillis();
         System.out.print("Starting clean ...");
         recalcLocusCoordinates();
-        HDF5AlignmentAnnotator faCalc=new HDF5AlignmentAnnotator(this, fileName, 
-                HDF5AlignmentAnnotator.AnnoType.ALLELEFreq);
-        faCalc.run();
+        int chunk=(myNumSites<hdf5GenoBlock)?myNumSites:hdf5GenoBlock;
+        myWriter.createIntMatrix(HapMapHDF5Constants.ALLELE_CNT, 6, myNumSites, 1, chunk, genoFeatures);
+        myWriter.createByteMatrix(HapMapHDF5Constants.ALLELE_FREQ_ORD, 6, myNumSites, 1, chunk, genoFeatures);
+        myWriter.createFloatArray(HapMapHDF5Constants.MAF, myNumSites, chunk, floatFeatures);
+        myWriter.createFloatArray(HapMapHDF5Constants.SITECOV, myNumSites, chunk, floatFeatures);
+        chunk=(getSequenceCount()<hdf5GenoBlock)?getSequenceCount():hdf5GenoBlock;
+        myWriter.createFloatArray(HapMapHDF5Constants.TAXACOV, getSequenceCount(), chunk, floatFeatures);
+        myWriter.createFloatArray(HapMapHDF5Constants.TAXAHET, getSequenceCount(), chunk, floatFeatures);
+        if(myIdentifiers.size()>0) {
+            HDF5AlignmentAnnotator faCalc=new HDF5AlignmentAnnotator(this, fileName, 
+                    HDF5AlignmentAnnotator.AnnoType.ALLELEFreq);
+            faCalc.run();
+        }
         System.out.printf("finished in %dms%n",System.currentTimeMillis()-time);
         myIsDirty = false;
         myNumSites -= myNumSitesStagedToRemove;
@@ -771,12 +826,18 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
     @Override
     public double getMajorAlleleFrequency(int site) {
-        return 1-maf[site];
+        return 1-getMinorAlleleFrequency(site);
     }
 
     @Override
     public double getMinorAlleleFrequency(int site) {
-        return maf[site];
+        try{
+            SiteAnnotation sa=mySiteAnnoCache.get(site);
+            return sa.maf;
+        } catch(ExecutionException e) {
+           e.printStackTrace();
+           throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");
+        }
     }
 
     @Override
@@ -790,7 +851,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
     
     public float getSiteCoverage(int site) {
-        return siteCov[site];
+        try{
+            SiteAnnotation sa=mySiteAnnoCache.get(site);
+            return sa.siteCov;
+        } catch(ExecutionException e) {
+           e.printStackTrace();
+           throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");
+        }
     }
 
     @Override
@@ -829,14 +896,95 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
+    /**
+     * Set annotations of sites and taxa.  The sites annotations should probably be
+     * set by block in general and not by all. 
+     * @param af
+     * @param afOrder
+     * @param maf
+     * @param paf
+     * @param coverage
+     * @param hets 
+     */
     protected void setCalcAlleleFreq(int[][] af, byte[][] afOrder,
             float[] maf, float[] paf, float[] coverage, float[] hets) {
-        myWriter.writeIntMatrix(HapMapHDF5Constants.ALLELE_CNT, af);
-        myWriter.writeByteMatrix(HapMapHDF5Constants.ALLELE_FREQ_ORD, afOrder);
-        myWriter.writeFloatArray(HapMapHDF5Constants.MAF, maf);
-        myWriter.writeFloatArray(HapMapHDF5Constants.SITECOV, paf);
-        myWriter.writeFloatArray(HapMapHDF5Constants.TAXACOV, coverage);
-        myWriter.writeFloatArray(HapMapHDF5Constants.TAXAHET, hets);
+        if(af[0].length>0) writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_CNT,af, af[0].length);
+        if(afOrder[0].length>0) writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_FREQ_ORD,afOrder, afOrder[0].length);
+        if(maf.length>0) writeHDF5EntireArray(HapMapHDF5Constants.MAF,maf, maf.length);
+        if(paf.length>0) writeHDF5EntireArray(HapMapHDF5Constants.SITECOV,paf, paf.length);
+        if(coverage.length>0) writeHDF5EntireArray(HapMapHDF5Constants.TAXACOV,coverage, coverage.length);
+        if(hets.length>0) {
+            System.out.println("Hets Length:"+hets.length);
+            writeHDF5EntireArray(HapMapHDF5Constants.TAXAHET,hets, hets.length);
+        }
+    }
+    
+    protected void writeHDF5EntireArray(String objectPath, Object val, int objMaxLength) {
+        writeHDF5EntireArray(objectPath,  myWriter, objMaxLength, hdf5GenoBlock, val);
+    }
+    
+    protected void writeHDF5Block(String objectPath, int block, Object val) {
+        writeHDF5Block(objectPath,  myWriter, hdf5GenoBlock, block, val);
+    }
+    
+    /**
+     * Needs to go the a JHDF5 Utils. 
+     */
+    public static void writeHDF5EntireArray(String objectPath, IHDF5Writer myWriter, int objMaxLength, int blockSize, Object val) {
+        int blocks=((objMaxLength-1)/blockSize)+1;
+        for (int block = 0; block < blocks; block++) {
+            int startPos=block*blockSize;
+            int length=((objMaxLength-startPos)>blockSize)?blockSize:objMaxLength-startPos;
+            if(val instanceof byte[][]) {
+                byte[][] oval=(byte[][])val;
+                byte[][] sval=new byte[oval.length][length];
+                for (int j = 0; j < oval.length; j++) {
+                    sval[j]=Arrays.copyOfRange(oval[j], startPos, startPos+length);
+                }
+                writeHDF5Block(objectPath,  myWriter, blockSize, block, sval);
+            }  else if(val instanceof int[][]) {
+                int[][] oval=(int[][])val;
+                int[][] sval=new int[oval.length][length];
+                for (int j = 0; j < oval.length; j++) {
+                    sval[j]=Arrays.copyOfRange(oval[j], startPos, startPos+length);
+                }
+                writeHDF5Block(objectPath,  myWriter, blockSize, block, sval);
+            } else if(val instanceof byte[]) { 
+                writeHDF5Block(objectPath,  myWriter, blockSize, block, Arrays.copyOfRange((byte[])val, startPos, startPos+length));
+            } else if(val instanceof float[]) { 
+                writeHDF5Block(objectPath,  myWriter, blockSize, block, Arrays.copyOfRange((float[])val, startPos, startPos+length));
+            } else if(val instanceof int[]) { 
+                writeHDF5Block(objectPath,  myWriter, blockSize, block, Arrays.copyOfRange((int[])val, startPos, startPos+length));
+            } else if(val instanceof String[]) { 
+                writeHDF5Block(objectPath,  myWriter, blockSize, block, Arrays.copyOfRange((String[])val, startPos, startPos+length));
+            }
+        }
+    }
+    
+    /**
+     * Needs to go the a JHDF5 Utils. 
+     */
+    public static void writeHDF5Block(String objectPath, IHDF5Writer myWriter, int blockSize, int block, Object val) {
+        int startPos=block*blockSize;
+        if(val instanceof byte[]) {
+            byte[] fval=(byte[])val;
+            myWriter.writeByteArrayBlockWithOffset(objectPath, fval, fval.length, (long)startPos);
+        } else if(val instanceof float[]) {
+            float[] fval=(float[])val;
+            myWriter.writeFloatArrayBlockWithOffset(objectPath, fval, fval.length, (long)startPos);
+        } else if(val instanceof int[]) {
+            int[] fval=(int[])val;
+            myWriter.writeIntArrayBlockWithOffset(objectPath, fval, fval.length, (long)startPos);
+        } else if(val instanceof int[][]) {
+            int[][] ival=(int[][])val;
+            myWriter.writeIntMatrixBlockWithOffset(objectPath, ival, ival.length, ival[0].length, 0l, (long)startPos);
+        } else if(val instanceof byte[][]) {
+            byte[][] bval=(byte[][])val;
+            myWriter.writeByteMatrixBlockWithOffset(objectPath, bval, bval.length, bval[0].length, 0l, (long)startPos);
+        } else if(val instanceof String[]) {
+            String[] sval=(String[])val;
+            myWriter.writeStringArrayBlockWithOffset(objectPath, sval, sval.length, (long)startPos);
+        }
     }
 
     @Override

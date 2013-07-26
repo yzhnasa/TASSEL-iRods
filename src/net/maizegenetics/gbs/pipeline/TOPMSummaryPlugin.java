@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -80,7 +81,6 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
             int chrom = myInputTOPM.getChromosome(i);
             int index = Arrays.binarySearch(myChromosomes, chrom);
 
-            int tagLength = myInputTOPM.getTagLength(i);
             //String tag = BaseEncoder.getSequenceFromLong(myInputTOPM.getTag(i));
             if (strand == 1) {
                 if (index < 0) {
@@ -91,28 +91,15 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                     myLogger.error("performFunction: tag: " + i + " invalid state: strand: " + strand + "  start position: " + startPos + "  end position: " + endPos);
                     continue;
                 }
-                //int startEndLength = endPos - startPos + 1;
-                //if (startEndLength != tagLength) {
-                //    myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " doesn't equal (end pos - start pos + 1): " + startEndLength);
-                //}
                 List<Integer> positionsOnTag = new ArrayList<Integer>();
                 int numDefinedVariants = 0;
                 for (int j = 0; j < myInputTOPM.getMaxNumVariants(); j++) {
                     int offset = myInputTOPM.getVariantPosOff(i, j);
                     byte def = myInputTOPM.getVariantDef(i, j);
-                    //if (offset != Byte.MIN_VALUE) {
-                    //    myLogger.info("performFunction: Tag: " + i + " Positive Strand: Defined Variant: Offset: " + offset + "  def: " + (char) def);
-                    //}
                     if ((offset != Byte.MIN_VALUE) && (def != Byte.MIN_VALUE)) {
                         numDefinedVariants++;
-                        //if ((char) def != tag.charAt(offset)) {
-                        //    myLogger.error("performFunction: Mismatch: Sequence From Long: " + tag + "  offset: " + offset + " def: " + (char) def + " from tag: " + tag.charAt(offset));
-                        //}
                         int position = startPos + offset;
                         positionsOnTag.add(position);
-//                        if (position > endPos && def != (byte) '-' &&  def != (byte) 'N') {
-//                            myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
-//                        }  // Jeff notes: this warning puts too much faith in the bowtie2 or BWA alignment and the correct parsing thereof
                         Integer count = myTagsPerSite[index].get(position);
                         if (count == null) {
                             myTagsPerSite[index].put(position, 1);
@@ -139,28 +126,15 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                     myLogger.error("performFunction: tag: " + i + " invalid state: strand: " + strand + "  start position: " + startPos + "  end position: " + endPos);
                     continue;
                 }
-                //int startEndLength = startPos - endPos + 1;
-                //if (startEndLength != tagLength) {
-                //    myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " doesn't equal (start pos - end pos + 1): " + startEndLength);
-                //}
                 List<Integer> positionsOnTag = new ArrayList<Integer>();
                 int numDefinedVariants = 0;
                 for (int j = 0; j < myInputTOPM.getMaxNumVariants(); j++) {
                     int offset = myInputTOPM.getVariantPosOff(i, j);
                     byte def = myInputTOPM.getVariantDef(i, j);
-                    //if (offset != Byte.MIN_VALUE) {
-                    //    myLogger.info("performFunction: Tag: " + i + " Negative Strand: Defined Variant: Offset: " + offset + "  def: " + (char) def);
-                    //}
                     if ((offset != Byte.MIN_VALUE) && (def != Byte.MIN_VALUE)) {
                         numDefinedVariants++;
-                        //if ((char) def != tag.charAt(offset)) {
-                        //    myLogger.error("performFunction: Mismatch: Sequence From Long: " + tag + "  offset: " + offset + " def: " + (char) def + " from tag: " + tag.charAt(offset));
-                        //}
                         int position = startPos + offset;
                         positionsOnTag.add(position);
-//                        if (position < endPos && def != (byte) '-' &&  def != (byte) 'N') {
-//                            myLogger.warn("performFunction: tag: " + i + " tag length: " + tagLength + " on chromosome: " + chrom + " has invalid offset: " + offset + " puts physical postion: " + position + " outside range: " + startPos + " to " + endPos);
-//                        }  // Jeff notes: this warning puts too much faith in the bowtie2 or BWA alignment and the correct parsing thereof
                         Integer count = myTagsPerSite[index].get(position);
                         if (count == null) {
                             myTagsPerSite[index].put(position, 1);
@@ -214,7 +188,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
             myLogger.info("performFunction: Chromosome: " + myChromosomes[i] + " Number of SNPs: " + myTagsPerSite[i].size());
         }
         myLogger.info("performFunction: Total SNPs: " + totalSNPs);
-        
+
         for (int i = 0; i <= myInputTOPM.getMaxNumVariants(); i++) {
             myLogger.info("performFunction: Number of Tags: " + myNumTagsPerVariantsDefined[i] + " Has: " + i + " Variants Defined");
         }
@@ -243,7 +217,7 @@ public class TOPMSummaryPlugin extends AbstractPlugin {
                         } else {
                             notFirst = true;
                         }
-                        writer.append((char) ((Byte) itr2.next()).byteValue());
+                        writer.append(NucleotideAlignmentConstants.getHaplotypeNucleotide(((Byte) itr2.next()).byteValue()));
                     }
                     writer.append("\n");
                 }

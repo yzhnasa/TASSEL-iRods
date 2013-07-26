@@ -21,13 +21,6 @@ public final class NucleotideAlignmentConstants {
     public static final byte GAP_ALLELE = (byte) 0x5;
     // Diploid Byte Values for Nucleotide Alleles
     public static final byte GAP_DIPLOID_ALLELE = (byte) 0x55;
-    
-    /** Needs to be removed */
-    public static final byte REF_DIPLOID_ALLELE = (byte) 0x00; 
-    /** Needs to be removed */
-    public static final byte ALT_DIPLOID_ALLELE = (byte) 0x11;
-    /** Needs to be removed */
-    public static final byte HET_DIPLOID_ALLELE = (byte) 0x01;
     // String Values for Nucleotide Alleles
     public static final String INSERT_ALLELE_STR = "+";
     public static final String GAP_ALLELE_STR = "-";
@@ -311,6 +304,17 @@ public final class NucleotideAlignmentConstants {
         } catch (NullPointerException e) {
             return QUESTION_MARK;
         }
+    }
+
+    /**
+     * Returns the Nucleotide String for the given haploid allele value.
+     *
+     * @param value haploid value
+     *
+     * @return Nucleotide String
+     */
+    public static String getHaplotypeNucleotide(byte value) {
+        return NUCLEOTIDE_ALLELES[0][value];
     }
 
     /**

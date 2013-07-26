@@ -797,7 +797,7 @@ public class TasselPipeline implements PluginListener {
                     } else if (temp.equalsIgnoreCase("Genotype")) {
                         plugin.setHetTreatment(HetTreatment.Genotype);
                     } else {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Het Treatment parameter must be Ignore, Missing, or Thirdstate.");
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Het Treatment parameter must be Haplotype, Homozygous, or Genotype.");
                     }
 
                 } else if (current.equalsIgnoreCase("-ldd")) {

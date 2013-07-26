@@ -20,10 +20,11 @@ import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**
- *
+ * Basic method of working with alignment of PE tags
  * @author Fei Lu
  */
 public abstract class AbstractPETagsOnPhysicalMap extends AbstractPETags {
+    /***/
     protected int[] chrF;//Integer.MIN_VALUE means the tag is not physically mapped
     protected int[] chrB;
     protected int[] chrContig;
@@ -36,7 +37,8 @@ public abstract class AbstractPETagsOnPhysicalMap extends AbstractPETags {
     protected byte[] strandF; //Byte.MIN_VALUE means the tag is not physically mapped
     protected byte[] strandB;
     protected byte[] strandContig;
-    public enum TagType {
+    
+    public enum PETagType {
         Forward, Backward, Contig
     }
     

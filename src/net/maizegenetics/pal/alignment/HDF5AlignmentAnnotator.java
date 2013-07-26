@@ -63,7 +63,7 @@ public class HDF5AlignmentAnnotator implements Runnable {
                 if(genotype[s]!=Alignment.UNKNOWN_DIPLOID_ALLELE) covSum++;
             }
             coverage[taxon]=(float)covSum/(float)sites;
-            hets[taxon]=(float)hetSum/(float)sites;
+            hets[taxon]=(float)hetSum/(float)covSum;
         }
 //        byte[] mjAlleles=new byte[sites];
 //        byte[] mnAlleles=new byte[sites];
