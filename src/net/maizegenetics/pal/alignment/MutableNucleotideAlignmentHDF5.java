@@ -244,14 +244,6 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         if(!myWriter.exists(HapMapHDF5Constants.DEPTH)) myWriter.createGroup(HapMapHDF5Constants.DEPTH);
         if(!myWriter.exists(HapMapHDF5Constants.SITE_DESC)) {
             myWriter.createGroup(HapMapHDF5Constants.SITE_DESC);
-            int chunk=(myNumSites<hdf5GenoBlock)?myNumSites:hdf5GenoBlock;
-            myWriter.createIntMatrix(HapMapHDF5Constants.ALLELE_CNT, 6, myNumSites, 1, chunk, genoFeatures);
-            myWriter.createByteMatrix(HapMapHDF5Constants.ALLELE_FREQ_ORD, 6, myNumSites, 1, chunk, genoFeatures);
-            myWriter.createFloatArray(HapMapHDF5Constants.MAF, myNumSites, chunk, floatFeatures);
-            myWriter.createFloatArray(HapMapHDF5Constants.SITECOV, myNumSites, chunk, floatFeatures);
-            chunk=(getSequenceCount()<hdf5GenoBlock)?getSequenceCount():hdf5GenoBlock;
-            myWriter.createFloatArray(HapMapHDF5Constants.TAXACOV, getSequenceCount(), chunk, floatFeatures);
-            myWriter.createFloatArray(HapMapHDF5Constants.TAXAHET, getSequenceCount(), chunk, floatFeatures);
             clean();
         }
     }
@@ -717,11 +709,11 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
     
      public synchronized void setAllBases(int taxon, byte[] newBases) {
-         writeHDF5EntireArray(getTaxaGenoPath(taxon), newBases);
+         setAllBases(getTaxaGenoPath(taxon), newBases);
      }
      
     private synchronized void setAllBases(String taxonGenoPath, byte[] newBases) {
-        writeHDF5EntireArray(taxonGenoPath, newBases);
+        writeHDF5EntireArray(taxonGenoPath, newBases, newBases.length);
        myGenoCache.invalidateAll();
        myIsDirty=true;
     }
@@ -810,9 +802,19 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         long time=System.currentTimeMillis();
         System.out.print("Starting clean ...");
         recalcLocusCoordinates();
-        HDF5AlignmentAnnotator faCalc=new HDF5AlignmentAnnotator(this, fileName, 
-                HDF5AlignmentAnnotator.AnnoType.ALLELEFreq);
-        faCalc.run();
+        int chunk=(myNumSites<hdf5GenoBlock)?myNumSites:hdf5GenoBlock;
+        myWriter.createIntMatrix(HapMapHDF5Constants.ALLELE_CNT, 6, myNumSites, 1, chunk, genoFeatures);
+        myWriter.createByteMatrix(HapMapHDF5Constants.ALLELE_FREQ_ORD, 6, myNumSites, 1, chunk, genoFeatures);
+        myWriter.createFloatArray(HapMapHDF5Constants.MAF, myNumSites, chunk, floatFeatures);
+        myWriter.createFloatArray(HapMapHDF5Constants.SITECOV, myNumSites, chunk, floatFeatures);
+        chunk=(getSequenceCount()<hdf5GenoBlock)?getSequenceCount():hdf5GenoBlock;
+        myWriter.createFloatArray(HapMapHDF5Constants.TAXACOV, getSequenceCount(), chunk, floatFeatures);
+        myWriter.createFloatArray(HapMapHDF5Constants.TAXAHET, getSequenceCount(), chunk, floatFeatures);
+        if(myIdentifiers.size()>0) {
+            HDF5AlignmentAnnotator faCalc=new HDF5AlignmentAnnotator(this, fileName, 
+                    HDF5AlignmentAnnotator.AnnoType.ALLELEFreq);
+            faCalc.run();
+        }
         System.out.printf("finished in %dms%n",System.currentTimeMillis()-time);
         myIsDirty = false;
         myNumSites -= myNumSitesStagedToRemove;
@@ -906,16 +908,19 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
      */
     protected void setCalcAlleleFreq(int[][] af, byte[][] afOrder,
             float[] maf, float[] paf, float[] coverage, float[] hets) {
-        if(af[0].length>0) writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_CNT,af);
-        if(afOrder[0].length>0) writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_FREQ_ORD,afOrder);
-        if(maf.length>0) writeHDF5EntireArray(HapMapHDF5Constants.MAF,maf);
-        if(paf.length>0) writeHDF5EntireArray(HapMapHDF5Constants.SITECOV,paf);
-        if(coverage.length>0) writeHDF5EntireArray(HapMapHDF5Constants.TAXACOV,coverage);
-        if(hets.length>0) writeHDF5EntireArray(HapMapHDF5Constants.TAXAHET,hets);
+        if(af[0].length>0) writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_CNT,af, af[0].length);
+        if(afOrder[0].length>0) writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_FREQ_ORD,afOrder, afOrder[0].length);
+        if(maf.length>0) writeHDF5EntireArray(HapMapHDF5Constants.MAF,maf, maf.length);
+        if(paf.length>0) writeHDF5EntireArray(HapMapHDF5Constants.SITECOV,paf, paf.length);
+        if(coverage.length>0) writeHDF5EntireArray(HapMapHDF5Constants.TAXACOV,coverage, coverage.length);
+        if(hets.length>0) {
+            System.out.println("Hets Length:"+hets.length);
+            writeHDF5EntireArray(HapMapHDF5Constants.TAXAHET,hets, hets.length);
+        }
     }
     
-    protected void writeHDF5EntireArray(String objectPath, Object val) {
-        writeHDF5EntireArray(objectPath,  myWriter, myNumSites, hdf5GenoBlock, val);
+    protected void writeHDF5EntireArray(String objectPath, Object val, int objMaxLength) {
+        writeHDF5EntireArray(objectPath,  myWriter, objMaxLength, hdf5GenoBlock, val);
     }
     
     protected void writeHDF5Block(String objectPath, int block, Object val) {
@@ -925,11 +930,11 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     /**
      * Needs to go the a JHDF5 Utils. 
      */
-    public static void writeHDF5EntireArray(String objectPath, IHDF5Writer myWriter, int myNumSites, int blockSize, Object val) {
-        int blocks=((myNumSites-1)/blockSize)+1;
+    public static void writeHDF5EntireArray(String objectPath, IHDF5Writer myWriter, int objMaxLength, int blockSize, Object val) {
+        int blocks=((objMaxLength-1)/blockSize)+1;
         for (int block = 0; block < blocks; block++) {
             int startPos=block*blockSize;
-            int length=((myNumSites-startPos)>blockSize)?blockSize:myNumSites-startPos;
+            int length=((objMaxLength-startPos)>blockSize)?blockSize:objMaxLength-startPos;
             if(val instanceof byte[][]) {
                 byte[][] oval=(byte[][])val;
                 byte[][] sval=new byte[oval.length][length];
