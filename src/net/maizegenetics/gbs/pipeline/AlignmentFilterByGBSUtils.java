@@ -33,9 +33,9 @@ import org.apache.poi.util.IntList;
 @Deprecated
 public class AlignmentFilterByGBSUtils {
 
-    public static final byte refAllele = NucleotideAlignmentConstants.REF_DIPLOID_ALLELE; //A
-    public static final byte altAllele = NucleotideAlignmentConstants.ALT_DIPLOID_ALLELE; //C
-    public static final byte hetAllele = NucleotideAlignmentConstants.HET_DIPLOID_ALLELE; //M
+    public static final byte refAllele = (byte) 0x00; //A
+    public static final byte altAllele = (byte) 0x11; //C
+    public static final byte hetAllele = (byte) 0x01; //M
 
     private AlignmentFilterByGBSUtils() {
     }
