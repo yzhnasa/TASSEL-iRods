@@ -43,8 +43,7 @@ public class TreeClusters {
 			for (int t = 0; t < nTaxa; t++) {
 				if (groups[t] == -1) {
 					Node aNode = theTree.getExternalNode(t);
-//					while (aNode.getParent() != null && aNode.getParent().getNodeHeight() <= maxHeight) {
-					while (aNode.getParent().getNodeHeight() <= maxHeight) {
+					while (aNode.getParent() != null && aNode.getParent().getNodeHeight() <= maxHeight) {
 						aNode = aNode.getParent();
 					}
 					setNodeToGroup(aNode, group, groups);
