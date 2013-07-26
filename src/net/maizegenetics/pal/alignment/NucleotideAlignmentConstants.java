@@ -307,6 +307,17 @@ public final class NucleotideAlignmentConstants {
     }
 
     /**
+     * Returns the Nucleotide String for the given haploid allele value.
+     *
+     * @param value haploid value
+     *
+     * @return Nucleotide String
+     */
+    public static String getHaplotypeNucleotide(byte value) {
+        return NUCLEOTIDE_ALLELES[0][value];
+    }
+
+    /**
      * Returns the Nucleotide Complement of given byte encoded nucleotide. A
      * returns T. T returns A. C returns G. G returns C. Otherwise given
      * nucleotide is returned.
