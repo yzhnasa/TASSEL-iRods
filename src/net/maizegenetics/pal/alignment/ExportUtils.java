@@ -158,7 +158,7 @@ public class ExportUtils {
     }
 
     public static String writeToMutableHDF5(Alignment a, String newHDF5file) {
-        return writeToMutableHDF5(a, newHDF5file, null);
+        return writeToMutableHDF5(a, newHDF5file, null, false);
     }
     
    /**
@@ -168,7 +168,7 @@ public class ExportUtils {
     * @param exportTaxa  subset of taxa (if null exports ALL taxa)
     * @return 
     */ 
-   public static String writeToMutableHDF5(Alignment a, String newHDF5file, IdGroup exportTaxa) {
+   public static String writeToMutableHDF5(Alignment a, String newHDF5file, IdGroup exportTaxa, boolean keepDepth) {
         IHDF5Writer h5w = null;
         try {
             int numSites = a.getSiteCount();
@@ -241,7 +241,11 @@ public class ExportUtils {
             for (int t = 0; t < numTaxa; t++) {
                   if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.getFullTaxaName(t))<0)) continue;  //taxon not in export list
                   byte[] bases = a.getBaseRow(t);
-                  addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
+                  if (keepDepth==false) addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
+                  else {
+                      MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
+                      addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, m.getDepthForAlleles(t));
+                  }
             }
             addA.clean();           
             return newHDF5file;
@@ -303,7 +307,7 @@ public class ExportUtils {
             siteOfSite[s]=site;
             s++;
         }
-        ExportUtils.writeToMutableHDF5(mna, newMerge, new SimpleIdGroup(0));
+        ExportUtils.writeToMutableHDF5(mna, newMerge, new SimpleIdGroup(0), false);
         MutableNucleotideAlignmentHDF5 base=MutableNucleotideAlignmentHDF5.getInstance(newMerge, 4096);
         int cnt=0;
         long startTime=System.currentTimeMillis();

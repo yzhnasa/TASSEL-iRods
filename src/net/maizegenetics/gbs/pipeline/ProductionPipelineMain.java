@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.net.InetAddress;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -20,6 +21,7 @@ import net.maizegenetics.util.SMTPClient;
 import com.google.common.base.Splitter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -35,6 +37,9 @@ import org.apache.commons.lang.StringUtils;
 public class ProductionPipelineMain {
 
 
+    private final Logger myLogger = Logger.getLogger(ProductionPipelineMain.class);
+
+//    myLogger.setLevel(Level.OFF);
     // these could reasonably be contents of a properties file
     private String applicationConfiguration = "production_pipeline.properties";
 
@@ -167,16 +172,17 @@ public class ProductionPipelineMain {
             System.setOut(ps);
             System.setErr(ps);
 
-            String xmlFilename = fileNameBase + ".xml";
-            String xmlFilePath = outputFolder  + "/" + xmlFilename;
-            System.out.println("xmlFilePath = " + xmlFilePath);
 
-            System.out.println(getTimeStamp() + " ***********Now initializing TasselPipeline*********");
+            System.out.println(getTimeStamp() + " ***********Now initializing ProductionSNPCallerPlugin*********");
             Date start = new Date();
-//            runTassel(xmlFilePath);
-            runTassel(tasselPipelineArgs);
+
+            String[] pluginArgs = createPluginArgs();
+            ProductionSNPCallerPlugin pscp = new ProductionSNPCallerPlugin();
+            pscp.setParameters(pluginArgs);
+            pscp.performFunction(null);
+
             Date stop = new Date();
-            System.out.println(getTimeStamp() + " *********** TasselPipeline has completed*********");
+            System.out.println(getTimeStamp() + " *********** ProductionSNPCallerPlugin has completed*********");
 
             long startTime = start.getTime();
             long stopTime = stop.getTime();
@@ -202,8 +208,8 @@ public class ProductionPipelineMain {
 
             // send email notification that a .run file has been processed
             SMTPClient sc = new SMTPClient(emailHost, emailAddresses);
-            String emailSubject = "GBS Production Pipeline " + xmlFilename;
-            String emailMsg = "Ran:\n " + xmlFilePath +
+            String emailSubject = "GBS Production Pipeline " + this.anInputFolder;
+            String emailMsg = "Ran:\n " + this.anInputFolder +
                                "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds" +
                                "\n\n Attachment:\n " + logFile.getAbsolutePath();
             try{
@@ -212,42 +218,25 @@ public class ProductionPipelineMain {
         }
     }
 
+
+
     /*
      *  Write out XML file for each instance of the TasselPipeline
      *
      * @param anXMLFile
      */
-    private String[] createXMLFile( String anXMLFile){
-
-        StringBuffer sb = new StringBuffer();
-        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
-        sb.append(" <TasselPipeline>\n");
-        sb.append("    <fork1>\n");
-        sb.append("        <ProductionSNPCallerPlugin>\n");
-        sb.append("            <i>" + this.anInputFolder + "</i>\n");
-        sb.append("            <k>" + this.keyFile + "</k>\n");
-        sb.append("            <e>" + this.enzyme + "</e>\n");
-        sb.append("            <o>" + this.outputFolder + "</o>\n");
-        sb.append("            <m>" + this.topmFile + "</m>\n");
-        sb.append("        </ProductionSNPCallerPlugin>\n");
-        sb.append("    </fork1>\n");
-        sb.append("    <runfork1/>\n");
-        sb.append("</TasselPipeline>\n");
+        private String[] createPluginArgs(){
 
 
-        File xmlFile = new File(outputFolder + "/" + anXMLFile);
-        try {
-            if (!xmlFile.exists()) {
-                xmlFile.createNewFile();
-            }
-            BufferedWriter bw = new BufferedWriter(new FileWriter(xmlFile.getAbsolutePath()));
-            bw.write(sb.toString());
-            bw.close();
-            
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-        return TasselPipelineXMLUtil.readXMLAsArgs(xmlFile.getAbsolutePath());
+            String[] args = {
+                    "-i", anInputFolder,
+                    "-k", keyFile,
+                    "-e", enzyme,
+                    "-o", outputFolder,
+                    "-m", topmFile
+            };
+        return args;
+
     }
 
     /**
@@ -435,12 +424,13 @@ public class ProductionPipelineMain {
             sb.append(getTimeStamp() + "MD5sum checking has been switched off using the --skipCheckSum argument");
         }
 
-        sb.append("XML file used to run the pipeline:\n" );
-        String[] xmlFileContents = createXMLFile(fileNameBase + ".xml");
-        tasselPipelineArgs = createXMLFile(fileNameBase + ".xml");
-        for(String arg: xmlFileContents) System.out.println("arg = " + arg);
+        // todo: record plugin args
+//        sb.append("XML file used to run the pipeline:\n" );
+//        String[] xmlFileContents = createXMLFile(fileNameBase + ".xml");
+//        tasselPipelineArgs = createXMLFile(fileNameBase + ".xml");
+//        for(String arg: xmlFileContents) System.out.println("arg = " + arg);
 
-        sb.append(getTimeStamp() + "\n" + xmlFileContents + "\n");
+//        sb.append(getTimeStamp() + "\n" + xmlFileContents + "\n");
         return sb.toString();
     }
 
@@ -453,6 +443,9 @@ public class ProductionPipelineMain {
         tp.main(args);
     }
 
+    private void runProductionSNPCallerPlugin(){
+
+    }
     /**
      * Convenience method to provide uniformly labelled timestamps
      * @return
@@ -487,8 +480,7 @@ public class ProductionPipelineMain {
         String skipCheckSum = "skipCheckSum";
         if(args != null){
             for(String arg: args){
-                StringUtils.containsIgnoreCase(skipCheckSum, arg);
-                if(arg.equalsIgnoreCase(skipCheckSum)){
+                if(StringUtils.containsIgnoreCase(arg, skipCheckSum )){
                     doCheckSum = false;
                     break;
                 }

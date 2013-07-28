@@ -6,8 +6,6 @@ package net.maizegenetics.gbs.maps;
 import ch.systemsx.cisd.hdf5.*;
 import java.io.File;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
 import net.maizegenetics.gbs.util.GBSHDF5Constants;
 import org.apache.log4j.Logger;
 
@@ -157,7 +155,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
             if (numVariants > maxVariants) {
                 throw new IllegalArgumentException("TagsOnPhysMapHDF5: createFile: max variants can't be less than original TOPM Variant Defs: " + numVariants);
             }
-            writeVariantsToHDF5(h5, inTags);
+            writeVariantsToHDF5(h5, inTags, maxVariants);
             System.out.println("Variant offsets written");
 
         } finally {
@@ -237,6 +235,7 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         variantDefs=new byte[myNumTags][];
         variantOffsets=new byte[myNumTags][];
         if(!myHDF5.exists(GBSHDF5Constants.VARIANTDEF)) return false;
+        
         for (int blockStep = 0; blockStep < myNumTags; blockStep+=readBlock) {
             int blockSize=(myNumTags-blockStep<readBlock)?myNumTags-blockStep:readBlock;
             byte[][] vd=myHDF5.readByteMatrixBlockWithOffset(GBSHDF5Constants.VARIANTDEF,blockSize,myMaxVariants,blockStep,0);
@@ -263,12 +262,12 @@ public class TagsOnPhysMapHDF5 extends AbstractTagsOnPhysicalMap implements TOPM
         return true;
     }
     
-    private static boolean writeVariantsToHDF5(IHDF5Writer aHDF5, AbstractTagsOnPhysicalMap aTOPM) {
+    private static boolean writeVariantsToHDF5(IHDF5Writer aHDF5, AbstractTagsOnPhysicalMap aTOPM, int myMaxVariants) {
         int howManyDef=0;
         int readBlock=4096*16;
         
         int myNumTags=aTOPM.myNumTags;
-        int myMaxVariants=aTOPM.myMaxVariants;
+//        int myMaxVariants=aTOPM.myMaxVariants;
         aHDF5.createByteMatrix(GBSHDF5Constants.VARIANTDEF, myNumTags, myMaxVariants);
         aHDF5.createByteMatrix(GBSHDF5Constants.VARIANTPOSOFF, myNumTags, myMaxVariants);
 //        variantDefs=new byte[myNumTags][];
