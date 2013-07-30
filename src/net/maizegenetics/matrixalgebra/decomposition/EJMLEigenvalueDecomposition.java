@@ -3,26 +3,28 @@ package net.maizegenetics.matrixalgebra.decomposition;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.EJMLDoubleMatrix;
 
-import org.ejml.alg.dense.decomposition.EigenDecomposition;
+import org.ejml.factory.DecompositionFactory;
+import org.ejml.factory.EigenDecomposition;
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.ops.EigenOps;
 
 public class EJMLEigenvalueDecomposition implements EigenvalueDecomposition {
-	final EigenDecomposition myDecomposition;
+	final EigenDecomposition<DenseMatrix64F> myDecomposition;
 	boolean successful;
 	
 	public EJMLEigenvalueDecomposition(DoubleMatrix dm) {
-		myDecomposition = EigenOps.decompositionSymmetric(true);
-		successful = myDecomposition.decompose(((EJMLDoubleMatrix) dm).myMatrix);
+		EJMLDoubleMatrix ejmldm = (EJMLDoubleMatrix) dm;
+		myDecomposition = DecompositionFactory.eig(dm.numberOfRows(), true);
+		successful = myDecomposition.decompose(ejmldm.myMatrix);
 	}
 	
 	public EJMLEigenvalueDecomposition(DenseMatrix64F matrix) {
-		myDecomposition = EigenOps.decompositionSymmetric(true);
+		myDecomposition = DecompositionFactory.eig(matrix.numRows, true);
 		successful = myDecomposition.decompose(matrix);
 		
 	}
 	
-	public EJMLEigenvalueDecomposition(EigenDecomposition decomp) {
+	public EJMLEigenvalueDecomposition(EigenDecomposition<DenseMatrix64F> decomp) {
 		myDecomposition = decomp;
 	}
 	

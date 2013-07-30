@@ -2,6 +2,7 @@ package net.maizegenetics.matrixalgebra.Matrix;
 
 import org.apache.log4j.Logger;
 import org.ejml.data.DenseMatrix64F;
+import org.ejml.ops.CommonOps;
 import org.ejml.ops.SpecializedOps;
 
 import cern.colt.matrix.DoubleFactory2D;
@@ -124,7 +125,7 @@ public class DoubleMatrixFactory {
 				int startCol = 0;
 				for (int c = 0; c < nCols; c++) {
 					DenseMatrix64F dm = ((EJMLDoubleMatrix) components[r][c]).myMatrix;
-					SpecializedOps.insert(dm, startRow, startCol, result);
+					CommonOps.insert(dm, result, startRow, startCol);
 					startCol += dm.numCols;
 				}
 				startRow += components[r][0].numberOfRows();

@@ -1,13 +1,10 @@
 package net.maizegenetics.matrixalgebra.Matrix;
 
-import org.ejml.alg.dense.decomposition.DecompositionFactory;
-import org.ejml.alg.dense.decomposition.svd.SingularValueDecompositionBase;
-import org.ejml.alg.dense.linsol.LinearSolver;
-import org.ejml.alg.dense.linsol.LinearSolverFactory;
+import org.ejml.factory.DecompositionFactory;
+import org.ejml.factory.LinearSolver;
+import org.ejml.factory.LinearSolverFactory;
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.ops.CommonOps;
-import org.ejml.ops.EigenOps;
-import org.ejml.ops.SingularOps;
 import org.ejml.ops.SpecializedOps;
 
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
@@ -17,7 +14,6 @@ import net.maizegenetics.matrixalgebra.decomposition.EJMLSingularValueDecomposit
 import net.maizegenetics.matrixalgebra.decomposition.EigenvalueDecomposition;
 import net.maizegenetics.matrixalgebra.decomposition.QRDecomposition;
 import net.maizegenetics.matrixalgebra.decomposition.SingularValueDecomposition;
-import net.maizegenetics.matrixalgebra.decomposition.SymmetricEigenvalueDecomposition;
 
 public class EJMLDoubleMatrix implements DoubleMatrix {
 
@@ -70,9 +66,8 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 	@Override
 	public int columnRank() {
 		if (myMatrix.numCols == 1) return 1;
-		org.ejml.alg.dense.decomposition.SingularValueDecomposition svd =  DecompositionFactory.svd();
-		svd.decompose(myMatrix);
-		return SingularOps.rank(svd, 1e-12);
+		EJMLSingularValueDecomposition svd = new EJMLSingularValueDecomposition(myMatrix);
+		return svd.getRank();
 	}
 
 	@Override
@@ -92,8 +87,8 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 			}
 			int totalRows = myNumberOfRows + dmNumberOfRows;
 			result = new DenseMatrix64F(totalRows, myNumberOfCols);
-			SpecializedOps.insert(myMatrix,0,0,result);
-			SpecializedOps.insert(otherMatrix,dmNumberOfRows,0,result);
+			CommonOps.insert(myMatrix, result,0,0);
+			CommonOps.insert(otherMatrix,result, dmNumberOfRows,0);
 		} else {
 			if (myNumberOfRows != dmNumberOfRows) {
 				StringBuilder sb = new StringBuilder("Non-conformable matrices in concatenate columns: ");
@@ -103,8 +98,8 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 			}
 			int totalCol = myNumberOfCols + dmNumberOfCols;
 			result = new DenseMatrix64F(myNumberOfRows, totalCol);
-			SpecializedOps.insert(myMatrix,0,0,result);
-			SpecializedOps.insert(otherMatrix,0,myNumberOfCols,result);
+			CommonOps.insert(myMatrix, result, 0, 0);
+			CommonOps.insert(otherMatrix, result, 0, myNumberOfCols);
 		}
 		return new EJMLDoubleMatrix(result);
 	}
@@ -141,7 +136,7 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 
 	@Override
 	public DoubleMatrix generalizedInverseWithRank(int[] rank) {
-		org.ejml.alg.dense.decomposition.SingularValueDecomposition myDecomposition = DecompositionFactory.svd();
+		org.ejml.factory.SingularValueDecomposition<DenseMatrix64F> myDecomposition = DecompositionFactory.svd(myMatrix.numRows, myMatrix.numCols, true, true, false);
 		myDecomposition.decompose(myMatrix);
 		double tol = 1e-10;
 		rank[0] = 0;
@@ -158,8 +153,8 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 			W.set(i, i, val);
 		}
 		
-		DenseMatrix64F V = myDecomposition.getV(false);
-		DenseMatrix64F UT  = myDecomposition.getU(true);
+		DenseMatrix64F V = myDecomposition.getV(null, false);
+		DenseMatrix64F UT  = myDecomposition.getU(null, true);
 		
 		int nrows = V.getNumRows();
 		int ncols = W.getNumCols();
@@ -371,7 +366,7 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 	public DoubleMatrix solve(DoubleMatrix Y) {
 		DenseMatrix64F data = ((EJMLDoubleMatrix) Y).myMatrix;
 		DenseMatrix64F result = new DenseMatrix64F(myMatrix.numCols, data.numCols);
-		LinearSolver solver = LinearSolverFactory.leastSquares();
+		LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.leastSquares(myMatrix.numCols, data.numCols);
 		solver.setA(myMatrix);
 		solver.solve(data, result);
 		return new EJMLDoubleMatrix(result);

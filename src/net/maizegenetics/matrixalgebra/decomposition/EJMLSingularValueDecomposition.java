@@ -1,8 +1,7 @@
 package net.maizegenetics.matrixalgebra.decomposition;
 
-import org.ejml.alg.dense.decomposition.DecompositionFactory;
 import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.factory.DecompositionFactory;
 import org.ejml.ops.SingularOps;
 
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
@@ -12,12 +11,12 @@ import net.maizegenetics.matrixalgebra.Matrix.EJMLDoubleMatrix;
 public class EJMLSingularValueDecomposition implements
 		SingularValueDecomposition {
 	
-	org.ejml.alg.dense.decomposition.SingularValueDecomposition myDecomposition;
+	org.ejml.factory.SingularValueDecomposition<DenseMatrix64F> myDecomposition;
 	boolean successful;
 	int rank = -1;
 
 	public EJMLSingularValueDecomposition(DenseMatrix64F matrix) {
-		myDecomposition = DecompositionFactory.svd();
+		myDecomposition = DecompositionFactory.svd(matrix.numRows, matrix.numCols, true, true, true);
 		successful = myDecomposition.decompose(matrix);
 	}
 	
@@ -34,12 +33,12 @@ public class EJMLSingularValueDecomposition implements
 
 	@Override
 	public DoubleMatrix getU(boolean transpose) {
-		return new EJMLDoubleMatrix(myDecomposition.getU(transpose));
+		return new EJMLDoubleMatrix(myDecomposition.getU(null, transpose));
 	}
 
 	@Override
 	public DoubleMatrix getV(boolean transpose) {
-		return new EJMLDoubleMatrix(myDecomposition.getV(transpose));
+		return new EJMLDoubleMatrix(myDecomposition.getV(null, transpose));
 	}
 	
 	boolean wasSuccessful() {
@@ -48,7 +47,7 @@ public class EJMLSingularValueDecomposition implements
 
 	@Override
 	public int getRank() {
-		if (rank < 0) rank = SingularOps.rank(myDecomposition, 1e-10);
+		rank = SingularOps.rank(myDecomposition, 1e-12);
 		return rank;
 	}
 
