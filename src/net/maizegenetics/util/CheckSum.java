@@ -1,84 +1,47 @@
 package net.maizegenetics.util;
 
-
 import java.io.*;
 import java.security.MessageDigest;
+import org.apache.log4j.Logger;
 
-/**
- * User: dkroon
- * Date: 4/9/13
- * Time: 11:47 AM
- * Adapted from http://www.rgagnon.com/javadetails/java-0416.html  ("Real's HowTo")
- */
 public class CheckSum {
 
-    /**
-     *
-     * @param filename
-     * @param protocol  Current natively supported protocols should include MD5, MD2, SHA, SHA1, SHA-256, SHA-384, SHA-512
-     * @return
-     * @throws Exception
-     */
-    public static byte[] createChecksum(File filename, String protocol) throws Exception
-    {
-        InputStream fis =  new FileInputStream(filename);
+    private static final Logger myLogger = Logger.getLogger(CheckSum.class);
 
-        byte[] buffer = new byte[1024];
-        MessageDigest complete = MessageDigest.getInstance(protocol);
-        int numRead;
-        do {
-            numRead = fis.read(buffer);
-            if (numRead > 0) {
-                complete.update(buffer, 0, numRead);
-            }
-        } while (numRead != -1);
-        fis.close();
-        return complete.digest();
+    private CheckSum() {
+        // utility class
     }
 
-
-    private static String getMD5ChecksumByFile(File aFile)  {
-
-        String result = "";
-        try{
-            byte[] b = createChecksum(aFile, "MD5");
-
-            for (int i=0; i < b.length; i++) {
-                result += Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
-            }
-        }catch(Exception e){ /* ignore */ }
-        return result;
+    public static String getMD5Checksum(String filename) {
+        return getChecksum(filename, "MD5");
     }
 
+    public static String getChecksum(String filename, String protocol) {
 
-    public static String getMD5Checksum(File aFile) {
+        try {
+            InputStream inputStream = Utils.getInputStream(filename);
+            MessageDigest digester = MessageDigest.getInstance(protocol);
 
-        if(aFile.isDirectory()){
-            StringBuffer sb = new StringBuffer();
-                File[] dirFiles = aFile.listFiles();
-                for(int i=0; i<dirFiles.length; i++){
-                    if(dirFiles[i].isDirectory()){
-                        sb.append(getMD5Checksum(dirFiles[i]));
-                    }else{
-                         sb.append(getAnnotatedMD5ChecksumByFile(dirFiles[i]));
-                    }
-                }
-            return sb.toString();
-        }else{
-            return getAnnotatedMD5ChecksumByFile(aFile);
+            byte[] buffer = new byte[8192];
+            int numOfBytesRead;
+            while ((numOfBytesRead = inputStream.read(buffer)) > 0) {
+                digester.update(buffer, 0, numOfBytesRead);
+            }
+            byte[] hashValue = digester.digest();
+            return convertBytesToHex(hashValue);
+        } catch (Exception ex) {
+            myLogger.error(ex.getMessage());
         }
+
+        return null;
+
     }
 
-    private static String getAnnotatedMD5ChecksumByFile(File fileIn ){
-        String checksum = getMD5ChecksumByFile(fileIn);
-
-        // get canonical path if possible so symbolic links are resolved
-        String path = null;
-        try{
-            path = fileIn.getCanonicalPath();
-        }catch(IOException ioe){ /* ignore */ }
-        if(path == null) path = fileIn.getAbsolutePath();
-
-        return path + " checksum: " + checksum;
+    private static String convertBytesToHex(byte[] bytes) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < bytes.length; i++) {
+            builder.append(String.format("%02x", bytes[i] & 0xff));
+        }
+        return builder.toString();
     }
 }

@@ -531,7 +531,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         HashMap<Integer,Integer> ChrToNSites = new HashMap<Integer,Integer>();
         for (int i = 0; i < chromosomes.length; i++) {
             if (chromosomes[i] > maxChr) maxChr = chromosomes[i];
-            uniquePositions.add(topm.getUniquePositions(chromosomes[i]));
+            uniquePositions.add(topm.getUniquePositions(i));
             int nSitesInChr = uniquePositions.get(i).length;
             ChrToNSites.put(chromosomes[i], nSitesInChr);
             totalNSites += nSitesInChr;

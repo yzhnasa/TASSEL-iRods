@@ -417,12 +417,9 @@ public class ProductionPipelineMain {
 
         // for each file in a directory, include the md5sum
         if(calculateChecksum){
-            File aKeyFile = new File(keyFile);
-            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(aKeyFile) + "\n");
-            File inputFolder = new File(anInputFolder);
-            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(inputFolder)+ "\n");
-            File prodFile = new File(topmFile);
-            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(prodFile) + "\n") ;
+            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(keyFile) + "\n");
+            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(anInputFolder)+ "\n");
+            sb.append(getTimeStamp() + CheckSum.getMD5Checksum(topmFile) + "\n") ;
         }else{
             sb.append(getTimeStamp() + "MD5sum checking has been switched off using the --skipCheckSum argument");
         }
