@@ -9,7 +9,8 @@ import java.util.List;
  *
  * @author Terry Casstevens and Ed Buckler
  */
-public interface SiteList extends List {
+public interface SiteList extends List<AnnotatedSite> {
+
     /**
      * Return reference diploid allele values at given site.
      *
@@ -290,6 +291,4 @@ public interface SiteList extends List {
      * @return whether is positive strand.
      */
     public boolean isPositiveStrand(int site);
-
-
 }
