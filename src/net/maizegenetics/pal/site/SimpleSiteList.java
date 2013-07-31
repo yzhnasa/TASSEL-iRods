@@ -21,6 +21,21 @@ public class SimpleSiteList implements SiteList {
     public byte getReferenceAllele(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
+    @Override
+    public byte[] getReference(int startSite, int endSite) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public byte[] getReference() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean hasReference() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
     @Override
     public String[] getSNPIDs() {
@@ -281,4 +296,5 @@ public class SimpleSiteList implements SiteList {
     public List<AnnotatedSite> subList(int fromIndex, int toIndex) {
         return mySiteList.subList(fromIndex, toIndex);
     }
+
 }

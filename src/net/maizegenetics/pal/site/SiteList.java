@@ -20,6 +20,35 @@ public interface SiteList extends List<AnnotatedSite> {
      * bits are the second allele value.
      */
     public byte getReferenceAllele(int site);
+    
+    /**
+     * Returns reference sequence of diploid allele values for given taxon in
+     * specified range (end site not included). Each value in array contains
+     * both diploid values. First four bits holds the first allele, and the
+     * second four bits holds the second allele.
+     *
+     * @param startSite start site
+     * @param endSite end site
+     *
+     * @return reference sequence of diploid allele values.
+     */
+    public byte[] getReference(int startSite, int endSite);
+
+    /**
+     * Returns reference sequence of diploid allele values. Each value in array
+     * contains both diploid values. First four bits holds the first allele, and
+     * the second four bits holds the second allele.
+     *
+     * @return reference sequence of diploid allele values.
+     */
+    public byte[] getReference();
+
+    /**
+     * Return whether this alignment has defined reference sequence.
+     *
+     * @return true if this alignment has reference sequence.
+     */
+    public boolean hasReference();
 
     /**
      * Get SNP IDs.
