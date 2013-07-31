@@ -320,4 +320,27 @@ public interface SiteList extends List<AnnotatedSite> {
      * @return whether is positive strand.
      */
     public boolean isPositiveStrand(int site);
+    
+    /**
+     * Return sorted list of alleles from highest frequency to lowest at given
+     * site in alignment. Resulting double dimension array holds alleles (bytes)
+     * in result[0]. And the counts are in result[1]. Counts haploid values
+     * twice and diploid values once. Higher ploids are not supported.
+     *
+     * @param site site
+     *
+     * @return sorted list of alleles and counts
+     */
+    public int[][] getAllelesSortedByFrequency(int site);
+
+    /**
+     * Return sorted list of diploid vales from highest frequency to lowest at
+     * given site in alignment. Resulting double dimension array holds diploids
+     * (Strings) in result[0]. And the counts are in result[1] (Integers).
+     *
+     * @param site site
+     *
+     * @return sorted list of diploids and counts
+     */
+    public Object[][] getDiploidssSortedByFrequency(int site);
 }

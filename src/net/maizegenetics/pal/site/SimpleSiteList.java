@@ -181,6 +181,18 @@ public class SimpleSiteList implements SiteList {
     public boolean isPositiveStrand(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
+    @Override
+    public int[][] getAllelesSortedByFrequency(int site) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Object[][] getDiploidssSortedByFrequency(int site) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    // List methods
 
     @Override
     public int size() {
