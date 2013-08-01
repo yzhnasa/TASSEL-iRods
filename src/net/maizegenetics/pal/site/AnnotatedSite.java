@@ -15,14 +15,22 @@ import java.util.HashMap;
  * @author Ed Buckler
  */
 public class AnnotatedSite {
-    public Locus myLocus=null;
-    public int myPosition;
-    public byte myStrand;
+    //Required 
+    public final Locus myLocus;
+    public final int myPosition;
+    public final byte myStrand;
+    public String mySNPIDs=null;
+    //equals should be based on these
+    
+    //ideas for locus
+    //try to parse to number,  not set to number Int.Max.  Sort by number, text.  
+    
+    
     public byte[] myAlleleFreqOrder=null;
     public int[] myAlleleCnt=null;
     public float myMAF= Float.NaN;;
     public float mySiteCoverage= Float.NaN;;
-    public String mySNPIDs=null;
+    
     public byte myReferenceAllele= Alignment.UNKNOWN_ALLELE;
     public byte myAncestralAllele=Alignment.UNKNOWN_ALLELE;
     public byte myMajorAllele=Alignment.UNKNOWN_ALLELE;;
@@ -37,7 +45,7 @@ public class AnnotatedSite {
     }
 
     public AnnotatedSite(int position, byte[] myAlleleFreqOrder, int[] myAlleleCnt, float maf, float siteCov, String mySNPIDs) {
-        this.myPosition = position;
+        this(null,position,(byte)1);
         this.myAlleleFreqOrder = myAlleleFreqOrder;
         this.myAlleleCnt = myAlleleCnt;
         this.myMAF = maf;
