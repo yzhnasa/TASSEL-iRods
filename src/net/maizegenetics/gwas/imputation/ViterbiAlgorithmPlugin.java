@@ -111,4 +111,12 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 		return usage.toString();
 	}
 
+	public void setUseVariableTransition(boolean useVariableTransition) {
+		this.useVariableTransition = useVariableTransition;
+	}
+
+	public void setVariableRecombFilename(String variableRecombFilename) {
+		this.variableRecombFilename = variableRecombFilename;
+	}
+
 }

@@ -230,4 +230,16 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 
         return usage.toString();
     }
+
+	public void setWriteNucleotides(boolean writeNucleotides) {
+		this.writeNucleotides = writeNucleotides;
+	}
+
+	public void setMinSnpCoverage(double minSnpCoverage) {
+		this.minSnpCoverage = minSnpCoverage;
+	}
+
+	public void setMaxMafForMono(double maxMafForMono) {
+		this.maxMafForMono = maxMafForMono;
+	}
 }
