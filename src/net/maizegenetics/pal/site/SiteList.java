@@ -9,7 +9,8 @@ import java.util.List;
  *
  * @author Terry Casstevens and Ed Buckler
  */
-public interface SiteList extends List {
+public interface SiteList extends List<AnnotatedSite> {
+
     /**
      * Return reference diploid allele values at given site.
      *
@@ -19,6 +20,35 @@ public interface SiteList extends List {
      * bits are the second allele value.
      */
     public byte getReferenceAllele(int site);
+    
+    /**
+     * Returns reference sequence of diploid allele values for given taxon in
+     * specified range (end site not included). Each value in array contains
+     * both diploid values. First four bits holds the first allele, and the
+     * second four bits holds the second allele.
+     *
+     * @param startSite start site
+     * @param endSite end site
+     *
+     * @return reference sequence of diploid allele values.
+     */
+    public byte[] getReference(int startSite, int endSite);
+
+    /**
+     * Returns reference sequence of diploid allele values. Each value in array
+     * contains both diploid values. First four bits holds the first allele, and
+     * the second four bits holds the second allele.
+     *
+     * @return reference sequence of diploid allele values.
+     */
+    public byte[] getReference();
+
+    /**
+     * Return whether this alignment has defined reference sequence.
+     *
+     * @return true if this alignment has reference sequence.
+     */
+    public boolean hasReference();
 
     /**
      * Get SNP IDs.
@@ -290,6 +320,27 @@ public interface SiteList extends List {
      * @return whether is positive strand.
      */
     public boolean isPositiveStrand(int site);
+    
+    /**
+     * Return sorted list of alleles from highest frequency to lowest at given
+     * site in alignment. Resulting double dimension array holds alleles (bytes)
+     * in result[0]. And the counts are in result[1]. Counts haploid values
+     * twice and diploid values once. Higher ploids are not supported.
+     *
+     * @param site site
+     *
+     * @return sorted list of alleles and counts
+     */
+    public int[][] getAllelesSortedByFrequency(int site);
 
-
+    /**
+     * Return sorted list of diploid vales from highest frequency to lowest at
+     * given site in alignment. Resulting double dimension array holds diploids
+     * (Strings) in result[0]. And the counts are in result[1] (Integers).
+     *
+     * @param site site
+     *
+     * @return sorted list of diploids and counts
+     */
+    public Object[][] getDiploidssSortedByFrequency(int site);
 }
