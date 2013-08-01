@@ -9,7 +9,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.Locus;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+//import java.util.Objects;
 
 /**
  * Container class for holding information about the site.  This includes information
@@ -22,7 +22,7 @@ import java.util.Objects;
  */
 public class AnnotatedSite implements Comparable<AnnotatedSite>{
     /**Locus of the site (required)*/
-    private final Locus myLocus;
+    private final Chromosome myChromosome;
     /**Physical position of the site (unknown = Float.NaN)*/
     private final int myPosition;
     /**Strand of the site (unknown = Byte.MIN_VALUE)*/
@@ -50,16 +50,16 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
     private HashMap myAnnoMap=null;
 
 
-    public AnnotatedSite(Locus locus, int position, float cM, byte strand, String snpID) {
+    public AnnotatedSite(Chromosome locus, int position, float cM, byte strand, String snpID) {
         this(locus, position, cM, strand, snpID, null, null, Float.NaN, Float.NaN, 
             Alignment.UNKNOWN_ALLELE, Alignment.UNKNOWN_ALLELE, Alignment.UNKNOWN_ALLELE, Alignment.UNKNOWN_ALLELE,
             null);
     }
 
-    public AnnotatedSite(Locus locus, int position, float cM, byte strand, String snpID,
+    public AnnotatedSite(Chromosome locus, int position, float cM, byte strand, String snpID,
             byte[] alleleFreqOrder, int[] alleleCnt, float maf, float siteCov, byte majorAllele, 
             byte referenceAllele, byte ancestralAllele, byte highDepthAllele, Map annoMap) {
-        this.myLocus=locus;
+        this.myChromosome=locus;
         this.myPosition = position;
         this.cM=cM;
         this.myStrand=strand;
@@ -127,22 +127,16 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 37 * hash + Objects.hashCode(this.myLocus);
+        hash = 37 * hash + this.myChromosome.hashCode();
         hash = 37 * hash + this.myPosition;
         hash = 37 * hash + this.myStrand;
         hash = 37 * hash + Float.floatToIntBits(this.cM);
-        hash = 37 * hash + Objects.hashCode(this.mySNPID);
+        hash = 37 * hash + this.getSNPID().hashCode();
         return hash;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
         return (compareTo((AnnotatedSite) obj)==0);
     }
     
@@ -150,7 +144,7 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
     @Override
     public int compareTo(AnnotatedSite o) {
         return ComparisonChain.start()
-                .compare(myLocus,o.getLocus())
+                .compare(myChromosome,o.getLocus())
                 .compare(myPosition,o.getPosition())
                 .compare(cM,o.getcM())
                 .compare(myStrand,o.getStrand())
@@ -159,8 +153,8 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
     }
 
     /**Return the locus (generally a chromosome) of a site*/
-    public Locus getLocus() {
-        return myLocus;
+    public Chromosome getLocus() {
+        return myChromosome;
     }
 
     /**Return the physical position of a site*/
@@ -181,7 +175,7 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
     /**Return the ID (name) for a site*/
     public String getSNPID() {
         if (mySNPID == null) {
-            return "S" + getLocus().getChromosomeName() + "_" + myPosition;
+            return "S" + getLocus().getName() + "_" + myPosition;
         } else {
             return mySNPID;
         }
