@@ -1,11 +1,8 @@
 package net.maizegenetics.pal.site;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import net.maizegenetics.pal.alignment.Locus;
+
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,9 +10,9 @@ import net.maizegenetics.pal.alignment.Locus;
  * Date: 7/30/13
  * Time: 5:22 PM
  */
-public class SimpleSiteList implements SiteList {
+public class SimplePositionList implements PositionList {
 
-    private final List<AnnotatedSite> mySiteList = new ArrayList<AnnotatedSite>();
+    private final List<Position> mySiteList = new ArrayList<Position>();
 
     @Override
     public byte getReferenceAllele(int site) {
@@ -210,7 +207,7 @@ public class SimpleSiteList implements SiteList {
     }
 
     @Override
-    public Iterator<AnnotatedSite> iterator() {
+    public Iterator<Position> iterator() {
         return mySiteList.iterator();
     }
 
@@ -225,7 +222,7 @@ public class SimpleSiteList implements SiteList {
     }
 
     @Override
-    public boolean add(AnnotatedSite e) {
+    public boolean add(Position e) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -240,12 +237,12 @@ public class SimpleSiteList implements SiteList {
     }
 
     @Override
-    public boolean addAll(Collection<? extends AnnotatedSite> c) {
+    public boolean addAll(Collection<? extends Position> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends AnnotatedSite> c) {
+    public boolean addAll(int index, Collection<? extends Position> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -265,22 +262,22 @@ public class SimpleSiteList implements SiteList {
     }
 
     @Override
-    public AnnotatedSite get(int index) {
+    public Position get(int index) {
         return mySiteList.get(index);
     }
 
     @Override
-    public AnnotatedSite set(int index, AnnotatedSite element) {
+    public Position set(int index, Position element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public void add(int index, AnnotatedSite element) {
+    public void add(int index, Position element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public AnnotatedSite remove(int index) {
+    public Position remove(int index) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -295,17 +292,17 @@ public class SimpleSiteList implements SiteList {
     }
 
     @Override
-    public ListIterator<AnnotatedSite> listIterator() {
+    public ListIterator<Position> listIterator() {
         return mySiteList.listIterator();
     }
 
     @Override
-    public ListIterator<AnnotatedSite> listIterator(int index) {
+    public ListIterator<Position> listIterator(int index) {
         return mySiteList.listIterator(index);
     }
 
     @Override
-    public List<AnnotatedSite> subList(int fromIndex, int toIndex) {
+    public List<Position> subList(int fromIndex, int toIndex) {
         return mySiteList.subList(fromIndex, toIndex);
     }
 

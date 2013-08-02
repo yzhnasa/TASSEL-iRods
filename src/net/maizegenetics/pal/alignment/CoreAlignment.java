@@ -8,7 +8,7 @@ import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.depth.AlleleDepth;
 import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.site.SiteList;
+import net.maizegenetics.pal.site.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
@@ -21,15 +21,15 @@ public class CoreAlignment implements Alignment {
 
     private final Genotype myGenotype;
     private final BitStorage myBitStorage;
-    private final SiteList mySiteList;
+    private final PositionList myPositionList;
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
     private final AlleleDepth myAlleleDepth;
 
-    private CoreAlignment(Genotype genotype, BitStorage bitStorage, SiteList siteList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    private CoreAlignment(Genotype genotype, BitStorage bitStorage, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         myGenotype = genotype;
         myBitStorage = bitStorage;
-        mySiteList = siteList;
+        myPositionList = positionList;
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
@@ -112,22 +112,22 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public byte getReferenceAllele(int site) {
-        return mySiteList.getReferenceAllele(site);
+        return myPositionList.getReferenceAllele(site);
     }
 
     @Override
     public byte[] getReference(int startSite, int endSite) {
-        return mySiteList.getReference(startSite, endSite);
+        return myPositionList.getReference(startSite, endSite);
     }
 
     @Override
     public byte[] getReference() {
-        return mySiteList.getReference();
+        return myPositionList.getReference();
     }
 
     @Override
     public boolean hasReference() {
-        return mySiteList.hasReference();
+        return myPositionList.hasReference();
     }
 
     @Override
@@ -142,27 +142,27 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public String[] getSNPIDs() {
-        return mySiteList.getSNPIDs();
+        return myPositionList.getSNPIDs();
     }
 
     @Override
     public String getSNPID(int site) {
-        return mySiteList.getSNPID(site);
+        return myPositionList.getSNPID(site);
     }
 
     @Override
     public int getSiteCount() {
-        return mySiteList.getSiteCount();
+        return myPositionList.getSiteCount();
     }
 
     @Override
     public int getLocusSiteCount(Locus locus) {
-        return mySiteList.getLocusSiteCount(locus);
+        return myPositionList.getLocusSiteCount(locus);
     }
 
     @Override
     public int[] getStartAndEndOfLocus(Locus locus) {
-        return mySiteList.getStartAndEndOfLocus(locus);
+        return myPositionList.getStartAndEndOfLocus(locus);
     }
 
     @Override
@@ -177,62 +177,62 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int getPositionInLocus(int site) {
-        return mySiteList.getPositionInLocus(site);
+        return myPositionList.getPositionInLocus(site);
     }
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
-        return mySiteList.getSiteOfPhysicalPosition(physicalPosition, locus);
+        return myPositionList.getSiteOfPhysicalPosition(physicalPosition, locus);
     }
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
-        return mySiteList.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+        return myPositionList.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
     }
 
     @Override
     public int[] getPhysicalPositions() {
-        return mySiteList.getPhysicalPositions();
+        return myPositionList.getPhysicalPositions();
     }
 
     @Override
     public byte getPositionType(int site) {
-        return mySiteList.getPositionType(site);
+        return myPositionList.getPositionType(site);
     }
 
     @Override
     public byte[] getPositionTypes() {
-        return mySiteList.getPositionTypes();
+        return myPositionList.getPositionTypes();
     }
 
     @Override
     public String getLocusName(int site) {
-        return mySiteList.getLocusName(site);
+        return myPositionList.getLocusName(site);
     }
 
     @Override
     public Locus getLocus(int site) {
-        return mySiteList.getLocus(site);
+        return myPositionList.getLocus(site);
     }
 
     @Override
     public Locus getLocus(String name) {
-        return mySiteList.getLocus(name);
+        return myPositionList.getLocus(name);
     }
 
     @Override
     public Locus[] getLoci() {
-        return mySiteList.getLoci();
+        return myPositionList.getLoci();
     }
 
     @Override
     public int getNumLoci() {
-        return mySiteList.getNumLoci();
+        return myPositionList.getNumLoci();
     }
 
     @Override
     public int[] getLociOffsets() {
-        return mySiteList.getLociOffsets();
+        return myPositionList.getLociOffsets();
     }
 
     @Override
@@ -267,12 +267,12 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int getIndelSize(int site) {
-        return mySiteList.getIndelSize(site);
+        return myPositionList.getIndelSize(site);
     }
 
     @Override
     public boolean isIndel(int site) {
-        return mySiteList.isIndel(site);
+        return myPositionList.isIndel(site);
     }
 
     @Override
@@ -287,42 +287,42 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public byte getMajorAllele(int site) {
-        return mySiteList.getMajorAllele(site);
+        return myPositionList.getMajorAllele(site);
     }
 
     @Override
     public String getMajorAlleleAsString(int site) {
-        return mySiteList.getMajorAlleleAsString(site);
+        return myPositionList.getMajorAlleleAsString(site);
     }
 
     @Override
     public byte getMinorAllele(int site) {
-        return mySiteList.getMinorAllele(site);
+        return myPositionList.getMinorAllele(site);
     }
 
     @Override
     public String getMinorAlleleAsString(int site) {
-        return mySiteList.getMinorAlleleAsString(site);
+        return myPositionList.getMinorAlleleAsString(site);
     }
 
     @Override
     public byte[] getMinorAlleles(int site) {
-        return mySiteList.getMinorAlleles(site);
+        return myPositionList.getMinorAlleles(site);
     }
 
     @Override
     public byte[] getAlleles(int site) {
-        return mySiteList.getAlleles(site);
+        return myPositionList.getAlleles(site);
     }
 
     @Override
     public double getMinorAlleleFrequency(int site) {
-        return mySiteList.getMinorAlleleFrequency(site);
+        return myPositionList.getMinorAlleleFrequency(site);
     }
 
     @Override
     public double getMajorAlleleFrequency(int site) {
-        return mySiteList.getMajorAlleleFrequency(site);
+        return myPositionList.getMajorAlleleFrequency(site);
     }
 
     @Override
@@ -349,7 +349,7 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public boolean isPositiveStrand(int site) {
-        return mySiteList.isPositiveStrand(site);
+        return myPositionList.isPositiveStrand(site);
     }
 
     @Override
@@ -359,12 +359,12 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        return mySiteList.getAllelesSortedByFrequency(site);
+        return myPositionList.getAllelesSortedByFrequency(site);
     }
 
     @Override
     public Object[][] getDiploidssSortedByFrequency(int site) {
-        return mySiteList.getDiploidssSortedByFrequency(site);
+        return myPositionList.getDiploidssSortedByFrequency(site);
     }
 
     @Override

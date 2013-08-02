@@ -3,10 +3,10 @@
  */
 package net.maizegenetics.pal.site;
 
-import net.maizegenetics.pal.alignment.*;
 import com.google.common.collect.ComparisonChain;
-import java.io.Serializable;
+import net.maizegenetics.pal.alignment.Locus;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
