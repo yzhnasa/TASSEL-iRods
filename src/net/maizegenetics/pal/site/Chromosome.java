@@ -99,6 +99,8 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
     
     @Override
     public boolean equals(Object obj) {
+        if (obj == this) {return true;}
+        if (!(obj instanceof Chromosome)) {return false;}
         return (compareTo((Chromosome)obj)==0);
     }
 

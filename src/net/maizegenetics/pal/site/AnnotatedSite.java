@@ -6,9 +6,9 @@ package net.maizegenetics.pal.site;
 
 import com.google.common.collect.ComparisonChain;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.Locus;
 import java.util.HashMap;
 import java.util.Map;
+import net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE;
 //import java.util.Objects;
 
 /**
@@ -31,46 +31,59 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
     private final float cM;
     /**Name of the site (default = SLocus_Position)*/
     private final String mySNPID;
-    //equals should be based on these
+    /**Is type Nucleotide or Text*/
+    private final boolean isNucleotide;
+    /**Whether the variant define the nature of the indel*/
+    private final boolean isIndel;
+    /**Define the nature of the polymorphism {"ACTAT","-"} or {"A","C","G"} or {"100","103","106"}
+     */
+    private final String[] myKnownVariants;
 
+    //Field below here should probably stay in annotatedSite, while those above go to CoreSite
 
-    //These are used to support alignments and their analyses
-    private final byte[] myAlleleFreqOrder;
-    private final int[] myAlleleCnt;
+    //These need to be in caches of genotype
+//    private final byte[] myAlleleFreqOrder;
+//    private final int[] myAlleleCnt;
+//    private final byte myMajorAllele;
+    
+    //These could perhaps be an array of 
+    private final ALLELE_SCOPE_TYPE myScopeForMAF;
     private final float myMAF;
     private final float mySiteCoverage;
-    private final byte myMajorAllele;
-    
-    
     private byte myReferenceAllele= Alignment.UNKNOWN_ALLELE;
+    private byte myGlobalMajorAllele= Alignment.UNKNOWN_ALLELE;
     private byte myAncestralAllele=Alignment.UNKNOWN_ALLELE;
     private byte myHighDepthAllele=Alignment.UNKNOWN_ALLELE;
     
     //Custom annotation are stored in the map
-    private HashMap myAnnoMap=null;
+    private Map myAnnoMap=null;
 
 
     public AnnotatedSite(Chromosome locus, int position, float cM, byte strand, String snpID) {
-        this(locus, position, cM, strand, snpID, null, null, Float.NaN, Float.NaN, 
+        this(locus, position, cM, strand, snpID, true, false, null, ALLELE_SCOPE_TYPE.Global_Frequency, Float.NaN, Float.NaN, 
             Alignment.UNKNOWN_ALLELE, Alignment.UNKNOWN_ALLELE, Alignment.UNKNOWN_ALLELE, Alignment.UNKNOWN_ALLELE,
             null);
     }
 
     public AnnotatedSite(Chromosome locus, int position, float cM, byte strand, String snpID,
-            byte[] alleleFreqOrder, int[] alleleCnt, float maf, float siteCov, byte majorAllele, 
+            boolean nucleotide, boolean indel, String[] knownVariants, ALLELE_SCOPE_TYPE scopeForMAF ,
+            float maf, float siteCov, byte majorGlobalAllele, 
             byte referenceAllele, byte ancestralAllele, byte highDepthAllele, Map annoMap) {
         this.myChromosome=locus;
         this.myPosition = position;
         this.cM=cM;
         this.myStrand=strand;
         this.mySNPID=snpID;
+        this.isNucleotide=nucleotide;
+        this.isIndel=indel;
+        this.myKnownVariants=knownVariants;
+        
   
-        this.myAlleleFreqOrder = alleleFreqOrder;
-        this.myAlleleCnt = alleleCnt;
+        this.myScopeForMAF=scopeForMAF;
         this.myMAF = maf;
         this.mySiteCoverage = siteCov;
         
-        this.myMajorAllele=majorAllele;
+        this.myGlobalMajorAllele=majorGlobalAllele;
         this.myReferenceAllele=referenceAllele;
         this.myAncestralAllele=ancestralAllele;
         this.myHighDepthAllele=highDepthAllele;
@@ -108,24 +121,10 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
         Object r=myAnnoMap.get(annoName);
         return r.toString();
     }
-    
-    public int[][] getAllelesSortedByFrequency() {
-        int result[][] = new int[2][myAlleleCnt.length];
-            for (int i = 0; i < myAlleleFreqOrder.length; i++) {
-               result[0][i]=myAlleleFreqOrder[i];
-               result[1][i]=myAlleleCnt[i];
-           }
-         return result;
-    }
-    
-    public int getAlleleTotal() {
-        int total=0;
-        for (int b : myAlleleCnt) {total+=b;}
-        return total;
-    }
 
     @Override
     public int hashCode() {
+        //TODO:  this hash code should be stored
         int hash = 7;
         hash = 37 * hash + this.myChromosome.hashCode();
         hash = 37 * hash + this.myPosition;
@@ -137,7 +136,17 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
 
     @Override
     public boolean equals(Object obj) {
-        return (compareTo((AnnotatedSite) obj)==0);
+        if (obj == this) {return true;}
+        if (!(obj instanceof AnnotatedSite)) {return false;}
+        AnnotatedSite o=(AnnotatedSite)obj;
+        int result=ComparisonChain.start()
+                .compare(myPosition,o.getPosition())  //position is most discriminating for speed
+                .compare(myChromosome,o.getLocus())
+                .compare(cM,o.getcM())
+                .compare(myStrand,o.getStrand())
+                .compare(mySNPID, o.getSNPID())
+                .result();
+        return (result==0);
     }
     
     
@@ -181,14 +190,16 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
         }
     }
 
-    /**Return the alleles ordered by allele frequency*/
-    public byte[] getAlleleFreqOrder() {
-        return myAlleleFreqOrder;
+    public boolean isIsNucleotide() {
+        return isNucleotide;
     }
 
-    /**Return the alleles frequency counts ordered from most frequent to least frequent*/
-    public int[] getAlleleCnt() {
-        return myAlleleCnt;
+    public boolean isIsIndel() {
+        return isIndel;
+    }
+
+    public String[] getMyKnownVariants() {
+        return myKnownVariants;
     }
 
     /**Return the minor allele frequency*/
@@ -212,8 +223,8 @@ public class AnnotatedSite implements Comparable<AnnotatedSite>{
     }
 
     /**Returns the major allele*/
-    public byte getMajorAllele() {
-        return myMajorAllele;
+    public byte getGlobalMajorAllele() {
+        return myGlobalMajorAllele;
     }
 
     /**Returns the high depth allele*/
