@@ -5,26 +5,37 @@ import com.google.common.collect.ComparisonChain;
 /**
  * Defines the central attributes of a position in the genome.
  */
-public class CorePosition implements Position {
+public final class CorePosition implements Position {
     /**Locus of the site (required)*/
-    protected final Chromosome myChromosome;
+    private final Chromosome myChromosome;
     /**Physical position of the site (unknown = Float.NaN)*/
-    protected final int myPosition;
+    private final int myPosition;
     /**Strand of the site (unknown = Byte.MIN_VALUE)*/
-    protected final byte myStrand;
+    private final byte myStrand;
     /**Genetic position in centiMorgans (unknown = Float.NaN)*/
-    protected final float myCM;
+    private final float myCM;
     /**Name of the site (default = SLocus_Position)*/
-    protected final String mySNPID;
+    private final String mySNPID;
     /**Is type Nucleotide or Text*/
-    protected final boolean isNucleotide;
+    private final boolean isNucleotide;
     /**Whether the variant define the nature of the indel*/
-    protected final boolean isIndel;
+    private final boolean isIndel;
     /**Define the nature of the polymorphism {"ACTAT","-"} or {"A","C","G"} or {"100","103","106"}
      */
-    protected final String[] myKnownVariants;
+    private final String[] myKnownVariants;
 
-
+    /**
+     * A builder for creating immutable CorePosition instances.
+     *<p> Example:
+     * <pre>   {@code
+     * Position cp= new CorePosition.Builder(new Chromosome("1"),1232)
+     *   .nucleotide(false)
+     *   .knownVariants(new String[]{"A","C"})
+     *   .cM(1.4f)
+     *   .snpName("PZA123")
+     *   .build();}</pre>
+     * <p>This would create nucleotide position on chromosome 1 at position 1232 (1.4cM).  The position is named PZA123.
+     */
     public static class Builder {
         // Required parameters
         private final Chromosome myChromosome;
@@ -36,15 +47,27 @@ public class CorePosition implements Position {
         private boolean isNucleotide=true;
         private boolean isIndel=false;
         private String[] myKnownVariants=null;
+
+        /**
+         * Constructor for Builder, requires chromosome and position
+         * @param myChromosome
+         * @param myPosition
+         */
         public Builder(Chromosome myChromosome, int myPosition) {
             this.myChromosome = myChromosome;
             this.myPosition = myPosition;
         }
+        /**Set strand (default=1)*/
         public Builder strand(byte val) {myStrand = val; return this;}
+        /**Set strand (default=Float.NaN)*/
         public Builder cM(float val) {myCM = val; return this;}
+        /**Set SNP name (default="S"+Chromosome+"_"+position)*/
         public Builder snpName(String val) {mySNPID = val; return this;}
+        /**Set whether position is nucleotide (default=true)*/
         public Builder nucleotide(boolean val) {isNucleotide = val; return this; }
+        /**Set whether position is indel (default=false)*/
         public Builder indel(boolean val) {isIndel = val; return this;}
+        /**Set text definition of variants (default=null)*/
         public Builder knownVariants(String[] val) {myKnownVariants = val; return this;}
         public CorePosition build() {
             return new CorePosition(this);
@@ -61,6 +84,14 @@ public class CorePosition implements Position {
         myKnownVariants = builder.myKnownVariants;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb=new StringBuilder("Position");
+        sb.append("\tChr:").append(getLocus().getName());
+        sb.append("\tPos:").append(getPosition());
+        sb.append("\tName:").append(getSNPID());
+        return sb.toString();
+    }
 
     @Override
     public int hashCode() {
@@ -145,7 +176,7 @@ public class CorePosition implements Position {
     }
 
     @Override
-    public String[] getMyKnownVariants() {
+    public String[] getKnownVariants() {
         return myKnownVariants;
     }
 }

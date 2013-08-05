@@ -1,11 +1,10 @@
 package net.maizegenetics.pal.site;
 
 /**
- * Created with IntelliJ IDEA.
- * User: edbuckler
- * Date: 8/2/13
- * Time: 5:46 PM
- * To change this template use File | Settings | File Templates.
+ * Defines a genomics positions and its known variants.  Includes attributes of chromosome, position, strand,
+ * centiMorgans, name (or SNP ID), whether this position is a nucleotide, or includes an indel.
+ *
+ * @author Ed Buckler
  */
 public interface Position extends Comparable<Position> {
 
@@ -24,11 +23,14 @@ public interface Position extends Comparable<Position> {
     /**Return the ID (name) for a site*/
     String getSNPID();
 
+    /**Whether the position is a nucleotide position or another marker type (SSR, AFLP, RAPD, CNV, which are recoded
+     * with text states)*/
     boolean isNucleotide();
 
+    /**Whether the position includes indels, which would be defined in the variants*/
     boolean isIndel();
 
     /**Returns the nature of the polymorphism {"ACTAT","-"} or {"A","C","G"} or {"100","103","106"}
      */
-    String[] getMyKnownVariants();
+    String[] getKnownVariants();
 }
