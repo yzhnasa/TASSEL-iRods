@@ -87,7 +87,7 @@ public final class CorePosition implements Position {
     @Override
     public String toString() {
         StringBuilder sb=new StringBuilder("Position");
-        sb.append("\tChr:").append(getLocus().getName());
+        sb.append("\tChr:").append(getChromosome().getName());
         sb.append("\tPos:").append(getPosition());
         sb.append("\tName:").append(getSNPID());
         return sb.toString();
@@ -112,7 +112,7 @@ public final class CorePosition implements Position {
         Position o=(Position)obj;
         int result= ComparisonChain.start()
                 .compare(myPosition,o.getPosition())  //position is most discriminating for speed
-                .compare(myChromosome,o.getLocus())
+                .compare(myChromosome,o.getChromosome())
                 .compare(myCM, o.getCM())
                 .compare(myStrand,o.getStrand())
                 .compare(getSNPID(), o.getSNPID())
@@ -123,7 +123,7 @@ public final class CorePosition implements Position {
     @Override
     public int compareTo(Position o) {
         return ComparisonChain.start()
-                .compare(myChromosome,o.getLocus())
+                .compare(myChromosome,o.getChromosome())
                 .compare(myPosition,o.getPosition())
                 .compare(myCM, o.getCM())
                 .compare(myStrand,o.getStrand())
@@ -133,7 +133,7 @@ public final class CorePosition implements Position {
 
 
     @Override
-    public Chromosome getLocus() {
+    public Chromosome getChromosome() {
         return myChromosome;
     }
 
@@ -159,7 +159,7 @@ public final class CorePosition implements Position {
     @Override
     public String getSNPID() {
         if (mySNPID == null) {
-            return "S" + getLocus().getName() + "_" + myPosition;
+            return "S" + getChromosome().getName() + "_" + myPosition;
         } else {
             return mySNPID;
         }

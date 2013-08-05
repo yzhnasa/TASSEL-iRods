@@ -9,7 +9,7 @@ package net.maizegenetics.pal.site;
 public interface Position extends Comparable<Position> {
 
     /**Return the locus (generally a chromosome) of a site*/
-    Chromosome getLocus();
+    Chromosome getChromosome();
 
     /**Return the physical position of a site*/
     int getPosition();

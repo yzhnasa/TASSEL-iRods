@@ -1,6 +1,7 @@
 package net.maizegenetics.pal.site;
 
-import net.maizegenetics.pal.alignment.Locus;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import java.util.*;
 
@@ -10,13 +11,46 @@ import java.util.*;
  * Date: 7/30/13
  * Time: 5:22 PM
  */
-public class SimplePositionList implements PositionList {
+public final class CoreAnnotatedPositionList implements AnnotatedPositionList {
 
-    private final List<Position> mySiteList = new ArrayList<Position>();
+    private final List<AnnotatedPosition> mySiteList = new ArrayList<AnnotatedPosition>();
+
+    /*Byte representations of DNA sequences are stored in blocks of 65536 sites*/
+    public static final int BLOCKSIZE=1<<16;
+    public static final int blockMask=BLOCKSIZE-1;
+    public static final int siteMask=~(BLOCKSIZE-1);
+
+    private enum AlleleT {REF(3), MAJ(7), ANC(13), HIDEP(17);
+        private int value;
+        private AlleleT(int value) {this.value = value;}
+    };
+    private LoadingCache<Integer,byte[]> myScopeAlleleCache; //key (alleleType << 17)|startBlock
+    private CacheLoader<Integer,byte[]> genoLoader = new CacheLoader<Integer,byte[]>() {
+        public byte[] load(Integer key) {
+            int block=key&blockMask;
+            int startSite=block<<16;
+            int alleleTint=key>>>17;
+            int length=(mySiteList.size()-startSite<BLOCKSIZE)?mySiteList.size()-startSite:BLOCKSIZE;
+            byte[] data=new byte[length];
+            if(alleleTint==AlleleT.REF.value) {
+                for (int i = startSite; i < startSite+length; i++) data[i]=mySiteList.get(i).getReferenceAllele();
+            } else  if(alleleTint==AlleleT.MAJ.value) {
+                for (int i = startSite; i < startSite+length; i++) data[i]=mySiteList.get(i).getGlobalMajorAllele();
+            } if(alleleTint==AlleleT.ANC.value) {
+                for (int i = startSite; i < startSite+length; i++) data[i]=mySiteList.get(i).getAncestralAllele();
+            } if(alleleTint==AlleleT.HIDEP.value) {
+                for (int i = startSite; i < startSite+length; i++) data[i]=mySiteList.get(i).getHighDepthAllele();
+            }
+            return data;
+        } };
+
+    private static final int getCacheKey(AlleleT aT, int site) {
+        return (aT.value<<17)|(site>>16);
+    }
 
     @Override
     public byte getReferenceAllele(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return mySiteList.get(site).getReferenceAllele();
     }
     
     @Override
@@ -36,12 +70,16 @@ public class SimplePositionList implements PositionList {
 
     @Override
     public String[] getSNPIDs() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String[] theIDs=new String[mySiteList.size()];
+        for (int i = 0; i < theIDs.length; i++) {
+            theIDs[i]=mySiteList.get(i).getSNPID();
+        }
+        return theIDs;
     }
 
     @Override
     public String getSNPID(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return mySiteList.get(site).getSNPID();
     }
 
     @Override
@@ -50,27 +88,27 @@ public class SimplePositionList implements PositionList {
     }
 
     @Override
-    public int getLocusSiteCount(Locus locus) {
+    public int getChromosomeSiteCount(Chromosome chromosome) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public int[] getStartAndEndOfLocus(Locus locus) {
+    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public int getPositionInLocus(int site) {
+    public int getPositionInChromosome(int site) {
+        return mySiteList.get(site).getPosition();
+    }
+
+    @Override
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -80,93 +118,43 @@ public class SimplePositionList implements PositionList {
     }
 
     @Override
-    public byte getPositionType(int site) {
+    public String getChromosomeName(int site) {
+        return mySiteList.get(site).getChromosome().getName();
+    }
+
+    @Override
+    public Chromosome getChromosome(int site) {
+        return mySiteList.get(site).getChromosome();
+    }
+
+    @Override
+    public Chromosome getChromosome(String name) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public byte[] getPositionTypes() {
+    public Chromosome[] getChromosomes() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public String getLocusName(int site) {
+    public int getNumChromosomes() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Locus getLocus(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Locus getLocus(String name) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Locus[] getLoci() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public int getNumLoci() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public int[] getLociOffsets() {
+    public int[] getChromosomesOffsets() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public int getIndelSize(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return mySiteList.get(site).getKnownVariants()[1].length();
     }
 
     @Override
     public boolean isIndel(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public byte getMajorAllele(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public String getMajorAlleleAsString(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public byte getMinorAllele(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public String getMinorAlleleAsString(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public byte[] getMinorAlleles(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public byte[] getAlleles(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double getMinorAlleleFrequency(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double getMajorAlleleFrequency(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return mySiteList.get(site).isIndel();
     }
 
     @Override
@@ -176,17 +164,7 @@ public class SimplePositionList implements PositionList {
 
     @Override
     public boolean isPositiveStrand(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
-    @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Object[][] getDiploidssSortedByFrequency(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (1==mySiteList.get(site).getStrand());
     }
     
     // List methods
@@ -207,7 +185,7 @@ public class SimplePositionList implements PositionList {
     }
 
     @Override
-    public Iterator<Position> iterator() {
+    public Iterator<AnnotatedPosition> iterator() {
         return mySiteList.iterator();
     }
 
@@ -222,7 +200,7 @@ public class SimplePositionList implements PositionList {
     }
 
     @Override
-    public boolean add(Position e) {
+    public boolean add(AnnotatedPosition e) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -237,12 +215,12 @@ public class SimplePositionList implements PositionList {
     }
 
     @Override
-    public boolean addAll(Collection<? extends Position> c) {
+    public boolean addAll(Collection<? extends AnnotatedPosition> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends Position> c) {
+    public boolean addAll(int index, Collection<? extends AnnotatedPosition> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -262,22 +240,22 @@ public class SimplePositionList implements PositionList {
     }
 
     @Override
-    public Position get(int index) {
+    public AnnotatedPosition get(int index) {
         return mySiteList.get(index);
     }
 
     @Override
-    public Position set(int index, Position element) {
+    public AnnotatedPosition set(int index, AnnotatedPosition element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public void add(int index, Position element) {
+    public void add(int index, AnnotatedPosition element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public Position remove(int index) {
+    public AnnotatedPosition remove(int index) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -292,17 +270,17 @@ public class SimplePositionList implements PositionList {
     }
 
     @Override
-    public ListIterator<Position> listIterator() {
+    public ListIterator<AnnotatedPosition> listIterator() {
         return mySiteList.listIterator();
     }
 
     @Override
-    public ListIterator<Position> listIterator(int index) {
+    public ListIterator<AnnotatedPosition> listIterator(int index) {
         return mySiteList.listIterator(index);
     }
 
     @Override
-    public List<Position> subList(int fromIndex, int toIndex) {
+    public List<AnnotatedPosition> subList(int fromIndex, int toIndex) {
         return mySiteList.subList(fromIndex, toIndex);
     }
 

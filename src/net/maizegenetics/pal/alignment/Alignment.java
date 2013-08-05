@@ -451,15 +451,19 @@ public interface Alignment extends Serializable {
      * @param site site
      *
      * @return position type
+     * @deprecated
      */
+    @Deprecated
     public byte getPositionType(int site);
 
     /**
-     * Returns position types. (eg. I=intron, E=exon, P=promoter, 1=first,
+     * @deprecated
+     *  Returns position types. (eg. I=intron, E=exon, P=promoter, 1=first,
      * 2=second, 3=third, etc.)
      *
      * @return position types
      */
+    @Deprecated
     public byte[] getPositionTypes();
 
     /**
