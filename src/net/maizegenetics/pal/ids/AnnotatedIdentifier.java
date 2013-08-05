@@ -2,6 +2,8 @@
 package net.maizegenetics.pal.ids;
 
 import com.google.common.collect.HashMultimap;
+import net.maizegenetics.pal.site.GeneralAnnotation;
+
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -13,7 +15,7 @@ import java.util.Set;
  * 
  * @author  Ed Buckler
  */
-public class AnnotatedIdentifier extends Identifier {
+public class AnnotatedIdentifier extends Identifier implements GeneralAnnotation {
     private HashMultimap<String, String> textAnnotations=null;
     private HashMultimap<String, Double> quantAnnotations=null;
 
@@ -37,11 +39,21 @@ public class AnnotatedIdentifier extends Identifier {
     public void addAnnotation(String annoName, double value) {
         quantAnnotations.put(annoName, value);
     }
-    
+
+
+    @Override
+    public Object[] getAnnotation(String annoName) {
+       if(textAnnotations.containsKey(annoName)) return textAnnotations.get(annoName).toArray(new String[0]);
+       if(quantAnnotations.containsKey(annoName)) return quantAnnotations.get(annoName).toArray(new Double[0]);
+       return null;
+    }
+
+    @Override
     public String[] getTextAnnotation(String annoName) {
         return textAnnotations.get(annoName).toArray(new String[0]);
     }
-    
+
+    @Override
     public Double[] getQuantAnnotation(String annoName) {
         return quantAnnotations.get(annoName).toArray(new Double[0]);
     }

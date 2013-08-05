@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import com.google.common.collect.ComparisonChain;
 import java.io.Serializable;
 
 import java.util.Collections;
@@ -14,12 +15,13 @@ import java.util.Map;
  *
  * @author terry
  */
-public class Locus implements Serializable {
+public class Locus implements Serializable, Comparable<Locus>{
 
     private static final long serialVersionUID = -5197800047652332969L;
     public static Locus UNKNOWN = new Locus("Unknown");
     private final String myName;
     private final String myChromosome;
+    private final int myChromosomeNumber;
     private final int myStart;
     private final int myEnd;
     private final Map<String, Integer> myFeatures = new HashMap<String, Integer>();
@@ -30,6 +32,11 @@ public class Locus implements Serializable {
         myChromosome = chromosome;
         myStart = start;
         myEnd = end;
+        int convChr=Integer.MAX_VALUE;
+        try{convChr=Integer.parseInt(myChromosome);
+        }
+        catch(NumberFormatException ne) {}
+        myChromosomeNumber=convChr;
 
         if ((featureNames == null) || (featurePositions == null)) {
             return;
@@ -90,6 +97,14 @@ public class Locus implements Serializable {
     public String getChromosomeName() {
         return myChromosome;
     }
+    
+    /**
+     * Returns the interger value of the chromosome (if name is not a number then
+     * Integer.MAX_VALUE is returned)
+     */
+    public int getChromosomeNumber() {
+        return myChromosomeNumber;
+    }
 
     public boolean isChromosome() {
         if (myChromosome == null) {
@@ -139,7 +154,9 @@ public class Locus implements Serializable {
             return false;
         }
         Locus other = (Locus) obj;
-
+        if (myChromosomeNumber != other.getChromosomeNumber()) {
+            return false;
+        }
         if (!myName.equals(other.getName())) {
             return false;
         }
@@ -172,6 +189,16 @@ public class Locus implements Serializable {
         }
 
         return true;
+    }
 
+    @Override
+    public int compareTo(Locus o) {
+        return ComparisonChain.start()
+                .compare(myChromosomeNumber,o.getChromosomeNumber())
+                .compare(myName,o.getName())
+                .compare(myChromosome,o.getChromosomeName())
+                .compare(myStart,o.getStart())
+                .compare(myEnd, o.getEnd())
+                .result();
     }
 }

@@ -128,8 +128,8 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         int chunkCount = this.getChunkCount(); 
         int chunkSize = this.getChunkSize();
         String[] dataSetNames = new String[size];
-        for (int i = startIndex; i < size; i++) {
-            dataSetNames[i] = GBSHDF5Constants.MAPBASE + this.getThreeFigureString(i);
+        for (int i = 0; i < size; i++) {
+            dataSetNames[i] = GBSHDF5Constants.MAPBASE + this.getThreeFigureString(i+startIndex);
             myHDF5.compounds().createArray(dataSetNames[i], tmiType, chunkSize*chunkCount, chunkSize, genoFeatures);
             
         }

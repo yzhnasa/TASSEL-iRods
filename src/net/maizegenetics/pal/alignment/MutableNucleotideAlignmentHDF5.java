@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutionException;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.pal.site.AnnotatedSite;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
 import org.apache.log4j.Logger;
@@ -83,15 +82,15 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private byte[][] myAlleleFreqOrder=null;  //we probably need all these in memory for rapid bit conversions
 
  //   protected String[] mySNPIDs;  //perhaps don't keep in memory, consider compressed
-    private LoadingCache<Integer,AnnotatedSite> mySiteAnnoCache; //key = site
-    private CacheLoader<Integer,AnnotatedSite> siteAnnotLoader = new CacheLoader<Integer,AnnotatedSite>() {
+    private LoadingCache<Integer,OldSiteAnnotation> mySiteAnnoCache; //key = site
+    private CacheLoader<Integer,OldSiteAnnotation> siteAnnotLoader = new CacheLoader<Integer,OldSiteAnnotation>() {
         int lastCachedStartSite=Integer.MIN_VALUE;
         int[][] af;
         byte[][] afOrder;
         float[] maf;
         float[] paf;
         String[] snpIDs;
-        public AnnotatedSite load(Integer key) {
+        public OldSiteAnnotation load(Integer key) {
             int startSite=key&hdf5GenoBlockMask;
             if(startSite!=lastCachedStartSite) {
                 int length=((myNumSites-startSite)<hdf5GenoBlock)?myNumSites-startSite:hdf5GenoBlock;
@@ -120,7 +119,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
                 theAf[i] = af[theAfOrder[i]][offset]; 
             }
             //TODO add SNPIDs
-            AnnotatedSite sa=new AnnotatedSite(myVariableSites[key],
+            OldSiteAnnotation sa=new OldSiteAnnotation(myVariableSites[key],
                         theAfOrder, theAf, maf[offset], paf[offset], snpIDs[offset]);
             return sa;
         }
@@ -581,7 +580,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public String getSNPID(int site) {
         try{
-            AnnotatedSite sa=mySiteAnnoCache.get(site);
+            OldSiteAnnotation sa=mySiteAnnoCache.get(site);
             if(sa.mySNPIDs!=null) return sa.mySNPIDs; 
         } catch(ExecutionException e) {
            return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
@@ -658,7 +657,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public byte[] getAlleles(int site) {
         try{
-            AnnotatedSite sa=mySiteAnnoCache.get(site);
+            OldSiteAnnotation sa=mySiteAnnoCache.get(site);
             return sa.myAlleleFreqOrder;
         } catch(ExecutionException e) {
            e.printStackTrace();
@@ -669,7 +668,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
    @Override
     public int[][] getAllelesSortedByFrequency(int site) {
        try{
-            AnnotatedSite sa=mySiteAnnoCache.get(site);
+            OldSiteAnnotation sa=mySiteAnnoCache.get(site);
             return sa.getAllelesSortedByFrequency();
         } catch(ExecutionException e) {
            e.printStackTrace();
@@ -680,7 +679,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public int getTotalGametesNotMissing(int site) {
         try{
-            AnnotatedSite sa=mySiteAnnoCache.get(site);
+            OldSiteAnnotation sa=mySiteAnnoCache.get(site);
             return sa.getAlleleTotal();
         } catch(ExecutionException e) {
            e.printStackTrace();
@@ -833,8 +832,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public double getMinorAlleleFrequency(int site) {
         try{
-            AnnotatedSite sa=mySiteAnnoCache.get(site);
-            return sa.myMAF;
+            OldSiteAnnotation sa=mySiteAnnoCache.get(site);
+            return sa.maf;
         } catch(ExecutionException e) {
            e.printStackTrace();
            throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");
@@ -853,8 +852,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     public float getSiteCoverage(int site) {
         try{
-            AnnotatedSite sa=mySiteAnnoCache.get(site);
-            return sa.mySiteCoverage;
+            OldSiteAnnotation sa=mySiteAnnoCache.get(site);
+            return sa.siteCov;
         } catch(ExecutionException e) {
            e.printStackTrace();
            throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");

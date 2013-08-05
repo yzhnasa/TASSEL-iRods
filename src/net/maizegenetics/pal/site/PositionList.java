@@ -9,7 +9,7 @@ import java.util.List;
  *
  * @author Terry Casstevens and Ed Buckler
  */
-public interface SiteList extends List<AnnotatedSite> {
+public interface PositionList extends List<Position> {
 
     /**
      * Return reference diploid allele values at given site.
