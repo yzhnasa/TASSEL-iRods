@@ -14,6 +14,13 @@ import javax.swing.ImageIcon;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
+import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.IdGroupUtils;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.Utils;
@@ -94,6 +101,12 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
     		myLogger.info(getUsage());
     		System.exit(-1);
     	}
+    	
+    	if (inputFilename.endsWith(".h5")) {
+    		extractSubsetFromHDF5();
+    		return;
+    	}
+    	
 		try {
 			LinkedList<String> pedlist = new LinkedList<String>();
 			
@@ -171,4 +184,45 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
 		System.out.println("Finished. Output written to " + outputFilename);
 	}
 	
+	public void extractSubsetFromHDF5() {
+		long start = System.currentTimeMillis();
+		
+		FileLoadPlugin flp = new FileLoadPlugin(null, false);
+		flp.setOpenFiles(new String[]{inputFilename});
+		DataSet ds = flp.performFunction(null);
+		
+		Alignment a = (Alignment) ds.getData(0).getData();
+		System.out.format("Time elapsed for reading hdf5 file = %d\n", System.currentTimeMillis() - start);
+		
+		LinkedList<String> pedlist = new LinkedList<String>();
+		
+		System.out.println("Reading taxa file, " + pedFilename);
+		
+		try {
+			BufferedReader br = Utils.getBufferedReader(pedFilename);
+			String input;
+			while ((input = br.readLine()) != null) {
+				pedlist.add(input);
+			}
+			System.out.println(pedlist.size() + " taxa read from the taxa file");
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+
+		String[] taxanames = new String[pedlist.size()];
+		pedlist.toArray(taxanames);
+		
+		IdGroup ids = new SimpleIdGroup(taxanames);
+		
+		start = System.currentTimeMillis();
+		Alignment b = FilterAlignment.getInstance(a, ids);
+		System.out.format("Time elapsed for filtering alignment = %d\n", System.currentTimeMillis() - start);
+		
+		start = System.currentTimeMillis();
+		if (a instanceof MutableNucleotideAlignmentHDF5) ExportUtils.writeToMutableHDF5(b, outputFilename);
+		else ExportUtils.writeToHDF5(b, outputFilename);
+		System.out.format("Time elapsed for writing new file = %d\n", System.currentTimeMillis() - start);
+	}
 }
