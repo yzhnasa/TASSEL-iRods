@@ -75,7 +75,7 @@ public class SequenceDiversityPlugin extends AbstractPlugin {
                         return null;
                     }
                     isSlidingWindowAnalysis = myDialog.isSlidingWindowAnalysis();
-                    typeOfSitesToAnalyze = myDialog.getTypeOfSitesToAnalyze();
+                    //typeOfSitesToAnalyze = myDialog.getTypeOfSitesToAnalyze();
                     startSite = myDialog.getStartSite();
                     endSite = myDialog.getEndSite();
                     windowSize = myDialog.getWindowSize();
@@ -377,12 +377,12 @@ class DiversityDialog extends JDialog {
 
     private void turnOffOptionsIfNotAnnotated() {
         boolean annotatedSites = false;
-        for (int i = 0; i < theAlignment.getSiteCount(); i++) {
-            if (theAlignment.getPositionType(i) != 0) {
-                annotatedSites = true;
-                continue;
-            }
-        }
+        //for (int i = 0; i < theAlignment.getSiteCount(); i++) {
+        //    if (theAlignment.getPositionType(i) != 0) {
+        //        annotatedSites = true;
+        //        continue;
+        //    }
+        //}
         if (annotatedSites == false) {
             codingCheckBox.setEnabled(false);
             noncodingCheckBox.setEnabled(false);
@@ -420,6 +420,7 @@ class DiversityDialog extends JDialog {
     }
 
     /** Returns whether sliding windows of diversity should be calculated */
+    /*
     public Vector getTypeOfSitesToAnalyze() {
         Vector grp = new Vector();
         if (overallCheckBox.isSelected()) {
@@ -460,6 +461,7 @@ class DiversityDialog extends JDialog {
         }
         return grp;
     }
+    */
 
     /** Return the number of number of bases to step in each sliding window*/
     public int getStepSize() {

@@ -40,26 +40,26 @@ public interface Alignment extends Serializable {
         None, MixedScoreTypes, QualityScore, ImputedProbablity, Dosage
     };
     final static public byte POSITION_TYPE_ALL_GROUP = 0;
-    final static public byte POSITION_TYPE_SILENT_GROUP = 1;
-    final static public byte POSITION_TYPE_SYNONYMOUS_GROUP = 2;
-    final static public byte POSITION_TYPE_NONCODING_GROUP = 3;
-    final static public byte POSITION_TYPE_NONTRANSSCRIBED_GROUP = 4;
-    final static public byte POSITION_TYPE_INTRON_GROUP = 5;
-    final static public byte POSITION_TYPE_INDEL_GROUP = 6;
-    final static public byte POSITION_TYPE_NONCODINGINDEL_GROUP = 7;
-    final static public byte POSITION_TYPE_NONSYNONYMOUS_GROUP = 8;
-    final static public byte POSITION_TYPE_CODING_GROUP = 9;
-    final static public byte POSITION_TYPE_CODINGINDEL_GROUP = 10;
-    final static public byte POSITION_TYPE_TRANSCRIBED_GROUP = 11;
+    // final static public byte POSITION_TYPE_SILENT_GROUP = 1;
+    // final static public byte POSITION_TYPE_SYNONYMOUS_GROUP = 2;
+    // final static public byte POSITION_TYPE_NONCODING_GROUP = 3;
+    // final static public byte POSITION_TYPE_NONTRANSSCRIBED_GROUP = 4;
+    // final static public byte POSITION_TYPE_INTRON_GROUP = 5;
+    // final static public byte POSITION_TYPE_INDEL_GROUP = 6;
+    // final static public byte POSITION_TYPE_NONCODINGINDEL_GROUP = 7;
+    // final static public byte POSITION_TYPE_NONSYNONYMOUS_GROUP = 8;
+    // final static public byte POSITION_TYPE_CODING_GROUP = 9;
+    // final static public byte POSITION_TYPE_CODINGINDEL_GROUP = 10;
+    // final static public byte POSITION_TYPE_TRANSCRIBED_GROUP = 11;
     final static public String[] POSITION_TYPE_GROUP_TEXT = {"All", "Silent", "Synonymous", "Noncoding",
         "Nontranscribed", "Intron", "Indel", "Noncoding Indel", "Nonsynonymous", "Coding",
         "Coding Indel", "Transcribed"};
-    final static public byte POSITION_TYPE_NONTRANSCRIBED_TYPE = 'N';
-    final static public byte POSITION_TYPE_ANON_CODING_TYPE = 'C';
-    final static public byte POSITION_TYPE_CODON1_TYPE = '1';
-    final static public byte POSITION_TYPE_CODON2_TYPE = '2';
-    final static public byte POSITION_TYPE_CODON3_TYPE = '3';
-    final static public byte POSITION_TYPE_INTRON_TYPE = 'I';
+    // final static public byte POSITION_TYPE_NONTRANSCRIBED_TYPE = 'N';
+    // final static public byte POSITION_TYPE_ANON_CODING_TYPE = 'C';
+    // final static public byte POSITION_TYPE_CODON1_TYPE = '1';
+    // final static public byte POSITION_TYPE_CODON2_TYPE = '2';
+    // final static public byte POSITION_TYPE_CODON3_TYPE = '3';
+    // final static public byte POSITION_TYPE_INTRON_TYPE = 'I';
 
     /**
      * This defines the possible allele scope types.
@@ -443,28 +443,6 @@ public interface Alignment extends Serializable {
      * @return physical positions.
      */
     public int[] getPhysicalPositions();
-
-    /**
-     * Returns position type for given site. (eg. I=intron, E=exon, P=promoter,
-     * 1=first, 2=second, 3=third, etc.)
-     *
-     * @param site site
-     *
-     * @return position type
-     * @deprecated
-     */
-    @Deprecated
-    public byte getPositionType(int site);
-
-    /**
-     * @deprecated
-     *  Returns position types. (eg. I=intron, E=exon, P=promoter, 1=first,
-     * 2=second, 3=third, etc.)
-     *
-     * @return position types
-     */
-    @Deprecated
-    public byte[] getPositionTypes();
 
     /**
      * Return Locus Name for given site.

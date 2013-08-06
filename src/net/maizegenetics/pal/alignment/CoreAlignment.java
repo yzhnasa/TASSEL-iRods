@@ -9,7 +9,6 @@ import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.depth.AlleleDepth;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.site.AnnotatedPositionList;
-import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
@@ -159,13 +158,13 @@ public class CoreAlignment implements Alignment {
     @Override
     public int getLocusSiteCount(Locus locus) {
         throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-      //  return myAnnotatedPositionList.getChromosomeSiteCount(locus);
+        //  return myAnnotatedPositionList.getChromosomeSiteCount(locus);
     }
 
     @Override
     public int[] getStartAndEndOfLocus(Locus locus) {
         throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-     //   return myAnnotatedPositionList.getStartAndEndOfChromosome(locus);
+        //   return myAnnotatedPositionList.getStartAndEndOfChromosome(locus);
     }
 
     @Override
@@ -192,24 +191,12 @@ public class CoreAlignment implements Alignment {
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
         throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-       // return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+        // return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
     }
 
     @Override
     public int[] getPhysicalPositions() {
         return myAnnotatedPositionList.getPhysicalPositions();
-    }
-
-    @Override
-    public byte getPositionType(int site) {
-        throw new UnsupportedOperationException("Deprecated");
-       // return myAnnotatedPositionList.getPositionType(site);
-    }
-
-    @Override
-    public byte[] getPositionTypes() {
-        throw new UnsupportedOperationException("Deprecated");
-      //  return myAnnotatedPositionList.getPositionTypes();
     }
 
     @Override
@@ -220,13 +207,13 @@ public class CoreAlignment implements Alignment {
     @Override
     public Locus getLocus(int site) {
         throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-       // return myAnnotatedPositionList.getChromosome(site);
+        // return myAnnotatedPositionList.getChromosome(site);
     }
 
     @Override
     public Locus getLocus(String name) {
         throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-       // return myAnnotatedPositionList.getChromosome(name);
+        // return myAnnotatedPositionList.getChromosome(name);
     }
 
     @Override
@@ -298,49 +285,49 @@ public class CoreAlignment implements Alignment {
     @Override
     public byte getMajorAllele(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-     //   return myAnnotatedPositionList.getMajorAllele(site);
+        //   return myAnnotatedPositionList.getMajorAllele(site);
     }
 
     @Override
     public String getMajorAlleleAsString(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-     //   return myAnnotatedPositionList.getMajorAlleleAsString(site);
+        //   return myAnnotatedPositionList.getMajorAlleleAsString(site);
     }
 
     @Override
     public byte getMinorAllele(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-     //   return myAnnotatedPositionList.getMinorAllele(site);
+        //   return myAnnotatedPositionList.getMinorAllele(site);
     }
 
     @Override
     public String getMinorAlleleAsString(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-      //  return myAnnotatedPositionList.getMinorAlleleAsString(site);
+        //  return myAnnotatedPositionList.getMinorAlleleAsString(site);
     }
 
     @Override
     public byte[] getMinorAlleles(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-      //  return myAnnotatedPositionList.getMinorAlleles(site);
+        //  return myAnnotatedPositionList.getMinorAlleles(site);
     }
 
     @Override
     public byte[] getAlleles(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-       // return myAnnotatedPositionList.getAlleles(site);
+        // return myAnnotatedPositionList.getAlleles(site);
     }
 
     @Override
     public double getMinorAlleleFrequency(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-     //   return myAnnotatedPositionList.getMinorAlleleFrequency(site);
+        //   return myAnnotatedPositionList.getMinorAlleleFrequency(site);
     }
 
     @Override
     public double getMajorAlleleFrequency(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-       // return myAnnotatedPositionList.getMajorAlleleFrequency(site);
+        // return myAnnotatedPositionList.getMajorAlleleFrequency(site);
     }
 
     @Override
@@ -378,13 +365,13 @@ public class CoreAlignment implements Alignment {
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-       // return myAnnotatedPositionList.getAllelesSortedByFrequency(site);
+        // return myAnnotatedPositionList.getAllelesSortedByFrequency(site);
     }
 
     @Override
     public Object[][] getDiploidssSortedByFrequency(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-       // return myAnnotatedPositionList.getDiploidssSortedByFrequency(site);
+        // return myAnnotatedPositionList.getDiploidssSortedByFrequency(site);
     }
 
     @Override

@@ -777,20 +777,6 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public byte getPositionType(int site) {
-        return Alignment.POSITION_TYPE_ALL_GROUP;
-    }
-
-    @Override
-    public byte[] getPositionTypes() {
-        byte[] positionTypes = new byte[this.getSiteCount()];
-        for (int i = 0; i < positionTypes.length; i++) {
-            positionTypes[i] = this.getPositionType(i);
-        }
-        return positionTypes;
-    }
-
-    @Override
     public boolean retainsRareAlleles() {
         return myRetainRareAlleles;
     }

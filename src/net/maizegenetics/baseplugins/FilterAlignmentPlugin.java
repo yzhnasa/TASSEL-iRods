@@ -60,7 +60,6 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     private boolean myDoSlidingHaps = false;
     private int myWinSize = 3;
     private int myStepSize = 3;
-    private char[] myIncTypes = {Alignment.POSITION_TYPE_ANON_CODING_TYPE, Alignment.POSITION_TYPE_INTRON_TYPE, Alignment.POSITION_TYPE_NONTRANSCRIBED_TYPE};  //default is all
 
     /**
      * Creates a new instance of FilterAlignmentPlugin
@@ -182,17 +181,6 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         }
 
         Alignment naa = aa;
-
-        //if ((myExtractIndels) && (aa instanceof Alignment)) {
-        //    naa = AlignmentUtils.myExtractIndels(aa, true);
-        //} else {
-        //    naa = aa;
-        //}
-
-        if (myIsUseAllSiteTypes == false) {
-            throw new UnsupportedOperationException();
-            //naa = AnnotatedAlignmentUtils.includeSitesByType(naa, myIncTypes);
-        }
 
         if (myFilterMinorSNPs) {
             naa = BitAlignment.getInstance(naa, 2, false, true);
@@ -359,14 +347,6 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
     public void setUseAllSiteTypes(boolean useAllSiteTypes) {
         myIsUseAllSiteTypes = useAllSiteTypes;
-    }
-
-    public void setIncludedTypes(char[] includeTypes) {
-        myIncTypes = includeTypes;
-    }
-
-    public char[] getIncludedTypes() {
-        return myIncTypes;
     }
 
     public boolean isDoSlidingHaps() {

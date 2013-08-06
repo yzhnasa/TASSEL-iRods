@@ -663,9 +663,10 @@ public class TasselPipeline implements PluginListener {
                     for (int i = 0; i < types.length; i++) {
                         if (types[i].equalsIgnoreCase("ALL")) {
                             grp.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
-                        } else if (types[i].equalsIgnoreCase("INDEL")) {
-                            grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
                         }
+                        // else if (types[i].equalsIgnoreCase("INDEL")) {
+                        //     grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
+                        // }
                     }
 
                     plugin.setTypeOfSitesToAnalyze(grp);
