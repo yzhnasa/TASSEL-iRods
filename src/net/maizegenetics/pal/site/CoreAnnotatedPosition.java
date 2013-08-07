@@ -65,6 +65,10 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
         public Builder(Position aCorePosition) {
             this.myCorePosition = aCorePosition;
         }
+        /**Constructor requires a Position before annotation of the position*/
+        public Builder(Chromosome chr, int position) {
+            this.myCorePosition = new CorePosition.Builder(chr, position).build();
+        }
         /**Set Minor Allele Frequency annotation (default=Float.NaN)*/
         public Builder maf(float val) {myMAF = val; return this;}
         /**Set site coverage annotation (default=Float.NaN)*/

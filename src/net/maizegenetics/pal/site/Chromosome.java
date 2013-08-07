@@ -25,6 +25,7 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
     private final int myChromosomeNumber;
     private final int myLength;
     private final Map<String, Integer> myFeatures;
+    private final int hashCode;
 
     /**
      *
@@ -41,6 +42,7 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
         myChromosomeNumber=convChr;
         if(features==null) {myFeatures=null;}
         else {myFeatures = new HashMap<String, Integer>(features);}
+        hashCode=calcHashCode();
     }
     
     public Chromosome(String name) {
@@ -92,6 +94,10 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
 
     @Override
     public int hashCode() {
+        return hashCode;
+    }
+
+    private int calcHashCode() {
         int hash = 7;
         hash = 79 * hash + (this.myName != null ? this.myName.hashCode() : 0);
         return hash;
@@ -106,9 +112,8 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
 
     @Override
     public int compareTo(Chromosome o) {
-        return ComparisonChain.start()
-                .compare(myChromosomeNumber,o.getChromosomeNumber())
-                .compare(myName,o.getName())
-                .result();
+        int result=Integer.compare(myChromosomeNumber,o.getChromosomeNumber());
+        if(result!=0) return result;
+        return myName.compareTo(o.getName());
     }
 }

@@ -23,6 +23,7 @@ public final class CorePosition implements Position {
     /**Define the nature of the polymorphism {"ACTAT","-"} or {"A","C","G"} or {"100","103","106"}
      */
     private final String[] myKnownVariants;
+    private final int hashCode;
 
     /**
      * A builder for creating immutable CorePosition instances.
@@ -47,6 +48,7 @@ public final class CorePosition implements Position {
         private boolean isNucleotide=true;
         private boolean isIndel=false;
         private String[] myKnownVariants=null;
+
 
         /**
          * Constructor for Builder, requires chromosome and position
@@ -82,6 +84,7 @@ public final class CorePosition implements Position {
         isNucleotide = builder.isNucleotide;
         isIndel = builder.isIndel;
         myKnownVariants = builder.myKnownVariants;
+        hashCode=hashCode();
     }
 
     @Override
@@ -95,6 +98,10 @@ public final class CorePosition implements Position {
 
     @Override
     public int hashCode() {
+        return this.hashCode;    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
+    public int calcHashCode() {
         //TODO:  this hash code should be stored
         int hash = 7;
         hash = 37 * hash + this.myChromosome.hashCode();
@@ -111,26 +118,26 @@ public final class CorePosition implements Position {
         if (!(obj instanceof Position)) {return false;}
         Position o=(Position)obj;
         int result= ComparisonChain.start()
-                .compare(myPosition,o.getPosition())  //position is most discriminating for speed
-                .compare(myChromosome,o.getChromosome())
+                .compare(myPosition, o.getPosition())  //position is most discriminating for speed
+                .compare(myChromosome, o.getChromosome())
                 .compare(myCM, o.getCM())
                 .compare(myStrand,o.getStrand())
-                .compare(getSNPID(), o.getSNPID())
                 .result();
-        return (result==0);
+        if(result!=0) return false;
+        return getSNPID().equals(o.getSNPID()); //This is done last as the string comparison is expensive
     }
 
     @Override
     public int compareTo(Position o) {
-        return ComparisonChain.start()
+        int result=ComparisonChain.start()
                 .compare(myChromosome,o.getChromosome())
                 .compare(myPosition,o.getPosition())
-                .compare(myCM, o.getCM())
-                .compare(myStrand,o.getStrand())
-                .compare(getSNPID(), o.getSNPID())
+//                .compare(myCM, o.getCM())
+//                .compare(myStrand,o.getStrand())
                 .result();
+        if(result!=0) return result;
+        return getSNPID().compareTo(o.getSNPID()); //This is done last as the string comparison is expensive
     }
-
 
     @Override
     public Chromosome getChromosome() {
@@ -159,7 +166,7 @@ public final class CorePosition implements Position {
     @Override
     public String getSNPID() {
         if (mySNPID == null) {
-            return "S" + getChromosome().getName() + "_" + myPosition;
+            return (new StringBuilder("S").append(getChromosome().getName()).append("_").append(myPosition)).toString();
         } else {
             return mySNPID;
         }
