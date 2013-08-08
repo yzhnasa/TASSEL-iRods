@@ -1,11 +1,12 @@
 package net.maizegenetics.pal.site;
 
 import net.maizegenetics.pal.site.Chromosome;
-
+import net.maizegenetics.pal.alignment.Alignment;
 import java.util.List;
 
 /**
- * List of sites in the genome.
+ * List of positions in the genome.   This type is used by every {@link Alignment}, but it can also be used list
+ * of GWAS results and other genomic annotations.
  *
  * @author Terry Casstevens and Ed Buckler
  */

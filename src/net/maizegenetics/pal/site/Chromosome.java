@@ -1,6 +1,3 @@
-/*
- * Locus
- */
 package net.maizegenetics.pal.site;
 
 import com.google.common.collect.ComparisonChain;
@@ -15,7 +12,7 @@ import java.util.Map;
  * Defines the chromosome structure and length.  The name and length recorded for 
  * each chromosome. 
  * 
- * @author terry
+ * @author Terry Casstevens and Ed Buckler
  */
 public class Chromosome implements Serializable, Comparable<Chromosome>{
 

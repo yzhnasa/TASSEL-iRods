@@ -3,27 +3,35 @@ package net.maizegenetics.pal.site;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 
+import java.nio.IntBuffer;
 import java.util.*;
 
 /**
- * Created with IntelliJ IDEA.
- * User: edbuckler
- * Date: 7/30/13
- * Time: 5:22 PM
+ * An in memory immutable instance of {@link AnnotatedPositionList}.  Use the {@link AnnotatedPositionArrayList.Builder}
+ * to create the list.
+ *
+ * @author Ed Buckler
  */
 public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
-
     private final List<AnnotatedPosition> mySiteList;
     private final int numPositions;
     private final byte[] refAlleles;
     private final byte[] majorAlleles;
     private final byte[] ancAlleles;
     private final byte[] hiDepAlleles;
-    private final HashMap<Chromosome,int[]> positionHash;  //Hash of chromosomes and positions
-   // private final lociOffsets;
+    private final TreeMap<Chromosome,ChrOffPos> myChrOffPosTree;
+    private final HashMap<String,Chromosome> myChrNameHash;
 
-
-
+    private class ChrOffPos {
+        final int startSiteOff;
+        final int endSiteOff;
+        final int[] position;
+        private ChrOffPos(int startSiteOff, int endSiteOff, int[] position) {
+            this.startSiteOff=startSiteOff;
+            this.endSiteOff=endSiteOff;
+            this.position=position;
+        }
+    }
 
     private AnnotatedPositionArrayList(ArrayList<AnnotatedPosition> builderList) {
         this.numPositions=builderList.size();
@@ -33,6 +41,10 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
         hiDepAlleles=new byte[numPositions];
         ArrayListMultimap<Chromosome,Integer> pTS=ArrayListMultimap.create();
         mySiteList=new ArrayList<AnnotatedPosition>(builderList.size());
+        myChrOffPosTree=new TreeMap<>();
+        myChrNameHash=new HashMap<>();
+        int currStart=0;
+        Chromosome currChr=builderList.get(0).getChromosome();
         for (int i=0; i<builderList.size(); i++) {
             AnnotatedPosition ap=builderList.get(i);
             refAlleles[i]=ap.getReferenceAllele();
@@ -40,14 +52,21 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
             ancAlleles[i]=ap.getAncestralAllele();
             hiDepAlleles[i]=ap.getHighDepthAllele();
             mySiteList.add(ap);
+            if((i==(builderList.size()-1))||!ap.getChromosome().equals(currChr)) {
+                myChrOffPosTree.put(currChr, new ChrOffPos(currStart, i-1, null));
+                currChr=ap.getChromosome();
+                currStart=i;
+            }
             pTS.put(ap.getChromosome(),ap.getPosition());
         }
-        positionHash=new HashMap<>();
+
         for (Chromosome chr: pTS.keySet()) {
             List<Integer> p=pTS.get(chr);
             int[] intP=new int[p.size()];
             for (int i=0; i<intP.length; i++) {intP[i]=p.get(i);}
-            positionHash.put(chr, intP);
+            ChrOffPos currOff=myChrOffPosTree.get(chr);
+            myChrOffPosTree.put(chr, new ChrOffPos(currOff.startSiteOff, currOff.endSiteOff, intP));
+            myChrNameHash.put(chr.getName(),chr);
             }
         pTS=null;
     }
@@ -95,13 +114,14 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
     @Override
     public int getChromosomeSiteCount(Chromosome chromosome) {
-        return positionHash.get(chromosome).length;
+        return myChrOffPosTree.get(chromosome).position.length;
     }
 
     @Override
     public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
-
-        throw new UnsupportedOperationException("Not supported yet.");
+        ChrOffPos cop=myChrOffPosTree.get(chromosome);
+        if(cop==null) return null;
+        return new int[]{cop.startSiteOff,cop.endSiteOff};
     }
 
     @Override
@@ -111,27 +131,39 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
-//        AnnotatedPosition ps=new CoreAnnotatedPosition.Builder(chromosome,physicalPosition).build();
-//        int i=Collections.binarySearch(mySiteList,ps);    //AvgPerObj:3777.697ns for 2 millions positions
-//        return i;
-//        int i=Arrays.binarySearch(posArray, physicalPosition); //AvgPerObj:227.5715ns  for 2million positions
-//        return i;
-        int i=Arrays.binarySearch(positionHash.get(chromosome), physicalPosition); //AvgPerObj:227.5715ns  for 2million positions
+        ChrOffPos cop=myChrOffPosTree.get(chromosome);
+        if(cop==null) return Integer.MIN_VALUE;
+        int i=Arrays.binarySearch(cop.position, physicalPosition); //AvgPerObj:227.5715ns  for 2million positions
+        i+=(i<0)?-cop.startSiteOff:cop.startSiteOff;
+        while((i>0)&&(physicalPosition==get(i-1).getPosition())) {i--;} //backup to the first position if there are duplicates
         return i;
-//        int i=Collections.binarySearch(posList,physicalPosition);   //AvgPerObj:583.4125ns  for 2million positions
-//        return i;
-//        return positionHash.get(((long)chromosome.hashCode()<<32)+(long)physicalPosition);  //AvgPerObj:137.499ns for 2million positions
-//        return positionHash.get(physicalPosition);  //AvgPerObj:126.499ns for 2million positions
     }
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int result=getSiteOfPhysicalPosition(physicalPosition, chromosome);
+        if (result < 0) {return result;}
+        else {
+            if (snpID.equals(getSNPID(result))) {return result;
+            } else {
+                int index=result;
+                while ((index < numPositions) && (getPositionInChromosome(index) == physicalPosition)) {
+                    if (snpID.equals(getSNPID(index))) {return index;}
+                    result++;
+                }
+                return -result - 1;
+            }
+        }
     }
 
     @Override
     public int[] getPhysicalPositions() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int[] result=new int[numPositions];
+        IntBuffer ib=IntBuffer.wrap(result);
+        for (ChrOffPos cop: myChrOffPosTree.values()) {
+            ib.put(cop.position);
+        }
+        return result;
     }
 
     @Override
@@ -146,22 +178,27 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
     @Override
     public Chromosome getChromosome(String name) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myChrNameHash.get(name);
     }
 
     @Override
     public Chromosome[] getChromosomes() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myChrOffPosTree.keySet().toArray(new Chromosome[0]);
     }
 
     @Override
     public int getNumChromosomes() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myChrOffPosTree.size();
     }
 
     @Override
     public int[] getChromosomesOffsets() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int[] result=new int[myChrOffPosTree.size()];
+        int index=0;
+        for (ChrOffPos cop: myChrOffPosTree.values()) {
+            result[index++]=cop.startSiteOff;
+        }
+        return result;
     }
 
     @Override
@@ -216,12 +253,14 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
         return mySiteList.toArray(a);
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public boolean add(AnnotatedPosition e) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public boolean remove(Object o) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
@@ -231,27 +270,32 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
         return mySiteList.containsAll(c);
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public boolean addAll(Collection<? extends AnnotatedPosition> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public boolean addAll(int index, Collection<? extends AnnotatedPosition> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public boolean removeAll(Collection<?> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public void clear() {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
@@ -261,17 +305,20 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
         return mySiteList.get(index);
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public AnnotatedPosition set(int index, AnnotatedPosition element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public void add(int index, AnnotatedPosition element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
-    @Override
+    /**Not supported immutable class*/
+    @Override@Deprecated
     public AnnotatedPosition remove(int index) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
@@ -302,16 +349,16 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
     }
 
     /**
-     * A builder for creating immutable list instances, especially
-     * {@code public static final} lists ("constant lists").
+     * A builder for creating immutable AnnotatedPositionArrayList
      *
      * <p>Example:
      * <pre>   {@code
-     *   public static final ImmutableList<Color> GOOGLE_COLORS
-     *       = new ImmutableList.Builder<Color>()
-     *           .addAll(WEBSAFE_COLORS)
-     *           .add(new Color(0, 191, 255))
-     *           .build();}</pre>
+     *   AnnotatedPositionArrayList.Builder b=new AnnotatedPositionArrayList.Builder();
+     *   for (int i = 0; i <size; i++) {
+     *       AnnotatedPosition ap=new CoreAnnotatedPosition.Builder(chr[chrIndex[i]],pos[i]).refAllele(refSeq[i]).build();
+     *       b.add(ap);
+     *       }
+     *   instance=b.build();}
      *
      * <p>Builder instances can be reused - it is safe to call {@link #build}
      * multiple times to build multiple lists in series. Each new list

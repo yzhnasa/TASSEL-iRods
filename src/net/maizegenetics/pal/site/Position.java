@@ -1,7 +1,7 @@
 package net.maizegenetics.pal.site;
 
 /**
- * Defines a genomics positions and its known variants.  Includes attributes of chromosome, position, strand,
+ * Defines a genomic positions and its known variants.  Includes attributes of chromosome, position, strand,
  * centiMorgans, name (or SNP ID), whether this position is a nucleotide, or includes an indel.
  *
  * @author Ed Buckler

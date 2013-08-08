@@ -3,7 +3,8 @@ package net.maizegenetics.pal.site;
 import com.google.common.collect.ComparisonChain;
 
 /**
- * Defines the central attributes of a position in the genome.
+ * Defines the central attributes of a position in the genome.  Use {@link CorePosition.Builder} in order to create a Position.
+ * CorePositions are immutable.
  */
 public final class CorePosition implements Position {
     /**Locus of the site (required)*/
@@ -132,8 +133,8 @@ public final class CorePosition implements Position {
         int result=ComparisonChain.start()
                 .compare(myChromosome,o.getChromosome())
                 .compare(myPosition,o.getPosition())
-//                .compare(myCM, o.getCM())
-//                .compare(myStrand,o.getStrand())
+                .compare(myCM, o.getCM())
+                .compare(myStrand,o.getStrand())
                 .result();
         if(result!=0) return result;
         return getSNPID().compareTo(o.getSNPID()); //This is done last as the string comparison is expensive
@@ -144,24 +145,20 @@ public final class CorePosition implements Position {
         return myChromosome;
     }
 
-
     @Override
     public int getPosition() {
         return myPosition;
     }
-
 
     @Override
     public byte getStrand() {
         return myStrand;
     }
 
-
     @Override
     public float getCM() {
         return myCM;
     }
-
 
     @Override
     public String getSNPID() {
