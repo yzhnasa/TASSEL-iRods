@@ -109,7 +109,8 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
 
     @Override
     public int compareTo(Chromosome o) {
-        int result=Integer.compare(myChromosomeNumber,o.getChromosomeNumber());
+        //int result=Integer.compare(myChromosomeNumber,o.getChromosomeNumber());
+        int result=Integer.valueOf(myChromosomeNumber).compareTo(Integer.valueOf(o.getChromosomeNumber()));
         if(result!=0) return result;
         return myName.compareTo(o.getName());
     }
