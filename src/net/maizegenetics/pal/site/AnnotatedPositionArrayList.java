@@ -42,7 +42,7 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
             mySiteList.add(ap);
             pTS.put(ap.getChromosome(),ap.getPosition());
         }
-        positionHash=new HashMap<>();
+        positionHash=new HashMap<Chromosome,int[]>();
         for (Chromosome chr: pTS.keySet()) {
             List<Integer> p=pTS.get(chr);
             int[] intP=new int[p.size()];
