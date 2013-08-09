@@ -712,8 +712,8 @@ public class TasselPipeline implements PluginListener {
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with LD Test Site number: " + str);
                     }
-                    if (testSite < 1) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Test Site can't be less than 1.");
+                    if (testSite < 0) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Test Site can't be less than 0.");
                     }
 
                     plugin.setTestSite(testSite);
