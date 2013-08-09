@@ -42,7 +42,7 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
         ArrayListMultimap<Chromosome,Integer> pTS=ArrayListMultimap.create();
         mySiteList=new ArrayList<AnnotatedPosition>(builderList.size());
         myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
-        myChrNameHash=new HashMap<String,Chromosome>();
+        myChrNameHash=new HashMap();
         int currStart=0;
         Chromosome currChr=builderList.get(0).getChromosome();
         for (int i=0; i<builderList.size(); i++) {
@@ -53,6 +53,7 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
             hiDepAlleles[i]=ap.getHighDepthAllele();
             mySiteList.add(ap);
             if((i==(builderList.size()-1))||!ap.getChromosome().equals(currChr)) {
+                int end=(i==builderList.size()-1)?i:i-1;
                 myChrOffPosTree.put(currChr, new ChrOffPos(currStart, i-1, null));
                 currChr=ap.getChromosome();
                 currStart=i;

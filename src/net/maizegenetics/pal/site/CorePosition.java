@@ -103,7 +103,6 @@ public final class CorePosition implements Position {
     }
 
     public int calcHashCode() {
-        //TODO:  this hash code should be stored
         int hash = 7;
         hash = 37 * hash + this.myChromosome.hashCode();
         hash = 37 * hash + this.myPosition;
