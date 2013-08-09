@@ -12,8 +12,10 @@ import java.io.FileWriter;
 import net.maizegenetics.gbs.maps.PETagsOnPhysicalMap;
 import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.gbs.tagdist.PETagCounts;
 import net.maizegenetics.gbs.tagdist.TagCounts;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
+import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**
@@ -46,7 +48,39 @@ public class FeiUtils {
 		umithm.setParameters(args);
 		umithm.performFunction(null);       
     }
-            
+    
+    public void mkSmallPETagCountsFile (String inputFileS, String outputFileS, int startIndex, int size) {
+        PETagCounts ptc = new PETagCounts (inputFileS, FilePacking.Bit);
+        try {
+            DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFileS), 65536));
+            dos.writeInt(ptc.getTagSizeInLong());
+            dos.writeInt(size);
+            for (int i = startIndex; i < startIndex+size; i++) {
+                
+                for (int j = 0; j < ptc.getTagSizeInLong(); j++) {
+                    dos.writeLong(ptc.getTagF(i)[j]);
+                }
+                dos.writeShort(ptc.getTagFLength(i));
+                for (int j = 0; j < ptc.getTagSizeInLong(); j++) {
+                    dos.writeLong(ptc.getTagB(i)[j]);
+                }
+                dos.writeShort(ptc.getTagBLength(i));
+                dos.writeByte(ptc.getContigLengthInLong(i));
+                for (int j = 0; j < ptc.getContigLengthInLong(i); j++) {
+                    dos.writeLong(ptc.getContig(i)[j]);
+                }
+                dos.writeShort(ptc.getContigLength(i));
+                dos.writeInt(ptc.getReadCount(i));
+            }
+            dos.flush();
+            dos.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+    
     /**
      * Only output N row tagCounts
      * @param inputFileS

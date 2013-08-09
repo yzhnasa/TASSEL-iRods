@@ -22,6 +22,7 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 /**
  * Basic method of working with alignment of PE tags
  * @author Fei Lu
+ * @deprecated 
  */
 public abstract class AbstractPETagsOnPhysicalMap extends AbstractPETags {
     /***/

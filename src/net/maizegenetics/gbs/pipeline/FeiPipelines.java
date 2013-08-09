@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import net.maizegenetics.gbs.maps.PETagsOnPhysicalMap;
+import net.maizegenetics.gbs.maps.PETagsOnPhysicalMapV3;
 import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
@@ -40,8 +41,8 @@ public class FeiPipelines {
         //this.mkSmallTagCount();
         //this.mkFastq();
         //this.mkFasta();
-        //this.mkTOPM();
-        //this.mkTOPMHDF5();
+        //this.mkTOPM(); //old version
+        //this.mkTOPMHDF5(); //old version
         this.initializeTOPMHDF5();
         this.annotateTOPMHDF5WithAligner();
         
@@ -51,10 +52,19 @@ public class FeiPipelines {
     public void annotateTOPMHDF5WithAligner () {
         String inputFileS = "M:/GBStest/topm/ini.topm.h5";
 
-        String bowtie2SamFileS = "M:/GBStest/alignment/bowtie2-K5.sam";
+        
         TagsOnPhysicalMapV3 topm = new TagsOnPhysicalMapV3(inputFileS);
         AnnotateTOPM anno = new AnnotateTOPM (topm);
+        String bowtie2SamFileS = "M:/GBStest/alignment/bowtie2-K5.sam";
         anno.annotateWithBowtie2(bowtie2SamFileS, 5);
+        String bwaSamFileS = "M:/GBStest/alignment/bwa-N5.sam";
+        anno.annotateWithBWA(bwaSamFileS, 5);
+        String blastFileS = "M:/GBStest/alignment/blast.m8.txt";
+        anno.annotateWithBLAST(blastFileS, 5);
+        String PETOPMFileS = "M:/af/ptopm/PE.topm";
+        anno.annotateWithPE(PETOPMFileS, 5);
+        String TOGMFileS = "M:/pav/PhyGenMapping/v1.togm.txt";
+        anno.annotateWithGM(TOGMFileS, 1);
     }
     
     public void initializeTOPMHDF5 () {
@@ -108,11 +118,17 @@ public class FeiPipelines {
         //this.parseFastq();
         //this.checkPETagCounts(); //for checking, not in the pipeline.
         //this.mergePETagCounts();
-        this.contigPETagCounts();
+        //this.contigPETagCounts();
         //this.mkPEstatistics();//for presentation, not included in pipeline.
+        //this.mkFastaFileFromPE();
+        this.mkPEAlignment();
+        
+        //************************************
+        //Deprecated
         //this.alignmentStep1();
         //this.alignmentStep2();
         //this.checkAlignmentOfPE(); //check alignment of longer sequence
+        //************************************
     }
     
     public void checkAlignmentOfPE () {
@@ -144,6 +160,26 @@ public class FeiPipelines {
         ptc.mkFastaFile(fastaFFileS, fastaBFileS, fastaCFileS);
     }
     
+    public void mkPEAlignment () {
+        String fFastaFileS = "M:/af/alignment/f.fasta.txt";
+        String bFastaFileS = "M:/af/alignment/b.fasta.txt";
+        String fSamFileS = "M:/af/alignment/f.k5.sam";
+        String bSamFileS = "M:/af/alignment/b.k5.sam";
+        String a = null;
+        PETagsOnPhysicalMapV3 ptopm = new PETagsOnPhysicalMapV3 (fFastaFileS, bFastaFileS, fSamFileS, bSamFileS);
+        String PETOPM = "M:/af/ptopm/PE.topm";
+        ptopm.writeBinaryFile(PETOPM);
+        ptopm = new PETagsOnPhysicalMapV3(PETOPM);
+    }
+    
+    public void mkFastaFileFromPE () {
+        String infileS = "M:/af/mergePETagCounts/merge.con.pe.cnt";
+        PETagCounts ptc = new PETagCounts (infileS, FilePacking.Bit);
+        String fFastaFileS = "M:/af/alignment/f.fasta.txt";
+        String bFastaFileS = "M:/af/alignment/b.fasta.txt";
+        ptc.mkFastaFile(fFastaFileS, bFastaFileS);
+    }
+    
     public void mkPEstatistics () {
         String infileS = "M:/af/mergePETagCounts/merge.con.pe.cnt";
         PETagCounts ptc = new PETagCounts (infileS, FilePacking.Bit);
@@ -161,7 +197,7 @@ public class FeiPipelines {
             BufferedWriter bw = new BufferedWriter (new FileWriter(staFileS), 65536);
             bw.write("FLength\tBLength\tContigLength\tReadCount");
             bw.newLine();
-            for (int i = 0; i < 100000; i++) {
+            for (int i = 0; i < 10000; i++) {
                 //if (ptc.getContigLengthInLong(i) == 0) continue; 
                 bw.write(String.valueOf(ptc.getTagFLength(i))+"\t"+String.valueOf(ptc.getTagBLength(i))+"\t"+String.valueOf(ptc.getContigLength(i))+"\t"+String.valueOf(ptc.getReadCount(i)));
                 bw.newLine();
@@ -174,7 +210,7 @@ public class FeiPipelines {
         }
     }
     
-    public void contigPETagCounts () {
+     public void contigPETagCounts () {
         String infileS = "M:/af/mergePETagCounts/merge.pe.cnt";
         String outfileS = "M:/af/mergePETagCounts/merge.con.pe.cnt";
         String arguments = "-i " + infileS + " -o " + outfileS;
@@ -195,8 +231,9 @@ public class FeiPipelines {
     }
 
     public void parseFastq () {
-        String infile1 = "M:/af/Illumina/ImputationP15_1_1_fastq.txt";
-        String infile2 = "M:/af/Illumina/ImputationP15_1_2_fastq.txt";
+        String infile1 = "M:/af/Illumina/test/ImputationP15_1_1_fastq.txt";
+        String infile2 = "M:/af/Illumina/test/ImputationP15_1_2_fastq.txt";
+        
         String keyfile = "M:/af/key/ImputationP15_key.txt";
         String outputDirS = "M:/af/PETagCounts/";
         String arguments = "-iF " + infile1 + " -iB " + infile2 + " -k " + keyfile + " -e ApekI -l 8 -o " + outputDirS;

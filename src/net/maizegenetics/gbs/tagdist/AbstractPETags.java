@@ -110,10 +110,58 @@ public abstract class AbstractPETags implements PETags {
     }
     
     /**
+     * Write forword and backword fasta files of PE tag for Bowtie2 alignment, the sequence is in format of index_f/b_c/n, where f means forward, b means backword, c means contig, n means no contig
+     * When contig exist, the forward and backword tags are the contig and reverse complement of the contig, respectively.
+     * @param fFastaFileS
+     * @param bFastaFileS 
+     */
+    public void mkFastaFile (String fFastaFileS, String bFastaFileS) {
+        try {
+            BufferedWriter bwf = new BufferedWriter (new FileWriter (fFastaFileS), 65536);
+            BufferedWriter bwb = new BufferedWriter (new FileWriter (bFastaFileS), 65536);
+            for (int i = 0; i < this.getTagCount(); i++) {
+                String forwardName = String.valueOf(i)+"_f_";
+                String backwardName = String.valueOf(i)+"_b_";
+                String forwardTag;
+                String backwardTag;
+                if (this.getContigLength(i) == 0) {
+                    forwardName = forwardName+"n";
+                    backwardName = backwardName+"n";
+                    forwardTag = BaseEncoder.getSequenceFromLong(this.getTagF(i)).substring(0, this.getTagFLength(i));
+                    backwardTag = BaseEncoder.getSequenceFromLong(this.getTagB(i)).substring(0, this.getTagBLength(i));
+                }
+                else {
+                    forwardName = forwardName+"c";
+                    backwardName = backwardName+"c";
+                    forwardTag = BaseEncoder.getSequenceFromLong(this.getContig(i)).substring(0, this.getContigLength(i));
+                    backwardTag = BaseEncoder.getReverseComplement(forwardTag);
+                }
+                
+                bwf.write(">"+forwardName);
+                bwf.newLine();
+                bwf.write(forwardTag);
+                bwf.newLine();
+                bwb.write(">"+backwardName);
+                bwb.newLine();
+                bwb.write(backwardTag);
+                bwb.newLine();
+            }
+            bwf.flush();
+            bwf.close();
+            bwb.flush();
+            bwb.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        } 
+    }
+    
+    /**
      * Write fasta files of PE tag for alignment
      * @param tagsFFastaFileS
      * @param tagsBFastaFileS
-     * @param contigFastaFileS 
+     * @param contigFastaFileS
+     * @deprecated 
      */
     public void mkFastaFile (String tagsFFastaFileS, String tagsBFastaFileS, String contigFastaFileS) {
         try {
@@ -230,13 +278,13 @@ public abstract class AbstractPETags implements PETags {
                     sb.append(hitS.substring(hitStart-1, hitS.length()));
                 }
             }
-            //String contigS = sb.toString();
-            //System.out.println(i+"\t"+queryStart+"\t"+queryEnd+"\t"+this.getTagFLength(i)+"\t"+hitStart+"\t"+hitEnd+"\t"+this.getTagBLength(i)+"\t"+psa.getLength());
-            //System.out.println(psa.toString(300));
-            //System.out.println(contigS);
-            //System.out.println(queryS);
-            //System.out.println(hitS);
-            //System.out.println("\n\n");
+//            String contigS = sb.toString();
+//            System.out.println(i+"\t"+queryStart+"\t"+queryEnd+"\t"+this.getTagFLength(i)+"\t"+hitStart+"\t"+hitEnd+"\t"+this.getTagBLength(i)+"\t"+psa.getLength());
+//            System.out.println(psa.toString(300));
+//            System.out.println(contigS);
+//            System.out.println(queryS);
+//            System.out.println(hitS);
+//            System.out.println("\n\n");
             contigLength[i] = (short)sb.length();
             int leftover = contigLength[i] % BaseEncoder.chunkSize;
             if (leftover == 0) {

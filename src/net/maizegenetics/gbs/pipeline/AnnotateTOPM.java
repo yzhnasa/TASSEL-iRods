@@ -11,27 +11,33 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.TreeSet;
+import net.maizegenetics.gbs.maps.PETagsOnPhysicalMapV3;
 import net.maizegenetics.gbs.maps.TagMappingInfoV3;
+import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMapV3;
+import net.maizegenetics.gbs.tagdist.TagsByTaxa;
+import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.gbs.util.SAMUtils;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
 /**
  * Methods to annotate TOPM file, including adding mapping info from aligners, adding PE tag position and genetic position, model prediction for the best position
- * Code of mappingSource. 0: Bowtie2; 1: BWA; 2: BLAST; 3: PE; 4: Genetic Mapping
+ * Code of mappingSource. 0: Bowtie2; 1: BWA; 2: BLAST; 3: PE one end; 4: PE the other end; 5: Genetic Mapping
  * @author Fei Lu
  */
 public class AnnotateTOPM {
     /**TOPM file that will be annotated*/
     TagsOnPhysicalMapV3 topm;
-    /**Record Sam record. When tmiBuffers[0] is full, output to TOPM block. Substitute tmiBuffers[i] with tmiBuffers[i+1]. Size = numBuffers×maxMappingNum(-K option)×TOPM CHUNK_SIZE*/
+    /**Record Sam record. When tmiBuffers[0] is full, output to TOPM block. Substitute tmiBuffers[i] with tmiBuffers[i+1]. Size = numBuffers×maxMappingNum(-K option)×TOPM CHUNK_SIZE
+     * Multiple buffers are used because the output in SAM is not exactly the order of input tag, roughly in the same order though
+     */
     TagMappingInfoV3[][][] tmiBuffers = null;
     /**check if tmiBuffer[0] is full for output*/
     boolean[][] bufferLights = null;
     /**Number of buffers*/
     int bufferNum = 2;
-    /**record how mapping tags are imported in each buffer*/
+    /**record how many mapping tags are imported in each buffer*/
     int[] lightCounts;
     /**Actual tag index of each tmiBuffers[i]*/
     int[] bufferStartTagIndex = null;
@@ -40,12 +46,21 @@ public class AnnotateTOPM {
     /**When the second buffer has filled at least with this cutoff, update buffer*/
     int updateBufferCountCutoff;
     
+    /**
+     * Constructor from a TOPM file
+     * @param topm 
+     */
     public AnnotateTOPM (TagsOnPhysicalMapV3 topm) {
         this.topm = topm;   
     }
     
+    /**
+     * Annotate the TOPM file using Bowtie2
+     * @param samFileS
+     * @param maxMappingNum is the max number of multiple alignment
+     */
     public void annotateWithBowtie2 (String samFileS, int maxMappingNum) {
-        String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMaxMappingCount(), maxMappingNum);
+        String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
         this.iniTMIBuffers(bufferNum, maxMappingNum);
         System.out.println("Reading SAM format tag alignment (Bowtie2) from: " + samFileS);
         System.out.println("Coverting SAM to TOPMHDF5...");
@@ -125,7 +140,7 @@ public class AnnotateTOPM {
                 }   
             }
             this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
-            topm.setMaxMapping(topm.getMaxMappingCount()+maxMappingNum);
+            topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
             br.close();
         } catch (Exception e) {
             
@@ -134,8 +149,13 @@ public class AnnotateTOPM {
         }
     }
     
+    /**
+     * Annotate the TOPM with BWA
+     * @param samFileS
+     * @param maxMappingNum 
+     */
     public void annotateWithBWA (String samFileS, int maxMappingNum) {
-        String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMaxMappingCount(), maxMappingNum);
+        String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
         this.iniTMIBuffers(bufferNum, maxMappingNum);
         System.out.println("Reading SAM format tag alignment (BWA) from: " + samFileS);
         System.out.println("Coverting SAM to TOPMHDF5...");
@@ -232,7 +252,7 @@ public class AnnotateTOPM {
                 inputStr=br.readLine();
             }
             this.saveBWATMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
-            topm.setMaxMapping(topm.getMaxMappingCount()+maxMappingNum);
+            topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
             br.close();
         } catch (Exception e) {
             
@@ -240,9 +260,14 @@ public class AnnotateTOPM {
             System.exit(1);
         }       
     }
-            
+    
+    /**
+     * Annotate the TOPM with BLAST
+     * @param blastM8FileS
+     * @param maxMappingNum 
+     */
     public void annotateWithBLAST (String blastM8FileS, int maxMappingNum) {
-        String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMaxMappingCount(), maxMappingNum);
+        String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
         this.iniTMIBuffers(2, maxMappingNum);
         System.out.println("Reading SAM format tag alignment (BLAST) from: " + blastM8FileS);
         System.out.println("Coverting SAM to TOPMHDF5...");
@@ -292,7 +317,7 @@ public class AnnotateTOPM {
                 }   
             }
             this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
-            topm.setMaxMapping(topm.getMaxMappingCount()+maxMappingNum);
+            topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
             br.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -300,15 +325,94 @@ public class AnnotateTOPM {
         }
     }
     
-    public void annotateWithPE (String PETOPMFileS) {
-        
-    }
-    
-    public void annotateWithGM (String TOGMFileS) {
-        
+    /**
+     * Annotate the TOPM with PE
+     * @param PETOPMFileS
+     * @param maxMappingNum 
+     */
+    public void annotateWithPE (String PETOPMFileS, int maxMappingNum) {
+        byte forwardMappingSource = 3, backMappingSource = 4;
+        PETagsOnPhysicalMapV3 ptopm = new PETagsOnPhysicalMapV3(PETOPMFileS);
+        String[] forwardDataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
+        topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
+        String[] backwardDataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
+        topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
+        TagMappingInfoV3[][] forwardBuffer;
+        TagMappingInfoV3[][] backBuffer;
+        for (int i = 0; i < topm.getChunkCount(); i++) {
+            forwardBuffer = this.getPopulateTMIBuffer(maxMappingNum);
+            backBuffer = this.getPopulateTMIBuffer(maxMappingNum);
+            int startIndex = i*topm.getChunkSize();
+            int endIndex = startIndex+topm.getChunkSize();
+            if (endIndex > topm.getTagCount()) endIndex = topm.getTagCount();
+            for (int j = startIndex; j < endIndex; j++) {
+                long[] t = topm.getTag(j);
+                int index = ptopm.getTagIndexWithLongestSeq(t);
+                if (index == -1) continue;
+                int max = ptopm.getMappingNum(index);
+                if (max > maxMappingNum) max = maxMappingNum;
+                for (int k = 0; k < max; k++) {
+                    int chr = ptopm.getChr(index, k);
+                    byte strand = ptopm.getStrand(index, k);
+                    int startPos = ptopm.getStartPos(index, k);
+                    short mappingScore = ptopm.getScore(index, k);
+                    byte divergence = ptopm.getDivergence(index, k);
+                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, forwardMappingSource, mappingScore);
+                    forwardBuffer[k][j-startIndex] = theTMI;
+                }
+                max = ptopm.getMappingNum(ptopm.getPairIndex(index));
+                if (max > maxMappingNum) max = maxMappingNum;
+                for (int k = 0; k < max; k++) {
+                    int chr = ptopm.getChr(ptopm.getPairIndex(index), k);
+                    byte strand = ptopm.getStrand(ptopm.getPairIndex(index), k);
+                    int startPos = ptopm.getStartPos(ptopm.getPairIndex(index), k);
+                    short mappingScore = ptopm.getScore(ptopm.getPairIndex(index), k);
+                    byte divergence = ptopm.getDivergence(ptopm.getPairIndex(index), k);
+                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, backMappingSource, mappingScore);
+                    backBuffer[k][j-startIndex] = theTMI;
+                }
+                this.saveTMIBufferToTOPM(forwardBuffer, forwardDataSetNames, i);
+                this.saveTMIBufferToTOPM(backBuffer, backwardDataSetNames, i);
+            }
+        }
     }
     
     /**
+     * Annotate the TOPM with genetic mapping
+     * @param TOGMFileS
+     * @param maxMappingNum 
+     */
+    public void annotateWithGM (String TOGMFileS, int maxMappingNum) {
+        byte mappingSource = 5;
+        TagsOnGeneticMap togm = new TagsOnGeneticMap(TOGMFileS, FilePacking.Text);
+        String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
+        topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
+        TagMappingInfoV3[][] buffer;
+        for (int i = 0; i < topm.getChunkCount(); i++) {
+            buffer = this.getPopulateTMIBuffer(maxMappingNum);
+            int startIndex = i*topm.getChunkSize();
+            int endIndex = startIndex+topm.getChunkSize();
+            if (endIndex > topm.getTagCount()) endIndex = topm.getTagCount();
+            for (int j = startIndex; j < endIndex; j++) {
+                long[] t = topm.getTag(j);
+                int index = togm.getTagIndex(t);
+                if (index < 0) continue;
+                for (int k = 0; k < maxMappingNum; k++) {
+                    int chr = togm.getGChr(index);
+                    byte strand = Byte.MIN_VALUE; //no strand in GM
+                    int startPos = togm.getGPos(index); //rough pos in GM
+                    short mappingScore = Short.MIN_VALUE; //no score in GM
+                    byte divergence = Byte.MIN_VALUE; //no divergence in GM
+                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, mappingSource, mappingScore);
+                    buffer[k][j-startIndex] = theTMI;
+                }
+                this.saveTMIBufferToTOPM(buffer, dataSetNames, i);
+            }
+        }
+    }
+    
+    /**
+     * Save mapping info (from BWA) in a buffer to TOPM
      * BWA doesn't provide mapping score, so the rank is just based on the order provided for multiple hits
      * @param tmiBuffer
      * @param dataSetNames
@@ -331,6 +435,42 @@ public class AnnotateTOPM {
         topm.writeTagMappingInfoDataSets(dataSetNames, tmiBuffer, chunkIndex);
     }
     
+    
+    /**
+     * Save mapping info in a buffer to TOPM. This works for PE and Genetic mapping. When mappingSource == Byte.MIN_VALUE, it means the tag doesn't exist in PE list or Genetic mapping
+     * @param tmiBuffer
+     * @param dataSetNames
+     * @param chunkIndex
+     * @param mappingSource 
+     */
+    private void saveTMIBufferToTOPM (TagMappingInfoV3[][] tmiBuffer, String[] dataSetNames, int chunkIndex) {
+        for (int i = 0; i < tmiBuffer[0].length; i++) {
+            int sum = 0;
+            for (int j = 0; j < tmiBuffer.length; j++) {
+                if (tmiBuffer[j][i].mappingSource == Byte.MIN_VALUE) sum++;
+            }
+            if (sum == tmiBuffer.length) continue;
+            TreeSet<Short> set = new TreeSet();
+            for (int j = 0; j < tmiBuffer.length; j++) {
+                set.add(tmiBuffer[j][i].mappingScore);
+            }
+            Short[] sA = set.toArray(new Short[set.size()]);
+            byte[] rank = new byte[tmiBuffer.length];
+            for (int j = 0; j < rank.length; j++) {
+                rank[j] = (byte)(sA.length - Arrays.binarySearch(sA, tmiBuffer[j][i].mappingScore) -1);
+                tmiBuffer[j][i].setMappingRank(rank[j]);
+            }
+        }
+        topm.writeTagMappingInfoDataSets(dataSetNames, tmiBuffer, chunkIndex);
+    }
+    
+    /**
+     * Save mapping info in a buffer to TOPM. This works for bowtie2, blast
+     * @param tmiBuffer
+     * @param dataSetNames
+     * @param chunkIndex
+     * @param mappingSource 
+     */
     private void saveTMIBufferToTOPM (TagMappingInfoV3[][] tmiBuffer, String[] dataSetNames, int chunkIndex, byte mappingSource) {
         for (int i = 0; i < tmiBuffer.length; i++) {
             for (int j = 0; j < tmiBuffer[i].length; j++) {
@@ -354,6 +494,9 @@ public class AnnotateTOPM {
         topm.writeTagMappingInfoDataSets(dataSetNames, tmiBuffer, chunkIndex);
     }
     
+    /**
+     * Update TMI buffers. After the buffers[0] is written to TOPM, buffers[i] moves to buffers[i-1]. This creats a new buffer at the end
+     */
     private void updateTMIBuffer () {
         for (int i = 0; i < tmiBuffers.length-1; i++) {
             tmiBuffers[i] = tmiBuffers[i+1];
@@ -368,6 +511,21 @@ public class AnnotateTOPM {
         this.calBufferTagIndexRange();
     }
     
+    private TagMappingInfoV3[][] getPopulateTMIBuffer (int maxMappingNum) {
+        TagMappingInfoV3[][] tmiBuffer = new TagMappingInfoV3[maxMappingNum][topm.getChunkSize()] ;
+        for (int i = 0; i < tmiBuffer.length; i++) {
+            for (int j = 0; j < tmiBuffer[i].length; j++) {
+                tmiBuffer[i][j] = new TagMappingInfoV3();
+            }
+        }
+        return tmiBuffer;
+    }
+    
+    /**
+     * Initialize TagMappingInfo buffers
+     * @param bufferNum number of buffers
+     * @param maxMappingNum maximum mapping information which will be held
+     */
     private void iniTMIBuffers (int bufferNum, int maxMappingNum) {
         tmiBuffers = new TagMappingInfoV3[bufferNum][maxMappingNum][topm.getChunkSize()];
         bufferStartTagIndex = new int[bufferNum];
@@ -380,10 +538,13 @@ public class AnnotateTOPM {
         updateBufferCountCutoff = (int)((double)topm.getChunkSize() * 0.2);
     }
     
+    /**
+     * Calculate the tag index range in these buffers
+     */
     private void calBufferTagIndexRange () {
         this.bufferTagIndexRange = new int[2];
         bufferTagIndexRange[0] = this.bufferStartTagIndex[0];
-        bufferTagIndexRange[1] = this.bufferStartTagIndex[bufferStartTagIndex.length-1]+topm.getChunkSize();
+        bufferTagIndexRange[1] = this.bufferStartTagIndex[tmiBuffers.length-1]+topm.getChunkSize();
     }
     
     private int getMappingBlockIndex (int bufferIndex, int bufferTagIndex) {
