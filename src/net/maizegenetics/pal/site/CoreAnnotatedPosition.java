@@ -7,8 +7,6 @@ package net.maizegenetics.pal.site;
 import com.google.common.collect.HashMultimap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-
-import java.util.Map;
 //import java.util.Objects;
 
 /**
@@ -31,7 +29,7 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
     private final byte myHighDepthAllele;
 
     //Custom annotation are stored in the map
-    private final HashMultimap<String, Object> myAnnoMap=null;
+    private final HashMultimap<String, Object> myAnnoMap;
 
     /**
      * A builder for creating immutable CoreAnnotatedPosition instances. AnnotatedPositions are
@@ -59,7 +57,7 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
         private byte myHighDepthAllele=Alignment.UNKNOWN_ALLELE;
 
         //in an general annotation object
-        private final Map myAnnoMap=null;
+        private HashMultimap<String, Object> myAnnoMap=null;
 
         /**Constructor requires a Position before annotation of the position*/
         public Builder(Position aCorePosition) {
@@ -81,6 +79,24 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
         public Builder ancAllele(byte val) {myAncestralAllele = val; return this;}
         /**Set high depth allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
         public Builder hiDepthAllele(byte val) {myHighDepthAllele = val; return this;}
+        /**Add non-standard annotation*/
+        public Builder addAnno(String key, String value) {
+            if(myAnnoMap==null) {
+                myAnnoMap=HashMultimap.create(2,1);
+            }
+            myAnnoMap.put(key,value);
+            return this;
+        }
+        /**Add non-standard annotation*/
+        public Builder addAnno(String key, Number value) {
+            if(myAnnoMap==null) {
+                myAnnoMap=HashMultimap.create(2,1);
+            }
+            myAnnoMap.put(key,value);
+            return this;
+        }
+
+
 
 
         public CoreAnnotatedPosition build() {
@@ -96,6 +112,7 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
         myReferenceAllele= builder.myReferenceAllele;
         myAncestralAllele= builder.myAncestralAllele;
         myHighDepthAllele= builder.myHighDepthAllele;
+        myAnnoMap=builder.myAnnoMap;
     }
 
     @Override
@@ -132,8 +149,14 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
 
     @Override
     public Double[] getQuantAnnotation(String annoName) {
-        try{return myAnnoMap.get(annoName).toArray(new Double[0]);}
-        catch(Exception e) {
+        try{
+            Object[] o=myAnnoMap.get(annoName).toArray();
+            if((o == null)||(!(o[0] instanceof Number))) return null;
+            Double[] d=new Double[o.length];
+            int i=0;
+            for (Object o1 : o) {d[i++]=((Number)o1).doubleValue();}
+            return d;
+        }catch(Exception e) {
             return null;
         }
     }
