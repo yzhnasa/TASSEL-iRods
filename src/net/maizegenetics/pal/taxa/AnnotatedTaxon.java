@@ -9,7 +9,9 @@ import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.site.GeneralAnnotation;
 
 /**
- *
+ * The generally used class for defining a taxon.  Contains its name, plus a series of optional annotations.
+ * Use the builder to create immutable instances.
+ * //TODO change Identifer name to Taxon and move the class to this package
  * @author Ed Buckler
  */
 public final class AnnotatedTaxon extends Identifier implements GeneralAnnotation {
@@ -56,8 +58,28 @@ public final class AnnotatedTaxon extends Identifier implements GeneralAnnotatio
         }
     }
 
+    public String getParent1() {
+        return myParent1;
+    }
+
+    public String getParent2() {
+        return myParent2;
+    }
+
+    public float getInbreedF() {
+        return myInbreedF;
+    }
+
+    public byte getSex() {
+        return mySex;
+    }
+
+    public String getPedigree() {
+        return myPedigree;
+    }
+
     /**
-     * A builder for creating immutable CorePosition instances.
+     * A builder for creating immutable AnnotatedTaxon instances.
      *<p> Example:
      * <pre>   {@code
      * AnnotatedTaxon cp= new AnnotatedTaxon.Builder("Z001E0001:Line:mays:Zea")

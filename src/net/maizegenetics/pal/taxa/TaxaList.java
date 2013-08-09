@@ -4,6 +4,7 @@
 package net.maizegenetics.pal.taxa;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -41,4 +42,11 @@ public interface TaxaList extends List<AnnotatedTaxon> {
      * @return full taxa name
      */
     public String getFullTaxaName(int index);
+
+    /**
+     * Return a list of all matching taxa indices for a given name.  Matches will be done with both fullName and regular name.
+     * @param name
+     * @return set of indices for matching taxa (Set is empty if no match).
+     */
+    public Set<Integer> getTaxaMatchingIndices(String name);
 }

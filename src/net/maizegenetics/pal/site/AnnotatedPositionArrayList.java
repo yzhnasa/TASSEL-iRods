@@ -7,7 +7,7 @@ import java.nio.IntBuffer;
 import java.util.*;
 
 /**
- * An in memory immutable instance of {@link AnnotatedPositionList}.  Use the {@link AnnotatedPositionArrayList.Builder}
+ * In memory immutable instance of {@link AnnotatedPositionList}.  Use the {@link AnnotatedPositionArrayList.Builder}
  * to create the list.
  *
  * @author Ed Buckler
@@ -335,17 +335,28 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
     @Override
     public ListIterator<AnnotatedPosition> listIterator() {
-        return mySiteList.listIterator();
+        return listIterator(0);
     }
 
     @Override
-    public ListIterator<AnnotatedPosition> listIterator(int index) {
-        return mySiteList.listIterator(index);
+    public ListIterator<AnnotatedPosition> listIterator(final int index) {
+        return new ListIterator<AnnotatedPosition>() {
+            private final ListIterator<AnnotatedPosition> i= mySiteList.listIterator(index);
+            public boolean hasNext()     {return i.hasNext();}
+            public AnnotatedPosition next()              {return i.next();}
+            public boolean hasPrevious() {return i.hasPrevious();}
+            public AnnotatedPosition previous()          {return i.previous();}
+            public int nextIndex()       {return i.nextIndex();}
+            public int previousIndex()   {return i.previousIndex();}
+            public void remove() {throw new UnsupportedOperationException();}
+            public void set(AnnotatedPosition e) {throw new UnsupportedOperationException();}
+            public void add(AnnotatedPosition e) {throw new UnsupportedOperationException();}
+        };
     }
 
     @Override
     public List<AnnotatedPosition> subList(int fromIndex, int toIndex) {
-        return mySiteList.subList(fromIndex, toIndex);
+        return Collections.unmodifiableList(mySiteList.subList(fromIndex, toIndex));
     }
 
     /**
