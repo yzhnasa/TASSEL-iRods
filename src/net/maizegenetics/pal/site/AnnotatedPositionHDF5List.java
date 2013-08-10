@@ -10,7 +10,6 @@ import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
-import net.maizegenetics.pal.site.AnnotatedPosition;
 
 import java.lang.reflect.Array;
 import java.nio.IntBuffer;
@@ -30,8 +29,8 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
 //    private final byte[] majorAlleles;
 //    private final byte[] ancAlleles;
 //    private final byte[] hiDepAlleles;
-    private final TreeMap<Chromosome,ChrOffPos> myChrOffPosTree;
-    private final HashMap<String,Chromosome> myChrNameHash;
+    private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
+    private final Map<String,Chromosome> myChrNameHash;
     private final RangeMap<Integer, Chromosome> rangeMap; //map of the start and end indices of chromosomes
 
     /*Byte representations of DNA sequences are stored in blocks of 65536 sites*/

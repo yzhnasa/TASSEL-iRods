@@ -1,9 +1,9 @@
 package net.maizegenetics.pal.taxa;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import java.util.*;
-import java.util.Collections;
 
 /**
  * In memory immutable instance of {@link TaxaList}.
@@ -17,7 +17,7 @@ import java.util.Collections;
 public class TaxaArrayList implements TaxaList {
     private final List<AnnotatedTaxon> myTaxaList;
     private final int numTaxa;
-    private final HashMultimap<String,Integer> myNameToIndex;
+    private final Multimap<String,Integer> myNameToIndex;
 
 
     TaxaArrayList(TaxaListBuilder builder) {
@@ -64,7 +64,7 @@ public class TaxaArrayList implements TaxaList {
 
     @Override
     public Set<Integer> getTaxaMatchingIndices(String name) {
-        return myNameToIndex.get(name);
+        return (Set)myNameToIndex.get(name);
     }
 
     @Override

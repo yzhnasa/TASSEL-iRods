@@ -19,10 +19,10 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
     private final byte[] majorAlleles;
     private final byte[] ancAlleles;
     private final byte[] hiDepAlleles;
-    private final TreeMap<Chromosome,ChrOffPos> myChrOffPosTree;
-    private final HashMap<String,Chromosome> myChrNameHash;
+    private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
+    private final Map<String,Chromosome> myChrNameHash;
 
-    private class ChrOffPos {
+    private static class ChrOffPos {
         final int startSiteOff;
         final int endSiteOff;
         final int[] position;

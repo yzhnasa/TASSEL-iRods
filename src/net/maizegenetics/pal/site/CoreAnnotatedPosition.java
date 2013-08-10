@@ -5,6 +5,7 @@
 package net.maizegenetics.pal.site;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 //import java.util.Objects;
@@ -25,11 +26,12 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
     private final float mySiteCoverage;
     private final byte myReferenceAllele;
     private final byte myGlobalMajorAllele;
+   // private final byte myGlobalMinorAllele;  //TODO need to implement globalMinor
     private final byte myAncestralAllele;
     private final byte myHighDepthAllele;
 
     //Custom annotation are stored in the map
-    private final HashMultimap<String, Object> myAnnoMap;
+    private final Multimap<String, Object> myAnnoMap;
 
     /**
      * A builder for creating immutable CoreAnnotatedPosition instances. AnnotatedPositions are

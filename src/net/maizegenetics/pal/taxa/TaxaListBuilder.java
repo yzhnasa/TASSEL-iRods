@@ -6,7 +6,6 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +33,7 @@ import java.util.List;
  * @author Ed Buckler
  */
 public class TaxaListBuilder {
-    private final ArrayList<AnnotatedTaxon> myTaxaList;
+    private final List<AnnotatedTaxon> myTaxaList;
 
     public TaxaListBuilder() {
         myTaxaList=new ArrayList<AnnotatedTaxon>();

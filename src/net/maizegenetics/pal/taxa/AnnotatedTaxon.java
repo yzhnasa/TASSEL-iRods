@@ -5,6 +5,7 @@
 package net.maizegenetics.pal.taxa;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.site.GeneralAnnotation;
 
@@ -21,7 +22,7 @@ public final class AnnotatedTaxon extends Identifier implements GeneralAnnotatio
       private final byte mySex;  //0=both, 1=female, 2=male
       private final String myPedigree;
     //Custom annotation are stored in the map
-    private final HashMultimap<String, Object> myAnnoMap;
+    private final Multimap<String, Object> myAnnoMap;
 
     @Override
     public Object[] getAnnotation(String annoName) {
