@@ -2,10 +2,6 @@
 package net.maizegenetics.pal.ids;
 
 import com.google.common.collect.HashMultimap;
-import net.maizegenetics.pal.site.GeneralAnnotation;
-
-import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * Identifiers normally only track a name, while the AnnotatedIdentifier provides support
@@ -14,8 +10,10 @@ import java.util.Set;
  * expected inbreeding coefficients, etc.
  * 
  * @author  Ed Buckler
+ * @deprecated taxa package has the annotated replacements
  */
-public class AnnotatedIdentifier extends Identifier implements GeneralAnnotation {
+@Deprecated
+public class AnnotatedIdentifier extends Identifier  {
     private HashMultimap<String, String> textAnnotations=null;
     private HashMultimap<String, Double> quantAnnotations=null;
 
@@ -41,19 +39,16 @@ public class AnnotatedIdentifier extends Identifier implements GeneralAnnotation
     }
 
 
-    @Override
     public Object[] getAnnotation(String annoName) {
        if(textAnnotations.containsKey(annoName)) return textAnnotations.get(annoName).toArray(new String[0]);
        if(quantAnnotations.containsKey(annoName)) return quantAnnotations.get(annoName).toArray(new Double[0]);
        return null;
     }
 
-    @Override
     public String[] getTextAnnotation(String annoName) {
         return textAnnotations.get(annoName).toArray(new String[0]);
     }
 
-    @Override
     public Double[] getQuantAnnotation(String annoName) {
         return quantAnnotations.get(annoName).toArray(new Double[0]);
     }

@@ -10,6 +10,7 @@ import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
+import net.maizegenetics.pal.site.AnnotatedPosition.Allele;
 
 import java.lang.reflect.Array;
 import java.nio.IntBuffer;
@@ -25,10 +26,6 @@ import java.util.concurrent.ExecutionException;
 public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
     private final IHDF5Reader reader;
     private final int numPositions;
-//    private final byte[] refAlleles;
-//    private final byte[] majorAlleles;
-//    private final byte[] ancAlleles;
-//    private final byte[] hiDepAlleles;
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
     private final Map<String,Chromosome> myChrNameHash;
     private final RangeMap<Integer, Chromosome> rangeMap; //map of the start and end indices of chromosomes
@@ -76,7 +73,7 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
                 int pos=cop.position[site-cop.startSiteOff];
                 Position p=new CorePosition.Builder(chr,pos).snpName(snpIDs[i]).build();
                 AnnotatedPosition ap=new CoreAnnotatedPosition.Builder(p)
-                        .majAllele(afOrder[0][i])
+                        .allele(Allele.GLBMAJ,afOrder[0][i])
                         .maf(maf[i]).siteCoverage(paf[i]).build();
                 result.put(site,ap);
             }
@@ -130,7 +127,7 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
     @Override
     public byte getReferenceAllele(int site) {
         try {
-            return mySiteList.get(site).getReferenceAllele();
+            return mySiteList.get(site).getAllele(Allele.REF);
         } catch (ExecutionException e) {
             e.printStackTrace();
             return Alignment.UNKNOWN_ALLELE;
@@ -139,14 +136,16 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
 
     @Override
     public byte[] getReference(int startSite, int endSite) {
-        byte[] result = new byte[endSite - startSite];
-        //System.arraycopy(refAlleles,startSite,result,0, result.length);
-        return result;
+        throw new UnsupportedOperationException("Not implemented yet.");
+//        byte[] result = new byte[endSite - startSite];
+//        //System.arraycopy(refAlleles,startSite,result,0, result.length);
+//        return result;
     }
 
     @Override
     public byte[] getReference() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented yet.");
+      //  return null;
        // return Arrays.copyOf(refAlleles,refAlleles.length);
     }
 

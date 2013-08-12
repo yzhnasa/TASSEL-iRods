@@ -2,6 +2,7 @@ package net.maizegenetics.pal.site;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
+import net.maizegenetics.pal.site.AnnotatedPosition.Allele;
 
 import java.nio.IntBuffer;
 import java.util.*;
@@ -15,10 +16,7 @@ import java.util.*;
 public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
     private final List<AnnotatedPosition> mySiteList;
     private final int numPositions;
-    private final byte[] refAlleles;
-    private final byte[] majorAlleles;
-    private final byte[] ancAlleles;
-    private final byte[] hiDepAlleles;
+    private final byte[][] alleles;
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
     private final Map<String,Chromosome> myChrNameHash;
 
@@ -35,10 +33,11 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
     private AnnotatedPositionArrayList(ArrayList<AnnotatedPosition> builderList) {
         this.numPositions=builderList.size();
-        refAlleles=new byte[numPositions];
-        majorAlleles=new byte[numPositions];
-        ancAlleles=new byte[numPositions];
-        hiDepAlleles=new byte[numPositions];
+        alleles=new byte[Allele.COUNT][numPositions];
+//        refAlleles=new byte[numPositions];
+//        majorAlleles=new byte[numPositions];
+//        ancAlleles=new byte[numPositions];
+//        hiDepAlleles=new byte[numPositions];
         ArrayListMultimap<Chromosome,Integer> pTS=ArrayListMultimap.create();
         mySiteList=new ArrayList<AnnotatedPosition>(builderList.size());
         myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
@@ -47,10 +46,9 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
         Chromosome currChr=builderList.get(0).getChromosome();
         for (int i=0; i<builderList.size(); i++) {
             AnnotatedPosition ap=builderList.get(i);
-            refAlleles[i]=ap.getReferenceAllele();
-            majorAlleles[i]=ap.getGlobalMajorAllele();
-            ancAlleles[i]=ap.getAncestralAllele();
-            hiDepAlleles[i]=ap.getHighDepthAllele();
+            for (Allele allele : Allele.values()) {
+              alleles[allele.index()][i]=ap.getAllele(allele);
+            }
             mySiteList.add(ap);
             if((i==(builderList.size()-1))||!ap.getChromosome().equals(currChr)) {
                 int end=(i==builderList.size()-1)?i:i-1;
@@ -73,19 +71,19 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
     @Override
     public byte getReferenceAllele(int site) {
-        return mySiteList.get(site).getReferenceAllele();
+        return mySiteList.get(site).getAllele(Allele.REF);
     }
     
     @Override
     public byte[] getReference(int startSite, int endSite) {
         byte[] result = new byte[endSite - startSite];
-        System.arraycopy(refAlleles,startSite,result,0, result.length);
+        System.arraycopy(alleles[Allele.REF.index()],startSite,result,0, result.length);
         return result;
     }
 
     @Override
     public byte[] getReference() {
-        return Arrays.copyOf(refAlleles,refAlleles.length);
+        return Arrays.copyOf(alleles[Allele.REF.index()],alleles[Allele.REF.index()].length);
     }
 
     @Override

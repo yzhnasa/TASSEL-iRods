@@ -4,9 +4,9 @@
 
 package net.maizegenetics.pal.taxa;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.ImmutableMultimap;
 import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.site.AbstractAnnotation;
 import net.maizegenetics.pal.site.GeneralAnnotation;
 
 /**
@@ -16,48 +16,14 @@ import net.maizegenetics.pal.site.GeneralAnnotation;
  * @author Ed Buckler
  */
 public final class AnnotatedTaxon extends Identifier implements GeneralAnnotation {
+      private final GeneralAnnotation myGA;
       private final String myParent1;  //generally female
       private final String myParent2;  //generally male
       private final float myInbreedF; //inbreeding coefficient
       private final byte mySex;  //0=both, 1=female, 2=male
       private final String myPedigree;
     //Custom annotation are stored in the map
-    private final Multimap<String, Object> myAnnoMap;
-
-    @Override
-    public Object[] getAnnotation(String annoName) {
-        if(myAnnoMap==null) return null;
-//        switch (annoName) {  //TODO: uncomment once in Java 7
-//            case "myParent1":return myLocus;
-//            case "myParent2":return myPosition;
-//            case "myInbreedF":return myCM;
-//            case "mySex":return myStrand;
-//            case "pedigree":return mySNPID;
-//        }
-        return myAnnoMap.get(annoName).toArray();
-    }
-
-    @Override
-    public String[] getTextAnnotation(String annoName) {
-        try{return myAnnoMap.get(annoName).toArray(new String[0]);}
-        catch(Exception e) {
-            return null;
-        }
-    }
-
-    @Override
-    public Double[] getQuantAnnotation(String annoName) {
-        try{
-            Object[] o=myAnnoMap.get(annoName).toArray();
-            if((o == null)||(!(o[0] instanceof Number))) return null;
-            Double[] d=new Double[o.length];
-            int i=0;
-            for (Object o1 : o) {d[i++]=((Number)o1).doubleValue();}
-            return d;
-        }catch(Exception e) {
-            return null;
-        }
-    }
+    //private final Multimap<String, Object> myAnnoMap;
 
     public String getParent1() {
         return myParent1;
@@ -77,6 +43,39 @@ public final class AnnotatedTaxon extends Identifier implements GeneralAnnotatio
 
     public String getPedigree() {
         return myPedigree;
+    }
+
+    @Override
+    public Object[] getAnnotation(String annoName) {
+        return myGA.getAnnotation(annoName);
+//        switch (annoName) {  //TODO: uncomment once in Java 7
+//            case "myParent1":return myLocus;
+//            case "myParent2":return myPosition;
+//            case "myInbreedF":return myCM;
+//            case "mySex":return myStrand;
+//            case "pedigree":return mySNPID;
+//        }
+    }
+
+    @Override
+    public String[] getTextAnnotation(String annoName) {
+        return myGA.getTextAnnotation(annoName);
+    }
+
+    @Override
+    public double[] getQuantAnnotation(String annoName) {
+        return myGA.getQuantAnnotation(annoName);
+    }
+
+
+    @Override
+    public String getConsensusAnnotation(String annoName) {
+        return myGA.getConsensusAnnotation(annoName);
+    }
+
+    @Override
+    public double getAverageAnnotation(String annoName) {
+        return myGA.getAverageAnnotation(annoName);
     }
 
     /**
@@ -99,7 +98,8 @@ public final class AnnotatedTaxon extends Identifier implements GeneralAnnotatio
         private float inbreedF=Float.NaN;
         private byte sex=0;  //0=both, 1=female, 2=male
         private String pedigree=null;
-        private HashMultimap<String, Object> myAnnoMap=null;
+        private ImmutableMultimap.Builder<String, Object> myAnnoMapBld=null;
+        private ImmutableMultimap<String, Object> myAnnoMap=null;
 
         /**
          * Constructor for Builder, requires a Taxon object
@@ -126,21 +126,22 @@ public final class AnnotatedTaxon extends Identifier implements GeneralAnnotatio
 
         /**Add non-standard annotation*/
         public Builder addAnno(String key, String value) {
-            if(myAnnoMap==null) {
-                myAnnoMap=HashMultimap.create(2,1);
+            if(myAnnoMapBld==null) {
+                myAnnoMapBld=new ImmutableMultimap.Builder();
             }
-            myAnnoMap.put(key,value);
+            myAnnoMapBld.put(key, value);
             return this;
         }
         /**Add non-standard annotation*/
         public Builder addAnno(String key, Number value) {
-            if(myAnnoMap==null) {
-                myAnnoMap=HashMultimap.create(2,1);
+            if(myAnnoMapBld==null) {
+                myAnnoMapBld=new ImmutableMultimap.Builder();
             }
-            myAnnoMap.put(key,value);
+            myAnnoMapBld.put(key, value);
             return this;
         }
         public AnnotatedTaxon build() {
+            if(myAnnoMapBld!=null) myAnnoMap=myAnnoMapBld.build();
             return new AnnotatedTaxon(this);
         }
     }
@@ -152,6 +153,6 @@ public final class AnnotatedTaxon extends Identifier implements GeneralAnnotatio
         this.mySex=builder.sex;
         this.myPedigree=builder.pedigree;
         this.myInbreedF=builder.inbreedF;
-        this.myAnnoMap=builder.myAnnoMap;
+        this.myGA=new AbstractAnnotation(builder.myAnnoMap);
     }
 }

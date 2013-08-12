@@ -1,9 +1,7 @@
 package net.maizegenetics.pal.site;
 
-import com.google.common.collect.ComparisonChain;
 import net.maizegenetics.pal.alignment.Locus;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +12,7 @@ import java.util.Map;
  * 
  * @author Terry Casstevens and Ed Buckler
  */
-public class Chromosome implements Serializable, Comparable<Chromosome>{
+public class Chromosome implements Comparable<Chromosome>{
 
     private static final long serialVersionUID = -5197800047652332969L;
     public static Locus UNKNOWN = new Locus("Unknown");

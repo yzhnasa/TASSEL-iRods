@@ -4,10 +4,11 @@
  */
 package net.maizegenetics.pal.site;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.ImmutableMultimap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+
+import java.util.Arrays;
 //import java.util.Objects;
 
 /**
@@ -20,18 +21,10 @@ import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
  */
 public final class CoreAnnotatedPosition implements AnnotatedPosition {
     private final Position myCorePosition;
-
-    //These could perhaps be an array of
+    private final GeneralAnnotation myGA;
     private final float myMAF;
     private final float mySiteCoverage;
-    private final byte myReferenceAllele;
-    private final byte myGlobalMajorAllele;
-   // private final byte myGlobalMinorAllele;  //TODO need to implement globalMinor
-    private final byte myAncestralAllele;
-    private final byte myHighDepthAllele;
-
-    //Custom annotation are stored in the map
-    private final Multimap<String, Object> myAnnoMap;
+    private final byte[] myAlleleValue;
 
     /**
      * A builder for creating immutable CoreAnnotatedPosition instances. AnnotatedPositions are
@@ -53,55 +46,46 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
         //in an allele annotation objects
         private float myMAF = Float.NaN;
         private float mySiteCoverage = Float.NaN;
-        private byte myGlobalMajorAllele=Alignment.UNKNOWN_ALLELE;
-        private byte myReferenceAllele=Alignment.UNKNOWN_ALLELE;
-        private byte myAncestralAllele=Alignment.UNKNOWN_ALLELE;
-        private byte myHighDepthAllele=Alignment.UNKNOWN_ALLELE;
+        private byte[] myAlleles=new byte[Allele.COUNT];
 
         //in an general annotation object
-        private HashMultimap<String, Object> myAnnoMap=null;
+        private ImmutableMultimap.Builder<String, Object> myAnnoMapBld=null;
+        private ImmutableMultimap<String, Object> myAnnoMap=null;
 
         /**Constructor requires a Position before annotation of the position*/
         public Builder(Position aCorePosition) {
             this.myCorePosition = aCorePosition;
+            Arrays.fill(myAlleles,Alignment.UNKNOWN_ALLELE);
         }
         /**Constructor requires a Position before annotation of the position*/
         public Builder(Chromosome chr, int position) {
-            this.myCorePosition = new CorePosition.Builder(chr, position).build();
+            this(new CorePosition.Builder(chr, position).build());
         }
         /**Set Minor Allele Frequency annotation (default=Float.NaN)*/
         public Builder maf(float val) {myMAF = val; return this;}
         /**Set site coverage annotation (default=Float.NaN)*/
         public Builder siteCoverage(float val) {mySiteCoverage = val; return this;}
-        /**Set major allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
-        public Builder majAllele(byte val) {myGlobalMajorAllele = val; return this;}
-        /**Set reference allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
-        public Builder refAllele(byte val) {myReferenceAllele = val; return this;}
-        /**Set ancestral allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
-        public Builder ancAllele(byte val) {myAncestralAllele = val; return this;}
-        /**Set high depth allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
-        public Builder hiDepthAllele(byte val) {myHighDepthAllele = val; return this;}
+        /**Set allele annotation by Allele type (default=Alignment.UNKNOWN_ALLELE)*/
+        public Builder allele(Allele aT, byte val) {myAlleles[aT.index()] = val; return this;}
         /**Add non-standard annotation*/
         public Builder addAnno(String key, String value) {
-            if(myAnnoMap==null) {
-                myAnnoMap=HashMultimap.create(2,1);
+            if(myAnnoMapBld==null) {
+                myAnnoMapBld=new ImmutableMultimap.Builder();
             }
-            myAnnoMap.put(key,value);
+            myAnnoMapBld.put(key, value);
             return this;
         }
         /**Add non-standard annotation*/
         public Builder addAnno(String key, Number value) {
-            if(myAnnoMap==null) {
-                myAnnoMap=HashMultimap.create(2,1);
+            if(myAnnoMapBld==null) {
+                myAnnoMapBld=new ImmutableMultimap.Builder();
             }
-            myAnnoMap.put(key,value);
+            myAnnoMapBld.put(key, value);
             return this;
         }
 
-
-
-
         public CoreAnnotatedPosition build() {
+            if(myAnnoMapBld!=null) myAnnoMap=myAnnoMapBld.build();
             return new CoreAnnotatedPosition(this);
         }
     }
@@ -110,11 +94,8 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
 
         myMAF = builder.myMAF;
         mySiteCoverage = builder.mySiteCoverage;
-        myGlobalMajorAllele= builder.myGlobalMajorAllele;
-        myReferenceAllele= builder.myReferenceAllele;
-        myAncestralAllele= builder.myAncestralAllele;
-        myHighDepthAllele= builder.myHighDepthAllele;
-        myAnnoMap=builder.myAnnoMap;
+        myAlleleValue=builder.myAlleles;
+        myGA = new AbstractAnnotation(builder.myAnnoMap);
     }
 
     @Override
@@ -124,43 +105,8 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
         sb.append("\tPos:").append(getPosition());
         sb.append("\tName:").append(getSNPID());
         sb.append("\tMAF:").append(getGlobalMAF());
-        sb.append("\tRef:").append(NucleotideAlignmentConstants.getHaplotypeNucleotide(myReferenceAllele));
+        sb.append("\tRef:").append(NucleotideAlignmentConstants.getHaplotypeNucleotide(getAllele(Allele.REF)));
         return sb.toString();
-    }
-
-    @Override
-    public Object[] getAnnotation(String annoName) {
-        if(myAnnoMap==null) return null;
-//        switch (annoName) {  //TODO: uncomment once in Java 7
-//            case "locus":return myLocus;
-//            case "position":return myPosition;
-//            case "myCM":return myCM;
-//            case "strand":return myStrand;
-//            case "snpID":return mySNPID;
-//        }
-        return myAnnoMap.get(annoName).toArray();
-    }
-
-    @Override
-    public String[] getTextAnnotation(String annoName) {
-        try{return myAnnoMap.get(annoName).toArray(new String[0]);}
-        catch(Exception e) {
-            return null;
-        }
-    }
-
-    @Override
-    public Double[] getQuantAnnotation(String annoName) {
-        try{
-            Object[] o=myAnnoMap.get(annoName).toArray();
-            if((o == null)||(!(o[0] instanceof Number))) return null;
-            Double[] d=new Double[o.length];
-            int i=0;
-            for (Object o1 : o) {d[i++]=((Number)o1).doubleValue();}
-            return d;
-        }catch(Exception e) {
-            return null;
-        }
     }
 
     @Override
@@ -174,23 +120,8 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
     }
 
     @Override
-    public byte getReferenceAllele() {
-        return myReferenceAllele;
-    }
-
-    @Override
-    public byte getAncestralAllele() {
-        return myAncestralAllele;
-    }
-
-    @Override
-    public byte getGlobalMajorAllele() {
-        return myGlobalMajorAllele;
-    }
-
-    @Override
-    public byte getHighDepthAllele() {
-        return myHighDepthAllele;
+    public byte getAllele(Allele alleleType) {
+        return myAlleleValue[alleleType.index()];
     }
 
     @Override
@@ -246,6 +177,40 @@ public final class CoreAnnotatedPosition implements AnnotatedPosition {
     @Override
     public String[] getKnownVariants() {
         return myCorePosition.getKnownVariants();
+    }
+
+    @Override
+    public Object[] getAnnotation(String annoName) {
+        return myGA.getAnnotation(annoName);
+//        switch (annoName) {  //TODO: uncomment once in Java 7
+//            case "locus":return myLocus;
+//            case "position":return myPosition;
+//            case "myCM":return myCM;
+//            case "strand":return myStrand;
+//            case "snpID":return mySNPID;
+//        }
+//        return myGA.getAnnotation(annoName);
+    }
+
+    @Override
+    public String[] getTextAnnotation(String annoName) {
+        return myGA.getTextAnnotation(annoName);
+    }
+
+    @Override
+    public double[] getQuantAnnotation(String annoName) {
+        return myGA.getQuantAnnotation(annoName);
+    }
+
+
+    @Override
+    public String getConsensusAnnotation(String annoName) {
+        return myGA.getConsensusAnnotation(annoName);
+    }
+
+    @Override
+    public double getAverageAnnotation(String annoName) {
+        return myGA.getAverageAnnotation(annoName);
     }
     
 }
