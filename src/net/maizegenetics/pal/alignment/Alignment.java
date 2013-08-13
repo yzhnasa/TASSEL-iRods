@@ -3,13 +3,11 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import java.io.Serializable;
-
-
 import net.maizegenetics.pal.ids.IdGroup;
-
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
+
+import java.io.Serializable;
 
 /**
  * This supports heterozygous diploid alignments.
@@ -65,7 +63,6 @@ public interface Alignment extends Serializable {
      * This defines the possible allele scope types.
      */
     public static enum ALLELE_SCOPE_TYPE {
-
         /**
          * This is the default where alleles are sorted by frequency. Same as
          * getAlleles().

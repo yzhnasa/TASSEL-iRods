@@ -25,7 +25,7 @@ public interface AnnotatedPosition extends GeneralAnnotation, Position {
         public final static int COUNT=Allele.values().length;
         Allele(int index) {this.index=index;}
         /**Sequential index that can be use for primitive arrays*/
-        protected int index() {return index;}
+        public int index() {return index;}
     }
 
     /**Return the minor allele frequency in a global scope*/
