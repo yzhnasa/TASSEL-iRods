@@ -9,6 +9,7 @@ import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.depth.AlleleDepth;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.site.AnnotatedPositionList;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
@@ -17,7 +18,7 @@ import net.maizegenetics.util.ProgressListener;
  *
  * @author terry
  */
-public class CoreAlignment implements Alignment {
+public class CoreAlignment implements AlignmentNew {
 
     private final Genotype myGenotype;
     private final BitStorage myBitStorage;
@@ -26,7 +27,7 @@ public class CoreAlignment implements Alignment {
     private final SiteScore mySiteScore;
     private final AlleleDepth myAlleleDepth;
 
-    private CoreAlignment(Genotype genotype, BitStorage bitStorage, AnnotatedPositionList annotatedPositionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    public CoreAlignment(Genotype genotype, BitStorage bitStorage, AnnotatedPositionList annotatedPositionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         myGenotype = genotype;
         myBitStorage = bitStorage;
         myAnnotatedPositionList = annotatedPositionList;
@@ -46,8 +47,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public byte getBase(int taxon, Locus locus, int physicalPosition) {
-        return myGenotype.getBase(taxon, locus, physicalPosition);
+    public byte getBase(int taxon, Chromosome chromosome, int physicalPosition) {
+        return myGenotype.getBase(taxon, myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
     @Override
@@ -156,15 +157,15 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getLocusSiteCount(Locus locus) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-        //  return myAnnotatedPositionList.getChromosomeSiteCount(locus);
+    public int getChromosomeSiteCount(Chromosome chromosome) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        //  return myAnnotatedPositionList.getChromosomeSiteCount(chromosome);
     }
 
     @Override
-    public int[] getStartAndEndOfLocus(Locus locus) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-        //   return myAnnotatedPositionList.getStartAndEndOfChromosome(locus);
+    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        //   return myAnnotatedPositionList.getStartAndEndOfChromosome(chromosome);
     }
 
     @Override
@@ -178,20 +179,20 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getPositionInLocus(int site) {
+    public int getPositionInChromosome(int site) {
         return myAnnotatedPositionList.getPositionInChromosome(site);
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-        //return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, locus);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        //return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome);
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
-        // return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        // return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
     }
 
     @Override
@@ -200,35 +201,35 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String getLocusName(int site) {
+    public String getChromosomeName(int site) {
         return myAnnotatedPositionList.getChromosomeName(site);
     }
 
     @Override
-    public Locus getLocus(int site) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
+    public Chromosome getChromosome(int site) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
         // return myAnnotatedPositionList.getChromosome(site);
     }
 
     @Override
-    public Locus getLocus(String name) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
+    public Chromosome getChromosome(String name) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
         // return myAnnotatedPositionList.getChromosome(name);
     }
 
     @Override
-    public Locus[] getLoci() {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Locus");
+    public Chromosome[] getChromosomes() {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
         //return myAnnotatedPositionList.getChromosomes();
     }
 
     @Override
-    public int getNumLoci() {
+    public int getNumChromosomes() {
         return myAnnotatedPositionList.getNumChromosomes();
     }
 
     @Override
-    public int[] getLociOffsets() {
+    public int[] getChromosomesOffsets() {
         return myAnnotatedPositionList.getChromosomesOffsets();
     }
 
@@ -358,8 +359,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public Alignment[] getAlignments() {
-        return myGenotype.getAlignments();
+    public AlignmentNew[] getAlignments() {
+        return new AlignmentNew[]{this};
     }
 
     @Override

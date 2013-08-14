@@ -3,9 +3,7 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.Locus;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.alignment.AlignmentNew;
 import net.maizegenetics.util.ProgressListener;
 
 /**
@@ -37,19 +35,6 @@ public interface Genotype {
      * bits.
      */
     public byte[] getBaseArray(int taxon, int site);
-
-    /**
-     * Returns diploid values for given taxon, locus, and physical position. The
-     * locus and physical position should map to an unique site.
-     *
-     * @param taxon taxon
-     * @param locus locus
-     * @param physicalPosition physical position
-     *
-     * @return first four bits are the first allele value and the second four
-     * bits are the second allele value.
-     */
-    public byte getBase(int taxon, Locus locus, int physicalPosition);
 
     /**
      * Returns sequence of diploid allele values for given taxon in specified
@@ -121,7 +106,7 @@ public interface Genotype {
      * @return string representations of diploid values.
      */
     public String[] getBaseAsStringArray(int taxon, int site);
-    
+
     /**
      * Returns whether allele values at given taxon and site are heterozygous.
      * If two values returned by getBase() are different, this will return
@@ -142,7 +127,7 @@ public interface Genotype {
      * @return number of heterozygous taxa
      */
     public int getHeterozygousCount(int site);
-    
+
     /**
      * Returns whether all sites are polymorphic.
      *
@@ -158,21 +143,14 @@ public interface Genotype {
      * @return true if given site is polymorphic.
      */
     public boolean isPolymorphic(int site);
-    
-    /**
-     * Returns individual alignments within this alignment.
-     *
-     * @return list of alignments.
-     */
-    public Alignment[] getAlignments();
-    
+
     /**
      * Returns whether this alignment is phased.
      *
      * @return true if phased.
      */
     public boolean isPhased();
-    
+
     /**
      * Returns true if this Alignment retains rare alleles. If false, rare
      * alleles are recorded as unknown.
@@ -347,5 +325,4 @@ public interface Genotype {
      * Optimizes this Alignment for Site based operations.
      */
     public void optimizeForSites(ProgressListener listener);
-
 }
