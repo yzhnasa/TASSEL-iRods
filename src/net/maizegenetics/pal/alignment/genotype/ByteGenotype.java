@@ -508,22 +508,55 @@ public class ByteGenotype implements Genotype {
 
     @Override
     public int getTotalGametesNotMissingForTaxon(int taxon) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        int result = 0;
+        for (int i = 0, n = mySiteCount; i < n; i++) {
+            byte[] current = getBaseArray(taxon, i);
+            if (current[0] != AlignmentNew.UNKNOWN_ALLELE) {
+                result++;
+            }
+            if (current[1] != AlignmentNew.UNKNOWN_ALLELE) {
+                result++;
+            }
+        }
+        return result;
+
     }
 
     @Override
     public int getHeterozygousCountForTaxon(int taxon) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int result = 0;
+        for (int i = 0, n = mySiteCount; i < n; i++) {
+            if (isHeterozygous(taxon, i)) {
+                result++;
+            }
+        }
+        return result;
     }
 
     @Override
     public int getTotalNotMissingForTaxon(int taxon) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        int result = 0;
+        for (int i = 0, n = mySiteCount; i < n; i++) {
+            byte current = getBase(taxon, i);
+            if (current != AlignmentNew.UNKNOWN_DIPLOID_ALLELE) {
+                result++;
+            }
+        }
+        return result;
+
     }
 
     @Override
     public byte[] getAlleles(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int[][] alleles = getAllelesSortedByFrequency(site);
+        int resultSize = alleles[0].length;
+        int maxNumAlleles = getMaxNumAlleles();
+        byte[] result = new byte[maxNumAlleles];
+        for (int i = 0; i < maxNumAlleles; i++) {
+            result[i] = (i < resultSize) ? (byte) alleles[0][i] : AlignmentNew.UNKNOWN_ALLELE;
+        }
+        return result;
     }
-
 }
