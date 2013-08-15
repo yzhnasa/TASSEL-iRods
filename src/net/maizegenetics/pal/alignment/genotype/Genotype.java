@@ -3,9 +3,6 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
-import net.maizegenetics.pal.alignment.AlignmentNew;
-import net.maizegenetics.util.ProgressListener;
-
 /**
  *
  * @author terry
@@ -299,30 +296,36 @@ public interface Genotype {
     public int getTotalNotMissingForTaxon(int taxon);
 
     /**
-     * Return whether alignment will execute quickly for site optimized
-     * operations. SBitAlignment is obviously friendly. But so would
-     * FilterAlignment is only sites have been filtered for example.
+     * Return sorted list of alleles from highest frequency to lowest at given
+     * site in alignment. Resulting double dimension array holds alleles (bytes)
+     * in result[0]. And the counts are in result[1]. Counts haploid values
+     * twice and diploid values once. Higher ploids are not supported.
      *
-     * @return whether optimized for site operations.
-     */
-    public boolean isSBitFriendly();
-
-    /**
-     * Return whether alignment will execute quickly for taxa optimized
-     * operations. TBitAlignment is obviously friendly. But so would
-     * FilterAlignment is only taxa have been filtered for example.
+     * @param site site
      *
-     * @return whether optimized for taxa operations.
+     * @return sorted list of alleles and counts
      */
-    public boolean isTBitFriendly();
+    public int[][] getAllelesSortedByFrequency(int site);
 
     /**
-     * Optimizes this Alignment for Taxa based operations.
+     * Return sorted list of diploid vales from highest frequency to lowest at
+     * given site in alignment. Resulting double dimension array holds diploids
+     * (Strings) in result[0]. And the counts are in result[1] (Integers).
+     *
+     * @param site site
+     *
+     * @return sorted list of diploids and counts
      */
-    public void optimizeForTaxa(ProgressListener listener);
-
+    public Object[][] getDiploidsSortedByFrequency(int site);
+    
     /**
-     * Optimizes this Alignment for Site based operations.
+     * Returns all alleles at given site in order of frequency. Gap is included
+     * as state. Heterozygous count one for each allele value. Homozygous counts
+     * two for the allele value.
+     *
+     * @param site site
+     *
+     * @return all alleles
      */
-    public void optimizeForSites(ProgressListener listener);
+    public byte[] getAlleles(int site);
 }

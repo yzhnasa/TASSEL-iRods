@@ -8,6 +8,7 @@ import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.util.BitSet;
 
 import java.util.concurrent.ExecutionException;
+import net.maizegenetics.util.ProgressListener;
 
 /**
  * Defines xxxx
@@ -21,6 +22,7 @@ public class DynamicBitStorage implements BitStorage {
     private byte[] myMajorHomo; //[taxa][sites]  TODO convert this to external object.
     private byte[] myMinorHomo; //[taxa][sites]  TODO convert this to external object.
     private byte[] myHet; //[taxa][sites]  TODO convert this to external object.
+
     private enum SB {
         TAXA (0), SITE (1);
         public final int index;
@@ -105,6 +107,26 @@ public class DynamicBitStorage implements BitStorage {
     @Override
     public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
         return new long[0];  //To change body of implemented methods use File | Settings | File Templates.
+    }
+    
+    @Override
+    public boolean isSBitFriendly() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean isTBitFriendly() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void optimizeForTaxa(ProgressListener listener) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void optimizeForSites(ProgressListener listener) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 

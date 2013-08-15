@@ -3,9 +3,12 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import net.maizegenetics.pal.alignment.AlignmentNew;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.util.ProgressListener;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import org.apache.log4j.Logger;
 
 /**
@@ -18,14 +21,18 @@ public class ByteGenotype implements Genotype {
     private final byte[][] myGenotype;
     private final int myTaxaCount;
     private final int mySiteCount;
+    private final String[][] myAlleleEncodings;
+    private final boolean myIsPhased;
 
-    ByteGenotype(byte[][] genotype) {
+    ByteGenotype(byte[][] genotype, boolean phased, String[][] alleleEncodings) {
         myTaxaCount = genotype.length;
         mySiteCount = genotype[0].length;
         myGenotype = new byte[myTaxaCount][mySiteCount];
         for (int t = 0; t < myTaxaCount; t++) {
             System.arraycopy(genotype[t], 0, myGenotype[t], 0, mySiteCount);
         }
+        myIsPhased = phased;
+        myAlleleEncodings = alleleEncodings;
     }
 
     @Override
@@ -149,72 +156,354 @@ public class ByteGenotype implements Genotype {
 
     @Override
     public boolean isPhased() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myIsPhased;
     }
 
     @Override
     public boolean retainsRareAlleles() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return true;
     }
 
     @Override
     public String[][] getAlleleEncodings() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myAlleleEncodings;
     }
 
     @Override
     public String[] getAlleleEncodings(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (myAlleleEncodings.length == 1) {
+            return myAlleleEncodings[0];
+        } else {
+            return myAlleleEncodings[site];
+        }
     }
 
     @Override
     public String getBaseAsString(int site, byte value) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getAlleleEncodings(site)[value];
     }
 
     @Override
     public String getDiploidAsString(int site, byte value) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String[] alleleStates = getAlleleEncodings(site);
+        return alleleStates[(value >>> 4) & 0xf] + ":" + alleleStates[value & 0xf];
     }
 
     @Override
     public int getMaxNumAlleles() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
     }
 
     @Override
     public int getTotalNumAlleles() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int result = getMaxNumAlleles();
+        if (retainsRareAlleles()) {
+            result++;
+        }
+        if (isPhased()) {
+            result++;
+        }
+        return result;
     }
 
     @Override
     public int getTotalGametesNotMissing(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        int result = 0;
+        for (int i = 0, n = myTaxaCount; i < n; i++) {
+            byte[] current = getBaseArray(i, site);
+            if (current[0] != AlignmentNew.UNKNOWN_ALLELE) {
+                result++;
+            }
+            if (current[1] != AlignmentNew.UNKNOWN_ALLELE) {
+                result++;
+            }
+        }
+        return result;
+
     }
 
     @Override
     public int getTotalNotMissing(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        int result = 0;
+        for (int i = 0, n = myTaxaCount; i < n; i++) {
+            byte current = getBase(i, site);
+            if (current != AlignmentNew.UNKNOWN_DIPLOID_ALLELE) {
+                result++;
+            }
+        }
+        return result;
+
     }
 
     @Override
     public int getMinorAlleleCount(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        int[][] alleles = getAllelesSortedByFrequency(site);
+
+        if (alleles[0].length >= 2) {
+            return alleles[1][1];
+        } else {
+            return 0;
+        }
+
     }
 
     @Override
     public int getMajorAlleleCount(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        int[][] alleles = getAllelesSortedByFrequency(site);
+
+        if (alleles[0].length >= 1) {
+            return alleles[1][0];
+        } else {
+            return 0;
+        }
+
+    }
+
+    @Override
+    public int[][] getAllelesSortedByFrequency(int site) {
+
+        int[] stateCnt = new int[16];
+        for (int i = 0; i < myTaxaCount; i++) {
+            byte[] dipB = getBaseArray(i, site);
+            if (dipB[0] != AlignmentNew.UNKNOWN_ALLELE) {
+                stateCnt[dipB[0]]++;
+            }
+            if (dipB[1] != AlignmentNew.UNKNOWN_ALLELE) {
+                stateCnt[dipB[1]]++;
+            }
+        }
+
+        int count = 0;
+        for (int j = 0; j < 16; j++) {
+            if (stateCnt[j] != 0) {
+                count++;
+            }
+        }
+
+        int result[][] = new int[2][count];
+        int index = 0;
+        for (int k = 0; k < 16; k++) {
+            if (stateCnt[k] != 0) {
+                result[0][index] = k;
+                result[1][index] = stateCnt[k];
+                index++;
+            }
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < count - 1; k++) {
+
+                if (result[1][k] < result[1][k + 1]) {
+
+                    int temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    int tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
+
+    @Override
+    public Object[][] getDiploidsSortedByFrequency(int site) {
+
+        Integer ONE_INTEGER = 1;
+
+        Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
+        for (int r = 0; r < myTaxaCount; r++) {
+            String current = getBaseAsString(r, site);
+            Integer num = diploidValueCounts.get(current);
+            if (num == null) {
+                diploidValueCounts.put(current, ONE_INTEGER);
+            } else {
+                diploidValueCounts.put(current, ++num);
+            }
+        }
+
+        Object[][] result = new Object[2][diploidValueCounts.size()];
+
+        int i = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Integer count = (Integer) diploidValueCounts.get(key);
+            result[0][i] = key;
+            result[1][i++] = count;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
+
+                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
     }
 
     @Override
     public Object[][] getDiploidCounts() {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        Map<String, Long> diploidValueCounts = new HashMap<String, Long>();
+        for (int c = 0; c < mySiteCount; c++) {
+            Object[][] diploids = getDiploidsSortedByFrequency(c);
+            for (int i = 0; i < diploids[0].length; i++) {
+                String current = (String) diploids[0][i];
+                Long count = (long) ((Integer) diploids[1][i]).intValue();
+                Long num = diploidValueCounts.get(current);
+                if (num == null) {
+                    diploidValueCounts.put(current, count);
+                } else {
+                    diploidValueCounts.put(current, (num + count));
+                }
+            }
+        }
+
+        Object[][] result = new Object[2][diploidValueCounts.size()];
+
+        int i = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Long count = diploidValueCounts.get(key);
+            result[0][i] = key;
+            result[1][i++] = count;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
+
+                if ((Long) result[1][k] < (Long) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
     }
 
     @Override
     public Object[][] getMajorMinorCounts() {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        String[][] alleleStates = getAlleleEncodings();
+
+        if (alleleStates.length != 1) {
+            return new Object[0][0];
+        }
+
+        long[][] counts = new long[16][16];
+
+        if (getMaxNumAlleles() >= 2) {
+            for (int site = 0; site < mySiteCount; site++) {
+                byte[] alleles = getAlleles(site);
+                byte indexI = alleles[0];
+                byte indexJ = alleles[1];
+                if (indexJ == AlignmentNew.UNKNOWN_ALLELE) {
+                    indexJ = indexI;
+                }
+                counts[indexI][indexJ]++;
+            }
+        } else {
+            for (int site = 0; site < mySiteCount; site++) {
+                byte[] alleles = getAlleles(site);
+                byte indexI = alleles[0];
+                counts[indexI][indexI]++;
+            }
+        }
+
+        int numAlleles = 0;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = 0; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    numAlleles++;
+                }
+            }
+        }
+
+        Object[][] result = new Object[2][numAlleles];
+        int nextResult = 0;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = 0; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    result[0][nextResult] = getBaseAsString(0, x) + ":" + getBaseAsString(0, y);
+                    result[1][nextResult++] = counts[x][y];
+                }
+            }
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < numAlleles - 1; k++) {
+
+                if ((Long) result[1][k] < (Long) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
     }
 
     @Override
@@ -233,22 +522,8 @@ public class ByteGenotype implements Genotype {
     }
 
     @Override
-    public boolean isSBitFriendly() {
+    public byte[] getAlleles(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Override
-    public boolean isTBitFriendly() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void optimizeForTaxa(ProgressListener listener) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void optimizeForSites(ProgressListener listener) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }

@@ -695,7 +695,7 @@ public interface AlignmentNew {
      *
      * @return sorted list of diploids and counts
      */
-    public Object[][] getDiploidssSortedByFrequency(int site);
+    public Object[][] getDiploidsSortedByFrequency(int site);
 
     /**
      * Returns whether this alignment is phased.

@@ -315,8 +315,7 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public byte[] getAlleles(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        // return myAnnotatedPositionList.getAlleles(site);
+        return myGenotype.getAlleles(site);
     }
 
     @Override
@@ -365,12 +364,11 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        // return myAnnotatedPositionList.getAllelesSortedByFrequency(site);
+        return myGenotype.getAllelesSortedByFrequency(site);
     }
 
     @Override
-    public Object[][] getDiploidssSortedByFrequency(int site) {
+    public Object[][] getDiploidsSortedByFrequency(int site) {
         throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
         // return myAnnotatedPositionList.getDiploidssSortedByFrequency(site);
     }
@@ -467,17 +465,17 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public boolean isSBitFriendly() {
-        return myGenotype.isSBitFriendly();
+        return myBitStorage.isSBitFriendly();
     }
 
     @Override
     public boolean isTBitFriendly() {
-        return myGenotype.isTBitFriendly();
+        return myBitStorage.isTBitFriendly();
     }
 
     @Override
     public void optimizeForTaxa(ProgressListener listener) {
-        myGenotype.optimizeForTaxa(listener);
+        myBitStorage.optimizeForTaxa(listener);
     }
 
     @Override
