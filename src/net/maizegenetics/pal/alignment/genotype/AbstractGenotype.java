@@ -23,9 +23,9 @@ public abstract class AbstractGenotype implements Genotype {
     private final String[][] myAlleleEncodings;
     private final boolean myIsPhased;
 
-    AbstractGenotype(int taxaCount, int siteCount, boolean phased, String[][] alleleEncodings) {
-        myTaxaCount = taxaCount;
-        mySiteCount = siteCount;
+    AbstractGenotype(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
+        myTaxaCount = numTaxa;
+        mySiteCount = numSites;
         myIsPhased = phased;
         myAlleleEncodings = alleleEncodings;
     }

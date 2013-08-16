@@ -13,8 +13,8 @@ public class HDF5ByteGenotype extends AbstractGenotype {
 
     private final IHDF5Reader myHDF5Reader;
 
-    private HDF5ByteGenotype(IHDF5Reader reader, int taxaCount, int siteCount, boolean phased, String[][] alleleEncodings) {
-        super(taxaCount, siteCount, phased, alleleEncodings);
+    private HDF5ByteGenotype(IHDF5Reader reader, int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
+        super(numTaxa, numSites, phased, alleleEncodings);
         myHDF5Reader = reader;
     }
 
