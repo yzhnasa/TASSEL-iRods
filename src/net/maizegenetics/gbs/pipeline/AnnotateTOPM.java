@@ -180,8 +180,8 @@ public class AnnotateTOPM {
                 byte divergence = Byte.MIN_VALUE;
                 String seqS = temp[9];
                 String XAString = null;
-                if (temp.length == 20) {
-                    XAString = temp[19].replaceFirst("XA:Z:", "");
+                if (temp[temp.length-1].startsWith("XA")) {
+                    XAString = temp[temp.length-1].replaceFirst("XA:Z:", "");
                 }
                 if (orientiation == 4) {
                     
@@ -262,6 +262,75 @@ public class AnnotateTOPM {
     }
     
     /**
+     * Annotate the TOPM with BLAST from a directory, where slices of blast result are stored
+     * @param blastDirS
+     * @param maxMappingNum 
+     */
+    public void annotateWithBlastFromDir (String blastDirS, int maxMappingNum) {
+        String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
+        this.iniTMIBuffers(2, maxMappingNum);
+        System.out.println("Reading BLAST table format tag alignment (BLAST) from: " + blastDirS);
+        System.out.println("Coverting BLAST to TOPMHDF5...");
+        byte mappingSource = 2;
+        File[] infiles = new File (blastDirS).listFiles();
+        try {
+            BufferedReader br;
+            for (int i = 0; i < infiles.length; i++) {
+                System.out.println("Reading BLAST table format tag alignment (BLAST) from: " + infiles[i].getAbsolutePath());
+                if (infiles[i].getName().endsWith("gz")) {
+                    br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(infiles[i]))));
+                }
+                else {
+                    br = new BufferedReader(new FileReader(infiles[i]), 65536);
+                }
+                String inputStr = null;
+                while((inputStr = br.readLine())!=null) {
+                    String[] temp =inputStr.split("\\s+");
+                    int chr = Integer.parseInt(temp[1]);
+                    byte strand = Byte.MIN_VALUE;
+                    int startPos = Integer.parseInt(temp[8]);
+                    int endPos = Integer.parseInt(temp[9]);
+                    if (startPos < endPos) {
+                        strand = 1;
+                    }
+                    else {
+                        strand = -1;
+                    }
+                    short mappingScore = Short.parseShort(temp[11].replaceAll("\\..+", ""));
+                    byte divergence = Byte.MIN_VALUE;
+                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
+                    int tagIndex = Integer.parseInt(temp[0]);
+                    if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[bufferNum-1]) {
+                        System.out.println("The index of the tag from sam file is out of buffer range. Program quits.");
+                        System.out.println("Please increase the buffer number");
+                        System.exit(1);
+                    }
+                    int bufferIndex = Arrays.binarySearch(bufferStartTagIndex, tagIndex);
+                    if (bufferIndex < 0) bufferIndex = -bufferIndex-2;
+                    int bufferTagIndex = tagIndex % topm.getChunkSize();
+                    int mappingBlockIndex = this.getMappingBlockIndex(bufferIndex, bufferTagIndex);
+                    if (mappingBlockIndex == Integer.MIN_VALUE) continue;
+                    tmiBuffers[bufferIndex][mappingBlockIndex][bufferTagIndex] = theTMI;
+                    if (bufferLights[bufferIndex][bufferTagIndex] == false) {
+                        lightCounts[bufferIndex]++;
+                    }
+                    bufferLights[bufferIndex][bufferTagIndex] = true;
+                    if (lightCounts[0] == topm.getChunkSize() && lightCounts[1] > this.updateBufferCountCutoff) {
+                        this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
+                        this.updateTMIBuffer();
+                    }   
+                }
+                br.close();
+            }
+            this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
+            topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
      * Annotate the TOPM with BLAST
      * @param blastM8FileS
      * @param maxMappingNum 
@@ -269,8 +338,8 @@ public class AnnotateTOPM {
     public void annotateWithBLAST (String blastM8FileS, int maxMappingNum) {
         String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
         this.iniTMIBuffers(2, maxMappingNum);
-        System.out.println("Reading SAM format tag alignment (BLAST) from: " + blastM8FileS);
-        System.out.println("Coverting SAM to TOPMHDF5...");
+        System.out.println("Reading BLAST table format tag alignment (BLAST) from: " + blastM8FileS);
+        System.out.println("Coverting BLAST to TOPMHDF5...");
         byte mappingSource = 2;
         try {
             BufferedReader br;

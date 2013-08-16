@@ -29,12 +29,67 @@ public class FeiPipelines {
     
     public FeiPipelines () {
         //this.pipelinePE();
-        this.testPipeline();
+        //this.testPipeline();
+        this.GBSV3Pipeline();
     }
     
     public static void main (String[] args) {
         new FeiPipelines();
         
+    }
+    
+    public void GBSV3Pipeline () {
+        //this.addTripsicum();
+        //this.mkV3Alignment(); //take some time to align using blast+
+        //this.initializeV3TOPM();
+        this.annotateV3TOPM();
+    }
+    
+    public void annotateV3TOPM () {
+        String inputFileS = "M:/GBSV3/topm/v3.topm.h5";
+        TagsOnPhysicalMapV3 topm = new TagsOnPhysicalMapV3(inputFileS);
+        AnnotateTOPM anno = new AnnotateTOPM (topm);
+        String bowtie2SamFileS = "M:/GBSV3/alignment/v3.bowtie2.sam.gz";
+        //anno.annotateWithBowtie2(bowtie2SamFileS, 5);
+        String bwaSamFileS = "M:/GBSV3/alignment/v3.bwa.sam.gz";
+        //anno.annotateWithBWA(bwaSamFileS, 5);
+        String blastDirS = "M:/GBSV3/alignment/blastResult/";
+        anno.annotateWithBlastFromDir(blastDirS, 5);
+    }
+    
+    public void initializeV3TOPM () {
+        String inputFileS = "M:/GBSV3/tagCount/gbsV3.cnt";
+        String outputFileS = "M:/GBSV3/topm/v3.topm.h5";
+        TagCounts tc = new TagCounts(inputFileS, FilePacking.Bit);
+        TagsOnPhysicalMapV3.createFile(tc, outputFileS);
+    }
+    
+    /**
+     * make alignment using bowtie2m, bwa and blast+, fasta file need to  be split to many small files to speed up blast (parallel)
+     */
+    public void mkV3Alignment () {
+        String inputFileS = "M:/GBSV3/tagCount/gbsV3.cnt";
+        String fastqFileS = "M:/GBSV3/alignment/v3.fastq";
+        //new FeiUtils ().convertTagCount2Fastq(inputFileS, fastqFileS);
+        
+        String fastaFileS = "M:/GBSV3/alignment/v3.fasta";
+        //TagCounts tc = new TagCounts(inputFileS, FilePacking.Bit);
+        //tc.toFASTA(fastaFileS);
+        
+        String zipFastaFileS = "M:/GBSV3/alignment/v3.fasta.gz";
+        String fastaDirS = "M:/GBSV3/alignment/splitFasta/";
+        FeiUtils util = new FeiUtils();
+        util.splitFastaFileS(zipFastaFileS, fastaDirS, 20000);  
+    }
+    
+    public void addTripsicum () {
+        String sourceDir = "M:/GBSV3/tagCount/source/";
+        String mergeFileS = "M:/GBSV3/tagCount/gbsV3.cnt";
+        String arguments = "-i " + sourceDir + " -o " + mergeFileS + " -c " + 10 ;
+        String[] args = arguments.split(" ");
+        MergeMultipleTagCountPlugin m = new MergeMultipleTagCountPlugin();
+        m.setParameters(args);
+		m.performFunction(null);  
     }
     
     public void testPipeline () {
@@ -59,8 +114,10 @@ public class FeiPipelines {
         anno.annotateWithBowtie2(bowtie2SamFileS, 5);
         String bwaSamFileS = "M:/GBStest/alignment/bwa-N5.sam";
         anno.annotateWithBWA(bwaSamFileS, 5);
-        String blastFileS = "M:/GBStest/alignment/blast.m8.txt";
-        anno.annotateWithBLAST(blastFileS, 5);
+        //String blastFileS = "M:/GBStest/alignment/blast.m8.txt";
+        //anno.annotateWithBLAST(blastFileS, 5);
+        String blastDirS = "M:/GBStest/alignment/blastOut/";
+        anno.annotateWithBlastFromDir(blastDirS, 5);
         String PETOPMFileS = "M:/af/ptopm/PE.topm";
         anno.annotateWithPE(PETOPMFileS, 5);
         String TOGMFileS = "M:/pav/PhyGenMapping/v1.togm.txt";
@@ -163,8 +220,8 @@ public class FeiPipelines {
     public void mkPEAlignment () {
         String fFastaFileS = "M:/af/alignment/f.fasta.txt";
         String bFastaFileS = "M:/af/alignment/b.fasta.txt";
-        String fSamFileS = "M:/af/alignment/f.k5.sam";
-        String bSamFileS = "M:/af/alignment/b.k5.sam";
+        String fSamFileS = "M:/af/alignment/f.k5.sam.gz";
+        String bSamFileS = "M:/af/alignment/b.k5.sam.gz";
         String a = null;
         PETagsOnPhysicalMapV3 ptopm = new PETagsOnPhysicalMapV3 (fFastaFileS, bFastaFileS, fSamFileS, bSamFileS);
         String PETOPM = "M:/af/ptopm/PE.topm";
@@ -231,8 +288,8 @@ public class FeiPipelines {
     }
 
     public void parseFastq () {
-        String infile1 = "M:/af/Illumina/test/ImputationP15_1_1_fastq.txt";
-        String infile2 = "M:/af/Illumina/test/ImputationP15_1_2_fastq.txt";
+        String infile1 = "M:/af/Illumina/ImputationP15_1_1_fastq.txt";
+        String infile2 = "M:/af/Illumina/ImputationP15_1_2_fastq.txt";
         
         String keyfile = "M:/af/key/ImputationP15_key.txt";
         String outputDirS = "M:/af/PETagCounts/";

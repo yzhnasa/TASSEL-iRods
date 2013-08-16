@@ -10,14 +10,17 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import net.maizegenetics.gbs.tagdist.AbstractTags;
 import net.maizegenetics.gbs.tagdist.Tags;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.gbs.util.SAMUtils;
+import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
 /**
  * This class hold the multiple mapping positions of PE tags, including forward and backward PE tags. Data in this class are used to annotate HDF5TOPM
@@ -66,6 +69,7 @@ public class PETagsOnPhysicalMapV3 implements Tags {
             while ((temp = br.readLine()) != null) {
                 tagNum++;
             }
+            System.out.println(String.valueOf(tagNum)+" PE tags (one end) in total");
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -157,7 +161,7 @@ public class PETagsOnPhysicalMapV3 implements Tags {
             DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(infileS), 65536));
             tagLengthInLong = dis.readInt();
             int tagNum = dis.readInt();
-            this.iniMatrix(tagNum);
+            this.iniMatrix(tagNum);    
             for (int i = 0; i < tagNum; i++) {
                 tags[i] = new long[tagLengthInLong];
                 for (int j = 0; j < tagLengthInLong; j++) {
@@ -223,7 +227,12 @@ public class PETagsOnPhysicalMapV3 implements Tags {
             e.printStackTrace();
         }
         try {
-            BufferedReader br = new BufferedReader (new FileReader(samFileS), 65536);
+            BufferedReader br;
+            if (samFileS.endsWith(".gz")) {
+                br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(new File(samFileS)))));
+            } else {
+                br = new BufferedReader(new FileReader(new File(samFileS)), 65536);
+            }
             String temp;
             ArrayList<String> recordList = new ArrayList();
             while (!(temp = br.readLine()).startsWith("@PG")) {}
