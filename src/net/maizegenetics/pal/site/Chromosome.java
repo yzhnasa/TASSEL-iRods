@@ -12,14 +12,14 @@ import java.util.Map;
  * 
  * @author Terry Casstevens and Ed Buckler
  */
-public class Chromosome implements Comparable<Chromosome>{
+public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
 
     private static final long serialVersionUID = -5197800047652332969L;
     public static Locus UNKNOWN = new Locus("Unknown");
     private final String myName;
     private final int myChromosomeNumber;
     private final int myLength;
-    private final Map<String, Integer> myFeatures;
+    private final GeneralAnnotation myGA;
     private final int hashCode;
 
     /**
@@ -28,33 +28,19 @@ public class Chromosome implements Comparable<Chromosome>{
      * @param length Length of chromosome in base pairs
      * @param features Map of features about the chromosome
      */
-    public Chromosome(String name, int length, Map<String, Integer> features) {
+    public Chromosome(String name, int length, GeneralAnnotation features) {
         myName = name;
         myLength = length;
         int convChr=Integer.MAX_VALUE;
         try{convChr=Integer.parseInt(name);}
         catch(NumberFormatException ne) {}
         myChromosomeNumber=convChr;
-        if(features==null) {myFeatures=null;}
-        else {myFeatures = new HashMap<String, Integer>(features);}
+        myGA=features;
         hashCode=calcHashCode();
     }
     
     public Chromosome(String name) {
         this(name, -1, null);
-    }
-
-    public static Chromosome getMergedInstance(Chromosome chr1, Chromosome chr2) {
-        String chromosome = chr1.getName();
-        if (!chromosome.equals(chr2.getName())) {
-            throw new IllegalArgumentException("Locus: getInstance: Chromosome Names must be the same.  Chromosome1: " + chromosome + "  Chromosome2: " + chr2.getName());
-        }
-        int length = Math.max(chr1.getLength(), chr2.getLength());
-        Map features1 = chr1.getFeatures();
-        Map features2 = chr2.getFeatures();
-        Map newfeatures = new HashMap<String, Integer>(features1);
-        newfeatures.putAll(features2);
-        return new Chromosome(chromosome, length, newfeatures);
     }
 
     public String getName() {
@@ -73,13 +59,30 @@ public class Chromosome implements Comparable<Chromosome>{
         return myLength;
     }
 
-    public int getFeaturePosition(String key) {
-        if(myFeatures==null) return Integer.MIN_VALUE;
-        return myFeatures.get(key);
+    @Override
+    public Object[] getAnnotation(String annoName) {
+        return myGA.getAnnotation(annoName);
     }
-    
-    protected Map getFeatures() {
-        return Collections.unmodifiableMap(myFeatures);
+
+    @Override
+    public String[] getTextAnnotation(String annoName) {
+        return myGA.getTextAnnotation(annoName);
+    }
+
+    @Override
+    public double[] getQuantAnnotation(String annoName) {
+        return myGA.getQuantAnnotation(annoName);
+    }
+
+
+    @Override
+    public String getConsensusAnnotation(String annoName) {
+        return myGA.getConsensusAnnotation(annoName);
+    }
+
+    @Override
+    public double getAverageAnnotation(String annoName) {
+        return myGA.getAverageAnnotation(annoName);
     }
 
     @Override
