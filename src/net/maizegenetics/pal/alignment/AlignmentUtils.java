@@ -716,47 +716,6 @@ public class AlignmentUtils {
         return new BitSet[]{rMj, rMn};
     }
 
-    /**
-     * Method for getting TBits rapidly from major and minor allele arrays
-     *
-     * @param genotype
-     * @param mjA
-     * @param mnA
-     * @return
-     */
-    public static BitSet[] calcBitPresenceFromGenotype(byte[] genotype, byte[] mjA, byte[] mnA, byte[] hetA) {
-        int sites = genotype.length;
-        if ((genotype.length != mjA.length) || (genotype.length != mnA.length)) {
-            throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
-        }
-        OpenBitSet rMj = new OpenBitSet(genotype.length);
-        OpenBitSet rMn = new OpenBitSet(genotype.length);
-        for (int i = 0; i < sites; i++) {
-            byte g = genotype[i];
-            byte mj = mjA[i];
-            byte mn = mnA[i];
-            if (mj == Alignment.UNKNOWN_ALLELE) {
-                continue;
-            }
-            if (g == mj) {
-                rMj.fastSet(i);
-                continue;
-            }
-            if (mn == Alignment.UNKNOWN_ALLELE) {
-                continue;
-            }
-            if (g == mn) {
-                rMn.fastSet(i);
-                continue;
-            }
-//            byte het = hetA[i];
-//            if (AlignmentUtils.isEqual(g, het)) {
-//                rMj.fastSet(i);
-//                rMn.fastSet(i);
-//            }
-        }
-        return new BitSet[]{rMj, rMn};
-    }
     
         /**
      * Method for getting TBits rapidly from major and minor allele arrays

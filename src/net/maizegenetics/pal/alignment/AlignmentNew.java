@@ -36,10 +36,6 @@ public interface AlignmentNew {
 
         None, MixedScoreTypes, QualityScore, ImputedProbablity, Dosage
     };
-    final static public byte POSITION_TYPE_ALL_GROUP = 0;
-    final static public String[] POSITION_TYPE_GROUP_TEXT = {"All", "Silent", "Synonymous", "Noncoding",
-        "Nontranscribed", "Intron", "Indel", "Noncoding Indel", "Nonsynonymous", "Coding",
-        "Coding Indel", "Transcribed"};
 
     /**
      * This defines the possible allele scope types.

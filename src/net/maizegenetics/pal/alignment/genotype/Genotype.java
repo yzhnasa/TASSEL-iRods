@@ -328,4 +328,19 @@ public interface Genotype {
      * @return all alleles
      */
     public byte[] getAlleles(int site);
+
+    /**
+     * Returns number of taxa (samples) in this genotype
+     *
+     * @return number of taxa
+     */
+    public int getTaxaCount();
+
+    /**
+     * Returns total number of sites in this genotype.
+     *
+     * @return number of sites
+     */
+    public int getSiteCount();
+
 }

@@ -48,6 +48,8 @@ public interface BitStorage {
      * the minor allele. Allele number of value 2 would be the third most
      * frequent allele value and so on.
      *
+     * //TODO - this should be made inclusive for endblock (like the underlying BitSet).  Note this will need changes in code.
+     *
      * @param taxon taxon
      * @param alleleNumber allele number
      * @param startBlock starting block
