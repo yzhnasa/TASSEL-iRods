@@ -21,7 +21,7 @@ public class GenotypeBuilder {
         myAlleleEncodings = alleleEncodings;
     }
 
-    public GenotypeBuilder getUnphasedNucleotideGenotypeBuilder(int numTaxa, int numSites) {
+    public static GenotypeBuilder getUnphasedNucleotideGenotypeBuilder(int numTaxa, int numSites) {
         return new GenotypeBuilder(numTaxa, numSites, false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
     }
 

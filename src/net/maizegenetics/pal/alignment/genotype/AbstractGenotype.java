@@ -3,13 +3,14 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import net.maizegenetics.pal.alignment.AlignmentNew;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import org.apache.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  *
@@ -548,5 +549,15 @@ public abstract class AbstractGenotype implements Genotype {
             result[i] = (i < resultSize) ? (byte) alleles[0][i] : AlignmentNew.UNKNOWN_ALLELE;
         }
         return result;
+    }
+
+    @Override
+    public int getSiteCount() {
+        return mySiteCount;
+    }
+
+    @Override
+    public int getTaxaCount() {
+        return myTaxaCount;
     }
 }

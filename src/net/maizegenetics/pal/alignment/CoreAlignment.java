@@ -480,7 +480,7 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public void optimizeForSites(ProgressListener listener) {
-        optimizeForSites(listener);
+        myBitStorage.optimizeForSites(listener);
     }
 
     @Override

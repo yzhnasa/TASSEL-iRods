@@ -44,11 +44,11 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		}
 		
 		List<Datum> inputAlignments = input.getDataOfType(Alignment.class);
-		ArrayList<PopulationData> familyList = PopulationData.readPedigreeFile(pedfileName);
 		LinkedList<Datum> datumList = new LinkedList<Datum>();
 
 		for (Datum d : inputAlignments) {
 			Alignment align = (Alignment) d.getData();
+			ArrayList<PopulationData> familyList = PopulationData.readPedigreeFile(pedfileName);
 			for (PopulationData family : familyList) {
 				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.getLocusName(0) + ".");
 				

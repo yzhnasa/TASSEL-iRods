@@ -5,10 +5,15 @@
 package net.maizegenetics.gbs.pipeline;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import net.maizegenetics.gbs.maps.PETagsOnPhysicalMap;
 import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
@@ -17,6 +22,7 @@ import net.maizegenetics.gbs.tagdist.TagCounts;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
 /**
  *
@@ -26,6 +32,81 @@ public class FeiUtils {
     
     public FeiUtils () {
         
+    }
+    
+    public void mergeBlastResult (String inputDirS, String outputFileS) {
+        File[] files = new File(inputDirS).listFiles();
+        try {
+            
+        }
+        catch (Exception e) {
+            
+        }
+    }
+    
+    public void splitFastaFileS (String inputFileS, String outputDir, int fileNum) {
+        try{
+            BufferedReader br;
+            if (inputFileS.endsWith(".gz")) {
+                br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(new File(inputFileS)))));
+            } else {
+                br = new BufferedReader(new FileReader(new File(inputFileS)), 65536);
+            }
+            String temp;
+            int tagNum = 0;
+            while ((temp = br.readLine()) != null) {
+                tagNum++;
+            }
+            br.close();
+            tagNum = tagNum/2;
+            int[] size = new int[fileNum];
+            int left = tagNum % fileNum;
+            if (left == 0) {
+                for (int i = 0; i < size.length; i++) {
+                    size[i] = tagNum / fileNum;
+                }
+            }
+            else {
+                int base = tagNum/fileNum;
+                for (int i = 0; i < left; i++) {
+                    size[i] = base+1;
+                }
+                for (int i = left; i < fileNum; i++) {
+                    size[i] = base;
+                }
+            }
+            if (inputFileS.endsWith(".gz")) {
+                br = new BufferedReader(new InputStreamReader(new MultiMemberGZIPInputStream(new FileInputStream(new File(inputFileS)))));
+            } else {
+                br = new BufferedReader(new FileReader(new File(inputFileS)), 65536);
+            }
+            for (int i = 0; i < fileNum; i++) {
+                String fileName = outputDir+"tag"+this.get5DigitNumber(i)+".fasta";
+                BufferedWriter bw = new BufferedWriter (new FileWriter(fileName), 65536);
+                for (int j = 0; j < size[i]; j++) {
+                    bw.write(br.readLine());
+                    bw.newLine();
+                    bw.write(br.readLine());
+                    bw.newLine();
+                }
+                bw.flush();
+                bw.close();
+            }
+            br.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+    }
+    
+    private String get5DigitNumber (int j) {
+        String numS = String.valueOf(j);
+        int repeat = 5 - numS.length();
+        for (int i = 0; i < repeat; i++) {
+            numS = "0"+numS;
+        }
+        return numS;
     }
     
     public void convertSAM2TOPM (String infileS, String outfileS) {
