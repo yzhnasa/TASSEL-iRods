@@ -1,5 +1,6 @@
 package net.maizegenetics.util;
 
+import java.io.File;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*; 
@@ -12,11 +13,8 @@ import javax.activation.*;
  * Reference: https://confluence.cornell.edu/login.action?os_destination=https%3A%2F%2Fconfluence.cornell.edu%2Fdisplay%2Fcitapps%2FHow%2Bto%2Bconfigure%2Bapplications%2Bto%2Bsend%2Bmail%2Bthrough%2Bthe%2BCornell%2Bmail%2Bservers.
  */
 public class SMTPClient { 
-    
-    private String host;
-    private String fromAddress;
-    private String toAddress;
-    private static MimeMessage message; 
+
+    private MimeMessage message;
     
     public SMTPClient(String host, String[] toAddresses){
         
@@ -31,8 +29,12 @@ public class SMTPClient {
             try{
                 message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddresses[i]));
                 message.setFrom(new InternetAddress(toAddresses[0]));  // just use first address as From
-            }catch(javax.mail.internet.AddressException ae){ /* ignore */  }
-             catch(javax.mail.MessagingException me){  /* ignore */  }
+            }catch(javax.mail.internet.AddressException ae){
+                ae.printStackTrace();
+            }
+             catch(javax.mail.MessagingException me){
+                me.printStackTrace();
+             }
         }
     }
 
@@ -45,13 +47,19 @@ public class SMTPClient {
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(messageBodyPart);
 
-        // Part two is attachment
-        messageBodyPart = new MimeBodyPart();
-        DataSource source = new FileDataSource(fileAttachment);
-        messageBodyPart.setDataHandler(new DataHandler(source));
-        messageBodyPart.setFileName(fileAttachment);
-        multipart.addBodyPart(messageBodyPart);
 
+
+        File aFileAttachment = new File(fileAttachment);
+        if(aFileAttachment.canRead()){
+
+            messageBodyPart = new MimeBodyPart();
+            DataSource source = new FileDataSource(fileAttachment);
+            messageBodyPart.setDataHandler(new DataHandler(source));
+            messageBodyPart.setFileName(aFileAttachment.getName());
+            multipart.addBodyPart(messageBodyPart);
+        }else{
+            messageBodyPart.setText(msg + "\n\nCould not attach file:\n" + fileAttachment);
+        }
         // Put parts in message
         message.setContent(multipart);
 

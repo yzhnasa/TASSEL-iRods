@@ -663,9 +663,10 @@ public class TasselPipeline implements PluginListener {
                     for (int i = 0; i < types.length; i++) {
                         if (types[i].equalsIgnoreCase("ALL")) {
                             grp.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
-                        } else if (types[i].equalsIgnoreCase("INDEL")) {
-                            grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
                         }
+                        // else if (types[i].equalsIgnoreCase("INDEL")) {
+                        //     grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
+                        // }
                     }
 
                     plugin.setTypeOfSitesToAnalyze(grp);
@@ -711,8 +712,8 @@ public class TasselPipeline implements PluginListener {
                     } catch (Exception e) {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem with LD Test Site number: " + str);
                     }
-                    if (testSite < 1) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Test Site can't be less than 1.");
+                    if (testSite < 0) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: LD Test Site can't be less than 0.");
                     }
 
                     plugin.setTestSite(testSite);

@@ -24,10 +24,12 @@ public class Identifier implements Serializable, Comparable {
     private final String myName;
     private final String[] myNameTokens;
     public static Identifier ANONYMOUS = new Identifier("");
+    private final int hashCode;
 
     public Identifier(String name) {
         myName = name;
         myNameTokens = name.split(DELIMITER);
+        hashCode=myName.hashCode();
     }
 
     public static Identifier getMergedInstance(Identifier id1, Identifier id2) {
@@ -193,5 +195,10 @@ public class Identifier implements Serializable, Comparable {
      */
     public int getNumNameLevels() {
         return myNameTokens.length;
+    }
+
+    @Override
+    public int hashCode() {
+        return hashCode;
     }
 }

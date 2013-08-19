@@ -1,222 +1,40 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package net.maizegenetics.pal.site;
 
-import com.google.common.collect.HashMultimap;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-
-import java.util.Map;
-//import java.util.Objects;
-
 /**
- * Provide information on a site and its annotations.  This includes information
- * on position, MAF, coverage.  This class is immutable.
- * <p></p>
- * The annotations are all set using the builder.
+ * Annotations about the allele frequency and state of a polymorphism for various allele scopes.
  *
- * @author Ed Buckler
  */
-public final class AnnotatedPosition implements Position, AlleleAnnotation, GeneralAnnotation {
-    private final Position myCorePosition;
-
-    //These could perhaps be an array of
-    private final float myMAF;
-    private final float mySiteCoverage;
-    private final byte myReferenceAllele;
-    private final byte myGlobalMajorAllele;
-    private final byte myAncestralAllele;
-    private final byte myHighDepthAllele;
-
-    //Custom annotation are stored in the map
-    private final HashMultimap<String, Object> myAnnoMap=null;
-
+public interface AnnotatedPosition extends GeneralAnnotation, Position {
     /**
-     * A builder for creating immutable AnnotatedPosition instances. AnnotatedPositions are
-     * built off a base of a CorePosition, so build it first.
-     *<p> Example:
-     * <pre>   {@code
-     * Position cp= new CorePosition.Builder(new Chromosome("1"),1232).build();
-     * AnnotatedPosition ap= new AnnotatedPosition.Builder(cp)
-     *    .maf(0.05f)
-     *    .ancAllele(NucleotideAlignmentConstants.C_ALLELE)
-     *    .build();}</pre>
-     * <p>This would create nucleotide position on chromosome 1 at position 1232.  The MAF is 0.05 and the ancestral allele
-     * is C.
+     * Allele types recorded in an annotated position.  If unknown,
+     * Alignment.UNKNOWN_ALLELE is returned.
      */
-    public static class Builder {
-        // Required parameters
-        private final Position myCorePosition;
-
-        //in an allele annotation objects
-        private float myMAF = Float.NaN;
-        private float mySiteCoverage = Float.NaN;
-        private byte myGlobalMajorAllele=Alignment.UNKNOWN_ALLELE;
-        private byte myReferenceAllele=Alignment.UNKNOWN_ALLELE;
-        private byte myAncestralAllele=Alignment.UNKNOWN_ALLELE;
-        private byte myHighDepthAllele=Alignment.UNKNOWN_ALLELE;
-
-        //in an general annotation object
-        private final Map myAnnoMap=null;
-
-        /**Constructor requires a Position before annotation of the position*/
-        public Builder(Position aCorePosition) {
-            this.myCorePosition = aCorePosition;
-        }
-        /**Set Minor Allele Frequency annotation (default=Float.NaN)*/
-        public Builder maf(float val) {myMAF = val; return this;}
-        /**Set site coverage annotation (default=Float.NaN)*/
-        public Builder siteCoverage(float val) {mySiteCoverage = val; return this;}
-        /**Set major allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
-        public Builder majAllele(byte val) {myGlobalMajorAllele = val; return this;}
-        /**Set reference allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
-        public Builder refAllele(byte val) {myReferenceAllele = val; return this;}
-        /**Set ancestral allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
-        public Builder ancAllele(byte val) {myAncestralAllele = val; return this;}
-        /**Set high depth allele annotation (default=Alignment.UNKNOWN_ALLELE)*/
-        public Builder hiDepthAllele(byte val) {myHighDepthAllele = val; return this;}
-
-
-        public AnnotatedPosition build() {
-            return new AnnotatedPosition(this);
-        }
-    }
-    private AnnotatedPosition(Builder builder) {
-        this.myCorePosition = builder.myCorePosition;
-
-        myMAF = builder.myMAF;
-        mySiteCoverage = builder.mySiteCoverage;
-        myGlobalMajorAllele= builder.myGlobalMajorAllele;
-        myReferenceAllele= builder.myReferenceAllele;
-        myAncestralAllele= builder.myAncestralAllele;
-        myHighDepthAllele= builder.myHighDepthAllele;
+    public enum Allele {  //The indices are used in effectively as map (EnumMap is not used as it requires 4X more memory)
+        /**Reference Allele*/
+        REF(0),
+        /**Major (most frequent) allele from the globally defined alignment*/
+        GLBMAJ(1),
+        /**Minor (second most frequent) allele from the globally defined alignment*/
+        GLBMIN(2),
+        /**Ancestral allele defined by evolutionary comparison*/
+        ANC(3),
+        /**High depth allele as defined from DNA sequencing analysis*/
+        HIDEP(4);
+        private final int index;
+        /**Count of the number of allele types*/
+        public final static int COUNT=Allele.values().length;
+        Allele(int index) {this.index=index;}
+        /**Sequential index that can be use for primitive arrays*/
+        public int index() {return index;}
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb=new StringBuilder("Position");
-        sb.append("\tChr:").append(getLocus().getName());
-        sb.append("\tPos:").append(getPosition());
-        sb.append("\tName:").append(getSNPID());
-        sb.append("\tMAF:").append(getMAF());
-        sb.append("\tRef:").append(NucleotideAlignmentConstants.getHaplotypeNucleotide(myReferenceAllele));
-        return sb.toString();
-    }
+    /**Return the minor allele frequency in a global scope*/
+    public float getGlobalMAF();
 
-    @Override
-    public Object[] getAnnotation(String annoName) {
-        if(myAnnoMap==null) return null;
-//        switch (annoName) {  //TODO: uncomment once in Java 7
-//            case "locus":return myLocus;
-//            case "position":return myPosition;
-//            case "myCM":return myCM;
-//            case "strand":return myStrand;
-//            case "snpID":return mySNPID;
-//        }
-        return myAnnoMap.get(annoName).toArray();
-    }
+    /**Returns the proportion of genotypes scored at a given site*/
+    public float getGlobalSiteCoverage();
 
-    @Override
-    public String[] getTextAnnotation(String annoName) {
-        try{return myAnnoMap.get(annoName).toArray(new String[0]);}
-        catch(Exception e) {
-            return null;
-        }
-    }
+    /**Return the allele specified by alleleType, if unknown Alignment.Unknown is return*/
+    public byte getAllele(Allele alleleType);
 
-    @Override
-    public Double[] getQuantAnnotation(String annoName) {
-        try{return myAnnoMap.get(annoName).toArray(new Double[0]);}
-        catch(Exception e) {
-            return null;
-        }
-    }
-
-    @Override
-    public float getMAF() {
-        return myMAF;
-    }
-
-    @Override
-    public float getSiteCoverage() {
-        return mySiteCoverage;
-    }
-
-    @Override
-    public byte getReferenceAllele() {
-        return myReferenceAllele;
-    }
-
-    @Override
-    public byte getAncestralAllele() {
-        return myAncestralAllele;
-    }
-
-    @Override
-    public byte getGlobalMajorAllele() {
-        return myGlobalMajorAllele;
-    }
-
-    @Override
-    public byte getHighDepthAllele() {
-        return myHighDepthAllele;
-    }
-
-    @Override
-    public int hashCode() {
-        return myCorePosition.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return myCorePosition.equals(obj);
-    }
-
-    @Override
-    public int compareTo(Position o) {
-        return myCorePosition.compareTo(o);
-    }
-
-    @Override
-    public Chromosome getLocus() {
-        return myCorePosition.getLocus();
-    }
-
-    @Override
-    public int getPosition() {
-        return myCorePosition.getPosition();
-    }
-
-    @Override
-    public byte getStrand() {
-        return myCorePosition.getStrand();
-    }
-
-    @Override
-    public float getCM() {
-        return myCorePosition.getCM();
-    }
-
-    @Override
-    public String getSNPID() {
-        return myCorePosition.getSNPID();
-    }
-
-    @Override
-    public boolean isNucleotide() {
-        return myCorePosition.isNucleotide();
-    }
-
-    @Override
-    public boolean isIndel() {
-        return myCorePosition.isIndel();
-    }
-
-    @Override
-    public String[] getKnownVariants() {
-        return myCorePosition.getKnownVariants();
-    }
-    
 }

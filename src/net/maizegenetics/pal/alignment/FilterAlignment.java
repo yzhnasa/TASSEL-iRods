@@ -567,24 +567,6 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public byte getPositionType(int site) {
-        return myBaseAlignment.getPositionType(translateSite(site));
-    }
-
-    @Override
-    public byte[] getPositionTypes() {
-
-        int numSites = getSiteCount();
-        byte[] result = new byte[numSites];
-        for (int i = 0; i < numSites; i++) {
-            result[i] = myBaseAlignment.getPositionType(translateSite(i));
-        }
-
-        return result;
-
-    }
-
-    @Override
     public float[][] getSiteScores() {
 
         if (!myBaseAlignment.hasSiteScores()) {

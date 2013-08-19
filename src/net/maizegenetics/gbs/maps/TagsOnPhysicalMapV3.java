@@ -15,13 +15,12 @@ import org.apache.log4j.Logger;
  * memory, loads faster, and is more flexible with mapping positions.
  * <p>
  * Multiple mapping positions can be stored for each Tag.  For example, separate aligners could record their
- * positions in the {@link TagMappingInfo} objects.  Then the genetic mapping algorithm could be used to resolve,
+ * positions in the {@link TagMappingInfoV3} objects.  Then the genetic mapping algorithm could be used to resolve,
  * which is the true mapping position.  MapPosition0 is used as the best mapping position, and used by the SNP caller.
- *
+ * The fields in {@link TagMappingInfoV3} may change for each aligner and genetic mapping, since part of the field might be missing different aligner and genetic mapping
  * <p>
- * TODO: createFile - needs to instantiate a TOPM just using a Tag Object
  * TODO: createFile that includes a Locus filter, only exports positions on the same locus and position range
- * TODO: Resort map positions by quality
+ * TODO: Resort map positions by quality (by model training)
  * 
  * 
  * @author Ed Buckler, Terry Casstevens, Fei Lu
@@ -39,7 +38,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     private static HDF5IntStorageFeatures vectorFeatures = HDF5IntStorageFeatures.createDeflation(5); //used by vectors
     
     /**Number of physical positions from different aligner or aligner with different parameters*/
-    protected int maxMapping = 0;
+    protected int mappingNum = 0;
     /**Writer/Reader of TagsOnPhysicalMapV3*/
     private IHDF5Writer myHDF5 = null;
     /**Tag index in block*/
@@ -106,7 +105,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         this.myNumTags = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGCOUNT);
         this.tags = myHDF5.readLongMatrix(GBSHDF5Constants.TAGS);
         this.tagLength = myHDF5.readByteArray(GBSHDF5Constants.TAGLENGTH);
-        this.maxMapping = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING);
+        this.mappingNum = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING);
         if(myHDF5.exists(GBSHDF5Constants.BEST_STRAND)) {
             bestStrand=myHDF5.readByteArray(GBSHDF5Constants.BEST_STRAND);
             bestChr= myHDF5.readIntArray(GBSHDF5Constants.BEST_CHR);
@@ -124,6 +123,12 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         System.gc();
     }
     
+    /**
+     * Creat datasets in HDF5 holding mapping information
+     * @param startIndex Start index of tag mapping information. This is essentially the current mappingNum
+     * @param size the number of datasets which will be created
+     * @return names of the datasets
+     */
     public String[] creatTagMappingInfoDatasets (int startIndex, int size) {
         int chunkCount = this.getChunkCount(); 
         int chunkSize = this.getChunkSize();
@@ -140,6 +145,12 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         return dataSetNames;
     }
     
+    /**
+     * Write TMI buffer/chunk to HDF5 datasets.
+     * @param dataSetNames
+     * @param tmiChunk TMI chunk [dataSetNames.length]*[chunk_size]
+     * @param chunkIndex index of this chunk
+     */
     public void writeTagMappingInfoDataSets (String[] dataSetNames, TagMappingInfoV3[][] tmiChunk, int chunkIndex) {
         for (int i = 0; i < dataSetNames.length; i++) {   
             myHDF5.compounds().writeArrayBlock(dataSetNames[i], tmiType, tmiChunk[i], chunkIndex);
@@ -147,45 +158,14 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
  
     }
     
-    private boolean populateBestMappings() {
-        bestStrand=new byte[myNumTags];
-        bestChr=new int[myNumTags];
-        bestStartPos=new int[myNumTags];
-        if(myHDF5.exists(GBSHDF5Constants.MAPBASE+"0")==false) {
-            Arrays.fill(bestStrand, TOPMInterface.BYTE_MISSING);
-            Arrays.fill(bestChr, TOPMInterface.INT_MISSING);
-            Arrays.fill(bestStartPos, TOPMInterface.INT_MISSING);
-            return false;
-        }
-        for (int i = 0; i < myNumTags; i++) {
-            int[] posArray=getPositionArray(i);
-           // {cachedTMI.chromosome, cachedTMI.strand, cachedTMI.startPosition}
-            bestStrand[i]=(byte)posArray[1];
-            bestChr[i]=posArray[0];
-            bestStartPos[i]=posArray[2];
-        }
-        myHDF5.createByteArray(GBSHDF5Constants.BEST_STRAND, myNumTags);
-        myHDF5.writeByteArray(GBSHDF5Constants.BEST_STRAND, bestStrand, vectorFeatures);
-        myHDF5.createIntArray(GBSHDF5Constants.BEST_CHR, myNumTags, vectorFeatures);
-        myHDF5.writeIntArray(GBSHDF5Constants.BEST_CHR, bestChr, vectorFeatures);
-        myHDF5.createIntArray(GBSHDF5Constants.BEST_STARTPOS, myNumTags, vectorFeatures);
-        myHDF5.writeIntArray(GBSHDF5Constants.BEST_STARTPOS, bestStartPos, vectorFeatures);
-        return true;
-    }
-    
-    private boolean populateMultimaps () {
-        if (myHDF5.exists(GBSHDF5Constants.MULTIMAPS)) return false;
-        this.multimaps = new byte[this.getTagCount()];
-        Arrays.fill(multimaps, TOPMInterface.BYTE_MISSING);
-        myHDF5.createByteArray(GBSHDF5Constants.MULTIMAPS, this.getTagCount());
-        myHDF5.writeByteArray(GBSHDF5Constants.MULTIMAPS, multimaps, vectorFeatures);
-        return true;
-    }
-    
-    public void setMaxMapping (int maxMapping) {
-        this.maxMapping = maxMapping;
-        myHDF5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING, maxMapping); 
-        System.out.println("TOPM maxMapping attibute was set to " + String.valueOf(maxMapping));
+    /**
+     * Set mappingNum attribute in HDF5
+     * @param maxMapping 
+     */
+    public void setMappingNum (int mappingNum) {
+        this.mappingNum = mappingNum;
+        myHDF5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING, mappingNum); 
+        System.out.println("TOPM maxMapping attibute was set to " + String.valueOf(mappingNum));
     }
     
     private boolean loadVariantsIntoMemory() {
@@ -261,7 +241,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
             if (cleanMap == false) {
                 saveCacheBackToFile();
             }
-            for (int mi = 0; mi < maxMapping; mi++) {
+            for (int mi = 0; mi < mappingNum; mi++) {
 //f                cachedTMIBlocks[mi] = myHDF5.compounds().readArrayBlock(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(mi), tmiType, CHUNK_SIZE, block);
                 cachedBlockIndex = block;
                 if (cacheAllMappingBlocks == false) {
@@ -276,7 +256,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     private void saveCacheBackToFile() {
         int block = cachedTagIndex >> BITS_TO_SHIFT_FOR_CHUNK;
         if (cachedBlockIndex != block) {
-            for (int mi = 0; mi < maxMapping; mi++) {
+            for (int mi = 0; mi < mappingNum; mi++) {
                 if (cleanMap == false) {
 //f                    myHDF5.compounds().writeArrayBlock(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(mi), tmiType, cachedTMIBlocks[mi], block);
                 }
@@ -305,8 +285,12 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
 //        saveCacheBackToFile();
     }
 
-    public int getMaxMappingCount () {
-        return this.maxMapping; 
+    /**
+     * Return number of mapping result
+     * @return 
+     */
+    public int getMappingNum () {
+        return this.mappingNum; 
     }
 
     public TagMappingInfo getAlternateTagMappingInfo(int index, int mapIndex) {
@@ -318,35 +302,6 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
             cacheMappingInfo(index);
         }
         return cachedTMIBlocks[mapIndex][index % CHUNK_SIZE];
-    }
-
-    public void setAlternateTagMappingInfo(int index, int mapIndex, TagMappingInfo theTMI) {
-        if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
-        if (cacheAllMappingBlocks == false) {
-            cacheMappingInfo(index);
-        }
-        if (cachedTagIndex != index) {
-            cacheMappingInfo(index);
-        }
-        cachedTMIBlocks[mapIndex][index % CHUNK_SIZE] = theTMI;
-        if (multimaps[index] >= mapIndex) {
-            multimaps[index] = (byte) (mapIndex + 1);
-        }
-        cleanMap = false;
-    }
-
-    public void swapTagMappingInfo(int index, int mapIndex, int mapIndex2) {
-        if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
-        if (cacheAllMappingBlocks == false) {
-            cacheMappingInfo(index);
-        }
-        if (cachedTagIndex != index) {
-            cacheMappingInfo(index);
-        }
-        TagMappingInfo tempTMI = cachedTMIBlocks[mapIndex][index % CHUNK_SIZE];
-        cachedTMIBlocks[mapIndex][index % CHUNK_SIZE] = cachedTMIBlocks[mapIndex2][index % CHUNK_SIZE];
-        cachedTMIBlocks[mapIndex2][index % CHUNK_SIZE] = tempTMI;
-        cleanMap = false;
     }
 
     @Override

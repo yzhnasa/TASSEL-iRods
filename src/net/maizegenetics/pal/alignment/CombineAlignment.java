@@ -292,26 +292,6 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
-    public byte getPositionType(int site) {
-        int translate = translateSite(site);
-        return myAlignments[translate].getPositionType(site - mySiteOffsets[translate]);
-    }
-
-    @Override
-    public byte[] getPositionTypes() {
-
-        int numSites = getSiteCount();
-        byte[] result = new byte[numSites];
-        for (int i = 0; i < numSites; i++) {
-            int translate = translateSite(i);
-            result[i] = myAlignments[translate].getPositionType(i - mySiteOffsets[translate]);
-        }
-
-        return result;
-
-    }
-
-    @Override
     public Locus getLocus(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getLocus(site - mySiteOffsets[translate]);

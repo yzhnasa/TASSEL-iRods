@@ -1,12 +1,7 @@
-/*
- * Locus
- */
 package net.maizegenetics.pal.site;
 
-import com.google.common.collect.ComparisonChain;
 import net.maizegenetics.pal.alignment.Locus;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,9 +10,9 @@ import java.util.Map;
  * Defines the chromosome structure and length.  The name and length recorded for 
  * each chromosome. 
  * 
- * @author terry
+ * @author Terry Casstevens and Ed Buckler
  */
-public class Chromosome implements Serializable, Comparable<Chromosome>{
+public class Chromosome implements Comparable<Chromosome>{
 
     private static final long serialVersionUID = -5197800047652332969L;
     public static Locus UNKNOWN = new Locus("Unknown");
@@ -25,6 +20,7 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
     private final int myChromosomeNumber;
     private final int myLength;
     private final Map<String, Integer> myFeatures;
+    private final int hashCode;
 
     /**
      *
@@ -41,6 +37,7 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
         myChromosomeNumber=convChr;
         if(features==null) {myFeatures=null;}
         else {myFeatures = new HashMap<String, Integer>(features);}
+        hashCode=calcHashCode();
     }
     
     public Chromosome(String name) {
@@ -92,6 +89,10 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
 
     @Override
     public int hashCode() {
+        return hashCode;
+    }
+
+    private int calcHashCode() {
         int hash = 7;
         hash = 79 * hash + (this.myName != null ? this.myName.hashCode() : 0);
         return hash;
@@ -106,9 +107,9 @@ public class Chromosome implements Serializable, Comparable<Chromosome>{
 
     @Override
     public int compareTo(Chromosome o) {
-        return ComparisonChain.start()
-                .compare(myChromosomeNumber,o.getChromosomeNumber())
-                .compare(myName,o.getName())
-                .result();
+        //int result=Integer.compare(myChromosomeNumber,o.getChromosomeNumber());
+        int result=Integer.valueOf(myChromosomeNumber).compareTo(Integer.valueOf(o.getChromosomeNumber()));
+        if(result!=0) return result;
+        return myName.compareTo(o.getName());
     }
 }

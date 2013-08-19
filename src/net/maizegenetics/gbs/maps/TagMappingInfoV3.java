@@ -6,7 +6,8 @@ package net.maizegenetics.gbs.maps;
  * <p>
  * TODO: Needs to be generalized for describing all mapping positions.
  * <p>
- * @author edbuckler
+ * The mappingSource can be an identifier. Byte.MIN_VALUE means the tag doesn't exist in the mapping result, other values means it exist either mapped or unmapped.
+ * @author edbuckler Fei Lu
  */
 public class TagMappingInfoV3 {
     /** Chromosome as an integer */
@@ -19,7 +20,7 @@ public class TagMappingInfoV3 {
     public int endPosition=Integer.MIN_VALUE;  //   // 4 bytes
     /**Number of diverging bp (edit distance) from reference, unknown = Byte.MIN_VALUE*/
     public byte divergence=Byte.MIN_VALUE;  
-    /**Code of mappingSource. 0: Bowtie2; 1: BWA; 2: BLAST; 3: PE; 4: Genetic Mapping*/
+    /**Code of mappingSource. 0: Bowtie2; 1: BWA; 2: BLAST; 3: PE one end; 4: PE the other end; 5: Genetic Mapping*/
     public byte mappingSource = Byte.MIN_VALUE;
     /**The rank of this mapping based on the scores from one aligner*/
     public byte mappingRank = Byte.MIN_VALUE;

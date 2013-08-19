@@ -1,7 +1,7 @@
 package net.maizegenetics.pal.site;
 
 /**
- * Defines a genomics positions and its known variants.  Includes attributes of chromosome, position, strand,
+ * Defines a genomic positions and its known variants.  Includes attributes of chromosome, position, strand,
  * centiMorgans, name (or SNP ID), whether this position is a nucleotide, or includes an indel.
  *
  * @author Ed Buckler
@@ -9,7 +9,7 @@ package net.maizegenetics.pal.site;
 public interface Position extends Comparable<Position> {
 
     /**Return the locus (generally a chromosome) of a site*/
-    Chromosome getLocus();
+    Chromosome getChromosome();
 
     /**Return the physical position of a site*/
     int getPosition();

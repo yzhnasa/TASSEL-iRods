@@ -25,6 +25,7 @@ import net.maizegenetics.gbs.util.SAMUtils;
 /**
  *
  * @author Fei Lu
+ * @deprecated 
  */
 public class PETagsOnPhysicalMap extends AbstractPETagsOnPhysicalMap {
     

@@ -3,7 +3,8 @@ package net.maizegenetics.pal.site;
 import com.google.common.collect.ComparisonChain;
 
 /**
- * Defines the central attributes of a position in the genome.
+ * Defines the central attributes of a position in the genome.  Use {@link CorePosition.Builder} in order to create a Position.
+ * CorePositions are immutable.
  */
 public final class CorePosition implements Position {
     /**Locus of the site (required)*/
@@ -23,6 +24,7 @@ public final class CorePosition implements Position {
     /**Define the nature of the polymorphism {"ACTAT","-"} or {"A","C","G"} or {"100","103","106"}
      */
     private final String[] myKnownVariants;
+    private final int hashCode;
 
     /**
      * A builder for creating immutable CorePosition instances.
@@ -47,6 +49,7 @@ public final class CorePosition implements Position {
         private boolean isNucleotide=true;
         private boolean isIndel=false;
         private String[] myKnownVariants=null;
+
 
         /**
          * Constructor for Builder, requires chromosome and position
@@ -82,12 +85,13 @@ public final class CorePosition implements Position {
         isNucleotide = builder.isNucleotide;
         isIndel = builder.isIndel;
         myKnownVariants = builder.myKnownVariants;
+        hashCode=hashCode();
     }
 
     @Override
     public String toString() {
         StringBuilder sb=new StringBuilder("Position");
-        sb.append("\tChr:").append(getLocus().getName());
+        sb.append("\tChr:").append(getChromosome().getName());
         sb.append("\tPos:").append(getPosition());
         sb.append("\tName:").append(getSNPID());
         return sb.toString();
@@ -95,7 +99,10 @@ public final class CorePosition implements Position {
 
     @Override
     public int hashCode() {
-        //TODO:  this hash code should be stored
+        return this.hashCode;    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
+    public int calcHashCode() {
         int hash = 7;
         hash = 37 * hash + this.myChromosome.hashCode();
         hash = 37 * hash + this.myPosition;
@@ -111,55 +118,51 @@ public final class CorePosition implements Position {
         if (!(obj instanceof Position)) {return false;}
         Position o=(Position)obj;
         int result= ComparisonChain.start()
-                .compare(myPosition,o.getPosition())  //position is most discriminating for speed
-                .compare(myChromosome,o.getLocus())
+                .compare(myPosition, o.getPosition())  //position is most discriminating for speed
+                .compare(myChromosome, o.getChromosome())
                 .compare(myCM, o.getCM())
                 .compare(myStrand,o.getStrand())
-                .compare(getSNPID(), o.getSNPID())
                 .result();
-        return (result==0);
+        if(result!=0) return false;
+        return getSNPID().equals(o.getSNPID()); //This is done last as the string comparison is expensive
     }
 
     @Override
     public int compareTo(Position o) {
-        return ComparisonChain.start()
-                .compare(myChromosome,o.getLocus())
+        int result=ComparisonChain.start()
+                .compare(myChromosome,o.getChromosome())
                 .compare(myPosition,o.getPosition())
                 .compare(myCM, o.getCM())
                 .compare(myStrand,o.getStrand())
-                .compare(getSNPID(), o.getSNPID())
                 .result();
+        if(result!=0) return result;
+        return getSNPID().compareTo(o.getSNPID()); //This is done last as the string comparison is expensive
     }
-
 
     @Override
-    public Chromosome getLocus() {
+    public Chromosome getChromosome() {
         return myChromosome;
     }
-
 
     @Override
     public int getPosition() {
         return myPosition;
     }
 
-
     @Override
     public byte getStrand() {
         return myStrand;
     }
-
 
     @Override
     public float getCM() {
         return myCM;
     }
 
-
     @Override
     public String getSNPID() {
         if (mySNPID == null) {
-            return "S" + getLocus().getName() + "_" + myPosition;
+            return (new StringBuilder("S").append(getChromosome().getName()).append("_").append(myPosition)).toString();
         } else {
             return mySNPID;
         }

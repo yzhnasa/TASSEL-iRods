@@ -8,7 +8,8 @@ import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.depth.AlleleDepth;
 import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.site.PositionList;
+import net.maizegenetics.pal.site.AnnotatedPositionList;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
@@ -17,19 +18,19 @@ import net.maizegenetics.util.ProgressListener;
  *
  * @author terry
  */
-public class CoreAlignment implements Alignment {
+public class CoreAlignment implements AlignmentNew {
 
     private final Genotype myGenotype;
     private final BitStorage myBitStorage;
-    private final PositionList myPositionList;
+    private final AnnotatedPositionList myAnnotatedPositionList;
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
     private final AlleleDepth myAlleleDepth;
 
-    private CoreAlignment(Genotype genotype, BitStorage bitStorage, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    public CoreAlignment(Genotype genotype, BitStorage bitStorage, AnnotatedPositionList annotatedPositionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         myGenotype = genotype;
         myBitStorage = bitStorage;
-        myPositionList = positionList;
+        myAnnotatedPositionList = annotatedPositionList;
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
@@ -46,8 +47,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public byte getBase(int taxon, Locus locus, int physicalPosition) {
-        return myGenotype.getBase(taxon, locus, physicalPosition);
+    public byte getBase(int taxon, Chromosome chromosome, int physicalPosition) {
+        return myGenotype.getBase(taxon, myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
     @Override
@@ -112,22 +113,22 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public byte getReferenceAllele(int site) {
-        return myPositionList.getReferenceAllele(site);
+        return myAnnotatedPositionList.getReferenceAllele(site);
     }
 
     @Override
     public byte[] getReference(int startSite, int endSite) {
-        return myPositionList.getReference(startSite, endSite);
+        return myAnnotatedPositionList.getReference(startSite, endSite);
     }
 
     @Override
     public byte[] getReference() {
-        return myPositionList.getReference();
+        return myAnnotatedPositionList.getReference();
     }
 
     @Override
     public boolean hasReference() {
-        return myPositionList.hasReference();
+        return myAnnotatedPositionList.hasReference();
     }
 
     @Override
@@ -142,27 +143,29 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public String[] getSNPIDs() {
-        return myPositionList.getSNPIDs();
+        return myAnnotatedPositionList.getSNPIDs();
     }
 
     @Override
     public String getSNPID(int site) {
-        return myPositionList.getSNPID(site);
+        return myAnnotatedPositionList.getSNPID(site);
     }
 
     @Override
     public int getSiteCount() {
-        return myPositionList.getSiteCount();
+        return myAnnotatedPositionList.getSiteCount();
     }
 
     @Override
-    public int getLocusSiteCount(Locus locus) {
-        return myPositionList.getLocusSiteCount(locus);
+    public int getChromosomeSiteCount(Chromosome chromosome) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        //  return myAnnotatedPositionList.getChromosomeSiteCount(chromosome);
     }
 
     @Override
-    public int[] getStartAndEndOfLocus(Locus locus) {
-        return myPositionList.getStartAndEndOfLocus(locus);
+    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        //   return myAnnotatedPositionList.getStartAndEndOfChromosome(chromosome);
     }
 
     @Override
@@ -176,63 +179,58 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getPositionInLocus(int site) {
-        return myPositionList.getPositionInLocus(site);
+    public int getPositionInChromosome(int site) {
+        return myAnnotatedPositionList.getPositionInChromosome(site);
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
-        return myPositionList.getSiteOfPhysicalPosition(physicalPosition, locus);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        //return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome);
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
-        return myPositionList.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        // return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
     }
 
     @Override
     public int[] getPhysicalPositions() {
-        return myPositionList.getPhysicalPositions();
+        return myAnnotatedPositionList.getPhysicalPositions();
     }
 
     @Override
-    public byte getPositionType(int site) {
-        return myPositionList.getPositionType(site);
+    public String getChromosomeName(int site) {
+        return myAnnotatedPositionList.getChromosomeName(site);
     }
 
     @Override
-    public byte[] getPositionTypes() {
-        return myPositionList.getPositionTypes();
+    public Chromosome getChromosome(int site) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        // return myAnnotatedPositionList.getChromosome(site);
     }
 
     @Override
-    public String getLocusName(int site) {
-        return myPositionList.getLocusName(site);
+    public Chromosome getChromosome(String name) {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        // return myAnnotatedPositionList.getChromosome(name);
     }
 
     @Override
-    public Locus getLocus(int site) {
-        return myPositionList.getLocus(site);
+    public Chromosome[] getChromosomes() {
+        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
+        //return myAnnotatedPositionList.getChromosomes();
     }
 
     @Override
-    public Locus getLocus(String name) {
-        return myPositionList.getLocus(name);
+    public int getNumChromosomes() {
+        return myAnnotatedPositionList.getNumChromosomes();
     }
 
     @Override
-    public Locus[] getLoci() {
-        return myPositionList.getLoci();
-    }
-
-    @Override
-    public int getNumLoci() {
-        return myPositionList.getNumLoci();
-    }
-
-    @Override
-    public int[] getLociOffsets() {
-        return myPositionList.getLociOffsets();
+    public int[] getChromosomesOffsets() {
+        return myAnnotatedPositionList.getChromosomesOffsets();
     }
 
     @Override
@@ -267,12 +265,12 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int getIndelSize(int site) {
-        return myPositionList.getIndelSize(site);
+        return myAnnotatedPositionList.getIndelSize(site);
     }
 
     @Override
     public boolean isIndel(int site) {
-        return myPositionList.isIndel(site);
+        return myAnnotatedPositionList.isIndel(site);
     }
 
     @Override
@@ -287,42 +285,49 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public byte getMajorAllele(int site) {
-        return myPositionList.getMajorAllele(site);
+        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
+        //   return myAnnotatedPositionList.getMajorAllele(site);
     }
 
     @Override
     public String getMajorAlleleAsString(int site) {
-        return myPositionList.getMajorAlleleAsString(site);
+        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
+        //   return myAnnotatedPositionList.getMajorAlleleAsString(site);
     }
 
     @Override
     public byte getMinorAllele(int site) {
-        return myPositionList.getMinorAllele(site);
+        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
+        //   return myAnnotatedPositionList.getMinorAllele(site);
     }
 
     @Override
     public String getMinorAlleleAsString(int site) {
-        return myPositionList.getMinorAlleleAsString(site);
+        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
+        //  return myAnnotatedPositionList.getMinorAlleleAsString(site);
     }
 
     @Override
     public byte[] getMinorAlleles(int site) {
-        return myPositionList.getMinorAlleles(site);
+        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
+        //  return myAnnotatedPositionList.getMinorAlleles(site);
     }
 
     @Override
     public byte[] getAlleles(int site) {
-        return myPositionList.getAlleles(site);
+        return myGenotype.getAlleles(site);
     }
 
     @Override
     public double getMinorAlleleFrequency(int site) {
-        return myPositionList.getMinorAlleleFrequency(site);
+        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
+        //   return myAnnotatedPositionList.getMinorAlleleFrequency(site);
     }
 
     @Override
     public double getMajorAlleleFrequency(int site) {
-        return myPositionList.getMajorAlleleFrequency(site);
+        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
+        // return myAnnotatedPositionList.getMajorAlleleFrequency(site);
     }
 
     @Override
@@ -349,22 +354,23 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public boolean isPositiveStrand(int site) {
-        return myPositionList.isPositiveStrand(site);
+        return myAnnotatedPositionList.isPositiveStrand(site);
     }
 
     @Override
-    public Alignment[] getAlignments() {
-        return myGenotype.getAlignments();
+    public AlignmentNew[] getAlignments() {
+        return new AlignmentNew[]{this};
     }
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        return myPositionList.getAllelesSortedByFrequency(site);
+        return myGenotype.getAllelesSortedByFrequency(site);
     }
 
     @Override
-    public Object[][] getDiploidssSortedByFrequency(int site) {
-        return myPositionList.getDiploidssSortedByFrequency(site);
+    public Object[][] getDiploidsSortedByFrequency(int site) {
+        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
+        // return myAnnotatedPositionList.getDiploidssSortedByFrequency(site);
     }
 
     @Override
@@ -459,22 +465,22 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public boolean isSBitFriendly() {
-        return myGenotype.isSBitFriendly();
+        return myBitStorage.isSBitFriendly();
     }
 
     @Override
     public boolean isTBitFriendly() {
-        return myGenotype.isTBitFriendly();
+        return myBitStorage.isTBitFriendly();
     }
 
     @Override
     public void optimizeForTaxa(ProgressListener listener) {
-        myGenotype.optimizeForTaxa(listener);
+        myBitStorage.optimizeForTaxa(listener);
     }
 
     @Override
     public void optimizeForSites(ProgressListener listener) {
-        optimizeForSites(listener);
+        myBitStorage.optimizeForSites(listener);
     }
 
     @Override

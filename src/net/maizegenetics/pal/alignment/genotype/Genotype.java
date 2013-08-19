@@ -3,11 +3,6 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.Locus;
-import net.maizegenetics.pal.alignment.Locus;
-import net.maizegenetics.util.ProgressListener;
-
 /**
  *
  * @author terry
@@ -37,19 +32,6 @@ public interface Genotype {
      * bits.
      */
     public byte[] getBaseArray(int taxon, int site);
-
-    /**
-     * Returns diploid values for given taxon, locus, and physical position. The
-     * locus and physical position should map to an unique site.
-     *
-     * @param taxon taxon
-     * @param locus locus
-     * @param physicalPosition physical position
-     *
-     * @return first four bits are the first allele value and the second four
-     * bits are the second allele value.
-     */
-    public byte getBase(int taxon, Locus locus, int physicalPosition);
 
     /**
      * Returns sequence of diploid allele values for given taxon in specified
@@ -121,7 +103,7 @@ public interface Genotype {
      * @return string representations of diploid values.
      */
     public String[] getBaseAsStringArray(int taxon, int site);
-    
+
     /**
      * Returns whether allele values at given taxon and site are heterozygous.
      * If two values returned by getBase() are different, this will return
@@ -142,7 +124,7 @@ public interface Genotype {
      * @return number of heterozygous taxa
      */
     public int getHeterozygousCount(int site);
-    
+
     /**
      * Returns whether all sites are polymorphic.
      *
@@ -158,21 +140,14 @@ public interface Genotype {
      * @return true if given site is polymorphic.
      */
     public boolean isPolymorphic(int site);
-    
-    /**
-     * Returns individual alignments within this alignment.
-     *
-     * @return list of alignments.
-     */
-    public Alignment[] getAlignments();
-    
+
     /**
      * Returns whether this alignment is phased.
      *
      * @return true if phased.
      */
     public boolean isPhased();
-    
+
     /**
      * Returns true if this Alignment retains rare alleles. If false, rare
      * alleles are recorded as unknown.
@@ -321,31 +296,51 @@ public interface Genotype {
     public int getTotalNotMissingForTaxon(int taxon);
 
     /**
-     * Return whether alignment will execute quickly for site optimized
-     * operations. SBitAlignment is obviously friendly. But so would
-     * FilterAlignment is only sites have been filtered for example.
+     * Return sorted list of alleles from highest frequency to lowest at given
+     * site in alignment. Resulting double dimension array holds alleles (bytes)
+     * in result[0]. And the counts are in result[1]. Counts haploid values
+     * twice and diploid values once. Higher ploids are not supported.
      *
-     * @return whether optimized for site operations.
-     */
-    public boolean isSBitFriendly();
-
-    /**
-     * Return whether alignment will execute quickly for taxa optimized
-     * operations. TBitAlignment is obviously friendly. But so would
-     * FilterAlignment is only taxa have been filtered for example.
+     * @param site site
      *
-     * @return whether optimized for taxa operations.
+     * @return sorted list of alleles and counts
      */
-    public boolean isTBitFriendly();
+    public int[][] getAllelesSortedByFrequency(int site);
 
     /**
-     * Optimizes this Alignment for Taxa based operations.
+     * Return sorted list of diploid vales from highest frequency to lowest at
+     * given site in alignment. Resulting double dimension array holds diploids
+     * (Strings) in result[0]. And the counts are in result[1] (Integers).
+     *
+     * @param site site
+     *
+     * @return sorted list of diploids and counts
      */
-    public void optimizeForTaxa(ProgressListener listener);
+    public Object[][] getDiploidsSortedByFrequency(int site);
+    
+    /**
+     * Returns all alleles at given site in order of frequency. Gap is included
+     * as state. Heterozygous count one for each allele value. Homozygous counts
+     * two for the allele value.
+     *
+     * @param site site
+     *
+     * @return all alleles
+     */
+    public byte[] getAlleles(int site);
 
     /**
-     * Optimizes this Alignment for Site based operations.
+     * Returns number of taxa (samples) in this genotype
+     *
+     * @return number of taxa
      */
-    public void optimizeForSites(ProgressListener listener);
+    public int getTaxaCount();
+
+    /**
+     * Returns total number of sites in this genotype.
+     *
+     * @return number of sites
+     */
+    public int getSiteCount();
 
 }

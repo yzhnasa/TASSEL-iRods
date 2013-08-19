@@ -514,16 +514,6 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     }
 
     @Override
-    public byte getPositionType(int site) {
-        return myBaseAlignment.getPositionType(site);
-    }
-
-    @Override
-    public byte[] getPositionTypes() {
-        return myBaseAlignment.getPositionTypes();
-    }
-
-    @Override
     public boolean retainsRareAlleles() {
         return myBaseAlignment.retainsRareAlleles();
     }

@@ -151,6 +151,21 @@ public class ParseBarcodeRead {
             // likelyReadEnd for common adapter is CCGCTCAGG, as the Poland et al.(2012) Y adapter was used for MspI
             likelyReadEnd = new String[]{"CCGG", "GTCGAC", "CCGCTCAGG"}; // look for MspI site, SalI site, or common adapter for MspI
             readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)ecor[i1]-msp[i1]")) {
+            theEnzyme = "EcoRI-MspI";   //  G^AATTC  C^CGG
+            initialCutSiteRemnant = new String[]{"AATTC"};
+            likelyReadEnd = new String[]{"CCGG", "GAATTC", "CCGAGATC"}; // look for MspI site, EcoRI site, or Poland et al. 2012 Y-adapter for MspI
+            readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)hindiii-msp[i1]|(?i)hind3-msp[i1]")) {
+            theEnzyme = "HindIII-MspI"; // A^AGCTT   C^CGG
+            initialCutSiteRemnant = new String[]{"AGCTT"};
+            likelyReadEnd = new String[]{"CCGG", "AAGCTT", "CCGAGATC"}; // look for MspI site, HindIII site, or Poland et al. 2012 Y-adapter for MspI
+            readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)sexa[i1]-sau3a[i1]")) {
+            theEnzyme = "SexAI-Sau3AI";  // A^CCWGGT   ^GATC (not blunt)
+            initialCutSiteRemnant = new String[]{"CCAGGT", "CCTGGT"};
+            likelyReadEnd = new String[]{"GATC", "ACCAGGT", "ACCTGGT", "GATCAGATC"}; // look for Sau3AI site, Sau3AI site, or Poland et al. 2012 Y-adapter for Sau3AI
+            readEndCutSiteRemnantLength = 4;
         } else if (enzyme.matches("(?i)apo[i1]")) {
             theEnzyme = "ApoI";
             initialCutSiteRemnant = new String[]{"AATTC", "AATTT"};  // corrected from {"AATTG","AATTC"} by Jeff Glaubitz on 2012/09/12
@@ -187,6 +202,11 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant=new String[]{"TGCAGG"};
             likelyReadEnd = new String[]{"CCTGCAGG","CCTGCAAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
             readEndCutSiteRemnantLength = 6;
+        } else if (enzyme.matches("(?i)hindiii|(?i)hind3")) {
+            theEnzyme = "HindIII"; // A^AGCTT
+            initialCutSiteRemnant=new String[]{"AGCTT"};
+            likelyReadEnd = new String[]{"AAGCTT","AAGCTAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
+            readEndCutSiteRemnantLength = 5;
         } else if (enzyme.matches("(?i)RBSTA")) {
             theEnzyme = "RBSTA";
             initialCutSiteRemnant = new String[]{"TA"};
@@ -204,6 +224,7 @@ public class ParseBarcodeRead {
                     +"  ApoI"     +"\n"
                     +"  BamHI"    +"\n"
                     +"  EcoT22I"  +"\n"
+                    +"  HindIII"  +"\n"
                     +"  HinP1I"   +"\n"
                     +"  HpaII"    +"\n"
                     +"  MseI"     +"\n"
@@ -218,7 +239,9 @@ public class ParseBarcodeRead {
                     +"Or the following for two-enzyme digests:\n"
                     +"  AsiSI-MspI"   +"\n"
                     +"  BssHII-MspI"  +"\n"
+                    +"  EcoRI-MspI"   +"\n"
                     +"  FseI-MspI"    +"\n"
+                    +"  HindIII-MspI" +"\n"
                     +"  PaeR7I-HhaI"  +"\n"
                     +"  PstI-ApeKI"   +"\n"
                     +"  PstI-EcoT22I" +"\n"
@@ -226,6 +249,7 @@ public class ParseBarcodeRead {
                     +"  PstI-TaqI"    +"\n"
                     +"  SalI-MspI"    +"\n"
                     +"  SbfI-MspI"    +"\n"
+                    +"  SexAI-Sau3AI" +"\n"
             );
             System.out.println("For two-enzyme digest, enzyme names should be separated by a dash, e.g. PstI-MspI ");
         }

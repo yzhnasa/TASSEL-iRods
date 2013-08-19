@@ -3,17 +3,13 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
+
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -719,6 +715,7 @@ public class AlignmentUtils {
         }
         return new BitSet[]{rMj, rMn};
     }
+
     
         /**
      * Method for getting TBits rapidly from major and minor allele arrays
@@ -748,6 +745,43 @@ public class AlignmentUtils {
             if(AlignmentUtils.isEqual(g, het)) {rMj.fastSet(i); rMn.fastSet(i);}
         }
         return new BitSet[]{rMj,rMn};
+    }
+
+    /**
+     * Method for getting Site Bits rapidly from major and minor alleles
+     *
+     * @param genotype
+     * @param mj
+     * @param mn
+     * @return
+     */
+    public static BitSet[] calcBitPresenceFromGenotype(byte[] genotype, byte mj, byte mn) {
+        int sites = genotype.length;
+        OpenBitSet rMj = new OpenBitSet(genotype.length);
+        OpenBitSet rMn = new OpenBitSet(genotype.length);
+        for (int i = 0; i < sites; i++) {
+            byte g = genotype[i];
+            if (mj == Alignment.UNKNOWN_ALLELE) {
+                continue;
+            }
+            if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
+                rMj.fastSet(i);
+                continue;
+            }
+            if (mn == Alignment.UNKNOWN_ALLELE) {
+                continue;
+            }
+            if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
+                rMn.fastSet(i);
+                continue;
+            }
+            byte het = AlignmentUtils.getUnphasedDiploidValue(mj, mn);
+            if (AlignmentUtils.isEqual(g, het)) {
+                rMj.fastSet(i);
+                rMn.fastSet(i);
+            }
+        }
+        return new BitSet[]{rMj, rMn};
     }
 
     /**
