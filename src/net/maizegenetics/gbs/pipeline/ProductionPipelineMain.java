@@ -278,9 +278,6 @@ public class ProductionPipelineMain {
      */
     private String loadApplicationConfiguration(String aFileIn){
         boolean loaded = false;
-
-        File f = new File(aFileIn);
-        String absPath = f.getAbsolutePath();
         Properties props = new Properties();
         try{
             props.load(new FileInputStream(aFileIn));
@@ -306,9 +303,11 @@ public class ProductionPipelineMain {
         emailHost =    props.getProperty(configurationElement);
 
         configurationElement =  "emailAddress";     // to whom the email notifications should be sent
-        String address =    props.getProperty(configurationElement);;
+        String address =    props.getProperty(configurationElement);
+        if(address.contains(emailAddressDelimiters)){
         Iterable<String> results = Splitter.on(emailAddressDelimiters).split(address);
         emailAddresses = Iterables.toArray(results, String.class);
+        }else{ emailAddresses = new String[] {address }; }
 
         configurationElement =  "runDirectory";     // directory where the .run files are expected to be
         runDirectory =    props.getProperty(configurationElement);
