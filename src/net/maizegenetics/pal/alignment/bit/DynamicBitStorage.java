@@ -16,19 +16,21 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Defines xxxx
+ * Provides rapid conversion routines and caching from byte encoding of nucleotides to bit encoding.  Only two alleles
+ * are supported for each scope (e.g. Major & minor, or Reference & Alternate).
+ * <p></p>
+ * The cache is designed to support multiple scopes, but currently scope must be passed in at construction.
+ * <p></p>
+ * It is not clear that site or taxa optimization is needed.  The code should be highly parallelizable as long as the gets are not
+ * for adjacent sites.
  *
  * @author Ed Buckler
  */
 public class DynamicBitStorage implements BitStorage {
-    private Genotype myGenotype; //[taxa][sites]  TODO convert this to external object.
-    //currently I am testing storing the alleles as homozgyous genotypes, there may be some performance benefits
-    //however this is not standard.
+    private Genotype myGenotype;
     private ALLELE_SCOPE_TYPE myPreferredScope=ALLELE_SCOPE_TYPE.Frequency;
-    private byte[] myPrefMajor; //[taxa][sites]  TODO convert this to external object.
-    private byte[] myPrefMinor; //[taxa][sites]  TODO convert this to external object.
-
-    private byte[] myHet; //[taxa][sites]  TODO convert this to external object.
+    private byte[] myPrefAllele0;  //usually 0 is major or reference
+    private byte[] myPrefAllele1;  //usually 1 is minor or alternate
     private final int myTaxaCount;
     private final int mySiteCount;
     public static final int SBoff=58;
@@ -48,8 +50,8 @@ public class DynamicBitStorage implements BitStorage {
         public BitSet[] load(Long key) {
             BitSet[] bs;
             if(getDirectionFromKey(key)==SB.TAXA) {
-                byte[] a1=myPrefMajor;
-                byte[] a2=myPrefMinor;
+                byte[] a1=myPrefAllele0;
+                byte[] a2=myPrefAllele1;
                 int taxon=getSiteOrTaxonFromKey(key);
                 bs=AlignmentUtils.calcBitPresenceFromGenotype(myGenotype.getBaseRow(taxon), a1, a2); //allele comp
                 return bs;
@@ -82,8 +84,8 @@ public class DynamicBitStorage implements BitStorage {
                 }
             }
             for (int i=0; i<length; i++) {
-                byte a1=myPrefMajor[site+i];
-                byte a2=myPrefMinor[site+i];
+                byte a1=myPrefAllele0[site+i];
+                byte a2=myPrefAllele1[site+i];
                 BitSet[] bs=AlignmentUtils.calcBitPresenceFromGenotype(myGenotypeTBlock[i], a1, a2);
                 result.put(getKey(SB.SITE,myPreferredScope,site+i),bs);
             }
@@ -183,14 +185,15 @@ public class DynamicBitStorage implements BitStorage {
     }
 
 
-    public DynamicBitStorage(Genotype myGenotype, byte[] myMajor, byte[] myMinor) {
+    public DynamicBitStorage(Genotype myGenotype, ALLELE_SCOPE_TYPE currentScope, byte[] myMajor, byte[] myMinor) {
         this.myGenotype=myGenotype;
+        this.myPreferredScope=currentScope;
         mySiteCount=myGenotype.getSiteCount();
         myTaxaCount=myGenotype.getTaxaCount();
-        this.myPrefMajor=Arrays.copyOf(myMajor,myMajor.length);
-        this.myPrefMinor=Arrays.copyOf(myMinor,myMinor.length);
+        this.myPrefAllele0=Arrays.copyOf(myMajor,myMajor.length);
+        this.myPrefAllele1=Arrays.copyOf(myMinor,myMinor.length);
         bitCache= CacheBuilder.newBuilder()
-                .maximumSize(5_000_000)
+                .maximumSize(3_000_000)
                 .build(bitLoader);
     }
 }

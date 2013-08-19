@@ -7,8 +7,11 @@ import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
 
 /**
+ * Interface provides genotypes in a binary fashion to be used in rapid computation.  See the package descriptions
+ * {@link net.maizegenetics.pal.alignment.bit} for more information on how bits encoding is used throughout TASSEL.
  *
- * @author terry
+ * @author Terry Casstevens
+ * @author Ed Buckler
  */
 public interface BitStorage {
 
@@ -16,8 +19,10 @@ public interface BitStorage {
      * Returns sequence of true/false values indicating whether taxon at each
      * site matches a specific allele (based on frequency). Allele number of
      * value 0 would be the major allele. Allele number of value 1 would be the
-     * minor allele. Allele number of value 2 would be the third most frequent
-     * allele value and so on.
+     * minor allele.
+     * <p></p>
+     * Tassel 4.0 Allele number of value 2 would be the third most frequent
+     * allele value and so on.  In TASSEL4.5, we may eliminate bit support for 3rd alleles, as bit tools ignores these.
      *
      * @param taxon taxon
      * @param alleleNumber allele number
