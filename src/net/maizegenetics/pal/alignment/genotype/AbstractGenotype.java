@@ -228,6 +228,22 @@ public abstract class AbstractGenotype implements Genotype {
 
     }
 
+    public byte[] getMajorAlleleForAllSites() {
+        byte[] result = new byte[mySiteCount];
+        for (int i = 0; i < mySiteCount; i++) {
+            result[i] = getMajorAllele(i);
+        }
+        return result;
+    }
+
+    public byte[] getMinorAlleleForAllSites() {
+        byte[] result = new byte[mySiteCount];
+        for (int i = 0; i < mySiteCount; i++) {
+            result[i] = getMinorAllele(i);
+        }
+        return result;
+    }
+
     @Override
     public int getMinorAlleleCount(int site) {
 
@@ -242,6 +258,33 @@ public abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
+    public byte getMinorAllele(int site) {
+        int[][] alleles = getAllelesSortedByFrequency(site);
+
+        if (alleles[0].length >= 2) {
+            return (byte) alleles[0][1];
+        } else {
+            return AlignmentNew.UNKNOWN_ALLELE;
+        }
+    }
+
+    @Override
+    public String getMinorAlleleAsString(int site) {
+        return getBaseAsString(site, getMinorAllele(site));
+    }
+
+    @Override
+    public byte[] getMinorAlleles(int site) {
+        int[][] alleles = getAllelesSortedByFrequency(site);
+        int resultSize = alleles[0].length - 1;
+        byte[] result = new byte[resultSize];
+        for (int i = 0; i < resultSize; i++) {
+            result[i] = (byte) alleles[0][i + 1];
+        }
+        return result;
+    }
+
+    @Override
     public int getMajorAlleleCount(int site) {
 
         int[][] alleles = getAllelesSortedByFrequency(site);
@@ -250,6 +293,58 @@ public abstract class AbstractGenotype implements Genotype {
             return alleles[1][0];
         } else {
             return 0;
+        }
+
+    }
+
+    @Override
+    public byte getMajorAllele(int site) {
+        int[][] alleles = getAllelesSortedByFrequency(site);
+
+        if (alleles[0].length >= 1) {
+            return (byte) alleles[0][0];
+        } else {
+            return AlignmentNew.UNKNOWN_ALLELE;
+        }
+    }
+
+    @Override
+    public String getMajorAlleleAsString(int site) {
+        return getBaseAsString(site, getMajorAllele(site));
+    }
+
+    @Override
+    public double getMajorAlleleFrequency(int site) {
+
+        int[][] alleles = getAllelesSortedByFrequency(site);
+
+        int numAlleles = alleles[0].length;
+        if (numAlleles >= 1) {
+            int totalNonMissing = 0;
+            for (int i = 0; i < numAlleles; i++) {
+                totalNonMissing = totalNonMissing + alleles[1][i];
+            }
+            return (double) alleles[1][0] / (double) totalNonMissing;
+        } else {
+            return 0.0;
+        }
+
+    }
+
+    @Override
+    public double getMinorAlleleFrequency(int site) {
+
+        int[][] alleles = getAllelesSortedByFrequency(site);
+
+        int numAlleles = alleles[0].length;
+        if (numAlleles >= 2) {
+            int totalNonMissing = 0;
+            for (int i = 0; i < numAlleles; i++) {
+                totalNonMissing = totalNonMissing + alleles[1][i];
+            }
+            return (double) alleles[1][1] / (double) totalNonMissing;
+        } else {
+            return 0.0;
         }
 
     }
@@ -560,4 +655,20 @@ public abstract class AbstractGenotype implements Genotype {
     public int getTaxaCount() {
         return myTaxaCount;
     }
+
+    /**
+     * Returns all bases of this genotype. First array dimension is sites and
+     * second is taxa.
+     *
+     * @return all bases
+     */
+    abstract byte[][] getBasesSiteTaxa();
+
+    /**
+     * Returns all bases of this genotype. First array dimension is taxa and
+     * second is sites.
+     *
+     * @return all bases
+     */
+    abstract byte[][] getBasesTaxaSite();
 }

@@ -3,8 +3,9 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
 
@@ -624,11 +625,11 @@ public interface AlignmentNew {
     public double getMajorAlleleFrequency(int site);
 
     /**
-     * Return id group of this alignment.
+     * Return taxa list of this alignment.
      *
-     * @return id group.
+     * @return taxa list.
      */
-    public IdGroup getIdGroup();
+    public TaxaList getTaxaList();
 
     /**
      * Return taxa name at given index.
@@ -913,4 +914,13 @@ public interface AlignmentNew {
      * @return sequence of true/false values.
      */
     public BitSet getAllelePresenceForAllTaxaByScope(AlignmentNew.ALLELE_SCOPE_TYPE scope, int site, int alleleNumber);
+
+    /**
+     * Returns BitStorage for this Genotype
+     *
+     * @param scopeType type
+     *
+     * @return BitStorage
+     */
+    public BitStorage getBitStorage(AlignmentNew.ALLELE_SCOPE_TYPE scopeType);
 }

@@ -317,7 +317,7 @@ public interface Genotype {
      * @return sorted list of diploids and counts
      */
     public Object[][] getDiploidsSortedByFrequency(int site);
-    
+
     /**
      * Returns all alleles at given site in order of frequency. Gap is included
      * as state. Heterozygous count one for each allele value. Homozygous counts
@@ -328,6 +328,97 @@ public interface Genotype {
      * @return all alleles
      */
     public byte[] getAlleles(int site);
+
+    /**
+     * Returns major allele for all sites.
+     *
+     * @return all major alleles
+     */
+    public byte[] getMajorAlleleForAllSites();
+
+    /**
+     * Returns minor allele for all sites.
+     *
+     * @return all minor alleles
+     */
+    public byte[] getMinorAlleleForAllSites();
+
+    /**
+     * Return most common allele at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
+     *
+     * @param site site
+     *
+     * @return most common allele
+     */
+    public byte getMajorAllele(int site);
+
+    /**
+     * Return most common allele at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
+     *
+     * @param site site
+     *
+     * @return most common allele as String
+     */
+    public String getMajorAlleleAsString(int site);
+
+    /**
+     * Return most common minor allele at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
+     *
+     * @param site site
+     *
+     * @return most common minor allele
+     */
+    public byte getMinorAllele(int site);
+
+    /**
+     * Return most common minor allele at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
+     *
+     * @param site site
+     *
+     * @return most common minor allele as String
+     */
+    public String getMinorAlleleAsString(int site);
+
+    /**
+     * Return all minor alleles at given site. Gap is included as state.
+     * Heterozygous count one for each allele value. Homozygous counts two for
+     * the allele value.
+     *
+     * @param site site
+     *
+     * @return all minor alleles
+     */
+    public byte[] getMinorAlleles(int site);
+
+    /**
+     * Return frequency for most common minor allele at given site. Gap is
+     * included as state. Heterozygous count one for each allele value.
+     * Homozygous counts two for the allele value.
+     *
+     * @param site site
+     *
+     * @return frequency
+     */
+    public double getMinorAlleleFrequency(int site);
+
+    /**
+     * Return frequency for major allele at given site. Gap is included as
+     * state. Heterozygous count one for each allele value. Homozygous counts
+     * two for the allele value.
+     *
+     * @param site site
+     *
+     * @return frequency
+     */
+    public double getMajorAlleleFrequency(int site);
 
     /**
      * Returns number of taxa (samples) in this genotype
@@ -342,5 +433,4 @@ public interface Genotype {
      * @return number of sites
      */
     public int getSiteCount();
-
 }

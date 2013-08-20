@@ -3,7 +3,7 @@ package net.maizegenetics.pal.alignment.bit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE;
+import net.maizegenetics.pal.alignment.AlignmentNew.ALLELE_SCOPE_TYPE;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.util.BitSet;
@@ -79,16 +79,16 @@ public class DynamicBitStorage implements BitStorage {
             HashMap<Long, BitSet[]> result = new HashMap<Long, BitSet[]>(64);
             int site = getSiteOrTaxonFromKey(key);
             int length = (mySiteCount - site < 64) ? mySiteCount - site : 64;
-            byte[][] myGenotypeTBlock = new byte[length][myTaxaCount];
+            byte[][] genotypeTBlock = new byte[length][myTaxaCount];
             for (int t = 0; t < myTaxaCount; t++) {
-                for (int s = 0; s < myGenotypeTBlock.length; s++) {
-                    myGenotypeTBlock[s][t] = myGenotype.getBase(t, site + s);
+                for (int s = 0; s < genotypeTBlock.length; s++) {
+                    genotypeTBlock[s][t] = myGenotype.getBase(t, site + s);
                 }
             }
             for (int i = 0; i < length; i++) {
                 byte a1 = myPrefAllele0[site + i];
                 byte a2 = myPrefAllele1[site + i];
-                BitSet[] bs = AlignmentUtils.calcBitPresenceFromGenotype(myGenotypeTBlock[i], a1, a2);
+                BitSet[] bs = AlignmentUtils.calcBitPresenceFromGenotype(genotypeTBlock[i], a1, a2);
                 result.put(getKey(SB.SITE, myPreferredScope, site + i), bs);
             }
             return result;
@@ -194,13 +194,13 @@ public class DynamicBitStorage implements BitStorage {
         System.out.println("optimizeForSites:" + bitCache.size());
     }
 
-    public DynamicBitStorage(Genotype genotype, ALLELE_SCOPE_TYPE currentScope, byte[] myMajor, byte[] myMinor) {
+    public DynamicBitStorage(Genotype genotype, ALLELE_SCOPE_TYPE currentScope, byte[] prefAllele0, byte[] prefAllele1) {
         myGenotype = genotype;
         myPreferredScope = currentScope;
         mySiteCount = myGenotype.getSiteCount();
         myTaxaCount = myGenotype.getTaxaCount();
-        this.myPrefAllele0 = Arrays.copyOf(myMajor, myMajor.length);
-        this.myPrefAllele1 = Arrays.copyOf(myMinor, myMinor.length);
+        myPrefAllele0 = Arrays.copyOf(prefAllele0, prefAllele0.length);
+        myPrefAllele1 = Arrays.copyOf(prefAllele1, prefAllele1.length);
         bitCache = CacheBuilder.newBuilder()
                 .maximumSize(3_000_000)
                 .build(bitLoader);

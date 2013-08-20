@@ -18,8 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import net.maizegenetics.pal.alignment.bit.BitStorage;
-import net.maizegenetics.pal.alignment.bit.DynamicBitStorage;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.ids.IdGroup;
@@ -540,17 +538,18 @@ public class ImportUtils {
 
     public static AlignmentNew readANewFromHapmap(final String filename, ProgressListener listener) {
         TaxaList taxaList;
-        AnnotatedPositionArrayList.Builder b=new AnnotatedPositionArrayList.Builder();
-        ArrayList<byte[]> genBySite=new ArrayList<>();
-        Map<String,Chromosome> chromosomeLookup=new HashMap<>();
+        AnnotatedPositionArrayList.Builder b = new AnnotatedPositionArrayList.Builder();
+        ArrayList<byte[]> genBySite = new ArrayList<>();
+        Map<String, Chromosome> chromosomeLookup = new HashMap<>();
 
 
         int minPosition = Integer.MAX_VALUE;
-        byte[] convert=new byte[128];
+        byte[] convert = new byte[128];
         for (int i = 0; i < convert.length; i++) {
-            try{convert[i]=NucleotideAlignmentConstants.getNucleotideDiploidByte((char)i);}
-            catch (IllegalArgumentException e) {
-                convert[i]=Alignment.UNKNOWN_DIPLOID_ALLELE;
+            try {
+                convert[i] = NucleotideAlignmentConstants.getNucleotideDiploidByte((char) i);
+            } catch (IllegalArgumentException e) {
+                convert[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
             }
         }
 
@@ -564,37 +563,40 @@ public class ImportUtils {
             String[] header = WHITESPACE_PATTERN.split(fileIn.readLine());
             int lineInFile = 1;
             int numTaxa = header.length - NUM_HAPMAP_NON_TAXA_HEADERS;
-            TaxaListBuilder tlb=new TaxaListBuilder();
+            TaxaListBuilder tlb = new TaxaListBuilder();
             for (int i = 0; i < numTaxa; i++) {
-                AnnotatedTaxon at= new AnnotatedTaxon.Builder(header[i+NUM_HAPMAP_NON_TAXA_HEADERS])
+                AnnotatedTaxon at = new AnnotatedTaxon.Builder(header[i + NUM_HAPMAP_NON_TAXA_HEADERS])
                         .build();
                 tlb.add(at);
             }
-            taxaList=tlb.build();
+            taxaList = tlb.build();
             String input;
-            long time=System.nanoTime();
-            while((input=fileIn.readLine())!=null) {
+            long time = System.nanoTime();
+            while ((input = fileIn.readLine()) != null) {
                 lineInFile++;
-                String[] tokens = WHITESPACE_PATTERN.split(input.substring(0,100));
-                int sumLength=NUM_HAPMAP_NON_TAXA_HEADERS;
-                for (int i = 0; i <NUM_HAPMAP_NON_TAXA_HEADERS ; i++) {
-                    sumLength+=tokens[i].length();
+                String[] tokens = WHITESPACE_PATTERN.split(input.substring(0, 100));
+                int sumLength = NUM_HAPMAP_NON_TAXA_HEADERS;
+                for (int i = 0; i < NUM_HAPMAP_NON_TAXA_HEADERS; i++) {
+                    sumLength += tokens[i].length();
                 }
-                Chromosome currChr=chromosomeLookup.get(tokens[HAPMAP_CHROMOSOME_COLUMN_INDEX]);
-                if(currChr==null) {
-                    currChr=new Chromosome(tokens[HAPMAP_CHROMOSOME_COLUMN_INDEX]);
-                    chromosomeLookup.put(tokens[HAPMAP_CHROMOSOME_COLUMN_INDEX],currChr);
+                Chromosome currChr = chromosomeLookup.get(tokens[HAPMAP_CHROMOSOME_COLUMN_INDEX]);
+                if (currChr == null) {
+                    currChr = new Chromosome(tokens[HAPMAP_CHROMOSOME_COLUMN_INDEX]);
+                    chromosomeLookup.put(tokens[HAPMAP_CHROMOSOME_COLUMN_INDEX], currChr);
                 }
-                CorePosition cp=new CorePosition.Builder(currChr,Integer.parseInt(tokens[HAPMAP_POSITION_COLUMN_INDEX]))
+                CorePosition cp = new CorePosition.Builder(currChr, Integer.parseInt(tokens[HAPMAP_POSITION_COLUMN_INDEX]))
                         .snpName(tokens[HAPMAP_SNPID_COLUMN_INDEX])
-//TODO                    strand, variants,
+                        //TODO                    strand, variants,
                         .build();
-                CoreAnnotatedPosition apb=new CoreAnnotatedPosition.Builder(cp).build();
+                CoreAnnotatedPosition apb = new CoreAnnotatedPosition.Builder(cp).build();
                 b.add(apb);
-                byte[] g=new byte[numTaxa];
-                if(lineInFile%2==0) { genBySite.add(g); continue; }
-                for (int i = 0; i <g.length; i++) {
-                    g[i]=convert[input.charAt((i*2)+sumLength)];
+                byte[] g = new byte[numTaxa];
+                if (lineInFile % 2 == 0) {
+                    genBySite.add(g);
+                    continue;
+                }
+                for (int i = 0; i < g.length; i++) {
+                    g[i] = convert[input.charAt((i * 2) + sumLength)];
                 }
                 genBySite.add(g);
 
@@ -608,27 +610,27 @@ public class ImportUtils {
 //                    listener.progress((int) (((double) (site + 1) / (double) numSites) * 100.0), null);
 //                }
             }
-            long totalTime=System.nanoTime()-time;
-            double timePerObj=(double)totalTime/(double)(numTaxa*lineInFile);
-            System.out.printf("ImportUtil timing %gs with site rate of %gns/bp %n", totalTime/1e9, timePerObj);
-            time=System.nanoTime();
-            AnnotatedPositionList apal=b.build();
-            totalTime=System.nanoTime()-time;
-            timePerObj=(double)totalTime/(double)(numTaxa*lineInFile);
-            System.out.printf("ImportUtil Sorting timing %gs with site rate of %gns/bp %n", totalTime/1e9, timePerObj);
-            time=System.nanoTime();
-            GenotypeBuilder gb=GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.getTaxaCount(),apal.getSiteCount());
-            for (int t=0; t<taxaList.getTaxaCount(); t++) {
-                for (int s=0; s<apal.getSiteCount(); s++) {
-                    gb.setBase(t,s,genBySite.get(s)[t]);
+            long totalTime = System.nanoTime() - time;
+            double timePerObj = (double) totalTime / (double) (numTaxa * lineInFile);
+            System.out.printf("ImportUtil timing %gs with site rate of %gns/bp %n", totalTime / 1e9, timePerObj);
+            time = System.nanoTime();
+            AnnotatedPositionList apal = b.build();
+            totalTime = System.nanoTime() - time;
+            timePerObj = (double) totalTime / (double) (numTaxa * lineInFile);
+            System.out.printf("ImportUtil Sorting timing %gs with site rate of %gns/bp %n", totalTime / 1e9, timePerObj);
+            time = System.nanoTime();
+            GenotypeBuilder gb = GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.getTaxaCount(), apal.getSiteCount());
+            for (int t = 0; t < taxaList.getTaxaCount(); t++) {
+                for (int s = 0; s < apal.getSiteCount(); s++) {
+                    gb.setBase(t, s, genBySite.get(s)[t]);
                 }
             }
-            Genotype g=gb.build();
-            totalTime=System.nanoTime()-time;
-            timePerObj=(double)totalTime/(double)(numTaxa*lineInFile);
-            System.out.printf("ImportUtil Genotype build timing %gs with site rate of %gns/bp %n", totalTime/1e9, timePerObj);
+            Genotype g = gb.build();
+            totalTime = System.nanoTime() - time;
+            timePerObj = (double) totalTime / (double) (numTaxa * lineInFile);
+            System.out.printf("ImportUtil Genotype build timing %gs with site rate of %gns/bp %n", totalTime / 1e9, timePerObj);
 //            BitStorage bst2=new DynamicBitStorage(g, Alignment.ALLELE_SCOPE_TYPE.Frequency, myMajor, myMinor);
-            AlignmentNew result=new NucleotideAlignment(g, null, apal, taxaList, null, null);
+            AlignmentNew result = new NucleotideAlignment(g, apal, taxaList, null, null);
 
 //            if (count != 0) {
 //                pool.execute(ProcessLineOfHapmap.getInstance(alleles, theData, TasselPrefs.getAlignmentRetainRareAlleles(), tokens, count, currentSite, numTaxa, lineInFile, isSBit));
@@ -659,7 +661,6 @@ public class ImportUtils {
         }
 
     }
-
 
     public static Alignment readFasta(String filename, boolean isSBit) throws FileNotFoundException, IOException {
 
@@ -753,5 +754,154 @@ public class ImportUtils {
         }
         myLogger.info("readAlignmentFromSerialGZ: Time: " + (System.currentTimeMillis() - time) + "  Sites: " + alignment.getSiteCount() + "  Taxa: " + alignment.getSequenceCount());
         return alignment;
+    }
+
+    public static Alignment readFromPLink(final String pedFilename, final String mapFilename, ProgressListener listener) {
+        return readFromPLink(pedFilename, mapFilename, true, listener);
+    }
+
+    public static Alignment readFromPLink(final String pedFilename, final String mapFilename, boolean isSBit, ProgressListener listener) {
+
+        int minPosition = Integer.MAX_VALUE;
+        String currLocus = null;
+        List<Locus> loci = new ArrayList<Locus>();
+        List<Integer> lociOffsets = new ArrayList<Integer>();
+
+        long currentTime = System.currentTimeMillis();
+        int numSites = Utils.getNumberLines(pedFilename) - 1;
+        myLogger.info("readFromHapmap: Number of Sites: " + numSites);
+
+        long prevTime = currentTime;
+        currentTime = System.currentTimeMillis();
+        myLogger.info("readFromHapmap: Time to count lines: " + ((currentTime - prevTime) / 1000));
+
+
+        BufferedReader fileIn = null;
+        try {
+            int numThreads = Runtime.getRuntime().availableProcessors();
+            ExecutorService pool = Executors.newFixedThreadPool(numThreads);
+
+            fileIn = Utils.getBufferedReader(pedFilename, 1000000);
+            String[] header = WHITESPACE_PATTERN.split(fileIn.readLine());
+            int lineInFile = 1;
+            int numTaxa = header.length - NUM_HAPMAP_NON_TAXA_HEADERS;
+            String[] snpIDs = new String[numSites];
+            int prevPosition = -1;
+
+            OpenBitSet[][] theData;
+            byte[][] alleles = new byte[numSites][TasselPrefs.getAlignmentMaxAllelesToRetain()];
+            int numDataRows = TasselPrefs.getAlignmentMaxAllelesToRetain();
+            if (TasselPrefs.getAlignmentRetainRareAlleles()) {
+                numDataRows++;
+            }
+            int numSitesToProcess = 1;
+            if (isSBit) {
+                theData = new OpenBitSet[numDataRows][numSites];
+                numSitesToProcess = 1;
+            } else {
+                theData = new OpenBitSet[numDataRows][numTaxa];
+                for (int al = 0; al < numDataRows; al++) {
+                    for (int t = 0; t < numTaxa; t++) {
+                        theData[al][t] = new OpenBitSet(numSites);
+                    }
+                }
+                numSitesToProcess = 64;
+            }
+
+            int[] physicalPositions = new int[numSites];
+            int count = 0;
+            String[][] tokens = new String[numSitesToProcess][];
+            int currentSite = 0;
+            for (int site = 0; site < numSites; site++) {
+
+                lineInFile++;
+
+                String input = fileIn.readLine();
+                tokens[count] = WHITESPACE_PATTERN.split(input);
+
+                snpIDs[site] = new String(tokens[count][HAPMAP_SNPID_COLUMN_INDEX]);
+                int position = Integer.parseInt(tokens[count][HAPMAP_POSITION_COLUMN_INDEX]);
+                String temp = new String(tokens[count][HAPMAP_CHROMOSOME_COLUMN_INDEX]);
+                if (currLocus == null) {
+                    lociOffsets.add(site);
+                    currLocus = temp;
+                    minPosition = position;
+                    prevPosition = -1;
+                } else if (!temp.equals(currLocus)) {
+                    loci.add(new Locus(currLocus, currLocus, minPosition, prevPosition, null, null));
+                    lociOffsets.add(site);
+                    currLocus = temp;
+                    minPosition = position;
+                    prevPosition = -1;
+                }
+
+                if (position < prevPosition) {
+                    throw new IllegalStateException("ImportUtils: readFromHapmap: Sites are not properly sorted for chromosome: " + currLocus + " at " + position + " and " + prevPosition);
+                }
+
+                count++;
+
+                if (count == numSitesToProcess) {
+                    pool.execute(ProcessLineOfHapmap.getInstance(alleles, theData, TasselPrefs.getAlignmentRetainRareAlleles(), tokens, count, currentSite, numTaxa, lineInFile, isSBit));
+                    count = 0;
+                    currentSite += numSitesToProcess;
+                    tokens = new String[numSitesToProcess][];
+                }
+
+                physicalPositions[site] = position;
+                prevPosition = position;
+
+                if (listener != null) {
+                    listener.progress((int) (((double) (site + 1) / (double) numSites) * 100.0), null);
+                }
+            }
+
+            if (count != 0) {
+                pool.execute(ProcessLineOfHapmap.getInstance(alleles, theData, TasselPrefs.getAlignmentRetainRareAlleles(), tokens, count, currentSite, numTaxa, lineInFile, isSBit));
+            }
+
+
+            pool.shutdown();
+            if (!pool.awaitTermination(6000, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("ImportUtils: readFromHapmap: processing threads timed out.");
+            }
+
+            if (currLocus != null) {
+                loci.add(new Locus(currLocus, currLocus, minPosition, prevPosition, null, null));
+            }
+
+            prevTime = currentTime;
+            currentTime = System.currentTimeMillis();
+            myLogger.info("readFromHapmap: Time to read file: " + ((currentTime - prevTime) / 1000));
+
+            String[] taxaNames = new String[numTaxa];
+            System.arraycopy(header, NUM_HAPMAP_NON_TAXA_HEADERS, taxaNames, 0, numTaxa);
+            IdGroup idGroup = new SimpleIdGroup(taxaNames);
+
+            Locus[] lociFinal = new Locus[loci.size()];
+            loci.toArray(lociFinal);
+            int[] offsetsFinal = new int[lociOffsets.size()];
+            for (int i = 0; i < lociOffsets.size(); i++) {
+                offsetsFinal[i] = ((Integer) lociOffsets.get(i)).intValue();
+            }
+
+            Alignment result = BitAlignment.getNucleotideInstance(idGroup, alleles, theData, null, null, physicalPositions, TasselPrefs.getAlignmentMaxAllelesToRetain(), lociFinal, offsetsFinal, snpIDs, TasselPrefs.getAlignmentRetainRareAlleles(), isSBit);
+
+            prevTime = currentTime;
+            currentTime = System.currentTimeMillis();
+            myLogger.info("readFromHapmap: Time to create Alignment: " + ((currentTime - prevTime) / 1000));
+
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("ImportUtils: readFromHapmap: Problem creating Alignment: " + pedFilename + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {
+                fileIn.close();
+            } catch (Exception ex) {
+                // do nothing
+            }
+        }
+
     }
 }

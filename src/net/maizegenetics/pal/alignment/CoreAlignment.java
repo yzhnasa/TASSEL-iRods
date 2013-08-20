@@ -6,13 +6,14 @@ package net.maizegenetics.pal.alignment;
 import net.maizegenetics.pal.alignment.score.SiteScore;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.bit.BitStorage;
+import net.maizegenetics.pal.alignment.bit.DynamicBitStorage;
 import net.maizegenetics.pal.alignment.depth.AlleleDepth;
-import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.site.AnnotatedPositionList;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -20,16 +21,16 @@ import net.maizegenetics.util.ProgressListener;
  */
 public class CoreAlignment implements AlignmentNew {
 
+    private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
     private final Genotype myGenotype;
-    private final BitStorage myBitStorage;
+    private BitStorage myFreqBitStorage;
     private final AnnotatedPositionList myAnnotatedPositionList;
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
     private final AlleleDepth myAlleleDepth;
 
-    public CoreAlignment(Genotype genotype, BitStorage bitStorage, AnnotatedPositionList annotatedPositionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    public CoreAlignment(Genotype genotype, AnnotatedPositionList annotatedPositionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         myGenotype = genotype;
-        myBitStorage = bitStorage;
         myAnnotatedPositionList = annotatedPositionList;
         myTaxaList = taxaList;
         mySiteScore = siteScore;
@@ -63,32 +64,32 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        return myBitStorage.getAllelePresenceForAllSites(taxon, alleleNumber);
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        return myBitStorage.getAllelePresenceForAllTaxa(site, alleleNumber);
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        return myBitStorage.getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
     }
 
     @Override
     public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        return myBitStorage.getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
     }
 
     @Override
     public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        return myBitStorage.getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
     }
 
     @Override
     public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        return myBitStorage.getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -285,32 +286,27 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public byte getMajorAllele(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        //   return myAnnotatedPositionList.getMajorAllele(site);
+        return myGenotype.getMajorAllele(site);
     }
 
     @Override
     public String getMajorAlleleAsString(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        //   return myAnnotatedPositionList.getMajorAlleleAsString(site);
+        return myGenotype.getMajorAlleleAsString(site);
     }
 
     @Override
     public byte getMinorAllele(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        //   return myAnnotatedPositionList.getMinorAllele(site);
+        return myGenotype.getMinorAllele(site);
     }
 
     @Override
     public String getMinorAlleleAsString(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        //  return myAnnotatedPositionList.getMinorAlleleAsString(site);
+        return myGenotype.getMinorAlleleAsString(site);
     }
 
     @Override
     public byte[] getMinorAlleles(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        //  return myAnnotatedPositionList.getMinorAlleles(site);
+        return myGenotype.getMinorAlleles(site);
     }
 
     @Override
@@ -320,21 +316,17 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public double getMinorAlleleFrequency(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        //   return myAnnotatedPositionList.getMinorAlleleFrequency(site);
+        return myGenotype.getMinorAlleleFrequency(site);
     }
 
     @Override
     public double getMajorAlleleFrequency(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        // return myAnnotatedPositionList.getMajorAlleleFrequency(site);
+        return myGenotype.getMajorAlleleFrequency(site);
     }
 
     @Override
-    public IdGroup getIdGroup() {
-        // This Method signature needs to be changed.
-        // return myTaxaList;
-        return null;
+    public TaxaList getTaxaList() {
+        return myTaxaList;
     }
 
     @Override
@@ -465,22 +457,22 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public boolean isSBitFriendly() {
-        return myBitStorage.isSBitFriendly();
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).isSBitFriendly();
     }
 
     @Override
     public boolean isTBitFriendly() {
-        return myBitStorage.isTBitFriendly();
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).isTBitFriendly();
     }
 
     @Override
     public void optimizeForTaxa(ProgressListener listener) {
-        myBitStorage.optimizeForTaxa(listener);
+        getBitStorage(ALLELE_SCOPE_TYPE.Frequency).optimizeForTaxa(listener);
     }
 
     @Override
     public void optimizeForSites(ProgressListener listener) {
-        myBitStorage.optimizeForSites(listener);
+        getBitStorage(ALLELE_SCOPE_TYPE.Frequency).optimizeForSites(listener);
     }
 
     @Override
@@ -496,5 +488,19 @@ public class CoreAlignment implements AlignmentNew {
     @Override
     public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
+        switch (scopeType) {
+            case Frequency:
+                if (myFreqBitStorage == null) {
+                    myFreqBitStorage = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
+                }
+                return myFreqBitStorage;
+            default:
+                myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
+                return null;
+        }
     }
 }
