@@ -3,7 +3,6 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.depth.AlleleDepth;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.score.SiteScore;
@@ -16,8 +15,8 @@ import net.maizegenetics.pal.taxa.TaxaList;
  */
 public class NucleotideAlignment extends CoreAlignment {
 
-    public NucleotideAlignment(Genotype genotype, BitStorage bitStorage, AnnotatedPositionList annotatedPositionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
-        super(genotype, bitStorage, annotatedPositionList, taxaList, siteScore, alleleDepth);
+    public NucleotideAlignment(Genotype genotype, AnnotatedPositionList annotatedPositionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+        super(genotype, annotatedPositionList, taxaList, siteScore, alleleDepth);
     }
 
     @Override
