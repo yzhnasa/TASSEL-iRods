@@ -27,13 +27,13 @@ public class SuperByteMatrix {
         if (numRemaining != 0) {
             myData = new byte[numSingleDimArrays + 1][];
             for (int i = 0; i < numSingleDimArrays; i++) {
-                myData[i] = new byte[Integer.MAX_VALUE];
+                myData[i] = new byte[numElementsPerSingleDimArray];
             }
             myData[numSingleDimArrays] = new byte[numRemaining];
         } else {
             myData = new byte[numSingleDimArrays][];
             for (int i = 0; i < numSingleDimArrays; i++) {
-                myData[i] = new byte[Integer.MAX_VALUE];
+                myData[i] = new byte[numElementsPerSingleDimArray];
             }
         }
 
