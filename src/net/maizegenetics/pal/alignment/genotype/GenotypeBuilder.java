@@ -29,6 +29,10 @@ public class GenotypeBuilder {
         myGenotype[taxon][site] = value;
     }
 
+    public void setBaseRangeForTaxon(int taxon, int startSite, byte[] value) {
+        System.arraycopy(value,0,myGenotype[taxon],startSite,value.length);
+    }
+
     public Genotype build() {
         return new ByteGenotype(myGenotype, myIsPhased, myAlleleEncodings);
     }
