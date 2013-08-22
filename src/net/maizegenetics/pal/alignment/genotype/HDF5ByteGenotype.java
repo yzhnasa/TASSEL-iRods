@@ -28,12 +28,17 @@ public class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    byte[][] getBasesSiteTaxa() {
+    public byte[] getGenotypeForAllSites(int taxon) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    byte[][] getBasesTaxaSite() {
+    public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public byte[] getGenotypeForAllTaxa(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

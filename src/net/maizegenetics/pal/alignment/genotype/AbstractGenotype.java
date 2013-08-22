@@ -655,20 +655,4 @@ public abstract class AbstractGenotype implements Genotype {
     public int getTaxaCount() {
         return myTaxaCount;
     }
-
-    /**
-     * Returns all bases of this genotype. First array dimension is sites and
-     * second is taxa.
-     *
-     * @return all bases
-     */
-    abstract byte[][] getBasesSiteTaxa();
-
-    /**
-     * Returns all bases of this genotype. First array dimension is taxa and
-     * second is sites.
-     *
-     * @return all bases
-     */
-    abstract byte[][] getBasesTaxaSite();
 }
