@@ -9,7 +9,7 @@ import java.util.*;
 
 /**
  * In memory immutable instance of {@link AnnotatedPositionList}.  Use the {@link AnnotatedPositionArrayList.Builder}
- * to create the list.
+ * to create the list.  This list is sorted by position.
  *
  * @author Ed Buckler
  */
@@ -368,7 +368,9 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
      *       b.add(ap);
      *       }
      *   instance=b.build();}
-     *
+     * <p></p>
+     * If being built separately from the genotypes, then use validate ordering to make sure sites are added in the
+     * indended order.  This list WILL be sorted.
      * <p>Builder instances can be reused - it is safe to call {@link #build}
      * multiple times to build multiple lists in series. Each new list
      * contains the one created before it.
@@ -415,14 +417,29 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
             return this;
         }
 
+        /*
+        Returns whether List is already ordered.  Important to check this if genotype and sites are separately built, as the
+         AnnotatedPositionArrayList must be sorted, and will be with build.
+         */
+        public boolean validateOrdering() {
+            boolean result=true;
+            AnnotatedPosition startAP=contents.get(0);
+            for (AnnotatedPosition ap:contents) {
+              if(ap.compareTo(startAP)<0) return false;
+            }
+            return result;
+        }
+
         /**
          * Returns a newly-created {@code ImmutableList} based on the contents of
          * the {@code Builder}.
          */
         public AnnotatedPositionList build() {
-            System.out.println("Beginning Sort of Position List");
-            Collections.sort(contents);
-            System.out.println("Finished Sort of Position List");
+            if(!validateOrdering()) {
+                System.out.println("Beginning Sort of Position List");
+                Collections.sort(contents);
+                System.out.println("Finished Sort of Position List");
+            }
             return new AnnotatedPositionArrayList(contents);
         }
     }
