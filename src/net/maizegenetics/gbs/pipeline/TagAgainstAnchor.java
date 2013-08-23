@@ -134,7 +134,7 @@ public class TagAgainstAnchor {
         int tagNum = tbt.getTagCount();
         if (tagNum % tagNumInChunk == 0) chunkNum = tagNum / tagNumInChunk;
         else chunkNum = tagNum / tagNumInChunk + 1;
-        System.out.println("TBT has " + chunkNum + " chunks, " + tagNumInChunk + " tags each");
+        System.out.println("TBT has " + chunkNum + " chunks, " + tagNumInChunk + " tags each\n");
         try {
             BufferedWriter bw = new BufferedWriter (new FileWriter (outfileS), 65536);
             bw.write("TestTag	TestTagNum	BlastChr	BlastPos	refDiv	LDChr	LDSite	LDPos	BinomP	SigTests	TagTaxaCnt	ChrSig	LRatioB:2	LRatioB:M	SiteOnBestChrThanNextChr	MinSigPos	MaxSigPos");
@@ -188,6 +188,7 @@ public class TagAgainstAnchor {
                         System.out.println(e.toString());
                     }
                 }
+                System.out.println("Each LD compirison took " + (double)this.getTimeSpanNano(lastTimePoint)/actualChunkSize/anchor.getSiteCount() + " nano seconds");
                 System.out.println("Multiple threading mapping took " + this.getTimeSpanSecond(lastTimePoint) + " seconds");
                 for (int j = 0; j < jobs.length; j++) {
                     String[] result = jobs[i].getResult();
@@ -449,7 +450,7 @@ public class TagAgainstAnchor {
     }
     
     private double getTimeSpanSecond (long lastTimePoint) {
-        return this.getTimeSpanNano(lastTimePoint)/1000000000;
+        return (double)this.getTimeSpanNano(lastTimePoint)/1000000000;
     }
     
     private long getTimeSpanNano (long lastTimePoint) {

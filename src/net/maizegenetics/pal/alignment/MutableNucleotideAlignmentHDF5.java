@@ -563,7 +563,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     @Override
     public int[] getStartAndEndOfLocus(Locus locus) {
         for (Locus mL : myLocusList) {
-            if(mL.getName().equals(locus.getName())) return new int[]{mL.getStart(),mL.getEnd()};
+            if(mL.getName().equals(locus.getName())) return new int[]{mL.getStart(),mL.getEnd()+1};
         }
         return null;
     }
