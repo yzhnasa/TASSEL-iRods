@@ -101,6 +101,66 @@ public class TagsByTaxaByteHDF5TagGroups extends AbstractTagsByTaxa {
         }
     }
 
+    public void writeDistFile(String newHDF5file, int[] tagIndex) {
+        int newTagCount = tagIndex.length;
+        long[][] newTags = new long[tagLengthInLong][newTagCount];
+        byte[] newTagLength = new byte[newTagCount];
+        for (int i = 0; i < newTagCount; i++) {
+            long[] ct = this.getTag(tagIndex[i]);
+            for (int j = 0; j < tagLengthInLong; j++) {
+                newTags[j][i] = ct[j];
+            }
+            newTagLength[i] = (byte) this.getTagLength(tagIndex[i]);
+        }
+        IHDF5WriterConfigurator config = HDF5Factory.configure(new File(newHDF5file));
+        System.out.println("Creating HDF5 file: " + newHDF5file);
+        config.overwrite();
+        config.dontUseExtendableDataTypes();
+        config.useUTF8CharacterEncoding();
+        IHDF5Writer nH5 = config.writer();
+        nH5.setIntAttribute("/", "tagCount", newTagCount);
+        nH5.setIntAttribute("/", "chunkSize", chunkSize);
+        nH5.setIntAttribute("/", "tagLengthInLong", tagLengthInLong);
+        nH5.setIntAttribute("/", "taxaNum", taxaNum);
+        //create tag matrix
+        nH5.createLongMatrix("tags", this.getTagSizeInLong(), newTagCount, this.getTagSizeInLong(), newTagCount);
+        nH5.writeLongMatrix("tags", newTags);
+        nH5.createByteArray("tagLength", newTagCount);
+        nH5.writeByteArray("tagLength", newTagLength);
+        //create TBT matrix
+        nH5.createGroup("tbttg");
+        int tagChunks = newTagCount >> 16;
+        if (newTagCount % chunkSize > 0) {
+            tagChunks++;
+        }
+        System.out.println(chunkSize);
+        System.out.printf("tagChunks %d Div %g %n", tagChunks, (double) newTagCount / (double) chunkSize);
+        nH5.setIntAttribute("tbttg/", "tagCount", newTagCount);
+        nH5.setIntAttribute("tbttg/", "tagChunks", tagChunks);
+
+        for (int tc = 0; tc < tagChunks; tc++) {
+            nH5.createGroup("tbttg/c" + tc);
+        }
+        
+        nH5.setIntAttribute("/", "taxaNum", taxaNum);
+        nH5.setIntAttribute("/", "tagCount", tagCount);
+        nH5.createStringVariableLengthArray("tbttg/taxaNames", taxaNum);
+        nH5.writeStringVariableLengthArray("tbttg/taxaNames", this.getTaxaNames());
+        
+        for (int i = 0; i < newTagCount; i++) {
+            byte[] td = new byte[taxaNum];
+            for (int j = 0; j < taxaNum; j++) {
+                td[j] = (byte) this.getReadCountForTagTaxon(tagIndex[i], j);
+            }
+            int chunk = i >> 16;
+            String d = "tbttg/c" + chunk + "/" + i;
+            byte[] deftc = encodeBySign(td);
+            nH5.createByteArray(d, deftc.length);
+            nH5.writeByteArray(d, deftc);
+        }
+        createFastTaxaMap();   
+    }
+    
     private void populateTBTMatrix(TagsByTaxa inTBT) {
         for (int tg = 0; tg < tagCount; tg++) {
             byte[] td = new byte[taxaNum];
@@ -292,6 +352,7 @@ public class TagsByTaxaByteHDF5TagGroups extends AbstractTagsByTaxa {
         return index;
     }
 
+    
     @Override
     public int getReadCountForTagTaxon(int tagIndex, int taxaIndex) {
         if (bufferedTagIndex != tagIndex) {

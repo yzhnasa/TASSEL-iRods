@@ -103,7 +103,7 @@ public class BuilderFromHapMap {
             e.printStackTrace();
         }
         long totalTime=System.nanoTime()-time;
-        System.out.printf("ImportUtil ReadText data timing %gs %n", totalTime/1e9);
+        System.out.printf("BuilderFromHapMap data timing %gs %n", totalTime/1e9);
         return result;
     }
 
@@ -166,8 +166,8 @@ class ProcessHapMapBlock implements Runnable {
         return new ProcessHapMapBlock(order,taxaN, txtL);
     }
 
-    @Override
-    public void run() {
+
+    public void runSplit() {
         Map<String, Chromosome> chromosomeLookup = new HashMap<>();
         gTS=new byte[taxaN][siteN];
         for (int s=0; s<siteN; s++) {
@@ -211,6 +211,61 @@ class ProcessHapMapBlock implements Runnable {
         }
         txtL=null;
     }
+
+    @Override
+    public void run() {
+        Map<String, Chromosome> chromosomeLookup = new HashMap<>();
+        gTS=new byte[taxaN][siteN];
+        for (int s=0; s<siteN; s++) {
+            String input=txtL.get(s);
+            int[] tabPos=new int[NUM_HAPMAP_NON_TAXA_HEADERS];
+            int tabIndex=0;
+            int len=input.length();
+            for (int i = 0; (tabIndex<NUM_HAPMAP_NON_TAXA_HEADERS) && (i<len); i++) {
+                if(input.charAt(i)=='\t') tabPos[tabIndex++]=i;
+            }
+           // String[] tokens = WHITESPACE_PATTERN.split(input,NUM_HAPMAP_NON_TAXA_HEADERS+1);
+            String chrName=input.substring(tabPos[CHROMOSOME_INDEX-1]+1,tabPos[CHROMOSOME_INDEX]);
+            Chromosome currChr = chromosomeLookup.get(chrName);
+            if (currChr == null) {
+                currChr = new Chromosome(chrName);
+                chromosomeLookup.put(chrName, currChr);
+            }
+            String[] variants=SLASH_PATTERN.split(input.substring(tabPos[VARIANT_INDEX-1]+1,tabPos[VARIANT_INDEX]));
+            CorePosition cp = new CorePosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[POSITION_INDEX-1]+1,tabPos[POSITION_INDEX])))
+                    .snpName(input.substring(0,tabPos[SNPID_INDEX]))
+                    .knownVariants(variants)
+                            //TODO                    strand, variants,
+                    .build();
+            CoreAnnotatedPosition.Builder apb = new CoreAnnotatedPosition.Builder(cp);
+            try{
+                byte glbMajor=NucleotideAlignmentConstants.getNucleotideAlleleByte(variants[0]);
+                apb.allele(AnnotatedPosition.Allele.GLBMAJ,glbMajor);
+                if(variants.length==2) {
+                    byte glbMinor=NucleotideAlignmentConstants.getNucleotideAlleleByte(variants[1]);
+                    apb.allele(AnnotatedPosition.Allele.GLBMIN,glbMinor);
+                }
+            } catch (IllegalArgumentException e) {
+                //for the indels that cannot be converted correctly now
+                // System.out.println("Error Parsing this variant"+Arrays.toString(variants));
+            }
+            blkPosList.add(apb.build());
+            int offset=tabPos[NUM_HAPMAP_NON_TAXA_HEADERS-1]+1;
+            if(isOneLetter) {
+                for (int i = offset; i < len; i+=2) {
+                    gTS[(i-offset)/2][s] = convert[input.charAt(i)];
+                }
+            } else {
+                for(int i = offset; i < len; i+=3) {
+                    //System.out.println(i+":"+input.charAt(i+1)+input.charAt(i));
+                    //there is a phasing conflict with the existing import approach
+                    gTS[(i-offset)/3][s]=AlignmentUtils.getDiploidValue(convert[input.charAt(i+1)], convert[input.charAt(i)]);
+                }
+            }
+        }
+        txtL=null;
+    }
+
 
     int getSiteNumber() {
         return siteN;

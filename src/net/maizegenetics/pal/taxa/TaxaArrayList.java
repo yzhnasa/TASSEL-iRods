@@ -29,7 +29,8 @@ public class TaxaArrayList implements TaxaList {
         for (AnnotatedTaxon annotatedTaxon : srcList) {
             myTaxaList.add(annotatedTaxon);
             if(myNameToIndex.containsKey(annotatedTaxon.getFullName())) {
-                throw new IllegalStateException("Taxa name is duplicated :"+annotatedTaxon.getFullName());
+               // throw new IllegalStateException("Taxa name is duplicated :"+annotatedTaxon.getFullName());
+                System.err.println("Warning: Taxa name is duplicated :"+annotatedTaxon.getFullName());
             }
             myNameToIndex.put(annotatedTaxon.getFullName(), index);
             if(!annotatedTaxon.getFullName().equals(annotatedTaxon.getName())) myNameToIndex.put(annotatedTaxon.getName(),index);

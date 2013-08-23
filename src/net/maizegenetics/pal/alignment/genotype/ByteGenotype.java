@@ -3,6 +3,8 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
+import net.maizegenetics.util.SuperByteMatrix;
+import net.maizegenetics.util.SuperByteMatrixBuilder;
 import org.apache.log4j.Logger;
 
 /**
@@ -12,44 +14,42 @@ import org.apache.log4j.Logger;
 public class ByteGenotype extends AbstractGenotype {
 
     private static final Logger myLogger = Logger.getLogger(ByteGenotype.class);
-    private final byte[][] myGenotype;
-    private byte[][] myGenotypeSiteTaxa = null;
+    private final SuperByteMatrix myGenotype;
 
     ByteGenotype(byte[][] genotype, boolean phased, String[][] alleleEncodings) {
         super(genotype.length, genotype[0].length, phased, alleleEncodings);
-        myGenotype = new byte[myTaxaCount][mySiteCount];
+        myGenotype = SuperByteMatrixBuilder.getInstance(myTaxaCount, mySiteCount);
+        System.out.println("myGenotype class: " + myGenotype.getClass().getName());
         for (int t = 0; t < myTaxaCount; t++) {
-            System.arraycopy(genotype[t], 0, myGenotype[t], 0, mySiteCount);
+            for (int s = 0; s < mySiteCount; s++) {
+                myGenotype.set(t, s, genotype[t][s]);
+            }
         }
+    }
+
+    ByteGenotype(SuperByteMatrix genotype, boolean phased, String[][] alleleEncodings) {
+        super(genotype.getNumRows(), genotype.getNumColumns(), phased, alleleEncodings);
+        myGenotype = genotype;
+        System.out.println("myGenotype class: " + myGenotype.getClass().getName());
     }
 
     @Override
     public byte getBase(int taxon, int site) {
-        return myGenotype[taxon][site];
+        return myGenotype.get(taxon, site);
     }
 
     @Override
-    byte[][] getBasesSiteTaxa() {
-        if (myGenotypeSiteTaxa == null) {
-            initTaxaSite();
-        }
-        return myGenotypeSiteTaxa;
+    public byte[] getGenotypeForAllSites(int taxon) {
+        return myGenotype.getAllColumns(taxon);
     }
 
     @Override
-    byte[][] getBasesTaxaSite() {
-        return myGenotype;
+    public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
+        return myGenotype.getColumnRange(taxon, start, end);
     }
 
-    private void initTaxaSite() {
-        myGenotypeSiteTaxa = new byte[mySiteCount][myTaxaCount];
-        for (int bigS = 0; bigS < mySiteCount; bigS += 64) {
-            int length = (mySiteCount - bigS < 64) ? mySiteCount - bigS : 64;
-            for (int t = 0; t < myTaxaCount; t++) {
-                for (int s = 0; s < length; s++) {
-                    myGenotypeSiteTaxa[bigS + s][t] = myGenotype[t][bigS + s];
-                }
-            }
-        }
+    @Override
+    public byte[] getGenotypeForAllTaxa(int site) {
+        return myGenotype.getAllRows(site);
     }
 }

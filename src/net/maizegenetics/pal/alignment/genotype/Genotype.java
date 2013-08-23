@@ -433,4 +433,34 @@ public interface Genotype {
      * @return number of sites
      */
     public int getSiteCount();
+
+    /**
+     * Get all genotypes for given taxon.
+     *
+     * @param taxon taxon
+     *
+     * @return genotypes
+     */
+    public byte[] getGenotypeForAllSites(int taxon);
+
+    /**
+     * Get all genotypes for given taxon from start site (inclusive) to end site
+     * (exclusive).
+     *
+     * @param taxon taxon
+     * @param start start
+     * @param end end
+     *
+     * @return genotypes
+     */
+    public byte[] getGenotypeForSiteRange(int taxon, int start, int end);
+
+    /**
+     * Get all genotypes for given site.
+     *
+     * @param site site
+     *
+     * @return genotypes
+     */
+    public byte[] getGenotypeForAllTaxa(int site);
 }
