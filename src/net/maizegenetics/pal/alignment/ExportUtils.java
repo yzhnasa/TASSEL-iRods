@@ -156,11 +156,11 @@ public class ExportUtils {
             }
         }
     }
-
+    
     public static String writeToMutableHDF5(Alignment a, String newHDF5file) {
         return writeToMutableHDF5(a, newHDF5file, null, false);
     }
-    
+   
    /**
     * Exports a alignment into the Byte HDF5 format.  
     * @param a alignment to be exported
@@ -258,7 +258,128 @@ public class ExportUtils {
             }
         }
     }
-        
+   
+   public static String writeToMutableHDF5(Alignment a, String newHDF5file, int[] snpIndex) {
+        return writeToMutableHDF5(a, newHDF5file, snpIndex, null, false);
+   }
+   
+   public static String writeToMutableHDF5(Alignment a, String newHDF5file, int[] snpIndex, IdGroup exportTaxa, boolean keepDepth) {
+        IHDF5Writer h5w = null;
+        try {
+            int numSites = snpIndex.length;
+            int numTaxa = a.getSequenceCount();
+            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, "hmp.h5");
+            File hdf5File = new File(newHDF5file);
+            if (hdf5File.exists()) {
+                throw new IllegalArgumentException("ExportUtils: writeToMutableHDF5: File already exists: " + newHDF5file);
+            }
+            IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+            myLogger.info("Writing Mutable HDF5 file: " + newHDF5file);
+            config.overwrite();
+            config.dontUseExtendableDataTypes();
+            h5w = config.writer();
+            HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
+            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
+            String[][] aEncodings = a.getAlleleEncodings();
+            int numEncodings = aEncodings.length;
+            int numStates = aEncodings[0].length;
+            MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, numStates});
+            for (int s = 0; s < numEncodings; s++) {
+                for (int x = 0; x < numStates; x++) {
+                    alleleEncodings.set(aEncodings[s][x], s, x);
+                }
+            }
+            h5w.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
+            h5w.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
+            MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
+            if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
+                throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
+            }
+            String[] originalSNPID = a.getSNPIDs();
+            String[] outputSNPID = new String[snpIndex.length];
+            for (int i = 0; i < outputSNPID.length; i++) {
+                outputSNPID[i] = originalSNPID[snpIndex[i]];
+            }
+            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, outputSNPID);  //consider adding compression
+
+            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
+
+            TreeSet<Locus> lset = new TreeSet();
+            for (int i = 0; i < numSites; i++) {
+                lset.add(a.getLocus(snpIndex[i]));
+            }
+            Locus[] outLoci = lset.toArray(new Locus[lset.size()]);
+            String[] lociNames = new String[outLoci.length];
+            HashMap<Locus, Integer> locusToIndex=new HashMap<Locus, Integer>(10);
+            for (int i = 0; i < lociNames.length; i++) {
+                lociNames[i] = outLoci[i].getName();
+                locusToIndex.put(outLoci[i],i);
+            }
+            
+            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames.length);
+            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
+
+//            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
+//            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
+            
+            int[] locusIndicesArray = new int[snpIndex.length];
+            for (int i = 0; i < locusIndicesArray.length; i++) {
+                locusIndicesArray[i] = locusToIndex.get(a.getLocus(snpIndex[i]));
+            }
+            
+            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),features);
+            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_INDICES, locusIndicesArray,features);
+            
+            int[] originalPositions = a.getPhysicalPositions();
+            int[] outPositions = new int[snpIndex.length];
+            for (int i = 0; i < snpIndex.length; i++) {
+                outPositions[i] = originalPositions[snpIndex[i]];
+            }
+            h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
+            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, outPositions);
+
+            // Write Bases
+
+  //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
+
+            h5w.createGroup(HapMapHDF5Constants.GENOTYPES);            
+            if((exportTaxa!=null)&&(exportTaxa.getIdCount()==0)) {h5w.close(); return newHDF5file;}
+            h5w.close();
+            MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
+            for (int t = 0; t < numTaxa; t++) {
+                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.getFullTaxaName(t))<0)) continue;  //taxon not in export list
+                  byte[] originalBases = a.getBaseRow(t);
+                  byte[] bases = new byte[snpIndex.length];
+                  for (int i = 0; i < bases.length; i++) {
+                      bases[i] = originalBases[snpIndex[i]];
+                  }
+                  
+                  if (keepDepth==false) addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
+                  else {                      
+                      MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
+                      byte[][] originalDepth = m.getDepthForAlleles(t);
+                      byte[][] depth = new byte[originalDepth.length][snpIndex.length];
+                      for (int i = 0; i < depth.length; i++) {
+                          for (int j = 0; j < snpIndex.length; j++) {
+                              depth[i][j] = originalDepth[i][snpIndex[j]];
+                          }
+                      }
+                      addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, depth);
+                  }
+            }
+            addA.clean();           
+            return newHDF5file;
+
+        } finally {
+            try {
+                h5w.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+    }
      /**
      * This merge multiple alignment together into one ByteNucleotideHDF5 File.  
      * This is designed for putting multiple chromosomes together into one whole genome file.

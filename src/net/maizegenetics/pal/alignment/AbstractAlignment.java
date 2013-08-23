@@ -696,7 +696,7 @@ abstract public class AbstractAlignment implements Alignment {
     @Override
     public int getLocusSiteCount(Locus locus) {
         int[] startEnd = getStartAndEndOfLocus(locus);
-        return startEnd[1] - startEnd[0];
+        return startEnd[1] - startEnd[0] + 1;
     }
 
     @Override

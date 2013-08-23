@@ -119,7 +119,7 @@ public class AnnotateTOPM {
                 TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
                 long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*32);
                 int tagIndex = topm.getTagIndex(seq);
-                if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[bufferNum-1]) {
+                if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[1]) {
                     System.out.println("The index of the tag from sam file is out of buffer range. Program quits.");
                     System.out.println("Please increase the buffer number");
                     System.exit(1);
@@ -206,11 +206,11 @@ public class AnnotateTOPM {
                 TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
                 long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*32);
                 int tagIndex = topm.getTagIndex(seq);
-                if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[bufferNum-1]) {
+                if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[1]) {
                     System.out.println("The index of the tag from sam file is out of buffer range. Program quits.");
                     System.out.println("Please increase the buffer number");
                     System.exit(1);
-                }
+                    }  
                 int bufferIndex = Arrays.binarySearch(bufferStartTagIndex, tagIndex);
                 if (bufferIndex < 0) bufferIndex = -bufferIndex-2;
                 int bufferTagIndex = tagIndex % topm.getChunkSize();
@@ -273,6 +273,7 @@ public class AnnotateTOPM {
         System.out.println("Coverting BLAST to TOPMHDF5...");
         byte mappingSource = 2;
         File[] infiles = new File (blastDirS).listFiles();
+        Arrays.sort(infiles);
         try {
             BufferedReader br;
             for (int i = 0; i < infiles.length; i++) {
@@ -298,29 +299,24 @@ public class AnnotateTOPM {
                     }
                     short mappingScore = Short.parseShort(temp[11].replaceAll("\\..+", ""));
                     byte divergence = Byte.MIN_VALUE;
-                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
                     int tagIndex = Integer.parseInt(temp[0]);
-                    if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[bufferNum-1]) {
-                        System.out.println("The index of the tag from sam file is out of buffer range. Program quits.");
-                        System.out.println("Please increase the buffer number");
-                        System.exit(1);
+                    if (tagIndex >= this.bufferStartTagIndex[1]) {
+                        int n = (tagIndex - bufferStartTagIndex[1]) /topm.getChunkSize()+1;
+                        for (int j = 0; j < n; j++) {
+                            this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
+                            this.updateTMIBuffer();
+                        }  
                     }
                     int bufferIndex = Arrays.binarySearch(bufferStartTagIndex, tagIndex);
                     if (bufferIndex < 0) bufferIndex = -bufferIndex-2;
                     int bufferTagIndex = tagIndex % topm.getChunkSize();
                     int mappingBlockIndex = this.getMappingBlockIndex(bufferIndex, bufferTagIndex);
                     if (mappingBlockIndex == Integer.MIN_VALUE) continue;
+                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
                     tmiBuffers[bufferIndex][mappingBlockIndex][bufferTagIndex] = theTMI;
-                    if (bufferLights[bufferIndex][bufferTagIndex] == false) {
-                        lightCounts[bufferIndex]++;
-                    }
-                    bufferLights[bufferIndex][bufferTagIndex] = true;
-                    if (lightCounts[0] == topm.getChunkSize() && lightCounts[1] > this.updateBufferCountCutoff) {
-                        this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
-                        this.updateTMIBuffer();
-                    }   
                 }
                 br.close();
+                System.gc();
             }
             this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
             topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
@@ -363,27 +359,21 @@ public class AnnotateTOPM {
                 }
                 short mappingScore = Short.parseShort(temp[11].replaceAll("\\..+", ""));
                 byte divergence = Byte.MIN_VALUE;
-                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
                 int tagIndex = Integer.parseInt(temp[0]);
-                if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[bufferNum-1]) {
-                    System.out.println("The index of the tag from sam file is out of buffer range. Program quits.");
-                    System.out.println("Please increase the buffer number");
-                    System.exit(1);
+                if (tagIndex >= this.bufferStartTagIndex[1]) {
+                    int n = (tagIndex - bufferStartTagIndex[1]) /topm.getChunkSize()+1;
+                    for (int j = 0; j < n; j++) {
+                        this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
+                        this.updateTMIBuffer();
+                    }  
                 }
                 int bufferIndex = Arrays.binarySearch(bufferStartTagIndex, tagIndex);
                 if (bufferIndex < 0) bufferIndex = -bufferIndex-2;
                 int bufferTagIndex = tagIndex % topm.getChunkSize();
                 int mappingBlockIndex = this.getMappingBlockIndex(bufferIndex, bufferTagIndex);
                 if (mappingBlockIndex == Integer.MIN_VALUE) continue;
+                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
                 tmiBuffers[bufferIndex][mappingBlockIndex][bufferTagIndex] = theTMI;
-                if (bufferLights[bufferIndex][bufferTagIndex] == false) {
-                    lightCounts[bufferIndex]++;
-                }
-                bufferLights[bufferIndex][bufferTagIndex] = true;
-                if (lightCounts[0] == topm.getChunkSize() && lightCounts[1] > this.updateBufferCountCutoff) {
-                    this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
-                    this.updateTMIBuffer();
-                }   
             }
             this.saveTMIBufferToTOPM(tmiBuffers[0], dataSetNames, this.bufferStartTagIndex[0]/topm.getChunkSize(), mappingSource);
             topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
