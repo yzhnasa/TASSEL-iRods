@@ -35,8 +35,6 @@ public class FilterAlignment extends AbstractAlignment {
     private final int[] mySiteRedirect;
     private final int myRangeStart;
     private final int myRangeEnd;
-    private Locus[] myLoci;
-    private int[] myLociOffsets;
 
     private FilterAlignment(Alignment a, IdGroup subIdGroup, int[] taxaRedirect, FilterAlignment original) {
 
@@ -528,37 +526,8 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public Locus[] getLoci() {
-        return myLoci;
-    }
-
-    @Override
     public Locus getLocus(int site) {
         return myBaseAlignment.getLocus(translateSite(site));
-    }
-
-    @Override
-    public int getLocusSiteCount(Locus locus) {
-
-        if ((!myIsSiteFilter) && (!myIsSiteFilterByRange)) {
-            return myBaseAlignment.getLocusSiteCount(locus);
-        }
-
-        int numSites = getSiteCount();
-        int result = 0;
-        for (int i = 0; i < numSites; i++) {
-            if (getLocus(translateSite(i)) == locus) {
-                result++;
-            }
-        }
-
-        return result;
-
-    }
-
-    @Override
-    public int getNumLoci() {
-        return myLoci.length;
     }
 
     @Override
@@ -818,11 +787,6 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public String getLocusName(int site) {
         return myBaseAlignment.getLocusName(translateSite(site));
-    }
-
-    @Override
-    public int[] getLociOffsets() {
-        return myLociOffsets;
     }
 
     @Override
