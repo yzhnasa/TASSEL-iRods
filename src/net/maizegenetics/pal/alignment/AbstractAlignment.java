@@ -29,11 +29,11 @@ abstract public class AbstractAlignment implements Alignment {
     private int[] myVariableSites;
     protected int myMaxNumAlleles = Alignment.DEFAULT_MAX_NUM_ALLELES;
     protected byte[][] myAlleles;
-    private Locus[] myLoci;
+    protected Locus[] myLoci;
     /**
      * Loci offsets hold first site of each locus.
      */
-    private int[] myLociOffsets;
+    protected int[] myLociOffsets;
     private String[] mySNPIDs;
     private boolean myRetainRareAlleles = false;
     private Alignment myOriginalAlignment = null;
@@ -283,7 +283,7 @@ abstract public class AbstractAlignment implements Alignment {
     public int getSequenceCount() {
         return getIdGroup().getIdCount();
     }
-    
+
     @Override
     public int getTaxaCount() {
         return getSequenceCount();

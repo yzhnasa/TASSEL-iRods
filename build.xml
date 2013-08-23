@@ -101,7 +101,7 @@
         <mkdir dir="${javadoc}"/>
         
         <javadoc packagenames="net.*"
-                 source="1.6"
+                 source="1.7"
                  destdir="${javadoc}"
                  author="true"
                  use="true"

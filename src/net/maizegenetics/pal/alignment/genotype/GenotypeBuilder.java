@@ -4,6 +4,8 @@
 package net.maizegenetics.pal.alignment.genotype;
 
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.util.SuperByteMatrix;
+import net.maizegenetics.util.SuperByteMatrixBuilder;
 
 /**
  *
@@ -11,12 +13,12 @@ import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
  */
 public class GenotypeBuilder {
 
-    private final byte[][] myGenotype;
+    private SuperByteMatrix myGenotype;
     private final boolean myIsPhased;
     private final String[][] myAlleleEncodings;
 
     private GenotypeBuilder(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
-        myGenotype = new byte[numTaxa][numSites];
+        myGenotype = SuperByteMatrixBuilder.getInstance(numTaxa, numSites);
         myIsPhased = phased;
         myAlleleEncodings = alleleEncodings;
     }
@@ -26,14 +28,24 @@ public class GenotypeBuilder {
     }
 
     public void setBase(int taxon, int site, byte value) {
-        myGenotype[taxon][site] = value;
+        myGenotype.set(taxon, site, value);
+    }
+
+    public void setBaseRangeForTaxon(int taxon, int startSite, byte[] value) {
+        for (int i = 0; i < value.length; i++) {
+            myGenotype.set(taxon, i, value[i]);
+        }
     }
 
     public Genotype build() {
-        return new ByteGenotype(myGenotype, myIsPhased, myAlleleEncodings);
+        SuperByteMatrix temp = myGenotype;
+        myGenotype = null;
+        return new ByteGenotype(temp, myIsPhased, myAlleleEncodings);
     }
 
     public Genotype buildHDF5(String filename) {
+        SuperByteMatrix temp = myGenotype;
+        myGenotype = null;
         throw new UnsupportedOperationException();
     }
 }

@@ -24,6 +24,7 @@ public class CoreAlignment implements AlignmentNew {
     private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
     private final Genotype myGenotype;
     private BitStorage myFreqBitStorage;
+    private BitStorage myReferenceBitStorage;
     private final AnnotatedPositionList myAnnotatedPositionList;
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
@@ -159,14 +160,12 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public int getChromosomeSiteCount(Chromosome chromosome) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
-        //  return myAnnotatedPositionList.getChromosomeSiteCount(chromosome);
+        return myAnnotatedPositionList.getChromosomeSiteCount(chromosome);
     }
 
     @Override
     public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
-        //   return myAnnotatedPositionList.getStartAndEndOfChromosome(chromosome);
+        return myAnnotatedPositionList.getStartAndEndOfChromosome(chromosome);
     }
 
     @Override
@@ -186,14 +185,12 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
-        //return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome);
+        return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome);
     }
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
-        // return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
+        return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
     }
 
     @Override
@@ -208,20 +205,17 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public Chromosome getChromosome(int site) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
-        // return myAnnotatedPositionList.getChromosome(site);
+        return myAnnotatedPositionList.getChromosome(site);
     }
 
     @Override
     public Chromosome getChromosome(String name) {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
-        // return myAnnotatedPositionList.getChromosome(name);
+        return myAnnotatedPositionList.getChromosome(name);
     }
 
     @Override
     public Chromosome[] getChromosomes() {
-        throw new UnsupportedOperationException("Not supported until Chromosome swapped in for Chromosome");
-        //return myAnnotatedPositionList.getChromosomes();
+        return myAnnotatedPositionList.getChromosomes();
     }
 
     @Override
@@ -341,7 +335,7 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public String getGenomeAssembly() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myAnnotatedPositionList.getGenomeAssembly();
     }
 
     @Override
@@ -361,8 +355,7 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public Object[][] getDiploidsSortedByFrequency(int site) {
-        throw new UnsupportedOperationException("Not supported yet.  Needs to come from genotype");
-        // return myAnnotatedPositionList.getDiploidssSortedByFrequency(site);
+        return myGenotype.getDiploidsSortedByFrequency(site);
     }
 
     @Override
@@ -372,7 +365,7 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public GeneticMap getGeneticMap() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -387,7 +380,7 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public String[] getAlleleEncodings(int site) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return myGenotype.getAlleleEncodings(site);
     }
 
     @Override
@@ -498,6 +491,11 @@ public class CoreAlignment implements AlignmentNew {
                     myFreqBitStorage = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
                 }
                 return myFreqBitStorage;
+            case Reference:
+                if (myReferenceBitStorage == null) {
+                    myReferenceBitStorage = new DynamicBitStorage(myGenotype, scopeType, getReference(), null);
+                }
+                return myReferenceBitStorage;
             default:
                 myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
                 return null;

@@ -48,7 +48,7 @@ public class ProductionPipelineMain {
 
     private String applicationHost = "unknown";                     // host on which pipeline is running
 
-    private String applicationConfiguration = "production_pipeline.properties";
+    public static String applicationConfiguration = "production_pipeline.properties";
 
     private String runFileSuffix = ".run";                        // default run file suffix
     private String emailHost = "appsmtp.mail.cornell.edu";        // default server to be used to send email notifications
@@ -58,7 +58,7 @@ public class ProductionPipelineMain {
 
     private String runDirectory = "/SSD/prop_pipeline/run/";        // directory into which the key and run files are
                                                                     // placed for pickup by cron job
-    private String archiveDirectory = "/SSD/prop_pipeline/arc/";    // directory into which the key and run files are placed
+    private String archiveDirectory = "/SSD/prop_pipeline/arcvtmp/";    // directory into which the key and run files are placed
                                                                     // after being run a dated directory will be created
                                                                     // within this directory and artifacts  such as the .log
                                                                     // and .xml file will be placed there
@@ -75,7 +75,7 @@ public class ProductionPipelineMain {
     private String keyFile= null;
     private String hostName = "host unknown";
 
-    private String[] tasselPipelineArgs;        // replacement for using an XML config file to pass relevant parameter to TasselPipeline
+    private String expectedCheckSum = "10e75e612ade7979f210958933da4de9";
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");      // make dateFormat uniform for all logging
     private String propertiesFileContents = null;
@@ -98,12 +98,14 @@ public class ProductionPipelineMain {
             "keyFile=/workdir/tassel/tassel4-src/20130716test/keyfile/MGP1_low_vol_2smallReps_key.txt";
 
 
-    public ProductionPipelineMain(boolean runCheckSum, boolean runImputation){
+    public ProductionPipelineMain(String appPropertiesFile, boolean runCheckSum, boolean runImputation, String testingCheckSum){
 
         init();
-        propertiesFileContents = loadApplicationConfiguration(applicationConfiguration);
+        // if no application property file is specified, try looking for something in the home directory
+        if(appPropertiesFile == null) appPropertiesFile = applicationConfiguration;
+        propertiesFileContents = loadApplicationConfiguration(appPropertiesFile);
 
-        loadRunFiles(runDirectory, runCheckSum, runImputation );
+        loadRunFiles(runDirectory, runCheckSum, runImputation, testingCheckSum);
     }
 
     private void init(){
@@ -117,7 +119,7 @@ public class ProductionPipelineMain {
      *
      * @param runDirectoryIn  Directory containing any number of .run files
      */
-    private void loadRunFiles(String runDirectoryIn, boolean doCheckSum, boolean runImputation){
+    private void loadRunFiles(String runDirectoryIn, boolean doCheckSum, boolean runImputation, String testingCheckSum){
 
         File dir = new File(runDirectoryIn);
 
@@ -224,33 +226,66 @@ public class ProductionPipelineMain {
             long diff = stopTime - startTime;
             long elapsedSeconds = diff / 1000;
 
+            String emailSubject = emailSubjectBase + this.anInputFolder;
+            String email = "Ran:\n " + this.anInputFolder +
+                    "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds" +
+                    "\n\n Attachment:\n " + logFile.getAbsolutePath() +
+                    "\nRun on server: " + applicationHost;
 
-            File toFile = new File(archiveDirectory + "/" + aFile.getName());
+            StringBuffer emailMsg = new StringBuffer(email);
 
-            boolean movedFile = false;
-            try{
-                Files.copy(aFile, toFile);  // todo: change this to move() when deploying
-                movedFile = true;
-            }catch (IOException ioe){}
+            // test section: get checksum on hapmap file(s), notify whether matching or not
+            if(testingCheckSum != null){
 
-            if(movedFile){
-                System.out.println("Moved file " + aFile.getAbsolutePath() + " to " + toFile.getAbsolutePath());
+                // find hapmap file in output directory
+                final String suffix = ".hmp.txt.gz";
+                File outDir = new File(outputFolder);
+                File[] hapMapFiles = outDir.listFiles(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return name.endsWith(suffix);
+                    }
+                });
+                boolean passedTest = false;
+                for(File f: hapMapFiles){
+                    // get checksum
+                    String filename = f.getAbsolutePath();
+                    String cksum = CheckSum.getChecksum(filename, "MD5");
+                    if(cksum.equalsIgnoreCase(expectedCheckSum)){
+
+                        emailSubject = emailSubjectBase + "test passed";
+                        passedTest = true;
+                    }
+                    emailMsg.append("\nFile: " +filename + "\tChecksum:" + cksum);
+                }
+
+                if(!passedTest){    emailSubject = emailSubjectBase + "TEST FAILED!"; }
             }else{
-                String msg = "******* COULD NOT MOVE FILE " + aFile.getAbsolutePath() + " TO " + toFile.getAbsolutePath() +
-                        " on server: " + applicationHost;
-                System.out.println(msg);
-                sendAlertNotification(emailSubjectBase + "- Error", msg);
-            }
 
+                emailSubject = emailSubjectBase + this.anInputFolder;
+                File toFile = new File(archiveDirectory + "/" + aFile.getName());
+
+                boolean movedFile = false;
+                try {
+                    Files.move(aFile, toFile);
+                    movedFile = true;
+                } catch (IOException ioe) {
+                }
+
+                if (movedFile) {
+                    System.out.println("Moved file " + aFile.getAbsolutePath() + " to " + toFile.getAbsolutePath());
+                } else {
+                    String msg = "******* COULD NOT MOVE FILE " + aFile.getAbsolutePath() + " TO " + toFile.getAbsolutePath() +
+                            " on server: " + applicationHost;
+                    System.out.println(msg);
+                    sendAlertNotification(emailSubjectBase + "- Error", msg);
+                }
+            }
             // send email notification that a .run file has been processed
             SMTPClient sc = new SMTPClient(emailHost, emailAddresses);
-            String emailSubject = emailSubjectBase + this.anInputFolder;
-            String emailMsg = "Ran:\n " + this.anInputFolder +
-                               "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds" +
-                               "\n\n Attachment:\n " + logFile.getAbsolutePath() +
-                                "\nRun on server: " + applicationHost;
+
             try{
-                sc.sendMessageWithAttachment(emailSubject, emailMsg, logFile.getAbsolutePath());
+                sc.sendMessageWithAttachment(emailSubject, emailMsg.toString(), logFile.getAbsolutePath());
             }catch (javax.mail.MessagingException me) {   /* ignore */ }
         }
     }
@@ -280,6 +315,9 @@ public class ProductionPipelineMain {
         boolean loaded = false;
         Properties props = new Properties();
         try{
+            File propsFile = new File(aFileIn);
+            System.out.println(propsFile.getAbsoluteFile());
+
             props.load(new FileInputStream(aFileIn));
             loaded = true;
         }catch(IOException ioe){
@@ -304,10 +342,10 @@ public class ProductionPipelineMain {
 
         configurationElement =  "emailAddress";     // to whom the email notifications should be sent
         String address =    props.getProperty(configurationElement);
-        if(address.contains(emailAddressDelimiters)){
+        if(address != null){
         Iterable<String> results = Splitter.on(emailAddressDelimiters).split(address);
         emailAddresses = Iterables.toArray(results, String.class);
-        }else{ emailAddresses = new String[] {address }; }
+        }
 
         configurationElement =  "runDirectory";     // directory where the .run files are expected to be
         runDirectory =    props.getProperty(configurationElement);
@@ -634,26 +672,57 @@ public class ProductionPipelineMain {
 
     public static void main(String[] args){
 
-        String msg = "--skipCheckSum flag allows MD5sum checking to be skipped.\n" +
-                     "--skipImputation flag allows imputation to be skipped";
+        String msg = "\n--skipCheckSum flag allows MD5sum checking to be skipped.\n" +
+                     "--skipImputation flag allows imputation to be skipped\n" +
+                     "--runTest flag is for use with a test data set and should be followed by the expected MD5Sum\n" +
+                     "--propsFile should be followed by a fully-qualified path name without spaces\n";
 
         boolean doCheckSum = true;
         boolean doImputation = true;
+        String expectedChksm = null;
+        String propsFile = "propsFile";
+        String propsFilePath = null;
         String skipCheckSum = "skipCheckSum";
         String skipImputation = "skipImputation";
+        String runTest = "runTest";
         if(args != null){
-            for(String arg: args){
-                if(StringUtils.containsIgnoreCase(arg, skipCheckSum )){
+            for(int i = 0; i < args.length; i++) {
+                if(StringUtils.containsIgnoreCase(args[i], skipCheckSum )){
                     doCheckSum = false;
+                    System.out.println("Skipping Checksums");
                 }
-                if(StringUtils.containsIgnoreCase(arg, skipImputation)){
+                if(StringUtils.containsIgnoreCase(args[i], skipImputation)){
                     doImputation = false;
+                    System.out.println("Skipping Imputation");
+                }
+                if(StringUtils.containsIgnoreCase(args[i], runTest)){
+                    if(args.length > i+1) {
+                        expectedChksm = args[i+1];
+                        i++;
+                        System.out.println("Running testing and expecting the following MD5Sum: " + expectedChksm);
+                    }
+                    else{
+                        System.out.println("No checksum following --" + runTest + " flag.\n");
+                        System.out.println(msg);
+                    }
+                }
+                if(StringUtils.containsIgnoreCase(args[i], propsFile)){
+                    if(args.length > i+1) {
+                        propsFilePath = args[i+1];
+                        i++;
+                        System.out.println("--" + propsFile + "\tUsing this properties file: " + propsFilePath);
+                    }
+                    else{
+                        System.out.println("No path following --" + propsFile + " flag.\n"+
+                                "Will look for " + applicationConfiguration + " file in the current directory");
+                        System.out.println(msg);
+                    }
                 }
             }
         }else{
             System.out.println(msg);
         }
 
-    	 new ProductionPipelineMain(doCheckSum, doImputation);
+    	 new ProductionPipelineMain(propsFilePath, doCheckSum, doImputation, expectedChksm);
     }
 }
