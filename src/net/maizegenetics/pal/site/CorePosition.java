@@ -85,7 +85,7 @@ public final class CorePosition implements Position {
         isNucleotide = builder.isNucleotide;
         isIndel = builder.isIndel;
         myKnownVariants = builder.myKnownVariants;
-        hashCode=hashCode();
+        hashCode=calcHashCode();
     }
 
     @Override
@@ -99,10 +99,10 @@ public final class CorePosition implements Position {
 
     @Override
     public int hashCode() {
-        return this.hashCode;    //To change body of overridden methods use File | Settings | File Templates.
+        return this.hashCode;
     }
 
-    public int calcHashCode() {
+    private int calcHashCode() {
         int hash = 7;
         hash = 37 * hash + this.myChromosome.hashCode();
         hash = 37 * hash + this.myPosition;

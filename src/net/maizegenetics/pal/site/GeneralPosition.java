@@ -189,7 +189,7 @@ public final class GeneralPosition implements AnnotatedPosition {
         for (int i = 0; i < builder.myAnnotations.size(); i++) {
             myVariantsAndAnno[i+1]=builder.myAnnotations.get(i);
         }
-        hashCode=hashCode();
+        hashCode=calcHashCode();
 
         myMAF = builder.myMAF;
         mySiteCoverage = builder.mySiteCoverage;
@@ -232,6 +232,16 @@ public final class GeneralPosition implements AnnotatedPosition {
         sb.append("\tMAF:").append(getGlobalMAF());
         sb.append("\tRef:").append(NucleotideAlignmentConstants.getHaplotypeNucleotide(getAllele(Allele.REF)));
         return sb.toString();
+    }
+
+    private int calcHashCode() {
+        int hash = 7;
+        hash = 37 * hash + this.myChromosome.hashCode();
+        hash = 37 * hash + this.myPosition;
+        hash = 37 * hash + this.myStrand;
+        hash = 37 * hash + Float.floatToIntBits(this.myCM);
+        hash = 37 * hash + this.mySNPIDAsBytes.hashCode();
+        return hash;
     }
 
     @Override
