@@ -167,52 +167,7 @@ class ProcessHapMapBlock implements Runnable {
     }
 
 
-    public void runSplit() {
-        Map<String, Chromosome> chromosomeLookup = new HashMap<>();
-        gTS=new byte[taxaN][siteN];
-        for (int s=0; s<siteN; s++) {
-            String input=txtL.get(s);
-            String[] tokens = WHITESPACE_PATTERN.split(input,NUM_HAPMAP_NON_TAXA_HEADERS+1);
-            Chromosome currChr = chromosomeLookup.get(tokens[CHROMOSOME_INDEX]);
-            if (currChr == null) {
-                currChr = new Chromosome(tokens[CHROMOSOME_INDEX]);
-                chromosomeLookup.put(tokens[CHROMOSOME_INDEX], currChr);
-            }
-            String[] variants=SLASH_PATTERN.split(tokens[VARIANT_INDEX]);
-            CorePosition cp = new CorePosition.Builder(currChr, Integer.parseInt(tokens[POSITION_INDEX]))
-                    .snpName(tokens[SNPID_INDEX])
-                    .knownVariants(variants)
-                            //TODO                    strand, variants,
-                    .build();
-            CoreAnnotatedPosition.Builder apb = new CoreAnnotatedPosition.Builder(cp);
-           try{
-                byte glbMajor=NucleotideAlignmentConstants.getNucleotideAlleleByte(variants[0]);
-                apb.allele(AnnotatedPosition.Allele.GLBMAJ,glbMajor);
-                if(variants.length==2) {
-                    byte glbMinor=NucleotideAlignmentConstants.getNucleotideAlleleByte(variants[1]);
-                    apb.allele(AnnotatedPosition.Allele.GLBMIN,glbMinor);
-                }
-            } catch (IllegalArgumentException e) {
-               //for the indels that cannot be converted correctly now
-              // System.out.println("Error Parsing this variant"+Arrays.toString(variants));
-           }
-            blkPosList.add(apb.build());
-            if(isOneLetter) {
-                for (int i = 0; i < tokens[GENOIDX].length(); i+=2) {
-                    gTS[i/2][s] = convert[tokens[GENOIDX].charAt(i)];
-                }
-            } else {
-                for (int i = 0; i < tokens[GENOIDX].length(); i+=3) {
-                    //System.out.println(i+":"+tokens[11].charAt(i)+tokens[11].charAt(i));
-                    //there is a phasing conflict with the existing import approach
-                    gTS[i/3][s] =AlignmentUtils.getDiploidValue(convert[tokens[GENOIDX].charAt(i+1)], convert[tokens[GENOIDX].charAt(i)]);
-                }
-            }
-        }
-        txtL=null;
-    }
-
-    @Override
+    //@Override
     public void run() {
         Map<String, Chromosome> chromosomeLookup = new HashMap<>();
         gTS=new byte[taxaN][siteN];
@@ -224,25 +179,24 @@ class ProcessHapMapBlock implements Runnable {
             for (int i = 0; (tabIndex<NUM_HAPMAP_NON_TAXA_HEADERS) && (i<len); i++) {
                 if(input.charAt(i)=='\t') tabPos[tabIndex++]=i;
             }
-           // String[] tokens = WHITESPACE_PATTERN.split(input,NUM_HAPMAP_NON_TAXA_HEADERS+1);
             String chrName=input.substring(tabPos[CHROMOSOME_INDEX-1]+1,tabPos[CHROMOSOME_INDEX]);
             Chromosome currChr = chromosomeLookup.get(chrName);
             if (currChr == null) {
-                currChr = new Chromosome(chrName);
+                currChr = new Chromosome(new String(chrName));
                 chromosomeLookup.put(chrName, currChr);
             }
-            String[] variants=SLASH_PATTERN.split(input.substring(tabPos[VARIANT_INDEX-1]+1,tabPos[VARIANT_INDEX]));
-            CorePosition cp = new CorePosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[POSITION_INDEX-1]+1,tabPos[POSITION_INDEX])))
+            String variants=input.substring(tabPos[VARIANT_INDEX-1]+1,tabPos[VARIANT_INDEX]);
+            GeneralPosition.Builder apb= new GeneralPosition.Builder(currChr,
+                    Integer.parseInt(input.substring(tabPos[POSITION_INDEX-1]+1,tabPos[POSITION_INDEX])))
                     .snpName(input.substring(0,tabPos[SNPID_INDEX]))
                     .knownVariants(variants)
                             //TODO                    strand, variants,
-                    .build();
-            CoreAnnotatedPosition.Builder apb = new CoreAnnotatedPosition.Builder(cp);
+                    ;
             try{
-                byte glbMajor=NucleotideAlignmentConstants.getNucleotideAlleleByte(variants[0]);
+                byte glbMajor=convert[variants.charAt(0)];
                 apb.allele(AnnotatedPosition.Allele.GLBMAJ,glbMajor);
-                if(variants.length==2) {
-                    byte glbMinor=NucleotideAlignmentConstants.getNucleotideAlleleByte(variants[1]);
+                if(variants.length()==3) {
+                    byte glbMinor=convert[variants.charAt(2)];
                     apb.allele(AnnotatedPosition.Allele.GLBMIN,glbMinor);
                 }
             } catch (IllegalArgumentException e) {

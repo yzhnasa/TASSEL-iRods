@@ -5,11 +5,13 @@
 package net.maizegenetics.pal.site;
 
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableMultimap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 //import java.util.Objects;
@@ -19,6 +21,11 @@ import java.util.concurrent.ConcurrentMap;
  * on position, MAF, coverage.  This class is immutable.
  * <p></p>
  * The annotations are all set using the builder.
+ * <p></p>
+ * This class has been optimized for memory size compared to the other version.  Every annotated position takes about 84
+ * bytes, even with a names and declared variants.  Positions with extended annotation take roughly 117 bytes, and as
+ * long as the annotation are repeated extensively the take an additional 8 bytes each.  So a site with 100 annotation would
+ * take <1000 bytes.
  *
  * @author Ed Buckler
  */
@@ -51,6 +58,9 @@ public final class GeneralPosition implements AnnotatedPosition {
     private static final ConcurrentMap<Map.Entry<String, String>,Map.Entry<String, String>> ANNO_HASH = new ConcurrentHashMap<>(500_000);
 
     public static Map.Entry<String, String> getCanonicalAnnotation(String key, String value) {
+        if (ANNO_HASH.size() > 100000) {
+            ANNO_HASH.clear();
+        }
         Map.Entry<String, String> str= new AbstractMap.SimpleImmutableEntry(key,value);
         Map.Entry<String, String> canon = ANNO_HASH.putIfAbsent(str, str);
         return (canon == null) ? str : canon;
@@ -119,7 +129,13 @@ public final class GeneralPosition implements AnnotatedPosition {
         public Builder indel(boolean val) {isIndel = val; return this;}
         /**Set text definition of variants (default=null)*/
         public Builder knownVariants(String[] val) {
-            Map.Entry<String, String> ent=getCanonicalAnnotation("VARIANT",Arrays.toString(val));
+            Map.Entry<String, String> ent=getCanonicalAnnotation("VARIANT",val[0]+"/"+val[1]);
+            myKnownVariants=ent;
+            return this;
+        }
+        /**Set text definition of variants (default=null)*/
+        public Builder knownVariants(String val) {
+            Map.Entry<String, String> ent=getCanonicalAnnotation("VARIANT",val);
             myKnownVariants=ent;
             return this;
         }
@@ -148,7 +164,10 @@ public final class GeneralPosition implements AnnotatedPosition {
             for (int i = myAlleles.length-1; i >=0 ; i--) {
                 myAllelesAsLong=(myAllelesAsLong<<8)|myAlleles[i];
             }
-
+            if (mySNPID != null) {
+                String defaultS=(new StringBuilder("S").append(myChromosome.getName()).append("_").append(myPosition)).toString();
+                if(defaultS.equals(mySNPID)) mySNPID=null;
+            }
             return new GeneralPosition(this);
         }
     }
