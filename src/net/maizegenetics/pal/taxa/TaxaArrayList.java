@@ -4,10 +4,11 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import java.util.*;
+import org.apache.log4j.Logger;
 
 /**
- * In memory immutable instance of {@link TaxaList}.
- * Basic list of taxa (samples) that are used in Alignments and other purposes.
+ * In memory immutable instance of {@link TaxaList}. Basic list of taxa
+ * (samples) that are used in Alignments and other purposes.
  *
  * Use {@link TaxaListBuilder} to instantiate.
  *
@@ -15,25 +16,27 @@ import java.util.*;
  *
  */
 public class TaxaArrayList implements TaxaList {
+
+    private static final Logger myLogger = Logger.getLogger(TaxaArrayList.class);
     private final List<AnnotatedTaxon> myTaxaList;
     private final int numTaxa;
-    private final Multimap<String,Integer> myNameToIndex;
-
+    private final Multimap<String, Integer> myNameToIndex;
 
     TaxaArrayList(TaxaListBuilder builder) {
-        List<AnnotatedTaxon> srcList=builder.getImmutableList();
-        this.myTaxaList = new ArrayList<AnnotatedTaxon>(srcList.size());
-        numTaxa=srcList.size();
-        myNameToIndex=HashMultimap.create(srcList.size()*2,1);
-        int index=0;
+        List<AnnotatedTaxon> srcList = builder.getImmutableList();
+        myTaxaList = new ArrayList<AnnotatedTaxon>(srcList.size());
+        numTaxa = srcList.size();
+        myNameToIndex = HashMultimap.create(srcList.size() * 2, 1);
+        int index = 0;
         for (AnnotatedTaxon annotatedTaxon : srcList) {
             myTaxaList.add(annotatedTaxon);
-            if(myNameToIndex.containsKey(annotatedTaxon.getFullName())) {
-               // throw new IllegalStateException("Taxa name is duplicated :"+annotatedTaxon.getFullName());
-                System.err.println("Warning: Taxa name is duplicated :"+annotatedTaxon.getFullName());
+            if (myNameToIndex.containsKey(annotatedTaxon.getFullName())) {
+                myLogger.warn("init: Taxa name is duplicated :" + annotatedTaxon.getFullName());
             }
             myNameToIndex.put(annotatedTaxon.getFullName(), index);
-            if(!annotatedTaxon.getFullName().equals(annotatedTaxon.getName())) myNameToIndex.put(annotatedTaxon.getName(),index);
+            if (!annotatedTaxon.getFullName().equals(annotatedTaxon.getName())) {
+                myNameToIndex.put(annotatedTaxon.getName(), index);
+            }
             index++;
         }
     }
@@ -65,7 +68,7 @@ public class TaxaArrayList implements TaxaList {
 
     @Override
     public Set<Integer> getTaxaMatchingIndices(String name) {
-        return (Set)myNameToIndex.get(name);
+        return (Set) myNameToIndex.get(name);
     }
 
     @Override
@@ -171,17 +174,44 @@ public class TaxaArrayList implements TaxaList {
     @Override
     public ListIterator<AnnotatedTaxon> listIterator(final int index) {
         return new ListIterator<AnnotatedTaxon>() {
-            private final ListIterator<AnnotatedTaxon> i= myTaxaList.listIterator(index);
-            public boolean hasNext()     {return i.hasNext();}
-            public AnnotatedTaxon next()              {return i.next();}
-            public boolean hasPrevious() {return i.hasPrevious();}
-            public AnnotatedTaxon previous()          {return i.previous();}
-            public int nextIndex()       {return i.nextIndex();}
-            public int previousIndex()   {return i.previousIndex();}
-            public void remove() {throw new UnsupportedOperationException();}
-            public void set(AnnotatedTaxon e) {throw new UnsupportedOperationException();}
-            public void add(AnnotatedTaxon e) {throw new UnsupportedOperationException();}
-            };
+            private final ListIterator<AnnotatedTaxon> i = myTaxaList.listIterator(index);
+
+            public boolean hasNext() {
+                return i.hasNext();
+            }
+
+            public AnnotatedTaxon next() {
+                return i.next();
+            }
+
+            public boolean hasPrevious() {
+                return i.hasPrevious();
+            }
+
+            public AnnotatedTaxon previous() {
+                return i.previous();
+            }
+
+            public int nextIndex() {
+                return i.nextIndex();
+            }
+
+            public int previousIndex() {
+                return i.previousIndex();
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+            public void set(AnnotatedTaxon e) {
+                throw new UnsupportedOperationException();
+            }
+
+            public void add(AnnotatedTaxon e) {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 
     @Override
