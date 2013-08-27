@@ -32,6 +32,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	private double minMinorAlleleFrequency = -1.0;
 	private boolean useBCFilter = true;
 	private boolean useMultipleBCFilter = false;
+	private boolean useClusterAlgorithm = false;
 	public CallParentAllelesPlugin(Frame parentFrame) {
         super(parentFrame, false);
 	}
@@ -58,7 +59,8 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				myLogger.info("creating family alignment for family " + family.name);
 				family.original =  BitAlignment.getInstance(FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false), true);
 				myLogger.info("family alignment created");
-				if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
+				if (useClusterAlgorithm)  NucleotideImputationUtils.callParentAllelesUsingClusters(family, maxMissing, minMinorAlleleFrequency, windowSize);
+				else if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
 				else if (useMultipleBCFilter) NucleotideImputationUtils.callParentAllelesByWindowForMultipleBC(family, maxMissing, 1, windowSize);
 				else NucleotideImputationUtils.callParentAllelesByWindow(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
 				String comment = "Parent Calls for family " + family.name + " from " + d.getName() + ".";
@@ -114,6 +116,9 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-logfile")) {
 				addFileLogger(args[++i]);
+			}
+			else if (args[i].equals("-cluster")) {
+				useClusterAlgorithm = true;
 			}
 			else if (args[i].equals("?")) myLogger.error(getUsage());
 		}
@@ -175,6 +180,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		usage.append("-b or -bc1 : use BC1 specific filter (default = true)\n");
 		usage.append("-n or -bcn : use multipe backcross specific filter (default = false)\n");
 		usage.append("-l or -logconfig : an xml configuration file for the logger. Default will be to print all messages to console.\n");
+//		usage.append("-cluster : use the cluster algorithm.\n");
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();
