@@ -4,6 +4,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import java.util.*;
+import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.prefs.TasselPrefs;
 import org.apache.log4j.Logger;
 
 /**
@@ -19,13 +21,14 @@ public class TaxaArrayList implements TaxaList {
 
     private static final Logger myLogger = Logger.getLogger(TaxaArrayList.class);
     private final List<AnnotatedTaxon> myTaxaList;
-    private final int numTaxa;
+    private final int myNumTaxa;
     private final Multimap<String, Integer> myNameToIndex;
 
     TaxaArrayList(TaxaListBuilder builder) {
+
         List<AnnotatedTaxon> srcList = builder.getImmutableList();
         myTaxaList = new ArrayList<AnnotatedTaxon>(srcList.size());
-        numTaxa = srcList.size();
+        myNumTaxa = srcList.size();
         myNameToIndex = HashMultimap.create(srcList.size() * 2, 1);
         int index = 0;
         for (AnnotatedTaxon annotatedTaxon : srcList) {
@@ -34,21 +37,19 @@ public class TaxaArrayList implements TaxaList {
                 myLogger.warn("init: Taxa name is duplicated :" + annotatedTaxon.getFullName());
             }
             myNameToIndex.put(annotatedTaxon.getFullName(), index);
-            if (!annotatedTaxon.getFullName().equals(annotatedTaxon.getName())) {
-                myNameToIndex.put(annotatedTaxon.getName(), index);
-            }
+
+            // Ed, we need to talk about this. -Terry
+            //if (!annotatedTaxon.getFullName().equals(annotatedTaxon.getName())) {
+            //    myNameToIndex.put(annotatedTaxon.getName(), index);
+            //}
+
             index++;
         }
     }
 
     @Override
-    public int getSequenceCount() {
-        return numTaxa;
-    }
-
-    @Override
     public int getTaxaCount() {
-        return numTaxa;
+        return myNumTaxa;
     }
 
     @Override
@@ -63,12 +64,47 @@ public class TaxaArrayList implements TaxaList {
 
     @Override
     public int size() {
-        return numTaxa;
+        return myNumTaxa;
     }
 
     @Override
-    public Set<Integer> getTaxaMatchingIndices(String name) {
-        return (Set) myNameToIndex.get(name);
+    public List<Integer> getIndicesMatchingTaxon(String name) {
+
+        TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
+
+        if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
+            return new ArrayList<Integer>(myNameToIndex.get(name));
+        }
+
+        List<Integer> result = new ArrayList<Integer>(1);
+        for (int i = 0, n = getTaxaCount(); i < n; i++) {
+            if (get(i).equals(name)) {
+                result.add(i);
+            }
+        }
+
+        return result;
+
+    }
+
+    @Override
+    public List<Integer> getIndicesMatchingTaxon(Identifier taxon) {
+
+        TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
+
+        if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
+            return new ArrayList<Integer>(myNameToIndex.get(taxon.getFullName()));
+        }
+
+        List<Integer> result = new ArrayList<Integer>(1);
+        for (int i = 0, n = getTaxaCount(); i < n; i++) {
+            if (get(i).equals(taxon)) {
+                result.add(i);
+            }
+        }
+
+        return result;
+
     }
 
     @Override

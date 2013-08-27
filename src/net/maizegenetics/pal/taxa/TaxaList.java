@@ -4,20 +4,13 @@
 package net.maizegenetics.pal.taxa;
 
 import java.util.List;
-import java.util.Set;
+import net.maizegenetics.pal.ids.Identifier;
 
 /**
  *
  * @author terry
  */
 public interface TaxaList extends List<AnnotatedTaxon> {
-
-    /**
-     * Returns number of sequences (taxa).
-     *
-     * @return number of sequences
-     */
-    public int getSequenceCount();
 
     /**
      * Returns number of taxa (same as getSequenceCount()
@@ -44,9 +37,22 @@ public interface TaxaList extends List<AnnotatedTaxon> {
     public String getFullTaxaName(int index);
 
     /**
-     * Return a list of all matching taxa indices for a given name.  Matches will be done with both fullName and regular name.
-     * @param name
-     * @return set of indices for matching taxa (Set is empty if no match).
+     * Return a list of all matching taxa indices for a given name. Matches will
+     * depend on the Tassel Preference ID Join Strict.
+     *
+     * @param name name
+     *
+     * @return Indices for matching taxa (Empty if no match).
      */
-    public Set<Integer> getTaxaMatchingIndices(String name);
+    public List<Integer> getIndicesMatchingTaxon(String name);
+    
+    /**
+     * Return a list of all matching taxa indices for a given name. Matches will
+     * depend on the Tassel Preference ID Join Strict.
+     *
+     * @param taxon taxon
+     *
+     * @return Indices for matching taxa (Empty if no match).
+     */
+    public List<Integer> getIndicesMatchingTaxon(Identifier taxon);
 }
