@@ -164,7 +164,12 @@ public class ParseBarcodeRead {
         } else if (enzyme.matches("(?i)sexa[i1]-sau3a[i1]")) {
             theEnzyme = "SexAI-Sau3AI";  // A^CCWGGT   ^GATC (not blunt)
             initialCutSiteRemnant = new String[]{"CCAGGT", "CCTGGT"};
-            likelyReadEnd = new String[]{"GATC", "ACCAGGT", "ACCTGGT", "GATCAGATC"}; // look for Sau3AI site, Sau3AI site, or Poland et al. 2012 Y-adapter for Sau3AI
+            likelyReadEnd = new String[]{"GATC", "ACCAGGT", "ACCTGGT", "GATCAGATC"}; // look for SexAI site, Sau3AI site, or Poland et al. 2012 Y-adapter for Sau3AI
+            readEndCutSiteRemnantLength = 4;
+        } else if (enzyme.matches("(?i)bamh[i1l]-mluc[i1]")) {
+            theEnzyme = "BamHI-MluCI";  // G^GATCC   ^AATT (not blunt)
+            initialCutSiteRemnant = new String[]{"GATCC"};
+            likelyReadEnd = new String[]{"AATT", "GGATCC", "AATTAGATC"}; // look for MluCI site, BamHI site, or Poland et al. 2012 Y-adapter for MluCI
             readEndCutSiteRemnantLength = 4;
         } else if (enzyme.matches("(?i)apo[i1]")) {
             theEnzyme = "ApoI";
@@ -238,6 +243,7 @@ public class ParseBarcodeRead {
                     +"  RBSCG"    +"\n"
                     +"Or the following for two-enzyme digests:\n"
                     +"  AsiSI-MspI"   +"\n"
+                    +"  BamHI-MluCI"  +"\n"
                     +"  BssHII-MspI"  +"\n"
                     +"  EcoRI-MspI"   +"\n"
                     +"  FseI-MspI"    +"\n"

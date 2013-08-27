@@ -655,4 +655,34 @@ public abstract class AbstractGenotype implements Genotype {
     public int getTaxaCount() {
         return myTaxaCount;
     }
+
+    @Override
+    public byte[] getGenotypeForAllSites(int taxon) {
+        int numSites = getSiteCount();
+        byte[] result = new byte[numSites];
+        for (int i = 0; i < numSites; i++) {
+            result[i] = getBase(taxon, i);
+        }
+        return result;
+    }
+
+    @Override
+    public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
+        int numSites = end - start;
+        byte[] result = new byte[numSites];
+        for (int i = start; i < end; i++) {
+            result[i] = getBase(taxon, i);
+        }
+        return result;
+    }
+
+    @Override
+    public byte[] getGenotypeForAllTaxa(int site) {
+        int numTaxa = getTaxaCount();
+        byte[] result = new byte[numTaxa];
+        for (int i = 0; i < numTaxa; i++) {
+            result[i] = getBase(i, site);
+        }
+        return result;
+    }
 }

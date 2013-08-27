@@ -170,7 +170,7 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public int getSequenceCount() {
-        return myTaxaList.getSequenceCount();
+        return myTaxaList.getTaxaCount();
     }
 
     @Override
