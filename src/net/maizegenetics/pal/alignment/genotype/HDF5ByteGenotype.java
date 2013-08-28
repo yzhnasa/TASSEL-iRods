@@ -38,7 +38,7 @@ public class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     private static int getTaxonFromKey(long key) {
-        return (int) key >>> 32;
+        return (int) (key >>> 32);
     }
 
     private static int getSiteStartFromKey(long key) {
@@ -57,7 +57,7 @@ public class HDF5ByteGenotype extends AbstractGenotype {
                 .build(myGenoLoader);
     }
 
-    HDF5ByteGenotype getInstance(IHDF5Reader reader) {
+    static HDF5ByteGenotype getInstance(IHDF5Reader reader) {
         return new HDF5ByteGenotype(reader, 0, 0, false, null);
     }
 
