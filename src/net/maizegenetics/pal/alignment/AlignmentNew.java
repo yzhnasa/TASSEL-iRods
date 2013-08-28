@@ -7,7 +7,6 @@ import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.ProgressListener;
 
 /**
  * This supports heterozygous diploid alignments.
@@ -854,34 +853,6 @@ public interface AlignmentNew {
      * @return number of non-missing sites.
      */
     public int getTotalNotMissingForTaxon(int taxon);
-
-    /**
-     * Return whether alignment will execute quickly for site optimized
-     * operations. SBitAlignmentNew is obviously friendly. But so would
-     * FilterAlignmentNew is only sites have been filtered for example.
-     *
-     * @return whether optimized for site operations.
-     */
-    public boolean isSBitFriendly();
-
-    /**
-     * Return whether alignment will execute quickly for taxa optimized
-     * operations. TBitAlignmentNew is obviously friendly. But so would
-     * FilterAlignmentNew is only taxa have been filtered for example.
-     *
-     * @return whether optimized for taxa operations.
-     */
-    public boolean isTBitFriendly();
-
-    /**
-     * Optimizes this AlignmentNew for Taxa based operations.
-     */
-    public void optimizeForTaxa(ProgressListener listener);
-
-    /**
-     * Optimizes this AlignmentNew for Site based operations.
-     */
-    public void optimizeForSites(ProgressListener listener);
 
     /**
      * Returns depth count for each diploid allele at the given taxon and site.

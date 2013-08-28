@@ -154,46 +154,6 @@ public class DynamicBitStorage implements BitStorage {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    @Override
-    public boolean isSBitFriendly() {
-        return true;
-    }
-
-    @Override
-    public boolean isTBitFriendly() {
-        return true;
-    }
-
-    @Override
-    public void optimizeForTaxa(ProgressListener listener) {
-        for (int t = 0; t < myTaxaCount; t++) {
-            try {
-                bitLoader.load(getKey(SB.TAXA, myPreferredScope, t));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if (listener != null) {
-                listener.progress((int) (((double) (t + 1) / (double) myTaxaCount) * 100.0), null);
-            }
-        }
-        System.out.println("optimizeForSites:" + bitCache.size());
-    }
-
-    @Override
-    public void optimizeForSites(ProgressListener listener) {
-        for (int s = 0; s < mySiteCount; s += 64) {
-            try {
-                bitCache.get(getKey(SB.SITE, myPreferredScope, s));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if ((listener != null) && (s % 1000 == 0)) {
-                listener.progress((int) (((double) (s + 1) / (double) mySiteCount) * 100.0), null);
-            }
-        }
-        System.out.println("optimizeForSites:" + bitCache.size());
-    }
-
     public DynamicBitStorage(Genotype genotype, ALLELE_SCOPE_TYPE currentScope, byte[] prefAllele0, byte[] prefAllele1) {
         myGenotype = genotype;
         myPreferredScope = currentScope;

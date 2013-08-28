@@ -4,11 +4,12 @@
 package net.maizegenetics.pal.alignment.bit;
 
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.ProgressListener;
 
 /**
- * Interface provides genotypes in a binary fashion to be used in rapid computation.  See the package descriptions
- * {@link net.maizegenetics.pal.alignment.bit} for more information on how bits encoding is used throughout TASSEL.
+ * Interface provides genotypes in a binary fashion to be used in rapid
+ * computation. See the package descriptions
+ * {@link net.maizegenetics.pal.alignment.bit} for more information on how bits
+ * encoding is used throughout TASSEL.
  *
  * @author Terry Casstevens
  * @author Ed Buckler
@@ -22,7 +23,8 @@ public interface BitStorage {
      * minor allele.
      * <p></p>
      * Tassel 4.0 Allele number of value 2 would be the third most frequent
-     * allele value and so on.  In TASSEL4.5, we may eliminate bit support for 3rd alleles, as bit tools ignores these.
+     * allele value and so on. In TASSEL4.5, we may eliminate bit support for
+     * 3rd alleles, as bit tools ignores these.
      *
      * @param taxon taxon
      * @param alleleNumber allele number
@@ -53,7 +55,8 @@ public interface BitStorage {
      * the minor allele. Allele number of value 2 would be the third most
      * frequent allele value and so on.
      *
-     * //TODO - this should be made inclusive for endblock (like the underlying BitSet).  Note this will need changes in code.
+     * //TODO - this should be made inclusive for endblock (like the underlying
+     * BitSet). Note this will need changes in code.
      *
      * @param taxon taxon
      * @param alleleNumber allele number
@@ -111,32 +114,4 @@ public interface BitStorage {
      * @return sequence of true/false values.
      */
     public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock);
-
-    /**
-     * Return whether alignment will execute quickly for site optimized
-     * operations. SBitAlignment is obviously friendly. But so would
-     * FilterAlignment is only sites have been filtered for example.
-     *
-     * @return whether optimized for site operations.
-     */
-    public boolean isSBitFriendly();
-
-    /**
-     * Return whether alignment will execute quickly for taxa optimized
-     * operations. TBitAlignment is obviously friendly. But so would
-     * FilterAlignment is only taxa have been filtered for example.
-     *
-     * @return whether optimized for taxa operations.
-     */
-    public boolean isTBitFriendly();
-
-    /**
-     * Optimizes this Alignment for Taxa based operations.
-     */
-    public void optimizeForTaxa(ProgressListener listener);
-
-    /**
-     * Optimizes this Alignment for Site based operations.
-     */
-    public void optimizeForSites(ProgressListener listener);
 }
