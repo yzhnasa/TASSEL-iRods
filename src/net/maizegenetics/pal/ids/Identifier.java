@@ -29,7 +29,7 @@ public class Identifier implements Serializable, Comparable {
     public Identifier(String name) {
         myName = name;
         myNameTokens = name.split(DELIMITER);
-        hashCode=myName.hashCode();
+        hashCode = myName.hashCode();
     }
 
     public static Identifier getMergedInstance(Identifier id1, Identifier id2) {
@@ -58,7 +58,9 @@ public class Identifier implements Serializable, Comparable {
     // implements Comparable interface
     @Override
     public int compareTo(Object c) {
-        if (c instanceof Identifier) {
+        if (this == c) {
+            return 0;
+        } else if (c instanceof Identifier) {
             return compareTo(((Identifier) c).getFullNameTokens());
         } else {
             throw new ClassCastException();
@@ -67,6 +69,10 @@ public class Identifier implements Serializable, Comparable {
 
     @Override
     public boolean equals(Object c) {
+
+        if (this == c) {
+            return true;
+        }
 
         TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
 

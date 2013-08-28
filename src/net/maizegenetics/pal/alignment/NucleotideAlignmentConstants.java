@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ public final class NucleotideAlignmentConstants {
     public static final String INSERT_ALLELE_STR = "+";
     public static final String GAP_ALLELE_STR = "-";
     public static final String UNDEFINED_ALLELE_STR = "X";
+    public static final byte UNDEFINED_DIPLOID_ALLELE = (byte) 0x66;
     public static final String[][] NUCLEOTIDE_ALLELES = new String[][]{{"A", "C", "G", "T", "+", "-",
             UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR,
             UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, Alignment.RARE_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR}};
@@ -144,6 +146,29 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_DIPLOID_HASH.put("M", (byte) 0x01); // AC
         NUCLEOTIDE_DIPLOID_HASH.put("0", (byte) 0x54); // -+
     }
+    private static final byte[] NUCLEOTIDE_DIPLOID_ARRAY = new byte[256];
+
+    static {
+        Arrays.fill(NUCLEOTIDE_DIPLOID_ARRAY, UNDEFINED_DIPLOID_ALLELE);
+        for (String temp : NUCLEOTIDE_DIPLOID_HASH.keySet()) {
+            NUCLEOTIDE_DIPLOID_ARRAY[getNucleotideDiploidArrayIndex(temp)] = NUCLEOTIDE_DIPLOID_HASH.get(temp);
+        }
+    }
+    private static final int mask = 0x2F;
+    private static final int mask2 = 0x81;
+    private static final int shift = 2;
+
+    private static int getNucleotideDiploidArrayIndex(String str) {
+
+        if (str.length() == 1) {
+            return str.charAt(0);
+        } else if (str.length() == 2) {
+            return ((((str.charAt(1) << shift) ^ (byte) mask2)) ^ (str.charAt(0) & (byte) mask)) & 0xFF;
+        } else {
+            throw new IllegalStateException("NucleotideAlignmentConstants: getIndex: str length: " + str.length());
+        }
+
+    }
     public static final Map<Byte, String> NUCLEOTIDE_IUPAC_HASH = new HashMap<Byte, String>();
 
     static {
@@ -247,7 +272,8 @@ public final class NucleotideAlignmentConstants {
      */
     public static byte getNucleotideDiploidByte(String value) {
         try {
-            return NUCLEOTIDE_DIPLOID_HASH.get(value).byteValue();
+            return NUCLEOTIDE_DIPLOID_ARRAY[getNucleotideDiploidArrayIndex(value)];
+            // return NUCLEOTIDE_DIPLOID_HASH.get(value).byteValue();
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideDiploidByte: unknown allele value: " + value);
         }
@@ -280,7 +306,8 @@ public final class NucleotideAlignmentConstants {
      */
     public static byte getNucleotideDiploidByte(char value) {
         try {
-            return NUCLEOTIDE_DIPLOID_HASH.get(String.valueOf(value)).byteValue();
+            return NUCLEOTIDE_DIPLOID_ARRAY[value];
+            // return NUCLEOTIDE_DIPLOID_HASH.get(String.valueOf(value)).byteValue();
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideDiploidByte: unknown allele value: " + value);
         }

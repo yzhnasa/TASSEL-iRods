@@ -12,7 +12,6 @@ import net.maizegenetics.pal.site.AnnotatedPositionList;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.ProgressListener;
 import org.apache.log4j.Logger;
 
 /**
@@ -449,26 +448,6 @@ public class CoreAlignment implements AlignmentNew {
     }
 
     @Override
-    public boolean isSBitFriendly() {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).isSBitFriendly();
-    }
-
-    @Override
-    public boolean isTBitFriendly() {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).isTBitFriendly();
-    }
-
-    @Override
-    public void optimizeForTaxa(ProgressListener listener) {
-        getBitStorage(ALLELE_SCOPE_TYPE.Frequency).optimizeForTaxa(listener);
-    }
-
-    @Override
-    public void optimizeForSites(ProgressListener listener) {
-        getBitStorage(ALLELE_SCOPE_TYPE.Frequency).optimizeForSites(listener);
-    }
-
-    @Override
     public byte[] getDepthForAlleles(int taxon, int site) {
         return myAlleleDepth.getDepthForAlleles(taxon, site);
     }
@@ -493,7 +472,7 @@ public class CoreAlignment implements AlignmentNew {
                 return myFreqBitStorage;
             case Reference:
                 if (myReferenceBitStorage == null) {
-                    myReferenceBitStorage = new DynamicBitStorage(myGenotype, scopeType, getReference(), null);
+                    myReferenceBitStorage = DynamicBitStorage.getInstance(myGenotype, scopeType, getReference());
                 }
                 return myReferenceBitStorage;
             default:
