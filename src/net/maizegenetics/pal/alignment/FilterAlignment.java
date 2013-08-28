@@ -497,6 +497,8 @@ public class FilterAlignment extends AbstractAlignment {
 
         if ((!myIsSiteFilter) && (!myIsSiteFilterByRange)) {
             myLoci = myBaseAlignment.getLoci();
+            myLociOffsets = myBaseAlignment.getLociOffsets();
+            return;
         }
 
         int numSites = getSiteCount();
