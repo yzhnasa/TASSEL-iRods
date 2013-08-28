@@ -81,7 +81,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		}
 		
 		int narg = args.length;
-		for (int i = 0; i < narg - 1; i++) {
+		for (int i = 0; i < narg; i++) {
 			if (args[i].equals("-p") || args[i].equalsIgnoreCase("-pedigrees")) {
 				pedfileName = args[++i];
 			}
