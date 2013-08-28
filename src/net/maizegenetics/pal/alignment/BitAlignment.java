@@ -1107,4 +1107,16 @@ public class BitAlignment extends AbstractAlignment {
         }
         mySBitData = BitUtil.transpose(myTBitData, myNumDataRows, getSequenceCount(), myNumSites, listener);
     }
+    
+    /*
+     * Set hets to missing for SBit
+     */
+    public void removeHetsInSBit () {
+        for (int i = 0; i < myNumSites; i++) {
+            BitSet het = new OpenBitSet(mySBitData[0][i].getBits().clone());
+            het.and(mySBitData[1][i]);
+            mySBitData[0][i].xor(het);
+            mySBitData[1][i].xor(het);
+        }
+    }
 }

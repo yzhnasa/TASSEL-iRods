@@ -429,10 +429,11 @@ public class AnnotateTOPM {
                     byte divergence = ptopm.getDivergence(ptopm.getPairIndex(index), k);
                     TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, backMappingSource, mappingScore);
                     backBuffer[k][j-startIndex] = theTMI;
-                }
-                this.saveTMIBufferToTOPM(forwardBuffer, forwardDataSetNames, i);
-                this.saveTMIBufferToTOPM(backBuffer, backwardDataSetNames, i);
+                } 
             }
+            this.saveTMIBufferToTOPM(forwardBuffer, forwardDataSetNames, i);
+            this.saveTMIBufferToTOPM(backBuffer, backwardDataSetNames, i);
+            System.out.println("Chunk " + i + "(index) with " + topm.getChunkSize() + " tags is annotated");
         }
     }
     
