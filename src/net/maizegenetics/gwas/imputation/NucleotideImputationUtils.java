@@ -1,5 +1,8 @@
 package net.maizegenetics.gwas.imputation;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,6 +28,7 @@ import net.maizegenetics.gwas.imputation.clustering.HaplotypeCluster;
 import net.maizegenetics.gwas.imputation.clustering.HaplotypeClusterer;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.BitNucleotideAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
@@ -473,6 +477,7 @@ public class NucleotideImputationUtils {
 		mna.clean();
 		popdata.imputed = BitAlignment.getInstance(mna, true); 
 
+		exportParentHaplotypes("/Volumes/Macintosh HD 2/temp/z1chr1parents.hmp.txt", popdata, "1");
 	}
 	
 	public static int[] translateSitesBackToOriginal(int[] sites, int[] translation) {
@@ -504,7 +509,6 @@ public class NucleotideImputationUtils {
 		
 		String[] hap0 = new String[targetSize];
 		String[] hap1 = new String[targetSize];
-//		int[] selectedSites = new int[windowSize];
 		while (nSelected < targetSize && nSelected > -1 && nextSite < totalSites && nextSite > -1) {
 			//snpset0 provides a count of alleles for cluster0, snpset1 for cluster1
 			Multiset<String> snpset0 = HashMultiset.create();
@@ -531,16 +535,9 @@ public class NucleotideImputationUtils {
 			}
 
 			//if either cluster has two alleles with roughly equal classes, then do not use
-			System.out.printf("for nextSite = : %d  snpset0: %s; snpset1: %s\n", nextSite, snpset0, snpset1);
-			
 			String mj0 = getMajorAlleleFromSnpset(snpset0);
-			if (mj0 == null) System.out.print("mj0 is null, ");
-			else System.out.printf("mj0 = %s, ", mj0);
 			if (mj0 != null) {  /*only one big class in snpset0*/
 				String mj1 = getMajorAlleleFromSnpset(snpset1);
-				if (mj1 == null) System.out.println("mj1 is null");
-				else System.out.printf("mj1 = %s\n", mj1);
-				
 				if (mj1 != null && !mj0.equals(mj1)) {  /*only one big class in snpset1*/ /*the alleles are not equal*/
 					hap0[nSelected] = mj0;
 					hap1[nSelected] = mj1;
@@ -598,6 +595,10 @@ public class NucleotideImputationUtils {
 			int dist1 = hap.distanceFrom(haplotype1);
 			if (dist0 <= maxDiff && dist1 > maxDiff) cluster0.add(hap);
 			else if (dist0 > maxDiff && dist1 <= maxDiff) cluster1.add(hap);
+			else if (numberOfSites < maxDiff) {
+				if (dist0 == 0 && dist1 > 1) cluster0.add(hap);
+				else if (dist0 > 1 && dist1 == 0) cluster1.add(hap);
+			}
 		}
 		
 		//return the clusters
@@ -2304,8 +2305,33 @@ public class NucleotideImputationUtils {
 		return mergedClusters;
 	}
 
-	public static boolean aboutTheSame(int x, int y) {
-		return false;
+	public static void exportParentHaplotypes(String filename, PopulationData popdata, String chr) {
+		int nsites = popdata.alleleA.length;
+		int imputedCount = 0;
+		
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+			bw.write("rs#\talleles\tchrom\tpos\tstrand\tassembly#\tcenter\tprotLSID\tassayLSID\tpanelLSID\tQCcode\tparentA\tparentC\n");
+			for (int s = 0; s < nsites; s++) {
+				if (popdata.snpIndex.fastGet(s)) {
+					bw.write(popdata.original.getSNPID(s));
+					bw.write("\tA/C\t");
+					bw.write(chr);
+					bw.write("\t");
+					bw.write(Integer.toString(popdata.original.getPositionInLocus(s)));
+					bw.write("\tNA\tNA\tNA\tNA\tNA\tNA\tNA\t");
+					bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(popdata.alleleA[s]));
+					bw.write("\t");
+					bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(popdata.alleleC[s]));
+					bw.write("\n");
+				}
+			}
+			
+			bw.close();
+		} catch(IOException e){
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 }
 
