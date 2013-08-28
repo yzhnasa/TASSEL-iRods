@@ -472,7 +472,7 @@ public class CoreAlignment implements AlignmentNew {
                 return myFreqBitStorage;
             case Reference:
                 if (myReferenceBitStorage == null) {
-                    myReferenceBitStorage = new DynamicBitStorage(myGenotype, scopeType, getReference(), null);
+                    myReferenceBitStorage = DynamicBitStorage.getInstance(myGenotype, scopeType, getReference());
                 }
                 return myReferenceBitStorage;
             default:
