@@ -42,7 +42,7 @@ public class CompressedMLMusingDoubleMatrix {
     private final boolean useCompression;
     private final boolean useP3D;
     private final double compression;
-    private DoubleMatrix ZKZ;
+//    private DoubleMatrix ZKZ;
     private final MarkerPhenotypeAdapter theAdapter;
     private final MLMPlugin parentPlugin;
     private final DistanceMatrix kinshipMatrix;
@@ -183,8 +183,9 @@ public class CompressedMLMusingDoubleMatrix {
             DoubleMatrix fixed = LinearModelUtils.createFixedEffectsArray(factorList, covariateList, missing);
 
             //fit data without markers
-            computeZKZ(y, fixed, Z, kin, theAdapter.getPhenotypeName(ph));
-            EMMAforDoubleMatrix emlm = new EMMAforDoubleMatrix(y, fixed, ZKZ, 0);
+            DoubleMatrix[] zk = computeZKZ(y, fixed, Z, kin, theAdapter.getPhenotypeName(ph));
+//            EMMAforDoubleMatrix emlm = new EMMAforDoubleMatrix(y, fixed, zk[0], zk[1], 0, Double.NaN);
+            EMMAforDoubleMatrix emlm = new EMMAforDoubleMatrix(y, fixed, zk[1], zk[0], 0, Double.NaN);
             emlm.solve();
             genvar = emlm.getVarRan();
             resvar = emlm.getVarRes();
@@ -237,6 +238,7 @@ public class CompressedMLMusingDoubleMatrix {
             //not implemented
 
             if (useP3D) {
+            	DoubleMatrix ZKZ = zk[0].mult(zk[1]).tcrossproduct(zk[0]);
                 Vminus = new SymmetricMatrixInverterDM(calculateV(ZKZ, genvar, resvar));
             }
 
@@ -334,7 +336,8 @@ public class CompressedMLMusingDoubleMatrix {
                     if (useP3D) {
                         testMarkerUsingP3D(result, ymarker, X, Vminus.getInverse(additionalMissing), markerdf);
                     } else {
-                        testMarkerUsingEMMA(result, ymarker, X, ZKZ.getSelection(keepIndex, keepIndex).copy(), nAlleles);
+                    	DoubleMatrix Zsel = zk[0].getSelection(keepIndex, null);
+                        testMarkerUsingEMMA(result, ymarker, X, zk[1], Zsel, nAlleles);
                         markerdf = result.modeldf - baseModeldf;
                     }
 
@@ -633,7 +636,19 @@ public class CompressedMLMusingDoubleMatrix {
         return true;
     }
 
-    public void computeZKZ(DoubleMatrix data, DoubleMatrix X, DoubleMatrix Z, DistanceMatrix kin, String traitname) {
+    /**
+     * Computes ZKZ. If compression is specified then the compressed ZKZ is calculated along with compressed versions of Z and K.
+     * @param data	the phenotype data. Needed for optimizing compression.
+     * @param X	the incidence matrix specifying all fixed effects other than markers
+     * @param Z the kinship incidence matrix
+     * @param kin	the genetic similarity matrix
+     * @param traitname	the name of the phenotype passed in data
+     * @return	an array containing the Z matrix as its first element and the K matrix as its second element. If compression is specified, then both are the compressed versions.
+     */
+    public DoubleMatrix[] computeZKZ(DoubleMatrix data, DoubleMatrix X, DoubleMatrix Z, DistanceMatrix kin, String traitname) {
+    	DoubleMatrix[] zkMatrices = new DoubleMatrix[2]; 
+    	CompressedDoubleMatrix.kinshipMethod kinmethod = CompressedDoubleMatrix.kinshipMethod.avg;
+    	
         //Kmatrix
         int nkin = kin.getSize();
         int nrow = nkin;
@@ -645,9 +660,10 @@ public class CompressedMLMusingDoubleMatrix {
                 K.set(r, c, kin.getDistance(r, c));
             }
         }
-        ZKZ = Z.mult(K).tcrossproduct(Z);
 
         if (!useCompression) {
+        	zkMatrices[0] = Z;
+        	zkMatrices[1] = K;
         } else if (Double.isNaN(compression)) {
             //are taxa replicated?
             //sum columns of Z. If any sum > 1, then yes
@@ -662,8 +678,8 @@ public class CompressedMLMusingDoubleMatrix {
 
             DistanceMatrix distance = calculateDistanceFromKin(kin);
             CompressedDoubleMatrix cm = new CompressedDoubleMatrix(kin, new UPGMATree(distance));
-//			CompressedDoubleMatrix cm = new CompressedDoubleMatrix(kin, new NeighborJoiningTree(distance));
-            EMMAforDoubleMatrix emlm = new EMMAforDoubleMatrix(data, X, ZKZ, 0);
+            EMMAforDoubleMatrix emlm = new EMMAforDoubleMatrix(data, X, K, Z, 0, Double.NaN);
+            
             emlm.solve();
             double bestlnlk = emlm.getLnLikelihood();
             int bestCompression = nkin;
@@ -677,10 +693,10 @@ public class CompressedMLMusingDoubleMatrix {
             while (g > 1 || (g == 1 && taxaReplicated)) {
                 cm.setNumberOfGroups(g);
 
-                ZKZ = cm.getCompressedZKZ(Z, CompressedDoubleMatrix.kinshipMethod.avg);
-
+                DoubleMatrix compressedZ = cm.getCompressedZ(Z);
+                DoubleMatrix compressedK = cm.getCompressedMatrix(kinmethod);
                 try {
-                    emlm = new EMMAforDoubleMatrix(data, X, ZKZ, 0);
+                    emlm = new EMMAforDoubleMatrix(data, X, compressedK, compressedZ, 0, Double.NaN);
                     emlm.solve();
 
                     //output number of groups, compression level (= number of taxa / number of groups), -2L, genvar, resvar
@@ -736,7 +752,8 @@ public class CompressedMLMusingDoubleMatrix {
             }
 
             cm.setNumberOfGroups(bestCompression);
-            ZKZ = cm.getCompressedZKZ(Z, CompressedDoubleMatrix.kinshipMethod.avg);
+            zkMatrices[0] = cm.getCompressedZ(Z);
+            zkMatrices[1] = cm.getCompressedMatrix(kinmethod);
             parentPlugin.updateProgress(0);
 
         } else {
@@ -744,12 +761,15 @@ public class CompressedMLMusingDoubleMatrix {
             CompressedDoubleMatrix cm = new CompressedDoubleMatrix(kin, new UPGMATree(distance));
             int g = (int) Math.round(nkin / compression);
             cm.setNumberOfGroups(g);
-            ZKZ = cm.getCompressedZKZ(Z, CompressedDoubleMatrix.kinshipMethod.avg);
+            zkMatrices[0] = cm.getCompressedZ(Z);
+            zkMatrices[1] = cm.getCompressedMatrix(kinmethod);
         }
+        
+        return zkMatrices;
     }
 
-    public void testMarkerUsingEMMA(CompressedMLMResult result, DoubleMatrix y, DoubleMatrix X, DoubleMatrix kin, int nAlleles) {
-        EMMAforDoubleMatrix emlm = new EMMAforDoubleMatrix(y, X, kin, nAlleles);
+    public void testMarkerUsingEMMA(CompressedMLMResult result, DoubleMatrix y, DoubleMatrix X, DoubleMatrix K, DoubleMatrix Z, int nAlleles) {
+        EMMAforDoubleMatrix emlm = new EMMAforDoubleMatrix(y, X, K, Z, nAlleles, Double.NaN);
         emlm.solve();
         result.beta = emlm.getBeta();
         double[] Fp = emlm.getMarkerFp();
