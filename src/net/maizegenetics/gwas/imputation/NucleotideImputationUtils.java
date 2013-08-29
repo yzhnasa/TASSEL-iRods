@@ -439,6 +439,7 @@ public class NucleotideImputationUtils {
 			for (int site : origSites) popdata.snpIndex.fastSet(site);
 		}
 		
+		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
 		ntaxa = popdata.original.getSequenceCount();
@@ -607,6 +608,68 @@ public class NucleotideImputationUtils {
 		newClusters.add(new HaplotypeCluster(cluster0));
 		newClusters.add(new HaplotypeCluster(cluster1));
 		return newClusters;
+	}
+	
+	public static byte[][] getReverseHaplotypes(Alignment a, PopulationData popdata, int windowSize, int maxDiff) {
+		int nFilteredSites = a.getSiteCount();
+		int nOriginalSites = popdata.original.getSiteCount();
+		
+		//generate again in reverse direction to check
+		byte[] reverseA = new byte[nFilteredSites];
+		byte[] reverseC = new byte[nFilteredSites];
+		Arrays.fill(reverseA, (byte) NN);
+		Arrays.fill(reverseC, (byte) NN);
+		
+		byte[] lastAhap = new byte[windowSize]; /*the A haplotype at the end of the chromosome*/
+		byte[] lastChap = new byte[windowSize]; /*the C haplotype at the end of the chromosome*/
+		int testSite = nOriginalSites - 1;
+		int[] selectedSites = new int[windowSize];
+		
+		for (int i = windowSize - 1; i >= 0; i-- ) {
+			while(!popdata.snpIndex.fastGet(testSite)) testSite--;
+			lastAhap[i] = popdata.alleleA[testSite];
+			lastChap[i] = popdata.alleleC[testSite];
+			testSite--;
+		}
+		Haplotype haplotype0 = new Haplotype(lastAhap);
+		Haplotype haplotype1 = new Haplotype(lastChap);
+		
+		int base = nFilteredSites - windowSize;
+		for (int i = 0; i < windowSize; i++) selectedSites[i] = base + i;
+		
+		ArrayList<Haplotype> cluster0 = new ArrayList<>();
+		ArrayList<Haplotype> cluster1 = new ArrayList<>();
+		
+		int ntaxa = a.getSequenceCount();
+		Alignment b = FilterAlignment.getInstance(a, selectedSites);
+		for (int t = 0; t < ntaxa; t++) {
+			byte[] seq = b.getBaseRow(t);
+			Haplotype hap = new Haplotype(seq, t);
+			int dist0 = hap.distanceFrom(haplotype0);
+			int dist1 = hap.distanceFrom(haplotype1);
+			if (dist0 <= maxDiff && dist1 > maxDiff) cluster0.add(hap);
+			else if (dist0 > maxDiff && dist1 <= maxDiff) cluster1.add(hap);
+		}
+
+		//extend to left
+		ArrayList<HaplotypeCluster> seedClusters = new ArrayList<HaplotypeCluster>();
+		seedClusters.add(new HaplotypeCluster(cluster0));
+		seedClusters.add(new HaplotypeCluster(cluster1));
+		int[] siteNumber = new int[]{windowSize};
+		int[] sites = selectedSites;
+		
+		while (siteNumber[0] == windowSize && sites[0] > 0) {
+			seedClusters = extendClusters(a, seedClusters, sites, siteNumber, false);
+			byte[] h0 = seedClusters.get(0).getMajorityHaplotype();
+			byte[] h1 = seedClusters.get(1).getMajorityHaplotype();
+			
+			for (int i = windowSize - siteNumber[0] ;i < windowSize; i++) {
+				reverseA[sites[i]] = h0[i];
+				reverseC[sites[i]] = h1[i];
+			}
+		}
+
+		return new byte[][]{reverseA, reverseC};
 	}
 	
 	public static String getMajorAlleleFromSnpset(Multiset<String> snpset) {
