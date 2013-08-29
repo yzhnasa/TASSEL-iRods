@@ -19,4 +19,8 @@ public class SuperByteMatrixBuilder {
             return new SuperByteMatrixSingle(rows, columns);
         }
     }
+
+    public static SuperByteMatrix getInstanceTranspose(int rows, int columns) {
+        return new SuperByteMatrixTranspose(rows, columns);
+    }
 }
