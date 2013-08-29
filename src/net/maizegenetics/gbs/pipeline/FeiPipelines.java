@@ -50,8 +50,8 @@ public class FeiPipelines {
         //this.addTripsicum();
         //this.mkV3Alignment(); //take some time to align using blast+
         //this.initializeV3TOPM();
-        //this.annotateV3TOPM();
-        this.geneticMapping();
+        this.annotateV3TOPM();
+        //this.geneticMapping();
         //this.bitTest();
         
     }
@@ -71,9 +71,11 @@ public class FeiPipelines {
     }
     
     public void geneticMapping () {
-        //String hapMapHDF5 = "M:/GBSV3/genotype/AllZeaGBSv27i3b.imp.hmp.h5";
+        //String hapMapHDF5 = "/workdir/mingh/AllZeaGBSv27i3b.imp.hmp.h5";
         String hapMapHDF5 = "M:/GBSV3/genotype/GBS27.small.imp.hmp.h5";
+        //String tbtHDF5 = "/workdir/mingh/smallerTBTHDF5_mergedtaxa_pivot_20120921.h5";
         String tbtHDF5 = "M:/GBSV3/tbt/smallerTBTHDF5_mergedtaxa_pivot_20120921.h5";
+        //String outfileS = "/workdir/mingh/outfile.txt";
         String outfileS = "M:/GBSV3/mappingResult/outfile.txt";
         TagAgainstAnchor taa = new TagAgainstAnchor(hapMapHDF5, tbtHDF5, outfileS, 0.000001, 20, -1, 16);
         
@@ -94,6 +96,8 @@ public class FeiPipelines {
         //anno.annotateWithBlastFromDir(blastDirS, 5);
         String PETOPMFileS = "M:/af/ptopm/PE.topm";
         //anno.annotateWithPE(PETOPMFileS, 5);
+        String TOGMFileS = "M:/pav/PhyGenMapping/v1.togm.txt";
+        anno.annotateWithGM(TOGMFileS, 1);
     }
     
     public void initializeV3TOPM () {

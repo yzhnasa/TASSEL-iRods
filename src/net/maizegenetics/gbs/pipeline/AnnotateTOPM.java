@@ -465,9 +465,10 @@ public class AnnotateTOPM {
                     byte divergence = Byte.MIN_VALUE; //no divergence in GM
                     TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, mappingSource, mappingScore);
                     buffer[k][j-startIndex] = theTMI;
-                }
-                this.saveTMIBufferToTOPM(buffer, dataSetNames, i);
+                }     
             }
+            this.saveTMIBufferToTOPM(buffer, dataSetNames, i);
+            if (i%100 == 0) System.out.println("Chunk " + i + "(index) with " + topm.getChunkSize() + " tags is annotated");
         }
     }
     

@@ -515,7 +515,7 @@ public class TagAgainstAnchor {
             chrEndIndex[i] = chrOffSet[i] + a.getLocusSiteCount(a.getLoci()[i]);
         }
         anchor = (BitAlignment) BitAlignment.getInstance(a, true);
-        if (ifRemoveHet) anchor.removeHetsInSBit();
+        //if (ifRemoveHet) anchor.removeHetsInSBit();
         anchorMaf = new double[anchor.getSiteCount()];
         for (int i = 0; i < anchorMaf.length; i++) {
             anchorMaf[i] = anchor.getMinorAlleleFrequency(i);
