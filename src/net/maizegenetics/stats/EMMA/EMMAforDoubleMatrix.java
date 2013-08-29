@@ -25,8 +25,6 @@ public class EMMAforDoubleMatrix {
     protected int Nran;
     protected int dfMarker = 0;
     
-//    protected boolean noZ;
-    
     protected DoubleMatrix X;
 //    protected DoubleMatrix A;
     protected DoubleMatrix Z = null;
@@ -112,7 +110,6 @@ public class EMMAforDoubleMatrix {
 	 * @param delta
 	 */
 	public EMMAforDoubleMatrix(DoubleMatrix data, DoubleMatrix fixed, DoubleMatrix kin, DoubleMatrix inZ, int nAlleles, double delta) {
-		//I created this constructor becuase it seems that the previous constructor assumes that Z is the identity matrix
 		dfModel = fixed.numberOfColumns();
 
 		int rank = fixed.columnRank();
@@ -236,9 +233,6 @@ public class EMMAforDoubleMatrix {
 		lnLikelihood = lnlk(delta);
 		invH = inverseH(delta);
 		beta = calculateBeta();
-                blup = calculateBLUP();
-                pred = calculatePred();
-                res = calculateRes();
 		double genvar = getGenvar(beta);
 
 	    dfModel = q - 1;
@@ -247,6 +241,12 @@ public class EMMAforDoubleMatrix {
 	    varRandomEffect = genvar;
 	}
 
+	public void calculateBlupsPredictedResiduals() {
+        blup = calculateBLUP();
+        pred = calculatePred();
+        res = calculateRes();
+	}
+	
 	private double findDeltaInInterval(double[] interval) {
         double[][] d = scanlnlk(interval[0], interval[1]);
 
