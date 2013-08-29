@@ -25,8 +25,13 @@ public class EMMAforDoubleMatrix {
     protected int Nran;
     protected int dfMarker = 0;
     
+//    protected boolean noZ;
+    
     protected DoubleMatrix X;
     protected DoubleMatrix A;
+    protected DoubleMatrix Z = null;
+//    protected DoubleMatrix transZ;
+    protected DoubleMatrix K;
     protected EigenvalueDecomposition eig;
     protected EigenvalueDecomposition eigA;
     protected DoubleMatrix U;
@@ -34,6 +39,7 @@ public class EMMAforDoubleMatrix {
     protected DoubleMatrix invXHX;
     
     protected DoubleMatrix beta;
+    protected DoubleMatrix Xbeta;
     protected double ssModel;
     protected double ssError;
     protected double SST;
@@ -60,6 +66,15 @@ public class EMMAforDoubleMatrix {
 		this(y, fixed, kin, nAlleles, Double.NaN);
 	}
 	
+	/**
+	 * This constructor assumes that Z is the identity matrix for calculating blups, predicted values and residuals. If that is not true use
+	 * the contstructor that explicity takes Z. This constructor treats A as ZKZ' so it can be used if blups and residuals are not needed.
+	 * @param data
+	 * @param fixed
+	 * @param kin
+	 * @param nAlleles
+	 * @param delta
+	 */
 	public EMMAforDoubleMatrix(DoubleMatrix data, DoubleMatrix fixed, DoubleMatrix kin, int nAlleles, double delta) {
 		//throw an error if X is less than full column rank
 		dfModel = fixed.numberOfColumns();
@@ -73,13 +88,51 @@ public class EMMAforDoubleMatrix {
 		
 		y = data;
 		if (y.numberOfColumns() > 1 && y.numberOfRows() == 1) this.y = y.transpose();
-		else this.y = y;
 		
 		N = y.numberOfRows();
 		X = fixed;
-		
+
 		q = X.numberOfColumns();
 		A = kin;
+        Z = DoubleMatrixFactory.DEFAULT.identity(A.numberOfRows());
+        
+		Nran = A.numberOfRows();
+		dfMarker = nAlleles - 1;
+		init();
+	}
+        
+	/**
+	 * This constructor should be used when Z is not the identity matrix. Z is needed to calculate blups and residuals.
+	 * @param data
+	 * @param fixed
+	 * @param kin
+	 * @param inZ
+	 * @param nAlleles
+	 * @param delta
+	 */
+	public EMMAforDoubleMatrix(DoubleMatrix data, DoubleMatrix fixed, DoubleMatrix kin, DoubleMatrix inZ, int nAlleles, double delta) {
+		//I created this constructor becuase it seems that the previous constructor assumes that Z is the identity matrix
+		dfModel = fixed.numberOfColumns();
+
+		int rank = fixed.columnRank();
+		if (rank < dfModel) throw new IllegalArgumentException("The fixed effect design matrix has less than full column rank. The analysis will not be run.");
+		if (!Double.isNaN(delta)) {
+			this.delta = delta;
+			findDelta = false;
+		} 
+
+		y = data;
+		if (y.numberOfColumns() > 1 && y.numberOfRows() == 1) this.y = y.transpose();
+
+		N = y.numberOfRows();
+		X = fixed;
+
+		q = X.numberOfColumns();
+		Z = inZ;
+		K = kin;
+
+		A = Z.mult(K).tcrossproduct(Z);
+
 		Nran = A.numberOfRows();
 		dfMarker = nAlleles - 1;
 		init();
@@ -95,6 +148,7 @@ public class EMMAforDoubleMatrix {
         eigA = A.getEigenvalueDecomposition();
         double[] eigenvalA = eigA.getEigenvalues();
         int n = eigenvalA.length;
+        
         double min = eigenvalA[0];
         for (int i = 1; i < n; i++) min = Math.min(min, eigenvalA[i]);
         double bend = 0.0;
@@ -181,13 +235,15 @@ public class EMMAforDoubleMatrix {
 		lnLikelihood = lnlk(delta);
 		invH = inverseH(delta);
 		beta = calculateBeta();
+                blup = calculateBLUP();
+                pred = calculatePred();
+                res = calculateRes();
 		double genvar = getGenvar(beta);
 
 	    dfModel = q - 1;
 	    dfError = N - q;
 	    varResidual = genvar * delta;
 	    varRandomEffect = genvar;
-	    calculatePredRes();
 	}
 
 	private double findDeltaInInterval(double[] interval) {
@@ -357,6 +413,27 @@ public class EMMAforDoubleMatrix {
     	return invXHX.mult(XtH.mult(y));
     }
     
+    private DoubleMatrix calculateBLUP(){
+        Xbeta = X.mult(beta);
+        DoubleMatrix YminusXbeta = y.minus(Xbeta);
+        DoubleMatrix KtransZ = K.mult(Z.transpose());
+        DoubleMatrix KtransZinvH = KtransZ.mult(invH);
+        return KtransZinvH.mult(YminusXbeta);
+    }
+    
+    private DoubleMatrix calculatePred(){
+        Xbeta = X.mult(beta);
+        DoubleMatrix Zu = Z.mult(blup);
+        return Xbeta.plus(Zu);
+    }
+ 
+    private DoubleMatrix calculateRes(){
+        return y.minus(pred);
+    }
+    
+    
+    
+    
     private double getGenvar(DoubleMatrix beta) {
     	DoubleMatrix res = y.copy();
     	res.minusEquals(X.mult(beta));
@@ -411,11 +488,7 @@ public class EMMAforDoubleMatrix {
 		return lnLikelihood;
 	}
 
-	public void calculatePredRes() {
-		pred = X.mult(beta);
-		res = y.minus(pred);
-	}
-	
+        
 	public double[] getMarkerFp() {
 		if (dfMarker < 1) return new double[]{Double.NaN, Double.NaN, Double.NaN}; 
 		int nparm = beta.numberOfRows();
