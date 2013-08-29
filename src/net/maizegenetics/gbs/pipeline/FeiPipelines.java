@@ -50,8 +50,8 @@ public class FeiPipelines {
         //this.addTripsicum();
         //this.mkV3Alignment(); //take some time to align using blast+
         //this.initializeV3TOPM();
-        this.annotateV3TOPM();
-        //this.geneticMapping();
+        //this.annotateV3TOPM();
+        this.geneticMapping();
         //this.bitTest();
         
     }
@@ -77,9 +77,8 @@ public class FeiPipelines {
         String tbtHDF5 = "M:/GBSV3/tbt/smallerTBTHDF5_mergedtaxa_pivot_20120921.h5";
         //String outfileS = "/workdir/mingh/outfile.txt";
         String outfileS = "M:/GBSV3/mappingResult/outfile.txt";
-        TagAgainstAnchor taa = new TagAgainstAnchor(hapMapHDF5, tbtHDF5, outfileS, 0.000001, 20, -1, 16);
-        
-        
+        TagAgainstAnchor taa = new TagAgainstAnchor(hapMapHDF5, tbtHDF5, outfileS, 0.000001, 20, -1, 2048);
+        //TagAgainstAnchor.getChunkNum(tbtHDF5, 1024);    
     }
     
     public void annotateV3TOPM () {

@@ -41,8 +41,7 @@ public class TagAgainstAnchor {
     Task[] jobs;
     static int threadNumPerCore = 32; //32 can be faster, but the admin will complain about too many threads
     int threadNum;
-    int tagNumPerThreadInChunk;
-    int tagNumInChunk;
+    int chunkSize;
     int chunkNum;
     int chunkStartIndex;
     int chunkEndIndex;
@@ -53,17 +52,19 @@ public class TagAgainstAnchor {
      * @param tbtHDF5 TagsByTaxa of HDF5 format
      * @param outfileS output file of genetic mapping
      * @param pThresh P-value threshold, default: 1e-6
-     * @param minCount minimum count when tag and alleles coexist in taxa, default = 20, too low number lacks statistical power
+     * @param minCount minimum count when tag appear in taxa (In TBT file), default = 20, too low number lacks statistical power
      * @param coreNum default:-1, which means using all cores in a node. When the coreNum is set less than total core number, which means using coreNum cores, each core runs 1 thread
-     * @param tagNumPerThreadInChunk number of tags which run on one thread in a chunk. This determines the time usage in a node, since the thread number is fixed
+     * @param chunkSize number of tags in a chunk. This determines the time usage in a node
      */
-    public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int tagNumPerThreadInChunk) {
+    public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int chunkSize) {
         this.pThresh = pThresh;
         this.minCount = minCount;
-        this.loadAnchorMap(hapMapHDF5, true);
+        this.loadAnchorMap(hapMapHDF5);
         this.loadTBT(tbtHDF5);
         this.redirect();
-        this.calculateThreadNumChunk(coreNum,tagNumPerThreadInChunk);
+        this.chunkSize = chunkSize;
+        this.chunkNum = this.getChunkNum(chunkSize);
+        this.calculateThreadNum(coreNum);
         this.chunkStartIndex = 0;
         this.chunkEndIndex = chunkNum;
         this.MTMapping(outfileS);
@@ -81,16 +82,54 @@ public class TagAgainstAnchor {
      * @param chunkStartIndex start index of chunk
      * @param chunkEndIndex end index of chunk. Note: chunk of end index is not included.
      */
-    public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int tagNumPerThreadInChunk, int chunkStartIndex, int chunkEndIndex) {
+    public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int chunkSize, int chunkStartIndex, int chunkEndIndex) {
         this.pThresh = pThresh;
         this.minCount = minCount;
-        this.loadAnchorMap(hapMapHDF5,true);
+        this.loadAnchorMap(hapMapHDF5);
         this.loadTBT(tbtHDF5);
         this.redirect();
-        this.calculateThreadNumChunk(coreNum,tagNumPerThreadInChunk);
+        this.chunkSize = chunkSize;
+        this.chunkNum = this.getChunkNum(chunkSize);
+        this.calculateThreadNum(coreNum);
         this.chunkStartIndex = chunkStartIndex;
         this.chunkEndIndex = chunkEndIndex;
         this.MTMapping(outfileS);
+    }
+    
+    /**
+     * Return the number of chunks at current chunkSize
+     * @param chunkSize
+     * @return 
+     */
+    public int getChunkNum (int chunkSize) {
+        int tagNum = tbt.getTagCount();
+        int chunkNum = 0;
+        int left = tagNum % chunkSize;
+        if (left == 0) chunkNum = tagNum / chunkSize;
+        else chunkNum = tagNum / chunkSize + 1;
+        return chunkNum;
+    }
+    
+    /**
+     * Pre-calculate number of chunks when qsub genetic mapping 
+     * @param tbtHDF5
+     * @param coreNum
+     * @param tagNumPerThreadInChunk
+     * @return 
+     */
+    public static int getChunkNum (String tbtHDF5, int chunkSize) {
+        TagsByTaxaByteHDF5TagGroups tbt = new TagsByTaxaByteHDF5TagGroups (tbtHDF5);
+        int tagNum = tbt.getTagCount();
+        int chunkNum = 0;
+        int left = tagNum % chunkSize;
+        if (left == 0) chunkNum = tagNum / chunkSize;
+        else chunkNum = tagNum / chunkSize + 1;
+        System.out.println("TBT has " + tagNum + " tags");
+        System.out.println("TBT will be devided into " + chunkNum + " chunks, " + chunkSize + " tags each");
+        if (left != 0) System.out.println("The last chunk has " + left + " tags");
+        System.out.println("The index of chunk are used submit parallel computation to different node");
+        System.out.println("Tags in each chunk will be multi-threaded in one node");
+        return chunkNum;
     }
     
     /**
@@ -130,42 +169,53 @@ public class TagAgainstAnchor {
      * @param outfileS 
      */
     public void MTMapping (String outfileS) {
+        if (chunkStartIndex > (chunkNum-1) || chunkEndIndex > chunkNum || chunkStartIndex == chunkEndIndex) {
+            System.out.println("Error in setting chunk index. Please reset");
+            System.exit(0);
+        }
         int tagNum = tbt.getTagCount();
-        if (tagNum % tagNumInChunk == 0) chunkNum = tagNum / tagNumInChunk;
-        else chunkNum = tagNum / tagNumInChunk + 1;
-        System.out.println("TBT has " + chunkNum + " chunks, " + tagNumInChunk + " tags each\n");
+        System.out.println("TBT has " + chunkNum + " chunks, mapping will start at chunk " + chunkStartIndex + ", end at chunk " + chunkEndIndex +"\n");
         try {
             BufferedWriter bw = new BufferedWriter (new FileWriter (outfileS), 65536);
             bw.write("TestTag	TestTagNum	BlastChr	BlastPos	refDiv	LDChr	LDSite	LDPos	BinomP	SigTests	TagTaxaCnt	ChrSig	LRatioB:2	LRatioB:M	SiteOnBestChrThanNextChr	MinSigPos	MaxSigPos");
             bw.newLine();
-            for (int i = 0; i < chunkNum; i++) {
-                int chunkStartTagIndex = i * tagNumInChunk;
-                int chunkEndTagIndex = chunkStartTagIndex + tagNumInChunk;
+            for (int i = this.chunkStartIndex; i < this.chunkEndIndex; i++) {
+                int chunkStartTagIndex = i * chunkSize;
+                int chunkEndTagIndex = chunkStartTagIndex + chunkSize;
                 if (chunkEndTagIndex > tagNum) chunkEndTagIndex = tagNum;
                 System.out.println("Start mapping tag chunk " + i + "(Index), tag index from " + chunkStartTagIndex + " to " + chunkEndTagIndex);
                 int[] threadStartTagIndex;
                 int[] threadEndTagIndex;
-                int actualThreadNum = threadNum;
+                int[] threadSize;
                 int actualChunkSize = chunkEndTagIndex-chunkStartTagIndex;
-                if (actualChunkSize != tagNumInChunk) {
-                    if (actualChunkSize % tagNumPerThreadInChunk == 0) actualThreadNum = actualChunkSize / tagNumPerThreadInChunk;
-                    else actualThreadNum = actualChunkSize / tagNumPerThreadInChunk + 1;
-                    threadStartTagIndex = new int[actualThreadNum];
-                    threadEndTagIndex = new int[actualThreadNum];
-                    for (int j = 0; j < actualThreadNum; j++) {
-                        threadStartTagIndex[j] = chunkStartTagIndex + tagNumPerThreadInChunk * j;
-                        threadEndTagIndex[j] = threadStartTagIndex[j] + tagNumPerThreadInChunk;
+                int left = actualChunkSize % threadNum;
+                int baseSize = actualChunkSize / threadNum;
+                if (baseSize == 0) {
+                    threadStartTagIndex = new int[left];
+                    threadEndTagIndex = new int[left];
+                    for (int j = 0; j < threadStartTagIndex.length; j++) {
+                        threadStartTagIndex[j] = chunkStartTagIndex + j;
+                        threadEndTagIndex[j] = threadStartTagIndex[j]+1;
                     }
-                    threadEndTagIndex[actualThreadNum-1] = tagNum;
                 }
                 else {
-                    threadStartTagIndex = new int[actualThreadNum];
-                    threadEndTagIndex = new int[actualThreadNum];
-                    for (int j = 0; j < actualThreadNum; j++) {
-                        threadStartTagIndex[j] = chunkStartTagIndex + tagNumPerThreadInChunk * j;
-                        threadEndTagIndex[j] = threadStartTagIndex[j] + tagNumPerThreadInChunk;
+                    threadSize = new int[threadNum];
+                    threadStartTagIndex = new int[threadNum];
+                    threadEndTagIndex = new int[threadNum];
+                    for (int j = 0; j < left; j++) {
+                        threadSize[j] = baseSize + 1;
+                    }
+                    for (int j = left; j < threadNum; j++) {
+                        threadSize[j] = baseSize;
+                    }              
+                    threadStartTagIndex[0] = chunkStartTagIndex;
+                    threadEndTagIndex[0] = threadStartTagIndex[0] + threadSize[0];
+                    for (int j = 1; j < threadNum; j++) {
+                        threadStartTagIndex[j] = threadEndTagIndex[j-1];
+                        threadEndTagIndex[j] = threadStartTagIndex[j]+threadSize[j];
                     }
                 }
+                int actualThreadNum = threadStartTagIndex.length;
                 jobs = new Task[actualThreadNum];
                 Thread[] mts = new Thread[actualThreadNum];
                 long lastTimePoint = this.getCurrentTimeNano();
@@ -208,8 +258,11 @@ public class TagAgainstAnchor {
         }
     }
     
-    private void calculateThreadNumChunk (int coreNum, int tagNumPerThreadInChunk) {
-        this.tagNumPerThreadInChunk = tagNumPerThreadInChunk;
+    /**
+     * Calculate the thread number used in this node
+     * @param coreNum 
+     */
+    private void calculateThreadNum (int coreNum) {
         int numOfProcessors = Runtime.getRuntime().availableProcessors();
         if (coreNum < 0) {
             threadNum = numOfProcessors * threadNumPerCore;
@@ -224,13 +277,17 @@ public class TagAgainstAnchor {
             System.out.println("TBT will be mapped by " + threadNum + " tasks");
             System.out.println("Each core runs 1 tasks, or 1 threads");
         }
-        this.tagNumInChunk = threadNum*this.tagNumPerThreadInChunk;
         int acutualUseCoreNum = numOfProcessors;
         if (acutualUseCoreNum > threadNum) acutualUseCoreNum = threadNum;
         System.out.println("This node has " + numOfProcessors + " processors. Will use " + acutualUseCoreNum + " processors");
         System.out.println("TBT will be mapped by " + threadNum + " threads");
         System.out.println("Each core runs " + threadNumPerCore + " threads");
-        System.out.println("Each TBT chunk has " + tagNumInChunk + " tags, which will be split and mapped by the " + threadNum + " threads\n");
+        System.out.println("Each TBT chunk has " + chunkSize + " tags, which will be split and mapped by the " + threadNum + " threads");
+        int left = tbt.getTagCount()%chunkSize;
+        if (left != 0) {
+            System.out.println("The last TBT chunk has " + left + " tags");
+        }
+        System.out.println("\n");
 	}
     
     /**
@@ -245,7 +302,12 @@ public class TagAgainstAnchor {
 		Task (int tagStartIndex, int tagEndIndex) {
 			this.buildSubTBT(tagStartIndex, tagEndIndex);
 		}
-
+        
+        /**
+         * Build TBTByte for each task/thread
+         * @param tagStartIndex
+         * @param tagEndIndex 
+         */
         private void buildSubTBT (int tagStartIndex, int tagEndIndex) {
             this.tagStartIndex = tagStartIndex;
             this.tagEndIndex = tagEndIndex;
@@ -269,6 +331,10 @@ public class TagAgainstAnchor {
             subTBT = new TagsByTaxaByte (tags, tagLength, tagDist, namesForTaxa);
         }
         
+        /**
+         * Return result for output when all the tasks are done
+         * @return 
+         */
 		public String[] getResult () {
 			return result;
 		}
@@ -285,9 +351,9 @@ public class TagAgainstAnchor {
                 long[] testTagDist;
                 double[][] theResults=new double[chromosomeNumber.length][];
                 testTagDist=getTagsInBits(subTBT, i, tbtRedirect, anchor.getSequenceCount());
-                ScanChromosomeMTR[] scanOnChr = new ScanChromosomeMTR[chromosomeNumber.length];
+                ScanChromosome[] scanOnChr = new ScanChromosome[chromosomeNumber.length];
                 for (int j = 0; j < chromosomeNumber.length; j++) {
-                    scanOnChr[j] = new ScanChromosomeMTR(testTagDist, theResults, j, chrStartIndex[j], chrEndIndex[j], pThresh, 1, blastPos);
+                    scanOnChr[j] = new ScanChromosome(testTagDist, theResults, j, chrStartIndex[j], chrEndIndex[j], pThresh, 1, blastPos);
                     scanOnChr[j].scan();
                 }
                 int countRealSig=0;
@@ -301,7 +367,7 @@ public class TagAgainstAnchor {
                 if (bestR[3] == 1) continue;
                 Arrays.sort(pRank);
                 double[][] bestResWithNewThreshold=new double[1][];
-                ScanChromosomeMTR bestChrNewThres = new ScanChromosomeMTR(testTagDist, bestResWithNewThreshold, 0, chrStartIndex[bestAlignment], chrEndIndex[bestAlignment],pRank[1], 1, blastPos);
+                ScanChromosome bestChrNewThres = new ScanChromosome(testTagDist, bestResWithNewThreshold, 0, chrStartIndex[bestAlignment], chrEndIndex[bestAlignment],pRank[1], 1, blastPos);
                 bestChrNewThres.scan();
                 int countOfSitesBetterThanNextBestChr=(int)bestResWithNewThreshold[0][4];
                 String s=String.format("%s %d %d %d %d %d %d %d %g %d %d %d %g %g %d %d %d %n",BaseEncoder.getSequenceFromLong(testTag), subTBT.getReadCount(i), blastChr, blastPos, refDiv,
@@ -317,7 +383,10 @@ public class TagAgainstAnchor {
 
 	}
     
-    private class ScanChromosomeMTR {
+    /**
+     * Class used to scan SNPs in one chromosome
+     */
+    private class ScanChromosome {
         int chrIndex;
         int chrStartIndex;
         int chrEndIndex;
@@ -330,8 +399,19 @@ public class TagAgainstAnchor {
         double bionomialThreshold=0.2;
         int blockPosition=Integer.MIN_VALUE;  //position to block from testing.
         int blockWindow=100;
-
-        public ScanChromosomeMTR(long[] tdist, double[][] resultReport, int chrIndex, int chrStartIndex, int chrEndIndex, double sigThreshold, int step, int blockPosition) {
+        
+        /**
+         * 
+         * @param tdist tag distribution if bits across all taxa
+         * @param resultReport
+         * @param chrIndex 
+         * @param chrStartIndex SNP start index of this chromosome
+         * @param chrEndIndex SNP end index of this chromosome
+         * @param sigThreshold threadhold of P-value, default 1E-6
+         * @param step step of scanning
+         * @param blockPosition 
+         */
+        public ScanChromosome(long[] tdist, double[][] resultReport, int chrIndex, int chrStartIndex, int chrEndIndex, double sigThreshold, int step, int blockPosition) {
             obsTdist=new OpenBitSet(tdist,tdist.length);
             this.resultReport=resultReport;
             this.chrIndex = chrIndex;
@@ -368,10 +448,11 @@ public class TagAgainstAnchor {
     }
     
     /**
-     * Test association using binomial test, collecting P-value
+     * fast test, using ratio to reduce the calculation of binomial and p (reduce 73%), but the time is only saved by 3%
      * @param obsTdist
      * @param obsMajor
      * @param obsMinor
+     * @param maf
      * @param binomFunc
      * @return 
      */
@@ -468,6 +549,14 @@ public class TagAgainstAnchor {
         return result;
     }
     
+    /**
+     * Return bit version of tag distribution across taxa
+     * @param aTBT
+     * @param tagIndex
+     * @param reDirect
+     * @param anchorTaxa
+     * @return 
+     */
     private long[] getTagsInBits(TagsByTaxaByte aTBT, int tagIndex, int[] reDirect, int anchorTaxa) {
         int lgPerSite = (anchorTaxa / 64) + 1;
         long[] seq = new long[lgPerSite];
@@ -492,6 +581,10 @@ public class TagAgainstAnchor {
         System.out.println("Taxa redirection took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
     }
     
+    /**
+     * load HDF5 TBT
+     * @param tbtHDF5 
+     */
     public void loadTBT (String tbtHDF5) {
         long lastTimePoint = this.getCurrentTimeNano();
         tbt = new TagsByTaxaByteHDF5TagGroups (tbtHDF5);
@@ -499,7 +592,11 @@ public class TagAgainstAnchor {
         System.out.println("TBT has " + tbt.getTagCount() + " tags and " + tbt.getTaxaCount() + " taxa");
     }
     
-    private void loadAnchorMap (String hapMapHDF5, boolean ifRemoveHet) {
+    /**
+     * load HDF5 genotype and convert to BitAlignment
+     * @param hapMapHDF5 
+     */
+    private void loadAnchorMap (String hapMapHDF5) {
         long lastTimePoint = this.getCurrentTimeNano();
         Alignment a = ImportUtils.readGuessFormat(hapMapHDF5, true);
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
@@ -514,8 +611,7 @@ public class TagAgainstAnchor {
             chrStartIndex[i] = chrOffSet[i];
             chrEndIndex[i] = chrOffSet[i] + a.getLocusSiteCount(a.getLoci()[i]);
         }
-        anchor = (BitAlignment) BitAlignment.getInstance(a, true);
-        //if (ifRemoveHet) anchor.removeHetsInSBit();
+        anchor = (BitAlignment)BitAlignment.getHomozygousNucleotideInstance(a, true);
         anchorMaf = new double[anchor.getSiteCount()];
         for (int i = 0; i < anchorMaf.length; i++) {
             anchorMaf[i] = anchor.getMinorAlleleFrequency(i);
