@@ -25,6 +25,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.util.OpenBitSet;
 import org.apache.log4j.Logger;
 
 /**
@@ -51,15 +52,32 @@ public class FeiPipelines {
         //this.initializeV3TOPM();
         //this.annotateV3TOPM();
         this.geneticMapping();
+        //this.bitTest();
         
+    }
+    
+    public void bitTest () {
+        long[] a = {0, 1};
+        long[] b = {0, 3};
+        OpenBitSet obsA = new OpenBitSet(a);
+        OpenBitSet obsB = new OpenBitSet(b);
+        OpenBitSet obsH = new OpenBitSet(obsA.getBits().clone());
+        obsH.and(obsB);
+        System.out.println(obsH.getBits()[1]);
+        obsA.xor(obsH);
+        obsB.xor(obsH);
+        System.out.println(obsA.getBits()[1]);
+        System.out.println(obsB.getBits()[1]);
     }
     
     public void geneticMapping () {
         //String hapMapHDF5 = "M:/GBSV3/genotype/AllZeaGBSv27i3b.imp.hmp.h5";
         String hapMapHDF5 = "M:/GBSV3/genotype/GBS27.small.imp.hmp.h5";
-        String tbtHDF5 = "M:/GBSV3/tbt/smallTBTHDF5_mergedtaxa_pivot_20120921.h5";
+        String tbtHDF5 = "M:/GBSV3/tbt/smallerTBTHDF5_mergedtaxa_pivot_20120921.h5";
         String outfileS = "M:/GBSV3/mappingResult/outfile.txt";
-        TagAgainstAnchor taa = new TagAgainstAnchor(hapMapHDF5, tbtHDF5, outfileS, 0.000001, 20, -1, 1024);
+        TagAgainstAnchor taa = new TagAgainstAnchor(hapMapHDF5, tbtHDF5, outfileS, 0.000001, 20, -1, 16);
+        
+        
     }
     
     public void annotateV3TOPM () {
@@ -119,8 +137,8 @@ public class FeiPipelines {
         //this.mkFasta();
         //this.mkTOPM(); //old version
         //this.mkTOPMHDF5(); //old version
-        //this.initializeTOPMHDF5();
-        //this.annotateTOPMHDF5WithAligner();
+        this.initializeTOPMHDF5();
+        this.annotateTOPMHDF5WithAligner();
         //this.mkSmallAnchorHDF5();
         //this.mkSmallTBTHDF5();
     }
@@ -128,12 +146,13 @@ public class FeiPipelines {
     public void mkSmallTBTHDF5 () {
         String inputTBTS = "M:/GBSV3/tbt/mergeTBTHDF5_mergedtaxa_pivot_20120921.h5";
         String outputTBTS = "M:/GBSV3/tbt/smallTBTHDF5_mergedtaxa_pivot_20120921.h5";
-        TagsByTaxaByteHDF5TagGroups tbt = new TagsByTaxaByteHDF5TagGroups (inputTBTS);
-        int[] tagIndex = new int[65536];
+        String ooutputTBTS = "M:/GBSV3/tbt/smallerTBTHDF5_mergedtaxa_pivot_20120921.h5";
+        TagsByTaxaByteHDF5TagGroups tbt = new TagsByTaxaByteHDF5TagGroups (outputTBTS);
+        int[] tagIndex = new int[4096];
         for (int i = 0; i < tagIndex.length; i++) {
             tagIndex[i] = i;
         }
-        tbt.writeDistFile(outputTBTS, tagIndex);
+        tbt.writeDistFile(ooutputTBTS, tagIndex);
         
     }
     
@@ -166,9 +185,9 @@ public class FeiPipelines {
         //String blastFileS = "M:/GBStest/alignment/blast.m8.txt";
         //anno.annotateWithBLAST(blastFileS, 5);
         String blastDirS = "M:/GBStest/alignment/blastOut/";
-        anno.annotateWithBlastFromDir(blastDirS, 5);
+        //anno.annotateWithBlastFromDir(blastDirS, 5);
         String PETOPMFileS = "M:/af/ptopm/PE.topm";
-        //anno.annotateWithPE(PETOPMFileS, 5);
+        anno.annotateWithPE(PETOPMFileS, 5);
         String TOGMFileS = "M:/pav/PhyGenMapping/v1.togm.txt";
         //anno.annotateWithGM(TOGMFileS, 1);
     }

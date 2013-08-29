@@ -18,11 +18,7 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.Locus;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
-import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 
 /**
@@ -31,6 +27,7 @@ import net.maizegenetics.util.OpenBitSet;
  */
 public class TagAgainstAnchor {
     BitAlignment anchor;
+    double[] anchorMaf;
     int[] chromosomeNumber;
     int[] chrStartIndex;
     int[] chrEndIndex;
@@ -39,8 +36,10 @@ public class TagAgainstAnchor {
     double pThresh = 0.000001;
     int minCount = 20;
     
+    int minTagAlleleIntersection = 4;
+    
     Task[] jobs;
-    static int threadNumPerCore = 4; //32 can be faster, but the admin will complain about too many threads
+    static int threadNumPerCore = 32; //32 can be faster, but the admin will complain about too many threads
     int threadNum;
     int tagNumPerThreadInChunk;
     int tagNumInChunk;
@@ -61,7 +60,7 @@ public class TagAgainstAnchor {
     public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int tagNumPerThreadInChunk) {
         this.pThresh = pThresh;
         this.minCount = minCount;
-        this.loadAnchorMap(hapMapHDF5);
+        this.loadAnchorMap(hapMapHDF5, true);
         this.loadTBT(tbtHDF5);
         this.redirect();
         this.calculateThreadNumChunk(coreNum,tagNumPerThreadInChunk);
@@ -85,7 +84,7 @@ public class TagAgainstAnchor {
     public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int tagNumPerThreadInChunk, int chunkStartIndex, int chunkEndIndex) {
         this.pThresh = pThresh;
         this.minCount = minCount;
-        this.loadAnchorMap(hapMapHDF5);
+        this.loadAnchorMap(hapMapHDF5,true);
         this.loadTBT(tbtHDF5);
         this.redirect();
         this.calculateThreadNumChunk(coreNum,tagNumPerThreadInChunk);
@@ -180,7 +179,7 @@ public class TagAgainstAnchor {
                     mts[j] = new Thread(jobs[j]);
                     mts[j].start();
                 }
-                for (int j = 0; j < threadNum; j++) {
+                for (int j = 0; j < actualThreadNum; j++) {
                     try {
                         mts[j].join();
                     }
@@ -191,7 +190,8 @@ public class TagAgainstAnchor {
                 System.out.println("Each LD compirison took " + (double)this.getTimeSpanNano(lastTimePoint)/actualChunkSize/anchor.getSiteCount() + " nano seconds");
                 System.out.println("Multiple threading mapping took " + this.getTimeSpanSecond(lastTimePoint) + " seconds");
                 for (int j = 0; j < jobs.length; j++) {
-                    String[] result = jobs[i].getResult();
+                    String[] result = jobs[j].getResult();
+                    if (result != null)
                     for (int k = 0; k < result.length; k++) {
                         bw.write(result[k]);
                     }
@@ -240,8 +240,8 @@ public class TagAgainstAnchor {
         int tagStartIndex;
         int tagEndIndex;
         TagsByTaxaByte subTBT;
-		String[] result;
-        
+		String[] result = null;
+
 		Task (int tagStartIndex, int tagEndIndex) {
 			this.buildSubTBT(tagStartIndex, tagEndIndex);
 		}
@@ -276,8 +276,8 @@ public class TagAgainstAnchor {
         @Override
 		public void run() {
             long lastTimePoint = getCurrentTimeNano();
-			ArrayList<String> resultList = new ArrayList();
-			for (int i = 0; i < subTBT.getTagCount(); i++) {
+			ArrayList<String> resultList = new ArrayList();          
+            for (int i = 0; i < subTBT.getTagCount(); i++) {
                 if(subTBT.getNumberOfTaxaWithTag(i) <minCount) continue;
                 double[] bestR={-1,-1,-1, 1, -1};
                 int blastChr=Integer.MIN_VALUE, blastPos=Integer.MIN_VALUE, bestAlignment=Integer.MIN_VALUE, refDiv=Integer.MIN_VALUE;
@@ -310,6 +310,7 @@ public class TagAgainstAnchor {
                         bestChrNewThres.minSigPos, bestChrNewThres.maxSigPos);
                 resultList.add(s);
             }
+			
 			result = resultList.toArray(new String[resultList.size()]);
 			//System.out.println("Task with " + subTBT.getTagCount() + " tags indexing from " + tagStartIndex + " to " + tagEndIndex + " are finished in " + getTimeSpanSecond(lastTimePoint) + " seconds");
 		}
@@ -318,8 +319,8 @@ public class TagAgainstAnchor {
     
     private class ScanChromosomeMTR {
         int chrIndex;
-        int tagStartIndex;
-        int tagEndIndex;
+        int chrStartIndex;
+        int chrEndIndex;
         OpenBitSet obsTdist;
         Binomial binomFunc=new Binomial(5, 0.5, new RandomJava());
         double[][] resultReport;
@@ -330,12 +331,12 @@ public class TagAgainstAnchor {
         int blockPosition=Integer.MIN_VALUE;  //position to block from testing.
         int blockWindow=100;
 
-        public ScanChromosomeMTR(long[] tdist, double[][] resultReport, int chrIndex, int tagStartIndex, int tagEndIndex, double sigThreshold, int step, int blockPosition) {
+        public ScanChromosomeMTR(long[] tdist, double[][] resultReport, int chrIndex, int chrStartIndex, int chrEndIndex, double sigThreshold, int step, int blockPosition) {
             obsTdist=new OpenBitSet(tdist,tdist.length);
             this.resultReport=resultReport;
             this.chrIndex = chrIndex;
-            this.tagStartIndex = tagStartIndex;
-            this.tagEndIndex = tagEndIndex;
+            this.chrStartIndex = chrStartIndex;
+            this.chrEndIndex = chrEndIndex;
             this.sigThreshold=sigThreshold;
             this.blockPosition=blockPosition;
             this.step=step;
@@ -345,12 +346,12 @@ public class TagAgainstAnchor {
             long tests=0;
             int bestSite=-1, countSig=0;
             double bestP=2;
-            for (int i = tagStartIndex; i < tagEndIndex; i+=step) {
+            for (int i = chrStartIndex; i < chrEndIndex; i+=step) {
                 if(Math.abs(anchor.getPositionInLocus(i)-blockPosition)<blockWindow) continue;
                 OpenBitSet obsMajor = new OpenBitSet(anchor.getAllelePresenceForAllTaxa(i, 0).getBits());
                 OpenBitSet obsMinor = new OpenBitSet(anchor.getAllelePresenceForAllTaxa(i, 1).getBits());
                 if(obsMinor.cardinality()>4) {
-                    double p=testSites(obsTdist, obsMajor, obsMinor, binomFunc);
+                    double p=fastTestSites(obsTdist, obsMajor, obsMinor, anchorMaf[i], binomFunc);
                     if(p<bestP) {bestP=p; bestSite=i;}
                     if(p<sigThreshold) {
                         countSig++;
@@ -365,6 +366,77 @@ public class TagAgainstAnchor {
             resultReport[chrIndex]=result;
         }
     }
+    
+    /**
+     * Test association using binomial test, collecting P-value
+     * @param obsTdist
+     * @param obsMajor
+     * @param obsMinor
+     * @param binomFunc
+     * @return 
+     */
+    public double fastTestSites(OpenBitSet obsTdist, OpenBitSet obsMajor, OpenBitSet obsMinor, double maf, Binomial binomFunc) {
+        double result=1;
+        int tagMinorCount=0, tagMajorCount=0;
+        tagMinorCount=(int)OpenBitSet.intersectionCount(obsTdist, obsMinor);
+        tagMajorCount=(int)OpenBitSet.intersectionCount(obsTdist,obsMajor);
+
+        int sumTagAllele = tagMinorCount + tagMajorCount;
+        if(sumTagAllele<4) return result;
+        
+        double ratio;
+        double minorProb;
+        int cdfCount;
+        if (tagMinorCount < tagMajorCount) {
+            ratio = (double)tagMinorCount/sumTagAllele;
+            minorProb = maf;
+            cdfCount = tagMinorCount;
+        }
+        else {
+            ratio = (double)tagMajorCount/sumTagAllele;
+            minorProb = 1-maf;
+            cdfCount = tagMajorCount;
+        }
+        if ((ratio-minorProb) < -0.003) return result;
+        binomFunc.setNandP(sumTagAllele,minorProb);
+        try {
+            result = binomFunc.cdf(cdfCount);
+            //System.out.println(ratio+"\t"+minorProb+"\t"+result);
+  
+        } catch (Exception e) {
+            System.err.println("Error in the BinomialDistributionImpl");
+        }
+        return result;
+    }
+    
+    /**
+     * Test association using binomial test, collecting P-value
+     * @param obsTdist
+     * @param obsMajor
+     * @param obsMinor
+     * @param binomFunc
+     * @return 
+     */
+    public double testSites(OpenBitSet obsTdist, OpenBitSet obsMajor, OpenBitSet obsMinor, double maf, Binomial binomFunc) {
+        double result=1;
+        int tagMinorCount=0, tagMajorCount=0;
+        tagMinorCount=(int)OpenBitSet.intersectionCount(obsTdist, obsMinor);
+        tagMajorCount=(int)OpenBitSet.intersectionCount(obsTdist,obsMajor);
+
+        int sumTagAllele = tagMinorCount + tagMajorCount;
+        if(sumTagAllele<4) return result;
+    
+        double minorProb = (tagMinorCount<tagMajorCount)? maf:1-maf;
+        binomFunc.setNandP(sumTagAllele,minorProb);
+        try {
+            result = (tagMinorCount<tagMajorCount)?binomFunc.cdf(tagMinorCount):binomFunc.cdf(tagMajorCount);
+  
+        } catch (Exception e) {
+            System.err.println("Error in the BinomialDistributionImpl");
+        }
+        return result;
+    }
+    
     /**
      * Test association using binomial test, collecting P-value
      * @param obsTdist
@@ -427,7 +499,7 @@ public class TagAgainstAnchor {
         System.out.println("TBT has " + tbt.getTagCount() + " tags and " + tbt.getTaxaCount() + " taxa");
     }
     
-    private void loadAnchorMap (String hapMapHDF5) {
+    private void loadAnchorMap (String hapMapHDF5, boolean ifRemoveHet) {
         long lastTimePoint = this.getCurrentTimeNano();
         Alignment a = ImportUtils.readGuessFormat(hapMapHDF5, true);
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
@@ -443,6 +515,11 @@ public class TagAgainstAnchor {
             chrEndIndex[i] = chrOffSet[i] + a.getLocusSiteCount(a.getLoci()[i]);
         }
         anchor = (BitAlignment) BitAlignment.getInstance(a, true);
+        if (ifRemoveHet) anchor.removeHetsInSBit();
+        anchorMaf = new double[anchor.getSiteCount()];
+        for (int i = 0; i < anchorMaf.length; i++) {
+            anchorMaf[i] = anchor.getMinorAlleleFrequency(i);
+        }
         System.out.println("Loading and converting to BitAlignment took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         this.screenPrintGbMemoryCurrentUse();
         this.screenPrintGbMemoryAvailable();
