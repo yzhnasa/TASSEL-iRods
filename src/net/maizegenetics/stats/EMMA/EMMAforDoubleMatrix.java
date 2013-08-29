@@ -28,7 +28,7 @@ public class EMMAforDoubleMatrix {
 //    protected boolean noZ;
     
     protected DoubleMatrix X;
-    protected DoubleMatrix A;
+//    protected DoubleMatrix A;
     protected DoubleMatrix Z = null;
 //    protected DoubleMatrix transZ;
     protected DoubleMatrix K;
@@ -93,10 +93,11 @@ public class EMMAforDoubleMatrix {
 		X = fixed;
 
 		q = X.numberOfColumns();
-		A = kin;
-        Z = DoubleMatrixFactory.DEFAULT.identity(A.numberOfRows());
+//		A = kin;
+		K = kin;
+		Nran = K.numberOfRows();
+        Z = DoubleMatrixFactory.DEFAULT.identity(Nran);
         
-		Nran = A.numberOfRows();
 		dfMarker = nAlleles - 1;
 		init();
 	}
@@ -131,9 +132,9 @@ public class EMMAforDoubleMatrix {
 		Z = inZ;
 		K = kin;
 
-		A = Z.mult(K).tcrossproduct(Z);
+//		A = Z.mult(K).tcrossproduct(Z);
 
-		Nran = A.numberOfRows();
+		Nran = Z.numberOfRows();
 		dfMarker = nAlleles - 1;
 		init();
 	}
@@ -145,6 +146,7 @@ public class EMMAforDoubleMatrix {
         lambda = new double[nreml];
         
         //find the eigenvalues of A
+        DoubleMatrix A = Z.mult(K).tcrossproduct(Z);
         eigA = A.getEigenvalueDecomposition();
         double[] eigenvalA = eigA.getEigenvalues();
         int n = eigenvalA.length;
@@ -164,10 +166,9 @@ public class EMMAforDoubleMatrix {
         //determine the s
         //add bend to the diagonal of A
         //this is necessary to get correct decomposition of SAS
-        DoubleMatrix A1 = A.copy();
-        n = A1.numberOfRows();
-        for (int i = 0; i < n; i++) A1.set(i, i, A1.get(i, i) + bend);
-        DoubleMatrix SAS = S.mult(A1.mult(S)); 
+        n = A.numberOfRows();
+        for (int i = 0; i < n; i++) A.set(i, i, A.get(i, i) + bend);
+        DoubleMatrix SAS = S.mult(A.mult(S)); 
         
         //decompose SAS
         eig = SAS.getEigenvalueDecomposition();
