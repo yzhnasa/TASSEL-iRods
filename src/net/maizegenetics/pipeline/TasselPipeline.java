@@ -187,6 +187,7 @@ public class TasselPipeline implements PluginListener {
             try {
 
                 String current = args[index++];
+                current = current.replaceFirst("—", "-");
 
                 if (!current.startsWith("-")) {
                     throw new IllegalArgumentException("TasselPipeline: parseArgs: expecting argument beginning with dash: " + current);
