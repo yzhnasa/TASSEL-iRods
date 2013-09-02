@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.site;
+package net.maizegenetics.pal.util;
 
 /**
  * Provide generalized annotations (descriptors) for a taxon or site.

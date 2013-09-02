@@ -2,19 +2,19 @@ package net.maizegenetics.pal.site;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import net.maizegenetics.pal.site.AnnotatedPosition.Allele;
+import net.maizegenetics.pal.site.Position.Allele;
 
 import java.nio.IntBuffer;
 import java.util.*;
 
 /**
- * In memory immutable instance of {@link AnnotatedPositionList}.  Use the {@link AnnotatedPositionArrayList.Builder}
+ * In memory immutable instance of {@link PositionList}.  Use the {@link PositionArrayList.Builder}
  * to create the list.  This list is sorted by position.
  *
  * @author Ed Buckler
  */
-public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
-    private final List<AnnotatedPosition> mySiteList;
+public final class PositionArrayList implements PositionList {
+    private final List<Position> mySiteList;
     private final int numPositions;
     private final byte[][] alleles;
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
@@ -31,7 +31,7 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
         }
     }
 
-    private AnnotatedPositionArrayList(ArrayList<AnnotatedPosition> builderList) {
+    private PositionArrayList(ArrayList<Position> builderList) {
         this.numPositions=builderList.size();
         alleles=new byte[Allele.COUNT][numPositions];
 //        refAlleles=new byte[numPositions];
@@ -39,13 +39,13 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 //        ancAlleles=new byte[numPositions];
 //        hiDepAlleles=new byte[numPositions];
         ArrayListMultimap<Chromosome,Integer> pTS=ArrayListMultimap.create();
-        mySiteList=new ArrayList<AnnotatedPosition>(builderList.size());
+        mySiteList=new ArrayList<Position>(builderList.size());
         myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
         myChrNameHash=new HashMap();
         int currStart=0;
         Chromosome currChr=builderList.get(0).getChromosome();
         for (int i=0; i<builderList.size(); i++) {
-            AnnotatedPosition ap=builderList.get(i);
+            Position ap=builderList.get(i);
             for (Allele allele : Allele.values()) {
               alleles[allele.index()][i]=ap.getAllele(allele);
             }
@@ -237,7 +237,7 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
     }
 
     @Override
-    public Iterator<AnnotatedPosition> iterator() {
+    public Iterator<Position> iterator() {
         return mySiteList.iterator();
     }
 
@@ -253,7 +253,7 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public boolean add(AnnotatedPosition e) {
+    public boolean add(Position e) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -270,13 +270,13 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public boolean addAll(Collection<? extends AnnotatedPosition> c) {
+    public boolean addAll(Collection<? extends Position> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public boolean addAll(int index, Collection<? extends AnnotatedPosition> c) {
+    public boolean addAll(int index, Collection<? extends Position> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -299,25 +299,25 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
     }
 
     @Override
-    public AnnotatedPosition get(int index) {
+    public Position get(int index) {
         return mySiteList.get(index);
     }
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public AnnotatedPosition set(int index, AnnotatedPosition element) {
+    public Position set(int index, Position element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public void add(int index, AnnotatedPosition element) {
+    public void add(int index, Position element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public AnnotatedPosition remove(int index) {
+    public Position remove(int index) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -332,39 +332,39 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
     }
 
     @Override
-    public ListIterator<AnnotatedPosition> listIterator() {
+    public ListIterator<Position> listIterator() {
         return listIterator(0);
     }
 
     @Override
-    public ListIterator<AnnotatedPosition> listIterator(final int index) {
-        return new ListIterator<AnnotatedPosition>() {
-            private final ListIterator<AnnotatedPosition> i= mySiteList.listIterator(index);
+    public ListIterator<Position> listIterator(final int index) {
+        return new ListIterator<Position>() {
+            private final ListIterator<Position> i= mySiteList.listIterator(index);
             public boolean hasNext()     {return i.hasNext();}
-            public AnnotatedPosition next()              {return i.next();}
+            public Position next()              {return i.next();}
             public boolean hasPrevious() {return i.hasPrevious();}
-            public AnnotatedPosition previous()          {return i.previous();}
+            public Position previous()          {return i.previous();}
             public int nextIndex()       {return i.nextIndex();}
             public int previousIndex()   {return i.previousIndex();}
             public void remove() {throw new UnsupportedOperationException();}
-            public void set(AnnotatedPosition e) {throw new UnsupportedOperationException();}
-            public void add(AnnotatedPosition e) {throw new UnsupportedOperationException();}
+            public void set(Position e) {throw new UnsupportedOperationException();}
+            public void add(Position e) {throw new UnsupportedOperationException();}
         };
     }
 
     @Override
-    public List<AnnotatedPosition> subList(int fromIndex, int toIndex) {
+    public List<Position> subList(int fromIndex, int toIndex) {
         return Collections.unmodifiableList(mySiteList.subList(fromIndex, toIndex));
     }
 
     /**
-     * A builder for creating immutable AnnotatedPositionArrayList
+     * A builder for creating immutable PositionArrayList
      *
      * <p>Example:
      * <pre>   {@code
-     *   AnnotatedPositionArrayList.Builder b=new AnnotatedPositionArrayList.Builder();
+     *   PositionArrayList.Builder b=new PositionArrayList.Builder();
      *   for (int i = 0; i <size; i++) {
-     *       AnnotatedPosition ap=new CoreAnnotatedPosition.Builder(chr[chrIndex[i]],pos[i]).refAllele(refSeq[i]).build();
+     *       Position ap=new CoreAnnotatedPosition.Builder(chr[chrIndex[i]],pos[i]).refAllele(refSeq[i]).build();
      *       b.add(ap);
      *       }
      *   instance=b.build();}
@@ -376,7 +376,7 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
      * contains the one created before it.
      */
     public static class Builder {
-        private final ArrayList<AnnotatedPosition> contents = new ArrayList<AnnotatedPosition>();
+        private final ArrayList<Position> contents = new ArrayList<Position>();
 
         /**
          * Creates a new builder. The returned builder is equivalent to the builder
@@ -385,32 +385,32 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
         public Builder() {}
 
         /**
-         * Adds {@code element} to the {@code AnnotatedPositionList}.
+         * Adds {@code element} to the {@code PositionList}.
          *
          * @param element the element to add
          * @return this {@code Builder} object
          * @throws NullPointerException if {@code element} is null
          */
-        public Builder add(AnnotatedPosition element) {
+        public Builder add(Position element) {
             Preconditions.checkNotNull(element, "element cannot be null");
             contents.add(element);
             return this;
         }
 
         /**
-         * Adds each element of {@code elements} to the {@code AnnotatedPositionList}.
+         * Adds each element of {@code elements} to the {@code PositionList}.
          *
-         * @param elements the {@code Iterable} to add to the {@code AnnotatedPositionList}
+         * @param elements the {@code Iterable} to add to the {@code PositionList}
          * @return this {@code Builder} object
          * @throws NullPointerException if {@code elements} is or contains null
          */
-        public Builder addAll(Iterable<? extends AnnotatedPosition> elements) {
+        public Builder addAll(Iterable<? extends Position> elements) {
             if (elements instanceof Collection) {
                 @SuppressWarnings("unchecked")
-                Collection<? extends AnnotatedPosition> collection = (Collection<? extends AnnotatedPosition>) elements;
+                Collection<? extends Position> collection = (Collection<? extends Position>) elements;
                 contents.ensureCapacity(contents.size() + collection.size());
             }
-            for (AnnotatedPosition elem : elements) {
+            for (Position elem : elements) {
                 Preconditions.checkNotNull(elem, "elements contains a null");
                 contents.add(elem);
             }
@@ -419,12 +419,12 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
 
         /*
         Returns whether List is already ordered.  Important to check this if genotype and sites are separately built, as the
-         AnnotatedPositionArrayList must be sorted, and will be with build.
+         PositionArrayList must be sorted, and will be with build.
          */
         public boolean validateOrdering() {
             boolean result=true;
-            AnnotatedPosition startAP=contents.get(0);
-            for (AnnotatedPosition ap:contents) {
+            Position startAP=contents.get(0);
+            for (Position ap:contents) {
               if(ap.compareTo(startAP)<0) return false;
             }
             return result;
@@ -434,13 +434,13 @@ public final class AnnotatedPositionArrayList implements AnnotatedPositionList {
          * Returns a newly-created {@code ImmutableList} based on the contents of
          * the {@code Builder}.
          */
-        public AnnotatedPositionList build() {
+        public PositionList build() {
             if(!validateOrdering()) {
                 System.out.println("Beginning Sort of Position List");
                 Collections.sort(contents);
                 System.out.println("Finished Sort of Position List");
             }
-            return new AnnotatedPositionArrayList(contents);
+            return new PositionArrayList(contents);
         }
     }
 

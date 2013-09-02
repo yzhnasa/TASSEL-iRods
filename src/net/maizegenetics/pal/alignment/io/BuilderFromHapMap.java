@@ -84,7 +84,7 @@ public class BuilderFromHapMap {
                 throw new IllegalStateException("BuilderFromHapMap: processing threads timed out.");
             }
             int currentSite=0;
-            AnnotatedPositionArrayList.Builder posBuild=new AnnotatedPositionArrayList.Builder();
+            PositionArrayList.Builder posBuild=new PositionArrayList.Builder();
             GenotypeBuilder gb = GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.getTaxaCount(), lines);
             for(ProcessHapMapBlock pb: pbs) {
                 posBuild.addAll(pb.getBlkPosList());
@@ -135,7 +135,7 @@ class ProcessHapMapBlock implements Runnable {
     private final int siteN;
     private ArrayList<String> txtL;
     private byte[][] gTS;
-    private final ArrayList<AnnotatedPosition> blkPosList;
+    private final ArrayList<Position> blkPosList;
     private final byte[] convert;
     private final boolean isOneLetter; //true e.g. A,R, false=AA,CT
 
@@ -194,10 +194,10 @@ class ProcessHapMapBlock implements Runnable {
                     ;
             try{
                 byte glbMajor=convert[variants.charAt(0)];
-                apb.allele(AnnotatedPosition.Allele.GLBMAJ,glbMajor);
+                apb.allele(Position.Allele.GLBMAJ,glbMajor);
                 if(variants.length()==3) {
                     byte glbMinor=convert[variants.charAt(2)];
-                    apb.allele(AnnotatedPosition.Allele.GLBMIN,glbMinor);
+                    apb.allele(Position.Allele.GLBMIN,glbMinor);
                 }
             } catch (IllegalArgumentException e) {
                 //for the indels that cannot be converted correctly now
@@ -229,7 +229,7 @@ class ProcessHapMapBlock implements Runnable {
         return gTS;
     }
 
-    ArrayList<AnnotatedPosition> getBlkPosList() {
+    ArrayList<Position> getBlkPosList() {
         return blkPosList;
     }
 }

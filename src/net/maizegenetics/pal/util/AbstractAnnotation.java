@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.site;
+package net.maizegenetics.pal.util;
 
 import com.google.common.collect.ImmutableMultimap;
 

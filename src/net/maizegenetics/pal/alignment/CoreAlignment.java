@@ -8,7 +8,7 @@ import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.bit.DynamicBitStorage;
 import net.maizegenetics.pal.alignment.depth.AlleleDepth;
-import net.maizegenetics.pal.site.AnnotatedPositionList;
+import net.maizegenetics.pal.site.PositionList;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
@@ -24,14 +24,14 @@ public class CoreAlignment implements AlignmentNew {
     private final Genotype myGenotype;
     private BitStorage myFreqBitStorage;
     private BitStorage myReferenceBitStorage;
-    private final AnnotatedPositionList myAnnotatedPositionList;
+    private final PositionList myPositionList;
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
     private final AlleleDepth myAlleleDepth;
 
-    public CoreAlignment(Genotype genotype, AnnotatedPositionList annotatedPositionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    public CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         myGenotype = genotype;
-        myAnnotatedPositionList = annotatedPositionList;
+        myPositionList=positionList;
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
@@ -49,7 +49,7 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public byte getBase(int taxon, Chromosome chromosome, int physicalPosition) {
-        return myGenotype.getBase(taxon, myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
+        return myGenotype.getBase(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
     @Override
@@ -114,22 +114,22 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public byte getReferenceAllele(int site) {
-        return myAnnotatedPositionList.getReferenceAllele(site);
+        return myPositionList.getReferenceAllele(site);
     }
 
     @Override
     public byte[] getReference(int startSite, int endSite) {
-        return myAnnotatedPositionList.getReference(startSite, endSite);
+        return myPositionList.getReference(startSite, endSite);
     }
 
     @Override
     public byte[] getReference() {
-        return myAnnotatedPositionList.getReference();
+        return myPositionList.getReference();
     }
 
     @Override
     public boolean hasReference() {
-        return myAnnotatedPositionList.hasReference();
+        return myPositionList.hasReference();
     }
 
     @Override
@@ -144,27 +144,27 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public String[] getSNPIDs() {
-        return myAnnotatedPositionList.getSNPIDs();
+        return myPositionList.getSNPIDs();
     }
 
     @Override
     public String getSNPID(int site) {
-        return myAnnotatedPositionList.getSNPID(site);
+        return myPositionList.getSNPID(site);
     }
 
     @Override
     public int getSiteCount() {
-        return myAnnotatedPositionList.getSiteCount();
+        return myPositionList.getSiteCount();
     }
 
     @Override
     public int getChromosomeSiteCount(Chromosome chromosome) {
-        return myAnnotatedPositionList.getChromosomeSiteCount(chromosome);
+        return myPositionList.getChromosomeSiteCount(chromosome);
     }
 
     @Override
     public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
-        return myAnnotatedPositionList.getStartAndEndOfChromosome(chromosome);
+        return myPositionList.getStartAndEndOfChromosome(chromosome);
     }
 
     @Override
@@ -179,52 +179,52 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public int getPositionInChromosome(int site) {
-        return myAnnotatedPositionList.getPositionInChromosome(site);
+        return myPositionList.getPositionInChromosome(site);
     }
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
-        return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome);
+        return myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome);
     }
 
     @Override
     public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
-        return myAnnotatedPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
+        return myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
     }
 
     @Override
     public int[] getPhysicalPositions() {
-        return myAnnotatedPositionList.getPhysicalPositions();
+        return myPositionList.getPhysicalPositions();
     }
 
     @Override
     public String getChromosomeName(int site) {
-        return myAnnotatedPositionList.getChromosomeName(site);
+        return myPositionList.getChromosomeName(site);
     }
 
     @Override
     public Chromosome getChromosome(int site) {
-        return myAnnotatedPositionList.getChromosome(site);
+        return myPositionList.getChromosome(site);
     }
 
     @Override
     public Chromosome getChromosome(String name) {
-        return myAnnotatedPositionList.getChromosome(name);
+        return myPositionList.getChromosome(name);
     }
 
     @Override
     public Chromosome[] getChromosomes() {
-        return myAnnotatedPositionList.getChromosomes();
+        return myPositionList.getChromosomes();
     }
 
     @Override
     public int getNumChromosomes() {
-        return myAnnotatedPositionList.getNumChromosomes();
+        return myPositionList.getNumChromosomes();
     }
 
     @Override
     public int[] getChromosomesOffsets() {
-        return myAnnotatedPositionList.getChromosomesOffsets();
+        return myPositionList.getChromosomesOffsets();
     }
 
     @Override
@@ -259,12 +259,12 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public int getIndelSize(int site) {
-        return myAnnotatedPositionList.getIndelSize(site);
+        return myPositionList.getIndelSize(site);
     }
 
     @Override
     public boolean isIndel(int site) {
-        return myAnnotatedPositionList.isIndel(site);
+        return myPositionList.isIndel(site);
     }
 
     @Override
@@ -334,12 +334,12 @@ public class CoreAlignment implements AlignmentNew {
 
     @Override
     public String getGenomeAssembly() {
-        return myAnnotatedPositionList.getGenomeAssembly();
+        return myPositionList.getGenomeAssembly();
     }
 
     @Override
     public boolean isPositiveStrand(int site) {
-        return myAnnotatedPositionList.isPositiveStrand(site);
+        return myPositionList.isPositiveStrand(site);
     }
 
     @Override

@@ -5,8 +5,8 @@ package net.maizegenetics.pal.taxa;
 
 import com.google.common.collect.ImmutableMultimap;
 import net.maizegenetics.pal.ids.Identifier;
-import net.maizegenetics.pal.site.AbstractAnnotation;
-import net.maizegenetics.pal.site.GeneralAnnotation;
+import net.maizegenetics.pal.util.AbstractAnnotation;
+import net.maizegenetics.pal.util.GeneralAnnotation;
 
 /**
  * The generally used class for defining a taxon. Contains its name, plus a

@@ -10,7 +10,7 @@ import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
-import net.maizegenetics.pal.site.AnnotatedPosition.Allele;
+import net.maizegenetics.pal.site.Position.Allele;
 
 import java.lang.reflect.Array;
 import java.nio.IntBuffer;
@@ -18,12 +18,12 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
- * HDF5 immutable instance of {@link AnnotatedPositionList}.  Use the {@link AnnotatedPositionArrayList.Builder}
+ * HDF5 immutable instance of {@link PositionList}.  Use the {@link PositionArrayList.Builder}
  * to create the list.
  *
  * @author Ed Buckler
  */
-public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
+public final class PositionHDF5List implements PositionList {
     private final IHDF5Reader reader;
     private final int numPositions;
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
@@ -35,10 +35,10 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
     public static final int blockMask=BLOCKSIZE-1;
     public static final int siteMask=~(BLOCKSIZE-1);
 
-    private LoadingCache<Integer,AnnotatedPosition> mySiteList; //key site > AnnoPos
-    private CacheLoader<Integer,AnnotatedPosition> annoPosLoader = new CacheLoader<Integer,AnnotatedPosition>()  {
+    private LoadingCache<Integer,Position> mySiteList; //key site > AnnoPos
+    private CacheLoader<Integer,Position> annoPosLoader = new CacheLoader<Integer,Position>()  {
         @Override
-        public AnnotatedPosition load(Integer key) {
+        public Position load(Integer key) {
             ArrayList toFill=new ArrayList<Integer>();
             toFill.add(key);
             try {
@@ -50,9 +50,9 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
         }
 
         @Override
-        public Map<Integer, AnnotatedPosition> loadAll(Iterable<? extends Integer> keys) throws Exception {
+        public Map<Integer, Position> loadAll(Iterable<? extends Integer> keys) throws Exception {
             int key=keys.iterator().next();
-            HashMap<Integer, AnnotatedPosition> result=new HashMap<Integer, AnnotatedPosition>(BLOCKSIZE);
+            HashMap<Integer, Position> result=new HashMap<Integer, Position>(BLOCKSIZE);
             byte[][] afOrder;
             float[] maf;
             float[] paf;
@@ -71,11 +71,13 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
                 Chromosome chr=getChromosome(site);
                 ChrOffPos cop=myChrOffPosTree.get(chr);
                 int pos=cop.position[site-cop.startSiteOff];
-                Position p=new CorePosition.Builder(chr,pos).snpName(snpIDs[i]).build();
-                AnnotatedPosition ap=new CoreAnnotatedPosition.Builder(p)
+                Position p=new GeneralPosition.Builder(chr,pos)
+                        .snpName(snpIDs[i])
                         .allele(Allele.GLBMAJ,afOrder[0][i])
-                        .maf(maf[i]).siteCoverage(paf[i]).build();
-                result.put(site,ap);
+                        .maf(maf[i])
+                        .siteCoverage(paf[i])
+                        .build();
+                result.put(site,p);
             }
             return result;
         }
@@ -92,7 +94,7 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
         }
     }
 
-    private AnnotatedPositionHDF5List(IHDF5Reader reader) {
+    private PositionHDF5List(IHDF5Reader reader) {
         this.reader=reader;
         int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
         this.numPositions=variableSites.length;
@@ -326,7 +328,7 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
     }
 
     @Override
-    public Iterator<AnnotatedPosition> iterator() {
+    public Iterator<Position> iterator() {
         //TODO don't know the best way to do this
         return null;
        // return mySiteList.iterator();
@@ -334,7 +336,7 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
 
     @Override
     public Object[] toArray() {
-        AnnotatedPosition[] aps=new AnnotatedPosition[numPositions];
+        Position[] aps=new Position[numPositions];
         for (int i=0; i<numPositions; i++) {
             aps[i]=get(i);
         }
@@ -342,23 +344,23 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
     }
 
     @Override
-    public <AnnotatedPosition> AnnotatedPosition[] toArray(AnnotatedPosition[] a) {
+    public <Position> Position[] toArray(Position[] a) {
         if (a.length < numPositions) {
             // If array is too small, allocate the new one with the same component type
-            a = (AnnotatedPosition[])Array.newInstance(a.getClass().getComponentType(), numPositions);
+            a = (Position[])Array.newInstance(a.getClass().getComponentType(), numPositions);
         } else if (a.length > numPositions) {
             // If array is to large, set the first unassigned element to null
             a[numPositions] = null;
         }
         for (int i=0; i<numPositions; i++) {
-            a[i]=(AnnotatedPosition)get(i);
+            a[i]=(Position)get(i);
         }
         return a;
     }
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public boolean add(AnnotatedPosition e) {
+    public boolean add(Position e) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -375,13 +377,13 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public boolean addAll(Collection<? extends AnnotatedPosition> c) {
+    public boolean addAll(Collection<? extends Position> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public boolean addAll(int index, Collection<? extends AnnotatedPosition> c) {
+    public boolean addAll(int index, Collection<? extends Position> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -404,7 +406,7 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
     }
 
     @Override
-    public AnnotatedPosition get(int index) {
+    public Position get(int index) {
         try {
             return mySiteList.get(index);
         } catch (ExecutionException e) {
@@ -414,19 +416,19 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public AnnotatedPosition set(int index, AnnotatedPosition element) {
+    public Position set(int index, Position element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public void add(int index, AnnotatedPosition element) {
+    public void add(int index, Position element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     /**Not supported immutable class*/
     @Override@Deprecated
-    public AnnotatedPosition remove(int index) {
+    public Position remove(int index) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -443,31 +445,31 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
     }
 
     @Override
-    public ListIterator<AnnotatedPosition> listIterator() {
+    public ListIterator<Position> listIterator() {
         throw new UnsupportedOperationException("Not implemented yet.");
      //   return mySiteList.listIterator();
     }
 
     @Override
-    public ListIterator<AnnotatedPosition> listIterator(int index) {
+    public ListIterator<Position> listIterator(int index) {
         throw new UnsupportedOperationException("Not implemented yet.");
        // return mySiteList.listIterator(index);
     }
 
     @Override
-    public List<AnnotatedPosition> subList(int fromIndex, int toIndex) {
+    public List<Position> subList(int fromIndex, int toIndex) {
         throw new UnsupportedOperationException("Not implemented yet.");
         //return mySiteList.subList(fromIndex, toIndex);
     }
 
     /**
-     * A builder for creating immutable AnnotatedPositionArrayList
+     * A builder for creating immutable PositionArrayList
      *
      * <p>Example:
      * <pre>   {@code
-     *   AnnotatedPositionArrayList.Builder b=new AnnotatedPositionArrayList.Builder();
+     *   PositionArrayList.Builder b=new PositionArrayList.Builder();
      *   for (int i = 0; i <size; i++) {
-     *       AnnotatedPosition ap=new CoreAnnotatedPosition.Builder(chr[chrIndex[i]],pos[i]).refAllele(refSeq[i]).build();
+     *       Position ap=new CoreAnnotatedPosition.Builder(chr[chrIndex[i]],pos[i]).refAllele(refSeq[i]).build();
      *       b.add(ap);
      *       }
      *   instance=b.build();}
@@ -492,8 +494,8 @@ public final class AnnotatedPositionHDF5List implements AnnotatedPositionList {
          * Returns a newly-created {@code ImmutableList} based on the contents of
          * the {@code Builder}.
          */
-        public AnnotatedPositionList build() {
-            return new AnnotatedPositionHDF5List(reader);
+        public PositionList build() {
+            return new PositionHDF5List(reader);
         }
     }
 }

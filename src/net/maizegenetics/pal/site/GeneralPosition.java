@@ -7,6 +7,7 @@ package net.maizegenetics.pal.site;
 import com.google.common.collect.ComparisonChain;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.util.GeneralAnnotationUtils;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @author Ed Buckler
  */
-public final class GeneralPosition implements AnnotatedPosition {
+public final class GeneralPosition implements Position {
        /**Locus of the site (required)*/
     private final Chromosome myChromosome;
     /**Physical position of the site (unknown = Float.NaN)*/
@@ -240,7 +241,7 @@ public final class GeneralPosition implements AnnotatedPosition {
         hash = 37 * hash + this.myPosition;
         hash = 37 * hash + this.myStrand;
         hash = 37 * hash + Float.floatToIntBits(this.myCM);
-        hash = 37 * hash + this.mySNPIDAsBytes.hashCode();
+        if(mySNPIDAsBytes!=null) hash = 37 * hash + this.mySNPIDAsBytes.hashCode();
         return hash;
     }
 
@@ -311,7 +312,7 @@ public final class GeneralPosition implements AnnotatedPosition {
 
     @Override
     public Object[] getAnnotation(String annoName) {
-        return GeneralAnnotationUtils.getAnnotation(myVariantsAndAnno,annoName);
+        return GeneralAnnotationUtils.getAnnotation(myVariantsAndAnno, annoName);
         //return myGA.getAnnotation(annoName);
 //        switch (annoName) {  //TODO: uncomment once in Java 7
 //            case "locus":return myLocus;

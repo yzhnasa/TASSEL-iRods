@@ -1,6 +1,7 @@
 package net.maizegenetics.pal.site;
 
 import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.util.GeneralAnnotation;
 
 /**
  * Defines the chromosome structure and length. The name and length recorded for
