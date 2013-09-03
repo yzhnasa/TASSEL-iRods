@@ -12,16 +12,35 @@ public class SuperByteMatrixBuilder {
     private SuperByteMatrixBuilder() {
     }
 
-    public static SuperByteMatrix getInstance(int rows, int columns) {
-        if ((long) rows * (long) columns > Integer.MAX_VALUE) {
-            return new SuperByteMatrixMultiple(rows, columns);
+    /**
+     * This returns a SuperByteMatrix designed for better performance when
+     * column iteration loop inside row iteration loop.
+     *
+     * @param numRows number of rows
+     * @param numColumns number of columns
+     *
+     * @return SuperByteMatrix (double dimension byte array)
+     */
+    public static SuperByteMatrix getInstance(int numRows, int numColumns) {
+        long numElements = (long) numRows * (long) numColumns;
+        if (numElements > (long) (Integer.MAX_VALUE - 10)) {
+            return new SuperByteMatrixMultiple(numRows, numColumns);
         } else {
-            return new SuperByteMatrixSingle(rows, columns);
+            return new SuperByteMatrixSingle(numRows, numColumns);
         }
     }
 
-    public static SuperByteMatrix getInstanceTranspose(int rows, int columns) {
-        return new SuperByteMatrixTranspose(rows, columns);
+    /**
+     * This returns a SuperByteMatrix designed for better performance when row
+     * iteration loop inside column iteration loop.
+     *
+     * @param numRows number of rows
+     * @param numColumns number of columns
+     *
+     * @return SuperByteMatrix (double dimension byte array)
+     */
+    public static SuperByteMatrix getInstanceTranspose(int numRows, int numColumns) {
+        return new SuperByteMatrixTranspose(numRows, numColumns);
     }
 
     public static SuperByteMatrix getInstanceTranspose(SuperByteMatrix matrix) {
