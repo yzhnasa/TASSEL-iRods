@@ -25,7 +25,7 @@ public class GBSHDF5Constants {
     public static final String MAXMAPPING = "maxMapping";
     public static final String TAGLENGTHINLONG = "tagLengthInLong";
     
-
+    
     private GBSHDF5Constants() {
     }
     

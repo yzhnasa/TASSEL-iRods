@@ -43,10 +43,14 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     private IHDF5Writer myHDF5 = null;
     /**Tag index in block*/
     private int cachedTagIndex = -1;
-    private TagMappingInfo cachedTMI = null;
+    private int cachedMapIndex = -1;
+    private TagMappingInfoV3 cachedTMI = null;
     /**Block index where the tag belongs to. Max: TagCount>>BITS_TO_SHIFT_FOR_CHUNK+1*/
-    private int cachedBlockIndex = -1;
-    private TagMappingInfo[][] cachedTMIBlocks = null;
+    private int cachedChunkIndex = -1;
+    private String[] mapNames = null;
+    private TagMappingInfoV3[][] cachedTMIChunk = null;
+    private int chunkStartTagIndex;
+    private int chunkEndTagIndex;
     private boolean cleanMap = true;
     private boolean cacheAllMappingBlocks = false;
     private HDF5CompoundType<TagMappingInfoV3> tmiType = null;
@@ -96,7 +100,11 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
             System.exit(1);
         }
     }
- 
+    
+    /**
+     * Constructor from a HDF5 TOPM file
+     * @param theHDF5file 
+     */
     public TagsOnPhysicalMapV3 (String theHDF5file) {
         System.out.println("Opening :" + theHDF5file);
         myHDF5 = HDF5Factory.open(theHDF5file);
@@ -106,6 +114,9 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         this.tags = myHDF5.readLongMatrix(GBSHDF5Constants.TAGS);
         this.tagLength = myHDF5.readByteArray(GBSHDF5Constants.TAGLENGTH);
         this.mappingNum = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING);
+        if (mappingNum != 0) {
+            this.renameMapNames();
+        }
         if(myHDF5.exists(GBSHDF5Constants.BEST_STRAND)) {
             bestStrand=myHDF5.readByteArray(GBSHDF5Constants.BEST_STRAND);
             bestChr= myHDF5.readIntArray(GBSHDF5Constants.BEST_CHR);
@@ -124,7 +135,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     }
     
     /**
-     * Creat datasets in HDF5 holding mapping information
+     * Creat datasets in HDF5 holding mapping information, which is used to annotate the TOPM with multiple alignment hypothesis
      * @param startIndex Start index of tag mapping information. This is essentially the current mappingNum
      * @param size the number of datasets which will be created
      * @return names of the datasets
@@ -146,7 +157,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     }
     
     /**
-     * Write TMI buffer/chunk to HDF5 datasets.
+     * Write TMI buffer/chunk to HDF5 datasets, which is used to annotate the TOPM with multiple alignment hypothesis
      * @param dataSetNames
      * @param tmiChunk TMI chunk [dataSetNames.length]*[chunk_size]
      * @param chunkIndex index of this chunk
@@ -164,8 +175,23 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
      */
     public void setMappingNum (int mappingNum) {
         this.mappingNum = mappingNum;
-        myHDF5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING, mappingNum); 
+        myHDF5.setIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING, mappingNum);
+        this.renameMapNames();
         System.out.println("TOPM maxMapping attibute was set to " + String.valueOf(mappingNum));
+    }
+    
+    /**
+     * Rename the mapNames based on the number of mapping
+     */
+    private void renameMapNames () {
+        if (mappingNum == 0) {
+            mapNames = null;
+            return;
+        }
+        this.mapNames = new String[mappingNum];
+        for (int i = 0; i < mappingNum; i++) {
+            mapNames[i] = GBSHDF5Constants.MAPBASE + this.getThreeFigureString(i);
+        }
     }
     
     private boolean loadVariantsIntoMemory() {
@@ -231,31 +257,42 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         return true;
     }
     
+    /**
+     * Load mapping information in a chunk to memory and reset tag start and end index
+     * @param chunkIndex 
+     */
+    private void cacheMappingInfoChunk (int chunkIndex) {
+        this.cachedTMIChunk = new TagMappingInfoV3[this.getMappingNum()][this.getChunkSize()];
+        for (int i = 0; i < mappingNum; i++) {
+            cachedTMIChunk[i] = myHDF5.compounds().readArrayBlock(mapNames[i], tmiType, this.getChunkSize(), chunkIndex);
+        }
+        this.cachedChunkIndex = chunkIndex;
+        this.chunkStartTagIndex = chunkIndex*this.getChunkSize();
+        this.chunkEndTagIndex = chunkStartTagIndex+this.getChunkSize();
+        if (chunkEndTagIndex > this.getTagCount()) chunkEndTagIndex = this.getTagCount();
+    }
     
-    private void cacheMappingInfo(int index) {
-        if (index == cachedTagIndex) {
+    /**
+     * Update current cachedTMI
+     * @param tagIndex
+     * @param mapIndex 
+     */
+    private void cacheMappingInfo(int tagIndex, int mapIndex) {
+        if (tagIndex == cachedTagIndex && mapIndex == cachedMapIndex) {
             return;
         }
-        int block = index >> BITS_TO_SHIFT_FOR_CHUNK;
-        if (cachedBlockIndex != block) {
-            if (cleanMap == false) {
-                saveCacheBackToFile();
-            }
-            for (int mi = 0; mi < mappingNum; mi++) {
-//f                cachedTMIBlocks[mi] = myHDF5.compounds().readArrayBlock(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(mi), tmiType, CHUNK_SIZE, block);
-                cachedBlockIndex = block;
-                if (cacheAllMappingBlocks == false) {
-                    break;
-                }
-            }
+        int chunkIndex = tagIndex >> BITS_TO_SHIFT_FOR_CHUNK;
+        if (chunkIndex != this.cachedChunkIndex) {
+            this.cacheMappingInfoChunk(chunkIndex); 
         }
-        this.cachedTMI = cachedTMIBlocks[0][index % CHUNK_SIZE];
-        this.cachedTagIndex = index;
+        cachedTMI = this.cachedTMIChunk[mapIndex][tagIndex%this.getChunkSize()];
+        cachedTagIndex = tagIndex;
+        cachedMapIndex = mapIndex;
     }
 
     private void saveCacheBackToFile() {
         int block = cachedTagIndex >> BITS_TO_SHIFT_FOR_CHUNK;
-        if (cachedBlockIndex != block) {
+        if (cachedChunkIndex != block) {
             for (int mi = 0; mi < mappingNum; mi++) {
                 if (cleanMap == false) {
 //f                    myHDF5.compounds().writeArrayBlock(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(mi), tmiType, cachedTMIBlocks[mi], block);
@@ -271,10 +308,18 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         }
     }
 
+    /**
+     * Return the total count of chunks
+     * @return 
+     */
     public int getChunkCount () {
         return (this.getTagCount()>>BITS_TO_SHIFT_FOR_CHUNK) + 1;
     }
     
+    /**
+     * Return the chunk size (Number of tags in a chunk)
+     * @return 
+     */
     public int getChunkSize () {
         return this.CHUNK_SIZE;
     }
@@ -293,16 +338,6 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         return this.mappingNum; 
     }
 
-    public TagMappingInfo getAlternateTagMappingInfo(int index, int mapIndex) {
-        if(hasDetailedMapping) return null;
-        if (cacheAllMappingBlocks == false) {
-            cacheMappingInfo(index);
-        }
-        if (cachedTagIndex != index) {
-            cacheMappingInfo(index);
-        }
-        return cachedTMIBlocks[mapIndex][index % CHUNK_SIZE];
-    }
 
     @Override
     public int addVariant(int tagIndex, byte offset, byte base) {
@@ -313,7 +348,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     public byte getDcoP(int index) {
         if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
         if (cachedTagIndex != index) {
-            cacheMappingInfo(index);
+            //cacheMappingInfo(index);
         }
         return cachedTMI.dcoP;
     }
@@ -322,7 +357,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     public byte getDivergence(int index) {
         if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
         if (cachedTagIndex != index) {
-            cacheMappingInfo(index);
+            //cacheMappingInfo(index);
         }
         return cachedTMI.divergence;
     }
@@ -331,7 +366,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     public int getEndPosition(int index) {
         if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
         if (cachedTagIndex != index) {
-            cacheMappingInfo(index);
+            //cacheMappingInfo(index);
         }
         return cachedTMI.endPosition;
     }
@@ -340,7 +375,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     public byte getMapP(int index) {
         if(!hasDetailedMapping) throw new IllegalStateException("Detailed mapping not present");
         if (cachedTagIndex != index) {
-            cacheMappingInfo(index);
+            //cacheMappingInfo(index);
         }
         return cachedTMI.mapP;
     }
@@ -348,7 +383,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     @Override
     public int[] getPositionArray(int index) {
         if (cachedTagIndex != index) {
-            cacheMappingInfo(index);
+            //cacheMappingInfo(index);
         }
         int[] r = {cachedTMI.chromosome, cachedTMI.strand, cachedTMI.startPosition};
         return r;
@@ -358,7 +393,18 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     public int getReadIndexForPositionIndex(int posIndex) {
         return indicesOfSortByPosition[posIndex];
     }
-
+    
+    /**
+     * Return tag mapping information of a tag in one map
+     * @param tagIndex
+     * @param mapIndex
+     * @return 
+     */
+    public TagMappingInfoV3 getMappingInfo (int tagIndex, int mapIndex) {
+        this.cacheMappingInfo(tagIndex, mapIndex);
+        return this.cachedTMI;
+    }
+    
     private String getThreeFigureString (int number) {
         String s = String.valueOf(number);
         int length = s.length();
