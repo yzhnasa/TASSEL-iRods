@@ -93,8 +93,8 @@ import org.apache.log4j.Logger;
 public class TASSELMainFrame extends JFrame implements ActionListener {
 
     private static final Logger myLogger = Logger.getLogger(TASSELMainFrame.class);
-    public static final String version = "4.3.0";
-    public static final String versionDate = "August 22, 2013";
+    public static final String version = "4.3.1";
+    public static final String versionDate = "September 5, 2013";
     private DataTreePanel myDataTreePanel;
     private String tasselDataFile = "TasselDataFile";
     //a variable to control when the progress bar was last updated
