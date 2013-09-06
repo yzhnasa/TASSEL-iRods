@@ -14,17 +14,53 @@ import net.maizegenetics.util.SuperByteMatrixBuilder;
 public class GenotypeBuilder {
 
     private SuperByteMatrix myGenotype;
-    private final boolean myIsPhased;
-    private final String[][] myAlleleEncodings;
+    private boolean myIsPhased = false;
+    private String[][] myAlleleEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
 
-    private GenotypeBuilder(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
-        myGenotype = SuperByteMatrixBuilder.getInstance(numTaxa, numSites);
-        myIsPhased = phased;
-        myAlleleEncodings = alleleEncodings;
+    private GenotypeBuilder(SuperByteMatrix genotype) {
+        myGenotype = genotype;
     }
 
+    /**
+     * Get Genotype Builder given number of taxa and sites. Performance
+     * optimized for site loop inside taxon loop. Default is unphased and
+     * NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES encoding.
+     *
+     * @param numTaxa number of taxa
+     * @param numSites number of sites.
+     *
+     * @return Genotype Builder
+     */
+    public static GenotypeBuilder getInstance(int numTaxa, int numSites) {
+        return getUnphasedNucleotideGenotypeBuilder(numTaxa, numSites);
+    }
+
+    /**
+     * Get Genotype Builder given number of taxa and sites. Performance
+     * optimized for taxon loop inside site loop. Default is unphased and
+     * NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES encoding.
+     *
+     * @param numTaxa number of taxa
+     * @param numSites number of sites.
+     *
+     * @return Genotype Builder
+     */
+    public static GenotypeBuilder getInstanceTranspose(int numTaxa, int numSites) {
+        return new GenotypeBuilder(SuperByteMatrixBuilder.getInstanceTranspose(numTaxa, numSites));
+    }
+
+    /**
+     * Get Genotype Builder given number of taxa and sites. Performance
+     * optimized for site loop inside taxon loop. Default is unphased and
+     * NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES encoding.
+     *
+     * @param numTaxa number of taxa
+     * @param numSites number of sites.
+     *
+     * @return Genotype Builder
+     */
     public static GenotypeBuilder getUnphasedNucleotideGenotypeBuilder(int numTaxa, int numSites) {
-        return new GenotypeBuilder(numTaxa, numSites, false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
+        return new GenotypeBuilder(SuperByteMatrixBuilder.getInstance(numTaxa, numSites));
     }
 
     public void setBase(int taxon, int site, byte value) {
@@ -37,10 +73,22 @@ public class GenotypeBuilder {
         }
     }
 
+    public void isPhased(boolean isPhased) {
+        myIsPhased = isPhased;
+    }
+
+    public void alleleEncodings(String[][] alleleEncodings) {
+        myAlleleEncodings = alleleEncodings;
+    }
+
     public Genotype build() {
         SuperByteMatrix temp = myGenotype;
         myGenotype = null;
-        return new ByteGenotype(temp, myIsPhased, myAlleleEncodings);
+        if (NucleotideAlignmentConstants.isNucleotideEncodings(myAlleleEncodings)) {
+            return new NucleotideGenotype(temp, myIsPhased);
+        } else {
+            return new ByteGenotype(temp, myIsPhased, myAlleleEncodings);
+        }
     }
 
     public Genotype buildHDF5(String filename) {
