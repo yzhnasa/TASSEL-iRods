@@ -107,4 +107,9 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
     public int getNumColumns() {
         return myNumColumns;
     }
+
+    @Override
+    public boolean isColumnInnerLoop() {
+        return true;
+    }
 }

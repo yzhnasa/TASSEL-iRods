@@ -54,4 +54,9 @@ public class SuperByteMatrixTranspose implements SuperByteMatrix {
     public byte[] getAllRows(int column) {
         return myMatrix.getAllColumns(column);
     }
+
+    @Override
+    public boolean isColumnInnerLoop() {
+        return false;
+    }
 }
