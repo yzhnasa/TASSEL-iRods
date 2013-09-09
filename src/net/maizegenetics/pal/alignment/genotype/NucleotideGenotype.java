@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -17,18 +17,16 @@ import net.maizegenetics.util.SuperByteMatrix;
 public class NucleotideGenotype extends ByteGenotype {
 
     private static final int SHIFT_AMOUNT = 10;
-    /**
-     * Byte representations of DNA sequences are stored in blocks of 65536 sites
-     */
     private static final int NUM_SITES_TO_CACHE = 1 << SHIFT_AMOUNT;
     public static final int SITE_BLOCK_MASK = ~(NUM_SITES_TO_CACHE - 1);
-    private static final int MAX_CACHE_SIZE = 50;
-    private final Map<Integer, SiteStats> myCachedSites = new LinkedHashMap<Integer, SiteStats>((3 * MAX_CACHE_SIZE) / 2) {
+    private static final int MAX_CACHE_SIZE = 150;
+    private final Map<Integer, int[][][]> myCachedInternal = new LinkedHashMap<Integer, int[][][]>((3 * MAX_CACHE_SIZE) / 2) {
         @Override
         protected boolean removeEldestEntry(Map.Entry eldest) {
             return size() > MAX_CACHE_SIZE;
         }
     };
+    private final Map<Integer, int[][][]> myCachedAlleleFreqs = Collections.synchronizedMap(myCachedInternal);
     private final int myMaxNumThreads = Runtime.getRuntime().availableProcessors();
     private int myNumRunningThreads = 0;
 
@@ -40,31 +38,29 @@ public class NucleotideGenotype extends ByteGenotype {
         super(genotype, phased, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
     }
 
-    private SiteStats getCachedSiteStats(int site) {
+    private int[][] getCachedAlleleFreq(int site) {
         int startSite = getStartSite(site);
-        SiteStats result = myCachedSites.get(startSite);
+        int[][][] result = myCachedAlleleFreqs.get(startSite);
         if (result == null) {
             if (myNumRunningThreads < myMaxNumThreads) {
-                myNumRunningThreads++;
                 new Thread(new LookAheadSiteStats(startSite + NUM_SITES_TO_CACHE * 10)).start();
             }
             result = calculateAlleleFreq(startSite);
-            myCachedSites.put(startSite, result);
         }
 
         if ((site == startSite) && (myNumRunningThreads < myMaxNumThreads)) {
-            myNumRunningThreads++;
             new Thread(new LookAheadSiteStats(startSite + NUM_SITES_TO_CACHE * 20)).start();
         }
-        return result;
+        return result[site - startSite];
     }
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        return getCachedSiteStats(site).getAllelesSortedByFrequency(site);
+        return getCachedAlleleFreq(site);
     }
 
-    private SiteStats calculateAlleleFreq(int startSite) {
+    private int[][][] calculateAlleleFreq(int site) {
+        int startSite = getStartSite(site);
         int numSites = Math.min(NUM_SITES_TO_CACHE, getSiteCount() - startSite);
         int numTaxa = getTaxaCount();
         int[][] alleleFreq = new int[numSites][6];
@@ -80,29 +76,47 @@ public class NucleotideGenotype extends ByteGenotype {
             }
         }
 
-        int[][][] alleleCounts = new int[numSites][2][];
+        int[][][] alleleCounts = new int[numSites][][];
         for (int s = 0; s < numSites; s++) {
-            int[] cntAndAllele = new int[6];
             for (byte i = 0; i < 6; i++) {
-                cntAndAllele[i] = (alleleFreq[s][i] << 4) | (5 - i);  //size | allele (the 5-i is to get the sort right, so if case of ties A is first)
+                // size | allele (the 5-i is to get the sort right, so if case of ties A is first)
+                alleleFreq[s][i] = (alleleFreq[s][i] << 4) | (5 - i);
             }
-            Arrays.sort(cntAndAllele);  //ascending quick sort
-            int numAlleles = 0;
-            for (byte i = 5; i >= 0; i--) {
-                if (cntAndAllele[i] <= 0xF) {
-                    numAlleles = 5 - i;
-                    break;
-                }
-            }
-            alleleCounts[s][0] = new int[numAlleles];
-            alleleCounts[s][1] = new int[numAlleles];
-            for (int i = 5, n = 5 - numAlleles; i > n; i--) {
-                alleleCounts[s][0][5 - i] = (byte) (5 - (0xF & cntAndAllele[i]));
-                alleleCounts[s][1][5 - i] = alleleFreq[s][alleleCounts[s][0][5 - i]];
+
+            int numAlleles = sort6(alleleFreq[s]);
+            alleleCounts[s] = new int[2][numAlleles];
+            for (int i = 0; i < numAlleles; i++) {
+                alleleCounts[s][0][i] = (byte) (5 - (0xF & alleleFreq[s][i]));
+                alleleCounts[s][1][i] = alleleFreq[s][i] >>> 4;
             }
         }
+        myCachedAlleleFreqs.put(startSite, alleleCounts);
 
-        return new SiteStats(startSite, alleleCounts);
+        return alleleCounts;
+    }
+
+    private static int sort6(int[] data) {
+        int countNotZero = 0;
+        for (int j = 0; j < 5; j++) {
+            int imax = j;
+            for (int i = j + 1; i < 6; i++) {
+                if (data[i] > data[imax]) {
+                    imax = i;
+                }
+            }
+            if (data[imax] > 0xF) {
+                int temp = data[j];
+                data[j] = data[imax];
+                data[imax] = temp;
+                countNotZero++;
+            } else {
+                return countNotZero;
+            }
+        }
+        if (data[5] > 0xF) {
+            countNotZero++;
+        }
+        return countNotZero;
     }
 
     private class LookAheadSiteStats implements Runnable {
@@ -110,6 +124,7 @@ public class NucleotideGenotype extends ByteGenotype {
         private final int myStartSite;
 
         public LookAheadSiteStats(int site) {
+            myNumRunningThreads++;
             myStartSite = getStartSite(site);
         }
 
@@ -119,29 +134,12 @@ public class NucleotideGenotype extends ByteGenotype {
                 if (myStartSite >= mySiteCount) {
                     return;
                 }
-                SiteStats result = myCachedSites.get(myStartSite);
-                if (result == null) {
-                    result = calculateAlleleFreq(myStartSite);
-                    myCachedSites.put(myStartSite, result);
+                if (myCachedAlleleFreqs.get(myStartSite) == null) {
+                    calculateAlleleFreq(myStartSite);
                 }
             } finally {
                 myNumRunningThreads--;
             }
-        }
-    }
-
-    private class SiteStats {
-
-        private final int myStartSite;
-        private final int[][][] myAlleleCounts;
-
-        SiteStats(int startSite, int[][][] alleleCounts) {
-            myStartSite = startSite;
-            myAlleleCounts = alleleCounts;
-        }
-
-        public int[][] getAllelesSortedByFrequency(int site) {
-            return myAlleleCounts[site - myStartSite];
         }
     }
 }
