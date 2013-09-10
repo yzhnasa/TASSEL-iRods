@@ -68,8 +68,9 @@ public class GenotypeBuilder {
     }
 
     public void setBaseRangeForTaxon(int taxon, int startSite, byte[] value) {
+        //TODO this needs an array copy method, startSite was eliminated
         for (int i = 0; i < value.length; i++) {
-            myGenotype.set(taxon, i, value[i]);
+            myGenotype.set(taxon, i+startSite, value[i]);
         }
     }
 
