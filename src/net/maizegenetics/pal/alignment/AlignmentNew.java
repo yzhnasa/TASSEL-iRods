@@ -5,6 +5,7 @@ package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.site.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 
@@ -379,6 +380,13 @@ public interface AlignmentNew {
      * @return number of taxa
      */
     public int getTaxaCount();
+
+
+    /**
+     * Return the position list for the alignment.
+     * @return PositionList for all sites.
+     */
+    public PositionList getPositionList();
 
     /**
      * Returns the physical position at given site.
