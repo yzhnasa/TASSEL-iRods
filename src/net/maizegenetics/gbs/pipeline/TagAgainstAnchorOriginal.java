@@ -12,6 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
@@ -25,20 +28,16 @@ import net.maizegenetics.util.OpenBitSet;
  *
  * @author Fei Lu
  */
-public class TagAgainstAnchor {
+public class TagAgainstAnchorOriginal {
     BitAlignment anchor;
     double[] anchorMaf;
     int[] chromosomeNumber;
-    /**First SNP index of a chromosome in the whole SNP list */
     int[] chrStartIndex;
-    /**Last SNP index of a chromosome in the whole SNP list, exclusive */
     int[] chrEndIndex;
     TagsByTaxaByteHDF5TagGroups tbt;
     int[] tbtRedirect;
     double pThresh = 0.000001;
     int minCount = 20;
-    /**Cache TBT*/
-    int tagBlockSize = 64;
     
     int minTagAlleleIntersection = 4;
     
@@ -60,7 +59,7 @@ public class TagAgainstAnchor {
      * @param coreNum default:-1, which means using all cores in a node. When the coreNum is set less than total core number, which means using coreNum cores, each core runs 1 thread
      * @param chunkSize number of tags in a chunk. This determines the time usage in a node
      */
-    public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int chunkSize) {
+    public TagAgainstAnchorOriginal (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int chunkSize) {
         this.pThresh = pThresh;
         this.minCount = minCount;
         this.loadAnchorMap(hapMapHDF5);
@@ -86,7 +85,7 @@ public class TagAgainstAnchor {
      * @param chunkStartIndex start index of chunk
      * @param chunkEndIndex end index of chunk. Note: chunk of end index is not included.
      */
-    public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int chunkSize, int chunkStartIndex, int chunkEndIndex) {
+    public TagAgainstAnchorOriginal (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int chunkSize, int chunkStartIndex, int chunkEndIndex) {
         this.pThresh = pThresh;
         this.minCount = minCount;
         this.loadAnchorMap(hapMapHDF5);
@@ -105,7 +104,7 @@ public class TagAgainstAnchor {
      * @param chunkSize
      * @return 
      */
-    public int getChunkNum (int chunkSize) {
+    private int getChunkNum (int chunkSize) {
         int tagNum = tbt.getTagCount();
         int chunkNum = 0;
         int left = tagNum % chunkSize;
@@ -187,13 +186,13 @@ public class TagAgainstAnchor {
                         threadEndTagIndex[j] = threadStartTagIndex[j]+threadSize[j];
                     }
                 }
-                int actualThreadNum = threadStartTagIndex.length;
+                int actualThreadNum = threadStartTagIndex.length;                
                 jobs = new Task[actualThreadNum];
                 Thread[] mts = new Thread[actualThreadNum];
                 long lastTimePoint = this.getCurrentTimeNano();
                 for (int j = 0; j < actualThreadNum; j++) {
                     jobs[j] = new Task (threadStartTagIndex[j], threadEndTagIndex[j]);
-                }
+                } 
                 System.out.println("Loading this chunk to multiple threads took " + this.getTimeSpanSecond(lastTimePoint) + " seconds");
                 System.out.println("Multiple threading mapping in progress...");
                 lastTimePoint = this.getCurrentTimeNano();       
@@ -267,59 +266,14 @@ public class TagAgainstAnchor {
      * Class for conducting mapping on one thread
      */
     class Task implements Runnable {
-        /**tag index in the whole tag list*/
         int tagStartIndex;
         int tagEndIndex;
         TagsByTaxaByte subTBT;
 		String[] result = null;
-        int blockNum;
-        /**tag index of subTBT*/
-        int[] blockStartIndex;
-        int[] blockEndIndex;
-        /**tag index of subTBT in block, where taxaCountWithTag > minCount*/
-        int[] blockTagIndex;
-        
-        double[][] bestR = null;
-        int[] bestChr = null;
-        int[] blastChr = null;
-        int[] blastPos = null;
-        int[] bestAlignment = null;
-        int[] refDiv = null;
-        long[][] testTag = null;
-        long[][] testTagDist = null;
-        double[][][] theResults = null;
-            
+
 		Task (int tagStartIndex, int tagEndIndex) {
 			this.buildSubTBT(tagStartIndex, tagEndIndex);
-            this.buildTagBlock();
 		}
-        
-        /**
-         * Build blocks
-         */
-        private void buildTagBlock () {
-            int left = subTBT.getTagCount()%tagBlockSize;
-            if (left == 0) {
-                blockNum = subTBT.getTagCount()/tagBlockSize;
-                blockStartIndex = new int[blockNum];
-                blockEndIndex = new int[blockNum];
-                for (int i = 0; i < blockNum; i++) {
-                    blockStartIndex[i] = i * tagBlockSize;
-                    blockEndIndex[i] = blockStartIndex[i]+tagBlockSize;
-                }
-            }
-            else {
-                blockNum = subTBT.getTagCount()/tagBlockSize + 1;
-                blockStartIndex = new int[blockNum];
-                blockEndIndex = new int[blockNum];
-                for (int i = 0; i < blockNum-1; i++) {
-                    blockStartIndex[i] = i * tagBlockSize;
-                    blockEndIndex[i] = blockStartIndex[i]+tagBlockSize;
-                }
-                blockStartIndex[blockNum-1] = tagBlockSize * (blockNum-1);
-                blockEndIndex[blockNum-1] = subTBT.getTagCount();
-            }
-        }
         
         /**
          * Build TBTByte for each task/thread
@@ -356,91 +310,47 @@ public class TagAgainstAnchor {
 		public String[] getResult () {
 			return result;
 		}
-        
-        private void initialize (int blockSize) {
-            bestR = new double[blockSize][];
-            bestChr = new int[blockSize];
-            blastChr = new int[blockSize];
-            blastPos = new int[blockSize];
-            bestAlignment = new int[blockSize];
-            refDiv = new int[blockSize];
-            testTag = new long[blockSize][];
-            testTagDist = new long[blockSize][];
-            theResults = new double[blockSize][][];
-            this.populate(blockSize);   
-        }
-        
-        private void populate (int blockSize) {
-            for (int i = 0; i < blockSize; i++) {
-                double[] a = {-1,-1,-1, 1, -1};
-                bestR[i] = a;
-                bestChr[i] = Integer.MIN_VALUE;
-                blastChr[i] = Integer.MIN_VALUE;
-                blastPos[i] = Integer.MIN_VALUE;
-                bestAlignment[i] = Integer.MIN_VALUE;
-                refDiv[i] = Integer.MIN_VALUE;
-                theResults[i] = new double[chromosomeNumber.length][];
-            }
-        }
-        
+
         @Override
 		public void run() {
             long lastTimePoint = getCurrentTimeNano();
-			ArrayList<String> resultList = new ArrayList(); 
-            
-            ScanChromosome[] scanOnChr = null;
-            for (int i = 0; i < this.blockNum; i++) {
-                int blockSize = this.blockEndIndex[i] - this.blockStartIndex[i];
-                ArrayList<Integer> blockTagIndexList = new ArrayList();
-                for (int j = 0; j < blockSize; j++) {
-                    if (subTBT.getNumberOfTaxaWithTag(this.blockStartIndex[i]+j) < minCount) continue;
-                    blockTagIndexList.add(this.blockStartIndex[i]+j);
-                }
-                if (blockTagIndexList.size() == 0) continue;
-                this.blockTagIndex = new int[blockTagIndexList.size()];
-                for (int j = 0; j < blockTagIndexList.size(); j++) {
-                    blockTagIndex[j] = blockTagIndexList.get(j);
-                }
-                blockSize = blockTagIndex.length;
-                this.initialize(blockSize);
-                for (int j = 0; j < blockSize; j++) {
-                    testTag[j] = subTBT.getTag(blockTagIndex[j]);
-                    testTagDist[j]=getTagsInBits(subTBT, blockTagIndex[j], tbtRedirect, anchor.getSequenceCount());
-                }
-                scanOnChr = new ScanChromosome[chromosomeNumber.length];
+			ArrayList<String> resultList = new ArrayList();          
+            for (int i = 0; i < subTBT.getTagCount(); i++) {
+                if(subTBT.getNumberOfTaxaWithTag(i) <minCount) continue;
+                double[] bestR={-1,-1,-1, 1, -1};
+                int blastChr=Integer.MIN_VALUE, blastPos=Integer.MIN_VALUE, bestAlignment=Integer.MIN_VALUE, refDiv=Integer.MIN_VALUE;
+                long[] testTag = subTBT.getTag(i);
+                long[] testTagDist;
+                double[][] theResults=new double[chromosomeNumber.length][];
+                testTagDist=getTagsInBits(subTBT, i, tbtRedirect, anchor.getSequenceCount());
+                ScanChromosome[] scanOnChr = new ScanChromosome[chromosomeNumber.length];
                 for (int j = 0; j < chromosomeNumber.length; j++) {
                     scanOnChr[j] = new ScanChromosome(testTagDist, theResults, j, chrStartIndex[j], chrEndIndex[j], pThresh, 1, blastPos);
                     scanOnChr[j].scan();
                 }
-
-                double[] pRank = null;
-                for (int j = 0; j < blockSize; j++) {
-                    pRank = new double[chromosomeNumber.length];
-                    int countRealSig = 0;
-                    for (int k = 0; k < chromosomeNumber.length; k++) {
-                        double[] r = theResults[j][k];                        
-                        pRank[k] = r[3];
-                        if(r[3]<bestR[j][3]) {bestR[j]=r.clone(); bestAlignment[j]=k;}
-                        if(r[3]<pThresh) countRealSig++;
-                    }
-                    if (bestR[j][3] == 1) continue;
-                    Arrays.sort(pRank);
-                    long[][] singleTagDist = new long[1][];
-                    singleTagDist[0] = testTagDist[j];
-                    double[][][] bestResWithNewThreshold=new double[1][1][];
-                    int[] blockPos = new int[1];
-                    blockPos[0] = blastPos[j]; 
-                    ScanChromosome bestChrNewThres = new ScanChromosome(singleTagDist, bestResWithNewThreshold, 0, chrStartIndex[bestAlignment[j]], chrEndIndex[bestAlignment[j]], pRank[1], 1, blockPos);
-                    bestChrNewThres.scan();
-                    int countOfSitesBetterThanNextBestChr=(int)bestResWithNewThreshold[0][0][4];
-                    String s=String.format("%s %d %d %d %d %d %d %d %g %d %d %d %g %g %d %d %d %n", BaseEncoder.getSequenceFromLong(testTag[j]), subTBT.getReadCount(blockTagIndex[j]), blastChr[j], blastPos[j], refDiv[j],
-                            (int)bestR[j][0],(int)bestR[j][1],(int)bestR[j][2], bestR[j][3], (int)bestR[j][4], subTBT.getNumberOfTaxaWithTag(blockTagIndex[j]),
-                            countRealSig, Math.log10(pRank[1]/pRank[0]), Math.log10(pRank[chromosomeNumber.length/2]/pRank[0]), countOfSitesBetterThanNextBestChr,
-                            bestChrNewThres.minSigPos[0], bestChrNewThres.maxSigPos[0]);
-                    resultList.add(s);
+                int countRealSig=0;
+                double[] pRank=new double[chromosomeNumber.length];
+                for (int j = 0; j < chromosomeNumber.length; j++) {
+                    double[] r=theResults[j];
+                    pRank[j]=r[3];
+                    if(r[3]<bestR[3]) {bestR=r.clone(); bestAlignment=j;}
+                    if(r[3]<pThresh) countRealSig++;
                 }
+                if (bestR[3] == 1) continue;
+                Arrays.sort(pRank);
+                double[][] bestResWithNewThreshold=new double[1][];
+                ScanChromosome bestChrNewThres = new ScanChromosome(testTagDist, bestResWithNewThreshold, 0, chrStartIndex[bestAlignment], chrEndIndex[bestAlignment],pRank[1], 1, blastPos);
+                bestChrNewThres.scan();
+                int countOfSitesBetterThanNextBestChr=(int)bestResWithNewThreshold[0][4];
+                String s=String.format("%s %d %d %d %d %d %d %d %g %d %d %d %g %g %d %d %d %n",BaseEncoder.getSequenceFromLong(testTag), subTBT.getReadCount(i), blastChr, blastPos, refDiv,
+                        (int)bestR[0],(int)bestR[1],(int)bestR[2], bestR[3], (int)bestR[4], subTBT.getNumberOfTaxaWithTag(i),
+                        countRealSig, Math.log10(pRank[1]/pRank[0]), Math.log10(pRank[chromosomeNumber.length/2]/pRank[0]), countOfSitesBetterThanNextBestChr,
+                        bestChrNewThres.minSigPos, bestChrNewThres.maxSigPos);
+                resultList.add(s);
             }
+			
 			result = resultList.toArray(new String[resultList.size()]);
+			//System.out.println("Task with " + subTBT.getTagCount() + " tags indexing from " + tagStartIndex + " to " + tagEndIndex + " are finished in " + getTimeSpanSecond(lastTimePoint) + " seconds");
 		}
 
 	}
@@ -452,14 +362,14 @@ public class TagAgainstAnchor {
         int chrIndex;
         int chrStartIndex;
         int chrEndIndex;
-        OpenBitSet[] obsTdist;
+        OpenBitSet obsTdist;
         Binomial binomFunc=new Binomial(5, 0.5, new RandomJava());
-        double[][][] resultReport;
+        double[][] resultReport;
         double sigThreshold;
-        int[] minSigPos, maxSigPos;
+        int minSigPos=Integer.MIN_VALUE, maxSigPos=Integer.MIN_VALUE;
         int step=1;
         double bionomialThreshold=0.2;
-        int[] blockPosition;
+        int blockPosition=Integer.MIN_VALUE;  //position to block from testing.
         int blockWindow=100;
         
         /**
@@ -473,15 +383,8 @@ public class TagAgainstAnchor {
          * @param step step of scanning
          * @param blockPosition 
          */
-        public ScanChromosome(long[][] tdist, double[][][] resultReport, int chrIndex, int chrStartIndex, int chrEndIndex, double sigThreshold, int step, int[] blockPosition) {
-            obsTdist = new OpenBitSet[tdist.length];
-            minSigPos = new int[tdist.length];
-            maxSigPos = new int[tdist.length];
-            for (int i = 0; i < tdist.length; i++) {
-                obsTdist[i] = new OpenBitSet(tdist[i], tdist[i].length);
-                minSigPos[i] = Integer.MIN_VALUE;
-                maxSigPos[i] = Integer.MIN_VALUE;
-            }
+        public ScanChromosome(long[] tdist, double[][] resultReport, int chrIndex, int chrStartIndex, int chrEndIndex, double sigThreshold, int step, int blockPosition) {
+            obsTdist=new OpenBitSet(tdist,tdist.length);
             this.resultReport=resultReport;
             this.chrIndex = chrIndex;
             this.chrStartIndex = chrStartIndex;
@@ -492,37 +395,27 @@ public class TagAgainstAnchor {
         }
 
         public void scan() {
-            int[] bestSite, countSig;
-            double[] bestP;
-            bestSite = new int[this.obsTdist.length];
-            countSig = new int[this.obsTdist.length];
-            bestP = new double[this.obsTdist.length];
-            for (int i = 0; i < bestSite.length; i++) {
-                bestSite[i] = -1;
-                countSig[i] = 0;
-                bestP[i] = 2;
-            }
+            long tests=0;
+            int bestSite=-1, countSig=0;
+            double bestP=2;
             for (int i = chrStartIndex; i < chrEndIndex; i+=step) {
+                if(Math.abs(anchor.getPositionInLocus(i)-blockPosition)<blockWindow) continue;
                 OpenBitSet obsMajor = new OpenBitSet(anchor.getAllelePresenceForAllTaxa(i, 0).getBits());
                 OpenBitSet obsMinor = new OpenBitSet(anchor.getAllelePresenceForAllTaxa(i, 1).getBits());
-                if (obsMinor.cardinality()>4) {
-                    for (int j = 0; j < obsTdist.length; j++) {
-                        if(Math.abs(anchor.getPositionInLocus(i)-blockPosition[j])<blockWindow) continue;
-                        double p = fastTestSites(obsTdist[j], obsMajor, obsMinor, anchorMaf[i], binomFunc);
-                        if(p<bestP[j]) {bestP[j]=p; bestSite[j]=i;}
-                        if(p<sigThreshold) {
-                            countSig[j]++;
-                            if(minSigPos[j]==-1) minSigPos[j]=anchor.getPositionInLocus(i);
-                            maxSigPos[j]=anchor.getPositionInLocus(i);
-                        }
+                if(obsMinor.cardinality()>4) {
+                    double p=fastTestSites(obsTdist, obsMajor, obsMinor, anchorMaf[i], binomFunc);
+                    if(p<bestP) {bestP=p; bestSite=i;}
+                    if(p<sigThreshold) {
+                        countSig++;
+                        if(minSigPos==-1) minSigPos=anchor.getPositionInLocus(i);
+                        maxSigPos=anchor.getPositionInLocus(i);
                     }
-                }                
+                }
+                tests++;
             }
-            for (int i = 0; i < obsTdist.length; i++) {
-                int chr = Integer.parseInt(anchor.getLocus(bestSite[i]).getChromosomeName());
-                double[] result={chr, bestSite[i], anchor.getPositionInLocus(bestSite[i]),bestP[i], countSig[i]};
-                resultReport[i][chrIndex] = result;
-            }
+            int chr=Integer.parseInt(anchor.getLocus(bestSite).getChromosomeName());
+            double[] result={chr, bestSite, anchor.getPositionInLocus(bestSite),bestP, countSig};
+            resultReport[chrIndex]=result;
         }
     }
     
