@@ -212,6 +212,11 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant=new String[]{"AGCTT"};
             likelyReadEnd = new String[]{"AAGCTT","AAGCTAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
             readEndCutSiteRemnantLength = 5;
+        } else if(enzyme.matches("(?i)ecor[i1]")) {
+            theEnzyme = "EcoRI";  // G^AATTC
+            initialCutSiteRemnant= new String[]{"AATTC"};
+            likelyReadEnd = new String[]{"GAATTC","GAATTAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
+            readEndCutSiteRemnantLength = 5;
         } else if (enzyme.matches("(?i)RBSTA")) {
             theEnzyme = "RBSTA";
             initialCutSiteRemnant = new String[]{"TA"};
@@ -228,6 +233,7 @@ public class ParseBarcodeRead {
                     +"  ApeKI"    +"\n"
                     +"  ApoI"     +"\n"
                     +"  BamHI"    +"\n"
+                    +"  EcoRI"    +"\n"
                     +"  EcoT22I"  +"\n"
                     +"  HindIII"  +"\n"
                     +"  HinP1I"   +"\n"

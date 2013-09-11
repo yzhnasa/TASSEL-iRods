@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import net.maizegenetics.gbs.maps.PETagsOnPhysicalMap;
 import net.maizegenetics.gbs.maps.PETagsOnPhysicalMapV3;
+import net.maizegenetics.gbs.maps.TagMappingInfoV3;
 import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
@@ -52,32 +53,18 @@ public class FeiPipelines {
         //this.initializeV3TOPM();
         //this.annotateV3TOPM();
         this.geneticMapping();
-        //this.bitTest();
         
-    }
-    
-    public void bitTest () {
-        long[] a = {0, 1};
-        long[] b = {0, 3};
-        OpenBitSet obsA = new OpenBitSet(a);
-        OpenBitSet obsB = new OpenBitSet(b);
-        OpenBitSet obsH = new OpenBitSet(obsA.getBits().clone());
-        obsH.and(obsB);
-        System.out.println(obsH.getBits()[1]);
-        obsA.xor(obsH);
-        obsB.xor(obsH);
-        System.out.println(obsA.getBits()[1]);
-        System.out.println(obsB.getBits()[1]);
     }
     
     public void geneticMapping () {
         //String hapMapHDF5 = "/workdir/mingh/AllZeaGBSv27i3b.imp.hmp.h5";
+        //String hapMapHDF5 = "/workdir/mingh/GBS27.small.imp.hmp.h5";
         String hapMapHDF5 = "M:/GBSV3/genotype/GBS27.small.imp.hmp.h5";
         //String tbtHDF5 = "/workdir/mingh/smallerTBTHDF5_mergedtaxa_pivot_20120921.h5";
         String tbtHDF5 = "M:/GBSV3/tbt/smallerTBTHDF5_mergedtaxa_pivot_20120921.h5";
         //String outfileS = "/workdir/mingh/outfile.txt";
         String outfileS = "M:/GBSV3/mappingResult/outfile.txt";
-        TagAgainstAnchor taa = new TagAgainstAnchor(hapMapHDF5, tbtHDF5, outfileS, 0.000001, 20, -1, 2048);
+        TagAgainstAnchor taa = new TagAgainstAnchor(hapMapHDF5, tbtHDF5, outfileS, 0.000001, 20, -1, 1024);
         //TagAgainstAnchor.getChunkNum(tbtHDF5, 1024);    
     }
     
@@ -140,8 +127,9 @@ public class FeiPipelines {
         //this.mkFasta();
         //this.mkTOPM(); //old version
         //this.mkTOPMHDF5(); //old version
-        this.initializeTOPMHDF5();
-        this.annotateTOPMHDF5WithAligner();
+        //this.initializeTOPMHDF5();
+        //this.annotateTOPMHDF5WithAligner();
+        this.readTOPMHDF5();
         //this.mkSmallAnchorHDF5();
         //this.mkSmallTBTHDF5();
     }
@@ -175,6 +163,31 @@ public class FeiPipelines {
         ExportUtils.writeToMutableHDF5(a, hapMapOutputS, snpIndex);
     }
     
+    public void readTOPMHDF5 () {
+        //String inputFileS = "M:/GBStest/topm/ini.topm.h5";
+        String inputFileS = "M:/GBSV3/topm/v3.topm.h5";
+        TagsOnPhysicalMapV3 topm = new TagsOnPhysicalMapV3 (inputFileS);
+        System.out.println(topm.getTagCount());
+ /*       
+        for (int i = 0; i < 500000; i++) {
+            TagMappingInfoV3[] tmi = new TagMappingInfoV3[topm.getMappingNum()];
+            for (int j = 0; j < topm.getMappingNum(); j++) {
+                tmi[j] = topm.getMappingInfo(i, j);
+            }
+            
+            int last = topm.getMappingNum()-1;
+            if (tmi[last].chromosome < 0) continue;
+            if (tmi[0].chromosome < 0) continue;
+            if (tmi[5].chromosome < 0) continue;
+            if (tmi[10].chromosome < 0) continue;
+            int dBowtie = Math.abs((tmi[0].chromosome*1000000000+tmi[0].startPosition) - (tmi[last].chromosome*1000000000+tmi[last].startPosition));
+            int dBwa = Math.abs((tmi[5].chromosome*1000000000+tmi[5].startPosition) - (tmi[last].chromosome*1000000000+tmi[last].startPosition));
+            int dBlast = Math.abs((tmi[10].chromosome*1000000000+tmi[10].startPosition) - (tmi[last].chromosome*1000000000+tmi[last].startPosition));
+            System.out.println(dBowtie+"\t"+dBwa+"\t"+dBlast+"\t"+i);
+        }
+ */
+    }
+    
     public void annotateTOPMHDF5WithAligner () {
         String inputFileS = "M:/GBStest/topm/ini.topm.h5";
 
@@ -182,17 +195,17 @@ public class FeiPipelines {
         TagsOnPhysicalMapV3 topm = new TagsOnPhysicalMapV3(inputFileS);
         AnnotateTOPM anno = new AnnotateTOPM (topm);
         String bowtie2SamFileS = "M:/GBStest/alignment/bowtie2-K5.sam";
-        //anno.annotateWithBowtie2(bowtie2SamFileS, 5);
+        anno.annotateWithBowtie2(bowtie2SamFileS, 5);
         String bwaSamFileS = "M:/GBStest/alignment/bwa-N5.sam";
-        //anno.annotateWithBWA(bwaSamFileS, 5);
+        anno.annotateWithBWA(bwaSamFileS, 5);
         //String blastFileS = "M:/GBStest/alignment/blast.m8.txt";
         //anno.annotateWithBLAST(blastFileS, 5);
         String blastDirS = "M:/GBStest/alignment/blastOut/";
-        //anno.annotateWithBlastFromDir(blastDirS, 5);
+        anno.annotateWithBlastFromDir(blastDirS, 5);
         String PETOPMFileS = "M:/af/ptopm/PE.topm";
         anno.annotateWithPE(PETOPMFileS, 5);
         String TOGMFileS = "M:/pav/PhyGenMapping/v1.togm.txt";
-        //anno.annotateWithGM(TOGMFileS, 1);
+        anno.annotateWithGM(TOGMFileS, 1);
     }
     
     public void initializeTOPMHDF5 () {

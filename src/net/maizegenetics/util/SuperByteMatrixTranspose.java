@@ -12,11 +12,7 @@ public class SuperByteMatrixTranspose implements SuperByteMatrix {
     private final SuperByteMatrix myMatrix;
 
     SuperByteMatrixTranspose(int rows, int columns) {
-        if ((long) rows * (long) columns > Integer.MAX_VALUE) {
-            myMatrix = new SuperByteMatrixMultiple(columns, rows);
-        } else {
-            myMatrix = new SuperByteMatrixSingle(columns, rows);
-        }
+        myMatrix = SuperByteMatrixBuilder.getInstance(columns, rows);
     }
 
     @Override
@@ -57,5 +53,10 @@ public class SuperByteMatrixTranspose implements SuperByteMatrix {
     @Override
     public byte[] getAllRows(int column) {
         return myMatrix.getAllColumns(column);
+    }
+
+    @Override
+    public boolean isColumnInnerLoop() {
+        return false;
     }
 }

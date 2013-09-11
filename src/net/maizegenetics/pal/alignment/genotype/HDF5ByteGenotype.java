@@ -72,4 +72,9 @@ public class HDF5ByteGenotype extends AbstractGenotype {
             throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
         }
     }
+
+    @Override
+    public void transposeData(boolean siteInnerLoop) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

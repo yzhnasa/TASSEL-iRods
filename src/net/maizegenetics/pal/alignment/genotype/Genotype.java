@@ -463,4 +463,14 @@ public interface Genotype {
      * @return genotypes
      */
     public byte[] getGenotypeForAllTaxa(int site);
+
+    /**
+     * Tells this Genotype to transpose it's data to optimize performance for
+     * given iteration nesting. If siteInnerLoop is true, performance better
+     * when looping through sites inside taxa loop. If false, performance better
+     * when looping through taxa inside site loop.
+     *
+     * @param siteInnerLoop flag for which iteration
+     */
+    public void transposeData(boolean siteInnerLoop);
 }

@@ -64,7 +64,7 @@ public class AnnotateTOPM {
         this.iniTMIBuffers(bufferNum, maxMappingNum);
         System.out.println("Reading SAM format tag alignment (Bowtie2) from: " + samFileS);
         System.out.println("Coverting SAM to TOPMHDF5...");
-        byte mappingSource = 0;
+        byte mappingSource = TagMappingInfoV3.sourceBowtie2;
         try {
             BufferedReader br;
             if (samFileS.endsWith(".gz")) {
@@ -159,7 +159,7 @@ public class AnnotateTOPM {
         this.iniTMIBuffers(bufferNum, maxMappingNum);
         System.out.println("Reading SAM format tag alignment (BWA) from: " + samFileS);
         System.out.println("Coverting SAM to TOPMHDF5...");
-        byte mappingSource = 1;
+        byte mappingSource = TagMappingInfoV3.sourceBWA;
         try {
             BufferedReader br;
             if (samFileS.endsWith(".gz")) {
@@ -271,7 +271,7 @@ public class AnnotateTOPM {
         this.iniTMIBuffers(2, maxMappingNum);
         System.out.println("Reading BLAST table format tag alignment (BLAST) from: " + blastDirS);
         System.out.println("Coverting BLAST to TOPMHDF5...");
-        byte mappingSource = 2;
+        byte mappingSource = TagMappingInfoV3.sourceBLAST;
         File[] infiles = new File (blastDirS).listFiles();
         Arrays.sort(infiles);
         try {
@@ -336,7 +336,7 @@ public class AnnotateTOPM {
         this.iniTMIBuffers(2, maxMappingNum);
         System.out.println("Reading BLAST table format tag alignment (BLAST) from: " + blastM8FileS);
         System.out.println("Coverting BLAST to TOPMHDF5...");
-        byte mappingSource = 2;
+        byte mappingSource = TagMappingInfoV3.sourceBLAST;
         try {
             BufferedReader br;
             if (blastM8FileS.endsWith(".gz")) {
@@ -390,7 +390,7 @@ public class AnnotateTOPM {
      * @param maxMappingNum 
      */
     public void annotateWithPE (String PETOPMFileS, int maxMappingNum) {
-        byte forwardMappingSource = 3, backMappingSource = 4;
+        byte forwardMappingSource = TagMappingInfoV3.sourcePEEnd1, backMappingSource = TagMappingInfoV3.sourcePEEnd2;
         PETagsOnPhysicalMapV3 ptopm = new PETagsOnPhysicalMapV3(PETOPMFileS);
         String[] forwardDataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
         topm.setMappingNum(topm.getMappingNum()+maxMappingNum);
@@ -443,7 +443,7 @@ public class AnnotateTOPM {
      * @param maxMappingNum 
      */
     public void annotateWithGM (String TOGMFileS, int maxMappingNum) {
-        byte mappingSource = 5;
+        byte mappingSource = TagMappingInfoV3.sourceGM;
         TagsOnGeneticMap togm = new TagsOnGeneticMap(TOGMFileS, FilePacking.Text);
         String[] dataSetNames = topm.creatTagMappingInfoDatasets(topm.getMappingNum(), maxMappingNum);
         topm.setMappingNum(topm.getMappingNum()+maxMappingNum);

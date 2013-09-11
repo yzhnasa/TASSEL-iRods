@@ -71,4 +71,15 @@ public interface SuperByteMatrix {
      * @return values
      */
     public byte[] getAllRows(int column);
+
+    /**
+     * Returns true if the matrix stored for better performance when column loop
+     * inside row loop. False if matrix stored for better performance when
+     * row loop inside column loop.
+     *
+     * @return true if the matrix stored for better performance when column loop
+     * inside row loop. False if matrix stored for better performance when
+     * row loop inside column loop.
+     */
+    public boolean isColumnInnerLoop();
 }

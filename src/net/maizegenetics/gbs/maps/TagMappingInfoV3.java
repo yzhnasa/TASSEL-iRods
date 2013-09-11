@@ -31,6 +31,24 @@ public class TagMappingInfoV3 {
     /**Genetic mapping probability Round(Log2(P)), unknown Byte.MIN_VALUE */
     public byte mapP=Byte.MIN_VALUE;  //Round(Log2(P)), unknown Byte.MIN_VALUE
     
+    /**Mapping source of Bowtie2*/
+    public static byte sourceBowtie2 = 0;
+    
+    /**Mapping source of BWA*/
+    public static byte sourceBWA = 1;
+    
+    /**Mapping source of BLAST*/
+    public static byte sourceBLAST = 2;
+    
+    /**Mapping source of one end of PE*/
+    public static byte sourcePEEnd1 = 3;
+    
+    /**Mapping source of the other end of PE*/
+    public static byte sourcePEEnd2 = 4;
+    
+    /**Mapping source of genetic mapping*/
+    public static byte sourceGM = 5;
+    
     public TagMappingInfoV3() {   
     }
     

@@ -19,7 +19,7 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
         myNumColumns = columns;
 
         long numElements = (long) myNumRows * (long) myNumColumns;
-        if (numElements > Integer.MAX_VALUE) {
+        if (numElements > (long) (Integer.MAX_VALUE - 10)) {
             throw new IllegalArgumentException("SuperByteMatrixSingle: init: this number of rows: " + rows + "  and columns: " + columns + " is too large for SuperByteMatrixSingle.");
         }
         myData = new byte[(int) numElements];
@@ -106,5 +106,10 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
     @Override
     public int getNumColumns() {
         return myNumColumns;
+    }
+
+    @Override
+    public boolean isColumnInnerLoop() {
+        return true;
     }
 }

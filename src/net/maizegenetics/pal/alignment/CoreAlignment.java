@@ -143,6 +143,11 @@ public class CoreAlignment implements AlignmentNew {
     }
 
     @Override
+    public PositionList getPositionList() {
+        return myPositionList;
+    }
+
+    @Override
     public String[] getSNPIDs() {
         return myPositionList.getSNPIDs();
     }
