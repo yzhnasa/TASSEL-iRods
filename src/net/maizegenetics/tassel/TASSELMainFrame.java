@@ -21,10 +21,10 @@ package net.maizegenetics.tassel;
 
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
-
 import net.maizegenetics.prefs.TasselPrefs;
 
 import javax.swing.*;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -32,15 +32,12 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.*;
-
 import java.io.*;
 import java.net.URL;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -78,6 +75,7 @@ import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
 import net.maizegenetics.gui.PrintHeapAction;
+import net.maizegenetics.gwas.modelfitter.StepwiseOLSModelFitterPlugin;
 import net.maizegenetics.plugindef.Plugin;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.plugindef.ThreadedPluginListener;
@@ -597,6 +595,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         result.add(createMenuItem(new MLMPlugin(this, true)));
         result.add(createMenuItem(new RidgeRegressionEmmaPlugin(this, true)));
         result.add(createMenuItem(new GenotypeSummaryPlugin(this, true)));
+//        result.add(createMenuItem(new StepwiseOLSModelFitterPlugin(this, true)));
         return result;
     }
 

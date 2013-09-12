@@ -17,94 +17,141 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
+import javax.swing.JTextField;
 
 import net.maizegenetics.pal.alignment.Alignment;
 
-public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListener{
-	JCheckBox jboxNested = new JCheckBox("Nest markers within main factor", null, false);
+public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListener {
+	JCheckBox chkNested = null;
 	JList<String> listMainEffects = null;
-	JLabel lblchoose = new JLabel("Choose a main effect to nest within:");
+	JButton btnLimits = new JButton("Enter limits by trait");
 	JButton btnOk = new JButton("btnOK");
 	JButton btnCancel = new JButton("btnCancel");
+	JLabel lblWhich = new JLabel("Which factor?");
+	JTextField txtEnter, txtExit, txtMax;
+	String enterlim, exitlim;
 	String[] mainEffects = null;
 	int indexOfSelectedEffect = 0;
 	boolean wasCancelled = false;
+	int numberOfMainEffects = 0;
 	
 	public StepwiseOLSModelFitterDialog(String[] mainEffects, Frame parentFrame) {
 		super();
+		enterlim = "1e-5";
+		exitlim = "2e-5";
 		this.mainEffects = mainEffects;
-		this.setTitle("Choose Nested Model");
+		if (mainEffects != null) numberOfMainEffects = mainEffects.length;
+		this.setTitle("Specify Model Parameters");
 		this.setModalityType(ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
         setUndecorated(false);
         getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         Container contentPane = getContentPane();
-//        BoxLayout layout = new BoxLayout(contentPane, BoxLayout.Y_AXIS);
         JPanel myPanel = new JPanel();
         myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
         myPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         contentPane.add(myPanel);
         
-        
-		int numberOfMainEffects = mainEffects.length;
 		if (numberOfMainEffects > 1) {
-			myPanel.add(Box.createVerticalStrut(20));
-			StringBuilder question = new StringBuilder("The dataset contains more than one main effect.");
-			JLabel lblquestion = new JLabel(question.toString());
-			lblquestion.setAlignmentX(CENTER_ALIGNMENT);
-			myPanel.add(lblquestion);
-			myPanel.add(Box.createVerticalStrut(20));
-			jboxNested.setAlignmentX(CENTER_ALIGNMENT);
-			myPanel.add(jboxNested);
-			jboxNested.addActionListener(this);
-			jboxNested.setActionCommand("nest");
-			listMainEffects = new JList<String>(mainEffects);
-			lblchoose.setVisible(true);
-			listMainEffects.setVisible(true);
-			listMainEffects.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+			chkNested = new JCheckBox("Nest markers within a factor", null, false);
+			myPanel.add(chkNested);
+			chkNested.setAlignmentX(CENTER_ALIGNMENT);
+			chkNested.addActionListener(this);
+			chkNested.setActionCommand("nest");
+			
+			
+			lblWhich.setAlignmentX(CENTER_ALIGNMENT);
+			lblWhich.setEnabled(false);
 			myPanel.add(Box.createVerticalStrut(30));
-			myPanel.add(lblchoose);
-			lblchoose.setAlignmentX(Component.CENTER_ALIGNMENT);
+			myPanel.add(lblWhich);
+			
+			listMainEffects = new JList<String>(mainEffects);
+			listMainEffects.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 			myPanel.add(Box.createVerticalStrut(10));
 			myPanel.add(listMainEffects);
 			listMainEffects.setAlignmentX(Component.CENTER_ALIGNMENT);
+			listMainEffects.setEnabled(false);
 			
-			myPanel.add(Box.createVerticalStrut(30));
-			myPanel.add(btnOk);
-			btnOk.setAlignmentX(CENTER_ALIGNMENT);
-			btnOk.addActionListener(this);
-			btnOk.setActionCommand("ok");
-			
-			myPanel.add(btnCancel);
-			btnCancel.setAlignmentX(CENTER_ALIGNMENT);
-			btnCancel.addActionListener(this);
-			btnCancel.setActionCommand("cancel");
-			
-			
-		} else {
-			StringBuilder question = new StringBuilder("The dataset contains only one main effect, ");
-			question.append(mainEffects[0]);
-			myPanel.add(new JLabel(question.toString()));
-			myPanel.add(Box.createVerticalStrut(20));
-			myPanel.add(jboxNested);
+		} else if (numberOfMainEffects == 1) {
+			chkNested = new JCheckBox("Nest markers within " + mainEffects[0], null, false);
+			myPanel.add(chkNested);
+			chkNested.setAlignmentX(CENTER_ALIGNMENT);
+			chkNested.addActionListener(this);
+			chkNested.setActionCommand("nest");
 		}
 		
+		if (numberOfMainEffects > 0) {
+			myPanel.add(Box.createVerticalStrut(20));
+			JLabel sep1 = new JLabel("-----------------------");
+			sep1.setAlignmentX(CENTER_ALIGNMENT);
+			myPanel.add(sep1);
+		}
+
+		myPanel.add(Box.createVerticalStrut(20));
+
+		Box enterBox = Box.createHorizontalBox();
+		enterBox.add(new JLabel("enter limit"));
+		txtEnter = new JTextField(enterlim, 15);
+		enterBox.add(txtEnter);
+		myPanel.add(enterBox);
+		
+		myPanel.add(Box.createVerticalStrut(10));
+		
+		Box exitBox = Box.createHorizontalBox();
+		exitBox.add(new JLabel("exit limit"));
+		txtExit = new JTextField(exitlim, 15);
+		exitBox.add(txtExit);
+		myPanel.add(exitBox);
+		
+		myPanel.add(Box.createVerticalStrut(10));
+		myPanel.add(btnLimits);
+		btnLimits.setActionCommand("limits");
+		btnLimits.setAlignmentX(CENTER_ALIGNMENT);
+		
+		
+		myPanel.add(Box.createVerticalStrut(20));
+		JLabel sep2 = new JLabel("-----------------------");
+		myPanel.add(sep2);
+		sep2.setAlignmentX(CENTER_ALIGNMENT);
+		myPanel.add(Box.createVerticalStrut(20));
+		
+		Box maxBox = Box.createHorizontalBox();
+		maxBox.add(new JLabel("Maximum number of markers"));
+		txtMax = new JTextField("1000", 6);
+		maxBox.add(txtMax);
+		myPanel.add(maxBox);
+		
+		myPanel.add(Box.createVerticalStrut(20));
+		JLabel sep3 = new JLabel("-----------------------");
+		myPanel.add(sep3);
+		sep3.setAlignmentX(CENTER_ALIGNMENT);
+		myPanel.add(Box.createVerticalStrut(20));
+		
+		Box buttonBox = Box.createHorizontalBox();
+		buttonBox.add(btnOk);
+		btnOk.setAlignmentX(CENTER_ALIGNMENT);
+		btnOk.addActionListener(this);
+		btnOk.setActionCommand("ok");
+		buttonBox.add(btnCancel);
+		btnCancel.setAlignmentX(CENTER_ALIGNMENT);
+		btnCancel.addActionListener(this);
+		btnCancel.setActionCommand("cancel");
+		myPanel.add(buttonBox);
+		buttonBox.setAlignmentX(CENTER_ALIGNMENT);
 		pack();
-		lblchoose.setVisible(false);
-		listMainEffects.setVisible(false);
 		setVisible(true);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		System.out.println("Action Command: " + e.getActionCommand());
-		if (e.getActionCommand().equals("nest")) {
-			if (jboxNested.isSelected()) {
-				lblchoose.setVisible(true);
-				listMainEffects.setVisible(true);
+		if (e.getActionCommand().equals("nest") && numberOfMainEffects > 1) {
+			if (chkNested.isSelected() ) {
+				listMainEffects.setEnabled(true);
+				lblWhich.setEnabled(true);
 			} else {
-				lblchoose.setVisible(false);
-				listMainEffects.setVisible(false);
+				listMainEffects.setEnabled(false);
+				lblWhich.setEnabled(false);
 			}
 		} else if (e.getActionCommand().equals("ok")) {
 			setVisible(false);
@@ -116,7 +163,8 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 	}
 	
 	public boolean isNested() {
-		return jboxNested.isSelected();
+		if (chkNested == null) return false;
+		return chkNested.isSelected();
 	}
 	
 	public String getNestedEffect() {
@@ -127,5 +175,17 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 	
 	public boolean wasCancelled() {
 		return wasCancelled;
+	}
+	
+	public double[] getEnterLimits() {
+		return StepwiseOLSModelFitterPlugin.parseDoubles(txtEnter.getText(), ",");
+	}
+	
+	public double[] getExitLimits() {
+		return StepwiseOLSModelFitterPlugin.parseDoubles(txtExit.getText(), ",");
+	}
+	
+	public int getMaxNumberOfMarkers() {
+		return Integer.parseInt(txtMax.getText());
 	}
 }

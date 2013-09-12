@@ -16,26 +16,29 @@ import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
 import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 
 public class StepwiseOLSModelFitter {
 	private MarkerPhenotypeAdapter myData;
-	private boolean nestMarkers = false;
+	
+	//settable parameters
 	private double[] enterlimits = null;
 	private double[] exitlimits = null;
 	private double enterlimit = 1e-5;
 	private double exitlimit = 2e-5;
 	private int maxNumberOfMarkers = 1000;
-	private int numberOfBaseModelEffects;
-	
+	private FactorModelEffect nestingEffect;
+	private boolean isNested;
+
+	//global variables used by the analysis
 	private ArrayList<ModelEffect> currentModel;
 	private int currentPhenotypeIndex;
+	private int numberOfBaseModelEffects;
 	private double[] y;
 	private boolean[] missing;
 	private ArrayList<String[]> factorList;
 	private ArrayList<double[]> covariateList;
-	private FactorModelEffect nestingEffect;
-	private boolean isNested;
 	private LinkedList<Object[]> resultRowsAnova;
 	private String datasetName;
 	
@@ -46,7 +49,7 @@ public class StepwiseOLSModelFitter {
 		this.datasetName = datasetName;
 	}
 	
-	public void runAnalysis() {
+	public DataSet runAnalysis() {
         //numberof markers
         int numberOfMarkers = myData.getNumberOfMarkers();
         
@@ -112,9 +115,10 @@ public class StepwiseOLSModelFitter {
                     covariateList.set(f, newcov);
                 }
             }
-            
+            fitModel();
         }
 
+        return null;
 	}
 	
 	public void fitModel() {
@@ -150,6 +154,7 @@ public class StepwiseOLSModelFitter {
 			while(backwardStep());
 		}
 
+		appendAnovaResults();
 	}
 	
 	public boolean forwardStep() {
@@ -321,5 +326,33 @@ public class StepwiseOLSModelFitter {
 		Object[][] table = new Object[resultRowsAnova.size()][];
 		resultRowsAnova.toArray(table);
 		return new SimpleTableReport(reportName, anovaReportHeader, table);
+	}
+
+	public void setEnterlimits(double[] enterlimits) {
+		this.enterlimits = enterlimits;
+	}
+
+	public void setExitlimits(double[] exitlimits) {
+		this.exitlimits = exitlimits;
+	}
+
+	public void setEnterlimit(double enterlimit) {
+		this.enterlimit = enterlimit;
+	}
+
+	public void setExitlimit(double exitlimit) {
+		this.exitlimit = exitlimit;
+	}
+
+	public void setMaxNumberOfMarkers(int maxNumberOfMarkers) {
+		this.maxNumberOfMarkers = maxNumberOfMarkers;
+	}
+
+	public void setNestingEffect(int nestingFactorIndex) {
+		
+	}
+
+	public void setNested(boolean isNested) {
+		this.isNested = isNested;
 	}
 }
