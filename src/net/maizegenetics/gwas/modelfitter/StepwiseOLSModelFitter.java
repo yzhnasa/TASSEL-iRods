@@ -39,7 +39,7 @@ public class StepwiseOLSModelFitter {
 	private boolean[] missing;
 	private ArrayList<String[]> factorList;
 	private ArrayList<double[]> covariateList;
-	private LinkedList<Object[]> resultRowsAnova;
+	private LinkedList<Object[]> resultRowsAnova = new LinkedList<Object[]>();
 	private String datasetName;
 	
 	private final String[] anovaReportHeader = new String[]{"Trait", "Name","Locus","Position","df","SS","MS", "F", "pr>F"};

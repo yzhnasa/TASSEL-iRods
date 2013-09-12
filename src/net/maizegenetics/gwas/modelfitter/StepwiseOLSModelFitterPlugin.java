@@ -34,7 +34,7 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 
 	@Override
 	public DataSet performFunction(DataSet input) {
-		List<Datum> datasets = input.getDataOfType(new Class[]{MarkerPhenotype.class});
+		List<Datum> datasets = input.getDataOfType(new Class[]{MarkerPhenotype.class, Phenotype.class});
 		if (datasets.size() < 1) {
 			String msg = "Error in performFunction: No appropriate dataset selected.";
 			myLogger.error(msg);
@@ -56,8 +56,13 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 			return null;
 		}
 
-		MarkerPhenotype mp = (MarkerPhenotype) datasets.get(0).getData();
-		MarkerPhenotypeAdapter theAdapter = new MarkerPhenotypeAdapter(mp);
+		MarkerPhenotypeAdapter theAdapter;
+		if (datasets.get(0).getData() instanceof MarkerPhenotype) {
+			MarkerPhenotype mp = (MarkerPhenotype) datasets.get(0).getData();
+			theAdapter = new MarkerPhenotypeAdapter(mp);
+		} else {
+			theAdapter = new MarkerPhenotypeAdapter((Phenotype) datasets.get(0).getData());
+		}
 
 		if (isInteractive()) {
 			int nfactors = theAdapter.getNumberOfFactors();
@@ -87,6 +92,7 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 			}
 
 			maxNumberOfMarkers = myDialog.getMaxNumberOfMarkers();
+			myDialog.dispose();
 		}
 
 		StepwiseOLSModelFitter modelFitter = new StepwiseOLSModelFitter(theAdapter, datasets.get(0).getName());
@@ -100,8 +106,9 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 		
 		modelFitter.runAnalysis(); 
 		TableReport trResults = modelFitter.getAnovaReport();
-
-		return new DataSet(new Datum("ANOVA_stepwise_" + datasets.get(0).getName(), trResults, "comments"), this);
+		DataSet myResult = new DataSet(new Datum("ANOVA_stepwise_" + datasets.get(0).getName(), trResults, "comments"), this);
+		fireDataSetReturned(myResult);
+		return myResult;
 	}
 
 	@Override
