@@ -100,7 +100,8 @@ public class BitAlignment extends AbstractAlignment {
         } else if (alleleStates.length == 1) {
             return new BitAlignment(a, maxNumAlleles, retainRareAlleles, isSBit);
         } else {
-            return new BitTextAlignment(a, maxNumAlleles, retainRareAlleles, isSBit);
+            return null;
+//            return new BitTextAlignment(a, maxNumAlleles, retainRareAlleles, isSBit);
         }
         
     }
@@ -112,7 +113,8 @@ public class BitAlignment extends AbstractAlignment {
         if (alleleStates.length == 1) {
             return new BitAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
         } else {
-            return new BitTextAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
+            return null;
+            //return new BitTextAlignment(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
         }
     }
     
