@@ -21,7 +21,6 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentMask;
 import net.maizegenetics.pal.alignment.AlignmentMask.MaskType;
 import net.maizegenetics.pal.alignment.AlignmentMaskBoolean;
-import net.maizegenetics.pal.popgen.BasicImputation;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;

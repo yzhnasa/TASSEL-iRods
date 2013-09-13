@@ -348,7 +348,7 @@ public class MarkerPhenotypeAdapter {
 
     public String getMarkerChromosome(int marker) {
         if (marker < numberOfMarkersFromAlignment) {
-            return align.getLocus(marker).getName();
+            return align.getChromosome(marker).getName();
         }
         int t = markerIndex.get(marker - numberOfMarkersFromAlignment);
         Object prop = pheno.getTrait(t).getProperty(Trait.PROP_CHROMOSOME);

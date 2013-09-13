@@ -12,14 +12,11 @@ import java.util.regex.Pattern;
 import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

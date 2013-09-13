@@ -24,7 +24,6 @@ import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.IdGroup;
