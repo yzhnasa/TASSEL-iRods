@@ -6,6 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -101,7 +102,7 @@ public class SeparatePlugin extends AbstractPlugin {
         for (int i = 0; i < alignments.length; i++) {
             int[] offsets = alignments[i].getLociOffsets();
             if (offsets.length > 1) {
-                Locus[] loci = alignments[i].getLoci();
+                Chromosome[] loci = alignments[i].getLoci();
                 for (int j = 0; j < offsets.length; j++) {
                     if (alignmentInList(loci[j], chromosomesToSeparate)) {
                         String name;
@@ -138,13 +139,13 @@ public class SeparatePlugin extends AbstractPlugin {
 
     }
 
-    private static boolean alignmentInList(Locus locus, String[] chromosomesToSeparate) {
+    private static boolean alignmentInList(Chromosome locus, String[] chromosomesToSeparate) {
 
         if (chromosomesToSeparate == null) {
             return true;
         }
 
-        String currentChr = locus.getChromosomeName();
+        String currentChr = locus.getName();
         for (int i = 0; i < chromosomesToSeparate.length; i++) {
             if (currentChr.equalsIgnoreCase(chromosomesToSeparate[i])) {
                 return true;

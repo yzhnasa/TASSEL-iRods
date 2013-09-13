@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
@@ -30,7 +31,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     private int myNumSites = 0;
     private int myNumSitesStagedToRemove = 0;
     protected int[] myVariableSites;
-    private List<Locus> myLocusToLociIndex = new ArrayList<Locus>();
+    private List<Chromosome> myLocusToLociIndex = new ArrayList<Chromosome>();
     protected int[] myLocusIndices;
     private int[] myLocusOffsets = null;
     protected String[] mySNPIDs;
@@ -97,7 +98,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         initTaxa(idGroup);
     }
 
-    protected MutableSingleEncodeAlignment(String[][] encodings, List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    protected MutableSingleEncodeAlignment(String[][] encodings, List<Identifier> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         super(encodings);
 
         if ((variableSites.length != locusIndices.length) || (variableSites.length != siteNames.length)) {
@@ -132,7 +133,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         return MutableSingleEncodeAlignment.getInstance(encodings, idGroup, initNumSites, idGroup.getIdCount(), initNumSites);
     }
 
-    public static MutableSingleEncodeAlignment getInstance(String[][] encodings, List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    public static MutableSingleEncodeAlignment getInstance(String[][] encodings, List<Identifier> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         return new MutableSingleEncodeAlignment(encodings, idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
     }
 
@@ -158,7 +159,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         TreeSet<Identifier> taxa = new TreeSet<Identifier>();
         List<String> siteNames = new ArrayList<String>();
         List<Integer> physicalPositions = new ArrayList<Integer>();
-        List<Locus> locusToLociIndex = new ArrayList<Locus>();
+        List<Chromosome> locusToLociIndex = new ArrayList<Chromosome>();
         List<Integer> locusIndices = new ArrayList<Integer>();
 
         for (int i = 0; i < alignments.length; i++) {
@@ -179,7 +180,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             for (int s = 0, m = alignments[i].getSiteCount(); s < m; s++) {
                 String currentSiteName = alignments[i].getSNPID(s);
                 int currentPhysicalPos = alignments[i].getPositionInLocus(s);
-                Locus currentLocus = alignments[i].getLocus(s);
+                Chromosome currentLocus = alignments[i].getLocus(s);
                 int index = siteNames.indexOf(currentSiteName);
                 if (index == -1) {
                     siteNames.add(currentSiteName);
@@ -187,9 +188,9 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                     //int locusIndex = locusToLociIndex.indexOf(currentLocus);
                     int locusIndex = -1;
                     for (int li = 0; li < locusToLociIndex.size(); li++) {
-                        if (currentLocus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
+                        if (currentLocus.getName().equals(locusToLociIndex.get(li).getName())) {
                             locusIndex = li;
-                            locusToLociIndex.set(li, Locus.getMergedInstance(currentLocus, locusToLociIndex.get(li)));
+                            locusToLociIndex.set(li, Chromosome.getMergedInstance(currentLocus, locusToLociIndex.get(li)));
                             break;
                         }
                     }
@@ -208,7 +209,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                         }
                         int locusIndex = -1;
                         for (int li = 0; li < locusToLociIndex.size(); li++) {
-                            if (currentLocus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
+                            if (currentLocus.getName().equals(locusToLociIndex.get(li).getName())) {
                                 locusIndex = li;
                                 break;
                             }
@@ -261,9 +262,9 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             for (int s = 0, n = currentAlignment.getSiteCount(); s < n; s++) {
                 String siteName = currentAlignment.getSNPID(s);
                 int physicalPosition = currentAlignment.getPositionInLocus(s);
-                Locus locus = currentAlignment.getLocus(s);
+                Chromosome locus = currentAlignment.getLocus(s);
                 for (int li = 0; li < locusToLociIndex.size(); li++) {
-                    if (locus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
+                    if (locus.getName().equals(locusToLociIndex.get(li).getName())) {
                         locus = locusToLociIndex.get(li);
                         break;
                     }
@@ -316,7 +317,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
     private void loadLoci(Alignment a) {
 
-        Locus[] loci = a.getLoci();
+        Chromosome[] loci = a.getLoci();
         for (int i = 0; i < loci.length; i++) {
             myLocusToLociIndex.add(loci[i]);
         }
@@ -404,13 +405,13 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     }
 
     @Override
-    public Locus getLocus(int site) {
+    public Chromosome getLocus(int site) {
         return myLocusToLociIndex.get(myLocusIndices[site]);
     }
 
     @Override
-    public Locus[] getLoci() {
-        Locus[] result = new Locus[myLocusToLociIndex.size()];
+    public Chromosome[] getLoci() {
+        Chromosome[] result = new Chromosome[myLocusToLociIndex.size()];
         for (int i = 0; i < myLocusToLociIndex.size(); i++) {
             result[i] = myLocusToLociIndex.get(i);
         }
@@ -451,13 +452,13 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     }
 
     @Override
-    public int[] getStartAndEndOfLocus(Locus locus) {
+    public int[] getStartAndEndOfLocus(Chromosome locus) {
 
         if (isDirty()) {
             throw new IllegalStateException("MutableSingleEncodeAlignment: getStartAndEndOfLocus: this alignment is dirty.");
         }
 
-        Locus[] loci = getLoci();
+        Chromosome[] loci = getLoci();
         int[] lociOffsets = getLociOffsets();
         int numLoci = getNumLoci();
         for (int i = 0; i < numLoci; i++) {
@@ -482,13 +483,13 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     @Override
     public String getSNPID(int site) {
         if ((mySNPIDs == null) || (mySNPIDs.length == 0) || (mySNPIDs[site] == null)) {
-            return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
+            return "S" + getLocus(site).getName() + "_" + getPositionInLocus(site);
         }
         return mySNPIDs[site];
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
 
         if (isDirty()) {
             throw new IllegalStateException("MutableSingleEncodeAlignment: getSiteOfPhysicalPosition: this alignment is dirty.");
@@ -510,7 +511,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID) {
 
         if (isDirty()) {
             throw new IllegalStateException("MutableSingleEncodeAlignment: getSiteOfPhysicalPosition: this alignment is dirty.");
@@ -571,7 +572,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         myData[taxon][site] = newBase;
     }
 
-    public void setBase(Identifier taxon, String siteName, Locus locus, int physicalPosition, byte newBase) {
+    public void setBase(Identifier taxon, String siteName, Chromosome locus, int physicalPosition, byte newBase) {
 
         int taxonIndex = myIdentifiers.indexOf(taxon);
         if (taxonIndex == -1) {
@@ -855,7 +856,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         setDirty();
     }
 
-    public void setLocusOfSite(int site, Locus locus) {
+    public void setLocusOfSite(int site, Chromosome locus) {
         if ((site < 0) || (site >= getSiteCount())) {
             throw new IllegalArgumentException("MutableSingleEncodeAlignment: setLocusOfSite: site outside of range: " + site);
         }
@@ -870,7 +871,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
         setDirty();
     }
 
-    private int getLocusIndex(Locus locus) {
+    private int getLocusIndex(Chromosome locus) {
         for (int i = 0; i < myLocusToLociIndex.size(); i++) {
             if (myLocusToLociIndex.get(i).equals(locus)) {
                 return i;

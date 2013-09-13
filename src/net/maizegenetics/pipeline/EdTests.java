@@ -4,6 +4,7 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.pal.site.Chromosome;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -374,7 +375,7 @@ public class EdTests {
     
     private void compareSitesInFiles() {
         int count=0;
-        Locus lx=hapMap.getLocus(0);
+        Chromosome lx=hapMap.getLocus(0);
         for (int i = 0; i < gbsMap.getSiteCount(); i++) {
             int position=gbsMap.getPositionInLocus(i);
             int hapSite=hapMap.getSiteOfPhysicalPosition(position, lx);

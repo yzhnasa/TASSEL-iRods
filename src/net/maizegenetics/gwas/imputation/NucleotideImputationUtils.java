@@ -30,7 +30,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.BitNucleotideAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.BitAlignment;
@@ -2034,12 +2034,12 @@ public class NucleotideImputationUtils {
 		int firstSite = 0;
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
-		Locus firstSnpLocus = sba.getLocus(0);
+		Chromosome firstSnpLocus = sba.getLocus(0);
 		int firstSnpPos = sba.getPositionInLocus(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
 			int nextSnpPos = sba.getPositionInLocus(nextSite);
-			Locus nextSnpLocus = sba.getLocus(nextSite);
+			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
 	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
@@ -2083,12 +2083,12 @@ public class NucleotideImputationUtils {
 		int firstSite = 0;
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
-		Locus firstSnpLocus = sba.getLocus(0);
+		Chromosome firstSnpLocus = sba.getLocus(0);
 		int firstSnpPos = sba.getPositionInLocus(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
 			int nextSnpPos = sba.getPositionInLocus(nextSite);
-			Locus nextSnpLocus = sba.getLocus(nextSite);
+			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				nextSite++;
 				if (nextSite >= nsites) break;
@@ -2122,12 +2122,12 @@ public class NucleotideImputationUtils {
 		
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(firstSite);
-		Locus firstSnpLocus = sba.getLocus(firstSite);
+		Chromosome firstSnpLocus = sba.getLocus(firstSite);
 		int firstSnpPos = sba.getPositionInLocus(firstSite);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
 			int nextSnpPos = sba.getPositionInLocus(nextSite);
-			Locus nextSnpLocus = sba.getLocus(nextSite);
+			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			
 			boolean skip = !polybits.fastGet(nextSite) || ( firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64 && computeRForMissingness(firstSite, nextSite, sba)  > 0.8) ;
 			

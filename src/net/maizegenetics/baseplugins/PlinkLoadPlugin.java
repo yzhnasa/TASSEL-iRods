@@ -131,8 +131,8 @@ public class PlinkLoadPlugin extends AbstractPlugin {
     public DataSet loadFile(String thePedFile, String theMapFile, String chromosome) {
 
         // Terry - fix this.
-        Alignment result = null;
-        //Alignment result = ImportUtils.readFromPLINK(thePedFile, theMapFile);
+        //Alignment result = null;
+        Alignment result = ImportUtils.readFromPLink(thePedFile, theMapFile, this);
         Datum td = new Datum(Utils.getFilename(thePedFile, FileLoadPlugin.FILE_EXT_PLINK_PED), result, null);
         DataSet tds = new DataSet(td, this);
         fireDataSetReturned(new PluginEvent(tds, PlinkLoadPlugin.class));
@@ -173,7 +173,6 @@ public class PlinkLoadPlugin extends AbstractPlugin {
             myMapFileField = new JTextField(TEXT_FIELD_WIDTH);
             myMapFileField.setText("(Select .MAP File)");
             
-//            myChromosomeField = new JTextField(TEXT_FIELD_WIDTH);
             myFileChooser = new JFileChooser(TasselPrefs.getOpenDir());
 
             myPedFileBrowseButton = new JButton("Browse...");

@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
@@ -118,7 +119,7 @@ public interface Alignment extends Serializable {
      * @return first four bits are the first allele value and the second four
      * bits are the second allele value.
      */
-    public byte getBase(int taxon, Locus locus, int physicalPosition);
+    public byte getBase(int taxon, Chromosome locus, int physicalPosition);
 
     /**
      * Returns sequence of diploid allele values for given taxon in specified
@@ -373,7 +374,7 @@ public interface Alignment extends Serializable {
      *
      * @return number of sites
      */
-    public int getLocusSiteCount(Locus locus);
+    public int getLocusSiteCount(Chromosome locus);
 
     /**
      * Get the first (inclusive) and last (exclusive) site of the specified
@@ -383,7 +384,7 @@ public interface Alignment extends Serializable {
      *
      * @return first and last site
      */
-    public int[] getStartAndEndOfLocus(Locus locus);
+    public int[] getStartAndEndOfLocus(Chromosome locus);
 
     /**
      * Returns number of sequences (taxa).
@@ -418,7 +419,7 @@ public interface Alignment extends Serializable {
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus);
 
     /**
      * Return site of given physical position / SNP ID in locus. If the physical
@@ -432,7 +433,7 @@ public interface Alignment extends Serializable {
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID);
 
     /**
      * Returns all physical positions.
@@ -442,38 +443,38 @@ public interface Alignment extends Serializable {
     public int[] getPhysicalPositions();
 
     /**
-     * Return Locus Name for given site.
+     * Return Chromosome Name for given site.
      *
      * @param site site
      *
-     * @return Locus Name
+     * @return Chromosome Name
      */
     public String getLocusName(int site);
 
     /**
-     * Return Locus for given site.
+     * Return Chromosome for given site.
      *
      * @param site site
      *
-     * @return Locus
+     * @return Chromosome
      */
-    public Locus getLocus(int site);
+    public Chromosome getLocus(int site);
 
     /**
-     * Return Locus with matching name. First to match will be returned.
+     * Return Chromosome with matching name. First to match will be returned.
      *
      * @param name name
      *
-     * @return Locus
+     * @return Chromosome
      */
-    public Locus getLocus(String name);
+    public Chromosome getLocus(String name);
 
     /**
      * Return all loci.
      *
      * @return loci
      */
-    public Locus[] getLoci();
+    public Chromosome[] getLoci();
 
     /**
      * Return number of loci.

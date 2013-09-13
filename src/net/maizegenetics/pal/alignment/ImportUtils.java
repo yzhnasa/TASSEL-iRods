@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.pal.ids.IdGroup;
@@ -331,7 +332,7 @@ public class ImportUtils {
                     currLocus = temp;
                     minPosition = currPos;
                 } else if (!temp.equals(currLocus)) {
-                    Locus newLocus = new Locus(currLocus, currLocus, minPosition, prevPos, null, null);
+                    Chromosome newLocus = new Chromosome(currLocus, currLocus, minPosition, prevPos, null, null);
 
                     for (int i = locusStart; i < site; i++) {
                         result.setLocusOfSite(i, newLocus);
@@ -350,7 +351,7 @@ public class ImportUtils {
             }
 
             if (currLocus != null) {
-                Locus newLocus = new Locus(currLocus, currLocus, minPosition, prevPos, null, null);
+                Chromosome newLocus = new Chromosome(currLocus, currLocus, minPosition, prevPos, null, null);
 
                 for (int i = locusStart; i < numSites; i++) {
                     result.setLocusOfSite(i, newLocus);
@@ -382,7 +383,7 @@ public class ImportUtils {
 
         int minPosition = Integer.MAX_VALUE;
         String currLocus = null;
-        List<Locus> loci = new ArrayList<Locus>();
+        List<Chromosome> loci = new ArrayList<Chromosome>();
         List<Integer> lociOffsets = new ArrayList<Integer>();
 
         long currentTime = System.currentTimeMillis();
@@ -446,7 +447,7 @@ public class ImportUtils {
                     minPosition = position;
                     prevPosition = -1;
                 } else if (!temp.equals(currLocus)) {
-                    loci.add(new Locus(currLocus, currLocus, minPosition, prevPosition, null, null));
+                    loci.add(new Chromosome(currLocus, currLocus, minPosition, prevPosition, null, null));
                     lociOffsets.add(site);
                     currLocus = temp;
                     minPosition = position;
@@ -485,7 +486,7 @@ public class ImportUtils {
             }
 
             if (currLocus != null) {
-                loci.add(new Locus(currLocus, currLocus, minPosition, prevPosition, null, null));
+                loci.add(new Chromosome(currLocus, currLocus, minPosition, prevPosition, null, null));
             }
 
             prevTime = currentTime;
@@ -496,7 +497,7 @@ public class ImportUtils {
             System.arraycopy(header, NUM_HAPMAP_NON_TAXA_HEADERS, taxaNames, 0, numTaxa);
             IdGroup idGroup = new SimpleIdGroup(taxaNames);
 
-            Locus[] lociFinal = new Locus[loci.size()];
+            Chromosome[] lociFinal = new Chromosome[loci.size()];
             loci.toArray(lociFinal);
             int[] offsetsFinal = new int[lociOffsets.size()];
             for (int i = 0; i < lociOffsets.size(); i++) {
@@ -582,8 +583,8 @@ public class ImportUtils {
         String[] sequenceArray = new String[sequences.size()];
         sequences.toArray(sequenceArray);
 
-        Locus unknown = new Locus("Unknown", "0", 0, sequenceArray[0].length(), null, null);
-        return BitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[]{unknown}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), isSBit);
+        Chromosome unknown = new Chromosome("Unknown", "0", 0, sequenceArray[0].length(), null, null);
+        return BitAlignment.getNucleotideInstance(idGroup, sequenceArray, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[]{unknown}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), isSBit);
 
     }
 
@@ -625,7 +626,7 @@ public class ImportUtils {
 
         int minPosition = Integer.MAX_VALUE;
         String currLocus = null;
-        List<Locus> loci = new ArrayList<Locus>();
+        List<Chromosome> loci = new ArrayList<Chromosome>();
         List<Integer> lociOffsets = new ArrayList<Integer>();
 
         long currentTime = System.currentTimeMillis();
@@ -689,7 +690,7 @@ public class ImportUtils {
                     minPosition = position;
                     prevPosition = -1;
                 } else if (!temp.equals(currLocus)) {
-                    loci.add(new Locus(currLocus, currLocus, minPosition, prevPosition, null, null));
+                    loci.add(new Chromosome(currLocus, currLocus, minPosition, prevPosition, null, null));
                     lociOffsets.add(site);
                     currLocus = temp;
                     minPosition = position;
@@ -728,7 +729,7 @@ public class ImportUtils {
             }
 
             if (currLocus != null) {
-                loci.add(new Locus(currLocus, currLocus, minPosition, prevPosition, null, null));
+                loci.add(new Chromosome(currLocus, currLocus, minPosition, prevPosition, null, null));
             }
 
             prevTime = currentTime;
@@ -739,7 +740,7 @@ public class ImportUtils {
             System.arraycopy(header, NUM_HAPMAP_NON_TAXA_HEADERS, taxaNames, 0, numTaxa);
             IdGroup idGroup = new SimpleIdGroup(taxaNames);
 
-            Locus[] lociFinal = new Locus[loci.size()];
+            Chromosome[] lociFinal = new Chromosome[loci.size()];
             loci.toArray(lociFinal);
             int[] offsetsFinal = new int[lociOffsets.size()];
             for (int i = 0; i < lociOffsets.size(); i++) {

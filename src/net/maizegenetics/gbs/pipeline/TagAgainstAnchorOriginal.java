@@ -413,7 +413,7 @@ public class TagAgainstAnchorOriginal {
                 }
                 tests++;
             }
-            int chr=Integer.parseInt(anchor.getLocus(bestSite).getChromosomeName());
+            int chr=Integer.parseInt(anchor.getLocus(bestSite).getName());
             double[] result={chr, bestSite, anchor.getPositionInLocus(bestSite),bestP, countSig};
             resultReport[chrIndex]=result;
         }

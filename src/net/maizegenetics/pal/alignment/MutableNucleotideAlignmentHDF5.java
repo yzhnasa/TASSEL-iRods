@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
@@ -74,7 +75,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
     
     protected int[] myVariableSites;
-    private List<Locus> myLocusList = new ArrayList<Locus>();
+    private List<Chromosome> myLocusList = new ArrayList<Chromosome>();
     protected int[] myLocusIndices;  //consider changing to byte or short to save memory, generally on 10 chromosomes
     private int[] myLociOffsets = null;
 
@@ -165,7 +166,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     private IdGroup myIdGroup;  //set to null whenever dirty
 
     protected MutableNucleotideAlignmentHDF5(String fileName, IHDF5Writer reader, List<Identifier> idGroup, int[] variableSites, 
-            List<Locus> locusList, int[] locusIndices, String[] siteNames, int defaultCacheSize) {
+            List<Chromosome> locusList, int[] locusIndices, String[] siteNames, int defaultCacheSize) {
         super(NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         myMaxNumAlleles=NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
         this.fileName=fileName;
@@ -225,8 +226,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
 
         int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
         String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
-        ArrayList<Locus> loci=new ArrayList<Locus>();
-        for (String lS : lociStrings) {loci.add(new Locus(lS));}
+        ArrayList<Chromosome> loci=new ArrayList<Chromosome>();
+        for (String lS : lociStrings) {loci.add(new Chromosome(lS));}
         int[] locusIndices;
         if(reader.exists(HapMapHDF5Constants.LOCUS_INDICES)) {
             locusIndices = reader.readIntArray(HapMapHDF5Constants.LOCUS_INDICES);}
@@ -526,20 +527,20 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         for (int s = 0; s < myNumSites; s++) {
             if(currLIndex!=myLocusIndices[s]) {
                 String name=getLocus(currStart).getName();
-                myLocusList.set(currLIndex, new Locus(name, name, currStart, s-1, null, null));
+                myLocusList.set(currLIndex, new Chromosome(name, name, currStart, s-1, null, null));
                 currStart=s;
                 currLIndex=myLocusIndices[s];
                 myLociOffsets[currLIndex]=currStart;
             }   
         }
         String name=getLocus(currStart).getName();
-        myLocusList.set(currLIndex, new Locus(name, name, currStart, myNumSites-1, null, null));
+        myLocusList.set(currLIndex, new Chromosome(name, name, currStart, myNumSites-1, null, null));
     }
 
 
     @Override
-    public Locus[] getLoci() {
-        Locus[] result = new Locus[myLocusList.size()];
+    public Chromosome[] getLoci() {
+        Chromosome[] result = new Chromosome[myLocusList.size()];
         for (int i = 0; i < myLocusList.size(); i++) result[i] = myLocusList.get(i);
         return result;
     }
@@ -550,7 +551,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
 
     @Override
-    public Locus getLocus(int site) {
+    public Chromosome getLocus(int site) {
         return myLocusList.get(myLocusIndices[site]);
     }
     
@@ -561,8 +562,8 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     
 
     @Override
-    public int[] getStartAndEndOfLocus(Locus locus) {
-        for (Locus mL : myLocusList) {
+    public int[] getStartAndEndOfLocus(Chromosome locus) {
+        for (Chromosome mL : myLocusList) {
             if(mL.getName().equals(locus.getName())) return new int[]{mL.getStart(),mL.getEnd()+1};
         }
         return null;
@@ -583,13 +584,13 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
             OldSiteAnnotation sa=mySiteAnnoCache.get(site);
             if(sa.mySNPIDs!=null) return sa.mySNPIDs; 
         } catch(ExecutionException e) {
-           return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
+           return "S" + getLocus(site).getName() + "_" + getPositionInLocus(site);
         }
-        return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
+        return "S" + getLocus(site).getName() + "_" + getPositionInLocus(site);
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
         if (isDirty()) {
             throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getSiteOfPhysicalPosition: this alignment is dirty.");
         }
@@ -610,7 +611,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID) {
         if (isDirty()) {
             throw new IllegalStateException("MutableBitNucleotideAlignmentHDF5: getSiteOfPhysicalPosition: this alignment is dirty.");
         }
@@ -700,7 +701,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
         //cacheTaxonSiteBlock(taxon, site);
     }
 
-    public void setBase(Identifier taxon, String siteName, Locus locus, int physicalPosition, byte newBase) {
+    public void setBase(Identifier taxon, String siteName, Chromosome locus, int physicalPosition, byte newBase) {
         throw new UnsupportedOperationException("Not supported.  Set all genotypes at once using setAllBases.");
     }
 
@@ -1008,7 +1009,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
 
     @Override
-    public void setLocusOfSite(int site, Locus locus) {
+    public void setLocusOfSite(int site, Chromosome locus) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

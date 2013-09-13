@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -47,7 +48,7 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
     };
     private boolean myOptimizeSiteIteration = true;
 
-    protected BitAlignmentHDF5(IHDF5Reader hdf5, IdGroup idGroup, byte[][] alleles, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    protected BitAlignmentHDF5(IHDF5Reader hdf5, IdGroup idGroup, byte[][] alleles, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Chromosome[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         super(alleles, idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles);
         myHDF5 = hdf5;
         myNumSBitWords = myHDF5.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SBIT_WORDS);
@@ -90,9 +91,9 @@ public class BitAlignmentHDF5 extends AbstractAlignment {
 
         String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
         int numLoci = lociStrings.length;
-        Locus[] loci = new Locus[numLoci];
+        Chromosome[] loci = new Chromosome[numLoci];
         for (int i = 0; i < numLoci; i++) {
-            loci[i] = new Locus(lociStrings[i]);
+            loci[i] = new Chromosome(lociStrings[i]);
         }
 
         int[] lociOffsets = reader.readIntArray(HapMapHDF5Constants.LOCUS_OFFSETS);

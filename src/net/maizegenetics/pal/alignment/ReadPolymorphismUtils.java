@@ -1,5 +1,6 @@
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -73,7 +74,7 @@ public class ReadPolymorphismUtils {
             }
         }
 
-        Locus[] myLoci = new Locus[]{Locus.UNKNOWN};
+        Chromosome[] myLoci = new Chromosome[]{Chromosome.UNKNOWN};
         return BitAlignment.getInstance(new SimpleIdGroup(taxa), finalData, null, null, null, 14, myLoci, new int[]{0}, markerNames, true, true);
     }
 

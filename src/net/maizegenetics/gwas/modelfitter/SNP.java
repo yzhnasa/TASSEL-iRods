@@ -2,16 +2,16 @@ package net.maizegenetics.gwas.modelfitter;
 
 import java.util.ArrayList;
 
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 
 public class SNP {
 	public String name;
-	public Locus locus;
+	public Chromosome locus;
 	public int position;
 	ArrayList<Object> alleles;
 	int index;
 	
-	public SNP(String name, Locus locus, int positionInLocus, int index) {
+	public SNP(String name, Chromosome locus, int positionInLocus, int index) {
 		this.name = name;
 		this.locus = locus;
 		position = positionInLocus;

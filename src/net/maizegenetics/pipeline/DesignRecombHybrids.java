@@ -17,7 +17,7 @@ import net.maizegenetics.pal.alignment.CombineAlignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -70,14 +70,14 @@ public class DesignRecombHybrids {
     }
     
     private static OpenBitSet makeMask(Alignment a) {
-        Locus[] l=a.getLoci();
+        Chromosome[] l=a.getLoci();
         OpenBitSet obs=new OpenBitSet(a.getSiteCount());
-        for(Locus lc: l) {
+        for(Chromosome lc: l) {
             int start=lc.getStart();
             int end=lc.getEnd();
             int startSite=Math.abs(a.getSiteOfPhysicalPosition((int)((end-start)*.25), lc));
             int endSite=Math.abs(a.getSiteOfPhysicalPosition((int)((end-start)*.75), lc));
-            System.out.printf("%s StartS:%d EndS:%d %n",lc.getChromosomeName(),startSite, endSite);
+            System.out.printf("%s StartS:%d EndS:%d %n",lc.getName(),startSite, endSite);
             for (int i = startSite; i < endSite; i++) {
                 obs.fastSet(i); 
             }

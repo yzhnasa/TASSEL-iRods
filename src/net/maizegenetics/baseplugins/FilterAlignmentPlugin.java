@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.CombineAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -49,7 +49,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     private int myEnd = -1;
     private int myStartPos = -1;
     private int myEndPos = -1;
-    private Locus myLocus = null;
+    private Chromosome myLocus = null;
     private String myLocusStr = null;
     private int myMinCount = 1;
     private double myMinFreq = 0.01;
@@ -116,7 +116,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             myEnd = aa.getSiteCount() - 1;
         }
 
-        Locus theLocus = myLocus;
+        Chromosome theLocus = myLocus;
         if ((theLocus == null) && (myLocusStr != null)) {
             theLocus = aa.getLocus(myLocusStr);
             if (theLocus == null) {
@@ -202,7 +202,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         }
         String theComment;
         StringBuilder builder = new StringBuilder();
-        Locus[] loci = naa.getLoci();
+        Chromosome[] loci = naa.getLoci();
         builder.append(inDatum.getName());
         builder.append("_");
         if ((loci != null) && (loci.length != 0)) {
@@ -292,11 +292,11 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         myLocusStr = name;
     }
 
-    public Locus getLocus() {
+    public Chromosome getLocus() {
         return myLocus;
     }
 
-    public void setLocus(Locus locus) {
+    public void setLocus(Chromosome locus) {
         myLocusStr = null;
         myLocus = locus;
     }

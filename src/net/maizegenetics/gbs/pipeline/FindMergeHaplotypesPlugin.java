@@ -22,7 +22,7 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
@@ -159,16 +159,16 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     }
     
     private int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
-        Locus[] theL=a.getLoci();
+        Chromosome[] theL=a.getLoci();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
-        for (Locus aL: theL) {
+        for (Chromosome aL: theL) {
             System.out.println("");
             int locusSites=aL.getEnd()-aL.getStart()+1;
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
             if(subAlignCnt==0) subAlignCnt++;
             int prefBlocks=(locusSites/(subAlignCnt*64));
             System.out.printf("Chr:%s Alignment Sites:%d subAlignCnt:%d RealSites:%d %n",
-                    aL.getChromosomeName(),locusSites, subAlignCnt, prefBlocks*64);
+                    aL.getName(),locusSites, subAlignCnt, prefBlocks*64);
             for (int i = 0; i < subAlignCnt; i++) {
                 int[] divs=new int[2];
                 divs[0]=(i*prefBlocks*64)+aL.getStart();

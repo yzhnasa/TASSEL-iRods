@@ -4,6 +4,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
@@ -31,7 +32,7 @@ public class MutableNucleotideDepthAlignment extends MutableNucleotideAlignment 
         initAllelicDepthArrays(maxNumTaxa, maxNumSites);
     }
 
-    private MutableNucleotideDepthAlignment(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    private MutableNucleotideDepthAlignment(List<Identifier> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         super(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
         initAllelicDepthArrays(idGroup.size(), siteNames.length);
     }
@@ -60,7 +61,7 @@ public class MutableNucleotideDepthAlignment extends MutableNucleotideAlignment 
         throw new UnsupportedOperationException("This constructor is not supported by MutableNucleotideDepthAlignment.");
     }
 
-    public static MutableNucleotideDepthAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    public static MutableNucleotideDepthAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         return new MutableNucleotideDepthAlignment(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
     }
 

@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
@@ -99,7 +100,7 @@ public class ExportUtils {
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
             String[] lociNames = new String[a.getNumLoci()];
-            Locus[] loci = a.getLoci();
+            Chromosome[] loci = a.getLoci();
             for (int i = 0; i < a.getNumLoci(); i++) {
                 lociNames[i] = loci[i].getName();
             }
@@ -207,8 +208,8 @@ public class ExportUtils {
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
             String[] lociNames = new String[a.getNumLoci()];
-            HashMap<Locus, Integer> locusToIndex=new HashMap<Locus, Integer>(10);
-            Locus[] loci = a.getLoci();
+            HashMap<Chromosome, Integer> locusToIndex=new HashMap<Chromosome, Integer>(10);
+            Chromosome[] loci = a.getLoci();
             for (int i = 0; i < a.getNumLoci(); i++) {
                 lociNames[i] = loci[i].getName();
                 locusToIndex.put(loci[i],i);
@@ -306,13 +307,13 @@ public class ExportUtils {
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
-            TreeSet<Locus> lset = new TreeSet();
+            TreeSet<Chromosome> lset = new TreeSet();
             for (int i = 0; i < numSites; i++) {
                 lset.add(a.getLocus(snpIndex[i]));
             }
-            Locus[] outLoci = lset.toArray(new Locus[lset.size()]);
+            Chromosome[] outLoci = lset.toArray(new Chromosome[lset.size()]);
             String[] lociNames = new String[outLoci.length];
-            HashMap<Locus, Integer> locusToIndex=new HashMap<Locus, Integer>(10);
+            HashMap<Chromosome, Integer> locusToIndex=new HashMap<Chromosome, Integer>(10);
             for (int i = 0; i < lociNames.length; i++) {
                 lociNames[i] = outLoci[i].getName();
                 locusToIndex.put(outLoci[i],i);
@@ -402,7 +403,7 @@ public class ExportUtils {
         for (int i=0; i<a.length; i++) {
             
             for (int s = 0; s < a[i].getSiteCount(); s++) {
-                long chrNum=Integer.parseInt(a[i].getLocus(s).getChromosomeName());
+                long chrNum=Integer.parseInt(a[i].getLocus(s).getName());
                 long phys=a[i].getPositionInLocus(s);
                 long value=((long)i<<32)+s;
                 long dupIndex=0;

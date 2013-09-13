@@ -25,7 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableVCFAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.util.VCFUtil;
@@ -555,7 +555,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         int currSite = theMSA.getSiteCount();
         //int currSite = theMSA.getNextFreeSite();
         theMSA.addSite(currSite);
-        theMSA.setLocusOfSite(currSite, new Locus(String.valueOf(chromosome), String.valueOf(chromosome), -1, -1, null, null));
+        theMSA.setLocusOfSite(currSite, new Chromosome(String.valueOf(chromosome), String.valueOf(chromosome), -1, -1, null, null));
         theMSA.setPositionOfSite(currSite, position);
         //theMSA.setStrandOfSite(currSite, (byte) '+');
         for (int tx = 0; tx < genos.length; tx++) {

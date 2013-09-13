@@ -38,7 +38,7 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.pal.ids.Identifier;
@@ -242,7 +242,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
         double maxSum=0, sumSites=0;
         for (int i = 0; i < a.getSiteCount(); i++) {
             int[][] contig = new int[2][2];
-            Locus myLocus=a.getLocus(i);
+            Chromosome myLocus=a.getLocus(i);
             BitSet rMj = a.getAllelePresenceForAllTaxa(i, 0);
             BitSet rMn = a.getAllelePresenceForAllTaxa(i, 1); 
             if(rMn.cardinality()<minMinorCnt) continue;

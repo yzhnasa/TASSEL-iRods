@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ abstract public class AbstractAlignment implements Alignment {
     private int[] myVariableSites;
     protected int myMaxNumAlleles = Alignment.DEFAULT_MAX_NUM_ALLELES;
     protected byte[][] myAlleles;
-    protected Locus[] myLoci;
+    protected Chromosome[] myLoci;
     /**
      * Loci offsets hold first site of each locus.
      */
@@ -38,7 +39,7 @@ abstract public class AbstractAlignment implements Alignment {
     private boolean myRetainRareAlleles = false;
     private Alignment myOriginalAlignment = null;
 
-    public AbstractAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    public AbstractAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Chromosome[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         if (idGroup.getIdCount() != data.length) {
             throw new IllegalArgumentException("AbstractAlignment: init: id group count: " + idGroup.getIdCount() + " doesn't equal number of data rows: " + data.length);
         }
@@ -47,7 +48,7 @@ abstract public class AbstractAlignment implements Alignment {
         initAlleles(data);
     }
 
-    public AbstractAlignment(byte[][] alleles, IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
+    public AbstractAlignment(byte[][] alleles, IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Chromosome[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles) {
         myNumSites = alleles.length;
         init(idGroup, map, reference, alleleStates, variableSites, maxNumAlleles, snpIDs, loci, lociOffsets, retainRareAlleles);
         myAlleles = alleles;
@@ -79,16 +80,16 @@ abstract public class AbstractAlignment implements Alignment {
      * @param alleleStates
      */
     public AbstractAlignment(String[][] alleleStates) {
-        init(null, null, null, alleleStates, null, 1, null, new Locus[]{new Locus("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
+        init(null, null, null, alleleStates, null, 1, null, new Chromosome[]{new Chromosome("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
     }
 
     // TERRY - Need to check if this needed?
     public AbstractAlignment(IdGroup idGroup, String[][] alleleStates) {
         myIdGroup = idGroup;
-        init(null, null, null, alleleStates, null, 1, null, new Locus[]{new Locus("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
+        init(null, null, null, alleleStates, null, 1, null, new Chromosome[]{new Chromosome("dummy", "0", 0, 0, null, null)}, new int[]{0}, false);
     }
 
-    private void init(IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, String[] snpIDs, Locus[] loci, int[] lociOffsets, boolean retainRareAlleles) {
+    private void init(IdGroup idGroup, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, String[] snpIDs, Chromosome[] loci, int[] lociOffsets, boolean retainRareAlleles) {
 
         if ((idGroup != null) && (idGroup.getIdCount() != 0)) {
             myIdGroup = SimpleIdGroup.getInstance(idGroup);
@@ -142,7 +143,7 @@ abstract public class AbstractAlignment implements Alignment {
             for (int i = 0; i < lociOffsets.length; i++) {
                 String name = myLoci[i].getName();
                 int end = (i < myLoci.length - 1) ? myLociOffsets[i + 1] - 1 : myNumSites - 1;
-                myLoci[i] = new Locus(name, name, myLociOffsets[i], end, null, null);
+                myLoci[i] = new Chromosome(name, name, myLociOffsets[i], end, null, null);
             }
         }
 
@@ -230,7 +231,7 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public byte getBase(int taxon, Locus locus, int physicalPosition) {
+    public byte getBase(int taxon, Chromosome locus, int physicalPosition) {
         return getBase(taxon, getSiteOfPhysicalPosition(physicalPosition, locus));
     }
 
@@ -655,7 +656,7 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public Locus getLocus(int site) {
+    public Chromosome getLocus(int site) {
         for (int i = 1; i < myLociOffsets.length; i++) {
             if (myLociOffsets[i] > site) {
                 return myLoci[i - 1];
@@ -665,17 +666,17 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public Locus[] getLoci() {
+    public Chromosome[] getLoci() {
         return myLoci;
     }
 
     @Override
-    public Locus getLocus(String name) {
+    public Chromosome getLocus(String name) {
 
         name = name.trim();
-        Locus[] temp = getLoci();
+        Chromosome[] temp = getLoci();
         for (int i = 0; i < temp.length; i++) {
-            if (temp[i].getChromosomeName().equalsIgnoreCase(name)) {
+            if (temp[i].getName().equalsIgnoreCase(name)) {
                 return temp[i];
             }
         }
@@ -694,13 +695,13 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public int getLocusSiteCount(Locus locus) {
+    public int getLocusSiteCount(Chromosome locus) {
         int[] startEnd = getStartAndEndOfLocus(locus);
         return startEnd[1] - startEnd[0];
     }
 
     @Override
-    public int[] getStartAndEndOfLocus(Locus locus) {
+    public int[] getStartAndEndOfLocus(Chromosome locus) {
         for (int i = 0; i < getNumLoci(); i++) {
             if (locus.equalName(myLoci[i])) {
                 int end = 0;
@@ -723,14 +724,14 @@ abstract public class AbstractAlignment implements Alignment {
     @Override
     public String getSNPID(int site) {
         if (mySNPIDs == null) {
-            return "S" + getLocus(site).getChromosomeName() + "_" + getPositionInLocus(site);
+            return "S" + getLocus(site).getName() + "_" + getPositionInLocus(site);
         } else {
             return mySNPIDs[site];
         }
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
         if (myVariableSites == null) {
             return physicalPosition;
         }
@@ -742,7 +743,7 @@ abstract public class AbstractAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID) {
         if (myVariableSites == null) {
             return physicalPosition;
         }

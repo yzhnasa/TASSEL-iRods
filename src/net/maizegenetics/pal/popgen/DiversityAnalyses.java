@@ -14,6 +14,7 @@
  */
 package net.maizegenetics.pal.popgen;
 
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.report.AbstractTableReport;
@@ -92,7 +93,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
      * This will determine what analyses are to be run and run them
      */
     private void runAnalysisForRegion(int start, int end) {
-        Locus locus = theAAlignment.getLocus(start);
+        Chromosome locus = theAAlignment.getLocus(start);
         int chromosome = -1;
         try {
             chromosome = Integer.parseInt(locus.getName());

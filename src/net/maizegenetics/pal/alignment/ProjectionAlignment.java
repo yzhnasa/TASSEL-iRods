@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
@@ -360,7 +361,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     }
 
     @Override
-    public byte getBase(int taxon, Locus locus, int physicalPosition) {
+    public byte getBase(int taxon, Chromosome locus, int physicalPosition) {
         return getBase(taxon, getSiteOfPhysicalPosition(physicalPosition, locus));
     }
 
@@ -469,12 +470,12 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     }
 
     @Override
-    public Locus getLocus(int site) {
+    public Chromosome getLocus(int site) {
         return myBaseAlignment.getLocus(site);
     }
 
     @Override
-    public Locus[] getLoci() {
+    public Chromosome[] getLoci() {
         return myBaseAlignment.getLoci();
     }
 
@@ -489,7 +490,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     }
 
     @Override
-    public int getLocusSiteCount(Locus locus) {
+    public int getLocusSiteCount(Chromosome locus) {
         return myBaseAlignment.getLocusSiteCount(locus);
     }
 
@@ -504,12 +505,12 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
         return myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus);
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID) {
         return myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
     }
 
@@ -796,7 +797,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     }
 
     @Override
-    public void setLocusOfSite(int site, Locus locus) {
+    public void setLocusOfSite(int site, Chromosome locus) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

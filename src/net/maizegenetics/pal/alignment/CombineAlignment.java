@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public class CombineAlignment extends AbstractAlignment {
     private final Alignment[] myAlignments;
     private final int[] mySiteOffsets;
     private final Map myLoci = new HashMap();
-    private Locus[] myLociList;
+    private Chromosome[] myLociList;
     private int[] myLociOffsets;
 
     private CombineAlignment(IdGroup subIdGroup, Alignment[] alignments) {
@@ -38,7 +39,7 @@ public class CombineAlignment extends AbstractAlignment {
             count = alignments[i].getSiteCount() + count;
             mySiteOffsets[i + 1] = count;
 
-            Locus[] loci = alignments[i].getLoci();
+            Chromosome[] loci = alignments[i].getLoci();
             for (int j = 0; j < loci.length; j++) {
                 myLoci.put(loci[j], alignments[i]);
             }
@@ -137,7 +138,7 @@ public class CombineAlignment extends AbstractAlignment {
     private void initLoci() {
 
         List offsets = new ArrayList();
-        List<Locus> loci = new ArrayList();
+        List<Chromosome> loci = new ArrayList();
         for (int i = 0; i < myAlignments.length; i++) {
             loci.addAll(Arrays.asList(myAlignments[i].getLoci()));
             int[] tempOffsets = myAlignments[i].getLociOffsets();
@@ -146,7 +147,7 @@ public class CombineAlignment extends AbstractAlignment {
             }
         }
 
-        myLociList = new Locus[loci.size()];
+        myLociList = new Chromosome[loci.size()];
         myLociList = loci.toArray(myLociList);
 
         myLociOffsets = new int[offsets.size()];
@@ -186,7 +187,7 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
-    public byte getBase(int taxon, Locus locus, int physicalPosition) {
+    public byte getBase(int taxon, Chromosome locus, int physicalPosition) {
         int site = getSiteOfPhysicalPosition(physicalPosition, locus);
         int translate = translateSite(site);
         return myAlignments[translate].getBase(taxon, site - mySiteOffsets[translate]);
@@ -249,7 +250,7 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getLocusSiteCount(Locus locus) {
+    public int getLocusSiteCount(Chromosome locus) {
         return ((Alignment) myLoci.get(locus)).getLocusSiteCount(locus);
     }
 
@@ -260,7 +261,7 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
         Alignment align = ((Alignment) myLoci.get(locus));
         int i = -1;
         for (int j = 0; j < myAlignments.length; j++) {
@@ -276,7 +277,7 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID) {
         Alignment align = ((Alignment) myLoci.get(locus));
         int i = -1;
         for (int j = 0; j < myAlignments.length; j++) {
@@ -292,13 +293,13 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
-    public Locus getLocus(int site) {
+    public Chromosome getLocus(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getLocus(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public Locus[] getLoci() {
+    public Chromosome[] getLoci() {
         return myLociList;
     }
 

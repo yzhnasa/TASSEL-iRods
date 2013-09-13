@@ -8,12 +8,13 @@ import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.ids.IdGroup;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * A builder for creating immutable {@link TaxaList} instances.
- * Example:<pre>   {@code
+ * A builder for creating immutable {@link TaxaList} instances. Example:
+ * <pre>   {@code
  *   TaxaListBuilder tlb=new TaxaListBuilder();
  *   for (int i = 0; i < 10; i++) {
  *      AnnotatedTaxon at= new AnnotatedTaxon.Builder("Z"+i+":Line:mays:Zea")
@@ -23,20 +24,17 @@ import java.util.List;
  *           .build();
  *       tlb.add(at);
  *       }
- *   TaxaList tl=tlb.build();}</pre>
- *   <p></p>
- *   If building from HDF5:<pre>
- *   {@code
- *   TaxaList tl=new TaxaListBuilder().buildFromHDF5(testMutFile);
- *   }</pre>
+ *   TaxaList tl=tlb.build();}</pre> <p></p> If building from HDF5:<pre> {@code
+ * TaxaList tl=new TaxaListBuilder().buildFromHDF5(testMutFile); }</pre>
  *
  * @author Ed Buckler
  */
 public class TaxaListBuilder {
+
     private final List<AnnotatedTaxon> myTaxaList;
 
     public TaxaListBuilder() {
-        myTaxaList=new ArrayList<AnnotatedTaxon>();
+        myTaxaList = new ArrayList<AnnotatedTaxon>();
     }
 
     public TaxaListBuilder add(AnnotatedTaxon taxon) {
@@ -51,10 +49,17 @@ public class TaxaListBuilder {
         return this;
     }
 
+    public TaxaListBuilder addAll(Collection<AnnotatedTaxon> taxa) {
+        for (AnnotatedTaxon annotatedTaxon : taxa) {
+            myTaxaList.add(annotatedTaxon);
+        }
+        return this;
+    }
+
     public TaxaListBuilder addAll(Alignment a) {
         //TODO change this over to get TaxaList from the Alignment, and then add the annotated alignments
-        IdGroup ids=a.getIdGroup();
-        for (int i = 0; i <ids.getIdCount() ; i++) {
+        IdGroup ids = a.getIdGroup();
+        for (int i = 0; i < ids.getIdCount(); i++) {
             myTaxaList.add(new AnnotatedTaxon.Builder(ids.getIdentifier(i)).build());
         }
         return this;
@@ -71,11 +76,13 @@ public class TaxaListBuilder {
     }
 
     public TaxaList buildFromHDF5(String hdf5FileName) {
-        IHDF5Reader reader= HDF5Factory.openForReading(hdf5FileName);
+        IHDF5Reader reader = HDF5Factory.openForReading(hdf5FileName);
         myTaxaList.clear();
-        List<HDF5LinkInformation> fields=reader.getAllGroupMemberInformation(HapMapHDF5Constants.GENOTYPES, true);
+        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(HapMapHDF5Constants.GENOTYPES, true);
         for (HDF5LinkInformation is : fields) {
-            if(is.isDataSet()==false) continue;
+            if (is.isDataSet() == false) {
+                continue;
+            }
             myTaxaList.add(new AnnotatedTaxon.Builder(is.getName()).build());
         }
         sort();
@@ -84,9 +91,6 @@ public class TaxaListBuilder {
 
     //Default package private method to hand the list to the instance
     List<AnnotatedTaxon> getImmutableList() {
-         return Collections.unmodifiableList(myTaxaList);
+        return Collections.unmodifiableList(myTaxaList);
     }
-
-
-
 }

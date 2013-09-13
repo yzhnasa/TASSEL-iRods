@@ -4,6 +4,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
@@ -34,7 +35,7 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
         initAllelicDepthArrays(maxNumTaxa, maxNumSites);
     }
 
-    private MutableVCFAlignment(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    private MutableVCFAlignment(List<Identifier> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         super(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
         initAllelicDepthArrays(idGroup.size(), siteNames.length);
     }
@@ -65,7 +66,7 @@ public class MutableVCFAlignment extends MutableNucleotideAlignment implements M
         return new MutableVCFAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
 
-    public static MutableVCFAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Locus> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    public static MutableVCFAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         return new MutableVCFAlignment(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
     }
 

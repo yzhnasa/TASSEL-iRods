@@ -336,13 +336,13 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             myLogger.error("ERROR: both hapmap genotype files should contain only a single chromosome");
             return;
         }
-        if (!a1.getLoci()[0].getChromosomeName().equals(a2.getLoci()[0].getChromosomeName())) {
+        if (!a1.getLoci()[0].getName().equals(a2.getLoci()[0].getName())) {
             myLogger.error("ERROR: the hapmap genotype files to compare do not contain the same chromosome");
             return;
         }
-        if (Integer.parseInt(a1.getLoci()[0].getChromosomeName()) != chr || Integer.parseInt(a2.getLoci()[0].getChromosomeName()) != chr) {
+        if (Integer.parseInt(a1.getLoci()[0].getName()) != chr || Integer.parseInt(a2.getLoci()[0].getName()) != chr) {
             myLogger.error("ERROR: one or both of the hapmap genotype files to compare do not contain the expected chromosome "
-                    + "(expected:" + chr + "  hmp1:" + a1.getLoci()[0].getChromosomeName() + "  hmp2:" + a2.getLoci()[0].getChromosomeName() + ")");
+                    + "(expected:" + chr + "  hmp1:" + a1.getLoci()[0].getName() + "  hmp2:" + a2.getLoci()[0].getName() + ")");
             return;
         }
 

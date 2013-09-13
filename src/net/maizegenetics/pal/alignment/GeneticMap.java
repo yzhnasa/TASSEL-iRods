@@ -1,5 +1,6 @@
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -10,6 +11,11 @@ import java.util.HashMap;
 
 import net.maizegenetics.pal.report.TableReport;
 
+/**
+ * 
+ * @deprecated
+ */
+@Deprecated
 public class GeneticMap implements TableReport, Serializable {
         private static final long serialVersionUID = -5197800047652332969L;
 	protected HashMap<String,Integer> markerIndex = new HashMap<String,Integer>();	//a hash map of marker indices for lookup functions
@@ -164,8 +170,8 @@ public class GeneticMap implements TableReport, Serializable {
 	 * @param position
 	 * @return	the genetic position corresponding to the given physical position calculated by interpolating between the map markers that have both genetic and physical positions.
 	 */
-	public double getGeneticPositionFromPhysical(Locus locus, int position) {
-		return getGeneticPositionFromPhysical(locus.getChromosomeName(), position);
+	public double getGeneticPositionFromPhysical(Chromosome locus, int position) {
+		return getGeneticPositionFromPhysical(locus.getName(), position);
 	}
 	
 	/**
@@ -216,8 +222,8 @@ public class GeneticMap implements TableReport, Serializable {
 	 * @param position
 	 * @return	the physical position corresponding to the given genetic position calculated by interpolating between the map markers that have both genetic and physical positions.
 	 */
-	public int getPhysicalPositionFromGenetic(Locus locus, double position) {
-		return getPhysicalPositionFromGenetic(locus.getChromosomeName(), position);
+	public int getPhysicalPositionFromGenetic(Chromosome locus, double position) {
+		return getPhysicalPositionFromGenetic(locus.getName(), position);
 	}
 	
 	/**

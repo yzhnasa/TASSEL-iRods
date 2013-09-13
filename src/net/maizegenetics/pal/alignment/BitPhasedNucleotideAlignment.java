@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.util.BitSet;
 
@@ -18,11 +19,11 @@ public class BitPhasedNucleotideAlignment extends BitPhasedAlignment {
         super(a, maxNumAlleles, retainRareAlleles, isSBit);
     }
 
-    protected BitPhasedNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
+    protected BitPhasedNucleotideAlignment(IdGroup idGroup, byte[][] data, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Chromosome[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
         super(idGroup, data, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
     }
 
-    protected BitPhasedNucleotideAlignment(IdGroup idGroup, byte[][] alleles, BitSet[][] data0, BitSet[][] data1, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Locus[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
+    protected BitPhasedNucleotideAlignment(IdGroup idGroup, byte[][] alleles, BitSet[][] data0, BitSet[][] data1, GeneticMap map, byte[] reference, String[][] alleleStates, int[] variableSites, int maxNumAlleles, Chromosome[] loci, int[] lociOffsets, String[] snpIDs, boolean retainRareAlleles, boolean isSBit) {
         super(idGroup, alleles, data0, data1, map, reference, alleleStates, variableSites, maxNumAlleles, loci, lociOffsets, snpIDs, retainRareAlleles, isSBit);
     }
 

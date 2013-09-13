@@ -11,7 +11,7 @@ import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.jGLiM.dm.NestedCovariateModelEffect;
 import net.maizegenetics.jGLiM.dm.PartitionedLinearModel;
 import net.maizegenetics.jGLiM.dm.SweepFastLinearModel;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
 import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.pal.report.SimpleTableReport;
@@ -168,7 +168,7 @@ public class StepwiseOLSModelFitter {
 		for (int s = 0; s < numberOfSites; s++) {
 			//create the appropriate marker effect
 			ModelEffect markerEffect = null;
-			SNP snp = new SNP(myData.getMarkerName(s), new Locus(myData.getLocusName(s)), (int) myData.getMarkerChromosomePosition(s), s);
+			SNP snp = new SNP(myData.getMarkerName(s), new Chromosome(myData.getLocusName(s)), (int) myData.getMarkerChromosomePosition(s), s);
 			Object[] markerValues = myData.getMarkerValue(currentPhenotypeIndex, s);
 			
 			if (myData.isMarkerDiscrete(s)) {
