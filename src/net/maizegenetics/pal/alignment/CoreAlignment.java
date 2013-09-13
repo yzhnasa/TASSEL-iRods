@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
  *
  * @author terry
  */
-public class CoreAlignment implements AlignmentNew {
+public class CoreAlignment implements Alignment {
 
     private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
     private final Genotype myGenotype;
@@ -348,8 +348,8 @@ public class CoreAlignment implements AlignmentNew {
     }
 
     @Override
-    public AlignmentNew[] getAlignments() {
-        return new AlignmentNew[]{this};
+    public Alignment[] getAlignments() {
+        return new Alignment[]{this};
     }
 
     @Override

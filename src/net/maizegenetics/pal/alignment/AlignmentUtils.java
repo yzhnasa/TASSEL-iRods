@@ -256,7 +256,7 @@ public class AlignmentUtils {
         return result;
     }
     
-    public static int[][] getAllelesSortedByFrequency(AlignmentNew alignment, int site) {
+    public static int[][] getAllelesSortedByFrequency(Alignment alignment, int site) {
 
         int[] stateCnt = new int[16];
         for (int i = 0; i < alignment.getTaxaCount(); i++) {
@@ -313,7 +313,7 @@ public class AlignmentUtils {
 
     }
     
-    public static Object[][] getDiploidsSortedByFrequency(AlignmentNew alignment, int site) {
+    public static Object[][] getDiploidsSortedByFrequency(Alignment alignment, int site) {
 
         Integer ONE_INTEGER = 1;
         int numTaxa = alignment.getTaxaCount();
