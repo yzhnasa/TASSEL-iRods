@@ -123,7 +123,7 @@ public class BitNeighborFinder {
 //                    best, ldAlignTN, ldAlign.getTaxaName(ldAlignTN));
 //            System.out.print(" "+ldAlign.getTaxaName(ldAlignTN));
             if(x==0) {posBreaks.add(0); hdTaxa.add(best);}
-            else if(hdTaxa.get(hdTaxa.size()-1)!=best) {posBreaks.add(ldAlign.getPositionInLocus(x*64)); hdTaxa.add(best);}
+            else if(hdTaxa.get(hdTaxa.size()-1)!=best) {posBreaks.add(ldAlign.getPositionInChromosome(x*64)); hdTaxa.add(best);}
         }
 //        System.out.println("");
 //        System.out.println(ldAlign.getTaxaName(taxa)+"\t"+siteBreaks.size()+"\t"+sections);

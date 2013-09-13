@@ -12,7 +12,7 @@ public class BasicTasselOperations {
     
     public static void main(String[] args) {
         //        for (int site = 0; site < inputAlign.getSiteCount(); site++) {
-//            int position=inputAlign.getPositionInLocus(site);
+//            int position=inputAlign.getPositionInChromosome(site);
 //            System.out.print(site+"\t"+position);
 //            for (int taxon = 0; taxon < inputAlign.getSequenceCount(); taxon++) {
 //                byte genotype=inputAlign.getBase(taxon, site);

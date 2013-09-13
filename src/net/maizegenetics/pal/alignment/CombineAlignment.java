@@ -255,9 +255,9 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getPositionInLocus(int site) {
+    public int getPositionInChromosome(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getPositionInLocus(site - mySiteOffsets[translate]);
+        return myAlignments[translate].getPositionInChromosome(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -521,7 +521,7 @@ public class CombineAlignment extends AbstractAlignment {
     @Override
     public String getLocusName(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getLocusName(site - mySiteOffsets[translate]);
+        return myAlignments[translate].getChromosomeName(site - mySiteOffsets[translate]);
     }
 
     @Override

@@ -571,22 +571,22 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             String cState = myAlignment.getMajorAlleleAsString(c) + ":" + myAlignment.getMinorAlleleAsString(c);
             Integer cStr = Integer.valueOf(c);
 
-            data[labelOffset++] = myAlignment.getLocusName(r);
-            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInLocus(r));
+            data[labelOffset++] = myAlignment.getChromosomeName(r);
+            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInChromosome(r));
             data[labelOffset++] = rStr;
 
             data[labelOffset++] = IntegerTwo;
             data[labelOffset++] = rState;
             data[labelOffset++] = NotImplemented;
-            data[labelOffset++] = myAlignment.getLocusName(c);
-            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInLocus(c));
+            data[labelOffset++] = myAlignment.getChromosomeName(c);
+            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInChromosome(c));
             data[labelOffset++] = cStr;
 
             data[labelOffset++] = IntegerTwo;
             data[labelOffset++] = cState;
             data[labelOffset++] = NotImplemented;
-            if (myAlignment.getLocusName(r).equals(myAlignment.getLocusName(c))) {
-                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.getPositionInLocus(r) - myAlignment.getPositionInLocus(c)));
+            if (myAlignment.getChromosomeName(r).equals(myAlignment.getChromosomeName(c))) {
+                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.getPositionInChromosome(r) - myAlignment.getPositionInChromosome(c)));
             } else {
                 data[labelOffset++] = NA;
             }

@@ -508,7 +508,7 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
     }
 
     @Override
-    public int getPositionInLocus(int site) {
+    public int getPositionInChromosome(int site) {
         try {
             if (myVariableSites[site] < 0) {
                 return site;
@@ -584,9 +584,9 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
             OldSiteAnnotation sa=mySiteAnnoCache.get(site);
             if(sa.mySNPIDs!=null) return sa.mySNPIDs; 
         } catch(ExecutionException e) {
-           return "S" + getLocus(site).getName() + "_" + getPositionInLocus(site);
+           return "S" + getLocus(site).getName() + "_" + getPositionInChromosome(site);
         }
-        return "S" + getLocus(site).getName() + "_" + getPositionInLocus(site);
+        return "S" + getLocus(site).getName() + "_" + getPositionInChromosome(site);
     }
 
     @Override
@@ -631,14 +631,14 @@ public class MutableNucleotideAlignmentHDF5 extends AbstractAlignment implements
                 return result;
             } else {
                 int index = result - 1;
-                while ((index >= startEnd[0]) && (getPositionInLocus(index) == physicalPosition)) {
+                while ((index >= startEnd[0]) && (getPositionInChromosome(index) == physicalPosition)) {
                     if (snpID.equals(getSNPID(index))) {
                         return index;
                     }
                     index--;
                 }
                 index = result + 1;
-                while ((index < startEnd[1]) && (getPositionInLocus(index) == physicalPosition)) {
+                while ((index < startEnd[1]) && (getPositionInChromosome(index) == physicalPosition)) {
                     if (snpID.equals(getSNPID(index))) {
                         return index;
                     }

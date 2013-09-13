@@ -507,20 +507,20 @@ public class TagAgainstAnchor {
                 OpenBitSet obsMinor = new OpenBitSet(anchor.getAllelePresenceForAllTaxa(i, 1).getBits());
                 if (obsMinor.cardinality()>4) {
                     for (int j = 0; j < obsTdist.length; j++) {
-                        if(Math.abs(anchor.getPositionInLocus(i)-blockPosition[j])<blockWindow) continue;
+                        if(Math.abs(anchor.getPositionInChromosome(i)-blockPosition[j])<blockWindow) continue;
                         double p = fastTestSites(obsTdist[j], obsMajor, obsMinor, anchorMaf[i], binomFunc);
                         if(p<bestP[j]) {bestP[j]=p; bestSite[j]=i;}
                         if(p<sigThreshold) {
                             countSig[j]++;
-                            if(minSigPos[j]==-1) minSigPos[j]=anchor.getPositionInLocus(i);
-                            maxSigPos[j]=anchor.getPositionInLocus(i);
+                            if(minSigPos[j]==-1) minSigPos[j]=anchor.getPositionInChromosome(i);
+                            maxSigPos[j]=anchor.getPositionInChromosome(i);
                         }
                     }
                 }                
             }
             for (int i = 0; i < obsTdist.length; i++) {
                 int chr = Integer.parseInt(anchor.getLocus(bestSite[i]).getName());
-                double[] result={chr, bestSite[i], anchor.getPositionInLocus(bestSite[i]),bestP[i], countSig[i]};
+                double[] result={chr, bestSite[i], anchor.getPositionInChromosome(bestSite[i]),bestP[i], countSig[i]};
                 resultReport[i][chrIndex] = result;
             }
         }

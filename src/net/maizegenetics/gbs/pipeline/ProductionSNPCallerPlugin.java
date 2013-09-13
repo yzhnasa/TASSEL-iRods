@@ -550,7 +550,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     
     private void generateFastSiteLookup() {
         for (int site=0, nSites=genos.getSiteCount(); site<nSites; site++) {
-            PositionToSite[Integer.parseInt(genos.getLocus(site).getName())].put(genos.getPositionInLocus(site), site);
+            PositionToSite[Integer.parseInt(genos.getLocus(site).getName())].put(genos.getPositionInChromosome(site), site);
         }
     }
 

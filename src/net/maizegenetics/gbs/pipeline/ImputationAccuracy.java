@@ -63,7 +63,7 @@ public class ImputationAccuracy {
         Alignment known= ImportUtils.readFromHapmap(dir+knownFile+(gzKnown==true?".hmp.txt.gz":".hmp.txt"), null);
         int[] knownPos= known.getPhysicalPositions();
         for (int site = 0; site < mask.getSiteCount(); site++) {
-            int pos= mask.getPositionInLocus(site);
+            int pos= mask.getPositionInChromosome(site);
             if (Arrays.binarySearch(knownPos, pos)<0) continue;
             for (int taxon = 0; taxon < mask.getSequenceCount(); taxon++) {
                 mask.setBase(taxon, site, diploidN);
@@ -157,8 +157,8 @@ public class ImputationAccuracy {
         
         int[] knownPos= known.getPhysicalPositions();
         for (int site = 0; site < unimputed.getSiteCount(); site++) {
-            int matchSite= known.getSiteOfPhysicalPosition(unimputed.getPositionInLocus(site), null);
-            if (Arrays.binarySearch(knownPos, unimputed.getPositionInLocus(site))<0) continue;
+            int matchSite= known.getSiteOfPhysicalPosition(unimputed.getPositionInChromosome(site), null);
+            if (Arrays.binarySearch(knownPos, unimputed.getPositionInChromosome(site))<0) continue;
             byte diploidMaj= AlignmentUtils.getDiploidValue(unimputed.getMajorAllele(site), unimputed.getMajorAllele(site));
             byte diploidMin= AlignmentUtils.getDiploidValue(unimputed.getMinorAllele(site), unimputed.getMinorAllele(site));
             
@@ -351,10 +351,10 @@ public class ImputationAccuracy {
             int[] knownPos= known.getPhysicalPositions();
             perSiteTaxon= new double[known.getSiteCount()+1][imputed.getSequenceCount()+1];
             for (int site = 0; site < imputed.getSiteCount(); site++) {
-                knownIndex= Arrays.binarySearch(knownPos, imputed.getPositionInLocus(site));
+                knownIndex= Arrays.binarySearch(knownPos, imputed.getPositionInChromosome(site));
                 if (knownIndex<0) continue;
 //                System.out.println(site+"/"+knownIndex);//debug
-                int matchSite= known.getSiteOfPhysicalPosition(unimputed.getPositionInLocus(site), null);
+                int matchSite= known.getSiteOfPhysicalPosition(unimputed.getPositionInChromosome(site), null);
                 knownMaj= known.getMajorAllele(matchSite);
                 knownMin= known.getMinorAllele(matchSite);
                 for (int taxon = 0; taxon < unimputed.getSequenceCount(); taxon++) {

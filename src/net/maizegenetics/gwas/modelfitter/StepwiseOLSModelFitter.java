@@ -168,7 +168,7 @@ public class StepwiseOLSModelFitter {
 		for (int s = 0; s < numberOfSites; s++) {
 			//create the appropriate marker effect
 			ModelEffect markerEffect = null;
-			SNP snp = new SNP(myData.getMarkerName(s), new Chromosome(myData.getLocusName(s)), (int) myData.getMarkerChromosomePosition(s), s);
+			SNP snp = new SNP(myData.getMarkerName(s), new Chromosome(myData.getChromosomeName(s)), (int) myData.getMarkerChromosomePosition(s), s);
 			Object[] markerValues = myData.getMarkerValue(currentPhenotypeIndex, s);
 			
 			if (myData.isMarkerDiscrete(s)) {

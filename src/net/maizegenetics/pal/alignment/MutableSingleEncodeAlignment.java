@@ -179,7 +179,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
 
             for (int s = 0, m = alignments[i].getSiteCount(); s < m; s++) {
                 String currentSiteName = alignments[i].getSNPID(s);
-                int currentPhysicalPos = alignments[i].getPositionInLocus(s);
+                int currentPhysicalPos = alignments[i].getPositionInChromosome(s);
                 Chromosome currentLocus = alignments[i].getLocus(s);
                 int index = siteNames.indexOf(currentSiteName);
                 if (index == -1) {
@@ -261,7 +261,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
             }
             for (int s = 0, n = currentAlignment.getSiteCount(); s < n; s++) {
                 String siteName = currentAlignment.getSNPID(s);
-                int physicalPosition = currentAlignment.getPositionInLocus(s);
+                int physicalPosition = currentAlignment.getPositionInChromosome(s);
                 Chromosome locus = currentAlignment.getLocus(s);
                 for (int li = 0; li < locusToLociIndex.size(); li++) {
                     if (locus.getName().equals(locusToLociIndex.get(li).getName())) {
@@ -393,7 +393,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     }
 
     @Override
-    public int getPositionInLocus(int site) {
+    public int getPositionInChromosome(int site) {
         try {
             if (myVariableSites[site] < 0) {
                 return site;
@@ -483,7 +483,7 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
     @Override
     public String getSNPID(int site) {
         if ((mySNPIDs == null) || (mySNPIDs.length == 0) || (mySNPIDs[site] == null)) {
-            return "S" + getLocus(site).getName() + "_" + getPositionInLocus(site);
+            return "S" + getLocus(site).getName() + "_" + getPositionInChromosome(site);
         }
         return mySNPIDs[site];
     }
@@ -532,14 +532,14 @@ public class MutableSingleEncodeAlignment extends AbstractAlignment implements M
                 return result;
             } else {
                 int index = result - 1;
-                while ((index >= startEnd[0]) && (getPositionInLocus(index) == physicalPosition)) {
+                while ((index >= startEnd[0]) && (getPositionInChromosome(index) == physicalPosition)) {
                     if (snpID.equals(getSNPID(index))) {
                         return index;
                     }
                     index--;
                 }
                 index = result + 1;
-                while ((index < startEnd[1]) && (getPositionInLocus(index) == physicalPosition)) {
+                while ((index < startEnd[1]) && (getPositionInChromosome(index) == physicalPosition)) {
                     if (snpID.equals(getSNPID(index))) {
                         return index;
                     }

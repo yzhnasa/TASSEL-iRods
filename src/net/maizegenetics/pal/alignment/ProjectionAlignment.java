@@ -465,8 +465,8 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
     }
 
     @Override
-    public int getPositionInLocus(int site) {
-        return myBaseAlignment.getPositionInLocus(site);
+    public int getPositionInChromosome(int site) {
+        return myBaseAlignment.getPositionInChromosome(site);
     }
 
     @Override

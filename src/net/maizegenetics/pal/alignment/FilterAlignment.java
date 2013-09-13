@@ -534,8 +534,8 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getPositionInLocus(int site) {
-        return myBaseAlignment.getPositionInLocus(translateSite(site));
+    public int getPositionInChromosome(int site) {
+        return myBaseAlignment.getPositionInChromosome(translateSite(site));
     }
 
     @Override
@@ -779,7 +779,7 @@ public class FilterAlignment extends AbstractAlignment {
             int numSites = getSiteCount();
             int[] result = new int[numSites];
             for (int i = 0; i < numSites; i++) {
-                result[i] = getPositionInLocus(i);
+                result[i] = getPositionInChromosome(i);
             }
             return result;
         } else {
@@ -789,7 +789,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     @Override
     public String getLocusName(int site) {
-        return myBaseAlignment.getLocusName(translateSite(site));
+        return myBaseAlignment.getChromosomeName(translateSite(site));
     }
 
     @Override

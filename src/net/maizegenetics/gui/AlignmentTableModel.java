@@ -97,11 +97,11 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         int realColumn = col + myHorizontalStart;
 
         if (myColumnNameType == COLUMN_NAME_TYPE.physicalPosition) {
-            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.getPositionInLocus(realColumn));
+            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.getPositionInChromosome(realColumn));
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteNumber) {
-            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.getPositionInLocus(realColumn));
+            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.getPositionInChromosome(realColumn));
         } else if (myColumnNameType == COLUMN_NAME_TYPE.locus) {
-            return myAlignment.getLocusName(realColumn);
+            return myAlignment.getChromosomeName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteName) {
             return myAlignment.getSNPID(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.alleles) {
@@ -125,7 +125,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
             return builder.toString();
         }
 
-        return String.valueOf(myAlignment.getPositionInLocus(realColumn));
+        return String.valueOf(myAlignment.getPositionInChromosome(realColumn));
 
     }
 

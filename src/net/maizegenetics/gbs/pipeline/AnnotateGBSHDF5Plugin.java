@@ -250,10 +250,10 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
             double minLD=0;
             int attemptTests=0, completedTests=0, sigTests=0;
             int leftSite=i, rightSite=i, j=-1;
-            int position=a.getPositionInLocus(i), dist=-1, minSigDist=Integer.MAX_VALUE;
+            int position=a.getPositionInChromosome(i), dist=-1, minSigDist=Integer.MAX_VALUE;
             while((completedTests<numberOfTests)&&((leftSite>0)||(rightSite+1<sites))) {
-                int rightDistance=(rightSite+1<sites)?a.getPositionInLocus(rightSite+1)-position:Integer.MAX_VALUE;
-                int leftDistance=(leftSite>0)?position-a.getPositionInLocus(leftSite-1):Integer.MAX_VALUE;
+                int rightDistance=(rightSite+1<sites)?a.getPositionInChromosome(rightSite+1)-position:Integer.MAX_VALUE;
+                int leftDistance=(leftSite>0)?position-a.getPositionInChromosome(leftSite-1):Integer.MAX_VALUE;
                 if(rightDistance<leftDistance) {rightSite++; j=rightSite; dist=rightDistance;}
                 else {leftSite--; j=leftSite; dist=leftDistance;}
                 if(dist<minPhysDist) continue;
@@ -279,8 +279,8 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
                 sigTests++;
                 if(rValue>minLD) {
                     float[] result={j, (float)rValue, (float)pValue, dist};
-                    SiteMappingInfo smi=new SiteMappingInfo(Integer.parseInt(a.getLocusName(j)),
-                            (byte)1,a.getPositionInLocus(j),(float)rValue, (float)pValue,j);
+                    SiteMappingInfo smi=new SiteMappingInfo(Integer.parseInt(a.getChromosomeName(j)),
+                            (byte)1,a.getPositionInChromosome(j),(float)rValue, (float)pValue,j);
                     bestLDSites.put(rValue, smi);
                 }
                 if(bestLDSites.size()>20) {
@@ -580,7 +580,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
     		}
     	}
         for (int i = 0; i < nsites; i++) {
-            System.out.printf("%d %d %g %n",i,a.getPositionInLocus(i),avgr[0][i]);
+            System.out.printf("%d %d %g %n",i,a.getPositionInChromosome(i),avgr[0][i]);
             
         }
     }
@@ -634,14 +634,14 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
                 ArrayList<Double> obsR2 = new ArrayList<Double>();
                 int leftSite=i, rightSite=i, j=-1;
                 int attemptTests=0, completedTests=0;
-                int position=a.getPositionInLocus(segSites.get(i)), dist=-1, minSigDist=Integer.MAX_VALUE;
+                int position=a.getPositionInChromosome(segSites.get(i)), dist=-1, minSigDist=Integer.MAX_VALUE;
                 BitSet rMj = pa.getAllelePresenceForAllTaxa(segSites.get(i), 0);
                 BitSet rMn = pa.getAllelePresenceForAllTaxa(segSites.get(i), 1); 
 //                System.out.printf("%d Site:%s Position:%d rMjCard:%d %n",i,
-//                        segSites.get(i),pa.getPositionInLocus(segSites.get(i)), rMj.cardinality());
+//                        segSites.get(i),pa.getPositionInChromosome(segSites.get(i)), rMj.cardinality());
                 while((completedTests<numberOfTests)&&((leftSite>0)||(rightSite+1<sites))) {
-                    int rightDistance=(rightSite+1<sites)?a.getPositionInLocus(segSites.get(rightSite+1))-position:Integer.MAX_VALUE;
-                    int leftDistance=(leftSite>0)?position-a.getPositionInLocus(segSites.get(leftSite-1)):Integer.MAX_VALUE;
+                    int rightDistance=(rightSite+1<sites)?a.getPositionInChromosome(segSites.get(rightSite+1))-position:Integer.MAX_VALUE;
+                    int leftDistance=(leftSite>0)?position-a.getPositionInChromosome(segSites.get(leftSite-1)):Integer.MAX_VALUE;
                     if(rightDistance<leftDistance) {rightSite++; j=segSites.get(rightSite); dist=rightDistance;}
                     else {leftSite--; j=segSites.get(leftSite); dist=leftDistance;}
                     if(dist<minPhysDist) continue;
@@ -649,7 +649,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
                     BitSet cMj = pa.getAllelePresenceForAllTaxa(j, 0);
                     BitSet cMn = pa.getAllelePresenceForAllTaxa(j, 1);
 //                    System.out.printf("jw Site:%d Position:%d rMjCard:%d %n",j
-//                        ,pa.getPositionInLocus(j), cMj.cardinality());
+//                        ,pa.getPositionInChromosome(j), cMj.cardinality());
 //                    LDResult result=LinkageDisequilibrium.getLDForSitePair(rMj,rMn,cMj,cMn,3,20,-1.0f,fe);
 //                    if(Float.isNaN(result[1])) continue;
 //                    obsR2.add((double)result[1]);
@@ -661,7 +661,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
                     ld34ByPop[pop][segSites.get(i)] = obsR2.get(obsR2.size() * 3/4);
                     ldMaxByPop[pop][segSites.get(i)] = obsR2.get(obsR2.size()-1);
 //                    System.out.printf("Pop:%d Position:%d Site:%d 3/4LD:%g MaxLD:%g %n",pop,i,
-//                            pa.getPositionInLocus(segSites.get(i)),ld34ByPop[pop][segSites.get(i)],obsR2.get(obsR2.size()-1));
+//                            pa.getPositionInChromosome(segSites.get(i)),ld34ByPop[pop][segSites.get(i)],obsR2.get(obsR2.size()-1));
                 }
             }
             // System.out.println("POP:"+pop+Arrays.toString(ldByPop[pop]));
@@ -688,7 +688,7 @@ public class AnnotateGBSHDF5Plugin extends AbstractPlugin {
             meanMaxLD[i]/=(float)cntPops[i];
             if(maxMaxLD[i]<0) maxMaxLD[i]=Float.NaN;
             if(minMaxLD[i]>1) minMaxLD[i]=Float.NaN;
-            System.out.printf("%d %d %d %g %g %g %g %n",i,a.getPositionInLocus(i),
+            System.out.printf("%d %d %d %g %g %g %g %n",i,a.getPositionInChromosome(i),
                     cntPops[i],mean34LD[i],meanMaxLD[i], maxMaxLD[i], minMaxLD[i]);
         }
         IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);

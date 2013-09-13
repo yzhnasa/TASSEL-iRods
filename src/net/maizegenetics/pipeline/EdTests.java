@@ -248,7 +248,7 @@ public class EdTests {
         System.out.println("MNA taxa added and cleaned");
         int mappingSites=0, sameStateSites=0;
         for (int i = 0; i < hapMap.getSiteCount(); i++) {
-            int pos=hapMap.getPositionInLocus(i);
+            int pos=hapMap.getPositionInChromosome(i);
             int site=mna.getSiteOfPhysicalPosition(pos, null);
             if(site<0) continue;
             mappingSites++;
@@ -327,7 +327,7 @@ public class EdTests {
             byte b2=Alignment.UNKNOWN_DIPLOID_ALLELE;
             int site2=i;
             if(withSiteLookup) {
-                int pos=hapMap.getPositionInLocus(i);
+                int pos=hapMap.getPositionInChromosome(i);
                 site2=projAlign.getSiteOfPhysicalPosition(pos, null);
                 if(site2>-1) b2=projAlign.getBase(t2, site2);
                 
@@ -377,7 +377,7 @@ public class EdTests {
         int count=0;
         Chromosome lx=hapMap.getLocus(0);
         for (int i = 0; i < gbsMap.getSiteCount(); i++) {
-            int position=gbsMap.getPositionInLocus(i);
+            int position=gbsMap.getPositionInChromosome(i);
             int hapSite=hapMap.getSiteOfPhysicalPosition(position, lx);
             if(hapSite>0) System.out.printf("%d %d %d %n",count++, position, hapSite);
         }
