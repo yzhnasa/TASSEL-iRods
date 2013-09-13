@@ -10,6 +10,7 @@ import net.maizegenetics.pal.ids.IdGroup;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A builder for creating immutable {@link TaxaList} instances.
@@ -45,6 +46,13 @@ public class TaxaListBuilder {
     }
 
     public TaxaListBuilder addAll(List<AnnotatedTaxon> taxa) {
+        for (AnnotatedTaxon annotatedTaxon : taxa) {
+            myTaxaList.add(annotatedTaxon);
+        }
+        return this;
+    }
+
+    public TaxaListBuilder addAll(Set<AnnotatedTaxon> taxa) {
         for (AnnotatedTaxon annotatedTaxon : taxa) {
             myTaxaList.add(annotatedTaxon);
         }

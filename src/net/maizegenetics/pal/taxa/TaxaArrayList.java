@@ -2,11 +2,11 @@ package net.maizegenetics.pal.taxa;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-
-import java.util.*;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.prefs.TasselPrefs;
 import org.apache.log4j.Logger;
+
+import java.util.*;
 
 /**
  * In memory immutable instance of {@link TaxaList}. Basic list of taxa
@@ -38,7 +38,7 @@ public class TaxaArrayList implements TaxaList {
             }
             myNameToIndex.put(annotatedTaxon.getFullName(), index);
 
-            // Ed, we need to talk about this. -Terry
+            //TODO Ed, we need to talk about this. -Terry
             //if (!annotatedTaxon.getFullName().equals(annotatedTaxon.getName())) {
             //    myNameToIndex.put(annotatedTaxon.getName(), index);
             //}
@@ -69,7 +69,7 @@ public class TaxaArrayList implements TaxaList {
 
     @Override
     public List<Integer> getIndicesMatchingTaxon(String name) {
-
+        //TODO remove TasselPrefs from within the method
         TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
 
         if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
@@ -89,7 +89,7 @@ public class TaxaArrayList implements TaxaList {
 
     @Override
     public List<Integer> getIndicesMatchingTaxon(Identifier taxon) {
-
+        //TODO remove TasselPrefs from within the method
         TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
 
         if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
@@ -194,7 +194,13 @@ public class TaxaArrayList implements TaxaList {
 
     @Override
     public int indexOf(Object o) {
-        return myTaxaList.indexOf(o);
+        AnnotatedTaxon at=(AnnotatedTaxon)o;
+        Collection<Integer> result=myNameToIndex.get(at.getFullName());
+        for (Integer i : result) {
+            if(myTaxaList.get(i).equals(at)) return i;
+        }
+        return -1;
+      //  return myTaxaList.indexOf(o);
     }
 
     @Override

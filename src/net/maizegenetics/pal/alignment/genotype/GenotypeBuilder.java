@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
+import ch.systemsx.cisd.hdf5.HDF5Factory;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
@@ -92,9 +93,10 @@ public class GenotypeBuilder {
         }
     }
 
-    public Genotype buildHDF5(String filename) {
-        SuperByteMatrix temp = myGenotype;
-        myGenotype = null;
-        throw new UnsupportedOperationException();
+    public static Genotype buildHDF5(String filename) {
+//        SuperByteMatrix temp = myGenotype;
+//        myGenotype = null;
+        return HDF5ByteGenotype.getInstance(HDF5Factory.openForReading(filename));
+        //throw new UnsupportedOperationException();
     }
 }
