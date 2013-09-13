@@ -6,6 +6,7 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedInput;
@@ -159,7 +160,7 @@ public class ReadSequenceAlignmentUtils {
             positions[i] = i;
             sites[i] = Integer.toString(i);
         }
-        return BitAlignment.getNucleotideInstance(idGroup, s, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Locus[] {Locus.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
+        return BitAlignment.getNucleotideInstance(idGroup, s, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[] {Chromosome.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
     }
 
     private static int readSeqLineP(PushbackReader in, int s, int pos, int maxPos, char[][] data, String[] identifiers,

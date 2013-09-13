@@ -418,7 +418,7 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
                     if (marker == null) {
                         marker = blank;
                     }
-                    String locus = theAdapter.getLocusName(m);
+                    String locus = theAdapter.getChromosomeName(m);
                     Integer site = new Integer(theAdapter.getLocusPosition(m));
                     String chrname = "";
                     Double chrpos = Double.NaN;

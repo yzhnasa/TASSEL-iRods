@@ -22,9 +22,8 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.IdGroup;
@@ -121,7 +120,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             MutableNucleotideAlignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
              minSites,  maxDistance);
             String newExport=exportFile.replace("sX.hmp", "s"+i+".hmp");
-            newExport=newExport.replace("gX", "gc"+mna.getLocusName(0)+"s"+i);
+            newExport=newExport.replace("gX", "gc"+mna.getChromosomeName(0)+"s"+i);
             ExportUtils.writeToHapmap(mna, false, newExport, '\t', null);
             if(errorExportFile!=null) exportBadSites(baseAlign, errorExportFile, 0.01);  
             mna=null;
@@ -137,7 +136,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         inAlign.optimizeForTaxa(null);
         int sites=inAlign.getSiteCount();
         System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.getLocus(0),
-                inAlign.getPositionInLocus(0),inAlign.getSequenceCount(),inAlign.getSiteCount());
+                inAlign.getPositionInChromosome(0),inAlign.getSequenceCount(),inAlign.getSiteCount());
 
         propMissing=new double[inAlign.getSequenceCount()];
         int startBlock=0;
@@ -159,16 +158,16 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     }
     
     private int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
-        Locus[] theL=a.getLoci();
+        Chromosome[] theL=a.getLoci();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
-        for (Locus aL: theL) {
+        for (Chromosome aL: theL) {
             System.out.println("");
             int locusSites=aL.getEnd()-aL.getStart()+1;
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
             if(subAlignCnt==0) subAlignCnt++;
             int prefBlocks=(locusSites/(subAlignCnt*64));
             System.out.printf("Chr:%s Alignment Sites:%d subAlignCnt:%d RealSites:%d %n",
-                    aL.getChromosomeName(),locusSites, subAlignCnt, prefBlocks*64);
+                    aL.getName(),locusSites, subAlignCnt, prefBlocks*64);
             for (int i = 0; i < subAlignCnt; i++) {
                 int[] divs=new int[2];
                 divs[0]=(i*prefBlocks*64)+aL.getStart();
@@ -220,7 +219,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         for (int i = 0; i < inAlign.getSiteCount(); i++) {
             mna.addSite(i);
             mna.setLocusOfSite(i, inAlign.getLocus(i));
-            mna.setPositionOfSite(i, inAlign.getPositionInLocus(i));
+            mna.setPositionOfSite(i, inAlign.getPositionInChromosome(i));
         }
         return mna;
     }
@@ -249,9 +248,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 double errorsRate=(double)siteErrors[i]/(double)siteCallCnt[i];
                 if(errorsRate<errorThreshold) continue;
                 bw.write(baseAlign.getSNPID(i)+"\t");
-                bw.write(baseAlign.getLocusName(i) +"\t");
+                bw.write(baseAlign.getChromosomeName(i) +"\t");
                 bw.write(i+"\t"); //dummy for genetic position
-                bw.write(baseAlign.getPositionInLocus(i) +"\n"); //dummy for genetic position
+                bw.write(baseAlign.getPositionInChromosome(i) +"\n"); //dummy for genetic position
             } 
             bw.close();
             

@@ -665,11 +665,11 @@ public class ImputationUtils {
 				Alignment a = ImportUtils.readFromHapmap(snpFilename, true, null);
 				int nsnps = a.getSiteCount();
 				
-				double startgenpos = agpmap.getCmFromPosition(chr, a.getPositionInLocus(0));
+				double startgenpos = agpmap.getCmFromPosition(chr, a.getPositionInChromosome(0));
 				//round up to nearest interval
 				startgenpos = ((double) (Math.ceil(startgenpos / interval))) * interval;
 				
-				double endgenpos = agpmap.getCmFromPosition(chr, a.getPositionInLocus(nsnps - 1));
+				double endgenpos = agpmap.getCmFromPosition(chr, a.getPositionInChromosome(nsnps - 1));
 				//round down to nearest interval
 				endgenpos = ((double)(Math.floor(endgenpos / interval))) * interval;
 
@@ -690,7 +690,7 @@ public class ImputationUtils {
 						bw.write("\t");
 						bw.write(genpos);
 						if (hapmapFormat) bw.write("\tNA\tNA\tNA\tNA\tNA\tNA");
-						while (physpos > a.getPositionInLocus(rightflank)) rightflank++; 
+						while (physpos > a.getPositionInChromosome(rightflank)) rightflank++;
 						leftflank = rightflank - 1;
 						
 						if (hapmapFormat) {
@@ -728,8 +728,8 @@ public class ImputationUtils {
 								else {
 									double leftval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
 									double rightval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
-									int leftpos = a.getPositionInLocus(leftndx);
-									int rightpos = a.getPositionInLocus(rightndx);
+									int leftpos = a.getPositionInChromosome(leftndx);
+									int rightpos = a.getPositionInChromosome(rightndx);
 									double pd = ((double) (physpos - leftpos)) / ((double) (rightpos - leftpos));
 									double thisval = leftval * (1 - pd) + rightval * pd;
 									bw.write(Double.toString(thisval));
@@ -886,10 +886,10 @@ public class ImputationUtils {
 				}
 
 				for (ImputedSnp isnp : snpList) {
-					while (rightflank < nsnps && isnp.physicalPos > a.getPositionInLocus(rightflank)) rightflank++;
-//					System.out.println("rightflank= " + rightflank + ", snp physicalPos= " + isnp.physicalPos + ", position of rightflank= " + a.getPositionInLocus(rightflank)); //debug
+					while (rightflank < nsnps && isnp.physicalPos > a.getPositionInChromosome(rightflank)) rightflank++;
+//					System.out.println("rightflank= " + rightflank + ", snp physicalPos= " + isnp.physicalPos + ", position of rightflank= " + a.getPositionInChromosome(rightflank)); //debug
 					leftflank = rightflank - 1;
-//					System.out.println("leftflank= " + leftflank + ", snp physicalPos= " + isnp.physicalPos + ", position of leftflank= " + a.getPositionInLocus(leftflank)); //debug
+//					System.out.println("leftflank= " + leftflank + ", snp physicalPos= " + isnp.physicalPos + ", position of leftflank= " + a.getPositionInChromosome(leftflank)); //debug
 
 					if (hapmapFormat) {
 						for (int t = 0; t < ntaxa; t++) {
@@ -948,8 +948,8 @@ public class ImputationUtils {
 							else {
 								double leftval = byteToNumber.get(leftByte);
 								double rightval = byteToNumber.get(rightByte);
-								int leftpos = a.getPositionInLocus(leftndx);
-								int rightpos = a.getPositionInLocus(rightndx);
+								int leftpos = a.getPositionInChromosome(leftndx);
+								int rightpos = a.getPositionInChromosome(rightndx);
 								double pd = ((double) (isnp.physicalPos - leftpos)) / ((double) (rightpos - leftpos));
 								double thisval = leftval * (1 - pd) + rightval * pd;
 								isnp.sb.append(Double.toString(thisval));

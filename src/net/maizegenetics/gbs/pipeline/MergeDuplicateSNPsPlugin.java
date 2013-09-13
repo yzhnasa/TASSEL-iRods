@@ -25,7 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableVCFAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.util.VCFUtil;
@@ -228,9 +228,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             }
             ArrayList<Integer> samePosAL = new ArrayList<Integer>();
             Integer[] samePos = null;
-            int currentPos = a.getPositionInLocus(0);
+            int currentPos = a.getPositionInChromosome(0);
             for (int s = 0; s < a.getSiteCount(); s++) {  // must be sorted by position, as HapMap files typically are (ImportUtils.readFromHapmap() fails if they aren't)
-                int newPos = a.getPositionInLocus(s);
+                int newPos = a.getPositionInChromosome(s);
                 if (newPos == currentPos) {   // assumes that the strands are all '+' (in DiscoverySNPCallerPlugin(), - strand genos were complemented)
                     samePosAL.add(s);  // collect markers with the same position
                 } else {
@@ -525,7 +525,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         }
         else 
         {
-            System.out.println("Not merged position: " + a.getPositionInLocus(samePos[0]) +  " Mismatch: "+ (int)(myMisMatchRate *100) + "%." );
+            System.out.println("Not merged position: " + a.getPositionInChromosome(samePos[0]) +  " Mismatch: "+ (int)(myMisMatchRate *100) + "%." );
             
             
             if (kpUnmergDups)
@@ -555,7 +555,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         int currSite = theMSA.getSiteCount();
         //int currSite = theMSA.getNextFreeSite();
         theMSA.addSite(currSite);
-        theMSA.setLocusOfSite(currSite, new Locus(String.valueOf(chromosome), String.valueOf(chromosome), -1, -1, null, null));
+        theMSA.setLocusOfSite(currSite, new Chromosome(String.valueOf(chromosome), String.valueOf(chromosome), -1, -1, null, null));
         theMSA.setPositionOfSite(currSite, position);
         //theMSA.setStrandOfSite(currSite, (byte) '+');
         for (int tx = 0; tx < genos.length; tx++) {
@@ -566,9 +566,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private void deleteRemainingDuplicates(MutableNucleotideAlignment theMSA) {
 
         ArrayList<Integer> samePosAL = new ArrayList<Integer>();
-        int currentPos = theMSA.getPositionInLocus(0);
+        int currentPos = theMSA.getPositionInChromosome(0);
         for (int s = 0; s < theMSA.getSiteCount(); s++) {
-            int newPos = theMSA.getPositionInLocus(s);
+            int newPos = theMSA.getPositionInChromosome(s);
             if (newPos == currentPos) {
                 samePosAL.add(s);  // collect markers with the same position
             } else {

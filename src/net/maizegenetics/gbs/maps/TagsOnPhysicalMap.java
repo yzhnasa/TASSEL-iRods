@@ -30,7 +30,7 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
@@ -1080,9 +1080,9 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
     public static HashMap<String, Integer> hapmapSites(Alignment file) {
         HashMap<String, Integer> snps = new HashMap<String, Integer>();
         for (int site = 0; site < file.getSiteCount(); site++) {        //Visit each site
-            String pos = (file.getLocusName(site) + "\t"
-                    + file.getPositionInLocus(site));
-            if (file.getPositionInLocus(site) > 2000000000) {
+            String pos = (file.getChromosomeName(site) + "\t"
+                    + file.getPositionInChromosome(site));
+            if (file.getPositionInChromosome(site) > 2000000000) {
                 System.out.println(pos);
             }
             snps.put(pos, site);

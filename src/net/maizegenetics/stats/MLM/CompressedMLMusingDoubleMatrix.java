@@ -353,7 +353,7 @@ public class CompressedMLMusingDoubleMatrix {
                         String markername = theAdapter.getMarkerName(m);
                         String chr = "";
                         String pos = "";
-                        String locus = theAdapter.getLocusName(m);
+                        String locus = theAdapter.getChromosomeName(m);
                         String site = Integer.toString(theAdapter.getLocusPosition(m));
                         if (myGeneticMap != null) {
                             int ndx = myGeneticMap.getMarkerIndex(markername);

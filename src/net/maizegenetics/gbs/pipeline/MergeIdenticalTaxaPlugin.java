@@ -121,7 +121,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             }
             for (int s = 0; s < a.getSiteCount(); s++) {
                 theMSA.setLocusOfSite(s, a.getLocus(s));
-                theMSA.setPositionOfSite(s, a.getPositionInLocus(s));
+                theMSA.setPositionOfSite(s, a.getPositionInChromosome(s));
                 if (inputFormat == INPUT_FORMAT.vcf){
                     theMSA.setReferenceAllele(s, a.getReferenceAllele(s));
                     theMSA.setCommonAlleles(s, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s));

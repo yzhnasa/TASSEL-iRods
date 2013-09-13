@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -323,7 +324,7 @@ public class FilterAlignment extends AbstractAlignment {
         return getInstance(a, a.getLocus(locus), startPhysicalPos, endPhysicalPos);
     }
 
-    public static FilterAlignment getInstance(Alignment a, Locus locus, int startPhysicalPos, int endPhysicalPos) {
+    public static FilterAlignment getInstance(Alignment a, Chromosome locus, int startPhysicalPos, int endPhysicalPos) {
 
         int startSite = a.getSiteOfPhysicalPosition(startPhysicalPos, locus);
         if (startSite < 0) {
@@ -344,7 +345,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
-    public static FilterAlignment getInstance(Alignment a, Locus locus) {
+    public static FilterAlignment getInstance(Alignment a, Chromosome locus) {
         int[] endStart = a.getStartAndEndOfLocus(locus);
         return getInstance(a, endStart[0], endStart[1] - 1);
     }
@@ -427,7 +428,7 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public byte getBase(int taxon, Locus locus, int physicalPosition) {
+    public byte getBase(int taxon, Chromosome locus, int physicalPosition) {
         int site = getSiteOfPhysicalPosition(physicalPosition, locus);
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
@@ -505,14 +506,14 @@ public class FilterAlignment extends AbstractAlignment {
         List loci = new ArrayList();
         List offsets = new ArrayList();
         for (int i = 0; i < numSites; i++) {
-            Locus current = getLocus(i);
+            Chromosome current = getLocus(i);
             if (!loci.contains(current)) {
                 loci.add(current);
                 offsets.add(i);
             }
         }
 
-        myLoci = new Locus[loci.size()];
+        myLoci = new Chromosome[loci.size()];
         loci.toArray(myLoci);
 
         myLociOffsets = new int[offsets.size()];
@@ -528,13 +529,13 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public Locus getLocus(int site) {
+    public Chromosome getLocus(int site) {
         return myBaseAlignment.getLocus(translateSite(site));
     }
 
     @Override
-    public int getPositionInLocus(int site) {
-        return myBaseAlignment.getPositionInLocus(translateSite(site));
+    public int getPositionInChromosome(int site) {
+        return myBaseAlignment.getPositionInChromosome(translateSite(site));
     }
 
     @Override
@@ -613,7 +614,7 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
         int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus);
         if (temp < 0) {
             temp = -(temp + 1);
@@ -623,7 +624,7 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID) {
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID) {
         int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
         if (temp < 0) {
             temp = -(temp + 1);
@@ -778,7 +779,7 @@ public class FilterAlignment extends AbstractAlignment {
             int numSites = getSiteCount();
             int[] result = new int[numSites];
             for (int i = 0; i < numSites; i++) {
-                result[i] = getPositionInLocus(i);
+                result[i] = getPositionInChromosome(i);
             }
             return result;
         } else {
@@ -788,7 +789,7 @@ public class FilterAlignment extends AbstractAlignment {
 
     @Override
     public String getLocusName(int site) {
-        return myBaseAlignment.getLocusName(translateSite(site));
+        return myBaseAlignment.getChromosomeName(translateSite(site));
     }
 
     @Override

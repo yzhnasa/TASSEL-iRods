@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
-import net.maizegenetics.pal.alignment.AlignmentNew;
+import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import org.apache.log4j.Logger;
@@ -109,18 +109,18 @@ public abstract class AbstractGenotype implements Genotype {
     @Override
     public boolean isPolymorphic(int site) {
 
-        byte first = AlignmentNew.UNKNOWN_ALLELE;
+        byte first = Alignment.UNKNOWN_ALLELE;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
             byte[] current = getBaseArray(i, site);
-            if (current[0] != AlignmentNew.UNKNOWN_ALLELE) {
-                if (first == AlignmentNew.UNKNOWN_ALLELE) {
+            if (current[0] != Alignment.UNKNOWN_ALLELE) {
+                if (first == Alignment.UNKNOWN_ALLELE) {
                     first = current[0];
                 } else if (first != current[0]) {
                     return true;
                 }
             }
-            if (current[1] != AlignmentNew.UNKNOWN_ALLELE) {
-                if (first == AlignmentNew.UNKNOWN_ALLELE) {
+            if (current[1] != Alignment.UNKNOWN_ALLELE) {
+                if (first == Alignment.UNKNOWN_ALLELE) {
                     first = current[1];
                 } else if (first != current[1]) {
                     return true;
@@ -203,10 +203,10 @@ public abstract class AbstractGenotype implements Genotype {
         int result = 0;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
             byte[] current = getBaseArray(i, site);
-            if (current[0] != AlignmentNew.UNKNOWN_ALLELE) {
+            if (current[0] != Alignment.UNKNOWN_ALLELE) {
                 result++;
             }
-            if (current[1] != AlignmentNew.UNKNOWN_ALLELE) {
+            if (current[1] != Alignment.UNKNOWN_ALLELE) {
                 result++;
             }
         }
@@ -220,7 +220,7 @@ public abstract class AbstractGenotype implements Genotype {
         int result = 0;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
             byte current = getBase(i, site);
-            if (current != AlignmentNew.UNKNOWN_DIPLOID_ALLELE) {
+            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                 result++;
             }
         }
@@ -264,7 +264,7 @@ public abstract class AbstractGenotype implements Genotype {
         if (alleles[0].length >= 2) {
             return (byte) alleles[0][1];
         } else {
-            return AlignmentNew.UNKNOWN_ALLELE;
+            return Alignment.UNKNOWN_ALLELE;
         }
     }
 
@@ -304,7 +304,7 @@ public abstract class AbstractGenotype implements Genotype {
         if (alleles[0].length >= 1) {
             return (byte) alleles[0][0];
         } else {
-            return AlignmentNew.UNKNOWN_ALLELE;
+            return Alignment.UNKNOWN_ALLELE;
         }
     }
 
@@ -355,10 +355,10 @@ public abstract class AbstractGenotype implements Genotype {
         int[] stateCnt = new int[16];
         for (int i = 0; i < myTaxaCount; i++) {
             byte[] dipB = getBaseArray(i, site);
-            if (dipB[0] != AlignmentNew.UNKNOWN_ALLELE) {
+            if (dipB[0] != Alignment.UNKNOWN_ALLELE) {
                 stateCnt[dipB[0]]++;
             }
-            if (dipB[1] != AlignmentNew.UNKNOWN_ALLELE) {
+            if (dipB[1] != Alignment.UNKNOWN_ALLELE) {
                 stateCnt[dipB[1]]++;
             }
         }
@@ -533,7 +533,7 @@ public abstract class AbstractGenotype implements Genotype {
                 byte[] alleles = getAlleles(site);
                 byte indexI = alleles[0];
                 byte indexJ = alleles[1];
-                if (indexJ == AlignmentNew.UNKNOWN_ALLELE) {
+                if (indexJ == Alignment.UNKNOWN_ALLELE) {
                     indexJ = indexI;
                 }
                 counts[indexI][indexJ]++;
@@ -598,10 +598,10 @@ public abstract class AbstractGenotype implements Genotype {
         int result = 0;
         for (int i = 0, n = mySiteCount; i < n; i++) {
             byte[] current = getBaseArray(taxon, i);
-            if (current[0] != AlignmentNew.UNKNOWN_ALLELE) {
+            if (current[0] != Alignment.UNKNOWN_ALLELE) {
                 result++;
             }
-            if (current[1] != AlignmentNew.UNKNOWN_ALLELE) {
+            if (current[1] != Alignment.UNKNOWN_ALLELE) {
                 result++;
             }
         }
@@ -626,7 +626,7 @@ public abstract class AbstractGenotype implements Genotype {
         int result = 0;
         for (int i = 0, n = mySiteCount; i < n; i++) {
             byte current = getBase(taxon, i);
-            if (current != AlignmentNew.UNKNOWN_DIPLOID_ALLELE) {
+            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                 result++;
             }
         }
@@ -641,7 +641,7 @@ public abstract class AbstractGenotype implements Genotype {
         int maxNumAlleles = getMaxNumAlleles();
         byte[] result = new byte[maxNumAlleles];
         for (int i = 0; i < maxNumAlleles; i++) {
-            result[i] = (i < resultSize) ? (byte) alleles[0][i] : AlignmentNew.UNKNOWN_ALLELE;
+            result[i] = (i < resultSize) ? (byte) alleles[0][i] : Alignment.UNKNOWN_ALLELE;
         }
         return result;
     }

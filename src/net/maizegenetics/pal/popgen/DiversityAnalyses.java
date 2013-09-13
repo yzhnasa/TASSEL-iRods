@@ -14,6 +14,7 @@
  */
 package net.maizegenetics.pal.popgen;
 
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.report.AbstractTableReport;
@@ -92,15 +93,15 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
      * This will determine what analyses are to be run and run them
      */
     private void runAnalysisForRegion(int start, int end) {
-        Locus locus = theAAlignment.getLocus(start);
+        Chromosome locus = theAAlignment.getLocus(start);
         int chromosome = -1;
         try {
             chromosome = Integer.parseInt(locus.getName());
         } catch (Exception e) {
             //do nothing
         }
-        double startChrPosition = theAAlignment.getPositionInLocus(start);
-        double endChrPosition = theAAlignment.getPositionInLocus(end);
+        double startChrPosition = theAAlignment.getPositionInChromosome(start);
+        double endChrPosition = theAAlignment.getPositionInChromosome(end);
         Alignment theFilteredAlignment = FilterAlignment.getInstance(theAAlignment, start, end);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(theFilteredAlignment);
         diversityResultsVector.add(evaluate(siteGroup, theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));

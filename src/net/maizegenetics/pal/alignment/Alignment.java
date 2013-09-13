@@ -3,18 +3,18 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.alignment.bit.BitStorage;
+import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.site.PositionList;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.ProgressListener;
-
-import java.io.Serializable;
 
 /**
  * This supports heterozygous diploid alignments.
  *
  * @author terry
  */
-public interface Alignment extends Serializable {
+public interface Alignment {
 
     /**
      * This encoding is used to lump together allele values with frequencies too
@@ -37,32 +37,12 @@ public interface Alignment extends Serializable {
 
         None, MixedScoreTypes, QualityScore, ImputedProbablity, Dosage
     };
-    final static public byte POSITION_TYPE_ALL_GROUP = 0;
-    // final static public byte POSITION_TYPE_SILENT_GROUP = 1;
-    // final static public byte POSITION_TYPE_SYNONYMOUS_GROUP = 2;
-    // final static public byte POSITION_TYPE_NONCODING_GROUP = 3;
-    // final static public byte POSITION_TYPE_NONTRANSSCRIBED_GROUP = 4;
-    // final static public byte POSITION_TYPE_INTRON_GROUP = 5;
-    // final static public byte POSITION_TYPE_INDEL_GROUP = 6;
-    // final static public byte POSITION_TYPE_NONCODINGINDEL_GROUP = 7;
-    // final static public byte POSITION_TYPE_NONSYNONYMOUS_GROUP = 8;
-    // final static public byte POSITION_TYPE_CODING_GROUP = 9;
-    // final static public byte POSITION_TYPE_CODINGINDEL_GROUP = 10;
-    // final static public byte POSITION_TYPE_TRANSCRIBED_GROUP = 11;
-    final static public String[] POSITION_TYPE_GROUP_TEXT = {"All", "Silent", "Synonymous", "Noncoding",
-        "Nontranscribed", "Intron", "Indel", "Noncoding Indel", "Nonsynonymous", "Coding",
-        "Coding Indel", "Transcribed"};
-    // final static public byte POSITION_TYPE_NONTRANSCRIBED_TYPE = 'N';
-    // final static public byte POSITION_TYPE_ANON_CODING_TYPE = 'C';
-    // final static public byte POSITION_TYPE_CODON1_TYPE = '1';
-    // final static public byte POSITION_TYPE_CODON2_TYPE = '2';
-    // final static public byte POSITION_TYPE_CODON3_TYPE = '3';
-    // final static public byte POSITION_TYPE_INTRON_TYPE = 'I';
 
     /**
      * This defines the possible allele scope types.
      */
     public static enum ALLELE_SCOPE_TYPE {
+
         /**
          * This is the default where alleles are sorted by frequency. Same as
          * getAlleles().
@@ -73,8 +53,9 @@ public interface Alignment extends Serializable {
          */
         Depth,
         /**
-         * This uses the allele frequency of a base/global Alignment determine
-         * sort order of alleles. That Alignment is usually a superset.
+         * This uses the allele frequency of a base/global Alignment
+         * determine sort order of alleles. That Alignment is usually a
+         * superset.
          */
         Global_Frequency,
         /**
@@ -108,17 +89,18 @@ public interface Alignment extends Serializable {
     public byte[] getBaseArray(int taxon, int site);
 
     /**
-     * Returns diploid values for given taxon, locus, and physical position. The
-     * locus and physical position should map to an unique site.
+     * Returns diploid values for given taxon, chromosome, and physical
+     * position. The chromosome and physical position should map to an unique
+     * site.
      *
      * @param taxon taxon
-     * @param locus locus
+     * @param chromosome chromosome
      * @param physicalPosition physical position
      *
      * @return first four bits are the first allele value and the second four
      * bits are the second allele value.
      */
-    public byte getBase(int taxon, Locus locus, int physicalPosition);
+    public byte getBase(int taxon, Chromosome chromosome, int physicalPosition);
 
     /**
      * Returns sequence of diploid allele values for given taxon in specified
@@ -367,23 +349,23 @@ public interface Alignment extends Serializable {
     public int getSiteCount();
 
     /**
-     * Return number of sites for given locus.
+     * Return number of sites for given chromosome.
      *
-     * @param locus locus
+     * @param chromosome chromosome
      *
      * @return number of sites
      */
-    public int getLocusSiteCount(Locus locus);
+    public int getChromosomeSiteCount(Chromosome chromosome);
 
     /**
      * Get the first (inclusive) and last (exclusive) site of the specified
-     * locus in this alignment.
+     * chromosome in this alignment.
      *
-     * @param locus locus
+     * @param chromosome chromosome
      *
      * @return first and last site
      */
-    public int[] getStartAndEndOfLocus(Locus locus);
+    public int[] getStartAndEndOfChromosome(Chromosome chromosome);
 
     /**
      * Returns number of sequences (taxa).
@@ -391,13 +373,20 @@ public interface Alignment extends Serializable {
      * @return number of sequences
      */
     public int getSequenceCount();
-    
+
     /**
      * Returns number of taxa (same as getSequenceCount()
-     * 
+     *
      * @return number of taxa
      */
     public int getTaxaCount();
+
+
+    /**
+     * Return the position list for the alignment.
+     * @return PositionList for all sites.
+     */
+    public PositionList getPositionList();
 
     /**
      * Returns the physical position at given site.
@@ -406,33 +395,33 @@ public interface Alignment extends Serializable {
      *
      * @return physical position
      */
-    public int getPositionInLocus(int site);
+    public int getPositionInChromosome(int site);
 
     /**
-     * Return site of given physical position in locus. If the physical position
-     * doesn't exist, (-(insertion point) - 1) is returned. If locus is not
-     * found, an exception is thrown.
+     * Return site of given physical position in chromosome. If the physical
+     * position doesn't exist, (-(insertion point) - 1) is returned. If
+     * chromosome is not found, an exception is thrown.
      *
      * @param physicalPosition physical position
-     * @param locus locus. if null, the first locus is used.
+     * @param chromosome chromosome. if null, the first chromosome is used.
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome);
 
     /**
-     * Return site of given physical position / SNP ID in locus. If the physical
-     * position doesn't exist, (-(insertion point) - 1) is returned. If locus is
-     * not found, an exception is thrown. This is to support multiple sites with
-     * the same physical position but different SNP IDs.
+     * Return site of given physical position / SNP ID in chromosome. If the
+     * physical position doesn't exist, (-(insertion point) - 1) is returned. If
+     * chromosome is not found, an exception is thrown. This is to support
+     * multiple sites with the same physical position but different SNP IDs.
      *
      * @param physicalPosition physical position
-     * @param locus locus. if null, the first locus is used.
+     * @param chromosome chromosome. if null, the first chromosome is used.
      * @param snpID SNP ID
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Locus locus, String snpID);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID);
 
     /**
      * Returns all physical positions.
@@ -442,52 +431,52 @@ public interface Alignment extends Serializable {
     public int[] getPhysicalPositions();
 
     /**
-     * Return Locus Name for given site.
+     * Return Chromosome Name for given site.
      *
      * @param site site
      *
-     * @return Locus Name
+     * @return Chromosome Name
      */
-    public String getLocusName(int site);
+    public String getChromosomeName(int site);
 
     /**
-     * Return Locus for given site.
+     * Return Chromosome for given site.
      *
      * @param site site
      *
-     * @return Locus
+     * @return Chromosome
      */
-    public Locus getLocus(int site);
+    public Chromosome getChromosome(int site);
 
     /**
-     * Return Locus with matching name. First to match will be returned.
+     * Return Chromosome with matching name. First to match will be returned.
      *
      * @param name name
      *
-     * @return Locus
+     * @return Chromosome
      */
-    public Locus getLocus(String name);
+    public Chromosome getChromosome(String name);
 
     /**
-     * Return all loci.
+     * Return all chromosomes.
      *
-     * @return loci
+     * @return chromosomes
      */
-    public Locus[] getLoci();
+    public Chromosome[] getChromosomes();
 
     /**
-     * Return number of loci.
+     * Return number of chromosomes.
      *
-     * @return number of loci
+     * @return number of chromosomes
      */
-    public int getNumLoci();
+    public int getNumChromosomes();
 
     /**
-     * Returns starting site for each locus.
+     * Returns starting site for each chromosome.
      *
-     * @return starting site for each locus.
+     * @return starting site for each chromosome.
      */
-    public int[] getLociOffsets();
+    public int[] getChromosomesOffsets();
 
     /**
      * Returns the site score of the given sequence and site.
@@ -518,7 +507,7 @@ public interface Alignment extends Serializable {
      *
      * @return site score type.
      */
-    public SITE_SCORE_TYPE getSiteScoreType();
+    public Alignment.SITE_SCORE_TYPE getSiteScoreType();
 
     /**
      * Return size of indel at given site.
@@ -643,11 +632,11 @@ public interface Alignment extends Serializable {
     public double getMajorAlleleFrequency(int site);
 
     /**
-     * Return id group of this alignment.
+     * Return taxa list of this alignment.
      *
-     * @return id group.
+     * @return taxa list.
      */
-    public IdGroup getIdGroup();
+    public TaxaList getTaxaList();
 
     /**
      * Return taxa name at given index.
@@ -710,7 +699,7 @@ public interface Alignment extends Serializable {
      *
      * @return sorted list of diploids and counts
      */
-    public Object[][] getDiploidssSortedByFrequency(int site);
+    public Object[][] getDiploidsSortedByFrequency(int site);
 
     /**
      * Returns whether this alignment is phased.
@@ -874,34 +863,6 @@ public interface Alignment extends Serializable {
     public int getTotalNotMissingForTaxon(int taxon);
 
     /**
-     * Return whether alignment will execute quickly for site optimized
-     * operations. SBitAlignment is obviously friendly. But so would
-     * FilterAlignment is only sites have been filtered for example.
-     *
-     * @return whether optimized for site operations.
-     */
-    public boolean isSBitFriendly();
-
-    /**
-     * Return whether alignment will execute quickly for taxa optimized
-     * operations. TBitAlignment is obviously friendly. But so would
-     * FilterAlignment is only taxa have been filtered for example.
-     *
-     * @return whether optimized for taxa operations.
-     */
-    public boolean isTBitFriendly();
-
-    /**
-     * Optimizes this Alignment for Taxa based operations.
-     */
-    public void optimizeForTaxa(ProgressListener listener);
-
-    /**
-     * Optimizes this Alignment for Site based operations.
-     */
-    public void optimizeForSites(ProgressListener listener);
-
-    /**
      * Returns depth count for each diploid allele at the given taxon and site.
      *
      * @param taxon taxon
@@ -919,7 +880,7 @@ public interface Alignment extends Serializable {
      *
      * @return alleles
      */
-    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site);
+    public byte[] getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE scope, int site);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
@@ -931,5 +892,14 @@ public interface Alignment extends Serializable {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber);
+    public BitSet getAllelePresenceForAllTaxaByScope(Alignment.ALLELE_SCOPE_TYPE scope, int site, int alleleNumber);
+
+    /**
+     * Returns BitStorage for this Genotype
+     *
+     * @param scopeType type
+     *
+     * @return BitStorage
+     */
+    public BitStorage getBitStorage(Alignment.ALLELE_SCOPE_TYPE scopeType);
 }

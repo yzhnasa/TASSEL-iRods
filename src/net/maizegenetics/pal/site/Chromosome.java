@@ -1,6 +1,5 @@
 package net.maizegenetics.pal.site;
 
-import net.maizegenetics.pal.alignment.Locus;
 import net.maizegenetics.pal.util.GeneralAnnotation;
 
 /**
@@ -12,7 +11,7 @@ import net.maizegenetics.pal.util.GeneralAnnotation;
 public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
 
     private static final long serialVersionUID = -5197800047652332969L;
-    public static Locus UNKNOWN = new Locus("Unknown");
+    public static Chromosome UNKNOWN = new Chromosome("Unknown");
     private final String myName;
     private final int myChromosomeNumber;
     private final int myLength;

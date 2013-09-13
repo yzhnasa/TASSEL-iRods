@@ -14,6 +14,7 @@
  */
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.ids.IdentifierSynonymizer;
@@ -319,7 +320,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
                         builder.append("Number of sites: ");
                         builder.append(a.getSiteCount());
                         builder.append("\n");
-                        Locus[] loci = a.getLoci();
+                        Chromosome[] loci = a.getLoci();
                         boolean first = true;
                         int numLoci = 0;
                         if (loci != null) {

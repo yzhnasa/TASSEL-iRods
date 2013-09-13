@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.ids.Identifier;
 
 /**
@@ -65,7 +66,7 @@ public interface MutableAlignment extends Alignment {
 
     public void setPositionOfSite(int site, int position);
 
-    public void setLocusOfSite(int site, Locus locus);
+    public void setLocusOfSite(int site, Chromosome locus);
     
     /**
      * Sets depth count for each diploid allele at the given taxon and site.

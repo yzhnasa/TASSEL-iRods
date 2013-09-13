@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableAlignment;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -35,8 +35,8 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(ConvertAlignmentCoordinatesPlugin.class);
     private String myMapFilename = null;
-    private final HashMap<String, Locus> myLociMap = new HashMap<String, Locus>();
-    private final HashMap<String, Locus> myAlignmentLociMap = new HashMap<String, Locus>();
+    private final HashMap<String, Chromosome> myLociMap = new HashMap<String, Chromosome>();
+    private final HashMap<String, Chromosome> myAlignmentLociMap = new HashMap<String, Chromosome>();
 
     public ConvertAlignmentCoordinatesPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -84,7 +84,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             alignment = MutableNucleotideAlignment.getInstance((Alignment) input.getData());
         }
 
-        Locus[] loci = alignment.getLoci();
+        Chromosome[] loci = alignment.getLoci();
         myLociMap.clear();
         for (int i = 0; i < loci.length; i++) {
             myLociMap.put(loci[i].getName(), loci[i]);
@@ -128,9 +128,9 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                             continue;
                         }
 
-                        if ((pos1 != alignment.getPositionInLocus(site)) || (!locus1.equals(alignment.getLocus(site).getName()))) {
+                        if ((pos1 != alignment.getPositionInChromosome(site)) || (!locus1.equals(alignment.getLocus(site).getName()))) {
                             myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " position and locus do not match alignment.");
-                            myLogger.warn("Alignment SNP ID: " + alignment.getSNPID(site) + "  position: " + alignment.getPositionInLocus(site) + "  locus: " + alignment.getLocusName(site));
+                            myLogger.warn("Alignment SNP ID: " + alignment.getSNPID(site) + "  position: " + alignment.getPositionInChromosome(site) + "  locus: " + alignment.getChromosomeName(site));
                             continue;
                         }
 
@@ -167,10 +167,10 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
         return null;
     }
 
-    private Locus getLocusObj(String locus) {
-        Locus locusObj = myLociMap.get(locus);
+    private Chromosome getLocusObj(String locus) {
+        Chromosome locusObj = myLociMap.get(locus);
         if (locusObj == null) {
-            locusObj = new Locus(locus, locus, -1, -1, null, null);
+            locusObj = new Chromosome(locus);
             myLociMap.put(locus, locusObj);
         }
         return locusObj;

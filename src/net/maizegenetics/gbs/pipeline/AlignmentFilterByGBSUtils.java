@@ -288,7 +288,7 @@ public class AlignmentFilterByGBSUtils {
                 if (Double.isNaN(rValue)) {
                     continue;
                 }
-                if (Math.abs(a.getPositionInLocus(i) - a.getPositionInLocus(j)) < minPosDist) {
+                if (Math.abs(a.getPositionInChromosome(i) - a.getPositionInChromosome(j)) < minPosDist) {
                     continue;
                 }
                 cntInformative++;

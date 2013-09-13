@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.site.Chromosome;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
@@ -99,7 +100,7 @@ public class ExportUtils {
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
             String[] lociNames = new String[a.getNumLoci()];
-            Locus[] loci = a.getLoci();
+            Chromosome[] loci = a.getLoci();
             for (int i = 0; i < a.getNumLoci(); i++) {
                 lociNames[i] = loci[i].getName();
             }
@@ -207,8 +208,8 @@ public class ExportUtils {
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
             String[] lociNames = new String[a.getNumLoci()];
-            HashMap<Locus, Integer> locusToIndex=new HashMap<Locus, Integer>(10);
-            Locus[] loci = a.getLoci();
+            HashMap<Chromosome, Integer> locusToIndex=new HashMap<Chromosome, Integer>(10);
+            Chromosome[] loci = a.getLoci();
             for (int i = 0; i < a.getNumLoci(); i++) {
                 lociNames[i] = loci[i].getName();
                 locusToIndex.put(loci[i],i);
@@ -306,13 +307,13 @@ public class ExportUtils {
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
-            TreeSet<Locus> lset = new TreeSet();
+            TreeSet<Chromosome> lset = new TreeSet();
             for (int i = 0; i < numSites; i++) {
                 lset.add(a.getLocus(snpIndex[i]));
             }
-            Locus[] outLoci = lset.toArray(new Locus[lset.size()]);
+            Chromosome[] outLoci = lset.toArray(new Chromosome[lset.size()]);
             String[] lociNames = new String[outLoci.length];
-            HashMap<Locus, Integer> locusToIndex=new HashMap<Locus, Integer>(10);
+            HashMap<Chromosome, Integer> locusToIndex=new HashMap<Chromosome, Integer>(10);
             for (int i = 0; i < lociNames.length; i++) {
                 lociNames[i] = outLoci[i].getName();
                 locusToIndex.put(outLoci[i],i);
@@ -402,8 +403,8 @@ public class ExportUtils {
         for (int i=0; i<a.length; i++) {
             
             for (int s = 0; s < a[i].getSiteCount(); s++) {
-                long chrNum=Integer.parseInt(a[i].getLocus(s).getChromosomeName());
-                long phys=a[i].getPositionInLocus(s);
+                long chrNum=Integer.parseInt(a[i].getLocus(s).getName());
+                long phys=a[i].getPositionInChromosome(s);
                 long value=((long)i<<32)+s;
                 long dupIndex=0;
                 long key=(chrNum<<36)+(dupIndex<<32)+(phys);
@@ -422,7 +423,7 @@ public class ExportUtils {
             int site=(int)ent;
             int ai=(int)(ent>>>32);
             mna.setLocusOfSite(s, a[ai].getLocus(site));
-            mna.setPositionOfSite(s, a[ai].getPositionInLocus(site));
+            mna.setPositionOfSite(s, a[ai].getPositionInChromosome(site));
             mna.setSNPID(s, a[ai].getSNPID(site));
             alignOfSite[s]=ai;
             siteOfSite[s]=site;
@@ -565,9 +566,9 @@ public class ExportUtils {
                     }
                 }
                 bw.write(delimChar);
-                bw.write(alignment.getLocusName(site));
+                bw.write(alignment.getChromosomeName(site));
                 bw.write(delimChar);
-                bw.write(String.valueOf(alignment.getPositionInLocus(site)));
+                bw.write(String.valueOf(alignment.getPositionInChromosome(site)));
                 bw.write(delimChar);
                 bw.write("+"); //strand
                 bw.write(delimChar);
@@ -705,9 +706,9 @@ public class ExportUtils {
                     }
                 }
                 bw.write(delimChar);
-                bw.write(alignment.getLocusName(site));
+                bw.write(alignment.getChromosomeName(site));
                 bw.write(delimChar);
-                bw.write(String.valueOf(alignment.getPositionInLocus(site)));
+                bw.write(String.valueOf(alignment.getPositionInChromosome(site)));
                 bw.write(delimChar);
                 bw.write("+"); //strand
                 bw.write(delimChar);
@@ -830,7 +831,7 @@ public class ExportUtils {
 
 
                 if (nAlleles == 0) {                                                  //used to be ==0
-                    System.out.println("no alleles at: " + site + " " + alignment.getPositionInLocus(site));
+                    System.out.println("no alleles at: " + site + " " + alignment.getPositionInChromosome(site));
                     continue;
                 }
 
@@ -841,7 +842,7 @@ public class ExportUtils {
                     refGeno = NucleotideAlignmentConstants.getNucleotideDiploidByte(MajorGenotype);
                 }
                 byte refAllele = (byte) (refGeno & 0xF);  // converts from diploid to haploid allele (2nd allele)
-                //System.out.println(alignment.getPositionInLocus(site) + " " + refAllele);
+                //System.out.println(alignment.getPositionInChromosome(site) + " " + refAllele);
                 byte[] alleleValues = null;
                 if (alignment instanceof MutableVCFAlignment) {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
@@ -920,9 +921,9 @@ public class ExportUtils {
                         }
                     }
                 }
-                bw.write(alignment.getLocusName(site)); // chromosome
+                bw.write(alignment.getChromosomeName(site)); // chromosome
                 bw.write(delimChar);
-                bw.write(alignment.getPositionInLocus(site) + ""); // position
+                bw.write(alignment.getPositionInChromosome(site) + ""); // position
                 bw.write(delimChar);
                 bw.write(alignment.getSNPID(site)); // site name
                 bw.write(delimChar);
@@ -1164,13 +1165,13 @@ public class ExportUtils {
             MAPbw = new BufferedWriter(new FileWriter(mapFileName), 1000000);
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
-                MAPbw.write(alignment.getLocusName(site)); // chromosome name
+                MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
                 MAPbw.write(alignment.getSNPID(site)); // rs#
                 MAPbw.write(delimChar);
                 MAPbw.write("-9"); // genetic distance unavailable
                 MAPbw.write(delimChar);
-                MAPbw.write(Integer.toString(alignment.getPositionInLocus(site))); // position
+                MAPbw.write(Integer.toString(alignment.getPositionInChromosome(site))); // position
                 MAPbw.write("\n");
             }
             MAPbw.close();
@@ -1260,9 +1261,9 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 MAPbw.write(alignment.getSNPID(site)); // rs#
                 MAPbw.write(delimChar);
-                MAPbw.write(alignment.getLocusName(site)); // chromosome name
+                MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
-                MAPbw.write(Integer.toString(alignment.getPositionInLocus(site))); // position
+                MAPbw.write(Integer.toString(alignment.getPositionInChromosome(site))); // position
                 MAPbw.write("\n");
                 DATbw.write(delimChar);
                 DATbw.write(alignment.getSNPID(site));
@@ -1330,7 +1331,7 @@ public class ExportUtils {
             int numSites = theAlignment.getSiteCount();
             for (int j = 0; j < numSites; j++) {
                 bw.write(delimit);
-                bw.write(String.valueOf(theAlignment.getPositionInLocus(j)));
+                bw.write(String.valueOf(theAlignment.getPositionInChromosome(j)));
             }
             bw.write("\n");
 

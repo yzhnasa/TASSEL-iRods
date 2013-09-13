@@ -58,6 +58,7 @@ import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.io.BuilderFromHapMap;
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
 
@@ -272,7 +273,10 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-h")) {
                     String hapFile = args[index++].trim();
                     loadFile(hapFile, FileLoadPlugin.TasselFileType.Hapmap);
-                } else if (current.equalsIgnoreCase("-h5")) {
+                } else if (current.equalsIgnoreCase("-nh")) {
+                    String hapFile = args[index++].trim();
+                    BuilderFromHapMap.getBuilder(hapFile).build();
+                }  else if (current.equalsIgnoreCase("-h5")) {
                     String hdf5File = args[index++].trim();
                     loadFile(hdf5File, FileLoadPlugin.TasselFileType.HDF5);
                 } else if (current.equalsIgnoreCase("-r")) {

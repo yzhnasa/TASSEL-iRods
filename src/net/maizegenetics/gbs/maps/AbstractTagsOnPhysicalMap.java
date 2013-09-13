@@ -18,7 +18,7 @@ import net.maizegenetics.gbs.tagdist.AbstractTags;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 
 /**
@@ -268,22 +268,22 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
     }
     
     @Override
-    public Locus[] getLoci() {
+    public Chromosome[] getLoci() {
         int[] chrs = getChromosomes();
-        Locus[] result = new Locus[chrs.length];
+        Chromosome[] result = new Chromosome[chrs.length];
 
         for (int i = 0; i < result.length; i++) {
-            result[i] = new Locus(chrs[i] + "", chrs[i] + "", -1, -1, null, null);
+            result[i] = new Chromosome(chrs[i] + "", chrs[i] + "", -1, -1, null, null);
         }
         return result;
     }
 
     @Override
-    public Locus getLocus(int tagIndex) {
+    public Chromosome getLocus(int tagIndex) {
         if (bestChr[tagIndex] == TOPMInterface.INT_MISSING) {
             return null;
         } //Return null for unmapped tags
-        return new Locus(bestChr[tagIndex] + "", bestChr[tagIndex] + "", -1, -1, null, null);
+        return new Chromosome(bestChr[tagIndex] + "", bestChr[tagIndex] + "", -1, -1, null, null);
     }
     
    void initPhysicalSort() {

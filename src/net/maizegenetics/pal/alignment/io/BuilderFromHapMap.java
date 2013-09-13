@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * global minor.
  * e.g. code <p></p>
  * {@code
- * AlignmentNew a=BuilderFromHapMap.getBuilder(infileName).build();
+ * Alignment a=BuilderFromHapMap.getBuilder(infileName).build();
  * }
  * <p></p>
  * TODO:  Add filtering while reading, provide an option to define the alleles as reference and alternate
@@ -48,9 +48,9 @@ public class BuilderFromHapMap {
 
     //TODO provide options on caching to use, read only some sites, etc.
 
-    public AlignmentNew build() {
+    public Alignment build() {
         long time=System.nanoTime();
-        AlignmentNew result=null;
+        Alignment result=null;
         try {
             int numThreads = Runtime.getRuntime().availableProcessors();
             ExecutorService pool = Executors.newFixedThreadPool(numThreads);

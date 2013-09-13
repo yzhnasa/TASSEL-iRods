@@ -255,6 +255,117 @@ public class AlignmentUtils {
         }
         return result;
     }
+    
+    public static int[][] getAllelesSortedByFrequency(Alignment alignment, int site) {
+
+        int[] stateCnt = new int[16];
+        for (int i = 0; i < alignment.getTaxaCount(); i++) {
+            byte[] dipB = alignment.getBaseArray(i, site);
+            if (dipB[0] != Alignment.UNKNOWN_ALLELE) {
+                stateCnt[dipB[0]]++;
+            }
+            if (dipB[1] != Alignment.UNKNOWN_ALLELE) {
+                stateCnt[dipB[1]]++;
+            }
+        }
+
+        int count = 0;
+        for (int j = 0; j < 16; j++) {
+            if (stateCnt[j] != 0) {
+                count++;
+            }
+        }
+
+        int result[][] = new int[2][count];
+        int index = 0;
+        for (int k = 0; k < 16; k++) {
+            if (stateCnt[k] != 0) {
+                result[0][index] = k;
+                result[1][index] = stateCnt[k];
+                index++;
+            }
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < count - 1; k++) {
+
+                if (result[1][k] < result[1][k + 1]) {
+
+                    int temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    int tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
+    
+    public static Object[][] getDiploidsSortedByFrequency(Alignment alignment, int site) {
+
+        Integer ONE_INTEGER = 1;
+        int numTaxa = alignment.getTaxaCount();
+
+        Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
+        for (int r = 0; r < numTaxa; r++) {
+            String current = alignment.getBaseAsString(r, site);
+            Integer num = diploidValueCounts.get(current);
+            if (num == null) {
+                diploidValueCounts.put(current, ONE_INTEGER);
+            } else {
+                diploidValueCounts.put(current, ++num);
+            }
+        }
+
+        Object[][] result = new Object[2][diploidValueCounts.size()];
+
+        int i = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Integer count = (Integer) diploidValueCounts.get(key);
+            result[0][i] = key;
+            result[1][i++] = count;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
+
+                if ((Integer) result[1][k] < (Integer) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+
+    }
 
     public static String[][] getAlleleStates(String[][] data, int maxNumAlleles) {
 

@@ -29,7 +29,7 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.MutableVCFAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
@@ -550,7 +550,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             int currSite = theMSA.getSiteCount();
             theMSA.addSite(currSite);
             String chromosome = String.valueOf(theTAL.getChromosome());
-            theMSA.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
+            theMSA.setLocusOfSite(currSite, new Chromosome(chromosome, chromosome, -1, -1, null, null));
             theMSA.setPositionOfSite(currSite, position);
             int offset = 0;
             if (includeReference && !fuzzyStartPositions) {

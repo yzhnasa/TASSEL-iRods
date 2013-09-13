@@ -17,7 +17,7 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.gbs.homology.TagMatchFinder;
 import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -31,7 +31,6 @@ import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TOPMInterface;
 import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.alignment.MutableNucleotideDepthAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.VCFUtil;
@@ -450,7 +449,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             int[] positsOnChr = uniquePositions.get(i);
             for (int j=0, nSitesOnChr=positsOnChr.length; j<nSitesOnChr; j++) {
                 genos.addSite(currSite);
-                genos.setLocusOfSite(currSite, new Locus(chromosome, chromosome, -1, -1, null, null));
+                genos.setLocusOfSite(currSite, new Chromosome(chromosome, chromosome, -1, -1, null, null));
                 genos.setPositionOfSite(currSite, positsOnChr[j]);
                 genos.setSNPID(currSite, genos.getSNPID(currSite));  
                 currSite++;
@@ -550,7 +549,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     
     private void generateFastSiteLookup() {
         for (int site=0, nSites=genos.getSiteCount(); site<nSites; site++) {
-            PositionToSite[Integer.parseInt(genos.getLocus(site).getChromosomeName())].put(genos.getPositionInLocus(site), site);
+            PositionToSite[Integer.parseInt(genos.getLocus(site).getName())].put(genos.getPositionInChromosome(site), site);
         }
     }
 
@@ -612,7 +611,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         if (chromosome == TOPMInterface.INT_MISSING) {
             return;
         }
-        Locus locus = new Locus(chromosome + "", chromosome + "", -1, -1, null, null);
+        Chromosome locus = new Chromosome(chromosome + "", chromosome + "", -1, -1, null, null);
         int startPos = topm.getStartPosition(tagIndex);
         for (int variant = 0; variant < topm.getMaxNumVariants(); variant++) {
             byte newBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 allele encodings

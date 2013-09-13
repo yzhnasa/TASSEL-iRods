@@ -348,7 +348,7 @@ public class MarkerPhenotypeAdapter {
 
     public String getMarkerChromosome(int marker) {
         if (marker < numberOfMarkersFromAlignment) {
-            return align.getLocus(marker).getChromosomeName();
+            return align.getChromosome(marker).getName();
         }
         int t = markerIndex.get(marker - numberOfMarkersFromAlignment);
         Object prop = pheno.getTrait(t).getProperty(Trait.PROP_CHROMOSOME);
@@ -372,7 +372,7 @@ public class MarkerPhenotypeAdapter {
 
     public String getLocusName(int marker) {
         if (marker < numberOfMarkersFromAlignment) {
-            return align.getLocusName(marker);
+            return align.getChromosomeName(marker);
         }
         int t = markerIndex.get(marker - numberOfMarkersFromAlignment);
         Object locusName = pheno.getTrait(t).getProperty(Trait.PROP_LOCUS);
@@ -384,7 +384,7 @@ public class MarkerPhenotypeAdapter {
 
     public int getLocusPosition(int marker) {
         if (marker < numberOfMarkersFromAlignment) {
-            return align.getPositionInLocus(marker);
+            return align.getPositionInChromosome(marker);
         }
         int t = markerIndex.get(marker - numberOfMarkersFromAlignment);
         Object prop = pheno.getTrait(t).getProperty(Trait.PROP_LOCUS_POSITION);

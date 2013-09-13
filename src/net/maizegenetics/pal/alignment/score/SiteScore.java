@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.pal.alignment.score;
 
-import net.maizegenetics.pal.alignment.AlignmentNew;
+import net.maizegenetics.pal.alignment.Alignment;
 
 /**
  *
@@ -40,5 +40,5 @@ public interface SiteScore {
      *
      * @return site score type.
      */
-    public AlignmentNew.SITE_SCORE_TYPE getSiteScoreType();
+    public Alignment.SITE_SCORE_TYPE getSiteScoreType();
 }

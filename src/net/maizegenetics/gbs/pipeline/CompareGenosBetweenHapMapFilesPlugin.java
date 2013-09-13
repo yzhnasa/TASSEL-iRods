@@ -336,18 +336,18 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             myLogger.error("ERROR: both hapmap genotype files should contain only a single chromosome");
             return;
         }
-        if (!a1.getLoci()[0].getChromosomeName().equals(a2.getLoci()[0].getChromosomeName())) {
+        if (!a1.getLoci()[0].getName().equals(a2.getLoci()[0].getName())) {
             myLogger.error("ERROR: the hapmap genotype files to compare do not contain the same chromosome");
             return;
         }
-        if (Integer.parseInt(a1.getLoci()[0].getChromosomeName()) != chr || Integer.parseInt(a2.getLoci()[0].getChromosomeName()) != chr) {
+        if (Integer.parseInt(a1.getLoci()[0].getName()) != chr || Integer.parseInt(a2.getLoci()[0].getName()) != chr) {
             myLogger.error("ERROR: one or both of the hapmap genotype files to compare do not contain the expected chromosome "
-                    + "(expected:" + chr + "  hmp1:" + a1.getLoci()[0].getChromosomeName() + "  hmp2:" + a2.getLoci()[0].getChromosomeName() + ")");
+                    + "(expected:" + chr + "  hmp1:" + a1.getLoci()[0].getName() + "  hmp2:" + a2.getLoci()[0].getName() + ")");
             return;
         }
 
-        myLogger.info("\nHapMap format genotype file1 contains " + a1.getLocusSiteCount(a1.getLocus(0)) + " sites on chromosome " + a1.getLocusName(0) + "\n");
-        myLogger.info("\nHapMap format genotype file2 contains " + a2.getLocusSiteCount(a2.getLocus(0)) + " sites on chromosome " + a2.getLocusName(0) + "\n\n");
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.getLocusSiteCount(a1.getLocus(0)) + " sites on chromosome " + a1.getChromosomeName(0) + "\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.getLocusSiteCount(a2.getLocus(0)) + " sites on chromosome " + a2.getChromosomeName(0) + "\n\n");
 
         int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
         int s1 = 0, s2 = 0;
@@ -355,18 +355,18 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         nSamePosNotComparable = 0;
         boolean finished = false;
         while (!finished) {
-            while (a1.getPositionInLocus(s1) != a2.getPositionInLocus(s2) && s1 < nSites1 && s2 < nSites2) {
-                while (a1.getPositionInLocus(s1) < a2.getPositionInLocus(s2) && s1 < nSites1) {
+            while (a1.getPositionInChromosome(s1) != a2.getPositionInChromosome(s2) && s1 < nSites1 && s2 < nSites2) {
+                while (a1.getPositionInChromosome(s1) < a2.getPositionInChromosome(s2) && s1 < nSites1) {
                     s1++;
                 }
-                while (a2.getPositionInLocus(s2) < a1.getPositionInLocus(s1) && s2 < nSites2) {
+                while (a2.getPositionInChromosome(s2) < a1.getPositionInChromosome(s1) && s2 < nSites2) {
                     s2++;
                 }
             }
             if (s1 == nSites1 || s2 == nSites2) {
                 finished = true;
-            } else if (a1.getPositionInLocus(s1) == a2.getPositionInLocus(s2)) {
-                position = a1.getPositionInLocus(s1);
+            } else if (a1.getPositionInChromosome(s1) == a2.getPositionInChromosome(s2)) {
+                position = a1.getPositionInChromosome(s1);
                 nCompared += getCompareTypeAndCompare(s1, a1, s2, a2);
                 s2++;  // assumes that a1 is from GBS where duplicate SNPs have been removed (but a2 might contain some duplicates: e.g., hapmap2)
             }

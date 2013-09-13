@@ -5,7 +5,7 @@ package net.maizegenetics.gbs.maps;
 
 import java.io.File;
 import net.maizegenetics.gbs.tagdist.Tags;
-import net.maizegenetics.pal.alignment.Locus;
+import net.maizegenetics.pal.site.Chromosome;
 
 /**
  * Tags on Physical Map (TOPM) Interface. Define methods for the TOPM classes.
@@ -103,16 +103,16 @@ public interface TOPMInterface extends Tags {
      *
      * @return Loci
      */
-    public Locus[] getLoci();
+    public Chromosome[] getLoci();
 
     /**
-     * Get Locus representing chromosome for given tag.
+     * Get Chromosome representing chromosome for given tag.
      *
      * @param tagIndex tag index
      *
-     * @return Locus
+     * @return Chromosome
      */
-    public Locus getLocus(int tagIndex);
+    public Chromosome getLocus(int tagIndex);
 
     public byte getMapP(int index);
 

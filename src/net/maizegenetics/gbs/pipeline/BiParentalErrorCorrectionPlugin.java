@@ -187,14 +187,14 @@ public class BiParentalErrorCorrectionPlugin extends AbstractPlugin {
                     if (Double.isNaN(theLD.getRSqr(i, j))) {
                         continue;
                     }
-                    if (Math.abs(paf.getPositionInLocus(i) - paf.getPositionInLocus(j)) < 100000) {
+                    if (Math.abs(paf.getPositionInChromosome(i) - paf.getPositionInChromosome(j)) < 100000) {
                         continue;
                     }
                     obsR2.add((double)theLD.getRSqr(i, j));
                 }
                 Collections.sort(obsR2);
                 if (obsR2.size() > 4) {
-                    ldByPop[pop][a.getSiteOfPhysicalPosition(paf.getPositionInLocus(i), null)] = obsR2.get(obsR2.size() / 2);
+                    ldByPop[pop][a.getSiteOfPhysicalPosition(paf.getPositionInChromosome(i), null)] = obsR2.get(obsR2.size() / 2);
                 }
             }
             // System.out.println("POP:"+pop+Arrays.toString(ldByPop[pop]));

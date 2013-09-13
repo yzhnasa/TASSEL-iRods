@@ -26,25 +26,24 @@ import org.apache.log4j.Logger;
  * multinomial permutation test. This class can work with either normal
  * alignments of annotated alignments. The alignments should be stripped of
  * invariable numSites.
+ * <p> {@link testDesign} sets matrix design for LD calculation. Either all by
+ * all, sliding window, site by all, or site list.
  * <p>
- * {@link testDesign} sets matrix design for LD calculation.  Either all by all, 
- * sliding window, site by all, or site list.
+ * There are multiple approaches for dealing with heterozygous sites.
+ * {@link HetTreatment} sets the way these are treated. Haplotype assumes fully
+ * phased heterozygous sites (any hets are double counted). This is the best
+ * approach for speed when things are fully phased. Homozygous converted all
+ * hets to missing. Genotype does a 3x3 genotype analysis (to be implemented)
  * <p>
- * There are multiple approaches for dealing with heterozygous sites.  {@link HetTreatment} sets
- * the way these are treated.  Haplotype assumes fully 
- * phased heterozygous sites (any hets are double counted).  This is the best approach for speed
- * when things are fully phased.  Homozygous converted all hets to missing.  Genotype
-  * does a 3x3 genotype analysis (to be implemented)
- *<p>
  * 2 state estimates of D' and r^2 can be found reviewed and discussed in Weir
  * 1996
- *<p>
+ * <p>
  * Multi-state loci (>=3) require an averaging approach. In TASSEL 3 in 2010,
  * Buckler removed these approach as the relative magnitudes and meaningfulness
  * of these approaches has never been clear. Additionally with the moving away
  * from SSR to SNPs these methods are less relevant. Researchers should convert
  * to biallelic - either by ignoring rarer classes or collapsing rarer states.
- *<p>
+ * <p>
  * TODO: Add 3x3 (genotype) mode.
  *
  * @version $Id: LinkageDisequilibrium.java,v 2
@@ -52,23 +51,39 @@ import org.apache.log4j.Logger;
  * @author Ed Buckler
  */
 public class LinkageDisequilibrium extends Thread implements Serializable, TableReport {
-    
+
     /**
      * Design of test matrix.
      */
     public static enum testDesign {
-        /** Test All by All site*/ All, 
-        /** Sliding of LD comparisons*/ SlidingWindow, 
-        /**Test on site versus all others*/SiteByAll, 
-        /**Test all sites with the site list with all others*/SiteList
+
+        /**
+         * Test All by All site
+         */
+        All,
+        /**
+         * Sliding of LD comparisons
+         */
+        SlidingWindow,
+        /**
+         * Test on site versus all others
+         */
+        SiteByAll,
+        /**
+         * Test all sites with the site list with all others
+         */
+        SiteList
     };
+
     /**
-     * Approaches for dealing with heterozygous sites.  Haplotype assumes fully 
-     * phased heterozygous sites (any hets are double counted).  This is the best approach for speed
-     * when things are fully phased.  Homozygous converted all hets to missing.  Genotype
-     * does a 3x3 genotype analysis (to be implemented)
+     * Approaches for dealing with heterozygous sites. Haplotype assumes fully
+     * phased heterozygous sites (any hets are double counted). This is the best
+     * approach for speed when things are fully phased. Homozygous converted all
+     * hets to missing. Genotype does a 3x3 genotype analysis (to be
+     * implemented)
      */
     public static enum HetTreatment {
+
         Haplotype, Homozygous, Genotype
     };
     private static final Logger myLogger = Logger.getLogger(LinkageDisequilibrium.class);
@@ -80,9 +95,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     private long myTotalTests = 0;
     private testDesign myCurrDesign = testDesign.SlidingWindow;
     /**
-     * HashMap of results Key = (site1*siteNum + site2), Value = float[rsqr,d', pvalue, sampleSize]
+     * HashMap of results Key = (site1*siteNum + site2), Value = float[rsqr,d',
+     * pvalue, sampleSize]
      */
-    private OpenLongObjectHashMap  myMapResults;
+    private OpenLongObjectHashMap myMapResults;
     private ProgressListener myListener = null;
     private FisherExact myFisherExact;
     private boolean myIsAccumulativeReport = false;
@@ -95,23 +111,23 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     private static Integer IntegerTwo = Integer.valueOf(2);
     private HetTreatment myHetTreatment = HetTreatment.Homozygous;
 
-
     /**
      * Constructor for doing LD analysis
+     *
      * @param alignment Input alignment with segregating sites
      * @param windowSize Size of sliding window
-     * @param LDType 
+     * @param LDType
      * @param testSite
      * @param listener
      * @param isAccumulativeReport
      * @param numAccumulateIntervals
      * @param sitesList
-     * @param hetTreatment 
+     * @param hetTreatment
      */
     public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
         myAlignment = alignment;
         mySBitAlignment = AlignmentUtils.optimizeForSites(myAlignment, listener);
-        myFisherExact = new FisherExact((2*myAlignment.getSequenceCount()) + 10);
+        myFisherExact = new FisherExact((2 * myAlignment.getSequenceCount()) + 10);
         myWindowSize = windowSize;
         myCurrDesign = LDType;
         myTestSite = testSite;
@@ -165,13 +181,22 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             myAccumulativeInterval = 1.0f / (float) myNumAccumulativeBins;
             myAccumulativeRValueBins = new int[myNumAccumulativeBins + 1];
         } else {
-           myMapResults=new OpenLongObjectHashMap(numSites); 
+            myMapResults = new OpenLongObjectHashMap(numSites);
         }
 
     }
-    
+
     private long getMapKey(int r, int c) {
-        return (c<r)?(((long)c*mySBitAlignment.getSiteCount())+r):(((long)r*mySBitAlignment.getSiteCount())+c);
+        return (c < r) ? (((long) c * mySBitAlignment.getSiteCount()) + r) : (((long) r * mySBitAlignment.getSiteCount()) + c);
+    }
+
+    public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, Alignment alignment, int site1, int site2) {
+        FisherExact fisherExact = new FisherExact((2 * alignment.getSequenceCount()) + 10);
+        BitSet rMj = alignment.getAllelePresenceForAllTaxa(site1, 0);
+        BitSet rMn = alignment.getAllelePresenceForAllTaxa(site1, 1);
+        BitSet cMj = alignment.getAllelePresenceForAllTaxa(site2, 0);
+        BitSet cMn = alignment.getAllelePresenceForAllTaxa(site2, 1);
+        return getLDForSitePair(rMj, rMn, cMj, cMn, 2, minTaxaForEstimate, -1.0f, fisherExact);
     }
 
     private void calculateBitLDForHaplotype(boolean ignoreHets) {
@@ -191,7 +216,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             BitSet rMn = workingAlignment.getAllelePresenceForAllTaxa(r, 1);
             BitSet cMj = workingAlignment.getAllelePresenceForAllTaxa(c, 0);
             BitSet cMn = workingAlignment.getAllelePresenceForAllTaxa(c, 1);
-            LDResult ldr=getLDForSitePair(rMj, rMn, cMj, cMn, 2, myMinTaxaForEstimate, -1.0f, myFisherExact);
+            LDResult ldr = getLDForSitePair(rMj, rMn, cMj, cMn, 2, myMinTaxaForEstimate, -1.0f, myFisherExact);
             if (myIsAccumulativeReport) {
                 if (ldr.r2 == Float.NaN) {
                     myAccumulativeRValueBins[myNumAccumulativeBins]++;
@@ -201,15 +226,14 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
                     int index = (int) Math.floor(ldr.r2 / myAccumulativeInterval);
                     myAccumulativeRValueBins[index]++;
                 }
-            } else {           
-                long key=getMapKey(r,c);
-                myMapResults.put(key, ldr);               
+            } else {
+                long key = getMapKey(r, c);
+                myMapResults.put(key, ldr);
             }
 
         } //end of currTest
         myMapResults.trimToSize();
     }
-    
 
     private void calculateBitLDWithHets() {
         //Do nothing; not implemented yet
@@ -264,8 +288,8 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
     public static LDResult getLDForSitePair(BitSet rMj, BitSet rMn, BitSet cMj, BitSet cMn,
             int minMinorCnt, int minCnt, float minR2, FisherExact myFisherExact) {
-       // float[] results = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};
-        LDResult results=new LDResult();
+        // float[] results = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};
+        LDResult results = new LDResult();
         int n = 0;
         int[][] contig = new int[2][2];
         n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
@@ -380,9 +404,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return P-value
      */
     public double getPVal(int r, int c) {
-        long key=getMapKey(r, c);
-        LDResult result=(LDResult)myMapResults.get(key);
-        if(result==null) return Float.NaN;
+        long key = getMapKey(r, c);
+        LDResult result = (LDResult) myMapResults.get(key);
+        if (result == null) {
+            return Float.NaN;
+        }
         return result.p;
     }
 
@@ -395,9 +421,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return number of gametes
      */
     public int getSampleSize(int r, int c) {
-        long key=getMapKey(r, c);
-        LDResult result=(LDResult)myMapResults.get(key);
-        if(result==null) return 0;
+        long key = getMapKey(r, c);
+        LDResult result = (LDResult) myMapResults.get(key);
+        if (result == null) {
+            return 0;
+        }
         return result.n;
     }
 
@@ -409,9 +437,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return D'
      */
     public float getDPrime(int r, int c) {
-        long key=getMapKey(r, c);
-        LDResult result=(LDResult)myMapResults.get(key);
-        if(result==null) return Float.NaN;
+        long key = getMapKey(r, c);
+        LDResult result = (LDResult) myMapResults.get(key);
+        if (result == null) {
+            return Float.NaN;
+        }
         return result.dprime;
     }
 
@@ -423,9 +453,11 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @return r^2
      */
     public float getRSqr(int r, int c) {
-        long key=getMapKey(r, c);
-        LDResult result=(LDResult)myMapResults.get(key);
-        if(result==null) return Float.NaN;
+        long key = getMapKey(r, c);
+        LDResult result = (LDResult) myMapResults.get(key);
+        if (result == null) {
+            return Float.NaN;
+        }
         return result.r2;
     }
 
@@ -539,22 +571,22 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             String cState = myAlignment.getMajorAlleleAsString(c) + ":" + myAlignment.getMinorAlleleAsString(c);
             Integer cStr = Integer.valueOf(c);
 
-            data[labelOffset++] = myAlignment.getLocusName(r);
-            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInLocus(r));
+            data[labelOffset++] = myAlignment.getChromosomeName(r);
+            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInChromosome(r));
             data[labelOffset++] = rStr;
 
             data[labelOffset++] = IntegerTwo;
             data[labelOffset++] = rState;
             data[labelOffset++] = NotImplemented;
-            data[labelOffset++] = myAlignment.getLocusName(c);
-            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInLocus(c));
+            data[labelOffset++] = myAlignment.getChromosomeName(c);
+            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInChromosome(c));
             data[labelOffset++] = cStr;
 
             data[labelOffset++] = IntegerTwo;
             data[labelOffset++] = cState;
             data[labelOffset++] = NotImplemented;
-            if (myAlignment.getLocusName(r).equals(myAlignment.getLocusName(c))) {
-                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.getPositionInLocus(r) - myAlignment.getPositionInLocus(c)));
+            if (myAlignment.getChromosomeName(r).equals(myAlignment.getChromosomeName(c))) {
+                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.getPositionInChromosome(r) - myAlignment.getPositionInChromosome(c)));
             } else {
                 data[labelOffset++] = NA;
             }
@@ -577,6 +609,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     public int getColumnCount() {
         return getTableColumnNames().length;
     }
+
     @Override
     public int getRowCount() {
         if (myIsAccumulativeReport) {
@@ -585,11 +618,12 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             return (int) myTotalTests;
         }
     }
-   @Override
+
+    @Override
     public int getElementCount() {
         return getRowCount() * getColumnCount();
     }
-    
+
     @Override
     public Object getValueAt(int row, int col) {
         return getRow(row)[col];
@@ -607,14 +641,15 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
 /**
  * Container class for reporting LD results
- * 
+ *
  * @author edbuckler
  */
 class LDResult {
-    public float r2=Float.NaN;
-    public float dprime=Float.NaN;
-    public float p=Float.NaN;
-    public int n=0;
+
+    public float r2 = Float.NaN;
+    public float dprime = Float.NaN;
+    public float p = Float.NaN;
+    public int n = 0;
 
     @Override
     public String toString() {

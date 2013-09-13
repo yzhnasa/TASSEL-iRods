@@ -30,7 +30,6 @@ import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.MutableAlignment;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignmentHDF5;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.ProjectionAlignment;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
@@ -266,7 +265,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //            }
             int countFullLength=0;
             for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
-                int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInLocus(0), donorAlign[da].getLocus(0));
+                int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getLocus(0));
                 int blocks=donorAlign[da].getAllelePresenceForAllSites(0, 0).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
                         donorAlign[da].getSiteCount(),conflictMasks[da][0],conflictMasks[da][1]); 
@@ -416,7 +415,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private OpenBitSet[][] createMaskForAlignmentConflicts(Alignment unimpAlign, Alignment[] donorAlign, boolean print) {
         OpenBitSet[][] result=new OpenBitSet[donorAlign.length][4];
         for (int da = 0; da < result.length; da++) {
-            int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInLocus(0), donorAlign[da].getLocus(0));
+            int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getLocus(0));
             OpenBitSet goodMask=new OpenBitSet(donorAlign[da].getSiteCount());
             OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].getSiteCount());
             OpenBitSet errorMask=new OpenBitSet(donorAlign[da].getSiteCount());
@@ -590,7 +589,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         for (int i = 0; i < informStates.length; i++) informStates[i]=nonMissingObs.get(i);
         int[] pos=new int[informSites];
         for (int i = 0; i < pos.length; i++) pos[i]=snpPositions.get(i);
-        int chrlength = donorAlign.getPositionInLocus(endSite) - donorAlign.getPositionInLocus(startSite);
+        int chrlength = donorAlign.getPositionInChromosome(endSite) - donorAlign.getPositionInChromosome(startSite);
         tp.setAverageSegmentLength( chrlength / sites );
         tp.setPositions(pos);
         
@@ -890,7 +889,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             }
             byte knownBase=impT.getOrigGeno(cs+donorOffset);
             if(!Arrays.equals(prevDonors, currDonors)) {
-                impT.breakPoints.put(donorAlign.getPositionInLocus(cs), currDonors);
+                impT.breakPoints.put(donorAlign.getPositionInChromosome(cs), currDonors);
                 prevDonors=currDonors;
             }
             if(theDH[0].phasedResults==null) {impT.chgHis[cs+donorOffset]=(byte)-neighbor;}
@@ -905,9 +904,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             }}
         } //end of cs loop
         //enter a stop of the DH at the beginning of the next block
-        int lastDApos=donorAlign.getPositionInLocus(endSite);
+        int lastDApos=donorAlign.getPositionInChromosome(endSite);
         int nextSite=unimpAlign.getSiteOfPhysicalPosition(lastDApos, donorAlign.getLocus(0))+1;
-        if(nextSite<unimpAlign.getSiteCount()) impT.breakPoints.put(unimpAlign.getPositionInLocus(nextSite), new int[]{-1,-1});
+        if(nextSite<unimpAlign.getSiteCount()) impT.breakPoints.put(unimpAlign.getPositionInChromosome(nextSite), new int[]{-1,-1});
     //    if (print) System.out.println("E:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         return impT;
     }

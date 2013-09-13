@@ -76,13 +76,15 @@ public class NucleotideGenotype extends ByteGenotype {
             }
         }
 
-        int[][][] alleleCounts = new int[numSites][][];
         for (int s = 0; s < numSites; s++) {
             for (byte i = 0; i < 6; i++) {
                 // size | allele (the 5-i is to get the sort right, so if case of ties A is first)
                 alleleFreq[s][i] = (alleleFreq[s][i] << 4) | (5 - i);
             }
-
+        }
+        
+        int[][][] alleleCounts = new int[numSites][][];
+        for (int s = 0; s < numSites; s++) {
             int numAlleles = sort6(alleleFreq[s]);
             alleleCounts[s] = new int[2][numAlleles];
             for (int i = 0; i < numAlleles; i++) {
