@@ -42,7 +42,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import net.maizegenetics.baseplugins.ArchaeopteryxPlugin;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.baseplugins.CreateTreePlugin;
 import net.maizegenetics.baseplugins.ExportPlugin;
 import net.maizegenetics.baseplugins.FileLoadPlugin;
@@ -75,7 +74,6 @@ import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
 import net.maizegenetics.gui.PrintHeapAction;
-import net.maizegenetics.gwas.modelfitter.StepwiseOLSModelFitterPlugin;
 import net.maizegenetics.plugindef.Plugin;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.plugindef.ThreadedPluginListener;
@@ -552,7 +550,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, flapjackLoadPlugin), KeyEvent.VK_L));
         result.add(createMenuItem(new ExportPlugin(this, true)));
-        result.add(createMenuItem(new ConvertSBitTBitPlugin(this, true)));
         result.add(createMenuItem(new GenotypeImputationPlugin(this, true)));
         result.add(createMenuItem(new NumericalTransformPlugin(this, true)));
         result.add(createMenuItem(new SynonymizerPlugin(this, true)));

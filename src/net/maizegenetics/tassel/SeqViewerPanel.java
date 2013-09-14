@@ -155,7 +155,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         add(getControls(), BorderLayout.NORTH);
         add(myScrollPane, BorderLayout.CENTER);
 
-        boolean multipleAlignments = myAlignment.getNumLoci() > 1;
+        boolean multipleAlignments = myAlignment.getNumChromosomes() > 1;
 
         if (multipleAlignments) {
             myTableModel.setColumnNameType(AlignmentTableModel.COLUMN_NAME_TYPE.siteNumber);
@@ -283,7 +283,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
 
         ButtonGroup buttonGroup = new ButtonGroup();
 
-        boolean multipleAlignments = myAlignment.getNumLoci() > 1;
+        boolean multipleAlignments = myAlignment.getNumChromosomes() > 1;
 
         JRadioButton physicalPosition = null;
         if (!multipleAlignments) {

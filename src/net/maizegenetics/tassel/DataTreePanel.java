@@ -200,31 +200,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
 
                 if (data instanceof Alignment) {
                     Alignment align = (Alignment) data;
-                    if ((align.isTBitFriendly()) && (align.isSBitFriendly())) {
-                        setIcon(tsBitIcon);
-                    } else if (align.isSBitFriendly()) {
-                        if ((align instanceof FilterAlignment) && (sBitFilterIcon != null)) {
-                            setIcon(sBitFilterIcon);
-                        } else if ((align instanceof CombineAlignment) && (sBitCombineIcon != null)) {
-                            setIcon(sBitCombineIcon);
-                        } else if (sBitIcon != null) {
-                            setIcon(sBitIcon);
-                        }
-                    } else if (align.isTBitFriendly()) {
-                        if ((align instanceof FilterAlignment) && (tBitFilterIcon != null)) {
-                            setIcon(tBitFilterIcon);
-                        } else if (tBitIcon != null) {
-                            setIcon(tBitIcon);
-                        }
-                    } else if (align instanceof FilterAlignment) {
-                        if (filterIcon != null) {
-                            setIcon(filterIcon);
-                        }
-                    } else if (align instanceof CombineAlignment) {
-                        if (combineIcon != null) {
-                            setIcon(combineIcon);
-                        }
-                    }
+                    setIcon(sBitIcon);
                 }
                 return result;
             }
@@ -320,7 +296,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
                         builder.append("Number of sites: ");
                         builder.append(a.getSiteCount());
                         builder.append("\n");
-                        Chromosome[] loci = a.getLoci();
+                        Chromosome[] loci = a.getChromosomes();
                         boolean first = true;
                         int numLoci = 0;
                         if (loci != null) {
