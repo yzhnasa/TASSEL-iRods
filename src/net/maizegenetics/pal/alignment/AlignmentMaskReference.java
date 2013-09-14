@@ -4,6 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import java.awt.Color;
+import java.util.List;
 import net.maizegenetics.pal.ids.Identifier;
 
 /**
@@ -27,19 +28,19 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, Identifier id) {
-        int index = align.getIdGroup().whichIdNumber(id);
-        if (index == -1) {
+        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, index);
+        return getInstanceCompareReference(align, index.get(0));
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, String id) {
-        int index = align.getIdGroup().whichIdNumber(id);
-        if (index == -1) {
+        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, index);
+        return getInstanceCompareReference(align, index.get(0));
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, int index) {

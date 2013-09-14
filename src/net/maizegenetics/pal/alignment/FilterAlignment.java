@@ -3,17 +3,22 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.site.Chromosome;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.alignment.bit.BitStorage;
+import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.site.PositionList;
+import net.maizegenetics.pal.taxa.AnnotatedTaxon;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
-import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.UnmodifiableBitSet;
 
 import org.apache.log4j.Logger;
@@ -24,7 +29,7 @@ import org.apache.log4j.Logger;
  *
  * @author terry
  */
-public class FilterAlignment extends AbstractAlignment {
+public class FilterAlignment implements Alignment {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private static final Logger myLogger = Logger.getLogger(FilterAlignment.class);
@@ -32,17 +37,20 @@ public class FilterAlignment extends AbstractAlignment {
     private final boolean myIsSiteFilter;
     private final boolean myIsSiteFilterByRange;
     private final Alignment myBaseAlignment;
+    private final TaxaList myTaxaList;
     private final int[] myTaxaRedirect;
     private final int[] mySiteRedirect;
     private final int myRangeStart;
     private final int myRangeEnd;
+    private Chromosome[] myChromosomes;
+    private int[] myChromosomeOffsets;
 
-    private FilterAlignment(Alignment a, IdGroup subIdGroup, int[] taxaRedirect, FilterAlignment original) {
+    private FilterAlignment(Alignment a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
 
-        super(subIdGroup);
+        myTaxaList = subList;
 
-        if (subIdGroup.getIdCount() != taxaRedirect.length) {
-            throw new IllegalArgumentException("FilterAlignment: init: subIdGroup should be same size as taxaRedirect.");
+        if (myTaxaList.getTaxaCount() != taxaRedirect.length) {
+            throw new IllegalArgumentException("FilterAlignment: init: subList should be same size as taxaRedirect.");
         }
 
         myIsTaxaFilter = true;
@@ -55,45 +63,45 @@ public class FilterAlignment extends AbstractAlignment {
             mySiteRedirect = null;
             myRangeStart = -1;
             myRangeEnd = -1;
-            myLoci = myBaseAlignment.getLoci();
-            myLociOffsets = myBaseAlignment.getLociOffsets();
+            myChromosomes = myBaseAlignment.getChromosomes();
+            myChromosomeOffsets = myBaseAlignment.getChromosomesOffsets();
         } else {
             myIsSiteFilter = original.isSiteFilter();
             myIsSiteFilterByRange = original.isSiteFilterByRange();
             mySiteRedirect = original.getSiteRedirect();
             myRangeStart = original.getRangeStart();
             myRangeEnd = original.getRangeEnd();
-            myLoci = original.getLoci();
-            myLociOffsets = original.getLociOffsets();
+            myChromosomes = original.getChromosomes();
+            myChromosomeOffsets = original.getChromosomesOffsets();
         }
 
     }
 
     /**
-     * This returns FilterAlignment with only specified subIdGroup. Defaults to
+     * This returns FilterAlignment with only specified subTaxaList. Defaults to
      * retain unknown taxa.
      *
      * @param a alignment
-     * @param subIdGroup subset id group
+     * @param subTaxaList subset id group
      *
      * @return filter alignment
      */
-    public static Alignment getInstance(Alignment a, IdGroup subIdGroup) {
-        return getInstance(a, subIdGroup, true);
+    public static Alignment getInstance(Alignment a, TaxaList subTaxaList) {
+        return getInstance(a, subTaxaList, true);
     }
 
     /**
-     * This returns FilterAlignment with only specified subIdGroup. If
+     * This returns FilterAlignment with only specified subTaxaList. If
      * retainUnknownTaxa is true then Alignment will return unknown values for
      * missing taxa.
      *
      * @param a alignment
-     * @param subIdGroup subset id group
+     * @param subTaxaList subset id group
      * @param retainUnknownTaxa whether to retain unknown taxa
      *
      * @return filter alignment
      */
-    public static Alignment getInstance(Alignment a, IdGroup subIdGroup, boolean retainUnknownTaxa) {
+    public static Alignment getInstance(Alignment a, TaxaList subTaxaList, boolean retainUnknownTaxa) {
 
         Alignment baseAlignment = a;
         FilterAlignment original = null;
@@ -103,29 +111,31 @@ public class FilterAlignment extends AbstractAlignment {
         }
 
         List<Integer> taxaRedirectList = new ArrayList<Integer>();
-        List<Identifier> idList = new ArrayList<Identifier>();
+        List<AnnotatedTaxon> idList = new ArrayList<AnnotatedTaxon>();
         boolean noNeedToFilter = true;
-        if (subIdGroup.getIdCount() != a.getSequenceCount()) {
+        if (subTaxaList.getTaxaCount() != a.getTaxaCount()) {
             noNeedToFilter = false;
         }
-        for (int i = 0, n = subIdGroup.getIdCount(); i < n; i++) {
-            int ion = a.getIdGroup().whichIdNumber(subIdGroup.getIdentifier(i));
+        for (int i = 0, n = subTaxaList.getTaxaCount(); i < n; i++) {
+            List<Integer> ion = a.getTaxaList().getIndicesMatchingTaxon(subTaxaList.get(i));
 
-            if (ion != i) {
+            if ((ion.size() != 1) || (ion.get(0) != i)) {
                 noNeedToFilter = false;
             }
 
-            if ((retainUnknownTaxa) && (ion < 0)) {
-                taxaRedirectList.add(-1);
-                idList.add(subIdGroup.getIdentifier(i));
-            } else {
-                int idn = baseAlignment.getIdGroup().whichIdNumber(subIdGroup.getIdentifier(i));
-                if (idn > -1) {
-                    taxaRedirectList.add(idn);
-                    idList.add(baseAlignment.getIdGroup().getIdentifier(idn));
-                } else if (retainUnknownTaxa) {
+            if (ion.isEmpty()) {
+                if (retainUnknownTaxa) {
                     taxaRedirectList.add(-1);
-                    idList.add(subIdGroup.getIdentifier(i));
+                    idList.add(subTaxaList.get(i));
+                }
+            } else {
+                for (int x = 0; x < ion.size(); x++) {
+                    if (a instanceof FilterAlignment) {
+                        taxaRedirectList.add(((FilterAlignment) a).translateTaxon(ion.get(x)));
+                    } else {
+                        taxaRedirectList.add(ion.get(x));
+                    }
+                    idList.add(a.getTaxaList().get(ion.get(x)));
                 }
             }
         }
@@ -139,11 +149,9 @@ public class FilterAlignment extends AbstractAlignment {
             taxaRedirect[j] = (int) taxaRedirectList.get(j);
         }
 
-        Identifier[] ids = new Identifier[idList.size()];
-        idList.toArray(ids);
-        IdGroup resultIdGroup = new SimpleIdGroup(ids);
+        TaxaList resultTaxaList = new TaxaListBuilder().addAll(idList).build();
 
-        return new FilterAlignment(baseAlignment, resultIdGroup, taxaRedirect, original);
+        return new FilterAlignment(baseAlignment, resultTaxaList, taxaRedirect, original);
 
     }
 
@@ -151,22 +159,20 @@ public class FilterAlignment extends AbstractAlignment {
      * Removes specified IDs.
      *
      * @param a alignment to filter
-     * @param subIdGroup specified IDs
+     * @param subTaxaList specified IDs
      *
      * @return Filtered Alignment
      */
-    public static Alignment getInstanceRemoveIDs(Alignment a, IdGroup subIdGroup) {
+    public static Alignment getInstanceRemoveIDs(Alignment a, TaxaList subTaxaList) {
 
-        List result = new ArrayList();
-        IdGroup current = a.getIdGroup();
-        for (int i = 0, n = current.getIdCount(); i < n; i++) {
-            if (subIdGroup.whichIdNumber(current.getIdentifier(i)) == -1) {
-                result.add(current.getIdentifier(i));
+        TaxaListBuilder result = new TaxaListBuilder();
+        TaxaList current = a.getTaxaList();
+        for (int i = 0, n = current.getTaxaCount(); i < n; i++) {
+            if (subTaxaList.getIndicesMatchingTaxon(current.get(i)).isEmpty()) {
+                result.add(current.get(i));
             }
         }
-        Identifier[] ids = new Identifier[result.size()];
-        result.toArray(ids);
-        return FilterAlignment.getInstance(a, new SimpleIdGroup(ids));
+        return FilterAlignment.getInstance(a, result.build());
 
     }
 
@@ -179,7 +185,7 @@ public class FilterAlignment extends AbstractAlignment {
      */
     private FilterAlignment(Alignment a, int startSite, int endSite, FilterAlignment original) {
 
-        super(original == null ? a.getIdGroup() : original.getIdGroup());
+        myTaxaList = original == null ? a.getTaxaList() : original.getTaxaList();
 
         if (startSite > endSite) {
             throw new IllegalArgumentException("FilterAlignment: init: start site: " + startSite + " is larger than end site: " + endSite);
@@ -219,7 +225,7 @@ public class FilterAlignment extends AbstractAlignment {
      */
     private FilterAlignment(Alignment a, int[] subSites, FilterAlignment original) {
 
-        super(original == null ? a.getIdGroup() : original.getIdGroup());
+        myTaxaList = original == null ? a.getTaxaList() : original.getTaxaList();
 
         myBaseAlignment = a;
         myIsSiteFilter = true;
@@ -320,18 +326,18 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
-    public static FilterAlignment getInstance(Alignment a, String locus, int startPhysicalPos, int endPhysicalPos) {
-        return getInstance(a, a.getChromosome(locus), startPhysicalPos, endPhysicalPos);
+    public static FilterAlignment getInstance(Alignment a, String chromosome, int startPhysicalPos, int endPhysicalPos) {
+        return getInstance(a, a.getChromosome(chromosome), startPhysicalPos, endPhysicalPos);
     }
 
-    public static FilterAlignment getInstance(Alignment a, Chromosome locus, int startPhysicalPos, int endPhysicalPos) {
+    public static FilterAlignment getInstance(Alignment a, Chromosome chromosome, int startPhysicalPos, int endPhysicalPos) {
 
-        int startSite = a.getSiteOfPhysicalPosition(startPhysicalPos, locus);
+        int startSite = a.getSiteOfPhysicalPosition(startPhysicalPos, chromosome);
         if (startSite < 0) {
             startSite = -(startSite + 1);
         }
 
-        int endSite = a.getSiteOfPhysicalPosition(endPhysicalPos, locus);
+        int endSite = a.getSiteOfPhysicalPosition(endPhysicalPos, chromosome);
         if (endSite < 0) {
             endSite = -(endSite + 2);
         }
@@ -345,8 +351,8 @@ public class FilterAlignment extends AbstractAlignment {
 
     }
 
-    public static FilterAlignment getInstance(Alignment a, Chromosome locus) {
-        int[] endStart = a.getStartAndEndOfLocus(locus);
+    public static FilterAlignment getInstance(Alignment a, Chromosome chromosome) {
+        int[] endStart = a.getStartAndEndOfChromosome(chromosome);
         return getInstance(a, endStart[0], endStart[1] - 1);
     }
 
@@ -497,28 +503,28 @@ public class FilterAlignment extends AbstractAlignment {
     private void getLociFromBase() {
 
         if ((!myIsSiteFilter) && (!myIsSiteFilterByRange)) {
-            myLoci = myBaseAlignment.getLoci();
-            myLociOffsets = myBaseAlignment.getLociOffsets();
+            myChromosomes = myBaseAlignment.getChromosomes();
+            myChromosomeOffsets = myBaseAlignment.getChromosomesOffsets();
             return;
         }
 
         int numSites = getSiteCount();
-        List loci = new ArrayList();
-        List offsets = new ArrayList();
+        List<Chromosome> chromosomes = new ArrayList<Chromosome>();
+        List<Integer> offsets = new ArrayList<Integer>();
         for (int i = 0; i < numSites; i++) {
-            Chromosome current = getLocus(i);
-            if (!loci.contains(current)) {
-                loci.add(current);
+            Chromosome current = getChromosome(i);
+            if (!chromosomes.contains(current)) {
+                chromosomes.add(current);
                 offsets.add(i);
             }
         }
 
-        myLoci = new Chromosome[loci.size()];
-        loci.toArray(myLoci);
+        myChromosomes = new Chromosome[chromosomes.size()];
+        chromosomes.toArray(myChromosomes);
 
-        myLociOffsets = new int[offsets.size()];
+        myChromosomeOffsets = new int[offsets.size()];
         for (int i = 0; i < offsets.size(); i++) {
-            myLociOffsets[i] = (Integer) offsets.get(i);
+            myChromosomeOffsets[i] = (Integer) offsets.get(i);
         }
 
     }
@@ -529,13 +535,54 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public Chromosome getLocus(int site) {
-        return myBaseAlignment.getLocus(translateSite(site));
+    public Chromosome getChromosome(int site) {
+        return myBaseAlignment.getChromosome(translateSite(site));
     }
 
     @Override
     public int getPositionInChromosome(int site) {
         return myBaseAlignment.getPositionInChromosome(translateSite(site));
+    }
+
+    @Override
+    public String getChromosomeName(int site) {
+        return myBaseAlignment.getChromosomeName(translateSite(site));
+    }
+
+    @Override
+    public Chromosome getChromosome(String name) {
+        return myBaseAlignment.getChromosome(name);
+    }
+
+    @Override
+    public Chromosome[] getChromosomes() {
+        return myChromosomes;
+    }
+
+    @Override
+    public int getNumChromosomes() {
+        return myChromosomes.length;
+    }
+
+    @Override
+    public int[] getChromosomesOffsets() {
+        return myChromosomeOffsets;
+    }
+
+    @Override
+    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
+        for (int i = 0; i < getNumChromosomes(); i++) {
+            if (chromosome.equals(myChromosomes[i])) {
+                int end = 0;
+                if (i == getNumChromosomes() - 1) {
+                    end = getSiteCount();
+                } else {
+                    end = myChromosomeOffsets[i + 1];
+                }
+                return new int[]{myChromosomeOffsets[i], end};
+            }
+        }
+        throw new IllegalArgumentException("FilterAlignment: getStartAndEndOfLocus: this locus not defined: " + chromosome.getName());
     }
 
     @Override
@@ -546,7 +593,7 @@ public class FilterAlignment extends AbstractAlignment {
         }
 
         int numSites = getSiteCount();
-        int numSeqs = getSequenceCount();
+        int numSeqs = getTaxaCount();
         float[][] result = new float[numSeqs][numSites];
         for (int i = 0; i < numSites; i++) {
             for (int j = 0; j < numSeqs; j++) {
@@ -614,8 +661,8 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
-        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, chromosome);
         if (temp < 0) {
             temp = -(temp + 1);
             return -(reverseTranslateSite(temp) + 1);
@@ -624,8 +671,8 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID) {
-        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
+        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
         if (temp < 0) {
             temp = -(temp + 1);
             return -(reverseTranslateSite(temp) + 1);
@@ -752,7 +799,11 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public byte[] getReference() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            return getReference(0, getSiteCount());
+            byte[] result = new byte[getSiteCount()];
+            for (int i = 0, n = getSiteCount(); i < n; i++) {
+                result[i] = getReferenceAllele(i);
+            }
+            return result;
         } else {
             return myBaseAlignment.getReference();
         }
@@ -788,8 +839,18 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     @Override
-    public String getLocusName(int site) {
-        return myBaseAlignment.getChromosomeName(translateSite(site));
+    public TaxaList getTaxaList() {
+        return myTaxaList;
+    }
+
+    @Override
+    public int getSequenceCount() {
+        return myTaxaList.getTaxaCount();
+    }
+
+    @Override
+    public int getTaxaCount() {
+        return myTaxaList.getTaxaCount();
     }
 
     @Override
@@ -872,7 +933,13 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public byte[] getAlleles(int site) {
         if (myIsTaxaFilter) {
-            return super.getAlleles(site);
+            int[][] alleles = getAllelesSortedByFrequency(site);
+            int resultSize = alleles[0].length;
+            byte[] result = new byte[resultSize];
+            for (int i = 0; i < resultSize; i++) {
+                result[i] = (byte) alleles[0][i];
+            }
+            return result;
         } else {
             return myBaseAlignment.getAlleles(translateSite(site));
         }
@@ -881,7 +948,7 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
         if (myIsTaxaFilter) {
-            return super.getAllelesSortedByFrequency(site);
+            return AlignmentUtils.getAllelesSortedByFrequency(this, site);
         } else {
             return myBaseAlignment.getAllelesSortedByFrequency(translateSite(site));
         }
@@ -890,7 +957,18 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public double getMajorAlleleFrequency(int site) {
         if (myIsTaxaFilter) {
-            return super.getMajorAlleleFrequency(site);
+            int[][] alleles = getAllelesSortedByFrequency(site);
+
+            int numAlleles = alleles[0].length;
+            if (numAlleles >= 1) {
+                int totalNonMissing = 0;
+                for (int i = 0; i < numAlleles; i++) {
+                    totalNonMissing += alleles[1][i];
+                }
+                return (double) alleles[1][0] / (double) totalNonMissing;
+            } else {
+                return 0.0;
+            }
         } else {
             return myBaseAlignment.getMajorAlleleFrequency(translateSite(site));
         }
@@ -899,7 +977,13 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int getHeterozygousCount(int site) {
         if (myIsTaxaFilter) {
-            return super.getHeterozygousCount(site);
+            int result = 0;
+            for (int i = 0, n = getTaxaCount(); i < n; i++) {
+                if (isHeterozygous(i, site)) {
+                    result++;
+                }
+            }
+            return result;
         } else {
             return myBaseAlignment.getHeterozygousCount(translateSite(site));
         }
@@ -908,7 +992,26 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public boolean isPolymorphic(int site) {
         if (myIsTaxaFilter) {
-            return super.isPolymorphic(site);
+            byte first = Alignment.UNKNOWN_ALLELE;
+            for (int i = 0, n = getTaxaCount(); i < n; i++) {
+                byte[] current = getBaseArray(i, site);
+                if (current[0] != Alignment.UNKNOWN_ALLELE) {
+                    if (first == Alignment.UNKNOWN_ALLELE) {
+                        first = current[0];
+                    } else if (first != current[0]) {
+                        return true;
+                    }
+                }
+                if (current[1] != Alignment.UNKNOWN_ALLELE) {
+                    if (first == Alignment.UNKNOWN_ALLELE) {
+                        first = current[1];
+                    } else if (first != current[1]) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         } else {
             return myBaseAlignment.isPolymorphic(translateSite(site));
         }
@@ -917,7 +1020,17 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int getTotalGametesNotMissing(int site) {
         if (myIsTaxaFilter) {
-            return super.getTotalGametesNotMissing(site);
+            int result = 0;
+            for (int i = 0, n = getTaxaCount(); i < n; i++) {
+                byte[] current = getBaseArray(i, site);
+                if (current[0] != Alignment.UNKNOWN_ALLELE) {
+                    result++;
+                }
+                if (current[1] != Alignment.UNKNOWN_ALLELE) {
+                    result++;
+                }
+            }
+            return result;
         } else {
             return myBaseAlignment.getTotalGametesNotMissing(translateSite(site));
         }
@@ -926,7 +1039,17 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int getTotalNotMissing(int site) {
         if (myIsTaxaFilter) {
-            return super.getTotalNotMissing(site);
+            int result = 0;
+            for (int i = 0, n = getTaxaCount(); i < n; i++) {
+                byte[] current = getBaseArray(i, site);
+                if (current[0] != Alignment.UNKNOWN_ALLELE) {
+                    result++;
+                }
+                if (current[1] != Alignment.UNKNOWN_ALLELE) {
+                    result++;
+                }
+            }
+            return result;
         } else {
             return myBaseAlignment.getTotalNotMissing(translateSite(site));
         }
@@ -935,7 +1058,13 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int getMinorAlleleCount(int site) {
         if (myIsTaxaFilter) {
-            return super.getMinorAlleleCount(site);
+            int[][] alleles = getAllelesSortedByFrequency(site);
+
+            if (alleles[0].length >= 2) {
+                return alleles[1][1];
+            } else {
+                return 0;
+            }
         } else {
             return myBaseAlignment.getMinorAlleleCount(translateSite(site));
         }
@@ -944,7 +1073,18 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public double getMinorAlleleFrequency(int site) {
         if (myIsTaxaFilter) {
-            return super.getMinorAlleleFrequency(site);
+            int[][] alleles = getAllelesSortedByFrequency(site);
+
+            int numAlleles = alleles[0].length;
+            if (numAlleles >= 2) {
+                int totalNonMissing = 0;
+                for (int i = 0; i < numAlleles; i++) {
+                    totalNonMissing += alleles[1][i];
+                }
+                return (double) alleles[1][1] / (double) totalNonMissing;
+            } else {
+                return 0.0;
+            }
         } else {
             return myBaseAlignment.getMinorAlleleFrequency(translateSite(site));
         }
@@ -953,7 +1093,13 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int getMajorAlleleCount(int site) {
         if (myIsTaxaFilter) {
-            return super.getMajorAlleleCount(site);
+            int[][] alleles = getAllelesSortedByFrequency(site);
+
+            if (alleles[0].length >= 1) {
+                return alleles[1][0];
+            } else {
+                return 0;
+            }
         } else {
             return myBaseAlignment.getMajorAlleleCount(translateSite(site));
         }
@@ -962,7 +1108,13 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public byte getMajorAllele(int site) {
         if (myIsTaxaFilter) {
-            return super.getMajorAllele(site);
+            int[][] alleles = getAllelesSortedByFrequency(site);
+
+            if (alleles[0].length >= 1) {
+                return (byte) alleles[0][0];
+            } else {
+                return Alignment.UNKNOWN_ALLELE;
+            }
         } else {
             return myBaseAlignment.getMajorAllele(translateSite(site));
         }
@@ -971,25 +1123,41 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public byte getMinorAllele(int site) {
         if (myIsTaxaFilter) {
-            return super.getMinorAllele(site);
+            int[][] alleles = getAllelesSortedByFrequency(site);
+
+            if (alleles[0].length >= 1) {
+                return (byte) alleles[0][0];
+            } else {
+                return Alignment.UNKNOWN_ALLELE;
+            }
         } else {
             return myBaseAlignment.getMinorAllele(translateSite(site));
         }
     }
 
     @Override
-    public Object[][] getDiploidssSortedByFrequency(int site) {
+    public Object[][] getDiploidsSortedByFrequency(int site) {
         if (myIsTaxaFilter) {
-            return super.getDiploidssSortedByFrequency(site);
+            return AlignmentUtils.getDiploidsSortedByFrequency(this, site);
         } else {
-            return myBaseAlignment.getDiploidssSortedByFrequency(translateSite(site));
+            return myBaseAlignment.getDiploidsSortedByFrequency(translateSite(site));
         }
     }
 
     @Override
     public int getTotalGametesNotMissingForTaxon(int taxon) {
         if (myIsSiteFilter || myIsSiteFilterByRange) {
-            return super.getTotalGametesNotMissingForTaxon(taxon);
+            int result = 0;
+            for (int i = 0, n = getSiteCount(); i < n; i++) {
+                byte[] current = getBaseArray(taxon, i);
+                if (current[0] != Alignment.UNKNOWN_ALLELE) {
+                    result++;
+                }
+                if (current[1] != Alignment.UNKNOWN_ALLELE) {
+                    result++;
+                }
+            }
+            return result;
         } else {
             return myBaseAlignment.getTotalGametesNotMissingForTaxon(translateTaxon(taxon));
         }
@@ -998,7 +1166,17 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int getTotalNotMissingForTaxon(int taxon) {
         if (myIsSiteFilter || myIsSiteFilterByRange) {
-            return super.getTotalNotMissingForTaxon(taxon);
+            int result = 0;
+            for (int i = 0, n = getSiteCount(); i < n; i++) {
+                byte[] current = getBaseArray(taxon, i);
+                if (current[0] != Alignment.UNKNOWN_ALLELE) {
+                    result++;
+                }
+                if (current[1] != Alignment.UNKNOWN_ALLELE) {
+                    result++;
+                }
+            }
+            return result;
         } else {
             return myBaseAlignment.getTotalNotMissingForTaxon(translateTaxon(taxon));
         }
@@ -1007,45 +1185,15 @@ public class FilterAlignment extends AbstractAlignment {
     @Override
     public int getHeterozygousCountForTaxon(int taxon) {
         if (myIsSiteFilter || myIsSiteFilterByRange) {
-            return super.getHeterozygousCountForTaxon(taxon);
+            int result = 0;
+            for (int i = 0, n = getSiteCount(); i < n; i++) {
+                if (isHeterozygous(taxon, i)) {
+                    result++;
+                }
+            }
+            return result;
         } else {
             return myBaseAlignment.getHeterozygousCountForTaxon(translateTaxon(taxon));
-        }
-    }
-
-    @Override
-    public boolean isSBitFriendly() {
-        if (!myIsTaxaFilter && myBaseAlignment.isSBitFriendly()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean isTBitFriendly() {
-        if (!myIsSiteFilter && !myIsSiteFilterByRange && myBaseAlignment.isTBitFriendly()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public void optimizeForTaxa(ProgressListener listener) {
-        if (!myIsSiteFilter && !myIsSiteFilterByRange) {
-            myBaseAlignment.optimizeForTaxa(listener);
-        } else {
-            throw new UnsupportedOperationException("FilterAlignment: optimizeForTaxa: Sites have been filtered.  Can't optimize for taxa.  Must create a new alignment.");
-        }
-    }
-
-    @Override
-    public void optimizeForSites(ProgressListener listener) {
-        if (!myIsTaxaFilter) {
-            myBaseAlignment.optimizeForSites(listener);
-        } else {
-            throw new UnsupportedOperationException("FilterAlignment: optimizeForSites: Taxa have been filtered.  Can't optimize for sites.  Must create a new alignment.");
         }
     }
 
@@ -1084,5 +1232,253 @@ public class FilterAlignment extends AbstractAlignment {
             return UnmodifiableBitSet.getInstance(result);
         }
 
+    }
+
+    @Override
+    public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = startSite; i < endSite; i++) {
+            if (i != startSite) {
+                builder.append(";");
+            }
+            builder.append(getBaseAsString(taxon, i));
+        }
+        return builder.toString();
+    }
+
+    @Override
+    public String getBaseAsStringRow(int taxon) {
+        return getBaseAsStringRange(taxon, 0, getSiteCount());
+    }
+
+    @Override
+    public byte[] getReference(int startSite, int endSite) {
+        if (!hasReference()) {
+            return null;
+        }
+
+        byte[] result = new byte[endSite - startSite];
+        for (int i = startSite; i < endSite; i++) {
+            result[i] = getReferenceAllele(i);
+        }
+        return result;
+    }
+
+    @Override
+    public int getChromosomeSiteCount(Chromosome chromosome) {
+        int[] startEnd = getStartAndEndOfChromosome(chromosome);
+        return startEnd[1] - startEnd[0];
+    }
+
+    @Override
+    public boolean isAllPolymorphic() {
+        for (int i = 0, n = getSiteCount(); i < n; i++) {
+            if (!isPolymorphic(i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public String getMajorAlleleAsString(int site) {
+        return getBaseAsString(site, getMajorAllele(site));
+    }
+
+    @Override
+    public String getMinorAlleleAsString(int site) {
+        return getBaseAsString(site, getMinorAllele(site));
+    }
+
+    @Override
+    public byte[] getMinorAlleles(int site) {
+        int[][] alleles = getAllelesSortedByFrequency(site);
+        int resultSize = alleles[0].length - 1;
+        byte[] result = new byte[resultSize];
+        for (int i = 0; i < resultSize; i++) {
+            result[i] = (byte) alleles[0][i + 1];
+        }
+        return result;
+    }
+
+    @Override
+    public String getTaxaName(int index) {
+        return myTaxaList.getTaxaName(index);
+    }
+
+    @Override
+    public String getFullTaxaName(int index) {
+        return myTaxaList.getFullTaxaName(index);
+    }
+
+    @Override
+    public Alignment[] getAlignments() {
+        return new Alignment[]{this};
+    }
+
+    @Override
+    public String getDiploidAsString(int site, byte value) {
+        String[] alleleStates = getAlleleEncodings(site);
+        return alleleStates[(value >>> 4) & 0xf] + ":" + alleleStates[value & 0xf];
+    }
+
+    @Override
+    public Object[][] getDiploidCounts() {
+
+        int numSites = getSiteCount();
+        int numTaxa = getSequenceCount();
+
+        Map<String, Long> diploidValueCounts = new HashMap<String, Long>();
+        for (int c = 0; c < numSites; c++) {
+            Object[][] diploids = getDiploidsSortedByFrequency(c);
+            for (int i = 0; i < diploids[0].length; i++) {
+                String current = (String) diploids[0][i];
+                Long count = (long) ((Integer) diploids[1][i]).intValue();
+                Long num = diploidValueCounts.get(current);
+                if (num == null) {
+                    diploidValueCounts.put(current, count);
+                } else {
+                    diploidValueCounts.put(current, (num + count));
+                }
+            }
+        }
+
+        Object[][] result = new Object[2][diploidValueCounts.size()];
+
+        int i = 0;
+        Iterator itr = diploidValueCounts.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            Long count = diploidValueCounts.get(key);
+            result[0][i] = key;
+            result[1][i++] = count;
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0, n = diploidValueCounts.size() - 1; k < n; k++) {
+
+                if ((Long) result[1][k] < (Long) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+    }
+
+    @Override
+    public Object[][] getMajorMinorCounts() {
+
+        String[][] alleleStates = getAlleleEncodings();
+
+        if (alleleStates.length != 1) {
+            return new Object[0][0];
+        }
+
+        int numSites = getSiteCount();
+        long[][] counts = new long[16][16];
+
+        if (getMaxNumAlleles() >= 2) {
+            for (int site = 0; site < numSites; site++) {
+                byte[] alleles = getAlleles(site);
+                byte indexI = alleles[0];
+                byte indexJ = alleles[1];
+                if (indexJ == UNKNOWN_ALLELE) {
+                    indexJ = indexI;
+                }
+                counts[indexI][indexJ]++;
+            }
+        } else {
+            for (int site = 0; site < numSites; site++) {
+                byte[] alleles = getAlleles(site);
+                byte indexI = alleles[0];
+                counts[indexI][indexI]++;
+            }
+        }
+
+        int numAlleles = 0;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = 0; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    numAlleles++;
+                }
+            }
+        }
+
+        Object[][] result = new Object[2][numAlleles];
+        int nextResult = 0;
+        for (byte x = 0; x < 16; x++) {
+            for (byte y = 0; y < 16; y++) {
+                if (counts[x][y] != 0) {
+                    result[0][nextResult] = getBaseAsString(0, x) + ":" + getBaseAsString(0, y);
+                    result[1][nextResult++] = counts[x][y];
+                }
+            }
+        }
+
+        boolean change = true;
+        while (change) {
+
+            change = false;
+
+            for (int k = 0; k < numAlleles - 1; k++) {
+
+                if ((Long) result[1][k] < (Long) result[1][k + 1]) {
+
+                    Object temp = result[0][k];
+                    result[0][k] = result[0][k + 1];
+                    result[0][k + 1] = temp;
+
+                    Object tempCount = result[1][k];
+                    result[1][k] = result[1][k + 1];
+                    result[1][k + 1] = tempCount;
+
+                    change = true;
+                }
+            }
+
+        }
+
+        return result;
+    }
+
+    @Override
+    public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public PositionList getPositionList() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

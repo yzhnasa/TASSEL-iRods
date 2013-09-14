@@ -5,6 +5,7 @@ package net.maizegenetics.pal.alignment;
 
 import java.awt.Color;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.Identifier;
@@ -32,19 +33,19 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, Identifier id) {
-        int index = align.getIdGroup().whichIdNumber(id);
-        if (index == -1) {
+        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, index);
+        return getInstanceCompareReference(align, index.get(0));
     }
 
     public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, String id) {
-        int index = align.getIdGroup().whichIdNumber(id);
-        if (index == -1) {
+        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, index);
+        return getInstanceCompareReference(align, index.get(0));
     }
 
     public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, int index) {
