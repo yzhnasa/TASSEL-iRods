@@ -6,23 +6,22 @@
  */
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.pal.alignment.MarkerPhenotype;
+import net.maizegenetics.pal.alignment.Phenotype;
 import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-
-import java.awt.Frame;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-
+import java.awt.*;
 import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -100,9 +99,9 @@ public class SeparatePlugin extends AbstractPlugin {
         List<Datum> result = new ArrayList<Datum>();
         Alignment[] alignments = alignment.getAlignments();
         for (int i = 0; i < alignments.length; i++) {
-            int[] offsets = alignments[i].getLociOffsets();
+            int[] offsets = alignments[i].getChromosomesOffsets();
             if (offsets.length > 1) {
-                Chromosome[] loci = alignments[i].getLoci();
+                Chromosome[] loci = alignments[i].getChromosomes();
                 for (int j = 0; j < offsets.length; j++) {
                     if (alignmentInList(loci[j], chromosomesToSeparate)) {
                         String name;
@@ -122,12 +121,12 @@ public class SeparatePlugin extends AbstractPlugin {
                     }
                 }
             } else {
-                if ((alignments.length > 1) && (alignmentInList(alignments[i].getLoci()[0], chromosomesToSeparate))) {
+                if ((alignments.length > 1) && (alignmentInList(alignments[i].getChromosomes()[0], chromosomesToSeparate))) {
                     String name;
                     if (dataSetName == null) {
-                        name = "Alignment_chrom" + alignments[i].getLocus(0);
+                        name = "Alignment_chrom" + alignments[i].getChromosome(0);
                     } else {
-                        name = dataSetName + "_chrom" + alignments[i].getLocus(0);
+                        name = dataSetName + "_chrom" + alignments[i].getChromosome(0);
                     }
                     Datum td = new Datum(name, alignments[i], null);
                     result.add(td);

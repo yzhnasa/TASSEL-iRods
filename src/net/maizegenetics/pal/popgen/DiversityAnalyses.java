@@ -14,14 +14,15 @@
  */
 package net.maizegenetics.pal.popgen;
 
-import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.report.AbstractTableReport;
+import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.site.Chromosome;
 
 import java.io.Serializable;
 import java.util.Vector;
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 
 /**
  *This method calculated estimates of nucleotide diversity (pi, theta, etc).
@@ -47,7 +48,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
     /** the base annotated alignment, it should be unprocessed (raw alignment)*/
     Alignment theAAlignment;
     /** the nature of the sites being evaluated, currently set to ALL POLYMORPHISMs, need to add specifics indels and SNPs.*/
-    byte siteGroup = Alignment.POSITION_TYPE_ALL_GROUP;
+
     Vector diversityResultsVector = new Vector();
     PolymorphismDistribution thePolymorphismDistribution = null;
 
@@ -93,7 +94,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
      * This will determine what analyses are to be run and run them
      */
     private void runAnalysisForRegion(int start, int end) {
-        Chromosome locus = theAAlignment.getLocus(start);
+        Chromosome locus = theAAlignment.getChromosome(start);
         int chromosome = -1;
         try {
             chromosome = Integer.parseInt(locus.getName());
@@ -104,16 +105,16 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         double endChrPosition = theAAlignment.getPositionInChromosome(end);
         Alignment theFilteredAlignment = FilterAlignment.getInstance(theAAlignment, start, end);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(theFilteredAlignment);
-        diversityResultsVector.add(evaluate(siteGroup, theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));
+        diversityResultsVector.add(evaluate(theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));
         if (thePolymorphismDistribution != null) {
-            thePolymorphismDistribution.addDistribution(Alignment.POSITION_TYPE_GROUP_TEXT[siteGroup] + "s" + start + "-e" + end, theFilteredAlignment, true);
+            thePolymorphismDistribution.addDistribution("ALL" + "s" + start + "-e" + end, theFilteredAlignment, true);
         }
     }
 
-    DiversityResults evaluate(byte siteGroup, Alignment theAlignment, IBSDistanceMatrix dm,
+    DiversityResults evaluate(Alignment theAlignment, IBSDistanceMatrix dm,
             int start, int end, int chromosome, double startChrPosition, double endChrPosition) {
         int sites = end - start + 1;
-        DiversityResults theDiversityResults = new DiversityResults(start, end, siteGroup, chromosome, startChrPosition, endChrPosition);
+        DiversityResults theDiversityResults = new DiversityResults(start, end, chromosome, startChrPosition, endChrPosition);
         if (dm == null) {
             theDiversityResults.totalSites = 0;
             theDiversityResults.pipbp = Double.NaN;
@@ -218,7 +219,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         DiversityResults theDiversityResults;
         theDiversityResults = (DiversityResults) diversityResultsVector.get(row);
         labelOffset = 0;
-        data[labelOffset++] = theDiversityResults.getSiteGroupString();
+        data[labelOffset++] = "ALL";
         data[labelOffset++] = "" + theDiversityResults.chromosome;
         data[labelOffset++] = "" + nf2.format(theDiversityResults.startChrPosition);
         data[labelOffset++] = "" + nf2.format(theDiversityResults.endChrPosition);
@@ -286,14 +287,12 @@ class DiversityResults implements Serializable {
 
     protected double pipbp, thetapbp, totalSites, avgSiteCoverage, tajimaD, startChrPosition, endChrPosition;
     protected int startSite, endSite, haplotypes, segregatingSites, chromosome;
-    protected int siteGroup;
     private int index;
 
-    public DiversityResults(int start, int end, byte siteGroup, int chromosome,
+    public DiversityResults(int start, int end, int chromosome,
             double startChrPosition, double endChrPosition) {
         this.startSite = start;
         this.endSite = end;
-        this.siteGroup = siteGroup;
         this.chromosome = chromosome;
         this.startChrPosition = startChrPosition;
         this.endChrPosition = endChrPosition;
@@ -312,12 +311,9 @@ class DiversityResults implements Serializable {
         this.index = theIndex;
     }
 
-    public String getSiteGroupString() {
-        return Alignment.POSITION_TYPE_GROUP_TEXT[siteGroup];
-    }
 
     public String toString() {
-        String result = "Diversity Results for " + getSiteGroupString() + "\n";
+        String result = "Diversity Results for " + "ALL" + "\n";
         result += "Pi =" + pipbp + "\n";
         result += "Theta =" + thetapbp + "\n";
         result += "Segregrating Sites =" + segregatingSites + "\n";

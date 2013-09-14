@@ -3,15 +3,15 @@ package net.maizegenetics.pd;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.util.Utils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
-import net.maizegenetics.util.Utils;
 
 public class PDAnnotation {
 
@@ -65,7 +65,6 @@ public class PDAnnotation {
         System.out.println("Loading:" + chromosomeFile);
         Alignment bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
         //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.getSiteCount(), bna.getPositionInChromosome(0), bna.getPositionInChromosome(bna.getSiteCount() - 1));
-        bna.optimizeForSites(null);
         int siteCnt = bna.getSiteCount();
         int[] alignmentPhysPos = bna.getPhysicalPositions();
         hasData = new int[siteCnt];

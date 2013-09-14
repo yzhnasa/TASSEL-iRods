@@ -9,9 +9,9 @@ package net.maizegenetics.pal.gui;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import javax.swing.JComponent;
 import java.text.DecimalFormat;
 
 /**
@@ -77,7 +77,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
         this.diseq = new double[windowSize][windowSize];
         setXStart();
         setYStart();
-        jump = new int[totalVariableSites+theAA.getNumLoci()-1];
+        jump = new int[totalVariableSites+theAA.getNumChromosomes()-1];
         String locus = theAA.getChromosomeName(0);
         int jumpValue = 0;
         for (int i = 0; i< jump.length; i++) {

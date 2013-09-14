@@ -3,36 +3,22 @@
  */
 package net.maizegenetics.baseplugins;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
-
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.Frame;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import java.net.URL;
-
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTabbedPane;
-
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -364,7 +350,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
             int count = 0;
             data[i][count++] = i;
-            data[i][count++] = alignment.getIdGroup().getIdentifier(i).getFullName();
+            data[i][count++] = alignment.getFullTaxaName(i);
             data[i][count++] = numSites;
             data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;

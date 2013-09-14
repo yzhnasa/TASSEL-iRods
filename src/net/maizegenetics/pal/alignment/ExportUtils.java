@@ -1256,7 +1256,7 @@ public class ExportUtils {
             }
             bw.write("\n");
 
-            for (int r = 0, n = theAlignment.getSequenceount(); r < n; r++) {
+            for (int r = 0, n = theAlignment.getTaxaCount(); r < n; r++) {
                 bw.write(theAlignment.getFullTaxaName(r));
                 for (int i = 0; i < numSites; i++) {
                     bw.write(delimit);
@@ -1293,7 +1293,7 @@ public class ExportUtils {
             int n = 0;
             while (n < a.getSiteCount()) {
                 if (n == 0) {
-                    format.displayLabel(out, a.getIdGroup().getIdentifier(s).getName(), 10);
+                    format.displayLabel(out, a.getFullTaxaName(s), 10);
                     out.print("     ");
                 } else {
                     out.print("               ");

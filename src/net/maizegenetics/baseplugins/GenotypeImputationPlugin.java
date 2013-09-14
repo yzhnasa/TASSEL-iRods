@@ -6,15 +6,6 @@
  */
 package net.maizegenetics.baseplugins;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.FocusEvent;
-
-import java.net.URL;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import net.maizegenetics.baseplugins.GenotypeImputationPlugin.ImpMethod;
 import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -26,8 +17,14 @@ import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
-
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Plugin supports the imputation of genotypic data using a variety of methods.
@@ -124,7 +121,8 @@ public class GenotypeImputationPlugin extends AbstractDisplayPlugin {
     
     public DataSet processDatum(Datum inDatum) {
         Alignment align = (Alignment) inDatum.getData();
-        Alignment impP1A = BasicImputation.imputeBySite(align, minLength, maxMismatch);
+        //Alignment impP1A = BasicImputation.imputeBySite(align, minLength, maxMismatch);
+        Alignment impP1A=null; //TODO these needs to be hooked to our new imputation methods both Peter's & Ed's
         
         String theName, theComment;
         theName = inDatum.getName() + "_Imp";

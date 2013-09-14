@@ -1,57 +1,11 @@
 package net.maizegenetics.baseplugins;
 
-import java.awt.Container;
-import java.awt.Dialog;
-import java.awt.Frame;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-import java.util.TreeSet;
-import java.util.regex.Pattern;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
-
-import org.apache.log4j.Logger;
-
 import net.maizegenetics.gui.ReportDestinationDialog;
 import net.maizegenetics.jGLiM.LinearModelUtils;
-import net.maizegenetics.jGLiM.dm.CovariateModelEffect;
-import net.maizegenetics.jGLiM.dm.FactorModelEffect;
-import net.maizegenetics.jGLiM.dm.ModelEffect;
-import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
-import net.maizegenetics.jGLiM.dm.SweepFastLinearModel;
-import net.maizegenetics.jGLiM.dm.SweepFastNestedModel;
+import net.maizegenetics.jGLiM.dm.*;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.alignment.GeneticMap;
-import net.maizegenetics.pal.alignment.MarkerPhenotype;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
-import net.maizegenetics.pal.alignment.Trait;
+import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.report.SimpleTableReport;
@@ -59,6 +13,17 @@ import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.URL;
+import java.util.*;
+import java.util.List;
+import java.util.regex.Pattern;
 
 public class FixedEffectLMPlugin extends AbstractPlugin {
 
@@ -418,7 +383,7 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
                     if (marker == null) {
                         marker = blank;
                     }
-                    String locus = theAdapter.getChromosomeName(m);
+                    String locus = theAdapter.getLocusName(m);
                     Integer site = new Integer(theAdapter.getLocusPosition(m));
                     String chrname = "";
                     Double chrpos = Double.NaN;

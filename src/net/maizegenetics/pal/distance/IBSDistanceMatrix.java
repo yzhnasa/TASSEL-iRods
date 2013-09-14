@@ -149,7 +149,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @return array of {distance, number of sites used in comparison}
      */
     public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
-        if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
+      //  if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
         long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
         long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
         long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
@@ -173,7 +173,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      */
     public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, 
             int minSitesCompared, int startWord, int endWord, BitSet maskBadSet) {
-        if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
+       // if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
         long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
         long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
         if(maskBadSet!=null) {

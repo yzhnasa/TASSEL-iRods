@@ -16,21 +16,13 @@ import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
-
 import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 /**
  *
@@ -38,7 +30,6 @@ import java.util.Vector;
  */
 public class SequenceDiversityPlugin extends AbstractPlugin {
 
-    Vector typeOfSitesToAnalyze = new Vector();
     boolean isSlidingWindowAnalysis = false;
     int startSite = 0;
     int endSite = 0;
@@ -49,7 +40,6 @@ public class SequenceDiversityPlugin extends AbstractPlugin {
     /** Creates a new instance of SequenceDiversityPlugin */
     public SequenceDiversityPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
-        typeOfSitesToAnalyze.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
     }
 
     public DataSet performFunction(DataSet input) {
@@ -110,21 +100,13 @@ public class SequenceDiversityPlugin extends AbstractPlugin {
     public DataSet processDatum(Datum input) {
         Alignment aa = (Alignment) input.getData();
         PolymorphismDistribution pda = new PolymorphismDistribution();
-        DiversityAnalyses theDA = new DiversityAnalyses(aa, typeOfSitesToAnalyze, isSlidingWindowAnalysis,
+        DiversityAnalyses theDA = new DiversityAnalyses(aa, null, isSlidingWindowAnalysis,
                 startSite, endSite, windowSize, stepSize, pda);
         List<Datum> results = new ArrayList<Datum>();
         results.add(new Datum("PolyDist:" + input.getName(), new SimpleTableReport(pda), "Polymorphism Distribution"));
         results.add(new Datum("Diversity:" + input.getName(), new SimpleTableReport(theDA), "Diversity Analysis"));
         DataSet tds = new DataSet(results, this);
         return tds;
-    }
-
-    public Vector getTypeOfSitesToAnalyze() {
-        return typeOfSitesToAnalyze;
-    }
-
-    public void setTypeOfSitesToAnalyze(Vector typeOfSitesToAnalyze) {
-        this.typeOfSitesToAnalyze = typeOfSitesToAnalyze;
     }
 
     public boolean isSlidingWindowAnalysis() {

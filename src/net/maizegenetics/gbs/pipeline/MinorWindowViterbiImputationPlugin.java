@@ -264,7 +264,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //            }
             int countFullLength=0;
             for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
-                int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getLocus(0));
+                int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getChromosome(0));
                 int blocks=donorAlign[da].getAllelePresenceForAllSites(0, 0).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
                         donorAlign[da].getSiteCount(),conflictMasks[da][0],conflictMasks[da][1]); 
@@ -413,7 +413,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private OpenBitSet[][] createMaskForAlignmentConflicts(Alignment unimpAlign, Alignment[] donorAlign, boolean print) {
         OpenBitSet[][] result=new OpenBitSet[donorAlign.length][4];
         for (int da = 0; da < result.length; da++) {
-            int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getLocus(0));
+            int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getChromosome(0));
             OpenBitSet goodMask=new OpenBitSet(donorAlign[da].getSiteCount());
             OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].getSiteCount());
             OpenBitSet errorMask=new OpenBitSet(donorAlign[da].getSiteCount());
@@ -903,7 +903,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         } //end of cs loop
         //enter a stop of the DH at the beginning of the next block
         int lastDApos=donorAlign.getPositionInChromosome(endSite);
-        int nextSite=unimpAlign.getSiteOfPhysicalPosition(lastDApos, donorAlign.getLocus(0))+1;
+        int nextSite=unimpAlign.getSiteOfPhysicalPosition(lastDApos, donorAlign.getChromosome(0))+1;
         if(nextSite<unimpAlign.getSiteCount()) impT.breakPoints.put(unimpAlign.getPositionInChromosome(nextSite), new int[]{-1,-1});
     //    if (print) System.out.println("E:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         return impT;
@@ -948,7 +948,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int gaps=0;
         for (int t = 0; t < iA.getSequenceCount(); t++) {
             int e=0,c=0,u=0,h=0;
-            int oATaxa=oA.getIdGroup().whichIdNumber(iA.getFullTaxaName(t));
+            int oATaxa=oA.getTaxaList().getIndicesMatchingTaxon(iA.getFullTaxaName(t)).get(0);
             for (int s = 0; s < iA.getSiteCount(); s++) {
                 if(noMask||(oA.getBase(oATaxa, s)!=mA.getBase(t, s))) {
                     byte ib=iA.getBase(t, s);

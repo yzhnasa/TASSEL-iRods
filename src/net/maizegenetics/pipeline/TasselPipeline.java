@@ -665,16 +665,16 @@ public class TasselPipeline implements PluginListener {
 
                     Vector grp = new Vector();
                     String[] types = args[index++].trim().split(",");
-                    for (int i = 0; i < types.length; i++) {
-                        if (types[i].equalsIgnoreCase("ALL")) {
-                            grp.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
-                        }
-                        // else if (types[i].equalsIgnoreCase("INDEL")) {
-                        //     grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
-                        // }
-                    }
+//                    for (int i = 0; i < types.length; i++) {
+//                        if (types[i].equalsIgnoreCase("ALL")) {
+//                            grp.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
+//                        }
+//                        // else if (types[i].equalsIgnoreCase("INDEL")) {
+//                        //     grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
+//                        // }
+//                    }
 
-                    plugin.setTypeOfSitesToAnalyze(grp);
+                  //  plugin.setTypeOfSitesToAnalyze(grp);
 
                 } else if (current.equalsIgnoreCase("-ld")) {
                     LinkageDisequilibriumPlugin plugin = new LinkageDisequilibriumPlugin(myMainFrame, false);

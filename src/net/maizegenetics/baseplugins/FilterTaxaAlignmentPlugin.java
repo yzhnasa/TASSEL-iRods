@@ -107,7 +107,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
                     @Override
                     public String getRealElementAt(int index) {
-                        return alignment.getIdGroup().getIdentifier(index).getFullName();
+                        return alignment.getFullTaxaName(index);
                     }
                 };
                 dialog = new SelectFromAvailableDialog(getParentFrame(), "Taxa Filter", listModel);
@@ -158,7 +158,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
             } else if (myIdsToRemove != null) {
                 result = FilterAlignment.getInstanceRemoveIDs((Alignment) theData, myIdsToRemove);
             }
-            count = ((Alignment) result).getIdGroup().getIdCount();
+            count = ((Alignment) result).getTaxaCount();
         } else if (theData instanceof Phenotype) {
             if (myIdsToKeep != null) {
                 result = FilterPhenotype.getInstance((Phenotype) theData, myIdsToKeep, null);

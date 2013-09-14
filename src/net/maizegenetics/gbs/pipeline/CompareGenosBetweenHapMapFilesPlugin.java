@@ -3,18 +3,6 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import javax.swing.ImageIcon;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
@@ -25,6 +13,14 @@ import net.maizegenetics.util.ArgsEngine;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
 import org.apache.log4j.SimpleLayout;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  *
@@ -332,22 +328,22 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
     private void findCommonPositionsAndCompare(Alignment a1, Alignment a2) {
 
-        if (a1.getLoci().length != 1 || a2.getLoci().length != 1) {
+        if (a1.getChromosomes().length != 1 || a2.getChromosomes().length != 1) {
             myLogger.error("ERROR: both hapmap genotype files should contain only a single chromosome");
             return;
         }
-        if (!a1.getLoci()[0].getName().equals(a2.getLoci()[0].getName())) {
+        if (!a1.getChromosomes()[0].getName().equals(a2.getChromosomes()[0].getName())) {
             myLogger.error("ERROR: the hapmap genotype files to compare do not contain the same chromosome");
             return;
         }
-        if (Integer.parseInt(a1.getLoci()[0].getName()) != chr || Integer.parseInt(a2.getLoci()[0].getName()) != chr) {
+        if (Integer.parseInt(a1.getChromosomes()[0].getName()) != chr || Integer.parseInt(a2.getChromosomes()[0].getName()) != chr) {
             myLogger.error("ERROR: one or both of the hapmap genotype files to compare do not contain the expected chromosome "
-                    + "(expected:" + chr + "  hmp1:" + a1.getLoci()[0].getName() + "  hmp2:" + a2.getLoci()[0].getName() + ")");
+                    + "(expected:" + chr + "  hmp1:" + a1.getChromosomes()[0].getName() + "  hmp2:" + a2.getChromosomes()[0].getName() + ")");
             return;
         }
 
-        myLogger.info("\nHapMap format genotype file1 contains " + a1.getLocusSiteCount(a1.getLocus(0)) + " sites on chromosome " + a1.getChromosomeName(0) + "\n");
-        myLogger.info("\nHapMap format genotype file2 contains " + a2.getLocusSiteCount(a2.getLocus(0)) + " sites on chromosome " + a2.getChromosomeName(0) + "\n\n");
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.getChromosomeSiteCount(a1.getChromosome(0)) + " sites on chromosome " + a1.getChromosomeName(0) + "\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.getChromosomeSiteCount(a2.getChromosome(0)) + " sites on chromosome " + a2.getChromosomeName(0) + "\n\n");
 
         int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
         int s1 = 0, s2 = 0;
