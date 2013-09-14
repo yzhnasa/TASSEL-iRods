@@ -1,32 +1,16 @@
 package net.maizegenetics.gwas.imputation;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Random;
-import java.util.regex.Pattern;
-
-import net.maizegenetics.pal.ids.TaxaList;
-import org.apache.log4j.Logger;
-
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.gwas.NAM.AGPMap;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.BitAlignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
+import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.util.*;
+import java.util.regex.Pattern;
 
 public class ImputationUtils {
 	private static final Logger myLogger = Logger.getLogger(ImputationUtils.class);
@@ -209,8 +193,8 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[t];
-		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.getIdGroup(), isInCluster1);
-		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.getIdGroup(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.getTaxaList(), isInCluster1);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.getTaxaList(), isInCluster2);
 		
 		Alignment a1 = FilterAlignment.getInstance(tb, id1);
 		Alignment a2 = FilterAlignment.getInstance(tb, id2);
@@ -238,7 +222,7 @@ public class ImputationUtils {
 			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.getSNPID(0));
 			return null;
 		} else {
-			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getIdGroup(), include));
+			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getTaxaList(), include));
 			
 			myAlignment = BitAlignment.getInstance(fa, false);
 		}
@@ -258,7 +242,7 @@ public class ImputationUtils {
 		
 		float[][] taxaLocs = new float[ntaxa][nsnps];
 		
-		myAlignment.optimizeForTaxa(null);
+		//myAlignment.optimizeForTaxa(null);
 		for (int t = 0; t < ntaxa; t++) {
 			taxaLocs[t] = snpsAsFloatVector(new BitSet[]{myAlignment.getAllelePresenceForAllSites(t, 0), myAlignment.getAllelePresenceForAllSites(t, 1)}, nsnps);
 		}
@@ -353,8 +337,8 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[bestTrial][t];
-		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.getIdGroup(), isInCluster1[bestTrial]);
-		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.getIdGroup(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.getTaxaList(), isInCluster1[bestTrial]);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.getTaxaList(), isInCluster2);
 		
 		Alignment a1 = FilterAlignment.getInstance(myAlignment, id1);
 		Alignment a2 = FilterAlignment.getInstance(myAlignment, id2);
@@ -1002,8 +986,8 @@ public class ImputationUtils {
 	}
 	
 	public static boolean isB73HaplotypeA(Alignment a) {
-		TaxaList ids = a.getIdGroup();
-		int ndx = ids.whichIdNumber("B73(PI550473)");
+		TaxaList ids = a.getTaxaList();
+		int ndx = ids.getIndicesMatchingTaxon("B73(PI550473)").get(0);
 		int nsnps = a.getSiteCount();
 		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();
 		for (int s = 0; s < nsnps; s++) {

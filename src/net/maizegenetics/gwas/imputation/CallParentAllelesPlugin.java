@@ -7,6 +7,8 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -57,7 +59,8 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				family.members.toArray(ids);
 				
 				myLogger.info("creating family alignment for family " + family.name);
-				family.original =  BitAlignment.getInstance(FilterAlignment.getInstance(align, new SimpleIdGroup(ids), false), true);
+                TaxaList tL=new TaxaListBuilder().addAll(ids).build();
+				family.original =  BitAlignment.getInstance(FilterAlignment.getInstance(align, tL, false), true);
 				myLogger.info("family alignment created");
 				if (useClusterAlgorithm)  NucleotideImputationUtils.callParentAllelesUsingClusters(family, maxMissing, minMinorAlleleFrequency, windowSize);
 				else if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);

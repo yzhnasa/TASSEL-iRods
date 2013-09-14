@@ -11,6 +11,8 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.FileAppender;
@@ -84,7 +86,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
 				for (PopulationData family : familyList) {
 					String[] names = new String[family.members.size()];
 					family.members.toArray(names);
-					Alignment align = FilterAlignment.getInstance(anAlignment, new SimpleIdGroup(names), false);
+                    TaxaList tL=new TaxaListBuilder().addAll(names).build();
+					Alignment align = FilterAlignment.getInstance(anAlignment, tL, false);
 					processFamily(align, family.name);
 				}
 			}
@@ -148,16 +151,16 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		//create list of taxa with too much missing data
 		LinkedList<Taxon> taxaDiscardList = new LinkedList<Taxon>();
 		for (int t = 0; t < ntaxa; t++) {
-			if (align.getTotalGametesNotMissingForTaxon(t) < minTaxaGametes) taxaDiscardList.add(align.getIdGroup().getIdentifier(t));
+			if (align.getTotalGametesNotMissingForTaxon(t) < minTaxaGametes) taxaDiscardList.add(align.getTaxaList().get(t));
 		}
 		if (taxaDiscardList.size() > 0) {
 			myLogger.info("\nThe following taxa will not be included in the analysis because the proportion of nonMissing data is below " + minNonMissingProportionForTaxon + ":\n");
 			for (Taxon id:taxaDiscardList) myLogger.info(id.getFullName());
 			
-			Taxon[] ids = new Taxon[taxaDiscardList.size()];
-			taxaDiscardList.toArray(ids);
-			
-			align = FilterAlignment.getInstanceRemoveIDs(align, new SimpleIdGroup(ids));
+//			Taxon[] ids = new Taxon[taxaDiscardList.size()];
+//			taxaDiscardList.toArray(ids);
+            TaxaList tL=new TaxaListBuilder().addAll(taxaDiscardList).build();
+			align = FilterAlignment.getInstanceRemoveIDs(align, tL);
 		}
 		
 		myLogger.info("After filtering for taxa, there are " + align.getSequenceCount() + " taxa.");

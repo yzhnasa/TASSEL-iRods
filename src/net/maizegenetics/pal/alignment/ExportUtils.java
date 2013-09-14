@@ -229,7 +229,7 @@ public class ExportUtils {
   //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
 
             h5w.createGroup(HapMapHDF5Constants.GENOTYPES);            
-            if((exportTaxa!=null)&&(exportTaxa.getIdCount()==0)) {h5w.close(); return newHDF5file;}
+            if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {h5w.close(); return newHDF5file;}
             h5w.close();
             MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
             for (int t = 0; t < numTaxa; t++) {
@@ -339,7 +339,7 @@ public class ExportUtils {
   //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
 
             h5w.createGroup(HapMapHDF5Constants.GENOTYPES);            
-            if((exportTaxa!=null)&&(exportTaxa.getIdCount()==0)) {h5w.close(); return newHDF5file;}
+            if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {h5w.close(); return newHDF5file;}
             h5w.close();
             MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
             for (int t = 0; t < numTaxa; t++) {
@@ -382,7 +382,7 @@ public class ExportUtils {
      * sites must be exactly the same.
      * <p>
      * TODO:  Need to add option for merging depth.
-     * @param sourceFile array of sourcefile names in ByteNucleotideHDF5 format with the new taxa
+     * @param sourceFiles array of sourcefile names in ByteNucleotideHDF5 format with the new taxa
      * @param targetFile name of ByteNucleotideHDF5 file to receive the new taxa
      */
     public static void addTaxaFromExistingByteHDF5File(String[] sourceFiles, String targetFile, boolean addDepth) {
@@ -592,7 +592,7 @@ public class ExportUtils {
                 //not completely sure this does what I want, I need to access the
                 //accession name from every alleleBLOB in bytes [52-201] but there
                 //doesn't seem to be a method to access that in Alignment
-                String sequenceID = alignment.getIdGroup().getIdentifier(taxa).getFullName().trim();
+                String sequenceID = alignment.getFullTaxaName(taxa).trim();
                 bw.write(sequenceID);
                 if (taxa != numTaxa - 1) {
                     bw.write(delimChar);
@@ -729,7 +729,7 @@ public class ExportUtils {
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             boolean refTaxon = false;
             for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
-                String taxonName = alignment.getIdGroup().getIdentifier(taxa).getFullName().trim();
+                String taxonName = alignment.getFullTaxaName(taxa).trim();
                 if (taxa == 0 && taxonName.contentEquals("REFERENCE_GENOME")) {
                     refTaxon = true;
                 } else {

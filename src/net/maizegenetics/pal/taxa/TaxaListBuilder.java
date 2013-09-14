@@ -47,7 +47,7 @@ public class TaxaListBuilder {
 //        return this;
 //    }
 
-    public TaxaListBuilder addAll(Collection<Taxon> taxa) {
+    public TaxaListBuilder addAll(Collection<AnnotatedTaxon> taxa) {
         for (Taxon t: taxa) {
             myTaxaList.add(new AnnotatedTaxon.Builder(t).build());
         }

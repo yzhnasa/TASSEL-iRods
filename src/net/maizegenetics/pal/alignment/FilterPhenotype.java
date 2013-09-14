@@ -1,7 +1,7 @@
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ public class FilterPhenotype extends AbstractPhenotype {
 
         if (taxa == null) {
             taxaGroup = phenotype.getTaxa();
-            int n = taxaGroup.getIdCount();
+            int n = taxaGroup.getTaxaCount();
             taxa = new int[n];
             for (int i = 0; i < n; i++) {
                 taxa[i] = i;
@@ -50,7 +50,7 @@ public class FilterPhenotype extends AbstractPhenotype {
             for (int i = 0; i < n; i++) {
                 ids[i] = phenotype.getTaxon(taxa[i]);
             }
-            taxaGroup = new SimpleIdGroup(ids);
+            taxaGroup = new TaxaListBuilder().addAll(ids).build();
         }
 
         if (traits == null) {
@@ -86,17 +86,17 @@ public class FilterPhenotype extends AbstractPhenotype {
 
         if (taxa == null) {
             taxaGroup = phenotype.getTaxa();
-            int n = taxaGroup.getIdCount();
+            int n = taxaGroup.getTaxaCount();
             taxaIndex = new int[n];
             for (int i = 0; i < n; i++) {
                 taxaIndex[i] = i;
             }
         } else {
             taxaGroup = taxa;
-            int n = taxaGroup.getIdCount();
+            int n = taxaGroup.getTaxaCount();
             taxaIndex = new int[n];
             for (int i = 0; i < n; i++) {
-                taxaIndex[i] = phenotype.whichTaxon(taxaGroup.getIdentifier(i));
+                taxaIndex[i] = phenotype.whichTaxon(taxaGroup.get(i));
             }
         }
 
@@ -125,16 +125,14 @@ public class FilterPhenotype extends AbstractPhenotype {
      * @return a FilterPhenotype with excluded IDs
      */
     public static FilterPhenotype getInstanceRemoveIDs(Phenotype phenotype, TaxaList taxa) {
-        List result = new ArrayList();
+        TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = phenotype.getTaxa();
-        for (int i = 0, n = current.getIdCount(); i < n; i++) {
-            if (taxa.whichIdNumber(current.getIdentifier(i)) == -1) {
-                result.add(current.getIdentifier(i));
+        for (int i = 0, n = current.getTaxaCount(); i < n; i++) {
+            if (taxa.getIndicesMatchingTaxon(current.get(i)).size() == 0) {
+                result.add(current.get(i));
             }
         }
-        Taxon[] ids = new Taxon[result.size()];
-        result.toArray(ids);
-        return FilterPhenotype.getInstance(phenotype, new SimpleIdGroup(ids), null);
+        return FilterPhenotype.getInstance(phenotype, result.build(), null);
     }
 
     //implement Phenotype interface
