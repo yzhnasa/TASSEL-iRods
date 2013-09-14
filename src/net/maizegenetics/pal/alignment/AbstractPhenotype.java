@@ -1,27 +1,28 @@
 package net.maizegenetics.pal.alignment;
 
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.LinkedHashSet;
-
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
 import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.TaxaList;
+
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 public abstract class AbstractPhenotype implements Phenotype {
 	private String[] factors;
 	private boolean[] useFactor;
-	private IdGroup taxa;
+	private TaxaList taxa;
 	private List<Trait> traitList;
 
-	public AbstractPhenotype(IdGroup taxa, List<Trait> traitList) {
+	public AbstractPhenotype(TaxaList taxa, List<Trait> traitList) {
 		this.taxa = taxa;
 		this.traitList = traitList;
 		init();
 	}
 	
-	public AbstractPhenotype(IdGroup taxa, List<Trait> traitList, String[] factors, boolean[] useFactor) {
+	public AbstractPhenotype(TaxaList taxa, List<Trait> traitList, String[] factors, boolean[] useFactor) {
 		this.taxa = taxa;
 		this.traitList = traitList;
 		this.factors = factors;
@@ -88,19 +89,19 @@ public abstract class AbstractPhenotype implements Phenotype {
 	}
 
 	public int getNumberOfTaxa() {
-		return taxa.getIdCount();
+		return taxa.getTaxaCount();
 	}
 
 	public int getNumberOfTraits() {
 		return traitList.size();
 	}
 
-	public IdGroup getTaxa() {
+	public TaxaList getTaxa() {
 		return taxa;
 	}
 
 	public Identifier getTaxon(int taxon) {
-		return taxa.getIdentifier(taxon);
+		return taxa.get(taxon);
 	}
 
 	public Trait getTrait(int trait) {
@@ -120,13 +121,14 @@ public abstract class AbstractPhenotype implements Phenotype {
 	}
 
 	public int whichTaxon(Identifier taxon) {
-		return taxa.whichIdNumber(taxon);
+		return taxa.getIndicesMatchingTaxon(taxon).get(0);
 	}
 
+    @Override
 	public int whichTrait(Trait trait) {
 		return traitList.indexOf(trait);
 	}
-	
+
 	public static List<Trait> copyTraitsFromPhenotype(Phenotype phenotype) {
 		List<Trait> newTraitList = new ArrayList<Trait>();
 		for (Trait t : phenotype.getTraits()) newTraitList.add(t);
@@ -151,7 +153,7 @@ public abstract class AbstractPhenotype implements Phenotype {
 
 	@Override
 	public int getRowCount() {
-		return taxa.getIdCount();
+		return taxa.getTaxaCount();
 	}
 
 	@Override

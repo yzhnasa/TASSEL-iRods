@@ -120,7 +120,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
                 theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(),newGroup.getIdCount(), a.getSiteCount(), myMaxNumAlleles);
             }
             for (int s = 0; s < a.getSiteCount(); s++) {
-                theMSA.setLocusOfSite(s, a.getLocus(s));
+                theMSA.setLocusOfSite(s, a.getChromosome(s));
                 theMSA.setPositionOfSite(s, a.getPositionInChromosome(s));
                 if (inputFormat == INPUT_FORMAT.vcf){
                     theMSA.setReferenceAllele(s, a.getReferenceAllele(s));

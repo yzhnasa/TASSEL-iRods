@@ -1,12 +1,12 @@
 package net.maizegenetics.pal.alignment;
 
-import java.io.Serializable;
-import java.util.List;
-
-import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.taxa.TaxaList;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * A collection of data for a set of Taxa. Each taxon is expected to appear only once in the data. 
@@ -46,7 +46,6 @@ public interface Phenotype extends Serializable, Report, TableReport {
      * @param trait
      * @param value
      */
-    public void setData(Identifier taxon, Trait trait, double value);
 
     /**
      * @param trait
@@ -90,7 +89,7 @@ public interface Phenotype extends Serializable, Report, TableReport {
     /**
      * @return	the taxa in this data set in order by row number
      */
-    public IdGroup getTaxa();
+    public TaxaList getTaxa();
 
     /**
      * @return the data stored in this data set as an array of doubles

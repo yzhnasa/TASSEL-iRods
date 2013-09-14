@@ -3,8 +3,10 @@
  */
 package net.maizegenetics.pal.ids;
 
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+
 import java.util.ArrayList;
-import java.util.List;
 import java.util.TreeSet;
 
 /**
@@ -74,28 +76,28 @@ public final class IdGroupUtils {
      * @param groups groups to join.
      * @return The ids from the intersect join, sorted in ascending order
      */
-    public static IdGroup getCommonIds(IdGroup[] groups) {
+    public static IdGroup getCommonIds(TaxaList[] groups) {
 
         if ((groups == null) || (groups.length == 0)) {
             return null;
         }
 
-        TreeSet<Identifier> intersectIds = new TreeSet<Identifier>();
-        for (int x = 0; x < groups[0].getIdCount(); x++) {
-            intersectIds.add(groups[0].getIdentifier(x));
-        }
+        TreeSet<Identifier> intersectIds = new TreeSet<Identifier>(groups[0]);
+//        for (int x = 0; x < groups[0].getIdCount(); x++) {
+//            intersectIds.add(groups[0].getIdentifier(x));
+//        }
         for (int i = 1; i < groups.length; i++) {
-            List temp = new ArrayList();
-            for (int j = 0; j < groups[i].getIdCount(); j++) {
-                temp.add(groups[i].getIdentifier(j));
-            }
-            intersectIds.retainAll(temp);
+//            List temp = new ArrayList();
+//            for (int j = 0; j < groups[i].getIdCount(); j++) {
+//                temp.add(groups[i].getIdentifier(j));
+//            }
+            intersectIds.retainAll(groups[i]);
         }
 
-        Identifier[] ids = new Identifier[intersectIds.size()];
-        intersectIds.toArray(ids);
+//        Identifier[] ids = new Identifier[intersectIds.size()];
+//        intersectIds.toArray(ids);
 
-        return new SimpleIdGroup(ids);
+        return new TaxaListBuilder().addAll(intersectIds).build();
 
     }
 

@@ -1,23 +1,17 @@
 package net.maizegenetics.gwas.modelfitter;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-
 import net.maizegenetics.jGLiM.LinearModelUtils;
-import net.maizegenetics.jGLiM.dm.CovariateModelEffect;
-import net.maizegenetics.jGLiM.dm.FactorModelEffect;
-import net.maizegenetics.jGLiM.dm.ModelEffect;
-import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
-import net.maizegenetics.jGLiM.dm.NestedCovariateModelEffect;
-import net.maizegenetics.jGLiM.dm.PartitionedLinearModel;
-import net.maizegenetics.jGLiM.dm.SweepFastLinearModel;
-import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.jGLiM.dm.*;
 import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
 import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class StepwiseOLSModelFitter {
 	private MarkerPhenotypeAdapter myData;
@@ -168,7 +162,7 @@ public class StepwiseOLSModelFitter {
 		for (int s = 0; s < numberOfSites; s++) {
 			//create the appropriate marker effect
 			ModelEffect markerEffect = null;
-			SNP snp = new SNP(myData.getMarkerName(s), new Chromosome(myData.getChromosomeName(s)), (int) myData.getMarkerChromosomePosition(s), s);
+			SNP snp = new SNP(myData.getMarkerName(s), new Chromosome(myData.getLocusName(s)), (int) myData.getMarkerChromosomePosition(s), s);
 			Object[] markerValues = myData.getMarkerValue(currentPhenotypeIndex, s);
 			
 			if (myData.isMarkerDiscrete(s)) {
