@@ -19,7 +19,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.regex.Pattern;
 
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
@@ -57,7 +56,6 @@ import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 
-import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.io.BuilderFromHapMap;
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
@@ -276,7 +274,7 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-nh")) {
                     String hapFile = args[index++].trim();
                     BuilderFromHapMap.getBuilder(hapFile).build();
-                }  else if (current.equalsIgnoreCase("-h5")) {
+                } else if (current.equalsIgnoreCase("-h5")) {
                     String hdf5File = args[index++].trim();
                     loadFile(hdf5File, FileLoadPlugin.TasselFileType.HDF5);
                 } else if (current.equalsIgnoreCase("-r")) {
@@ -653,28 +651,6 @@ public class TasselPipeline implements PluginListener {
 
                     plugin.setWindowSize(size);
                     plugin.setSlidingWindowAnalysis(true);
-
-                } else if (current.equalsIgnoreCase("-diversityTypeSites")) {
-
-                    SequenceDiversityPlugin plugin = null;
-                    try {
-                        plugin = (SequenceDiversityPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No SequenceDiversityPlugin step defined: " + current);
-                    }
-
-                    Vector grp = new Vector();
-                    String[] types = args[index++].trim().split(",");
-//                    for (int i = 0; i < types.length; i++) {
-//                        if (types[i].equalsIgnoreCase("ALL")) {
-//                            grp.add(new Integer(Alignment.POSITION_TYPE_ALL_GROUP));
-//                        }
-//                        // else if (types[i].equalsIgnoreCase("INDEL")) {
-//                        //     grp.add(new Integer(Alignment.POSITION_TYPE_INDEL_GROUP));
-//                        // }
-//                    }
-
-                  //  plugin.setTypeOfSitesToAnalyze(grp);
 
                 } else if (current.equalsIgnoreCase("-ld")) {
                     LinkageDisequilibriumPlugin plugin = new LinkageDisequilibriumPlugin(myMainFrame, false);
