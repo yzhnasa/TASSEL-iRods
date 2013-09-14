@@ -4,11 +4,11 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.pal.ids;
-
-import java.io.Serializable;
+package net.maizegenetics.pal.taxa;
 
 import net.maizegenetics.prefs.TasselPrefs;
+
+import java.io.Serializable;
 
 /**
  * An identifier for some sampled data. This will most often be for example, the
@@ -17,22 +17,22 @@ import net.maizegenetics.prefs.TasselPrefs;
  *
  * @author terry
  */
-public class Identifier implements Serializable, Comparable {
+public class Taxon implements Serializable, Comparable {
 
     private static final long serialVersionUID = -7873729831795750538L;
     public static final String DELIMITER = ":";
     private final String myName;
     private final String[] myNameTokens;
-    public static Identifier ANONYMOUS = new Identifier("");
+    public static Taxon ANONYMOUS = new Taxon("");
     private final int hashCode;
 
-    public Identifier(String name) {
+    public Taxon(String name) {
         myName = name;
         myNameTokens = name.split(DELIMITER);
         hashCode = myName.hashCode();
     }
 
-    public static Identifier getMergedInstance(Identifier id1, Identifier id2) {
+    public static Taxon getMergedInstance(Taxon id1, Taxon id2) {
         String[] first = id1.getFullNameTokens();
         String[] second = id2.getFullNameTokens();
         int count = Math.min(first.length, second.length);
@@ -44,7 +44,7 @@ public class Identifier implements Serializable, Comparable {
                         builder.append(DELIMITER);
                     }
                     builder.append(first[x]);
-                    return new Identifier(builder.toString());
+                    return new Taxon(builder.toString());
                 }
             }
         }
@@ -60,8 +60,8 @@ public class Identifier implements Serializable, Comparable {
     public int compareTo(Object c) {
         if (this == c) {
             return 0;
-        } else if (c instanceof Identifier) {
-            return compareTo(((Identifier) c).getFullNameTokens());
+        } else if (c instanceof Taxon) {
+            return compareTo(((Taxon) c).getFullNameTokens());
         } else {
             throw new ClassCastException();
         }
@@ -76,9 +76,9 @@ public class Identifier implements Serializable, Comparable {
 
         TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
 
-        if (c instanceof Identifier) {
+        if (c instanceof Taxon) {
             if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
-                return getFullName().equals(((Identifier) c).getFullName());
+                return getFullName().equals(((Taxon) c).getFullName());
             } else {
                 return compareTo(c) == 0;
             }

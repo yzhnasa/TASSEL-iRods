@@ -6,11 +6,11 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.distance;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -36,7 +36,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     // Private stuff
     //
     /** sequence identifiers */
-    private IdGroup idGroup;
+    private TaxaList idGroup;
     /** distances [seq1][seq2] */
     private double[][] distance = null;
     static final long serialVersionUID = 4725925229860707633L;
@@ -52,7 +52,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
         byte version = in.readByte();
         switch (version) {
             default: {
-                idGroup = (IdGroup) in.readObject();
+                idGroup = (TaxaList) in.readObject();
                 distance = (double[][]) in.readObject();
             }
         }
@@ -63,7 +63,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     }
 
     /** constructor taking distances array and IdGroup */
-    public DistanceMatrix(double[][] distance, IdGroup idGroup) {
+    public DistanceMatrix(double[][] distance, TaxaList idGroup) {
         super();
         this.distance = distance;
         this.idGroup = idGroup;
@@ -75,23 +75,23 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
      */
     public DistanceMatrix(DistanceMatrix dm) {
         distance = net.maizegenetics.pal.util.Utils.getCopy(dm.distance);
-        idGroup = SimpleIdGroup.getInstance(dm.idGroup);
+        idGroup = dm.idGroup;
     }
 
     /**
      * constructor that takes a distance matrix and clones the distances,
      * of a the identifiers in idGroup.
      */
-    public DistanceMatrix(DistanceMatrix dm, IdGroup subset) {
+    public DistanceMatrix(DistanceMatrix dm, TaxaList subset) {
 
         int index1, index2;
 
         distance = new double[subset.getIdCount()][subset.getIdCount()];
         for (int i = 0; i < distance.length; i++) {
-            index1 = dm.whichIdNumber(subset.getIdentifier(i).getName());
+            index1 = dm.whichIdNumber(subset.getTaxaName(i));
             distance[i][i] = dm.distance[index1][index1];
             for (int j = 0; j < i; j++) {
-                index2 = dm.whichIdNumber(subset.getIdentifier(j).getName());
+                index2 = dm.whichIdNumber(subset.getTaxaName(j));
                 distance[i][j] = dm.distance[index1][index2];
                 distance[j][i] = distance[i][j];
             }
@@ -107,7 +107,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
 
         for (int i = 0; i < distance.length; i++) {
             format.displayLabel(out,
-                    idGroup.getIdentifier(i).getName(), 10);
+                    idGroup.getTaxaName(i), 10);
             out.print("      ");
 
             for (int j = 0; j < distance.length; j++) {
@@ -229,11 +229,11 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     }
 
     //IdGroup interface
-    public Identifier getIdentifier(int i) {
+    public Taxon getIdentifier(int i) {
         return idGroup.getIdentifier(i);
     }
 
-    public void setIdentifier(int i, Identifier ident) {
+    public void setIdentifier(int i, Taxon ident) {
         idGroup.setIdentifier(i, ident);
     }
 
@@ -245,7 +245,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
         return idGroup.whichIdNumber(name);
     }
 
-    public int whichIdNumber(Identifier id) {
+    public int whichIdNumber(Taxon id) {
         return idGroup.whichIdNumber(id);
     }
 
@@ -253,7 +253,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
      * Return id group of this alignment.
      * @deprecated distance matrix now implements IdGroup
      */
-    public IdGroup getIdGroup() {
+    public TaxaList getIdGroup() {
         return idGroup;
     }
 
@@ -332,7 +332,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
         return index;
     }
 
-    protected final void setIdGroup(IdGroup base) {
+    protected final void setIdGroup(TaxaList base) {
         this.idGroup = SimpleIdGroup.getInstance(base);
     }
 

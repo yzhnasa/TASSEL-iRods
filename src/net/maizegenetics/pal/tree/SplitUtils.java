@@ -7,7 +7,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.TaxaList;
 
 /**
  * utilities for split systems
@@ -29,7 +29,7 @@ public class SplitUtils
 	 * @param idGroup  sequence order for the matrix
 	 * @param tree
 	 */
-	public static SplitSystem getSplits(IdGroup idGroup, Tree tree)
+	public static SplitSystem getSplits(TaxaList idGroup, Tree tree)
 	{
 		int size = tree.getInternalNodeCount()-1;
 		SplitSystem splitSystem = new SplitSystem(idGroup, size);
@@ -55,7 +55,7 @@ public class SplitUtils
 	 */
 	public static SplitSystem getSplits(Tree tree)
 	{
-		IdGroup idGroup = TreeUtils.getLeafIdGroup(tree);
+		TaxaList idGroup = TreeUtils.getLeafIdGroup(tree);
 
 		return getSplits(idGroup, tree);
 	}
@@ -69,7 +69,7 @@ public class SplitUtils
 	 * @param internalNode Node
 	 * @param boolean[] split
 	 */
-	public static void getSplit(IdGroup idGroup, Node internalNode, boolean[] split)
+	public static void getSplit(TaxaList idGroup, Node internalNode, boolean[] split)
 	{
 		if (internalNode.isLeaf() || internalNode.isRoot())
 		{
@@ -140,7 +140,7 @@ public class SplitUtils
 	// Package stuff
 	//
 
-	static void markNode(IdGroup idGroup, Node node, boolean[] split)
+	static void markNode(TaxaList idGroup, Node node, boolean[] split)
 	{
 		if (node.isLeaf())
 		{

@@ -13,6 +13,9 @@ package net.maizegenetics.pal.ids;
  * @author			 Matthew Goode
  * @version 1.0
  */
+
+import net.maizegenetics.pal.taxa.Taxon;
+
 import java.util.Enumeration;
 import java.util.Hashtable;
 public class LabelMapping implements java.io.Serializable {
@@ -49,7 +52,7 @@ public class LabelMapping implements java.io.Serializable {
 	public void addMapping(String id, String label) {
 		mappings_.put(id,label);
 	}
-	public void addMapping(Identifier id, String label) {
+	public void addMapping(Taxon id, String label) {
 		if(id!=null&&id.getName()!=null) {
 			mappings_.put(id.getName(),label);
 		}
@@ -71,20 +74,20 @@ public class LabelMapping implements java.io.Serializable {
 		}
 		return mappings_.get(id).toString();
 	}
-	public String getLabel(Identifier id, String defaultLabel) {
+	public String getLabel(Taxon id, String defaultLabel) {
 		if(id==null) {
 			return defaultLabel;
 		}
 		return getLabel(id.getName(),defaultLabel);
 	}
-	public String getLabel(Identifier id) {
+	public String getLabel(Taxon id) {
 		return getLabel(id.getName(),id.getName());
 	}
-	public Identifier getLabelIdentifier(Identifier id) {
+	public Taxon getLabelIdentifier(Taxon id) {
 		if(id==null) {
 			return null;
 		}
-		return new Identifier(getLabel(id.getName(),id.getName()));
+		return new Taxon(getLabel(id.getName(),id.getName()));
 	}
 	/**
 	 * If a mapping occurs more than once will rename instance to "x 1", "x 2"... and so on where x is the mapping in question

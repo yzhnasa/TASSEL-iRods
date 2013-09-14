@@ -4,7 +4,6 @@
 package net.maizegenetics.pal.taxa;
 
 import com.google.common.collect.ImmutableMultimap;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.util.AbstractAnnotation;
 import net.maizegenetics.pal.util.GeneralAnnotation;
 
@@ -16,7 +15,7 @@ import net.maizegenetics.pal.util.GeneralAnnotation;
  *
  * @author Ed Buckler
  */
-public final class AnnotatedTaxon extends Identifier implements GeneralAnnotation {
+public final class AnnotatedTaxon extends Taxon implements GeneralAnnotation {
 
     private final GeneralAnnotation myGA;
     private final String myParent1;  // generally female
@@ -109,7 +108,7 @@ public final class AnnotatedTaxon extends Identifier implements GeneralAnnotatio
          *
          * @param aTaxon taxon object
          */
-        public Builder(Identifier aTaxon) {
+        public Builder(Taxon aTaxon) {
             myTaxonFullName = aTaxon.getFullName();
         }
 

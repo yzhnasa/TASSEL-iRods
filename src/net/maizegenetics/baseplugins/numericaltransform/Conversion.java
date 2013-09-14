@@ -2,7 +2,6 @@ package net.maizegenetics.baseplugins.numericaltransform;
 
 import net.maizegenetics.pal.alignment.Phenotype;
 import net.maizegenetics.pal.alignment.SimplePhenotype;
-import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.alignment.Trait;
 
 import java.math.BigDecimal;

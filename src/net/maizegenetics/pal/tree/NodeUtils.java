@@ -8,7 +8,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.pal.util.BranchLimits;
 import net.maizegenetics.pal.util.Log;
@@ -263,7 +263,7 @@ public class NodeUtils {
 	 */
 	public static void exchangeInfo(Node node1, Node node2) {
 
-		Identifier swaps;
+		Taxon swaps;
 		double swapd;
 
 		swaps = node1.getIdentifier();
@@ -656,7 +656,7 @@ public class NodeUtils {
 	 * Returns the first nodes in this tree that has the
 	 * required identifiers.
 	 */
-	public static final Node[] findByIdentifier(Node node, Identifier[] identifiers) {
+	public static final Node[] findByIdentifier(Node node, Taxon[] identifiers) {
 		Node[] nodes = new Node[identifiers.length];
 		for(int i = 0 ; i < nodes.length ; i++) {
 			nodes[i] = findByIdentifier(node,identifiers[i]);
@@ -667,7 +667,7 @@ public class NodeUtils {
 	 * Returns the first node in this tree that has the
 	 * required identifier.
 	 */
-	public static final Node findByIdentifier(Node node, Identifier identifier) {
+	public static final Node findByIdentifier(Node node, Taxon identifier) {
 		return findByIdentifier(node,identifier.getName());
 	}
 	/**

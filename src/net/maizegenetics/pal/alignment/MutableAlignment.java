@@ -4,7 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 
 /**
  *
@@ -52,7 +52,7 @@ public interface MutableAlignment extends Alignment {
      *
      * @param id identifier to add
      */
-    public void addTaxon(Identifier id);
+    public void addTaxon(Taxon id);
 
     /**
      * Sets the identifier at given taxon index.
@@ -60,7 +60,7 @@ public interface MutableAlignment extends Alignment {
      * @param taxon taxon index
      * @param id identifier to set
      */
-    public void setTaxonName(int taxon, Identifier id);
+    public void setTaxonName(int taxon, Taxon id);
 
     public void removeTaxon(int taxon);
 

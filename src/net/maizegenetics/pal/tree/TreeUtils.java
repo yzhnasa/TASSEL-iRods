@@ -6,8 +6,8 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.LabelMapping;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedOutput;
@@ -49,7 +49,7 @@ public class TreeUtils {
      * @param t2 tree 2
      */
     public static double getRobinsonFouldsDistance(SplitSystem s1, Tree t2) {
-        IdGroup idGroup = s1.getIdGroup();
+        TaxaList idGroup = s1.getIdGroup();
         SplitSystem s2 = SplitUtils.getSplits(idGroup, t2);
 
         if (s1.getLabelCount() != s2.getLabelCount()) {
@@ -118,24 +118,24 @@ public class TreeUtils {
     }
 
     /**
-     * @return the first found node that has a certain name (as determined by the nodes Identifier)
+     * @return the first found node that has a certain name (as determined by the nodes Taxon)
      * in the tree defined by a root node.
      * @param tree The Tree supposidly containing such a named node
      * @param name The name of the node to find.
      * @return The node with the name, or null if no such node exists
-     * @see Identifier, Node
+     * @see net.maizegenetics.pal.taxa.Taxon , Node
      */
     public static final Node getNodeByName(Tree tree, String name) {
         return getNodeByName(tree.getRoot(), name);
     }
 
     /**
-     * @return the first found node that has a certain name (as determined by the nodes Identifier)
+     * @return the first found node that has a certain name (as determined by the nodes Taxon)
      * in the tree defined by a root node.
      * @param root The root node of a tree
      * @param name The name of the node to find.
      * @return The node with the name, or null if no such node exists
-     * @see Identifier, Node
+     * @see net.maizegenetics.pal.taxa.Taxon , Node
      */
     public static final Node getNodeByName(Node root, String name) {
         if (root.getIdentifier().getName().equals(name)) {
@@ -344,7 +344,7 @@ public class TreeUtils {
                     (String) table.get(tree.getExternalNode(i).getIdentifier().getName());
 
             if (newName != null) {
-                tree.getExternalNode(i).setIdentifier(new Identifier(newName));
+                tree.getExternalNode(i).setIdentifier(new Taxon(newName));
             }
         }
         for (int i = 0; i < tree.getInternalNodeCount(); i++) {
@@ -355,7 +355,7 @@ public class TreeUtils {
                     (String) table.get(tree.getInternalNode(i).getIdentifier().getName());
 
             if (newName != null) {
-                tree.getInternalNode(i).setIdentifier(new Identifier(newName));
+                tree.getInternalNode(i).setIdentifier(new Taxon(newName));
             }
         }
     }
@@ -373,10 +373,10 @@ public class TreeUtils {
      *
      * @return leaf identifier group
      */
-    public static final IdGroup getLeafIdGroup(Tree tree) {
+    public static final TaxaList getLeafIdGroup(Tree tree) {
         tree.createNodeList();
 
-        IdGroup labelList =
+        TaxaList labelList =
                 new SimpleIdGroup(tree.getExternalNodeCount());
 
         for (int i = 0; i < tree.getExternalNodeCount(); i++) {
@@ -398,7 +398,7 @@ public class TreeUtils {
      *
      * @return list of links
      */
-    public static final int[] mapExternalIdentifiers(IdGroup idGroup, Tree tree)
+    public static final int[] mapExternalIdentifiers(TaxaList idGroup, Tree tree)
             throws IllegalArgumentException {
 
         int[] alias = new int[tree.getExternalNodeCount()];
@@ -426,7 +426,7 @@ public class TreeUtils {
         int counter = 0;
         String pos = "0";
 
-        IdGroup ids = getLeafIdGroup(tree);
+        TaxaList ids = getLeafIdGroup(tree);
 
         for (int i = 0; i < tree.getInternalNodeCount(); i++) {
 
@@ -435,7 +435,7 @@ public class TreeUtils {
                 counter += 1;
                 pos = "" + counter;
             }
-            tree.getInternalNode(i).setIdentifier(new Identifier(pos));
+            tree.getInternalNode(i).setIdentifier(new Taxon(pos));
             counter += 1;
             pos = "" + counter;
         }
@@ -447,7 +447,7 @@ public class TreeUtils {
     public static TimeOrderCharacterData extractTimeOrderCharacterData(Tree tree, int units) {
 
         tree.createNodeList();
-        IdGroup identifiers = getLeafIdGroup(tree);
+        TaxaList identifiers = getLeafIdGroup(tree);
         TimeOrderCharacterData tocd = new TimeOrderCharacterData(identifiers, units);
         double[] times = new double[tree.getExternalNodeCount()];
 
@@ -1002,7 +1002,7 @@ public class TreeUtils {
         if (node.isLeaf()) {
             out.println(" " + node.getIdentifier());
         } else {
-            if (!node.getIdentifier().equals(Identifier.ANONYMOUS)) {
+            if (!node.getIdentifier().equals(Taxon.ANONYMOUS)) {
                 out.print("(" + node.getIdentifier() + ")");
             }
             out.println();
@@ -1056,7 +1056,7 @@ public class TreeUtils {
      */
     public static final Tree getBootstrapSupportByCladeTree(String attributeName, Tree baseTree, Tree[] alternativeTrees) {
         SimpleTree result = new SimpleTree(baseTree);
-        IdGroup ids = TreeUtils.getLeafIdGroup(baseTree);
+        TaxaList ids = TreeUtils.getLeafIdGroup(baseTree);
         SplitSystem baseSystem = SplitUtils.getSplits(ids, baseTree);
         boolean[][] baseVector = baseSystem.getSplitVector();
         int[] supportCount = new int[baseVector.length];
@@ -1089,7 +1089,7 @@ public class TreeUtils {
      * @param ids The set of identifiers
      * @return A relabelled tree, or the input tree if no numbered leaves.
      */
-    public static final Tree getNumberRelabelledTree(Tree baseTree, IdGroup ids) {
+    public static final Tree getNumberRelabelledTree(Tree baseTree, TaxaList ids) {
         LabelMapping lm = new LabelMapping();
         int minIndex = Integer.MAX_VALUE;
         for (int i = 0; i < baseTree.getIdCount(); i++) {

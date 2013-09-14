@@ -13,9 +13,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
-import java.util.Set;
 import java.util.regex.Pattern;
 
+import net.maizegenetics.pal.ids.TaxaList;
 import org.apache.log4j.Logger;
 
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
@@ -25,8 +25,7 @@ import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.IdGroupUtils;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
 import net.maizegenetics.util.BitSet;
 
 public class ImputationUtils {
@@ -210,8 +209,8 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[t];
-		IdGroup id1 = IdGroupUtils.idGroupSubset(tb.getIdGroup(), isInCluster1);
-		IdGroup id2 = IdGroupUtils.idGroupSubset(tb.getIdGroup(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.getIdGroup(), isInCluster1);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.getIdGroup(), isInCluster2);
 		
 		Alignment a1 = FilterAlignment.getInstance(tb, id1);
 		Alignment a2 = FilterAlignment.getInstance(tb, id2);
@@ -354,8 +353,8 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[bestTrial][t];
-		IdGroup id1 = IdGroupUtils.idGroupSubset(myAlignment.getIdGroup(), isInCluster1[bestTrial]);
-		IdGroup id2 = IdGroupUtils.idGroupSubset(myAlignment.getIdGroup(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.getIdGroup(), isInCluster1[bestTrial]);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.getIdGroup(), isInCluster2);
 		
 		Alignment a1 = FilterAlignment.getInstance(myAlignment, id1);
 		Alignment a2 = FilterAlignment.getInstance(myAlignment, id2);
@@ -1003,7 +1002,7 @@ public class ImputationUtils {
 	}
 	
 	public static boolean isB73HaplotypeA(Alignment a) {
-		IdGroup ids = a.getIdGroup();
+		TaxaList ids = a.getIdGroup();
 		int ndx = ids.whichIdNumber("B73(PI550473)");
 		int nsnps = a.getSiteCount();
 		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();

@@ -10,10 +10,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Set;
 
 import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 
+import net.maizegenetics.pal.ids.TaxaList;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.stat.inference.TestUtils;
 import org.apache.log4j.Logger;
@@ -36,8 +36,7 @@ import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.IdGroupUtils;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.math.GammaFunction;
 import net.maizegenetics.pal.tree.Tree;
@@ -94,11 +93,11 @@ public class NucleotideImputationUtils {
 		//debug
 		examineTaxaClusters(popdata.original, polybits);
 		
-		IdGroup[] taxaGroup =  findTaxaGroups(popdata.original, coreSnps);
+		TaxaList[] taxaGroup =  findTaxaGroups(popdata.original, coreSnps);
 		
 		//create an alignment for each cluster
-		IdGroup parentAGroup;
-		IdGroup parentCGroup;
+		TaxaList parentAGroup;
+		TaxaList parentCGroup;
 		if (taxaGroup[0].whichIdNumber(parentA) > -1) {
 			parentAGroup = taxaGroup[0];
 			parentCGroup = taxaGroup[1];
@@ -297,7 +296,7 @@ public class NucleotideImputationUtils {
 				//are groups in this alignment correlated with groups in the previous alignment
 				double r = 0;
 				if (prevAlignment != null) {
-					r = getIdCorrelation(new IdGroup[][] {{prevAlignment[0].getIdGroup(), prevAlignment[1].getIdGroup()},{taxaAlignments[0].getIdGroup(), taxaAlignments[1].getIdGroup()}});
+					r = getIdCorrelation(new TaxaList[][] {{prevAlignment[0].getIdGroup(), prevAlignment[1].getIdGroup()},{taxaAlignments[0].getIdGroup(), taxaAlignments[1].getIdGroup()}});
 					myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", r = " + r + " , # of snps in alignment = " + snpList.size());
 				} else {
 					myLogger.info("For " + popdata.name + " the window starting at " + popdata.original.getSNPID(snpIndex[0]) + ", # of snps in alignment = " + snpList.size());
@@ -483,7 +482,7 @@ public class NucleotideImputationUtils {
 	}
 	
 	public static void checksubpops(PopulationData popdata, int halfWindowSize) {
-		IdGroup allIds = popdata.original.getIdGroup();
+		TaxaList allIds = popdata.original.getIdGroup();
 		ArrayList<LinkedList<Identifier>> subids = new ArrayList<LinkedList<Identifier>>();
 		for (int i = 0; i < 3; i++) subids.add(new LinkedList<Identifier>());
 		int nids = allIds.getIdCount();
@@ -861,7 +860,7 @@ public class NucleotideImputationUtils {
 		}
 		
 		myLogger.info("identified low coverage taxa");
-		IdGroup targetids = IdGroupUtils.idGroupSubset(target.getIdGroup(), goodCoverage);
+		TaxaList targetids = IdGroupUtils.idGroupSubset(target.getIdGroup(), goodCoverage);
 		Alignment target2 = FilterAlignment.getInstance(target, targetids);
 		
 		myLogger.info("Filtered on taxa.");
@@ -1103,7 +1102,7 @@ public class NucleotideImputationUtils {
 		}
 	}
 	
-	public static double getIdCorrelation(IdGroup[][] id) {
+	public static double getIdCorrelation(TaxaList[][] id) {
 		double[][] counts = new double[2][2];
 		counts[0][0] = IdGroupUtils.getCommonIds(id[0][0], id[1][0]).getIdCount();
 		counts[0][1] = IdGroupUtils.getCommonIds(id[0][0], id[1][1]).getIdCount();
@@ -1345,7 +1344,7 @@ public class NucleotideImputationUtils {
 		return snpSets[bestSet];
 	}
 	
-	public static IdGroup[] findTaxaGroups(Alignment a, int[] coreSnps) {
+	public static TaxaList[] findTaxaGroups(Alignment a, int[] coreSnps) {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
 		
@@ -1399,9 +1398,9 @@ public class NucleotideImputationUtils {
 			if (groups[i] == majorGroup) majorids[majorCount++] = myTree.getIdentifier(i).getFullName();
 			else if (groups[i] == minorGroup) minorids[minorCount++] = myTree.getIdentifier(i).getFullName();
 		}
-		IdGroup majorTaxa = new SimpleIdGroup(majorids);
-		IdGroup minorTaxa =  new SimpleIdGroup(minorids);
-		return new IdGroup[]{majorTaxa,minorTaxa};
+		TaxaList majorTaxa = new SimpleIdGroup(majorids);
+		TaxaList minorTaxa =  new SimpleIdGroup(minorids);
+		return new TaxaList[]{majorTaxa,minorTaxa};
 	}
 	
 	public static Alignment[] getTaxaGroupAlignments(Alignment a, int[] parentIndex, LinkedList<Integer> snpIndices) {

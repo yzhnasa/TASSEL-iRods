@@ -22,12 +22,12 @@ import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -149,7 +149,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         int index=0;
         for (byte[][] calls : results.values()) {
             mna.setBaseRange(index, 0, calls[0]);
-            mna.setTaxonName(index, new Identifier("h"+index+(new String(calls[1]))));
+            mna.setTaxonName(index, new Taxon("h"+index+(new String(calls[1]))));
             index++;
         }
         mna.clean();
@@ -212,9 +212,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     }
     
     private MutableNucleotideAlignment createEmptyHaplotypeAlignment(Alignment inAlign, int maxHaplotypes) {
-        IdGroup outIDG=new SimpleIdGroup(maxHaplotypes);
+        TaxaList outIDG=new SimpleIdGroup(maxHaplotypes);
         for (int i = 0; i < maxHaplotypes; i++) {
-            outIDG.setIdentifier(i, new Identifier("Hap"+i));
+            outIDG.setIdentifier(i, new Taxon("Hap"+i));
         }
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(outIDG, inAlign.getSiteCount());
         for (int i = 0; i < inAlign.getSiteCount(); i++) {

@@ -7,7 +7,7 @@
 
 package net.maizegenetics.pal.gui;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.LabelMapping;
 import net.maizegenetics.pal.tree.*;
 
@@ -316,7 +316,7 @@ abstract public class TreePainter implements Painter {
 		return defaultDisplay;
 	}
 	private int getLongestIdentifierPixelWidth(FontMetrics fm, Node n) {
-		Identifier id = n.getIdentifier();
+		Taxon id = n.getIdentifier();
 		int myWidth = 0;
 		if(id!=null) {
 			String name = id.getName();

@@ -1,8 +1,7 @@
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.IdGroupUtils;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.taxa.TaxaList;
 
 import java.io.PrintWriter;
@@ -100,7 +99,7 @@ public abstract class AbstractPhenotype implements Phenotype {
 		return taxa;
 	}
 
-	public Identifier getTaxon(int taxon) {
+	public Taxon getTaxon(int taxon) {
 		return taxa.get(taxon);
 	}
 
@@ -120,7 +119,7 @@ public abstract class AbstractPhenotype implements Phenotype {
 		useFactor[factor] = active;
 	}
 
-	public int whichTaxon(Identifier taxon) {
+	public int whichTaxon(Taxon taxon) {
 		return taxa.getIndicesMatchingTaxon(taxon).get(0);
 	}
 

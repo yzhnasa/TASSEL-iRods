@@ -7,7 +7,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.TaxaList;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -28,7 +28,7 @@ public class CladeSystem {
 	 * @param idGroup  sequence labels
 	 * @param size     number of clades
 	 */
-	public CladeSystem(IdGroup idGroup, int size) {
+	public CladeSystem(TaxaList idGroup, int size) {
 		this.idGroup = idGroup;
 		clades = new boolean[size][idGroup.getIdCount()];
 	}
@@ -54,7 +54,7 @@ public class CladeSystem {
 	}
 
 	/** get idGroup */
-	public IdGroup getIdGroup() {		
+	public TaxaList getIdGroup() {
 		return idGroup;
 	}
 
@@ -109,7 +109,7 @@ public class CladeSystem {
 	 * @return all clade systems for a group of trees.
 	 */
 	public static CladeSystem[] getCladeSystems(Tree[] trees) {
-		IdGroup idGroup = TreeUtils.getLeafIdGroup(trees[0]);
+		TaxaList idGroup = TreeUtils.getLeafIdGroup(trees[0]);
 		CladeSystem[] cladeSystems = new CladeSystem[trees.length];
 		for (int i =0; i < cladeSystems.length; i++) {
 			cladeSystems[i] = getClades(idGroup, trees[i]);
@@ -142,7 +142,7 @@ public class CladeSystem {
 	 * @param idGroup  sequence order for the matrix
 	 * @param tree
 	 */
-	public static CladeSystem getClades(IdGroup idGroup, Tree tree) {
+	public static CladeSystem getClades(TaxaList idGroup, Tree tree) {
 		tree.createNodeList();
 		
 		int size = tree.getInternalNodeCount()-1;
@@ -164,7 +164,7 @@ public class CladeSystem {
 	 * @param tree
 	 */
 	public static CladeSystem getClades(Tree tree) {
-		IdGroup idGroup = TreeUtils.getLeafIdGroup(tree);
+		TaxaList idGroup = TreeUtils.getLeafIdGroup(tree);
 		
 		return getClades(idGroup, tree);
 	}
@@ -176,7 +176,7 @@ public class CladeSystem {
 	 * @param internalNode Node
 	 * @param boolean[] clade
 	 */
-	public static void getClade(IdGroup idGroup, Node internalNode, boolean[] clade) {
+	public static void getClade(TaxaList idGroup, Node internalNode, boolean[] clade) {
 		if (internalNode.isLeaf() || internalNode.isRoot()) {
 			throw new IllegalArgumentException("Only internal nodes (and no root) nodes allowed");
 		}
@@ -215,6 +215,6 @@ public class CladeSystem {
 	// Private stuff
 	//
 	
-	private IdGroup idGroup;
+	private TaxaList idGroup;
 	private boolean[][] clades;
 }

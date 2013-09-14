@@ -11,8 +11,8 @@ import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.FilterPhenotype;
 import net.maizegenetics.pal.alignment.Phenotype;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -39,8 +39,8 @@ import org.apache.log4j.Logger;
 public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(FilterTaxaAlignmentPlugin.class);
-    private IdGroup myIdsToKeep = null;
-    private IdGroup myIdsToRemove = null;
+    private TaxaList myIdsToKeep = null;
+    private TaxaList myIdsToRemove = null;
 
     /** Creates a new instance of FilterTaxaAlignmentPlugin */
     public FilterTaxaAlignmentPlugin(Frame parentFrame, boolean isInteractive) {
@@ -93,7 +93,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
         Object theData = inDatum.getData();
 
         if (isInteractive) {
-            IdGroup origIdGroup = null;
+            TaxaList origIdGroup = null;
             SelectFromAvailableDialog dialog = null;
             if (theData instanceof Alignment) {
                 final Alignment alignment = (Alignment) theData;
@@ -137,7 +137,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
                 return null;
             }
             int[] indicesToKeep = dialog.getDesiredIndices();
-            Identifier[] ids = new Identifier[indicesToKeep.length];
+            Taxon[] ids = new Taxon[indicesToKeep.length];
             for (int i = 0; i < indicesToKeep.length; i++) {
                 ids[i] = origIdGroup.getIdentifier(indicesToKeep[i]);
             }
@@ -178,15 +178,15 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
     }
 
-    public IdGroup getIdsToKeep() {
+    public TaxaList getIdsToKeep() {
         return myIdsToKeep;
     }
 
-    public void setIdsToKeep(IdGroup idsToKeep) {
+    public void setIdsToKeep(TaxaList idsToKeep) {
         myIdsToKeep = idsToKeep;
     }
 
-    public void setIdsToRemove(IdGroup idsToRemove) {
+    public void setIdsToRemove(TaxaList idsToRemove) {
         myIdsToRemove = idsToRemove;
     }
 

@@ -6,7 +6,7 @@ import net.maizegenetics.jGLiM.dm.*;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
@@ -325,8 +325,8 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
 
                 //if taxa are replicated, add taxa:marker to use as error term
                 //if the full list has duplicates, check to see if it still has
-                Identifier[] taxaSublist = new Identifier[numberOfObs];
-                Identifier[] taxa = theAdapter.getTaxa(ph);
+                Taxon[] taxaSublist = new Taxon[numberOfObs];
+                Taxon[] taxa = theAdapter.getTaxa(ph);
                 for (int i = 0; i < numberOfObs; i++) {
                     taxaSublist[i] = taxa[nonmissingRows[i]];
                 }
@@ -914,8 +914,8 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
             modelEffects.add(meanEffect);
 
             //now add the taxa
-            Identifier[] alltaxa = mpa.getTaxa(ph);
-            Identifier[] taxa = new Identifier[numberOfObs];
+            Taxon[] alltaxa = mpa.getTaxa(ph);
+            Taxon[] taxa = new Taxon[numberOfObs];
             ArrayList<Object> taxaIds = new ArrayList<Object>();
             for (int i = 0; i < numberOfObs; i++) {
                 taxa[i] = alltaxa[nonmissingRows[i]];
@@ -1040,16 +1040,16 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
         //add the BLUEs to the results
         //the individual phenotypes must first be merged to create a unified table with taxa as rows and phenotypes as columns
 
-        TreeSet<Identifier> taxaSet = new TreeSet<Identifier>();
+        TreeSet<Taxon> taxaSet = new TreeSet<Taxon>();
         for (ArrayList<Object> list : taxaListList) {
             for (Object taxon : list) {
-                taxaSet.add((Identifier) taxon);
+                taxaSet.add((Taxon) taxon);
             }
         }
 
-        HashMap<Identifier, Integer> taxaMap = new HashMap<Identifier, Integer>();
+        HashMap<Taxon, Integer> taxaMap = new HashMap<Taxon, Integer>();
         int count = 0;
-        for (Identifier taxon : taxaSet) {
+        for (Taxon taxon : taxaSet) {
             taxaMap.put(taxon, count++);
         }
         String[] blueColumnLabels = new String[numberOfPhenotypes + 1];
@@ -1080,7 +1080,7 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
             }
         }
 
-        Identifier[] taxaIds = new Identifier[taxaSet.size()];
+        Taxon[] taxaIds = new Taxon[taxaSet.size()];
         taxaSet.toArray(taxaIds);
         Phenotype thePhenotype = new SimplePhenotype(new SimpleIdGroup(taxaIds), traitList, blues);
 
@@ -1108,9 +1108,9 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
         return "Use fixed effect model to test associations";
     }
 
-    private boolean containsDuplicates(Identifier[] ids) {
-        HashSet<Identifier> idSet = new HashSet<Identifier>();
-        for (Identifier id : ids) {
+    private boolean containsDuplicates(Taxon[] ids) {
+        HashSet<Taxon> idSet = new HashSet<Taxon>();
+        for (Taxon id : ids) {
             idSet.add(id);
         }
         if (idSet.size() < ids.length) {

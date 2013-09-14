@@ -8,8 +8,8 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.IdentifierSynonymizer;
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -56,11 +56,11 @@ public class SynonymizerPlugin extends AbstractPlugin {
                 Datum current = input.getData(i);
                 Object currentData = current.getData();
                 if (currentData instanceof Alignment) {
-                    IdGroup idGroup = ((Alignment) currentData).getIdGroup();
+                    TaxaList idGroup = ((Alignment) currentData).getIdGroup();
                     Datum idGroupDatum = new Datum(current.getName(), idGroup, current.getComment());
                     data.add(idGroupDatum);
                 } else if (currentData instanceof Phenotype) {
-                    IdGroup idGroup = ((Phenotype) currentData).getTaxa();
+                    TaxaList idGroup = ((Phenotype) currentData).getTaxa();
                     Datum idGroupDatum = new Datum(current.getName(), idGroup, current.getComment());
                     data.add(idGroupDatum);
                 } else {
@@ -69,7 +69,7 @@ public class SynonymizerPlugin extends AbstractPlugin {
             }
             DataSet newInput = new DataSet(data, this);
 
-            int alignCnt = newInput.getDataOfType(IdGroup.class).size();
+            int alignCnt = newInput.getDataOfType(TaxaList.class).size();
             int synCnt = newInput.getDataOfType(IdentifierSynonymizer.class).size();
             if ((synCnt == 0) && (alignCnt > 1)) {  //create a new synonymizer
                 Datum td = createSynonymizer(newInput);
@@ -123,12 +123,12 @@ public class SynonymizerPlugin extends AbstractPlugin {
             myLogger.info(msg);
         }
         if (performFunction) {
-            List<Datum> idList = input.getDataOfType(IdGroup.class);
-            IdGroup[] aa = new IdGroup[idList.size() - 1];
+            List<Datum> idList = input.getDataOfType(TaxaList.class);
+            TaxaList[] aa = new TaxaList[idList.size() - 1];
             for (int i = 1; i < idList.size(); i++) {
-                aa[i - 1] = (IdGroup) idList.get(i).getData();
+                aa[i - 1] = (TaxaList) idList.get(i).getData();
             }
-            IdentifierSynonymizer ts = new IdentifierSynonymizer((IdGroup) idList.get(0).getData(), aa);
+            IdentifierSynonymizer ts = new IdentifierSynonymizer((TaxaList) idList.get(0).getData(), aa);
             StringWriter sw = new StringWriter();
             ts.report(new PrintWriter(sw));
             td = new Datum(input.getData(0).getName() + " Synonyms", ts, "Taxa synonyms\n" + sw.toString());
@@ -156,10 +156,10 @@ public class SynonymizerPlugin extends AbstractPlugin {
         }
         if (performFunction) {
             IdentifierSynonymizer is = (IdentifierSynonymizer) input.getDataOfType(IdentifierSynonymizer.class).get(0).getData();
-            List<Datum> idList = input.getDataOfType(IdGroup.class);
-            IdGroup[] aa = new IdGroup[idList.size()];
+            List<Datum> idList = input.getDataOfType(TaxaList.class);
+            TaxaList[] aa = new TaxaList[idList.size()];
             for (int i = 0; i < idList.size(); i++) {
-                aa[i] = (IdGroup) idList.get(i).getData();
+                aa[i] = (TaxaList) idList.get(i).getData();
             }
             is.changeAlignmentIdentifiers(aa);
         }

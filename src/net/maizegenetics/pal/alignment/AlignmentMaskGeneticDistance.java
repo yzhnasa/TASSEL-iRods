@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 
 /**
  *
@@ -32,7 +32,7 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
         myAlignment = align;
     }
 
-    public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, Identifier id) {
+    public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, Taxon id) {
         List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);

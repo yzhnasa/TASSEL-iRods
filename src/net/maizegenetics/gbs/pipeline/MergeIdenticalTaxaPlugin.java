@@ -10,6 +10,8 @@ import java.util.TreeMap;
 
 import javax.swing.ImageIcon;
 
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -17,8 +19,6 @@ import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.MutableVCFAlignment;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -86,7 +86,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
             AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
 
-            IdGroup idg = a.getIdGroup();
+            TaxaList idg = a.getIdGroup();
             TreeMap<String, List<String>> sortedIds2 = new TreeMap<String, List<String>>();
             int uniqueTaxa = 0;
             for (int i = 0; i < idg.getIdCount(); i++) {
@@ -97,14 +97,14 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
                 }
                 l.add(idg.getIdentifier(i).getFullName());
             }
-            IdGroup newGroup = new SimpleIdGroup(uniqueTaxa);
+            TaxaList newGroup = new SimpleIdGroup(uniqueTaxa);
             int index = 0;
             for (List<String> l : sortedIds2.values()) {
                 if (l.size() > 1) {
-                    newGroup.setIdentifier(index, new Identifier(l.get(0).split(":")[0] + ":MERGE"));
+                    newGroup.setIdentifier(index, new Taxon(l.get(0).split(":")[0] + ":MERGE"));
                     System.out.println("To be merged: " + l.size() + ": " + l);
                 } else {
-                    newGroup.setIdentifier(index, new Identifier(l.get(0)));
+                    newGroup.setIdentifier(index, new Taxon(l.get(0)));
                 }
                 //System.out.println(newGroup.getIdentifier(index).getFullName());
                 index++;

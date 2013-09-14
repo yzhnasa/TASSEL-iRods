@@ -8,10 +8,10 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.LabelMapping;
 import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.ids.IdGroupUtils;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -97,7 +97,7 @@ public class SimpleTree implements Tree, Report, Units, Serializable
 
 		// Default configuration
 		root = new SimpleNode();
-		//root.setIdentifier(new Identifier("ROOT"));
+		//root.setIdentifier(new Taxon("ROOT"));
 		root.setBranchLength(0.0);
 		root.setBranchLengthSE(0.0);
 	}
@@ -310,16 +310,16 @@ public class SimpleTree implements Tree, Report, Units, Serializable
 	public int getIdCount() {
 		return getExternalNodeCount();
 	}
-	public Identifier getIdentifier(int i) {
+	public Taxon getIdentifier(int i) {
 		return getExternalNode(i).getIdentifier();
 	}
-	public void setIdentifier(int i, Identifier id) {
+	public void setIdentifier(int i, Taxon id) {
 		getExternalNode(i).setIdentifier(id);
 	}
 	public int whichIdNumber(String s) {
 		return IdGroupUtils.whichIdNumber(this,s);
 	}
-    public int whichIdNumber(Identifier id) {
+    public int whichIdNumber(Taxon id) {
 		return IdGroupUtils.whichIdNumber(this,id.getFullName());
 	}
 

@@ -8,7 +8,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.LabelMapping;
 import net.maizegenetics.pal.util.BranchLimits;
 
@@ -49,7 +49,7 @@ public class SimpleNode implements AttributeNode {
 	private double height;
 
 	/** identifier of node/associated branch */
-	private Identifier identifier;
+	private Taxon identifier;
 
 	/** the attributes associated with this node. */
 	private Hashtable attributes = null;
@@ -94,7 +94,7 @@ public class SimpleNode implements AttributeNode {
 						lengthSE = in.readDouble();
 						height = in.readDouble();
 						in.readDouble();
-						identifier = (Identifier)in.readObject();
+						identifier = (Taxon)in.readObject();
 						child = (Node[])in.readObject();
 						break;
 					}
@@ -107,7 +107,7 @@ public class SimpleNode implements AttributeNode {
 						length = in.readDouble();
 						lengthSE = in.readDouble();
 						height = in.readDouble();
-						identifier = (Identifier)in.readObject();
+						identifier = (Taxon)in.readObject();
 						child = (Node[])in.readObject();
 						break;
 					}
@@ -120,7 +120,7 @@ public class SimpleNode implements AttributeNode {
 						length = in.readDouble();
 						lengthSE = in.readDouble();
 						height = in.readDouble();
-						identifier = (Identifier)in.readObject();
+						identifier = (Taxon)in.readObject();
 						child = (Node[])in.readObject();
 						attributes = (Hashtable)in.readObject();
 					}
@@ -139,7 +139,7 @@ public class SimpleNode implements AttributeNode {
 		length = 0.0;
 		lengthSE = 0.0;
 		height = 0.0;
-		identifier = Identifier.ANONYMOUS;
+		identifier = Taxon.ANONYMOUS;
 
 		number = 0;
 		sequence = null;
@@ -147,7 +147,7 @@ public class SimpleNode implements AttributeNode {
 
 	public SimpleNode(String name, double branchLength) {
 		this();
-		identifier = new Identifier(name);
+		identifier = new Taxon(name);
 		length = branchLength;
 
 	}
@@ -187,7 +187,7 @@ public class SimpleNode implements AttributeNode {
 		length = 0.0;
 		lengthSE = 0.0;
 		height = 0.0;
-		identifier = Identifier.ANONYMOUS;
+		identifier = Taxon.ANONYMOUS;
 
 		number = 0;
 		sequence = null;
@@ -233,7 +233,7 @@ public class SimpleNode implements AttributeNode {
 			} else {
 				identifier = n.getIdentifier();
 			}
-		} else { identifier = Identifier.ANONYMOUS; }
+		} else { identifier = Taxon.ANONYMOUS; }
 
 		number = n.getNumber();
 		sequence = n.getSequence();
@@ -363,14 +363,14 @@ public class SimpleNode implements AttributeNode {
 	/**
 	 * Returns the identifier for this node.
 	 */
-	public final Identifier getIdentifier() {
+	public final Taxon getIdentifier() {
 		return identifier;
 	}
 
 	/**
 	 * Set identifier for this node.
 	 */
-	public final void setIdentifier(Identifier id) {
+	public final void setIdentifier(Taxon id) {
 		identifier = id;
 		//return identifier;
 	}

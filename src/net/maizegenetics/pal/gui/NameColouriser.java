@@ -17,7 +17,7 @@ package net.maizegenetics.pal.gui;
  *       <li> 14 August 2003 - Changed to use Label Displayers. Will need a name change at a later point
  *     </ul>
  */
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 
 import java.awt.*;
 import java.util.Hashtable;
@@ -35,7 +35,7 @@ public final class NameColouriser implements java.io.Serializable {
 			addMapping(names[i],colour);
 		}
 	}
-	public NameColouriser(Identifier name, Color colour) {
+	public NameColouriser(Taxon name, Color colour) {
 		addMapping(name,colour);
 	}
 
@@ -49,7 +49,7 @@ public final class NameColouriser implements java.io.Serializable {
 		displayMappings_.put(name, display);
 	}
 
-	public void addMapping(Identifier id, Color colour) {
+	public void addMapping(Taxon id, Color colour) {
 		if(id!=null&&id.getName()!=null) {
 			displayMappings_.put(id.getName(),LabelDisplayer.Utils.buildDisplay(colour));
 		}
@@ -73,7 +73,7 @@ public final class NameColouriser implements java.io.Serializable {
 		return (LabelDisplayer)displayMappings_.get(name);
 	}
 
-	public LabelDisplayer getDisplay(Identifier id, LabelDisplayer defaultDisplay) {
+	public LabelDisplayer getDisplay(Taxon id, LabelDisplayer defaultDisplay) {
 		if(id==null) {
 			return defaultDisplay;
 		}

@@ -15,7 +15,7 @@ public class WizardPanelDescriptor {
     
     
     /**
-     * Identifier returned by getNextPanelDescriptor() to indicate that this is the
+     * Taxon returned by getNextPanelDescriptor() to indicate that this is the
      * last panel and the text of the 'Next' button should change to 'Finish'.
      */    
     public static final FinishIdentifier FINISH = new FinishIdentifier();

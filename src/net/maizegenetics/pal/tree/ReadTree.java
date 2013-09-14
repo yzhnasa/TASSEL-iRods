@@ -8,7 +8,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.io.FormattedInput;
 import net.maizegenetics.pal.io.InputSource;
 
@@ -110,7 +110,7 @@ public class ReadTree extends SimpleTree
 			}
 
 			// Read label (any length)
-			currentNode.setIdentifier(new Identifier(fi.readLabel(input, -1)));
+			currentNode.setIdentifier(new Taxon(fi.readLabel(input, -1)));
 
 			// Read distance
 			c = fi.readNextChar(input);

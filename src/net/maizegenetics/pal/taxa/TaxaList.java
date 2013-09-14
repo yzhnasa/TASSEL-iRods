@@ -4,7 +4,6 @@
 package net.maizegenetics.pal.taxa;
 
 import java.util.List;
-import net.maizegenetics.pal.ids.Identifier;
 
 /**
  *
@@ -54,5 +53,5 @@ public interface TaxaList extends List<AnnotatedTaxon> {
      *
      * @return Indices for matching taxa (Empty if no match).
      */
-    public List<Integer> getIndicesMatchingTaxon(Identifier taxon);
+    public List<Integer> getIndicesMatchingTaxon(Taxon taxon);
 }

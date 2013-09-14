@@ -4,24 +4,13 @@
 package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.alignment.io.BuilderFromHapMap;
-import net.maizegenetics.pal.site.Chromosome;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.*;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
 /**
  * The class imports Alignment from various file formats.

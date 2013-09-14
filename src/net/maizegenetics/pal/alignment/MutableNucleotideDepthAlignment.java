@@ -4,13 +4,14 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.pal.site.Chromosome;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
 import java.util.List;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+
+import net.maizegenetics.pal.taxa.Taxon;
 
 /**
  *
@@ -27,12 +28,12 @@ public class MutableNucleotideDepthAlignment extends MutableNucleotideAlignment 
         initAllelicDepthArrays(maxNumTaxa, maxNumSites);
     }
 
-    private MutableNucleotideDepthAlignment(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
+    private MutableNucleotideDepthAlignment(TaxaList idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
         super(idGroup, initNumSites, maxNumTaxa, maxNumSites);
         initAllelicDepthArrays(maxNumTaxa, maxNumSites);
     }
 
-    private MutableNucleotideDepthAlignment(List<Identifier> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    private MutableNucleotideDepthAlignment(List<Taxon> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         super(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
         initAllelicDepthArrays(idGroup.size(), siteNames.length);
     }
@@ -45,23 +46,23 @@ public class MutableNucleotideDepthAlignment extends MutableNucleotideAlignment 
         }
     }
 
-    public static MutableNucleotideDepthAlignment getInstance(IdGroup idGroup, int maxNumSites) {
+    public static MutableNucleotideDepthAlignment getInstance(TaxaList idGroup, int maxNumSites) {
         return new MutableNucleotideDepthAlignment(idGroup, 0, idGroup.getIdCount(), maxNumSites);
     }
 
-    public static MutableNucleotideDepthAlignment getInstance(IdGroup idGroup, int maxNumSites, int NumberOfAllelesToKeep) {
+    public static MutableNucleotideDepthAlignment getInstance(TaxaList idGroup, int maxNumSites, int NumberOfAllelesToKeep) {
         throw new UnsupportedOperationException("This constructor is not supported by MutableNucleotideDepthAlignment.");
     }
 
-    public static MutableNucleotideDepthAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
+    public static MutableNucleotideDepthAlignment getInstance(TaxaList idGroup, int initNumSites, int maxNumTaxa, int maxNumSites) {
         return new MutableNucleotideDepthAlignment(idGroup, initNumSites, maxNumTaxa, maxNumSites);
     }
 
-    public static MutableNucleotideDepthAlignment getInstance(IdGroup idGroup, int initNumSites, int maxNumTaxa, int maxNumSites, int NumberOfAllelesToKeep) {
+    public static MutableNucleotideDepthAlignment getInstance(TaxaList idGroup, int initNumSites, int maxNumTaxa, int maxNumSites, int NumberOfAllelesToKeep) {
         throw new UnsupportedOperationException("This constructor is not supported by MutableNucleotideDepthAlignment.");
     }
 
-    public static MutableNucleotideDepthAlignment getInstance(List<Identifier> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
+    public static MutableNucleotideDepthAlignment getInstance(List<Taxon> idGroup, int[] variableSites, List<Chromosome> locusToLociIndex, int[] locusIndices, String[] siteNames) {
         return new MutableNucleotideDepthAlignment(idGroup, variableSites, locusToLociIndex, locusIndices, siteNames);
     }
 

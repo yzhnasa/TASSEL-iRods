@@ -9,12 +9,12 @@ import java.util.HashMap;
 
 import javax.swing.ImageIcon;
 
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.VCFUtil;
@@ -97,7 +97,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 if (lowCoverageTaxa == null) {
                     lowCoverageTaxa = getLowCoverageLines(a, tCov);
                 }  // Note: lowCoverageTaxa is based upon the startChromosome only
-                IdGroup keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getIdGroup(), lowCoverageTaxa, false);
+                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getIdGroup(), lowCoverageTaxa, false);
                 a = FilterAlignment.getInstance(a, keepTaxa);
                 myLogger.info("TaxaFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
                 if (a.getSiteCount() == 0) {
@@ -116,7 +116,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
 
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
                 String[] highExpectedFTaxa = getHighExpectedFTaxa(a);
-                IdGroup highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getIdGroup(), highExpectedFTaxa, true);
+                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getIdGroup(), highExpectedFTaxa, true);
                 Alignment inbredGenos = FilterAlignment.getInstance(a, highExpectedFTaxaIDGroup);
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0, snpLogging, "Filter the sites for minF only based only on the taxa with expectedF >= minF");
                 inbredGenos = null;

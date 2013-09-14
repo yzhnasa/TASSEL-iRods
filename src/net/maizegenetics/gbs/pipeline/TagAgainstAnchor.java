@@ -18,7 +18,7 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
 
 /**
@@ -653,7 +653,7 @@ public class TagAgainstAnchor {
     private void redirect () {
         long lastTimePoint = this.getCurrentTimeNano();
         tbtRedirect = new int[tbt.getTaxaCount()];
-        IdGroup g = anchor.getIdGroup();
+        TaxaList g = anchor.getIdGroup();
         for (int i = 0; i < tbtRedirect.length; i++) {
             tbtRedirect[i] = g.whichIdNumber(tbt.getTaxaName(i));
         }

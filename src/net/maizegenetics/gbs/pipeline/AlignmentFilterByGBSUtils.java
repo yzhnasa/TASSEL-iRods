@@ -13,9 +13,9 @@ import java.util.TreeMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.IdGroupUtils;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 
@@ -40,8 +40,8 @@ public class AlignmentFilterByGBSUtils {
     private AlignmentFilterByGBSUtils() {
     }
 
-    public static IdGroup getFilteredIdGroupByName(IdGroup orig, String[] filter, boolean keepTaxaMatchFilter) {
-        ArrayList<Identifier> keepTaxa = new ArrayList<Identifier>();
+    public static TaxaList getFilteredIdGroupByName(TaxaList orig, String[] filter, boolean keepTaxaMatchFilter) {
+        ArrayList<Taxon> keepTaxa = new ArrayList<Taxon>();
         for (int i = 0; i < orig.getIdCount(); i++) {
             boolean matchFlag = false;
             for (String s : filter) {
@@ -53,9 +53,9 @@ public class AlignmentFilterByGBSUtils {
                 keepTaxa.add(orig.getIdentifier(i));
             }
         }
-        Identifier[] ids = new Identifier[keepTaxa.size()];
+        Taxon[] ids = new Taxon[keepTaxa.size()];
         keepTaxa.toArray(ids);
-        IdGroup newGroup = new SimpleIdGroup(ids);
+        TaxaList newGroup = new SimpleIdGroup(ids);
         return newGroup;
     }
 
@@ -92,7 +92,7 @@ public class AlignmentFilterByGBSUtils {
         return counts;
     }
 
-    public static IdGroup getLowHetIdGroup(Alignment a, boolean isRefAltCoded, double maxHets, int minCount) {
+    public static TaxaList getLowHetIdGroup(Alignment a, boolean isRefAltCoded, double maxHets, int minCount) {
         int[][] hetCnt = hetsByLine(a, isRefAltCoded, false);
         boolean[] include = new boolean[a.getSequenceCount()];
         for (int i = 0; i < hetCnt[0].length; i++) {
@@ -212,7 +212,7 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static double getErrorRateForDuplicatedTaxa(Alignment a, boolean ignoreHets, boolean random, boolean printToScreen) {
-        IdGroup idg = a.getIdGroup();
+        TaxaList idg = a.getIdGroup();
         TreeMap<String, Integer> sortedIds = new TreeMap<String, Integer>();
         for (int i = 0; i < idg.getIdCount(); i++) {
             sortedIds.put(idg.getIdentifier(i).getFullName().toUpperCase(), i);
@@ -403,7 +403,7 @@ public class AlignmentFilterByGBSUtils {
         return goodSites.toArray();
     }
 
-    public static IdGroup getLowDCOIdGroup(Alignment a, boolean isRefAltCoded, double maxDCO, int minCount) {
+    public static TaxaList getLowDCOIdGroup(Alignment a, boolean isRefAltCoded, double maxDCO, int minCount) {
         int[][] dcoCnt = hetsByLine(a, isRefAltCoded, false);
         boolean[] include = new boolean[a.getSequenceCount()];
         for (int i = 0; i < dcoCnt[0].length; i++) {

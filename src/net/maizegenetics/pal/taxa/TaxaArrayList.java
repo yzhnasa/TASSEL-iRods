@@ -2,7 +2,6 @@ package net.maizegenetics.pal.taxa;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.prefs.TasselPrefs;
 import org.apache.log4j.Logger;
 
@@ -88,7 +87,7 @@ public class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public List<Integer> getIndicesMatchingTaxon(Identifier taxon) {
+    public List<Integer> getIndicesMatchingTaxon(Taxon taxon) {
         //TODO remove TasselPrefs from within the method
         TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
 

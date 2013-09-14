@@ -1,6 +1,18 @@
 package net.maizegenetics.baseplugins;
 
-import java.awt.Frame;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.plugindef.AbstractPlugin;
+import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.util.Utils;
+import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -8,19 +20,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-
-import javax.swing.ImageIcon;
-
-import org.apache.log4j.Logger;
-
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.plugindef.AbstractPlugin;
-import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.util.Utils;
 
 
 public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
@@ -210,8 +209,8 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
 
 		String[] taxanames = new String[pedlist.size()];
 		pedlist.toArray(taxanames);
-		
-		IdGroup ids = new SimpleIdGroup(taxanames);
+
+        TaxaList ids =new TaxaListBuilder().addAll(taxanames).build();
 		
 		start = System.currentTimeMillis();
 		Alignment b = FilterAlignment.getInstance(a, ids);

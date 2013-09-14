@@ -3,8 +3,8 @@ package net.maizegenetics.pal.alignment;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 
 public class FilterPhenotype extends AbstractPhenotype {
@@ -15,7 +15,7 @@ public class FilterPhenotype extends AbstractPhenotype {
     private int numberOfRows = 0;
     private int numberOfColumns = 0;
 
-    private FilterPhenotype(Phenotype phenotype, int[] taxa, IdGroup taxaGroup, int[] traits, List<Trait> traitList) {
+    private FilterPhenotype(Phenotype phenotype, int[] taxa, TaxaList taxaGroup, int[] traits, List<Trait> traitList) {
         super(taxaGroup, traitList);
         thePhenotype = phenotype;
         taxaIndex = taxa;
@@ -34,7 +34,7 @@ public class FilterPhenotype extends AbstractPhenotype {
      * is not appropriate for union joins.
      */ 
     public static FilterPhenotype getInstance(Phenotype phenotype, int[] taxa, int[] traits) {
-        IdGroup taxaGroup;
+        TaxaList taxaGroup;
         List<Trait> traitList;
 
         if (taxa == null) {
@@ -46,7 +46,7 @@ public class FilterPhenotype extends AbstractPhenotype {
             }
         } else {
             int n = taxa.length;
-            Identifier[] ids = new Identifier[n];
+            Taxon[] ids = new Taxon[n];
             for (int i = 0; i < n; i++) {
                 ids[i] = phenotype.getTaxon(taxa[i]);
             }
@@ -78,8 +78,8 @@ public class FilterPhenotype extends AbstractPhenotype {
      * Taxa and traits not included in the original Phenotype will return missing values for data. 
      * Data values cannot be set for these traits and taxa as the underlying data matrix will not contain storage for them.
      */
-    public static FilterPhenotype getInstance(Phenotype phenotype, IdGroup taxa, List<Trait> traits) {
-        IdGroup taxaGroup;
+    public static FilterPhenotype getInstance(Phenotype phenotype, TaxaList taxa, List<Trait> traits) {
+        TaxaList taxaGroup;
         List<Trait> traitList;
         int[] taxaIndex;
         int[] traitIndex;
@@ -124,15 +124,15 @@ public class FilterPhenotype extends AbstractPhenotype {
      * @param taxa the taxa to be excluded in the output FilterPhenotype
      * @return a FilterPhenotype with excluded IDs
      */
-    public static FilterPhenotype getInstanceRemoveIDs(Phenotype phenotype, IdGroup taxa) {
+    public static FilterPhenotype getInstanceRemoveIDs(Phenotype phenotype, TaxaList taxa) {
         List result = new ArrayList();
-        IdGroup current = phenotype.getTaxa();
+        TaxaList current = phenotype.getTaxa();
         for (int i = 0, n = current.getIdCount(); i < n; i++) {
             if (taxa.whichIdNumber(current.getIdentifier(i)) == -1) {
                 result.add(current.getIdentifier(i));
             }
         }
-        Identifier[] ids = new Identifier[result.size()];
+        Taxon[] ids = new Taxon[result.size()];
         result.toArray(ids);
         return FilterPhenotype.getInstance(phenotype, new SimpleIdGroup(ids), null);
     }
@@ -147,7 +147,7 @@ public class FilterPhenotype extends AbstractPhenotype {
         return thePhenotype.getData(taxaIndex[taxon], traitIndex[trait]);
     }
 
-    public double getData(Identifier taxon, Trait trait) {
+    public double getData(Taxon taxon, Trait trait) {
         return thePhenotype.getData(whichTaxon(taxon), whichTrait(trait));
     }
 
@@ -165,7 +165,7 @@ public class FilterPhenotype extends AbstractPhenotype {
         thePhenotype.setData(taxaIndex[taxon], traitIndex[trait], value);
     }
 
-    public void setData(Identifier taxon, Trait trait, double value) {
+    public void setData(Taxon taxon, Trait trait, double value) {
         setData(whichTaxon(taxon), whichTrait(trait), value);
     }
 

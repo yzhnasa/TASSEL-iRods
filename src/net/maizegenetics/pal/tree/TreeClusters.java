@@ -2,7 +2,7 @@ package net.maizegenetics.pal.tree;
 
 import java.util.Arrays;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 
 /**
  * @author Peter Bradbury 2/23/2010
@@ -84,7 +84,7 @@ public class TreeClusters {
 	
 	public void setNodeToGroup(Node aNode, int group, int[] groups) {
 		if (aNode.isLeaf()) {
-			Identifier nodeId = aNode.getIdentifier();
+			Taxon nodeId = aNode.getIdentifier();
 			int index = theTree.whichIdNumber(nodeId);
 			groups[index] = group;
 		}
@@ -94,6 +94,6 @@ public class TreeClusters {
 		}
 	}
 	
-	public Identifier getTaxon(int whichTaxon) { return theTree.getIdentifier(whichTaxon);}
+	public Taxon getTaxon(int whichTaxon) { return theTree.getIdentifier(whichTaxon);}
 	public Tree getTree() {return theTree;}
 }

@@ -7,10 +7,11 @@
 
 package net.maizegenetics.pal.distance;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 
 import java.io.Serializable;
+
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 
@@ -97,7 +98,7 @@ public class DistanceMatrixUtils implements Serializable {
 		int size = parent.getIdCount() - 1;
 
 		double[][] distances = new double[size][size];
-		Identifier[] ids = new Identifier[size];
+		Taxon[] ids = new Taxon[size];
 		int counti = 0, countj = 0;
 		for (int i = 0; i < size; i++) {
 			if (counti == taxaToRemove) {

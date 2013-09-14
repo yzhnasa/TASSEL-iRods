@@ -6,8 +6,8 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedInput;
 import net.maizegenetics.pal.io.InputSource;
@@ -78,7 +78,7 @@ public class ReadSequenceAlignmentUtils {
     // Read alignment (in PHYLIP 3.4 INTERLEAVED or PHYLIP SEQUENTIAL format)
     private static Alignment readPHYLIP(PushbackReader in, int maxLabelLength) {
         FormattedInput fi = FormattedInput.getInstance();
-        IdGroup idGroup;
+        TaxaList idGroup;
         int numSeqs = 0, numSites = 0, lineLength = 0;
         char[][] data = null;
         int c, pos = 0, seq = 0;

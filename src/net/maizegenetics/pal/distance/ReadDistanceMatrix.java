@@ -6,8 +6,8 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.distance;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedInput;
 import net.maizegenetics.pal.io.InputSource;
@@ -58,15 +58,15 @@ public class ReadDistanceMatrix {
 
             // Read distance and sequence names
             double[][] distance = new double[numSeqs][numSeqs];
-            Identifier[] ids = new Identifier[numSeqs];
+            Taxon[] ids = new Taxon[numSeqs];
             for (int i = 0; i < numSeqs; i++) {
-                ids[i] = new Identifier(fi.readWord(in).trim());
+                ids[i] = new Taxon(fi.readWord(in).trim());
                 for (int j = 0; j < numSeqs; j++) {
                     distance[i][j] = fi.readDouble(in);
                 }
                 fi.nextLine(in);
             }
-            IdGroup idGroup = new SimpleIdGroup(ids);
+            TaxaList idGroup = new SimpleIdGroup(ids);
             return new DistanceMatrix(distance, idGroup);
         } catch (IOException e) {
             throw new DistanceParseException("IO error");

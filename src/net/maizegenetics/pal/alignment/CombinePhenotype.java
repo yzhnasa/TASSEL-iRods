@@ -7,8 +7,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 
 public class CombinePhenotype extends AbstractPhenotype {
@@ -21,7 +21,7 @@ public class CombinePhenotype extends AbstractPhenotype {
     int totalColumns;
     int totalRows;
 
-    private CombinePhenotype(Phenotype[] phenotypes, boolean isUnion, IdGroup taxaGroup, List<Trait> traitList, int[][] rowmap, int[][] columnmap) {
+    private CombinePhenotype(Phenotype[] phenotypes, boolean isUnion, TaxaList taxaGroup, List<Trait> traitList, int[][] rowmap, int[][] columnmap) {
         super(taxaGroup, traitList);
         this.phenotypes = phenotypes;
         this.isUnion = isUnion;
@@ -40,7 +40,7 @@ public class CombinePhenotype extends AbstractPhenotype {
         Object[] colinfo = mapColumns(phenotypes, isUnion);
 
         int[][] rowmap = (int[][]) rowinfo[0];
-        IdGroup taxa = (IdGroup) rowinfo[1];
+        TaxaList taxa = (TaxaList) rowinfo[1];
         int[][] colmap = (int[][]) colinfo[0];
         ArrayList<Trait> traitList = (ArrayList<Trait>) colinfo[1];
 
@@ -48,13 +48,13 @@ public class CombinePhenotype extends AbstractPhenotype {
     }
 
     private static Object[] mapRows(Phenotype[] phenotypes, boolean isUnion) {
-        TreeMap<Identifier, int[]> rowTreeMap = new TreeMap<Identifier, int[]>();
+        TreeMap<Taxon, int[]> rowTreeMap = new TreeMap<Taxon, int[]>();
         int npheno = phenotypes.length;
         int pcount = 0;
         for (Phenotype pheno : phenotypes) {
             int n = pheno.getNumberOfTaxa();
             for (int t = 0; t < n; t++) {
-                Identifier id = pheno.getTaxon(t);
+                Taxon id = pheno.getTaxon(t);
                 int[] rows = rowTreeMap.get(id);
                 if (rows == null) {
                     rows = new int[npheno];
@@ -69,9 +69,9 @@ public class CombinePhenotype extends AbstractPhenotype {
         }
 
         //if intersect, delete taxa that are not in all phenotypes
-        Set<Entry<Identifier, int[]>> rowSet = rowTreeMap.entrySet();
+        Set<Entry<Taxon, int[]>> rowSet = rowTreeMap.entrySet();
         if (!isUnion) {
-            Iterator<Entry<Identifier, int[]>> rit = rowSet.iterator();
+            Iterator<Entry<Taxon, int[]>> rit = rowSet.iterator();
             while (rit.hasNext()) {
                 boolean notComplete = false;
                 int[] rows = rit.next().getValue();
@@ -89,9 +89,9 @@ public class CombinePhenotype extends AbstractPhenotype {
 
         int nrows = rowSet.size();
         int[][] rowmap = new int[nrows][];
-        Identifier[] ids = new Identifier[nrows];
+        Taxon[] ids = new Taxon[nrows];
         int count = 0;
-        for (Entry<Identifier, int[]> entry : rowSet) {
+        for (Entry<Taxon, int[]> entry : rowSet) {
             rowmap[count] = entry.getValue();
             ids[count] = entry.getKey();
             count++;
@@ -136,7 +136,7 @@ public class CombinePhenotype extends AbstractPhenotype {
         return null;
     }
 
-    public double getData(Identifier taxon, Trait trait) {
+    public double getData(Taxon taxon, Trait trait) {
         return getData(whichTaxon(taxon), whichTrait(trait));
     }
 
@@ -149,7 +149,7 @@ public class CombinePhenotype extends AbstractPhenotype {
         }
     }
 
-    public void setData(Identifier taxon, Trait trait, double value) {
+    public void setData(Taxon taxon, Trait trait, double value) {
         setData(whichTaxon(taxon), whichTrait(trait), value);
     }
 

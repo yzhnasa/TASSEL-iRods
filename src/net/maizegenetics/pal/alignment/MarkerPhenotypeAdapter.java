@@ -9,7 +9,7 @@ import java.util.TreeSet;
 
 import net.maizegenetics.jGLiM.BasicLevel;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 
 public class MarkerPhenotypeAdapter {
 
@@ -439,9 +439,9 @@ public class MarkerPhenotypeAdapter {
         return MarkerPhenotypeAdapterUtils.whichAreMissing(values);
     }
 
-    public Identifier[] getTaxa(int phenotype) {
+    public Taxon[] getTaxa(int phenotype) {
         int nrows = getNumberOfRows(phenotype);
-        Identifier[] names = new Identifier[nrows];
+        Taxon[] names = new Taxon[nrows];
         int ntaxa = pheno.getNumberOfTaxa();
         int nblocks = getNumberOfBlocks(phenotype);
         for (int b = 0; b < nblocks; b++) {

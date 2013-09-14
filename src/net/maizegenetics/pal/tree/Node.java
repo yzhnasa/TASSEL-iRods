@@ -8,7 +8,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 
 import java.io.Serializable;
 
@@ -80,10 +80,10 @@ public interface Node extends Serializable {
 
 
 	/** Returns the identifier for this node. */
-	Identifier getIdentifier();
+	Taxon getIdentifier();
 
 	/** Set identifier for this node. */
-	void setIdentifier(Identifier id);
+	void setIdentifier(Taxon id);
 
 	/**
 	 * Returns the number of children this node has.

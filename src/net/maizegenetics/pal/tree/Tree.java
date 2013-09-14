@@ -8,10 +8,10 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.ids.IdGroupUtils;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -28,7 +28,7 @@ import java.util.Hashtable;
  *
  * @author Alexei Drummond
  */
-public interface Tree extends IdGroup, Units, Serializable, UnitsProvider {
+public interface Tree extends TaxaList, Units, Serializable, UnitsProvider {
 
 	/**
 	 * @return the root node of this tree.
@@ -389,10 +389,10 @@ public interface Tree extends IdGroup, Units, Serializable, UnitsProvider {
 	public int getIdCount() {
 		return getExternalNodeCount();
 	}
-	public Identifier getIdentifier(int i) {
+	public Taxon getIdentifier(int i) {
 		return getExternalNode(i).getIdentifier();
 	}
-	public void setIdentifier(int i, Identifier id) {
+	public void setIdentifier(int i, Taxon id) {
 		getExternalNode(i).setIdentifier(id);
 	}
 	public int whichIdNumber(String s) {

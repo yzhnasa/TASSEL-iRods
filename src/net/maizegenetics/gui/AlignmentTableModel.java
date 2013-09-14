@@ -15,7 +15,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.TaxaList;
 
 /**
  *
@@ -249,7 +249,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         List result = new ArrayList();
 
-        IdGroup idGroup = myAlignment.getIdGroup();
+        TaxaList idGroup = myAlignment.getIdGroup();
         for (int i = 0, n = idGroup.getIdCount(); i < n; i++) {
             result.add(idGroup.getIdentifier(i));
         }

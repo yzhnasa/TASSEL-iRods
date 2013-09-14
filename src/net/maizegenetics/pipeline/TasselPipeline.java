@@ -60,7 +60,7 @@ import net.maizegenetics.pal.alignment.io.BuilderFromHapMap;
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.HetTreatment;
 
@@ -1221,9 +1221,9 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-includeTaxa")) {
                     FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
                     String[] taxa = args[index++].trim().split(",");
-                    Identifier[] ids = new Identifier[taxa.length];
+                    Taxon[] ids = new Taxon[taxa.length];
                     for (int i = 0; i < taxa.length; i++) {
-                        ids[i] = new Identifier(taxa[i]);
+                        ids[i] = new Taxon(taxa[i]);
                     }
                     plugin.setIdsToKeep(new SimpleIdGroup(ids));
                     integratePlugin(plugin, true);
@@ -1252,18 +1252,18 @@ public class TasselPipeline implements PluginListener {
                         br.close();
                     }
 
-                    Identifier[] ids = new Identifier[taxa.size()];
+                    Taxon[] ids = new Taxon[taxa.size()];
                     for (int i = 0; i < taxa.size(); i++) {
-                        ids[i] = new Identifier((String) taxa.get(i));
+                        ids[i] = new Taxon((String) taxa.get(i));
                     }
                     plugin.setIdsToKeep(new SimpleIdGroup(ids));
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-excludeTaxa")) {
                     FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
                     String[] taxa = args[index++].trim().split(",");
-                    Identifier[] ids = new Identifier[taxa.length];
+                    Taxon[] ids = new Taxon[taxa.length];
                     for (int i = 0; i < taxa.length; i++) {
-                        ids[i] = new Identifier(taxa[i]);
+                        ids[i] = new Taxon(taxa[i]);
                     }
                     plugin.setIdsToRemove(new SimpleIdGroup(ids));
                     integratePlugin(plugin, true);
@@ -1292,9 +1292,9 @@ public class TasselPipeline implements PluginListener {
                         br.close();
                     }
 
-                    Identifier[] ids = new Identifier[taxa.size()];
+                    Taxon[] ids = new Taxon[taxa.size()];
                     for (int i = 0; i < taxa.size(); i++) {
-                        ids[i] = new Identifier((String) taxa.get(i));
+                        ids[i] = new Taxon((String) taxa.get(i));
                     }
                     plugin.setIdsToRemove(new SimpleIdGroup(ids));
                     integratePlugin(plugin, true);

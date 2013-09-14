@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.pal.site.Chromosome;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
@@ -16,13 +17,11 @@ import java.io.FileWriter;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
+
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
@@ -168,7 +167,7 @@ public class ExportUtils {
     * @param exportTaxa  subset of taxa (if null exports ALL taxa)
     * @return 
     */ 
-   public static String writeToMutableHDF5(Alignment a, String newHDF5file, IdGroup exportTaxa, boolean keepDepth) {
+   public static String writeToMutableHDF5(Alignment a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
         IHDF5Writer h5w = null;
         try {
             int numSites = a.getSiteCount();
@@ -241,10 +240,10 @@ public class ExportUtils {
             for (int t = 0; t < numTaxa; t++) {
                   if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.getFullTaxaName(t))<0)) continue;  //taxon not in export list
                   byte[] bases = a.getBaseRow(t);
-                  if (keepDepth==false) addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
+                  if (keepDepth==false) addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, null);
                   else {
                       MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
-                      addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, m.getDepthForAlleles(t));
+                      addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, m.getDepthForAlleles(t));
                   }
             }
             addA.clean();           
@@ -263,7 +262,7 @@ public class ExportUtils {
         return writeToMutableHDF5(a, newHDF5file, snpIndex, null, false);
    }
    
-   public static String writeToMutableHDF5(Alignment a, String newHDF5file, int[] snpIndex, IdGroup exportTaxa, boolean keepDepth) {
+   public static String writeToMutableHDF5(Alignment a, String newHDF5file, int[] snpIndex, TaxaList exportTaxa, boolean keepDepth) {
         IHDF5Writer h5w = null;
         try {
             int numSites = snpIndex.length;
@@ -356,7 +355,7 @@ public class ExportUtils {
                       bases[i] = originalBases[snpIndex[i]];
                   }
                   
-                  if (keepDepth==false) addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, null);
+                  if (keepDepth==false) addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, null);
                   else {                      
                       MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
                       byte[][] originalDepth = m.getDepthForAlleles(t);
@@ -366,7 +365,7 @@ public class ExportUtils {
                               depth[i][j] = originalDepth[i][snpIndex[j]];
                           }
                       }
-                      addA.addTaxon(new Identifier(a.getFullTaxaName(t)), bases, depth);
+                      addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, depth);
                   }
             }
             addA.clean();           

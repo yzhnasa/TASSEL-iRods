@@ -21,7 +21,7 @@ import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.pal.alignment.Phenotype;
 import net.maizegenetics.pal.alignment.SimplePhenotype;
 import net.maizegenetics.pal.alignment.Trait;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -107,7 +107,7 @@ public class RidgeRegressionEmmaPlugin extends AbstractPlugin {
             phenotype = DoubleMatrixFactory.DEFAULT.make(nObs, 1, phenotypeData);
 
             //get the taxa
-            Identifier[] taxaIDs = theAdapter.getTaxa(ph);
+            Taxon[] taxaIDs = theAdapter.getTaxa(ph);
 
             //keep track of missing rows
             boolean[] missing = theAdapter.getMissingPhenotypes(ph);

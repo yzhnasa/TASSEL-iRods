@@ -54,7 +54,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentMask;
 import net.maizegenetics.pal.alignment.AlignmentMaskGeneticDistance;
 import net.maizegenetics.pal.alignment.AlignmentMaskReference;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.Datum;
 
 /**
@@ -137,7 +137,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
             public String getToolTipText(MouseEvent evt) {
 
                 int index = locationToIndex(evt.getPoint());
-                Identifier id = (Identifier) getModel().getElementAt(index);
+                Taxon id = (Taxon) getModel().getElementAt(index);
 
                 return id.getFullName();
 

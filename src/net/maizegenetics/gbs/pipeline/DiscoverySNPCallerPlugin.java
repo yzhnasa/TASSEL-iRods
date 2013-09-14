@@ -24,6 +24,7 @@ import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaBitFileMap;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteFileMap;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -33,7 +34,6 @@ import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.pal.alignment.MutableVCFAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -453,7 +453,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         } else {
             taxaNames = theTBT.getTaxaNames();
         }
-        IdGroup taxa = new SimpleIdGroup(taxaNames);
+        TaxaList taxa = new SimpleIdGroup(taxaNames);
         MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
         return theMSA;
     }
@@ -473,7 +473,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         } else {
             taxaNames = theTBT.getTaxaNames();
         }
-        IdGroup taxa = new SimpleIdGroup(taxaNames);
+        TaxaList taxa = new SimpleIdGroup(taxaNames);
         MutableVCFAlignment theMVA = MutableVCFAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
         return theMVA;
     }

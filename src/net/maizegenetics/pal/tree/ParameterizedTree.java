@@ -8,7 +8,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.math.OrthogonalHints;
 import net.maizegenetics.pal.util.Parameterized;
 
@@ -84,8 +84,8 @@ public interface ParameterizedTree extends Parameterized, Tree {
 
 		//IdGroup stuff ==========
 
-		public final Identifier getIdentifier(int i) {   return tree.getIdentifier(i);	  }
-		public final void setIdentifier(int i,Identifier id) {   tree.setIdentifier(i,id);	  }
+		public final Taxon getIdentifier(int i) {   return tree.getIdentifier(i);	  }
+		public final void setIdentifier(int i,Taxon id) {   tree.setIdentifier(i,id);	  }
 		public final int getIdCount() {		return tree.getIdCount();		}
 		public final int whichIdNumber(String s) {		return tree.whichIdNumber(s);		}
 

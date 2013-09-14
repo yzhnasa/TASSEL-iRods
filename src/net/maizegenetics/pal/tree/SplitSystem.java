@@ -7,7 +7,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.ids.TaxaList;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -29,7 +29,7 @@ public class SplitSystem
 	 * @param idGroup  sequence labels
 	 * @param size     number of splits
 	 */
-	public SplitSystem(IdGroup idGroup, int size)
+	public SplitSystem(TaxaList idGroup, int size)
 	{
 		this.idGroup = idGroup;
 		
@@ -65,7 +65,7 @@ public class SplitSystem
 
 
 	/** get idGroup */
-	public IdGroup getIdGroup()
+	public TaxaList getIdGroup()
 	{		
 		return idGroup;
 	}
@@ -122,6 +122,6 @@ public class SplitSystem
 	//
 	
 	private int labelCount, splitCount;
-	private IdGroup idGroup;
+	private TaxaList idGroup;
 	private boolean[][] splits;
 }

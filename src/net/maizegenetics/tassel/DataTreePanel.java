@@ -17,7 +17,7 @@ package net.maizegenetics.tassel;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.distance.DistanceMatrix;
-import net.maizegenetics.pal.ids.IdentifierSynonymizer;
+import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.tree.Tree;
 

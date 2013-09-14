@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
+import net.maizegenetics.pal.taxa.Taxon;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
@@ -26,7 +27,6 @@ import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -146,15 +146,15 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		myLogger.info("Before filter alignment has " + ntaxa + " taxa and " + nsites + " sites.");
 		
 		//create list of taxa with too much missing data
-		LinkedList<Identifier> taxaDiscardList = new LinkedList<Identifier>();
+		LinkedList<Taxon> taxaDiscardList = new LinkedList<Taxon>();
 		for (int t = 0; t < ntaxa; t++) {
 			if (align.getTotalGametesNotMissingForTaxon(t) < minTaxaGametes) taxaDiscardList.add(align.getIdGroup().getIdentifier(t));
 		}
 		if (taxaDiscardList.size() > 0) {
 			myLogger.info("\nThe following taxa will not be included in the analysis because the proportion of nonMissing data is below " + minNonMissingProportionForTaxon + ":\n");
-			for (Identifier id:taxaDiscardList) myLogger.info(id.getFullName());
+			for (Taxon id:taxaDiscardList) myLogger.info(id.getFullName());
 			
-			Identifier[] ids = new Identifier[taxaDiscardList.size()];
+			Taxon[] ids = new Taxon[taxaDiscardList.size()];
 			taxaDiscardList.toArray(ids);
 			
 			align = FilterAlignment.getInstanceRemoveIDs(align, new SimpleIdGroup(ids));

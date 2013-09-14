@@ -13,7 +13,7 @@ package net.maizegenetics.pal.gui;
  * @author			 Matthew Goode
  * @version 1.0
  */
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 
 import java.awt.*;
 import java.util.Hashtable;
@@ -24,7 +24,7 @@ public class LayoutTracker {
 	public void addMapping(String name, Rectangle bounds) {
 		layoutMappings_.put(name,bounds);
 	}
-	public void addMapping(Identifier id, Rectangle bounds) {
+	public void addMapping(Taxon id, Rectangle bounds) {
 		if(id!=null&&id.getName()!=null) {
 			layoutMappings_.put(id.getName(),bounds);
 		}
@@ -36,7 +36,7 @@ public class LayoutTracker {
 		}
 		return (Rectangle)layoutMappings_.get(name);
 	}
-	public Rectangle getBounds(Identifier id) {
+	public Rectangle getBounds(Taxon id) {
 		if(id==null) {
 			return null;
 		}

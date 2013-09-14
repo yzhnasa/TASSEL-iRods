@@ -1,6 +1,6 @@
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.taxa.TaxaList;
@@ -30,7 +30,7 @@ public interface Phenotype extends Serializable, Report, TableReport {
      * @param trait
      * @return		the data value for this taxon and trait
      */
-    public double getData(Identifier taxon, Trait trait);
+    public double getData(Taxon taxon, Trait trait);
 
     /**
      * Sets the double value for this trait and taxon.
@@ -57,7 +57,7 @@ public interface Phenotype extends Serializable, Report, TableReport {
      * @param taxon
      * @return	the index of the taxon, representing the column in which the data for this trait is stored.
      */
-    public int whichTaxon(Identifier taxon);
+    public int whichTaxon(Taxon taxon);
 
     /**
      * @param trait	an integer j, representing the jth column in the data set
@@ -67,9 +67,9 @@ public interface Phenotype extends Serializable, Report, TableReport {
 
     /**
      * @param taxon	an integer i, representing the ith row in the data set
-     * @return		the taxon Identifier for this row
+     * @return		the taxon Taxon for this row
      */
-    public Identifier getTaxon(int taxon);
+    public Taxon getTaxon(int taxon);
 
     /**
      * @return the number of taxa or rows in this data set

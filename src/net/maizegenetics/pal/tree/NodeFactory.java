@@ -23,7 +23,8 @@ package net.maizegenetics.pal.tree;
  *
  * @author Korbinian Strimmer
  */
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
+
 public class NodeFactory
 {
 	/** create a node */
@@ -32,19 +33,19 @@ public class NodeFactory
 		return new SimpleNode();
 	}
 	/** create a node, with a specified identifier */
-	public static final Node createNode(Identifier id)
+	public static final Node createNode(Taxon id)
 	{
 		return new SimpleNode(id.getName(),0);
 	}
 	/** create a node, with a specified identifier */
-	public static final Node createNode(Identifier id, double height)
+	public static final Node createNode(Taxon id, double height)
 	{
 		SimpleNode sn = new SimpleNode(id.getName(),0);
 		sn.setNodeHeight(height);
 		return sn;
 	}
 		/** create a node, with a specified identifier */
-	public static final Node createNodeBranchLength(double branchLength, Identifier id)
+	public static final Node createNodeBranchLength(double branchLength, Taxon id)
 	{
 		SimpleNode sn = new SimpleNode(id.getName(),0);
 		sn.setBranchLength(branchLength);

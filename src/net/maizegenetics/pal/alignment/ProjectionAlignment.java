@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.pal.site.Chromosome;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -11,8 +12,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ExceptionUtils;
@@ -36,7 +36,7 @@ public class ProjectionAlignment implements Alignment{
     public long cacheUseCnt=0, lookupCnt=0;
     
 
-    public ProjectionAlignment(Alignment hdAlign, IdGroup ldIDGroup) {
+    public ProjectionAlignment(Alignment hdAlign, TaxaList ldIDGroup) {
         super(ldIDGroup, hdAlign.getAlleleEncodings());
         myBaseAlignment = AlignmentUtils.optimizeForSites(hdAlign);
         mySiteBreaks = new int[getSequenceCount()][];
@@ -45,7 +45,7 @@ public class ProjectionAlignment implements Alignment{
         init();
     }
     
-    public ProjectionAlignment(Alignment hdAlign, IdGroup ldIDGroup, int[][] myPosBreaks, 
+    public ProjectionAlignment(Alignment hdAlign, TaxaList ldIDGroup, int[][] myPosBreaks,
             int[][][] myHDTaxa) {
         super(ldIDGroup, hdAlign.getAlleleEncodings());
         myBaseAlignment = AlignmentUtils.optimizeForSites(hdAlign);
@@ -82,7 +82,7 @@ public class ProjectionAlignment implements Alignment{
                 System.err.println("Error in number of base taxa"); return null;
             }
             int taxaCnt=Integer.parseInt(sl[1]);
-            IdGroup aIDG=new SimpleIdGroup(taxaCnt);
+            TaxaList aIDG=new SimpleIdGroup(taxaCnt);
             for (int i = 0; i < baseTaxaCnt; i++) {
                 sl=Utils.readLineSkipComments(br).split("\t");
                 //change to hash map 
@@ -95,7 +95,7 @@ public class ProjectionAlignment implements Alignment{
             int[][][] myHDTaxa = new int[taxaCnt][][];
             for (int i = 0; i < taxaCnt; i++) {
                 sl=Utils.readLineSkipComments(br).split("\t");
-                aIDG.setIdentifier(i, new Identifier(sl[0]));
+                aIDG.setIdentifier(i, new Taxon(sl[0]));
                 int breakTotal=sl.length-1;
                 if(breakTotal==0) continue;  //no data
                 myPosBreaks[i]=new int[sl.length-1];
@@ -769,12 +769,12 @@ public class ProjectionAlignment implements Alignment{
     }
 
     @Override
-    public void addTaxon(Identifier id) {
+    public void addTaxon(Taxon id) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void setTaxonName(int taxon, Identifier id) {
+    public void setTaxonName(int taxon, Taxon id) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

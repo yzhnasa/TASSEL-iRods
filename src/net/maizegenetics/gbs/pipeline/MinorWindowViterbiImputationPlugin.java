@@ -33,7 +33,7 @@ import net.maizegenetics.pal.alignment.MutableAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.ProjectionAlignment;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.popgen.DonorHypoth;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -306,7 +306,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             sb.append(String.format("Het:%d PropHet:%g ", unk[1], (double)unk[1]/(double)mna.getSiteCount()));
             if(!isOutputProjection) {
                 if(mna instanceof MutableNucleotideAlignmentHDF5) {
-                    Identifier tID=unimpAlign.getIdGroup().getIdentifier(taxon);
+                    Taxon tID=unimpAlign.getIdGroup().getIdentifier(taxon);
 //                    mna.addTaxon(tID);
 //                    int newTaxaIndex=mna.getIdGroup().whichIdNumber(tID);
 // //                   if(taxon!=newTaxaIndex) System.out.println(taxon+":"+newTaxaIndex);

@@ -1,21 +1,16 @@
-package net.maizegenetics.pal.ids;
-
-import com.google.common.collect.TreeMultimap;
-import java.io.BufferedReader;
-import java.util.ArrayList;
-import net.maizegenetics.util.Utils;
+package net.maizegenetics.pal.taxa;
 
 /**
  * Utilities for reading and writing IdGroup and PedigreeIdGroups.
  * 
  * @author Ed Buckler
  */
-public class IdGroupIOUtils {
+public class TaxaListIOUtils {
 
-    private IdGroupIOUtils() {
+    private TaxaListIOUtils() {
     }
-    
-    public static TreeMultimap<String,String> getMapOfTextAnnotatedIds(IdGroup annoIdGroup, String annoName) {
+   /*
+    public static TreeMultimap<String,String> getMapOfTextAnnotatedIds(TaxaList annoIdGroup, String annoName) {
         TreeMultimap<String,String> annoMap=TreeMultimap.create();
         for (int i = 0; i < annoIdGroup.getIdCount(); i++) {
             if(annoIdGroup.getIdentifier(i) instanceof AnnotatedIdentifier) {
@@ -28,7 +23,7 @@ public class IdGroupIOUtils {
         return annoMap;
     }
     
-    public static TreeMultimap<String,String> getMapOfTextAnnotatedIds(IdGroup annoIdGroup, String keyAnnoName, String valueAnnoName) {
+    public static TreeMultimap<String,String> getMapOfTextAnnotatedIds(TaxaList annoIdGroup, String keyAnnoName, String valueAnnoName) {
         TreeMultimap<String,String> annoMap=TreeMultimap.create();
         for (int i = 0; i < annoIdGroup.getIdCount(); i++) {
             if(annoIdGroup.getIdentifier(i) instanceof AnnotatedIdentifier) {
@@ -45,13 +40,13 @@ public class IdGroupIOUtils {
         return annoMap;
     }
     
-    public static IdGroup readPedigree(String fileName) {
+    public static TaxaList readPedigree(String fileName) {
         BufferedReader fileIn = null;
         try {
             fileIn = Utils.getBufferedReader(fileName, 1000000);
             fileIn.mark(1<<16);
             String line;
-            ArrayList<Identifier> taxaNames=new ArrayList<Identifier>();
+            ArrayList<Taxon> taxaNames=new ArrayList<Taxon>();
             line=fileIn.readLine();
             int indexOfName=0;
             String[] headers=null;
@@ -92,7 +87,7 @@ public class IdGroupIOUtils {
                     }
                     taxaNames.add(anID);
                 } else {
-                    taxaNames.add(new Identifier(s[indexOfName]));
+                    taxaNames.add(new Taxon(s[indexOfName]));
                 }
             }
             return new SimpleIdGroup(taxaNames);
@@ -104,6 +99,6 @@ public class IdGroupIOUtils {
         
     }
     
-    
+   */
     
 }

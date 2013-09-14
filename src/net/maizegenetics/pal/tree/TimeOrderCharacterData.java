@@ -8,10 +8,10 @@
 package net.maizegenetics.pal.tree;
 
 import net.maizegenetics.pal.ids.IdGenerator;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.math.MersenneTwisterFast;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.util.BranchLimits;
 import net.maizegenetics.pal.util.HeapSort;
 
@@ -24,7 +24,7 @@ import java.io.Serializable;
  *
  * @author Alexei Drummond
  */
-public class TimeOrderCharacterData implements Serializable, BranchLimits, UnitsProvider, IdGroup {
+public class TimeOrderCharacterData implements Serializable, BranchLimits, UnitsProvider, TaxaList {
 
 	//
 	// Protected Stuff
@@ -37,7 +37,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	protected double[] times = null; //Is serialized
 
 	/** the identifier group */
-	protected IdGroup taxa; //Is serialized
+	protected TaxaList taxa; //Is serialized
 
 	protected int units = Units.GENERATIONS; //Is serialized
 	protected SubgroupHandler[] subgroups_;
@@ -71,7 +71,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 			case 1 : {
 				timeOrdinals = (int[])in.readObject();
 				times = (double[])in.readObject();
-				taxa = (IdGroup)in.readObject();
+				taxa = (TaxaList)in.readObject();
 				units = in.readInt();
 				name = (String)in.readObject();
 				break;
@@ -79,7 +79,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 			default : {
 				timeOrdinals = (int[])in.readObject();
 				times = (double[])in.readObject();
-				taxa = (IdGroup)in.readObject();
+				taxa = (TaxaList)in.readObject();
 				units = in.readInt();
 				name = (String)in.readObject();
 				subgroups_ = (SubgroupHandler[])in.readObject();
@@ -97,7 +97,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 		 * Clones a TimeOrderCharacterData object
 		 * but the identifier positions match that of base (ie whichIdNumber(Name) returns the same as for base)
 		 */
-	private TimeOrderCharacterData(TimeOrderCharacterData toCopy, IdGroup base) {
+	private TimeOrderCharacterData(TimeOrderCharacterData toCopy, TaxaList base) {
 		int size = toCopy.getIdCount();
 		this.timeOrdinals = new int[size];
 		final boolean hasTimes = toCopy.hasTimes();
@@ -125,7 +125,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	 * @param taxa the taxa that this time data relates to.
 	 * @param units the units of the times.
 	 */
-	public TimeOrderCharacterData(IdGroup taxa, int units) {
+	public TimeOrderCharacterData(TaxaList taxa, int units) {
 		this(taxa, units, false);
 	}
 
@@ -136,7 +136,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	 * @param contemp if true, all times are set to zero, else
 	 * times are not set.
 	 */
-	public TimeOrderCharacterData(IdGroup taxa, int units, boolean contemp) {
+	public TimeOrderCharacterData(TaxaList taxa, int units, boolean contemp) {
 		this.taxa = taxa;
 		this.units = units;
 
@@ -187,7 +187,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	/**
 	 * Extracts a subset of a TimeOrderCharacterData.
 	 */
-	public TimeOrderCharacterData subset(IdGroup staxa) {
+	public TimeOrderCharacterData subset(TaxaList staxa) {
 
 		TimeOrderCharacterData subset =
 			new TimeOrderCharacterData(staxa, getUnits());
@@ -258,7 +258,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	public final TimeOrderCharacterData createSubgroup(int subgroupNumber) {
 		return this.subgroups_[subgroupNumber].generateNewTOCD(this);
 	}
-	public final Identifier[] getSubgroupMembers(int subgroupNumber) {
+	public final Taxon[] getSubgroupMembers(int subgroupNumber) {
 		return this.subgroups_[subgroupNumber].getSubgroupMembers(this);
 	}
 
@@ -349,7 +349,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	 * @throws IllegalArgumentException if the base ids don't match the ids of this tocd
 	 *
 	 */
-	public TimeOrderCharacterData getReordered(IdGroup base) {
+	public TimeOrderCharacterData getReordered(TaxaList base) {
 		return new TimeOrderCharacterData(this,base);
 	}
 
@@ -414,7 +414,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	 * @param idgroup use these labels to match indices in given tocd.
 	 * @param doTimes if set then sets times as well
 	 */
-	public void setOrdinals(TimeOrderCharacterData tocd, IdGroup standard, boolean doTimes) {
+	public void setOrdinals(TimeOrderCharacterData tocd, TaxaList standard, boolean doTimes) {
 
 		if (timeOrdinals == null) {
 			timeOrdinals = new int[taxa.getIdCount()];
@@ -533,7 +533,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 		int i = whichIdNumber(taxonName);
 		return timeOrdinals[i];
 	}
-	public int getTimeOrdinal(Identifier taxonName) {
+	public int getTimeOrdinal(Taxon taxonName) {
 		int i = whichIdNumber(taxonName.getName());
 		return timeOrdinals[i];
 	}
@@ -597,7 +597,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 
-		sb.append("Identifier\t"+ (hasTimes() ? "Times\t" : "") + "Sample\n");
+		sb.append("Taxon\t"+ (hasTimes() ? "Times\t" : "") + "Sample\n");
 		for (int i = 0; i < taxa.getIdCount(); i++) {
 			sb.append(taxa.getIdentifier(i) + "\t" +
 				(hasTimes() ? getTime(i) + "\t" : "") +
@@ -626,17 +626,17 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 	}
 
 	//IdGroup interface
-	public Identifier getIdentifier(int i) {return taxa.getIdentifier(i);}
-	public void setIdentifier(int i, Identifier ident) { taxa.setIdentifier(i, ident); }
+	public Taxon getIdentifier(int i) {return taxa.getIdentifier(i);}
+	public void setIdentifier(int i, Taxon ident) { taxa.setIdentifier(i, ident); }
 	public int getIdCount() { return taxa.getIdCount(); }
 	public int whichIdNumber(String name) { return taxa.whichIdNumber(name); }
-    public int whichIdNumber(Identifier id) { return taxa.whichIdNumber(id); }
+    public int whichIdNumber(Taxon id) { return taxa.whichIdNumber(id); }
 
 	/**
 	 * Return id group of this alignment.
 	 * @deprecated TimeOrderCharacterData now implements IdGroup
 	 */
-	public IdGroup getIdGroup() { return taxa; }
+	public TaxaList getIdGroup() { return taxa; }
 
 	/**
 	 * A simple utility method for generating a maximu mutation rate based
@@ -688,10 +688,10 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 		private SubgroupHandler(int[] subgroupIndexes) {
 			this.subgroupIndexes_ = net.maizegenetics.pal.util.Utils.getCopy(subgroupIndexes);
 		}
-		private SubgroupHandler(SubgroupHandler toCopy, IdGroup oldBase, IdGroup newBase) {
+		private SubgroupHandler(SubgroupHandler toCopy, TaxaList oldBase, TaxaList newBase) {
 			this(toCopy.subgroupIndexes_, oldBase,newBase);
 		}
-		private SubgroupHandler(int[] oldSubgroupIndexes, IdGroup oldBase, IdGroup newBase) {
+		private SubgroupHandler(int[] oldSubgroupIndexes, TaxaList oldBase, TaxaList newBase) {
 			this.subgroupIndexes_ = new int[oldSubgroupIndexes.length];
 			for(int i = 0 ; i < oldSubgroupIndexes.length ; i++) {
 				String oldName = oldBase.getIdentifier(oldSubgroupIndexes[i]).getName();
@@ -702,9 +702,9 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 				this.subgroupIndexes_[i] = newIndex;
 			}
 		}
-		public Identifier[] getSubgroupMembers(TimeOrderCharacterData parent) {
+		public Taxon[] getSubgroupMembers(TimeOrderCharacterData parent) {
 			final int size = subgroupIndexes_.length;
-			Identifier[] ids = new Identifier[size];
+			Taxon[] ids = new Taxon[size];
 			for(int i = 0 ; i < size ; i++) {
 				ids[i] = parent.getIdentifier(subgroupIndexes_[i]);
 			}
@@ -712,7 +712,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 		}
 		public TimeOrderCharacterData generateNewTOCD(TimeOrderCharacterData parent) {
 			final int size = subgroupIndexes_.length;
-			Identifier[] ids = new Identifier[size];
+			Taxon[] ids = new Taxon[size];
 			for(int i = 0 ; i < size ; i++) {
 				ids[i] = parent.getIdentifier(subgroupIndexes_[i]);
 			}
@@ -774,7 +774,7 @@ public class TimeOrderCharacterData implements Serializable, BranchLimits, Units
 		/**
 		 * Get a copy of the subgroup handlers such that the numbering is reorganised to match newbase
 		 */
-		public static final SubgroupHandler[] getCopy(SubgroupHandler[] toCopy, IdGroup oldBase, IdGroup newBase) {
+		public static final SubgroupHandler[] getCopy(SubgroupHandler[] toCopy, TaxaList oldBase, TaxaList newBase) {
 			if(toCopy==null) {
 				return null;
 			}

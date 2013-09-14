@@ -7,6 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -26,8 +27,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.prefs.TasselPrefs;
 
@@ -142,9 +142,9 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
     private Alignment getFilteredAlignment(Alignment alignment) {
         int numSites = alignment.getSiteCount();
         int numTaxa = alignment.getSequenceCount();
-        IdGroup ids = alignment.getIdGroup();
+        TaxaList ids = alignment.getIdGroup();
 
-        List<Identifier> keepTaxaList = new ArrayList<Identifier>();
+        List<Taxon> keepTaxaList = new ArrayList<Taxon>();
         for (int t = 0; t < numTaxa; t++) {
 
             progress((int) ((double) t / (double) numTaxa * 100.0), null);
@@ -169,7 +169,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             keepTaxaList.add(ids.getIdentifier(t));
         }
 
-        IdGroup taxa = new SimpleIdGroup(keepTaxaList);
+        TaxaList taxa = new SimpleIdGroup(keepTaxaList);
         return FilterAlignment.getInstance(alignment, taxa, false);
     }
 

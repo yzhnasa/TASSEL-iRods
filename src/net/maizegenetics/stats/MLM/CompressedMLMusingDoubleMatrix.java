@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import javax.swing.JOptionPane;
 
+import net.maizegenetics.pal.ids.TaxaList;
 import org.apache.log4j.Logger;
 
 
@@ -28,8 +29,7 @@ import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
 import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.pal.alignment.Phenotype;
 import net.maizegenetics.pal.distance.DistanceMatrix;
-import net.maizegenetics.pal.ids.IdGroup;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.tree.UPGMATree;
@@ -133,7 +133,7 @@ public class CompressedMLMusingDoubleMatrix {
             double[] phenotypeData = theAdapter.getPhenotypeValues(ph);
 
             //get the taxa
-            Identifier[] theTaxa = theAdapter.getTaxa(ph);
+            Taxon[] theTaxa = theAdapter.getTaxa(ph);
 
             //keep track of missing rows
             boolean[] missing = theAdapter.getMissingPhenotypes(ph);
@@ -146,7 +146,7 @@ public class CompressedMLMusingDoubleMatrix {
 
             //update missing for taxa not in the kinship matrix or the distance matrix.
             //Create kinship and distance matrices with taxa in phenotype
-            IdGroup nonmissingIds = updateMissingWithKinship(missing, theTaxa);
+            TaxaList nonmissingIds = updateMissingWithKinship(missing, theTaxa);
             DistanceMatrix kin = new DistanceMatrix(kinshipMatrix, nonmissingIds);
 
             //calculate the number of nonmissing observations
@@ -161,7 +161,7 @@ public class CompressedMLMusingDoubleMatrix {
             //create phenotype matrix
             int count = 0;
             DoubleMatrix y = DoubleMatrixFactory.DEFAULT.make(nonMissingObs, 1);
-            Identifier[] nonmissingTaxa = new Identifier[nonMissingObs];
+            Taxon[] nonmissingTaxa = new Taxon[nonMissingObs];
             for (int i = 0; i < totalObs; i++) {
                 if (!missing[i]) {
                     y.set(count, 0, phenotypeData[i]);
@@ -901,9 +901,9 @@ public class CompressedMLMusingDoubleMatrix {
      * @param phenotypeTaxa the taxa
      * @return an IdGroup with the taxa that are in both the kinship matrix and the phenotype
      */
-    public IdGroup updateMissingWithKinship(boolean[] missing, Identifier[] phenotypeTaxa) {
+    public TaxaList updateMissingWithKinship(boolean[] missing, Taxon[] phenotypeTaxa) {
         int n = missing.length;
-        TreeSet<Identifier> kinSet = new TreeSet<Identifier>();
+        TreeSet<Taxon> kinSet = new TreeSet<Taxon>();
         for (int i = 0; i < n; i++) {
             int col = kinshipMatrix.whichIdNumber(phenotypeTaxa[i]);
             if (!missing[i]) {
@@ -915,7 +915,7 @@ public class CompressedMLMusingDoubleMatrix {
             }
         }
 
-        Identifier[] taxa = new Identifier[kinSet.size()];
+        Taxon[] taxa = new Taxon[kinSet.size()];
         kinSet.toArray(taxa);
         return new SimpleIdGroup(taxa);
     }

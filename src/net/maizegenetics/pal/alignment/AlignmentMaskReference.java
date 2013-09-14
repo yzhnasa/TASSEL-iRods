@@ -5,7 +5,7 @@ package net.maizegenetics.pal.alignment;
 
 import java.awt.Color;
 import java.util.List;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 
 /**
  *
@@ -27,7 +27,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
         return getInstanceCompareReference(align, -1);
     }
 
-    public static AlignmentMaskReference getInstanceCompareReference(Alignment align, Identifier id) {
+    public static AlignmentMaskReference getInstanceCompareReference(Alignment align, Taxon id) {
         List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);

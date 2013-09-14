@@ -1,5 +1,7 @@
-package net.maizegenetics.pal.ids;
+package net.maizegenetics.pal.taxa;
 
+import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.AbstractTableReport;
@@ -20,23 +22,23 @@ import java.util.TreeMap;
 public class IdentifierSynonymizer extends AbstractTableReport implements Serializable, Report, TableReport {
 
     Hashtable idSynonyms = new Hashtable();
-    private IdGroup referenceIDGroup;
+    private TaxaList referenceIDGroup;
     private int unmatchCount = 0;
 
-    public IdentifierSynonymizer(IdGroup preferredTaxa, IdGroup[] alternateTaxaSets) {
+    public IdentifierSynonymizer(TaxaList preferredTaxa, TaxaList[] alternateTaxaSets) {
         init(preferredTaxa, alternateTaxaSets);
     }
 
-    public IdentifierSynonymizer(IdGroup preferredTaxa, IdGroup alternateTaxa) {
-        IdGroup[] alternateTaxaSets = new IdGroup[1];
+    public IdentifierSynonymizer(TaxaList preferredTaxa, TaxaList alternateTaxa) {
+        TaxaList[] alternateTaxaSets = new TaxaList[1];
         alternateTaxaSets[0] = alternateTaxa;
         init(preferredTaxa, alternateTaxaSets);
     }
 
-    private void init(IdGroup preferredTaxa, IdGroup[] alternateTaxaSets) {
+    private void init(TaxaList preferredTaxa, TaxaList[] alternateTaxaSets) {
         //referenceIDGroup=preferredTaxa;
         referenceIDGroup = SimpleIdGroup.getInstance(preferredTaxa);
-        Identifier currID;
+        Taxon currID;
         //Load up the synonym table with all the known names
         for (int i = 0; i < referenceIDGroup.getIdCount(); i++) {
             idSynonyms.put(referenceIDGroup.getIdentifier(i).getName(), new Integer(i));
@@ -188,19 +190,19 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         return s;
     }
 
-    public void changeAlignmentIdentifiers(IdGroup alternateIdGroups) {
-        IdGroup[] aidg = new IdGroup[1];
+    public void changeAlignmentIdentifiers(TaxaList alternateIdGroups) {
+        TaxaList[] aidg = new TaxaList[1];
         aidg[0] = alternateIdGroups;
         changeAlignmentIdentifiers(aidg[0]);
     }
 
-    public void changeAlignmentIdentifiers(IdGroup[] alternateIdGroups) {
-        Identifier currID;
+    public void changeAlignmentIdentifiers(TaxaList[] alternateIdGroups) {
+        Taxon currID;
         for (int a = 0; a < alternateIdGroups.length; a++) {
             for (int i = 0; i < alternateIdGroups[a].getIdCount(); i++) {
                 currID = alternateIdGroups[a].getIdentifier(i);
                 if (getPreferredIndex(currID.getName()) > -1) {
-                    alternateIdGroups[a].setIdentifier(i, new Identifier(getPreferredName(currID.getName())));
+                    alternateIdGroups[a].setIdentifier(i, new Taxon(getPreferredName(currID.getName())));
                 }
             }
         }
@@ -229,7 +231,7 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         }
     }
 
-    public Identifier getPreferredIdentifier(Identifier theID) {
+    public Taxon getPreferredIdentifier(Taxon theID) {
         int index = getPreferredIndex(theID.getName());
         if (index > -1) {
             return referenceIDGroup.getIdentifier(index);

@@ -2,7 +2,7 @@ package net.maizegenetics.baseplugins.numericaltransform;
 
 import net.maizegenetics.pal.alignment.Phenotype;
 import net.maizegenetics.pal.alignment.SimplePhenotype;
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.alignment.Trait;
 import net.maizegenetics.plugindef.Datum;
@@ -11,7 +11,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -140,7 +139,7 @@ public class ImputePanel extends JPanel {
             }
         }
         //rebuild the data set
-        Identifier[] newIDs = new Identifier[includedCount];
+        Taxon[] newIDs = new Taxon[includedCount];
 
         int traitCount = colsSelected.length;
         java.util.List<Trait> newtraits = new ArrayList<Trait>();
