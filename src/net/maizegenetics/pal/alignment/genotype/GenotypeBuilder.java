@@ -4,6 +4,8 @@
 package net.maizegenetics.pal.alignment.genotype;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
+import java.util.regex.Pattern;
+import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
@@ -71,7 +73,45 @@ public class GenotypeBuilder {
     public void setBaseRangeForTaxon(int taxon, int startSite, byte[] value) {
         //TODO this needs an array copy method, startSite was eliminated
         for (int i = 0; i < value.length; i++) {
-            myGenotype.set(taxon, i+startSite, value[i]);
+            myGenotype.set(taxon, i + startSite, value[i]);
+        }
+    }
+
+    public void setBases(String[][] data) {
+
+        if ((data == null) || (data.length == 0)) {
+            throw new IllegalArgumentException("BitAlignment: getInstance: data can not be empty.");
+        }
+
+        int numTaxa = data.length;
+        int numSites = data[0].length;
+
+        for (int site = 0; site < numSites; site++) {
+            if (data[0][0].contains(":")) {
+                Pattern colon = Pattern.compile(":");
+                for (int taxon = 0; taxon < numTaxa; taxon++) {
+                    if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_DIPLOID_ALLELE_STR)) {
+                        setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                    } else if (data[taxon][site].equals("?") || data[taxon][site].equals("?:?")) {
+                        setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                    } else {
+                        String[] siteval = colon.split(data[taxon][site]);
+                        byte first = NucleotideAlignmentConstants.getNucleotideAlleleByte(siteval[0]);
+                        byte second = NucleotideAlignmentConstants.getNucleotideAlleleByte(siteval[1]);
+                        setBase(taxon, site, (byte) ((first << 4) | second));
+                    }
+                }
+            } else {
+                for (int taxon = 0; taxon < numTaxa; taxon++) {
+                    if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
+                        setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                    } else if (data[taxon][site].equals("?")) {
+                        setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                    } else {
+                        setBase(taxon, site, NucleotideAlignmentConstants.getNucleotideAlleleByte(data[taxon][site]));
+                    }
+                }
+            }
         }
     }
 
