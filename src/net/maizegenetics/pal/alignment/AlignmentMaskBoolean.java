@@ -4,6 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import java.awt.Color;
+import java.util.List;
 
 import net.maizegenetics.pal.ids.Identifier;
 
@@ -15,7 +16,6 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private final byte[][] myMask;
-    
 
     public AlignmentMaskBoolean(Alignment align, byte[][] mask, String name, MaskType type) {
         this(align, mask, name, getNextColor(), type);
@@ -39,17 +39,17 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align) {
-        String name = align.getIdGroup().getIdentifier(0).getName() + " Reference";
+        String name = align.getTaxaName(0) + " Reference";
         return getInstanceCompareReference(align, align.getBaseRange(0, 0, align.getSiteCount()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, Identifier id) {
-        int index = align.getIdGroup().whichIdNumber(id);
-        if (index == -1) {
+        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
         String name = id.getName() + " Reference";
-        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount()), name);
+        return getInstanceCompareReference(align, align.getBaseRange(index.get(0), 0, align.getSiteCount()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, int index) {
@@ -61,11 +61,11 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, String id) {
-        int index = align.getIdGroup().whichIdNumber(id);
-        if (index == -1) {
+        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount()), id + " Reference");
+        return getInstanceCompareReference(align, align.getBaseRange(index.get(0), 0, align.getSiteCount()), id + " Reference");
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, byte[] ref, String name) {
@@ -103,8 +103,8 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
     public static AlignmentMaskBoolean getInstanceCompareAlignments(Alignment align1, Alignment align2, String name, MaskType type) {
 
-        if ((align1.getSequenceCount() != align2.getSequenceCount()) ||
-                (align1.getSiteCount() != align2.getSiteCount())) {
+        if ((align1.getSequenceCount() != align2.getSequenceCount())
+                || (align1.getSiteCount() != align2.getSiteCount())) {
             throw new IllegalArgumentException("AlignmentMaskBoolean: getInstanceCompareAlignments: both alignments should have same number of sequences and sites.");
         }
 

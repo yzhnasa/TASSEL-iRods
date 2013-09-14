@@ -439,6 +439,7 @@ public class NucleotideImputationUtils {
 			for (int site : origSites) popdata.snpIndex.fastSet(site);
 		}
 		
+		checksubpops(popdata, 20);
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
@@ -478,7 +479,78 @@ public class NucleotideImputationUtils {
 		mna.clean();
 		popdata.imputed = BitAlignment.getInstance(mna, true); 
 
-		exportParentHaplotypes("/Volumes/Macintosh HD 2/temp/z1chr1parents.hmp.txt", popdata, "1");
+//	 	exportParentHaplotypes("/Volumes/Macintosh HD 2/temp/z1chr1parents.hmp.txt", popdata, "1");
+	}
+	
+	public static void checksubpops(PopulationData popdata, int halfWindowSize) {
+		IdGroup allIds = popdata.original.getIdGroup();
+		ArrayList<LinkedList<Identifier>> subids = new ArrayList<LinkedList<Identifier>>();
+		for (int i = 0; i < 3; i++) subids.add(new LinkedList<Identifier>());
+		int nids = allIds.getIdCount();
+		for (int i = 0; i < nids; i++) {
+			Identifier id = allIds.getIdentifier(i);
+			int ent = Integer.parseInt(id.getFullName().substring(5,9));
+			if (ent < 68) subids.get(0).add(id);
+			else if (ent < 135) subids.get(1).add(id);
+			else if (ent < 201) subids.get(2).add(id);
+		}
+		
+		int nsites = (int) popdata.snpIndex.cardinality();
+		int totalsites = popdata.original.getSiteCount();
+		int[] goodsites = new int[nsites];
+		int ptr = 0;
+		for (int i = 0; i < totalsites; i++) if (popdata.snpIndex.fastGet(i)) goodsites[ptr++] = i;
+		
+		for (int i = 0; i < 3; i++) {
+			Alignment a = FilterAlignment.getInstance(popdata.original, new SimpleIdGroup(subids.get(i)));
+			int ntaxa = a.getSequenceCount();
+			for (int s = 0; s < nsites; s++) {
+				
+				int firstSite = s - halfWindowSize;
+				int lastSite = s + halfWindowSize;
+				if (firstSite < 0) {
+					lastSite -= firstSite;
+					firstSite = 0;
+				} else if (lastSite > nsites - 1) {
+					firstSite += lastSite - nsites + 1;
+					lastSite = nsites - 1;
+				}
+				
+				byte Aallele = popdata.alleleA[goodsites[s]];
+				byte Callele = popdata.alleleC[goodsites[s]];
+				int matchCount = 0;
+				int totalCount = 0;
+				for (int t = 0; t < ntaxa; t++) {
+					byte tgeno = a.getBase(t, goodsites[s]);
+					if (tgeno == Aallele) {
+						for (int s2 = firstSite; s2 <= lastSite; s2++) if (s2 != s) {
+							byte tgeno2 = a.getBase(t, goodsites[s2]);
+							if (tgeno2 != NN) {
+								totalCount += 1;
+								if (tgeno2 == popdata.alleleA[goodsites[s2]]) matchCount++;
+							}
+						}
+					} else if (tgeno == Callele) {
+						for (int s2 = firstSite; s2 <= lastSite; s2++) if (s2 != s) {
+							byte tgeno2 = a.getBase(t, goodsites[s2]);
+							if (tgeno2 != NN) {
+								totalCount += 1;
+								if (tgeno2 == popdata.alleleC[goodsites[s2]]) matchCount++;
+							}
+						}
+					}
+				}
+				
+				StringBuilder sb = new StringBuilder();
+				sb.append(i).append("\t");
+				sb.append(a.getPositionInLocus(goodsites[s]));
+				sb.append("\t").append(matchCount);
+				sb.append("\t").append(totalCount);
+				sb.append("\t").append( ((double) matchCount) / ((double) totalCount) );
+				myLogger.info(sb.toString());
+			}
+			
+		}
 	}
 	
 	public static int[] translateSitesBackToOriginal(int[] sites, int[] translation) {
@@ -547,6 +619,13 @@ public class NucleotideImputationUtils {
 				}
 			}
 			
+			//determine whether subfamilies have one or two major alleles
+			boolean checkSubfamilies = true;
+			if (checkSubfamilies) {
+				
+			}
+			
+			
 			nextSite += direction;
 		}
 		
@@ -608,6 +687,10 @@ public class NucleotideImputationUtils {
 		newClusters.add(new HaplotypeCluster(cluster0));
 		newClusters.add(new HaplotypeCluster(cluster1));
 		return newClusters;
+	}
+	
+	public static void testSiteByClusters() {
+		
 	}
 	
 	public static byte[][] getReverseHaplotypes(Alignment a, PopulationData popdata, int windowSize, int maxDiff) {
@@ -672,7 +755,7 @@ public class NucleotideImputationUtils {
 		return new byte[][]{reverseA, reverseC};
 	}
 	
-	public static String getMajorAlleleFromSnpset(Multiset<String> snpset) {
+	public static String getMajorAlleleFromSnpset(Multiset<String> snpset, double alpha) {
 		ArrayList<Multiset.Entry<String>> snplist = new ArrayList<>(snpset.entrySet());
 		if (snplist.size() == 0) return null;
 		if (snplist.size() == 1) return snplist.get(0).getElement();
@@ -693,7 +776,7 @@ public class NucleotideImputationUtils {
 
 		boolean different = false;
 		try {
-			different =  TestUtils.chiSquareTest(expected, observed, 0.05);
+			different =  TestUtils.chiSquareTest(expected, observed, alpha);
 		} catch (IllegalArgumentException e) {
 			System.out.println("Illegal Argument to NucleotideImputationUtils.testClassSize(): ");
 			e.printStackTrace();
@@ -707,6 +790,10 @@ public class NucleotideImputationUtils {
 		}
 		
 		return null;
+	}
+	
+	public static String getMajorAlleleFromSnpset(Multiset<String> snpset) {
+		return getMajorAlleleFromSnpset(snpset, 0.05);
 	}
 	
 	public static void updateAlleleCalls(HaplotypeCluster cluster, int[] sites, byte[] alleleCalls) {
@@ -1568,13 +1655,13 @@ public class NucleotideImputationUtils {
 		
 		TransitionProbability tp;
 		if (useVariableRecombitionRates) {
-			tp = new TransitionProbabilityWithVariableRecombination(a.getChromosomeName(0));
+			tp = new TransitionProbabilityWithVariableRecombination(a.getLocusName(0));
 		} else {
 			tp = new TransitionProbability();
 		}
 		
 		tp.setTransitionProbability(transition);
-		int chrlength = a.getPositionInChromosome(nsites - 1) - a.getPositionInChromosome(0);
+		int chrlength = a.getPositionInLocus(nsites - 1) - a.getPositionInLocus(0);
 		tp.setAverageSegmentLength( chrlength / nsites );
 		
                 //initialize the emission matrix, states (5) in rows, observations (3) in columns
