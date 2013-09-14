@@ -7,21 +7,19 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
+import net.maizegenetics.pal.gui.LinkageDisequilibriumMinimapComponent;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-
 import java.net.URL;
 import java.util.List;
-import net.maizegenetics.pal.gui.LinkageDisequilibriumMinimapComponent;
 
 
 /**
@@ -216,7 +214,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
 
         this.theLinkageDiseqDisplayPlugin = theQAF;
         this.theLinkageDisequilibrium = theLinkageDisequilibrium;
-        maxWindowSize = theLinkageDisequilibrium.getSiteCount() + theLinkageDisequilibrium.getAlignment().getNumLoci() - 1;
+        maxWindowSize = theLinkageDisequilibrium.getSiteCount() + theLinkageDisequilibrium.getAlignment().getNumChromosomes() - 1;
 
         myXPos = (int)Math.ceil(maxWindowSize/2.0);
         myYPos = (int)Math.ceil(maxWindowSize/2.0);

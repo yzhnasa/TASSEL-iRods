@@ -1,30 +1,20 @@
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import javax.swing.ImageIcon;
-
-import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.pal.taxa.AnnotatedTaxon;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.util.ArgsEngine;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.MutableVCFAlignment;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.VCFUtil;
-
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 /**
  * Basic filters needed for removing bad sites and taxa from GBS pipelines
@@ -86,30 +76,31 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
             AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
 
-            TaxaList idg = a.getIdGroup();
+            TaxaList idg = a.getTaxaList();
             TreeMap<String, List<String>> sortedIds2 = new TreeMap<String, List<String>>();
             int uniqueTaxa = 0;
-            for (int i = 0; i < idg.getIdCount(); i++) {
-                List<String> l = sortedIds2.get(idg.getIdentifier(i).getName());
+            for (int i = 0; i < idg.getTaxaCount(); i++) {
+                List<String> l = sortedIds2.get(idg.getTaxaName(i));
                 if (l == null) {
-                    sortedIds2.put(idg.getIdentifier(i).getName(), l = new ArrayList<String>());
+                    sortedIds2.put(idg.getTaxaName(i), l = new ArrayList<String>());
                     uniqueTaxa++;
                 }
-                l.add(idg.getIdentifier(i).getFullName());
+                l.add(idg.getFullTaxaName(i));
             }
-            TaxaList newGroup = new SimpleIdGroup(uniqueTaxa);
+            TaxaListBuilder newGroupBuild = new TaxaListBuilder();
             int index = 0;
             for (List<String> l : sortedIds2.values()) {
                 if (l.size() > 1) {
-                    newGroup.setIdentifier(index, new Taxon(l.get(0).split(":")[0] + ":MERGE"));
+                    newGroupBuild.add(new AnnotatedTaxon.Builder(l.get(0).split(":")[0]+":MERGE").build());
                     System.out.println("To be merged: " + l.size() + ": " + l);
                 } else {
-                    newGroup.setIdentifier(index, new Taxon(l.get(0)));
+                    newGroupBuild.add(new AnnotatedTaxon.Builder(l.get(0)).build());
                 }
                 //System.out.println(newGroup.getIdentifier(index).getFullName());
                 index++;
             }
-            System.out.println("Total taxa:" + idg.getIdCount());
+            TaxaList newGroup=newGroupBuild.build();
+            System.out.println("Total taxa:" + idg.getTaxaCount());
             System.out.println("Unique taxa:" + uniqueTaxa);
             //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(newGroup, a.getSiteCount(), a.getLoci());
             MutableNucleotideAlignment theMSA = null;
@@ -117,7 +108,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
                 theMSA = MutableNucleotideAlignment.getInstance(newGroup, a.getSiteCount());
             }
             else if (inputFormat == INPUT_FORMAT.vcf){
-                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(),newGroup.getIdCount(), a.getSiteCount(), myMaxNumAlleles);
+                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(),newGroup.getTaxaCount(), a.getSiteCount(), myMaxNumAlleles);
             }
             for (int s = 0; s < a.getSiteCount(); s++) {
                 theMSA.setLocusOfSite(s, a.getChromosome(s));
@@ -184,7 +175,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 
                     }
                     else {
-                        int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));                    
+                        int oldTaxon = a.getTaxaList().getIndicesMatchingTaxon(entry.getValue().get(0)).get(0);
                         calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount());
                         newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
                         for (int s = 0; s < a.getSiteCount(); s++) {
@@ -213,7 +204,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         short[][] siteCnt = new short[2][a.getSiteCount()];
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {
-            taxaIndex[t] = a.getIdGroup().whichIdNumber(taxa.get(t));
+            taxaIndex[t] = a.getTaxaList().getIndicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[a.getSiteCount()];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
@@ -268,7 +259,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxa.size(); t++) {
-            taxaIndex[t] = a.getIdGroup().whichIdNumber(taxa.get(t));
+            taxaIndex[t] = a.getTaxaList().getIndicesMatchingTaxon(taxa.get(t)).get(0);
         }
         for (int s = 0; s < a.getSiteCount(); s++) {
             byte[] alleles = a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s);

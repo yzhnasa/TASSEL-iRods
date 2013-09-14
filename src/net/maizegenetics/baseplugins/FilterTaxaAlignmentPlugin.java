@@ -12,8 +12,8 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.FilterPhenotype;
 import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -91,7 +91,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
             SelectFromAvailableDialog dialog = null;
             if (theData instanceof Alignment) {
                 final Alignment alignment = (Alignment) theData;
-                origIdGroup = alignment.getIdGroup();
+                origIdGroup = alignment.getTaxaList();
                 AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
 
                     @Override
@@ -133,14 +133,14 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
             int[] indicesToKeep = dialog.getDesiredIndices();
             Taxon[] ids = new Taxon[indicesToKeep.length];
             for (int i = 0; i < indicesToKeep.length; i++) {
-                ids[i] = origIdGroup.getIdentifier(indicesToKeep[i]);
+                ids[i] = origIdGroup.get(indicesToKeep[i]);
             }
-            myIdsToKeep = new SimpleIdGroup(ids);
+            myIdsToKeep=new TaxaListBuilder().addAll(ids).build();
             dialog.dispose();
         }
 
-        if (((myIdsToKeep == null) || (myIdsToKeep.getIdCount() == 0))
-                && ((myIdsToRemove == null) || (myIdsToRemove.getIdCount() == 0))) {
+        if (((myIdsToKeep == null) || (myIdsToKeep.getTaxaCount() == 0))
+                && ((myIdsToRemove == null) || (myIdsToRemove.getTaxaCount() == 0))) {
             return null;
         }
 

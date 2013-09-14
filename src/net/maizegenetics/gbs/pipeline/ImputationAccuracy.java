@@ -147,11 +147,11 @@ public class ImputationAccuracy {
         matchTaxon= new int[unimputed.getSequenceCount()];//holds the index of corresponding taxon in known
         String[] knownNames= new String[known.getSequenceCount()];
         for (int taxon = 0; taxon < knownNames.length; taxon++) {
-            knownNames[taxon]= known.getIdGroup().getIdentifier(taxon).getNameLevel(0);
+            knownNames[taxon]= known.getTaxaList().get(taxon).getNameLevel(0);
         }
         
         for (int taxon = 0; taxon < matchTaxon.length; taxon++) {
-            String unkName= unimputed.getIdGroup().getIdentifier(taxon).getNameLevel(0);
+            String unkName= unimputed.getTaxaList().get(taxon).getNameLevel(0);
             matchTaxon[taxon]= Arrays.binarySearch(knownNames, unkName);
         }
         

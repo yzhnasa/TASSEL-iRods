@@ -6,20 +6,21 @@ package net.maizegenetics.gbs.pipeline;
 
 import cern.jet.random.Binomial;
 import edu.cornell.lassp.houle.RngPack.RandomJava;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 
 /**
  *
@@ -653,9 +654,9 @@ public class TagAgainstAnchor {
     private void redirect () {
         long lastTimePoint = this.getCurrentTimeNano();
         tbtRedirect = new int[tbt.getTaxaCount()];
-        TaxaList g = anchor.getIdGroup();
+        TaxaList g = anchor.getTaxaList();
         for (int i = 0; i < tbtRedirect.length; i++) {
-            tbtRedirect[i] = g.whichIdNumber(tbt.getTaxaName(i));
+            tbtRedirect[i] = g.getIndicesMatchingTaxon(tbt.getTaxaName(i)).get(0);
         }
         System.out.println("Taxa redirection took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
     }

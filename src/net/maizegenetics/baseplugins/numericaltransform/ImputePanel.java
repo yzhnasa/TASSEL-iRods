@@ -2,9 +2,10 @@ package net.maizegenetics.baseplugins.numericaltransform;
 
 import net.maizegenetics.pal.alignment.Phenotype;
 import net.maizegenetics.pal.alignment.SimplePhenotype;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.alignment.Trait;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.Datum;
 
 import javax.swing.*;
@@ -150,7 +151,7 @@ public class ImputePanel extends JPanel {
         double[][] tempData = new double[includedCount][colsSelected.length];
         for (int i = 0; i < includedCount; i++) {
             for (int j = 0; j < colCount; j++) {
-                newIDs[i] = aCharacterAlignment.getTaxa().getIdentifier(includedRowTemp[i]);
+                newIDs[i] = aCharacterAlignment.getTaxa().get(includedRowTemp[i]);
                 tempData[i][j] = aCharacterAlignment.getData(includedRowTemp[i], colsSelected[j]);
             }
         }
@@ -161,7 +162,8 @@ public class ImputePanel extends JPanel {
         int kNeighbors = Integer.parseInt(spnK.getValue().toString());
         double[][] theImputedData = KNN.impute(tempData, kNeighbors, rdoManhattenDistance.isSelected(), rdoUnweightedAverage.isSelected());
         //SimplePhenotype sca = new SimplePhenotype(new SimpleIdGroup(newIDs), theImputedData, aCharacterAlignment.getFactorNameCopy(), newtraits);
-        SimplePhenotype sca = new SimplePhenotype(new SimpleIdGroup(newIDs), newtraits, theImputedData);
+        TaxaList tL=new TaxaListBuilder().addAll(newIDs).build();
+        SimplePhenotype sca = new SimplePhenotype(tL, newtraits, theImputedData);
         StringWriter sw = new StringWriter();
         //sca.report(new PrintWriter(sw));
         String theComment = sw.toString() + "\nImputed Phenotypic Values." + "\nTaxa with insufficient data: " + (aCharacterAlignment.getNumberOfTaxa() - sca.getNumberOfTaxa()) + "\nK = " + kNeighbors + minRequiredData + "% cutoff):\n";

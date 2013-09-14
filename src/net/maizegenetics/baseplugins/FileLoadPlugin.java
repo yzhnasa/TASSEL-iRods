@@ -6,42 +6,32 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.gui.DialogUtils;
+import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.pal.alignment.ReadPhenotypeUtils;
+import net.maizegenetics.pal.alignment.ReadPolymorphismUtils;
+import net.maizegenetics.pal.alignment.ReadSequenceAlignmentUtils;
 import net.maizegenetics.pal.distance.ReadDistanceMatrix;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.TableReportUtils;
-
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-
 import net.maizegenetics.prefs.TasselPrefs;
-
-import net.maizegenetics.gui.DialogUtils;
-
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Frame;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import java.io.*;
-
 import java.net.URL;
-
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
-
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -358,10 +348,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                     result = ReadPhenotypeUtils.readNumericalAlignment(inFile);
                     break;
                 }
-                case Fasta: {
-                    result = ImportUtils.readFasta(inFile, myIsSBit);
-                    break;
-                }
                 case SqrMatrix: {
                     result = ReadDistanceMatrix.readDistanceMatrix(inFile);
                     break;
@@ -372,10 +358,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                 }
                 case GeneticMap: {
                     result = ReadPolymorphismUtils.readGeneticMapFile(inFile);
-                    break;
-                }
-                case Serial: {
-                    result = ImportUtils.readAlignmentFromSerialGZ(inFile);
                     break;
                 }
                 case Table: {

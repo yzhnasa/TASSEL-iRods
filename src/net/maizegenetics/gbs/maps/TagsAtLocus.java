@@ -3,31 +3,32 @@
  */
 package net.maizegenetics.gbs.maps;
 
-import org.apache.commons.math.distribution.BinomialDistributionImpl;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
-import java.util.List;
-import org.biojava3.core.sequence.DNASequence;
-import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
-import org.biojava3.alignment.template.Profile;
-import org.biojava3.alignment.Alignments;
-import org.biojava3.alignment.SimpleGapPenalty;
-import org.biojava3.alignment.SubstitutionMatrixHelper;
-import org.biojava3.alignment.template.SequencePair;
-import org.biojava3.alignment.template.SubstitutionMatrix;
-import org.biojava3.alignment.Alignments.PairwiseSequenceAlignerType;
-import org.biojava3.core.sequence.compound.NucleotideCompound;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.VCFUtil;
+import org.apache.commons.math.distribution.BinomialDistributionImpl;
+import org.biojava3.alignment.Alignments;
+import org.biojava3.alignment.Alignments.PairwiseSequenceAlignerType;
+import org.biojava3.alignment.SimpleGapPenalty;
+import org.biojava3.alignment.SubstitutionMatrixHelper;
+import org.biojava3.alignment.template.Profile;
+import org.biojava3.alignment.template.SequencePair;
+import org.biojava3.alignment.template.SubstitutionMatrix;
+import org.biojava3.core.sequence.DNASequence;
+import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
+import org.biojava3.core.sequence.compound.NucleotideCompound;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Aligns and calls SNPs for all tags at a given locus.
@@ -519,10 +520,11 @@ public class TagsAtLocus {
         }
         profile = null;
         Alignment aa = null;
+        TaxaList tL=new TaxaListBuilder().addAll(names).build();
         if (refTagWithGaps) {
-            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, positions, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
+            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, positions, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
         } else {
-            aa = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
+            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
         }
         Alignment faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
 //        if (printOutAlignments && refTagWithGaps) {
@@ -590,7 +592,8 @@ public class TagsAtLocus {
             writeAlignment(refSeq, myAlign, minRefGenIndex, maxRefGenIndex);
         }
         Alignment a = null;
-        a = BitAlignment.getNucleotideInstance(new SimpleIdGroup(names), aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
+        TaxaList tL=new TaxaListBuilder().addAll(names).build();
+        a = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
         Alignment fa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(a, 0.000001, 1.0, 2);
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  FA (alignment filtered for polymorphic sites):\n" + fa.toString());

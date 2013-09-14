@@ -4,18 +4,16 @@
  */
 package net.maizegenetics.gui;
 
-import java.text.NumberFormat;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.taxa.TaxaList;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JSlider;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
-
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.ids.TaxaList;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -206,7 +204,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     public void adjustPosition(int position) {
 
         if (isPhysicalPosition()) {
-            position = myAlignment.getSiteOfPhysicalPosition(position, myAlignment.getLocus(0));
+            position = myAlignment.getSiteOfPhysicalPosition(position, myAlignment.getChromosome(0));
             if (position < 0) {
                 position = -position;
             }
@@ -249,9 +247,9 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         List result = new ArrayList();
 
-        TaxaList idGroup = myAlignment.getIdGroup();
-        for (int i = 0, n = idGroup.getIdCount(); i < n; i++) {
-            result.add(idGroup.getIdentifier(i));
+        TaxaList idGroup = myAlignment.getTaxaList();
+        for (int i = 0, n = idGroup.getTaxaCount(); i < n; i++) {
+            result.add(idGroup.get(i));
         }
 
         return result;

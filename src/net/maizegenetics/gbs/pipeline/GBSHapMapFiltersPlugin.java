@@ -1,25 +1,21 @@
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-
-import java.io.File;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import javax.swing.ImageIcon;
-
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.VCFUtil;
-
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Basic filters needed for removing bad sites and taxa from GBS pipelines
@@ -97,7 +93,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 if (lowCoverageTaxa == null) {
                     lowCoverageTaxa = getLowCoverageLines(a, tCov);
                 }  // Note: lowCoverageTaxa is based upon the startChromosome only
-                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getIdGroup(), lowCoverageTaxa, false);
+                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getTaxaList(), lowCoverageTaxa, false);
                 a = FilterAlignment.getInstance(a, keepTaxa);
                 myLogger.info("TaxaFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
                 if (a.getSiteCount() == 0) {
@@ -116,7 +112,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
 
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
                 String[] highExpectedFTaxa = getHighExpectedFTaxa(a);
-                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getIdGroup(), highExpectedFTaxa, true);
+                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getTaxaList(), highExpectedFTaxa, true);
                 Alignment inbredGenos = FilterAlignment.getInstance(a, highExpectedFTaxaIDGroup);
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0, snpLogging, "Filter the sites for minF only based only on the taxa with expectedF >= minF");
                 inbredGenos = null;
@@ -319,7 +315,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             double propCovered = (double) covered / (double) a.getSiteCount();
             // myLogger.info(a.getTaxaName(i)+":"+propCovered);
             if (propCovered < pCoverage) {
-                lowLines.add(a.getIdGroup().getIdentifier(i).getFullName());
+                lowLines.add(a.getFullTaxaName(i));
             }
         }
         String[] lowL = lowLines.toArray(new String[0]);

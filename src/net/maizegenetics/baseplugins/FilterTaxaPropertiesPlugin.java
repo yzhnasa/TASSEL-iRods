@@ -7,31 +7,24 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
+import net.maizegenetics.prefs.TasselPrefs;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.Frame;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-
 import java.net.URL;
-
-import java.util.ArrayList;
 import java.util.List;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.prefs.TasselPrefs;
-
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -142,9 +135,9 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
     private Alignment getFilteredAlignment(Alignment alignment) {
         int numSites = alignment.getSiteCount();
         int numTaxa = alignment.getSequenceCount();
-        TaxaList ids = alignment.getIdGroup();
+        TaxaList ids = alignment.getTaxaList();
 
-        List<Taxon> keepTaxaList = new ArrayList<Taxon>();
+        TaxaListBuilder keepTaxaList = new TaxaListBuilder();
         for (int t = 0; t < numTaxa; t++) {
 
             progress((int) ((double) t / (double) numTaxa * 100.0), null);
@@ -166,11 +159,9 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
                 }
             }
 
-            keepTaxaList.add(ids.getIdentifier(t));
+            keepTaxaList.add(ids.get(t));
         }
-
-        TaxaList taxa = new SimpleIdGroup(keepTaxaList);
-        return FilterAlignment.getInstance(alignment, taxa, false);
+        return FilterAlignment.getInstance(alignment, keepTaxaList.build(), false);
     }
 
     public double getMinNotMissing() {

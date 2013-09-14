@@ -3,7 +3,6 @@ package net.maizegenetics.baseplugins;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.ExportUtils;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;

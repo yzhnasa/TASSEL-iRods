@@ -4,22 +4,20 @@
 package net.maizegenetics.gbs.pipeline;
 
 import cern.colt.list.IntArrayList;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
+import org.apache.poi.util.IntList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
-
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.taxa.IdGroupUtils;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
-
-import org.apache.poi.util.IntList;
 
 /**
  * Filter methods for reference versus non-reference map. These are not really
@@ -42,20 +40,20 @@ public class AlignmentFilterByGBSUtils {
 
     public static TaxaList getFilteredIdGroupByName(TaxaList orig, String[] filter, boolean keepTaxaMatchFilter) {
         ArrayList<Taxon> keepTaxa = new ArrayList<Taxon>();
-        for (int i = 0; i < orig.getIdCount(); i++) {
+        for (int i = 0; i < orig.getTaxaCount(); i++) {
             boolean matchFlag = false;
             for (String s : filter) {
-                if (orig.getIdentifier(i).getFullName().contains(s)) {
+                if (orig.getFullTaxaName(i).contains(s)) {
                     matchFlag = true;
                 }
             }
             if (matchFlag == keepTaxaMatchFilter) {
-                keepTaxa.add(orig.getIdentifier(i));
+                keepTaxa.add(orig.get(i));
             }
         }
         Taxon[] ids = new Taxon[keepTaxa.size()];
         keepTaxa.toArray(ids);
-        TaxaList newGroup = new SimpleIdGroup(ids);
+        TaxaList newGroup=new TaxaListBuilder().addAll(ids).build();
         return newGroup;
     }
 
@@ -102,7 +100,7 @@ public class AlignmentFilterByGBSUtils {
                 include[i] = true;
             }
         }
-        return IdGroupUtils.idGroupSubset(a.getIdGroup(), include);
+        return IdGroupUtils.idGroupSubset(a.getTaxaList(), include);
     }
 
     public static int[][] genotypicCountsBySite(Alignment a, boolean isRefAltCoded, boolean printToScreen) {
@@ -212,10 +210,10 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static double getErrorRateForDuplicatedTaxa(Alignment a, boolean ignoreHets, boolean random, boolean printToScreen) {
-        TaxaList idg = a.getIdGroup();
+        TaxaList idg = a.getTaxaList();
         TreeMap<String, Integer> sortedIds = new TreeMap<String, Integer>();
-        for (int i = 0; i < idg.getIdCount(); i++) {
-            sortedIds.put(idg.getIdentifier(i).getFullName().toUpperCase(), i);
+        for (int i = 0; i < idg.getTaxaCount(); i++) {
+            sortedIds.put(idg.get(i).getFullName().toUpperCase(), i);
         }
         long cntDiff = 0, cntTotal = 0;
         Map.Entry<String, Integer> priorEntry = sortedIds.lastEntry();
@@ -413,6 +411,6 @@ public class AlignmentFilterByGBSUtils {
                 include[i] = true;
             }
         }
-        return IdGroupUtils.idGroupSubset(a.getIdGroup(), include);
+        return IdGroupUtils.idGroupSubset(a.getTaxaList(), include);
     }
 }

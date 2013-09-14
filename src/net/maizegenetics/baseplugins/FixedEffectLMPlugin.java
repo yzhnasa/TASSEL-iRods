@@ -6,10 +6,11 @@ import net.maizegenetics.jGLiM.dm.*;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -1080,9 +1081,8 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
             }
         }
 
-        Taxon[] taxaIds = new Taxon[taxaSet.size()];
-        taxaSet.toArray(taxaIds);
-        Phenotype thePhenotype = new SimplePhenotype(new SimpleIdGroup(taxaIds), traitList, blues);
+        TaxaList tL=new TaxaListBuilder().addAll(taxaSet).build();
+        Phenotype thePhenotype = new SimplePhenotype(tL, traitList, blues);
 
         theResults.add(new Datum("BLUEs_" + datasetName, thePhenotype, "BLUEs calculated from " + datasetName));
         return theResults;

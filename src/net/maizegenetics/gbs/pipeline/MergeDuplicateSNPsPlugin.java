@@ -220,11 +220,11 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             MutableNucleotideAlignment msa = null;
             if (inputFormat == INPUT_FORMAT.hapmap)
             {
-                msa = MutableNucleotideAlignment.getInstance(a.getIdGroup(), a.getSiteCount());
+                msa = MutableNucleotideAlignment.getInstance(a.getTaxaList(), a.getSiteCount());
             }
             else if (inputFormat == INPUT_FORMAT.vcf)
             {
-                 msa = MutableVCFAlignment.getInstance(a.getIdGroup(), a.getSiteCount(), myMaxNumAlleles);
+                 msa = MutableVCFAlignment.getInstance(a.getTaxaList(), a.getSiteCount(), myMaxNumAlleles);
             }
             ArrayList<Integer> samePosAL = new ArrayList<Integer>();
             Integer[] samePos = null;

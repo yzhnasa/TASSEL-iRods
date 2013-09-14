@@ -6,22 +6,16 @@
  */
 package net.maizegenetics.baseplugins;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.SimplePhenotype;
 import net.maizegenetics.pal.alignment.Trait;
-
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 
 import javax.swing.*;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
+import java.util.*;
 
 /**
  * Numerical Genotype Plugin.
@@ -162,7 +156,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        return new SimplePhenotype(input.getIdGroup(), traitNames, pcValues);
+        return new SimplePhenotype(input.getTaxaList(), traitNames, pcValues);
     }
 
     public static SimplePhenotype collapseTransform(Alignment input) {
@@ -196,7 +190,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        return new SimplePhenotype(input.getIdGroup(), traitNames, pcValues);
+        return new SimplePhenotype(input.getTaxaList(), traitNames, pcValues);
 
     }
 
