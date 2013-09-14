@@ -321,7 +321,7 @@ public class FilterAlignment extends AbstractAlignment {
     }
 
     public static FilterAlignment getInstance(Alignment a, String locus, int startPhysicalPos, int endPhysicalPos) {
-        return getInstance(a, a.getLocus(locus), startPhysicalPos, endPhysicalPos);
+        return getInstance(a, a.getChromosome(locus), startPhysicalPos, endPhysicalPos);
     }
 
     public static FilterAlignment getInstance(Alignment a, Chromosome locus, int startPhysicalPos, int endPhysicalPos) {

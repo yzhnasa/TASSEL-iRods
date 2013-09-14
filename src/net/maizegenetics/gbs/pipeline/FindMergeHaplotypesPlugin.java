@@ -29,6 +29,7 @@ import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.Identifier;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -133,9 +134,8 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             int minSites, double maxDistance) {
         Alignment fa=FilterAlignment.getInstance(baseAlign, startSite, endSite);
         Alignment inAlign=BitAlignment.getInstance(fa, false);  //load for Taxa
-        inAlign.optimizeForTaxa(null);
         int sites=inAlign.getSiteCount();
-        System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.getLocus(0),
+        System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.getChromosome(0),
                 inAlign.getPositionInChromosome(0),inAlign.getSequenceCount(),inAlign.getSiteCount());
 
         propMissing=new double[inAlign.getSequenceCount()];
@@ -158,10 +158,11 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     }
     
     private int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
-        Chromosome[] theL=a.getLoci();
+        Chromosome[] theL=a.getChromosomes();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Chromosome aL: theL) {
             System.out.println("");
+            //todo chromosome offsets will be need to replace this
             int locusSites=aL.getEnd()-aL.getStart()+1;
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
             if(subAlignCnt==0) subAlignCnt++;
@@ -180,7 +181,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         for (int i = 0; i < result.length; i++) {
             result[i]=allDivisions.get(i);
            // 
-            System.out.printf("Chromosome Divisions: %s start:%d end:%d %n", a.getLocus(result[i][0]).getName(),
+            System.out.printf("Chromosome Divisions: %s start:%d end:%d %n", a.getChromosome(result[i][0]).getName(),
                     result[i][0], result[i][1]);
         }
         return result;
@@ -218,7 +219,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(outIDG, inAlign.getSiteCount());
         for (int i = 0; i < inAlign.getSiteCount(); i++) {
             mna.addSite(i);
-            mna.setLocusOfSite(i, inAlign.getLocus(i));
+            mna.setLocusOfSite(i, inAlign.getChromosome(i));
             mna.setPositionOfSite(i, inAlign.getPositionInChromosome(i));
         }
         return mna;
@@ -268,7 +269,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         TreeMap<Integer,ArrayList> mergeSets=new TreeMap<Integer,ArrayList>();
         TreeMap<Integer,byte[][]> results=new TreeMap<Integer,byte[][]>(Collections.reverseOrder());
         TreeSet<Integer> unmatched=new TreeSet<Integer>(presentRanking.values());
-        IdGroup inIDG=inAlign.getIdGroup();
+        TaxaList inIDG=inAlign.getTaxaList();
         for (Entry<Integer,Integer> e : presentRanking.entrySet()) {
             int taxon1=e.getValue();
             if(unmatched.contains(taxon1)==false) continue;//already included in another group
@@ -285,13 +286,13 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             if(((hits.size()+1)<this.minTaxaInGroup)) continue;
             if(hits.size()>0) {
                 ArrayList<String> mergeNames=new ArrayList<String>();
-                mergeNames.add(inIDG.getIdentifier(taxon1).getFullName());
+                mergeNames.add(inIDG.getFullTaxaName(taxon1));
                 mergeSets.put(taxon1, hits);         
                // System.out.print(inAlign.getFullTaxaName(taxon1)+"=");
                 for (Integer taxon2 : hits) {
                     unmatched.remove(taxon2);
                    // System.out.print(inAlign.getFullTaxaName(taxon2)+"=");
-                    mergeNames.add(inIDG.getIdentifier(taxon2).getFullName());
+                    mergeNames.add(inIDG.getFullTaxaName(taxon2));
                 }
               //  System.out.println("");              
                 calls=consensusGameteCalls(inAlign, mergeNames, startSite, endSite, maxErrorInCreatingConsensus, siteOffsetForError);
@@ -303,7 +304,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             double hetFreq=(double)unkCnt[1]/(double)(inAlign.getSiteCount()-unkCnt[0]);
             if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq))) {
                 int index=(hits.size()*200000)+taxon1;
-                System.out.printf("Output %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.getIdentifier(taxon1).getFullName(),
+                System.out.printf("Output %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.getFullTaxaName(taxon1),
                         hits.size(), missingFreq, hetFreq, index);
                 byte[][] callPlusNames=new byte[2][];
                 callPlusNames[0]=calls;
@@ -320,7 +321,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             int endSite, double maxError, int siteOffsetForError) {
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {  //why are we working with names rather than numbers
-            taxaIndex[t] = a.getIdGroup().whichIdNumber(taxa.get(t));
+            taxaIndex[t] = a.getTaxaList().getIndicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[endSite-startSite+1];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);

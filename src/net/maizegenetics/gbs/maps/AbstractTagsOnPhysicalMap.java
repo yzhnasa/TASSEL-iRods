@@ -7,6 +7,12 @@ package net.maizegenetics.gbs.maps;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
+import net.maizegenetics.gbs.tagdist.AbstractTags;
+import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.site.Chromosome;
+
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -14,12 +20,6 @@ import java.io.FileOutputStream;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import net.maizegenetics.gbs.tagdist.AbstractTags;
-import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 
 /**
  * Abstract TagsOnPhysicalMap object.  Abstract alignment is implemented by two types of TOPM classes
@@ -271,9 +271,8 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
     public Chromosome[] getLoci() {
         int[] chrs = getChromosomes();
         Chromosome[] result = new Chromosome[chrs.length];
-
         for (int i = 0; i < result.length; i++) {
-            result[i] = new Chromosome(chrs[i] + "", chrs[i] + "", -1, -1, null, null);
+            result[i] = new Chromosome(chrs[i] + "");
         }
         return result;
     }
@@ -283,7 +282,7 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
         if (bestChr[tagIndex] == TOPMInterface.INT_MISSING) {
             return null;
         } //Return null for unmapped tags
-        return new Chromosome(bestChr[tagIndex] + "", bestChr[tagIndex] + "", -1, -1, null, null);
+        return new Chromosome(bestChr[tagIndex] + "");
     }
     
    void initPhysicalSort() {

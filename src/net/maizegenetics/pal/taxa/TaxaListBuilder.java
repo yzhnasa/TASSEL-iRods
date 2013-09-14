@@ -5,12 +5,8 @@ import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
-import net.maizegenetics.pal.ids.IdGroup;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A builder for creating immutable {@link TaxaList} instances.
@@ -45,26 +41,13 @@ public class TaxaListBuilder {
         return this;
     }
 
-    public TaxaListBuilder addAll(List<AnnotatedTaxon> taxa) {
-        for (AnnotatedTaxon annotatedTaxon : taxa) {
-            myTaxaList.add(annotatedTaxon);
-        }
-        return this;
-    }
-
-    public TaxaListBuilder addAll(Set<AnnotatedTaxon> taxa) {
-        for (AnnotatedTaxon annotatedTaxon : taxa) {
-            myTaxaList.add(annotatedTaxon);
-        }
+    public TaxaListBuilder addAll(Collection<AnnotatedTaxon> taxa) {
+        myTaxaList.addAll(taxa);
         return this;
     }
 
     public TaxaListBuilder addAll(Alignment a) {
-        //TODO change this over to get TaxaList from the Alignment, and then add the annotated alignments
-        IdGroup ids=a.getIdGroup();
-        for (int i = 0; i <ids.getIdCount() ; i++) {
-            myTaxaList.add(new AnnotatedTaxon.Builder(ids.getIdentifier(i)).build());
-        }
+        myTaxaList.addAll(a.getTaxaList());
         return this;
     }
 

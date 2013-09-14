@@ -6,30 +6,28 @@ package net.maizegenetics.gbs.pipeline;
 
 import cern.jet.random.Binomial;
 import edu.cornell.lassp.houle.RngPack.RandomJava;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.ids.IdGroup;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 
 /**
  *
  * @author Fei Lu
  */
 public class TagAgainstAnchorOriginal {
-    BitAlignment anchor;
+    Alignment anchor;
     double[] anchorMaf;
     int[] chromosomeNumber;
     int[] chrStartIndex;
@@ -413,7 +411,7 @@ public class TagAgainstAnchorOriginal {
                 }
                 tests++;
             }
-            int chr=Integer.parseInt(anchor.getLocus(bestSite).getName());
+            int chr=Integer.parseInt(anchor.getChromosome(bestSite).getName());
             double[] result={chr, bestSite, anchor.getPositionInChromosome(bestSite),bestP, countSig};
             resultReport[chrIndex]=result;
         }
@@ -546,9 +544,9 @@ public class TagAgainstAnchorOriginal {
     private void redirect () {
         long lastTimePoint = this.getCurrentTimeNano();
         tbtRedirect = new int[tbt.getTaxaCount()];
-        IdGroup g = anchor.getIdGroup();
+        TaxaList g = anchor.getTaxaList();
         for (int i = 0; i < tbtRedirect.length; i++) {
-            tbtRedirect[i] = g.whichIdNumber(tbt.getTaxaName(i));
+            tbtRedirect[i] = g.getIndicesMatchingTaxon(tbt.getTaxaName(i)).get(0);
         }
         System.out.println("Taxa redirection took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
     }
@@ -574,14 +572,14 @@ public class TagAgainstAnchorOriginal {
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         System.out.println("The anchor map has " + a.getSiteCount() + " sites and " + a.getTaxaCount() + " taxa");
         lastTimePoint = this.getCurrentTimeNano();
-        int[] chrOffSet = a.getLociOffsets();
-        chromosomeNumber = new int[a.getLoci().length];
+        int[] chrOffSet = a.getChromosomesOffsets();
+        chromosomeNumber = new int[a.getChromosomes().length];
         chrStartIndex = new int[chromosomeNumber.length];
         chrEndIndex = new int[chromosomeNumber.length];
         for (int i = 0; i < chromosomeNumber.length; i++) {
-            chromosomeNumber[i] = a.getLoci()[i].getChromosomeNumber();
+            chromosomeNumber[i] = a.getChromosomes()[i].getChromosomeNumber();
             chrStartIndex[i] = chrOffSet[i];
-            chrEndIndex[i] = chrOffSet[i] + a.getLocusSiteCount(a.getLoci()[i]);
+            chrEndIndex[i] = chrOffSet[i] + a.getChromosomeSiteCount(a.getChromosomes()[i]);
         }
         anchor = (BitAlignment)BitAlignment.getHomozygousNucleotideInstance(a, true);
         anchorMaf = new double[anchor.getSiteCount()];

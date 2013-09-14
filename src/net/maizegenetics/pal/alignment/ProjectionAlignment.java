@@ -25,7 +25,7 @@ import net.maizegenetics.util.Utils;
  *
  * @author ed, terry
  */
-public class ProjectionAlignment extends AbstractAlignment implements MutableAlignment {
+public class ProjectionAlignment implements Alignment{
 
     private int[][] mySiteBreaks;  //temporary - saving not needed
     private int[][][] myHDTaxa;  //taxa ids should be saved
@@ -316,15 +316,7 @@ public class ProjectionAlignment extends AbstractAlignment implements MutableAli
         return AlignmentUtils.getUnphasedDiploidValueNoHets(b0, b1);
     }
 
-    @Override
-    public boolean isSBitFriendly() {
-        return false;
-    }
 
-    @Override
-    public boolean isTBitFriendly() {
-        return false;
-    }
 
 //    @Override
 //    public byte[] getBaseRow(int taxon) {

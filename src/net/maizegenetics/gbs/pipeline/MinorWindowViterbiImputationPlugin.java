@@ -167,7 +167,6 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //        } else {
 //            unimpAlign=ImportUtils.readFromHapmap(unImpTargetFile, false, (ProgressListener)null);
 //        }
-        unimpAlign.optimizeForTaxa(null);
         
         OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, true);   
 
@@ -180,7 +179,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         System.out.println("Creating mutable alignment");
         MutableAlignment mna=null;
         if(isOutputProjection) {
-            mna=new ProjectionAlignment(donorAlign[0], unimpAlign.getIdGroup());
+            mna=new ProjectionAlignment(donorAlign[0], unimpAlign.getTaxaList());
         } else {
             if(exportFile.contains("hmp.h5")) {
                 ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, new SimpleIdGroup(0), false);
@@ -253,7 +252,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         @Override
         public void run() {
             StringBuilder sb=new StringBuilder();
-            String name=unimpAlign.getIdGroup().getIdentifier(taxon).getFullName();
+            String name=unimpAlign.getFullTaxaName(taxon);
             ImputedTaxon impTaxon=new ImputedTaxon(taxon, unimpAlign.getBaseRow(taxon),isOutputProjection);
             int[] unkHets=countUnknownAndHets(impTaxon.getOrigGeno());
             sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d Hets:%d... ", taxon,name,
@@ -347,7 +346,6 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             System.out.println("Starting Read");
             donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), true, (ProgressListener)null);     
             System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
-            donorAlign[i].optimizeForTaxa(null);
             System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }

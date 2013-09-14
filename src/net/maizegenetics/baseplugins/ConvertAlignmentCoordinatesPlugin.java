@@ -3,29 +3,23 @@
  */
 package net.maizegenetics.baseplugins;
 
-import java.awt.Frame;
-
-import java.io.BufferedReader;
-
-import java.util.HashMap;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-
-import java.util.List;
-import java.util.regex.Pattern;
-
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.alignment.MutableAlignment;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
-
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.util.Utils;
-
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.BufferedReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -84,7 +78,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             alignment = MutableNucleotideAlignment.getInstance((Alignment) input.getData());
         }
 
-        Chromosome[] loci = alignment.getLoci();
+        Chromosome[] loci = alignment.getChromosomes();
         myLociMap.clear();
         for (int i = 0; i < loci.length; i++) {
             myLociMap.put(loci[i].getName(), loci[i]);
@@ -128,7 +122,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                             continue;
                         }
 
-                        if ((pos1 != alignment.getPositionInChromosome(site)) || (!locus1.equals(alignment.getLocus(site).getName()))) {
+                        if ((pos1 != alignment.getPositionInChromosome(site)) || (!locus1.equals(alignment.getChromosome(site).getName()))) {
                             myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " position and locus do not match alignment.");
                             myLogger.warn("Alignment SNP ID: " + alignment.getSNPID(site) + "  position: " + alignment.getPositionInChromosome(site) + "  locus: " + alignment.getChromosomeName(site));
                             continue;

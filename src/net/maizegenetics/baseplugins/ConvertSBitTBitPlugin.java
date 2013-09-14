@@ -120,14 +120,14 @@ public class ConvertSBitTBitPlugin extends AbstractPlugin {
         Alignment result = null;
         if (type == CONVERT_TYPE.sbit) {
             try {
-                alignment.optimizeForSites(listener);
+//                alignment.optimizeForSites(listener);
                 result = alignment;
             } catch (UnsupportedOperationException e) {
                 result = BitAlignment.getInstance(alignment, true);
             }
         } else if (type == CONVERT_TYPE.tbit) {
             try {
-                alignment.optimizeForTaxa(listener);
+//                alignment.optimizeForTaxa(listener);
                 result = alignment;
             } catch (UnsupportedOperationException e) {
                 result = BitAlignment.getInstance(alignment, false);

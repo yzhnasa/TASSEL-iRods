@@ -45,7 +45,6 @@ public class ExportUtils {
     }
 
     public static String writeToHDF5(Alignment a, String newHDF5file) {
-
         a = AlignmentUtils.optimizeForTaxaAndSites(a);
         IHDF5Writer h5w = null;
         try {
@@ -99,16 +98,16 @@ public class ExportUtils {
             h5w.createGroup(HapMapHDF5Constants.SBIT);
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
-            String[] lociNames = new String[a.getNumLoci()];
-            Chromosome[] loci = a.getLoci();
-            for (int i = 0; i < a.getNumLoci(); i++) {
+            String[] lociNames = new String[a.getNumChromosomes()];
+            Chromosome[] loci = a.getChromosomes();
+            for (int i = 0; i < a.getNumChromosomes(); i++) {
                 lociNames[i] = loci[i].getName();
             }
-            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumLoci());
+            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumChromosomes());
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
 
-            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
-            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
+            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumChromosomes());
+            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getChromosomesOffsets());
 
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
@@ -207,14 +206,14 @@ public class ExportUtils {
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
-            String[] lociNames = new String[a.getNumLoci()];
+            String[] lociNames = new String[a.getNumChromosomes()];
             HashMap<Chromosome, Integer> locusToIndex=new HashMap<Chromosome, Integer>(10);
-            Chromosome[] loci = a.getLoci();
-            for (int i = 0; i < a.getNumLoci(); i++) {
+            Chromosome[] loci = a.getChromosomes();
+            for (int i = 0; i < a.getNumChromosomes(); i++) {
                 lociNames[i] = loci[i].getName();
                 locusToIndex.put(loci[i],i);
             }
-            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumLoci());
+            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumChromosomes());
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
 
 //            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
@@ -222,7 +221,7 @@ public class ExportUtils {
             
             int[] locusIndicesArray = new int[a.getSiteCount()];
             for (int i = 0; i < locusIndicesArray.length; i++) {
-                locusIndicesArray[i] = locusToIndex.get(a.getLocus(i));
+                locusIndicesArray[i] = locusToIndex.get(a.getChromosome(i));
             }
             
             h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),features);
@@ -309,7 +308,7 @@ public class ExportUtils {
 
             TreeSet<Chromosome> lset = new TreeSet();
             for (int i = 0; i < numSites; i++) {
-                lset.add(a.getLocus(snpIndex[i]));
+                lset.add(a.getChromosome(snpIndex[i]));
             }
             Chromosome[] outLoci = lset.toArray(new Chromosome[lset.size()]);
             String[] lociNames = new String[outLoci.length];
@@ -327,7 +326,7 @@ public class ExportUtils {
             
             int[] locusIndicesArray = new int[snpIndex.length];
             for (int i = 0; i < locusIndicesArray.length; i++) {
-                locusIndicesArray[i] = locusToIndex.get(a.getLocus(snpIndex[i]));
+                locusIndicesArray[i] = locusToIndex.get(a.getChromosome(snpIndex[i]));
             }
             
             h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),features);
@@ -381,85 +380,7 @@ public class ExportUtils {
             }
         }
     }
-     /**
-     * This merge multiple alignment together into one ByteNucleotideHDF5 File.  
-     * This is designed for putting multiple chromosomes together into one whole genome file.
-     * @param a array of input alignments
-     * @param newMerge name of ByteNucleotideHDF5
-     */
-    public static void mergeToMutableHDF5(Alignment[] a, String newMerge) {
-        if ((a == null) || (a.length == 0)) {
-            return ;
-        }
-        TreeSet<String> taxa = new TreeSet<String>();
-        TreeMap<Long, Long> siteMap=new TreeMap<Long, Long>();  //key = (chr<<36)+(dup<<32)+(physicalPos)); value = (align<<32+site)
 
-        for (Alignment ai : a) {
-            IdGroup currentIds = ai.getIdGroup();
-            for (int t = 0; t < currentIds.getIdCount(); t++) {
-                taxa.add(currentIds.getIdentifier(t).getFullName());
-            }
-        }     
-        for (int i=0; i<a.length; i++) {
-            
-            for (int s = 0; s < a[i].getSiteCount(); s++) {
-                long chrNum=Integer.parseInt(a[i].getLocus(s).getName());
-                long phys=a[i].getPositionInChromosome(s);
-                long value=((long)i<<32)+s;
-                long dupIndex=0;
-                long key=(chrNum<<36)+(dupIndex<<32)+(phys);
-                while(siteMap.containsKey(key)) {
-                    dupIndex++;
-                    key=(chrNum<<36)+(dupIndex<<32)+(phys);
-                }
-                siteMap.put(key, value);
-            }
-        }
-        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(new SimpleIdGroup(1),siteMap.size(),1,siteMap.size());
-        int s=0;
-        int[] alignOfSite=new int[siteMap.size()];
-        int[] siteOfSite=new int[siteMap.size()];
-        for (long ent : siteMap.values()) {
-            int site=(int)ent;
-            int ai=(int)(ent>>>32);
-            mna.setLocusOfSite(s, a[ai].getLocus(site));
-            mna.setPositionOfSite(s, a[ai].getPositionInChromosome(site));
-            mna.setSNPID(s, a[ai].getSNPID(site));
-            alignOfSite[s]=ai;
-            siteOfSite[s]=site;
-            s++;
-        }
-        ExportUtils.writeToMutableHDF5(mna, newMerge, new SimpleIdGroup(0), false);
-        MutableNucleotideAlignmentHDF5 base=MutableNucleotideAlignmentHDF5.getInstance(newMerge, 4096);
-        int cnt=0;
-        long startTime=System.currentTimeMillis();
-        for (String tn: taxa) {
-            int[] tind=new int[a.length];
-            for (int i=0; i<a.length; i++) {
-                tind[i]=a[i].getIdGroup().whichIdNumber(tn);
-            }
-            byte[] geno=new byte[alignOfSite.length];
-            for (int ns = 0; ns < geno.length; ns++) {
-                if(tind[alignOfSite[ns]]<0) {
-                    geno[ns]=Alignment.UNKNOWN_DIPLOID_ALLELE;
-                } else {
-                    geno[ns]=a[alignOfSite[ns]].getBase(tind[alignOfSite[ns]], siteOfSite[ns]);
-                }
-            }
-            base.addTaxon(new Identifier(tn),geno,null);
-//            int newTaxaIndex=base.getIdGroup().whichIdNumber(tn);
-//            base.setAllBases(newTaxaIndex, geno);
-            if(cnt++%100==0) {
-                long time=System.currentTimeMillis()-startTime;
-                double milliPerTaxon=time/cnt;
-                double minRemaining=((double)(taxa.size()-cnt)*(double)milliPerTaxon)/60000d;
-                System.out.println(cnt+": out:"+tn+" TimePerTaxon:"+milliPerTaxon+"ms   TimeRemaining:"+minRemaining+"min");
- //               if(cnt>1000) {base.clean();return;}  //for timing purposes
-            }
-                
-        }
-        base.clean();
-    }
     
          /**
      * This merge multiple alignment together into one ByteNucleotideHDF5 File.  
@@ -537,7 +458,7 @@ public class ExportUtils {
                 //not completely sure this does what I want, I need to access the
                 //accession name from every alleleBLOB in bytes [52-201] but there
                 //doesn't seem to be a method to access that in Alignment
-                String sequenceID = alignment.getIdGroup().getIdentifier(taxa).getFullName().trim();
+                String sequenceID = alignment.getFullTaxaName(taxa).trim();
                 bw.write(sequenceID);
                 if (taxa != numTaxa - 1) {
                     bw.write(delimChar);
@@ -1181,14 +1102,14 @@ public class ExportUtils {
             Pattern splitter = Pattern.compile(":");
             int numTaxa = alignment.getSequenceCount();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
-                String[] name = splitter.split(alignment.getIdGroup().getIdentifier(taxa).getFullName().trim());
+                String[] name = splitter.split(alignment.getFullTaxaName(taxa).trim());
                 if (name.length != 1) {
                     PEDbw.write(name[1]); // namelvl 1 if is available
                 } else {
                     PEDbw.write("-9");
                 }
                 PEDbw.write(delimChar);
-                PEDbw.write(alignment.getIdGroup().getIdentifier(taxa).getFullName().trim()); // namelvl 0
+                PEDbw.write(alignment.getFullTaxaName(taxa).trim()); // namelvl 0
                 PEDbw.write(delimChar);
                 PEDbw.write("-9"); // paternal ID unavailable
                 PEDbw.write(delimChar);
@@ -1272,7 +1193,7 @@ public class ExportUtils {
             DATbw.write("\n");
             int numTaxa = alignment.getSequenceCount();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
-                DATbw.write(alignment.getIdGroup().getIdentifier(taxa).getFullName().trim());
+                DATbw.write(alignment.getFullTaxaName(taxa).trim());
                 DATbw.write(delimChar);
                 for (int site = 0; site < numSites; site++) {
                     String[] b = alignment.getBaseAsStringArray(taxa, site);
@@ -1335,8 +1256,8 @@ public class ExportUtils {
             }
             bw.write("\n");
 
-            for (int r = 0, n = theAlignment.getSequenceCount(); r < n; r++) {
-                bw.write(theAlignment.getIdGroup().getIdentifier(r).getFullName());
+            for (int r = 0, n = theAlignment.getSequenceount(); r < n; r++) {
+                bw.write(theAlignment.getFullTaxaName(r));
                 for (int i = 0; i < numSites; i++) {
                     bw.write(delimit);
                     bw.write(theAlignment.getBaseAsString(r, i));
@@ -1397,7 +1318,7 @@ public class ExportUtils {
         while (n < a.getSiteCount()) {
             for (int s = 0; s < a.getSequenceCount(); s++) {
                 if (n == 0) {
-                    format.displayLabel(out, a.getIdGroup().getIdentifier(s).getName(), 10);
+                    format.displayLabel(out, a.getFullTaxaName(s), 10);
                     out.print("     ");
                 } else {
                     out.print("               ");
@@ -1424,7 +1345,7 @@ public class ExportUtils {
         while (n < a.getSiteCount()) {
             out.println();
             for (int s = 0; s < a.getSequenceCount(); s++) {
-                format.displayLabel(out, a.getIdGroup().getIdentifier(s).getName(), 10);
+                format.displayLabel(out, a.getFullTaxaName(s), 10);
                 out.print("     ");
 
                 printNextSites(a, out, false, s, n, 50);

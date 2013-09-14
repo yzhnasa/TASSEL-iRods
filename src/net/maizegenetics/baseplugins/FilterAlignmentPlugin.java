@@ -118,7 +118,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
         Chromosome theLocus = myLocus;
         if ((theLocus == null) && (myLocusStr != null)) {
-            theLocus = aa.getLocus(myLocusStr);
+            theLocus = aa.getChromosome(myLocusStr);
             if (theLocus == null) {
                 throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Alignment doesn't contain locus: " + myLocusStr);
             }
@@ -202,7 +202,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         }
         String theComment;
         StringBuilder builder = new StringBuilder();
-        Chromosome[] loci = naa.getLoci();
+        Chromosome[] loci = naa.getChromosomes();
         builder.append(inDatum.getName());
         builder.append("_");
         if ((loci != null) && (loci.length != 0)) {
@@ -464,9 +464,9 @@ class DataFilterAlignmentDialog extends JDialog {
         super(f, "Filter Alignment", true);
         theAlignment = a;
         chromFilteredAlignment = theAlignment;
-        chromsAvailable = new String[theAlignment.getNumLoci()];
+        chromsAvailable = new String[theAlignment.getNumChromosomes()];
         for (int i = 0; i < chromsAvailable.length; i++) {
-            chromsAvailable[i] = theAlignment.getLoci()[i].getName().trim();
+            chromsAvailable[i] = theAlignment.getChromosomes()[i].getName().trim();
         }
         totalSeq = theAlignment.getSequenceCount();
         siteCount = theAlignment.getSiteCount();
@@ -865,7 +865,7 @@ class DataFilterAlignmentDialog extends JDialog {
             for (int i = 0; i < chromsSelected.length; i++) {
                 for (int j = 0; j < availableAlignments.size(); j++) {
                     Alignment current = (Alignment) availableAlignments.get(j).getData();
-                    if (current.getLoci().length == 1) {
+                    if (current.getChromosomes().length == 1) {
                         if (chromsSelected[i].equals(current.getChromosomeName(0))) {
                             selectedAlignments[i] = current;
                         }
