@@ -5,7 +5,6 @@ package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
-import net.maizegenetics.util.ProgressListener;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -255,7 +254,7 @@ public class AlignmentUtils {
         }
         return result;
     }
-    
+
     public static int[][] getAllelesSortedByFrequency(Alignment alignment, int site) {
 
         int[] stateCnt = new int[16];
@@ -312,7 +311,7 @@ public class AlignmentUtils {
         return result;
 
     }
-    
+
     public static Object[][] getDiploidsSortedByFrequency(Alignment alignment, int site) {
 
         Integer ONE_INTEGER = 1;
@@ -661,22 +660,31 @@ public class AlignmentUtils {
         return true;
 
     }
-    
+
     /**
      * Return true if either at least one allele agree
+     *
      * @param genotype1
      * @param genotype2
      * @return true if at least one allele is equal
      */
     public static boolean isPartiallyEqual(byte genotype1, byte genotype2) {
-        int low1=0xF&genotype1;
-        int low2=0xF&genotype2;
-        if(low1==low2) return true;
-        int high1=genotype1>>>4;
-        if(high1==low2) return true;
-        int high2=genotype2>>>4;
-        if(low1==high2) return true;
-        if(high1==high2) return true;
+        int low1 = 0xF & genotype1;
+        int low2 = 0xF & genotype2;
+        if (low1 == low2) {
+            return true;
+        }
+        int high1 = genotype1 >>> 4;
+        if (high1 == low2) {
+            return true;
+        }
+        int high2 = genotype2 >>> 4;
+        if (low1 == high2) {
+            return true;
+        }
+        if (high1 == high2) {
+            return true;
+        }
         return false;
     }
 
@@ -827,35 +835,50 @@ public class AlignmentUtils {
         return new BitSet[]{rMj, rMn};
     }
 
-    
-        /**
+    /**
      * Method for getting TBits rapidly from major and minor allele arrays
+     *
      * @param genotype
      * @param mjA
      * @param mnA
-     * @return 
+     * @return
      */
     public static BitSet[] calcBitPresenceFromGenotype15(byte[] genotype, byte[] mjA, byte[] mnA) {
-        int sites=genotype.length;
-        if((genotype.length!=mjA.length)||(genotype.length!=mnA.length)) throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
-        ByteBuffer gBB=ByteBuffer.wrap(genotype);  //byte buffer make the code 20% faster for short sequences
-        ByteBuffer mjBB=ByteBuffer.wrap(mjA);
-        ByteBuffer mnBB=ByteBuffer.wrap(mnA);
-        OpenBitSet rMj=new OpenBitSet(genotype.length);
-        OpenBitSet rMn=new OpenBitSet(genotype.length);
-        for (int i = 0; i < sites; i++) {
-            byte g=gBB.get();
-            byte mj=mjBB.get();
-            byte mn=mnBB.get();
- //           System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
-            if(mj==Alignment.UNKNOWN_ALLELE) continue;
-            if(g==AlignmentUtils.getDiploidValuePhased(mj, mj)) {rMj.fastSet(i); continue;}       
-            if(mn==Alignment.UNKNOWN_ALLELE) continue;
-            if(g==AlignmentUtils.getDiploidValuePhased(mn, mn)) {rMn.fastSet(i); continue;}
-            byte het=AlignmentUtils.getUnphasedDiploidValue(mj, mn);
-            if(AlignmentUtils.isEqual(g, het)) {rMj.fastSet(i); rMn.fastSet(i);}
+        int sites = genotype.length;
+        if ((genotype.length != mjA.length) || (genotype.length != mnA.length)) {
+            throw new ArrayIndexOutOfBoundsException("Input genotypes unequal in length");
         }
-        return new BitSet[]{rMj,rMn};
+        ByteBuffer gBB = ByteBuffer.wrap(genotype);  //byte buffer make the code 20% faster for short sequences
+        ByteBuffer mjBB = ByteBuffer.wrap(mjA);
+        ByteBuffer mnBB = ByteBuffer.wrap(mnA);
+        OpenBitSet rMj = new OpenBitSet(genotype.length);
+        OpenBitSet rMn = new OpenBitSet(genotype.length);
+        for (int i = 0; i < sites; i++) {
+            byte g = gBB.get();
+            byte mj = mjBB.get();
+            byte mn = mnBB.get();
+            // System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
+            if (mj == Alignment.UNKNOWN_ALLELE) {
+                continue;
+            }
+            if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
+                rMj.fastSet(i);
+                continue;
+            }
+            if (mn == Alignment.UNKNOWN_ALLELE) {
+                continue;
+            }
+            if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
+                rMn.fastSet(i);
+                continue;
+            }
+            byte het = AlignmentUtils.getUnphasedDiploidValue(mj, mn);
+            if (AlignmentUtils.isEqual(g, het)) {
+                rMj.fastSet(i);
+                rMn.fastSet(i);
+            }
+        }
+        return new BitSet[]{rMj, rMn};
     }
 
     /**
@@ -893,97 +916,5 @@ public class AlignmentUtils {
             }
         }
         return new BitSet[]{rMj, rMn};
-    }
-
-    /**
-     * Returns an Alignment that's optimized for site operations. It may return
-     * the given alignment if nothing needs to be done.
-     *
-     * @param alignment alignment
-     *
-     * @return optimized alignment
-     */
-    public static Alignment optimizeForSites(Alignment alignment) {
-        return optimizeForSites(alignment, null);
-    }
-
-    /**
-     * Returns an Alignment that's optimized for site operations. It may return
-     * the given alignment if nothing needs to be done.
-     *
-     * @param alignment alignment
-     * @param listener progress listener
-     *
-     * @return optimized alignment
-     */
-    public static Alignment optimizeForSites(Alignment alignment, ProgressListener listener) {
-
-        Alignment result;
-
-        try {
-            alignment.optimizeForSites(listener);
-            result = alignment;
-        } catch (UnsupportedOperationException e) {
-            result = BitAlignment.getInstance(alignment, true);
-        }
-
-        return result;
-
-    }
-
-    /**
-     * Returns an Alignment that's optimized for taxa operations. It may return
-     * the given alignment if nothing needs to be done.
-     *
-     * @param alignment alignment
-     *
-     * @return optimized alignment
-     */
-    public static Alignment optimizeForTaxa(Alignment alignment) {
-        return optimizeForTaxa(alignment, null);
-    }
-
-    /**
-     * Returns an Alignment that's optimized for taxa operations. It may return
-     * the given alignment if nothing needs to be done.
-     *
-     * @param alignment alignment
-     * @param listener progress listener
-     *
-     * @return optimized alignment
-     */
-    public static Alignment optimizeForTaxa(Alignment alignment, ProgressListener listener) {
-
-        Alignment result;
-
-        try {
-            alignment.optimizeForTaxa(listener);
-            result = alignment;
-        } catch (UnsupportedOperationException e) {
-            result = BitAlignment.getInstance(alignment, false);
-        }
-
-        return result;
-
-    }
-
-    public static Alignment optimizeForTaxaAndSites(Alignment alignment) {
-
-        boolean isSBit = alignment.isSBitFriendly();
-        boolean isTBit = alignment.isTBitFriendly();
-
-        Alignment result = null;
-        if (isSBit && isTBit) {
-            result = alignment;
-        } else if (isSBit) {
-            result = optimizeForTaxa(alignment);
-            result = optimizeForSites(result);
-        } else {
-            result = optimizeForSites(alignment);
-            result = optimizeForTaxa(result);
-        }
-
-        return result;
-
     }
 }
