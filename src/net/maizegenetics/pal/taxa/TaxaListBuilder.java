@@ -30,10 +30,11 @@ import java.util.*;
  * @author Ed Buckler
  */
 public class TaxaListBuilder {
+
     private final List<AnnotatedTaxon> myTaxaList;
 
     public TaxaListBuilder() {
-        myTaxaList=new ArrayList<AnnotatedTaxon>();
+        myTaxaList = new ArrayList<AnnotatedTaxon>();
     }
 
     public TaxaListBuilder add(AnnotatedTaxon taxon) {
@@ -51,6 +52,13 @@ public class TaxaListBuilder {
         return this;
     }
 
+    public TaxaListBuilder addAll(String[] taxa) {
+        for (int i = 0, n = taxa.length; i < n; i++) {
+            myTaxaList.add(new AnnotatedTaxon.Builder(taxa[i]).build());
+        }
+        return this;
+    }
+
     /*Sort the taxa by their natural order (alphabetically by name)*/
     public TaxaListBuilder sort() {
         Collections.sort(myTaxaList);
@@ -62,11 +70,13 @@ public class TaxaListBuilder {
     }
 
     public TaxaList buildFromHDF5(String hdf5FileName) {
-        IHDF5Reader reader= HDF5Factory.openForReading(hdf5FileName);
+        IHDF5Reader reader = HDF5Factory.openForReading(hdf5FileName);
         myTaxaList.clear();
-        List<HDF5LinkInformation> fields=reader.getAllGroupMemberInformation(HapMapHDF5Constants.GENOTYPES, true);
+        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(HapMapHDF5Constants.GENOTYPES, true);
         for (HDF5LinkInformation is : fields) {
-            if(is.isDataSet()==false) continue;
+            if (is.isDataSet() == false) {
+                continue;
+            }
             myTaxaList.add(new AnnotatedTaxon.Builder(is.getName()).build());
         }
         sort();
@@ -75,9 +85,6 @@ public class TaxaListBuilder {
 
     //Default package private method to hand the list to the instance
     List<AnnotatedTaxon> getImmutableList() {
-         return Collections.unmodifiableList(myTaxaList);
+        return Collections.unmodifiableList(myTaxaList);
     }
-
-
-
 }
