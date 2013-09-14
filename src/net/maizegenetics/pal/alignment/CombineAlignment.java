@@ -3,17 +3,14 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.site.Chromosome;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import net.maizegenetics.pal.ids.IdGroup;
 import net.maizegenetics.pal.ids.IdGroupUtils;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.ProgressListener;
+import net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE;
+
+import java.util.*;
 
 /**
  *
@@ -257,7 +254,7 @@ public class CombineAlignment extends AbstractAlignment {
     @Override
     public int getPositionInChromosome(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getPositionInChromosome(site - mySiteOffsets[translate]);
+        return myAlignments[translate].getPositionInChromosome(site-mySiteOffsets[translate]);
     }
 
     @Override
@@ -521,7 +518,7 @@ public class CombineAlignment extends AbstractAlignment {
     @Override
     public String getLocusName(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getChromosomeName(site - mySiteOffsets[translate]);
+        return myAlignments[translate].getChromosomeName(site-mySiteOffsets[translate]);
     }
 
     @Override
@@ -745,7 +742,7 @@ public class CombineAlignment extends AbstractAlignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+    public byte[] getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE scope, int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getAllelesByScope(scope, site - mySiteOffsets[translate]);
     }

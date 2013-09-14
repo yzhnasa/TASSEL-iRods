@@ -26,7 +26,7 @@ import net.maizegenetics.util.OpenBitSet;
  * @author Fei Lu
  */
 public class TagAgainstAnchor {
-    BitAlignment anchor;
+    Alignment anchor;
     double[] anchorMaf;
     int[] chromosomeNumber;
     /**First SNP index of a chromosome in the whole SNP list */
@@ -519,7 +519,7 @@ public class TagAgainstAnchor {
                 }                
             }
             for (int i = 0; i < obsTdist.length; i++) {
-                int chr = Integer.parseInt(anchor.getLocus(bestSite[i]).getName());
+                int chr = Integer.parseInt(anchor.getChromosome(bestSite[i]).getName());
                 double[] result={chr, bestSite[i], anchor.getPositionInChromosome(bestSite[i]),bestP[i], countSig[i]};
                 resultReport[i][chrIndex] = result;
             }
@@ -681,14 +681,14 @@ public class TagAgainstAnchor {
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         System.out.println("The anchor map has " + a.getSiteCount() + " sites and " + a.getTaxaCount() + " taxa");
         lastTimePoint = this.getCurrentTimeNano();
-        int[] chrOffSet = a.getLociOffsets();
-        chromosomeNumber = new int[a.getLoci().length];
+        int[] chrOffSet = a.getChromosomesOffsets();
+        chromosomeNumber = new int[a.getChromosomes().length];
         chrStartIndex = new int[chromosomeNumber.length];
         chrEndIndex = new int[chromosomeNumber.length];
         for (int i = 0; i < chromosomeNumber.length; i++) {
-            chromosomeNumber[i] = a.getLoci()[i].getChromosomeNumber();
+            chromosomeNumber[i] = a.getChromosomes()[i].getChromosomeNumber();
             chrStartIndex[i] = chrOffSet[i];
-            chrEndIndex[i] = chrOffSet[i] + a.getLocusSiteCount(a.getLoci()[i]);
+            chrEndIndex[i] = chrOffSet[i] + a.getChromosomeSiteCount(a.getChromosomes()[i]);
         }
         anchor = (BitAlignment)BitAlignment.getHomozygousNucleotideInstance(a, true);
         anchorMaf = new double[anchor.getSiteCount()];
