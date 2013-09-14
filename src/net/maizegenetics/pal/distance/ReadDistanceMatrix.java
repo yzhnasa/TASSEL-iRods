@@ -6,11 +6,11 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.distance;
 
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedInput;
 import net.maizegenetics.pal.io.InputSource;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
 
 import java.io.IOException;
 import java.io.PushbackReader;
@@ -66,7 +66,7 @@ public class ReadDistanceMatrix {
                 }
                 fi.nextLine(in);
             }
-            TaxaList idGroup = new SimpleIdGroup(ids);
+            TaxaList idGroup = new TaxaListBuilder().addAll(ids).build();
             return new DistanceMatrix(distance, idGroup);
         } catch (IOException e) {
             throw new DistanceParseException("IO error");

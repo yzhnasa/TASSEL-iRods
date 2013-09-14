@@ -3,31 +3,26 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.site.Chromosome;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.TreeSet;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
-
-import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.io.FormattedOutput;
+import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
 import net.maizegenetics.util.VCFUtil;
 import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * The class exports PAL alignment data types to various file formats.
@@ -44,7 +39,7 @@ public class ExportUtils {
     }
 
     public static String writeToHDF5(Alignment a, String newHDF5file) {
-        a = AlignmentUtils.optimizeForTaxaAndSites(a);
+ //       a = AlignmentUtils.optimizeForTaxaAndSites(a);
         IHDF5Writer h5w = null;
         try {
 

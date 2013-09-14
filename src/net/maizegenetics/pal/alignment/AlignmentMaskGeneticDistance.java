@@ -3,12 +3,13 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import java.awt.Color;
+import net.maizegenetics.pal.distance.IBSDistanceMatrix;
+import net.maizegenetics.pal.taxa.Taxon;
+
+import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.taxa.Taxon;
 
 /**
  *
@@ -64,9 +65,9 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
             return result;
         }
 
-        if (myTBitAlignment == null) {
-            myTBitAlignment = AlignmentUtils.optimizeForTaxa(myAlignment);
-        }
+//        if (myTBitAlignment == null) {
+//            myTBitAlignment = AlignmentUtils.optimizeForTaxa(myAlignment);
+//        }
 
         result = (byte) (IBSDistanceMatrix.computeHetBitDistances(myTBitAlignment, taxon, myTaxonReference)[0] * 255.0);
         myCache.put(taxon, result);

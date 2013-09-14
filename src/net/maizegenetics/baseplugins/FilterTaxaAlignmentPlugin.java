@@ -6,31 +6,25 @@
  */
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.gui.AbstractAvailableListModel;
+import net.maizegenetics.gui.SelectFromAvailableDialog;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.alignment.FilterPhenotype;
 import net.maizegenetics.pal.alignment.Phenotype;
-
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-
-import java.awt.Frame;
-
+import java.awt.*;
 import java.net.URL;
-
 import java.util.List;
-
-import net.maizegenetics.gui.AbstractAvailableListModel;
-import net.maizegenetics.gui.SelectFromAvailableDialog;
-
-import org.apache.log4j.Logger;
 
 /**
  *

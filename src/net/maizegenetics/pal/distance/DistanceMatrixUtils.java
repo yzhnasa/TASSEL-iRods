@@ -7,13 +7,13 @@
 
 package net.maizegenetics.pal.distance;
 
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-
-import java.io.Serializable;
-
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
+
+import java.io.Serializable;
 
 
 /**
@@ -117,8 +117,8 @@ public class DistanceMatrixUtils implements Serializable {
 			}
 			counti += 1;
 		}
-
-		DistanceMatrix smaller = new DistanceMatrix(distances, new SimpleIdGroup(ids));
+        TaxaList tl=new TaxaListBuilder().addAll(ids).build();
+		DistanceMatrix smaller = new DistanceMatrix(distances, tl);
 
 		return smaller;
 	}

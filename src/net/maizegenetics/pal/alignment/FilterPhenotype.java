@@ -1,11 +1,11 @@
 package net.maizegenetics.pal.alignment;
 
+import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 
 public class FilterPhenotype extends AbstractPhenotype {
 

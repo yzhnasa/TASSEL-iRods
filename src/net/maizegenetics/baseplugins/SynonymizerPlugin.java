@@ -8,16 +8,17 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.ids.TaxaList;
 import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-import javax.swing.table.TableModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,8 +30,6 @@ import java.net.URL;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.log4j.Logger;
 
 /**
  *

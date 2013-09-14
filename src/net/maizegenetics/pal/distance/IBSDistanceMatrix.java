@@ -15,7 +15,6 @@
 package net.maizegenetics.pal.distance;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.ProgressListener;
@@ -93,9 +92,8 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         isTrueIBS = trueIBS;
         myListener = listener;
         numSeqs = theAlignment.getSequenceCount();
-        theTBA = AlignmentUtils.optimizeForTaxa(theAlignment, listener);
         //  this should have an option to only use the 2 or 3 most common alleles
-        setIdGroup(theAlignment.getIdGroup());
+        setIdGroup(theAlignment.getTaxaList());
         computeHetBitDistances();
     }
 
@@ -144,7 +142,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @param taxon1 index of taxon 1
      * @param taxon2 index of taxon 2
      * @param minSitesCompared Minimum number of sites needed to estimate distance
-     * @param trueIBS estimate diagonal distance based IBS (default = false, i=i=0.0)
+     * @param isTrueIBS estimate diagonal distance based IBS (default = false, i=i=0.0)
      * 
      * @return array of {distance, number of sites used in comparison}
      */
@@ -208,7 +206,6 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @param jMn Vector of minor alleles for taxon j
      * @param minSitesCompared Minimum number of sites needed to estimate distance
      * @param endWord ending word for calculating distance inclusive site=(endWord*64+63)
-     * @param maskBadSet Optional mask for sites (those set to 1 are kept) 
      * @return array of {distance, number of sites used in comparison}
      */
     public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, 

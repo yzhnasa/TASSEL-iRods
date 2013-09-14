@@ -1,15 +1,11 @@
 package net.maizegenetics.pal.alignment;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.Map.Entry;
-
-import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 public class CombinePhenotype extends AbstractPhenotype {
 
@@ -96,8 +92,8 @@ public class CombinePhenotype extends AbstractPhenotype {
             ids[count] = entry.getKey();
             count++;
         }
-
-        return new Object[]{rowmap, new SimpleIdGroup(ids)};
+        TaxaList tl=new TaxaListBuilder().addAll(ids).build();
+        return new Object[]{rowmap, tl};
     }
 
     private static Object[] mapColumns(Phenotype[] phenotypes, boolean isUnion) {

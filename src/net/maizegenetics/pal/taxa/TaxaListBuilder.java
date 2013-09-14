@@ -59,6 +59,13 @@ public class TaxaListBuilder {
         return this;
     }
 
+    public TaxaListBuilder addAll(Taxon[] taxa) {
+        for (int i = 0, n = taxa.length; i < n; i++) {
+            myTaxaList.add(new AnnotatedTaxon.Builder(taxa[i]).build());
+        }
+        return this;
+    }
+
     /*Sort the taxa by their natural order (alphabetically by name)*/
     public TaxaListBuilder sort() {
         Collections.sort(myTaxaList);

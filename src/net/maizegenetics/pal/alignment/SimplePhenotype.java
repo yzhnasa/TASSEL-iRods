@@ -1,12 +1,11 @@
 package net.maizegenetics.pal.alignment;
 
-import java.util.List;
-
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix2D;
-
-import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.Taxon;
+
+import java.util.List;
 
 public class SimplePhenotype extends AbstractPhenotype {
 	private DoubleMatrix2D data;

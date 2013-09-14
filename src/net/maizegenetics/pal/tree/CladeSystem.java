@@ -7,7 +7,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaList;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -30,7 +30,7 @@ public class CladeSystem {
 	 */
 	public CladeSystem(TaxaList idGroup, int size) {
 		this.idGroup = idGroup;
-		clades = new boolean[size][idGroup.getIdCount()];
+		clades = new boolean[size][idGroup.getTaxaCount()];
 	}
 
 	/** get number of clades */
@@ -81,7 +81,7 @@ public class CladeSystem {
 		
 		for (int i = 0; i < getLabelCount(); i++)
 		{
-			pw.println(idGroup.getIdentifier(i));
+			pw.println(idGroup.getFullTaxaName(i));
 		}
 		pw.println();
 		
@@ -174,7 +174,7 @@ public class CladeSystem {
 	 *
 	 * @param idGroup order of labels
 	 * @param internalNode Node
-	 * @param boolean[] clade
+	 * @param clade
 	 */
 	public static void getClade(TaxaList idGroup, Node internalNode, boolean[] clade) {
 		if (internalNode.isLeaf() || internalNode.isRoot()) {

@@ -1,32 +1,24 @@
 package net.maizegenetics.baseplugins.genomicselection;
 
-import java.awt.Frame;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-
-import org.apache.log4j.Logger;
-
 import net.maizegenetics.jGLiM.dm.FactorModelEffect;
 import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.alignment.MarkerPhenotype;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
-import net.maizegenetics.pal.alignment.Trait;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.report.SimpleTableReport;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class RidgeRegressionEmmaPlugin extends AbstractPlugin {
 
@@ -170,7 +162,8 @@ public class RidgeRegressionEmmaPlugin extends AbstractPlugin {
             LinkedList<Trait> traitList = new LinkedList<Trait>();
             String phenoName = theAdapter.getPhenotypeName(ph);
             traitList.add(new Trait(phenoName + "_GEBV", false, Trait.TYPE_DATA));
-            Phenotype outGebv = new SimplePhenotype(new SimpleIdGroup(taxaIDs), traitList, traitTable);
+            Phenotype outGebv = new SimplePhenotype(new TaxaListBuilder().addAll(taxaIDs).build(),
+                    traitList, traitTable);
             String datumName = dataset.getName() + "_GEBVs_" + phenoName;
             StringBuilder comment = new StringBuilder("Ridge Regression from ");
             comment.append(dataset.getName()).append(":\n");

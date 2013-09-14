@@ -1,10 +1,6 @@
 package net.maizegenetics.pal.distance;
 
-import net.maizegenetics.pal.distance.DistanceMatrix;
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.SimplePhenotype;
 
 import java.awt.*;
@@ -36,7 +32,7 @@ public class Kinship extends DistanceMatrix {
 
     public Kinship(Alignment mar, boolean areHetsRelated, boolean rescaleKinship) {
         this.mar = mar;
-        numSeqs = this.mar.getIdGroup().getIdCount();
+        numSeqs = this.mar.getTaxaCount();
         buildFromMarker();
     }
 
@@ -52,7 +48,7 @@ public class Kinship extends DistanceMatrix {
     public void buildFromMarker() {
 
     	IBSDistanceMatrix adm = new IBSDistanceMatrix(mar, 0, true, null);
-    	dm = new DistanceMatrix(adm.getDistances(), mar.getIdGroup());
+    	dm = new DistanceMatrix(adm.getDistances(), mar.getTaxaList());
     	toSimilarity();
     	getKStatistics();
 //    	pullBackExtrem();

@@ -6,12 +6,12 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.LabelMapping;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.pal.math.MersenneTwisterFast;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.Taxon;
 
 import java.io.PrintWriter;
 import java.util.Hashtable;

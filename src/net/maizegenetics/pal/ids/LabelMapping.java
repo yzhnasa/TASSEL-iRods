@@ -14,6 +14,9 @@ package net.maizegenetics.pal.ids;
  * @version 1.0
  */
 
+import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 
 import java.util.Enumeration;
@@ -57,11 +60,8 @@ public class LabelMapping implements java.io.Serializable {
 			mappings_.put(id.getName(),label);
 		}
 	}
-	/**
-	 * @param names Names
-	 * @param colours associated colours
-	 * @note assumes parallel arrays
-	 */
+
+
 	public void addMappings(String[] ids, String[] labels) {
 		for(int i = 0 ; i < ids.length ; i++) {
 			mappings_.put(ids[i],labels[i]);
@@ -131,13 +131,13 @@ public class LabelMapping implements java.io.Serializable {
 		}
 		return new LabelMapping(newMapping);
 	}
-	public IdGroup getMapped(IdGroup original) {
+	public TaxaList getMapped(TaxaList original) {
 		String[] oldIDs = IdGroupUtils.getNames(original);
 		String[] newIDs = new String[oldIDs.length];
 		for(int i = 0 ; i < newIDs.length ; i++) {
 			newIDs[i] = getLabel(oldIDs[i],oldIDs[i]);
 		}
-		return new SimpleIdGroup(newIDs);
+		return new TaxaListBuilder().addAll(newIDs).build();
 	}
 
 	// Static classes

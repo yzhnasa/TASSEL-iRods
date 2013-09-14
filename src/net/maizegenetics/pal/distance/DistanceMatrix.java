@@ -6,7 +6,6 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.distance;
 
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.taxa.TaxaList;
@@ -86,7 +85,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
 
         int index1, index2;
 
-        distance = new double[subset.getIdCount()][subset.getIdCount()];
+        distance = new double[subset.getTaxaCount()][subset.getTaxaCount()];
         for (int i = 0; i < distance.length; i++) {
             index1 = dm.whichIdNumber(subset.getTaxaName(i));
             distance[i][i] = dm.distance[index1][index1];
@@ -230,23 +229,19 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
 
     //IdGroup interface
     public Taxon getIdentifier(int i) {
-        return idGroup.getIdentifier(i);
-    }
-
-    public void setIdentifier(int i, Taxon ident) {
-        idGroup.setIdentifier(i, ident);
+        return idGroup.get(i);
     }
 
     public int getIdCount() {
-        return idGroup.getIdCount();
+        return idGroup.getTaxaCount();
     }
 
     public int whichIdNumber(String name) {
-        return idGroup.whichIdNumber(name);
+        return idGroup.getIndicesMatchingTaxon(name).get(0);
     }
 
     public int whichIdNumber(Taxon id) {
-        return idGroup.whichIdNumber(id);
+        return idGroup.getIndicesMatchingTaxon(id).get(0);
     }
 
     /**
@@ -279,7 +274,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
 
     /**
      * @param fromID the thing (taxa,sequence) from which we want to find the closest (excluding self)
-     * @param exlcusion indexes of things that should not be considered, may be null
+     * @param exclusion indexes of things that should not be considered, may be null
      * @return the index of the thing closest to the specified
      * @note if fromID not a valid name then return -1
      */
@@ -314,7 +309,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
 
     /**
      * @param fromIndex the index of the thing (taxa,sequence) from which we want to find the closest (excluding self)
-     * @param exlcusion indexes of things that should not be considered, may be null
+     * @param exclusion indexes of things that should not be considered, may be null
      * @return the index of the member closes to the specified
      */
     public int getClosestIndex(int fromIndex, int[] exclusion) {
@@ -333,7 +328,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     }
 
     protected final void setIdGroup(TaxaList base) {
-        this.idGroup = SimpleIdGroup.getInstance(base);
+        this.idGroup = base;
     }
 
     protected final void setDistances(double[][] matrix) {
@@ -416,5 +411,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
         }
         return getIdentifier(col-1).toString();
     }
+
+
 
 }

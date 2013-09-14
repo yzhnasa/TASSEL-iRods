@@ -171,7 +171,7 @@ public class Conversion {
      * from Kolmogorov-Smirnov, Cramer-vonMises and Anderson-Darling.
      * Utilizes the Stochastic Simulation in Java (SSJ) library.
      *
-     * @param data the data set to be tested
+     * @param dataIn the data set to be tested
      * @return pre-formatted String of the normality test results
      */
     /*   public static String getNormalityResults(double[] data) {

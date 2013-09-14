@@ -6,15 +6,15 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedInput;
 import net.maizegenetics.pal.io.InputSource;
+import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.prefs.TasselPrefs;
 
 import java.io.IOException;
 import java.io.PushbackReader;
-import net.maizegenetics.prefs.TasselPrefs;
 
 /**
  * reads aligned sequence data from plain text files.<p>

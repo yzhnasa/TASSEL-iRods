@@ -2,7 +2,6 @@ package net.maizegenetics.pal.distance;
 
 
 import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.taxa.TaxaList;
 
 import java.io.Serializable;
 
@@ -13,7 +12,7 @@ import java.io.Serializable;
  * Time: 12:13:28 PM
  * To change this template use File | Settings | File Templates.
  */
-public interface IdGroupMatrix extends Serializable, TaxaList, TableReport {
+public interface IdGroupMatrix extends Serializable, TableReport {
 
     /** returns representation of this alignment as a string */
     String toString();
