@@ -66,18 +66,20 @@ public class GenotypeBuilder {
         return new GenotypeBuilder(SuperByteMatrixBuilder.getInstance(numTaxa, numSites));
     }
 
-    public void setBase(int taxon, int site, byte value) {
+    public GenotypeBuilder setBase(int taxon, int site, byte value) {
         myGenotype.set(taxon, site, value);
+        return this;
     }
 
-    public void setBaseRangeForTaxon(int taxon, int startSite, byte[] value) {
+    public GenotypeBuilder setBaseRangeForTaxon(int taxon, int startSite, byte[] value) {
         //TODO this needs an array copy method, startSite was eliminated
         for (int i = 0; i < value.length; i++) {
             myGenotype.set(taxon, i + startSite, value[i]);
         }
+        return this;
     }
 
-    public void setBases(String[][] data) {
+    public GenotypeBuilder setBases(String[][] data) {
 
         if ((data == null) || (data.length == 0)) {
             throw new IllegalArgumentException("BitAlignment: getInstance: data can not be empty.");
@@ -113,14 +115,17 @@ public class GenotypeBuilder {
                 }
             }
         }
+        return this;
     }
 
-    public void isPhased(boolean isPhased) {
+    public GenotypeBuilder isPhased(boolean isPhased) {
         myIsPhased = isPhased;
+        return this;
     }
 
-    public void alleleEncodings(String[][] alleleEncodings) {
+    public GenotypeBuilder alleleEncodings(String[][] alleleEncodings) {
         myAlleleEncodings = alleleEncodings;
+        return this;
     }
 
     public Genotype build() {
