@@ -29,12 +29,20 @@ public class CoreAlignment implements Alignment {
     private final SiteScore mySiteScore;
     private final AlleleDepth myAlleleDepth;
 
-    public CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         myGenotype = genotype;
-        myPositionList=positionList;
+        myPositionList = positionList;
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
+    }
+
+    CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList) {
+        myGenotype = genotype;
+        myPositionList = positionList;
+        myTaxaList = taxaList;
+        mySiteScore = null;
+        myAlleleDepth = null;
     }
 
     @Override
