@@ -30,7 +30,7 @@ import java.util.*;
  * @author Ed Buckler
  */
 public class TaxaListBuilder {
-
+    //TODO need to move union and intersection utils to the builder
     private final List<Taxon> myTaxaList;
 
     public TaxaListBuilder() {

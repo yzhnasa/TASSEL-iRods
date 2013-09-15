@@ -1,5 +1,25 @@
 package net.maizegenetics.stats.MLM;
 
+import net.maizegenetics.baseplugins.MLMPlugin;
+import net.maizegenetics.jGLiM.LinearModelUtils;
+import net.maizegenetics.jGLiM.SymmetricMatrixInverterDM;
+import net.maizegenetics.jGLiM.dm.FactorModelEffect;
+import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
+import net.maizegenetics.jGLiM.dm.SweepFast;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
+import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.pal.distance.DistanceMatrix;
+import net.maizegenetics.pal.report.SimpleTableReport;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.pal.tree.UPGMATree;
+import net.maizegenetics.plugindef.Datum;
+import net.maizegenetics.stats.EMMA.EMMAforDoubleMatrix;
+import org.apache.log4j.Logger;
+
+import javax.swing.*;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -8,33 +28,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
-
-import javax.swing.JOptionPane;
-
-import net.maizegenetics.pal.ids.TaxaList;
-import org.apache.log4j.Logger;
-
-
-import net.maizegenetics.baseplugins.MLMPlugin;
-import net.maizegenetics.jGLiM.LinearModelUtils;
-import net.maizegenetics.jGLiM.dm.FactorModelEffect;
-import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
-import net.maizegenetics.jGLiM.dm.SweepFast;
-import net.maizegenetics.jGLiM.SymmetricMatrixInverterDM;
-import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
-import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.alignment.GeneticMap;
-import net.maizegenetics.pal.alignment.MarkerPhenotype;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.distance.DistanceMatrix;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.pal.report.SimpleTableReport;
-import net.maizegenetics.pal.tree.UPGMATree;
-import net.maizegenetics.plugindef.Datum;
-import net.maizegenetics.stats.EMMA.EMMAforDoubleMatrix;
 
 public class CompressedMLMusingDoubleMatrix {
 
@@ -353,7 +346,7 @@ public class CompressedMLMusingDoubleMatrix {
                         String markername = theAdapter.getMarkerName(m);
                         String chr = "";
                         String pos = "";
-                        String locus = theAdapter.getChromosomeName(m);
+                        String locus = theAdapter.getLocusName(m);
                         String site = Integer.toString(theAdapter.getLocusPosition(m));
                         if (myGeneticMap != null) {
                             int ndx = myGeneticMap.getMarkerIndex(markername);
@@ -917,7 +910,7 @@ public class CompressedMLMusingDoubleMatrix {
 
         Taxon[] taxa = new Taxon[kinSet.size()];
         kinSet.toArray(taxa);
-        return new SimpleIdGroup(taxa);
+        return new TaxaListBuilder().addAll(taxa).build();
     }
 
     class CompressedMLMResult {

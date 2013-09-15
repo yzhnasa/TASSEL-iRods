@@ -67,7 +67,7 @@ public class SplitUtils
 	 *
 	 * @param idGroup order of labels
 	 * @param internalNode Node
-	 * @param boolean[] split
+	 * @param split
 	 */
 	public static void getSplit(TaxaList idGroup, Node internalNode, boolean[] split)
 	{
@@ -145,7 +145,7 @@ public class SplitUtils
 		if (node.isLeaf())
 		{
 			String name = node.getIdentifier().getName();
-			int index = idGroup.whichIdNumber(name);
+			int index = idGroup.getIndicesMatchingTaxon(name).get(0);
 
 			if (index < 0)
 			{

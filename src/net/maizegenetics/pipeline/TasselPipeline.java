@@ -60,6 +60,7 @@ import net.maizegenetics.pal.alignment.io.BuilderFromHapMap;
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
 
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.HetTreatment;
@@ -1225,7 +1226,7 @@ public class TasselPipeline implements PluginListener {
                     for (int i = 0; i < taxa.length; i++) {
                         ids[i] = new Taxon(taxa[i]);
                     }
-                    plugin.setIdsToKeep(new SimpleIdGroup(ids));
+                    plugin.setIdsToKeep(new TaxaListBuilder().addAll(ids).build());
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-includeTaxaInFile")) {
                     FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
@@ -1256,7 +1257,7 @@ public class TasselPipeline implements PluginListener {
                     for (int i = 0; i < taxa.size(); i++) {
                         ids[i] = new Taxon((String) taxa.get(i));
                     }
-                    plugin.setIdsToKeep(new SimpleIdGroup(ids));
+                    plugin.setIdsToKeep(new TaxaListBuilder().addAll(ids).build());
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-excludeTaxa")) {
                     FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
@@ -1265,7 +1266,7 @@ public class TasselPipeline implements PluginListener {
                     for (int i = 0; i < taxa.length; i++) {
                         ids[i] = new Taxon(taxa[i]);
                     }
-                    plugin.setIdsToRemove(new SimpleIdGroup(ids));
+                    plugin.setIdsToRemove(new TaxaListBuilder().addAll(ids).build());
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-excludeTaxaInFile")) {
                     FilterTaxaAlignmentPlugin plugin = new FilterTaxaAlignmentPlugin(myMainFrame, false);
@@ -1296,7 +1297,7 @@ public class TasselPipeline implements PluginListener {
                     for (int i = 0; i < taxa.size(); i++) {
                         ids[i] = new Taxon((String) taxa.get(i));
                     }
-                    plugin.setIdsToRemove(new SimpleIdGroup(ids));
+                    plugin.setIdsToRemove(new TaxaListBuilder().addAll(ids).build());
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-includeSiteNames")) {
                     FilterSiteNamePlugin plugin = new FilterSiteNamePlugin(myMainFrame, false);

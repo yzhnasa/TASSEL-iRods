@@ -28,7 +28,7 @@ import java.util.Hashtable;
  *
  * @author Alexei Drummond
  */
-public interface Tree extends TaxaList, Units, Serializable, UnitsProvider {
+public interface Tree extends Units, Serializable, UnitsProvider {
 
 	/**
 	 * @return the root node of this tree.
@@ -74,6 +74,31 @@ public interface Tree extends TaxaList, Units, Serializable, UnitsProvider {
 	 * heights are expressed in.
 	 */
 	int getUnits();
+
+    /**
+     * Number of external nodes, which is the number of taxa.
+     * @return
+     */
+    int getIdCount();
+
+    /**
+     * Return the taxon at external node i
+     */
+    Taxon getIdentifier(int i);
+
+    /**
+     * Returns match with external nodes by Taxon name
+     * @param s
+     * @return
+     */
+    int whichIdNumber(String s);
+
+    /**
+     * Returns match with external nodes by Taxon
+     * @param t
+     * @return
+     */
+    int whichIdNumber(Taxon t);
 
 	/**
 	 * Sets the units that this tree's branch lengths and node
@@ -137,6 +162,8 @@ public interface Tree extends TaxaList, Units, Serializable, UnitsProvider {
 		private int units = EXPECTED_SUBSTITUTIONS;
 
 		private boolean setupLengthsAndHeights_ = true;
+
+        private TaxaList myTaxaList;
 		//
 		// Serialization Stuff
 		//
@@ -396,7 +423,7 @@ public interface Tree extends TaxaList, Units, Serializable, UnitsProvider {
 		getExternalNode(i).setIdentifier(id);
 	}
 	public int whichIdNumber(String s) {
-		return IdGroupUtils.whichIdNumber(this,s);
+		return IdGroupUtils.whichIdNumber(myTaxaList,s);
 	}
 
 //========================================================
