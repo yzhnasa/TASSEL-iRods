@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
+import net.maizegenetics.pal.alignment.genotype.Genotype;
+import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
@@ -76,8 +78,14 @@ public class ReadPolymorphismUtils {
         }
 
         Chromosome[] myLoci = new Chromosome[]{Chromosome.UNKNOWN};
-        TaxaList tL=new TaxaListBuilder().addAll(taxa).build();
-        return BitAlignment.getInstance(tL, finalData, null, null, null, 14, myLoci, new int[]{0}, markerNames, true, true);
+        Genotype genotype = GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(nTaxa, nMarkers)
+                .setBases(finalData)
+                .build();
+
+        TaxaList taxaList = new TaxaListBuilder().addAll(taxa).build();
+
+        return new CoreAlignment(genotype, null, taxaList, null, null);
+
     }
 
     public static GeneticMap readGeneticMapFile(String filename) throws IOException {
