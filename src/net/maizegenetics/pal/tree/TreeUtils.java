@@ -6,15 +6,13 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.LabelMapping;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.pal.math.MersenneTwisterFast;
 import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 
 import java.io.PrintWriter;
-import java.util.Hashtable;
 
 /**
  * various utility functions on trees.
@@ -150,82 +148,6 @@ public class TreeUtils {
         return null;
     }
 
-    /**
-     * Takes a tree (in mutation units) and returns a scaled version of it (in generation units).
-     * @param mutationRateModel the mutation rate model used for scaling
-     * and the desired units are expected substitutions then this scale
-     * factor should be equal to the mutation rate.
-     * @param newUnits the new units of the tree.
-     */
-    public static Tree mutationsToGenerations(Tree mutationTree, MutationRateModel muModel) {
-        return scale(mutationTree, muModel, Units.GENERATIONS);
-        /*if (muModel.getMutationRate(0.0) <= 0.0) {
-        throw new IllegalArgumentException("Non-positive mutation rate is not permitted!");
-        }
-
-        SimpleTree tree = new SimpleTree(mutationTree);
-
-        for (int i = 0; i < tree.getExternalNodeCount(); i++) {
-        double oldHeight = tree.getExternalNode(i).getNodeHeight();
-        tree.getExternalNode(i).setNodeHeight(muModel.getTime(oldHeight));
-        }
-        for (int i = 0; i < tree.getInternalNodeCount(); i++) {
-        double oldHeight = tree.getInternalNode(i).getNodeHeight();
-        tree.getInternalNode(i).setNodeHeight(muModel.getTime(oldHeight));
-        }
-        NodeUtils.heights2Lengths(tree.getRoot());
-        tree.setUnits(Units.GENERATIONS);
-
-        return tree;*/
-    }
-
-    /**
-     * Takes a tree (in generation units) and returns a scaled version of it (in mutation units).
-     * @param mutationRateModel the mutation rate model.
-     * The mutation rate must be in units of mutations per site per generation.
-     */
-    public static Tree generationsToMutations(Tree generationTree, MutationRateModel muModel) {
-
-        if (muModel.getUnits() != Units.GENERATIONS) {
-            throw new IllegalArgumentException("Mutation rate must be per generation!");
-        }
-
-        return generationsToMutations(generationTree, muModel, 1.0);
-    }
-
-    /**
-     * Takes a tree (in generation units) and returns a scaled version of it (in mutation units).
-     * @param mutationRateModel the mutation rate model in calendar units.
-     * @param generationTime the length of a generation in calendar units.
-     * If the mutation rate is in mutations per site per year, then the
-     * generation time will be in generations per year.
-     */
-    public static Tree generationsToMutations(Tree generationTree, MutationRateModel muModel, double generationTime) {
-
-        if (generationTree.getUnits() != Units.GENERATIONS) {
-            throw new IllegalArgumentException("Tree must be in units of generations!");
-        }
-
-        if (muModel.getMutationRate(0.0) <= 0.0) {
-            throw new IllegalArgumentException("Non-positive mutation rate is not permitted!");
-        }
-
-        SimpleTree tree = new SimpleTree(generationTree);
-
-        for (int i = 0; i < tree.getExternalNodeCount(); i++) {
-            double oldHeight = tree.getExternalNode(i).getNodeHeight();
-            tree.getExternalNode(i).setNodeHeight(muModel.getExpectedSubstitutions(oldHeight) * generationTime);
-        }
-        for (int i = 0; i < tree.getInternalNodeCount(); i++) {
-            double oldHeight = tree.getInternalNode(i).getNodeHeight();
-            tree.getInternalNode(i).setNodeHeight(muModel.getExpectedSubstitutions(oldHeight) * generationTime);
-        }
-        //Don't respect minimum branch lengths
-        NodeUtils.heights2Lengths(tree.getRoot(), false);
-        tree.setUnits(Units.EXPECTED_SUBSTITUTIONS);
-
-        return tree;
-    }
 
     /**
      * @deprecated use getScaled()
@@ -275,7 +197,7 @@ public class TreeUtils {
 
     /**
      * Takes a tree and returns a scaled version of it.
-     * @param rate scale factor. If the original tree is in generations
+     * param rate scale factor. If the original tree is in generations
      * and the desired units are expected substitutions then this scale
      * factor should be equal to the mutation rate.
      * @note resulting units is defined by muModel's units
@@ -293,7 +215,7 @@ public class TreeUtils {
 
     /**
      * Takes a tree and returns a scaled version of it.
-     * @param rate scale factor. If the original tree is in generations
+     * param rate scale factor. If the original tree is in generations
      * and the desired units are expected substitutions then this scale
      * factor should be equal to the mutation rate.
      * @param newUnits the new units of the tree. (Such as the mutationTree is measured in expected substitutions/newUnits)
@@ -329,36 +251,6 @@ public class TreeUtils {
         return tree;
     }
 
-    /**
-     * Given a translation table where the keys are the current
-     * identifier names and the values are the new identifier names,
-     * this method replaces the current identifiers in the tree with new
-     * identifiers.
-     */
-    public static void renameNodes(Tree tree, Hashtable table) {
-
-        tree.createNodeList();
-
-        for (int i = 0; i < tree.getExternalNodeCount(); i++) {
-            String newName =
-                    (String) table.get(tree.getExternalNode(i).getIdentifier().getName());
-
-            if (newName != null) {
-                tree.getExternalNode(i).setIdentifier(new Taxon(newName));
-            }
-        }
-        for (int i = 0; i < tree.getInternalNodeCount(); i++) {
-
-
-
-            String newName =
-                    (String) table.get(tree.getInternalNode(i).getIdentifier().getName());
-
-            if (newName != null) {
-                tree.getInternalNode(i).setIdentifier(new Taxon(newName));
-            }
-        }
-    }
 
     /**
      * Rotates branches by leaf count.
@@ -376,92 +268,15 @@ public class TreeUtils {
     public static final TaxaList getLeafIdGroup(Tree tree) {
         tree.createNodeList();
 
-        TaxaList labelList =
-                new SimpleIdGroup(tree.getExternalNodeCount());
+        TaxaListBuilder labelList =new TaxaListBuilder();
 
         for (int i = 0; i < tree.getExternalNodeCount(); i++) {
-            labelList.setIdentifier(i, tree.getExternalNode(i).getIdentifier());
+            labelList.add(tree.getExternalNode(i).getIdentifier());
         }
 
-        return labelList;
+        return labelList.build();
     }
 
-    /**
-     * map external identifiers in the tree to a set of given identifiers
-     * (which can be larger than the set of external identifiers but
-     * must contain all of them)
-     * <b> NOTE: </b> for efficiency it is assumed that the node lists of the tree are
-     * correctly maintained. This should take effect everywhere soon.
-     * Only methods that actually change a tree need to call createNodeList().
-     *
-     * @param idGroup an ordered group of identifiers
-     *
-     * @return list of links
-     */
-    public static final int[] mapExternalIdentifiers(TaxaList idGroup, Tree tree)
-            throws IllegalArgumentException {
-
-        int[] alias = new int[tree.getExternalNodeCount()];
-
-        // Check whether for each label in tree there is
-        // a correspondence in the given set of labels
-        for (int i = 0; i < tree.getExternalNodeCount(); i++) {
-            alias[i] = idGroup.whichIdNumber(tree.getExternalNode(i).getIdentifier().getName());
-
-            if (alias[i] == -1) {
-                throw new IllegalArgumentException("Tree label " + tree.getExternalNode(i).getIdentifier()
-                        + " not present in given set of labels");
-            }
-        }
-
-        return alias;
-    }
-
-    /**
-     * Labels the internal nodes of the tree using numbers starting from 0.
-     * Skips numbers already used by external leaves.
-     */
-    public static final void labelInternalNodes(Tree tree) {
-
-        int counter = 0;
-        String pos = "0";
-
-        TaxaList ids = getLeafIdGroup(tree);
-
-        for (int i = 0; i < tree.getInternalNodeCount(); i++) {
-
-            //if label already used find a better one
-            while (ids.whichIdNumber(pos) >= 0) {
-                counter += 1;
-                pos = "" + counter;
-            }
-            tree.getInternalNode(i).setIdentifier(new Taxon(pos));
-            counter += 1;
-            pos = "" + counter;
-        }
-    }
-
-    /**
-     * Extracts a time order character data from a tree.
-     */
-    public static TimeOrderCharacterData extractTimeOrderCharacterData(Tree tree, int units) {
-
-        tree.createNodeList();
-        TaxaList identifiers = getLeafIdGroup(tree);
-        TimeOrderCharacterData tocd = new TimeOrderCharacterData(identifiers, units);
-        double[] times = new double[tree.getExternalNodeCount()];
-
-        // WARNING: following code assumes that getLeafIdGroup
-        //has same order as external node list.
-        for (int i = 0; i < times.length; i++) {
-            times[i] = tree.getExternalNode(i).getNodeHeight();
-        }
-
-        // this sets the ordinals as well
-        tocd.setTimes(times, units);
-
-        return tocd;
-    }
 
     /**
      * print a this tree in New Hampshire format
@@ -1076,47 +891,5 @@ public class TreeUtils {
                     new Integer(support));
         }
         return result;
-    }
-
-    /**
-     * Create a new tree such that the labels are redifined from a base tree in such a manner:
-     *  For each leaf label
-     * <ol>
-     *  <li> If the base label is not a number the new label is just the original label </i>
-     *  <li> If the base label is a number the new label appropriately index label from a set identifiers </i>
-     * </ol>
-     * @param baseTree The base tree
-     * @param ids The set of identifiers
-     * @return A relabelled tree, or the input tree if no numbered leaves.
-     */
-    public static final Tree getNumberRelabelledTree(Tree baseTree, TaxaList ids) {
-        LabelMapping lm = new LabelMapping();
-        int minIndex = Integer.MAX_VALUE;
-        for (int i = 0; i < baseTree.getIdCount(); i++) {
-            String treeLabel = baseTree.getIdentifier(i).getName();
-            try {
-                int number = Integer.parseInt(treeLabel);
-                if (number < minIndex) {
-                    minIndex = number;
-                }
-            } catch (NumberFormatException e) {
-            }
-        }
-        int changes = 0;
-        for (int i = 0; i < baseTree.getIdCount(); i++) {
-            String treeLabel = baseTree.getIdentifier(i).getName();
-            try {
-                int number = Integer.parseInt(treeLabel) - minIndex;
-                if (number < ids.getIdCount()) {
-                    lm.addMapping(treeLabel, ids.getIdentifier(number).getName());
-                    changes++;
-                }
-            } catch (NumberFormatException e) {
-            }
-        }
-        if (changes == 0) {
-            return baseTree;
-        }
-        return new SimpleTree(baseTree, lm);
     }
 }

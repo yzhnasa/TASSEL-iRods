@@ -8,10 +8,9 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.ids.LabelMapping;
 import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.Taxon;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -313,15 +312,24 @@ public class SimpleTree implements Tree, Report, Units, Serializable
 	public Taxon getIdentifier(int i) {
 		return getExternalNode(i).getIdentifier();
 	}
-	public void setIdentifier(int i, Taxon id) {
-		getExternalNode(i).setIdentifier(id);
-	}
-	public int whichIdNumber(String s) {
-		return IdGroupUtils.whichIdNumber(this,s);
-	}
-    public int whichIdNumber(Taxon id) {
-		return IdGroupUtils.whichIdNumber(this,id.getFullName());
-	}
+
+    public int whichIdNumber(String s) {
+        for (int i = 0; i < this.getIdCount(); i++) {
+            if (s.equals(getIdentifier(i).getFullName())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int whichIdNumber(Taxon t) {
+        for (int i = 0; i < this.getIdCount(); i++) {
+            if (t.equals(getIdentifier(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
 //========================================================
 	/**

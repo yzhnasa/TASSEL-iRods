@@ -3,9 +3,6 @@
  */
 package net.maizegenetics.pal.taxa;
 
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-
 import java.util.ArrayList;
 import java.util.TreeSet;
 
@@ -117,6 +114,7 @@ public final class IdGroupUtils {
      *
      * @param groups groups to join.
      * @return The ids from the union join, sorted in ascending order
+     * TODO move to Taxalist builder
      */
     public static TaxaList getAllIds(TaxaList[] groups) {
 
@@ -131,11 +129,7 @@ public final class IdGroupUtils {
                 allIds.add(groups[i].get(j));
             }
         }
-
-        Taxon[] ids = new Taxon[allIds.size()];
-        allIds.toArray(ids);
-
-        return new SimpleIdGroup(ids);
+        return new TaxaListBuilder().addAll(allIds).build();
 
     }
 
@@ -146,6 +140,7 @@ public final class IdGroupUtils {
      * in the new subset. Otherwise, it will not.
      * @return a new IdGroup that is a subset of the original
      * @throws IllegalArgumentException if the number of Identifiers in original is not equal to the length of include.
+     * TODO move to Taxalist builder
      */
     public static TaxaList idGroupSubset(TaxaList original, boolean[] include) {
         int nOld = original.getTaxaCount();
@@ -158,7 +153,8 @@ public final class IdGroupUtils {
                 newIds.add(original.get(i));
             }
         }
-        return new SimpleIdGroup(newIds.toArray(new Taxon[newIds.size()]));
+        return new TaxaListBuilder().addAll(newIds).build();
+        //new SimpleIdGroup(newIds.toArray(new Taxon[newIds.size()]));
     }
 
     /**
@@ -174,7 +170,7 @@ public final class IdGroupUtils {
 
     /**
      * Translates an array of identifiers into an array of strings, with optional removal of particular identifier
-     * @param toIgnoreIndex the index of an idetifier to ignore, if <0 no element is ignored
+     * @param toIgnore the index of an idetifier to ignore, if <0 no element is ignored
      */
     public static String[] getNames(Taxon[] ids, int toIgnore) {
         if (toIgnore < 0 || toIgnore >= ids.length) {
@@ -226,7 +222,7 @@ public final class IdGroupUtils {
 
     /**
      * Translates an IDgroup into an array of strings, with optional removal of particular identifier
-     * @param toIgnoreIndex the index of an idetifier to ignore, if <0 no element is ignored
+     * @param toIgnore the index of an idetifier to ignore, if <0 no element is ignored
      */
     public static String[] getNames(TaxaList ids, int toIgnore) {
         if (toIgnore < 0 || toIgnore >= ids.getTaxaCount()) {

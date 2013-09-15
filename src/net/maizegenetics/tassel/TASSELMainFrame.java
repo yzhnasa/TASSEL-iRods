@@ -19,19 +19,23 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
-import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.plugindef.Datum;
+import net.maizegenetics.baseplugins.*;
+import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
+import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
+import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
+import net.maizegenetics.gui.PrintHeapAction;
+import net.maizegenetics.plugindef.*;
 import net.maizegenetics.prefs.TasselPrefs;
+import net.maizegenetics.progress.ProgressPanel;
+import net.maizegenetics.util.Utils;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Insets;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.URL;
 import java.util.HashMap;
@@ -40,47 +44,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import net.maizegenetics.baseplugins.ArchaeopteryxPlugin;
-import net.maizegenetics.baseplugins.CreateTreePlugin;
-import net.maizegenetics.baseplugins.ExportPlugin;
-import net.maizegenetics.baseplugins.FileLoadPlugin;
-import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
-import net.maizegenetics.baseplugins.FilterSiteNamePlugin;
-import net.maizegenetics.baseplugins.FilterTaxaAlignmentPlugin;
-import net.maizegenetics.baseplugins.FilterTaxaPropertiesPlugin;
-import net.maizegenetics.baseplugins.FilterTraitsPlugin;
-import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
-import net.maizegenetics.baseplugins.FlapjackLoadPlugin;
-import net.maizegenetics.baseplugins.GenotypeImputationPlugin;
-import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
-import net.maizegenetics.baseplugins.Grid2dDisplayPlugin;
-import net.maizegenetics.baseplugins.IntersectionAlignmentPlugin;
-import net.maizegenetics.baseplugins.KinshipPlugin;
-import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
-import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
-import net.maizegenetics.baseplugins.MLMPlugin;
-import net.maizegenetics.baseplugins.ManhattanDisplayPlugin;
-import net.maizegenetics.baseplugins.MergeAlignmentsPlugin;
-import net.maizegenetics.baseplugins.PlinkLoadPlugin;
-import net.maizegenetics.baseplugins.QQDisplayPlugin;
-import net.maizegenetics.baseplugins.SeparatePlugin;
-import net.maizegenetics.baseplugins.SequenceDiversityPlugin;
-import net.maizegenetics.baseplugins.SynonymizerPlugin;
-import net.maizegenetics.baseplugins.TableDisplayPlugin;
-import net.maizegenetics.baseplugins.TreeDisplayPlugin;
-import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
-import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
-import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
-import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
-import net.maizegenetics.gui.PrintHeapAction;
-import net.maizegenetics.plugindef.Plugin;
-import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.plugindef.ThreadedPluginListener;
-import net.maizegenetics.progress.ProgressPanel;
-import net.maizegenetics.util.Utils;
-
-import org.apache.log4j.Logger;
 
 /**
  * TASSELMainFrame
@@ -608,7 +571,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         result.add(createMenuItem(new ChartDisplayPlugin(this, true)));
         result.add(createMenuItem(new QQDisplayPlugin(this, true)));
         result.add(createMenuItem(new ManhattanDisplayPlugin(this, true)));
-        result.add(createMenuItem(new TreeDisplayPlugin(this, true)));
         return result;
 
     }
