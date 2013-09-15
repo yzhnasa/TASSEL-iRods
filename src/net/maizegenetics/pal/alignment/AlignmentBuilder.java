@@ -31,9 +31,27 @@ public class AlignmentBuilder {
         int numTaxa = alignment.getTaxaCount();
         int numSites = alignment.getSiteCount();
         GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
-        for (int t = 0; t < numTaxa; t++) {
-            for (int s = 0; s < numSites; s++) {
-                builder.setBase(t, s, alignment.getBase(t, s));
+        byte[] majorAllele = new byte[64];
+        byte[] minorAllele = new byte[64];
+        for (int bigS = 0; bigS < numSites; bigS += 64) {
+            int blockSize = Math.min(64, numSites - bigS);
+
+            for (int s = 0; s < blockSize; s++) {
+                majorAllele[s] = alignment.getMajorAllele(s + bigS);
+                minorAllele[s] = alignment.getMinorAllele(s + bigS);
+            }
+
+            for (int t = 0; t < numTaxa; t++) {
+                for (int s = 0; s < blockSize; s++) {
+                    byte[] currentAlleles = alignment.getBaseArray(t, s + bigS);
+                    if ((currentAlleles[0] != majorAllele[s]) && (currentAlleles[0] != minorAllele[s])) {
+                        currentAlleles[0] = Alignment.UNKNOWN_ALLELE;
+                    }
+                    if ((currentAlleles[1] != majorAllele[s]) && (currentAlleles[1] != minorAllele[s])) {
+                        currentAlleles[1] = Alignment.UNKNOWN_ALLELE;
+                    }
+                    builder.setBase(t, s, AlignmentUtils.getDiploidValue(currentAlleles[0], currentAlleles[1]));
+                }
             }
         }
         return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
