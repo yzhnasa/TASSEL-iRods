@@ -34,7 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.maizegenetics.pal.alignment.BitAlignment;
+import net.maizegenetics.pal.alignment.AlignmentBuilder;
 
 import org.apache.log4j.Logger;
 
@@ -183,7 +183,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         Alignment naa = aa;
 
         if (myFilterMinorSNPs) {
-            naa = BitAlignment.getInstance(naa, 2, false, true);
+            naa = AlignmentBuilder.getInstanceOnlyMajorMinor(naa);
         }
 
         if ((myStart != 0) || (myEnd < (naa.getSiteCount() - 1))) {
