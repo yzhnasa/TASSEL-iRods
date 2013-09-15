@@ -9,7 +9,7 @@ import java.util.List;
  *
  * @author terry
  */
-public interface TaxaList extends List<AnnotatedTaxon> {
+public interface TaxaList extends List<Taxon> {
 
     /**
      * Returns number of taxa (same as getSequenceCount()

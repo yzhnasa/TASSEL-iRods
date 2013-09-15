@@ -42,12 +42,12 @@ public class TaxaListUtils {
             return null;
         }
 
-        TreeSet<AnnotatedTaxon> intersectIds = new TreeSet<AnnotatedTaxon>();
+        TreeSet<Taxon> intersectIds = new TreeSet<Taxon>();
         for (int x = 0; x < groups[0].getTaxaCount(); x++) {
             intersectIds.add(groups[0].get(x));
         }
         for (int i = 1; i < groups.length; i++) {
-            List<AnnotatedTaxon> temp = new ArrayList<AnnotatedTaxon>();
+            List<Taxon> temp = new ArrayList<Taxon>();
             for (int j = 0; j < groups[i].getTaxaCount(); j++) {
                 temp.add(groups[i].get(j));
             }
@@ -86,7 +86,7 @@ public class TaxaListUtils {
             return null;
         }
 
-        TreeSet<AnnotatedTaxon> allIds = new TreeSet<AnnotatedTaxon>();
+        TreeSet<Taxon> allIds = new TreeSet<Taxon>();
         for (int i = 0; i < groups.length; i++) {
             int n = groups[i].getTaxaCount();
             for (int j = 0; j < n; j++) {

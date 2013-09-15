@@ -6,6 +6,9 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.taxa;
 
+import com.google.common.collect.ImmutableMultimap;
+import net.maizegenetics.pal.util.AbstractAnnotation;
+import net.maizegenetics.pal.util.GeneralAnnotation;
 import net.maizegenetics.prefs.TasselPrefs;
 
 import java.io.Serializable;
@@ -15,21 +18,44 @@ import java.io.Serializable;
  * accession number of a DNA sequence, or the taxonomic name that the sequence
  * represents, et cetera.
  *
- * @author terry
+ * The generally used class for defining a taxon. Contains its name, plus a
+ * series of optional annotations. Use the builder to create immutable
+ * instances.
+ * //TODO has a very inefficient method for storing Strings. String and/or annotation pools need to be used.
+ *
+ * @author Terry Casstevens
+ * @author Ed Buckler
  */
-public class Taxon implements Serializable, Comparable {
+public class Taxon implements Serializable, Comparable, GeneralAnnotation {
 
     private static final long serialVersionUID = -7873729831795750538L;
     public static final String DELIMITER = ":";
+    //TODO need to change the annotation approach to the same GeneralPosition with pools
+    protected final GeneralAnnotation myGA;
+    protected final String myParent1;  // generally female
+    protected final String myParent2;  // generally male
+    protected final float myInbreedF; // inbreeding coefficient
+    protected final byte mySex;  // 0=both, 1=female, 2=male
+    protected final String myPedigree;
     private final String myName;
     private final String[] myNameTokens;
     public static Taxon ANONYMOUS = new Taxon("");
     private final int hashCode;
 
     public Taxon(String name) {
-        myName = name;
-        myNameTokens = name.split(DELIMITER);
+        this(new Builder(name));
+    }
+
+    private Taxon(Builder builder) {
+        myName = builder.myTaxonFullName;
+        myNameTokens = myName.split(DELIMITER);
         hashCode = myName.hashCode();
+        this.mySex = builder.sex;
+        this.myInbreedF = builder.inbreedF;
+        this.myParent1 = builder.parent1;
+        this.myPedigree = builder.pedigree;
+        this.myGA = new AbstractAnnotation(builder.myAnnoMap);
+        this.myParent2 = builder.parent2;
     }
 
     public static Taxon getMergedInstance(Taxon id1, Taxon id2) {
@@ -206,5 +232,163 @@ public class Taxon implements Serializable, Comparable {
     @Override
     public int hashCode() {
         return hashCode;
+    }
+
+    public String getParent1() {
+        return myParent1;
+    }
+
+    public String getParent2() {
+        return myParent2;
+    }
+
+    public float getInbreedF() {
+        return myInbreedF;
+    }
+
+    public byte getSex() {
+        return mySex;
+    }
+
+    public String getPedigree() {
+        return myPedigree;
+    }
+
+    @Override
+    public Object[] getAnnotation(String annoName) {
+        return myGA.getAnnotation(annoName);
+//        switch (annoName) {  //TODO: uncomment once in Java 7
+//            case "myParent1":return myLocus;
+//            case "myParent2":return myPosition;
+//            case "myInbreedF":return myCM;
+//            case "mySex":return myStrand;
+//            case "pedigree":return mySNPID;
+//        }
+//       }
+    }
+
+    @Override
+    public String[] getTextAnnotation(String annoName) {
+        return myGA.getTextAnnotation(annoName);
+    }
+
+    @Override
+    public double[] getQuantAnnotation(String annoName) {
+        return myGA.getQuantAnnotation(annoName);
+    }
+
+    @Override
+    public String getConsensusAnnotation(String annoName) {
+        return myGA.getConsensusAnnotation(annoName);
+    }
+
+    @Override
+    public double getAverageAnnotation(String annoName) {
+        return myGA.getAverageAnnotation(annoName);
+    }
+
+    /**
+     * A builder for creating immutable Taxon instances.
+     * <p> Example:
+     * <pre>   {@code
+     * Taxon cp= new Taxon.Builder("Z001E0001:Line:mays:Zea")
+     *   .inbreedF(0.99)
+     *   .parents("B73","B97")
+     *   .pedigree("(B73xB97)S6I1")
+     *   .build();}</pre>
+     * <p>This would create an Taxon.
+     */
+    public static class Builder {
+
+        // Required parameters
+        private final String myTaxonFullName;
+        // Optional parameters - initialized to default values
+        private String parent1 = null;  //generally female
+        private String parent2 = null;  //generally male
+        private float inbreedF = Float.NaN;
+        private byte sex = 0;  //0=both, 1=female, 2=male
+        private String pedigree = null;
+        private ImmutableMultimap.Builder<String, Object> myAnnoMapBld = null;
+        private ImmutableMultimap<String, Object> myAnnoMap = null;
+
+        /**
+         * Constructor for Builder, requires a Taxon object
+         *
+         * @param aTaxon taxon object
+         */
+        public Builder(Taxon aTaxon) {
+            myTaxonFullName = aTaxon.getFullName();
+        }
+
+        /**
+         * Constructor for Builder, requires a Taxon name
+         *
+         * @param aTaxonName name of the taxon
+         */
+        public Builder(String aTaxonName) {
+            myTaxonFullName = aTaxonName;
+        }
+
+        /**
+         * Set sex: 0=both, 1=female, 2=male (default=0 Both)
+         */
+        public Builder sex(byte val) {
+            sex = val;
+            return this;
+        }
+
+        /**
+         * Set inbreeding coefficient (default=Float.NaN)
+         */
+        public Builder inbreedF(float val) {
+            inbreedF = val;
+            return this;
+        }
+
+        /**
+         * Set text definition of parents (default=null)
+         */
+        public Builder parents(String mom, String dad) {
+            parent1 = mom;
+            parent2 = dad;
+            return this;
+        }
+
+        /**
+         * Set text definition of pedigree (default=null)
+         */
+        public Builder pedigree(String val) {
+            pedigree = val;
+            return this;
+        }
+
+        /**
+         * Add non-standard annotation
+         */
+        public Builder addAnno(String key, String value) {
+            if (myAnnoMapBld == null) {
+                myAnnoMapBld = new ImmutableMultimap.Builder();
+            }
+            myAnnoMapBld.put(key, value);
+            return this;
+        }
+
+        /**
+         * Add non-standard annotation
+         */
+        public Builder addAnno(String key, Number value) {
+            if (myAnnoMapBld == null) {
+                myAnnoMapBld = new ImmutableMultimap.Builder();
+            }
+            myAnnoMapBld.put(key, value);
+            return this;
+        }
+
+        public Taxon build() {
+            if (myAnnoMapBld != null) {
+                myAnnoMap = myAnnoMapBld.build();
+            }
+            return new Taxon(this);
+        }
     }
 }

@@ -4,7 +4,7 @@ import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.site.*;
-import net.maizegenetics.pal.taxa.AnnotatedTaxon;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.util.Utils;
@@ -112,7 +112,7 @@ public class BuilderFromHapMap {
         int numTaxa = header.length - NUM_HAPMAP_NON_TAXA_HEADERS;
         TaxaListBuilder tlb = new TaxaListBuilder();
         for (int i = 0; i < numTaxa; i++) {
-            AnnotatedTaxon at = new AnnotatedTaxon.Builder(header[i + NUM_HAPMAP_NON_TAXA_HEADERS])
+            Taxon at = new Taxon.Builder(header[i + NUM_HAPMAP_NON_TAXA_HEADERS])
                     .build();
             tlb.add(at);
         }

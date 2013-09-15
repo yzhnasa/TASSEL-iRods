@@ -25,11 +25,11 @@ public final class IdGroupUtils {
      * @return true if <i>sub</i> IdGroup completely contained within <i>full</i>, false otherwise
      */
     public static boolean isContainedWithin(TaxaList sub, TaxaList full) {
-        for (int i = 0; i < sub.getIdCount(); i++) {
+        for (int i = 0; i < sub.getTaxaCount(); i++) {
             boolean found = false;
-            Taxon subID = sub.getIdentifier(i);
-            for (int j = 0; j < full.getIdCount(); j++) {
-                Taxon fullID = full.getIdentifier(j);
+            Taxon subID = sub.get(i);
+            for (int j = 0; j < full.getTaxaCount(); j++) {
+                Taxon fullID = full.get(j);
                 if (fullID.equals(subID)) {
                     found = true;
                     break;
@@ -55,8 +55,8 @@ public final class IdGroupUtils {
      * @return -1 if <i>s</i> not in <i>group</i>
      */
     public static int whichIdNumber(TaxaList group, String s) {
-        for (int i = 0; i < group.getIdCount(); i++) {
-            if (s.equals(group.getIdentifier(i).getFullName())) {
+        for (int i = 0; i < group.getTaxaCount(); i++) {
+            if (s.equals(group.get(i).getFullName())) {
                 return i;
             }
         }
@@ -85,13 +85,13 @@ public final class IdGroupUtils {
         }
 
         TreeSet<Taxon> intersectIds = new TreeSet<Taxon>(groups[0]);
-//        for (int x = 0; x < groups[0].getIdCount(); x++) {
-//            intersectIds.add(groups[0].getIdentifier(x));
+//        for (int x = 0; x < groups[0].getTaxaCount(); x++) {
+//            intersectIds.add(groups[0].get(x));
 //        }
         for (int i = 1; i < groups.length; i++) {
 //            List temp = new ArrayList();
-//            for (int j = 0; j < groups[i].getIdCount(); j++) {
-//                temp.add(groups[i].getIdentifier(j));
+//            for (int j = 0; j < groups[i].getTaxaCount(); j++) {
+//                temp.add(groups[i].get(j));
 //            }
             intersectIds.retainAll(groups[i]);
         }
@@ -126,9 +126,9 @@ public final class IdGroupUtils {
 
         TreeSet<Taxon> allIds = new TreeSet<Taxon>();
         for (int i = 0; i < groups.length; i++) {
-            int n = groups[i].getIdCount();
+            int n = groups[i].getTaxaCount();
             for (int j = 0; j < n; j++) {
-                allIds.add(groups[i].getIdentifier(j));
+                allIds.add(groups[i].get(j));
             }
         }
 
@@ -148,14 +148,14 @@ public final class IdGroupUtils {
      * @throws IllegalArgumentException if the number of Identifiers in original is not equal to the length of include.
      */
     public static TaxaList idGroupSubset(TaxaList original, boolean[] include) {
-        int nOld = original.getIdCount();
+        int nOld = original.getTaxaCount();
         if (nOld != include.length) {
             throw new IllegalArgumentException("Size of IdGroup and include array are different.");
         }
         ArrayList<Taxon> newIds = new ArrayList<Taxon>();
         for (int i = 0; i < nOld; i++) {
             if (include[i]) {
-                newIds.add(original.getIdentifier(i));
+                newIds.add(original.get(i));
             }
         }
         return new SimpleIdGroup(newIds.toArray(new Taxon[newIds.size()]));
@@ -206,9 +206,9 @@ public final class IdGroupUtils {
      * Translates an IdGroup into an array of identifiers
      */
     public static Taxon[] getIdentifiers(TaxaList idGroup) {
-        Taxon[] ids = new Taxon[idGroup.getIdCount()];
+        Taxon[] ids = new Taxon[idGroup.getTaxaCount()];
         for (int i = 0; i < ids.length; i++) {
-            ids[i] = idGroup.getIdentifier(i);
+            ids[i] = idGroup.get(i);
         }
         return ids;
     }
@@ -217,9 +217,9 @@ public final class IdGroupUtils {
      * Translates an IdGroup into an array of strings
      */
     public static String[] getNames(TaxaList ids) {
-        String[] names = new String[ids.getIdCount()];
+        String[] names = new String[ids.getTaxaCount()];
         for (int i = 0; i < names.length; i++) {
-            names[i] = ids.getIdentifier(i).getName();
+            names[i] = ids.get(i).getName();
         }
         return names;
     }
@@ -229,15 +229,15 @@ public final class IdGroupUtils {
      * @param toIgnoreIndex the index of an idetifier to ignore, if <0 no element is ignored
      */
     public static String[] getNames(TaxaList ids, int toIgnore) {
-        if (toIgnore < 0 || toIgnore >= ids.getIdCount()) {
+        if (toIgnore < 0 || toIgnore >= ids.getTaxaCount()) {
             return getNames(ids);
         }
-        int numberOfIDS = ids.getIdCount();
+        int numberOfIDS = ids.getTaxaCount();
         String[] names = new String[numberOfIDS - 1];
         int index = 0;
         for (int i = 0; i < numberOfIDS; i++) {
             if (i != toIgnore) {
-                names[index] = ids.getIdentifier(i).getName();
+                names[index] = ids.get(i).getName();
                 index++;
             }
         }

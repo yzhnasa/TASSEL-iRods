@@ -13,7 +13,7 @@ import java.util.Map;
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.site.PositionList;
-import net.maizegenetics.pal.taxa.AnnotatedTaxon;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 
@@ -111,7 +111,7 @@ public class FilterAlignment implements Alignment {
         }
 
         List<Integer> taxaRedirectList = new ArrayList<Integer>();
-        List<AnnotatedTaxon> idList = new ArrayList<AnnotatedTaxon>();
+        List<Taxon> idList = new ArrayList<Taxon>();
         boolean noNeedToFilter = true;
         if (subTaxaList.getTaxaCount() != a.getTaxaCount()) {
             noNeedToFilter = false;

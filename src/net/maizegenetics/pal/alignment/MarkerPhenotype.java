@@ -1,9 +1,8 @@
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.taxa.IdGroupUtils;
-
 import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.TaxaList;
 
 /**
  * @author terry
@@ -25,7 +24,7 @@ public class MarkerPhenotype implements TableReport {
     }
 
     public static MarkerPhenotype getInstance(Alignment aa, Phenotype ca, boolean union) {
-        TaxaList idGroup = getIdGroup(aa.getIdGroup(), ca.getTaxa(), union);
+        TaxaList idGroup = getIdGroup(aa.getTaxaList(), ca.getTaxa(), union);
         Alignment align = FilterAlignment.getInstance(aa, idGroup);
         Phenotype phenotype = FilterPhenotype.getInstance(ca, idGroup, null);
         return new MarkerPhenotype(align, phenotype);

@@ -19,27 +19,27 @@ import java.util.*;
 public class TaxaArrayList implements TaxaList {
 
     private static final Logger myLogger = Logger.getLogger(TaxaArrayList.class);
-    private final List<AnnotatedTaxon> myTaxaList;
+    private final List<Taxon> myTaxaList;
     private final int myNumTaxa;
     private final Multimap<String, Integer> myNameToIndex;
 
     TaxaArrayList(TaxaListBuilder builder) {
 
-        List<AnnotatedTaxon> srcList = builder.getImmutableList();
-        myTaxaList = new ArrayList<AnnotatedTaxon>(srcList.size());
+        List<Taxon> srcList = builder.getImmutableList();
+        myTaxaList = new ArrayList<Taxon>(srcList.size());
         myNumTaxa = srcList.size();
         myNameToIndex = HashMultimap.create(srcList.size() * 2, 1);
         int index = 0;
-        for (AnnotatedTaxon annotatedTaxon : srcList) {
-            myTaxaList.add(annotatedTaxon);
-            if (myNameToIndex.containsKey(annotatedTaxon.getFullName())) {
-                myLogger.warn("init: Taxa name is duplicated :" + annotatedTaxon.getFullName());
+        for (Taxon Taxon : srcList) {
+            myTaxaList.add(Taxon);
+            if (myNameToIndex.containsKey(Taxon.getFullName())) {
+                myLogger.warn("init: Taxa name is duplicated :" + Taxon.getFullName());
             }
-            myNameToIndex.put(annotatedTaxon.getFullName(), index);
+            myNameToIndex.put(Taxon.getFullName(), index);
 
             //TODO Ed, we need to talk about this. -Terry
-            //if (!annotatedTaxon.getFullName().equals(annotatedTaxon.getName())) {
-            //    myNameToIndex.put(annotatedTaxon.getName(), index);
+            //if (!Taxon.getFullName().equals(Taxon.getName())) {
+            //    myNameToIndex.put(Taxon.getName(), index);
             //}
 
             index++;
@@ -117,7 +117,7 @@ public class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public Iterator<AnnotatedTaxon> iterator() {
+    public Iterator<Taxon> iterator() {
         return myTaxaList.iterator();
     }
 
@@ -132,7 +132,7 @@ public class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public boolean add(AnnotatedTaxon annotatedTaxon) {
+    public boolean add(Taxon Taxon) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -147,12 +147,12 @@ public class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public boolean addAll(Collection<? extends AnnotatedTaxon> c) {
+    public boolean addAll(Collection<? extends Taxon> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends AnnotatedTaxon> c) {
+    public boolean addAll(int index, Collection<? extends Taxon> c) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
@@ -172,28 +172,28 @@ public class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public AnnotatedTaxon get(int index) {
+    public Taxon get(int index) {
         return myTaxaList.get(index);
     }
 
     @Override
-    public AnnotatedTaxon set(int index, AnnotatedTaxon element) {
+    public Taxon set(int index, Taxon element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public void add(int index, AnnotatedTaxon element) {
+    public void add(int index, Taxon element) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
-    public AnnotatedTaxon remove(int index) {
+    public Taxon remove(int index) {
         throw new UnsupportedOperationException("This Class is Immutable.");
     }
 
     @Override
     public int indexOf(Object o) {
-        AnnotatedTaxon at=(AnnotatedTaxon)o;
+        Taxon at=(Taxon)o;
         Collection<Integer> result=myNameToIndex.get(at.getFullName());
         for (Integer i : result) {
             if(myTaxaList.get(i).equals(at)) return i;
@@ -208,20 +208,20 @@ public class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public ListIterator<AnnotatedTaxon> listIterator() {
+    public ListIterator<Taxon> listIterator() {
         return listIterator(0);
     }
 
     @Override
-    public ListIterator<AnnotatedTaxon> listIterator(final int index) {
-        return new ListIterator<AnnotatedTaxon>() {
-            private final ListIterator<AnnotatedTaxon> i = myTaxaList.listIterator(index);
+    public ListIterator<Taxon> listIterator(final int index) {
+        return new ListIterator<Taxon>() {
+            private final ListIterator<Taxon> i = myTaxaList.listIterator(index);
 
             public boolean hasNext() {
                 return i.hasNext();
             }
 
-            public AnnotatedTaxon next() {
+            public Taxon next() {
                 return i.next();
             }
 
@@ -229,7 +229,7 @@ public class TaxaArrayList implements TaxaList {
                 return i.hasPrevious();
             }
 
-            public AnnotatedTaxon previous() {
+            public Taxon previous() {
                 return i.previous();
             }
 
@@ -245,18 +245,18 @@ public class TaxaArrayList implements TaxaList {
                 throw new UnsupportedOperationException();
             }
 
-            public void set(AnnotatedTaxon e) {
+            public void set(Taxon e) {
                 throw new UnsupportedOperationException();
             }
 
-            public void add(AnnotatedTaxon e) {
+            public void add(Taxon e) {
                 throw new UnsupportedOperationException();
             }
         };
     }
 
     @Override
-    public List<AnnotatedTaxon> subList(int fromIndex, int toIndex) {
+    public List<Taxon> subList(int fromIndex, int toIndex) {
         return Collections.unmodifiableList(myTaxaList.subList(fromIndex, toIndex));
     }
 }

@@ -1,21 +1,18 @@
 package net.maizegenetics.pal.alignment;
 
+import cern.colt.matrix.DoubleFactory2D;
+import cern.colt.matrix.DoubleMatrix2D;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.util.Utils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix2D;
-
-
-import net.maizegenetics.util.Utils;
 
 
 public class ReadPhenotypeUtils {
@@ -199,7 +196,8 @@ public class ReadPhenotypeUtils {
 			genotypes.viewColumn(loc).assign(dblValues);
 		}
 		br.close();
-		return new SimplePhenotype(new SimpleIdGroup(taxaNames), traitList, genotypes);
+        TaxaList tL=new TaxaListBuilder().addAll(taxaNames).build();
+		return new SimplePhenotype(tL, traitList, genotypes);
 	}
 	
 	/**
@@ -244,8 +242,8 @@ public class ReadPhenotypeUtils {
 			traitList.add(makeCharacterTrait(locusText[i], dblval, locusNames[i], Trait.TYPE_MARKER));
 			genotypes.viewColumn(i).assign(dblval);
 		}
-		
-		return new SimplePhenotype(new SimpleIdGroup(taxaNames), traitList, genotypes);
+        TaxaList tL=new TaxaListBuilder().addAll(taxaNames).build();
+		return new SimplePhenotype(tL, traitList, genotypes);
 	}
 
 	/**
@@ -292,8 +290,8 @@ public class ReadPhenotypeUtils {
 				else phenotypes.setQuick(i, j, Double.parseDouble(strval));
 			}
 		}
-		
-		return new SimplePhenotype(new SimpleIdGroup(taxaNames), traitList, phenotypes);
+        TaxaList tL=new TaxaListBuilder().addAll(taxaNames).build();
+		return new SimplePhenotype(tL, traitList, phenotypes);
 	}
 	
 	/**
@@ -512,8 +510,8 @@ public class ReadPhenotypeUtils {
 				}
 			}
 		}
-
-		return new SimplePhenotype(new SimpleIdGroup(taxanames), traitList, data);
+        TaxaList tL=new TaxaListBuilder().addAll(taxanames).build();
+		return new SimplePhenotype(tL, traitList, data);
 	}
 	
 	private static String[] processHeader(int numberOfColumns, String[] parsedline, String filename) {

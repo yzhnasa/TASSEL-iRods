@@ -13,7 +13,7 @@ import java.util.*;
  * Example:<pre>   {@code
  *   TaxaListBuilder tlb=new TaxaListBuilder();
  *   for (int i = 0; i < 10; i++) {
- *      AnnotatedTaxon at= new AnnotatedTaxon.Builder("Z"+i+":Line:mays:Zea")
+ *      Taxon at= new Taxon.Builder("Z"+i+":Line:mays:Zea")
  *           .inbreedF(0.99f)
  *           .parents("B73","B97")
  *           .pedigree("(B73xB97)S6I1")
@@ -31,25 +31,25 @@ import java.util.*;
  */
 public class TaxaListBuilder {
 
-    private final List<AnnotatedTaxon> myTaxaList;
+    private final List<Taxon> myTaxaList;
 
     public TaxaListBuilder() {
-        myTaxaList = new ArrayList<AnnotatedTaxon>();
+        myTaxaList = new ArrayList<Taxon>();
     }
 
-    public TaxaListBuilder add(AnnotatedTaxon taxon) {
+    public TaxaListBuilder add(Taxon taxon) {
         myTaxaList.add(taxon);
         return this;
     }
 
-//    public TaxaListBuilder addAll(Collection<AnnotatedTaxon> taxa) {
+//    public TaxaListBuilder addAll(Collection<Taxon> taxa) {
 //        myTaxaList.addAll(taxa);
 //        return this;
 //    }
 
-    public TaxaListBuilder addAll(Collection<AnnotatedTaxon> taxa) {
+    public TaxaListBuilder addAll(Collection<Taxon> taxa) {
         for (Taxon t: taxa) {
-            myTaxaList.add(new AnnotatedTaxon.Builder(t).build());
+            myTaxaList.add(new Taxon.Builder(t).build());
         }
         return this;
     }
@@ -61,14 +61,14 @@ public class TaxaListBuilder {
 
     public TaxaListBuilder addAll(String[] taxa) {
         for (int i = 0, n = taxa.length; i < n; i++) {
-            myTaxaList.add(new AnnotatedTaxon.Builder(taxa[i]).build());
+            myTaxaList.add(new Taxon.Builder(taxa[i]).build());
         }
         return this;
     }
 
     public TaxaListBuilder addAll(Taxon[] taxa) {
         for (int i = 0, n = taxa.length; i < n; i++) {
-            myTaxaList.add(new AnnotatedTaxon.Builder(taxa[i]).build());
+            myTaxaList.add(new Taxon.Builder(taxa[i]).build());
         }
         return this;
     }
@@ -91,14 +91,14 @@ public class TaxaListBuilder {
             if (is.isDataSet() == false) {
                 continue;
             }
-            myTaxaList.add(new AnnotatedTaxon.Builder(is.getName()).build());
+            myTaxaList.add(new Taxon.Builder(is.getName()).build());
         }
         sort();
         return build();
     }
 
     //Default package private method to hand the list to the instance
-    List<AnnotatedTaxon> getImmutableList() {
+    List<Taxon> getImmutableList() {
         return Collections.unmodifiableList(myTaxaList);
     }
 }

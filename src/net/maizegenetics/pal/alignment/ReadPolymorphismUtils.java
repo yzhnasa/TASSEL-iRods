@@ -7,7 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.util.Utils;
 
 public class ReadPolymorphismUtils {
@@ -75,7 +76,8 @@ public class ReadPolymorphismUtils {
         }
 
         Chromosome[] myLoci = new Chromosome[]{Chromosome.UNKNOWN};
-        return BitAlignment.getInstance(new SimpleIdGroup(taxa), finalData, null, null, null, 14, myLoci, new int[]{0}, markerNames, true, true);
+        TaxaList tL=new TaxaListBuilder().addAll(taxa).build();
+        return BitAlignment.getInstance(tL, finalData, null, null, null, 14, myLoci, new int[]{0}, markerNames, true, true);
     }
 
     public static GeneticMap readGeneticMapFile(String filename) throws IOException {

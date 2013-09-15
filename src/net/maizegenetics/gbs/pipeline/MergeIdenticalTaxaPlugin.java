@@ -1,10 +1,9 @@
 package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.taxa.AnnotatedTaxon;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -91,10 +90,10 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             int index = 0;
             for (List<String> l : sortedIds2.values()) {
                 if (l.size() > 1) {
-                    newGroupBuild.add(new AnnotatedTaxon.Builder(l.get(0).split(":")[0]+":MERGE").build());
+                    newGroupBuild.add(new Taxon.Builder(l.get(0).split(":")[0]+":MERGE").build());
                     System.out.println("To be merged: " + l.size() + ": " + l);
                 } else {
-                    newGroupBuild.add(new AnnotatedTaxon.Builder(l.get(0)).build());
+                    newGroupBuild.add(new Taxon.Builder(l.get(0)).build());
                 }
                 //System.out.println(newGroup.getIdentifier(index).getFullName());
                 index++;
