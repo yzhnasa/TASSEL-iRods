@@ -7,18 +7,18 @@
 package net.maizegenetics.pal.popgen;
 
 import cern.colt.map.OpenLongObjectHashMap;
-import java.io.Serializable;
-import java.io.StringWriter;
-import java.util.Arrays;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.BitAlignment;
+import net.maizegenetics.pal.alignment.AlignmentBuilder;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
 import org.apache.log4j.Logger;
+
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.util.Arrays;
 
 /**
  * This class calculates D' and r^2 estimates of linkage disequilibrium. It also
@@ -126,7 +126,6 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
         myAlignment = alignment;
-        mySBitAlignment = AlignmentUtils.optimizeForSites(myAlignment, listener);
         myFisherExact = new FisherExact((2 * myAlignment.getSequenceCount()) + 10);
         myWindowSize = windowSize;
         myCurrDesign = LDType;
@@ -203,7 +202,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         //It will ignore hets, make a new Alignment and set all het calls to missing. Otherwise set the pointer to the old alignment
         Alignment workingAlignment;
         if (ignoreHets) {
-            workingAlignment = BitAlignment.getHomozygousNucleotideInstance(myAlignment, true);
+            workingAlignment =AlignmentBuilder.getHomozygousInstance(myAlignment);
         } else {
             workingAlignment = mySBitAlignment;
         }

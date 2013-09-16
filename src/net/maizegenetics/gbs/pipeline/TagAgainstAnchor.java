@@ -10,7 +10,7 @@ import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.BitAlignment;
+import net.maizegenetics.pal.alignment.AlignmentBuilder;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
@@ -83,11 +83,12 @@ public class TagAgainstAnchor {
      * @param pThresh
      * @param minCount
      * @param coreNum
-     * @param tagNumPerThreadInChunk
+     * @param chunkSize
      * @param chunkStartIndex start index of chunk
      * @param chunkEndIndex end index of chunk. Note: chunk of end index is not included.
      */
-    public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum, int chunkSize, int chunkStartIndex, int chunkEndIndex) {
+    public TagAgainstAnchor (String hapMapHDF5, String tbtHDF5, String outfileS, double pThresh, int minCount, int coreNum,
+                             int chunkSize, int chunkStartIndex, int chunkEndIndex) {
         this.pThresh = pThresh;
         this.minCount = minCount;
         this.loadAnchorMap(hapMapHDF5);
@@ -118,8 +119,7 @@ public class TagAgainstAnchor {
     /**
      * Pre-calculate number of chunks when qsub genetic mapping 
      * @param tbtHDF5
-     * @param coreNum
-     * @param tagNumPerThreadInChunk
+     * @param chunkSize
      * @return 
      */
     public static int getChunkNum (String tbtHDF5, int chunkSize) {
@@ -691,7 +691,7 @@ public class TagAgainstAnchor {
             chrStartIndex[i] = chrOffSet[i];
             chrEndIndex[i] = chrOffSet[i] + a.getChromosomeSiteCount(a.getChromosomes()[i]);
         }
-        anchor = (BitAlignment)BitAlignment.getHomozygousNucleotideInstance(a, true);
+        anchor=AlignmentBuilder.getHomozygousInstance(a);
         anchorMaf = new double[anchor.getSiteCount()];
         for (int i = 0; i < anchorMaf.length; i++) {
             anchorMaf[i] = anchor.getMinorAlleleFrequency(i);

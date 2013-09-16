@@ -56,4 +56,24 @@ public class AlignmentBuilder {
         }
         return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
     }
+
+    public static Alignment getHomozygousInstance(Alignment alignment) {
+        int numTaxa = alignment.getTaxaCount();
+        int numSites = alignment.getSiteCount();
+        GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
+        for (int bigS = 0; bigS < numSites; bigS += 64) {
+            int blockSize = Math.min(64, numSites - bigS);
+            for (int t = 0; t < numTaxa; t++) {
+                for (int s = 0; s < blockSize; s++) {
+                    byte currGeno=alignment.getBase(t, s + bigS);
+                    if(AlignmentUtils.isHeterozygous(currGeno)) {
+                        builder.setBase(t, s, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                    } else {
+                        builder.setBase(t, s, currGeno);
+                    }
+                }
+            }
+        }
+        return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
+    }
 }
