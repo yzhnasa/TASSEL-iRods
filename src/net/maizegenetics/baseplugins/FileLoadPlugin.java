@@ -44,7 +44,6 @@ public class FileLoadPlugin extends AbstractPlugin {
     private TasselFileType myFileType = TasselFileType.Unknown;
     private PlinkLoadPlugin myPlinkLoadPlugin = null;
     private FlapjackLoadPlugin myFlapjackLoadPlugin = null;
-    private boolean myIsSBit = true;
     private JFileChooser myOpenFileChooser = new JFileChooser(TasselPrefs.getOpenDir());
 
     public enum TasselFileType {
@@ -315,7 +314,7 @@ public class FileLoadPlugin extends AbstractPlugin {
                     if (inFile.endsWith(".gz")) {
                         suffix = FILE_EXT_HAPMAP_GZ;
                     }
-                    result = ImportUtils.readFromHapmap(inFile, myIsSBit, this);
+                    result = ImportUtils.readFromHapmap(inFile, true, this);
                     break;
                 }
                 case HDF5: {
@@ -447,14 +446,6 @@ public class FileLoadPlugin extends AbstractPlugin {
 
     public void setTheFileType(TasselFileType theFileType) {
         myFileType = theFileType;
-    }
-
-    public boolean getIsFileCreatedSBit() {
-        return myIsSBit;
-    }
-
-    public void setIsFileCreatedSBit(boolean value) {
-        myIsSBit = value;
     }
 
     /**

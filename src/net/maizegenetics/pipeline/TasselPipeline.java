@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 import net.maizegenetics.baseplugins.CombineDataSetsPlugin;
 import net.maizegenetics.baseplugins.ConvertAlignmentCoordinatesPlugin;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.baseplugins.CreateTreePlugin;
 import net.maizegenetics.baseplugins.DistanceMatrixPlugin;
 import net.maizegenetics.baseplugins.DistanceMatrixRangesPlugin;
@@ -62,7 +61,6 @@ import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
 
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.HetTreatment;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -398,20 +396,6 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing max alleles to retain: " + temp);
                     }
                     TasselPrefs.putAlignmentMaxAllelesToRetain(maxAlleles);
-                } else if (current.equalsIgnoreCase("-optimizeForTaxa")) {
-                    FileLoadPlugin plugin = (FileLoadPlugin) findLastPluginFromCurrentPipe(new Class[]{FileLoadPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No File Load step defined: " + current);
-                    }
-                    plugin.setIsFileCreatedSBit(false);
-                } else if (current.equalsIgnoreCase("-convertToSiteOpt")) {
-                    ConvertSBitTBitPlugin plugin = new ConvertSBitTBitPlugin(myMainFrame, false);
-                    plugin.setType(ConvertSBitTBitPlugin.CONVERT_TYPE.sbit);
-                    integratePlugin(plugin, true);
-                } else if (current.equalsIgnoreCase("-convertToTaxaOpt")) {
-                    ConvertSBitTBitPlugin plugin = new ConvertSBitTBitPlugin(myMainFrame, false);
-                    plugin.setType(ConvertSBitTBitPlugin.CONVERT_TYPE.tbit);
-                    integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-union")) {
                     UnionAlignmentPlugin plugin = new UnionAlignmentPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
