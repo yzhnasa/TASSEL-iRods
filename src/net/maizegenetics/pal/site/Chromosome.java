@@ -41,6 +41,7 @@ public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
         this(name, -1, null);
     }
 
+
     public String getName() {
         return myName;
     }

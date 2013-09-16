@@ -10,14 +10,16 @@ import net.maizegenetics.gbs.maps.TOPMInterface;
 import net.maizegenetics.gbs.maps.TagsAtLocus;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaBitFileMap;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteFileMap;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.site.PositionArrayList;
 import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -41,7 +43,7 @@ import java.util.HashMap;
  * @author edbuckler
  */
 public class DiscoverySNPCallerPlugin extends AbstractPlugin {
-
+    private static final String refGenName="REFERENCE_GENOME";
     static int maxSize = 200000;  //normally 200K;
     private double minF = -2.0, minMAF = 0.01;
     private int minMAC = 10;
@@ -101,13 +103,18 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             String out = suppliedOutputFileName.replace("+", "" + chr);
             if (customSNPLogging) myCustomSNPLog = new CustomSNPLog(out, false);
             myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + chr + " (maximum number of sites = " + maxSize + ")");
-            MutableNucleotideAlignment theMSA = vcf ? createMutableVCFAlignment(theTBT, maxSize + 100, includeReference)
-                    : createMutableAlignment(theTBT, maxSize + 100, includeReference);
+            TaxaList tL;
+            if (includeReference) {tL=new TaxaListBuilder().add(new Taxon(refGenName)).addAll(theTBT.getTaxaList()).build();}
+            else {tL=new TaxaListBuilder().add(new Taxon(refGenName)).addAll(theTBT.getTaxaList()).build();}
+            GenotypeBuilder gB=GenotypeBuilder.getInstance(tL.getTaxaCount(),maxSize + 100);
+            PositionArrayList.Builder posBuilder=new PositionArrayList.Builder();
+//            MutableNucleotideAlignment theMSA = vcf ? createMutableVCFAlignment(theTBT, maxSize + 100, includeReference)
+//                    : createMutableAlignment(theTBT, maxSize + 100, includeReference);
             if (includeReference) {
                 refGenomeChr = readReferenceGenomeChr(refGenomeFileStr, chr);
                 if (refGenomeChr == null) continue;
             }
-            runTagsToSNPByAlignment(theMSA, out, chr, false);
+            runTagsToSNPByAlignment(gB, posBuilder, out, chr, false);
             if (customSNPLogging) myCustomSNPLog.close();
             myLogger.info("Finished processing chromosome " + chr + "\n\n");
         }
@@ -205,8 +212,6 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 theTBT = new TagsByTaxaByteHDF5TagGroups(inputFileName);
             } else if (useTBTByte) {
                 theTBT = new TagsByTaxaByteFileMap(inputFileName);
-            } else {
-                theTBT = new TagsByTaxaBitFileMap(inputFileName);
             }
         } else {
             printUsage();
@@ -371,13 +376,14 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void runTagsToSNPByAlignment(MutableNucleotideAlignment theMSA, String outHapMap, int targetChromo, boolean requireGeneticSupport) {
+    public void runTagsToSNPByAlignment(GenotypeBuilder theMSA, PositionArrayList.Builder posBuilder, String outHapMap,
+                                        int targetChromo, boolean requireGeneticSupport) {
         long time = System.currentTimeMillis();
         DataOutputStream locusLogDOS = openLocusLog(outHapMap);
         TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE,Byte.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,includeReference,fuzzyStartPositions,errorRate);
         int[] currPos = null;
         int countLoci = 0;
-        for (int i = 0; (i < theTOPM.getSize()) && (theMSA.getSiteCount() < (maxSize - 1000)); i++) {
+        for (int i = 0; (i < theTOPM.getSize()) && (posBuilder.size() < (maxSize - 1000)); i++) {
             int ri = theTOPM.getReadIndexForPositionIndex(i);  // process tags in order of physical position
             int[] newPos = theTOPM.getPositionArray(ri);
             if (newPos[CHR] != targetChromo) continue;    //Skip tags from other chromosomes
@@ -387,12 +393,12 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             } else {
                 int nTaxaCovered = currTAL.getNumberTaxaCovered();
                 if (currTAL.getSize()>1 && nTaxaCovered >= minTaxaWithLocus) {  // finish the current TAL
-                    addSitesToMutableAlignment(currTAL, theMSA,locusLogDOS);  // note that with fuzzyStartPositions there may be no overlapping tags!!
+                    addSitesToMutableAlignment(currTAL, theMSA, posBuilder, locusLogDOS);  // note that with fuzzyStartPositions there may be no overlapping tags!!
                     countLoci++;
-                    if (theMSA.getSiteCount() % 100 == 0) {
-                        double rate = (double) theMSA.getSiteCount() / (double) (System.currentTimeMillis() - time);
+                    if (posBuilder.size() % 100 == 0) {
+                        double rate = (double) posBuilder.size() / (double) (System.currentTimeMillis() - time);
                         myLogger.info(String.format(
-                                "Chr:%d Pos:%d Loci=%d SNPs=%d rate=%g SNP/millisec %n", currPos[CHR], currPos[START_POS], countLoci, theMSA.getSiteCount(), rate));
+                                "Chr:%d Pos:%d Loci=%d SNPs=%d rate=%g SNP/millisec %n", currPos[CHR], currPos[START_POS], countLoci, posBuilder.size(), rate));
                     }
                 } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
                 currPos = newPos; // start a new TAL with the current tag
@@ -405,33 +411,23 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             }
         }
         if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() >= minTaxaWithLocus)) { // then finish the final TAL for the targetChromo
-            addSitesToMutableAlignment(currTAL, theMSA,locusLogDOS);
+            addSitesToMutableAlignment(currTAL, theMSA, posBuilder, locusLogDOS);
         } else if (currPos!=null) {
             logRejectedTagLocus(currTAL,locusLogDOS);
         }
-        if (theMSA.getSiteCount() > 0) {
-            theMSA.clean();
-            ExportUtils.writeToHapmap(theMSA, false, outHapMap, '\t', null);
-            if (vcf) {
-                String vcfFileName;
-                if (outHapMap.endsWith(".hmp.txt")) {
-                    vcfFileName = outHapMap.replace(".hmp.txt", ".vcf");
-                } else if (outHapMap.endsWith(".hmp.txt.gz")) {
-                    vcfFileName = outHapMap.replace(".hmp.txt.gz", ".vcf.gz");
-                } else {
-                    vcfFileName = outHapMap + ".vcf";
-                }
-                ExportUtils.writeToVCF(theMSA, vcfFileName, '\t');
-            }
+        if (posBuilder.size() > 0) {
+            theMSA.clean(); //Todo this a key sort between the genotype and position that needs to be maintained
+            Alignment outA=AlignmentBuilder.getInstance(theMSA.build(),posBuilder.build(),theTBT.getTaxaList());
+            ExportUtils.writeToHapmap(outA, false, outHapMap, '\t', null);
         }
-        myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + theMSA.getSiteCount());
+        myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + posBuilder.size());
         try{ locusLogDOS.close(); } catch(Exception e) { catchLocusLogException(e); }
     }
 
     /**
      * Creates a MutableNucleotideAlignment based on the taxa in a TBT.
      */
-    private static MutableNucleotideAlignment createMutableAlignment(TagsByTaxa theTBT, int maxSites, boolean includeReference) {
+    private static GenotypeBuilder createMutableAlignment(TagsByTaxa theTBT, int maxSites, boolean includeReference) {
         String[] taxaNames;
         if (includeReference) {
             int nTaxa = theTBT.getTaxaNames().length + 1;
@@ -443,29 +439,10 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         } else {
             taxaNames = theTBT.getTaxaNames();
         }
-        TaxaList taxa = new SimpleIdGroup(taxaNames);
-        MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
+     //   TaxaList taxa = new SimpleIdGroup(taxaNames);
+        GenotypeBuilder theMSA=GenotypeBuilder.getInstance(taxaNames.length,maxSites);
+        //MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
         return theMSA;
-    }
-    
-    /**
-     * Same as above method. Creates a MutableVCFAlignment 
-     */
-    private static MutableVCFAlignment createMutableVCFAlignment(TagsByTaxa theTBT, int maxSites, boolean includeReference) {
-        String[] taxaNames;
-        if (includeReference) {
-            int nTaxa = theTBT.getTaxaNames().length + 1;
-            taxaNames = new String[nTaxa];
-            taxaNames[0] = "REFERENCE_GENOME";  // will hold the "genotype" of the reference genome
-            for (int t = 1; t < nTaxa; t++) {
-                taxaNames[t] = theTBT.getTaxaName(t-1);
-            }
-        } else {
-            taxaNames = theTBT.getTaxaNames();
-        }
-        TaxaList taxa = new SimpleIdGroup(taxaNames);
-        MutableVCFAlignment theMVA = MutableVCFAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
-        return theMVA;
     }
 
     boolean nearbyTag(int[] newTagPos, int[] currTagPos) {

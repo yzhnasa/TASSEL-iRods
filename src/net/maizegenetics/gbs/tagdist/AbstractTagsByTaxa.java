@@ -3,22 +3,16 @@
  */
 package net.maizegenetics.gbs.tagdist;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.nio.channels.FileChannel;
+import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.util.BitUtil;
+import net.maizegenetics.util.OpenBitSet;
+
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-
-import net.maizegenetics.util.OpenBitSet;
-import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.util.BitUtil;
+import java.nio.channels.FileChannel;
 
 /**
  * Basic method implementation of Tags by Taxa, including methods for reading and writing
@@ -29,6 +23,7 @@ public abstract class AbstractTagsByTaxa extends AbstractTags implements TagsByT
 
     protected int taxaNum = 0;
     protected String[] taxaNames;
+    protected TaxaList taxaList=null;
 
     @Override
     public int getTaxaCount() {
@@ -43,6 +38,14 @@ public abstract class AbstractTagsByTaxa extends AbstractTags implements TagsByT
     @Override
     public String[] getTaxaNames() {
         return taxaNames;
+    }
+
+    @Override
+    public TaxaList getTaxaList() {
+        if(taxaList==null) {
+            taxaList=new TaxaListBuilder().addAll(taxaNames).build();
+        }
+        return taxaList;
     }
 
     @Override

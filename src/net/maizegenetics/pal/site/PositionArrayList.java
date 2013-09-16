@@ -447,6 +447,14 @@ public final class PositionArrayList implements PositionList {
         }
 
         /**
+         * Returns the size (number of positions) in the current list
+         * @return current size
+         */
+        public int size() {
+            return contents.size();
+        }
+
+        /**
          * Returns a newly-created {@code ImmutableList} based on the contents of
          * the {@code Builder}.
          */

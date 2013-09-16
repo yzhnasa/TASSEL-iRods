@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.gbs.tagdist;
 
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
 
 import java.io.File;
@@ -101,6 +102,13 @@ public interface TagsByTaxa extends Tags {
      * Returns an array of taxa names
      */
     String[] getTaxaNames();
+
+    /**
+     * Return taxa list of this alignment.
+     *
+     * @return taxa list.
+     */
+    public TaxaList getTaxaList();
 
     /**
      * Set the read depth for a specific tag and taxon.  Overwrite the depth that was previously there.

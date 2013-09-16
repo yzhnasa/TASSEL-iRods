@@ -151,7 +151,11 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
      * @param unImpTargetFile sites must match exactly with donor file
      * @param exportFile output file of imputed sites
      * @param minMinorCnt determines the size of the search window, low recombination 20-30, high recombination 10-15
-     * @param hybridMode true=do hybrid search
+     * @param minTestSites
+     * @param minSitesPresent
+     * @param maxHybridErrorRate
+     * @param isOutputProjection
+     * @param imputeDonorFile
      */
     public void runMinorWindowViterbiImputation(String donorFile, String unImpTargetFile, 
             String exportFile, int minMinorCnt, int minTestSites, int minSitesPresent, 
