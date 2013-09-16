@@ -70,7 +70,7 @@ public interface TableReport {
      *
      * @param start start position
      * @param end end position
-     * @return
+     * @return array of the all the data
      */
     public Object[][] getTableData(int start, int end);
 

@@ -27,7 +27,7 @@ public abstract class AbstractTableReport implements TableReport {
      *
      * @param start start position
      * @param end end position
-     * @return
+     * @return  array of all the data within a range of entries
      */
     public Object[][] getTableData(int start, int end) {
 
