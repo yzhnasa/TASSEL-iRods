@@ -77,7 +77,6 @@ public class ReadPolymorphismUtils {
             }
         }
 
-        Chromosome[] myLoci = new Chromosome[]{Chromosome.UNKNOWN};
         Genotype genotype = GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(nTaxa, nMarkers)
                 .setBases(finalData)
                 .build();

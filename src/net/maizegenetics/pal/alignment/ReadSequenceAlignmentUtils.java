@@ -6,30 +6,28 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.io.FormattedInput;
 import net.maizegenetics.pal.io.InputSource;
-import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.prefs.TasselPrefs;
 
 import java.io.IOException;
 import java.io.PushbackReader;
+import net.maizegenetics.pal.alignment.genotype.Genotype;
+import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 
 /**
  * reads aligned sequence data from plain text files.<p>
  *
- * recognizes PHYLIP 3.4 INTERLEAVED,
- *              PHYLIP SEQUENTIAL,
- *              CLUSTAL and derived formats.<p>
+ * recognizes PHYLIP 3.4 INTERLEAVED, PHYLIP SEQUENTIAL, CLUSTAL and derived
+ * formats.<p>
  *
- * Other features:
- * - the dot as "copy character" is recognized,
- * - all base characters are capitalized,
- * - automatic data type estimation
- * - determination of corresponding base frequencies.
+ * Other features: - the dot as "copy character" is recognized, - all base
+ * characters are capitalized, - automatic data type estimation - determination
+ * of corresponding base frequencies.
  *
- * @version $Id: ReadSequenceAlignmentUtils.java,v 1.1 2009/07/23 19:39:41 tcasstevens Exp $
+ * @version $Id: ReadSequenceAlignmentUtils.java,v 1.1 2009/07/23 19:39:41
+ * tcasstevens Exp $
  *
  * @author Korbinian Strimmer
  * @author Alexei Drummond
@@ -40,8 +38,10 @@ public class ReadSequenceAlignmentUtils {
         // to prevent instantiation of this utility class.
     }
 
-    /** read from stream, while letting the user set the maximum label (taxa) label length
-     * as non-standard phylip formats now exist*/
+    /**
+     * read from stream, while letting the user set the maximum label (taxa)
+     * label length as non-standard phylip formats now exist
+     */
     public static Alignment readBasicAlignments(PushbackReader input, int maxLabelLength)
             throws IOException {
         Alignment saa = null;
@@ -49,8 +49,10 @@ public class ReadSequenceAlignmentUtils {
         return saa;
     }
 
-    /** read from file, while letting the user set the maximum label (taxa) label length
-     * as non-standard phylip formats now exist*/
+    /**
+     * read from file, while letting the user set the maximum label (taxa) label
+     * length as non-standard phylip formats now exist
+     */
     public static Alignment readBasicAlignments(String file, int maxLabelLength)
             throws IOException {
         PushbackReader input = InputSource.openFile(file);
@@ -145,7 +147,7 @@ public class ReadSequenceAlignmentUtils {
                     }
                 }
             }
-            idGroup = new SimpleIdGroup(identifiers);
+            idGroup = new TaxaListBuilder().addAll(identifiers).build();
         } catch (IOException e) {
             throw new IllegalArgumentException("IO error after pos. " + (pos + 1) + ", seq. " + (seq + 1));
         }
@@ -160,7 +162,12 @@ public class ReadSequenceAlignmentUtils {
             positions[i] = i;
             sites[i] = Integer.toString(i);
         }
-        return BitAlignment.getNucleotideInstance(idGroup, s, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[] {Chromosome.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
+
+        Genotype genotype = GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(numSeqs, numSites)
+                .setBases(s)
+                .build();
+
+        return AlignmentBuilder.getInstance(genotype, null, idGroup);
     }
 
     private static int readSeqLineP(PushbackReader in, int s, int pos, int maxPos, char[][] data, String[] identifiers,
