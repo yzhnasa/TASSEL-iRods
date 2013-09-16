@@ -136,25 +136,25 @@ public abstract class MutationRateModel implements Units,
 	 * @return a TimeOrderCharacterData scaled to use EXPECTED_SUBSTITUTIONS based on
 	 * this MutationRateModel
 	 */
-	public TimeOrderCharacterData scale(TimeOrderCharacterData toScale) {
-		if(getUnits()!=toScale.getUnits()) {
-			throw new IllegalArgumentException("Incompatible units, expecting "+getUnits()+", found (in toScale) "+toScale.getUnits());
-		}
-		TimeOrderCharacterData scaled = toScale.clone(toScale);
-		double[] times = new double[scaled.getIdCount()];
-		for (int i = 0; i < times.length; i++) {
-			times[i] = getExpectedSubstitutions(scaled.getTime(i));
-		}
-		scaled.setTimes(times,Units.EXPECTED_SUBSTITUTIONS,false);
-		return scaled;
-	}
+//	public TimeOrderCharacterData scale(TimeOrderCharacterData toScale) {
+//		if(getUnits()!=toScale.getUnits()) {
+//			throw new IllegalArgumentException("Incompatible units, expecting "+getUnits()+", found (in toScale) "+toScale.getUnits());
+//		}
+//		TimeOrderCharacterData scaled = toScale.clone(toScale);
+//		double[] times = new double[scaled.getIdCount()];
+//		for (int i = 0; i < times.length; i++) {
+//			times[i] = getExpectedSubstitutions(scaled.getTime(i));
+//		}
+//		scaled.setTimes(times,Units.EXPECTED_SUBSTITUTIONS,false);
+//		return scaled;
+//	}
 
 	/**
 	 * sets units of measurement.
 	 * @throws IllegalArgumentException if units are ExpectedSubstitutions
 	 *
 	 * @param u units
-	 * @param the maximumMutationRate that is allowable, given the units. This needs to be given intelligently.
+	 * @param maximumMutationRate that is allowable, given the units. This needs to be given intelligently.
 	 */
 	public final void setUnits(int u, double maximumMutationRate)
 	{
