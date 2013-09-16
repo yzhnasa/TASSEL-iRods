@@ -5,13 +5,14 @@ package net.maizegenetics.gbs.maps;
 
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.BitAlignment;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.site.GeneralPosition;
+import net.maizegenetics.pal.site.PositionArrayList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.VCFUtil;
 import org.apache.commons.math.distribution.BinomialDistributionImpl;
@@ -500,48 +501,61 @@ public class TagsAtLocus {
             Profile<DNASequence, NucleotideCompound> profile2 = Alignments.getMultipleSequenceAlignment(lst);
             System.out.printf("Clustal2:%d%n%s%n", minStartPosition, profile2);
         }
+        int nSites=profile.getAlignedSequence(1).getSequenceAsString().length();
+        TaxaListBuilder tlB=new TaxaListBuilder();
+        GenotypeBuilder gB=GenotypeBuilder.getInstance(theTags.size(),nSites);
         String[] aseqs = new String[theTags.size()];
-        String[] names = new String[theTags.size()];
+        //String[] names = new String[theTags.size()];
         boolean refTagWithGaps = false;
         int[] positions = null;
+        PositionArrayList.Builder pALB=new PositionArrayList.Builder();
+        for (int i=0; i<nSites; i++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,i).build());}
         for (int i = 0; i < aseqs.length; i++) {
-            aseqs[i] = profile.getAlignedSequence(i + 1).getSequenceAsString();
-            names[i] = profile.getAlignedSequence(i + 1).getOriginalSequence().getOriginalHeader();
-            if (names[i].split("_")[1].equals("refTag")) {  // names were set to indexInTheTags_"refTag"|"no"
+            //aseqs[i] = profile.getAlignedSequence(i + 1).getSequenceAsString();
+            gB.setBaseRangeForTaxon(i,0,profile.getAlignedSequence(i + 1).getSequenceAsString().getBytes());
+            String names = profile.getAlignedSequence(i + 1).getOriginalSequence().getOriginalHeader();
+            if (names.split("_")[1].equals("refTag")) {  // names were set to indexInTheTags_"refTag"|"no"
                 if (aseqs[i].contains("-")) {
                     refTagWithGaps = true;
                     positions = new int[aseqs[i].length()];
                     positions[0] = 0;
+                    pALB=new PositionArrayList.Builder();
+                    pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,0).build());
                     for (int site = 1; site < aseqs[i].length(); site++) {
                         positions[site] = (aseqs[i].charAt(site) == '-') ? (positions[site - 1]) : (positions[site - 1] + 1);
                     }
+                    for (int site=0; site<nSites; site++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,positions[site]).build());}
                 }
             }
+            tlB.add(new Taxon(names));
         }
         profile = null;
-        Alignment aa = null;
-        TaxaList tL=new TaxaListBuilder().addAll(names).build();
-        if (refTagWithGaps) {
-            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, positions, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
-        } else {
-            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
-        }
+        Alignment aa = AlignmentBuilder.getInstance(gB.build(),pALB.build(),tlB.build());;
+//        if (refTagWithGaps) {
+//            aa=AlignmentBuilder.getInstance(gB.build(),pALB.build(),tlB.build());
+//            //aseqs = sequence
+//            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, positions, 5, new Chromosome[]{Chromosome.UNKNOWN},
+//                    new int[]{0}, null, false, true);
+//        } else {
+//            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
+//        }
         Alignment faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
 //        if (printOutAlignments && refTagWithGaps) {
         if (printOutAlignments && (minStartPosition % 1000 == 0)) {
+            TaxaList tL=tlB.build();
             String tagStr;
             System.out.println("\nHere is an example alignment for a TagLocus (1 out of every 1000 is displayed):");
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  All sites:");
             for (int tg = 0; tg < aseqs.length; tg++) {
                 tagStr = aa.getBaseAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
-                System.out.println(tagStr + " " + names[tg]);
+                System.out.println(tagStr + " " + tL.getTaxaName(tg));
             }
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  Polymorphic sites only:");
             for (int tg = 0; tg < aseqs.length; tg++) {
                 tagStr = faa.getBaseAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
-                System.out.println(tagStr + " " + names[tg]);
+                System.out.println(tagStr + " " + tL.getTaxaName(tg));
             }
             System.out.println();
         }
@@ -585,6 +599,7 @@ public class TagsAtLocus {
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
             System.out.println("minRefGenIndex:" + minRefGenIndex + "  maxRefGenIndex:" + maxRefGenIndex + "  ChrPositionAtMinRefGenIndex:" + minStartPosition + "\n");
         }
+        //Todo where are aseqs and names filled out?
         String[] aseqs = new String[theTags.size()];  // omit the reference genome sequence
         String[] names = new String[theTags.size()];
         char[][] myAlign = getAlignment(pairwiseAligns, refSeq, minRefGenIndex, maxRefGenIndex, aseqs, names);
@@ -593,6 +608,7 @@ public class TagsAtLocus {
         }
         Alignment a = null;
         TaxaList tL=new TaxaListBuilder().addAll(names).build();
+
         a = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
         Alignment fa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(a, 0.000001, 1.0, 2);
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
