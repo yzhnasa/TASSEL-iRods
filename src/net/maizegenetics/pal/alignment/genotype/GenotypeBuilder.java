@@ -79,6 +79,22 @@ public class GenotypeBuilder {
         return this;
     }
 
+    public GenotypeBuilder setBases(String[] data) {
+
+        int numTaxa = data.length;
+
+        int numSites = data[0].length();
+
+        for (int site = 0; site < numSites; site++) {
+            for (int taxon = 0; taxon < numTaxa; taxon++) {
+                setBase(taxon, site, NucleotideAlignmentConstants.getNucleotideDiploidByte(data[taxon].charAt(site)));
+            }
+        }
+
+        return this;
+
+    }
+
     public GenotypeBuilder setBases(String[][] data) {
 
         if ((data == null) || (data.length == 0)) {
@@ -139,9 +155,6 @@ public class GenotypeBuilder {
     }
 
     public static Genotype buildHDF5(String filename) {
-//        SuperByteMatrix temp = myGenotype;
-//        myGenotype = null;
         return HDF5ByteGenotype.getInstance(HDF5Factory.openForReading(filename));
-        //throw new UnsupportedOperationException();
     }
 }
