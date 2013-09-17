@@ -61,19 +61,56 @@ public class AlignmentBuilder {
         int numTaxa = alignment.getTaxaCount();
         int numSites = alignment.getSiteCount();
         GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
-        for (int bigS = 0; bigS < numSites; bigS += 64) {
-            int blockSize = Math.min(64, numSites - bigS);
-            for (int t = 0; t < numTaxa; t++) {
-                for (int s = 0; s < blockSize; s++) {
-                    byte currGeno=alignment.getBase(t, s + bigS);
-                    if(AlignmentUtils.isHeterozygous(currGeno)) {
-                        builder.setBase(t, s, Alignment.UNKNOWN_DIPLOID_ALLELE);
-                    } else {
-                        builder.setBase(t, s, currGeno);
-                    }
+        //TODO this would be even faster to work through the SuperByteMatrix, as knowledge of site or taxa is not needed.
+        for (int t = 0; t < numTaxa; t++) {
+            for (int s = 0; s < numSites; s++) {
+                byte currGeno=alignment.getBase(t, s);
+                if(AlignmentUtils.isHeterozygous(currGeno)) {
+                    builder.setBase(t, s, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                } else {
+                    builder.setBase(t, s, currGeno);
                 }
             }
+
         }
         return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
     }
+
+    /**
+     * Returns a taxa optimized version of a filtered alignment.  Only needed in performance critical situations
+     * like imputation.
+     * @param alignment
+     * @return alignment backed by a single SuperByteMatrix
+     */
+    public static Alignment getGenotypeCopyInstance(FilterAlignment alignment) {
+        return getGenotypeCopyInstance(alignment);
+    }
+
+    /**
+     * Returns a taxa optimized version of a combine alignment.  Only needed in performance critical situations
+     * like imputation.
+     * @param alignment
+     * @return alignment backed by a single SuperByteMatrix
+     */
+    public static Alignment getGenotypeCopyInstance(CombineAlignment alignment) {
+        return getGenotypeCopyInstance(alignment);
+    }
+
+    /**
+     * This is private as only want the method used by combine and filter alignment.  Since other data structures
+     * are immutable and optimized that is unneeded except for these alignment types.
+     * @param alignment
+     * @return alignment backed by a single SuperByteMatrix
+     */
+    private static Alignment getGenotypeCopyInstance(Alignment alignment) {
+        int numTaxa = alignment.getTaxaCount();
+        int numSites = alignment.getSiteCount();
+        GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
+        for (int t = 0; t < numTaxa; t++) {
+            for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.getBase(t, s));}
+        }
+        return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
+    }
+
+
 }
