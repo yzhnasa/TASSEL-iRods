@@ -1,9 +1,7 @@
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -12,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -43,158 +41,159 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
-        for (int chr = startChromosome; chr <= endChromosome; chr++) {
-            infile = suppliedInputFileName.replace("+", "" + chr);
-            outfile = suppliedOutputFileName.replace("+", "" + chr);
-            myLogger.info("Reading: " + infile);
-            Alignment a = null;
-            
-            if (inputFormat == INPUT_FORMAT.hapmap)
-            {
-                try {
-                    a = ImportUtils.readFromHapmap(infile, this);
-                } catch (Exception e) {
-                    myLogger.info("Could not read input hapmap file for chr" + chr + ":\n\t" + infile + "\n\tSkipping...");
-                    continue;
-                }
-            }
-            else if (inputFormat == INPUT_FORMAT.vcf)
-            {
-                try {
-                    a = ImportUtils.readFromVCF(infile, this, myMaxNumAlleles);
-                } catch (Exception e) {
-                    myLogger.info("Could not read input vcf file for chr" + chr + ":\n\t" + infile + "\n\tSkipping...");
-                    continue;
-                }
-            }
-            else
-            {
-                 throw new IllegalArgumentException("File format " + inputFormat + " is not recognized!");
-            }
-            
-            myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-            AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
-
-            TaxaList idg = a.getTaxaList();
-            TreeMap<String, List<String>> sortedIds2 = new TreeMap<String, List<String>>();
-            int uniqueTaxa = 0;
-            for (int i = 0; i < idg.getTaxaCount(); i++) {
-                List<String> l = sortedIds2.get(idg.getTaxaName(i));
-                if (l == null) {
-                    sortedIds2.put(idg.getTaxaName(i), l = new ArrayList<String>());
-                    uniqueTaxa++;
-                }
-                l.add(idg.getFullTaxaName(i));
-            }
-            TaxaListBuilder newGroupBuild = new TaxaListBuilder();
-            int index = 0;
-            for (List<String> l : sortedIds2.values()) {
-                if (l.size() > 1) {
-                    newGroupBuild.add(new Taxon.Builder(l.get(0).split(":")[0]+":MERGE").build());
-                    System.out.println("To be merged: " + l.size() + ": " + l);
-                } else {
-                    newGroupBuild.add(new Taxon.Builder(l.get(0)).build());
-                }
-                //System.out.println(newGroup.getIdentifier(index).getFullName());
-                index++;
-            }
-            TaxaList newGroup=newGroupBuild.build();
-            System.out.println("Total taxa:" + idg.getTaxaCount());
-            System.out.println("Unique taxa:" + uniqueTaxa);
-            //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(newGroup, a.getSiteCount(), a.getLoci());
-            MutableNucleotideAlignment theMSA = null;
-            if (inputFormat == INPUT_FORMAT.hapmap){
-                theMSA = MutableNucleotideAlignment.getInstance(newGroup, a.getSiteCount());
-            }
-            else if (inputFormat == INPUT_FORMAT.vcf){
-                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(),newGroup.getTaxaCount(), a.getSiteCount(), myMaxNumAlleles);
-            }
-            for (int s = 0; s < a.getSiteCount(); s++) {
-                theMSA.setLocusOfSite(s, a.getChromosome(s));
-                theMSA.setPositionOfSite(s, a.getPositionInChromosome(s));
-                if (inputFormat == INPUT_FORMAT.vcf){
-                    theMSA.setReferenceAllele(s, a.getReferenceAllele(s));
-                    theMSA.setCommonAlleles(s, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s));
-                }
-                
-                //theMSA.setSitePrefix(s, (byte) a.getSNPID(s).charAt(0));
-                //theMSA.setStrandOfSite(s, (byte) 1);
-            }
-            System.out.printf("MergeLine Number Scored PropScored HetSites PropHets%n");
-            int newTaxon = -1;
-            byte[] calls = null;
-            for (Map.Entry<String, List<String>> entry : sortedIds2.entrySet()) {
-                if (inputFormat == INPUT_FORMAT.hapmap)
-                {
-                    if (entry.getValue().size() > 1) {
-                        calls = consensusCalls(a, entry.getValue(), makeHetCalls, majorityRule);
-                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
-                    } else {
-                        int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));
-                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
-                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
-                    }
-                    for (int s = 0; s < a.getSiteCount(); s++) {
-                        theMSA.setBase(newTaxon, s, calls[s]);
-                    }
-                    if (entry.getValue().size() > 1) {
-                        int known = 0, hets = 0;
-                        for (int s = 0; s < a.getSiteCount(); s++) {
-                            byte cb = theMSA.getBase(newTaxon, s);
-                            if (cb != Alignment.UNKNOWN_DIPLOID_ALLELE) {
-                                known++;
-                            }
-                            if (AlignmentUtils.isHeterozygous(cb)) {
-                                hets++;
-                            }
-                        }
-                        double pctK = (double) known / (double) a.getSiteCount();
-                        double pctH = (double) hets / (double) a.getSiteCount();
-                        System.out.printf("%s %d %d %.3g %d %.3g %n", entry.getKey(), entry.getValue().size(), known, pctK, hets, pctH);
-                    }
-                }
-                else if (inputFormat == INPUT_FORMAT.vcf){
-                    if (entry.getValue().size() > 1){
-                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
-                        List<String> taxa = entry.getValue();
-                        
-                        //the return result is a two day array result[x][y]
-                        //y: site index
-                        //x: x=0: genotype calling; x=1 to max: allele depth
-                        byte[][] genotypeAndDepth = consensusCallsForVCF(a, taxa, myMaxNumAlleles);
-                        for (int s = 0; s < a.getSiteCount(); s++) {
-                            theMSA.setBase(newTaxon, s, genotypeAndDepth[0][s]);
-                            byte[] mydepth = new byte[theMSA.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s).length];
-                            for (int al=0; al<mydepth.length; al++)
-                            {
-                                mydepth[al] = genotypeAndDepth[al+1][s];
-                            }
-                            theMSA.setDepthForAlleles(newTaxon, s, mydepth);
-                        }
-
-                    }
-                    else {
-                        int oldTaxon = a.getTaxaList().getIndicesMatchingTaxon(entry.getValue().get(0)).get(0);
-                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount());
-                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
-                        for (int s = 0; s < a.getSiteCount(); s++) {
-                            theMSA.setBase(newTaxon, s, calls[s]);
-
-                            theMSA.setDepthForAlleles(newTaxon, s, a.getDepthForAlleles(oldTaxon, s));
-                        }
-                    }
-                        
-                }
-            }
-            if (inputFormat == INPUT_FORMAT.hapmap)
-            {
-                ExportUtils.writeToHapmap(theMSA, false, outfile, '\t', this);
-            }
-            else if (inputFormat == INPUT_FORMAT.vcf)
-            {
-                ExportUtils.writeToVCF(theMSA, outfile, '\t');
-            }
-        }
+        //TODO need to redo the entire function work at whole genome, test identity, search for identity
+//        for (int chr = startChromosome; chr <= endChromosome; chr++) {
+//            infile = suppliedInputFileName.replace("+", "" + chr);
+//            outfile = suppliedOutputFileName.replace("+", "" + chr);
+//            myLogger.info("Reading: " + infile);
+//            Alignment a = null;
+//
+//            if (inputFormat == INPUT_FORMAT.hapmap)
+//            {
+//                try {
+//                    a = ImportUtils.readFromHapmap(infile, this);
+//                } catch (Exception e) {
+//                    myLogger.info("Could not read input hapmap file for chr" + chr + ":\n\t" + infile + "\n\tSkipping...");
+//                    continue;
+//                }
+//            }
+//            else if (inputFormat == INPUT_FORMAT.vcf)
+//            {
+//                try {
+//                    a = ImportUtils.readFromVCF(infile, this, myMaxNumAlleles);
+//                } catch (Exception e) {
+//                    myLogger.info("Could not read input vcf file for chr" + chr + ":\n\t" + infile + "\n\tSkipping...");
+//                    continue;
+//                }
+//            }
+//            else
+//            {
+//                 throw new IllegalArgumentException("File format " + inputFormat + " is not recognized!");
+//            }
+//
+//            myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
+//            AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
+//
+//            TaxaList idg = a.getTaxaList();
+//            TreeMap<String, List<String>> sortedIds2 = new TreeMap<String, List<String>>();
+//            int uniqueTaxa = 0;
+//            for (int i = 0; i < idg.getTaxaCount(); i++) {
+//                List<String> l = sortedIds2.get(idg.getTaxaName(i));
+//                if (l == null) {
+//                    sortedIds2.put(idg.getTaxaName(i), l = new ArrayList<String>());
+//                    uniqueTaxa++;
+//                }
+//                l.add(idg.getFullTaxaName(i));
+//            }
+//            TaxaListBuilder newGroupBuild = new TaxaListBuilder();
+//            int index = 0;
+//            for (List<String> l : sortedIds2.values()) {
+//                if (l.size() > 1) {
+//                    newGroupBuild.add(new Taxon.Builder(l.get(0).split(":")[0]+":MERGE").build());
+//                    System.out.println("To be merged: " + l.size() + ": " + l);
+//                } else {
+//                    newGroupBuild.add(new Taxon.Builder(l.get(0)).build());
+//                }
+//                //System.out.println(newGroup.getIdentifier(index).getFullName());
+//                index++;
+//            }
+//            TaxaList newGroup=newGroupBuild.build();
+//            System.out.println("Total taxa:" + idg.getTaxaCount());
+//            System.out.println("Unique taxa:" + uniqueTaxa);
+//            //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(newGroup, a.getSiteCount(), a.getLoci());
+//            MutableNucleotideAlignment theMSA = null;
+//            if (inputFormat == INPUT_FORMAT.hapmap){
+//                theMSA = MutableNucleotideAlignment.getInstance(newGroup, a.getSiteCount());
+//            }
+//            else if (inputFormat == INPUT_FORMAT.vcf){
+//                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(),newGroup.getTaxaCount(), a.getSiteCount(), myMaxNumAlleles);
+//            }
+//            for (int s = 0; s < a.getSiteCount(); s++) {
+//                theMSA.setLocusOfSite(s, a.getChromosome(s));
+//                theMSA.setPositionOfSite(s, a.getPositionInChromosome(s));
+//                if (inputFormat == INPUT_FORMAT.vcf){
+//                    theMSA.setReferenceAllele(s, a.getReferenceAllele(s));
+//                    theMSA.setCommonAlleles(s, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s));
+//                }
+//
+//                //theMSA.setSitePrefix(s, (byte) a.getSNPID(s).charAt(0));
+//                //theMSA.setStrandOfSite(s, (byte) 1);
+//            }
+//            System.out.printf("MergeLine Number Scored PropScored HetSites PropHets%n");
+//            int newTaxon = -1;
+//            byte[] calls = null;
+//            for (Map.Entry<String, List<String>> entry : sortedIds2.entrySet()) {
+//                if (inputFormat == INPUT_FORMAT.hapmap)
+//                {
+//                    if (entry.getValue().size() > 1) {
+//                        calls = consensusCalls(a, entry.getValue(), makeHetCalls, majorityRule);
+//                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
+//                    } else {
+//                        int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));
+//                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
+//                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
+//                    }
+//                    for (int s = 0; s < a.getSiteCount(); s++) {
+//                        theMSA.setBase(newTaxon, s, calls[s]);
+//                    }
+//                    if (entry.getValue().size() > 1) {
+//                        int known = 0, hets = 0;
+//                        for (int s = 0; s < a.getSiteCount(); s++) {
+//                            byte cb = theMSA.getBase(newTaxon, s);
+//                            if (cb != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+//                                known++;
+//                            }
+//                            if (AlignmentUtils.isHeterozygous(cb)) {
+//                                hets++;
+//                            }
+//                        }
+//                        double pctK = (double) known / (double) a.getSiteCount();
+//                        double pctH = (double) hets / (double) a.getSiteCount();
+//                        System.out.printf("%s %d %d %.3g %d %.3g %n", entry.getKey(), entry.getValue().size(), known, pctK, hets, pctH);
+//                    }
+//                }
+//                else if (inputFormat == INPUT_FORMAT.vcf){
+//                    if (entry.getValue().size() > 1){
+//                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
+//                        List<String> taxa = entry.getValue();
+//
+//                        //the return result is a two day array result[x][y]
+//                        //y: site index
+//                        //x: x=0: genotype calling; x=1 to max: allele depth
+//                        byte[][] genotypeAndDepth = consensusCallsForVCF(a, taxa, myMaxNumAlleles);
+//                        for (int s = 0; s < a.getSiteCount(); s++) {
+//                            theMSA.setBase(newTaxon, s, genotypeAndDepth[0][s]);
+//                            byte[] mydepth = new byte[theMSA.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s).length];
+//                            for (int al=0; al<mydepth.length; al++)
+//                            {
+//                                mydepth[al] = genotypeAndDepth[al+1][s];
+//                            }
+//                            theMSA.setDepthForAlleles(newTaxon, s, mydepth);
+//                        }
+//
+//                    }
+//                    else {
+//                        int oldTaxon = a.getTaxaList().getIndicesMatchingTaxon(entry.getValue().get(0)).get(0);
+//                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount());
+//                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
+//                        for (int s = 0; s < a.getSiteCount(); s++) {
+//                            theMSA.setBase(newTaxon, s, calls[s]);
+//
+//                            theMSA.setDepthForAlleles(newTaxon, s, a.getDepthForAlleles(oldTaxon, s));
+//                        }
+//                    }
+//
+//                }
+//            }
+//            if (inputFormat == INPUT_FORMAT.hapmap)
+//            {
+//                ExportUtils.writeToHapmap(theMSA, false, outfile, '\t', this);
+//            }
+//            else if (inputFormat == INPUT_FORMAT.vcf)
+//            {
+//                ExportUtils.writeToVCF(theMSA, outfile, '\t');
+//            }
+//        }
 
         return null;
     }
