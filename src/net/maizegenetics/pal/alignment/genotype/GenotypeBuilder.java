@@ -4,11 +4,13 @@
 package net.maizegenetics.pal.alignment.genotype;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
-import java.util.regex.Pattern;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
+
+import java.util.regex.Pattern;
 
 /**
  *
@@ -156,5 +158,9 @@ public class GenotypeBuilder {
 
     public static Genotype buildHDF5(String filename) {
         return HDF5ByteGenotype.getInstance(HDF5Factory.openForReading(filename));
+    }
+
+    public static Genotype buildHDF5(IHDF5Reader reader) {
+        return HDF5ByteGenotype.getInstance(reader);
     }
 }

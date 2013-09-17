@@ -502,6 +502,14 @@ public final class PositionHDF5List implements PositionList {
         }
 
         /**
+         * Creates a new builder based on an existing HDF5 file reader.
+         */
+        public Builder(IHDF5Reader reader) {
+            this.reader = reader;
+            hdf5FileName=reader.getFile().getName();
+        }
+
+        /**
          * Creates a positionList in a new HDF5 file.
          */
         public Builder(String hdf5FileName, PositionList a) {
