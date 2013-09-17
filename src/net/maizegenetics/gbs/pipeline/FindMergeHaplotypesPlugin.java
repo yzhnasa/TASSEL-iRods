@@ -4,42 +4,25 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-import java.io.BufferedWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import javax.swing.ImageIcon;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.BitAlignment;
-import net.maizegenetics.pal.alignment.BitAlignmentHDF5;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.GeneticMap;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.util.ArgsEngine;
+import net.maizegenetics.util.*;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.BitUtil;
-import net.maizegenetics.util.ExceptionUtils;
-import net.maizegenetics.util.OpenBitSet;
-import net.maizegenetics.util.ProgressListener;
-import net.maizegenetics.util.Utils;
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.BufferedWriter;
+import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
 
 /**
  * Creates haplotypes by finding large IBS regions within GBS data.  Starts with the 
@@ -100,17 +83,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
      */
     public void runFindMergeHaplotypes(String inFile, String exportFile,
             String errorExportFile, double maxDistance, int minSites, int appoxSitesPerHaplotype) {
-        Alignment baseAlign=null;
         System.out.println("Reading: "+inFile);
-        if(inFile.contains(".h5")) {
-            if(MutableNucleotideAlignmentHDF5.isMutableNucleotideAlignmentHDF5(inFile)) {
-                baseAlign=MutableNucleotideAlignmentHDF5.getInstance(inFile);}
-            else {
-                baseAlign=BitAlignmentHDF5.getInstance(inFile);
-            }
-        } else {
-            baseAlign=ImportUtils.readFromHapmap(inFile, false, (ProgressListener)null);
-        }
+        Alignment baseAlign=ImportUtils.readGuessFormat(inFile);
+
         int[][] divisions=divideChromosome(baseAlign, appoxSitesPerHaplotype);  
         System.out.printf("In taxa:%d sites:%d %n",baseAlign.getSequenceCount(),baseAlign.getSiteCount());
         siteErrors=new int[baseAlign.getSiteCount()];
@@ -118,7 +93,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         if(startDiv==-1) startDiv=0;
         if(endDiv==-1) endDiv=divisions.length-1;
         for (int i = startDiv; i <=endDiv; i++) {
-            MutableNucleotideAlignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
+            Alignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
              minSites,  maxDistance);
             String newExport=exportFile.replace("sX.hmp", "s"+i+".hmp");
             newExport=newExport.replace("gX", "gc"+mna.getChromosomeName(0)+"s"+i);
@@ -130,10 +105,10 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         
     }
     
-    private MutableNucleotideAlignment createHaplotypeAlignment(int startSite, int endSite, Alignment baseAlign,
+    private Alignment createHaplotypeAlignment(int startSite, int endSite, Alignment baseAlign,
             int minSites, double maxDistance) {
-        Alignment fa=FilterAlignment.getInstance(baseAlign, startSite, endSite);
-        Alignment inAlign=BitAlignment.getInstance(fa, false);  //load for Taxa
+        FilterAlignment fa=FilterAlignment.getInstance(baseAlign, startSite, endSite);
+        Alignment inAlign=AlignmentBuilder.getGenotypeCopyInstance(fa);
         int sites=inAlign.getSiteCount();
         System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.getChromosome(0),
                 inAlign.getPositionInChromosome(0),inAlign.getSequenceCount(),inAlign.getSiteCount());
@@ -145,16 +120,15 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         System.out.printf("Block %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
         System.out.printf("Current Site %d Current block %d EndBlock: %d %n",startSite, startBlock, endBlock);
         TreeMap<Integer,byte[][]> results=mergeWithinWindow(inAlign, presentRanking, startBlock, endBlock, maxDistance, startSite);
-        MutableNucleotideAlignment mna=createEmptyHaplotypeAlignment(inAlign, results.size());
+        TaxaListBuilder tLB=new TaxaListBuilder();
+        GenotypeBuilder gB=GenotypeBuilder.getInstance(results.size(),inAlign.getSiteCount());
         int index=0;
         for (byte[][] calls : results.values()) {
-            mna.setBaseRange(index, 0, calls[0]);
-            mna.setTaxonName(index, new Taxon("h"+index+(new String(calls[1]))));
+            tLB.add(new Taxon("h"+index+(new String(calls[1]))));
+            gB.setBaseRangeForTaxon(index,0,calls[0]);
             index++;
         }
-        mna.clean();
-        fa=inAlign=null;
-        return mna;
+        return AlignmentBuilder.getInstance(gB.build(),inAlign.getPositionList(),tLB.build());
     }
     
     private int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
@@ -162,8 +136,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Chromosome aL: theL) {
             System.out.println("");
+            int[] startEnd=a.getPositionList().getStartAndEndOfChromosome(aL);
             //todo chromosome offsets will be need to replace this
-            int locusSites=aL.getEnd()-aL.getStart()+1;
+            int locusSites=startEnd[1]-startEnd[0]+1;
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
             if(subAlignCnt==0) subAlignCnt++;
             int prefBlocks=(locusSites/(subAlignCnt*64));
@@ -171,9 +146,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                     aL.getName(),locusSites, subAlignCnt, prefBlocks*64);
             for (int i = 0; i < subAlignCnt; i++) {
                 int[] divs=new int[2];
-                divs[0]=(i*prefBlocks*64)+aL.getStart();
+                divs[0]=(i*prefBlocks*64)+startEnd[0];
                 divs[1]=divs[0]+(prefBlocks*64)-1;
-                if(i==subAlignCnt-1) divs[1]=aL.getEnd();
+                if(i==subAlignCnt-1) divs[1]=startEnd[1];
                 allDivisions.add(divs);
             }
         }
@@ -209,20 +184,6 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             presentRanking.put(index, i);
         }
         return presentRanking;
-    }
-    
-    private MutableNucleotideAlignment createEmptyHaplotypeAlignment(Alignment inAlign, int maxHaplotypes) {
-        TaxaList outIDG=new SimpleIdGroup(maxHaplotypes);
-        for (int i = 0; i < maxHaplotypes; i++) {
-            outIDG.setIdentifier(i, new Taxon("Hap"+i));
-        }
-        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(outIDG, inAlign.getSiteCount());
-        for (int i = 0; i < inAlign.getSiteCount(); i++) {
-            mna.addSite(i);
-            mna.setLocusOfSite(i, inAlign.getChromosome(i));
-            mna.setPositionOfSite(i, inAlign.getPositionInChromosome(i));
-        }
-        return mna;
     }
     
     private BitSet maskBadSites(GeneticMap gm, Alignment a) {
@@ -308,7 +269,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                         hits.size(), missingFreq, hetFreq, index);
                 byte[][] callPlusNames=new byte[2][];
                 callPlusNames[0]=calls;
-                String newName=inIDG.getIdentifier(taxon1).getNameLevel(0)+":d"+(hits.size()+1);
+                String newName=inIDG.get(taxon1).getNameLevel(0)+":d"+(hits.size()+1);
                 callPlusNames[1]=newName.getBytes();
                 results.put(index, callPlusNames);
             }
