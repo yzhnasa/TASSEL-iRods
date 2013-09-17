@@ -2,6 +2,9 @@ package net.maizegenetics.pal.site;
 
 import net.maizegenetics.pal.util.GeneralAnnotation;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 /**
  * Defines the chromosome structure and length. The name and length recorded for
  * each chromosome.
@@ -17,6 +20,18 @@ public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
     private final int myLength;
     private final GeneralAnnotation myGA;
     private final int hashCode;
+
+    //since there are numerous redundant chromosome, this class use a hash, so that
+    //only the pointers are stored.
+    private static final ConcurrentMap<Chromosome,Chromosome> CHR_HASH = new ConcurrentHashMap<>(50);
+
+    public static Chromosome getCanonicalChromosome(Chromosome chr) {
+        if (CHR_HASH.size() > 1000) {
+            CHR_HASH.clear();
+        }
+        Chromosome canon = CHR_HASH.putIfAbsent(chr, chr);
+        return (canon == null) ? chr : canon;
+    }
 
     /**
      *

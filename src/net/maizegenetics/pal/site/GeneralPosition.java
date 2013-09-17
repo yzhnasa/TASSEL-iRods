@@ -102,7 +102,7 @@ public final class GeneralPosition implements Position {
 
         /**Constructor requires a Position before annotation of the position*/
         public Builder(Chromosome chr, int position) {
-            myChromosome = chr;
+            myChromosome = Chromosome.getCanonicalChromosome(chr);
             myPosition = position;
             Arrays.fill(myAlleles,Alignment.UNKNOWN_ALLELE);
         }
