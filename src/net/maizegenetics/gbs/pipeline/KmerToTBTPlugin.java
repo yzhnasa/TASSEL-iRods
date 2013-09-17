@@ -3,37 +3,21 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-
-import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.gbs.tagdist.TagCounts;
-import net.maizegenetics.gbs.tagdist.Tags;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa;
+import net.maizegenetics.gbs.tagdist.*;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaBit;
-import net.maizegenetics.util.ArgsEngine;
-import net.maizegenetics.util.DirectoryCrawler;
+import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-
-import java.awt.Frame;
-
-import java.util.HashMap;
-
-import javax.swing.ImageIcon;
-
-import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaShort;
-import net.maizegenetics.gbs.util.BaseEncoder;
-
+import net.maizegenetics.util.ArgsEngine;
+import net.maizegenetics.util.DirectoryCrawler;
+import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.HashMap;
 
 /**
  * This pipeline converts a series of fastq files to TagsByTaxa files (one per
@@ -193,10 +177,6 @@ public class KmerToTBTPlugin extends AbstractPlugin {
      *
      * @param fastqFileS Array of fastq file names (Illumina-created files with
      * raw read sequence, quality score, machine name, etc.)
-     * @param keyFileS A key file (list of taxa by barcode, lane & flow cell,
-     * including plate maps)
-     * @param enzyme The enzyme used to make the library (currently ApeKI or
-     * PstI)
      * @param theMasterTags A Tags object: list of tags to be included in the
      * final TBT
      * @param outputDir String containing the path of the output directory to
@@ -248,8 +228,6 @@ public class KmerToTBTPlugin extends AbstractPlugin {
                 theTBT = new TagsByTaxaByte(taxaNames, theMasterTags);
             } else if (useTBTShort) {
                 theTBT = new TagsByTaxaShort(taxaNames, theMasterTags);
-            } else {
-                theTBT = new TagsByTaxaBit(taxaNames, theMasterTags);
             }
 
             // Read the fastq file and assign reads to tags and taxa

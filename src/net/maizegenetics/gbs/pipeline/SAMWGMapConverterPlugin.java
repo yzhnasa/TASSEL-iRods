@@ -4,18 +4,18 @@
  */
 
 package net.maizegenetics.gbs.pipeline;
-import java.awt.Frame;
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.pal.alignment.BitAlignmentHDF5;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 
 /**
  * This class reads in SAM mapping results tests them against an anchor map 
@@ -25,14 +25,12 @@ import org.apache.log4j.Logger;
  *
  */
 public final class SAMWGMapConverterPlugin extends AbstractPlugin{
-    boolean cleanCutSites=true;
     private static final Logger myLogger=Logger.getLogger(SAMWGMapConverterPlugin.class);
     private static ArgsEngine myArgsEngine;
     private static String inputFileName=null;
     private static String outputFileName=null;
     private boolean textFormat = false;
     private int tagLengthInLong = 2;
-    private BitAlignmentHDF5[] anchAlign;
 
     public SAMWGMapConverterPlugin(){
         super(null, false);

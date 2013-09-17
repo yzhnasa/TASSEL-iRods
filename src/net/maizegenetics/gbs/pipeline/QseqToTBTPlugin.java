@@ -3,13 +3,6 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-
-import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
@@ -17,18 +10,17 @@ import net.maizegenetics.gbs.tagdist.TagCounts;
 import net.maizegenetics.gbs.tagdist.Tags;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaBit;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
-import net.maizegenetics.util.ArgsEngine;
-import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-
-import java.awt.Frame;
-
-import javax.swing.ImageIcon;
-
+import net.maizegenetics.util.ArgsEngine;
+import net.maizegenetics.util.DirectoryCrawler;
+import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
 
 /**
  * This pipeline converts a series of qseq files to TagsByTaxa files (one per qseq file).
@@ -233,8 +225,6 @@ public class QseqToTBTPlugin extends AbstractPlugin {
 
             if (useTBTByte) {
                 theTBT = new TagsByTaxaByte(taxaNames, theMasterTags);
-            } else {
-                theTBT = new TagsByTaxaBit(taxaNames, theMasterTags);
             }
 
             // Read the qseq file and assign reads to tags and taxa

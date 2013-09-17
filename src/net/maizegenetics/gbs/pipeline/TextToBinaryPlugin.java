@@ -3,22 +3,18 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-import java.io.File;
-
-import javax.swing.ImageIcon;
-
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.gbs.tagdist.TagCounts;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaBit;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
-
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
-
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 
 /**
  *
@@ -47,10 +43,6 @@ public class TextToBinaryPlugin extends AbstractPlugin {
             case TagCounts:
                 TagCounts tc = new TagCounts(myInput, FilePacking.Text);
                 tc.writeTagCountFile(myOutput, FilePacking.Bit, 0);
-                break;
-            case TBTBit:
-                TagsByTaxaBit tbtbit = new TagsByTaxaBit(myInput, FilePacking.Text);
-                tbtbit.writeDistFile(new File(myOutput), FilePacking.Bit, 0);
                 break;
             case TBTByte:
                 TagsByTaxaByte tbtbyte = new TagsByTaxaByte(myInput, FilePacking.Text);

@@ -16,6 +16,8 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.site.GeneralPosition;
+import net.maizegenetics.pal.site.Position;
 import net.maizegenetics.pal.site.PositionArrayList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
@@ -458,7 +460,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return false;
     }
     
-    private synchronized void addSitesToMutableAlignment(TagsAtLocus theTAL, MutableNucleotideAlignment theMSA, DataOutputStream locusLogDOS) {
+    private synchronized void addSitesToMutableAlignment(TagsAtLocus theTAL, GenotypeBuilder theMSA,
+                                        PositionArrayList.Builder posBuilder, DataOutputStream locusLogDOS) {
         boolean refTagUsed = false;
         byte[][][] alleleDepths = null;
         byte[][] commonAlleles = null;
@@ -514,44 +517,47 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 }
             }
             varSiteKept[s] = true;
-            int currSite = theMSA.getSiteCount();
-            theMSA.addSite(currSite);
-            String chromosome = String.valueOf(theTAL.getChromosome());
-            theMSA.setLocusOfSite(currSite, new Chromosome(chromosome, chromosome, -1, -1, null, null));
-            theMSA.setPositionOfSite(currSite, position);
+            int currSite = posBuilder.size();
+            GeneralPosition.Builder gpb=new GeneralPosition.Builder(new Chromosome(String.valueOf(theTAL.getChromosome())), position);
+//            theMSA.addSite(currSite);
+//            String chromosome = String.valueOf(theTAL.getChromosome());
+//            theMSA.setLocusOfSite(currSite, new Chromosome(chromosome, chromosome, -1, -1, null, null));
+//            theMSA.setPositionOfSite(currSite, position);
             int offset = 0;
             if (includeReference && !fuzzyStartPositions) {
                 offset = 1;
                 byte geno = (strand == -1) ? complementGeno(theTAL.getRefGeno(s)) : theTAL.getRefGeno(s);
                 theMSA.setBase(0, currSite, geno);
-                theMSA.setReferenceAllele(currSite, geno);
-                if (vcf) {
-                    byte[] depths = new byte[]{0,0,0}; // assumes maxNumAlleles = 3
-                    theMSA.setDepthForAlleles(0, currSite, depths);
-                }
+ //               theMSA.setReferenceAllele(currSite, geno);
+                gpb.allele(Position.Allele.REF,geno);
+//                if (vcf) {
+//                    byte[] depths = new byte[]{0,0,0}; // assumes maxNumAlleles = 3
+//                    theMSA.setDepthForAlleles(0, currSite, depths);
+//                }
             }
+            posBuilder.add(gpb.build());
             for (int tx = 0; tx < theTBT.getTaxaCount(); tx++) {
                 if (callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
                     theMSA.setBase(tx+offset, currSite, complementGeno(callsBySite[s][tx]));  // complement to plus strand
                 } else {
                     theMSA.setBase(tx+offset, currSite, callsBySite[s][tx]);
                 }
-                if (vcf) {
-                    byte[] depths = new byte[alleleDepths.length];
-                    for (int a = 0; a < depths.length; a++) {
-                        depths[a] = alleleDepths[a][s][tx];
-                    }
-                    theMSA.setDepthForAlleles(tx+offset, currSite, depths);
-                }
+//                if (vcf) {
+//                    byte[] depths = new byte[alleleDepths.length];
+//                    for (int a = 0; a < depths.length; a++) {
+//                        depths[a] = alleleDepths[a][s][tx];
+//                    }
+//                    theMSA.setDepthForAlleles(tx+offset, currSite, depths);
+//                }
             }
-            if (vcf) {
-                byte[] allelesForSite = new byte[commonAlleles.length];
-                for (int a = 0; a < allelesForSite.length; a++) {
-                    if (strand == -1) allelesForSite[a] = complementAllele(commonAlleles[a][s]);
-                    else allelesForSite[a] = commonAlleles[a][s];
-                }
-                theMSA.setCommonAlleles(currSite, allelesForSite);
-            }
+//            if (vcf) {
+//                byte[] allelesForSite = new byte[commonAlleles.length];
+//                for (int a = 0; a < allelesForSite.length; a++) {
+//                    if (strand == -1) allelesForSite[a] = complementAllele(commonAlleles[a][s]);
+//                    else allelesForSite[a] = commonAlleles[a][s];
+//                }
+//                theMSA.setCommonAlleles(currSite, allelesForSite);
+//            }
             if (isUpdateTOPM & !customFiltering) {  
                 updateTOPM(theTAL, s, position, strand, alleles);
             }

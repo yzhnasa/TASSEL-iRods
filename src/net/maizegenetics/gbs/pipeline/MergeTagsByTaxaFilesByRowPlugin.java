@@ -3,34 +3,24 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
+import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.gbs.tagdist.*;
+import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
+import net.maizegenetics.plugindef.AbstractPlugin;
+import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.util.ArgsEngine;
+import net.maizegenetics.util.DirectoryCrawler;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Logger;
+import org.apache.log4j.SimpleLayout;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-
 import java.util.ArrayList;
-
-import javax.swing.ImageIcon;
-
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.gbs.tagdist.TagCountMutable;
-import net.maizegenetics.gbs.tagdist.TagCounts;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaBitFileMap;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaByteFileMap;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaByteFileMapSeq;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaUtils;
-import net.maizegenetics.util.ArgsEngine;
-import net.maizegenetics.plugindef.AbstractPlugin;
-import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.util.DirectoryCrawler;
-
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Logger;
-import org.apache.log4j.SimpleLayout;
 
 /**
  * Merges multiple TagsByTaxa files that are too large to fit in memory when
@@ -282,9 +272,7 @@ public class MergeTagsByTaxaFilesByRowPlugin extends AbstractPlugin {
     }
 
     private static TagsByTaxa newTBT(String filename, String[] taxonNames, TagCountMutable tcm) {
-        if (TagsByTaxaUtils.format(filename).equals(TagsByTaxa.FilePacking.Bit)) {
-            return new TagsByTaxaBitFileMap(filename, taxonNames, tcm);
-        } else if (TagsByTaxaUtils.format(filename).equals(TagsByTaxa.FilePacking.Byte)) {
+        if (TagsByTaxaUtils.format(filename).equals(TagsByTaxa.FilePacking.Byte)) {
             return new TagsByTaxaByteFileMap(filename, taxonNames, tcm);
         } else {
             return null;
@@ -292,9 +280,7 @@ public class MergeTagsByTaxaFilesByRowPlugin extends AbstractPlugin {
     }
 
     private static TagsByTaxa newTBT(String filename) {
-        if (TagsByTaxaUtils.format(filename).equals(TagsByTaxa.FilePacking.Bit)) {
-            return new TagsByTaxaBitFileMap(filename);
-        } else if (TagsByTaxaUtils.format(filename).equals(TagsByTaxa.FilePacking.Byte)) {
+        if (TagsByTaxaUtils.format(filename).equals(TagsByTaxa.FilePacking.Byte)) {
             return new TagsByTaxaByteFileMap(filename);
         } else {
             return null;
