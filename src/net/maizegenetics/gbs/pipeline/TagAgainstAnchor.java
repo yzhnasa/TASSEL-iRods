@@ -678,7 +678,7 @@ public class TagAgainstAnchor {
      */
     private void loadAnchorMap (String hapMapHDF5) {
         long lastTimePoint = this.getCurrentTimeNano();
-        Alignment a = ImportUtils.readGuessFormat(hapMapHDF5, true);
+        Alignment a = ImportUtils.readGuessFormat(hapMapHDF5);
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         System.out.println("The anchor map has " + a.getSiteCount() + " sites and " + a.getTaxaCount() + " taxa");
         lastTimePoint = this.getCurrentTimeNano();

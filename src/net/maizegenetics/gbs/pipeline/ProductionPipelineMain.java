@@ -4,14 +4,7 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.io.*;
-import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.net.InetAddress;
-import java.util.Properties;
-
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import net.maizegenetics.pal.alignment.Alignment;
@@ -19,10 +12,16 @@ import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.CheckSum;
 import net.maizegenetics.util.SMTPClient;
-import com.google.common.base.Splitter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Properties;
 
 
 /**
@@ -562,8 +561,8 @@ public class ProductionPipelineMain {
     public static String compareOriginalAgainstImputed(String originalFile, String imputedFile){
 
         StringBuffer sb = new StringBuffer();
-        Alignment origAlignment = ImportUtils.readGuessFormat(originalFile, false);
-        Alignment impAlignment = ImportUtils.readGuessFormat(imputedFile, false);
+        Alignment origAlignment = ImportUtils.readGuessFormat(originalFile);
+        Alignment impAlignment = ImportUtils.readGuessFormat(imputedFile);
 
 
         int siteCount = origAlignment.getSiteCount();
