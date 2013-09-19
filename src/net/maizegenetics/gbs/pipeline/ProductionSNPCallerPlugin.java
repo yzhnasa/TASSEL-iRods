@@ -31,7 +31,6 @@ import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TOPMInterface;
 import net.maizegenetics.gbs.maps.TOPMUtils;
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.MutableNucleotideDepthAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.VCFUtil;
 import org.apache.commons.math.distribution.BinomialDistributionImpl;
