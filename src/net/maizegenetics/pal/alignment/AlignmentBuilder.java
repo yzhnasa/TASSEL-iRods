@@ -9,6 +9,7 @@ import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.alignment.score.SiteScore;
 import net.maizegenetics.pal.site.Position;
 import net.maizegenetics.pal.site.PositionArrayList;
+import net.maizegenetics.pal.site.PositionHDF5List;
 import net.maizegenetics.pal.site.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
@@ -35,12 +36,25 @@ public class AlignmentBuilder {
     private PositionArrayList.Builder posListBuilder=null;
 
     private enum BuildType{TAXA_INC, SITE_INC, GENO_EDIT};
+    private boolean isHDF5=false;
     private BuildType myBuildType;
 
     private AlignmentBuilder(PositionList positionList) {
         this.positionList=positionList;
         this.myBuildType=BuildType.TAXA_INC;
         incGeno=new ArrayList<>();
+        taxaListBuilder=new TaxaListBuilder();
+    }
+
+    /**
+     * Experimental idea.
+     * @param positionList
+     * @param hdf5File
+     */
+    private AlignmentBuilder(PositionList positionList, String hdf5File) {
+        this.positionList=new PositionHDF5List.Builder(hdf5File,positionList).build();  //create a new position list
+        this.myBuildType=BuildType.TAXA_INC;
+        isHDF5=true;
         taxaListBuilder=new TaxaListBuilder();
     }
 
@@ -53,6 +67,10 @@ public class AlignmentBuilder {
 
     public static AlignmentBuilder getTaxaIncremental(PositionList positionList) {
         return new AlignmentBuilder(positionList);
+    }
+
+    public static AlignmentBuilder getTaxaIncremental(PositionList positionList, String newHDF5File) {
+        return new AlignmentBuilder(positionList,newHDF5File);
     }
 
     public static AlignmentBuilder getSiteIncremental(TaxaList taxaList) {
@@ -70,9 +88,35 @@ public class AlignmentBuilder {
     public AlignmentBuilder addTaxon(Taxon taxon, byte[] genos) {
         if(myBuildType!=BuildType.TAXA_INC) throw new IllegalArgumentException("addTaxon only be used with AlignmentBuilder.getTaxaIncremental");
         if(genos.length!=positionList.getSiteCount()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
-        taxaListBuilder.add(taxon);
-        incGeno.add(genos);
+        if(isHDF5) {
+            addTaxon(taxon, genos, null);
+
+        } else {
+            taxaListBuilder.add(taxon);
+            incGeno.add(genos);
+        }
         return this;
+    }
+
+    /**
+     * Code needed to add a Taxon to HDF5, potentially split into functions in TaxaListBuilder & GenotypeBuilder
+     */
+    private synchronized void addTaxon(Taxon id, byte[] genotype, byte[][] depth) {
+//        int chunk=1<<16;
+//        if(myNumSites<chunk) chunk=myNumSites;
+//        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
+//        if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
+//        if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
+//        myWriter.createByteArray(basesPath, myNumSites, chunk, genoFeatures);
+//        setAllBases(basesPath, genotype);
+//        int taxonIndex=myIdentifiers.size();
+//        myIdentifiers.add(id);
+//        myIdGroup=null;
+//        if(depth!=null) {
+//            if(depth.length!=6) throw new IllegalStateException("Just set A, C, G, T, -, + all at once");
+//            if(depth[0].length!=myNumSites) throw new IllegalStateException("Setting all depth in addTaxon.  Wrong number of sites");
+//            myWriter.writeByteMatrix(getTaxaDepthPath(taxonIndex), depth, genoFeatures);
+//        }
     }
 
     public Alignment build(){
