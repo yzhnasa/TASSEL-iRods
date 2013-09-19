@@ -60,7 +60,7 @@ public class AlignmentBuilder {
     }
 
     public AlignmentBuilder addSite(Position pos, byte[] genos) {
-        if(posListBuilder==null) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getSiteIncremental");
+        if(myBuildType!=BuildType.SITE_INC) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getSiteIncremental");
         if(genos.length!=taxaList.getTaxaCount()) throw new IndexOutOfBoundsException("Number of taxa and genotypes do not agree");
         posListBuilder.add(pos);
         incGeno.add(genos);
@@ -68,7 +68,7 @@ public class AlignmentBuilder {
     }
 
     public AlignmentBuilder addTaxon(Taxon taxon, byte[] genos) {
-        if(taxaListBuilder==null) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getTaxaIncremental");
+        if(myBuildType!=BuildType.TAXA_INC) throw new IllegalArgumentException("addTaxon only be used with AlignmentBuilder.getTaxaIncremental");
         if(genos.length!=positionList.getSiteCount()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
         taxaListBuilder.add(taxon);
         incGeno.add(genos);
