@@ -42,15 +42,8 @@ public class TaxaListBuilder {
         return this;
     }
 
-//    public TaxaListBuilder addAll(Collection<Taxon> taxa) {
-//        myTaxaList.addAll(taxa);
-//        return this;
-//    }
-
     public TaxaListBuilder addAll(Collection<Taxon> taxa) {
-        for (Taxon t: taxa) {
-            myTaxaList.add(new Taxon.Builder(t).build());
-        }
+        myTaxaList.addAll(taxa);
         return this;
     }
 
