@@ -272,8 +272,9 @@ public class ExportPlugin extends AbstractPlugin {
                             imputeOptionDialog.setLocationRelativeTo(getParentFrame());
                             imputeOptionDialog.setVisible(true);
                             if (imputeOptionDialog.getDisplayImputed()) {
-                                resultFile = ExportUtils.writeToHapmap(inputAlignment, (AlignmentMask) currentMask, myIsDiploid, mySaveFile, '\t', this);
-                                foundImputed = true;
+                                //TODO emailed Terry about whether to keep
+//                                resultFile = ExportUtils.writeToHapmap(inputAlignment, (AlignmentMask) currentMask, myIsDiploid, mySaveFile, '\t', this);
+//                                foundImputed = true;
                             } else if (i == (n - 1)) {
                                 resultFile = ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t', this);
                             }

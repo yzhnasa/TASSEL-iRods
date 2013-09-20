@@ -220,7 +220,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             if(mna.isHDF5()) {
                 mna.build();
             } else {
-                ExportUtils.writeToHapmap(mna.build(), false, exportFile, '\t', null);}
+                ExportUtils.writeToHapmap(mna.build(), false, exportFile, '\t', null);
+            }
         }
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
         
