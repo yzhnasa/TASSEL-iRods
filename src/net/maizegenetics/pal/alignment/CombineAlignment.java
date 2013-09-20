@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.maizegenetics.pal.alignment.bit.BitStorage;
+import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.site.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
@@ -863,6 +864,11 @@ public class CombineAlignment implements Alignment {
 
     @Override
     public PositionList getPositionList() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Genotype getGenotypeMatrix() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }
