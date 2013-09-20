@@ -98,6 +98,10 @@ public class AlignmentBuilder {
         return this;
     }
 
+    public boolean isHDF5() {
+        return isHDF5;
+    }
+
     /**
      * Code needed to add a Taxon to HDF5, potentially split into functions in TaxaListBuilder & GenotypeBuilder
      */

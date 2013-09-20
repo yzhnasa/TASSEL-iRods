@@ -108,15 +108,14 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             TaxaList tL;
             if (includeReference) {tL=new TaxaListBuilder().add(new Taxon(refGenName)).addAll(theTBT.getTaxaList()).build();}
             else {tL=new TaxaListBuilder().add(new Taxon(refGenName)).addAll(theTBT.getTaxaList()).build();}
-            GenotypeBuilder gB=GenotypeBuilder.getInstance(tL.getTaxaCount(),maxSize + 100);
-            PositionArrayList.Builder posBuilder=new PositionArrayList.Builder();
+            AlignmentBuilder aB=AlignmentBuilder.getSiteIncremental(tL);
 //            MutableNucleotideAlignment theMSA = vcf ? createMutableVCFAlignment(theTBT, maxSize + 100, includeReference)
 //                    : createMutableAlignment(theTBT, maxSize + 100, includeReference);
             if (includeReference) {
                 refGenomeChr = readReferenceGenomeChr(refGenomeFileStr, chr);
                 if (refGenomeChr == null) continue;
             }
-            runTagsToSNPByAlignment(gB, posBuilder, out, chr, false);
+            runTagsToSNPByAlignment(aB, out, chr, false);
             if (customSNPLogging) myCustomSNPLog.close();
             myLogger.info("Finished processing chromosome " + chr + "\n\n");
         }
@@ -378,14 +377,15 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void runTagsToSNPByAlignment(GenotypeBuilder theMSA, PositionArrayList.Builder posBuilder, String outHapMap,
+    public void runTagsToSNPByAlignment(AlignmentBuilder theMSA, String outHapMap,
                                         int targetChromo, boolean requireGeneticSupport) {
         long time = System.currentTimeMillis();
         DataOutputStream locusLogDOS = openLocusLog(outHapMap);
         TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE,Byte.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,includeReference,fuzzyStartPositions,errorRate);
         int[] currPos = null;
         int countLoci = 0;
-        for (int i = 0; (i < theTOPM.getSize()) && (posBuilder.size() < (maxSize - 1000)); i++) {
+        int siteCnt=0;
+        for (int i = 0; (i < theTOPM.getSize()) && (siteCnt < (maxSize - 1000)); i++) {
             int ri = theTOPM.getReadIndexForPositionIndex(i);  // process tags in order of physical position
             int[] newPos = theTOPM.getPositionArray(ri);
             if (newPos[CHR] != targetChromo) continue;    //Skip tags from other chromosomes
@@ -395,12 +395,12 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             } else {
                 int nTaxaCovered = currTAL.getNumberTaxaCovered();
                 if (currTAL.getSize()>1 && nTaxaCovered >= minTaxaWithLocus) {  // finish the current TAL
-                    addSitesToMutableAlignment(currTAL, theMSA, posBuilder, locusLogDOS);  // note that with fuzzyStartPositions there may be no overlapping tags!!
+                    siteCnt+=addSitesToMutableAlignment(currTAL, theMSA, locusLogDOS);  // note that with fuzzyStartPositions there may be no overlapping tags!!
                     countLoci++;
-                    if (posBuilder.size() % 100 == 0) {
-                        double rate = (double) posBuilder.size() / (double) (System.currentTimeMillis() - time);
+                    if (siteCnt % 100 == 0) {
+                        double rate = (double) siteCnt / (double) (System.currentTimeMillis() - time);
                         myLogger.info(String.format(
-                                "Chr:%d Pos:%d Loci=%d SNPs=%d rate=%g SNP/millisec %n", currPos[CHR], currPos[START_POS], countLoci, posBuilder.size(), rate));
+                                "Chr:%d Pos:%d Loci=%d SNPs=%d rate=%g SNP/millisec %n", currPos[CHR], currPos[START_POS], countLoci, siteCnt, rate));
                     }
                 } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
                 currPos = newPos; // start a new TAL with the current tag
@@ -413,16 +413,16 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             }
         }
         if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() >= minTaxaWithLocus)) { // then finish the final TAL for the targetChromo
-            addSitesToMutableAlignment(currTAL, theMSA, posBuilder, locusLogDOS);
+            addSitesToMutableAlignment(currTAL, theMSA, locusLogDOS);
         } else if (currPos!=null) {
             logRejectedTagLocus(currTAL,locusLogDOS);
         }
-        if (posBuilder.size() > 0) {
-            theMSA.clean(); //Todo this a key sort between the genotype and position that needs to be maintained
-            Alignment outA=AlignmentBuilder.getInstance(theMSA.build(),posBuilder.build(),theTBT.getTaxaList());
-            ExportUtils.writeToHapmap(outA, false, outHapMap, '\t', null);
+        if (siteCnt > 0) {
+ //           theMSA.clean(); //Todo this a key sort between the genotype and position that needs to be maintained
+ //           Alignment outA=AlignmentBuilder.getInstance(theMSA.build(),posBuilder.build(),theTBT.getTaxaList());
+            ExportUtils.writeToHapmap(theMSA.build(), false, outHapMap, '\t', null);
         }
-        myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + posBuilder.size());
+        myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + siteCnt);
         try{ locusLogDOS.close(); } catch(Exception e) { catchLocusLogException(e); }
     }
 
@@ -460,14 +460,14 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return false;
     }
     
-    private synchronized void addSitesToMutableAlignment(TagsAtLocus theTAL, GenotypeBuilder theMSA,
-                                        PositionArrayList.Builder posBuilder, DataOutputStream locusLogDOS) {
+    private synchronized int addSitesToMutableAlignment(TagsAtLocus theTAL, AlignmentBuilder theMSA,
+                                        DataOutputStream locusLogDOS) {
         boolean refTagUsed = false;
         byte[][][] alleleDepths = null;
         byte[][] commonAlleles = null;
         if (theTAL.getSize() < 2) {
             logRejectedTagLocus(theTAL,locusLogDOS);
-            return;  // need at least two (overlapping!) sequences to make an alignment
+            return 0;  // need at least two (overlapping!) sequences to make an alignment
         }
         byte[][] callsBySite;
         if (vcf) {
@@ -492,7 +492,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         }
         if (callsBySite == null) {
             logAcceptedTagLocus(theTAL.getLocusReport(minTaxaWithLocus, null), locusLogDOS);
-            return;
+            return 0;
         }
         int[] positionsInLocus = theTAL.getPositionsOfVariableSites();
         int strand = theTAL.getStrand();
@@ -517,30 +517,27 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 }
             }
             varSiteKept[s] = true;
-            int currSite = posBuilder.size();
             GeneralPosition.Builder gpb=new GeneralPosition.Builder(new Chromosome(String.valueOf(theTAL.getChromosome())), position);
 //            theMSA.addSite(currSite);
 //            String chromosome = String.valueOf(theTAL.getChromosome());
 //            theMSA.setLocusOfSite(currSite, new Chromosome(chromosome, chromosome, -1, -1, null, null));
 //            theMSA.setPositionOfSite(currSite, position);
-            int offset = 0;
+            int offset = (includeReference && !fuzzyStartPositions)?1:0;
+            byte[] genotype=new byte[theTBT.getTaxaCount()+offset];
+            Arrays.fill(genotype,Alignment.UNKNOWN_DIPLOID_ALLELE);
             if (includeReference && !fuzzyStartPositions) {
-                offset = 1;
-                byte geno = (strand == -1) ? complementGeno(theTAL.getRefGeno(s)) : theTAL.getRefGeno(s);
-                theMSA.setBase(0, currSite, geno);
- //               theMSA.setReferenceAllele(currSite, geno);
-                gpb.allele(Position.Allele.REF,geno);
+                genotype[0] = (strand == -1) ? complementGeno(theTAL.getRefGeno(s)) : theTAL.getRefGeno(s);
+                gpb.allele(Position.Allele.REF,genotype[0]);
 //                if (vcf) {
 //                    byte[] depths = new byte[]{0,0,0}; // assumes maxNumAlleles = 3
 //                    theMSA.setDepthForAlleles(0, currSite, depths);
 //                }
             }
-            posBuilder.add(gpb.build());
             for (int tx = 0; tx < theTBT.getTaxaCount(); tx++) {
                 if (callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
-                    theMSA.setBase(tx+offset, currSite, complementGeno(callsBySite[s][tx]));  // complement to plus strand
+                    genotype[tx+offset]=complementGeno(callsBySite[s][tx]);  // complement to plus strand
                 } else {
-                    theMSA.setBase(tx+offset, currSite, callsBySite[s][tx]);
+                    genotype[tx+offset]=callsBySite[s][tx];
                 }
 //                if (vcf) {
 //                    byte[] depths = new byte[alleleDepths.length];
@@ -558,17 +555,19 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
 //                }
 //                theMSA.setCommonAlleles(currSite, allelesForSite);
 //            }
+            theMSA.addSite(gpb.build(),genotype);
             if (isUpdateTOPM & !customFiltering) {  
                 updateTOPM(theTAL, s, position, strand, alleles);
             }
-            if (currSite % 100 == 0) {
-                System.out.printf("Site:%d Position:%d %n", currSite, position);
-            }
+//            if (currSite % 100 == 0) {
+//                System.out.printf("Site:%d Position:%d %n", currSite, position);
+//            }
         }
         logAcceptedTagLocus(theTAL.getLocusReport(minTaxaWithLocus, varSiteKept), locusLogDOS);
         if (isUpdateTOPM & customFiltering) {  
             updateTOPM(theTAL, varSiteKept, SiteQualityScores);
         }
+        return callsBySite.length;
     }
 
     private void updateTOPM(TagsAtLocus myTAL, boolean[] varSiteKept, TagLocusSiteQualityScores SiteQualityScores) {

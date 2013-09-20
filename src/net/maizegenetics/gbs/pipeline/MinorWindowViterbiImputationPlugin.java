@@ -18,23 +18,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.ImageIcon;
+
 import net.maizegenetics.annotation.Citation;
 import net.maizegenetics.gwas.imputation.EmissionProbability;
 import net.maizegenetics.gwas.imputation.TransitionProbability;
 import net.maizegenetics.gwas.imputation.ViterbiAlgorithm;
 
+import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.util.ArgsEngine;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.MutableAlignment;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.alignment.ProjectionAlignment;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.popgen.DonorHypoth;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -165,7 +157,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         Alignment[] donorAlign=loadDonors(donorFile);
         this.minTestSites=minTestSites;
         this.isOutputProjection=isOutputProjection;
-        unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile, false);
+        unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile);
 //        if(unImpTargetFile.contains(".h5")) {
 //            unimpAlign=BitAlignmentHDF5.getInstance(unImpTargetFile, false);
 //        } else {
@@ -181,15 +173,17 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 
         System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.getSequenceCount(),unimpAlign.getSiteCount());       
         System.out.println("Creating mutable alignment");
-        MutableAlignment mna=null;
+        AlignmentBuilder mna=null;
         if(isOutputProjection) {
-            mna=new ProjectionAlignment(donorAlign[0], unimpAlign.getTaxaList());
+//            mna=new ProjectionAlignment(donorAlign[0], unimpAlign.getTaxaList());
         } else {
             if(exportFile.contains("hmp.h5")) {
-                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, new SimpleIdGroup(0), false);
-                mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
+//                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, new SimpleIdGroup(0), false);
+//                mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
+                mna= AlignmentBuilder.getTaxaIncremental(this.unimpAlign.getPositionList(),exportFile);
             }else {
-                mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
+                mna= AlignmentBuilder.getTaxaIncremental(this.unimpAlign.getPositionList());
+//                mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
             }
 
         }
@@ -221,12 +215,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //                    (double)siteErrors[i]/(double)siteCallCnt[i], unimpAlign.getMinorAlleleFrequency(i));
 //        }
         if(isOutputProjection) {
-           ((ProjectionAlignment)mna).save(exportFile);
+//           ((ProjectionAlignment)mna).save(exportFile);
         } else {
-            if(mna instanceof MutableNucleotideAlignmentHDF5) {
-                mna.clean();
+            if(mna.isHDF5()) {
+                mna.build();
             } else {
-                ExportUtils.writeToHapmap(mna, false, exportFile, '\t', null);}
+                ExportUtils.writeToHapmap(mna.build(), false, exportFile, '\t', null);}
         }
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
         
@@ -238,11 +232,11 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int minSitesPresent;
         OpenBitSet[][] conflictMasks;
         boolean imputeDonorFile;
-        MutableAlignment mna;
+        AlignmentBuilder mna;
         
         
         public ImputeOneTaxon(int taxon, Alignment[] donorAlign, int minSitesPresent, OpenBitSet[][] conflictMasks,
-            boolean imputeDonorFile, MutableAlignment mna) {
+            boolean imputeDonorFile, AlignmentBuilder mna) {
             this.taxon=taxon;
             this.donorAlign=donorAlign;
             this.minSitesPresent=minSitesPresent;
@@ -306,19 +300,20 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             }          
             sb.append(String.format("Viterbi:%d BlocksSolved:%d ", countFullLength, impTaxon.getBlocksSolved()));
             int[] unk=countUnknownAndHets(impTaxon.resolveGeno);
-            sb.append(String.format("Unk:%d PropMissing:%g ", unk[0], (double)unk[0]/(double)mna.getSiteCount()));
-            sb.append(String.format("Het:%d PropHet:%g ", unk[1], (double)unk[1]/(double)mna.getSiteCount()));
+            sb.append(String.format("Unk:%d PropMissing:%g ", unk[0], (double) unk[0] / (double) impTaxon.getOrigGeno().length));
+            sb.append(String.format("Het:%d PropHet:%g ", unk[1], (double)unk[1]/(double)impTaxon.getOrigGeno().length));
             if(!isOutputProjection) {
-                if(mna instanceof MutableNucleotideAlignmentHDF5) {
-                    Taxon tID=unimpAlign.getIdGroup().getIdentifier(taxon);
-//                    mna.addTaxon(tID);
-//                    int newTaxaIndex=mna.getIdGroup().whichIdNumber(tID);
-// //                   if(taxon!=newTaxaIndex) System.out.println(taxon+":"+newTaxaIndex);
-//                    ((MutableNucleotideAlignmentHDF5)mna).setAllBases(newTaxaIndex, impTaxon.resolveGeno);
-                    ((MutableNucleotideAlignmentHDF5)mna).addTaxon(tID, impTaxon.resolveGeno, null);
-                } else {
-                    mna.setBaseRange(taxon, 0, impTaxon.resolveGeno);
-                }
+                mna.addTaxon(unimpAlign.getTaxaList().get(taxon),impTaxon.resolveGeno);
+//                if(mna instanceof MutableNucleotideAlignmentHDF5) {
+//                    Taxon tID=unimpAlign.getIdGroup().getIdentifier(taxon);
+////                    mna.addTaxon(tID);
+////                    int newTaxaIndex=mna.getIdGroup().whichIdNumber(tID);
+//// //                   if(taxon!=newTaxaIndex) System.out.println(taxon+":"+newTaxaIndex);
+////                    ((MutableNucleotideAlignmentHDF5)mna).setAllBases(newTaxaIndex, impTaxon.resolveGeno);
+//                    ((MutableNucleotideAlignmentHDF5)mna).addTaxon(tID, impTaxon.resolveGeno, null);
+//                } else {
+//                    mna.setBaseRange(taxon, 0, impTaxon.resolveGeno);
+//                }
                     
             }
             double errRate=calcErrorForTaxonAndSite(impTaxon); 
@@ -329,7 +324,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             System.out.println(sb.toString());
             if(isOutputProjection) {
                // System.out.println(breakPoints.toString());
-                ((ProjectionAlignment)mna).setCompositionOfTaxon(taxon, impTaxon.breakPoints);
+       //         ((ProjectionAlignment)mna).setCompositionOfTaxon(taxon, impTaxon.breakPoints);
             }
         }
         
@@ -937,13 +932,13 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     
     public static int[] compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
         boolean taxaOut=false;
-        Alignment oA=ImportUtils.readGuessFormat(origFile, false);
+        Alignment oA=ImportUtils.readGuessFormat(origFile);
         System.out.printf("Orig taxa:%d sites:%d %n",oA.getSequenceCount(),oA.getSiteCount());        
         Alignment mA=null;
-        if(noMask==false) {mA=ImportUtils.readGuessFormat(maskFile, false);
+        if(noMask==false) {mA=ImportUtils.readGuessFormat(maskFile);
             System.out.printf("Mask taxa:%d sites:%d %n",mA.getSequenceCount(),mA.getSiteCount());
         }
-        Alignment iA=ImportUtils.readGuessFormat(impFile, false);
+        Alignment iA=ImportUtils.readGuessFormat(impFile);
         System.out.printf("Imp taxa:%d sites:%d %n",iA.getSequenceCount(),iA.getSiteCount());
         int correct=0;
         int errors=0;
