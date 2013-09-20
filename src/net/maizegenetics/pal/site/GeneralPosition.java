@@ -82,8 +82,8 @@ public final class GeneralPosition implements Position {
      */
     public static class Builder {
         // Required parameters
-        private final Chromosome myChromosome;
-        private final int myPosition;
+        private Chromosome myChromosome;
+        private int myPosition;
         // Optional parameters - initialized to default values
         private byte myStrand=1;
         private float myCM=Float.NaN;
@@ -117,7 +117,10 @@ public final class GeneralPosition implements Position {
            isIndel=aCorePosition.isIndel();
            //myKnownVariants=aCorePosition.getKnownVariants(); //todo Fix
         }
-
+        /**Set Chromosome*/
+         public Builder chromosome(Chromosome val) {myChromosome = val; return this;}
+        /**Set Position in Chromosome*/
+        public Builder position(int val) {myPosition = val; return this;}
         /**Set strand (default=1)*/
         public Builder strand(byte val) {myStrand = val; return this;}
         /**Set strand (default=Float.NaN)*/

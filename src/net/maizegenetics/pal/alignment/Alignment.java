@@ -4,6 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.alignment.bit.BitStorage;
+import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.site.Chromosome;
 import net.maizegenetics.pal.site.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
@@ -63,6 +64,14 @@ public interface Alignment {
          */
         Reference
     };
+
+
+    /**
+     * Returns the immutable Genotype matrix.  Taxa and Positions are not part of the matrix.  This method is used for
+     * copying Alignments, when either the Taxa or Positions have changed.
+     * @return genotype matrix
+     */
+    public Genotype getGenotypeMatrix();
 
     /**
      * Returns diploid value (genotype) for a given taxon and site.

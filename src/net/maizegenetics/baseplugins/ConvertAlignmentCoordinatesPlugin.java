@@ -4,9 +4,10 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.MutableAlignment;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
+import net.maizegenetics.pal.alignment.AlignmentBuilder;
 import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.site.GeneralPosition;
+import net.maizegenetics.pal.site.PositionArrayList;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -70,12 +71,12 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             throw new IllegalStateException("ConvertAlignmentCoordinatesPlugin: processDatum: map filename not set.");
         }
 
-        MutableAlignment alignment = null;
+        Alignment alignment = null;
 
-        if (input.getData() instanceof MutableAlignment) {
-            alignment = (MutableAlignment) input.getData();
+        if (input.getData() instanceof Alignment) {
+            alignment = (Alignment) input.getData();
         } else {
-            alignment = MutableNucleotideAlignment.getInstance((Alignment) input.getData());
+            throw new IllegalStateException("ConvertAlignmentCoordinatesPlugin: processDatum: datum must be instanceof Alignment.");
         }
 
         Chromosome[] loci = alignment.getChromosomes();
@@ -89,6 +90,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
         BufferedReader br = null;
         int count = 1;
+        PositionArrayList.Builder posBuilder=new PositionArrayList.Builder().addAll(alignment.getPositionList());
         try {
             br = Utils.getBufferedReader(myMapFilename);
             Pattern sep = Pattern.compile("\\s+");
@@ -106,6 +108,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                 inputline = br.readLine();
 
                 String locus1 = getLocusName(parsedline[1]);
+
 
                 if (myAlignmentLociMap.get(locus1) != null) {
 
@@ -129,12 +132,16 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                         }
 
                         numChanges++;
+                        GeneralPosition.Builder newPos=new GeneralPosition.Builder(alignment.getPositionList().get(site));
+                        newPos.chromosome(getLocusObj(locus2)).position(pos2).snpName(snpID);
+                        posBuilder.set(site, newPos.build());
 
-                        alignment.setPositionOfSite(site, pos2);
 
-                        if (!locus1.equals(locus2)) {
-                            alignment.setLocusOfSite(site, getLocusObj(locus2));
-                        }
+//                        posBuilder.setPositionOfSite(site, pos2);
+//
+//                        if (!locus1.equals(locus2)) {
+//                            posBuilder.setLocusOfSite(site, getLocusObj(locus2));
+//                        }
 
                     }
 
@@ -144,9 +151,9 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
             myLogger.info("Number Changes: " + numChanges);
 
-            alignment.clean();
-
-            return new Datum(input.getName() + "_NewCoordinates", alignment, null);
+  //          alignment.clean();
+            //TODO check sort of positions.
+            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(),posBuilder.build(),alignment.getTaxaList()), null);
 
         } catch (Exception e) {
             myLogger.error("processDatum: problem converting alignment: line: " + count + "  message: " + e.getMessage());

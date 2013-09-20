@@ -46,6 +46,11 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
+    public Genotype getGenotypeMatrix() {
+        return myGenotype;
+    }
+
+    @Override
     public byte getBase(int taxon, int site) {
         return myGenotype.getBase(taxon, site);
     }

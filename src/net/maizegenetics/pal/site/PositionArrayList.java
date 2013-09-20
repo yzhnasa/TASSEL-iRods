@@ -433,6 +433,20 @@ public final class PositionArrayList implements PositionList {
             return this;
         }
 
+        /**
+        * Replaces the element at the specified position in this list with
+        * the specified element.
+        *
+        * @param index index of the element to replace
+        * @param element element to be stored at the specified position
+        * @return this {@code Builder} object
+        * @throws IndexOutOfBoundsException {@inheritDoc}
+        */
+        public Builder set(int index, Position element) {
+            contents.set(index,element);
+            return this;
+        }
+
         /*
         Returns whether List is already ordered.  Important to check this if genotype and sites are separately built, as the
          PositionArrayList must be sorted, and will be with build.
