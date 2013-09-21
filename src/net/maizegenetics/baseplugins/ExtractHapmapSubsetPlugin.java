@@ -216,7 +216,7 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
 		System.out.format("Time elapsed for filtering alignment = %d\n", System.currentTimeMillis() - start);
 		
 		start = System.currentTimeMillis();
-		if (a instanceof MutableNucleotideAlignmentHDF5) ExportUtils.writeToMutableHDF5(b, outputFilename);
+		if (outputFilename.contains(".h5")) ExportUtils.writeToMutableHDF5(b, outputFilename);
 		else ExportUtils.writeToHDF5(b, outputFilename);
 		System.out.format("Time elapsed for writing new file = %d\n", System.currentTimeMillis() - start);
 	}

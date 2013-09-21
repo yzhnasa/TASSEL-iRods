@@ -3,6 +3,8 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
+
 /**
  *
  * @author terry
@@ -72,6 +74,8 @@ public final class HapMapHDF5Constants {
     public static final String NUM_LD_BINS = LD_DESC+"/numLDBins";
     public static final String LD_BINS = LD_DESC+"/binsLD";
 
+    //Standard Compression (deflation) levels
+    public static final HDF5IntStorageFeatures intDeflation = HDF5IntStorageFeatures.createDeflation(2);
 
 
     // Annotations

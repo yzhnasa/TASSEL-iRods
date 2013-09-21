@@ -1,44 +1,21 @@
 package net.maizegenetics.gwas.imputation;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
-
-import net.maizegenetics.pal.ids.TaxaList;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.stat.inference.TestUtils;
-import org.apache.log4j.Logger;
-
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
-
+import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.gwas.imputation.clustering.Haplotype;
 import net.maizegenetics.gwas.imputation.clustering.HaplotypeCluster;
 import net.maizegenetics.gwas.imputation.clustering.HaplotypeClusterer;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.BitNucleotideAlignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.alignment.BitAlignment;
+import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.taxa.IdGroupUtils;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.math.GammaFunction;
+import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.taxa.IdGroupUtils;
+import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.tree.Tree;
 import net.maizegenetics.pal.tree.TreeClusters;
 import net.maizegenetics.pal.tree.UPGMATree;
@@ -47,6 +24,14 @@ import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.stat.inference.TestUtils;
+import org.apache.log4j.Logger;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
 public class NucleotideImputationUtils {
 	private static final Logger myLogger = Logger.getLogger(NucleotideImputationUtils.class);

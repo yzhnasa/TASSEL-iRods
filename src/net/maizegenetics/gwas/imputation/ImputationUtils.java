@@ -1,6 +1,5 @@
 package net.maizegenetics.gwas.imputation;
 
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.gwas.NAM.AGPMap;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.taxa.IdGroupUtils;
@@ -79,7 +78,7 @@ public class ImputationUtils {
 	
 	public static Alignment[] getTwoClusters(Alignment a, int[] parentIndex) {
 		int maxiter = 5;
-		Alignment tb = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+		Alignment tb = a;
 		//if (a instanceof TBitAlignment) tb = (TBitAlignment) a;
 		//else tb = TBitAlignment.getInstance(a);
 		
@@ -224,7 +223,7 @@ public class ImputationUtils {
 		} else {
 			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getTaxaList(), include));
 			
-			myAlignment = BitAlignment.getInstance(fa, false);
+			myAlignment = AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
 		}
 		int ntrials = 5;
 		int maxiter = 5;

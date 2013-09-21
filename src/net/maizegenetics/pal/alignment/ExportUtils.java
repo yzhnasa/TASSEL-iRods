@@ -19,8 +19,6 @@ import net.maizegenetics.util.VCFUtil;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
@@ -163,94 +161,20 @@ public class ExportUtils {
     * @return 
     */ 
    public static String writeToMutableHDF5(Alignment a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
-        IHDF5Writer h5w = null;
-        try {
-            int numSites = a.getSiteCount();
-            int numTaxa = a.getSequenceCount();
-            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, "hmp.h5");
-            File hdf5File = new File(newHDF5file);
-            if (hdf5File.exists()) {
-                throw new IllegalArgumentException("ExportUtils: writeToMutableHDF5: File already exists: " + newHDF5file);
-            }
-            IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
-            myLogger.info("Writing Mutable HDF5 file: " + newHDF5file);
-            config.overwrite();
-            config.dontUseExtendableDataTypes();
-            h5w = config.writer();
-            HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
-            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
-            String[][] aEncodings = a.getAlleleEncodings();
-            int numEncodings = aEncodings.length;
-            int numStates = aEncodings[0].length;
-            MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, numStates});
-            for (int s = 0; s < numEncodings; s++) {
-                for (int x = 0; x < numStates; x++) {
-                    alleleEncodings.set(aEncodings[s][x], s, x);
-                }
-            }
-            h5w.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
-            h5w.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
-            MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
-            if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
-                throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
-            }
-            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());  //consider adding compression
-
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
-
-            String[] lociNames = new String[a.getNumChromosomes()];
-            HashMap<Chromosome, Integer> locusToIndex=new HashMap<Chromosome, Integer>(10);
-            Chromosome[] loci = a.getChromosomes();
-            for (int i = 0; i < a.getNumChromosomes(); i++) {
-                lociNames[i] = loci[i].getName();
-                locusToIndex.put(loci[i],i);
-            }
-            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumChromosomes());
-            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
-
-//            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
-//            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
-            
-            int[] locusIndicesArray = new int[a.getSiteCount()];
-            for (int i = 0; i < locusIndicesArray.length; i++) {
-                locusIndicesArray[i] = locusToIndex.get(a.getChromosome(i));
-            }
-            
-            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),features);
-            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_INDICES, locusIndicesArray,features);
-
-            h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
-            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
-
-            // Write Bases
-
-  //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
-
-            h5w.createGroup(HapMapHDF5Constants.GENOTYPES);            
-            if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {h5w.close(); return newHDF5file;}
-            h5w.close();
-            MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
-            for (int t = 0; t < numTaxa; t++) {
-                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.getFullTaxaName(t))<0)) continue;  //taxon not in export list
-                  byte[] bases = a.getBaseRow(t);
-                  if (keepDepth==false) addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, null);
-                  else {
-                      MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
-                      addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, m.getDepthForAlleles(t));
-                  }
-            }
-            addA.clean();           
-            return newHDF5file;
-
-        } finally {
-            try {
-                h5w.close();
-            } catch (Exception e) {
-                // do nothing
-            }
+        AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(a.getPositionList(),newHDF5file);
+        if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {aB.build(); return newHDF5file;}
+        for (int t = 0; t < a.getTaxaCount(); t++) {
+              if((exportTaxa!=null)&&(!exportTaxa.contains(a.getTaxaList().get(t)))) continue;  //taxon not in export list
+              byte[] bases = a.getBaseRow(t);
+              if (keepDepth==false) aB.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, null);
+              else {
+                  //todo restore depth save
+//                  MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
+//                  addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, m.getDepthForAlleles(t));
+              }
         }
+        aB.build();
+        return newHDF5file;
     }
 
 
@@ -557,6 +481,8 @@ public class ExportUtils {
      * @return
      */
     public static String writeToVCF(Alignment alignment, String filename, char delimChar) {
+        //todo restore depth
+        boolean hasDepth=false;  //in future test for this
         try {
 
             filename = Utils.addSuffixIfNeeded(filename, ".vcf", new String[]{".vcf", ".vcf.gz"});
@@ -618,7 +544,7 @@ public class ExportUtils {
                 byte refAllele = (byte) (refGeno & 0xF);  // converts from diploid to haploid allele (2nd allele)
                 //System.out.println(alignment.getPositionInChromosome(site) + " " + refAllele);
                 byte[] alleleValues = null;
-                if (alignment instanceof MutableVCFAlignment) {
+                if (hasDepth) {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 } else {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Frequency, site);
@@ -729,7 +655,7 @@ public class ExportUtils {
                 bw.write("PASS"); // filter
                 bw.write(delimChar);
 
-                if (alignment instanceof MutableVCFAlignment) {
+                if (hasDepth) {
                     int totalDepth = 0;
                     for (int i = 0; i < alignment.getSequenceCount(); i++) {
                         byte[] depth = alignment.getDepthForAlleles(i, site);
@@ -745,7 +671,7 @@ public class ExportUtils {
                 }
                 bw.write(delimChar);
 
-                if (alignment instanceof MutableVCFAlignment) {
+                if (hasDepth) {
                     bw.write("GT:AD:DP:GQ:PL");
                 } else {
                     bw.write("GT");
@@ -838,7 +764,7 @@ public class ExportUtils {
                     } else {
                         bw.write("./.");
                     }
-                    if (!(alignment instanceof MutableVCFAlignment)) {
+                    if (!(hasDepth)) {
                         continue;
                     }
                     bw.write(":");

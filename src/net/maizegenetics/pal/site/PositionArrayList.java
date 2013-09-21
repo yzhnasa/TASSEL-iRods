@@ -31,7 +31,7 @@ public final class PositionArrayList implements PositionList {
         }
     }
 
-    private PositionArrayList(ArrayList<Position> builderList) {
+    PositionArrayList(ArrayList<Position> builderList) {
         this.numPositions=builderList.size();
         alleles=new byte[Allele.COUNT][numPositions];
 //        refAlleles=new byte[numPositions];

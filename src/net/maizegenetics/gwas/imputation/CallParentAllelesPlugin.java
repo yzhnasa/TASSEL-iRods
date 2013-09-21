@@ -1,27 +1,24 @@
 package net.maizegenetics.gwas.imputation;
 
-import java.awt.Frame;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.swing.ImageIcon;
-
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentBuilder;
+import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.plugindef.AbstractPlugin;
+import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.plugindef.Datum;
+import net.maizegenetics.plugindef.PluginEvent;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.xml.DOMConfigurator;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.BitAlignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.plugindef.AbstractPlugin;
-import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.plugindef.Datum;
-import net.maizegenetics.plugindef.PluginEvent;
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class CallParentAllelesPlugin extends AbstractPlugin {
 	private static final Logger myLogger = Logger.getLogger(CallParentAllelesPlugin.class);
@@ -60,7 +57,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				
 				myLogger.info("creating family alignment for family " + family.name);
                 TaxaList tL=new TaxaListBuilder().addAll(ids).build();
-				family.original =  BitAlignment.getInstance(FilterAlignment.getInstance(align, tL, false), true);
+				family.original =  AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)FilterAlignment.getInstance(align, tL, false));
 				myLogger.info("family alignment created");
 				if (useClusterAlgorithm)  NucleotideImputationUtils.callParentAllelesUsingClusters(family, maxMissing, minMinorAlleleFrequency, windowSize);
 				else if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
