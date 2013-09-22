@@ -4,7 +4,10 @@
 package net.maizegenetics.pal.alignment;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
-import ch.systemsx.cisd.hdf5.*;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import net.maizegenetics.pal.alignment.depth.AlleleDepth;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
@@ -22,6 +25,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
+ * Create new alignments.  New alignments are built from a minimum of TaxaList, PositionList, and Genotypes.  Depth and Scores are optional
+ * features of alignments.
+ * <p></p>
+ * If you know the taxa,position, and genotypes are known from the beginning use:
+ * Alignment a=AlignmentBuilder.getInstance(genotype, positionList, taxaList);
+ *
+ * In many situations only
  *
  * @author Terry Casstevens
  * @author Ed Buckler
@@ -44,6 +54,9 @@ public class AlignmentBuilder {
     private IHDF5Writer writer=null;
     private BuildType myBuildType;
 
+    /*
+    Builder for in memory taxa incremental
+     */
     private AlignmentBuilder(PositionList positionList) {
         this.positionList=positionList;
         this.myBuildType=BuildType.TAXA_INC;
@@ -51,24 +64,9 @@ public class AlignmentBuilder {
         taxaListBuilder=new TaxaListBuilder();
     }
 
-    /**
-     * Experimental idea.
-     * @param positionList
-     * @param hdf5File
+    /*
+        Builder for in memory site incremental
      */
-    private AlignmentBuilder(PositionList positionList, String hdf5File) {
-        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
-        //config.overwrite();
-        config.dontUseExtendableDataTypes();
-        writer = config.writer();
-        this.positionList=new PositionHDF5List.Builder(writer,positionList).build();  //create a new position list
-
-        setupGenotypeTaxaInHDF5(writer);
-        this.myBuildType=BuildType.TAXA_INC;
-        isHDF5=true;
-        taxaListBuilder=new TaxaListBuilder();
-    }
-
     private AlignmentBuilder(TaxaList taxaList) {
         this.taxaList=taxaList;
         this.myBuildType=BuildType.SITE_INC;
@@ -89,7 +87,7 @@ public class AlignmentBuilder {
     }
 
     public AlignmentBuilder addSite(Position pos, byte[] genos) {
-        if(myBuildType!=BuildType.SITE_INC) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getSiteIncremental");
+        if((myBuildType!=BuildType.SITE_INC)||isHDF5) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getSiteIncremental and without HDF5");
         if(genos.length!=taxaList.getTaxaCount()) throw new IndexOutOfBoundsException("Number of taxa and genotypes do not agree");
         posListBuilder.add(pos);
         incGeno.add(genos);
@@ -99,6 +97,7 @@ public class AlignmentBuilder {
     public AlignmentBuilder addTaxon(Taxon taxon, byte[] genos) {
         return addTaxon(taxon, genos, null);
     }
+
     public AlignmentBuilder addTaxon(Taxon taxon, byte[] genos, byte[] depth) {
         if(myBuildType!=BuildType.TAXA_INC) throw new IllegalArgumentException("addTaxon only be used with AlignmentBuilder.getTaxaIncremental");
         if(genos.length!=positionList.getSiteCount()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
@@ -116,54 +115,11 @@ public class AlignmentBuilder {
         return isHDF5;
     }
 
-    private synchronized void setupGenotypeTaxaInHDF5(IHDF5Writer writer) {
-        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES,
-                NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
-        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.BLOCK_SIZE,
-                1<<16);
-        writer.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, false);
-        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, 0);
-        String[][] aEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
-        int numEncodings = aEncodings.length;
-        int numStates = aEncodings[0].length;
-        MDArray<String> alleleEncodings = new MDArray<>(String.class, new int[]{numEncodings, numStates});
-        for (int s = 0; s < numEncodings; s++) {
-            for (int x = 0; x < numStates; x++) {
-                alleleEncodings.set(aEncodings[s][x], s, x);
-            }
-        }
-        writer.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
-        writer.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
-        MDArray<String> alleleEncodingReadAgain = writer.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
-        if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
-            throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
-        }
-        writer.createGroup(HapMapHDF5Constants.GENOTYPES);
-    }
-
-    /**
-     * Code needed to add a Taxon to HDF5, potentially split into functions in TaxaListBuilder & GenotypeBuilder
-     */
-    private synchronized void addTaxon(IHDF5Writer myWriter, Taxon id, byte[] genotype, byte[][] depth) {
-        int chunk=1<<16;
-        int myNumSites=positionList.getSiteCount();
-        if(myNumSites<chunk) chunk=myNumSites;
-        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
-        if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
-        if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
-        myWriter.createByteArray(basesPath, myNumSites, chunk, HapMapHDF5Constants.intDeflation);
-        HDF5Utils.writeHDF5EntireArray(basesPath, myWriter, genotype.length, 1<<16, genotype);
-        if(depth!=null) {
-            if(depth.length!=6) throw new IllegalStateException("Just set A, C, G, T, -, + all at once");
-            if(depth[0].length!=myNumSites) throw new IllegalStateException("Setting all depth in addTaxon.  Wrong number of sites");
- //           myWriter.writeByteMatrix(getTaxaDepthPath(taxonIndex), depth, HapMapHDF5Constants.intDeflation);
-        }
-    }
 
     public Alignment build(){
         if(isHDF5) {
             String name=writer.getFile().getAbsolutePath();
-            calculateAlleleFreq(writer);
+            annotateHDF5File(writer);
             writer.close();
             return getInstance(name);
         }
@@ -198,8 +154,41 @@ public class AlignmentBuilder {
         return new CoreAlignment(genotype, positionList, taxaList, siteScore, alleleDepth);
     }
 
+    /**
+     * Standard approach for creating a new Alignment
+     * @param genotype
+     * @param positionList
+     * @param taxaList
+     * @return new alignment
+     */
     public static Alignment getInstance(Genotype genotype, PositionList positionList, TaxaList taxaList) {
         return new CoreAlignment(genotype, positionList, taxaList);
+    }
+
+    /**
+     * Creates a new HDF5 file alignment based on existing Genotype, PositionList, and TaxaList.
+     * @param genotype
+     * @param positionList
+     * @param taxaList
+     * @param hdf5File name of the file
+     * @return alignment backed by new HDF5 file
+     */
+    public static Alignment getInstance(Genotype genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
+        AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(positionList,hdf5File);
+        for (int i=0; i<taxaList.getTaxaCount(); i++) {
+            aB.addTaxon(taxaList.get(i),genotype.getBaseRow(i));
+        }
+        return aB.build();
+    }
+
+    /**
+     * Creates a new HDF5 file alignment based on an existing alignment.
+     * @param a existing alignment
+     * @param hdf5File name of the file
+     * @return alignment backed by new HDF5 file
+     */
+    public static Alignment getInstance(Alignment a, String hdf5File) {
+        return getInstance(a.getGenotypeMatrix(),a.getPositionList(),a.getTaxaList(),hdf5File);
     }
 
     public static Alignment getInstance(String hdf5File) {
@@ -295,7 +284,80 @@ public class AlignmentBuilder {
         return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
     }
 
-    private void calculateAlleleFreq(IHDF5Writer writer) {
+    /*
+    HDF5 Alignment section.
+     */
+
+    /**
+     * Creates a new HDF5 file that can used with TaxaIncremental addition.
+     * @param positionList
+     * @param hdf5File
+     */
+    private AlignmentBuilder(PositionList positionList, String hdf5File) {
+        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+        //config.overwrite();
+        config.dontUseExtendableDataTypes();
+        writer = config.writer();
+        this.positionList=new PositionHDF5List.Builder(writer,positionList).build();  //create a new position list
+
+        setupGenotypeTaxaInHDF5(writer);
+        this.myBuildType=BuildType.TAXA_INC;
+        isHDF5=true;
+        taxaListBuilder=new TaxaListBuilder();
+    }
+
+
+
+    private synchronized void setupGenotypeTaxaInHDF5(IHDF5Writer writer) {
+        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES,
+                NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.BLOCK_SIZE,
+                1<<16);
+        writer.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, false);
+        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, 0);
+        String[][] aEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
+        int numEncodings = aEncodings.length;
+        int numStates = aEncodings[0].length;
+        MDArray<String> alleleEncodings = new MDArray<>(String.class, new int[]{numEncodings, numStates});
+        for (int s = 0; s < numEncodings; s++) {
+            for (int x = 0; x < numStates; x++) {
+                alleleEncodings.set(aEncodings[s][x], s, x);
+            }
+        }
+        writer.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
+        writer.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
+        MDArray<String> alleleEncodingReadAgain = writer.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
+        if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
+            throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
+        }
+        writer.createGroup(HapMapHDF5Constants.GENOTYPES);
+    }
+
+    /**
+     * Code needed to add a Taxon to HDF5, potentially split into functions in TaxaListBuilder & GenotypeBuilder
+     */
+    private synchronized void addTaxon(IHDF5Writer myWriter, Taxon id, byte[] genotype, byte[][] depth) {
+        int chunk=1<<16;
+        int myNumSites=positionList.getSiteCount();
+        if(myNumSites<chunk) chunk=myNumSites;
+        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
+        if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
+        if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
+        myWriter.createByteArray(basesPath, myNumSites, chunk, HapMapHDF5Constants.intDeflation);
+        HDF5Utils.writeHDF5EntireArray(basesPath, myWriter, genotype.length, 1<<16, genotype);
+        if(depth!=null) {
+            if(depth.length!=6) throw new IllegalStateException("Just set A, C, G, T, -, + all at once");
+            if(depth[0].length!=myNumSites) throw new IllegalStateException("Setting all depth in addTaxon.  Wrong number of sites");
+            //           myWriter.writeByteMatrix(getTaxaDepthPath(taxonIndex), depth, HapMapHDF5Constants.intDeflation);
+        }
+    }
+
+    /**
+     * Annotates the HDF5 HapMap file after it is built.
+     * Currently, placed in the AlignmentBuilder as it still above genotypes, taxa, and sites.
+     * @param writer
+     */
+    private void annotateHDF5File(IHDF5Writer writer) {
         int hdf5GenoBlock=writer.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.BLOCK_SIZE);
         int sites=writer.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(writer);
@@ -352,10 +414,10 @@ public class AlignmentBuilder {
         if(maf.length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.MAF, writer, maf.length, 1<<16, maf);
         if(paf.length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.SITECOV, writer, paf.length, 1<<16, paf);
 
-//        if(coverage.length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.TAXACOV, writer, coverage.length, 1<<16, coverage);
-//        if(hets.length>0) {
-//            System.out.println("Hets Length:"+hets.length);
-//            HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.TAXAHET, writer, hets.length, 1<<16, hets);
-//        }
+        if(coverage.length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.TAXACOV, writer, coverage.length, 1<<16, coverage);
+        if(hets.length>0) {
+            System.out.println("Hets Length:"+hets.length);
+            HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.TAXAHET, writer, hets.length, 1<<16, hets);
+        }
     }
 }

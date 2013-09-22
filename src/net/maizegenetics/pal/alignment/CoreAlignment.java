@@ -30,6 +30,7 @@ public class CoreAlignment implements Alignment {
     private final AlleleDepth myAlleleDepth;
 
     CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+        //todo need check dimensions
         myGenotype = genotype;
         myPositionList = positionList;
         myTaxaList = taxaList;
