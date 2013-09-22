@@ -6,81 +6,33 @@
  */
 package net.maizegenetics.pipeline;
 
-import java.awt.Frame;
-
-import java.io.BufferedReader;
-
-import java.lang.reflect.Constructor;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
-import net.maizegenetics.baseplugins.CombineDataSetsPlugin;
-import net.maizegenetics.baseplugins.ConvertAlignmentCoordinatesPlugin;
-import net.maizegenetics.baseplugins.CreateTreePlugin;
-import net.maizegenetics.baseplugins.DistanceMatrixPlugin;
-import net.maizegenetics.baseplugins.DistanceMatrixRangesPlugin;
-import net.maizegenetics.baseplugins.ExportMultiplePlugin;
-import net.maizegenetics.baseplugins.FileLoadPlugin;
-import net.maizegenetics.baseplugins.FilterAlignmentPlugin;
-import net.maizegenetics.baseplugins.FilterSiteNamePlugin;
-import net.maizegenetics.baseplugins.FilterTaxaAlignmentPlugin;
-import net.maizegenetics.baseplugins.FilterTraitsPlugin;
-import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
-import net.maizegenetics.baseplugins.FlapjackLoadPlugin;
-import net.maizegenetics.baseplugins.GenotypeImputationPlugin;
-import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
-import net.maizegenetics.baseplugins.IntersectionAlignmentPlugin;
-import net.maizegenetics.baseplugins.KinshipPlugin;
-import net.maizegenetics.baseplugins.LinkageDiseqDisplayPlugin;
-import net.maizegenetics.baseplugins.LinkageDisequilibriumPlugin;
-import net.maizegenetics.baseplugins.MLMPlugin;
-import net.maizegenetics.baseplugins.MergeAlignmentsPlugin;
-import net.maizegenetics.baseplugins.MergeAlignmentsSameSitesPlugin;
-import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
-import net.maizegenetics.baseplugins.PlinkLoadPlugin;
-import net.maizegenetics.baseplugins.SeparatePlugin;
-import net.maizegenetics.baseplugins.SequenceDiversityPlugin;
-import net.maizegenetics.baseplugins.SynonymizerPlugin;
-import net.maizegenetics.baseplugins.TableDisplayPlugin;
-import net.maizegenetics.baseplugins.UnionAlignmentPlugin;
+import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-
 import net.maizegenetics.pal.alignment.io.BuilderFromHapMap;
 import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
+import net.maizegenetics.pal.popgen.LinkageDisequilibrium.HetTreatment;
 import net.maizegenetics.pal.popgen.LinkageDisequilibrium.testDesign;
-
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium.HetTreatment;
-
-import net.maizegenetics.plugindef.AbstractPlugin;
-import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.plugindef.Datum;
-import net.maizegenetics.plugindef.Plugin;
-import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.plugindef.PluginListener;
-import net.maizegenetics.plugindef.ThreadedPluginListener;
-
+import net.maizegenetics.plugindef.*;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.progress.ProgressPanel;
 import net.maizegenetics.tassel.DataTreePanel;
 import net.maizegenetics.tassel.TASSELMainFrame;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+
+import java.awt.*;
+import java.io.BufferedReader;
+import java.lang.reflect.Constructor;
+import java.util.*;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -185,7 +137,8 @@ public class TasselPipeline implements PluginListener {
             try {
 
                 String current = args[index++];
-                current = current.replaceFirst("—", "-");
+                String emDash="\u2014";
+                current = current.replaceFirst(emDash, "-");
 
                 if (!current.startsWith("-")) {
                     throw new IllegalArgumentException("TasselPipeline: parseArgs: expecting argument beginning with dash: " + current);

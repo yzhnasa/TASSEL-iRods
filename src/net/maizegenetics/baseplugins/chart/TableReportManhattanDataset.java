@@ -3,9 +3,10 @@
  */
 package net.maizegenetics.baseplugins.chart;
 
-import java.util.HashMap;
 import net.maizegenetics.pal.report.TableReport;
 import org.jfree.data.xy.DefaultTableXYDataset;
+
+import java.util.HashMap;
 
 /**
  *
@@ -267,7 +268,7 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
                         currentChrom = myChromNames[i];
                         seriesNames[chromIndex - 1] = currentChrom;
                     }
-                    //                ÷if (!myNumericChromNames) {
+                    //                if (!myNumericChromNames) {
                     theData[i][chromIndex] = myLogPValues[i];
                 } else {
 
@@ -278,7 +279,7 @@ public class TableReportManhattanDataset extends DefaultTableXYDataset {
                     theData[i][Integer.parseInt(myChromNames[i])] = myLogPValues[i];
 
                 }
-//               ÷ } else {
+//                } else {
 //                    theData[i][myChromOrder[chromIndex - 1]+1] = myLogPValues[i];
 //                }
             } catch (NumberFormatException ex) {

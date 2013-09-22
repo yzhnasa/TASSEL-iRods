@@ -4,22 +4,18 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.TreeSet;
 import net.maizegenetics.gbs.maps.PETagsOnPhysicalMapV3;
 import net.maizegenetics.gbs.maps.TagMappingInfoV3;
 import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMapV3;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.gbs.util.SAMUtils;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
+
+import java.io.*;
+import java.util.Arrays;
+import java.util.TreeSet;
 
 /**
  * Methods to annotate TOPM file, including adding mapping info from aligners, adding PE tag position and genetic position, model prediction for the best position
@@ -29,7 +25,7 @@ import net.maizegenetics.util.MultiMemberGZIPInputStream;
 public class AnnotateTOPM {
     /**TOPM file that will be annotated*/
     TagsOnPhysicalMapV3 topm;
-    /**Record Sam record. When tmiBuffers[0] is full, output to TOPM block. Substitute tmiBuffers[i] with tmiBuffers[i+1]. Size = numBuffers×maxMappingNum(-K option)×TOPM CHUNK_SIZE
+    /**Record Sam record. When tmiBuffers[0] is full, output to TOPM block. Substitute tmiBuffers[i] with tmiBuffers[i+1]. Size = numBuffers x maxMappingNum(-K option) x TOPM CHUNK_SIZE
      * Multiple buffers are used because the output in SAM is not exactly the order of input tag, roughly in the same order though
      */
     TagMappingInfoV3[][][] tmiBuffers = null;
@@ -502,7 +498,6 @@ public class AnnotateTOPM {
      * @param tmiBuffer
      * @param dataSetNames
      * @param chunkIndex
-     * @param mappingSource 
      */
     private void saveTMIBufferToTOPM (TagMappingInfoV3[][] tmiBuffer, String[] dataSetNames, int chunkIndex) {
         for (int i = 0; i < tmiBuffer[0].length; i++) {
