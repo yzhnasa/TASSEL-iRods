@@ -362,6 +362,7 @@ public class AlignmentBuilder {
         int sites=writer.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(writer);
         int taxa=tL.getTaxaCount();
+        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA,taxa);
         int[][] af=new int[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][sites];
         byte[][] afOrder=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][sites];
         float[] coverage=new float[taxa];

@@ -8,14 +8,19 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.pal.taxa.TaxaListBuilder;
 
 /**
  *
+ * @author Ed Buckler
  * @author Terry Casstevens
  */
 public class HDF5ByteGenotype extends AbstractGenotype {
 
     private static final int SHIFT_AMOUNT = 16;
+    private final String[] genotypePaths;
     /**
      * Byte representations of DNA sequences are stored in blocks of 65536 sites
      */
@@ -33,24 +38,32 @@ public class HDF5ByteGenotype extends AbstractGenotype {
     };
     private final LoadingCache<Long, byte[]> myGenoCache;
 
+
+
     private static long getCacheKey(int taxon, int site) {
-        return ((long) taxon << 32) + (site / HDF5_GENOTYPE_BLOCK_SIZE);
+        return ((long) taxon << 33) + (site / HDF5_GENOTYPE_BLOCK_SIZE);
     }
 
     private static int getTaxonFromKey(long key) {
-        return (int) (key >>> 32);
+        return (int) (key >>> 33);
     }
 
     private static int getSiteStartFromKey(long key) {
-        return (int) ((key << 32) >>> 32);
+        return (int) ((key << 33) >>> 33);
     }
 
     private String getTaxaGenoPath(int taxon) {
-        return HapMapHDF5Constants.GENOTYPES + "/taxon" + taxon;
+        return genotypePaths[taxon];
+     //   return HapMapHDF5Constants.GENOTYPES + "/taxon" + taxon;
     }
 
     private HDF5ByteGenotype(IHDF5Reader reader, int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
         super(numTaxa, numSites, phased, alleleEncodings);
+        genotypePaths=new String[numTaxa];
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);  //not the most efficient thing to do, but ensures sort is the same.
+        for (int i=0; i<numTaxa; i++) {
+            genotypePaths[i]=HapMapHDF5Constants.GENOTYPES + "/" + tL.getFullTaxaName(i);
+        }
         myHDF5Reader = reader;
         myGenoCache = CacheBuilder.newBuilder()
                 .maximumSize((3 * getTaxaCount()) / 2)
@@ -58,7 +71,10 @@ public class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     static HDF5ByteGenotype getInstance(IHDF5Reader reader) {
-        return new HDF5ByteGenotype(reader, 0, 0, false, null);
+        int numTaxa=reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA);
+        int numSites=reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
+        String[][] alleleEncodings=NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
+        return new HDF5ByteGenotype(reader, numTaxa, numSites, false, alleleEncodings);
     }
 
     @Override
