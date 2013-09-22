@@ -33,8 +33,8 @@ public class BuilderFromGenotypeHDF5 {
     //TODO update to the newest version
     //TODO subset??
     public Alignment build() {
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5(infile);
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
         PositionList pL=new PositionHDF5List.Builder(reader).build();
         Genotype geno=GenotypeBuilder.buildHDF5(reader);
         return AlignmentBuilder.getInstance(geno,pL, tL);

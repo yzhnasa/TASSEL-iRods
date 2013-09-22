@@ -5,7 +5,6 @@ package net.maizegenetics.pal.alignment;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
-import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import net.maizegenetics.pal.io.FormattedOutput;

@@ -47,6 +47,7 @@ public final class PositionHDF5List implements PositionList {
                 mySiteList.putAll(loadAll(toFill));
                 return get(key);
             } catch (Exception e) {
+                e.printStackTrace();
                 return null;
             }
         }
@@ -61,7 +62,7 @@ public final class PositionHDF5List implements PositionList {
             String[] snpIDs;
             int startSite=key&siteMask;
             int length=((numPositions-startSite)<BLOCKSIZE)?numPositions-startSite:BLOCKSIZE;
- //           System.out.println("Reading from HDF5 site anno:"+startSite);
+//           System.out.println("Reading from HDF5 site anno:"+startSite);
             synchronized(reader) {
                 afOrder = reader.readByteMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_FREQ_ORD, 2, length, 0l, startSite);
                 maf= reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.MAF,length, startSite);
@@ -512,10 +513,10 @@ public final class PositionHDF5List implements PositionList {
         /**
          * Creates a positionList in a new HDF5 file.
          */
-        public Builder(String hdf5FileName, PositionList a) {
-            this.hdf5FileName=hdf5FileName;
-            IHDF5Writer h5w= HDF5Factory.open(hdf5FileName);
-   //         h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());  //TODO consider adding compression & blocks
+        public Builder(IHDF5Writer h5w, PositionList a) {
+            this.hdf5FileName=h5w.getFile().getName();
+      //      IHDF5Writer h5w= HDF5Factory.open(hdf5FileName);
+            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());  //TODO consider adding compression & blocks
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, a.size());
 
@@ -538,8 +539,7 @@ public final class PositionHDF5List implements PositionList {
 
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, a.size());
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
-            h5w.close();
-            this.reader = HDF5Factory.openForReading(hdf5FileName);
+            this.reader = h5w;
         }
 
         /**

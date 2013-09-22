@@ -88,7 +88,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     };
     private static final Logger myLogger = Logger.getLogger(LinkageDisequilibrium.class);
     private Alignment myAlignment;
-    private Alignment mySBitAlignment;
+//    private Alignment mySBitAlignment;
     private int myMinTaxaForEstimate = 20;
     private int myWindowSize = 50;
     private int myTestSite = -1;  // this is only set when one versus all numSites is calculated.
@@ -186,7 +186,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     private long getMapKey(int r, int c) {
-        return (c < r) ? (((long) c * mySBitAlignment.getSiteCount()) + r) : (((long) r * mySBitAlignment.getSiteCount()) + c);
+        return (c < r) ? (((long) c * myAlignment.getSiteCount()) + r) : (((long) r * myAlignment.getSiteCount()) + c);
     }
 
     public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, Alignment alignment, int site1, int site2) {
@@ -204,7 +204,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (ignoreHets) {
             workingAlignment =AlignmentBuilder.getHomozygousInstance(myAlignment);
         } else {
-            workingAlignment = mySBitAlignment;
+            workingAlignment = myAlignment;
         }
         for (long currTest = 0; currTest < myTotalTests; currTest++) {
             int r = getRowFromIndex(currTest);

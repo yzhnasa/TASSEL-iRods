@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 
 /**
@@ -69,6 +70,7 @@ public final class HapMapHDF5Constants {
     public static final String NUM_TBIT_WORDS = "numTBitWords";
     public static final String NUM_TAXA = "numTaxa";
     public static final String NUM_SITES = "numSites";
+    public static final String BLOCK_SIZE = "blockSize";
     public static final String MAX_NUM_ALLELES = "maxNumAlleles";
     public static final String RETAIN_RARE_ALLELES = "retainRareAlleles";
     public static final String NUM_LD_BINS = LD_DESC+"/numLDBins";
@@ -76,6 +78,7 @@ public final class HapMapHDF5Constants {
 
     //Standard Compression (deflation) levels
     public static final HDF5IntStorageFeatures intDeflation = HDF5IntStorageFeatures.createDeflation(2);
+    public static final HDF5FloatStorageFeatures floatDeflation = HDF5FloatStorageFeatures.createDeflation(2);
 
 
     // Annotations

@@ -1,12 +1,14 @@
 package net.maizegenetics.pal.taxa;
 
-import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A builder for creating immutable {@link TaxaList} instances.
@@ -76,8 +78,8 @@ public class TaxaListBuilder {
         return new TaxaArrayList(this);
     }
 
-    public TaxaList buildFromHDF5(String hdf5FileName) {
-        IHDF5Reader reader = HDF5Factory.openForReading(hdf5FileName);
+    public TaxaList buildFromHDF5(IHDF5Reader reader) {
+        //IHDF5Reader reader = HDF5Factory.openForReading(hdf5FileName);
         myTaxaList.clear();
         List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(HapMapHDF5Constants.GENOTYPES, true);
         for (HDF5LinkInformation is : fields) {
