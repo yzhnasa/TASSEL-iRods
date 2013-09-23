@@ -1,6 +1,5 @@
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.site.Chromosome;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;

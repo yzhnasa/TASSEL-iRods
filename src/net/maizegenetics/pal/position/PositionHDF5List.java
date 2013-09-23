@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.site;
+package net.maizegenetics.pal.position;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
@@ -12,7 +12,7 @@ import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
-import net.maizegenetics.pal.site.Position.Allele;
+import net.maizegenetics.pal.position.Position.Allele;
 
 import java.lang.reflect.Array;
 import java.nio.IntBuffer;

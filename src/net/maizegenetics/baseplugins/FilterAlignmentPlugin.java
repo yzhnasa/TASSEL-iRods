@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.alignment.CombineAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

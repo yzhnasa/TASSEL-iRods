@@ -2,7 +2,7 @@ package net.maizegenetics.gwas.modelfitter;
 
 import java.util.ArrayList;
 
-import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.position.Chromosome;
 
 public class SNP {
 	public String name;

@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.site;
+package net.maizegenetics.pal.position;
 
 import com.google.common.base.Preconditions;
 

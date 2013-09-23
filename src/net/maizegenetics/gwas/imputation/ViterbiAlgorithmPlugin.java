@@ -3,7 +3,6 @@ package net.maizegenetics.gwas.imputation;
 import java.awt.Frame;
 import java.util.List;
 import javax.swing.ImageIcon;
-import net.maizegenetics.baseplugins.ConvertSBitTBitPlugin;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -28,7 +27,7 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 		List<Datum> theData = input.getDataOfType(PopulationData.class);
 		for (Datum data:theData) {
 			PopulationData family = (PopulationData) data.getData();
-			Alignment tba = ConvertSBitTBitPlugin.convertAlignment(family.imputed, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, this);
+			Alignment tba = family.imputed;
 			//if (family.imputed instanceof TBitAlignment) {
 			//	tba = (TBitAlignment) family.imputed;
 			//} else {

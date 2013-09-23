@@ -1,8 +1,8 @@
-package net.maizegenetics.pal.site;
+package net.maizegenetics.pal.position;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import net.maizegenetics.pal.site.Position.Allele;
+import net.maizegenetics.pal.position.Position.Allele;
 
 import java.nio.IntBuffer;
 import java.util.*;

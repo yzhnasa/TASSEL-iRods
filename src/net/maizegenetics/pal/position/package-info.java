@@ -11,4 +11,4 @@
  *     <p></p>
  *     Annotations are descriptors about a site, e.g. reference allele, minor allele frequency, strand, etc.
  */
-package net.maizegenetics.pal.site;
+package net.maizegenetics.pal.position;

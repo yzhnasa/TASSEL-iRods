@@ -1,6 +1,6 @@
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.position.Chromosome;
 import java.io.Serializable;
 
 import java.util.ArrayList;

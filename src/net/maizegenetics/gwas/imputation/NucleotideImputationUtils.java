@@ -13,7 +13,7 @@ import net.maizegenetics.pal.distance.DistanceMatrix;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.pal.math.GammaFunction;
-import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.taxa.IdGroupUtils;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.tree.Tree;
@@ -1614,7 +1614,7 @@ public class NucleotideImputationUtils {
 		return imputeUsingViterbiFiveState(a, probHeterozygous, familyName, false);
 	}
 	
-	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName, boolean useVariableRecombitionRates) {
+	public static Alignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName, boolean useVariableRecombitionRates) {
 		a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
 		//obs are in {A, C, M}, where M is heterozygote A/C

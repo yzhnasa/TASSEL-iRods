@@ -3,7 +3,7 @@ package net.maizegenetics.pal.alignment.io;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
-import net.maizegenetics.pal.site.*;
+import net.maizegenetics.pal.position.*;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;

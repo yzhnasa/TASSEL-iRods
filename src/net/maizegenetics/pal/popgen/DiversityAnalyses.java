@@ -19,7 +19,7 @@ import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.report.AbstractTableReport;
 import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.position.Chromosome;
 
 import java.io.Serializable;
 import java.util.Vector;

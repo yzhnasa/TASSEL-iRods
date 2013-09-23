@@ -5,9 +5,9 @@ package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
-import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.site.GeneralPosition;
-import net.maizegenetics.pal.site.PositionArrayList;
+import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.pal.position.GeneralPosition;
+import net.maizegenetics.pal.position.PositionArrayList;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

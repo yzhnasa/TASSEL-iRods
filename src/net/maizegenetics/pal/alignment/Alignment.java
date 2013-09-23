@@ -5,8 +5,8 @@ package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
-import net.maizegenetics.pal.site.Chromosome;
-import net.maizegenetics.pal.site.PositionList;
+import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 

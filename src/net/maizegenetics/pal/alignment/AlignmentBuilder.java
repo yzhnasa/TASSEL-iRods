@@ -12,10 +12,10 @@ import net.maizegenetics.pal.alignment.depth.AlleleDepth;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.alignment.score.SiteScore;
-import net.maizegenetics.pal.site.Position;
-import net.maizegenetics.pal.site.PositionArrayList;
-import net.maizegenetics.pal.site.PositionHDF5List;
-import net.maizegenetics.pal.site.PositionList;
+import net.maizegenetics.pal.position.Position;
+import net.maizegenetics.pal.position.PositionArrayList;
+import net.maizegenetics.pal.position.PositionHDF5List;
+import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
@@ -196,7 +196,7 @@ public class AlignmentBuilder {
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
         PositionList pL=new PositionHDF5List.Builder(reader).build();
         Genotype geno=GenotypeBuilder.buildHDF5(reader);
-        return AlignmentBuilder.getInstance(geno,pL, tL);
+        return AlignmentBuilder.getInstance(geno, pL, tL);
     }
 
     public static Alignment getInstanceOnlyMajorMinor(Alignment alignment) {

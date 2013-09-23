@@ -4,7 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.ids.TaxaList;
-import net.maizegenetics.pal.site.Chromosome;
+import net.maizegenetics.pal.position.Chromosome;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.util.ArrayList;

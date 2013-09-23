@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.site;
+package net.maizegenetics.pal.position;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import java.util.List;

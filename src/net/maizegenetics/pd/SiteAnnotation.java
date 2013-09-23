@@ -1,7 +1,5 @@
 package net.maizegenetics.pd;
 
-import net.maizegenetics.pal.site.Chromosome;
-
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
