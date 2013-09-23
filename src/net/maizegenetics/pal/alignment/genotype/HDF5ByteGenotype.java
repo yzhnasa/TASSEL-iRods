@@ -90,6 +90,16 @@ public class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     @Override
+    public String getBaseAsString(int taxon, int site) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
+    }
+
+    @Override
+    public String getDiploidAsString(int site, byte value) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
+    }
+
+    @Override
     public void transposeData(boolean siteInnerLoop) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
