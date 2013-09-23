@@ -14,7 +14,7 @@ import net.maizegenetics.util.SuperByteMatrix;
  *
  * @author Terry Casstevens
  */
-public class NucleotideGenotype extends ByteGenotype {
+class NucleotideGenotype extends ByteGenotype {
 
     private static final int SHIFT_AMOUNT = 10;
     private static final int NUM_SITES_TO_CACHE = 1 << SHIFT_AMOUNT;
@@ -82,7 +82,7 @@ public class NucleotideGenotype extends ByteGenotype {
                 alleleFreq[s][i] = (alleleFreq[s][i] << 4) | (5 - i);
             }
         }
-        
+
         int[][][] alleleCounts = new int[numSites][][];
         for (int s = 0; s < numSites; s++) {
             int numAlleles = sort6(alleleFreq[s]);

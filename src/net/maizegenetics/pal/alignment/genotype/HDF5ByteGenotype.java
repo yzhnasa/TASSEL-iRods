@@ -17,7 +17,7 @@ import net.maizegenetics.pal.taxa.TaxaListBuilder;
  * @author Ed Buckler
  * @author Terry Casstevens
  */
-public class HDF5ByteGenotype extends AbstractGenotype {
+class HDF5ByteGenotype extends AbstractGenotype {
 
     private static final int SHIFT_AMOUNT = 16;
     private final String[] genotypePaths;
@@ -54,7 +54,6 @@ public class HDF5ByteGenotype extends AbstractGenotype {
 
     private String getTaxaGenoPath(int taxon) {
         return genotypePaths[taxon];
-     //   return HapMapHDF5Constants.GENOTYPES + "/taxon" + taxon;
     }
 
     private HDF5ByteGenotype(IHDF5Reader reader, int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {

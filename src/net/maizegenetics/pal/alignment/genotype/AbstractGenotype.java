@@ -16,7 +16,7 @@ import java.util.Map;
  *
  * @author Terry Casstevens
  */
-public abstract class AbstractGenotype implements Genotype {
+abstract class AbstractGenotype implements Genotype {
 
     private static final Logger myLogger = Logger.getLogger(AbstractGenotype.class);
     protected final int myTaxaCount;

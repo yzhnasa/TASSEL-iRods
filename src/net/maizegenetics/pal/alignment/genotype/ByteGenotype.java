@@ -11,13 +11,13 @@ import org.apache.log4j.Logger;
  *
  * @author Terry Casstevens
  */
-public class ByteGenotype extends AbstractGenotype {
-    
+class ByteGenotype extends AbstractGenotype {
+
     private static final Logger myLogger = Logger.getLogger(ByteGenotype.class);
     private SuperByteMatrix myGenotype;
     private SuperByteMatrix mySiteInnerLoop;
     private SuperByteMatrix myTaxonInnerLoop;
-    
+
     ByteGenotype(byte[][] genotype, boolean phased, String[][] alleleEncodings) {
         super(genotype.length, genotype[0].length, phased, alleleEncodings);
         mySiteInnerLoop = SuperByteMatrixBuilder.getInstance(myTaxaCount, mySiteCount);
@@ -29,7 +29,7 @@ public class ByteGenotype extends AbstractGenotype {
             }
         }
     }
-    
+
     ByteGenotype(SuperByteMatrix genotype, boolean phased, String[][] alleleEncodings) {
         super(genotype.getNumRows(), genotype.getNumColumns(), phased, alleleEncodings);
         if (genotype.isColumnInnerLoop()) {
@@ -40,30 +40,30 @@ public class ByteGenotype extends AbstractGenotype {
         myGenotype = genotype;
         System.out.println("myGenotype class: " + myGenotype.getClass().getName());
     }
-    
+
     @Override
     public byte getBase(int taxon, int site) {
         return myGenotype.get(taxon, site);
     }
-    
+
     @Override
     public byte[] getGenotypeForAllSites(int taxon) {
         return myGenotype.getAllColumns(taxon);
     }
-    
+
     @Override
     public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
         return myGenotype.getColumnRange(taxon, start, end);
     }
-    
+
     @Override
     public byte[] getGenotypeForAllTaxa(int site) {
         return myGenotype.getAllRows(site);
     }
-    
+
     @Override
     public void transposeData(boolean siteInnerLoop) {
-        
+
         if (siteInnerLoop) {
             if (mySiteInnerLoop == null) {
                 mySiteInnerLoop = SuperByteMatrixBuilder.getInstanceTranspose(myTaxonInnerLoop);
@@ -75,6 +75,6 @@ public class ByteGenotype extends AbstractGenotype {
             }
             myGenotype = myTaxonInnerLoop;
         }
-        
+
     }
 }
