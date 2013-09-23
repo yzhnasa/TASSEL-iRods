@@ -7,7 +7,7 @@ import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.position.GeneralPosition;
-import net.maizegenetics.pal.position.PositionArrayList;
+import net.maizegenetics.pal.position.PositionListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -210,7 +210,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             }
             //MutableNucleotideAlignment msa = null;
             GenotypeBuilder msa=GenotypeBuilder.getInstance(a.getTaxaCount(),a.getSiteCount());
-            PositionArrayList.Builder posBuilder=new PositionArrayList.Builder();
+            PositionListBuilder posBuilder=new PositionListBuilder();
 //            if (inputFormat == INPUT_FORMAT.hapmap)
 //            {
 //                msa = MutableNucleotideAlignment.getInstance(a.getTaxaList(), a.getSiteCount());
@@ -315,7 +315,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     }
 
     private void processSNPsWithSamePosition(Integer[] samePos, Alignment a, int chr, int currentPos,
-                                             GenotypeBuilder msa, PositionArrayList.Builder posBuild) {
+                                             GenotypeBuilder msa, PositionListBuilder posBuild) {
         boolean[] finished = new boolean[samePos.length];
         for (int i = 0; i < finished.length; ++i) {
             finished[i] = false;   // indicates if the site has already been merged with a previous site OR written as is to msa
@@ -552,7 +552,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //    }
     
     private void addSiteToMutableAlignment(int chromosome, int position, byte[] genos, GenotypeBuilder theMSA,
-                                           PositionArrayList.Builder posBuilder) {
+                                           PositionListBuilder posBuilder) {
         int currSite=posBuilder.size();
     //    int currSite = theMSA.getSiteCount();
         //int currSite = theMSA.getNextFreeSite();

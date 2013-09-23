@@ -6,8 +6,8 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentBuilder;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
-import net.maizegenetics.pal.position.PositionHDF5List;
 import net.maizegenetics.pal.position.PositionList;
+import net.maizegenetics.pal.position.PositionListBuilder;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import org.apache.log4j.Logger;
@@ -35,7 +35,7 @@ public class BuilderFromGenotypeHDF5 {
     public Alignment build() {
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
-        PositionList pL=new PositionHDF5List.Builder(reader).build();
+        PositionList pL=new PositionListBuilder(reader).build();
         Genotype geno=GenotypeBuilder.buildHDF5(reader);
         return AlignmentBuilder.getInstance(geno,pL, tL);
     }

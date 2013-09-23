@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutionException;
  *
  * @author Ed Buckler
  */
-public final class PositionHDF5List implements PositionList {
+final class PositionHDF5List implements PositionList {
     private final IHDF5Reader reader;
     private final int numPositions;
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
@@ -97,7 +97,7 @@ public final class PositionHDF5List implements PositionList {
         }
     }
 
-    private PositionHDF5List(IHDF5Reader reader) {
+    PositionHDF5List(IHDF5Reader reader) {
         this.reader=reader;
         int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
         this.numPositions=variableSites.length;
@@ -477,78 +477,6 @@ public final class PositionHDF5List implements PositionList {
     public List<Position> subList(int fromIndex, int toIndex) {
         throw new UnsupportedOperationException("Not implemented yet.");
         //return mySiteList.subList(fromIndex, toIndex);
-    }
-
-    /**
-     * A builder for creating immutable PositionList from HDF5File
-     *
-     * <p>Example:
-     * <pre>   {@code
-     *   PositionArrayList instance=new PositionHDF5List.Builder("fileName").build();
-     *   }
-     *
-     * <p>Builder instances can be reused - it is safe to call {@link #build}
-     * multiple times to build multiple lists in series. Each new list
-     * contains the one created before it.
-     */
-    public static class Builder {
-        private final String hdf5FileName;
-        private final IHDF5Reader reader;
-        /**
-         * Creates a new builder based on an existing HDF5 file.
-         */
-        public Builder(String hdf5FileName) {
-            this.hdf5FileName=hdf5FileName;
-            this.reader = HDF5Factory.openForReading(hdf5FileName);
-        }
-
-        /**
-         * Creates a new builder based on an existing HDF5 file reader.
-         */
-        public Builder(IHDF5Reader reader) {
-            this.reader = reader;
-            hdf5FileName=reader.getFile().getName();
-        }
-
-        /**
-         * Creates a positionList in a new HDF5 file.
-         */
-        public Builder(IHDF5Writer h5w, PositionList a) {
-            this.hdf5FileName=h5w.getFile().getName();
-      //      IHDF5Writer h5w= HDF5Factory.open(hdf5FileName);
-            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());  //TODO consider adding compression & blocks
-
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, a.size());
-
-            String[] lociNames = new String[a.getNumChromosomes()];
-            Map<Chromosome, Integer> locusToIndex=new HashMap<>(10);
-            Chromosome[] loci = a.getChromosomes();
-            for (int i = 0; i < a.getNumChromosomes(); i++) {
-                lociNames[i] = loci[i].getName();
-                locusToIndex.put(loci[i],i);
-            }
-            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumChromosomes());
-            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
-            int[] locusIndicesArray = new int[a.getSiteCount()];
-            for (int i = 0; i < locusIndicesArray.length; i++) {
-                locusIndicesArray[i] = locusToIndex.get(a.getChromosome(i));
-            }
-            HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(2);
-            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),features);
-            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_INDICES, locusIndicesArray,features);
-
-            h5w.createIntArray(HapMapHDF5Constants.POSITIONS, a.size());
-            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
-            this.reader = h5w;
-        }
-
-        /**
-         * Returns a newly-created {@code ImmutableList} based on the contents of
-         * the {@code Builder}.
-         */
-        public PositionList build() {
-            return new PositionHDF5List(reader);
-        }
     }
 }
 

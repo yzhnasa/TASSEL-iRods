@@ -12,7 +12,8 @@ import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.position.GeneralPosition;
-import net.maizegenetics.pal.position.PositionArrayList;
+import net.maizegenetics.pal.position.PositionList;
+import net.maizegenetics.pal.position.PositionListBuilder;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
@@ -510,7 +511,7 @@ public class TagsAtLocus {
         //String[] names = new String[theTags.size()];
         boolean refTagWithGaps = false;
         int[] positions = null;
-        PositionArrayList.Builder pALB=new PositionArrayList.Builder();
+        PositionListBuilder pALB=new PositionListBuilder();
         for (int i=0; i<nSites; i++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,i).build());}
         for (int i = 0; i < aseqs.length; i++) {
             //aseqs[i] = profile.getAlignedSequence(i + 1).getSequenceAsString();
@@ -521,7 +522,7 @@ public class TagsAtLocus {
                     refTagWithGaps = true;
                     positions = new int[aseqs[i].length()];
                     positions[0] = 0;
-                    pALB=new PositionArrayList.Builder();
+                    pALB=new PositionListBuilder();
                     pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,0).build());
                     for (int site = 1; site < aseqs[i].length(); site++) {
                         positions[site] = (aseqs[i].charAt(site) == '-') ? (positions[site - 1]) : (positions[site - 1] + 1);
@@ -611,7 +612,7 @@ public class TagsAtLocus {
         Alignment a = null;
         TaxaList tL=new TaxaListBuilder().addAll(names).build();
         int nSites=aseqs[0].length();
-        PositionArrayList.Builder pALB=new PositionArrayList.Builder();
+        PositionListBuilder pALB=new PositionListBuilder();
         for (int i=0; i<nSites; i++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,i).build());}
         GenotypeBuilder gB=GenotypeBuilder.getInstance(theTags.size(),nSites);
         for (int i=0; i<aseqs.length; i++) {gB.setBaseRangeForTaxon(i,0,aseqs[i].getBytes());}

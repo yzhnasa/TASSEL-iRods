@@ -1,14 +1,14 @@
 /**
- * Site package supports lists of sites and their annotation.
+ * Position package supports lists of positions and their annotation.
  * <p>
  *     Definitions:
  *     <p></p>
- *     Sites are any defined point in the genome.  Generally they are polymorphic, but they do not need to
+ *     Positions are any defined point in the genome.  Generally they are polymorphic, but they do not need to
  *     be.
  *     <p></p>
- *     Locus - is generally a chromosome, and multiple sites are generally part of one chromosomes.  While sites are frequently
- *     nested within a locus for viewing.  There is no need for sites to be sorted that way.
+ *     Chromosome can be viewed as physical chromosome, but it can also be used as an order set of positions.  For example, chromosome
+ *     could be used to reference a large series of contigs.
  *     <p></p>
- *     Annotations are descriptors about a site, e.g. reference allele, minor allele frequency, strand, etc.
+ *     Annotations are descriptors about a position, e.g. reference allele, minor allele frequency, strand, etc.
  */
 package net.maizegenetics.pal.position;

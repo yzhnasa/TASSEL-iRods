@@ -84,7 +84,7 @@ public class BuilderFromHapMap {
                 throw new IllegalStateException("BuilderFromHapMap: processing threads timed out.");
             }
             int currentSite=0;
-            PositionArrayList.Builder posBuild=new PositionArrayList.Builder();
+            PositionListBuilder posBuild=new PositionListBuilder();
             GenotypeBuilder gb=GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.getTaxaCount(), lines);
             for (ProcessHapMapBlock pb : pbs) {
                 posBuild.addAll(pb.getBlkPosList());

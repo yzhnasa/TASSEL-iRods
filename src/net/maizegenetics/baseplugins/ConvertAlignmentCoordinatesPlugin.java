@@ -7,7 +7,7 @@ import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentBuilder;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.position.GeneralPosition;
-import net.maizegenetics.pal.position.PositionArrayList;
+import net.maizegenetics.pal.position.PositionListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -90,7 +90,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
         BufferedReader br = null;
         int count = 1;
-        PositionArrayList.Builder posBuilder=new PositionArrayList.Builder().addAll(alignment.getPositionList());
+        PositionListBuilder posBuilder=new PositionListBuilder().addAll(alignment.getPositionList());
         try {
             br = Utils.getBufferedReader(myMapFilename);
             Pattern sep = Pattern.compile("\\s+");

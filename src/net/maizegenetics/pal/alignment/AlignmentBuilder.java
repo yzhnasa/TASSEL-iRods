@@ -12,9 +12,7 @@ import net.maizegenetics.pal.alignment.depth.AlleleDepth;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.alignment.score.SiteScore;
-import net.maizegenetics.pal.position.Position;
-import net.maizegenetics.pal.position.PositionArrayList;
-import net.maizegenetics.pal.position.PositionHDF5List;
+import net.maizegenetics.pal.position.*;
 import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
@@ -47,7 +45,7 @@ public class AlignmentBuilder {
 
     //Fields for incremental sites
     private TaxaList taxaList=null;
-    private PositionArrayList.Builder posListBuilder=null;
+    private PositionListBuilder posListBuilder=null;
 
     private enum BuildType{TAXA_INC, SITE_INC, GENO_EDIT};
     private boolean isHDF5=false;
@@ -194,7 +192,7 @@ public class AlignmentBuilder {
     public static Alignment getInstance(String hdf5File) {
         IHDF5Reader reader=HDF5Factory.openForReading(hdf5File);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
-        PositionList pL=new PositionHDF5List.Builder(reader).build();
+        PositionList pL=new PositionListBuilder(reader).build();
         Genotype geno=GenotypeBuilder.buildHDF5(reader);
         return AlignmentBuilder.getInstance(geno, pL, tL);
     }
@@ -298,7 +296,7 @@ public class AlignmentBuilder {
         //config.overwrite();
         config.dontUseExtendableDataTypes();
         writer = config.writer();
-        this.positionList=new PositionHDF5List.Builder(writer,positionList).build();  //create a new position list
+        this.positionList=new PositionListBuilder(writer,positionList).build();  //create a new position list
 
         setupGenotypeTaxaInHDF5(writer);
         this.myBuildType=BuildType.TAXA_INC;
