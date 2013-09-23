@@ -135,7 +135,7 @@ class ProcessHapMapBlock implements Runnable {
     private ArrayList<String> txtL;
     private byte[][] gTS;
     private final ArrayList<Position> blkPosList;
-    private final byte[] convert;
+ //   private final byte[] convert;
     private final boolean isOneLetter; //true e.g. A,R, false=AA,CT
 
     private ProcessHapMapBlock(int order, int taxaN, ArrayList<String> txtL) {
@@ -152,16 +152,6 @@ class ProcessHapMapBlock implements Runnable {
             isOneLetter=false;
         } else {
             throw new IllegalStateException("ProcessHapMapBlock: Genotype coded wrong use one or 2 letters per genotype");
-        }
-
-        //todo Move to Nucleotide constants if best way
-        convert=new byte[128];
-        for (int i=0; i<convert.length; i++) {
-            try {
-                convert[i]=NucleotideAlignmentConstants.getNucleotideDiploidByte((char) i);
-            } catch (IllegalArgumentException e) {
-                convert[i]=Alignment.UNKNOWN_DIPLOID_ALLELE;
-            }
         }
     }
 
@@ -190,13 +180,15 @@ class ProcessHapMapBlock implements Runnable {
                 chromosomeLookup.put(chrName, currChr);
             }
             String variants=input.substring(tabPos[VARIANT_INDEX-1]+1, tabPos[VARIANT_INDEX]);
-            GeneralPosition.Builder apb=new GeneralPosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[POSITION_INDEX-1]+1, tabPos[POSITION_INDEX]))).snpName(input.substring(0, tabPos[SNPID_INDEX])).knownVariants(variants) //TODO                    strand, variants,
+            GeneralPosition.Builder apb=new GeneralPosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[POSITION_INDEX-1]+1, tabPos[POSITION_INDEX])))
+                    .snpName(input.substring(0, tabPos[SNPID_INDEX]))
+                    .knownVariants(variants) //TODO                    strand, variants,
                     ;
             try {
-                byte glbMajor=convert[variants.charAt(0)];
+                byte glbMajor=NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(0));
                 apb.allele(Position.Allele.GLBMAJ, glbMajor);
                 if (variants.length()==3) {
-                    byte glbMinor=convert[variants.charAt(2)];
+                    byte glbMinor=NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(2));
                     apb.allele(Position.Allele.GLBMIN, glbMinor);
                 }
             } catch (IllegalArgumentException e) {
@@ -207,13 +199,14 @@ class ProcessHapMapBlock implements Runnable {
             int offset=tabPos[NUM_HAPMAP_NON_TAXA_HEADERS-1]+1;
             if (isOneLetter) {
                 for (int i=offset; i<len; i+=2) {
-                    gTS[(i-offset)/2][s]=convert[input.charAt(i)];
+                    gTS[(i-offset)/2][s]=NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i));
                 }
             } else {
                 for (int i=offset; i<len; i+=3) {
                     //System.out.println(i+":"+input.charAt(i+1)+input.charAt(i));
                     //there is a phasing conflict with the existing import approach
-                    gTS[(i-offset)/3][s]=AlignmentUtils.getDiploidValue(convert[input.charAt(i+1)], convert[input.charAt(i)]);
+                    gTS[(i-offset)/3][s]=AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i+1)),
+                            NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i)));
                 }
             }
         }
