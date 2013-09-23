@@ -8,7 +8,6 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.ids.LabelMapping;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.taxa.Taxon;
 

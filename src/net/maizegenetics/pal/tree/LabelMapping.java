@@ -5,7 +5,7 @@
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
 
-package net.maizegenetics.pal.ids;
+package net.maizegenetics.pal.tree;
 
 /**
  * Title:        LabelMapping
@@ -29,7 +29,7 @@ public class LabelMapping implements java.io.Serializable {
 	//
 	private static final long serialVersionUID=-9217142171228146380L;
 
-	//serialver -classpath ./classes net.maizegenetics.pal.ids.LabelMapping
+	//serialver -classpath ./classes net.maizegenetics.pal.tree.LabelMapping
 	private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
 		out.writeByte(1); //Version number
 		out.writeObject(mappings_);

@@ -9,7 +9,6 @@
 package net.maizegenetics.pal.tree;
 
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.ids.LabelMapping;
 import net.maizegenetics.pal.util.BranchLimits;
 
 import java.io.IOException;
