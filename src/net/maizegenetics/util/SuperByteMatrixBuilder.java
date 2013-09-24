@@ -37,15 +37,29 @@ public class SuperByteMatrixBuilder {
     }
 
     public static SuperByteMatrix getInstanceCopy(SuperByteMatrix matrix) {
+
         int numRows = matrix.getNumRows();
         int numColumns = matrix.getNumColumns();
-        SuperByteMatrix result = getInstance(numRows, numColumns);
-        for (int r = 0; r < numRows; r++) {
-            for (int c = 0; c < numColumns; c++) {
-                result.set(r, c, matrix.get(r, c));
+        if ((matrix instanceof SuperByteMatrixSingle) || (matrix instanceof SuperByteMatrixMultiple)) {
+            SuperByteMatrix result = getInstance(numRows, numColumns);
+            for (int r = 0; r < numRows; r++) {
+                for (int c = 0; c < numColumns; c++) {
+                    result.set(r, c, matrix.get(r, c));
+                }
             }
+            return result;
+        } else if (matrix instanceof SuperByteMatrixTranspose) {
+            SuperByteMatrix result = getInstanceTranspose(numRows, numColumns);
+            for (int c = 0; c < numColumns; c++) {
+                for (int r = 0; r < numRows; r++) {
+                    result.set(r, c, matrix.get(r, c));
+                }
+            }
+            return result;
+        } else {
+            throw new IllegalArgumentException("SuperByteMatrixBuilder: getInstanceCopy: Don't Know how to Copy: " + matrix.getClass().getName());
         }
-        return result;
+
     }
 
     /**
