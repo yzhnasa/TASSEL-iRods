@@ -115,10 +115,13 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
 
     @Override
     public void reorderRows(int[] newIndices) {
-
+        
         if (newIndices.length != myNumRows) {
             throw new IllegalArgumentException("SuperByteMatrixSingle: reorderRows: index array size: " + newIndices.length + " doesn't equal num rows in matrix: " + myNumRows);
         }
+        
+        int[] tempIndices = new int[newIndices.length];
+        System.arraycopy(newIndices, 0, tempIndices, 0, myNumRows);
 
         int currentRow = 0;
         byte[] temp = new byte[myNumColumns];
@@ -126,8 +129,8 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
         while (currentRow < myNumRows) {
 
             while (currentRow < myNumRows) {
-                if ((newIndices[currentRow] == currentRow) || (newIndices[currentRow] == -1)) {
-                    newIndices[currentRow] = -1;
+                if ((tempIndices[currentRow] == currentRow) || (tempIndices[currentRow] == -1)) {
+                    tempIndices[currentRow] = -1;
                 } else {
                     break;
                 }
@@ -138,17 +141,17 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
                 
                 System.arraycopy(myData, getIndex(currentRow, 0), temp, 0, myNumColumns);
 
-                int srcRow = newIndices[currentRow];
+                int srcRow = tempIndices[currentRow];
                 int dstRow = currentRow;
                 while (srcRow != currentRow) {
                     System.arraycopy(myData, getIndex(srcRow, 0), myData, getIndex(dstRow, 0), myNumColumns);
-                    newIndices[dstRow] = -1;
+                    tempIndices[dstRow] = -1;
                     dstRow = srcRow;
-                    srcRow = newIndices[dstRow];
+                    srcRow = tempIndices[dstRow];
                 }
                 
                 System.arraycopy(temp, 0, myData, getIndex(dstRow, 0), myNumColumns);
-                newIndices[dstRow] = -1;
+                tempIndices[dstRow] = -1;
 
             }
 
