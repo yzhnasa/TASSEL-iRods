@@ -59,7 +59,7 @@ public class TransitionProbability {
 		if (node <= 0) return;
 		int n = probabilityOfATransition.length;
 		adjustedProbability = new double[n][n];
-		int segmentLength = positions[node] - positions[node - 1];
+		int segmentLength = Math.abs(positions[node] - positions[node - 1]);
 		double m;
 		for (int row = 0; row < n; row++) {
 			double offdiagsum = 0;
