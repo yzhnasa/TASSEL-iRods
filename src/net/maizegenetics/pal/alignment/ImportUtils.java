@@ -51,6 +51,7 @@ public class ImportUtils {
             return null;
         } catch (Exception e) {
             System.err.println("Error reading:" + fileName);
+            e.printStackTrace();
             return null;
         }
 
