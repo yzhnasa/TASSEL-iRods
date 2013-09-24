@@ -59,4 +59,9 @@ public class SuperByteMatrixTranspose implements SuperByteMatrix {
     public boolean isColumnInnerLoop() {
         return false;
     }
+
+    @Override
+    public void reorderRows(int[] newIndices) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

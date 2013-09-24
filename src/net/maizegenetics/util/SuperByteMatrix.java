@@ -74,12 +74,19 @@ public interface SuperByteMatrix {
 
     /**
      * Returns true if the matrix stored for better performance when column loop
-     * inside row loop. False if matrix stored for better performance when
-     * row loop inside column loop.
+     * inside row loop. False if matrix stored for better performance when row
+     * loop inside column loop.
      *
      * @return true if the matrix stored for better performance when column loop
-     * inside row loop. False if matrix stored for better performance when
-     * row loop inside column loop.
+     * inside row loop. False if matrix stored for better performance when row
+     * loop inside column loop.
      */
     public boolean isColumnInnerLoop();
+
+    /**
+     * Reorders rows of this matrix based on the given indices.
+     *
+     * @param newIndices new indices.
+     */
+    public void reorderRows(int[] newIndices);
 }

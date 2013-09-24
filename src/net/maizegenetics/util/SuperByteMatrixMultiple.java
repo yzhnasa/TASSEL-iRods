@@ -127,4 +127,9 @@ public class SuperByteMatrixMultiple implements SuperByteMatrix {
     public boolean isColumnInnerLoop() {
         return true;
     }
+
+    @Override
+    public void reorderRows(int[] newIndices) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
