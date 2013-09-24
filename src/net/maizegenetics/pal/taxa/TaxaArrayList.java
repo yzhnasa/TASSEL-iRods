@@ -16,7 +16,7 @@ import java.util.*;
  * @author Ed Buckler
  *
  */
-public class TaxaArrayList implements TaxaList {
+class TaxaArrayList implements TaxaList {
 
     private static final Logger myLogger = Logger.getLogger(TaxaArrayList.class);
     private final List<Taxon> myTaxaList;

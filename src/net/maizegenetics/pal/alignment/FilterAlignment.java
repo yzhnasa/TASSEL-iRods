@@ -3,26 +3,20 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.position.PositionList;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.pal.position.PositionListBuilder;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
-
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.UnmodifiableBitSet;
-
 import org.apache.log4j.Logger;
+
+import java.util.*;
 
 /**
  * All taxa and site filtering should be controlled through this class. It
@@ -1480,7 +1474,12 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public PositionList getPositionList() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        PositionListBuilder pLB=new PositionListBuilder();
+        PositionList basePL=getBaseAlignment().getPositionList();
+        for (int i=0; i<getSiteCount(); i++) {
+            pLB.add(basePL.get(translateSite(i)));
+        }
+        return pLB.build();
     }
 
     @Override

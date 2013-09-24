@@ -3,12 +3,12 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
+import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.util.SuperByteMatrix;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.util.SuperByteMatrix;
 
 /**
  *
@@ -36,6 +36,16 @@ class NucleotideGenotype extends ByteGenotype {
 
     NucleotideGenotype(SuperByteMatrix genotype, boolean phased) {
         super(genotype, phased, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
+    }
+
+    @Override
+    public String getBaseAsString(int taxon, int site) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
+    }
+
+    @Override
+    public String getDiploidAsString(int site, byte value) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
 
     private int[][] getCachedAlleleFreq(int site) {
