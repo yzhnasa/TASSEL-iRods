@@ -145,6 +145,14 @@ public class GenotypeBuilder {
         myAlleleEncodings = alleleEncodings;
         return this;
     }
+    
+    public int getTaxaCount() {
+        return myGenotype.getNumRows();
+    }
+    
+    public int getSiteCount() {
+        return myGenotype.getNumColumns();
+    }
 
     public Genotype build() {
         SuperByteMatrix temp = myGenotype;
