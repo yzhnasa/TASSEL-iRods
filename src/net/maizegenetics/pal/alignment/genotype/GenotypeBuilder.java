@@ -145,13 +145,17 @@ public class GenotypeBuilder {
         myAlleleEncodings = alleleEncodings;
         return this;
     }
-    
+
     public int getTaxaCount() {
         return myGenotype.getNumRows();
     }
-    
+
     public int getSiteCount() {
         return myGenotype.getNumColumns();
+    }
+
+    public void reorderTaxa(int[] newIndices) {
+        myGenotype.reorderRows(newIndices);
     }
 
     public Genotype build() {
