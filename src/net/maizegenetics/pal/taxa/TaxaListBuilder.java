@@ -97,15 +97,21 @@ public class TaxaListBuilder {
         return Collections.unmodifiableList(myTaxaList);
     }
     
-    public void sortTaxaAlphabetically(GenotypeBuilder genotypes) {
+    public TaxaListBuilder sortTaxaAlphabetically(GenotypeBuilder genotypes) {
         int numTaxa = myTaxaList.size();
         if (numTaxa != genotypes.getTaxaCount()) {
             throw new IllegalArgumentException("TaxaListBuilder: sortTaxaAlphabetically: taxa list size: " + numTaxa + " doesn't match genotypes num taxa: " + genotypes.getTaxaCount());
         }
-        genotypes.reorderTaxa(sortTaxaAlphabetically());
+        genotypes.reorderTaxa(sortAlphabetically());
+        return this;
     }
     
-    public int[] sortTaxaAlphabetically() {
+    public TaxaListBuilder sortTaxaAlphabetically() {
+        sortAlphabetically();
+        return this;
+    }
+    
+    private int[] sortAlphabetically() {
         
         int numTaxa = myTaxaList.size();
         
