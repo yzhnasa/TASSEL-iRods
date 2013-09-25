@@ -115,11 +115,11 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
 
     @Override
     public void reorderRows(int[] newIndices) {
-        
+
         if (newIndices.length != myNumRows) {
             throw new IllegalArgumentException("SuperByteMatrixSingle: reorderRows: index array size: " + newIndices.length + " doesn't equal num rows in matrix: " + myNumRows);
         }
-        
+
         int[] tempIndices = new int[newIndices.length];
         System.arraycopy(newIndices, 0, tempIndices, 0, myNumRows);
 
@@ -138,20 +138,72 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
             }
 
             if (currentRow < myNumRows) {
-                
+
                 System.arraycopy(myData, getIndex(currentRow, 0), temp, 0, myNumColumns);
 
                 int srcRow = tempIndices[currentRow];
-                int dstRow = currentRow;
+                int destRow = currentRow;
                 while (srcRow != currentRow) {
-                    System.arraycopy(myData, getIndex(srcRow, 0), myData, getIndex(dstRow, 0), myNumColumns);
-                    tempIndices[dstRow] = -1;
-                    dstRow = srcRow;
-                    srcRow = tempIndices[dstRow];
+                    System.arraycopy(myData, getIndex(srcRow, 0), myData, getIndex(destRow, 0), myNumColumns);
+                    tempIndices[destRow] = -1;
+                    destRow = srcRow;
+                    srcRow = tempIndices[destRow];
                 }
-                
-                System.arraycopy(temp, 0, myData, getIndex(dstRow, 0), myNumColumns);
-                tempIndices[dstRow] = -1;
+
+                System.arraycopy(temp, 0, myData, getIndex(destRow, 0), myNumColumns);
+                tempIndices[destRow] = -1;
+
+            }
+
+        }
+
+    }
+
+    @Override
+    public void reorderColumns(int[] newIndices) {
+
+        if (newIndices.length != myNumColumns) {
+            throw new IllegalArgumentException("SuperByteMatrixSingle: reorderColumns: index array size: " + newIndices.length + " doesn't equal num columns in matrix: " + myNumColumns);
+        }
+
+        int[] tempIndices = new int[newIndices.length];
+        System.arraycopy(newIndices, 0, tempIndices, 0, myNumColumns);
+
+        int currentRow = 0;
+        byte[] temp = new byte[myNumRows];
+
+        while (currentRow < myNumColumns) {
+
+            while (currentRow < myNumColumns) {
+                if ((tempIndices[currentRow] == currentRow) || (tempIndices[currentRow] == -1)) {
+                    tempIndices[currentRow] = -1;
+                } else {
+                    break;
+                }
+                currentRow++;
+            }
+
+            if (currentRow < myNumColumns) {
+
+                for (int r = 0; r < myNumRows; r++) {
+                    temp[r] = get(r, currentRow);
+                }
+
+                int srcColumn = tempIndices[currentRow];
+                int destColumn = currentRow;
+                while (srcColumn != currentRow) {
+                    for (int r = 0; r < myNumRows; r++) {
+                        set(r, destColumn, get(r, srcColumn));
+                    }
+                    tempIndices[destColumn] = -1;
+                    destColumn = srcColumn;
+                    srcColumn = tempIndices[destColumn];
+                }
+
+                for (int r = 0; r < myNumRows; r++) {
+                    set(r, destColumn, temp[r]);
+                }
+                tempIndices[destColumn] = -1;
 
             }
 

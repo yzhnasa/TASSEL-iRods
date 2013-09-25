@@ -132,4 +132,9 @@ public class SuperByteMatrixMultiple implements SuperByteMatrix {
     public void reorderRows(int[] newIndices) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public void reorderColumns(int[] newIndices) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

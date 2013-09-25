@@ -62,6 +62,11 @@ public class SuperByteMatrixTranspose implements SuperByteMatrix {
 
     @Override
     public void reorderRows(int[] newIndices) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        myMatrix.reorderColumns(newIndices);
+    }
+
+    @Override
+    public void reorderColumns(int[] newIndices) {
+        myMatrix.reorderRows(newIndices);
     }
 }

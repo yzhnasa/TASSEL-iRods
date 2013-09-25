@@ -89,4 +89,11 @@ public interface SuperByteMatrix {
      * @param newIndices new indices.
      */
     public void reorderRows(int[] newIndices);
+
+    /**
+     * Reorders columns of this matrix based on the given indices.
+     *
+     * @param newIndices new indices.
+     */
+    public void reorderColumns(int[] newIndices);
 }
