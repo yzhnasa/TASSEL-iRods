@@ -130,7 +130,48 @@ public class SuperByteMatrixMultiple implements SuperByteMatrix {
 
     @Override
     public void reorderRows(int[] newIndices) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        if (newIndices.length != myNumRows) {
+            throw new IllegalArgumentException("SuperByteMatrixSingle: reorderRows: index array size: " + newIndices.length + " doesn't equal num rows in matrix: " + myNumRows);
+        }
+
+        int[] tempIndices = new int[newIndices.length];
+        System.arraycopy(newIndices, 0, tempIndices, 0, myNumRows);
+
+        int currentRow = 0;
+        byte[] temp = new byte[myNumColumns];
+
+        while (currentRow < myNumRows) {
+
+            while (currentRow < myNumRows) {
+                if ((tempIndices[currentRow] == currentRow) || (tempIndices[currentRow] == -1)) {
+                    tempIndices[currentRow] = -1;
+                } else {
+                    break;
+                }
+                currentRow++;
+            }
+
+            if (currentRow < myNumRows) {
+
+                System.arraycopy(myData[getFirstIndex(currentRow)], getSecondIndex(currentRow, 0), temp, 0, myNumColumns);
+
+                int srcRow = tempIndices[currentRow];
+                int destRow = currentRow;
+                while (srcRow != currentRow) {
+                    System.arraycopy(myData[getFirstIndex(srcRow)], getSecondIndex(srcRow, 0), myData[getFirstIndex(destRow)], getSecondIndex(destRow, 0), myNumColumns);
+                    tempIndices[destRow] = -1;
+                    destRow = srcRow;
+                    srcRow = tempIndices[destRow];
+                }
+
+                System.arraycopy(temp, 0, myData[getFirstIndex(destRow)], getSecondIndex(destRow, 0), myNumColumns);
+                tempIndices[destRow] = -1;
+
+            }
+
+        }
+
     }
 
     @Override
