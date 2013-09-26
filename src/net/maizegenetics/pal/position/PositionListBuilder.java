@@ -1,5 +1,8 @@
 package net.maizegenetics.pal.position;
 
+import cern.colt.GenericSorting;
+import cern.colt.Swapper;
+import cern.colt.function.IntComparator;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -8,6 +11,7 @@ import com.google.common.base.Preconditions;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 
 import java.util.*;
+import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 
 /**
  * A builder for creating immutable PositionList.  Can be used for either an in memory or HDF5 list.
@@ -181,6 +185,58 @@ public class PositionListBuilder {
             System.out.println("Finished Sort of Position List");
         }
         return new PositionArrayList(contents);
+    }
+    
+    public PositionListBuilder sortPositions(GenotypeBuilder genotypes) {
+        int numPositions = contents.size();
+        if (numPositions != genotypes.getSiteCount()) {
+            throw new IllegalArgumentException("PositionListBuilder: sortPositions: position list size: " + numPositions + " doesn't match genotypes num position: " + genotypes.getSiteCount());
+        }
+        genotypes.reorderPositions(sort());
+        return this;
+    }
+    
+    public PositionListBuilder sortPositions() {
+        sort();
+        return this;
+    }
+    
+    private int[] sort() {
+        
+        int numPositions = contents.size();
+        
+        final int indicesOfSortByPosition[] = new int[numPositions];
+        for (int i = 0; i < indicesOfSortByPosition.length; i++) {
+            indicesOfSortByPosition[i] = i;
+        }
+        
+        Swapper swapPosition = new Swapper() {
+            @Override
+            public void swap(int a, int b) {
+                int temp = indicesOfSortByPosition[a];
+                indicesOfSortByPosition[a] = indicesOfSortByPosition[b];
+                indicesOfSortByPosition[b] = temp;
+            }
+        };
+        
+        IntComparator compPosition = new IntComparator() {
+            @Override
+            public int compare(int a, int b) {
+                return contents.get(indicesOfSortByPosition[a]).compareTo(contents.get(indicesOfSortByPosition[b]));
+            }
+        };
+        
+        GenericSorting.quickSort(0, indicesOfSortByPosition.length, compPosition, swapPosition);
+        
+        ArrayList<Position> temp = new ArrayList<>(numPositions);
+        for (int t = 0; t < numPositions; t++) {
+            temp.add(contents.get(indicesOfSortByPosition[t]));
+        }
+        
+        contents = temp;
+        
+        return indicesOfSortByPosition;
+        
     }
 
 }
