@@ -2,8 +2,11 @@ package net.maizegenetics.pal.util;
 
 import com.google.common.collect.ImmutableMultimap;
 
+import java.util.Map;
+
 /**
- * Defines xxxx
+ * Not sure we want to do this, but if we do then we need to use the myAnno approach, as it massively reduces the overhead
+ * for small number of annotations.
  *
  * @author Ed Buckler
  */
@@ -13,6 +16,9 @@ public class AbstractAnnotation implements GeneralAnnotation {
     public static final double[] EMPTYdouble=new double[0];
     //Custom annotation are stored in the map
     private final ImmutableMultimap<String, Object> myAnnoMap;
+
+  //  private final Map.Entry<String, String>[] myAnno;
+
 
     public AbstractAnnotation(ImmutableMultimap<String, Object> myAnnoMap) {
         this.myAnnoMap=myAnnoMap;
@@ -52,5 +58,10 @@ public class AbstractAnnotation implements GeneralAnnotation {
     @Override
     public double getAverageAnnotation(String annoName) {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Map.Entry[] getAllAnnotationEntries() {
+        return new Map.Entry[0];  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

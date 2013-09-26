@@ -1,5 +1,7 @@
 package net.maizegenetics.pal.util;
 
+import java.util.Map;
+
 /**
  * Provide generalized annotations (descriptors) for a taxon or site.
  *
@@ -40,6 +42,12 @@ public interface GeneralAnnotation {
      * @return average value (if not present - return Double.NaN)
      */
     public double getAverageAnnotation(String annoName);
+
+    /**
+     * Returns all annotation Map.Entries.
+     * @return array of Map.Entry
+     */
+    public Map.Entry[] getAllAnnotationEntries();
 
     //should we provide methods, to average the quantitative annotations, the first annotation
     //

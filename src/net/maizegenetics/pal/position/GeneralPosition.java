@@ -349,5 +349,10 @@ public final class GeneralPosition implements Position {
     public double getAverageAnnotation(String annoName) {
         return GeneralAnnotationUtils.getAverageAnnotation(myVariantsAndAnno,annoName);
     }
+
+    @Override
+    public Map.Entry[] getAllAnnotationEntries() {
+        return Arrays.copyOf(myVariantsAndAnno,myVariantsAndAnno.length);
+    }
     
 }

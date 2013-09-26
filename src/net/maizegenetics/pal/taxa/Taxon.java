@@ -11,9 +11,7 @@ import net.maizegenetics.pal.util.GeneralAnnotationUtils;
 import net.maizegenetics.prefs.TasselPrefs;
 
 import java.io.Serializable;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -256,6 +254,11 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
         return GeneralAnnotationUtils.getAverageAnnotation(myAnno,annoName);
     }
 
+    @Override
+    public Map.Entry[] getAllAnnotationEntries() {
+        return Arrays.copyOf(myAnno,myAnno.length);
+    }
+
     /**
      * A builder for creating immutable Taxon instances.
      * <p> Example:
@@ -271,7 +274,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
     public static class Builder {
 
         // Required parameters
-        private final String myTaxonFullName;
+        private String myTaxonFullName;
         private ArrayList<Map.Entry<String, String>> myAnnotations=new ArrayList<>(0);
 
         /**
@@ -280,6 +283,9 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
          */
         public Builder(Taxon aTaxon) {
             myTaxonFullName = aTaxon.getFullName();
+            for (Map.Entry entry : aTaxon.getAllAnnotationEntries()) {
+                myAnnotations.add(entry);
+            }
         }
 
         /**
@@ -302,6 +308,10 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
             myAnnotations.add(ent);
             return this;
         }
+
+        /**Change the name*/
+        /** Set sex: 0=both, 1=female, 2=male (default=0 Both) */
+        public Builder name(String newName) {myTaxonFullName=newName; return this;}
 
         /** Set sex: 0=both, 1=female, 2=male (default=0 Both) */
         public Builder sex(byte val) {return addAnno(SexKey,val);}

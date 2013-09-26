@@ -2,6 +2,8 @@ package net.maizegenetics.pal.position;
 
 import net.maizegenetics.pal.util.GeneralAnnotation;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -96,6 +98,11 @@ public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
     @Override
     public double getAverageAnnotation(String annoName) {
         return myGA.getAverageAnnotation(annoName);
+    }
+
+    @Override
+    public Map.Entry[] getAllAnnotationEntries() {
+        return myGA.getAllAnnotationEntries();
     }
 
     @Override
