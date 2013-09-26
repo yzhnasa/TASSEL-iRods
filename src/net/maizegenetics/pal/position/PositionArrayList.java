@@ -323,22 +323,7 @@ final class PositionArrayList implements PositionList {
 
     @Override
     public int indexOf(Object o) {
-        int low = 0;
-        int high = numPositions-1;
-        Position key=(Position)o;
-
-        while (low <= high) {
-            int mid = (low + high) >>> 1;
-            Position midVal = mySiteList.get(mid);
-            int cmp = key.compareTo(midVal);
-            if (cmp < 0)
-                low = mid + 1;
-            else if (cmp > 0)
-                high = mid - 1;
-            else
-                return mid; // key found
-        }
-        return -(low + 1);  // key not found.
+        return Collections.binarySearch(mySiteList,(Position)o);
  //       return mySiteList.indexOf(o);
     }
 

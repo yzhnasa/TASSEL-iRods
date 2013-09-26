@@ -1,9 +1,6 @@
 package net.maizegenetics.pal.position;
 
-import ch.systemsx.cisd.hdf5.HDF5Factory;
-import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -20,7 +17,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
- * HDF5 immutable instance of {@link PositionList}.  Use the {@link PositionArrayList.Builder}
+ * HDF5 immutable instance of {@link PositionList}.  Use the {@link PositionListBuilder}
  * to create the list.
  *
  * @author Ed Buckler

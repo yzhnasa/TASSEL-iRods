@@ -106,6 +106,7 @@ public class PositionListBuilder {
         Position startAP=contents.get(0);
         for (Position ap:contents) {
             if(ap.compareTo(startAP)<0) return false;
+            startAP=ap;
         }
         return result;
     }
