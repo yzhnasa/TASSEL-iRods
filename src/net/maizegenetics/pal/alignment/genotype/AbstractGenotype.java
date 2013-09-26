@@ -228,6 +228,7 @@ abstract class AbstractGenotype implements Genotype {
 
     }
 
+    @Override
     public byte[] getMajorAlleleForAllSites() {
         byte[] result = new byte[mySiteCount];
         for (int i = 0; i < mySiteCount; i++) {
@@ -236,6 +237,7 @@ abstract class AbstractGenotype implements Genotype {
         return result;
     }
 
+    @Override
     public byte[] getMinorAlleleForAllSites() {
         byte[] result = new byte[mySiteCount];
         for (int i = 0; i < mySiteCount; i++) {

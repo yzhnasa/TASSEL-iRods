@@ -158,6 +158,10 @@ public class GenotypeBuilder {
         myGenotype.reorderRows(newIndices);
     }
 
+    public void reorderPositions(int[] newIndices) {
+        myGenotype.reorderColumns(newIndices);
+    }
+
     public Genotype build() {
         SuperByteMatrix temp = myGenotype;
         myGenotype = null;
