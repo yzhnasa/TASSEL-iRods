@@ -2,7 +2,6 @@ package net.maizegenetics.pal.alignment.io;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentBuilder;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
@@ -61,27 +60,39 @@ public class BuilderFromGenotypeHDF5 {
         PositionListBuilder palBuild=new PositionListBuilder();
         System.out.println("Combining Position List");
         for (String infile : infiles) {
-            inPL.add(new PositionListBuilder(infile).build());
-            palBuild.addAll(new PositionListBuilder(infile).build());
+            PositionList pl=new PositionListBuilder(infile).build();
+            inPL.add(pl);
+            palBuild.addAll(pl);
         }
         System.out.println("Sorting Position List");
         PositionList pal=palBuild.build(); //In memory position list
-        System.out.println("Writing Position List");
-        IHDF5Writer writer=HDF5Factory.open(newMerge);
-        new PositionListBuilder(writer, pal).build();    //write it to new HDF5
-        System.out.println("Creating Position List");
-
+//        for (int i=0; i<pal.getSiteCount(); i+=10000) {
+//            System.out.println(inPL.get(0).get(i).toString());
+//            System.out.println(pal.get(i).toString());
+//        }
+        System.out.println("Creating Position List Look Up");
         int[][] oldSiteToNewSite=new int[inPL.size()][];
+        int misses=0;
+        int hits=0;
         for (int i=0; i<inPL.size(); i++) {
             PositionList aPL=inPL.get(i);
             oldSiteToNewSite[i]=new int[aPL.getSiteCount()];
             for (int j=0; j<aPL.size(); j++) {
                 oldSiteToNewSite[i][j]=pal.indexOf(aPL.get(j));
+                if(oldSiteToNewSite[i][j]<0) {
+                    misses++;
+                    System.out.println(oldSiteToNewSite[i][j]);
+                    System.out.println(aPL.get(j).toString());
+                    System.out.println(pal.get(-oldSiteToNewSite[i][j]).toString());
+                    System.out.printf("misses:%d hits:%d %n", misses, hits);
+                } else {
+                    hits++;
+                }
             }
         }
+        System.out.println(misses);
         inPL=null;
         int numberOfSites=pal.getSiteCount();
-        pal=null;
         //Get taxa List
         List<TaxaList> inTL=new ArrayList<>();
         TreeSet<Taxon> taxa = new TreeSet<>();
@@ -93,35 +104,43 @@ public class BuilderFromGenotypeHDF5 {
             inTL.add(aTL);
         }
         TaxaList newTaxaList=new TaxaListBuilder().addAll(taxa).build();
-//        int[][] oldTaxaToNewTaxa=new int[inTL.size()][];
-//        for (int i=0; i<inTL.size(); i++) {
-//            TaxaList aTL=inTL.get(i);
-//            oldTaxaToNewTaxa[i]=new int[aTL.getTaxaCount()];
-//            for (int j=0; j<aTL.size(); j++) {
-//                oldTaxaToNewTaxa[i][j]=newTaxaList.indexOf(aTL.get(j));
-//            }
-//        }
+        int[][] oldTaxaToNewTaxa=new int[inTL.size()][];
+        for (int i=0; i<inTL.size(); i++) {
+            TaxaList aTL=inTL.get(i);
+            oldTaxaToNewTaxa[i]=new int[aTL.getTaxaCount()];
+            for (int j=0; j<aTL.size(); j++) {
+                oldTaxaToNewTaxa[i][j]=newTaxaList.indexOf(aTL.get(j));
+                if(oldTaxaToNewTaxa[i][j]<0) {
+                    System.out.println(oldTaxaToNewTaxa[i][j]);
+                    System.out.println(aTL.get(j).toString());
+                }
+            }
+        }
+        AlignmentBuilder ab=AlignmentBuilder.getTaxaIncremental(pal,newMerge);
+        System.gc();
+
 //        System.out.println(Arrays.deepToString(oldTaxaToNewTaxa));
 
         //Transfer the genotypes
-//        List<IHDF5Reader> readers=new ArrayList<>();
-//        for (String infile : infiles) {
-//            readers.add(HDF5Factory.openForReading(infile));
-//        }
-//        IHDF5Writer myWriter=HDF5Factory.open(newMerge);
-//        HDF5IntStorageFeatures genoFeatures = HDF5IntStorageFeatures.createDeflation(2);
-//        for (Taxon aT : newTaxaList) {
-//            byte[] geno=new byte[numberOfSites];
-//            String genoPath=HapMapHDF5Constants.GENOTYPES + "/" + aT.getFullName();
-//            for (int i=0; i<readers.size(); i++) {
-//                byte[] r=readers.get(i).readAsByteArray(genoPath);
-//                for (int j=0; j<oldSiteToNewSite[i].length; j++) {
-//                    geno[oldSiteToNewSite[i][j]]=r[j];
-//                }
-//            }
-//            myWriter.createByteArray(genoPath, numberOfSites, 1<<16, genoFeatures);
-//            MutableNucleotideAlignmentHDF5.writeHDF5EntireArray(genoPath,myWriter,numberOfSites,1<<16,geno);
-//        }
+        System.out.println("Opening alignments");
+        List<Alignment> sourceA=new ArrayList<>();
+        for (String infile : infiles) {
+            sourceA.add(AlignmentBuilder.getInstance(infile));
+        }
+
+
+        for (Taxon aT : newTaxaList) {
+            System.out.println("Write taxon:"+aT.getFullName());
+            byte[] geno=new byte[numberOfSites];
+            for (int i=0; i<sourceA.size(); i++) {
+                int taxonIndex=sourceA.get(i).getTaxaList().getIndicesMatchingTaxon(aT).get(0);
+                byte[] r=sourceA.get(i).getBaseRow(taxonIndex);
+                for (int j=0; j<oldSiteToNewSite[i].length; j++) {
+                    geno[oldSiteToNewSite[i][j]]=r[j];
+                }
+            }
+            ab.addTaxon(aT,geno);
+        }
 
     }
 

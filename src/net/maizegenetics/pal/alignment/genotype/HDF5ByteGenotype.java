@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutionException;
  */
 class HDF5ByteGenotype extends AbstractGenotype {
 
-    private static final int SHIFT_AMOUNT = 16;;
+    private static final int SHIFT_AMOUNT = 16;
 
     private final String[] genotypePaths;
     /**
