@@ -40,7 +40,7 @@ public class BuilderFromGenotypeHDF5 {
     public Alignment build() {
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
-        PositionList pL=new PositionListBuilder(reader).build();
+        PositionList pL=PositionListBuilder.getInstance(reader);
         Genotype geno=GenotypeBuilder.buildHDF5(reader);
         return AlignmentBuilder.getInstance(geno,pL, tL);
     }
@@ -60,7 +60,7 @@ public class BuilderFromGenotypeHDF5 {
         PositionListBuilder palBuild=new PositionListBuilder();
         System.out.println("Combining Position List");
         for (String infile : infiles) {
-            PositionList pl=new PositionListBuilder(infile).build();
+            PositionList pl=PositionListBuilder.getInstance(infile);
             inPL.add(pl);
             palBuild.addAll(pl);
         }

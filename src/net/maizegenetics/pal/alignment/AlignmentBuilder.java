@@ -192,7 +192,7 @@ public class AlignmentBuilder {
     public static Alignment getInstance(String hdf5File) {
         IHDF5Reader reader=HDF5Factory.openForReading(hdf5File);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
-        PositionList pL=new PositionListBuilder(reader).build();
+        PositionList pL=PositionListBuilder.getInstance(reader);
         Genotype geno=GenotypeBuilder.buildHDF5(reader);
         return AlignmentBuilder.getInstance(geno, pL, tL);
     }
