@@ -132,7 +132,7 @@ public class SuperByteMatrixMultiple implements SuperByteMatrix {
     public void reorderRows(int[] newIndices) {
 
         if (newIndices.length != myNumRows) {
-            throw new IllegalArgumentException("SuperByteMatrixSingle: reorderRows: index array size: " + newIndices.length + " doesn't equal num rows in matrix: " + myNumRows);
+            throw new IllegalArgumentException("SuperByteMatrixMultiple: reorderRows: index array size: " + newIndices.length + " doesn't equal num rows in matrix: " + myNumRows);
         }
 
         int[] tempIndices = new int[newIndices.length];
@@ -176,6 +176,54 @@ public class SuperByteMatrixMultiple implements SuperByteMatrix {
 
     @Override
     public void reorderColumns(int[] newIndices) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        if (newIndices.length != myNumColumns) {
+            throw new IllegalArgumentException("SuperByteMatrixMultiple: reorderColumns: index array size: " + newIndices.length + " doesn't equal num columns in matrix: " + myNumColumns);
+        }
+
+        int[] tempIndices = new int[newIndices.length];
+        System.arraycopy(newIndices, 0, tempIndices, 0, myNumColumns);
+
+        int currentRow = 0;
+        byte[] temp = new byte[myNumRows];
+
+        while (currentRow < myNumColumns) {
+
+            while (currentRow < myNumColumns) {
+                if ((tempIndices[currentRow] == currentRow) || (tempIndices[currentRow] == -1)) {
+                    tempIndices[currentRow] = -1;
+                } else {
+                    break;
+                }
+                currentRow++;
+            }
+
+            if (currentRow < myNumColumns) {
+
+                for (int r = 0; r < myNumRows; r++) {
+                    temp[r] = get(r, currentRow);
+                }
+
+                int srcColumn = tempIndices[currentRow];
+                int destColumn = currentRow;
+                while (srcColumn != currentRow) {
+                    for (int r = 0; r < myNumRows; r++) {
+                        set(r, destColumn, get(r, srcColumn));
+                    }
+                    tempIndices[destColumn] = -1;
+                    destColumn = srcColumn;
+                    srcColumn = tempIndices[destColumn];
+                }
+
+                for (int r = 0; r < myNumRows; r++) {
+                    set(r, destColumn, temp[r]);
+                }
+                tempIndices[destColumn] = -1;
+
+            }
+
+        }
+
     }
+
 }
