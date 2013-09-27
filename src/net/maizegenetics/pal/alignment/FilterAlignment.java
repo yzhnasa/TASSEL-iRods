@@ -39,6 +39,7 @@ public class FilterAlignment implements Alignment {
     private final int myRangeEnd;
     private Chromosome[] myChromosomes;
     private int[] myChromosomeOffsets;
+    private PositionList myPositionList;
 
     private FilterAlignment(Alignment a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
 
@@ -1474,12 +1475,15 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public PositionList getPositionList() {
-        PositionListBuilder pLB=new PositionListBuilder();
-        PositionList basePL=getBaseAlignment().getPositionList();
-        for (int i=0; i<getSiteCount(); i++) {
-            pLB.add(basePL.get(translateSite(i)));
+        if(myPositionList==null) {
+            PositionListBuilder pLB=new PositionListBuilder();
+            PositionList basePL=getBaseAlignment().getPositionList();
+            for (int i=0; i<getSiteCount(); i++) {
+                pLB.add(basePL.get(translateSite(i)));
+            }
+            myPositionList=pLB.build();
         }
-        return pLB.build();
+        return myPositionList;
     }
 
     @Override
