@@ -56,7 +56,7 @@ public final class GeneralPosition implements Position {
 
     //since there are numerous redundant annotations and variant descriptions, this class use a annotation hash, so that
     //only the pointers are stored.  It takes a little longer to instantiate, but save 3-fold in memory.
-    private static final ConcurrentMap<Map.Entry<String, String>,Map.Entry<String, String>> ANNO_HASH = new ConcurrentHashMap<>(500_000);
+    private static final ConcurrentMap<Map.Entry<String, String>,Map.Entry<String, String>> ANNO_HASH = new ConcurrentHashMap<>(100_000);
 
     public static Map.Entry<String, String> getCanonicalAnnotation(String key, String value) {
         if (ANNO_HASH.size() > 100000) {

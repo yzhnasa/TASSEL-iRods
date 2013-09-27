@@ -18,7 +18,10 @@ import java.util.List;
 import java.util.TreeSet;
 
 /**
- * Defines xxxx
+ * Provides Builder and methods to build HDF5 files. The methods for merging files work, but they are far from
+ * optimal.  It appears that they are taking twice the memory that they should.  Ed has looked for the memory leak
+ * with a profiler but cannot find it yet.
+ * Todo: TAS-70 Details the issues with apparent memory leak.
  *
  * @author Ed Buckler
  */
@@ -56,26 +59,28 @@ public class BuilderFromGenotypeHDF5 {
             return ;
         }
         System.out.println("Opening Existing Position List");
-        List<PositionList> inPL=new ArrayList<>();
         PositionListBuilder palBuild=new PositionListBuilder();
+        //this could be made more efficient by doing the position and taxa list at the same time.
         System.out.println("Combining Position List");
         for (String infile : infiles) {
+            System.out.println("..."+infile);
             PositionList pl=new PositionListBuilder(infile).build();
-            inPL.add(pl);
             palBuild.addAll(pl);
+            pl.close();
+           // pl=null;
+            System.gc();
         }
         System.out.println("Sorting Position List");
         PositionList pal=palBuild.build(); //In memory position list
-//        for (int i=0; i<pal.getSiteCount(); i+=10000) {
-//            System.out.println(inPL.get(0).get(i).toString());
-//            System.out.println(pal.get(i).toString());
-//        }
+        palBuild=null;
+
         System.out.println("Creating Position List Look Up");
-        int[][] oldSiteToNewSite=new int[inPL.size()][];
+        int[][] oldSiteToNewSite=new int[infiles.length][];
         int misses=0;
         int hits=0;
-        for (int i=0; i<inPL.size(); i++) {
-            PositionList aPL=inPL.get(i);
+        for (int i=0; i<infiles.length; i++) {
+            System.out.println("..."+infiles[i]);
+            PositionList aPL=new PositionListBuilder(infiles[i]).build();
             oldSiteToNewSite[i]=new int[aPL.getSiteCount()];
             for (int j=0; j<aPL.size(); j++) {
                 oldSiteToNewSite[i][j]=pal.indexOf(aPL.get(j));
@@ -89,11 +94,14 @@ public class BuilderFromGenotypeHDF5 {
                     hits++;
                 }
             }
+            aPL.close();
+           // aPL=null;
+            System.gc();
         }
         System.out.println(misses);
-        inPL=null;
         int numberOfSites=pal.getSiteCount();
         //Get taxa List
+        //This could be combined with above.
         List<TaxaList> inTL=new ArrayList<>();
         TreeSet<Taxon> taxa = new TreeSet<>();
         for (String infile : infiles) {
@@ -141,6 +149,7 @@ public class BuilderFromGenotypeHDF5 {
             }
             ab.addTaxon(aT,geno);
         }
+        ab.build();
 
     }
 

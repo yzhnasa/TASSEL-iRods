@@ -1,6 +1,5 @@
 package net.maizegenetics.pal.position;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import net.maizegenetics.pal.position.Position.Allele;
 
@@ -8,7 +7,7 @@ import java.nio.IntBuffer;
 import java.util.*;
 
 /**
- * In memory immutable instance of {@link PositionList}.  Use the {@link PositionArrayList.Builder}
+ * In memory immutable instance of {@link PositionList}.  Use the {@link PositionListBuilder}
  * to create the list.  This list is sorted by position.
  *
  * @author Ed Buckler
