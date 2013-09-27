@@ -11,7 +11,6 @@ import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -41,44 +40,44 @@ public class TaxaListBuilder {
     //TODO need to move union and intersection utils to the builder
 
     private List<Taxon> myTaxaList;
-    
+
     public TaxaListBuilder() {
         myTaxaList = new ArrayList<Taxon>();
     }
-    
+
     public TaxaListBuilder add(Taxon taxon) {
         myTaxaList.add(taxon);
         return this;
     }
-    
+
     public TaxaListBuilder addAll(Collection<Taxon> taxa) {
         myTaxaList.addAll(taxa);
         return this;
     }
-    
+
     public TaxaListBuilder addAll(Alignment a) {
         myTaxaList.addAll(a.getTaxaList());
         return this;
     }
-    
+
     public TaxaListBuilder addAll(String[] taxa) {
         for (int i = 0, n = taxa.length; i < n; i++) {
             myTaxaList.add(new Taxon.Builder(taxa[i]).build());
         }
         return this;
     }
-    
+
     public TaxaListBuilder addAll(Taxon[] taxa) {
         for (int i = 0, n = taxa.length; i < n; i++) {
             myTaxaList.add(new Taxon.Builder(taxa[i]).build());
         }
         return this;
     }
-    
+
     public TaxaList build() {
         return new TaxaArrayList(this);
     }
-    
+
     public TaxaList buildFromHDF5(IHDF5Reader reader) {
         //IHDF5Reader reader = HDF5Factory.openForReading(hdf5FileName);
         myTaxaList.clear();
@@ -96,7 +95,7 @@ public class TaxaListBuilder {
     List<Taxon> getImmutableList() {
         return Collections.unmodifiableList(myTaxaList);
     }
-    
+
     public TaxaListBuilder sortTaxaAlphabetically(GenotypeBuilder genotypes) {
         int numTaxa = myTaxaList.size();
         if (numTaxa != genotypes.getTaxaCount()) {
@@ -105,21 +104,21 @@ public class TaxaListBuilder {
         genotypes.reorderTaxa(sortAlphabetically());
         return this;
     }
-    
+
     public TaxaListBuilder sortTaxaAlphabetically() {
         sortAlphabetically();
         return this;
     }
-    
+
     private int[] sortAlphabetically() {
-        
+
         int numTaxa = myTaxaList.size();
-        
+
         final int indicesOfSortByTaxa[] = new int[numTaxa];
         for (int i = 0; i < indicesOfSortByTaxa.length; i++) {
             indicesOfSortByTaxa[i] = i;
         }
-        
+
         Swapper swapTaxa = new Swapper() {
             @Override
             public void swap(int a, int b) {
@@ -128,24 +127,24 @@ public class TaxaListBuilder {
                 indicesOfSortByTaxa[b] = temp;
             }
         };
-        
+
         IntComparator compTaxa = new IntComparator() {
             @Override
             public int compare(int a, int b) {
                 return myTaxaList.get(indicesOfSortByTaxa[a]).compareTo(myTaxaList.get(indicesOfSortByTaxa[b]));
             }
         };
-        
+
         GenericSorting.quickSort(0, indicesOfSortByTaxa.length, compTaxa, swapTaxa);
-        
-        Taxon[] temp = new Taxon[numTaxa];
+
+        List<Taxon> temp = new ArrayList<>(numTaxa);
         for (int t = 0; t < numTaxa; t++) {
-            temp[t] = myTaxaList.get(indicesOfSortByTaxa[t]);
+            temp.add(myTaxaList.get(indicesOfSortByTaxa[t]));
         }
-        
-        myTaxaList = Arrays.asList(temp);
-        
+
+        myTaxaList = temp;
+
         return indicesOfSortByTaxa;
-        
+
     }
 }
