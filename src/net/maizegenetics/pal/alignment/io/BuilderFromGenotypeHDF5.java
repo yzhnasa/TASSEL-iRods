@@ -43,7 +43,7 @@ public class BuilderFromGenotypeHDF5 {
     public Alignment build() {
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
-        PositionList pL=new PositionListBuilder(reader).build();
+        PositionList pL=PositionListBuilder.getInstance(reader);
         Genotype geno=GenotypeBuilder.buildHDF5(reader);
         return AlignmentBuilder.getInstance(geno,pL, tL);
     }
@@ -64,10 +64,10 @@ public class BuilderFromGenotypeHDF5 {
         System.out.println("Combining Position List");
         for (String infile : infiles) {
             System.out.println("..."+infile);
-            PositionList pl=new PositionListBuilder(infile).build();
+            IHDF5Reader reader=HDF5Factory.openForReading(infile);
+            PositionList pl=PositionListBuilder.getInstance(reader);
             palBuild.addAll(pl);
-            pl.close();
-           // pl=null;
+            reader.close();
             System.gc();
         }
         System.out.println("Sorting Position List");
@@ -80,7 +80,8 @@ public class BuilderFromGenotypeHDF5 {
         int hits=0;
         for (int i=0; i<infiles.length; i++) {
             System.out.println("..."+infiles[i]);
-            PositionList aPL=new PositionListBuilder(infiles[i]).build();
+            IHDF5Reader reader=HDF5Factory.openForReading(infiles[i]);
+            PositionList aPL=PositionListBuilder.getInstance(reader);
             oldSiteToNewSite[i]=new int[aPL.getSiteCount()];
             for (int j=0; j<aPL.size(); j++) {
                 oldSiteToNewSite[i][j]=pal.indexOf(aPL.get(j));
@@ -94,7 +95,7 @@ public class BuilderFromGenotypeHDF5 {
                     hits++;
                 }
             }
-            aPL.close();
+            reader.close();
            // aPL=null;
             System.gc();
         }
