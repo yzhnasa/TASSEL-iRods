@@ -41,7 +41,7 @@ import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
  */
 public class PositionListBuilder {
 
-    private ArrayList<Position> contents = new ArrayList<Position>();
+    private ArrayList<Position> myPositions = new ArrayList<Position>();
     private boolean isHDF5=false;
     private IHDF5Reader reader;
 
@@ -61,7 +61,7 @@ public class PositionListBuilder {
     public PositionListBuilder add(Position element) {
         if(isHDF5) throw new UnsupportedOperationException("Positions cannot be added to existing HDF5 alignments");
         Preconditions.checkNotNull(element, "element cannot be null");
-        contents.add(element);
+        myPositions.add(element);
         return this;
     }
 
@@ -77,18 +77,18 @@ public class PositionListBuilder {
         if (elements instanceof Collection) {
             @SuppressWarnings("unchecked")
             Collection<? extends Position> collection = (Collection<? extends Position>) elements;
-            contents.ensureCapacity(contents.size() + collection.size());
+            myPositions.ensureCapacity(myPositions.size() + collection.size());
         }
         for (Position elem : elements) {
             Preconditions.checkNotNull(elem, "elements contains a null");
-            contents.add(elem);
+            myPositions.add(elem);
         }
         return this;
     }
 
     /**
-     * Replaces the element at the specified position in this list with
-     * the specified element.
+     * Replaces the element at the specified position in this list with the
+     * specified element.
      *
      * @param index index of the element to replace
      * @param element element to be stored at the specified position
@@ -97,47 +97,46 @@ public class PositionListBuilder {
      */
     public PositionListBuilder set(int index, Position element) {
         if(isHDF5) throw new UnsupportedOperationException("Positions cannot be edited to existing HDF5 alignments");
-        contents.set(index,element);
+        myPositions.set(index,element);
         return this;
     }
 
-    /*
-    Returns whether List is already ordered.  Important to check this if genotype and sites are separately built, as the
-     PositionArrayList must be sorted, and will be with build.
+    /**
+     * Returns whether List is already ordered. Important to check this if
+     * genotype and sites are separately built, as the PositionArrayList must be
+     * sorted, and will be with build.
      */
     public boolean validateOrdering() {
         boolean result=true;
-        Position startAP=contents.get(0);
-        for (Position ap:contents) {
+        Position startAP=myPositions.get(0);
+        for (Position ap:myPositions) {
             if(ap.compareTo(startAP)<0) return false;
             startAP=ap;
-        }
+            }
         return result;
     }
 
     /**
      * Returns the size (number of positions) in the current list
+     *
      * @return current size
      */
     public int size() {
-        return contents.size();
+        return myPositions.size();
     }
 
-
     /**
-     * Creates a new builder based on an existing HDF5 file.
+     * Creates a new position list based on an existing HDF5 file.
      */
-    public PositionListBuilder(String hdf5FileName) {
-        isHDF5=true;
-        this.reader = HDF5Factory.openForReading(hdf5FileName);
+    public static PositionList getInstance(String hdf5Filename) {
+        return new PositionHDF5List(HDF5Factory.openForReading(hdf5Filename));
     }
 
     /**
      * Creates a new builder based on an existing HDF5 file reader.
      */
-    public PositionListBuilder(IHDF5Reader reader) {
-        isHDF5=true;
-        this.reader = reader;
+    public static PositionList getInstance(IHDF5Reader reader) {
+        return new PositionHDF5List(reader);
     }
 
     /**
@@ -174,42 +173,46 @@ public class PositionListBuilder {
     }
 
     /**
-     * Returns a newly-created {@code ImmutableList} based on the contents of
+     * Returns a newly-created {@code ImmutableList} based on the myPositions of
      * the {@code Builder}.
      */
     public PositionList build() {
-        if(isHDF5) return new PositionHDF5List(reader);
-        if(!validateOrdering()) {
-            System.out.println("Beginning Sort of Position List");
-            Collections.sort(contents);
-            System.out.println("Finished Sort of Position List");
+        if (isHDF5) {
+            return new PositionHDF5List(reader);
+        } else {
+            Collections.sort(myPositions);
+            return new PositionArrayList(myPositions);
         }
-        return new PositionArrayList(contents);
     }
-    
+
+    public PositionList build(GenotypeBuilder genotypes) {
+        sortPositions(genotypes);
+        return new PositionArrayList(myPositions);
+    }
+
     public PositionListBuilder sortPositions(GenotypeBuilder genotypes) {
-        int numPositions = contents.size();
+        int numPositions = myPositions.size();
         if (numPositions != genotypes.getSiteCount()) {
             throw new IllegalArgumentException("PositionListBuilder: sortPositions: position list size: " + numPositions + " doesn't match genotypes num position: " + genotypes.getSiteCount());
         }
         genotypes.reorderPositions(sort());
         return this;
     }
-    
+
     public PositionListBuilder sortPositions() {
         sort();
         return this;
     }
-    
+
     private int[] sort() {
-        
-        int numPositions = contents.size();
-        
+
+        int numPositions = myPositions.size();
+
         final int indicesOfSortByPosition[] = new int[numPositions];
         for (int i = 0; i < indicesOfSortByPosition.length; i++) {
             indicesOfSortByPosition[i] = i;
         }
-        
+
         Swapper swapPosition = new Swapper() {
             @Override
             public void swap(int a, int b) {
@@ -218,25 +221,24 @@ public class PositionListBuilder {
                 indicesOfSortByPosition[b] = temp;
             }
         };
-        
+
         IntComparator compPosition = new IntComparator() {
             @Override
             public int compare(int a, int b) {
-                return contents.get(indicesOfSortByPosition[a]).compareTo(contents.get(indicesOfSortByPosition[b]));
+                return myPositions.get(indicesOfSortByPosition[a]).compareTo(myPositions.get(indicesOfSortByPosition[b]));
             }
         };
-        
+
         GenericSorting.quickSort(0, indicesOfSortByPosition.length, compPosition, swapPosition);
-        
+
         ArrayList<Position> temp = new ArrayList<>(numPositions);
         for (int t = 0; t < numPositions; t++) {
-            temp.add(contents.get(indicesOfSortByPosition[t]));
+            temp.add(myPositions.get(indicesOfSortByPosition[t]));
         }
-        
-        contents = temp;
-        
-        return indicesOfSortByPosition;
-        
-    }
 
+        myPositions = temp;
+
+        return indicesOfSortByPosition;
+
+    }
 }
