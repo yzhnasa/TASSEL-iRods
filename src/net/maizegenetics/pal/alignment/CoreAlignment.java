@@ -417,11 +417,6 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalNumAlleles() {
-        return myGenotype.getTotalNumAlleles();
-    }
-
-    @Override
     public int getTotalGametesNotMissing(int site) {
         return myGenotype.getTotalGametesNotMissing(site);
     }

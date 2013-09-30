@@ -818,11 +818,6 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalNumAlleles() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public int getTotalNotMissing(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }

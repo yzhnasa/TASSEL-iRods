@@ -198,19 +198,11 @@ public interface Genotype {
     public String getDiploidAsString(int site, byte value);
 
     /**
-     * Return max number of alleles retained by this alignment.
+     * Return max number of alleles defined for any given site.
      *
      * @return max number of alleles.
      */
     public int getMaxNumAlleles();
-
-    /**
-     * Returns max number of alleles retained by this alignment including rare
-     * (if retained) and unknown (if phased).
-     *
-     * @return total number alleles
-     */
-    public int getTotalNumAlleles();
 
     /**
      * Returns total number of non-missing allele values for given site. This

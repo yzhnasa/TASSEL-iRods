@@ -186,18 +186,6 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int getTotalNumAlleles() {
-        int result = getMaxNumAlleles();
-        if (retainsRareAlleles()) {
-            result++;
-        }
-        if (isPhased()) {
-            result++;
-        }
-        return result;
-    }
-
-    @Override
     public int getTotalGametesNotMissing(int site) {
 
         int result = 0;

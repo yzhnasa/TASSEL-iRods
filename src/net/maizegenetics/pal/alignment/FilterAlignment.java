@@ -806,11 +806,6 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalNumAlleles() {
-        return myBaseAlignment.getTotalNumAlleles();
-    }
-
-    @Override
     public boolean isHeterozygous(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {

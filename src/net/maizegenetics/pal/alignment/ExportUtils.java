@@ -36,7 +36,6 @@ public class ExportUtils {
     }
 
     public static String writeToHDF5(Alignment a, String newHDF5file) {
- //       a = AlignmentUtils.optimizeForTaxaAndSites(a);
         IHDF5Writer h5w = null;
         try {
 
@@ -54,7 +53,7 @@ public class ExportUtils {
             config.dontUseExtendableDataTypes();
             h5w = config.writer();
 
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
+            //h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
 
             h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
 
@@ -103,12 +102,12 @@ public class ExportUtils {
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
 
-            h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
-            byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
-            for (int i = 0; i < numSites; i++) {
-                alleles[i] = a.getAlleles(i);
-            }
-            h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
+            //h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
+            //byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
+            //for (int i = 0; i < numSites; i++) {
+            //    alleles[i] = a.getAlleles(i);
+            //}
+            //h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
 
             String[] tn = new String[numTaxa];
             for (int i = 0; i < tn.length; i++) {
@@ -117,7 +116,8 @@ public class ExportUtils {
             h5w.createStringVariableLengthArray(HapMapHDF5Constants.TAXA, numTaxa);
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.TAXA, tn);
 
-            for (int aNum = 0; aNum < a.getTotalNumAlleles(); aNum++) {
+            //for (int aNum = 0; aNum < a.getTotalNumAlleles(); aNum++) {
+            for (int aNum = 0; aNum < 6; aNum++) {
 
                 String currentSBitPath = HapMapHDF5Constants.SBIT + "/" + aNum;
                 h5w.createLongMatrix(currentSBitPath, numSites, numSBitWords, 1, numSBitWords);
@@ -547,9 +547,9 @@ public class ExportUtils {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 } else {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Frequency, site);
-                    if (nAlleles > alignment.getMaxNumAlleles()) {
-                        nAlleles = alignment.getMaxNumAlleles();
-                    }
+                    //if (nAlleles > alignment.getMaxNumAlleles()) {
+                    //    nAlleles = alignment.getMaxNumAlleles();
+                    //}
                 }
                 int[] alleleRedirect = new int[nAlleles]; // holds the indices of alleleValues in ref, alt1, [alt2] order (max 3 alleles)
                 String refAlleleStr;

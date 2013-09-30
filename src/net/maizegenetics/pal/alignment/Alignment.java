@@ -29,10 +29,6 @@ public interface Alignment {
     public static String UNKNOWN_ALLELE_STR = "N";
     public static String UNKNOWN_DIPLOID_ALLELE_STR = "N:N";
     public static char UNKNOWN_ALLELE_CHAR = 'N';
-    /**
-     * Default number of alleles to retain.
-     */
-    public static final int DEFAULT_MAX_NUM_ALLELES = 2;
 
     public static enum SITE_SCORE_TYPE {
 
@@ -54,9 +50,8 @@ public interface Alignment {
          */
         Depth,
         /**
-         * This uses the allele frequency of a base/global Alignment
-         * determine sort order of alleles. That Alignment is usually a
-         * superset.
+         * This uses the allele frequency of a base/global Alignment determine
+         * sort order of alleles. That Alignment is usually a superset.
          */
         Global_Frequency,
         /**
@@ -65,10 +60,11 @@ public interface Alignment {
         Reference
     };
 
-
     /**
-     * Returns the immutable Genotype matrix.  Taxa and Positions are not part of the matrix.  This method is used for
-     * copying Alignments, when either the Taxa or Positions have changed.
+     * Returns the immutable Genotype matrix. Taxa and Positions are not part of
+     * the matrix. This method is used for copying Alignments, when either the
+     * Taxa or Positions have changed.
+     *
      * @return genotype matrix
      */
     public Genotype getGenotypeMatrix();
@@ -390,9 +386,9 @@ public interface Alignment {
      */
     public int getTaxaCount();
 
-
     /**
      * Return the position list for the alignment.
+     *
      * @return PositionList for all sites.
      */
     public PositionList getPositionList();
@@ -774,19 +770,11 @@ public interface Alignment {
     public String getDiploidAsString(int site, byte value);
 
     /**
-     * Return max number of alleles retained by this alignment.
+     * Return max number of alleles defined for any given site.
      *
      * @return max number of alleles.
      */
     public int getMaxNumAlleles();
-
-    /**
-     * Returns max number of alleles retained by this alignment including rare
-     * (if retained) and unknown (if phased).
-     *
-     * @return total number alleles
-     */
-    public int getTotalNumAlleles();
 
     /**
      * Returns total number of non-missing allele values for given site. This
