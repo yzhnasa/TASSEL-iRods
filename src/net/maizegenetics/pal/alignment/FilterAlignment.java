@@ -1117,7 +1117,7 @@ public class FilterAlignment implements Alignment {
             int[][] alleles = getAllelesSortedByFrequency(site);
 
             if (alleles[0].length >= 1) {
-                return (byte) alleles[0][0];
+                return (byte) alleles[0][1];
             } else {
                 return Alignment.UNKNOWN_ALLELE;
             }
