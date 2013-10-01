@@ -83,7 +83,7 @@ public class ExportUtils {
                 throw new IllegalStateException("ExportUtils: writeToHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
             }
 
-            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());
+            //h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());
 
             h5w.createGroup(HapMapHDF5Constants.SBIT);
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);

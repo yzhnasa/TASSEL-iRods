@@ -630,23 +630,6 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public String[] getSNPIDs() {
-
-        if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            int numSites = getSiteCount();
-            String[] result = new String[numSites];
-            for (int i = 0; i < numSites; i++) {
-                result[i] = myBaseAlignment.getSNPID(translateSite(i));
-            }
-
-            return result;
-        } else {
-            return myBaseAlignment.getSNPIDs();
-        }
-
-    }
-
-    @Override
     public boolean hasReference() {
         return myBaseAlignment.hasReference();
     }

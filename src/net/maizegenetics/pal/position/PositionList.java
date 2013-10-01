@@ -51,13 +51,6 @@ public interface PositionList extends List<Position> {
     public boolean hasReference();
 
     /**
-     * Get SNP IDs.
-     *
-     * @return site names.
-     */
-    public String[] getSNPIDs();
-
-    /**
      * Get SNP ID for specified site.
      *
      * @param site site

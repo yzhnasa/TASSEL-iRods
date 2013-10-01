@@ -91,15 +91,6 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public String[] getSNPIDs() {
-        String[] theIDs=new String[mySiteList.size()];
-        for (int i = 0; i < theIDs.length; i++) {
-            theIDs[i]=mySiteList.get(i).getSNPID();
-        }
-        return theIDs;
-    }
-
-    @Override
     public String getSNPID(int site) {
         return mySiteList.get(site).getSNPID();
     }

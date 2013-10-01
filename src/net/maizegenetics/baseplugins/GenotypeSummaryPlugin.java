@@ -268,9 +268,6 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         Object[][] data = new Object[numSites][columnNames.size()];
         int totalGametes = numTaxa * 2;
 
-        String[] snpIDs = alignment.getSNPIDs();
-        boolean hasSnpIDs = ((snpIDs != null) && (snpIDs.length != 0));
-
         int[] physicalPositions = alignment.getPhysicalPositions();
         boolean hasPhysicalPositions = ((physicalPositions != null) && (physicalPositions.length != 0));
 
@@ -281,11 +278,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             int count = 0;
 
             data[i][count++] = i;
-            if (hasSnpIDs) {
-                data[i][count++] = snpIDs[i];
-            } else {
-                count++;
-            }
+            data[i][count++] = alignment.getSNPID(i);
             if (hasPhysicalPositions) {
                 data[i][count++] = physicalPositions[i];
             } else {

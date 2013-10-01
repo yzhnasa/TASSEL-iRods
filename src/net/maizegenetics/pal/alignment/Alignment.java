@@ -332,13 +332,6 @@ public interface Alignment {
     public int getHeterozygousCount(int site);
 
     /**
-     * Get SNP IDs.
-     *
-     * @return site names.
-     */
-    public String[] getSNPIDs();
-
-    /**
      * Get SNP ID for specified site.
      *
      * @param site site

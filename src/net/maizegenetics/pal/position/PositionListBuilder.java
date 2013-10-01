@@ -145,7 +145,13 @@ public class PositionListBuilder {
     public PositionListBuilder(IHDF5Writer h5w, PositionList a) {
         //this.hdf5FileName=h5w.getFile().getName();
         //      IHDF5Writer h5w= HDF5Factory.open(hdf5FileName);
-        h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());  //TODO consider adding compression & blocks
+        //TODO This replaces getSNPIDs() but not sure this is better?
+        int numSites = a.getSiteCount();
+        String[] snpIDs = new String[numSites];
+        for (int i = 0; i < numSites; i++) {
+            snpIDs[i] = a.getSNPID(i);
+        }
+        h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, snpIDs);  //TODO consider adding compression & blocks
 
         h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, a.size());
 

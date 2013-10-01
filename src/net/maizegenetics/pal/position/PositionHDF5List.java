@@ -157,20 +157,6 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public String[] getSNPIDs() {
-        try {
-            String[] theIDs=new String[numPositions];
-            for (int i = 0; i < theIDs.length; i++) {
-                theIDs[i]=mySiteList.get(i).getSNPID();
-            }
-            return theIDs;
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @Override
     public String getSNPID(int site) {
         try {
             return mySiteList.get(site).getSNPID();

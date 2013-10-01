@@ -236,22 +236,6 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String[] getSNPIDs() {
-
-        int numSites = getSiteCount();
-        String[] result = new String[numSites];
-        int count = 0;
-        for (int i = 0; i < myAlignments.length; i++) {
-            for (int j = 0, n = myAlignments[i].getSiteCount(); j < n; j++) {
-                result[count++] = myAlignments[i].getSNPID(j);
-            }
-        }
-
-        return result;
-
-    }
-
-    @Override
     public String getSNPID(int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getSNPID(site - mySiteOffsets[translate]);

@@ -86,11 +86,15 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             myAlignmentLociMap.put(loci[i].getName(), loci[i]);
         }
 
-        String[] snpIDs = alignment.getSNPIDs();
+        int numSites = alignment.getSiteCount();
+        String[] snpIDs = new String[numSites];
+        for (int i = 0; i < numSites; i++) {
+            snpIDs[i] = alignment.getSNPID(i);
+        }
 
         BufferedReader br = null;
         int count = 1;
-        PositionListBuilder posBuilder=new PositionListBuilder().addAll(alignment.getPositionList());
+        PositionListBuilder posBuilder = new PositionListBuilder().addAll(alignment.getPositionList());
         try {
             br = Utils.getBufferedReader(myMapFilename);
             Pattern sep = Pattern.compile("\\s+");
@@ -132,16 +136,16 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                         }
 
                         numChanges++;
-                        GeneralPosition.Builder newPos=new GeneralPosition.Builder(alignment.getPositionList().get(site));
+                        GeneralPosition.Builder newPos = new GeneralPosition.Builder(alignment.getPositionList().get(site));
                         newPos.chromosome(getLocusObj(locus2)).position(pos2).snpName(snpID);
                         posBuilder.set(site, newPos.build());
 
 
-//                        posBuilder.setPositionOfSite(site, pos2);
-//
-//                        if (!locus1.equals(locus2)) {
-//                            posBuilder.setLocusOfSite(site, getLocusObj(locus2));
-//                        }
+                        // posBuilder.setPositionOfSite(site, pos2);
+                        //
+                        // if (!locus1.equals(locus2)) {
+                        //     posBuilder.setLocusOfSite(site, getLocusObj(locus2));
+                        // }
 
                     }
 
@@ -151,9 +155,9 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
             myLogger.info("Number Changes: " + numChanges);
 
-  //          alignment.clean();
+            //          alignment.clean();
             //TODO check sort of positions.
-            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(),posBuilder.build(),alignment.getTaxaList()), null);
+            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(), posBuilder.build(), alignment.getTaxaList()), null);
 
         } catch (Exception e) {
             myLogger.error("processDatum: problem converting alignment: line: " + count + "  message: " + e.getMessage());
