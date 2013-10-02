@@ -182,7 +182,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public int getMaxNumAlleles() {
-        return NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
+        return 14;
     }
 
     @Override

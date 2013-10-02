@@ -154,4 +154,12 @@ class NucleotideGenotype extends ByteGenotype {
             }
         }
     }
+    public int getMaxNumAlleles() {
+        return NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
+    } 
+    
+    @Override
+    public boolean retainsRareAlleles() {
+        return false;
+    } 
 }
