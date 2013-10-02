@@ -10,13 +10,15 @@ package net.maizegenetics.util;
 public class SuperByteMatrixSingle implements SuperByteMatrix {
 
     private final byte[] myData;
-    private final int myNumRows;
-    private final int myNumColumns;
+    private int myNumRows;
+    private int myNumColumns;
+    private final long myPrecompute1;
 
     SuperByteMatrixSingle(int rows, int columns) {
 
         myNumRows = rows;
         myNumColumns = columns;
+        myPrecompute1 = (long) myNumColumns * (long) myNumRows - 1l;
 
         long numElements = (long) myNumRows * (long) myNumColumns;
         if (numElements > (long) (Integer.MAX_VALUE - 10)) {
@@ -111,6 +113,45 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
     @Override
     public boolean isColumnInnerLoop() {
         return true;
+    }
+
+    private int translateIndexForTranspose(long index) {
+        return (int) ((index + (index % (long) myNumRows) * myPrecompute1) / (long) myNumRows);
+    }
+
+    public void transpose() {
+        int numElements = myNumColumns * myNumRows;
+        BitSet notVisited = new OpenBitSet(numElements);
+        notVisited.set(0, numElements);
+        int currentIndex = 1;
+        byte temp;
+        while (currentIndex != -1) {
+
+            currentIndex = notVisited.nextSetBit(currentIndex);
+
+            if (currentIndex != -1) {
+
+                temp = myData[currentIndex];
+
+                int srcIndex = translateIndexForTranspose(currentIndex);
+                int destIndex = currentIndex;
+                while (srcIndex != currentIndex) {
+                    myData[destIndex] = myData[srcIndex];
+                    notVisited.fastClear(destIndex);
+                    destIndex = srcIndex;
+                    srcIndex = translateIndexForTranspose(destIndex);
+                }
+
+                myData[destIndex] = temp;
+                notVisited.fastClear(destIndex);
+
+            }
+
+        }
+
+        int tempSize = myNumColumns;
+        myNumColumns = myNumRows;
+        myNumRows = tempSize;
     }
 
     @Override
