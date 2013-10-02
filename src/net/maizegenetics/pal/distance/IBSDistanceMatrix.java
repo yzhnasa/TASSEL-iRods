@@ -92,6 +92,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         isTrueIBS = trueIBS;
         myListener = listener;
         numSeqs = theAlignment.getSequenceCount();
+        theTBA = theAlignment;
         //  this should have an option to only use the 2 or 3 most common alleles
         setIdGroup(theAlignment.getTaxaList());
         computeHetBitDistances();
