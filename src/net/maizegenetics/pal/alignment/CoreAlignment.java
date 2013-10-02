@@ -39,11 +39,7 @@ public class CoreAlignment implements Alignment {
     }
 
     CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList) {
-        myGenotype = genotype;
-        myPositionList = positionList;
-        myTaxaList = taxaList;
-        mySiteScore = null;
-        myAlleleDepth = null;
+        this(genotype, positionList, taxaList, null, null);
     }
 
     @Override
