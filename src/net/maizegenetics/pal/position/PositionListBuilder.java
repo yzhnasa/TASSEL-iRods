@@ -4,14 +4,14 @@ import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
-import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import com.google.common.base.Preconditions;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
+import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
+import net.maizegenetics.util.HDF5Utils;
 
 import java.util.*;
-import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 
 /**
  * A builder for creating immutable PositionList.  Can be used for either an in memory or HDF5 list.
@@ -139,22 +139,12 @@ public class PositionListBuilder {
         return new PositionHDF5List(reader);
     }
 
+
     /**
      * Creates a positionList in a new HDF5 file.
      */
     public PositionListBuilder(IHDF5Writer h5w, PositionList a) {
-        //this.hdf5FileName=h5w.getFile().getName();
-        //      IHDF5Writer h5w= HDF5Factory.open(hdf5FileName);
-        //TODO This replaces getSNPIDs() but not sure this is better?
-        int numSites = a.getSiteCount();
-        String[] snpIDs = new String[numSites];
-        for (int i = 0; i < numSites; i++) {
-            snpIDs[i] = a.getSNPID(i);
-        }
-        h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, snpIDs);  //TODO consider adding compression & blocks
-
         h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, a.size());
-
         String[] lociNames = new String[a.getNumChromosomes()];
         Map<Chromosome, Integer> locusToIndex=new HashMap<>(10);
         Chromosome[] loci = a.getChromosomes();
@@ -164,16 +154,29 @@ public class PositionListBuilder {
         }
         h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumChromosomes());
         h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
-        int[] locusIndicesArray = new int[a.getSiteCount()];
-        for (int i = 0; i < locusIndicesArray.length; i++) {
-            locusIndicesArray[i] = locusToIndex.get(a.getChromosome(i));
-        }
-        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(2);
-        h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),features);
-        h5w.writeIntArray(HapMapHDF5Constants.LOCUS_INDICES, locusIndicesArray,features);
 
-        h5w.createIntArray(HapMapHDF5Constants.POSITIONS, a.size());
-        h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
+        int blockSize=1<<16;
+        h5w.createStringArray(HapMapHDF5Constants.SNP_IDS, 15,a.getSiteCount(),blockSize,HapMapHDF5Constants.genDeflation);
+        h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),HapMapHDF5Constants.intDeflation);
+        h5w.createIntArray(HapMapHDF5Constants.POSITIONS, a.getSiteCount(), HapMapHDF5Constants.intDeflation);
+
+        int blocks=((a.getSiteCount()-1)/blockSize)+1;
+        for (int block = 0; block < blocks; block++) {
+            int startPos=block*blockSize;
+            int length=((a.getSiteCount()-startPos)>blockSize)?blockSize:a.getSiteCount()-startPos;
+            String[] snpIDs = new String[length];
+            int[] locusIndicesArray = new int[length];
+            int[] positions=new int[length];
+            for (int i=0; i<length; i++) {
+                Position gp=a.get(i+startPos);
+                snpIDs[i]=gp.getSNPID();
+                locusIndicesArray[i] = locusToIndex.get(gp.getChromosome());
+                positions[i]=gp.getPosition();
+            }
+            HDF5Utils.writeHDF5Block(HapMapHDF5Constants.SNP_IDS,h5w,blockSize,block,snpIDs);
+            HDF5Utils.writeHDF5Block(HapMapHDF5Constants.LOCUS_INDICES,h5w,blockSize,block,locusIndicesArray);
+            HDF5Utils.writeHDF5Block(HapMapHDF5Constants.POSITIONS,h5w,blockSize,block,positions);
+        }
         this.reader = h5w;
         isHDF5=true;
     }

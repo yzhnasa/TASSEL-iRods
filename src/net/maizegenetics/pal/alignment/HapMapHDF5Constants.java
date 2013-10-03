@@ -4,6 +4,7 @@
 package net.maizegenetics.pal.alignment;
 
 import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
+import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 
 /**
@@ -78,6 +79,7 @@ public final class HapMapHDF5Constants {
 
     //Standard Compression (deflation) levels
     public static final HDF5IntStorageFeatures intDeflation = HDF5IntStorageFeatures.createDeflation(2);
+    public static final HDF5GenericStorageFeatures genDeflation = HDF5GenericStorageFeatures.createDeflation(2);
     public static final HDF5FloatStorageFeatures floatDeflation = HDF5FloatStorageFeatures.createDeflation(2);
 
 
