@@ -40,6 +40,7 @@ public class FilterAlignment implements Alignment {
     private Chromosome[] myChromosomes;
     private int[] myChromosomeOffsets;
     private PositionList myPositionList;
+    private final AlleleFreqCache myAlleleFreqCache;
 
     private FilterAlignment(Alignment a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
 
@@ -52,6 +53,7 @@ public class FilterAlignment implements Alignment {
         myIsTaxaFilter = true;
         myBaseAlignment = a;
         myTaxaRedirect = taxaRedirect;
+        myAlleleFreqCache = new AlleleFreqCache(this, myBaseAlignment.getMaxNumAlleles());
 
         if (original == null) {
             myIsSiteFilter = false;
@@ -202,6 +204,7 @@ public class FilterAlignment implements Alignment {
         myRangeEnd = endSite;
         mySiteRedirect = null;
         getLociFromBase();
+        myAlleleFreqCache = new AlleleFreqCache(this, myBaseAlignment.getMaxNumAlleles());
 
         if (original == null) {
             myIsTaxaFilter = false;
@@ -236,6 +239,7 @@ public class FilterAlignment implements Alignment {
         myRangeStart = -1;
         myRangeEnd = -1;
         getLociFromBase();
+        myAlleleFreqCache = new AlleleFreqCache(this, myBaseAlignment.getMaxNumAlleles());
 
         if (original == null) {
             myIsTaxaFilter = false;
@@ -921,11 +925,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        if (myIsTaxaFilter) {
-            return AlignmentUtils.getAllelesSortedByFrequency(this, site);
-        } else {
-            return myBaseAlignment.getAllelesSortedByFrequency(translateSite(site));
-        }
+        return myAlleleFreqCache.getAllelesSortedByFrequency(site);
     }
 
     @Override
