@@ -5,6 +5,7 @@ package net.maizegenetics.pal.alignment;
 
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
+import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.position.PositionListBuilder;
@@ -14,6 +15,7 @@ import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.UnmodifiableBitSet;
+
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -40,7 +42,7 @@ public class FilterAlignment implements Alignment {
     private Chromosome[] myChromosomes;
     private int[] myChromosomeOffsets;
     private PositionList myPositionList;
-    private final AlleleFreqCache myAlleleFreqCache;
+    private final Genotype myGenotype;
 
     private FilterAlignment(Alignment a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
 
@@ -53,7 +55,6 @@ public class FilterAlignment implements Alignment {
         myIsTaxaFilter = true;
         myBaseAlignment = a;
         myTaxaRedirect = taxaRedirect;
-        myAlleleFreqCache = new AlleleFreqCache(this, myBaseAlignment.getMaxNumAlleles());
 
         if (original == null) {
             myIsSiteFilter = false;
@@ -71,6 +72,12 @@ public class FilterAlignment implements Alignment {
             myRangeEnd = original.getRangeEnd();
             myChromosomes = original.getChromosomes();
             myChromosomeOffsets = original.getChromosomesOffsets();
+        }
+
+        if (myIsSiteFilter) {
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+        } else {
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -204,7 +211,6 @@ public class FilterAlignment implements Alignment {
         myRangeEnd = endSite;
         mySiteRedirect = null;
         getLociFromBase();
-        myAlleleFreqCache = new AlleleFreqCache(this, myBaseAlignment.getMaxNumAlleles());
 
         if (original == null) {
             myIsTaxaFilter = false;
@@ -212,6 +218,12 @@ public class FilterAlignment implements Alignment {
         } else {
             myIsTaxaFilter = original.isTaxaFilter();
             myTaxaRedirect = original.getTaxaRedirect();
+        }
+
+        if (myIsSiteFilter) {
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+        } else {
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -239,7 +251,6 @@ public class FilterAlignment implements Alignment {
         myRangeStart = -1;
         myRangeEnd = -1;
         getLociFromBase();
-        myAlleleFreqCache = new AlleleFreqCache(this, myBaseAlignment.getMaxNumAlleles());
 
         if (original == null) {
             myIsTaxaFilter = false;
@@ -247,6 +258,12 @@ public class FilterAlignment implements Alignment {
         } else {
             myIsTaxaFilter = original.isTaxaFilter();
             myTaxaRedirect = original.getTaxaRedirect();
+        }
+
+        if (myIsSiteFilter) {
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+        } else {
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -393,12 +410,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public byte getBase(int taxon, int site) {
-        int taxaIndex = translateTaxon(taxon);
-        if (taxaIndex == -1) {
-            return Alignment.UNKNOWN_ALLELE;
-        } else {
-            return myBaseAlignment.getBase(taxaIndex, translateSite(site));
-        }
+        return myGenotype.getBase(taxon, site);
     }
 
     @Override
@@ -925,7 +937,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        return myAlleleFreqCache.getAllelesSortedByFrequency(site);
+        return myGenotype.getAllelesSortedByFrequency(site);
     }
 
     @Override
@@ -1446,19 +1458,19 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public PositionList getPositionList() {
-        if(myPositionList==null) {
-            PositionListBuilder pLB=new PositionListBuilder();
-            PositionList basePL=getBaseAlignment().getPositionList();
-            for (int i=0; i<getSiteCount(); i++) {
+        if (myPositionList == null) {
+            PositionListBuilder pLB = new PositionListBuilder();
+            PositionList basePL = getBaseAlignment().getPositionList();
+            for (int i = 0; i < getSiteCount(); i++) {
                 pLB.add(basePL.get(translateSite(i)));
             }
-            myPositionList=pLB.build();
+            myPositionList = pLB.build();
         }
         return myPositionList;
     }
 
     @Override
     public Genotype getGenotypeMatrix() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return myGenotype;
     }
 }

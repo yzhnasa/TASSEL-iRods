@@ -6,6 +6,7 @@ package net.maizegenetics.pal.alignment.genotype;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
@@ -19,16 +20,23 @@ import java.util.Map;
 abstract class AbstractGenotype implements Genotype {
 
     private static final Logger myLogger = Logger.getLogger(AbstractGenotype.class);
+    private static final int DEFAULT_MAX_NUM_ALLELES = NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
     protected final int myTaxaCount;
     protected final int mySiteCount;
     private final String[][] myAlleleEncodings;
     private final boolean myIsPhased;
+    private final AlleleFreqCache myAlleleFreqCache;
 
-    AbstractGenotype(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
+    AbstractGenotype(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings, int maxNumAlleles) {
         myTaxaCount = numTaxa;
         mySiteCount = numSites;
         myIsPhased = phased;
         myAlleleEncodings = alleleEncodings;
+        myAlleleFreqCache = new AlleleFreqCache(this, maxNumAlleles);
+    }
+
+    AbstractGenotype(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
+        this(numTaxa, numSites, phased, alleleEncodings, DEFAULT_MAX_NUM_ALLELES);
     }
 
     @Override
@@ -83,6 +91,11 @@ abstract class AbstractGenotype implements Genotype {
         String[][] alleleStates = getAlleleEncodings();
         byte[] temp = getBaseArray(taxon, site);
         return new String[]{alleleStates[0][temp[0]], alleleStates[0][temp[1]]};
+    }
+
+    @Override
+    public int[][] getAllelesSortedByFrequency(int site) {
+        return myAlleleFreqCache.getAllelesSortedByFrequency(site);
     }
 
     @Override
@@ -182,7 +195,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public int getMaxNumAlleles() {
-        return 14;
+        return DEFAULT_MAX_NUM_ALLELES;
     }
 
     @Override
@@ -336,64 +349,6 @@ abstract class AbstractGenotype implements Genotype {
         } else {
             return 0.0;
         }
-
-    }
-
-    @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
-
-        int[] stateCnt = new int[16];
-        for (int i = 0; i < myTaxaCount; i++) {
-            byte[] dipB = getBaseArray(i, site);
-            if (dipB[0] != Alignment.UNKNOWN_ALLELE) {
-                stateCnt[dipB[0]]++;
-            }
-            if (dipB[1] != Alignment.UNKNOWN_ALLELE) {
-                stateCnt[dipB[1]]++;
-            }
-        }
-
-        int count = 0;
-        for (int j = 0; j < 16; j++) {
-            if (stateCnt[j] != 0) {
-                count++;
-            }
-        }
-
-        int result[][] = new int[2][count];
-        int index = 0;
-        for (int k = 0; k < 16; k++) {
-            if (stateCnt[k] != 0) {
-                result[0][index] = k;
-                result[1][index] = stateCnt[k];
-                index++;
-            }
-        }
-
-        boolean change = true;
-        while (change) {
-
-            change = false;
-
-            for (int k = 0; k < count - 1; k++) {
-
-                if (result[1][k] < result[1][k + 1]) {
-
-                    int temp = result[0][k];
-                    result[0][k] = result[0][k + 1];
-                    result[0][k + 1] = temp;
-
-                    int tempCount = result[1][k];
-                    result[1][k] = result[1][k + 1];
-                    result[1][k + 1] = tempCount;
-
-                    change = true;
-                }
-            }
-
-        }
-
-        return result;
 
     }
 

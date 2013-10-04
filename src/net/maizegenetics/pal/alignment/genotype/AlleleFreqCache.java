@@ -1,11 +1,12 @@
 /*
  *  AlleleFreqCache
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.pal.alignment.genotype;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.maizegenetics.pal.alignment.genotype.Genotype;
 
 /**
  *
@@ -17,7 +18,7 @@ public class AlleleFreqCache {
     private static final int NUM_SITES_TO_CACHE = 1 << SHIFT_AMOUNT;
     public static final int SITE_BLOCK_MASK = ~(NUM_SITES_TO_CACHE - 1);
     private static final int MAX_CACHE_SIZE = 150;
-    private final Alignment myAlignment;
+    private final Genotype myGenotype;
     private final int myMaxNumAlleles;
     private final Map<Integer, int[][][]> myCachedInternal = new LinkedHashMap<Integer, int[][][]>((3 * MAX_CACHE_SIZE) / 2) {
         @Override
@@ -29,8 +30,8 @@ public class AlleleFreqCache {
     private final int myMaxNumThreads = Runtime.getRuntime().availableProcessors();
     private int myNumRunningThreads = 0;
 
-    public AlleleFreqCache(Alignment alignment, int maxNumAlleles) {
-        myAlignment = alignment;
+    public AlleleFreqCache(Genotype genotype, int maxNumAlleles) {
+        myGenotype = genotype;
         myMaxNumAlleles = maxNumAlleles;
     }
 
@@ -60,12 +61,12 @@ public class AlleleFreqCache {
 
     private int[][][] calculateAlleleFreq(int site) {
         int startSite = getStartSite(site);
-        int numSites = Math.min(NUM_SITES_TO_CACHE, myAlignment.getSiteCount() - startSite);
-        int numTaxa = myAlignment.getTaxaCount();
+        int numSites = Math.min(NUM_SITES_TO_CACHE, myGenotype.getSiteCount() - startSite);
+        int numTaxa = myGenotype.getTaxaCount();
         int[][] alleleFreq = new int[numSites][myMaxNumAlleles];
         for (int taxon = 0; taxon < numTaxa; taxon++) {
             for (int s = 0; s < numSites; s++) {
-                byte[] b = myAlignment.getBaseArray(taxon, s + startSite);
+                byte[] b = myGenotype.getBaseArray(taxon, s + startSite);
                 if (b[0] < myMaxNumAlleles) {
                     alleleFreq[s][b[0]]++;
                 }
@@ -132,7 +133,7 @@ public class AlleleFreqCache {
         @Override
         public void run() {
             try {
-                if (myStartSite >= myAlignment.getSiteCount()) {
+                if (myStartSite >= myGenotype.getSiteCount()) {
                     return;
                 }
                 if (myCachedAlleleFreqs.get(myStartSite) == null) {
