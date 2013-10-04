@@ -518,21 +518,14 @@ abstract class AbstractGenotype implements Genotype {
 
         long[][] counts = new long[16][16];
 
-        if (getMaxNumAlleles() >= 2) {
-            for (int site = 0; site < mySiteCount; site++) {
-                byte[] alleles = getAlleles(site);
-                byte indexI = alleles[0];
-                byte indexJ = alleles[1];
-                if (indexJ == Alignment.UNKNOWN_ALLELE) {
-                    indexJ = indexI;
-                }
-                counts[indexI][indexJ]++;
-            }
-        } else {
-            for (int site = 0; site < mySiteCount; site++) {
-                byte[] alleles = getAlleles(site);
-                byte indexI = alleles[0];
-                counts[indexI][indexI]++;
+        for (int site = 0; site < mySiteCount; site++) {
+            byte[] alleles = getAlleles(site);
+            if ((alleles == null) || alleles.length == 0) {
+                // do nothing
+            } else if (alleles.length == 1) {
+                counts[alleles[0]][alleles[0]]++;
+            } else {
+                counts[alleles[0]][alleles[1]]++;
             }
         }
 
