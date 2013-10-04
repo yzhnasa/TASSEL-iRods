@@ -6,7 +6,6 @@ package net.maizegenetics.pal.alignment.genotype;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import net.maizegenetics.pal.alignment.genotype.Genotype;
 
 /**
  *
