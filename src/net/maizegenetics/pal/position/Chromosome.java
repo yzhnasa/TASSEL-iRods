@@ -2,7 +2,6 @@ package net.maizegenetics.pal.position;
 
 import net.maizegenetics.pal.util.GeneralAnnotation;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -135,8 +134,9 @@ public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
     @Override
     public int compareTo(Chromosome o) {
         //int result=Integer.compare(myChromosomeNumber,o.getChromosomeNumber());
-        int result = Integer.valueOf(myChromosomeNumber).compareTo(Integer.valueOf(o.getChromosomeNumber()));
-        if (result != 0) {
+        int result=myChromosomeNumber-o.getChromosomeNumber();
+       // int result = Integer.valueOf(myChromosomeNumber).compareTo(Integer.valueOf(o.getChromosomeNumber()));
+        if ((result != 0)||(myChromosomeNumber!=Integer.MAX_VALUE)) {
             return result;
         }
         return myName.compareTo(o.getName());

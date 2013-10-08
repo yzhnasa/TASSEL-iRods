@@ -122,8 +122,9 @@ final class PositionArrayList implements PositionList {
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return Integer.MIN_VALUE;
         int i=Arrays.binarySearch(cop.position, physicalPosition); //AvgPerObj:227.5715ns  for 2million positions
+        while((i>0)&&(physicalPosition==cop.position[i-1])) {i--;} //backup to the first position if there are duplicates
         i+=(i<0)?-cop.startSiteOff:cop.startSiteOff;
-        while((i>0)&&(physicalPosition==get(i-1).getPosition())) {i--;} //backup to the first position if there are duplicates
+
         return i;
     }
 

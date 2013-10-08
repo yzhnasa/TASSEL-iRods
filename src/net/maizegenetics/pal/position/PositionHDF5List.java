@@ -4,9 +4,6 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Range;
-import com.google.common.collect.RangeMap;
-import com.google.common.collect.TreeRangeMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
 import net.maizegenetics.pal.position.Position.Allele;
@@ -25,9 +22,11 @@ import java.util.concurrent.ExecutionException;
 final class PositionHDF5List implements PositionList {
     private final IHDF5Reader reader;
     private final int numPositions;
+//    private final int[] positions;
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
     private final Map<String,Chromosome> myChrNameHash;
-    private final RangeMap<Integer, Chromosome> rangeMap; //map of the start and end indices of chromosomes
+    private final int[] chrOffsets;  //starting site for each chromosome
+    private final Chromosome[] chrIndex;
 
     /*Byte representations of DNA sequences are stored in blocks of 65536 sites*/
     public static final int BLOCKSIZE=1<<16;
@@ -106,9 +105,11 @@ final class PositionHDF5List implements PositionList {
         int[] locusIndices = reader.readIntArray(HapMapHDF5Constants.LOCUS_INDICES);
         myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
         myChrNameHash=new HashMap<String,Chromosome>();
-        rangeMap = TreeRangeMap.create();
         int currStart=0;
         int currLocusIndex=locusIndices[0];
+        chrOffsets=new int[chrs.size()];
+        chrIndex=new Chromosome[chrs.size()];
+        int cI=0;
         for (int i=0; i<locusIndices.length; i++) {
             if((i==(locusIndices.length-1))||currLocusIndex!=locusIndices[i]) {
                 int end=(i==locusIndices.length-1)?i:i-1;
@@ -116,11 +117,14 @@ final class PositionHDF5List implements PositionList {
                 Chromosome currChr=chrs.get(currLocusIndex);
                 myChrOffPosTree.put(currChr, new ChrOffPos(currStart, end, cPos));
                 myChrNameHash.put(currChr.getName(),currChr);
-                rangeMap.put(Range.closed(currStart,end),currChr);
+                chrOffsets[cI]=currStart;
+                chrIndex[cI]=currChr;
+                cI++;
                 currStart=i;
                 currLocusIndex=locusIndices[i];
             }
         }
+       // rangeMap=rangeMapBuild.build();
         mySiteList= CacheBuilder.newBuilder()
                 .maximumSize(1000000)
                 .build(annoPosLoader);
@@ -185,7 +189,10 @@ final class PositionHDF5List implements PositionList {
 
     @Override
     public int getPositionInChromosome(int site) {
-        Chromosome chr=rangeMap.get(site);
+        int i=Arrays.binarySearch(chrOffsets,site);
+        if(i<0) i=-(i+1)-1;
+        Chromosome chr=chrIndex[i];
+//        Chromosome chr=rangeMap.get(site);
         ChrOffPos cop=myChrOffPosTree.get(chr);
         return cop.position[site-cop.startSiteOff];
     }
@@ -195,8 +202,8 @@ final class PositionHDF5List implements PositionList {
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return Integer.MIN_VALUE;
         int i=Arrays.binarySearch(cop.position, physicalPosition); //AvgPerObj:227.5715ns  for 2million positions
+        while((i>0)&&(physicalPosition==cop.position[i-1])) {i--;} //backup to the first position if there are duplicates
         i+=(i<0)?-cop.startSiteOff:cop.startSiteOff;
-        while((i>0)&&(physicalPosition==get(i-1).getPosition())) {i--;} //backup to the first position if there are duplicates
         return i;
     }
 
@@ -229,12 +236,17 @@ final class PositionHDF5List implements PositionList {
 
     @Override
     public String getChromosomeName(int site) {
-        return rangeMap.get(site).getName();
+        return getChromosome(site).getName();
+       // return rangeMap.get(site).getName();
     }
 
     @Override
     public Chromosome getChromosome(int site) {
-        return rangeMap.get(site);
+        int i=Arrays.binarySearch(chrOffsets,site);
+        if(i<0) i=-(i+1)-1;
+        Chromosome chr=chrIndex[i];
+        return chr;
+       // return rangeMap.get(site);
     }
 
     @Override
