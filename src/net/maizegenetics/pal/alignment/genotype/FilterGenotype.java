@@ -81,6 +81,16 @@ class FilterGenotype extends AbstractGenotype {
     }
 
     @Override
+    public String getBaseAsString(int taxon, int site) {
+        int taxaIndex = translateTaxon(taxon);
+        if (taxaIndex == -1) {
+            return Alignment.UNKNOWN_ALLELE_STR;
+        } else {
+            return myBaseGenotype.getBaseAsString(taxaIndex, translateSite(site));
+        }
+    }
+
+    @Override
     public void transposeData(boolean siteInnerLoop) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
