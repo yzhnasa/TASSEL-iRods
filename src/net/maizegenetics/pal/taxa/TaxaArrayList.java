@@ -193,13 +193,12 @@ class TaxaArrayList implements TaxaList {
 
     @Override
     public int indexOf(Object o) {
-        Taxon at=(Taxon)o;
+        Taxon at=(Taxon)o;   //uses the hashMap to do this quickly
         Collection<Integer> result=myNameToIndex.get(at.getFullName());
         for (Integer i : result) {
             if(myTaxaList.get(i).equals(at)) return i;
         }
         return -1;
-      //  return myTaxaList.indexOf(o);
     }
 
     @Override
