@@ -1,6 +1,7 @@
 package net.maizegenetics.pal.alignment;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import net.maizegenetics.pal.alignment.genotype.ProjectionGenotype;
 import net.maizegenetics.pal.position.Position;
 import net.maizegenetics.pal.taxa.TaxaList;
@@ -11,15 +12,19 @@ import net.maizegenetics.pal.util.DonorHaplotypes;
 import java.util.*;
 
 /**
- * Defines xxxx
+ * Builds a projection alignment.  Projection alignments use defined haplotypes and breakpoints that point to high density
+ * genotypes (base Alignment).  These are used to efficiently store and connect low density maps with imputed high density genotypes.
+ * <p></p>
+ * The alignment built by this builder is a CoreAlignment with a ProjectionGenotype.  The taxa come from the
+ * projection alignment file, while the sites and positions are the same as the base alignment.
  *
  * @author Ed Buckler
  */
 public class ProjectionBuilder {
     private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
-    private SortedMap<Taxon,NavigableSet<DonorHaplotypes>> allBreakPoints;
+    private ImmutableMap.Builder<Taxon,NavigableSet<DonorHaplotypes>> allBreakPoints;
 
-    public static Alignment getInstance(Alignment baseAlignment, SortedMap<Taxon,NavigableSet<DonorHaplotypes>> allBreakPoints) {
+    public static Alignment getInstance(Alignment baseAlignment, ImmutableMap<Taxon,NavigableSet<DonorHaplotypes>> allBreakPoints) {
         TaxaList tl=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         ImmutableList breakList=ImmutableList.builder().addAll(allBreakPoints.values()).build();
         return AlignmentBuilder.getInstance(new ProjectionGenotype(baseAlignment, breakList),
@@ -28,7 +33,7 @@ public class ProjectionBuilder {
 
     public ProjectionBuilder(Alignment myBaseAlignment) {
         this.myBaseAlignment=myBaseAlignment;
-        allBreakPoints=new TreeMap<>();
+        allBreakPoints=new ImmutableMap.Builder<>();
     }
 
     public ProjectionBuilder addTaxon(Taxon taxon, Map<Position,Taxon[]> breakPoints) {
@@ -43,7 +48,7 @@ public class ProjectionBuilder {
     }
 
     public Alignment build() {
-        return getInstance(myBaseAlignment,allBreakPoints);
+        return getInstance(myBaseAlignment,allBreakPoints.build());
     }
 
     /**

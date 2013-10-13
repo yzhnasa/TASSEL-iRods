@@ -16,16 +16,18 @@ import java.util.NavigableSet;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Defines xxxx
+ * Projection genotype use defined haplotypes and breakpoints that point to high density
+ * genotypes (baseAlignment).  These are used to efficiently store and connect low density maps with imputed high density genotypes.
+ * <p></p>
+ * The alignment built by this builder is a CoreAlignment with a ProjectionGenotype.  The taxa indice come from the
+ * projection alignment file, while the site indices are the same as the base alignment.
+ * TODO this implement a projection interface with the getDonorHaplotypes method
  *
  * @author Ed Buckler
  */
 public class ProjectionGenotype extends AbstractGenotype {
     private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
     private ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints;
-
-    private int myNumSites;
-    private int myTaxaCount;
 
     private static final int SHIFT_AMOUNT = 16;
     private static final int HDF5_GENOTYPE_BLOCK_SIZE = 1 << SHIFT_AMOUNT;
@@ -36,7 +38,7 @@ public class ProjectionGenotype extends AbstractGenotype {
     private final LoadingCache<Long, byte[]> myGenoCache;
     private final CacheLoader<Long, byte[]> myGenoLoader = new CacheLoader<Long, byte[]>() {
         public byte[] load(Long key) {
-    //        System.out.println("loading "+getTaxonFromKey(key));
+            if(getTaxonFromKey(key)<4) System.out.println("loading "+getTaxonFromKey(key));
             int startSite = getSiteStartFromKey(key) << SHIFT_AMOUNT;
             Chromosome startChr=myBaseAlignment.getChromosome(startSite);
             int startPosition=myBaseAlignment.getPositionInChromosome(startSite);
@@ -48,6 +50,9 @@ public class ProjectionGenotype extends AbstractGenotype {
             Iterator<DonorHaplotypes> bpIter=theBP.tailSet(theBP.lower(searchDH),true).iterator();
             DonorHaplotypes currDH=bpIter.next();
             int[] currDHSiteRange=siteRangeForDonor(currDH);
+            if(currDHSiteRange[1]>startSite+length) currDHSiteRange[1]=startSite+length;
+//            byte[] p1a=myBaseAlignment.getBaseRange(currDH.getParent1index(),currDHSiteRange[0], currDHSiteRange[1]);
+//            byte[] p2a=myBaseAlignment.getBaseRange(currDH.getParent2index(),currDHSiteRange[0], currDHSiteRange[1]);
             for (int i=startSite; i<startSite+length; i++) {
                 if(i<currDHSiteRange[0]) continue;
                 if(i>currDHSiteRange[1]) {
@@ -57,12 +62,17 @@ public class ProjectionGenotype extends AbstractGenotype {
                         currDHSiteRange=siteRangeForDonor(currDH);
                         i=currDHSiteRange[0];
                         if(i>=startSite+length) break;
+                        if(currDHSiteRange[1]>startSite+length) currDHSiteRange[1]=startSite+length;
+//                        p1a=myBaseAlignment.getBaseRange(currDH.getParent1index(),currDHSiteRange[0], currDHSiteRange[1]);
+//                        p2a=myBaseAlignment.getBaseRange(currDH.getParent2index(),currDHSiteRange[0], currDHSiteRange[1]);
                     } else {
                       break;
                     }
                 }
                 byte p1=myBaseAlignment.getBase(currDH.getParent1index(),i);
                 byte p2=myBaseAlignment.getBase(currDH.getParent2index(),i);
+//                byte p1=p1a[i-currDHSiteRange[0]];
+//                byte p2=p2a[i-currDHSiteRange[0]];
                 data[i-startSite]=AlignmentUtils.getUnphasedDiploidValueNoHets(p1, p2);
 //                data[i-startSite]=(byte)(i%64);
             }
@@ -74,11 +84,13 @@ public class ProjectionGenotype extends AbstractGenotype {
         super(allBreakPoints.size(), hdAlign.getSiteCount(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         myBaseAlignment = hdAlign;
         this.allBreakPoints=allBreakPoints;
-        myTaxaCount=allBreakPoints.size();
-
         myGenoCache = CacheBuilder.newBuilder()
-                .maximumSize((3 * getTaxaCount()) / 2)
+                .maximumSize((10 * getTaxaCount()) / 2)
                 .build(myGenoLoader);
+    }
+
+    public NavigableSet<DonorHaplotypes> getDonorHaplotypes(int taxon) {
+        return allBreakPoints.get(taxon);
     }
 
     private static long getCacheKey(int taxon, int site) {

@@ -11,10 +11,11 @@ import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.util.*;
 
 /**
- * Defines xxxx
+ * Methods for reading and writing ProjectionAlignments to files.
  *
  * @author Ed Buckler
  */
@@ -34,15 +35,21 @@ public class ProjectionAlignmentIO {
                 System.err.println("Error in number of base taxa"); return null;
             }
             int taxaCnt=Integer.parseInt(sl[1]);
+            Map<Integer,Integer> paIndexToBaseIndex=new HashMap<>();
             for (int i = 0; i < baseTaxaCnt; i++) {
                 sl=Utils.readLineSkipComments(br).split("\t");
-                //change to hash map
                 int index=Integer.parseInt(sl[0]);
-                if(!baseHighDensityAlignment.getFullTaxaName(index).equals(sl[1])) {
-                    System.err.println("Names or order does not agree with base taxa"); return null;
+                Taxon taxon=new Taxon(sl[1]);
+                List<Integer> matches=baseHighDensityAlignment.getTaxaList().getIndicesMatchingTaxon(taxon);
+                if(matches.size()==0) {
+                    throw new NoSuchElementException("Taxon "+sl[1]+" not found within base taxa");
                 }
+                if(matches.size()>1) {
+                    throw new NoSuchElementException("Taxon "+sl[1]+" found multiple times within base taxa");
+                }
+                paIndexToBaseIndex.put(index, matches.get(0));
             }
-            SortedMap<Taxon,NavigableSet<DonorHaplotypes>> allBreakPoints=new TreeMap<>();
+            ProjectionBuilder pb=new ProjectionBuilder(baseHighDensityAlignment);
             for (int i = 0; i < taxaCnt; i++) {
                 sl=Utils.readLineSkipComments(br).split("\t");
                 int breakTotal=sl.length-1;
@@ -51,13 +58,15 @@ public class ProjectionAlignmentIO {
                 for (int bp = 0; bp < breakTotal; bp++) {
                     String[] bptext=sl[bp+1].split(":");
                     Chromosome chr=new Chromosome(bptext[0]);
-                    DonorHaplotypes dh=new DonorHaplotypes(chr, Integer.parseInt(bptext[1]), Integer.parseInt(bptext[1]),
-                            Integer.parseInt(bptext[2]), Integer.parseInt(bptext[3]));
+                    int baseParent1=paIndexToBaseIndex.get(Integer.parseInt(bptext[3]));
+                    int baseParent2=paIndexToBaseIndex.get(Integer.parseInt(bptext[4]));
+                    DonorHaplotypes dh=new DonorHaplotypes(chr, Integer.parseInt(bptext[1]), Integer.parseInt(bptext[2]),
+                            baseParent1, baseParent2);
                     breakForTaxon.add(dh);
                 }
-                allBreakPoints.put(new Taxon(sl[0]), breakForTaxon);
+                pb.addTaxon(new Taxon(sl[0]), breakForTaxon);
             }
-            return ProjectionBuilder.getInstance(baseHighDensityAlignment, allBreakPoints);
+            return pb.build();
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Error reading Projection file: " + paFile + ": " + ExceptionUtils.getExceptionCauses(e));
@@ -69,37 +78,40 @@ public class ProjectionAlignmentIO {
         }
     }
 
-    public void save(String outfile, Alignment pa) {
+    public static void writeToFile(String outfile, Alignment pa) {
         if(!(pa.getGenotypeMatrix() instanceof ProjectionGenotype)) {
             throw new UnsupportedOperationException("Save only works for Alignments with projection genotypes");
         }
-//        BufferedWriter bw = null;
-//        try {
-//            String fullFileName = Utils.addSuffixIfNeeded(outfile, ".pa.txt.gz", new String[]{".pa.txt", ".pa.txt.gz"});
-//            bw = Utils.getBufferedWriter(fullFileName);
-//            bw.write(myBaseAlignment.getSequenceCount()+"\t"+pa.getSequenceCount()+"\n");
-//            bw.write("#Donor Haplotypes\n");
-//            for (int i = 0; i < myBaseAlignment.getSequenceCount(); i++) {
-//                bw.write(i+"\t"+myBaseAlignment.getFullTaxaName(i)+"\n");
-//            }
-//            bw.write("#Taxa Breakpoints\n");
-//            bw.write("#Block are defined position:donor1:donor2 (-1 means no hypothesis)\n");
-//            for (int i = 0; i < pa.getSequenceCount(); i++) {
-//                bw.write(pa.getFullTaxaName(i)+"\t");
-////                for (int p = 0; (myPosBreaks[i]!=null)&&(p < myPosBreaks[i].length); p++) {
-////                    bw.write(myPosBreaks[i][p]+":"+myHDTaxa[i][p][0]+":"+myHDTaxa[i][p][1]+"\t");
-////                }
-//                bw.write("\n");
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            throw new IllegalArgumentException("Error writing Projection file: " + outfile + ": " + ExceptionUtils.getExceptionCauses(e));
-//        } finally {
-//            try {bw.close();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
+        ProjectionGenotype pg=(ProjectionGenotype)pa.getGenotypeMatrix();
+        BufferedWriter bw = null;
+        try {
+            String fullFileName = Utils.addSuffixIfNeeded(outfile, ".pa.txt.gz", new String[]{".pa.txt", ".pa.txt.gz"});
+            bw = Utils.getBufferedWriter(fullFileName);
+            bw.write(pa.getSequenceCount()+"\t"+pa.getSequenceCount()+"\n");
+            bw.write("#Donor Haplotypes\n");
+            for (int i = 0; i < pa.getSequenceCount(); i++) {
+                bw.write(i+"\t"+pa.getFullTaxaName(i)+"\n");
+            }
+            bw.write("#Taxa Breakpoints\n");
+            bw.write("#Block are defined chr:startPos:endPos:donor1:donor2 (-1 means no hypothesis)\n");
+            for (int i = 0; i < pa.getSequenceCount(); i++) {
+                bw.write(pa.getFullTaxaName(i)+"\t");
+                NavigableSet<DonorHaplotypes> theDH=pg.getDonorHaplotypes(i);
+                for (DonorHaplotypes dh : theDH) {
+                    bw.write(dh.getChromosome().getName()+":"+dh.getStartPosition()+":"+dh.getEndPosition()+":"+
+                            dh.getParent1index()+":"+dh.getParent2index()+"\t");
+                }
+                bw.write("\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Error writing Projection file: " + outfile + ": " + ExceptionUtils.getExceptionCauses(e));
+        } finally {
+            try {bw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }
