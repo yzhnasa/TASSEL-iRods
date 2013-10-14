@@ -28,6 +28,8 @@ public class CoreAlignment implements Alignment {
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
     private final AlleleDepth myAlleleDepth;
+    private final int mySiteCount;
+    private final int myTaxaCount;
 
     CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         //todo need check dimensions
@@ -36,6 +38,8 @@ public class CoreAlignment implements Alignment {
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
+        mySiteCount=myPositionList.getSiteCount();
+        myTaxaCount=myTaxaList.getTaxaCount();
     }
 
     CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList) {
@@ -164,7 +168,7 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int getSiteCount() {
-        return myPositionList.getSiteCount();
+        return mySiteCount;
     }
 
     @Override
@@ -179,12 +183,12 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int getSequenceCount() {
-        return myTaxaList.getTaxaCount();
+        return myTaxaCount;
     }
 
     @Override
     public int getTaxaCount() {
-        return myTaxaList.getTaxaCount();
+        return myTaxaCount;
     }
 
     @Override

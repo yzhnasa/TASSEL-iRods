@@ -4,12 +4,16 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeMap;
+import com.google.common.collect.TreeRangeMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.util.DonorHaplotypes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NavigableSet;
@@ -80,6 +84,29 @@ public class ProjectionGenotype extends AbstractGenotype {
         }
     };
 
+    private ArrayList<RangeMap<Integer,DonorSiteHaps>> breakMaps;
+    private DonorSiteHaps[] currentDSH;
+
+    private final LoadingCache<Integer, byte[]> mySiteCache;
+    private final CacheLoader<Integer, byte[]> mySiteLoader = new CacheLoader<Integer, byte[]>() {
+        @Override
+        public byte[] load(Integer site) throws Exception {
+            byte[] baseGeno=new byte[myBaseAlignment.getTaxaCount()];
+            for (int t=0; t<baseGeno.length; t++) baseGeno[t]=myBaseAlignment.getBase(t,site);
+            byte[] data=new byte[getTaxaCount()];
+            for (int t=0; t<data.length; t++) {
+                if((currentDSH[t]==null)||(!currentDSH[t].containsSite(site))) {
+                    currentDSH[t]=breakMaps.get(t).get(site);
+                    //TODO consider null
+                }
+                byte p1=baseGeno[currentDSH[t].getParent1index()];
+                byte p2=baseGeno[currentDSH[t].getParent2index()];
+                data[t]=AlignmentUtils.getUnphasedDiploidValueNoHets(p1, p2);
+            }
+            return data;
+        }
+    };
+
     public ProjectionGenotype(Alignment hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
         super(allBreakPoints.size(), hdAlign.getSiteCount(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         myBaseAlignment = hdAlign;
@@ -87,6 +114,21 @@ public class ProjectionGenotype extends AbstractGenotype {
         myGenoCache = CacheBuilder.newBuilder()
                 .maximumSize((10 * getTaxaCount()) / 2)
                 .build(myGenoLoader);
+        breakMaps=new ArrayList<>(getTaxaCount());
+        for (NavigableSet<DonorHaplotypes> allBreakPoint : allBreakPoints) {
+            RangeMap<Integer,DonorSiteHaps> tRM=TreeRangeMap.create();
+            for (DonorHaplotypes dh : allBreakPoint) {
+                int[] siteRange=siteRangeForDonor(dh);
+                DonorSiteHaps dsh=new DonorSiteHaps(siteRange[0],siteRange[1],dh.getParent1index(),dh.getParent2index());
+                tRM.put(Range.closed(siteRange[0],siteRange[1]),dsh);
+                //TODO consider putting in blank range maps
+            }
+            breakMaps.add(tRM);
+        }
+        currentDSH=new DonorSiteHaps[getTaxaCount()];
+        mySiteCache = CacheBuilder.newBuilder()
+                .maximumSize(100_000)
+                .build(mySiteLoader);
     }
 
     public NavigableSet<DonorHaplotypes> getDonorHaplotypes(int taxon) {
@@ -128,6 +170,27 @@ public class ProjectionGenotype extends AbstractGenotype {
             lastKey=key;
             lastData=data;
             return data[site % HDF5_GENOTYPE_BLOCK_SIZE];
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
+        }
+    }
+
+//    @Override
+//    public byte getBase(int taxon, int site) {
+//        try {
+//            byte[] data = mySiteCache.get(site);
+//            return data[taxon];
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//            throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
+//        }
+//    }
+
+    public byte[] getAllBaseForSite(int site) {
+        try {
+            byte[] data = mySiteCache.get(site);
+            return data;
         } catch (ExecutionException e) {
             e.printStackTrace();
             throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
@@ -258,6 +321,39 @@ public class ProjectionGenotype extends AbstractGenotype {
 
 
 
+   private class DonorSiteHaps {
+        private final int startSite;
+        private final int endSite;
+        private final int parent1index;
+        private final int parent2index;
 
+       private DonorSiteHaps(int startSite, int endSite, int parent1index, int parent2index) {
+           this.startSite=startSite;
+           this.endSite=endSite;
+           this.parent1index=parent1index;
+           this.parent2index=parent2index;
+       }
+
+       private int getStartSite() {
+           return startSite;
+       }
+
+       private int getEndSite() {
+           return endSite;
+       }
+
+       private int getParent1index() {
+           return parent1index;
+       }
+
+       private int getParent2index() {
+           return parent2index;
+       }
+
+       private boolean containsSite(int site) {
+           if((site<startSite)||(site>endSite)) return false;
+           return true;
+       }
+   }
 
 }
