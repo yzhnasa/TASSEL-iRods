@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutionException;
  * Projection genotype use defined haplotypes and breakpoints that point to high density
  * genotypes (baseAlignment).  These are used to efficiently store and connect low density maps with imputed high density genotypes.
  * <p></p>
- * The alignment built by this builder is a CoreAlignment with a ProjectionGenotype.  The taxa indice come from the
+ * The alignment built by this builder is a CoreAlignment with a ProjectionGenotype.  The taxa indices come from the
  * projection alignment file, while the site indices are the same as the base alignment.
  * TODO this implement a projection interface with the getDonorHaplotypes method
  *
@@ -159,22 +159,22 @@ public class ProjectionGenotype extends AbstractGenotype {
         return new int[]{start,end};
     }
 
-    @Override
-    public byte getBase(int taxon, int site) {
-        long key = getCacheKey(taxon, site);
-        if(key==lastKey) {
-            return lastData[site % HDF5_GENOTYPE_BLOCK_SIZE];
-        }
-        try {
-            byte[] data = myGenoCache.get(key);
-            lastKey=key;
-            lastData=data;
-            return data[site % HDF5_GENOTYPE_BLOCK_SIZE];
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
-        }
-    }
+//    @Override
+//    public byte getBase(int taxon, int site) {
+//        long key = getCacheKey(taxon, site);
+//        if(key==lastKey) {
+//            return lastData[site % HDF5_GENOTYPE_BLOCK_SIZE];
+//        }
+//        try {
+//            byte[] data = myGenoCache.get(key);
+//            lastKey=key;
+//            lastData=data;
+//            return data[site % HDF5_GENOTYPE_BLOCK_SIZE];
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//            throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
+//        }
+//    }
 
 //    @Override
 //    public byte getBase(int taxon, int site) {
@@ -186,6 +186,17 @@ public class ProjectionGenotype extends AbstractGenotype {
 //            throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
 //        }
 //    }
+
+        @Override
+    public byte getBase(int taxon, int site) {
+        if((currentDSH[taxon]==null)||(!currentDSH[taxon].containsSite(site))) {
+            currentDSH[taxon]=breakMaps.get(taxon).get(site);
+            //TODO consider null
+        }
+        byte p1=myBaseAlignment.getBase(currentDSH[taxon].getParent1index(),site);
+        byte p2=myBaseAlignment.getBase(currentDSH[taxon].getParent2index(),site);
+        return AlignmentUtils.getUnphasedDiploidValueNoHets(p1, p2);
+    }
 
     public byte[] getAllBaseForSite(int site) {
         try {
