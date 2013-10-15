@@ -86,26 +86,11 @@ public class ProjectionGenotype extends AbstractGenotype {
 
     private ArrayList<RangeMap<Integer,DonorSiteHaps>> breakMaps;
     private DonorSiteHaps[] currentDSH;
+    private byte[] donorForCachedSite;
+    private byte[] projForCachedTaxon;
+    private int cachedSite=-1;
+    int[] primDSH; //startSite,endSite,parent1,parent2 array for the
 
-    private final LoadingCache<Integer, byte[]> mySiteCache;
-    private final CacheLoader<Integer, byte[]> mySiteLoader = new CacheLoader<Integer, byte[]>() {
-        @Override
-        public byte[] load(Integer site) throws Exception {
-            byte[] baseGeno=new byte[myBaseAlignment.getTaxaCount()];
-            for (int t=0; t<baseGeno.length; t++) baseGeno[t]=myBaseAlignment.getBase(t,site);
-            byte[] data=new byte[getTaxaCount()];
-            for (int t=0; t<data.length; t++) {
-                if((currentDSH[t]==null)||(!currentDSH[t].containsSite(site))) {
-                    currentDSH[t]=breakMaps.get(t).get(site);
-                    //TODO consider null
-                }
-                byte p1=baseGeno[currentDSH[t].getParent1index()];
-                byte p2=baseGeno[currentDSH[t].getParent2index()];
-                data[t]=AlignmentUtils.getUnphasedDiploidValueNoHets(p1, p2);
-            }
-            return data;
-        }
-    };
 
     public ProjectionGenotype(Alignment hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
         super(allBreakPoints.size(), hdAlign.getSiteCount(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
@@ -126,9 +111,8 @@ public class ProjectionGenotype extends AbstractGenotype {
             breakMaps.add(tRM);
         }
         currentDSH=new DonorSiteHaps[getTaxaCount()];
-        mySiteCache = CacheBuilder.newBuilder()
-                .maximumSize(100_000)
-                .build(mySiteLoader);
+        primDSH=new int[myTaxaCount*4];
+        Arrays.fill(primDSH,Integer.MIN_VALUE);
     }
 
     public NavigableSet<DonorHaplotypes> getDonorHaplotypes(int taxon) {
@@ -159,54 +143,42 @@ public class ProjectionGenotype extends AbstractGenotype {
         return new int[]{start,end};
     }
 
-//    @Override
+//        @Override
 //    public byte getBase(int taxon, int site) {
-//        long key = getCacheKey(taxon, site);
-//        if(key==lastKey) {
-//            return lastData[site % HDF5_GENOTYPE_BLOCK_SIZE];
+//        if((currentDSH[taxon]==null)||(!currentDSH[taxon].containsSite(site))) {
+//            currentDSH[taxon]=breakMaps.get(taxon).get(site);
+//            //TODO consider null
 //        }
-//        try {
-//            byte[] data = myGenoCache.get(key);
-//            lastKey=key;
-//            lastData=data;
-//            return data[site % HDF5_GENOTYPE_BLOCK_SIZE];
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
-//            throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
-//        }
+//        byte p1=myBaseAlignment.getBase(currentDSH[taxon].getParent1index(),site);
+//        byte p2=myBaseAlignment.getBase(currentDSH[taxon].getParent2index(),site);
+//        return AlignmentUtils.getUnphasedDiploidValueNoHets(p1, p2);
 //    }
 
-//    @Override
-//    public byte getBase(int taxon, int site) {
-//        try {
-//            byte[] data = mySiteCache.get(site);
-//            return data[taxon];
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
-//            throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
-//        }
-//    }
 
-        @Override
+
+    @Override
     public byte getBase(int taxon, int site) {
-        if((currentDSH[taxon]==null)||(!currentDSH[taxon].containsSite(site))) {
-            currentDSH[taxon]=breakMaps.get(taxon).get(site);
+        //test transpose problems
+        if(site!=cachedSite) {
+            donorForCachedSite=myBaseAlignment.getGenotypeMatrix().getGenotypeForAllTaxa(site);
+            cachedSite=site;
+        }
+        int primPos=taxon<<2;
+        if((site<primDSH[primPos++])||(site>primDSH[primPos++])) {
+            DonorSiteHaps currentDSH=breakMaps.get(taxon).get(site);
+            primPos=taxon<<2;
+            primDSH[primPos++]=currentDSH.getStartSite();
+            primDSH[primPos++]=currentDSH.getEndSite();
+            primDSH[primPos++]=currentDSH.getParent1index();
+            primDSH[primPos]=currentDSH.getParent2index();
+            primPos=(taxon<<2)+2;
             //TODO consider null
         }
-        byte p1=myBaseAlignment.getBase(currentDSH[taxon].getParent1index(),site);
-        byte p2=myBaseAlignment.getBase(currentDSH[taxon].getParent2index(),site);
-        return AlignmentUtils.getUnphasedDiploidValueNoHets(p1, p2);
+ //       if(primDSH[primPos]==primDSH[primPos+1]) return donorForCachedSite[primDSH[primPos]];
+        return AlignmentUtils.getUnphasedDiploidValueNoHets(donorForCachedSite[primDSH[primPos]], donorForCachedSite[primDSH[primPos+1]]);
     }
 
-    public byte[] getAllBaseForSite(int site) {
-        try {
-            byte[] data = mySiteCache.get(site);
-            return data;
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            throw new IllegalStateException("HDF5ByteGenotype: getBase: Error getting base from cache.");
-        }
-    }
+
 
     @Override
     public String getBaseAsString(int taxon, int site) {
@@ -219,117 +191,10 @@ public class ProjectionGenotype extends AbstractGenotype {
     }
 
 
-//    @Override
-//    public byte[] getGenotypeForAllSites(int taxon) {
-//        return myGenotype.getAllColumns(taxon);
-//    }
-//
-//    @Override
-//    public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
-//        return myGenotype.getColumnRange(taxon, start, end);
-//    }
-//
-//    @Override
-//    public byte[] getGenotypeForAllTaxa(int site) {
-//        return myGenotype.getAllRows(site);
-//    }
-
     @Override
     public void transposeData(boolean siteInnerLoop) {
-
-//        if (siteInnerLoop) {
-//            if (mySiteInnerLoop == null) {
-//                mySiteInnerLoop = SuperByteMatrixBuilder.getInstanceTranspose(myTaxonInnerLoop);
-//            }
-//            myGenotype = mySiteInnerLoop;
-//        } else {
-//            if (myTaxonInnerLoop == null) {
-//                myTaxonInnerLoop = SuperByteMatrixBuilder.getInstanceTranspose(mySiteInnerLoop);
-//            }
-//            myGenotype = myTaxonInnerLoop;
-//        }
-
+        myBaseAlignment.getGenotypeMatrix().transposeData(siteInnerLoop);
     }
-
-//    private void init() {
-//        myNumSites=myBaseAlignment.getSiteCount();
-//        cacheTaxonSiteBound=new int[myTaxaCount][2];
-//        cacheTaxonDonors=new int[myTaxaCount][2];
-//        for (int i = 0; i < myTaxaCount; i++) {
-//            //   translateTaxon(i,0);
-//            cacheNewTaxonSiteRange(i,0);
-//        }
-//    }
-//
-//    private int[] translateTaxon(int taxon, int site) {
-//        if (mySiteBreaks[taxon] == null) {
-//            return null;
-//        }
-//        if((cacheTaxonSiteBound[taxon][0]<=site)&&(site<=cacheTaxonSiteBound[taxon][1])) {
-//            cacheUseCnt++;
-//            return cacheTaxonDonors[taxon];
-//        } else {
-//            lookupCnt++;
-//            return cacheNewTaxonSiteRange(taxon, site);
-//        }
-////        int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
-////        if (b < 0) {
-////            b = -(b + 2);  //this will not work if it does not start with zero.
-////        }
-////        return myHDTaxa[taxon][b];
-//    }
-//
-//    private int[] cacheNewTaxonSiteRange(int taxon, int site){
-//        if (mySiteBreaks[taxon] == null) return null;
-//        int b = Arrays.binarySearch(mySiteBreaks[taxon], site);
-//        if (b < 0) {
-//            b = -(b + 2);  //this will not work if it does not start with zero.
-//        }
-//        cacheTaxonSiteBound[taxon][0]=mySiteBreaks[taxon][b];
-//        if((b+1)<mySiteBreaks[taxon].length) {
-//            cacheTaxonSiteBound[taxon][1]=mySiteBreaks[taxon][b+1];
-//        } else {
-//            cacheTaxonSiteBound[taxon][1]=myNumSites;
-//        }
-//        cacheTaxonDonors[taxon]=myHDTaxa[taxon][b];
-//        return myHDTaxa[taxon][b];
-//    }
-//
-//    @Override
-//    public String getBaseAsString(int taxon, int site) {
-//        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
-//    }
-//
-//    @Override
-//    public String getDiploidAsString(int site, byte value) {
-//        return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
-//    }
-
-
-
-//    @Override
-//    public byte[] getBaseRow(int taxon) {
-//
-//        int numBreaks = mySiteBreaks[taxon].length;
-//        byte[] result = new byte[myNumSites];
-//        for (int i = 0; i < numBreaks - 1; i++) {
-//            int[] hdTaxon = myHDTaxa[taxon][i];
-//            for (int j = mySiteBreaks[taxon][i]; j < mySiteBreaks[taxon][i + 1]; j++) {
-//               // result[j] = myBaseAlignment.getBase(hdTaxon, j);
-//                result[j]=AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(hdTaxon[0], j), myBaseAlignment.getBase(hdTaxon[1], j));
-//            }
-//        }
-//
-//        int[] hdTaxon = myHDTaxa[taxon][numBreaks - 1];
-//        for (int j = mySiteBreaks[taxon][numBreaks - 1], n = getSiteCount(); j < n; j++) {
-// //           result[j] = myBaseAlignment.getBase(hdTaxon, j);
-//            result[j]=AlignmentUtils.getDiploidValue(myBaseAlignment.getBase(hdTaxon[0], j), myBaseAlignment.getBase(hdTaxon[1], j));
-//        }
-//
-//        return result;
-//    }
-
-
 
 
    private class DonorSiteHaps {

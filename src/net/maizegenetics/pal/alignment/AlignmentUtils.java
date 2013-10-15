@@ -760,6 +760,9 @@ public class AlignmentUtils {
      * @return diploid value
      */
     public static byte getUnphasedDiploidValueNoHets(byte g1, byte g2) {
+        if ((g2 == g1)&&(!isHeterozygous(g1))) {
+            return g1;
+        }
         if (g1 == Alignment.UNKNOWN_DIPLOID_ALLELE) {
             return Alignment.UNKNOWN_DIPLOID_ALLELE;
         }
@@ -772,9 +775,7 @@ public class AlignmentUtils {
         if (isHeterozygous(g2)) {
             return Alignment.UNKNOWN_DIPLOID_ALLELE;
         }
-        if (g2 == g1) {
-            return g1;
-        }
+
         return getUnphasedDiploidValue(g1, g2);
     }
 
