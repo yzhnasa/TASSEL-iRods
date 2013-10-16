@@ -1066,34 +1066,4 @@ public class FilterAlignment implements Alignment {
     public Genotype getGenotypeMatrix() {
         return myGenotype;
     }
-
-    @Override
-    public byte[] getMajorAlleleForAllSites() {
-        return myGenotype.getMajorAlleleForAllSites();
-    }
-
-    @Override
-    public byte[] getMinorAlleleForAllSites() {
-        return myGenotype.getMinorAlleleForAllSites();
-    }
-
-    @Override
-    public byte[] getGenotypeForAllSites(int taxon) {
-        return myGenotype.getGenotypeForAllSites(taxon);
-    }
-
-    @Override
-    public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
-        return myGenotype.getGenotypeForSiteRange(taxon, start, end);
-    }
-
-    @Override
-    public byte[] getGenotypeForAllTaxa(int site) {
-        return myGenotype.getGenotypeForAllTaxa(site);
-    }
-
-    @Override
-    public void transposeData(boolean siteInnerLoop) {
-        myGenotype.transposeData(siteInnerLoop);
-    }
 }

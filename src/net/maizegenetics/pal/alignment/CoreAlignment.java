@@ -38,8 +38,8 @@ public class CoreAlignment implements Alignment {
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
-        mySiteCount = myPositionList.getSiteCount();
-        myTaxaCount = myTaxaList.getTaxaCount();
+        mySiteCount=myPositionList.getSiteCount();
+        myTaxaCount=myTaxaList.getTaxaCount();
     }
 
     CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList) {
@@ -488,35 +488,5 @@ public class CoreAlignment implements Alignment {
                 myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
                 return null;
         }
-    }
-
-    @Override
-    public byte[] getMajorAlleleForAllSites() {
-        return myGenotype.getMajorAlleleForAllSites();
-    }
-
-    @Override
-    public byte[] getMinorAlleleForAllSites() {
-        return myGenotype.getMinorAlleleForAllSites();
-    }
-
-    @Override
-    public byte[] getGenotypeForAllSites(int taxon) {
-        return myGenotype.getGenotypeForAllSites(taxon);
-    }
-
-    @Override
-    public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
-        return myGenotype.getGenotypeForSiteRange(taxon, start, end);
-    }
-
-    @Override
-    public byte[] getGenotypeForAllTaxa(int site) {
-        return myGenotype.getGenotypeForAllTaxa(site);
-    }
-
-    @Override
-    public void transposeData(boolean siteInnerLoop) {
-        myGenotype.transposeData(siteInnerLoop);
     }
 }
