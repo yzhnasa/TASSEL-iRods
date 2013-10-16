@@ -850,4 +850,34 @@ public class CombineAlignment implements Alignment {
     public Genotype getGenotypeMatrix() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public byte[] getMajorAlleleForAllSites() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public byte[] getMinorAlleleForAllSites() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public byte[] getGenotypeForAllSites(int taxon) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public byte[] getGenotypeForAllTaxa(int site) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void transposeData(boolean siteInnerLoop) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
