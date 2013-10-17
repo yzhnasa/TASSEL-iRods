@@ -506,7 +506,7 @@ public class AnnotateTOPM {
                 if (tmiBuffer[j][i].mappingSource == Byte.MIN_VALUE) sum++;
             }
             if (sum == tmiBuffer.length) continue;
-            TreeSet<Short> set = new TreeSet();
+            TreeSet<Short> set = new TreeSet<>();
             for (int j = 0; j < tmiBuffer.length; j++) {
                 set.add(tmiBuffer[j][i].mappingScore);
             }
@@ -536,7 +536,7 @@ public class AnnotateTOPM {
             }
         }
         for (int i = 0; i < tmiBuffer[0].length; i++) {
-            TreeSet<Short> set = new TreeSet();
+            TreeSet<Short> set = new TreeSet<>();
             for (int j = 0; j < tmiBuffer.length; j++) {
                 set.add(tmiBuffer[j][i].mappingScore);
             }

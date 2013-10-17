@@ -4,16 +4,16 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-import java.io.File;
-import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.tagdist.PETagCounts;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 
 /**
  * Merge PETagCounts file of each taxon into one master PETagCounts file
@@ -52,11 +52,11 @@ public class MergePETagCountPlugin extends AbstractPlugin {
      */
     public void mergePETagCount () {
         File[] infiles = new File(inputDirS).listFiles();
-        PETagCounts prime = new PETagCounts(infiles[0].getAbsolutePath(), FilePacking.Bit).getCollapsedPETagCounts();
+        PETagCounts prime = new PETagCounts(infiles[0].getAbsolutePath(), FilePacking.Byte).getCollapsedPETagCounts();
         for (int i = 1; i < infiles.length; i++) {
-            prime = prime.getMergedPETagCounts(new PETagCounts(infiles[i].getAbsolutePath(), FilePacking.Bit), false);
+            prime = prime.getMergedPETagCounts(new PETagCounts(infiles[i].getAbsolutePath(), FilePacking.Byte), false);
         }
-        prime.writeDistFile(outputFileS, FilePacking.Bit, 0);
+        prime.writeDistFile(outputFileS, FilePacking.Byte, 0);
     }
     
     @Override

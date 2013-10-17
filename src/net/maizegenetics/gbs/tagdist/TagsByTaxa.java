@@ -25,7 +25,7 @@ public interface TagsByTaxa extends Tags {
      */
     public static enum FilePacking {
 
-        Bit, Byte, Short, Int, Text
+        Byte, Short, Int, Text
     };
 
     /**

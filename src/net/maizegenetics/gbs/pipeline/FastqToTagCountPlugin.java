@@ -1,11 +1,5 @@
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-
-import javax.swing.ImageIcon;
-
-import java.io.BufferedReader;
-import java.io.File;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.gbs.tagdist.TagCountMutable;
@@ -15,8 +9,12 @@ import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.util.Utils;
-
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.BufferedReader;
+import java.io.File;
 
 /**
  * Derives a tagCount list for each fastq file in the input directory.
@@ -244,7 +242,7 @@ public class FastqToTagCountPlugin extends AbstractPlugin {
                 myLogger.info("Timing process (sorting, collapsing, and writing TagCount to file).");
                 long timePoint1 = System.currentTimeMillis();
                 theTC.collapseCounts();
-                theTC.writeTagCountFile(outputDir + File.separator + countFileNames[laneNum], FilePacking.Bit, minCount);
+                theTC.writeTagCountFile(outputDir + File.separator + countFileNames[laneNum], FilePacking.Byte, minCount);
                 myLogger.info("Process took " + (System.currentTimeMillis() - timePoint1) + " milliseconds.");
                 br.close();
 

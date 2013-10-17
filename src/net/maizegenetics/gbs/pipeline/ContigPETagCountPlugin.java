@@ -4,15 +4,15 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-import java.io.File;
-import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.tagdist.PETagCounts;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  *
@@ -51,9 +51,9 @@ public class ContigPETagCountPlugin extends AbstractPlugin {
      * Make contigs of PETagCounts from forward and backward tags
      */
     public void contigPETagCount () {
-        PETagCounts p = new PETagCounts(inputFileS, TagsByTaxa.FilePacking.Bit).getCollapsedPETagCounts();
+        PETagCounts p = new PETagCounts(inputFileS, TagsByTaxa.FilePacking.Byte).getCollapsedPETagCounts();
         p.contigPETags();
-        p.writeDistFile(outputFileS, TagsByTaxa.FilePacking.Bit, 0);
+        p.writeDistFile(outputFileS, TagsByTaxa.FilePacking.Byte, 0);
     }
     
     @Override

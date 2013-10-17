@@ -155,7 +155,7 @@ public class KmerToTBTPlugin extends AbstractPlugin {
                 printUsage();
                 throw new IllegalArgumentException("Options -t and -m are mutually exclusive.");
             }
-            myMasterTags = new TagCounts(myArgsEngine.getString("-t"), FilePacking.Bit);
+            myMasterTags = new TagCounts(myArgsEngine.getString("-t"), FilePacking.Byte);
         } else if (myArgsEngine.getBoolean("-m")) {
             if (myArgsEngine.getBoolean("-t")) {
                 printUsage();
@@ -193,7 +193,7 @@ public class KmerToTBTPlugin extends AbstractPlugin {
 
             //Determine name of output file based on input parameters
             File outfile;
-            FilePacking outFormat = useTBTByte ? FilePacking.Byte : (useTBTShort ? FilePacking.Short : FilePacking.Bit);
+            FilePacking outFormat = useTBTByte ? FilePacking.Byte : (useTBTShort ? FilePacking.Short : FilePacking.Byte);
             String outFileS = outputDir + fastqFileS[laneNum].substring(fastqFileS[laneNum].lastIndexOf(File.separator));
             String replaceS = (outFormat == FilePacking.Text) ? ".tbt.txt" : ((outFormat == FilePacking.Byte) ? ".tbt.byte" : ((outFormat == FilePacking.Short) ? ".tbt.shrt" : ".tbt.bin"));
             outfile = new File(outFileS.replaceAll(

@@ -167,7 +167,7 @@ public class SeqToTBTHDF5Plugin extends AbstractPlugin {
                 printUsage();
                 throw new IllegalArgumentException("Options -t and -m are mutually exclusive.");
             }
-            myMasterTags = new TagCounts(myArgsEngine.getString("-t"), FilePacking.Bit);
+            myMasterTags = new TagCounts(myArgsEngine.getString("-t"), FilePacking.Byte);
         } else if (myArgsEngine.getBoolean("-m")) {
             if (myArgsEngine.getBoolean("-t")) {
                 printUsage();

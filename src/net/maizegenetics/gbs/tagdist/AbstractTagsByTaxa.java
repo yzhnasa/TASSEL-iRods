@@ -107,9 +107,6 @@ public abstract class AbstractTagsByTaxa extends AbstractTags implements TagsByT
             case Text:
                 readTextDistFile(inFile);
                 break;
-            case Bit:
-                readBitDistFile(inFile);
-                break;
             default:
                 readByteShortDistFile(inFile, numberType);
                 break;
@@ -259,9 +256,6 @@ public abstract class AbstractTagsByTaxa extends AbstractTags implements TagsByT
             switch (numberType) {
                 case Text:
                     hapsOutput = writeTextDistFile(fw, outReads, minCount);
-                    break;
-                case Bit:
-                    hapsOutput = writeBitDistFile(fw, outReads, minCount);
                     break;
                 default:
                     hapsOutput = writeByteShortDistFile(fw, numberType, outReads, minCount);

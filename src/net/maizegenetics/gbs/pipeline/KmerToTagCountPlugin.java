@@ -1,24 +1,17 @@
 package net.maizegenetics.gbs.pipeline;
 
-import java.awt.Frame;
-
-import javax.swing.ImageIcon;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-
-import net.maizegenetics.util.MultiMemberGZIPInputStream;
-import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.gbs.tagdist.TagCountMutable;
 import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
+import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
-
+import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
 
 /**
  * Derives a tagCount list for each fastq file in the input directory.
@@ -189,7 +182,7 @@ public class KmerToTagCountPlugin extends AbstractPlugin {
             System.out.println("Timing process (sorting, collapsing, and writing TagCount to file).");
             timePoint1 = System.currentTimeMillis();
             theTC.collapseCounts();
-            theTC.writeTagCountFile(myOutput, FilePacking.Bit, minCount);
+            theTC.writeTagCountFile(myOutput, FilePacking.Byte, minCount);
             System.out.println("Process took " + (System.currentTimeMillis() - timePoint1) + " milliseconds.");
             br.close();
         } catch (Exception e) {

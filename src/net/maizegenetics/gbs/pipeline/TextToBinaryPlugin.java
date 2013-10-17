@@ -42,7 +42,7 @@ public class TextToBinaryPlugin extends AbstractPlugin {
                 break;
             case TagCounts:
                 TagCounts tc = new TagCounts(myInput, FilePacking.Text);
-                tc.writeTagCountFile(myOutput, FilePacking.Bit, 0);
+                tc.writeTagCountFile(myOutput, FilePacking.Byte, 0);
                 break;
             case TBTByte:
                 TagsByTaxaByte tbtbyte = new TagsByTaxaByte(myInput, FilePacking.Text);

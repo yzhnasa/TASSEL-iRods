@@ -1,26 +1,16 @@
 package net.maizegenetics.gbs.tagdist;
 
-import java.util.TreeSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.util.OpenBitSet;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.TreeSet;
 
 /**
  * This class contains methods which process TagsByTaxa files one line at a time, as opposed
@@ -45,21 +35,12 @@ public class TagsByTaxaUtils {
 
         /** Returns a byte[] of taxon distribution for the current tag, regardless of file format.*/
         public byte[] taxonDist() {
-            byte[] result = new byte[taxaNames.length];
-            if (inputFormat == TagsByTaxa.FilePacking.Bit) {
-                OpenBitSet currBitSet = new OpenBitSet(currRecord.bitDistribution, longsInBitset);
-                for (int i = 0; i < currBitSet.capacity(); i++) {
-                    if (currBitSet.fastGet(i)) {
-                        result[i]++;
-                    }
-                }
-            } else if (inputFormat == TagsByTaxa.FilePacking.Byte) {
+            if (inputFormat == TagsByTaxa.FilePacking.Byte) {
                 return byteDistribution;
             } else {
                 System.out.println("Taxon distribution of the current tag is blank.");
                 return null;
             }
-            return result;
         }
 
         public float taxonCoverage() {
@@ -197,29 +178,10 @@ public class TagsByTaxaUtils {
      * @param currRecord  A TBTRecord object.*/
     private static void writeRecord(TBTRecord currRecord) {
         switch (outputFormat) {
-            case Bit:
-                try {
-                    for (Long i : currRecord.sequence) {
-                        outputStream.writeLong(i);
-                    }
-                    outputStream.write(currRecord.tagLength);
-                    for (Long i : currRecord.bitDistribution) {
-                        outputStream.writeLong(i);
-                    }
-                } catch (Exception e) {
-                    System.out.println("Caught exception while writing binary TBT record: " + e);
-                }
-                break;
-
             case Text:
                 //Records are output to text two different ways, depending on which format they are stored in.
                 String outputLine = null;
-                if (inputFormat.equals(TagsByTaxa.FilePacking.Bit)) {
-                    outputLine =
-                            BaseEncoder.getSequenceFromLong(currRecord.sequence) + "\t"
-                            + Byte.toString(currRecord.tagLength) + "\t"
-                            + bitsetToString(new OpenBitSet(currRecord.bitDistribution, currRecord.bitDistribution.length)) + "\n";
-                } else if (inputFormat.equals(TagsByTaxa.FilePacking.Byte)) {
+                if (inputFormat.equals(TagsByTaxa.FilePacking.Byte)) {
                     outputLine =
                             BaseEncoder.getSequenceFromLong(currRecord.sequence) + "\t"
                             + Byte.toString(currRecord.tagLength) + "\t";
@@ -251,23 +213,9 @@ public class TagsByTaxaUtils {
 
     /**Reads a single TBT record to disk.  It  uses the value of <b>format</b>
      * to determine whether to read text, binary, or another format.
-     * @param currRecord  A TBTRecord object.*/
+     * */
     private static void readRecord() {
         switch (inputFormat) {
-            case Bit:
-                try {
-                    for (int i = 0; i < tagLengthInLong; i++) {
-                        currRecord.sequence[i] = inputStream.readLong();
-                    }
-                    currRecord.tagLength = inputStream.readByte();
-                    for (int i = 0; i < longsInBitset; i++) {
-                        currRecord.bitDistribution[i] = inputStream.readLong();
-                    }
-                } catch (Exception e) {
-                    System.out.println("Caught exception while reading binary TBT record: " + e);
-                }
-                break;
-
             case Byte:
                 currRecord.byteDistribution = new byte[numTaxa];
                 try {
@@ -311,7 +259,6 @@ public class TagsByTaxaUtils {
      * to determine whether to read text, binary, or another format.*/
     private static void readHeader() {
         switch (inputFormat) {
-            case Bit:   //Fall through
             case Byte:
                 try {
                     numTags = inputStream.readInt();
@@ -355,7 +302,6 @@ public class TagsByTaxaUtils {
      * to determine whether to write text, binary, or another format.*/
     private static void writeHeader() {
         switch (outputFormat) {
-            case Bit:   //Fall through
             case Byte:
                 try {
                     outputStream.writeInt(numTags);
@@ -544,7 +490,6 @@ public class TagsByTaxaUtils {
 
         try {
             switch (inputFormat) {
-                case Bit:   //Fall through
                 case Byte:
                     inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(inputFileName), 65536));
                     break;
@@ -558,7 +503,6 @@ public class TagsByTaxaUtils {
             }
 
             switch (outputFormat) {
-                case Bit:   //Fall through
                 case Byte:
                     outputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFileName), 65536));
                     break;
@@ -580,7 +524,6 @@ public class TagsByTaxaUtils {
         try {
             switch (inputFormat) {
                 case Byte: //Fall through
-                case Bit:
                     inputStream.close();
                     break;
                 case Text:
@@ -590,7 +533,6 @@ public class TagsByTaxaUtils {
 
             switch (outputFormat) {
                 case Byte: //Fall through
-                case Bit:
                     outputStream.close();
                     break;
                 case Text:
@@ -624,15 +566,7 @@ public class TagsByTaxaUtils {
             }
             readRecord();
 
-            if (format == TagsByTaxa.FilePacking.Bit) {
-                OpenBitSet bitset = new OpenBitSet(currRecord.bitDistribution, numTaxa); //(currRecord.bitDistribution, numTaxa);
-                for (int j = 0; j < numTaxa; j++) {
-                    if (bitset.fastGet(j)) {
-                        tagCount[j]++;
-                    }
-                }
-
-            } else if (format == TagsByTaxa.FilePacking.Byte) {
+            if (format == TagsByTaxa.FilePacking.Byte) {
                 for (int j = 0; j < numTaxa; j++) {
                     tagCount[j] += currRecord.byteDistribution[j];
                 }
@@ -677,10 +611,8 @@ public class TagsByTaxaUtils {
     }
 
     /**Calls <b>printSumCounts</b> once for every file in the specified directory.
-     *
-     * @param inputFileName
-     * @param format  A TagsByTaxa.FilePacking enumerated value.
-     * @param progressIndication    Whether or not to provide feeback on number of tags read.   */
+
+     */
     public static void printSumCountsOfAll(String directoryName, TagsByTaxa.FilePacking format) {
         for (String filename : DirectoryCrawler.listFileNames(".*.tbt.bin|.*.tbt.txt|.*.tbt.byte", directoryName)) {
             System.out.println(filename + ":");
@@ -720,11 +652,7 @@ public class TagsByTaxaUtils {
             if (i % 1000000 == 0) {
                 System.out.println("Read " + i / 1000000 + " million tags.");
             }
-            if (format.equals(TagsByTaxa.FilePacking.Bit)) {
-                currBitSet = new OpenBitSet(currRecord.bitDistribution, longsInBitset);
-                nonZeroValues += currBitSet.cardinality();
-                zeroValues += currBitSet.size() - currBitSet.cardinality();
-            } else if (format.equals(TagsByTaxa.FilePacking.Byte)) {
+            if (format.equals(TagsByTaxa.FilePacking.Byte)) {
                 for (byte value : currRecord.byteDistribution) {
                     if (value == 0) {
                         zeroValues++;
@@ -830,9 +758,6 @@ public class TagsByTaxaUtils {
     public static TagsByTaxa.FilePacking format(String filename) {
         TagsByTaxa.FilePacking format = null;
         String fileExtension = filename.substring(filename.lastIndexOf("."));
-        if (fileExtension.equals(".bin")) {
-            format = TagsByTaxa.FilePacking.Bit;
-        }
         if (fileExtension.equals(".byte")) {
             format = TagsByTaxa.FilePacking.Byte;
         }

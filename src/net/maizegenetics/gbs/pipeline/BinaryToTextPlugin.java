@@ -46,7 +46,7 @@ public class BinaryToTextPlugin extends AbstractPlugin {
                 topm.writeTextFile(new File(myOutput));
                 break;
             case TagCounts:
-                TagCounts tc = new TagCounts(myInput, FilePacking.Bit);
+                TagCounts tc = new TagCounts(myInput, FilePacking.Byte);
                 tc.writeTagCountFile(myOutput, FilePacking.Text, 0);
                 break;
             case TBTByte:

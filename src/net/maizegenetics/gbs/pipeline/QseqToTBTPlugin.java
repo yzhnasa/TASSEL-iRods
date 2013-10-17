@@ -144,7 +144,7 @@ public class QseqToTBTPlugin extends AbstractPlugin {
                 printUsage();
                 throw new IllegalArgumentException("Options -t and -m are mutually exclusive.");
             }
-            myMasterTags = new TagCounts(myArgsEngine.getString("-t"), FilePacking.Bit);
+            myMasterTags = new TagCounts(myArgsEngine.getString("-t"), FilePacking.Byte);
         } else if (myArgsEngine.getBoolean("-m")) {
             if (myArgsEngine.getBoolean("-t")) {
                 printUsage();
@@ -176,7 +176,7 @@ public class QseqToTBTPlugin extends AbstractPlugin {
             System.gc();
 
             File outfile;
-            FilePacking outFormat = useTBTByte ? FilePacking.Byte : FilePacking.Bit;
+            FilePacking outFormat = FilePacking.Byte;
             String outFileS = outputDir + qseqFileS[laneNum].substring(qseqFileS[laneNum].lastIndexOf(File.separator));
             String replaceS = (outFormat == FilePacking.Text) ? ".tbt.txt" : ((outFormat == FilePacking.Byte) ? ".tbt.byte" : ".tbt.bin");
             outfile = new File(outFileS.replaceAll("_qseq\\.txt$|_qseq\\.txt\\.gz$", replaceS));
