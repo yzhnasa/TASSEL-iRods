@@ -57,7 +57,7 @@ public class Trait implements Comparable<Trait>, Serializable {
 		this.name = name;
 		this.isDiscrete = isDiscrete;
 		this.type = type;
-		if (properties != null) propertyMap = new HashMap(properties);
+		if (properties != null) propertyMap = new HashMap<>(properties);
 	}
 	
 	/**

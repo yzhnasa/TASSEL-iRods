@@ -8,7 +8,7 @@ package net.maizegenetics.pal.popgen;
  *
  * @author edbuckler
  */
-public class DonorHypoth implements Comparable{
+public class DonorHypoth implements Comparable<DonorHypoth>{
     public int targetTaxon = -1;
     public int donor1Taxon = -1;
     public int donor2Taxon = -1;
@@ -94,10 +94,11 @@ public class DonorHypoth implements Comparable{
 //        }
         return true;
     }
-    
-    public int compareTo(Object o) {
+
+    @Override
+    public int compareTo(DonorHypoth o) {
         if(o.equals(this)) {return 0;}
-        DonorHypoth aDH=(DonorHypoth)o;
+        DonorHypoth aDH=o;
         if(aDH.donor1Taxon<this.donor1Taxon) return 1;
         return -1;
         

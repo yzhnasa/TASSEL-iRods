@@ -11,7 +11,6 @@ import net.maizegenetics.pal.math.MersenneTwisterFast;
 public class Local {
 	
 	private static MersenneTwisterFast random = new MersenneTwisterFast();
-	private static double lambda = 1.0;
 	
 	public static Tree local(Tree tree) {
 		return local(tree, 1.0);

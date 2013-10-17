@@ -66,7 +66,7 @@ public class BuilderFromHapMap {
                 txtLines.add(currLine);
                 lines++;
                 if (lines%linesAtTime==0) {
-                    ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(pbs.size(), taxaList.getTaxaCount(), txtLines);
+                    ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(taxaList.getTaxaCount(), txtLines);
                     pbs.add(pb);
                     //     pb.run();
                     pool.execute(pb);
@@ -75,7 +75,7 @@ public class BuilderFromHapMap {
             }
             r.close();
             if (txtLines.size()>0) {
-                ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(pbs.size(), taxaList.getTaxaCount(), txtLines);
+                ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(taxaList.getTaxaCount(), txtLines);
                 pbs.add(pb);
                 pool.execute(pb);
             }
@@ -129,7 +129,6 @@ class ProcessHapMapBlock implements Runnable {
     private static final int VARIANT_INDEX=1;
     private static final int CHROMOSOME_INDEX=2;
     private static final int POSITION_INDEX=3;
-    private final int order;
     private final int taxaN;
     private final int siteN;
     private ArrayList<String> txtL;
@@ -138,8 +137,7 @@ class ProcessHapMapBlock implements Runnable {
  //   private final byte[] convert;
     private final boolean isOneLetter; //true e.g. A,R, false=AA,CT
 
-    private ProcessHapMapBlock(int order, int taxaN, ArrayList<String> txtL) {
-        this.order=order;
+    private ProcessHapMapBlock(int taxaN, ArrayList<String> txtL) {
         this.taxaN=taxaN;
         this.siteN=txtL.size();
         this.txtL=txtL;
@@ -155,8 +153,8 @@ class ProcessHapMapBlock implements Runnable {
         }
     }
 
-    public static ProcessHapMapBlock getInstance(int order, int taxaN, ArrayList<String> txtL) {
-        return new ProcessHapMapBlock(order, taxaN, txtL);
+    public static ProcessHapMapBlock getInstance(int taxaN, ArrayList<String> txtL) {
+        return new ProcessHapMapBlock(taxaN, txtL);
     }
 
     //@Override
