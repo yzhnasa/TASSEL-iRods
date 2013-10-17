@@ -3,7 +3,10 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import static net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE.Frequency;
+import static net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE.Reference;
 import net.maizegenetics.pal.alignment.bit.BitStorage;
+import net.maizegenetics.pal.alignment.bit.DynamicBitStorage;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.position.Chromosome;
@@ -13,8 +16,6 @@ import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.util.BitSet;
-import net.maizegenetics.util.OpenBitSet;
-import net.maizegenetics.util.UnmodifiableBitSet;
 
 import org.apache.log4j.Logger;
 
@@ -43,6 +44,7 @@ public class FilterAlignment implements Alignment {
     private int[] myChromosomeOffsets;
     private PositionList myPositionList;
     private final Genotype myGenotype;
+    private final Map<ALLELE_SCOPE_TYPE, BitStorage> myBitStorage = new EnumMap<ALLELE_SCOPE_TYPE, BitStorage>(ALLELE_SCOPE_TYPE.class);
 
     private FilterAlignment(Alignment a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
 
@@ -686,29 +688,17 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        if (myIsSiteFilter || myIsSiteFilterByRange) {
-            throw new IllegalStateException("FilterAlignment: getAllelePresenceForAllSites: This Filter Alignment has had Sites removed.  You need to optimize for taxa before calling this.");
-        } else {
-            return myBaseAlignment.getAllelePresenceForAllSites(translateTaxon(taxon), alleleNumber);
-        }
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        if (myIsTaxaFilter) {
-            throw new IllegalStateException("FilterAlignment: getAllelePresenceForAllTaxa: This Filter Alignment has had Taxa removed.  You need to optimize for sites before calling this.");
-        } else {
-            return myBaseAlignment.getAllelePresenceForAllTaxa(translateSite(site), alleleNumber);
-        }
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        if (myIsSiteFilter || myIsSiteFilterByRange) {
-            throw new IllegalStateException("FilterAlignment: getAllelePresenceForSitesBlock: This Filter Alignment has had Sites removed.  You need to optimize for taxa before calling this.");
-        } else {
-            return myBaseAlignment.getAllelePresenceForSitesBlock(translateTaxon(taxon), alleleNumber, startBlock, endBlock);
-        }
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -934,35 +924,22 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
-        if (scope == ALLELE_SCOPE_TYPE.Frequency) {
-            return getAllelePresenceForAllTaxa(site, alleleNumber);
-        } else {
-            int numTaxa = getSequenceCount();
-            BitSet result = new OpenBitSet(numTaxa);
-            BitSet baseBitSet = myBaseAlignment.getAllelePresenceForAllTaxaByScope(scope, translateSite(site), alleleNumber);
-            for (int i = 0; i < numTaxa; i++) {
-                if (baseBitSet.fastGet(translateTaxon(i))) {
-                    result.fastSet(i);
-                }
-            }
-            return UnmodifiableBitSet.getInstance(result);
-        }
-
+        return getBitStorage(scope).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
     }
 
     @Override
     public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
     }
 
     @Override
     public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -1046,7 +1023,26 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        BitStorage result = myBitStorage.get(scopeType);
+        if (result != null) {
+            return result;
+        }
+
+        switch (scopeType) {
+            case Frequency:
+                result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
+                break;
+            case Reference:
+                result = DynamicBitStorage.getInstance(myGenotype, scopeType, getReference());
+                break;
+            default:
+                myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
+                return null;
+        }
+
+        myBitStorage.put(scopeType, result);
+        return result;
     }
 
     @Override

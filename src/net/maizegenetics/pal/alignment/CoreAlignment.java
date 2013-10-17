@@ -3,6 +3,10 @@
  */
 package net.maizegenetics.pal.alignment;
 
+import java.util.HashMap;
+import java.util.Map;
+import static net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE.Frequency;
+import static net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE.Reference;
 import net.maizegenetics.pal.alignment.score.SiteScore;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.bit.BitStorage;
@@ -22,8 +26,7 @@ public class CoreAlignment implements Alignment {
 
     private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
     private final Genotype myGenotype;
-    private BitStorage myFreqBitStorage;
-    private BitStorage myReferenceBitStorage;
+    private final Map<ALLELE_SCOPE_TYPE, BitStorage> myBitStorage = new HashMap<ALLELE_SCOPE_TYPE, BitStorage>();
     private final PositionList myPositionList;
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
@@ -38,8 +41,8 @@ public class CoreAlignment implements Alignment {
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
-        mySiteCount=myPositionList.getSiteCount();
-        myTaxaCount=myTaxaList.getTaxaCount();
+        mySiteCount = myPositionList.getSiteCount();
+        myTaxaCount = myTaxaList.getTaxaCount();
     }
 
     CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList) {
@@ -463,30 +466,41 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        switch (scope) {
+            case Frequency:
+                return getAlleles(site);
+            default:
+                myLogger.warn("getAllelesByScope: Unsupported type: " + scope);
+                return null;
+        }
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getBitStorage(scope).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
+
+        BitStorage result = myBitStorage.get(scopeType);
+        if (result != null) {
+            return result;
+        }
+
         switch (scopeType) {
             case Frequency:
-                if (myFreqBitStorage == null) {
-                    myFreqBitStorage = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
-                }
-                return myFreqBitStorage;
+                result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
+                break;
             case Reference:
-                if (myReferenceBitStorage == null) {
-                    myReferenceBitStorage = DynamicBitStorage.getInstance(myGenotype, scopeType, getReference());
-                }
-                return myReferenceBitStorage;
+                result = DynamicBitStorage.getInstance(myGenotype, scopeType, getReference());
+                break;
             default:
                 myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
                 return null;
         }
+
+        myBitStorage.put(scopeType, result);
+        return result;
     }
 }
