@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -387,12 +388,12 @@ public class TagAgainstAnchor {
         @Override
 		public void run() {
             long lastTimePoint = getCurrentTimeNano();
-			ArrayList<String> resultList = new ArrayList(); 
+			List<String> resultList = new ArrayList<>();
             
             ScanChromosome[] scanOnChr = null;
             for (int i = 0; i < this.blockNum; i++) {
                 int blockSize = this.blockEndIndex[i] - this.blockStartIndex[i];
-                ArrayList<Integer> blockTagIndexList = new ArrayList();
+                List<Integer> blockTagIndexList = new ArrayList<>();
                 for (int j = 0; j < blockSize; j++) {
                     if (subTBT.getNumberOfTaxaWithTag(this.blockStartIndex[i]+j) < minCount) continue;
                     blockTagIndexList.add(this.blockStartIndex[i]+j);

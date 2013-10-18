@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentMap;
  * @author Terry Casstevens
  * @author Ed Buckler
  */
-public class Taxon implements Serializable, Comparable, GeneralAnnotation {
+public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation {
 
     private static final long serialVersionUID = -7873729831795750538L;
     public static final String DELIMITER = ":";
@@ -51,7 +51,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
         if (TAXON_ANNO_HASH.size() > 1_000_000) {
             TAXON_ANNO_HASH.clear();
         }
-        Map.Entry<String, String> str= new AbstractMap.SimpleImmutableEntry(key,value);
+        Map.Entry<String, String> str= new AbstractMap.SimpleImmutableEntry<>(key,value);
         Map.Entry<String, String> canon = TAXON_ANNO_HASH.putIfAbsent(str, str);
         return (canon == null) ? str : canon;
     }
@@ -76,11 +76,11 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
 
     // implements Comparable interface
     @Override
-    public int compareTo(Object c) {
+    public int compareTo(Taxon c) {
         if (this == c) {
             return 0;
         } else if (c instanceof Taxon) {
-            return compareTo(((Taxon) c).getName());
+            return compareTo(c.getName());
         } else {
             throw new ClassCastException();
         }
@@ -99,7 +99,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
             if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
                 return getName().equals(((Taxon) c).getName());
             } else {
-                return compareTo(c) == 0;
+                return compareTo((Taxon)c) == 0;
             }
         } else if (c instanceof String) {
             if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
@@ -153,7 +153,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
     }
 
     @Override
-    public Map.Entry[] getAllAnnotationEntries() {
+    public Map.Entry<String,String>[] getAllAnnotationEntries() {
         return Arrays.copyOf(myAnno,myAnno.length);
     }
 
@@ -181,7 +181,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
          */
         public Builder(Taxon aTaxon) {
             myTaxonName = aTaxon.getName();
-            for (Map.Entry entry : aTaxon.getAllAnnotationEntries()) {
+            for (Map.Entry<String,String> entry : aTaxon.getAllAnnotationEntries()) {
                 myAnnotations.add(entry);
             }
         }

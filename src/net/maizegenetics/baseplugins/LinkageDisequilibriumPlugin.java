@@ -6,27 +6,22 @@
  */
 package net.maizegenetics.baseplugins;
 
-import java.awt.event.KeyEvent;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-
+import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
-
+import java.awt.event.KeyEvent;
 import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -108,7 +103,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
                 myHetTreatment = myDialog.getHetTreatment();
             }
 
-            List result = new ArrayList();
+            List<DataSet> result = new ArrayList<>();
             DataSet tds = null;
 
             tds = processDatum(current);
@@ -266,7 +261,7 @@ class LinkageDiseqDialog extends JDialog {
     private JPanel myPanel = new JPanel();
     private JPanel myLDSelectionPanel = new JPanel();
     private JLabel myLDTypeLabel = new JLabel("Select LD type: ");
-    private JComboBox myLDType;
+    private JComboBox<String> myLDType;
     private JPanel myLDOptionsPanel = new JPanel();
     private JLabel myFullMatrixLabel = new JLabel();
     private JTextField myWindowSizeTextField = new JTextField();
@@ -284,7 +279,7 @@ class LinkageDiseqDialog extends JDialog {
     private int myNumAccumulativeInterval = 100;
     private JPanel myHetTreatmentPanel = new JPanel();
     private JLabel myHetTreatmentLabel = new JLabel("How to treat heterozygous calls:");
-    private JComboBox myHetTreatment;
+    private JComboBox<String> myHetTreatment;
     private JPanel myButtonsPanel = new JPanel();
     private JButton myRunButton = new JButton("Run");
     private JButton myCloseButton = new JButton("Close");
@@ -318,7 +313,7 @@ class LinkageDiseqDialog extends JDialog {
             ldTypes[2] = "Site by All";
         }
 
-        myLDType = new JComboBox(ldTypes);
+        myLDType = new JComboBox<>(ldTypes);
         myLDType.setSelectedIndex(1);
 
         myFullMatrixLabel.setText("Full LD with " + myNumSites * ((myNumSites - 1) / 2) + " comparisons.");
@@ -384,7 +379,7 @@ class LinkageDiseqDialog extends JDialog {
 
         //Heterozygous treatment options
         String[] hetTypes = {"Ignore (inbred lines only)", "Set to missing", "Treat as third state"};
-        myHetTreatment = new JComboBox(hetTypes);
+        myHetTreatment = new JComboBox<>(hetTypes);
         myHetTreatment.setSelectedIndex(1);
         /*myHetTreatment.addActionListener(new java.awt.event.ActionListener() {	//Nothing reall happens when switch option, only at running, so no action listener needed
          public void actionPerformed(ActionEvent e) {

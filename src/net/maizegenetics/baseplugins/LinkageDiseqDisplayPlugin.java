@@ -173,8 +173,8 @@ class LinkageDiseqDisplayDialog extends JDialog {
 
     JLabel upperSqrLabel;
     JLabel lowerSqrLabel;
-    JComboBox upperSqrSelector;
-    JComboBox lowerSqrSelector;
+    JComboBox<String> upperSqrSelector;
+    JComboBox<String> lowerSqrSelector;
 
     GridBagLayout gridBagLayout1 = new GridBagLayout();
     JCheckBox schematicCheckBox = new JCheckBox();
@@ -375,7 +375,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         String[] valueOptions = {"P-Value", "R Squared", "D Prime"};
 
         upperSqrLabel = new JLabel("Upper triangle:");
-        upperSqrSelector = new JComboBox(valueOptions);
+        upperSqrSelector = new JComboBox<>(valueOptions);
         upperSqrSelector.setSelectedIndex(1);
         upperSqrSelector.addActionListener(new java.awt.event.ActionListener() {
 
@@ -385,7 +385,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
         });
 
         lowerSqrLabel = new JLabel("Lower triangle:");
-        lowerSqrSelector = new JComboBox(valueOptions);
+        lowerSqrSelector = new JComboBox<>(valueOptions);
         lowerSqrSelector.setSelectedIndex(0);
         lowerSqrSelector.addActionListener(new java.awt.event.ActionListener() {
 
