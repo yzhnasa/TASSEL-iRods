@@ -1315,7 +1315,7 @@ public class NucleotideImputationUtils {
 			int count = 0;
 			for (int i = 0; i < snpIds.length; i++) {
 				if (groups[i] == groupIndex[0]) {
-					int snpIndex = Integer.parseInt(myTree.getIdentifier(i).getFullName());
+					int snpIndex = Integer.parseInt(myTree.getIdentifier(i).getName());
 					snpSets[setnum][count++] = snpIds[snpIndex];
 				}
 			}
@@ -1380,8 +1380,8 @@ public class NucleotideImputationUtils {
 		majorCount = 0;
 		minorCount = 0;
 		for (int i = 0; i < groups.length; i++) {
-			if (groups[i] == majorGroup) majorids[majorCount++] = myTree.getIdentifier(i).getFullName();
-			else if (groups[i] == minorGroup) minorids[minorCount++] = myTree.getIdentifier(i).getFullName();
+			if (groups[i] == majorGroup) majorids[majorCount++] = myTree.getIdentifier(i).getName();
+			else if (groups[i] == minorGroup) minorids[minorCount++] = myTree.getIdentifier(i).getName();
 		}
 		TaxaList majorTaxa = new SimpleIdGroup(majorids);
 		TaxaList minorTaxa =  new SimpleIdGroup(minorids);
@@ -1988,7 +1988,7 @@ public class NucleotideImputationUtils {
 						int cntA = 0;
 						int cntB = 0;
 						for (int t = 0; t < ntaxa; t++) {
-							String taxon = myTree.getIdentifier(t).getFullName();
+							String taxon = myTree.getIdentifier(t).getName();
 							if (groups[t] == order[0]) taxaA[cntA++] = taxon;
 							else if (groups[t] == order[1]) taxaB[cntB++] = taxon;
 						}

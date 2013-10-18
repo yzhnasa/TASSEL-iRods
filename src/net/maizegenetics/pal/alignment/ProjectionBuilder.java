@@ -68,7 +68,7 @@ public class ProjectionBuilder {
             for (int i=0; i<iT.length; i++) {
                 List<Integer> r=tl.getIndicesMatchingTaxon(ts[i]);
                 if(r.size()==1) {iT[i]=r.get(0);}
-                else {throw new IllegalArgumentException("Taxa not found or duplicated:"+ts[i].getFullName());}
+                else {throw new IllegalArgumentException("Taxa not found or duplicated:"+ts[i].getName());}
             }
             DonorHaplotypes dh=new DonorHaplotypes(bp.getKey().getChromosome(), bp.getKey().getPosition(),
                     Integer.MAX_VALUE, iT[0], iT[1]);

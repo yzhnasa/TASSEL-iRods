@@ -314,7 +314,7 @@ public class SimpleTree implements Tree, Report, Units, Serializable
 
     public int whichIdNumber(String s) {
         for (int i = 0; i < this.getIdCount(); i++) {
-            if (s.equals(getIdentifier(i).getFullName())) {
+            if (s.equals(getIdentifier(i).getName())) {
                 return i;
             }
         }

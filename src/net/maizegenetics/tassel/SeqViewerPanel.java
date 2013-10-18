@@ -139,7 +139,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
                 int index = locationToIndex(evt.getPoint());
                 Taxon id = (Taxon) getModel().getElementAt(index);
 
-                return id.getFullName();
+                return id.getName();
 
             }
         };

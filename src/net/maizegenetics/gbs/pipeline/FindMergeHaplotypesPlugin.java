@@ -269,7 +269,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                         hits.size(), missingFreq, hetFreq, index);
                 byte[][] callPlusNames=new byte[2][];
                 callPlusNames[0]=calls;
-                String newName=inIDG.get(taxon1).getNameLevel(0)+":d"+(hits.size()+1);
+                String newName=inIDG.get(taxon1).getName()+":d"+(hits.size()+1);
                 callPlusNames[1]=newName.getBytes();
                 results.put(index, callPlusNames);
             }

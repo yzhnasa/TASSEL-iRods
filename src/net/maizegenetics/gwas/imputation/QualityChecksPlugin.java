@@ -155,7 +155,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		}
 		if (taxaDiscardList.size() > 0) {
 			myLogger.info("\nThe following taxa will not be included in the analysis because the proportion of nonMissing data is below " + minNonMissingProportionForTaxon + ":\n");
-			for (Taxon id:taxaDiscardList) myLogger.info(id.getFullName());
+			for (Taxon id:taxaDiscardList) myLogger.info(id.getName());
 			
 //			Taxon[] ids = new Taxon[taxaDiscardList.size()];
 //			taxaDiscardList.toArray(ids);

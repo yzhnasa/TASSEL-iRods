@@ -1,4 +1,4 @@
-// Identifier.java
+// Taxon.java
 //
 // (c) 1999-2000 PAL Development Core Team
 //
@@ -41,7 +41,6 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
 
     private final Map.Entry<String, String>[] myAnno;
     private final String myName;
-    private final String[] myNameTokens;
     private final int hashCode;
 
     //since there are numerous redundant annotations and variant descriptions, this class use a annotation hash, so that
@@ -62,8 +61,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
     }
 
     private Taxon(Builder builder) {
-        myName = builder.myTaxonFullName;
-        myNameTokens = myName.split(DELIMITER);
+        myName = builder.myTaxonName;
         hashCode = myName.hashCode();
         //this looks crazy because it java doesn't support generic arrays
         myAnno=(Map.Entry<String, String>[])new Map.Entry<?,?>[builder.myAnnotations.size()];
@@ -82,7 +80,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
         if (this == c) {
             return 0;
         } else if (c instanceof Taxon) {
-            return compareTo(((Taxon) c).getFullNameTokens());
+            return compareTo(((Taxon) c).getName());
         } else {
             throw new ClassCastException();
         }
@@ -99,13 +97,13 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
 
         if (c instanceof Taxon) {
             if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
-                return getFullName().equals(((Taxon) c).getFullName());
+                return getName().equals(((Taxon) c).getName());
             } else {
                 return compareTo(c) == 0;
             }
         } else if (c instanceof String) {
             if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
-                return getFullName().equals(((String) c));
+                return getName().equals(((String) c));
             } else {
                 return compareTo((String) c) == 0;
             }
@@ -116,111 +114,11 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
     }
 
     public int compareTo(String c) {
-        return compareTo(c.split(DELIMITER));
-    }
-
-    public int compareTo(String[] fullNameTokens) {
-
-        TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
-
-        int count = Math.min(myNameTokens.length, fullNameTokens.length);
-        if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.NumLevels) {
-            count = Math.min(count, TasselPrefs.getIDJoinNumLevels());
-        }
-        for (int i = 0; i < count; i++) {
-            int current = myNameTokens[i].compareTo(fullNameTokens[i]);
-            if (current != 0) {
-                return current;
-            }
-        }
-
-        if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
-            if (myNameTokens.length < fullNameTokens.length) {
-                return -1;
-            } else if (fullNameTokens.length < myNameTokens.length) {
-                return 1;
-            } else {
-                return 0;
-            }
-        } else {
-            return 0;
-        }
-
+        return myName.compareTo(c);
     }
 
     public String getName() {
-        return getNameLevel(0);
-    }
-
-    public String getFullName() {
         return myName;
-    }
-
-    public String getFullName(String delimiter) {
-        if (delimiter.equals(DELIMITER)) {
-            return myName;
-        }
-        return myName.replaceAll(DELIMITER, delimiter);
-    }
-
-    public String[] getFullNameTokens() {
-        return myNameTokens;
-    }
-
-    /**
-     * Returns requested level of name starting at index 0. 0 will generally be
-     * most specific classification.
-     *
-     * @param index
-     * @return Specified level.
-     */
-    public String getNameLevel(int index) {
-        if (index < myNameTokens.length) {
-            return myNameTokens[index];
-        }
-        return null;
-    }
-
-    /**
-     * Returns name up to specified level (not including specified level. Levels
-     * start at index 0.
-     *
-     * @param index
-     * @return name up to specified level exclusive.
-     */
-    public String getNameToLevel(int index) {
-        return getNameToLevel(index, DELIMITER);
-    }
-
-    public String getNameToLevel(int index, String delimiter) {
-        int upto = 0;
-        if (index > myNameTokens.length) {
-            upto = myNameTokens.length;
-        } else {
-            upto = index;
-        }
-        if (upto == 0) {
-            return null;
-        }
-
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < upto; i++) {
-            if (i != 0) {
-                builder.append(delimiter);
-            }
-            builder.append(myNameTokens[i]);
-        }
-
-        return builder.toString();
-    }
-
-    /**
-     * Returns number of name levels.
-     *
-     * @return number of name levels.
-     */
-    public int getNumNameLevels() {
-        return myNameTokens.length;
     }
 
     @Override
@@ -274,7 +172,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
     public static class Builder {
 
         // Required parameters
-        private String myTaxonFullName;
+        private String myTaxonName;
         private ArrayList<Map.Entry<String, String>> myAnnotations=new ArrayList<>(0);
 
         /**
@@ -282,7 +180,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
          * @param aTaxon taxon object
          */
         public Builder(Taxon aTaxon) {
-            myTaxonFullName = aTaxon.getFullName();
+            myTaxonName = aTaxon.getName();
             for (Map.Entry entry : aTaxon.getAllAnnotationEntries()) {
                 myAnnotations.add(entry);
             }
@@ -293,7 +191,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
          * @param aTaxonName name of the taxon
          */
         public Builder(String aTaxonName) {
-            myTaxonFullName = aTaxonName;
+            myTaxonName = aTaxonName;
         }
 
         /**Add non-standard annotation*/
@@ -311,7 +209,7 @@ public class Taxon implements Serializable, Comparable, GeneralAnnotation {
 
         /**Change the name*/
         /** Set sex: 0=both, 1=female, 2=male (default=0 Both) */
-        public Builder name(String newName) {myTaxonFullName=newName; return this;}
+        public Builder name(String newName) {myTaxonName=newName; return this;}
 
         /** Set sex: 0=both, 1=female, 2=male (default=0 Both) */
         public Builder sex(byte val) {return addAnno(SexKey,val);}

@@ -139,7 +139,7 @@ public class BuilderFromGenotypeHDF5 {
 
 
         for (Taxon aT : newTaxaList) {
-            System.out.println("Write taxon:"+aT.getFullName());
+            System.out.println("Write taxon:"+aT.getName());
             byte[] geno=new byte[numberOfSites];
             for (int i=0; i<sourceA.size(); i++) {
                 int taxonIndex=sourceA.get(i).getTaxaList().getIndicesMatchingTaxon(aT).get(0);

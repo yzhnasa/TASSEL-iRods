@@ -32,10 +32,10 @@ class TaxaArrayList implements TaxaList {
         int index = 0;
         for (Taxon Taxon : srcList) {
             myTaxaList.add(Taxon);
-            if (myNameToIndex.containsKey(Taxon.getFullName())) {
-                myLogger.warn("init: Taxa name is duplicated :" + Taxon.getFullName());
+            if (myNameToIndex.containsKey(Taxon.getName())) {
+                myLogger.warn("init: Taxa name is duplicated :" + Taxon.getName());
             }
-            myNameToIndex.put(Taxon.getFullName(), index);
+            myNameToIndex.put(Taxon.getName(), index);
 
             //TODO Ed, we need to talk about this. -Terry
             //if (!Taxon.getFullName().equals(Taxon.getName())) {
@@ -58,7 +58,7 @@ class TaxaArrayList implements TaxaList {
 
     @Override
     public String getFullTaxaName(int index) {
-        return myTaxaList.get(index).getFullName();
+        return myTaxaList.get(index).getName();
     }
 
     @Override
@@ -92,7 +92,7 @@ class TaxaArrayList implements TaxaList {
         TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
 
         if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
-            return new ArrayList<Integer>(myNameToIndex.get(taxon.getFullName()));
+            return new ArrayList<Integer>(myNameToIndex.get(taxon.getName()));
         }
 
         List<Integer> result = new ArrayList<Integer>(1);
@@ -194,7 +194,7 @@ class TaxaArrayList implements TaxaList {
     @Override
     public int indexOf(Object o) {
         Taxon at=(Taxon)o;   //uses the hashMap to do this quickly
-        Collection<Integer> result=myNameToIndex.get(at.getFullName());
+        Collection<Integer> result=myNameToIndex.get(at.getName());
         for (Integer i : result) {
             if(myTaxaList.get(i).equals(at)) return i;
         }

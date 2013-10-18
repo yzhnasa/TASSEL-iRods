@@ -338,7 +338,7 @@ public class AlignmentBuilder {
         int chunk=1<<16;
         int myNumSites=positionList.getSiteCount();
         if(myNumSites<chunk) chunk=myNumSites;
-        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getFullName();
+        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getName();
         if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
         if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
         myWriter.createByteArray(basesPath, myNumSites, chunk, HapMapHDF5Constants.intDeflation);

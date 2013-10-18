@@ -117,7 +117,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
                     @Override
                     public String getRealElementAt(int index) {
-                        return phenotype.getTaxon(index).getFullName();
+                        return phenotype.getTaxon(index).getName();
                     }
                 };
                 dialog = new SelectFromAvailableDialog(getParentFrame(), "Taxa Filter", listModel);

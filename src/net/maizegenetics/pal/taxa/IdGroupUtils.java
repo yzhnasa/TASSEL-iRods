@@ -53,7 +53,7 @@ public final class IdGroupUtils {
      */
     public static int whichIdNumber(TaxaList group, String s) {
         for (int i = 0; i < group.getTaxaCount(); i++) {
-            if (s.equals(group.get(i).getFullName())) {
+            if (s.equals(group.get(i).getName())) {
                 return i;
             }
         }

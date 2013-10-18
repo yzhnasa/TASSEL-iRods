@@ -213,7 +213,7 @@ public class AlignmentFilterByGBSUtils {
         TaxaList idg = a.getTaxaList();
         TreeMap<String, Integer> sortedIds = new TreeMap<String, Integer>();
         for (int i = 0; i < idg.getTaxaCount(); i++) {
-            sortedIds.put(idg.get(i).getFullName().toUpperCase(), i);
+            sortedIds.put(idg.get(i).getName().toUpperCase(), i);
         }
         long cntDiff = 0, cntTotal = 0;
         Map.Entry<String, Integer> priorEntry = sortedIds.lastEntry();
