@@ -245,6 +245,14 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_IUPAC_HASH.put((byte) 0xFF, "N"); // NN
 
     }
+    private static final String[] NUCLEOTIDE_IUPAC_ARRAY = new String[256];
+
+    static {
+        Arrays.fill(NUCLEOTIDE_IUPAC_ARRAY, null);
+        for (Byte temp : NUCLEOTIDE_IUPAC_HASH.keySet()) {
+            NUCLEOTIDE_IUPAC_ARRAY[temp & 0xFF] = NUCLEOTIDE_IUPAC_HASH.get(temp);
+        }
+    }
     private static final Map<String, Byte> NUCLEOTIDE_ALLELE_HASH = new HashMap<String, Byte>();
 
     static {
@@ -322,7 +330,7 @@ public final class NucleotideAlignmentConstants {
      */
     public static String getNucleotideIUPAC(byte value) {
         try {
-            String result = NUCLEOTIDE_IUPAC_HASH.get(value);
+            String result = NUCLEOTIDE_IUPAC_ARRAY[value & 0xFF];
             if (result == null) {
                 return QUESTION_MARK;
             } else {
