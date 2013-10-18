@@ -133,7 +133,10 @@ public final class GeneralPosition implements Position {
         public Builder indel(boolean val) {isIndel = val; return this;}
         /**Set text definition of variants (default=null)*/
         public Builder knownVariants(String[] val) {
-            Map.Entry<String, String> ent=getCanonicalAnnotation("VARIANT",val[0]+"/"+val[1]);
+            StringBuilder sb=new StringBuilder();
+            for (String s : val) {sb.append(s).append("/");}
+            sb.setLength(sb.length()-1); //remove terminal /
+            Map.Entry<String, String> ent=getCanonicalAnnotation("VARIANT",sb.toString());
             myKnownVariants=ent;
             return this;
         }
@@ -312,7 +315,7 @@ public final class GeneralPosition implements Position {
     @Override
     public String[] getKnownVariants() {
         if((myVariantsAndAnno==null)||(myVariantsAndAnno[0]==null)) return new String[0];
-        return myVariantsAndAnno[0].getValue().replace("[", "").replace("]", "").split(", ");
+        return myVariantsAndAnno[0].getValue().replace("[", "").replace("]", "").split("/");
     }
 
     @Override
