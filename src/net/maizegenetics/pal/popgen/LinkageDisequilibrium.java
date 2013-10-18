@@ -51,6 +51,7 @@ import java.util.Arrays;
  * @author Ed Buckler
  */
 public class LinkageDisequilibrium extends Thread implements Serializable, TableReport {
+    private static final long serialVersionUID=-123423421342l;
 
     /**
      * Design of test matrix.

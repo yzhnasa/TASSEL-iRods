@@ -3,12 +3,6 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.position.Chromosome;
@@ -16,6 +10,8 @@ import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListUtils;
 import net.maizegenetics.util.BitSet;
+
+import java.util.*;
 
 /**
  *
@@ -26,7 +22,7 @@ public class CombineAlignment implements Alignment {
     private static final long serialVersionUID = -5197800047652332969L;
     private final Alignment[] myAlignments;
     private final int[] mySiteOffsets;
-    private final Map myChromosomes = new HashMap();
+    private final Map<Chromosome,Alignment> myChromosomes = new HashMap<>();
     private Chromosome[] myChromosomesList;
     private int[] myChromosomesOffsets;
     private final TaxaList myTaxaList;
@@ -142,8 +138,8 @@ public class CombineAlignment implements Alignment {
 
     private void initChromosomes() {
 
-        List offsets = new ArrayList();
-        List<Chromosome> chromosomes = new ArrayList();
+        List<Integer> offsets = new ArrayList<>();
+        List<Chromosome> chromosomes = new ArrayList<>();
         for (int i = 0; i < myAlignments.length; i++) {
             chromosomes.addAll(Arrays.asList(myAlignments[i].getChromosomes()));
             int[] tempOffsets = myAlignments[i].getChromosomesOffsets();

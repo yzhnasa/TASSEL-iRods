@@ -58,7 +58,7 @@ public class DynamicBitStorage implements BitStorage {
                 bs = AlignmentUtils.calcBitPresenceFromGenotype(myGenotype.getBaseRow(taxon), a1, a2); //allele comp
                 return bs;
             } else {
-                ArrayList toFill = new ArrayList<Integer>();
+                ArrayList<Long> toFill = new ArrayList<>();
                 toFill.add(key);
                 try {
                     bitCache.putAll(loadAll(toFill));

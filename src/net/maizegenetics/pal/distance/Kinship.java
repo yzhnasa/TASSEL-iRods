@@ -181,7 +181,6 @@ public class Kinship extends DistanceMatrix {
     public void cutOff() {
         //Set vale to 0 if below than avg
         //By Zhiwu Zhang
-        double s;
         for (int i = 0; i < numSeqs; i++) {
             for (int j = i + 0; j < numSeqs; j++) {
                 if (dm.getDistance(i, j) < kAvg) {

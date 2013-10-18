@@ -62,7 +62,7 @@ public final class GeneralPosition implements Position {
         if (ANNO_HASH.size() > 100000) {
             ANNO_HASH.clear();
         }
-        Map.Entry<String, String> str= new AbstractMap.SimpleImmutableEntry(key,value);
+        Map.Entry<String, String> str= new AbstractMap.SimpleImmutableEntry<>(key,value);
         Map.Entry<String, String> canon = ANNO_HASH.putIfAbsent(str, str);
         return (canon == null) ? str : canon;
     }
@@ -175,6 +175,7 @@ public final class GeneralPosition implements Position {
             return new GeneralPosition(this);
         }
     }
+
     private GeneralPosition(Builder builder) {
         myChromosome = builder.myChromosome;
         myPosition = builder.myPosition;
@@ -188,6 +189,7 @@ public final class GeneralPosition implements Position {
         isNucleotide = builder.isNucleotide;
         isIndel = builder.isIndel;
         //this looks crazy because it java doesn't support generic arrays
+
         myVariantsAndAnno=(Map.Entry<String, String>[])new Map.Entry<?,?>[1+builder.myAnnotations.size()];
         myVariantsAndAnno[0]=builder.myKnownVariants;
         for (int i = 0; i < builder.myAnnotations.size(); i++) {
@@ -351,7 +353,7 @@ public final class GeneralPosition implements Position {
     }
 
     @Override
-    public Map.Entry[] getAllAnnotationEntries() {
+    public Map.Entry<String,String>[] getAllAnnotationEntries() {
         return Arrays.copyOf(myVariantsAndAnno,myVariantsAndAnno.length);
     }
     

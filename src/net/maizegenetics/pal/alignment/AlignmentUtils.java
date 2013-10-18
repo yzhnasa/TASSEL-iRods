@@ -173,7 +173,7 @@ public class AlignmentUtils {
 
     public static Object[][] getAllelesSortedByFrequency(String[][] data, int site) {
 
-        Map<String, Integer> stateCnt = new HashMap();
+        Map<String, Integer> stateCnt = new HashMap<>();
         for (int i = 0; i < data.length; i++) {
             String[] temp = data[i][site].split(":");
             String first;
@@ -187,7 +187,7 @@ public class AlignmentUtils {
                 second = temp[1].trim();
             }
             if (!first.equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
-                Integer count = (Integer) stateCnt.get(first);
+                Integer count = stateCnt.get(first);
                 if (count == null) {
                     stateCnt.put(first, ONE);
                 } else {
@@ -195,7 +195,7 @@ public class AlignmentUtils {
                 }
             }
             if (!second.equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
-                Integer count = (Integer) stateCnt.get(second);
+                Integer count = stateCnt.get(second);
                 if (count == null) {
                     stateCnt.put(second, ONE);
                 } else {
@@ -207,10 +207,10 @@ public class AlignmentUtils {
         int count = stateCnt.size();
 
         Object[][] result = new Object[2][count];
-        Iterator itr = stateCnt.keySet().iterator();
+        Iterator<String> itr = stateCnt.keySet().iterator();
         int index = 0;
         while (itr.hasNext()) {
-            String key = (String) itr.next();
+            String key = itr.next();
             result[0][index] = key;
             result[1][index] = (Integer) stateCnt.get(key);
             index++;
@@ -248,7 +248,7 @@ public class AlignmentUtils {
             return null;
         }
         int resultSize = alleles[0].length;
-        List result = new ArrayList();
+        List<String> result = new ArrayList<>();
         for (int i = 0; i < resultSize; i++) {
             result.add((String) alleles[0][i]);
         }
@@ -331,10 +331,10 @@ public class AlignmentUtils {
         Object[][] result = new Object[2][diploidValueCounts.size()];
 
         int i = 0;
-        Iterator itr = diploidValueCounts.keySet().iterator();
+        Iterator<String> itr = diploidValueCounts.keySet().iterator();
         while (itr.hasNext()) {
-            String key = (String) itr.next();
-            Integer count = (Integer) diploidValueCounts.get(key);
+            String key = itr.next();
+            Integer count = diploidValueCounts.get(key);
             result[0][i] = key;
             result[1][i++] = count;
         }
@@ -382,7 +382,7 @@ public class AlignmentUtils {
         }
 
         for (int site = 0; site < numSites; site++) {
-            List alleles = AlignmentUtils.getAlleles(data, site);
+            List<String> alleles = AlignmentUtils.getAlleles(data, site);
             if (alleles != null) {
                 int numAlleles = Math.min(alleles.size(), maxNumAlleles);
                 for (int k = 0; k < numAlleles; k++) {

@@ -17,12 +17,13 @@ package net.maizegenetics.pal.popgen;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
 import net.maizegenetics.pal.distance.IBSDistanceMatrix;
+import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.report.AbstractTableReport;
 import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.position.Chromosome;
 
 import java.io.Serializable;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *This method calculated estimates of nucleotide diversity (pi, theta, etc).
@@ -49,17 +50,16 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
     Alignment theAAlignment;
     /** the nature of the sites being evaluated, currently set to ALL POLYMORPHISMs, need to add specifics indels and SNPs.*/
 
-    Vector diversityResultsVector = new Vector();
+    List<DiversityResults> diversityResultsVector = new ArrayList<>();
     PolymorphismDistribution thePolymorphismDistribution = null;
 
     /**
      * Constructor that uses a sliding window
      * @param aa an annotated alignment
-     * @param sitePositionGroups a vector that contains the various site groups found in PositionTypeSubsetter
      * @param slidingWindow if true a sliding window will be run
      *
      */
-    public DiversityAnalyses(Alignment aa, Vector sitePositionGroups, boolean slidingWindow, int start, int end, int window, int step,
+    public DiversityAnalyses(Alignment aa, boolean slidingWindow, int start, int end, int window, int step,
             PolymorphismDistribution thePolymorphismDistribution) {
         this.startSite = start;
         this.endSite = end;
@@ -72,8 +72,8 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         runAnalyses();
     }
 
-    public DiversityAnalyses(Alignment aa, Vector sitePositionGroups, boolean slidingWindow, int start, int end, int window, int step) {
-        this(aa, sitePositionGroups, slidingWindow, start, end, window, step, null);
+    public DiversityAnalyses(Alignment aa, boolean slidingWindow, int start, int end, int window, int step) {
+        this(aa, slidingWindow, start, end, window, step, null);
     }
 
     /**

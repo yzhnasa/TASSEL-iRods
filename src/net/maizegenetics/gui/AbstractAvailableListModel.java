@@ -3,18 +3,17 @@
  */
 package net.maizegenetics.gui;
 
-import java.util.regex.Pattern;
-
-import javax.swing.AbstractListModel;
-
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
+
+import javax.swing.*;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author terry
  */
-public abstract class AbstractAvailableListModel extends AbstractListModel {
+public abstract class AbstractAvailableListModel extends AbstractListModel<String> {
 
     private BitSet myShownIndices;
     private boolean myShowAll = true;
@@ -30,7 +29,7 @@ public abstract class AbstractAvailableListModel extends AbstractListModel {
     }
 
     @Override
-    public Object getElementAt(int index) {
+    public String getElementAt(int index) {
         if (myShowAll) {
             return getRealElementAt(index);
         } else {

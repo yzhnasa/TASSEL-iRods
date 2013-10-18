@@ -36,7 +36,6 @@ public class FisherExact {
      */
     public FisherExact(int maxSize) {
         this.maxSize = maxSize;
-        double cf = 1.0;
         f = new double[maxSize + 1];
         f[0] = 0.0;
         for (int i = 1; i <= this.maxSize; i++) {
@@ -46,7 +45,6 @@ public class FisherExact {
     
      public FisherExact(int maxSize, boolean useLookup) {
         this.maxSize = maxSize;
-        double cf = 1.0;
         f = new double[maxSize + 1];
         f[0] = 0.0;
         for (int i = 1; i <= this.maxSize; i++) {

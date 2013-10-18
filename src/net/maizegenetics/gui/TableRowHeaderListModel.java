@@ -6,24 +6,23 @@
  */
 package net.maizegenetics.gui;
 
-import java.util.List;
-
 import javax.swing.*;
+import java.util.List;
 
 /**
  *
  * @author  terryc
  */
-public class TableRowHeaderListModel extends AbstractListModel {
+public class TableRowHeaderListModel extends AbstractListModel<String> {
 
-    private List myList = null;
+    private List<String> myList = null;
 
     /**
      * TableRowHeaderListModel Constructor.
      *
      * @param list list of row headers
      */
-    public TableRowHeaderListModel(List list) {
+    public TableRowHeaderListModel(List<String> list) {
         super();
 
         myList = list;
@@ -36,7 +35,7 @@ public class TableRowHeaderListModel extends AbstractListModel {
      * @return the value at <code>index</code>
      *
      */
-    public Object getElementAt(int index) {
+    public String getElementAt(int index) {
         if ((myList == null) || myList.size() == 0) {
             return null;
         }

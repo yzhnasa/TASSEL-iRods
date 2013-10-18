@@ -128,7 +128,7 @@ final double calcLnFisherExactP()    //the natural log of the fisher exact P
 
 final void randomcontig()
 {
-	int i,j,temp, r,sum=0;
+	int i,j,temp, r;
 
     for(i=0; i<rows; i++)
       {for(j=0; j<cols; j++)

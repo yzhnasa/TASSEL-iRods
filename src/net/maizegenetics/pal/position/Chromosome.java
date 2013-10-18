@@ -100,7 +100,7 @@ public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
     }
 
     @Override
-    public Map.Entry[] getAllAnnotationEntries() {
+    public Map.Entry<String,String>[] getAllAnnotationEntries() {
         return myGA.getAllAnnotationEntries();
     }
 

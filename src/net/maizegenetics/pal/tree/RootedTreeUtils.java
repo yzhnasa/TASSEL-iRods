@@ -6,7 +6,8 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.tree;
 
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -35,7 +36,7 @@ public class RootedTreeUtils {
 	 * taxa in the given subtree.
 	 *
 	 * @param root the root of the tree in which search for a subtree
-	 * @param taxa the hashtable of taxa.
+	 * @param clade the hashtable of taxa.
 	 */
 	public static boolean containsClade(Node root, Node clade) {
 		return (getClade(root, clade) != null);
@@ -102,7 +103,7 @@ public class RootedTreeUtils {
 
 		if (leafCount1 != leafCount2) return false;
 
-		Hashtable table = new Hashtable(leafCount1+1);
+		HashMap<String,String> table = new HashMap<>(leafCount1+1);
 		collectTaxa(node1, table);
 		return !containsNovelTaxa(node2, table);
 	}
@@ -111,9 +112,9 @@ public class RootedTreeUtils {
 	 * Collects all of the names of the taxa in the tree into a hashtable.
 	 * @return the number of new taxa added to the hashtable from this tree.
 	 * @param root the root node of the tree.
-	 * @param taxa a hashtable to hold the taxa names, may already hold some taxa names.
+	 * @param table a hashtable to hold the taxa names, may already hold some taxa names.
 	 */
-	public static int collectTaxa(Node root, Hashtable table) {
+	public static int collectTaxa(Node root, Map<String,String> table) {
 		int nc = root.getChildCount();
 		if (nc == 0) {
 			String name = root.getIdentifier().getName();
@@ -137,7 +138,7 @@ public class RootedTreeUtils {
 	 * @param root the root node of the tree.
 	 * @param taxa a hashtable holding taxa names.
 	 */
-	public static boolean containsNovelTaxa(Node root, Hashtable taxa) {
+	public static boolean containsNovelTaxa(Node root, Map<String,String> taxa) {
 		int nc = root.getChildCount();
 		if (nc == 0) {
 			return !taxa.containsKey(root.getIdentifier().getName());
@@ -154,9 +155,9 @@ public class RootedTreeUtils {
 	/**
 	 * @return the number of taxa in the given tree that are NOT in the given hashtable.
 	 * @param root the root node of the tree.
-	 * @param taxa a hashtable holding taxa names.
+	 * @param table a hashtable holding taxa names.
 	 */
-	private static int newTaxaCount(Node root, Hashtable table) {
+	private static int newTaxaCount(Node root, Map<String,String> table) {
 		int nc = root.getChildCount();
 		if (nc == 0) {
 			return (table.containsKey(root.getIdentifier().getName()) ? 0 : 1);
@@ -176,11 +177,11 @@ public class RootedTreeUtils {
 	 * @param subtree the subtree being searched for.
 	 * @param trees a vector of trees to search for the subtree in.
 	 */
-	public static int subtreeCount(Node subtree, Vector trees) {
+	public static int subtreeCount(Node subtree, Vector<Tree> trees) {
 		int count = 0;
 		Node root;
 		for (int i = 0; i < trees.size(); i++) {
-			root = ((Tree)trees.elementAt(i)).getRoot();
+			root = (trees.elementAt(i)).getRoot();
 			if (containsSubtree(root, subtree)) {
 				count += 1;
 			}
@@ -195,7 +196,7 @@ public class RootedTreeUtils {
 	 * @param subtree the subtree being searched for.
 	 * @param trees a vector of trees to search for the subtree in.
 	 */
-	public static double getMeanSubtreeHeight(Node subtree, Vector trees) {
+	public static double getMeanSubtreeHeight(Node subtree, Vector<Tree> trees) {
 		int count = 0;
 		double totalHeight = 0.0;
 		Node root;
@@ -217,12 +218,12 @@ public class RootedTreeUtils {
 	 * @param clade a node containing the clade being searched for.
 	 * @param trees a vector of trees to search for the clade in.
 	 */
-	public static double getMeanCladeHeight(Node clade, Vector trees) {
+	public static double getMeanCladeHeight(Node clade, Vector<Tree> trees) {
 		int count = 0;
 		double totalHeight = 0.0;
 		Node root;
 		for (int i = 0; i < trees.size(); i++) {
-			root = ((Tree)trees.elementAt(i)).getRoot();
+			root = (trees.elementAt(i)).getRoot();
 			Node match = getClade(root, clade);
 			if (match != null) {
 				count += 1;
@@ -239,11 +240,11 @@ public class RootedTreeUtils {
 	 * @param subtree a subtree containing the taxaset being searched for.
 	 * @param trees a vector of trees to search for the clade in.
 	 */
-	public static int cladeCount(Node subtree, Vector trees) {
+	public static int cladeCount(Node subtree, Vector<Tree> trees) {
 		int count = 0;
 		Node root;
 		for (int i = 0; i < trees.size(); i++) {
-			root = ((Tree)trees.elementAt(i)).getRoot();
+			root = (trees.elementAt(i)).getRoot();
 			if (containsClade(root, subtree)) {
 				count += 1;
 			}
@@ -251,7 +252,7 @@ public class RootedTreeUtils {
 		return count;
 	}
 
-	public static void collectProportions(Tree tree, Vector trees) {
+	public static void collectProportions(Tree tree, Vector<Tree> trees) {
 
 		for (int i =0; i < tree.getInternalNodeCount(); i++) {
 			Node node = tree.getInternalNode(i);

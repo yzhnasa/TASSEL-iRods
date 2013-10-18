@@ -47,7 +47,7 @@ public interface GeneralAnnotation {
      * Returns all annotation Map.Entries.
      * @return array of Map.Entry
      */
-    public Map.Entry[] getAllAnnotationEntries();
+    public Map.Entry<String, String>[] getAllAnnotationEntries();
 
     //should we provide methods, to average the quantitative annotations, the first annotation
     //

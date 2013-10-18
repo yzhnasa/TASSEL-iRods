@@ -113,8 +113,8 @@ public class TagsByTaxaByteHDF5TaxaGroups extends AbstractTagsByTaxa {
             String s = h5.getStringAttribute("tbttx/" + tx, "name");
             taxaNameDirTreeMap.put(s, "tbttx/" + tx);
         }
-        this.taxaDirList = new ArrayList(taxaNameDirTreeMap.values());
-        this.taxaNameList = new ArrayList(taxaNameDirTreeMap.keySet());
+        this.taxaDirList = new ArrayList<>(taxaNameDirTreeMap.values());
+        this.taxaNameList = new ArrayList<>(taxaNameDirTreeMap.keySet());
     }
 
     public boolean addTaxon(String taxonName, byte[] values) {
@@ -239,7 +239,6 @@ public class TagsByTaxaByteHDF5TaxaGroups extends AbstractTagsByTaxa {
         String inTBTFile = "/Users/edbuckler/SolexaAnal/GBS/build20120110/tbt/434GFAAXX_s_3.tbt.byte";
         TagsByTaxa inTBT = new TagsByTaxaByte(inTBTFile, FilePacking.Byte);
         long time = System.currentTimeMillis();
-        TagsByTaxaByteHDF5TaxaGroups tHDF5 = new TagsByTaxaByteHDF5TaxaGroups(inTBT, path + file);
         TagsByTaxaByteHDF5TaxaGroups rHDF5 = new TagsByTaxaByteHDF5TaxaGroups(path + file);
         int same = 0, diff = 0, count = 0;
         time = System.currentTimeMillis();

@@ -6,14 +6,11 @@
  */
 package net.maizegenetics.plugindef;
 
-import java.awt.Frame;
-
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.swing.JMenu;
-import javax.swing.JPanel;
 
 /**
  *
@@ -21,8 +18,8 @@ import javax.swing.JPanel;
  */
 abstract public class AbstractPlugin implements Plugin {
 
-    private final List myListeners = new ArrayList();
-    private final List<Plugin> myInputs = new ArrayList();
+    private final List<PluginListener> myListeners = new ArrayList<>();
+    private final List<Plugin> myInputs = new ArrayList<>();
     private final Frame myParentFrame;
     private final boolean myIsInteractive;
     private boolean myTrace = false;
@@ -109,7 +106,7 @@ abstract public class AbstractPlugin implements Plugin {
 
     }
 
-    protected List getListeners() {
+    protected List<PluginListener> getListeners() {
         return myListeners;
     }
 
@@ -125,15 +122,15 @@ abstract public class AbstractPlugin implements Plugin {
     protected void fireDataSetReturned(PluginEvent event) {
 
         synchronized (myListeners) {
-            Iterator itr = myListeners.iterator();
+            Iterator<PluginListener> itr = myListeners.iterator();
             while (itr.hasNext()) {
                 try {
                     if (myThreaded) {
-                        PluginListener current = (PluginListener) itr.next();
+                        PluginListener current = itr.next();
                         ThreadedPluginListener thread = new ThreadedPluginListener(current, event);
                         thread.start();
                     } else {
-                        PluginListener current = (PluginListener) itr.next();
+                        PluginListener current = itr.next();
                         current.dataSetReturned(event);
                     }
                 } catch (Exception e) {
@@ -161,9 +158,9 @@ abstract public class AbstractPlugin implements Plugin {
     protected void fireProgress(PluginEvent event) {
 
         synchronized (myListeners) {
-            Iterator itr = myListeners.iterator();
+            Iterator<PluginListener> itr = myListeners.iterator();
             while (itr.hasNext()) {
-                PluginListener current = (PluginListener) itr.next();
+                PluginListener current = itr.next();
                 current.progress(event);
             }
         }
@@ -222,7 +219,7 @@ abstract public class AbstractPlugin implements Plugin {
         indent(indent);
         System.out.println(getClass().getName());
 
-        Iterator itr = myInputs.iterator();
+        Iterator<Plugin> itr = myInputs.iterator();
         while (itr.hasNext()) {
             try {
                 AbstractPlugin current = (AbstractPlugin) itr.next();
@@ -245,7 +242,7 @@ abstract public class AbstractPlugin implements Plugin {
         indent(indent);
         System.out.println(getClass().getName());
 
-        Iterator itr = myListeners.iterator();
+        Iterator<PluginListener> itr = myListeners.iterator();
         while (itr.hasNext()) {
             try {
                 AbstractPlugin current = (AbstractPlugin) itr.next();

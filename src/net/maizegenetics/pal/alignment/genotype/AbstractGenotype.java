@@ -371,10 +371,10 @@ abstract class AbstractGenotype implements Genotype {
         Object[][] result = new Object[2][diploidValueCounts.size()];
 
         int i = 0;
-        Iterator itr = diploidValueCounts.keySet().iterator();
+        Iterator<String> itr = diploidValueCounts.keySet().iterator();
         while (itr.hasNext()) {
-            String key = (String) itr.next();
-            Integer count = (Integer) diploidValueCounts.get(key);
+            String key = itr.next();
+            Integer count = diploidValueCounts.get(key);
             result[0][i] = key;
             result[1][i++] = count;
         }

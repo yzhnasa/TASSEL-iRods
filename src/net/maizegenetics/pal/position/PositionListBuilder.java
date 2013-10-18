@@ -75,7 +75,6 @@ public class PositionListBuilder {
     public PositionListBuilder addAll(Iterable<? extends Position> elements) {
         if(isHDF5) throw new UnsupportedOperationException("Positions cannot be added to existing HDF5 alignments");
         if (elements instanceof Collection) {
-            @SuppressWarnings("unchecked")
             Collection<? extends Position> collection = (Collection<? extends Position>) elements;
             myPositions.ensureCapacity(myPositions.size() + collection.size());
         }

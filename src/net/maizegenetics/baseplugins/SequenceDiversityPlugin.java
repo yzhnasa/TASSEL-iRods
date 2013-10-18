@@ -100,7 +100,7 @@ public class SequenceDiversityPlugin extends AbstractPlugin {
     public DataSet processDatum(Datum input) {
         Alignment aa = (Alignment) input.getData();
         PolymorphismDistribution pda = new PolymorphismDistribution();
-        DiversityAnalyses theDA = new DiversityAnalyses(aa, null, isSlidingWindowAnalysis,
+        DiversityAnalyses theDA = new DiversityAnalyses(aa, isSlidingWindowAnalysis,
                 startSite, endSite, windowSize, stepSize, pda);
         List<Datum> results = new ArrayList<Datum>();
         results.add(new Datum("PolyDist:" + input.getName(), new SimpleTableReport(pda), "Polymorphism Distribution"));

@@ -3,34 +3,15 @@
  */
 package net.maizegenetics.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Frame;
-import java.awt.event.ActionEvent;
-
-import java.util.Arrays;
-
-import javax.swing.AbstractAction;
-import javax.swing.AbstractListModel;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JRootPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
+
+import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.Arrays;
 
 /**
  *
@@ -39,8 +20,8 @@ import net.maizegenetics.util.OpenBitSet;
 public class SelectFromAvailableDialog extends JDialog {
 
     private final static int LIST_ROW_COUNT = 20;
-    private JList myAvailable;
-    private JList mySelected;
+    private JList<String> myAvailable;
+    private JList<String> mySelected;
     private AbstractAvailableListModel myAvailableListModel;
     private SelectedListModel mySelectedListModel;
     private boolean myIsCanceled = false;
@@ -235,7 +216,7 @@ public class SelectFromAvailableDialog extends JDialog {
 
     }
 
-    public class SelectedListModel extends AbstractListModel {
+    public class SelectedListModel extends AbstractListModel<String> {
 
         private BitSet mySelectedIndices;
 
@@ -249,7 +230,7 @@ public class SelectFromAvailableDialog extends JDialog {
         }
 
         @Override
-        public Object getElementAt(int index) {
+        public String getElementAt(int index) {
             return myAvailableListModel.getRealElementAt(mySelectedIndices.indexOfNthSetBit(index + 1));
         }
 

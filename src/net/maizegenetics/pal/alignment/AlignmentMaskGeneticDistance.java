@@ -19,18 +19,16 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private Map<Integer, Byte> myCache = new LinkedHashMap<Integer, Byte>() {
-        protected boolean removeEldestEntry(Map.Entry eldest) {
+        protected boolean removeEldestEntry(Map.Entry<Integer, Byte> eldest) {
             return size() > 100;
         }
     };
     private final int myTaxonReference;
-    private final Alignment myAlignment;
     private Alignment myTBitAlignment = null;
 
     private AlignmentMaskGeneticDistance(Alignment align, int taxonReference, String name, Color color) {
         super(align, name, color, AlignmentMask.MaskType.reference);
         myTaxonReference = taxonReference;
-        myAlignment = align;
     }
 
     public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, Taxon id) {

@@ -55,7 +55,7 @@ public class MergeTagsByTaxaFilesPlugin extends AbstractPlugin {
         TagCountMutable theTCM = new TagCountMutable(2, maxTags);  // 50,000,000 works on a Windows7 machine with 4GB of RAM - JCG. 
         myLogger.info("Mutable Tag Count Created.  MaxTags:" + theTCM.getSize());
         myLogger.info("CurrentSize:" + theTCM.getCurrentSize());
-        TreeSet<String> allTaxa = new TreeSet();
+        TreeSet<String> allTaxa = new TreeSet<>();
         int filesRead = 0;
         for (String inName : infiles) {
             filesRead++;

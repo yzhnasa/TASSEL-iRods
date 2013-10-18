@@ -7,10 +7,7 @@ import net.maizegenetics.pal.report.AbstractTableReport;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 
 /**
@@ -20,7 +17,7 @@ import java.util.TreeMap;
  */
 public class IdentifierSynonymizer extends AbstractTableReport implements Serializable, Report, TableReport {
 
-    Hashtable idSynonyms = new Hashtable();    //TODO needs to be entirely updated to new collections
+    HashMap<String,Integer> idSynonyms = new HashMap<>();    //TODO needs to be entirely updated to new collections
     private TaxaList referenceIDGroup;
     private int unmatchCount = 0;
 
@@ -40,20 +37,20 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         Taxon currID;
         //Load up the synonym table with all the known names
         for (int i = 0; i < referenceIDGroup.getTaxaCount(); i++) {
-            idSynonyms.put(referenceIDGroup.getTaxaName(i), new Integer(i));
+            idSynonyms.put(referenceIDGroup.getTaxaName(i), i);
         }
         //Find the unknown names and place them in a list
         for (int a = 0; a < alternateTaxaSets.length; a++) {
             for (int i = 0; i < alternateTaxaSets[a].getTaxaCount(); i++) {
                 currID = alternateTaxaSets[a].get(i);
                 if (idSynonyms.containsKey(currID.getName()) == false) {
-                    ArrayList theBest = findBestMatch(currID.toString());
+                    ArrayList<String> theBest = findBestMatch(currID.toString());
                     if (theBest.size() == 1) {
                         String bs = (String) theBest.get(0);
                         int indexOfBest = referenceIDGroup.getIndicesMatchingTaxon(bs).get(0);
-                        idSynonyms.put(currID.toString(), new Integer(indexOfBest));
+                        idSynonyms.put(currID.toString(), indexOfBest);
                     } else {
-                        idSynonyms.put(currID.toString(), new Integer(-1));
+                        idSynonyms.put(currID.toString(), -1);
                         unmatchCount++;
                     }
                 }
@@ -61,8 +58,8 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         }
     }
 
-    private ArrayList findBestMatch(String unmatchedString) {
-        ArrayList bestMatches = new ArrayList();
+    private ArrayList<String> findBestMatch(String unmatchedString) {
+        ArrayList<String> bestMatches = new ArrayList<>();
         double maxScore = -1;
         double sm;
         int levelOfRestriction = 0;
@@ -94,8 +91,8 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         return bestMatches;
     }
 
-    public ArrayList findOrderedMatches(String unmatchedString, int levelOfRestriction) {
-        SortedMap theSortMap = new TreeMap();
+    public ArrayList<String> findOrderedMatches(String unmatchedString, int levelOfRestriction) {
+        SortedMap<Double,String> theSortMap = new TreeMap<>();
         double sm;
         boolean ignoreCase = false, ignoreWhite = false, ignorePunc = false;
         if (levelOfRestriction > 0) {
@@ -109,10 +106,9 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         }
         for (int i = 0; i < referenceIDGroup.getTaxaCount(); i++) {
             sm = scoreMatch(referenceIDGroup.getTaxaName(i), unmatchedString, ignoreCase, ignoreWhite, ignorePunc);
-            theSortMap.put(new Double(1 - sm - ((double) i / 100000.0)), referenceIDGroup.getTaxaName(i));
+            theSortMap.put(1 - sm - ((double) i / 100000.0), referenceIDGroup.getTaxaName(i));
         }
-        ArrayList bestMatches = new ArrayList(theSortMap.values());
-        return bestMatches;
+        return new ArrayList<>(theSortMap.values());
     }
 
     private double scoreMatch2(String s1, String s2, boolean ignoreCase, boolean ignoreWhite, boolean ignorePunc) {
@@ -141,8 +137,8 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         //this is slower but it will not be tricked if there are long runs of characters in s1
         s1 = cleanName(s1, ignoreCase, ignoreWhite, ignorePunc);
         s2 = cleanName(s2, ignoreCase, ignoreWhite, ignorePunc);
-        ArrayList pairs1 = letterPairs(s1);
-        ArrayList pairs2 = letterPairs(s2);
+        ArrayList<String> pairs1 = letterPairs(s1);
+        ArrayList<String> pairs2 = letterPairs(s2);
 
         int intersection = 0;
         int union = pairs1.size() + pairs2.size();
@@ -161,8 +157,8 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
     }
 
     /** @return an array of adjacent letter pairs contained in the input string */
-    private static ArrayList letterPairs(String str) {
-        ArrayList allPairs = new ArrayList();
+    private static ArrayList<String> letterPairs(String str) {
+        ArrayList<String> allPairs = new ArrayList<>();
         //int numPairs = str.length()-1;
         //String[] pairs = new String[numPairs];
         for (int i = 0; i < (str.length() - 1); i++) {

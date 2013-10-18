@@ -37,7 +37,7 @@ final class PositionHDF5List implements PositionList {
     private CacheLoader<Integer,Position> annoPosLoader = new CacheLoader<Integer,Position>()  {
         @Override
         public Position load(Integer key) {
-            ArrayList toFill=new ArrayList<Integer>();
+            List<Integer> toFill=new ArrayList<>();
             toFill.add(key);
             try {
                 mySiteList.putAll(loadAll(toFill));
