@@ -23,7 +23,9 @@ public class StepwiseOLSModelFitter {
 	private double exitlimit = 2e-5;
 	private int maxNumberOfMarkers = 1000;
 	private FactorModelEffect nestingEffect;
+	private int nestingFactorIndex;
 	private boolean isNested;
+	private ArrayList<String> nestingFactorNames;
 
 	//global variables used by the analysis
 	private ArrayList<ModelEffect> currentModel;
@@ -34,10 +36,22 @@ public class StepwiseOLSModelFitter {
 	private ArrayList<String[]> factorList;
 	private ArrayList<double[]> covariateList;
 	private LinkedList<Object[]> resultRowsAnova = new LinkedList<Object[]>();
+	private LinkedList<Object[]> rowsSiteEffectTable = new LinkedList<Object[]>();
+    private MODEL_TYPE modelType = MODEL_TYPE.pvalue;
+        
 	private String datasetName;
-	
+        private double globalbestbic = Double.MAX_VALUE; //Rationale: the optimal model has minimum BIC. Thus, initialize bestbic with the largest possible double java can handle.
+        private double globalbestmbic = Double.MAX_VALUE;
+        public enum MODEL_TYPE {pvalue, bic, mbic};
+        private boolean test;
+        
+        
 	private final String[] anovaReportHeader = new String[]{"Trait", "Name","Locus","Position","df","SS","MS", "F", "pr>F"};
 	
+        public void setModelType(MODEL_TYPE modelType){
+            this.modelType = modelType;
+        }
+        
 	public StepwiseOLSModelFitter(MarkerPhenotypeAdapter anAdapter, String datasetName) {
 		myData = anAdapter;
 		this.datasetName = datasetName;
@@ -91,6 +105,7 @@ public class StepwiseOLSModelFitter {
                 for (int f = 0 ; f < n; f++) {
                 	String[] newfactor = new String[numberNotMissing];
                 	String[] oldfactor = factorList.get(f);
+                	ptr = 0;
                     for (int i = 0; i < totalNumber; i++) {
                     	if (!missing[i]) newfactor[ptr++] = oldfactor[i];
                     }
@@ -132,6 +147,10 @@ public class StepwiseOLSModelFitter {
 				int[] levels = ModelEffectUtils.getIntegerLevels(factorList.get(f), ids);
 				FactorModelEffect fme = new FactorModelEffect(levels, true, new Object[]{myData.getFactorName(f), ids});
 				currentModel.add(fme);
+				if (isNested && f == nestingFactorIndex) {
+					nestingEffect = fme;
+					nestingFactorNames = ids; 
+				}
 			}
 		}
 		
@@ -147,12 +166,17 @@ public class StepwiseOLSModelFitter {
 		while(forwardStep()) {
 			while(backwardStep());
 		}
-
-		appendAnovaResults();
+		
+		SweepFastLinearModel theLinearModel = new SweepFastLinearModel(currentModel, y);
+		appendAnovaResults(theLinearModel);
+		appendSiteEffectEstimates(theLinearModel);
+		
 	}
 	
 	public boolean forwardStep() {
 		double bestss = 0;
+                double bestbic = 1.7E+308;
+                double bestmbic = 1.7E+308;
 		ModelEffect besteffect = null;
 		
 		SweepFastLinearModel sflm = new SweepFastLinearModel(currentModel, y);
@@ -164,9 +188,10 @@ public class StepwiseOLSModelFitter {
 			ModelEffect markerEffect = null;
 			SNP snp = new SNP(myData.getMarkerName(s), new Chromosome(myData.getLocusName(s)), (int) myData.getMarkerChromosomePosition(s), s);
 			Object[] markerValues = myData.getMarkerValue(currentPhenotypeIndex, s);
-			
+			int n = markerValues.length;
+                        
 			if (myData.isMarkerDiscrete(s)) {
-				int n = markerValues.length;
+				//int n = markerValues.length;
 				ArrayList<Object> markerIds = new ArrayList<Object>();
 				int[] levels = ModelEffectUtils.getIntegerLevels(markerValues, markerIds);
 				snp.alleles = markerIds;
@@ -178,13 +203,14 @@ public class StepwiseOLSModelFitter {
 					markerEffect = new FactorModelEffect(levels, true, snp);
 				}
 			} else {
-				int n = markerValues.length;
+				//int n = markerValues.length;
 				double[] cov = new double[n];
 				for (int i = 0; i < n; i++) cov[i] = ((Double) markerValues[i]).doubleValue();
 				
 				if (isNested) {
-					CovariateModelEffect cme = new CovariateModelEffect(cov, snp);
+					CovariateModelEffect cme = new CovariateModelEffect(cov);
 					markerEffect = new NestedCovariateModelEffect(cme, nestingEffect);
+					markerEffect.setID(snp);
 				} else {
 					markerEffect = new CovariateModelEffect(cov, snp);
 				}
@@ -192,7 +218,33 @@ public class StepwiseOLSModelFitter {
 			
 			plm.testNewModelEffect(markerEffect);
 			double modelss = plm.getModelSS();
-			if (modelss > bestss) {
+                        
+                        //Calculate the BIC
+                        double errorss = plm.getErrorSS();
+                        double modeldf = plm.getModeldf();
+                        double p = modeldf+2; // modeldf corresponds to the slope estimates of each predictor, and 2 is for the intercept and the residual variance
+                        double bic = (n*Math.log(errorss/n)) + (p*Math.log(n)) ; 
+                                
+                        //Calculate the mBIC
+                        int numberOfTwoWayInteractions = (numberOfSites*(numberOfSites-1))/2;
+                        double pForMbic = plm.getModeldf();
+                        double qForMbic = 0; //This is going to be the number of two-way interaction terms. For now, this is not implemented, and thus I am setting it equal to zer
+                        double mbic = (n*Math.log(errorss)) + ((pForMbic+qForMbic)*Math.log(n)) + (2*pForMbic*(Math.log((numberOfSites/2.2)-1))) + 
+                                       (2*qForMbic*(Math.log((numberOfTwoWayInteractions/2.2)-1) ));
+                        
+                        switch(modelType){
+                            case pvalue:
+                                test = modelss > bestss;
+                                break;
+                            case bic:
+                                test = bic < bestbic;
+                                break;
+                            case mbic:
+                                //Not implemented yet
+                                break;
+                        }
+			if (test) {
+                                bestbic = bic;
 				bestss = modelss;
 				besteffect = markerEffect;
 			}
@@ -201,14 +253,29 @@ public class StepwiseOLSModelFitter {
 		//if the p-value for the select SNP is less than the enter limit, add it to the model and recalculate the model solution
 		plm.testNewModelEffect(besteffect);
 		double[] Fp = plm.getFp();
-		if (Fp[1] < enterlimit) {
+		if(modelType == MODEL_TYPE.pvalue){
+                   if ( Fp[1] < enterlimit) {
 			currentModel.add(besteffect);
 			if (currentModel.size() == maxNumberOfMarkers + numberOfBaseModelEffects) return false;
 			return true;
-		} else {
-			return false;
-		}
-
+                    } else { 
+			return false; 
+                    }     
+                } else if(modelType == MODEL_TYPE.bic){
+                    if(bestbic < globalbestbic){
+                        globalbestbic = bestbic;
+                        currentModel.add(besteffect);
+                        if (currentModel.size() == maxNumberOfMarkers + numberOfBaseModelEffects) return false;
+                        return true;
+                    } else{
+                        return false;
+                    } 
+                } else if(modelType == MODEL_TYPE.mbic){
+                    return false;
+                }  else{
+                    return false;
+                }  
+                   
 	}
 	
 	public boolean backwardStep() {
@@ -248,11 +315,10 @@ public class StepwiseOLSModelFitter {
 		return false;
 	}
 	
-	public LinkedList<Object[]> createReportRowsFromCurrentModel() {
+	public LinkedList<Object[]> createReportRowsFromCurrentModel(SweepFastLinearModel sflm) {
 		String traitname = myData.getPhenotypeName(currentPhenotypeIndex);
 		int ncol = anovaReportHeader.length;
 		LinkedList<Object[]> reportTable = new LinkedList<Object[]>();
-		SweepFastLinearModel sflm  = new SweepFastLinearModel(currentModel, y);
 		double[] residualSSdf = sflm.getResidualSSdf();
 		int effectPtr = 0;
 		for (ModelEffect me : currentModel) {
@@ -301,9 +367,9 @@ public class StepwiseOLSModelFitter {
 		return reportTable;
 	}
 	
-	public Datum createReportFromCurrentModel() {
+	public Datum createReportFromCurrentModel(SweepFastLinearModel sflm) {
 		String traitname = myData.getPhenotypeName(currentPhenotypeIndex);
-		LinkedList<Object[]> reportTable = createReportRowsFromCurrentModel();
+		LinkedList<Object[]> reportTable = createReportRowsFromCurrentModel(sflm);
 		Object[][] table = new Object[reportTable.size()][];
 		reportTable.toArray(table);
 		String reportName = "ANOVA for " + traitname + ", " + datasetName;
@@ -311,8 +377,8 @@ public class StepwiseOLSModelFitter {
 		return new Datum(reportName, tr, "");
 	}
 	
-	public void appendAnovaResults() {
-		resultRowsAnova.addAll(createReportRowsFromCurrentModel());
+	public void appendAnovaResults(SweepFastLinearModel sflm) {
+		resultRowsAnova.addAll(createReportRowsFromCurrentModel(sflm));
 	}
 	
 	public TableReport getAnovaReport() {
@@ -322,6 +388,62 @@ public class StepwiseOLSModelFitter {
 		return new SimpleTableReport(reportName, anovaReportHeader, table);
 	}
 
+	public TableReport getMarkerEffectReport() {
+		if (rowsSiteEffectTable.size() == 0) return null;
+		//columns are trait, snp name, locus, position, factor value, estimate
+		String reportName = "Marker effects for " + datasetName;
+		String[] reportHeader = new String[]{"Trait","Snp","Locus","Position","Within","Estimate"};
+		Object[][] table = new Object[rowsSiteEffectTable.size()][];
+		rowsSiteEffectTable.toArray(table);
+		return new SimpleTableReport(reportName, reportHeader, table);
+	}
+	
+	public void appendSiteEffectEstimates(SweepFastLinearModel sflm) {
+		
+		//columns are trait, snp name, locus, position, factor value, estimate
+		int nBaseModelParameters = 0;
+		String traitname = myData.getPhenotypeName(currentPhenotypeIndex);
+		for (int i = 0; i < numberOfBaseModelEffects; i++) {
+			nBaseModelParameters += currentModel.get(i).getEffectSize();
+		}
+		
+		double[] beta = sflm.getBeta();
+		int parameterIndex = nBaseModelParameters;
+		for (int s = numberOfBaseModelEffects; s < currentModel.size(); s++) {
+			ModelEffect me = currentModel.get(s);
+			if (me instanceof NestedCovariateModelEffect) {
+				NestedCovariateModelEffect ncme = (NestedCovariateModelEffect) me;
+				FactorModelEffect fme = ncme.getFactorModelEffect();
+				SNP snp = (SNP) ncme.getID();
+				int n = nestingFactorNames.size();
+				for (int i = 0; i < n; i++) {
+					Object[] rowValues = new Object[6];
+					int ptr = 0;
+					rowValues[ptr++] = traitname;
+					rowValues[ptr++] = snp.name;
+					rowValues[ptr++] = snp.locus.getName();
+					rowValues[ptr++] = new Integer(snp.position);
+					rowValues[ptr++] = nestingFactorNames.get(i);
+					rowValues[ptr++] = new Double(beta[parameterIndex++]);
+					rowsSiteEffectTable.add(rowValues);
+				}
+			} else if (me instanceof CovariateModelEffect) {
+				SNP snp = (SNP) me.getID();
+				Object[] rowValues = new Object[6];
+				int ptr = 0;
+				rowValues[ptr++] = traitname;
+				rowValues[ptr++] = snp.name;
+				rowValues[ptr++] = snp.locus.getName();
+				rowValues[ptr++] = new Integer(snp.position);
+				rowValues[ptr++] = "NA";
+				rowValues[ptr++] = new Double(beta[parameterIndex++]);
+				rowsSiteEffectTable.add(rowValues);
+			} else if (me instanceof FactorModelEffect) {
+				
+			}
+		}
+	}
+	
 	public void setEnterlimits(double[] enterlimits) {
 		this.enterlimits = enterlimits;
 	}
@@ -342,8 +464,8 @@ public class StepwiseOLSModelFitter {
 		this.maxNumberOfMarkers = maxNumberOfMarkers;
 	}
 
-	public void setNestingEffect(int nestingFactorIndex) {
-		
+	public void setNestingEffectIndex(int nestingFactorIndex) {
+		this.nestingFactorIndex = nestingFactorIndex;
 	}
 
 	public void setNested(boolean isNested) {

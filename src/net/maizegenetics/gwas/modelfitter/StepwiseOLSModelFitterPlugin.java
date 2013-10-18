@@ -1,6 +1,7 @@
 package net.maizegenetics.gwas.modelfitter;
 
 import java.awt.Frame;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -102,11 +103,17 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 		modelFitter.setExitlimits(exitlimits);
 		modelFitter.setMaxNumberOfMarkers(maxNumberOfMarkers);
 		modelFitter.setNested(nestMarkers);
-		modelFitter.setNestingEffect(nestingFactorIndex);
+		modelFitter.setNestingEffectIndex(nestingFactorIndex);
 		
-		modelFitter.runAnalysis(); 
+		modelFitter.runAnalysis();
+		
 		TableReport trResults = modelFitter.getAnovaReport();
-		DataSet myResult = new DataSet(new Datum("ANOVA_stepwise_" + datasets.get(0).getName(), trResults, "comments"), this);
+		TableReport trEffects = modelFitter.getMarkerEffectReport();
+		LinkedList<Datum> datumList = new LinkedList<Datum>();
+		if (trResults != null) datumList.add(new Datum("ANOVA_stepwise_" + datasets.get(0).getName(), trResults, "comments"));
+		if (trEffects != null) datumList.add(new Datum("Marker_estimates_" + datasets.get(0).getName(), trEffects, "comments"));
+		
+		DataSet myResult = new DataSet(datumList, this);
 		fireDataSetReturned(myResult);
 		return myResult;
 	}
