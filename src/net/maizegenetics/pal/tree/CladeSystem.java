@@ -81,7 +81,7 @@ public class CladeSystem {
 		
 		for (int i = 0; i < getLabelCount(); i++)
 		{
-			pw.println(idGroup.getFullTaxaName(i));
+			pw.println(idGroup.getTaxaName(i));
 		}
 		pw.println();
 		

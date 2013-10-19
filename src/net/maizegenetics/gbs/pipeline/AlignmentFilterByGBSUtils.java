@@ -43,7 +43,7 @@ public class AlignmentFilterByGBSUtils {
         for (int i = 0; i < orig.getTaxaCount(); i++) {
             boolean matchFlag = false;
             for (String s : filter) {
-                if (orig.getFullTaxaName(i).contains(s)) {
+                if (orig.getTaxaName(i).contains(s)) {
                     matchFlag = true;
                 }
             }

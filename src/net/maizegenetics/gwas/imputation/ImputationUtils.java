@@ -864,7 +864,7 @@ public class ImputationUtils {
 				int rightflank = 0;
 				
 				for (int t = 0; t < ntaxa; t++) {
-					if (!a.getTaxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.getTaxaName(t))) taxaHeader.append("\t").append(a.getFullTaxaName(t));
+					if (!a.getTaxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.getTaxaName(t))) taxaHeader.append("\t").append(a.getTaxaName(t));
 				}
 
 				for (ImputedSnp isnp : snpList) {

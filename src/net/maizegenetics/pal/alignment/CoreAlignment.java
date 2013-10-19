@@ -345,11 +345,6 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String getFullTaxaName(int index) {
-        return myTaxaList.getFullTaxaName(index);
-    }
-
-    @Override
     public String getGenomeAssembly() {
         return myPositionList.getGenomeAssembly();
     }

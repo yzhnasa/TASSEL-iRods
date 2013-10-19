@@ -28,14 +28,6 @@ public interface TaxaList extends List<Taxon> {
     public String getTaxaName(int index);
 
     /**
-     * Return full taxa name at given index.
-     *
-     * @param index
-     * @return full taxa name
-     */
-    public String getFullTaxaName(int index);
-
-    /**
      * Return a list of all matching taxa indices for a given name. Matches will
      * depend on the Tassel Preference ID Join Strict.
      *

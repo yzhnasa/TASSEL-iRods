@@ -83,7 +83,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                    sortedIds2.put(idg.getTaxaName(i), l = new ArrayList<String>());
 //                    uniqueTaxa++;
 //                }
-//                l.add(idg.getFullTaxaName(i));
+//                l.add(idg.getTaxaName(i));
 //            }
 //            TaxaListBuilder newGroupBuild = new TaxaListBuilder();
 //            int index = 0;

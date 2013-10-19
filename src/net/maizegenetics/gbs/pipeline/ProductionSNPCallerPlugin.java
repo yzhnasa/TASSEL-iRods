@@ -766,9 +766,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             throwSNPIDMismatchError(nSNPIDMismatches);
         }
         for (int taxon = 0, nTaxa = genos.getSequenceCount(); taxon < nTaxa; taxon++) {
-            int hdf5Taxon = hdf5Genos.getIdGroup().whichIdNumber(genos.getFullTaxaName(taxon));
+            int hdf5Taxon = hdf5Genos.getIdGroup().whichIdNumber(genos.getTaxaName(taxon));
             if (hdf5Taxon == -1) {
-                throwMissingTaxonInHDF5Error(genos.getFullTaxaName(taxon));
+                throwMissingTaxonInHDF5Error(genos.getTaxaName(taxon));
             } else {
                 hdf5Genos.setAllDepth(hdf5Taxon, genos.getDepthsForAllSites(taxon));
             }

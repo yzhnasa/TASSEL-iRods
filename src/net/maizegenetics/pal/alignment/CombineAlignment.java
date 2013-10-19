@@ -788,11 +788,6 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getFullTaxaName(int index) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public String getDiploidAsString(int site, byte value) {
         throw new UnsupportedOperationException("Not supported yet.");
     }

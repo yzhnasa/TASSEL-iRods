@@ -111,7 +111,7 @@ public class ExportUtils {
 
             String[] tn = new String[numTaxa];
             for (int i = 0; i < tn.length; i++) {
-                tn[i] = a.getFullTaxaName(i);
+                tn[i] = a.getTaxaName(i);
             }
             h5w.createStringVariableLengthArray(HapMapHDF5Constants.TAXA, numTaxa);
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.TAXA, tn);
@@ -165,11 +165,11 @@ public class ExportUtils {
         for (int t = 0; t < a.getTaxaCount(); t++) {
               if((exportTaxa!=null)&&(!exportTaxa.contains(a.getTaxaList().get(t)))) continue;  //taxon not in export list
               byte[] bases = a.getBaseRow(t);
-              if (keepDepth==false) aB.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, null);
+              if (keepDepth==false) aB.addTaxon(new Taxon(a.getTaxaName(t)), bases, null);
               else {
                   //todo restore depth save
 //                  MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
-//                  addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, m.getDepthForAlleles(t));
+//                  addA.addTaxon(new Taxon(a.getTaxaName(t)), bases, m.getDepthForAlleles(t));
               }
         }
         aB.build();
@@ -268,14 +268,14 @@ public class ExportUtils {
 //            h5w.close();
 //            MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
 //            for (int t = 0; t < numTaxa; t++) {
-//                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.getFullTaxaName(t))<0)) continue;  //taxon not in export list
+//                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.getTaxaName(t))<0)) continue;  //taxon not in export list
 //                  byte[] originalBases = a.getBaseRow(t);
 //                  byte[] bases = new byte[snpIndex.length];
 //                  for (int i = 0; i < bases.length; i++) {
 //                      bases[i] = originalBases[snpIndex[i]];
 //                  }
 //
-//                  if (keepDepth==false) addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, null);
+//                  if (keepDepth==false) addA.addTaxon(new Taxon(a.getTaxaName(t)), bases, null);
 //                  else {
 //                      MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
 //                      byte[][] originalDepth = m.getDepthForAlleles(t);
@@ -285,7 +285,7 @@ public class ExportUtils {
 //                              depth[i][j] = originalDepth[i][snpIndex[j]];
 //                          }
 //                      }
-//                      addA.addTaxon(new Taxon(a.getFullTaxaName(t)), bases, depth);
+//                      addA.addTaxon(new Taxon(a.getTaxaName(t)), bases, depth);
 //                  }
 //            }
 //            addA.clean();
@@ -377,7 +377,7 @@ public class ExportUtils {
                 //not completely sure this does what I want, I need to access the
                 //accession name from every alleleBLOB in bytes [52-201] but there
                 //doesn't seem to be a method to access that in Alignment
-                String sequenceID = alignment.getFullTaxaName(taxa).trim();
+                String sequenceID = alignment.getTaxaName(taxa).trim();
                 bw.write(sequenceID);
                 if (taxa != numTaxa - 1) {
                     bw.write(delimChar);
@@ -515,7 +515,7 @@ public class ExportUtils {
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             boolean refTaxon = false;
             for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
-                String taxonName = alignment.getFullTaxaName(taxa).trim();
+                String taxonName = alignment.getTaxaName(taxa).trim();
                 if (taxa == 0 && taxonName.contentEquals("REFERENCE_GENOME")) {
                     refTaxon = true;
                 } else {
@@ -882,14 +882,14 @@ public class ExportUtils {
             Pattern splitter = Pattern.compile(":");
             int numTaxa = alignment.getSequenceCount();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
-                String[] name = splitter.split(alignment.getFullTaxaName(taxa).trim());
+                String[] name = splitter.split(alignment.getTaxaName(taxa).trim());
                 if (name.length != 1) {
                     PEDbw.write(name[1]); // namelvl 1 if is available
                 } else {
                     PEDbw.write("-9");
                 }
                 PEDbw.write(delimChar);
-                PEDbw.write(alignment.getFullTaxaName(taxa).trim()); // namelvl 0
+                PEDbw.write(alignment.getTaxaName(taxa).trim()); // namelvl 0
                 PEDbw.write(delimChar);
                 PEDbw.write("-9"); // paternal ID unavailable
                 PEDbw.write(delimChar);
@@ -973,7 +973,7 @@ public class ExportUtils {
             DATbw.write("\n");
             int numTaxa = alignment.getSequenceCount();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
-                DATbw.write(alignment.getFullTaxaName(taxa).trim());
+                DATbw.write(alignment.getTaxaName(taxa).trim());
                 DATbw.write(delimChar);
                 for (int site = 0; site < numSites; site++) {
                     String[] b = alignment.getBaseAsStringArray(taxa, site);
@@ -1037,7 +1037,7 @@ public class ExportUtils {
             bw.write("\n");
 
             for (int r = 0, n = theAlignment.getTaxaCount(); r < n; r++) {
-                bw.write(theAlignment.getFullTaxaName(r));
+                bw.write(theAlignment.getTaxaName(r));
                 for (int i = 0; i < numSites; i++) {
                     bw.write(delimit);
                     bw.write(theAlignment.getBaseAsString(r, i));
@@ -1073,7 +1073,7 @@ public class ExportUtils {
             int n = 0;
             while (n < a.getSiteCount()) {
                 if (n == 0) {
-                    format.displayLabel(out, a.getFullTaxaName(s), 10);
+                    format.displayLabel(out, a.getTaxaName(s), 10);
                     out.print("     ");
                 } else {
                     out.print("               ");
@@ -1098,7 +1098,7 @@ public class ExportUtils {
         while (n < a.getSiteCount()) {
             for (int s = 0; s < a.getSequenceCount(); s++) {
                 if (n == 0) {
-                    format.displayLabel(out, a.getFullTaxaName(s), 10);
+                    format.displayLabel(out, a.getTaxaName(s), 10);
                     out.print("     ");
                 } else {
                     out.print("               ");
@@ -1125,7 +1125,7 @@ public class ExportUtils {
         while (n < a.getSiteCount()) {
             out.println();
             for (int s = 0; s < a.getSequenceCount(); s++) {
-                format.displayLabel(out, a.getFullTaxaName(s), 10);
+                format.displayLabel(out, a.getTaxaName(s), 10);
                 out.print("     ");
 
                 printNextSites(a, out, false, s, n, 50);

@@ -247,13 +247,13 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             if(((hits.size()+1)<this.minTaxaInGroup)) continue;
             if(hits.size()>0) {
                 ArrayList<String> mergeNames=new ArrayList<String>();
-                mergeNames.add(inIDG.getFullTaxaName(taxon1));
+                mergeNames.add(inIDG.getTaxaName(taxon1));
                 mergeSets.put(taxon1, hits);         
-               // System.out.print(inAlign.getFullTaxaName(taxon1)+"=");
+               // System.out.print(inAlign.getTaxaName(taxon1)+"=");
                 for (Integer taxon2 : hits) {
                     unmatched.remove(taxon2);
-                   // System.out.print(inAlign.getFullTaxaName(taxon2)+"=");
-                    mergeNames.add(inIDG.getFullTaxaName(taxon2));
+                   // System.out.print(inAlign.getTaxaName(taxon2)+"=");
+                    mergeNames.add(inIDG.getTaxaName(taxon2));
                 }
               //  System.out.println("");              
                 calls=consensusGameteCalls(inAlign, mergeNames, startSite, endSite, maxErrorInCreatingConsensus, siteOffsetForError);
@@ -265,7 +265,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             double hetFreq=(double)unkCnt[1]/(double)(inAlign.getSiteCount()-unkCnt[0]);
             if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq))) {
                 int index=(hits.size()*200000)+taxon1;
-                System.out.printf("Output %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.getFullTaxaName(taxon1),
+                System.out.printf("Output %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.getTaxaName(taxon1),
                         hits.size(), missingFreq, hetFreq, index);
                 byte[][] callPlusNames=new byte[2][];
                 callPlusNames[0]=calls;

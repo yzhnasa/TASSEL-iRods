@@ -347,7 +347,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     			bw.newLine();
     			String chr = align.getChromosomeName(0);
     			for (int t = 0; t < ntaxa; t++) {
-    				bw.write(align.getFullTaxaName(t));
+    				bw.write(align.getTaxaName(t));
     				bw.write("\t");
     				bw.write(chr);
     				bw.write("\t");

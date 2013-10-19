@@ -57,11 +57,6 @@ class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public String getFullTaxaName(int index) {
-        return myTaxaList.get(index).getName();
-    }
-
-    @Override
     public int size() {
         return myNumTaxa;
     }

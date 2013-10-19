@@ -343,7 +343,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
             int count = 0;
             data[i][count++] = i;
-            data[i][count++] = alignment.getFullTaxaName(i);
+            data[i][count++] = alignment.getTaxaName(i);
             data[i][count++] = numSites;
             data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;

@@ -366,7 +366,7 @@ public class AlignmentBuilder {
         float[] coverage=new float[taxa];
         float[] hets=new float[taxa];
         for (int taxon = 0; taxon < taxa; taxon++) {
-            String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + tL.getFullTaxaName(taxon);
+            String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + tL.getTaxaName(taxon);
             byte[] genotype=writer.readByteArray(basesPath);
             int covSum=0;  //coverage of the taxon
             int hetSum=0;

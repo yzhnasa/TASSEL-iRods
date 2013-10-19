@@ -101,7 +101,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
                     @Override
                     public String getRealElementAt(int index) {
-                        return alignment.getFullTaxaName(index);
+                        return alignment.getTaxaName(index);
                     }
                 };
                 dialog = new SelectFromAvailableDialog(getParentFrame(), "Taxa Filter", listModel);

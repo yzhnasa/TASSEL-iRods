@@ -3,8 +3,6 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import static net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE.Frequency;
-import static net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE.Reference;
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.alignment.bit.DynamicBitStorage;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
@@ -16,7 +14,6 @@ import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.util.BitSet;
-
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -994,11 +991,6 @@ public class FilterAlignment implements Alignment {
     @Override
     public String getTaxaName(int index) {
         return myTaxaList.getTaxaName(index);
-    }
-
-    @Override
-    public String getFullTaxaName(int index) {
-        return myTaxaList.getFullTaxaName(index);
     }
 
     @Override

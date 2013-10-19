@@ -251,7 +251,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         @Override
         public void run() {
             StringBuilder sb=new StringBuilder();
-            String name=unimpAlign.getFullTaxaName(taxon);
+            String name=unimpAlign.getTaxaName(taxon);
             ImputedTaxon impTaxon=new ImputedTaxon(taxon, unimpAlign.getBaseRow(taxon),isOutputProjection);
             int[] unkHets=countUnknownAndHets(impTaxon.getOrigGeno());
             sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d Hets:%d... ", taxon,name,
@@ -948,7 +948,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int gaps=0;
         for (int t = 0; t < iA.getSequenceCount(); t++) {
             int e=0,c=0,u=0,h=0;
-            int oATaxa=oA.getTaxaList().getIndicesMatchingTaxon(iA.getFullTaxaName(t)).get(0);
+            int oATaxa=oA.getTaxaList().getIndicesMatchingTaxon(iA.getTaxaName(t)).get(0);
             for (int s = 0; s < iA.getSiteCount(); s++) {
                 if(noMask||(oA.getBase(oATaxa, s)!=mA.getBase(t, s))) {
                     byte ib=iA.getBase(t, s);

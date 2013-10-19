@@ -612,16 +612,16 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         nInbredTaxa = 0;
         try {
             for (int taxon = 0; taxon < a.getSequenceCount(); taxon++) {
-                if (taxaFs.containsKey(a.getFullTaxaName(taxon))) {
-                    if (taxaFs.get(a.getFullTaxaName(taxon)) >= 0.8) {
+                if (taxaFs.containsKey(a.getTaxaName(taxon))) {
+                    if (taxaFs.get(a.getTaxaName(taxon)) >= 0.8) {
                         useTaxaForCompare[taxon] = true;
                         nInbredTaxa++;
                     }
                 } else {
-                    if (a.getFullTaxaName(taxon).contentEquals("REFERENCE_GENOME")) {
+                    if (a.getTaxaName(taxon).contentEquals("REFERENCE_GENOME")) {
                         useTaxaForCompare[taxon] = false;
                     } else {
-                        throw new Exception("Taxon " + a.getFullTaxaName(taxon) + " not found in the pedigree file");
+                        throw new Exception("Taxon " + a.getTaxaName(taxon) + " not found in the pedigree file");
                     }
                 }
             }
