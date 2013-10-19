@@ -13,16 +13,16 @@ import java.util.List;
  *
  * @author  terryc
  */
-public class TableRowHeaderListModel extends AbstractListModel<String> {
+public class TableRowHeaderListModel extends AbstractListModel<Object> {
 
-    private List<String> myList = null;
+    private List<Object> myList = null;
 
     /**
      * TableRowHeaderListModel Constructor.
      *
      * @param list list of row headers
      */
-    public TableRowHeaderListModel(List<String> list) {
+    public TableRowHeaderListModel(List<Object> list) {
         super();
 
         myList = list;
@@ -35,7 +35,7 @@ public class TableRowHeaderListModel extends AbstractListModel<String> {
      * @return the value at <code>index</code>
      *
      */
-    public String getElementAt(int index) {
+    public Object getElementAt(int index) {
         if ((myList == null) || myList.size() == 0) {
             return null;
         }
