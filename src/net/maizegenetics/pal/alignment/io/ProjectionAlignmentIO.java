@@ -1,6 +1,7 @@
 package net.maizegenetics.pal.alignment.io;
 
 import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.AlignmentBuilder;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.ProjectionBuilder;
 import net.maizegenetics.pal.alignment.genotype.ProjectionGenotype;
@@ -22,6 +23,7 @@ import java.util.*;
 public class ProjectionAlignmentIO {
 
     public static Alignment getInstance(String paFile, String baseHighDensityAlignmentFile) {
+        if(baseHighDensityAlignmentFile.endsWith(".h5")) return getInstance(paFile, AlignmentBuilder.getInstance(baseHighDensityAlignmentFile));
         return getInstance(paFile, ImportUtils.readFromHapmap(baseHighDensityAlignmentFile, null));
     }
 
@@ -83,14 +85,15 @@ public class ProjectionAlignmentIO {
             throw new UnsupportedOperationException("Save only works for Alignments with projection genotypes");
         }
         ProjectionGenotype pg=(ProjectionGenotype)pa.getGenotypeMatrix();
+        Alignment baseAlignment=pg.getBaseAlignment();
         BufferedWriter bw = null;
         try {
             String fullFileName = Utils.addSuffixIfNeeded(outfile, ".pa.txt.gz", new String[]{".pa.txt", ".pa.txt.gz"});
             bw = Utils.getBufferedWriter(fullFileName);
-            bw.write(pa.getSequenceCount()+"\t"+pa.getSequenceCount()+"\n");
+            bw.write(baseAlignment.getSequenceCount()+"\t"+pa.getSequenceCount()+"\n");
             bw.write("#Donor Haplotypes\n");
-            for (int i = 0; i < pa.getSequenceCount(); i++) {
-                bw.write(i+"\t"+pa.getTaxaName(i)+"\n");
+            for (int i = 0; i < baseAlignment.getSequenceCount(); i++) {
+                bw.write(i+"\t"+baseAlignment.getTaxaName(i)+"\n");
             }
             bw.write("#Taxa Breakpoints\n");
             bw.write("#Block are defined chr:startPos:endPos:donor1:donor2 (-1 means no hypothesis)\n");

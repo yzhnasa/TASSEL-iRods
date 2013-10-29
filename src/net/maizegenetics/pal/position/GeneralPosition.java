@@ -238,6 +238,9 @@ public final class GeneralPosition implements Position {
         sb.append("\tChr:").append(getChromosome().getName());
         sb.append("\tPos:").append(getPosition());
         sb.append("\tName:").append(getSNPID());
+        if((myVariantsAndAnno!=null)&&(myVariantsAndAnno[0]!=null)) {
+            sb.append("\tVariants:").append(myVariantsAndAnno[0].getValue());
+        }
         sb.append("\tMAF:").append(getGlobalMAF());
         sb.append("\tRef:").append(NucleotideAlignmentConstants.getHaplotypeNucleotide(getAllele(Allele.REF)));
         return sb.toString();

@@ -24,7 +24,8 @@ import java.util.NavigableSet;
  * @author Ed Buckler
  */
 public class ProjectionGenotype extends AbstractGenotype {
-    private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
+    private final Alignment myBaseAlignment;  //high density marker alignment that is being projected. It was suggested that this
+    //just have a pointer to a genotype, which would work, excepting for saving the file, when the base taxa names are needed.
     private ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints;
 
     private enum BaseMode {General, Site, Taxa};
@@ -76,9 +77,18 @@ public class ProjectionGenotype extends AbstractGenotype {
         return getBaseGeneral(taxon, site);
     }
 
+    /**
+     * Returns the high density base alignment of the projection genotype.
+     * @return base Alignment
+     */
+    public Alignment getBaseAlignment() {
+        return myBaseAlignment;
+    }
+
     private byte getBaseGeneral(int taxon, int site) {
         if((currentDSH[taxon]==null)||(!currentDSH[taxon].containsSite(site))) {
             currentDSH[taxon]=breakMaps.get(taxon).get(site);
+            if(currentDSH[taxon]==null) return Alignment.UNKNOWN_DIPLOID_ALLELE;
             //TODO consider null
         }
         byte p1=myBaseAlignment.getBase(currentDSH[taxon].getParent1index(),site);

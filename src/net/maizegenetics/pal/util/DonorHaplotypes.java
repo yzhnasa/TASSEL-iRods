@@ -23,6 +23,15 @@ public class DonorHaplotypes implements Comparable<DonorHaplotypes>{
         this.parent2index=parent2index;
     }
 
+    public static DonorHaplotypes getMergedInstance(DonorHaplotypes dh1, DonorHaplotypes dh2) {
+        if(!dh1.getChromosome().equals(dh2.getChromosome())) return null;
+        if(dh1.getParent1index()!=dh2.getParent1index()) return null;
+        if(dh1.getParent2index()!=dh2.getParent2index()) return null;
+        int startPosition=Math.min(dh1.getStartPosition(), dh2.getStartPosition());
+        int endPosition=Math.max(dh1.getEndPosition(), dh2.getEndPosition());
+        return new DonorHaplotypes(dh1.getChromosome(),startPosition,endPosition,dh1.getParent1index(),dh1.getParent2index());
+    }
+
     public Chromosome getChromosome() {
         return chromosome;
     }
@@ -62,5 +71,16 @@ public class DonorHaplotypes implements Comparable<DonorHaplotypes>{
                 .compare(parent2index, o.getParent2index())
                 .result();
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DonorHaplotypes{"+
+                "chromosome="+chromosome+
+                ", startPosition="+startPosition+
+                ", endPosition="+endPosition+
+                ", parent1index="+parent1index+
+                ", parent2index="+parent2index+
+                '}';
     }
 }

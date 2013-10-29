@@ -9,11 +9,15 @@ import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.util.DonorHaplotypes;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 /**
- * Builds a projection alignment.  Projection alignments use defined haplotypes and breakpoints that point to high density
- * genotypes (base Alignment).  These are used to efficiently store and connect low density maps with imputed high density genotypes.
+ * Builds a projection alignment.  Projection alignments use defined haplotypes and breakpoints
+ * that point to high density genotypes (base Alignment).  These are used to efficiently store
+ * and connect low density maps with imputed high density genotypes.
  * <p></p>
  * The alignment built by this builder is a CoreAlignment with a ProjectionGenotype.  The taxa come from the
  * projection alignment file, while the sites and positions are the same as the base alignment.
@@ -24,7 +28,7 @@ public class ProjectionBuilder {
     private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
     private ImmutableMap.Builder<Taxon,NavigableSet<DonorHaplotypes>> allBreakPoints;
 
-    public static Alignment getInstance(Alignment baseAlignment, ImmutableMap<Taxon,NavigableSet<DonorHaplotypes>> allBreakPoints) {
+    public static Alignment getInstance(Alignment baseAlignment, ImmutableMap<Taxon, NavigableSet<DonorHaplotypes>> allBreakPoints) {
         TaxaList tl=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         ImmutableList breakList=ImmutableList.builder().addAll(allBreakPoints.values()).build();
         return AlignmentBuilder.getInstance(new ProjectionGenotype(baseAlignment, breakList),
@@ -36,19 +40,21 @@ public class ProjectionBuilder {
         allBreakPoints=new ImmutableMap.Builder<>();
     }
 
-    public ProjectionBuilder addTaxon(Taxon taxon, Map<Position,Taxon[]> breakPoints) {
+    public synchronized ProjectionBuilder addTaxon(Taxon taxon, Map<Position,Taxon[]> breakPoints) {
         NavigableSet<DonorHaplotypes> intBreak=convertToIndexBreakPoints(breakPoints);
         allBreakPoints.put(taxon,intBreak);
         return this;
     }
 
-    public ProjectionBuilder addTaxon(Taxon taxon, NavigableSet<DonorHaplotypes> breakPoints) {
+    public synchronized ProjectionBuilder addTaxon(Taxon taxon, NavigableSet<DonorHaplotypes> breakPoints) {
         allBreakPoints.put(taxon,breakPoints);
         return this;
     }
 
     public Alignment build() {
-        return getInstance(myBaseAlignment,allBreakPoints.build());
+        ImmutableMap<Taxon,NavigableSet<DonorHaplotypes>> immBreak=allBreakPoints.build();
+        System.out.println(immBreak.size());
+        return getInstance(myBaseAlignment,immBreak);
     }
 
     /**
