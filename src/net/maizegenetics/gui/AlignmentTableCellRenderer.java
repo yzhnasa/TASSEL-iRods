@@ -240,27 +240,38 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
             alleles = myAlignment.getAlleles(site);
             myCachedAlleles.put(site, alleles);
         }
-        byte major = Alignment.UNKNOWN_ALLELE;
-        byte minor = Alignment.UNKNOWN_ALLELE;
-        if (alleles.length > 1) {
-            major = alleles[0];
-            minor = alleles[1];
-        } else if (alleles.length > 0) {
-            major = alleles[0];
-        }
-        byte[] diploidValues = myAlignment.getBaseArray(row, site);
 
-        if (isSelected) {
-            comp.setBackground(Color.DARK_GRAY);
-        } else if (((diploidValues[0] == major) && (diploidValues[1] == minor))
-                || ((diploidValues[0] == minor) && (diploidValues[1] == major))) {
-            comp.setBackground(MAJOR_MINOR_ALLELE_COLOR);
-        } else if ((diploidValues[0] == major) || (diploidValues[1] == major)) {
-            comp.setBackground(MAJOR_ALLELE_COLOR);
-        } else if ((diploidValues[0] == minor) || (diploidValues[1] == minor)) {
-            comp.setBackground(MINOR_ALLELE_COLOR);
+        byte[] diploidValues = myAlignment.getBaseArray(row, site);
+        if (alleles.length > 1) {
+            byte major = alleles[0];
+            byte minor = alleles[1];
+            if (isSelected) {
+                comp.setBackground(Color.DARK_GRAY);
+            } else if (((diploidValues[0] == major) && (diploidValues[1] == minor))
+                    || ((diploidValues[0] == minor) && (diploidValues[1] == major))) {
+                comp.setBackground(MAJOR_MINOR_ALLELE_COLOR);
+            } else if ((diploidValues[0] == major) || (diploidValues[1] == major)) {
+                comp.setBackground(MAJOR_ALLELE_COLOR);
+            } else if ((diploidValues[0] == minor) || (diploidValues[1] == minor)) {
+                comp.setBackground(MINOR_ALLELE_COLOR);
+            } else {
+                comp.setBackground(null);
+            }
+        } else if (alleles.length == 1) {
+            byte major = alleles[0];
+            if (isSelected) {
+                comp.setBackground(Color.DARK_GRAY);
+            } else if ((diploidValues[0] == major) || (diploidValues[1] == major)) {
+                comp.setBackground(MAJOR_ALLELE_COLOR);
+            } else {
+                comp.setBackground(null);
+            }
         } else {
-            comp.setBackground(null);
+            if (isSelected) {
+                comp.setBackground(Color.DARK_GRAY);
+            } else {
+                comp.setBackground(null);
+            }
         }
 
         return comp;
