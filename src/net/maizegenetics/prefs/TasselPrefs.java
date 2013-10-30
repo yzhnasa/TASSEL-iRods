@@ -56,7 +56,7 @@ public class TasselPrefs {
     public static final String FILTER_ALIGN_PLUGIN_TOP = "/tassel/plugins/filterAlign";
     // Min. frequency for filtering sites.
     public static final String FILTER_ALIGN_PLUGIN_MIN_FREQ = "minFreq";
-    public static final double FILTER_ALIGN_PLUGIN_MIN_FREQ_DEFAULT = 0.01;
+    public static final double FILTER_ALIGN_PLUGIN_MIN_FREQ_DEFAULT = 0.0;
     // Max. frequency for filtering sites.
     public static final String FILTER_ALIGN_PLUGIN_MAX_FREQ = "maxFreq";
     public static final double FILTER_ALIGN_PLUGIN_MAX_FREQ_DEFAULT = 1.0;
