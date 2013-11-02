@@ -131,7 +131,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         return AlignmentBuilder.getInstance(gB.build(),inAlign.getPositionList(),tLB.build());
     }
     
-    private int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
+    public static int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
         Chromosome[] theL=a.getChromosomes();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Chromosome aL: theL) {

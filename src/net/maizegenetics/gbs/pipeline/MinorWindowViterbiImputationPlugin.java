@@ -319,7 +319,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         
     }
     
-     public Alignment[] loadDonors(String donorFileRoot){
+     public static Alignment[] loadDonors(String donorFileRoot){
         File theDF=new File(donorFileRoot);
         String prefilter=theDF.getName().split(".gX.")[0]+".gc"; //grabs the left side of the file
         String prefilterOld=theDF.getName().split("s\\+")[0]+"s"; //grabs the left side of the file
