@@ -433,7 +433,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 + "-eC    End chromosome\n"
                 + "-mxDiv    Maximum divergence from founder haplotype\n"
                 + "-mxHet    Maximum heterozygosity of haplotype to even scanned\n"
-                + "-hapSize    Preferred haplotype block size in sites\n"
+                + "-hapSize    Preferred haplotype block size in sites (minimum 64); will use the closest multiple of 64 at or below the supplied value\n"
                 + "-minPres    Minimum number of present sites within input sequence to do the search\n"
                 + "-maxHap    Maximum number of haplotypes per segment\n"
                 + "-maxOutMiss  Maximum frequency of missing data in the output haplotype"
