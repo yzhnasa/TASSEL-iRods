@@ -306,29 +306,6 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: -convertTOPMtoHDF5: Unknown file extension: " + filename);
                     }
                     TagsOnPhysMapHDF5.createFile(topm, h5Filename, 4, 8);
-                } else if (current.equalsIgnoreCase("-taxaJoinStrict")) {
-                    String temp = args[index++].trim();
-                    if (temp.equalsIgnoreCase("false")) {
-                        temp = TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.NonStrict.toString();
-                    } else if (temp.equalsIgnoreCase("true")) {
-                        temp = TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict.toString();
-                    }
-                    TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = null;
-                    try {
-                        type = TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.valueOf(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -taxaJoinStrict: Unknown type: " + temp + "  Should be: " + Arrays.toString(TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.values()));
-                    }
-                    TasselPrefs.putIDJoinStrict(type);
-                } else if (current.equalsIgnoreCase("-taxaJoinNumLevels")) {
-                    String temp = args[index++].trim();
-                    int numLevels = 0;
-                    try {
-                        numLevels = Integer.parseInt(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing Taxa Join Number Levels: " + temp);
-                    }
-                    TasselPrefs.putIDJoinNumLevels(numLevels);
                 } else if (current.equalsIgnoreCase("-retainRareAlleles")) {
                     String temp = args[index++].trim();
                     boolean retain = true;

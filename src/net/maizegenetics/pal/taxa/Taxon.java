@@ -8,7 +8,6 @@ package net.maizegenetics.pal.taxa;
 
 import net.maizegenetics.pal.util.GeneralAnnotation;
 import net.maizegenetics.pal.util.GeneralAnnotationUtils;
-import net.maizegenetics.prefs.TasselPrefs;
 
 import java.io.Serializable;
 import java.util.*;
@@ -32,26 +31,23 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
     private static final long serialVersionUID = -7873729831795750538L;
     public static final String DELIMITER = ":";
     public static Taxon ANONYMOUS = new Taxon("");
-    public static final String FatherKey="FATHER";
-    public static final String MotherKey="MOTHER";
-    public static final String PedigreeKey="PEDIGREE";
-    public static final String SexKey="SEX";
-    public static final String InbreedFKey="InbreedF";
-
-
+    public static final String FatherKey = "FATHER";
+    public static final String MotherKey = "MOTHER";
+    public static final String PedigreeKey = "PEDIGREE";
+    public static final String SexKey = "SEX";
+    public static final String InbreedFKey = "InbreedF";
     private final Map.Entry<String, String>[] myAnno;
     private final String myName;
     private final int hashCode;
-
     //since there are numerous redundant annotations and variant descriptions, this class use a annotation hash, so that
     //only the pointers are stored.  It takes a little longer to instantiate, but save 3-fold in memory.
-    private static final ConcurrentMap<Map.Entry<String, String>,Map.Entry<String, String>> TAXON_ANNO_HASH = new ConcurrentHashMap<>(1_000_000);
+    private static final ConcurrentMap<Map.Entry<String, String>, Map.Entry<String, String>> TAXON_ANNO_HASH = new ConcurrentHashMap<>(1_000_000);
 
     private static Map.Entry<String, String> getCanonicalAnnotation(String key, String value) {
         if (TAXON_ANNO_HASH.size() > 1_000_000) {
             TAXON_ANNO_HASH.clear();
         }
-        Map.Entry<String, String> str= new AbstractMap.SimpleImmutableEntry<>(key,value);
+        Map.Entry<String, String> str = new AbstractMap.SimpleImmutableEntry<>(key, value);
         Map.Entry<String, String> canon = TAXON_ANNO_HASH.putIfAbsent(str, str);
         return (canon == null) ? str : canon;
     }
@@ -64,9 +60,9 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
         myName = builder.myTaxonName;
         hashCode = myName.hashCode();
         //this looks crazy because it java doesn't support generic arrays
-        myAnno=(Map.Entry<String, String>[])new Map.Entry<?,?>[builder.myAnnotations.size()];
+        myAnno = (Map.Entry<String, String>[]) new Map.Entry<?, ?>[builder.myAnnotations.size()];
         for (int i = 0; i < builder.myAnnotations.size(); i++) {
-            myAnno[i]=builder.myAnnotations.get(i);
+            myAnno[i] = builder.myAnnotations.get(i);
         }
     }
 
@@ -79,10 +75,8 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
     public int compareTo(Taxon c) {
         if (this == c) {
             return 0;
-        } else if (c instanceof Taxon) {
-            return compareTo(c.getName());
         } else {
-            throw new ClassCastException();
+            return myName.compareTo(c.getName());
         }
     }
 
@@ -93,28 +87,14 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
             return true;
         }
 
-        TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES type = TasselPrefs.getIDJoinStrict();
-
         if (c instanceof Taxon) {
-            if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
-                return getName().equals(((Taxon) c).getName());
-            } else {
-                return compareTo((Taxon)c) == 0;
-            }
+            return myName.equals(((Taxon) c).getName());
         } else if (c instanceof String) {
-            if (type == TasselPrefs.TASSEL_IDENTIFIER_JOIN_TYPES.Strict) {
-                return getName().equals(((String) c));
-            } else {
-                return compareTo((String) c) == 0;
-            }
+            return myName.equals((String) c);
         } else {
             return false;
         }
 
-    }
-
-    public int compareTo(String c) {
-        return myName.compareTo(c);
     }
 
     public String getName() {
@@ -133,28 +113,27 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
 
     @Override
     public String[] getTextAnnotation(String annoName) {
-        return GeneralAnnotationUtils.getTextAnnotation(myAnno,annoName);
+        return GeneralAnnotationUtils.getTextAnnotation(myAnno, annoName);
     }
 
     @Override
     public double[] getQuantAnnotation(String annoName) {
-        return GeneralAnnotationUtils.getQuantAnnotation(myAnno,annoName);
+        return GeneralAnnotationUtils.getQuantAnnotation(myAnno, annoName);
     }
-
 
     @Override
     public String getConsensusAnnotation(String annoName) {
-        return GeneralAnnotationUtils.getConsensusAnnotation(myAnno,annoName);
+        return GeneralAnnotationUtils.getConsensusAnnotation(myAnno, annoName);
     }
 
     @Override
     public double getAverageAnnotation(String annoName) {
-        return GeneralAnnotationUtils.getAverageAnnotation(myAnno,annoName);
+        return GeneralAnnotationUtils.getAverageAnnotation(myAnno, annoName);
     }
 
     @Override
-    public Map.Entry<String,String>[] getAllAnnotationEntries() {
-        return Arrays.copyOf(myAnno,myAnno.length);
+    public Map.Entry<String, String>[] getAllAnnotationEntries() {
+        return Arrays.copyOf(myAnno, myAnno.length);
     }
 
     /**
@@ -173,59 +152,86 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
 
         // Required parameters
         private String myTaxonName;
-        private ArrayList<Map.Entry<String, String>> myAnnotations=new ArrayList<>(0);
+        private ArrayList<Map.Entry<String, String>> myAnnotations = new ArrayList<>(0);
 
         /**
          * Constructor for Builder, requires a Taxon object
+         *
          * @param aTaxon taxon object
          */
         public Builder(Taxon aTaxon) {
             myTaxonName = aTaxon.getName();
-            for (Map.Entry<String,String> entry : aTaxon.getAllAnnotationEntries()) {
+            for (Map.Entry<String, String> entry : aTaxon.getAllAnnotationEntries()) {
                 myAnnotations.add(entry);
             }
         }
 
         /**
          * Constructor for Builder, requires a Taxon name
+         *
          * @param aTaxonName name of the taxon
          */
         public Builder(String aTaxonName) {
             myTaxonName = aTaxonName;
         }
 
-        /**Add non-standard annotation*/
+        /**
+         * Add non-standard annotation
+         */
         public Builder addAnno(String key, String value) {
-            Map.Entry<String, String> ent=getCanonicalAnnotation(key,value);
+            Map.Entry<String, String> ent = getCanonicalAnnotation(key, value);
             myAnnotations.add(ent);
             return this;
         }
-        /**Add non-standard annotation*/
+
+        /**
+         * Add non-standard annotation
+         */
         public Builder addAnno(String key, Number value) {
-            Map.Entry<String, String> ent=getCanonicalAnnotation(key,value.toString());
+            Map.Entry<String, String> ent = getCanonicalAnnotation(key, value.toString());
             myAnnotations.add(ent);
             return this;
         }
 
-        /**Change the name*/
-        /** Set sex: 0=both, 1=female, 2=male (default=0 Both) */
-        public Builder name(String newName) {myTaxonName=newName; return this;}
-
-        /** Set sex: 0=both, 1=female, 2=male (default=0 Both) */
-        public Builder sex(byte val) {return addAnno(SexKey,val);}
-
-        /**  Set inbreeding coefficient (default=Float.NaN)*/
-        public Builder inbreedF(float val) {return addAnno(InbreedFKey,val);}
-
-        /** Set text definition of parents (default=null)*/
-        public Builder parents(String mom, String dad) {
-            addAnno(MotherKey,mom);
-            return addAnno(FatherKey,dad);
+        /**
+         * Change the name
+         */
+        /**
+         * Set sex: 0=both, 1=female, 2=male (default=0 Both)
+         */
+        public Builder name(String newName) {
+            myTaxonName = newName;
+            return this;
         }
 
-        /** Set text definition of pedigree (default=null) */
-        public Builder pedigree(String val) {return addAnno(PedigreeKey,val);}
+        /**
+         * Set sex: 0=both, 1=female, 2=male (default=0 Both)
+         */
+        public Builder sex(byte val) {
+            return addAnno(SexKey, val);
+        }
 
+        /**
+         * Set inbreeding coefficient (default=Float.NaN)
+         */
+        public Builder inbreedF(float val) {
+            return addAnno(InbreedFKey, val);
+        }
+
+        /**
+         * Set text definition of parents (default=null)
+         */
+        public Builder parents(String mom, String dad) {
+            addAnno(MotherKey, mom);
+            return addAnno(FatherKey, dad);
+        }
+
+        /**
+         * Set text definition of pedigree (default=null)
+         */
+        public Builder pedigree(String val) {
+            return addAnno(PedigreeKey, val);
+        }
 
         public Taxon build() {
             return new Taxon(this);
