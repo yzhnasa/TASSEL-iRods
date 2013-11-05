@@ -3,6 +3,10 @@
  */
 package net.maizegenetics.util;
 
+import net.maizegenetics.pal.alignment.Alignment;
+
+import java.util.Arrays;
+
 /**
  *
  * @author Terry Casstevens
@@ -25,6 +29,7 @@ public class SuperByteMatrixSingle implements SuperByteMatrix {
             throw new IllegalArgumentException("SuperByteMatrixSingle: init: this number of rows: " + rows + "  and columns: " + columns + " is too large for SuperByteMatrixSingle.");
         }
         myData = new byte[(int) numElements];
+        Arrays.fill(myData, Alignment.UNKNOWN_DIPLOID_ALLELE);
 
     }
 
