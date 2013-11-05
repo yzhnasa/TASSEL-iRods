@@ -17,7 +17,7 @@ import java.util.prefs.Preferences;
 public class TasselPrefs {
 
     private static boolean PERSIST_PREFERENCES = false;
-    private static Map<String, Object> TEMP_CACHED_VALUES = new HashMap<String, Object>();
+    private static Map<String, Object> TEMP_CACHED_VALUES = new HashMap<>();
     //
     // Top level preferences
     //
@@ -26,30 +26,6 @@ public class TasselPrefs {
     public static final String TASSEL_SAVE_DIR_DEFAULT = "";
     public static final String TASSEL_OPEN_DIR = "openDir";
     public static final String TASSEL_OPEN_DIR_DEFAULT = "";
-
-    public static enum TASSEL_IDENTIFIER_JOIN_TYPES {
-
-        /**
-         * This means taxa names must match exactly all levels. This is the same
-         * as true use to be.
-         */
-        Strict,
-        /**
-         * This means taxa names must match all levels up to the least specific
-         * taxa. This is the same as false use to be.
-         */
-        NonStrict,
-        /**
-         * This means taxa names must match specified number of levels.
-         */
-        NumLevels
-    };
-    public static final String TASSEL_IDENTIFIER_JOIN_STRICT = "idJoinStrict";
-    public static final TASSEL_IDENTIFIER_JOIN_TYPES TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT = TASSEL_IDENTIFIER_JOIN_TYPES.NonStrict;
-    private static TASSEL_IDENTIFIER_JOIN_TYPES TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = null;
-    public static final String TASSEL_IDENTIFIER_JOIN_NUM_LEVELS = "idJoinNumLevels";
-    public static final int TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_DEFAULT = 1;
-    private static int TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = -1;
     //
     // FilterAlignmentPlugin preferences
     //
@@ -80,8 +56,6 @@ public class TasselPrefs {
     // Alignment preferences
     //
     public static final String ALIGNMENT_TOP = "/tassel/alignment";
-    public static final String ALIGNMENT_MAX_ALLELES_TO_RETAIN = "maxAllelesToRetain";
-    public static final int ALIGNMENT_MAX_ALLELES_TO_RETAIN_DEFAULT = 2;
     public static final String ALIGNMENT_RETAIN_RARE_ALLELES = "retainRareAlleles";
     public static final boolean ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT = false;
 
@@ -235,56 +209,6 @@ public class TasselPrefs {
         putPref(TASSEL_TOP, TASSEL_OPEN_DIR, value);
     }
 
-    private static TASSEL_IDENTIFIER_JOIN_TYPES initIDJoin() {
-
-        String value = getPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, null);
-        if (value == null) {
-            value = TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT.toString();
-        } else if (value.equalsIgnoreCase("true")) {
-            value = TASSEL_IDENTIFIER_JOIN_TYPES.Strict.toString();
-        } else if (value.equalsIgnoreCase("false")) {
-            value = TASSEL_IDENTIFIER_JOIN_TYPES.NonStrict.toString();
-        }
-
-        TASSEL_IDENTIFIER_JOIN_TYPES result = null;
-        try {
-            result = TASSEL_IDENTIFIER_JOIN_TYPES.valueOf(value);
-        } catch (Exception e) {
-            result = TASSEL_IDENTIFIER_JOIN_STRICT_DEFAULT;
-        }
-
-        putPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, result.toString());
-
-        return result;
-
-    }
-
-    public static TASSEL_IDENTIFIER_JOIN_TYPES getIDJoinStrict() {
-        if (TASSEL_IDENTIFIER_JOIN_STRICT_VALUE == null) {
-            TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = initIDJoin();
-        }
-        // This can be called many times, so to improve performance
-        // this will return value without executing system call.
-        return TASSEL_IDENTIFIER_JOIN_STRICT_VALUE;
-    }
-
-    public static void putIDJoinStrict(TASSEL_IDENTIFIER_JOIN_TYPES type) {
-        TASSEL_IDENTIFIER_JOIN_STRICT_VALUE = type;
-        putPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_STRICT, type.toString());
-    }
-
-    public static int getIDJoinNumLevels() {
-        if (TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE == -1) {
-            TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = getIntPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_DEFAULT);
-        }
-        return TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE;
-    }
-
-    public static void putIDJoinNumLevels(int value) {
-        TASSEL_IDENTIFIER_JOIN_NUM_LEVELS_VALUE = value;
-        putIntPref(TASSEL_TOP, TASSEL_IDENTIFIER_JOIN_NUM_LEVELS, value);
-    }
-
     //
     // FilterAlignmentPlugin preferences
     //
@@ -342,14 +266,6 @@ public class TasselPrefs {
     //
     // Alignment preferences
     //
-    public static int getAlignmentMaxAllelesToRetain() {
-        return getIntPref(ALIGNMENT_TOP, ALIGNMENT_MAX_ALLELES_TO_RETAIN, ALIGNMENT_MAX_ALLELES_TO_RETAIN_DEFAULT);
-    }
-
-    public static void putAlignmentMaxAllelesToRetain(int value) {
-        putIntPref(ALIGNMENT_TOP, ALIGNMENT_MAX_ALLELES_TO_RETAIN, value);
-    }
-
     public static boolean getAlignmentRetainRareAlleles() {
         return getBooleanPref(ALIGNMENT_TOP, ALIGNMENT_RETAIN_RARE_ALLELES, ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT);
     }
