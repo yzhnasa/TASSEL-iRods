@@ -56,8 +56,6 @@ public class TasselPrefs {
     // Alignment preferences
     //
     public static final String ALIGNMENT_TOP = "/tassel/alignment";
-    public static final String ALIGNMENT_MAX_ALLELES_TO_RETAIN = "maxAllelesToRetain";
-    public static final int ALIGNMENT_MAX_ALLELES_TO_RETAIN_DEFAULT = 2;
     public static final String ALIGNMENT_RETAIN_RARE_ALLELES = "retainRareAlleles";
     public static final boolean ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT = false;
 
@@ -268,14 +266,6 @@ public class TasselPrefs {
     //
     // Alignment preferences
     //
-    public static int getAlignmentMaxAllelesToRetain() {
-        return getIntPref(ALIGNMENT_TOP, ALIGNMENT_MAX_ALLELES_TO_RETAIN, ALIGNMENT_MAX_ALLELES_TO_RETAIN_DEFAULT);
-    }
-
-    public static void putAlignmentMaxAllelesToRetain(int value) {
-        putIntPref(ALIGNMENT_TOP, ALIGNMENT_MAX_ALLELES_TO_RETAIN, value);
-    }
-
     public static boolean getAlignmentRetainRareAlleles() {
         return getBooleanPref(ALIGNMENT_TOP, ALIGNMENT_RETAIN_RARE_ALLELES, ALIGNMENT_RETAIN_RARE_ALLELES_DEFAULT);
     }

@@ -317,15 +317,6 @@ public class TasselPipeline implements PluginListener {
                         throw new IllegalArgumentException("TasselPipeline: parseArgs: -retainRareAlleles parameter must be true or false.");
                     }
                     TasselPrefs.putAlignmentRetainRareAlleles(retain);
-                } else if (current.equalsIgnoreCase("-maxAllelesToRetain")) {
-                    String temp = args[index++].trim();
-                    int maxAlleles = 0;
-                    try {
-                        maxAlleles = Integer.parseInt(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing max alleles to retain: " + temp);
-                    }
-                    TasselPrefs.putAlignmentMaxAllelesToRetain(maxAlleles);
                 } else if (current.equalsIgnoreCase("-union")) {
                     UnionAlignmentPlugin plugin = new UnionAlignmentPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
