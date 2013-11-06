@@ -3,6 +3,8 @@
  */
 package net.maizegenetics.util;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Terry Casstevens
@@ -42,6 +44,14 @@ public class SuperByteMatrixMultiple implements SuperByteMatrix {
     @Override
     public void set(int row, int column, byte value) {
         myData[getFirstIndex(row)][getSecondIndex(row, column)] = value;
+    }
+
+    @Override
+    public void setAll(byte value) {
+        int numSingleDimArrays = myData.length;
+        for (int i = 0; i < numSingleDimArrays; i++) {
+            Arrays.fill(myData[i], value);
+        }
     }
 
     @Override

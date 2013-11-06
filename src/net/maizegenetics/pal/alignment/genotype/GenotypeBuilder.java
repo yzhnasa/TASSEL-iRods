@@ -51,7 +51,9 @@ public class GenotypeBuilder {
      * @return Genotype Builder
      */
     public static GenotypeBuilder getInstanceTranspose(int numTaxa, int numSites) {
-        return new GenotypeBuilder(SuperByteMatrixBuilder.getInstanceTranspose(numTaxa, numSites));
+        SuperByteMatrix matrix = SuperByteMatrixBuilder.getInstanceTranspose(numTaxa, numSites);
+        matrix.setAll(Alignment.UNKNOWN_DIPLOID_ALLELE);
+        return new GenotypeBuilder(matrix);
     }
 
     /**
@@ -65,7 +67,9 @@ public class GenotypeBuilder {
      * @return Genotype Builder
      */
     public static GenotypeBuilder getUnphasedNucleotideGenotypeBuilder(int numTaxa, int numSites) {
-        return new GenotypeBuilder(SuperByteMatrixBuilder.getInstance(numTaxa, numSites));
+        SuperByteMatrix matrix = SuperByteMatrixBuilder.getInstance(numTaxa, numSites);
+        matrix.setAll(Alignment.UNKNOWN_DIPLOID_ALLELE);
+        return new GenotypeBuilder(matrix);
     }
 
     public static Genotype getFilteredInstance(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int rangeStart, int rangeEnd) {

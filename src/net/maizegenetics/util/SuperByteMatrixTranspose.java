@@ -29,6 +29,11 @@ public class SuperByteMatrixTranspose implements SuperByteMatrix {
     public void set(int row, int column, byte value) {
         myMatrix.set(column, row, value);
     }
+    
+    @Override
+    public void setAll(byte value) {
+        myMatrix.setAll(value);
+    }
 
     @Override
     public byte get(int row, int column) {

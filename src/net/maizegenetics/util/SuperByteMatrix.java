@@ -24,13 +24,20 @@ public interface SuperByteMatrix {
     public int getNumColumns();
 
     /**
-     * Sets value at give row and column.
+     * Sets value at given row and column.
      *
      * @param row row
      * @param column column
      * @param value value
      */
     public void set(int row, int column, byte value);
+    
+    /**
+     * Sets value for all elements.
+     * 
+     * @param value value
+     */
+    public void setAll(byte value);
 
     /**
      * Gets value at given row and column.
