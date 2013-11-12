@@ -25,8 +25,8 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 	JCheckBox chkNested = null;
 	JList<String> listMainEffects = null;
 	JButton btnLimits = new JButton("Enter limits by trait");
-	JButton btnOk = new JButton("btnOK");
-	JButton btnCancel = new JButton("btnCancel");
+	JButton btnOk = new JButton("OK");
+	JButton btnCancel = new JButton("Cancel");
 	JLabel lblWhich = new JLabel("Which factor?");
 	JTextField txtEnter, txtExit, txtMax;
 	String enterlim, exitlim;
