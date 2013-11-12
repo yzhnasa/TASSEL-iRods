@@ -69,7 +69,7 @@ public class AlignmentBuilder {
         this.taxaList=taxaList;
         this.myBuildType=BuildType.SITE_INC;
         incGeno=new ArrayList<>();
-        taxaListBuilder=new TaxaListBuilder();
+        posListBuilder=new PositionListBuilder();
     }
 
     public static AlignmentBuilder getTaxaIncremental(PositionList positionList) {
@@ -135,12 +135,11 @@ public class AlignmentBuilder {
                 //TODO validate sort order, sort if needed
                 PositionList pl=posListBuilder.build();
                 GenotypeBuilder gB=GenotypeBuilder.getInstance(taxaList.getTaxaCount(),pl.getSiteCount());
-                for (int i=0; i<taxaList.getTaxaCount(); i++) {
-                    byte[] b=incGeno.get(i);
-                    for (int s=0; s<b.length; s++) {
-                        gB.setBase(i,s,b[s]);
+                for (int s=0; s<pl.getSiteCount(); s++) {
+                    byte[] b=incGeno.get(s);
+                    for (int t=0; t<b.length; t++) {
+                        gB.setBase(t,s,b[t]);
                     }
-
                 }
                 return new CoreAlignment(gB.build(), pl, taxaList);
             }
