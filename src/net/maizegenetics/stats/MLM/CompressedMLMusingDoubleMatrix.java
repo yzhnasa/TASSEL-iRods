@@ -17,14 +17,18 @@ import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.tree.UPGMATree;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.stats.EMMA.EMMAforDoubleMatrix;
+
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
@@ -35,6 +39,8 @@ public class CompressedMLMusingDoubleMatrix {
     private final boolean useCompression;
     private final boolean useP3D;
     private final double compression;
+    private boolean outputResiduals = false;
+    
 //    private DoubleMatrix ZKZ;
     private final MarkerPhenotypeAdapter theAdapter;
     private final MLMPlugin parentPlugin;
@@ -80,7 +86,7 @@ public class CompressedMLMusingDoubleMatrix {
     }
 
     public List<Datum> solve() {
-
+    	List<Datum> results = new LinkedList<Datum>();
         int numberOfMarkers = theAdapter.getNumberOfMarkers();
         int numberOfPhenotypes = theAdapter.getNumberOfPhenotypes();
 
@@ -186,6 +192,8 @@ public class CompressedMLMusingDoubleMatrix {
             int baseModeldf = emlm.getDfModel();
 
             //record the results
+            if (outputResiduals) results.add(createResPhenotype(emlm, nonmissingIds, new Trait(theAdapter.getPhenotypeName(ph), false, Trait.TYPE_DATA)));
+            
             Object[] tableRow;
             if (myGeneticMap != null) {
                 //{"Trait","Marker","Chr","Pos","Locus","Site","df","F","p","errordf","MarkerR2","Genetic Var","Residual Var", "-2LnLikelihood"}
@@ -492,8 +500,9 @@ public class CompressedMLMusingDoubleMatrix {
             }
             return null;
         }
-
-        return formatResults();
+        
+        results.addAll(formatResults());
+        return results;
     }
 
     private String getTabbedStringFromArray(Object[] array) {
@@ -913,6 +922,29 @@ public class CompressedMLMusingDoubleMatrix {
         return new TaxaListBuilder().addAll(taxa).build();
     }
 
+    public Datum createResPhenotype(EMMAforDoubleMatrix emma, TaxaList taxaIds, Trait trait) {
+        String resReportName = "Residuals_for_" + trait.getName() + "_" + datasetName;
+        
+        String resComments = "Residuals for taxa, trait = " + trait.getName();
+ 
+    	LinkedList<Trait> traits = new LinkedList<Trait>();
+    	traits.add(trait);
+    	
+        DoubleMatrix res = emma.getRes();
+        int nres = res.numberOfRows();
+        
+        double[][] resarray = new double[nres][1];
+        
+    	for (int i = 0; i < nres; i++) resarray[i][0] = res.get(i,0);
+        
+        SimplePhenotype resPheno = new SimplePhenotype(taxaIds, traits, resarray);
+        
+        String name = String.format("Residuals for %s.", trait.getName());
+        String comment = "";
+        Datum output = new Datum(name, resPheno, comment);
+        return output;
+     }
+    
     class CompressedMLMResult {
 
         DoubleMatrix beta = null;
