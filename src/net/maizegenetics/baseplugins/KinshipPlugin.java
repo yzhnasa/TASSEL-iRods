@@ -5,7 +5,7 @@ import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.distance.Kinship;
+import net.maizegenetics.popgen.distance.Kinship;
 
 import javax.swing.*;
 import java.net.URL;

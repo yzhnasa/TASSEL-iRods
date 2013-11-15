@@ -13,7 +13,7 @@
 
 package net.maizegenetics.pal.tree;
 
-import net.maizegenetics.pal.distance.DistanceMatrix;
+import net.maizegenetics.popgen.distance.DistanceMatrix;
 
 /**
  * constructs a UPGMA tree from pairwise distances

@@ -6,7 +6,7 @@ package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
+import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;

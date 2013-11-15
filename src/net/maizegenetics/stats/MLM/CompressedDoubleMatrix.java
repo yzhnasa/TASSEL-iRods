@@ -5,7 +5,7 @@ import java.util.Collections;
 
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.distance.DistanceMatrix;
+import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.pal.tree.Tree;
 import net.maizegenetics.pal.tree.TreeClusters;
 import net.maizegenetics.pal.tree.UPGMATree;

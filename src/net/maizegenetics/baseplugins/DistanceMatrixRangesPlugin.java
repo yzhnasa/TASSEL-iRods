@@ -10,7 +10,7 @@ import java.util.List;
 import javax.swing.*;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
+import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;

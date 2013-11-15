@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
+import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.taxa.Taxon;
 
 import java.awt.*;

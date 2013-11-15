@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.distance;
+package net.maizegenetics.popgen.distance;
 
 import java.io.BufferedWriter;
 import java.io.File;

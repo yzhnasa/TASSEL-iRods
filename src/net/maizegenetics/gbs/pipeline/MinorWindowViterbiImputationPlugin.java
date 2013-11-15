@@ -12,7 +12,7 @@ import net.maizegenetics.gwas.imputation.TransitionProbability;
 import net.maizegenetics.gwas.imputation.ViterbiAlgorithm;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.alignment.io.ProjectionAlignmentIO;
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
+import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.popgen.DonorHypoth;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.util.DonorHaplotypes;

@@ -5,7 +5,7 @@
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
 
-package net.maizegenetics.pal.distance;
+package net.maizegenetics.popgen.distance;
 
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;

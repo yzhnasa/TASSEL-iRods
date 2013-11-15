@@ -35,8 +35,8 @@ import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
 
-import net.maizegenetics.pal.distance.DistanceMatrix;
-import net.maizegenetics.pal.distance.WriteDistanceMatrix;
+import net.maizegenetics.popgen.distance.DistanceMatrix;
+import net.maizegenetics.popgen.distance.WriteDistanceMatrix;
 
 import net.maizegenetics.tassel.TASSELMainFrame;
 

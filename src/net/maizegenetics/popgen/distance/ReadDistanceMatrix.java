@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.pal.distance;
+package net.maizegenetics.popgen.distance;
 
 import net.maizegenetics.pal.io.FormattedInput;
 import net.maizegenetics.pal.io.InputSource;

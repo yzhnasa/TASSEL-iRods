@@ -9,7 +9,7 @@ import net.maizegenetics.jGLiM.dm.SweepFast;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.distance.DistanceMatrix;
+import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;

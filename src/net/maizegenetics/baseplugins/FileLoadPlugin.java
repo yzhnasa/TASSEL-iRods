@@ -11,7 +11,7 @@ import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.ReadPhenotypeUtils;
 import net.maizegenetics.pal.alignment.ReadPolymorphismUtils;
 import net.maizegenetics.pal.alignment.ReadSequenceAlignmentUtils;
-import net.maizegenetics.pal.distance.ReadDistanceMatrix;
+import net.maizegenetics.popgen.distance.ReadDistanceMatrix;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.TableReportUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;

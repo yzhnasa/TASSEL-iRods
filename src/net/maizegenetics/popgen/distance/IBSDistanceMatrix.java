@@ -12,7 +12,7 @@
  * public license. 
  *
  */
-package net.maizegenetics.pal.distance;
+package net.maizegenetics.popgen.distance;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.util.BitSet;

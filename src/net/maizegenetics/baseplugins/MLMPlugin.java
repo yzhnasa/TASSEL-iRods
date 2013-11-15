@@ -7,7 +7,7 @@ import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.pal.alignment.GeneticMap;
 import net.maizegenetics.pal.alignment.MarkerPhenotype;
 import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.distance.DistanceMatrix;
+import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.stats.MLM.*;
 import net.maizegenetics.gui.ReportDestinationDialog;
 
