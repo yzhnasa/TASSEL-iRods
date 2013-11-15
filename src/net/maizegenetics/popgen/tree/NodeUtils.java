@@ -10,10 +10,11 @@ package net.maizegenetics.popgen.tree;
 
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.io.FormattedOutput;
-import net.maizegenetics.pal.util.Log;
 
 import java.io.PrintWriter;
 import java.util.Vector;
+
+import org.apache.log4j.Logger;
 
 /**
  * Helper routines for dealing with nodes.
@@ -25,6 +26,9 @@ import java.util.Vector;
  * @author Matthew Goode
  */
 public class NodeUtils {
+    
+    private static final Logger myLogger = Logger.getLogger(NodeUtils.class);
+    
 	/**
 	 * Appends all external nodes from tree defined by root to Vector store
 	 * @param root The root node defining tree
@@ -674,9 +678,9 @@ public class NodeUtils {
 	 * required identifier.
 	 */
 	public static final Node findByIdentifier(Node node, String identifierName) {
-
-		Log.getDefaultLogger().debug("node identifier = " + node.getIdentifier());
-		Log.getDefaultLogger().debug("target identifier name = " + identifierName);
+            
+            myLogger.debug("node identifier = " + node.getIdentifier());
+            myLogger.debug("target identifier name = " + identifierName);
 
 		if (node.getIdentifier().getName().equals(identifierName)) {
 			return node;
