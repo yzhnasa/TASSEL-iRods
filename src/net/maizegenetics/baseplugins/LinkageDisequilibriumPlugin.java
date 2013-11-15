@@ -8,7 +8,7 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
+import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

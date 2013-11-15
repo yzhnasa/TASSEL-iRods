@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.popgen;
+package net.maizegenetics.popgen;
 
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.report.AbstractTableReport;

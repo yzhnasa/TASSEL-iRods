@@ -7,8 +7,8 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.popgen.DiversityAnalyses;
-import net.maizegenetics.pal.popgen.PolymorphismDistribution;
+import net.maizegenetics.popgen.DiversityAnalyses;
+import net.maizegenetics.popgen.PolymorphismDistribution;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

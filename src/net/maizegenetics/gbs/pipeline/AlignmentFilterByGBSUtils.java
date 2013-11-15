@@ -7,7 +7,7 @@ import cern.colt.list.IntArrayList;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
+import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.pal.taxa.IdGroupUtils;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;

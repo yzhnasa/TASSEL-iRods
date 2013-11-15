@@ -12,7 +12,7 @@
  * public license. 
  *
  */
-package net.maizegenetics.pal.popgen;
+package net.maizegenetics.popgen;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;

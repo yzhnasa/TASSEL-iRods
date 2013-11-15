@@ -7,7 +7,7 @@
 package net.maizegenetics.pal.gui;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
+import net.maizegenetics.popgen.LinkageDisequilibrium;
 
 import javax.swing.*;
 import java.awt.*;
