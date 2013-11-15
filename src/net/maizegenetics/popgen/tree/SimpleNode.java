@@ -9,7 +9,6 @@
 package net.maizegenetics.popgen.tree;
 
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.util.BranchLimits;
 
 import java.io.IOException;
 import java.io.PrintWriter;

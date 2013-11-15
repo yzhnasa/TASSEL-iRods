@@ -10,7 +10,6 @@ package net.maizegenetics.popgen.tree;
 
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.io.FormattedOutput;
-import net.maizegenetics.pal.util.BranchLimits;
 import net.maizegenetics.pal.util.Log;
 
 import java.io.PrintWriter;
