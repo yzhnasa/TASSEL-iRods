@@ -11,7 +11,6 @@ package net.maizegenetics.popgen.tree;
 import net.maizegenetics.pal.io.FormattedOutput;
 import net.maizegenetics.pal.math.OrthogonalHints;
 import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.util.Parameterized;
 
 import java.io.Serializable;
 

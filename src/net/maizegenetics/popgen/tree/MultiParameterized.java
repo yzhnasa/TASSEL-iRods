@@ -5,7 +5,7 @@
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
 
-package net.maizegenetics.pal.util;
+package net.maizegenetics.popgen.tree;
 
 /**
  * <p>Title: MultiParameterized</p>
