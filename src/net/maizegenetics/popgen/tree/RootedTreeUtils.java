@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.pal.tree;
+package net.maizegenetics.popgen.tree;
 
 import java.util.HashMap;
 import java.util.Map;

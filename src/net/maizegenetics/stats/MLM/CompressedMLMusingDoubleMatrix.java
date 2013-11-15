@@ -14,7 +14,7 @@ import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.tree.UPGMATree;
+import net.maizegenetics.popgen.tree.UPGMATree;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.stats.EMMA.EMMAforDoubleMatrix;
 

@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.tree;
+package net.maizegenetics.popgen.tree;
 
 import java.util.Arrays;
 

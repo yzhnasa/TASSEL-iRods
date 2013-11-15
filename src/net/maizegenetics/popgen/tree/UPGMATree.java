@@ -1,45 +1,44 @@
-// NeighborJoiningTree.java
+// UPGMATree.java
 //
 // (c) 1999-2001 PAL Development Core Team
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
 
+// Known bugs and limitations:
+// - computational complexity O(numSeqs^3)
+//   (this could be brought down to O(numSeqs^2)
+//   but this needs more clever programming ...)
 
-// computational complexity O(numSeqs^3)
 
-
-package net.maizegenetics.pal.tree;
+package net.maizegenetics.popgen.tree;
 
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 
-
 /**
- * constructs a neighbor-joining tree from pairwise distances
- * <br><br>
- * Saitou, N., and Nei, M., (1987) The neighbor-joining method: A new method for reconstructing phylogenetic trees. <i> Mol. Biol. Evol,</i> 4(4):406-425,
- * <br>
- * @version $Id: NeighborJoiningTree.java,v 1.1 2007/01/12 03:26:17 tcasstevens Exp $
+ * constructs a UPGMA tree from pairwise distances
+ *
+ * @version $Id: UPGMATree.java,v 1.1 2007/01/12 03:26:17 tcasstevens Exp $
  *
  * @author Korbinian Strimmer
  * @author Alexei Drummond
  */
-public class NeighborJoiningTree extends SimpleTree
+public class UPGMATree extends SimpleTree
 {
 	//
 	// Public stuff
 	//
 
 	/**
-	 * construct NJ tree
+	 * constructor UPGMA tree
 	 *
 	 * @param m distance matrix
 	 */
-	public NeighborJoiningTree(DistanceMatrix m)
+	public UPGMATree(DistanceMatrix m)
 	{
-		if (m.getSize() < 3)
+		if (m.getSize() < 2)
 		{
-			new IllegalArgumentException("LESS THAN 3 TAXA IN DISTANCE MATRIX");
+			new IllegalArgumentException("LESS THAN 2 TAXA IN DISTANCE MATRIX");
 		}
 		if (!m.isSymmetric())
 		{
@@ -48,19 +47,21 @@ public class NeighborJoiningTree extends SimpleTree
 
 		init(m);
 
-		//while (numClusters > 3)
 		while (true)
 		{
 			findNextPair();
 			newBranchLengths();
-			if (numClusters == 3)
+
+			if (numClusters == 2)
 			{
 				break;
 			}
+
 			newCluster();
 		}
 
 		finish();
+		createNodeList();
 	}
 
 
@@ -74,8 +75,9 @@ public class NeighborJoiningTree extends SimpleTree
 	private int bestj, abj;
 	private int[] alias;
 	private double[][] distance;
-	private double[] r;
-	private double scale;
+
+	private double[] height;
+	private int[] oc;
 
 	private double getDist(int a, int b)
 	{
@@ -86,7 +88,7 @@ public class NeighborJoiningTree extends SimpleTree
 	{
 		numClusters = m.getSize();
 
-		distance =  m.getClonedDistances();
+		distance = m.getClonedDistances();
 
 		for (int i = 0; i < numClusters; i++)
 		{
@@ -101,53 +103,32 @@ public class NeighborJoiningTree extends SimpleTree
 			alias[i] = i;
 		}
 
-		r = new double[numClusters];
+		height = new double[numClusters];
+		oc = new int[numClusters];
+		for (int i = 0; i < numClusters; i++)
+		{
+			height[i] = 0.0;
+			oc[i] = 1;
+		}
 	}
 
 	private void finish()
 	{
-		if (besti != 0 && bestj != 0)
-		{
-			getRoot().getChild(0).setBranchLength(updatedDistance(besti, bestj, 0));
-		}
-		else if (besti != 1 && bestj != 1)
-		{
-			getRoot().getChild(1).setBranchLength(updatedDistance(besti, bestj, 1));
-		}
-		else
-		{
-			getRoot().getChild(2).setBranchLength(updatedDistance(besti, bestj, 2));
-		}
 		distance = null;
-
-		// make node heights available also
-		NodeUtils.lengths2Heights(getRoot());
 	}
 
 	private void findNextPair()
 	{
-		for (int i = 0; i < numClusters; i++)
-		{
-			r[i] = 0;
-			for (int j = 0; j < numClusters; j++)
-			{
-				r[i] += getDist(i,j);
-			}
-		}
-
 		besti = 0;
 		bestj = 1;
-		double smax = -1.0;
-		scale = 1.0/(numClusters-2);
+		double dmin = getDist(0, 1);
 		for (int i = 0; i < numClusters-1; i++)
 		{
 			for (int j = i+1; j < numClusters; j++)
 			{
-				double sij = (r[i] + r[j] ) * scale - getDist(i, j);
-
-				if (sij > smax)
+				if (getDist(i, j) < dmin)
 				{
-					smax = sij;
+					dmin = getDist(i, j);
 					besti = i;
 					bestj = j;
 				}
@@ -160,11 +141,9 @@ public class NeighborJoiningTree extends SimpleTree
 	private void newBranchLengths()
 	{
 		double dij = getDist(besti, bestj);
-		double li = (dij + (r[besti]-r[bestj])*scale)*0.5;
-		double lj = dij - li; // = (dij + (r[bestj]-r[besti])*scale)*0.5
 
-		getRoot().getChild(besti).setBranchLength(li);
-		getRoot().getChild(bestj).setBranchLength(lj);
+		getRoot().getChild(besti).setBranchLength(dij/2.0-height[abi]);
+		getRoot().getChild(bestj).setBranchLength(dij/2.0-height[abj]);
 	}
 
 	private void newCluster()
@@ -180,7 +159,11 @@ public class NeighborJoiningTree extends SimpleTree
 		}
 		distance[abi][abi] = 0.0;
 
-		// Replace besti with new cluster
+		// Update UPGMA variables
+		height[abi] = getDist(besti, bestj)/2.0;
+		oc[abi] += oc[abj];
+
+		// Index besti now represent the new cluster
 		NodeUtils.joinChilds(getRoot(), besti, bestj);
 
 		// Update alias
@@ -192,13 +175,20 @@ public class NeighborJoiningTree extends SimpleTree
 		numClusters--;
 	}
 
+
 	/**
 	 * compute updated distance between the new cluster (i,j)
 	 * to any other cluster k
 	 */
 	private double updatedDistance(int i, int j, int k)
 	{
-		return (getDist(k, i) + getDist(k, j) - getDist(i, j))*0.5;
+		int ai = alias[i];
+		int aj = alias[j];
+
+		double ocsum = (double) (oc[ai]+oc[aj]);
+
+		return 	(oc[ai]/ocsum)*getDist(k, i) +
+			(oc[aj]/ocsum)*getDist(k, j);
 	}
 
 }

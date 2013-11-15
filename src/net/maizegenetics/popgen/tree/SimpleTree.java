@@ -6,7 +6,7 @@
 // terms of the Lesser GNU General Public License (LGPL)
 
 
-package net.maizegenetics.pal.tree;
+package net.maizegenetics.popgen.tree;
 
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.taxa.Taxon;

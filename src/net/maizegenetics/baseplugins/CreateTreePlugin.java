@@ -91,13 +91,13 @@ public class CreateTreePlugin extends AbstractPlugin {
         // SitePattern sp = new SitePattern(aa);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(aa, this);
         // adm.recompute(sp);
-        net.maizegenetics.pal.tree.Tree theTree;
+        net.maizegenetics.popgen.tree.Tree theTree;
         List<Datum> results = new ArrayList<Datum>();
         if (isNJ) {
-            theTree = new net.maizegenetics.pal.tree.NeighborJoiningTree(adm);
+            theTree = new net.maizegenetics.popgen.tree.NeighborJoiningTree(adm);
             results.add(new Datum("Tree:" + input.getName(), theTree, "NJ Tree"));
         } else {
-            theTree = new net.maizegenetics.pal.tree.UPGMATree(adm);
+            theTree = new net.maizegenetics.popgen.tree.UPGMATree(adm);
             results.add(new Datum("Tree:" + input.getName(), theTree, "UPGMA Tree"));
         }
         if (isSaveMatrix) {

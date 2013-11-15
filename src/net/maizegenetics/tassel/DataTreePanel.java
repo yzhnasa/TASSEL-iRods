@@ -19,7 +19,7 @@ import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
 import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.tree.Tree;
+import net.maizegenetics.popgen.tree.Tree;
 
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

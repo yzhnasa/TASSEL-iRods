@@ -6,9 +6,9 @@ import java.util.Collections;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
-import net.maizegenetics.pal.tree.Tree;
-import net.maizegenetics.pal.tree.TreeClusters;
-import net.maizegenetics.pal.tree.UPGMATree;
+import net.maizegenetics.popgen.tree.Tree;
+import net.maizegenetics.popgen.tree.TreeClusters;
+import net.maizegenetics.popgen.tree.UPGMATree;
 
 public class CompressedDoubleMatrix {
 	protected DistanceMatrix kinshipMatrix;
