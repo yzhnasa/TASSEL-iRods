@@ -73,7 +73,11 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
      * and IdGroup
      */
     public DistanceMatrix(DistanceMatrix dm) {
-        distance = net.maizegenetics.pal.util.Utils.getCopy(dm.distance);
+        double[][] copy = new double[dm.distance.length][];
+        for (int i = 0; i < copy.length; i++) {
+            copy[i] = new double[dm.distance[i].length];
+            System.arraycopy(dm.distance[i], 0, copy[i], 0, dm.distance[i].length);
+        }
         idGroup = dm.idGroup;
     }
 
@@ -181,14 +185,19 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
      * Returns the distances as a 2-dimensional array of doubles. Matrix is cloned first so it can be altered freely.
      */
     public final double[][] getClonedDistances() {
-        return net.maizegenetics.pal.util.Utils.getCopy(distance);
+        double[][] copy = new double[distance.length][];
+        for (int i = 0; i < copy.length; i++) {
+            copy[i] = new double[distance[i].length];
+            System.arraycopy(distance[i], 0, copy[i], 0, distance[i].length);
+        }
+        return copy;
     }
 
     /**
      * Returns the distances as a 2-dimensional array of doubles (in the actual array used to store the distances)
      */
     protected final double[][] getDistances() {
-        return net.maizegenetics.pal.util.Utils.getCopy(distance);
+        return getClonedDistances();
     }
 
     public final double getDistance(final int row, final int col) {
