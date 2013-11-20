@@ -907,9 +907,11 @@ public class CompressedMLMusingDoubleMatrix {
         int n = missing.length;
         TreeSet<Taxon> kinSet = new TreeSet<Taxon>();
         for (int i = 0; i < n; i++) {
-            int col = kinshipMatrix.whichIdNumber(phenotypeTaxa[i]);
+//            int col = kinshipMatrix.whichIdNumber(phenotypeTaxa[i]);
+        	TaxaList kinshipTaxa = kinshipMatrix.getIdGroup();
+            List<Integer> thisTaxon = kinshipTaxa.getIndicesMatchingTaxon(phenotypeTaxa[i]);
             if (!missing[i]) {
-                if (col == -1) {
+                if (thisTaxon.size() == 0) {
                     missing[i] = true;
                 } else {
                     kinSet.add(phenotypeTaxa[i]);
