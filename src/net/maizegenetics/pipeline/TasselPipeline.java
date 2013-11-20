@@ -11,7 +11,7 @@ import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.pal.alignment.io.BuilderFromHapMap;
-import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
+import net.maizegenetics.baseplugins.LinkageDisequilibriumComponent;
 import net.maizegenetics.popgen.LinkageDisequilibrium.HetTreatment;
 import net.maizegenetics.popgen.LinkageDisequilibrium.testDesign;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;

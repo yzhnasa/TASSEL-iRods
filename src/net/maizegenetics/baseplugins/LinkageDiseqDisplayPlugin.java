@@ -6,8 +6,6 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
-import net.maizegenetics.pal.gui.LinkageDisequilibriumMinimapComponent;
 import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

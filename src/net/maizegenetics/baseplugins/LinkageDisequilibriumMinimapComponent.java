@@ -3,7 +3,7 @@
  *
  */
 
-package net.maizegenetics.pal.gui;
+package net.maizegenetics.baseplugins;
 
 import java.awt.Color;
 import java.awt.Dimension;

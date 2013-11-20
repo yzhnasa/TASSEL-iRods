@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.pal.gui;
+package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.popgen.LinkageDisequilibrium;
