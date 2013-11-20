@@ -39,7 +39,7 @@ public class CompressedMLMusingDoubleMatrix {
     private final boolean useCompression;
     private final boolean useP3D;
     private final double compression;
-    private boolean outputResiduals = false;
+    private boolean outputResiduals = true;
     
 //    private DoubleMatrix ZKZ;
     private final MarkerPhenotypeAdapter theAdapter;
@@ -932,6 +932,7 @@ public class CompressedMLMusingDoubleMatrix {
     	LinkedList<Trait> traits = new LinkedList<Trait>();
     	traits.add(trait);
     	
+    	emma.calculateBlupsPredictedResiduals();
         DoubleMatrix res = emma.getRes();
         int nres = res.numberOfRows();
         
