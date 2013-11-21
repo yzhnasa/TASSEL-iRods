@@ -6,7 +6,7 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.popgen.distance;
 
-import net.maizegenetics.pal.io.FormattedOutput;
+import net.maizegenetics.util.FormattedOutput;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.Taxon;

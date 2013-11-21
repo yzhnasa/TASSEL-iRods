@@ -9,7 +9,7 @@
 package net.maizegenetics.popgen.tree;
 
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.io.FormattedOutput;
+import net.maizegenetics.util.FormattedOutput;
 
 import java.io.PrintWriter;
 import java.util.Vector;

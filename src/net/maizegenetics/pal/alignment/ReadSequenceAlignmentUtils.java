@@ -6,8 +6,8 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.io.FormattedInput;
-import net.maizegenetics.pal.io.InputSource;
+import net.maizegenetics.util.FormattedInput;
+import net.maizegenetics.util.InputSource;
 import net.maizegenetics.pal.taxa.TaxaList;
 
 import java.io.IOException;
@@ -59,18 +59,6 @@ public class ReadSequenceAlignmentUtils {
         Alignment saa = readBasicAlignments(input, maxLabelLength);
         input.close();
         return saa;
-    }
-
-    private static final boolean isType(PushbackReader in, String id) throws IOException {
-        FormattedInput fi = FormattedInput.getInstance();
-        for (int i = 0; i < id.length(); i++) {
-            int c = fi.readNextChar(in);
-            if (c != id.charAt(i)) {
-                in.unread(c);
-                return false;
-            }
-        }
-        return true;
     }
 
     private static Alignment readFile(PushbackReader in, int maxLabelLength) throws IOException {

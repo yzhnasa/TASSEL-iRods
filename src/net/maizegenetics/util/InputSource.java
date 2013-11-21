@@ -6,7 +6,7 @@
 // terms of the Lesser GNU General Public License (LGPL)
 
 
-package net.maizegenetics.pal.io;
+package net.maizegenetics.util;
 
 import java.io.*;
 

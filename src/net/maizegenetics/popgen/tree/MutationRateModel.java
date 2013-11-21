@@ -8,7 +8,7 @@
 
 package net.maizegenetics.popgen.tree;
 
-import net.maizegenetics.pal.io.FormattedOutput;
+import net.maizegenetics.util.FormattedOutput;
 import net.maizegenetics.pal.math.OrthogonalHints;
 import net.maizegenetics.pal.report.Report;
 

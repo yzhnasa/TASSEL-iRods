@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.pal.io;
+package net.maizegenetics.util;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
