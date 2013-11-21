@@ -27,8 +27,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
@@ -908,7 +906,7 @@ public class CompressedMLMusingDoubleMatrix {
         TreeSet<Taxon> kinSet = new TreeSet<Taxon>();
         for (int i = 0; i < n; i++) {
 //            int col = kinshipMatrix.whichIdNumber(phenotypeTaxa[i]);
-        	TaxaList kinshipTaxa = kinshipMatrix.getIdGroup();
+        	TaxaList kinshipTaxa = kinshipMatrix.getTaxaList();
             List<Integer> thisTaxon = kinshipTaxa.getIndicesMatchingTaxon(phenotypeTaxa[i]);
             if (!missing[i]) {
                 if (thisTaxon.size() == 0) {

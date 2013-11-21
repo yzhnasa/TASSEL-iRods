@@ -28,7 +28,7 @@ import net.maizegenetics.util.ProgressListener;
  * along the identity diagonal is 0 (isTrueIBS = false), but changing isTrueIBS = true will calculate
  * the identity.
  * <p>
- * The distance estimates become wildly inaccuate when two few sites are used to calculate
+ * The distance estimates become wildly inaccuate when too few sites are used to calculate
  * distance.  The minSiteComp parameter can be used to control the minimum number of sites
  * used for a calculation.  If there are insufficient sites in the estimate, then Double.NaN
  * is returned.

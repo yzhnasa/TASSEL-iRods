@@ -106,7 +106,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 //
 //        for (int i = 0; i < alignments.length; i++) {
 //
-//            TaxaList currentIds = alignments[i].getIdGroup();
+//            TaxaList currentIds = alignments[i].getTaxaList();
 //            for (int j = 0, n = currentIds.getIdCount(); j < n; j++) {
 //                Taxon current = currentIds.getIdentifier(j);
 //                if (taxa.contains(current)) {
@@ -194,7 +194,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 //        for (int i = 0; i < alignments.length; i++) {
 //            myLogger.info("Merging Alignment: " + (i + 1) + " of " + alignments.length);
 //            Alignment currentAlignment = alignments[i];
-//            IdGroup ids = currentAlignment.getIdGroup();
+//            IdGroup ids = currentAlignment.getTaxaList();
 //            int numSeqs = ids.getIdCount();
 //            int[] taxaIndices = new int[numSeqs];
 //            for (int t = 0; t < numSeqs; t++) {

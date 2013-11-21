@@ -127,11 +127,11 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                {
 //                    if (entry.getValue().size() > 1) {
 //                        calls = consensusCalls(a, entry.getValue(), makeHetCalls, majorityRule);
-//                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
+//                        newTaxon = theMSA.getTaxaList().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
 //                    } else {
-//                        int oldTaxon = a.getIdGroup().whichIdNumber(entry.getValue().get(0));
+//                        int oldTaxon = a.getTaxaList().whichIdNumber(entry.getValue().get(0));
 //                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
-//                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
+//                        newTaxon = theMSA.getTaxaList().whichIdNumber(entry.getValue().get(0));
 //                    }
 //                    for (int s = 0; s < a.getSiteCount(); s++) {
 //                        theMSA.setBase(newTaxon, s, calls[s]);
@@ -154,7 +154,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                }
 //                else if (inputFormat == INPUT_FORMAT.vcf){
 //                    if (entry.getValue().size() > 1){
-//                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
+//                        newTaxon = theMSA.getTaxaList().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
 //                        List<String> taxa = entry.getValue();
 //
 //                        //the return result is a two day array result[x][y]
@@ -175,7 +175,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                    else {
 //                        int oldTaxon = a.getTaxaList().getIndicesMatchingTaxon(entry.getValue().get(0)).get(0);
 //                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount());
-//                        newTaxon = theMSA.getIdGroup().whichIdNumber(entry.getValue().get(0));
+//                        newTaxon = theMSA.getTaxaList().whichIdNumber(entry.getValue().get(0));
 //                        for (int s = 0; s < a.getSiteCount(); s++) {
 //                            theMSA.setBase(newTaxon, s, calls[s]);
 //
