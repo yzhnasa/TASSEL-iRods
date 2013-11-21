@@ -186,13 +186,13 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             myLogger.info("Comparing: " + infile1 + " to " + infile2);
             Alignment a1, a2;
             try {
-                a1 = ImportUtils.readFromHapmap(infile1, null);
+                a1 = ImportUtils.readGuessFormat(infile1);
             } catch (Exception e) {
                 myLogger.info("Could not read the first input hapmap file for chr" + chr + ":\n\t" + infile1 + "\n\tSkipping...");
                 continue;
             }
             try {
-                a2 = ImportUtils.readFromHapmap(infile2, null);
+                a2 = ImportUtils.readGuessFormat(infile2);
             } catch (Exception e) {
                 myLogger.info("Could not read the second input hapmap file for chr" + chr + ":\n\t" + infile2 + "\n\tSkipping...");
                 continue;
