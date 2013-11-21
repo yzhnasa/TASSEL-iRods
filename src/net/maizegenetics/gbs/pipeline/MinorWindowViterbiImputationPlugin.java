@@ -6,7 +6,6 @@ package net.maizegenetics.gbs.pipeline;
 
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import net.maizegenetics.annotation.Citation;
 import net.maizegenetics.gwas.imputation.EmissionProbability;
 import net.maizegenetics.gwas.imputation.TransitionProbability;
 import net.maizegenetics.gwas.imputation.ViterbiAlgorithm;
@@ -65,10 +64,7 @@ import java.util.concurrent.TimeUnit;
  * <li>Move accuracy to one method outside of setAlignmentWithDonors
  *
  * @author Edward Buckler
- * @cite 
  */
-@Citation("Two papers: Viterbi from Bradbury, et al (in prep) Recombination patterns in maize\n"+
-        "NearestNeighborSearch Swarts,...,Buckler (in prep) Imputation with large genotyping by sequencing data\n")
 public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private int startChr, endChr;
     private String hmpFile;

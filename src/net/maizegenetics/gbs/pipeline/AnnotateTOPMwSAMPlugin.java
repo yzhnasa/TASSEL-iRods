@@ -14,7 +14,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import javax.swing.ImageIcon;
-import net.maizegenetics.annotation.UnderConstruction;
 import net.maizegenetics.gbs.maps.TagMappingInfo;
 import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
@@ -38,7 +37,6 @@ import org.apache.log4j.Logger;
  * @author Ed Buckler and Fei Lu
  *
  */
-@UnderConstruction(owner="Fei Lu", otherContacts="Ed Buckler")
 public final class AnnotateTOPMwSAMPlugin extends AbstractPlugin{
     boolean cleanCutSites=true;
     private static final Logger myLogger=Logger.getLogger(AnnotateTOPMwSAMPlugin.class);
