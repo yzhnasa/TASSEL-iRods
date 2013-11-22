@@ -15,8 +15,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import net.maizegenetics.gbs.tagdist.TagCountMutable;
-import net.maizegenetics.gbs.tagdist.Tags;
+import net.maizegenetics.dna.tag.TagCountMutable;
+import net.maizegenetics.dna.tag.Tags;
 
 import net.maizegenetics.gbs.util.SAMUtils;
 import net.maizegenetics.gbs.util.BaseEncoder;

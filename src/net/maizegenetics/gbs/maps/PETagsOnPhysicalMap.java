@@ -16,9 +16,9 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.HashMap;
-import net.maizegenetics.gbs.tagdist.AbstractPETags;
-import net.maizegenetics.gbs.tagdist.PETagCounts;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
+import net.maizegenetics.dna.tag.AbstractPETags;
+import net.maizegenetics.dna.tag.PETagCounts;
+import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.gbs.util.SAMUtils;
 

@@ -1,7 +1,7 @@
 /*
  * UTagPairs
  */
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;

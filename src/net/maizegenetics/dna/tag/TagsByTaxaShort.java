@@ -1,7 +1,7 @@
 /*
  * TagsByTaxaShort
  */
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import java.io.File;
 

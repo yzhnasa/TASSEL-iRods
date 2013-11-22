@@ -7,7 +7,7 @@ package net.maizegenetics.gbs.maps;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
-import net.maizegenetics.gbs.tagdist.AbstractTags;
+import net.maizegenetics.dna.tag.AbstractTags;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;

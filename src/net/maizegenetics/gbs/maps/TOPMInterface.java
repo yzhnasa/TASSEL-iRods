@@ -4,7 +4,7 @@
 package net.maizegenetics.gbs.maps;
 
 import java.io.File;
-import net.maizegenetics.gbs.tagdist.Tags;
+import net.maizegenetics.dna.tag.Tags;
 import net.maizegenetics.dna.map.Chromosome;
 
 /**

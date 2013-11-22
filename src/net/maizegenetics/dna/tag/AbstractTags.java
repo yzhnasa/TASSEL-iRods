@@ -1,7 +1,7 @@
 /*
  * AbstractTags
  */
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import cern.colt.GenericSorting;
 import java.util.Arrays;

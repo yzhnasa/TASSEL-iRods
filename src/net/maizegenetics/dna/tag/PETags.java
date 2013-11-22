@@ -1,8 +1,8 @@
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
+import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 
 /**
  * Basic interface for holding sets of sequence tag (these are compressed into 2-bit codings

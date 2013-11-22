@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.gbs.maps;
 
-import net.maizegenetics.gbs.tagdist.TagsByTaxa;
+import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentBuilder;

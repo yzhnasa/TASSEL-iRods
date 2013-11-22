@@ -1,4 +1,4 @@
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;

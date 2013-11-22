@@ -24,4 +24,4 @@
  * distributions of Tags across taxa.
  *
  */
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;

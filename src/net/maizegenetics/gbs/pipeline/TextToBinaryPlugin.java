@@ -4,9 +4,9 @@
 package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.gbs.tagdist.TagCounts;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
+import net.maizegenetics.dna.tag.TagCounts;
+import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
+import net.maizegenetics.dna.tag.TagsByTaxaByte;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

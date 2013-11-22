@@ -8,7 +8,7 @@ import net.maizegenetics.gbs.maps.PETagsOnPhysicalMapV3;
 import net.maizegenetics.gbs.maps.TagMappingInfoV3;
 import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMapV3;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
+import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.gbs.util.SAMUtils;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;

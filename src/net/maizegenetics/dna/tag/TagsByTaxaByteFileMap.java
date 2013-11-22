@@ -1,7 +1,7 @@
 /*
  * TagsByTaxaByteFileMap
  */
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;

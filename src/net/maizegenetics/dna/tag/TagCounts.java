@@ -1,4 +1,4 @@
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import cern.colt.GenericSorting;
 
@@ -14,7 +14,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
+import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**

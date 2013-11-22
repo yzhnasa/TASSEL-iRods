@@ -6,8 +6,8 @@ package net.maizegenetics.gbs.pipeline;
 
 import cern.jet.random.Binomial;
 import edu.cornell.lassp.houle.RngPack.RandomJava;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
+import net.maizegenetics.dna.tag.TagsByTaxaByte;
+import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentBuilder;

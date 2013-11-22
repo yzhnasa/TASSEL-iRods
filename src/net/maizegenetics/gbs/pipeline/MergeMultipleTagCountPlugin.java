@@ -16,7 +16,7 @@ import java.io.IOException;
 
 import javax.swing.ImageIcon;
 
-import net.maizegenetics.gbs.tagdist.AbstractTags;
+import net.maizegenetics.dna.tag.AbstractTags;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.plugindef.AbstractPlugin;

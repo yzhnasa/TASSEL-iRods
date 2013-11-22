@@ -1,7 +1,7 @@
 /*
  * TagsByTaxaByteHDF5TaxaGroups
  */
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;

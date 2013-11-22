@@ -1,7 +1,7 @@
 /*
  * AbstractTagsByTaxa
  */
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.taxa.TaxaList;

@@ -1,7 +1,7 @@
 /*
  * TagsByTaxa
  */
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;

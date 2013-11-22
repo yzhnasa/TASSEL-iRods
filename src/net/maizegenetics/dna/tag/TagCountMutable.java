@@ -1,4 +1,4 @@
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 /**
  * Resizeable tags count container.  Tags sequences are compressed in long, tags lengths are tracked,

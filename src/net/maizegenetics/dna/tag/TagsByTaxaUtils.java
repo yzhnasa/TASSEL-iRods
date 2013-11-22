@@ -1,4 +1,4 @@
-package net.maizegenetics.gbs.tagdist;
+package net.maizegenetics.dna.tag;
 
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
 import net.maizegenetics.gbs.util.BaseEncoder;
