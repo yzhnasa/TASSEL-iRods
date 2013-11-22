@@ -23,7 +23,7 @@ package net.maizegenetics.popgen.tree;
  *
  * @author Korbinian Strimmer
  */
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 
 public class NodeFactory
 {

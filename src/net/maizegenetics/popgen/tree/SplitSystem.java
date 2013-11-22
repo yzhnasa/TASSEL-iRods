@@ -7,7 +7,7 @@
 
 package net.maizegenetics.popgen.tree;
 
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

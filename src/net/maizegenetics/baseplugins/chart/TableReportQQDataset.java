@@ -6,7 +6,7 @@ package net.maizegenetics.baseplugins.chart;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 import org.jfree.data.xy.DefaultTableXYDataset;
 
 /**

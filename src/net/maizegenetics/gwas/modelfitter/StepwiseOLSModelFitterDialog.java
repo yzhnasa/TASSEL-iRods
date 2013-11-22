@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 
 public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListener {
 	JCheckBox chkNested = null;

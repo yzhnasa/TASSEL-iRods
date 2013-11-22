@@ -1,7 +1,7 @@
 package net.maizegenetics.gwas.imputation.clustering;
 
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
  * A Haplotype is a sequence which can be either a true haplotype or a genotype.

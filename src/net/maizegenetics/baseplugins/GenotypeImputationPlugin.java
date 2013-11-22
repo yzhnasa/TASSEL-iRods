@@ -8,10 +8,10 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.baseplugins.GenotypeImputationPlugin.ImpMethod;
 import net.maizegenetics.gui.DialogUtils;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.AlignmentMask.MaskType;
-import net.maizegenetics.pal.alignment.AlignmentMaskBoolean;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentMask;
+import net.maizegenetics.dna.snp.AlignmentMask.MaskType;
+import net.maizegenetics.dna.snp.AlignmentMaskBoolean;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;

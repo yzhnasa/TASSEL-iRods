@@ -1,9 +1,13 @@
 package net.maizegenetics.gwas.imputation;
 
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.gwas.NAM.AGPMap;
-import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.taxa.IdGroupUtils;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.IdGroupUtils;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import org.apache.log4j.Logger;
 

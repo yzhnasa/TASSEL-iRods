@@ -1,13 +1,18 @@
 package net.maizegenetics.baseplugins.genomicselection;
 
+import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.MarkerPhenotypeAdapter;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.Trait;
+import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.jGLiM.dm.FactorModelEffect;
 import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.report.SimpleTableReport;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.util.SimpleTableReport;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

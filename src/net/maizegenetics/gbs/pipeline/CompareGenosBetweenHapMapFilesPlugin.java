@@ -5,13 +5,13 @@ package net.maizegenetics.gbs.pipeline;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.ImportUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.ArgsEngine;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;

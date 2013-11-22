@@ -3,9 +3,9 @@ package net.maizegenetics.pd;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
-import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.HapMapHDF5Constants;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.util.Utils;
 
 import java.io.BufferedReader;

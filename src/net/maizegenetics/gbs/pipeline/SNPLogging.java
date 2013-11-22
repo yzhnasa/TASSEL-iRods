@@ -5,7 +5,7 @@ package net.maizegenetics.gbs.pipeline;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.util.Utils;
 import org.apache.log4j.Logger;
 

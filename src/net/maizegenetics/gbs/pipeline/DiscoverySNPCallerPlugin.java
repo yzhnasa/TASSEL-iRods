@@ -3,24 +3,28 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
-import net.maizegenetics.gbs.maps.TOPMInterface;
-import net.maizegenetics.gbs.maps.TagsAtLocus;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaByteFileMap;
-import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
+import net.maizegenetics.dna.map.TOPMInterface;
+import net.maizegenetics.dna.map.TagsAtLocus;
+import net.maizegenetics.dna.map.TagsOnPhysicalMap;
+import net.maizegenetics.dna.tag.TagsByTaxa;
+import net.maizegenetics.dna.tag.TagsByTaxaByteFileMap;
+import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
-import net.maizegenetics.pal.position.Chromosome;
-import net.maizegenetics.pal.position.GeneralPosition;
-import net.maizegenetics.pal.position.Position;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
+import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.dna.map.GeneralPosition;
+import net.maizegenetics.dna.map.Position;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -40,12 +44,11 @@ import java.util.HashMap;
  * calls SNPs, and then outputs the SNPs to a HapMap file.
  *
  * It is multi-threaded, as there are substantial speed increases with it.
- *
- * @author edbuckler
+ * @author Jeff Glaubitz
+ * @author Ed Buckler
  */
 public class DiscoverySNPCallerPlugin extends AbstractPlugin {
     private static final String refGenName="REFERENCE_GENOME";
-    static int maxSize = 200000;  //normally 200K;
     private double minF = -2.0, minMAF = 0.01;
     private int minMAC = 10;
     //    static boolean ignoreTriallelic=false;
@@ -66,7 +69,6 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
     boolean[] useTaxaForMinF = null;
     int nInbredTaxa = Integer.MIN_VALUE;
     String suppliedOutputFileName;
-    boolean vcf = false;
     int startChr = Integer.MAX_VALUE;
     int endChr = Integer.MIN_VALUE;
     private static ArgsEngine myArgsEngine = null;
@@ -103,7 +105,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             myLogger.info("\n\nProcessing chromosome " + chr + "...");
             String out = suppliedOutputFileName.replace("+", "" + chr);
             if (customSNPLogging) myCustomSNPLog = new CustomSNPLog(out, false);
-            myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + chr + " (maximum number of sites = " + maxSize + ")");
+            myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + chr);
             TaxaList tL;
             if (includeReference) {tL=new TaxaListBuilder().add(new Taxon(refGenName)).addAll(theTBT.getTaxaList()).build();}
             else {tL=new TaxaListBuilder().add(new Taxon(refGenName)).addAll(theTBT.getTaxaList()).build();}
@@ -135,11 +137,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 + "-i       Input .tbt file\n"
                 + "-y       Use byte-formatted TBT file (*.tbt.byte)\n"
                 + "-m       TagsOnPhysicalMap file containing genomic positions of tags\n"
-                + "-mUpd    Update TagsOnPhysicalMap file with allele calls for Production Pipeline, save to specified file (default: no updating)\n"
-                + "-o       Output HapMap file. Use a plus sign (+) as a wild card character in place of the chromosome number\n"
-                + "           (e.g., /path/hapmap/myGBSGenos.chr+.hmp.txt)\n"
-                + "-vcf     Output a VCF file (*.vcf) as well as the default HapMap (*.hmp.txt)  (default: "+vcf+")\n"
-                + "-mxSites Maximum number of sites (SNPs) output per chromosome (default: " + maxSize + ")\n"
+                + "-o    Update TagsOnPhysicalMap file with allele calls for Production Pipeline, save to specified file (default: no updating)\n"
                 + "-mnF     Minimum F (inbreeding coefficient) (default: " + minF + "  = no filter)\n"
                 + "-p       Pedigree file containing full sample names (or expected names after merging) & expected inbreeding\n"
                 + "         coefficient (F) for each.  Only taxa with expected F >= mnF used to calculate F = 1-Ho/He.\n"
@@ -177,10 +175,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             myArgsEngine.add("-i", "--input-file", true);
             myArgsEngine.add("-y", "--useTBTByte", false);
             myArgsEngine.add("-m", "--physical-map", true);
-            myArgsEngine.add("-mUpd", "--update-physical-map", true);
-            myArgsEngine.add("-o", "--output-directory", true);
-            myArgsEngine.add("-vcf", "--output_vcf", false);
-            myArgsEngine.add("-mxSites", "--max-sites-per-chr", true);
+            myArgsEngine.add("-o", "--updated-physical-map", true);
             myArgsEngine.add("-mnF", "--minFInbreeding", true);
             myArgsEngine.add("-p", "--pedigree-file", true);
             myArgsEngine.add("-mnMAF", "--minMinorAlleleFreq", true);
@@ -197,6 +192,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             myArgsEngine.add("-eC", "--end-chromosome", true);
         }
         myArgsEngine.parse(args);
+
 
         if (myArgsEngine.getBoolean("-y")) {
             useTBTByte = true;
@@ -231,41 +227,9 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             printUsage();
             throw new IllegalArgumentException("Please specify a physical map file.");
         }
-        if (myArgsEngine.getBoolean("-mUpd")) {
-            this.isUpdateTOPM = true;
-            this.outTOPMFile = myArgsEngine.getString("-mUpd");
-        }
         if (myArgsEngine.getBoolean("-o")) {
-            suppliedOutputFileName = myArgsEngine.getString("-o");
-            boolean noWildCard = false;
-            if (suppliedOutputFileName.contains(File.separator)) {
-                if (!suppliedOutputFileName.substring(suppliedOutputFileName.lastIndexOf(File.separator)).contains("+")) {
-                    noWildCard = true;
-                }
-            } else if (!suppliedOutputFileName.contains("+")) {
-                noWildCard = true;
-            } 
-            if (noWildCard) {
-                printUsage();
-                throw new IllegalArgumentException("The output file name should contain a \"+\" wildcard character in place of the chromosome number (-o option: " + suppliedOutputFileName + ")");
-            }
-            String outFolder = suppliedOutputFileName.substring(0,suppliedOutputFileName.lastIndexOf(File.separator));
-            File outDir = new File(outFolder);
-            try {
-                if (!outDir.getCanonicalFile().isDirectory()) {
-                    throw new Exception();
-                }
-            } catch (Exception e) {
-                printUsage();
-                throw new IllegalArgumentException("Path to the output file does not exist (-o option: " + suppliedOutputFileName + ")");
-            }
-        }
-        
-        if (myArgsEngine.getBoolean("-vcf")) {
-            vcf = true;
-        }
-        if (myArgsEngine.getBoolean("-mxSites")) {
-            maxSize = Integer.parseInt(myArgsEngine.getString("-mxSites"));
+            this.isUpdateTOPM = true;
+            this.outTOPMFile = myArgsEngine.getString("-o");
         }
         if (myArgsEngine.getBoolean("-mnF")) {
             minF = Double.parseDouble(myArgsEngine.getString("-mnF"));
@@ -311,19 +275,6 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             refGenomeFile = null;
             System.gc();
         }
-          // the (experimental) -LocusBorder option is not properly implemented yet in Tassel4
-//        if (myArgsEngine.getBoolean("-LocusBorder")) {
-//            if (!includeReference) {
-//                printUsage();
-//                throw new IllegalArgumentException("The -LocusBorder option requires that the -ref option (referenceGenome) is also invoked.");
-//            }
-//            if (vcf) {
-//                printUsage();
-//                throw new IllegalArgumentException("The -LocusBorder option is currently incompatible with the -vcf option.");
-//            }
-//            locusBorder = Integer.parseInt(myArgsEngine.getString("-LocusBorder"));
-//            fuzzyStartPositions = true;
-//        }
         if (myArgsEngine.getBoolean("-inclRare")) {
             inclRare = true;
         }
@@ -384,7 +335,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         int[] currPos = null;
         int countLoci = 0;
         int siteCnt=0;
-        for (int i = 0; (i < theTOPM.getSize()) && (siteCnt < (maxSize - 1000)); i++) {
+        for (int i = 0; i < theTOPM.getSize(); i++) {
             int ri = theTOPM.getReadIndexForPositionIndex(i);  // process tags in order of physical position
             int[] newPos = theTOPM.getPositionArray(ri);
             if (newPos[CHR] != targetChromo) continue;    //Skip tags from other chromosomes
@@ -416,34 +367,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         } else if (currPos!=null) {
             logRejectedTagLocus(currTAL,locusLogDOS);
         }
-        if (siteCnt > 0) {
- //           theMSA.clean(); //Todo this a key sort between the genotype and position that needs to be maintained
- //           Alignment outA=AlignmentBuilder.getInstance(theMSA.build(),posBuilder.build(),theTBT.getTaxaList());
-            ExportUtils.writeToHapmap(theMSA.build(), false, outHapMap, '\t', null);
-        }
         myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + siteCnt);
         try{ locusLogDOS.close(); } catch(Exception e) { catchLocusLogException(e); }
-    }
-
-    /**
-     * Creates a MutableNucleotideAlignment based on the taxa in a TBT.
-     */
-    private static GenotypeBuilder createMutableAlignment(TagsByTaxa theTBT, int maxSites, boolean includeReference) {
-        String[] taxaNames;
-        if (includeReference) {
-            int nTaxa = theTBT.getTaxaNames().length + 1;
-            taxaNames = new String[nTaxa];
-            taxaNames[0] = "REFERENCE_GENOME";  // will hold the "genotype" of the reference genome
-            for (int t = 1; t < nTaxa; t++) {
-                taxaNames[t] = theTBT.getTaxaName(t-1);
-            }
-        } else {
-            taxaNames = theTBT.getTaxaNames();
-        }
-     //   TaxaList taxa = new SimpleIdGroup(taxaNames);
-        GenotypeBuilder theMSA=GenotypeBuilder.getInstance(taxaNames.length,maxSites);
-        //MutableNucleotideAlignment theMSA = MutableNucleotideAlignment.getInstance(taxa, 0, taxa.getIdCount(), maxSites);
-        return theMSA;
     }
 
     boolean nearbyTag(int[] newTagPos, int[] currTagPos) {
@@ -462,22 +387,13 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
     private synchronized int addSitesToMutableAlignment(TagsAtLocus theTAL, AlignmentBuilder theMSA,
                                         DataOutputStream locusLogDOS) {
         boolean refTagUsed = false;
-        byte[][][] alleleDepths = null;
         byte[][] commonAlleles = null;
         if (theTAL.getSize() < 2) {
             logRejectedTagLocus(theTAL,locusLogDOS);
             return 0;  // need at least two (overlapping!) sequences to make an alignment
         }
         byte[][] callsBySite;
-        if (vcf) {
-            if (includeReference) {
-                addRefTag(theTAL);
-                refTagUsed = true;
-            }
-            callsBySite = theTAL.getSNPCallsVCF(callBiallelicSNPsWithGap, includeReference);
-            alleleDepths = theTAL.getAlleleDepthsInTaxa();
-            commonAlleles = theTAL.getCommonAlleles();
-        } else if (includeReference) {
+        if (includeReference) {
             if (fuzzyStartPositions) {
                 String refSeqInRegion = getRefSeqInRegion(theTAL);
                 callsBySite = theTAL.getSNPCallsQuant(refSeqInRegion, callBiallelicSNPsWithGap);
@@ -517,45 +433,9 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             }
             varSiteKept[s] = true;
             GeneralPosition.Builder gpb=new GeneralPosition.Builder(new Chromosome(String.valueOf(theTAL.getChromosome())), position);
-//            theMSA.addSite(currSite);
-//            String chromosome = String.valueOf(theTAL.getChromosome());
-//            theMSA.setLocusOfSite(currSite, new Chromosome(chromosome, chromosome, -1, -1, null, null));
-//            theMSA.setPositionOfSite(currSite, position);
             int offset = (includeReference && !fuzzyStartPositions)?1:0;
-            byte[] genotype=new byte[theTBT.getTaxaCount()+offset];
-            Arrays.fill(genotype,Alignment.UNKNOWN_DIPLOID_ALLELE);
-            if (includeReference && !fuzzyStartPositions) {
-                genotype[0] = (strand == -1) ? complementGeno(theTAL.getRefGeno(s)) : theTAL.getRefGeno(s);
-                gpb.allele(Position.Allele.REF,genotype[0]);
-//                if (vcf) {
-//                    byte[] depths = new byte[]{0,0,0}; // assumes maxNumAlleles = 3
-//                    theMSA.setDepthForAlleles(0, currSite, depths);
-//                }
-            }
-            for (int tx = 0; tx < theTBT.getTaxaCount(); tx++) {
-                if (callsBySite[s][tx] != Alignment.UNKNOWN_DIPLOID_ALLELE && strand == -1) {
-                    genotype[tx+offset]=complementGeno(callsBySite[s][tx]);  // complement to plus strand
-                } else {
-                    genotype[tx+offset]=callsBySite[s][tx];
-                }
-//                if (vcf) {
-//                    byte[] depths = new byte[alleleDepths.length];
-//                    for (int a = 0; a < depths.length; a++) {
-//                        depths[a] = alleleDepths[a][s][tx];
-//                    }
-//                    theMSA.setDepthForAlleles(tx+offset, currSite, depths);
-//                }
-            }
-//            if (vcf) {
-//                byte[] allelesForSite = new byte[commonAlleles.length];
-//                for (int a = 0; a < allelesForSite.length; a++) {
-//                    if (strand == -1) allelesForSite[a] = complementAllele(commonAlleles[a][s]);
-//                    else allelesForSite[a] = commonAlleles[a][s];
-//                }
-//                theMSA.setCommonAlleles(currSite, allelesForSite);
-//            }
-            theMSA.addSite(gpb.build(),genotype);
-            if (isUpdateTOPM & !customFiltering) {  
+
+            if (isUpdateTOPM & !customFiltering) {
                 updateTOPM(theTAL, s, position, strand, alleles);
             }
 //            if (currSite % 100 == 0) {
@@ -1376,8 +1256,7 @@ class CustomSNPLogRecord {
         sBuilder.append(DELIM);
         sBuilder.append(alleles);
         sBuilder.append(DELIM);
-        sBuilder.append(String.valueOf(nTagsAtLocus));
-        sBuilder.append(DELIM);
+        sBuilder.append(String.valueOf(nTagsAtLocus)).append(DELIM);
         sBuilder.append(String.valueOf(nReads));
         sBuilder.append(DELIM);
         sBuilder.append(String.valueOf(nTaxa));

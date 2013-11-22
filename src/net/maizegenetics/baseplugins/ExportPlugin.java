@@ -14,11 +14,11 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.PhenotypeUtils;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentMask;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.PhenotypeUtils;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -26,9 +26,9 @@ import net.maizegenetics.plugindef.Datum;
 
 import net.maizegenetics.prefs.TasselPrefs;
 
-import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.report.TableReportUtils;
+import net.maizegenetics.util.Report;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.util.TableReportUtils;
 
 import net.maizegenetics.gui.DialogUtils;
 

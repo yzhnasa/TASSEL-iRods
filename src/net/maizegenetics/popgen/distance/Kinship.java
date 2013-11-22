@@ -1,7 +1,7 @@
 package net.maizegenetics.popgen.distance;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.trait.SimplePhenotype;
 
 import java.awt.*;
 

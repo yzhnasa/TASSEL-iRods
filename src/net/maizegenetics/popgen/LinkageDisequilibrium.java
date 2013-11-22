@@ -7,10 +7,10 @@
 package net.maizegenetics.popgen;
 
 import cern.colt.map.OpenLongObjectHashMap;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentBuilder;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.statistics.FisherExact;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.stats.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;

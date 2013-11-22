@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import net.maizegenetics.gbs.tagdist.Tags;
+import net.maizegenetics.dna.tag.Tags;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 /**

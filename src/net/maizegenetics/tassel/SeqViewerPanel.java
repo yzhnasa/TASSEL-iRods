@@ -50,11 +50,11 @@ import net.maizegenetics.gui.AlignmentTableModel;
 import net.maizegenetics.gui.RowHeaderRenderer;
 import net.maizegenetics.gui.TableRowHeaderListModel;
 import net.maizegenetics.gui.VerticalLabelUI;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.AlignmentMaskGeneticDistance;
-import net.maizegenetics.pal.alignment.AlignmentMaskReference;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentMask;
+import net.maizegenetics.dna.snp.AlignmentMaskGeneticDistance;
+import net.maizegenetics.dna.snp.AlignmentMaskReference;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.Datum;
 
 /**

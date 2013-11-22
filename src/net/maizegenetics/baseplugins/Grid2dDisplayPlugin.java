@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 

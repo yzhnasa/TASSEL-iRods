@@ -14,11 +14,14 @@
  */
 package net.maizegenetics.tassel;
 
-import net.maizegenetics.pal.position.Chromosome;
-import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.AlignmentMask;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
-import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.taxa.IdentifierSynonymizer;
+import net.maizegenetics.util.TableReport;
 import net.maizegenetics.popgen.tree.Tree;
 
 import net.maizegenetics.plugindef.DataSet;

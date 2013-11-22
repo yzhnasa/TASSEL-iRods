@@ -6,9 +6,13 @@
  */
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.CombineAlignment;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.CombinePhenotype;
 import java.awt.Frame;
 
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

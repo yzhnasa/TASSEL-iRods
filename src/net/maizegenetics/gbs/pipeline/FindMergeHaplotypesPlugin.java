@@ -4,13 +4,20 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GeneticMap;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.ImportUtils;
+import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.position.Chromosome;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.*;

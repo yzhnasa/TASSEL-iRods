@@ -12,8 +12,8 @@ import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
 
-import net.maizegenetics.pal.alignment.FilterPhenotype;
-import net.maizegenetics.pal.alignment.Phenotype;
+import net.maizegenetics.trait.FilterPhenotype;
+import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

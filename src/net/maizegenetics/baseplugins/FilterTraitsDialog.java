@@ -17,8 +17,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.Trait;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.Trait;
 
 public class FilterTraitsDialog extends JDialog implements ActionListener, TableModelListener {
 

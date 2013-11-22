@@ -1,5 +1,9 @@
 package net.maizegenetics.gwas.imputation;
 
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
@@ -8,14 +12,13 @@ import net.maizegenetics.baseplugins.TreeDisplayPlugin;
 import net.maizegenetics.gwas.imputation.clustering.Haplotype;
 import net.maizegenetics.gwas.imputation.clustering.HaplotypeCluster;
 import net.maizegenetics.gwas.imputation.clustering.HaplotypeClusterer;
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.pal.math.GammaFunction;
-import net.maizegenetics.pal.position.Chromosome;
-import net.maizegenetics.pal.taxa.IdGroupUtils;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.stats.math.GammaFunction;
+import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.taxa.IdGroupUtils;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.popgen.tree.Tree;
 import net.maizegenetics.popgen.tree.TreeClusters;
 import net.maizegenetics.popgen.tree.UPGMATree;

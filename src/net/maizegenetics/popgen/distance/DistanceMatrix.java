@@ -7,9 +7,9 @@
 package net.maizegenetics.popgen.distance;
 
 import net.maizegenetics.util.FormattedOutput;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.Taxon;
 
 import java.io.IOException;
 import java.io.PrintWriter;
