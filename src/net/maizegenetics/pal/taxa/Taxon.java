@@ -6,8 +6,8 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.taxa;
 
-import net.maizegenetics.pal.util.GeneralAnnotation;
-import net.maizegenetics.pal.util.GeneralAnnotationUtils;
+import net.maizegenetics.util.GeneralAnnotation;
+import net.maizegenetics.util.GeneralAnnotationUtils;
 
 import java.io.Serializable;
 import java.util.*;

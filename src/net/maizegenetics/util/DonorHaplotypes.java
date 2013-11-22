@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.util;
+package net.maizegenetics.util;
 
 import com.google.common.collect.ComparisonChain;
 import net.maizegenetics.pal.position.Chromosome;

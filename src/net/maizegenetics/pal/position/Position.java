@@ -1,6 +1,6 @@
 package net.maizegenetics.pal.position;
 
-import net.maizegenetics.pal.util.GeneralAnnotation;
+import net.maizegenetics.util.GeneralAnnotation;
 
 /**
  * Defines a genomic positions and its known variants.  Includes attributes of chromosome, position, strand,

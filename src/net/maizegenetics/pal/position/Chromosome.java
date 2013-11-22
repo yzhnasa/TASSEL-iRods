@@ -1,6 +1,6 @@
 package net.maizegenetics.pal.position;
 
-import net.maizegenetics.pal.util.GeneralAnnotation;
+import net.maizegenetics.util.GeneralAnnotation;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

@@ -7,7 +7,7 @@ import net.maizegenetics.pal.alignment.ProjectionBuilder;
 import net.maizegenetics.pal.alignment.genotype.ProjectionGenotype;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.util.DonorHaplotypes;
+import net.maizegenetics.util.DonorHaplotypes;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
 

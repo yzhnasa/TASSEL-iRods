@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.util;
+package net.maizegenetics.util;
 
 import java.util.ArrayList;
 import java.util.Map;

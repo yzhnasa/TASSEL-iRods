@@ -8,7 +8,7 @@ import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.util.DonorHaplotypes;
+import net.maizegenetics.util.DonorHaplotypes;
 
 import java.util.Map;
 import java.util.SortedSet;

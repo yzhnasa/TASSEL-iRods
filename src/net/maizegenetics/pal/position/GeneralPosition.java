@@ -7,7 +7,7 @@ package net.maizegenetics.pal.position;
 import com.google.common.collect.ComparisonChain;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.util.GeneralAnnotationUtils;
+import net.maizegenetics.util.GeneralAnnotationUtils;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;

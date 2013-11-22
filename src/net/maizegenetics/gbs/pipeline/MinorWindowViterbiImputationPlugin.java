@@ -14,7 +14,7 @@ import net.maizegenetics.pal.alignment.io.ProjectionAlignmentIO;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.popgen.DonorHypoth;
 import net.maizegenetics.pal.position.Chromosome;
-import net.maizegenetics.pal.util.DonorHaplotypes;
+import net.maizegenetics.util.DonorHaplotypes;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.prefs.TasselPrefs;
