@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment.io;
+package net.maizegenetics.dna.snp.io;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;

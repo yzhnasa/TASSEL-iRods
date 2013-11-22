@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment.io;
+package net.maizegenetics.dna.snp.io;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentBuilder;

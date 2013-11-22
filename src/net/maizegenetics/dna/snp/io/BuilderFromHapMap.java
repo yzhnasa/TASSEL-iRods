@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment.io;
+package net.maizegenetics.dna.snp.io;
 
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
@@ -21,29 +21,30 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * Create an alignment based on VCF format file (either .txt or compressed).  Alleles are set as global reference.
+ * Create an alignment based on HapMap format file (either .txt or compressed).  Alleles are set as global major and
+ * global minor.
  * e.g. code <p></p>
  * {@code
- * Alignment a=BuilderFromVCF.getBuilder(infileName).build();
+ * Alignment a=BuilderFromHapMap.getBuilder(infileName).build();
  * }
  * <p></p>
  * TODO:  Add filtering while reading, provide an option to define the alleles as reference and alternate
  *
  * @author Ed Buckler
  */
-public class BuilderFromVCF {
+public class BuilderFromHapMap {
 
     private static final Logger myLogger=Logger.getLogger(BuilderFromHapMap.class);
     private static final Pattern WHITESPACE_PATTERN=Pattern.compile("\\s");
-    private static final int NUM_HAPMAP_NON_TAXA_HEADERS=5;
+    private static final int NUM_HAPMAP_NON_TAXA_HEADERS=11;
     private final String infile;
 
-    private BuilderFromVCF(String infile) {
+    private BuilderFromHapMap(String infile) {
         this.infile=infile;
     }
 
-    public static BuilderFromVCF getBuilder(String infile) {
-        return new BuilderFromVCF(infile);
+    public static BuilderFromHapMap getBuilder(String infile) {
+        return new BuilderFromHapMap(infile);
     }
 
     //TODO provide options on caching to use, read only some sites, etc.
@@ -59,13 +60,13 @@ public class BuilderFromVCF {
             int linesAtTime=1<<12;  //this is a critical lines with 20% or more swings.  Needs to be optimized with transposing
             //  int linesAtTime=1<<8;  //better for with lots of taxa.
             ArrayList<String> txtLines=new ArrayList<>(linesAtTime);
-            ArrayList<ProcessVCFBlock> pbs=new ArrayList<>();
+            ArrayList<ProcessHapMapBlock> pbs=new ArrayList<>();
             int lines=0;
             while ((currLine=r.readLine())!=null) {
                 txtLines.add(currLine);
                 lines++;
                 if (lines%linesAtTime==0) {
-                    ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.getTaxaCount(), txtLines);
+                    ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(taxaList.getTaxaCount(), txtLines);
                     pbs.add(pb);
                     //     pb.run();
                     pool.execute(pb);
@@ -74,7 +75,7 @@ public class BuilderFromVCF {
             }
             r.close();
             if (txtLines.size()>0) {
-                ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.getTaxaCount(), txtLines);
+                ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(taxaList.getTaxaCount(), txtLines);
                 pbs.add(pb);
                 pool.execute(pb);
             }
@@ -85,7 +86,7 @@ public class BuilderFromVCF {
             int currentSite=0;
             PositionListBuilder posBuild=new PositionListBuilder();
             GenotypeBuilder gb=GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.getTaxaCount(), lines);
-            for (ProcessVCFBlock pb : pbs) {
+            for (ProcessHapMapBlock pb : pbs) {
                 posBuild.addAll(pb.getBlkPosList());
                 byte[][] bgTS=pb.getGenoTS();
                 for (int t=0; t<bgTS.length; t++) {
@@ -118,36 +119,42 @@ public class BuilderFromVCF {
     }
 }
 
-class ProcessVCFBlock implements Runnable {
+class ProcessHapMapBlock implements Runnable {
 
     private static final Pattern WHITESPACE_PATTERN=Pattern.compile("\\s");
     private static final Pattern SLASH_PATTERN=Pattern.compile("/");
-    private static final int NUM_HAPMAP_NON_TAXA_HEADERS=5;
+    private static final int NUM_HAPMAP_NON_TAXA_HEADERS=11;
     private static final int GENOIDX=NUM_HAPMAP_NON_TAXA_HEADERS;
-    private static final int SNPID_INDEX=-1;
-    private static final int VARIANT_INDEX=-1;
-    private static final int CHROMOSOME_INDEX=0;
-    private static final int POSITION_INDEX=1;
-    private static final int REF_INDEX=2;
-    private static final int ALT_INDEX=3;
-    private static final int INFO_INDEX=3;
+    private static final int SNPID_INDEX=0;
+    private static final int VARIANT_INDEX=1;
+    private static final int CHROMOSOME_INDEX=2;
+    private static final int POSITION_INDEX=3;
     private final int taxaN;
     private final int siteN;
     private ArrayList<String> txtL;
     private byte[][] gTS;
     private final ArrayList<Position> blkPosList;
+ //   private final byte[] convert;
+    private final boolean isOneLetter; //true e.g. A,R, false=AA,CT
 
-
-    private ProcessVCFBlock(int taxaN, ArrayList<String> txtL) {
+    private ProcessHapMapBlock(int taxaN, ArrayList<String> txtL) {
         this.taxaN=taxaN;
         this.siteN=txtL.size();
         this.txtL=txtL;
         blkPosList=new ArrayList<>(siteN);
-
+        String[] tokens=WHITESPACE_PATTERN.split(txtL.get(0), NUM_HAPMAP_NON_TAXA_HEADERS+1);
+        double avg=(double) (tokens[GENOIDX].length()+1)/(double) taxaN;
+        if ((avg>1.99)&&(avg<2.01)) {
+            isOneLetter=true;
+        } else if ((avg>2.99)&&(avg<3.01)) {
+            isOneLetter=false;
+        } else {
+            throw new IllegalStateException("ProcessHapMapBlock: Genotype coded wrong use one or 2 letters per genotype");
+        }
     }
 
-    public static ProcessVCFBlock getInstance(int taxaN, ArrayList<String> txtL) {
-        return new ProcessVCFBlock(taxaN, txtL);
+    public static ProcessHapMapBlock getInstance(int taxaN, ArrayList<String> txtL) {
+        return new ProcessHapMapBlock(taxaN, txtL);
     }
 
     //@Override
@@ -156,43 +163,50 @@ class ProcessVCFBlock implements Runnable {
         gTS=new byte[taxaN][siteN];
         for (int s=0; s<siteN; s++) {
             String input=txtL.get(s);
-            int[] tabPos=new int[NUM_HAPMAP_NON_TAXA_HEADERS+taxaN];
+            int[] tabPos=new int[NUM_HAPMAP_NON_TAXA_HEADERS];
             int tabIndex=0;
             int len=input.length();
-            for (int i=0; (tabIndex<NUM_HAPMAP_NON_TAXA_HEADERS+taxaN)&&(i<len); i++) {
+            for (int i=0; (tabIndex<NUM_HAPMAP_NON_TAXA_HEADERS)&&(i<len); i++) {
                 if (input.charAt(i)=='\t') {
                     tabPos[tabIndex++]=i;
                 }
             }
-            String chrName=input.substring(0, tabPos[CHROMOSOME_INDEX]);
+            String chrName=input.substring(tabPos[CHROMOSOME_INDEX-1]+1, tabPos[CHROMOSOME_INDEX]);
             Chromosome currChr=chromosomeLookup.get(chrName);
             if (currChr==null) {
                 currChr=new Chromosome(new String(chrName));
                 chromosomeLookup.put(chrName, currChr);
             }
-            String refS=input.substring(tabPos[REF_INDEX-1]+1, tabPos[REF_INDEX]);
-            String alt=input.substring(tabPos[ALT_INDEX-1]+1, tabPos[ALT_INDEX]);
-            String variants=(refS+"/"+alt).replace(',','/').replace('I','+').replace('D','-');
+            String variants=input.substring(tabPos[VARIANT_INDEX-1]+1, tabPos[VARIANT_INDEX]);
             GeneralPosition.Builder apb=new GeneralPosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[POSITION_INDEX-1]+1, tabPos[POSITION_INDEX])))
+                    .snpName(input.substring(0, tabPos[SNPID_INDEX]))
                     .knownVariants(variants) //TODO                    strand, variants,
                     ;
-            byte[] alleles=new byte[(variants.length()+1)/2];
-            for (int i = 0, varInd=0; i < alleles.length; i++, varInd+=2) {
-                alleles[i]=NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(varInd));
+            try {
+                byte glbMajor=NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(0));
+                apb.allele(Position.Allele.GLBMAJ, glbMajor);
+                if (variants.length()==3) {
+                    byte glbMinor=NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(2));
+                    apb.allele(Position.Allele.GLBMIN, glbMinor);
+                }
+            } catch (IllegalArgumentException e) {
+                //for the indels that cannot be converted correctly now
+                // System.out.println("Error Parsing this variant"+Arrays.toString(variants));
             }
-            apb.allele(Position.Allele.REF, alleles[0]);
             blkPosList.add(apb.build());
-//            System.out.println(s);
-//            System.out.println(input);
-            for (int t = 0; t < taxaN; t++) {
-                int offset=tabPos[NUM_HAPMAP_NON_TAXA_HEADERS-1+t]+1;
-                int a1=input.charAt(offset)-'0';
-                int a2=input.charAt(offset+2)-'0';
-                if(a1<0 || a2<0 ) {gTS[t][s]=Alignment.UNKNOWN_DIPLOID_ALLELE;}
-                else {gTS[t][s]=AlignmentUtils.getDiploidValue(alleles[a1],alleles[a2]);}
-              //  System.out.print(gTS[t][s] + "\t");
+            int offset=tabPos[NUM_HAPMAP_NON_TAXA_HEADERS-1]+1;
+            if (isOneLetter) {
+                for (int i=offset; i<len; i+=2) {
+                    gTS[(i-offset)/2][s]=NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i));
+                }
+            } else {
+                for (int i=offset; i<len; i+=3) {
+                    //System.out.println(i+":"+input.charAt(i+1)+input.charAt(i));
+                    //there is a phasing conflict with the existing import approach
+                    gTS[(i-offset)/3][s]=AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i+1)),
+                            NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i)));
+                }
             }
-//            System.out.println();
         }
         txtL=null;
     }
@@ -209,4 +223,3 @@ class ProcessVCFBlock implements Runnable {
         return blkPosList;
     }
 }
-

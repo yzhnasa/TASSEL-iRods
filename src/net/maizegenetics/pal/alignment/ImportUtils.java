@@ -3,8 +3,8 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.alignment.io.BuilderFromGenotypeHDF5;
-import net.maizegenetics.pal.alignment.io.BuilderFromHapMap;
+import net.maizegenetics.dna.snp.io.BuilderFromGenotypeHDF5;
+import net.maizegenetics.dna.snp.io.BuilderFromHapMap;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
