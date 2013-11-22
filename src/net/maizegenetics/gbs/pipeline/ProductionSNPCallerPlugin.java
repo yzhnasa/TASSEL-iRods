@@ -19,7 +19,7 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.gbs.homology.TagMatchFinder;
 import net.maizegenetics.dna.snp.ExportUtils;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;

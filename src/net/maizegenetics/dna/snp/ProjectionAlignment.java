@@ -4,7 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.bit.BitStorage;
-import net.maizegenetics.pal.position.PositionList;
+import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;

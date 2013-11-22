@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.position;
+package net.maizegenetics.dna.map;
 
 import net.maizegenetics.dna.snp.Alignment;
 import java.util.List;

@@ -11,7 +11,7 @@ import net.maizegenetics.gbs.tagdist.AbstractTags;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;

@@ -1,7 +1,7 @@
 package net.maizegenetics.util;
 
 import com.google.common.collect.ComparisonChain;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 
 /**
  * Defines the haplotypes and positions of a chromosomal segment

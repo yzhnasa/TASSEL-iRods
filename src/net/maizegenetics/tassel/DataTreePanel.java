@@ -18,7 +18,7 @@ import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.dna.snp.AlignmentMask;
 import net.maizegenetics.trait.Phenotype;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
 import net.maizegenetics.pal.report.TableReport;

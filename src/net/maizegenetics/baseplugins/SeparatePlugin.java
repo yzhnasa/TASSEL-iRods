@@ -10,7 +10,7 @@ import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Phenotype;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

@@ -1,6 +1,6 @@
 package net.maizegenetics.dna.snp;
 
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 import java.io.Serializable;
 
 import java.util.ArrayList;

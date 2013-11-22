@@ -3,6 +3,8 @@
  */
 package net.maizegenetics.dna.snp;
 
+import net.maizegenetics.dna.map.PositionListBuilder;
+import net.maizegenetics.dna.map.Position;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -12,8 +14,7 @@ import net.maizegenetics.dna.snp.depth.AlleleDepth;
 import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
 import net.maizegenetics.dna.snp.score.SiteScore;
-import net.maizegenetics.pal.position.*;
-import net.maizegenetics.pal.position.PositionList;
+import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;

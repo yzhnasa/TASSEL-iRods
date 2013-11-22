@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.maizegenetics.pal.position;
+package net.maizegenetics.dna.map;
 
 import com.google.common.collect.ComparisonChain;
 import net.maizegenetics.dna.snp.Alignment;

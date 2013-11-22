@@ -1,7 +1,7 @@
-package net.maizegenetics.pal.position;
+package net.maizegenetics.dna.map;
 
 import com.google.common.collect.ArrayListMultimap;
-import net.maizegenetics.pal.position.Position.Allele;
+import net.maizegenetics.dna.map.Position.Allele;
 
 import java.nio.IntBuffer;
 import java.util.*;

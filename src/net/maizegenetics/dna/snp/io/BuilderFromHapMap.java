@@ -1,12 +1,15 @@
 package net.maizegenetics.dna.snp.io;
 
+import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.dna.map.GeneralPosition;
+import net.maizegenetics.dna.map.PositionListBuilder;
+import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
-import net.maizegenetics.pal.position.*;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;

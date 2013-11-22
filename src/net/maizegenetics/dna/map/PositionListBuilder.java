@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.position;
+package net.maizegenetics.dna.map;
 
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;

@@ -14,7 +14,7 @@ import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;

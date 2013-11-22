@@ -5,9 +5,9 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
-import net.maizegenetics.pal.position.Chromosome;
-import net.maizegenetics.pal.position.GeneralPosition;
-import net.maizegenetics.pal.position.PositionListBuilder;
+import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.dna.map.GeneralPosition;
+import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

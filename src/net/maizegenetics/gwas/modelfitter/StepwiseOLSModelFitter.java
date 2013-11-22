@@ -6,7 +6,7 @@ import net.maizegenetics.trait.MarkerPhenotypeAdapter;
 import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 

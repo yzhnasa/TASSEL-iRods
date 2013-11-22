@@ -5,7 +5,7 @@ package net.maizegenetics.gbs.maps;
 
 import java.io.File;
 import net.maizegenetics.gbs.tagdist.Tags;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 
 /**
  * Tags on Physical Map (TOPM) Interface. Define methods for the TOPM classes.

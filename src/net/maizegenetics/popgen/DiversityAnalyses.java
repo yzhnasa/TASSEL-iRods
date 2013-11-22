@@ -17,7 +17,7 @@ package net.maizegenetics.popgen;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.pal.report.AbstractTableReport;
 import net.maizegenetics.pal.report.TableReport;
 
