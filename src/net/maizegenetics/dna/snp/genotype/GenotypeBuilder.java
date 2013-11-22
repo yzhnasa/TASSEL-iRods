@@ -1,7 +1,7 @@
 /*
  *  GenotypeBuilder
  */
-package net.maizegenetics.pal.alignment.genotype;
+package net.maizegenetics.dna.snp.genotype;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;

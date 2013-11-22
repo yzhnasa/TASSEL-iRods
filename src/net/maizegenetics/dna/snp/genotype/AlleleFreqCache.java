@@ -1,7 +1,7 @@
 /*
  *  AlleleFreqCache
  */
-package net.maizegenetics.pal.alignment.genotype;
+package net.maizegenetics.dna.snp.genotype;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

@@ -4,7 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.pal.alignment.bit.BitStorage;
-import net.maizegenetics.pal.alignment.genotype.Genotype;
+import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;

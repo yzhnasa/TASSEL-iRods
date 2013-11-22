@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment.genotype;
+package net.maizegenetics.dna.snp.genotype;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;

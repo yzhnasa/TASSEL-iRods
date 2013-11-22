@@ -18,7 +18,7 @@ import net.maizegenetics.gbs.tagdist.TagsByTaxa;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteFileMap;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.position.GeneralPosition;
 import net.maizegenetics.pal.position.Position;

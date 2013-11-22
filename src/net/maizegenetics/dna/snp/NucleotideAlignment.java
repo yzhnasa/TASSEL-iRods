@@ -4,7 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
-import net.maizegenetics.pal.alignment.genotype.Genotype;
+import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.pal.alignment.score.SiteScore;
 import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;

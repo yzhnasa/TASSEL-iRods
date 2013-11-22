@@ -1,7 +1,7 @@
 /*
  *  FilterGenotype
  */
-package net.maizegenetics.pal.alignment.genotype;
+package net.maizegenetics.dna.snp.genotype;
 
 import net.maizegenetics.dna.snp.Alignment;
 

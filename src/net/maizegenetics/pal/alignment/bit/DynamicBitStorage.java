@@ -5,7 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import net.maizegenetics.dna.snp.Alignment.ALLELE_SCOPE_TYPE;
 import net.maizegenetics.dna.snp.AlignmentUtils;
-import net.maizegenetics.pal.alignment.genotype.Genotype;
+import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.util.BitSet;
 
 import java.util.ArrayList;

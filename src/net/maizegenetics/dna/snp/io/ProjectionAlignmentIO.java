@@ -4,7 +4,7 @@ import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.ProjectionBuilder;
-import net.maizegenetics.pal.alignment.genotype.ProjectionGenotype;
+import net.maizegenetics.dna.snp.genotype.ProjectionGenotype;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.util.DonorHaplotypes;

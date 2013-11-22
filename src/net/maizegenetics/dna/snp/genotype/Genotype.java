@@ -1,7 +1,7 @@
 /*
  * Genotype
  */
-package net.maizegenetics.pal.alignment.genotype;
+package net.maizegenetics.dna.snp.genotype;
 
 /**
  *

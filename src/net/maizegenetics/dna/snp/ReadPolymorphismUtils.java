@@ -5,8 +5,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
-import net.maizegenetics.pal.alignment.genotype.Genotype;
-import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotype.Genotype;
+import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
 
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
