@@ -5,7 +5,7 @@
 package net.maizegenetics.gui;
 
 import net.maizegenetics.dna.snp.Alignment;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;

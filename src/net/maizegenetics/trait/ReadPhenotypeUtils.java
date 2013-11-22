@@ -3,8 +3,8 @@ package net.maizegenetics.trait;
 import net.maizegenetics.trait.SimplePhenotype;
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix2D;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.util.Utils;
 
 import java.io.BufferedReader;

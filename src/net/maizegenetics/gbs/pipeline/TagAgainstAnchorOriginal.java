@@ -12,7 +12,7 @@ import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.ImportUtils;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
 
 import java.io.BufferedWriter;

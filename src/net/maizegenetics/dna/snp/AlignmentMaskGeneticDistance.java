@@ -4,7 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 
 import java.awt.*;
 import java.util.LinkedHashMap;

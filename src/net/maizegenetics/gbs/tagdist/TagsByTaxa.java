@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.gbs.tagdist;
 
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
 
 import java.io.File;

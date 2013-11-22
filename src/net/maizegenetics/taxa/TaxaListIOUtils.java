@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.taxa;
+package net.maizegenetics.taxa;
 
 /**
  * Utilities for reading and writing IdGroup and PedigreeIdGroups.

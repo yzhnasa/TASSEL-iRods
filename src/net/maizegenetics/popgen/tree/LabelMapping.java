@@ -14,7 +14,7 @@ package net.maizegenetics.popgen.tree;
  * @version 1.0
  */
 
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 
 import java.util.Hashtable;
 public class LabelMapping implements java.io.Serializable {

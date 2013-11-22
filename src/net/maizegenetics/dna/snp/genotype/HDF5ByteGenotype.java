@@ -10,8 +10,8 @@ import com.google.common.cache.LoadingCache;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 
 import java.util.concurrent.ExecutionException;
 

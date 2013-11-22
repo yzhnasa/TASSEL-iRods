@@ -1,10 +1,10 @@
 package net.maizegenetics.trait;
 
 import net.maizegenetics.trait.Trait;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
 
 import java.io.Serializable;
 import java.util.List;

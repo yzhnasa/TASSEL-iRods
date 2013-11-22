@@ -2,7 +2,7 @@ package net.maizegenetics.popgen.tree;
 
 import java.util.Arrays;
 
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 
 /**
  * @author Peter Bradbury 2/23/2010

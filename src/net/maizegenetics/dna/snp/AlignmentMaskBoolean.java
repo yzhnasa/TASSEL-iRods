@@ -6,7 +6,7 @@ package net.maizegenetics.dna.snp;
 import java.awt.Color;
 import java.util.List;
 
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 
 /**
  *

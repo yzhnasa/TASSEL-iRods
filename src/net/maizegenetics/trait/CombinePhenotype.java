@@ -1,9 +1,9 @@
 package net.maizegenetics.trait;
 
 import net.maizegenetics.trait.AbstractPhenotype;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 
 import java.util.*;
 import java.util.Map.Entry;

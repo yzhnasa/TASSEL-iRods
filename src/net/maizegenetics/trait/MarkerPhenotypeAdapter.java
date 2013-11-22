@@ -12,7 +12,7 @@ import java.util.TreeSet;
 import net.maizegenetics.jGLiM.BasicLevel;
 import net.maizegenetics.dna.snp.Alignment;
 
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 
 public class MarkerPhenotypeAdapter {
 

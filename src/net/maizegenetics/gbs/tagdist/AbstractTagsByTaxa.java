@@ -4,8 +4,8 @@
 package net.maizegenetics.gbs.tagdist;
 
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
 

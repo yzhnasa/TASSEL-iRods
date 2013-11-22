@@ -8,7 +8,7 @@
 
 package net.maizegenetics.popgen.tree;
 
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 
 import java.io.IOException;
 import java.io.PrintWriter;

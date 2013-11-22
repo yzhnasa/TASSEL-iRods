@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.taxa;
+package net.maizegenetics.taxa;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;

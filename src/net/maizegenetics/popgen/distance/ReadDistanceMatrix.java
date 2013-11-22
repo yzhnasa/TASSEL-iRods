@@ -8,9 +8,9 @@ package net.maizegenetics.popgen.distance;
 
 import net.maizegenetics.util.FormattedInput;
 import net.maizegenetics.util.InputSource;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 
 import java.io.IOException;
 import java.io.PushbackReader;

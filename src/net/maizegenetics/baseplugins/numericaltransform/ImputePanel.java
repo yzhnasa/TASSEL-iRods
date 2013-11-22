@@ -3,9 +3,9 @@ package net.maizegenetics.baseplugins.numericaltransform;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.trait.Trait;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.Datum;
 
 import javax.swing.*;

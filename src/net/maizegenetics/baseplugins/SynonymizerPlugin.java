@@ -8,8 +8,8 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.trait.Phenotype;
-import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.IdentifierSynonymizer;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

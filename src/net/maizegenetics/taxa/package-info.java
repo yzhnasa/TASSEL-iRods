@@ -10,4 +10,4 @@
  *     <p></p>
  *     Annotations are descriptors about a taxon, e.g.  parent1, parent2, pedigree, etc.
  */
-package net.maizegenetics.pal.taxa;
+package net.maizegenetics.taxa;

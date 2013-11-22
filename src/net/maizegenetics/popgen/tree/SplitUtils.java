@@ -7,7 +7,7 @@
 
 package net.maizegenetics.popgen.tree;
 
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
 
 /**
  * utilities for split systems

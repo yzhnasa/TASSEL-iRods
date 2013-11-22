@@ -1,8 +1,8 @@
 package net.maizegenetics.trait;
 
-import net.maizegenetics.pal.taxa.IdGroupUtils;
-import net.maizegenetics.pal.taxa.Taxon;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.IdGroupUtils;
+import net.maizegenetics.taxa.Taxon;
+import net.maizegenetics.taxa.TaxaList;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;

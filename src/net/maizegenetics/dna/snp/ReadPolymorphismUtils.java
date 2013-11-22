@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
 
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.util.Utils;
 
 public class ReadPolymorphismUtils {

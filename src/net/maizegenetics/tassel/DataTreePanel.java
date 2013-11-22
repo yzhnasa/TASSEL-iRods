@@ -20,7 +20,7 @@ import net.maizegenetics.dna.snp.AlignmentMask;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
-import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
+import net.maizegenetics.taxa.IdentifierSynonymizer;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.popgen.tree.Tree;
 

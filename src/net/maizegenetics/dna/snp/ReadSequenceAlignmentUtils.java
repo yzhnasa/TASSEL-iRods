@@ -8,13 +8,13 @@ package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.util.FormattedInput;
 import net.maizegenetics.util.InputSource;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
 
 import java.io.IOException;
 import java.io.PushbackReader;
 import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.TaxaListBuilder;
 
 /**
  * reads aligned sequence data from plain text files.<p>

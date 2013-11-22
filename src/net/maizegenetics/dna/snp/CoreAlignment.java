@@ -14,7 +14,7 @@ import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import org.apache.log4j.Logger;
 

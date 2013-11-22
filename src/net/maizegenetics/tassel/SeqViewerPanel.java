@@ -54,7 +54,7 @@ import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentMask;
 import net.maizegenetics.dna.snp.AlignmentMaskGeneticDistance;
 import net.maizegenetics.dna.snp.AlignmentMaskReference;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.Datum;
 
 /**

@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.taxa;
+package net.maizegenetics.taxa;
 
 
 import net.maizegenetics.pal.report.TableReport;
