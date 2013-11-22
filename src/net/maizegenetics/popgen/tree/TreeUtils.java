@@ -7,7 +7,7 @@
 package net.maizegenetics.popgen.tree;
 
 import net.maizegenetics.util.FormattedOutput;
-import net.maizegenetics.pal.math.MersenneTwisterFast;
+import net.maizegenetics.stats.math.MersenneTwisterFast;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;

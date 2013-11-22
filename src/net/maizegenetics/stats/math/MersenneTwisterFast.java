@@ -12,7 +12,7 @@
 // see also http://www.cs.umd.edu/users/seanl/
 
 
-package net.maizegenetics.pal.math;
+package net.maizegenetics.stats.math;
 
 import java.io.Serializable;
 

@@ -8,7 +8,7 @@
 
 package net.maizegenetics.pal.statistics;
 
-import net.maizegenetics.pal.math.GammaFunction;
+import net.maizegenetics.stats.math.GammaFunction;
 
 
 /**

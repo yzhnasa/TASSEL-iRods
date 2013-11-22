@@ -5,7 +5,7 @@
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
 
-package net.maizegenetics.pal.math;
+package net.maizegenetics.stats.math;
 
 /**
  * Provides a means for giving an Orthogonal base optimiser (IE, OrthognalMinimum)

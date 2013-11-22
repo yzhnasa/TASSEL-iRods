@@ -12,7 +12,7 @@ import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
-import net.maizegenetics.pal.math.GammaFunction;
+import net.maizegenetics.stats.math.GammaFunction;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.taxa.IdGroupUtils;
 import net.maizegenetics.pal.taxa.TaxaList;

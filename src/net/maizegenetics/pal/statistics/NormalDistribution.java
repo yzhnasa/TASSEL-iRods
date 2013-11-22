@@ -8,7 +8,7 @@
 
 package net.maizegenetics.pal.statistics;
 
-import net.maizegenetics.pal.math.ErrorFunction;
+import net.maizegenetics.stats.math.ErrorFunction;
 
 /**
  * normal distribution (pdf, cdf, quantile)

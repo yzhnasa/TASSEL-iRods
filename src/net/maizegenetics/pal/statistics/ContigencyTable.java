@@ -6,7 +6,7 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.pal.statistics;
 
-import net.maizegenetics.pal.math.MersenneTwisterFast;
+import net.maizegenetics.stats.math.MersenneTwisterFast;
 
 /**
  * Class for permuting contigency tables and determining the likelihood of the table.
