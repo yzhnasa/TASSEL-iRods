@@ -3,10 +3,13 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -32,7 +35,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     private ArgsEngine myArgsEngine = null;
     private String hmp1FileStr, hmp2FileStr;
     private int startChr, endChr, chr, position;
-    private HashMap<String, List<String>> taxaSynonyms = new HashMap<String, List<String>>();
+    private Multimap<String, String> taxaSynonyms = HashMultimap.create();
+
     private HashMap<Integer, List<Integer>> taxaRedirect = new HashMap<Integer, List<Integer>>();
     private final String DELIMITER = "\t";
 
@@ -277,11 +281,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             while ((inputLine = br.readLine()) != null) {
                 String[] cells = inputLine.split("\t");
                 if (!(cells[0].equals("NA") || cells[1].equals("NA"))) {
-                    List<String> synTaxaForTaxon = taxaSynonyms.get(cells[0]);
-                    if (synTaxaForTaxon == null) {
-                        taxaSynonyms.put(cells[0], synTaxaForTaxon = new ArrayList<String>());
-                    }
-                    synTaxaForTaxon.add(cells[1]);
+                    taxaSynonyms.put(cells[0],cells[1]);
                     ++nCompareTaxa;
                 }
                 ++nTaxa;
@@ -293,6 +293,23 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             return false;
         }
         myLogger.info(nTaxa + " pairs of taxa full names read from the taxon synonym input file: " + nCompareTaxa + " of these will be compared (if found in the genotype files)");
+        return true;
+    }
+
+    private boolean createTaxaSynonymsFromAlignment(String f1, String f2) {
+        Alignment a1=ImportUtils.readGuessFormat(f1);
+        Alignment a2=ImportUtils.readGuessFormat(f1);
+        taxaSynonyms.clear();
+        int nTaxa = 0, nCompareTaxa = 0;
+        for (Taxon taxon : a1.getTaxaList()) {
+            List<Integer> t2a=a2.getTaxaList().getIndicesMatchingTaxon(taxon);
+            for (Integer tIndex : t2a) {
+                taxaSynonyms.put(taxon.getName(), a2.getTaxaName(tIndex));
+                ++nCompareTaxa;
+            }
+            ++nTaxa;
+        }
+        myLogger.info(nTaxa + " pairs of taxa full names read are identical between alignments: " + nCompareTaxa + " of these will be compared (if found in the genotype files)");
         return true;
     }
 
