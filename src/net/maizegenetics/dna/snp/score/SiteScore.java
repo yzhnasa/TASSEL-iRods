@@ -1,7 +1,7 @@
 /*
  *  SiteScore
  */
-package net.maizegenetics.pal.alignment.score;
+package net.maizegenetics.dna.snp.score;
 
 import net.maizegenetics.dna.snp.Alignment;
 

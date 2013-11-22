@@ -11,7 +11,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
 import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
-import net.maizegenetics.pal.alignment.score.SiteScore;
+import net.maizegenetics.dna.snp.score.SiteScore;
 import net.maizegenetics.pal.position.*;
 import net.maizegenetics.pal.position.PositionList;
 import net.maizegenetics.pal.taxa.TaxaList;
