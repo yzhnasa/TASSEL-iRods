@@ -4,10 +4,10 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.gbs.maps.PETagsOnPhysicalMapV3;
-import net.maizegenetics.gbs.maps.TagMappingInfoV3;
-import net.maizegenetics.gbs.maps.TagsOnGeneticMap;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMapV3;
+import net.maizegenetics.dna.map.PETagsOnPhysicalMapV3;
+import net.maizegenetics.dna.map.TagMappingInfoV3;
+import net.maizegenetics.dna.map.TagsOnGeneticMap;
+import net.maizegenetics.dna.map.TagsOnPhysicalMapV3;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.gbs.util.SAMUtils;

@@ -5,7 +5,7 @@ package net.maizegenetics.gbs.pipeline;
 
 import cern.colt.list.IntArrayList;
 
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.tag.TagCounts;
 import net.maizegenetics.dna.tag.Tags;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;

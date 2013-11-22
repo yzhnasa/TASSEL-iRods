@@ -1,7 +1,7 @@
 /*
  * TagsOnPhysMapHDF5
  */
-package net.maizegenetics.gbs.maps;
+package net.maizegenetics.dna.map;
 
 import ch.systemsx.cisd.hdf5.*;
 import java.io.File;

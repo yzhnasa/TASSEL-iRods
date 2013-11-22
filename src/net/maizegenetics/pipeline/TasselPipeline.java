@@ -8,8 +8,8 @@ package net.maizegenetics.pipeline;
 
 import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
-import net.maizegenetics.gbs.maps.TagsOnPhysMapHDF5;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.dna.map.TagsOnPhysMapHDF5;
+import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.snp.io.BuilderFromHapMap;
 import net.maizegenetics.baseplugins.LinkageDisequilibriumComponent;
 import net.maizegenetics.popgen.LinkageDisequilibrium.HetTreatment;

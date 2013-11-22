@@ -1,5 +1,5 @@
 
-package net.maizegenetics.gbs.maps;
+package net.maizegenetics.dna.map;
 
 /**
  * Container class for passing information on where a tags maps.

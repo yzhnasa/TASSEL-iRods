@@ -1,4 +1,4 @@
-package net.maizegenetics.gbs.maps;
+package net.maizegenetics.dna.map;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.maizegenetics.gbs.maps;
+package net.maizegenetics.dna.map;
 
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;

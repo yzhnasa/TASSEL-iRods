@@ -9,7 +9,7 @@ import net.maizegenetics.dna.tag.TagCounts;
 import net.maizegenetics.dna.tag.TagCountMutable;
 import net.maizegenetics.dna.tag.TagsByTaxaUtils;
 import net.maizegenetics.dna.tag.TagsByTaxaByteFileMap;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

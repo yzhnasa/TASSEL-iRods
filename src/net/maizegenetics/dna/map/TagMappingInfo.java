@@ -1,5 +1,5 @@
 
-package net.maizegenetics.gbs.maps;
+package net.maizegenetics.dna.map;
 
 /**
  * Container class for information on mapping position.  

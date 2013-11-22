@@ -1,7 +1,7 @@
 /*
  * TagsAtLocus
  */
-package net.maizegenetics.gbs.maps;
+package net.maizegenetics.dna.map;
 
 import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.gbs.util.BaseEncoder;
