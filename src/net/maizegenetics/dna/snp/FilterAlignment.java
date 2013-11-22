@@ -3,8 +3,8 @@
  */
 package net.maizegenetics.dna.snp;
 
-import net.maizegenetics.pal.alignment.bit.BitStorage;
-import net.maizegenetics.pal.alignment.bit.DynamicBitStorage;
+import net.maizegenetics.dna.snp.bit.BitStorage;
+import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
 import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.position.Chromosome;

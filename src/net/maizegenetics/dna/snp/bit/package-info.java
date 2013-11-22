@@ -28,4 +28,4 @@
  THESE RESULTS IN THE ALGORITHMS THAT USE BIT LEVEL ENCODING TO BE 25 TO 50 TIMES FASTER.
 
  */
-package net.maizegenetics.pal.alignment.bit;
+package net.maizegenetics.dna.snp.bit;

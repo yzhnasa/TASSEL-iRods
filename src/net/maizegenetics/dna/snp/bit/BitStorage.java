@@ -1,7 +1,7 @@
 /*
  * BitStorage
  */
-package net.maizegenetics.pal.alignment.bit;
+package net.maizegenetics.dna.snp.bit;
 
 import net.maizegenetics.util.BitSet;
 

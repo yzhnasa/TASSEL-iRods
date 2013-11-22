@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment.bit;
+package net.maizegenetics.dna.snp.bit;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
