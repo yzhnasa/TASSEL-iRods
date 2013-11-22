@@ -9,9 +9,9 @@ import edu.cornell.lassp.houle.RngPack.RandomJava;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByte;
 import net.maizegenetics.gbs.tagdist.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentBuilder;
-import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
 

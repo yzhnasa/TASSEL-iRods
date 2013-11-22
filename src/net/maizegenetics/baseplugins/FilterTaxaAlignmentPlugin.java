@@ -8,8 +8,8 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.gui.AbstractAvailableListModel;
 import net.maizegenetics.gui.SelectFromAvailableDialog;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.trait.FilterPhenotype;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.pal.taxa.TaxaList;

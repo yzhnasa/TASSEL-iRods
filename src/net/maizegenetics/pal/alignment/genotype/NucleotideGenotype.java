@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.SuperByteMatrix;
 
 /**

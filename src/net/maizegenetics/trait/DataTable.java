@@ -1,6 +1,6 @@
 package net.maizegenetics.trait;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.trait.Phenotype;
 
 /**

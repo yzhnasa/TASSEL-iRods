@@ -7,10 +7,10 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.gui.DialogUtils;
-import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.trait.ReadPhenotypeUtils;
-import net.maizegenetics.pal.alignment.ReadPolymorphismUtils;
-import net.maizegenetics.pal.alignment.ReadSequenceAlignmentUtils;
+import net.maizegenetics.dna.snp.ReadPolymorphismUtils;
+import net.maizegenetics.dna.snp.ReadSequenceAlignmentUtils;
 import net.maizegenetics.popgen.distance.ReadDistanceMatrix;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.TableReportUtils;

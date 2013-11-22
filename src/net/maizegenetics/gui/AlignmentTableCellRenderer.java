@@ -14,11 +14,11 @@ import java.util.Map;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.AlignmentMaskGeneticDistance;
-import net.maizegenetics.pal.alignment.AlignmentMaskReference;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentMask;
+import net.maizegenetics.dna.snp.AlignmentMaskGeneticDistance;
+import net.maizegenetics.dna.snp.AlignmentMaskReference;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
  *

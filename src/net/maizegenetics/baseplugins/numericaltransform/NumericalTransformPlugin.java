@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins.numericaltransform;
 
 import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.plugindef.AbstractPlugin;

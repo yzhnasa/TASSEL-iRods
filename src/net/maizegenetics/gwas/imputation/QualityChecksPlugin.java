@@ -26,9 +26,9 @@ import org.jfree.data.xy.DefaultXYDataset;
 
 import net.maizegenetics.baseplugins.ExportPlugin;
 import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.pal.alignment.BitAlignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

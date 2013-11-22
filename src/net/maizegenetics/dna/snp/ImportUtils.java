@@ -1,7 +1,7 @@
 /*
  * ImportUtils
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.io.BuilderFromGenotypeHDF5;
 import net.maizegenetics.dna.snp.io.BuilderFromHapMap;

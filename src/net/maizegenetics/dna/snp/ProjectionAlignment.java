@@ -1,7 +1,7 @@
 /*
  * ProjectionAlignment
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.pal.alignment.bit.BitStorage;
 import net.maizegenetics.pal.position.PositionList;

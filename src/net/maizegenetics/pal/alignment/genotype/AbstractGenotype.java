@@ -3,9 +3,9 @@
  */
 package net.maizegenetics.pal.alignment.genotype;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 import org.apache.log4j.Logger;
 

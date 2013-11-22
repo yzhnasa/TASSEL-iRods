@@ -4,7 +4,7 @@
  */
 package net.maizegenetics.gui;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.pal.taxa.TaxaList;
 
 import javax.swing.*;

@@ -1,9 +1,9 @@
 package net.maizegenetics.dna.snp.io;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentBuilder;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.ProjectionBuilder;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.ImportUtils;
+import net.maizegenetics.dna.snp.ProjectionBuilder;
 import net.maizegenetics.pal.alignment.genotype.ProjectionGenotype;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.taxa.Taxon;

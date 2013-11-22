@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.pal.position.Chromosome;
 import java.io.Serializable;

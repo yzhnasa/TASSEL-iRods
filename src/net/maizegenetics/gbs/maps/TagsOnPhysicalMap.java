@@ -21,10 +21,10 @@ import net.maizegenetics.gbs.tagdist.Tags;
 import net.maizegenetics.gbs.util.SAMUtils;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.ImportUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
 /**

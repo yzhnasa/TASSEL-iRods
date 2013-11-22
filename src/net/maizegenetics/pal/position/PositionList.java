@@ -1,6 +1,6 @@
 package net.maizegenetics.pal.position;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import java.util.List;
 
 /**

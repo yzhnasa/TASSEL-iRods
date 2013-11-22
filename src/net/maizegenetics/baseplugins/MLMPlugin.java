@@ -4,7 +4,7 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.pal.alignment.GeneticMap;
+import net.maizegenetics.dna.snp.GeneticMap;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.popgen.distance.DistanceMatrix;

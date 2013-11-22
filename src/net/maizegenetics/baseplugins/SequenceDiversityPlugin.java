@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.popgen.DiversityAnalyses;
 import net.maizegenetics.popgen.PolymorphismDistribution;
 import net.maizegenetics.pal.report.SimpleTableReport;

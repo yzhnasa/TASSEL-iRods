@@ -1,12 +1,12 @@
 /*
  * CoreAlignment
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import java.util.HashMap;
 import java.util.Map;
-import static net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE.Frequency;
-import static net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE.Reference;
+import static net.maizegenetics.dna.snp.Alignment.ALLELE_SCOPE_TYPE.Frequency;
+import static net.maizegenetics.dna.snp.Alignment.ALLELE_SCOPE_TYPE.Reference;
 import net.maizegenetics.pal.alignment.score.SiteScore;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.bit.BitStorage;

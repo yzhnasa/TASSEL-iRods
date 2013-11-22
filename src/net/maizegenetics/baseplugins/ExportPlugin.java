@@ -14,9 +14,9 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.ExportUtils;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentMask;
+import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.PhenotypeUtils;
 

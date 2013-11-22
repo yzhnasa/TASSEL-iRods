@@ -1,8 +1,8 @@
 package net.maizegenetics.gwas.imputation;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 public class PhasedEmissionProbability extends EmissionProbability {
 	float[][][] parentHaplotypeProbability; //first dimension is the site, second dimension is the haplotype (0-3), third dimension is nucleotide (A=0, C=1, G=2, T=3)

@@ -7,7 +7,7 @@ import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import com.google.common.base.Preconditions;
-import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
+import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.util.HDF5Utils;
 

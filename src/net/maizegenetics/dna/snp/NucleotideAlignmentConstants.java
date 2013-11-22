@@ -1,7 +1,7 @@
 /*
  * NucleotideAlignmentConstants
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import java.util.Arrays;
 import java.util.HashMap;

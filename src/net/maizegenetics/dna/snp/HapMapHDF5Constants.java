@@ -1,7 +1,7 @@
 /*
  * HapMapHDF5Constants
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;

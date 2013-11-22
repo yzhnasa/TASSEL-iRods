@@ -1,11 +1,11 @@
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.popgen.distance.Kinship;
 
 import javax.swing.*;

@@ -9,8 +9,8 @@ import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
 import net.maizegenetics.gbs.tagdist.AbstractTags;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.position.Chromosome;
 
 import java.io.BufferedOutputStream;

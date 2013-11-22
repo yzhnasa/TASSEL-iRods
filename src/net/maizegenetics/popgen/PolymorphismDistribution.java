@@ -5,7 +5,7 @@ import net.maizegenetics.pal.report.AbstractTableReport;
 
 import java.io.Serializable;
 import java.util.Vector;
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 
 /**
  *This class provides the distribution of polymorphisms

@@ -4,7 +4,14 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GeneticMap;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.position.Chromosome;

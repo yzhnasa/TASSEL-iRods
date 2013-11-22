@@ -5,8 +5,8 @@
 package net.maizegenetics.pal.position;
 
 import com.google.common.collect.ComparisonChain;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.GeneralAnnotationUtils;
 
 import java.util.AbstractMap;

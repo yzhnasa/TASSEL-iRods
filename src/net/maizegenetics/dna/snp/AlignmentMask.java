@@ -1,7 +1,7 @@
 /*
  * AlignmentMask
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import java.awt.Color;
 

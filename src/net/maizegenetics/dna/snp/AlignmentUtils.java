@@ -1,7 +1,7 @@
 /*
  * AlignmentUtils
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;

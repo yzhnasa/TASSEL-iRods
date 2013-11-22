@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import net.maizegenetics.jGLiM.BasicLevel;
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 
 import net.maizegenetics.pal.taxa.Taxon;
 

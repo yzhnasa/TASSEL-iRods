@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.pal.alignment.score;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 
 /**
  *

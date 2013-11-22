@@ -5,7 +5,7 @@
 package net.maizegenetics.util;
 
 import java.util.HashMap;
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 
 /**
  *

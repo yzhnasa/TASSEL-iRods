@@ -10,7 +10,6 @@ import net.maizegenetics.jGLiM.dm.FactorModelEffect;
 import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;

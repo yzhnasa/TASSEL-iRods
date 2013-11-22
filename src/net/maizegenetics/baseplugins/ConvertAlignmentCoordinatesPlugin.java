@@ -3,8 +3,8 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentBuilder;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.position.GeneralPosition;
 import net.maizegenetics.pal.position.PositionListBuilder;

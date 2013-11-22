@@ -4,12 +4,19 @@
 package net.maizegenetics.gbs.pipeline;
 
 
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.ProjectionBuilder;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.ImportUtils;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import net.maizegenetics.gwas.imputation.EmissionProbability;
 import net.maizegenetics.gwas.imputation.TransitionProbability;
 import net.maizegenetics.gwas.imputation.ViterbiAlgorithm;
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.popgen.DonorHypoth;

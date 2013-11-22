@@ -6,8 +6,8 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.trait.Trait;
 import net.maizegenetics.plugindef.AbstractPlugin;

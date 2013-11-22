@@ -17,7 +17,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.swing.ImageIcon;
 import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

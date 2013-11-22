@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

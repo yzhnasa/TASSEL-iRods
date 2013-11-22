@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
 import net.maizegenetics.pal.taxa.TaxaList;

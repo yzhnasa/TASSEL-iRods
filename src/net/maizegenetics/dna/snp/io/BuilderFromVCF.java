@@ -1,6 +1,9 @@
 package net.maizegenetics.dna.snp.io;
 
-import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 import net.maizegenetics.pal.position.*;

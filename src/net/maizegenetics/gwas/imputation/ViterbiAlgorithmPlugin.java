@@ -3,7 +3,7 @@ package net.maizegenetics.gwas.imputation;
 import java.awt.Frame;
 import java.util.List;
 import javax.swing.ImageIcon;
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

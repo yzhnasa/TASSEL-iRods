@@ -6,8 +6,8 @@ import cern.colt.function.IntComparator;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
+import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.pal.alignment.genotype.GenotypeBuilder;
 
 import java.util.ArrayList;

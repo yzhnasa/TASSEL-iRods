@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.util.FormattedInput;
 import net.maizegenetics.util.InputSource;

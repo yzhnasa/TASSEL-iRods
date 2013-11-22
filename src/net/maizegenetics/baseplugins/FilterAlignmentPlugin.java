@@ -6,15 +6,15 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.pal.position.Chromosome;
-import net.maizegenetics.pal.alignment.CombineAlignment;
+import net.maizegenetics.dna.snp.CombineAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.prefs.TasselPrefs;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.dna.snp.AlignmentUtils;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
@@ -34,7 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.maizegenetics.pal.alignment.AlignmentBuilder;
+import net.maizegenetics.dna.snp.AlignmentBuilder;
 
 import org.apache.log4j.Logger;
 

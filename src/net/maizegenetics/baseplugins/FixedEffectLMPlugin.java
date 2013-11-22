@@ -1,5 +1,6 @@
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.dna.snp.GeneticMap;
 import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.MarkerPhenotypeAdapter;
@@ -11,7 +12,6 @@ import net.maizegenetics.jGLiM.LinearModelUtils;
 import net.maizegenetics.jGLiM.dm.*;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.taxa.TaxaList;

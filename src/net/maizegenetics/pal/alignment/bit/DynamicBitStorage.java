@@ -3,8 +3,8 @@ package net.maizegenetics.pal.alignment.bit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import net.maizegenetics.pal.alignment.Alignment.ALLELE_SCOPE_TYPE;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
+import net.maizegenetics.dna.snp.Alignment.ALLELE_SCOPE_TYPE;
+import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.util.BitSet;
 

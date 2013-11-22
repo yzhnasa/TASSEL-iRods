@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.dna.snp.depth;
 
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
  *

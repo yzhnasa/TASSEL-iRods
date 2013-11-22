@@ -1,7 +1,7 @@
 /*
  * AlignmentMaskGeneticDistance
  */
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.pal.taxa.Taxon;
