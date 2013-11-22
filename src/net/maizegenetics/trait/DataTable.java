@@ -1,4 +1,7 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
+
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.trait.Phenotype;
 
 /**
  * Presents data from (at most) one Alignment and one Phenotype in a manner that is 

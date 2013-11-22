@@ -14,6 +14,7 @@
  */
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.popgen.distance.DistanceMatrix;

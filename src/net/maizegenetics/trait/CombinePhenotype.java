@@ -1,5 +1,6 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
 
+import net.maizegenetics.trait.AbstractPhenotype;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;

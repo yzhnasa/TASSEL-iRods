@@ -8,8 +8,8 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.MarkerPhenotype;
-import net.maizegenetics.pal.alignment.Phenotype;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.pal.position.Chromosome;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

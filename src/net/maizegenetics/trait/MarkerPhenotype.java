@@ -1,5 +1,8 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
 
+import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.trait.FilterPhenotype;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.taxa.IdGroupUtils;
 import net.maizegenetics.pal.taxa.TaxaList;

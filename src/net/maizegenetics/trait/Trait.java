@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
 
 import java.io.Serializable;
 import java.util.ArrayList;

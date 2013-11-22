@@ -1,5 +1,11 @@
 package net.maizegenetics.stats.MLM;
 
+import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.MarkerPhenotypeAdapter;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.Trait;
+import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.baseplugins.MLMPlugin;
 import net.maizegenetics.jGLiM.LinearModelUtils;
 import net.maizegenetics.jGLiM.SymmetricMatrixInverterDM;

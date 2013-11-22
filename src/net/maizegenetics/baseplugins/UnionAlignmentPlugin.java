@@ -6,6 +6,9 @@
  */
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.CombinePhenotype;
 import java.awt.Frame;
 
 import net.maizegenetics.pal.alignment.*;

@@ -1,5 +1,11 @@
 package net.maizegenetics.baseplugins.genomicselection;
 
+import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.MarkerPhenotypeAdapter;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.Trait;
+import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.jGLiM.dm.FactorModelEffect;
 import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;

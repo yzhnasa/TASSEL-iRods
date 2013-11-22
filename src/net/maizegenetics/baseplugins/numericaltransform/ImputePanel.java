@@ -1,8 +1,8 @@
 package net.maizegenetics.baseplugins.numericaltransform;
 
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
-import net.maizegenetics.pal.alignment.Trait;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.SimplePhenotype;
+import net.maizegenetics.trait.Trait;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.pal.taxa.TaxaListBuilder;
 import net.maizegenetics.pal.taxa.Taxon;

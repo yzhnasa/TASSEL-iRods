@@ -8,7 +8,7 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.ReadPhenotypeUtils;
+import net.maizegenetics.trait.ReadPhenotypeUtils;
 import net.maizegenetics.pal.alignment.ReadPolymorphismUtils;
 import net.maizegenetics.pal.alignment.ReadSequenceAlignmentUtils;
 import net.maizegenetics.popgen.distance.ReadDistanceMatrix;

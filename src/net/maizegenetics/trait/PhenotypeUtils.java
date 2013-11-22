@@ -1,5 +1,6 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
 
+import net.maizegenetics.trait.Trait;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
 
 import net.maizegenetics.pal.taxa.IdGroupUtils;
 import net.maizegenetics.pal.taxa.Taxon;

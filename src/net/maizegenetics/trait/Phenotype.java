@@ -1,5 +1,6 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
 
+import net.maizegenetics.trait.Trait;
 import net.maizegenetics.pal.taxa.Taxon;
 import net.maizegenetics.pal.report.Report;
 import net.maizegenetics.pal.report.TableReport;

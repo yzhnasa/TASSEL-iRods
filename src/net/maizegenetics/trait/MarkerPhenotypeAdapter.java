@@ -1,5 +1,7 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
 
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.Trait;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,6 +10,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import net.maizegenetics.jGLiM.BasicLevel;
+import net.maizegenetics.pal.alignment.Alignment;
 
 import net.maizegenetics.pal.taxa.Taxon;
 

@@ -17,8 +17,8 @@ import java.awt.event.ActionListener;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentMask;
 import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.PhenotypeUtils;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.PhenotypeUtils;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

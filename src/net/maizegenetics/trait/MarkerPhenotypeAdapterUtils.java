@@ -1,5 +1,6 @@
-package net.maizegenetics.pal.alignment;
+package net.maizegenetics.trait;
 
+import net.maizegenetics.trait.MarkerPhenotypeAdapter;
 import java.util.ArrayList;
 
 import net.maizegenetics.jGLiM.ModelEffect;

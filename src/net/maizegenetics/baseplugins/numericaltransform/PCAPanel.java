@@ -4,9 +4,9 @@ import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
-import net.maizegenetics.pal.alignment.Trait;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.SimplePhenotype;
+import net.maizegenetics.trait.Trait;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.plugindef.Datum;

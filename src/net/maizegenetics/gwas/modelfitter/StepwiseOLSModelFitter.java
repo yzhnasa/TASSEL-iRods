@@ -2,8 +2,8 @@ package net.maizegenetics.gwas.modelfitter;
 
 import net.maizegenetics.jGLiM.LinearModelUtils;
 import net.maizegenetics.jGLiM.dm.*;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
+import net.maizegenetics.trait.MarkerPhenotypeAdapter;
+import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.pal.report.SimpleTableReport;
 import net.maizegenetics.pal.report.TableReport;
 import net.maizegenetics.pal.position.Chromosome;

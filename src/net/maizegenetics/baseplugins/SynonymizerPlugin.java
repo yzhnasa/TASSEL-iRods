@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.Phenotype;
+import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
 import net.maizegenetics.pal.taxa.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
