@@ -1,6 +1,6 @@
 package net.maizegenetics.baseplugins.chart;
 
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
 import java.util.ArrayList;

@@ -2,8 +2,8 @@ package net.maizegenetics.trait;
 
 import net.maizegenetics.trait.Trait;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.Report;
+import net.maizegenetics.util.TableReport;
 import net.maizegenetics.taxa.TaxaList;
 
 import java.io.Serializable;

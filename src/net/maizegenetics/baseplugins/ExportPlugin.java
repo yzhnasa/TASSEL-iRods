@@ -26,9 +26,9 @@ import net.maizegenetics.plugindef.Datum;
 
 import net.maizegenetics.prefs.TasselPrefs;
 
-import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.report.TableReportUtils;
+import net.maizegenetics.util.Report;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.util.TableReportUtils;
 
 import net.maizegenetics.gui.DialogUtils;
 

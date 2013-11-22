@@ -1,9 +1,9 @@
 package net.maizegenetics.taxa;
 
 
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.report.AbstractTableReport;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.util.Report;
+import net.maizegenetics.util.AbstractTableReport;
 
 import java.io.PrintWriter;
 import java.io.Serializable;

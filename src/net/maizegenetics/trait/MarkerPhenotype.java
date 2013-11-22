@@ -3,7 +3,7 @@ package net.maizegenetics.trait;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.trait.FilterPhenotype;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 import net.maizegenetics.taxa.IdGroupUtils;
 import net.maizegenetics.taxa.TaxaList;
 

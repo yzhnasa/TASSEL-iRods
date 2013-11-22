@@ -18,8 +18,8 @@ import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.pal.report.AbstractTableReport;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.AbstractTableReport;
+import net.maizegenetics.util.TableReport;
 
 import java.io.Serializable;
 import java.util.ArrayList;

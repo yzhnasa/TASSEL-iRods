@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.report;
+package net.maizegenetics.util;
 
 import java.io.Serializable;
 

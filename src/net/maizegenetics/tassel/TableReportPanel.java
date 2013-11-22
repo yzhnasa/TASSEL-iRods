@@ -1,7 +1,7 @@
 package net.maizegenetics.tassel;
 
 import net.maizegenetics.gui.TableReportNoPagingTableModel;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 
 import net.maizegenetics.util.DoubleFormat;
 

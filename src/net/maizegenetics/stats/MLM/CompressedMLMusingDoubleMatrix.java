@@ -16,7 +16,7 @@ import net.maizegenetics.jGLiM.dm.SweepFast;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
-import net.maizegenetics.pal.report.SimpleTableReport;
+import net.maizegenetics.util.SimpleTableReport;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;

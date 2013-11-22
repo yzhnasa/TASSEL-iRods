@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.pal.report;
+package net.maizegenetics.util;
 
 /**
  * interface for classes with data that can be presented in tables

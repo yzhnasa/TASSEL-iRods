@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 
 /**
  * 

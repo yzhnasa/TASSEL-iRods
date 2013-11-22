@@ -10,7 +10,7 @@ package net.maizegenetics.popgen.tree;
 
 import net.maizegenetics.util.FormattedOutput;
 import net.maizegenetics.stats.math.OrthogonalHints;
-import net.maizegenetics.pal.report.Report;
+import net.maizegenetics.util.Report;
 
 import java.io.Serializable;
 

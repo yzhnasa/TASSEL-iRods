@@ -1,7 +1,7 @@
 package net.maizegenetics.popgen;
 
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.report.AbstractTableReport;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.util.AbstractTableReport;
 
 import java.io.Serializable;
 import java.util.Vector;

@@ -7,7 +7,7 @@
 package net.maizegenetics.popgen.distance;
 
 import net.maizegenetics.util.FormattedOutput;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.Taxon;
 
