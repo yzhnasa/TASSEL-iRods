@@ -10,7 +10,7 @@ import cern.colt.map.OpenLongObjectHashMap;
 import net.maizegenetics.pal.alignment.Alignment;
 import net.maizegenetics.pal.alignment.AlignmentBuilder;
 import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.statistics.FisherExact;
+import net.maizegenetics.stats.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;

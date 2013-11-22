@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.pal.statistics;
+package net.maizegenetics.stats.statistics;
 
 import net.maizegenetics.stats.math.MersenneTwisterFast;
 

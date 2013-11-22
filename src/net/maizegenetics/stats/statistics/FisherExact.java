@@ -5,7 +5,7 @@
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
 
-package net.maizegenetics.pal.statistics;
+package net.maizegenetics.stats.statistics;
 
 /**
  * This does a Fisher Exact test.  The Fisher's Exact test procedure calculates an exact probability value
