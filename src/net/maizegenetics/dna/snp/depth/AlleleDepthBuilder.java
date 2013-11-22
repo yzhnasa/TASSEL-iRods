@@ -1,7 +1,7 @@
 /*
  *  AlleleDepthBuilder
  */
-package net.maizegenetics.pal.alignment.depth;
+package net.maizegenetics.dna.snp.depth;
 
 import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
 

@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.pal.alignment;
 
-import net.maizegenetics.pal.alignment.depth.AlleleDepth;
+import net.maizegenetics.dna.snp.depth.AlleleDepth;
 import net.maizegenetics.pal.alignment.genotype.Genotype;
 import net.maizegenetics.pal.alignment.score.SiteScore;
 import net.maizegenetics.pal.position.PositionList;

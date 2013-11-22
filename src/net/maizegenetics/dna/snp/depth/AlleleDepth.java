@@ -1,7 +1,7 @@
 /*
  *  AlleleDepth
  */
-package net.maizegenetics.pal.alignment.depth;
+package net.maizegenetics.dna.snp.depth;
 
 /**
  *
