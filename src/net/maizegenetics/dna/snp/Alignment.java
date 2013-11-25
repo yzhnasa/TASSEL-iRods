@@ -188,7 +188,7 @@ public interface Alignment {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
@@ -203,7 +203,7 @@ public interface Alignment {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at sites
@@ -221,7 +221,7 @@ public interface Alignment {
      *
      * @return sequence of true/false values.
      */
-    public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock);
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock);
 
     /**
      * Returns string representation of diploid values returned by getBase() for
