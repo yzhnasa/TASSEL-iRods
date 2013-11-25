@@ -166,7 +166,7 @@ public interface Genotype {
      *
      * @return allele values for all sites.
      */
-    public String[][] getAlleleEncodings();
+    public String[][] alleleDefinitions();
 
     /**
      * Same as getAlleleEncodings() for only one site.
@@ -175,7 +175,7 @@ public interface Genotype {
      *
      * @return allele values for given site.
      */
-    public String[] getAlleleEncodings(int site);
+    public String[] alleleDefinitions(int site);
 
     /**
      * Returns String representation of allele value at site.

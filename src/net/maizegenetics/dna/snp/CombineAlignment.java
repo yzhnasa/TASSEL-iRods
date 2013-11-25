@@ -609,17 +609,17 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
+    public String[][] alleleDefinitions() {
 
         if (myAlleleStates != null) {
             return myAlleleStates;
         }
 
         boolean allTheSame = true;
-        String[][] encodings = myAlignments[0].getAlleleEncodings();
+        String[][] encodings = myAlignments[0].alleleDefinitions();
         if (encodings.length == 1) {
             for (int i = 1; i < myAlignments.length; i++) {
-                String[][] current = myAlignments[i].getAlleleEncodings();
+                String[][] current = myAlignments[i].alleleDefinitions();
                 if ((current.length == 1) && (encodings[0].length == current[0].length)) {
                     for (int j = 0; j < encodings[0].length; j++) {
                         if (!current[0][j].equals(encodings[0][j])) {
@@ -647,7 +647,7 @@ public class CombineAlignment implements Alignment {
             int count = 0;
             for (int i = 0; i < myAlignments.length; i++) {
                 for (int j = 0, n = myAlignments[i].getSiteCount(); j < n; j++) {
-                    result[count++] = myAlignments[i].getAlleleEncodings(j);
+                    result[count++] = myAlignments[i].alleleDefinitions(j);
                 }
             }
             myAlleleStates = result;
@@ -658,9 +658,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
+    public String[] alleleDefinitions(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getAlleleEncodings(site - mySiteOffsets[translate]);
+        return myAlignments[translate].alleleDefinitions(site - mySiteOffsets[translate]);
     }
 
     @Override

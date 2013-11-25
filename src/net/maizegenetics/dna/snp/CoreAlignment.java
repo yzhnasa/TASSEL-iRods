@@ -385,13 +385,13 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
-        return myGenotype.getAlleleEncodings();
+    public String[][] alleleDefinitions() {
+        return myGenotype.alleleDefinitions();
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
-        return myGenotype.getAlleleEncodings(site);
+    public String[] alleleDefinitions(int site) {
+        return myGenotype.alleleDefinitions(site);
     }
 
     @Override

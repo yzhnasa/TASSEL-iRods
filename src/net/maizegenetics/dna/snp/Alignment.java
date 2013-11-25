@@ -723,16 +723,16 @@ public interface Alignment {
      *
      * @return allele values for all sites.
      */
-    public String[][] getAlleleEncodings();
+    public String[][] alleleDefinitions();
 
     /**
-     * Same as getAlleleEncodings() for only one site.
+     * Same as alleleDefinitions() for only one site.
      *
      * @param site site
      *
      * @return allele values for given site.
      */
-    public String[] getAlleleEncodings(int site);
+    public String[] alleleDefinitions(int site);
 
     /**
      * Returns String representation of allele value at site.

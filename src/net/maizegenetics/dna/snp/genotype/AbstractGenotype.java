@@ -64,7 +64,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public String getBaseAsString(int taxon, int site) {
-        String[][] alleleStates = getAlleleEncodings();
+        String[][] alleleStates = alleleDefinitions();
         byte[] temp = getBaseArray(taxon, site);
         return alleleStates[0][temp[0]] + ":" + alleleStates[0][temp[1]];
     }
@@ -88,7 +88,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public String[] getBaseAsStringArray(int taxon, int site) {
-        String[][] alleleStates = getAlleleEncodings();
+        String[][] alleleStates = alleleDefinitions();
         byte[] temp = getBaseArray(taxon, site);
         return new String[]{alleleStates[0][temp[0]], alleleStates[0][temp[1]]};
     }
@@ -169,12 +169,12 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
+    public String[][] alleleDefinitions() {
         return myAlleleEncodings;
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
+    public String[] alleleDefinitions(int site) {
         if (myAlleleEncodings.length == 1) {
             return myAlleleEncodings[0];
         } else {
@@ -184,12 +184,12 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public String getBaseAsString(int site, byte value) {
-        return getAlleleEncodings(site)[value];
+        return alleleDefinitions(site)[value];
     }
 
     @Override
     public String getDiploidAsString(int site, byte value) {
-        String[] alleleStates = getAlleleEncodings(site);
+        String[] alleleStates = alleleDefinitions(site);
         return alleleStates[(value >>> 4) & 0xf] + ":" + alleleStates[value & 0xf];
     }
 
@@ -465,7 +465,7 @@ abstract class AbstractGenotype implements Genotype {
     @Override
     public Object[][] getMajorMinorCounts() {
 
-        String[][] alleleStates = getAlleleEncodings();
+        String[][] alleleStates = alleleDefinitions();
 
         if (alleleStates.length != 1) {
             return new Object[0][0];

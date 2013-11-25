@@ -65,7 +65,7 @@ public class ExportUtils {
             int numTBitWords = a.getAllelePresenceForAllSites(0, 0).getNumWords();
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TBIT_WORDS, numTBitWords);
 
-            String[][] aEncodings = a.getAlleleEncodings();
+            String[][] aEncodings = a.alleleDefinitions();
             //myLogger.info(Arrays.deepToString(aEncodings));
             int numEncodings = aEncodings.length;
             int numStates = aEncodings[0].length;
@@ -201,7 +201,7 @@ public class ExportUtils {
 //            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
 //            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
 //            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
-//            String[][] aEncodings = a.getAlleleEncodings();
+//            String[][] aEncodings = a.alleleDefinitions();
 //            int numEncodings = aEncodings.length;
 //            int numStates = aEncodings[0].length;
 //            MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, numStates});

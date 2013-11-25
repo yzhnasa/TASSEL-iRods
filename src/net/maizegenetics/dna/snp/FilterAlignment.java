@@ -801,13 +801,13 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
-        return getAlleleEncodings();
+    public String[][] alleleDefinitions() {
+        return alleleDefinitions();
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
-        return getAlleleEncodings(site);
+    public String[] alleleDefinitions(int site) {
+        return alleleDefinitions(site);
     }
 
     @Override

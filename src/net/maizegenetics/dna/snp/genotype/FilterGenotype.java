@@ -96,15 +96,15 @@ class FilterGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
-        String[][] encodings = myBaseGenotype.getAlleleEncodings();
+    public String[][] alleleDefinitions() {
+        String[][] encodings = myBaseGenotype.alleleDefinitions();
         if (encodings.length == 1) {
             return encodings;
         } else if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
             int numSites = getSiteCount();
             String[][] result = new String[numSites][];
             for (int i = 0; i < numSites; i++) {
-                result[i] = getAlleleEncodings(i);
+                result[i] = alleleDefinitions(i);
             }
             return result;
         } else {
@@ -113,8 +113,8 @@ class FilterGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
-        return myBaseGenotype.getAlleleEncodings(translateSite(site));
+    public String[] alleleDefinitions(int site) {
+        return myBaseGenotype.alleleDefinitions(translateSite(site));
     }
 
     @Override
