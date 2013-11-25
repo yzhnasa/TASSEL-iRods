@@ -71,22 +71,22 @@ class FilterGenotype extends AbstractGenotype {
     }
 
     @Override
-    public byte getBase(int taxon, int site) {
+    public byte genotype(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
             return Alignment.UNKNOWN_ALLELE;
         } else {
-            return myBaseGenotype.getBase(taxaIndex, translateSite(site));
+            return myBaseGenotype.genotype(taxaIndex, translateSite(site));
         }
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
+    public String genotypeAsString(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
             return Alignment.UNKNOWN_ALLELE_STR;
         } else {
-            return myBaseGenotype.getBaseAsString(taxaIndex, translateSite(site));
+            return myBaseGenotype.genotypeAsString(taxaIndex, translateSite(site));
         }
     }
 

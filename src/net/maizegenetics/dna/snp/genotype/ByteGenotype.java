@@ -42,7 +42,7 @@ class ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    public byte getBase(int taxon, int site) {
+    public byte genotype(int taxon, int site) {
         return myGenotype.get(taxon, site);
     }
 

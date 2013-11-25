@@ -65,7 +65,7 @@ public class AlleleFreqCache {
         int[][] alleleFreq = new int[numSites][myMaxNumAlleles];
         for (int taxon = 0; taxon < numTaxa; taxon++) {
             for (int s = 0; s < numSites; s++) {
-                byte[] b = myGenotype.getBaseArray(taxon, s + startSite);
+                byte[] b = myGenotype.genotypeArray(taxon, s + startSite);
                 if (b[0] < myMaxNumAlleles) {
                     alleleFreq[s][b[0]]++;
                 }

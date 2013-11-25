@@ -174,7 +174,7 @@ public class AlignmentBuilder {
     public static Alignment getInstance(Genotype genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
         AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(positionList,hdf5File);
         for (int i=0; i<taxaList.getTaxaCount(); i++) {
-            aB.addTaxon(taxaList.get(i),genotype.getBaseRow(i));
+            aB.addTaxon(taxaList.get(i),genotype.genotypeRow(i));
         }
         return aB.build();
     }

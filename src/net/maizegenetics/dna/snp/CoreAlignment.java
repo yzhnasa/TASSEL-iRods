@@ -56,27 +56,27 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public byte genotype(int taxon, int site) {
-        return myGenotype.getBase(taxon, site);
+        return myGenotype.genotype(taxon, site);
     }
 
     @Override
     public byte[] genotypeArray(int taxon, int site) {
-        return myGenotype.getBaseArray(taxon, site);
+        return myGenotype.genotypeArray(taxon, site);
     }
 
     @Override
     public byte genotype(int taxon, Chromosome chromosome, int physicalPosition) {
-        return myGenotype.getBase(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
+        return myGenotype.genotype(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
     @Override
     public byte[] genotypeRange(int taxon, int startSite, int endSite) {
-        return myGenotype.getBaseRange(taxon, startSite, endSite);
+        return myGenotype.genotypeRange(taxon, startSite, endSite);
     }
 
     @Override
     public byte[] genotypeRow(int taxon) {
-        return myGenotype.getBaseRow(taxon);
+        return myGenotype.genotypeRow(taxon);
     }
 
     @Override
@@ -111,22 +111,22 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public String genotypeAsString(int taxon, int site) {
-        return myGenotype.getBaseAsString(taxon, site);
+        return myGenotype.genotypeAsString(taxon, site);
     }
 
     @Override
     public String genotypeAsStringRange(int taxon, int startSite, int endSite) {
-        return myGenotype.getBaseAsStringRange(taxon, startSite, endSite);
+        return myGenotype.genotypeAsStringRange(taxon, startSite, endSite);
     }
 
     @Override
     public String genotypeAsStringRow(int taxon) {
-        return myGenotype.getBaseAsStringRow(taxon);
+        return myGenotype.genotypeAsStringRow(taxon);
     }
 
     @Override
     public String[] genotypeAsStringArray(int taxon, int site) {
-        return myGenotype.getBaseAsStringArray(taxon, site);
+        return myGenotype.genotypeAsStringArray(taxon, site);
     }
 
     @Override
@@ -396,7 +396,7 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public String genotypeAsString(int site, byte value) {
-        return myGenotype.getBaseAsString(site, value);
+        return myGenotype.genotypeAsString(site, value);
     }
 
     @Override
