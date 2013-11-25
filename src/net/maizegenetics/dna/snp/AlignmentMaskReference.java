@@ -28,7 +28,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, Taxon id) {
-        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);
         }
@@ -36,7 +36,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, String id) {
-        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);
         }
@@ -51,16 +51,16 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
         if (index == -1) {
             name = "Alignment Reference";
         } else {
-            name = align.getTaxaName(index) + " Reference";
+            name = align.taxaName(index) + " Reference";
         }
         return new AlignmentMaskReference(align, index, name, getNextColor());
     }
 
     @Override
     public byte getMask(int taxon, int site) {
-        if ((myTaxonReference == -1) && (AlignmentUtils.isEqualOrUnknown(myAlignment.getBase(taxon, site), myAlignment.getReferenceAllele(site)))) {
+        if ((myTaxonReference == -1) && (AlignmentUtils.isEqualOrUnknown(myAlignment.genotype(taxon, site), myAlignment.getReferenceAllele(site)))) {
             return 0;
-        } else if (AlignmentUtils.isEqualOrUnknown(myAlignment.getBaseArray(taxon, site), myAlignment.getBaseArray(myTaxonReference, site))) {
+        } else if (AlignmentUtils.isEqualOrUnknown(myAlignment.genotypeArray(taxon, site), myAlignment.genotypeArray(myTaxonReference, site))) {
             return 0;
         } else {
             return 1;

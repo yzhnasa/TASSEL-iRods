@@ -91,7 +91,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
             SelectFromAvailableDialog dialog = null;
             if (theData instanceof Alignment) {
                 final Alignment alignment = (Alignment) theData;
-                origIdGroup = alignment.getTaxaList();
+                origIdGroup = alignment.taxa();
                 AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
 
                     @Override
@@ -101,7 +101,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
                     @Override
                     public String getRealElementAt(int index) {
-                        return alignment.getTaxaName(index);
+                        return alignment.taxaName(index);
                     }
                 };
                 dialog = new SelectFromAvailableDialog(getParentFrame(), "Taxa Filter", listModel);

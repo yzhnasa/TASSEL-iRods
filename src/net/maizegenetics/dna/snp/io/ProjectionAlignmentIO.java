@@ -42,7 +42,7 @@ public class ProjectionAlignmentIO {
                 sl=Utils.readLineSkipComments(br).split("\t");
                 int index=Integer.parseInt(sl[0]);
                 Taxon taxon=new Taxon(sl[1]);
-                List<Integer> matches=baseHighDensityAlignment.getTaxaList().getIndicesMatchingTaxon(taxon);
+                List<Integer> matches=baseHighDensityAlignment.taxa().getIndicesMatchingTaxon(taxon);
                 if(matches.size()==0) {
                     throw new NoSuchElementException("Taxon "+sl[1]+" not found within base taxa");
                 }
@@ -93,12 +93,12 @@ public class ProjectionAlignmentIO {
             bw.write(baseAlignment.getSequenceCount()+"\t"+pa.getSequenceCount()+"\n");
             bw.write("#Donor Haplotypes\n");
             for (int i = 0; i < baseAlignment.getSequenceCount(); i++) {
-                bw.write(i+"\t"+baseAlignment.getTaxaName(i)+"\n");
+                bw.write(i+"\t"+baseAlignment.taxaName(i)+"\n");
             }
             bw.write("#Taxa Breakpoints\n");
             bw.write("#Block are defined chr:startPos:endPos:donor1:donor2 (-1 means no hypothesis)\n");
             for (int i = 0; i < pa.getSequenceCount(); i++) {
-                bw.write(pa.getTaxaName(i)+"\t");
+                bw.write(pa.taxaName(i)+"\t");
                 NavigableSet<DonorHaplotypes> theDH=pg.getDonorHaplotypes(i);
                 for (DonorHaplotypes dh : theDH) {
                     bw.write(dh.getChromosome().getName()+":"+dh.getStartPosition()+":"+dh.getEndPosition()+":"+

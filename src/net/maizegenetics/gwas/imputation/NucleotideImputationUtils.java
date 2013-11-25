@@ -124,7 +124,7 @@ public class NucleotideImputationUtils {
 			Csnp[snp] = alleleC;
 			
 			for (int t = 0; t < ntaxa; t++) {
-				byte[] taxon = popdata.original.getBaseArray(t, snp);
+				byte[] taxon = popdata.original.genotypeArray(t, snp);
 				if (taxon[0] == taxon[1]) {
 					if (taxon[0] == alleleA) parentAlignment.setBase(t, snp, AA);
 					else if (taxon[0] == alleleC) parentAlignment.setBase(t, snp, CC);
@@ -508,10 +508,10 @@ public class NucleotideImputationUtils {
 				int matchCount = 0;
 				int totalCount = 0;
 				for (int t = 0; t < ntaxa; t++) {
-					byte tgeno = a.getBase(t, goodsites[s]);
+					byte tgeno = a.genotype(t, goodsites[s]);
 					if (tgeno == Aallele) {
 						for (int s2 = firstSite; s2 <= lastSite; s2++) if (s2 != s) {
-							byte tgeno2 = a.getBase(t, goodsites[s2]);
+							byte tgeno2 = a.genotype(t, goodsites[s2]);
 							if (tgeno2 != NN) {
 								totalCount += 1;
 								if (tgeno2 == popdata.alleleA[goodsites[s2]]) matchCount++;
@@ -519,7 +519,7 @@ public class NucleotideImputationUtils {
 						}
 					} else if (tgeno == Callele) {
 						for (int s2 = firstSite; s2 <= lastSite; s2++) if (s2 != s) {
-							byte tgeno2 = a.getBase(t, goodsites[s2]);
+							byte tgeno2 = a.genotype(t, goodsites[s2]);
 							if (tgeno2 != NN) {
 								totalCount += 1;
 								if (tgeno2 == popdata.alleleC[goodsites[s2]]) matchCount++;
@@ -578,7 +578,7 @@ public class NucleotideImputationUtils {
 			for (Iterator<Haplotype> iterator = hc.getIterator(); iterator.hasNext();) {
 				Haplotype hap = iterator.next();
 				int taxon = hap.taxonIndex;
-				byte allele = a.getBase(taxon, nextSite);
+				byte allele = a.genotype(taxon, nextSite);
 				if (allele != Haplotype.N) {
 					snpset0.add(NucleotideAlignmentConstants.getNucleotideIUPAC(allele));
 				}
@@ -588,7 +588,7 @@ public class NucleotideImputationUtils {
 			for (Iterator<Haplotype> iterator = hc.getIterator(); iterator.hasNext();) {
 				Haplotype hap = iterator.next();
 				int taxon = hap.taxonIndex;
-				byte allele = a.getBase(taxon, nextSite);
+				byte allele = a.genotype(taxon, nextSite);
 				if (allele != Haplotype.N) {
 					snpset1.add(NucleotideAlignmentConstants.getNucleotideIUPAC(allele));
 				}
@@ -656,7 +656,7 @@ public class NucleotideImputationUtils {
 		int ntaxa = a.getSequenceCount();
 		Alignment b = FilterAlignment.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
-			seq = b.getBaseRow(t);
+			seq = b.genotypeRow(t);
 			Haplotype hap = new Haplotype(seq, t);
 			int dist0 = hap.distanceFrom(haplotype0);
 			int dist1 = hap.distanceFrom(haplotype1);
@@ -713,7 +713,7 @@ public class NucleotideImputationUtils {
 		int ntaxa = a.getSequenceCount();
 		Alignment b = FilterAlignment.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
-			byte[] seq = b.getBaseRow(t);
+			byte[] seq = b.genotypeRow(t);
 			Haplotype hap = new Haplotype(seq, t);
 			int dist0 = hap.distanceFrom(haplotype0);
 			int dist1 = hap.distanceFrom(haplotype1);
@@ -1685,12 +1685,12 @@ public class NucleotideImputationUtils {
 			BitSet isNotMissing = notMissingIndex.get(t);
 			int nmcount = 0;
 			for (int s = 0; s < nsites; s++) {
-				byte base = a.getBase(t, s);
-				if (isNotMissing.fastGet(s) && obsMap.get(a.getBase(t, s)) == null) {
+				byte base = a.genotype(t, s);
+				if (isNotMissing.fastGet(s) && obsMap.get(a.genotype(t, s)) == null) {
 					myLogger.info("null from " + Byte.toString(base));
 				}
 				if (isNotMissing.fastGet(s)) {
-					obs[nmcount] = obsMap.get(a.getBase(t, s));
+					obs[nmcount] = obsMap.get(a.genotype(t, s));
 					pos[nmcount++] = a.getPositionInChromosome(s);
 				}
 				
@@ -1718,7 +1718,7 @@ public class NucleotideImputationUtils {
 					va.calculate();
 					bestStates.add(va.getMostProbableStateSequence());
 				} else { //do not impute if obs < 20
-					myLogger.info("Fewer then 20 observations for " + a.getTaxaName(t));
+					myLogger.info("Fewer then 20 observations for " + a.taxaName(t));
 					byte[] states = new byte[nobs];
 					byte[] obs = nonMissingObs.get(t);
 					for (int i = 0; i < nobs; i++) {
@@ -1937,7 +1937,7 @@ public class NucleotideImputationUtils {
 				byte CCcall = (byte) ((Ccall << 4) | Ccall);
 				byte ACcall = (byte) ((Acall << 4) | Ccall);
 				for (int t = 0; t < ntaxa; t++) {
-					byte parentCall = popdata.imputed.getBase(t, imputedSnpCount);
+					byte parentCall = popdata.imputed.genotype(t, imputedSnpCount);
 					if (parentCall == AA) {
 						mna.setBase(t, imputedSnpCount, AAcall);
 					} else if (parentCall == CC) {
@@ -2432,7 +2432,7 @@ public class NucleotideImputationUtils {
 		ArrayList<Haplotype> haps = new ArrayList<Haplotype>();
 		
 		for (int t = 0; t < ntaxa; t++) {
-			haps.add(new Haplotype(a.getBaseRange(t, start, end), t));
+			haps.add(new Haplotype(a.genotypeRange(t, start, end), t));
 		}
 		
 		HaplotypeClusterer hc = new HaplotypeClusterer(haps);

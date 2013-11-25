@@ -27,7 +27,7 @@ public class MarkerPhenotype implements TableReport {
     }
 
     public static MarkerPhenotype getInstance(Alignment aa, Phenotype ca, boolean union) {
-        TaxaList idGroup = getIdGroup(aa.getTaxaList(), ca.getTaxa(), union);
+        TaxaList idGroup = getIdGroup(aa.taxa(), ca.getTaxa(), union);
         Alignment align = FilterAlignment.getInstance(aa, idGroup);
         Phenotype phenotype = FilterPhenotype.getInstance(ca, idGroup, null);
         return new MarkerPhenotype(align, phenotype);
@@ -62,13 +62,13 @@ public class MarkerPhenotype implements TableReport {
         }
         builder.append("\n");
         for (int i = 0; i < myAlignment.getSequenceCount(); i++) {
-            builder.append(myAlignment.getTaxaName(i));
+            builder.append(myAlignment.taxaName(i));
             builder.append("\t");
             for (int j = 0; j < myPhenotype.getNumberOfTraits(); j++) {
                 builder.append(myPhenotype.getData(i, j));
                 builder.append("\t");
             }
-            builder.append(myAlignment.getBaseAsStringRow(i));
+            builder.append(myAlignment.genotypeAsStringRow(i));
         }
         return builder.toString();
     }
@@ -115,13 +115,13 @@ public class MarkerPhenotype implements TableReport {
 
         Object[] data;
         data = new String[myPhenotype.getNumberOfTraits() + 2];
-        data[0] = myAlignment.getTaxaName(row);
+        data[0] = myAlignment.taxaName(row);
         for (int c = 0; c < myPhenotype.getNumberOfTraits(); c++) {
             data[c + 1] = "" + myPhenotype.getData(row, c);
         }
         int siteCount = Math.min(myAlignment.getSiteCount(), 10);
         StringBuilder builder = new StringBuilder();
-        builder.append(myAlignment.getBaseAsStringRange(row, 0, siteCount));
+        builder.append(myAlignment.genotypeAsStringRange(row, 0, siteCount));
         if (myAlignment.getSiteCount() > 10) {
             builder.append("...");
         }
@@ -153,7 +153,7 @@ public class MarkerPhenotype implements TableReport {
         if (col == haplotypeColumn) {
             int siteCount = Math.min(myAlignment.getSiteCount(), 10);
             StringBuilder builder = new StringBuilder();
-            builder.append(myAlignment.getBaseAsStringRange(row, 0, siteCount));
+            builder.append(myAlignment.genotypeAsStringRange(row, 0, siteCount));
             if (myAlignment.getSiteCount() > 10) {
                 builder.append("...");
             }

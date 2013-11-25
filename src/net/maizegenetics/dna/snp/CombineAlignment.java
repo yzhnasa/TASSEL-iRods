@@ -67,9 +67,9 @@ public class CombineAlignment implements Alignment {
             return alignments[0];
         }
 
-        TaxaList firstGroup = alignments[0].getTaxaList();
+        TaxaList firstGroup = alignments[0].taxa();
         for (int i = 1; i < alignments.length; i++) {
-            if (!areTaxaListsEqual(firstGroup, alignments[i].getTaxaList())) {
+            if (!areTaxaListsEqual(firstGroup, alignments[i].taxa())) {
                 throw new IllegalArgumentException("CombineAlignment: getInstance: TaxaLists do not match.");
             }
         }
@@ -102,7 +102,7 @@ public class CombineAlignment implements Alignment {
 
         TaxaList[] groups = new TaxaList[alignments.length];
         for (int i = 0; i < alignments.length; i++) {
-            groups[i] = alignments[i].getTaxaList();
+            groups[i] = alignments[i].taxa();
         }
         TaxaList newTaxa = null;
         if (isUnion) {
@@ -162,13 +162,13 @@ public class CombineAlignment implements Alignment {
 
     }
 
-    public byte getBase(int taxon, int site) {
+    public byte genotype(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBase(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotype(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
-    public byte[] getBaseRange(int taxon, int startSite, int endSite) {
+    public byte[] genotypeRange(int taxon, int startSite, int endSite) {
 
         byte[] result = new byte[endSite - startSite];
         int count = 0;
@@ -188,7 +188,7 @@ public class CombineAlignment implements Alignment {
                 secondSite = endSite - mySiteOffsets[secondAlign];
             }
             for (int s = firstSite; s < secondSite; s++) {
-                result[count++] = myAlignments[i].getBase(taxon, s);
+                result[count++] = myAlignments[i].genotype(taxon, s);
             }
         }
         return result;
@@ -196,10 +196,10 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte getBase(int taxon, Chromosome locus, int physicalPosition) {
+    public byte genotype(int taxon, Chromosome locus, int physicalPosition) {
         int site = getSiteOfPhysicalPosition(physicalPosition, locus);
         int translate = translateSite(site);
-        return myAlignments[translate].getBase(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotype(taxon, site - mySiteOffsets[translate]);
     }
 
     /**
@@ -232,9 +232,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getSNPID(int site) {
+    public String siteName(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getSNPID(site - mySiteOffsets[translate]);
+        return myAlignments[translate].siteName(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -404,16 +404,16 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getBaseArray(int taxon, int site) {
+    public byte[] genotypeArray(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBaseArray(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotypeArray(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
-    public byte[] getBaseRow(int taxon) {
+    public byte[] genotypeRow(int taxon) {
         byte[] result = new byte[getSiteCount()];
         for (int i = 0; i < myAlignments.length; i++) {
-            byte[] current = myAlignments[i].getBaseRow(taxon);
+            byte[] current = myAlignments[i].genotypeRow(taxon);
             System.arraycopy(current, 0, result, myChromosomesOffsets[i], current.length);
         }
         return result;
@@ -436,15 +436,15 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
+    public String genotypeAsString(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBaseAsString(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotypeAsString(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
-    public String[] getBaseAsStringArray(int taxon, int site) {
+    public String[] genotypeAsStringArray(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBaseAsStringArray(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotypeAsStringArray(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -556,13 +556,13 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getGenomeAssembly() {
-        String first = myAlignments[0].getGenomeAssembly();
+    public String genomeVersion() {
+        String first = myAlignments[0].genomeVersion();
         if (first == null) {
             return null;
         }
         for (int i = 1; i < myAlignments.length; i++) {
-            String current = myAlignments[i].getGenomeAssembly();
+            String current = myAlignments[i].genomeVersion();
             if ((current != null) && (!first.equals(current))) {
                 return null;
             }
@@ -609,17 +609,17 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
+    public String[][] alleleDefinitions() {
 
         if (myAlleleStates != null) {
             return myAlleleStates;
         }
 
         boolean allTheSame = true;
-        String[][] encodings = myAlignments[0].getAlleleEncodings();
+        String[][] encodings = myAlignments[0].alleleDefinitions();
         if (encodings.length == 1) {
             for (int i = 1; i < myAlignments.length; i++) {
-                String[][] current = myAlignments[i].getAlleleEncodings();
+                String[][] current = myAlignments[i].alleleDefinitions();
                 if ((current.length == 1) && (encodings[0].length == current[0].length)) {
                     for (int j = 0; j < encodings[0].length; j++) {
                         if (!current[0][j].equals(encodings[0][j])) {
@@ -647,7 +647,7 @@ public class CombineAlignment implements Alignment {
             int count = 0;
             for (int i = 0; i < myAlignments.length; i++) {
                 for (int j = 0, n = myAlignments[i].getSiteCount(); j < n; j++) {
-                    result[count++] = myAlignments[i].getAlleleEncodings(j);
+                    result[count++] = myAlignments[i].alleleDefinitions(j);
                 }
             }
             myAlleleStates = result;
@@ -658,15 +658,15 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
+    public String[] alleleDefinitions(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getAlleleEncodings(site - mySiteOffsets[translate]);
+        return myAlignments[translate].alleleDefinitions(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public String getBaseAsString(int site, byte value) {
+    public String genotypeAsString(int site, byte value) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBaseAsString(site - mySiteOffsets[translate], value);
+        return myAlignments[translate].genotypeAsString(site - mySiteOffsets[translate], value);
     }
 
     @Override
@@ -711,39 +711,39 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+    public byte[] getAllelesByScope(ALLELE_SORT_TYPE scope, int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getAllelesByScope(scope, site - mySiteOffsets[translate]);
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SORT_TYPE scope, int site, int alleleNumber) {
         int translate = translateSite(site);
         return myAlignments[translate].getAllelePresenceForAllTaxaByScope(scope, site - mySiteOffsets[translate], alleleNumber);
     }
 
     @Override
-    public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+    public String genotypeAsStringRange(int taxon, int startSite, int endSite) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public String getBaseAsStringRow(int taxon) {
+    public String genotypeAsStringRow(int taxon) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -778,12 +778,12 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public TaxaList getTaxaList() {
+    public TaxaList taxa() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public String getTaxaName(int index) {
+    public String taxaName(int index) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -828,7 +828,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
+    public BitStorage getBitStorage(ALLELE_SORT_TYPE scopeType) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

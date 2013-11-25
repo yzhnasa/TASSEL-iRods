@@ -629,7 +629,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
             if (jump[r] != 1 && mouseX > xPos[r-myXStart] && mouseX < xPos[r-myXStart+1]) {
                 for (int c = myYStart; c < myYEnd; c++) {
                     if (jump[c] != 1 && mouseY > yPos[c-myYStart] && mouseY < yPos[c-myYStart+1]) {
-                        return theAA.getSNPID(r+jump[r]) + ": " + theAA.getPositionInChromosome(r+jump[r]) + ", " + theAA.getSNPID(c+jump[c]) + ": " + theAA.getPositionInChromosome(c+jump[c]) + ", Value: " + format.format(diseq[r-myXStart][c-myYStart]);
+                        return theAA.siteName(r+jump[r]) + ": " + theAA.getPositionInChromosome(r+jump[r]) + ", " + theAA.siteName(c+jump[c]) + ": " + theAA.getPositionInChromosome(c+jump[c]) + ", Value: " + format.format(diseq[r-myXStart][c-myYStart]);
                     }
                 }
             }

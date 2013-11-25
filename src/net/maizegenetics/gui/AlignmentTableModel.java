@@ -71,7 +71,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         try {
             realColumn = col + myHorizontalStart;
-            result = myAlignment.getBaseAsString(row, realColumn);
+            result = myAlignment.genotypeAsString(row, realColumn);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("row: " + row + "   col: " + col + "   realColumn: " + realColumn);
@@ -87,7 +87,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public Object getRealValueAt(int row, int col) {
-        return myAlignment.getBase(row, col);
+        return myAlignment.genotype(row, col);
     }
 
     public String getColumnName(int col) {
@@ -101,7 +101,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         } else if (myColumnNameType == COLUMN_NAME_TYPE.locus) {
             return myAlignment.getChromosomeName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteName) {
-            return myAlignment.getSNPID(realColumn);
+            return myAlignment.siteName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.alleles) {
             int[][] alleles = myAlignment.getAllelesSortedByFrequency(realColumn);
             int numAlleles = alleles[0].length;
@@ -117,7 +117,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
                     builder.append("; ");
                 }
                 builder.append(NUMBER_FORMAT.format((double) alleles[1][i] / total));
-                builder.append(myAlignment.getBaseAsString(realColumn, (byte) alleles[0][i]));
+                builder.append(myAlignment.genotypeAsString(realColumn, (byte) alleles[0][i]));
             }
 
             return builder.toString();
@@ -247,7 +247,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         List result = new ArrayList();
 
-        TaxaList idGroup = myAlignment.getTaxaList();
+        TaxaList idGroup = myAlignment.taxa();
         for (int i = 0, n = idGroup.getTaxaCount(); i < n; i++) {
             result.add(idGroup.get(i));
         }

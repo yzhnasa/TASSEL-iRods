@@ -261,10 +261,10 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         Alignment a2=ImportUtils.readGuessFormat(f1);
         taxaSynonyms.clear();
         int nTaxa = 0, nCompareTaxa = 0;
-        for (Taxon taxon : a1.getTaxaList()) {
-            List<Integer> t2a=a2.getTaxaList().getIndicesMatchingTaxon(taxon);
+        for (Taxon taxon : a1.taxa()) {
+            List<Integer> t2a=a2.taxa().getIndicesMatchingTaxon(taxon);
             for (Integer tIndex : t2a) {
-                taxaSynonyms.put(taxon.getName(), a2.getTaxaName(tIndex));
+                taxaSynonyms.put(taxon.getName(), a2.taxaName(tIndex));
                 ++nCompareTaxa;
             }
             ++nTaxa;
@@ -280,11 +280,11 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         System.out.println("------\t\t------");
         int nTaxaPairs = 0;
         for (int taxon1Index = 0; taxon1Index < a1.getSequenceCount(); taxon1Index++) {
-            String taxon1 = a1.getTaxaName(taxon1Index);
+            String taxon1 = a1.taxaName(taxon1Index);
             if (taxaSynonyms.containsKey(taxon1)) {
                 for (String taxon2 : taxaSynonyms.get(taxon1)) {
                     for (int taxon2Index = 0; taxon2Index < a2.getSequenceCount(); taxon2Index++) {
-                        if (taxon2.equals(a2.getTaxaName(taxon2Index))) {
+                        if (taxon2.equals(a2.taxaName(taxon2Index))) {
                             List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
                             if (synTaxaIndicesForTaxonIndex == null) {
                                 taxaRedirect.put(taxon1Index, synTaxaIndicesForTaxonIndex = new ArrayList<Integer>());
@@ -329,9 +329,9 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             int taxon2Count = 0;
             for (Integer taxon2Index : synTaxaIndicesForTaxonIndex) {
                 StringBuilder builder = new StringBuilder();
-                builder.append(a1.getTaxaName(taxon1Index));
+                builder.append(a1.taxaName(taxon1Index));
                 builder.append(DELIMITER);
-                builder.append(a2.getTaxaName(taxon2Index));
+                builder.append(a2.taxaName(taxon2Index));
                 builder.append(DELIMITER);
                 builder.append(myCompareStatsTaxa[taxon1Count][taxon2Count][NUM_SITES_COMPARED]);
                 builder.append(DELIMITER);
@@ -362,8 +362,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         summStats[MINOR_ALLELE_FREQ2] = a2.getMinorAlleleFrequency(site2);
         summStats[F_VALUE1] = calculateF(a1, site1);
         summStats[F_VALUE2] = calculateF(a2, site2);
-        String alleleString1 = a1.getBaseAsString(site1, alleles1[0]) + "/" + a1.getBaseAsString(site1, alleles1[1]);
-        String alleleString2 = a2.getBaseAsString(site2, alleles2[0]) + "/" + a2.getBaseAsString(site2, alleles2[1]);
+        String alleleString1 = a1.genotypeAsString(site1, alleles1[0]) + "/" + a1.genotypeAsString(site1, alleles1[1]);
+        String alleleString2 = a2.genotypeAsString(site2, alleles2[0]) + "/" + a2.genotypeAsString(site2, alleles2[1]);
 
         int[][][] compareTaxaStatsSame = null;
         int[][][] compareTaxaStatsDiff = null;
@@ -467,7 +467,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         int nTaxa = a.getSequenceCount();
         // TERRY - Does this make sense?  What if it's het but not major/minor?
         for (int taxon = 0; taxon < nTaxa; taxon++) {
-            byte[] bases = a.getBaseArray(taxon, site);
+            byte[] bases = a.genotypeArray(taxon, site);
             if ((bases[0] == majAllele) && bases[1] == majAllele) {
                 majGenoCnt++;
             } else if ((bases[0] == minAllele) && bases[1] == minAllele) {
@@ -489,12 +489,12 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
     private int[] compareGenotypes(int taxon1Index, int site1, Alignment a1, int taxon2Index, int site2, Alignment a2, boolean sameStrand) {
         int[] compareStats = new int[COMPARE_STATS_LENGTH];
-        byte base1 = a1.getBase(taxon1Index, site1);
+        byte base1 = a1.genotype(taxon1Index, site1);
         byte base2;
         if (sameStrand) {
-            base2 = a2.getBase(taxon2Index, site2);
+            base2 = a2.genotype(taxon2Index, site2);
         } else {
-            base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.getBase(taxon2Index, site2));
+            base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.genotype(taxon2Index, site2));
         }
         if (base1 != Alignment.UNKNOWN_DIPLOID_ALLELE && base2 != Alignment.UNKNOWN_DIPLOID_ALLELE) {
             if (!(AlignmentUtils.isHeterozygous(base1) || AlignmentUtils.isHeterozygous(base2))) {

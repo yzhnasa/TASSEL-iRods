@@ -66,7 +66,7 @@ public class ProjectionBuilder {
     private NavigableSet<DonorHaplotypes> convertToIndexBreakPoints(Map<Position, Taxon[]> breakPoints) {
         DonorHaplotypes lastP=new DonorHaplotypes(null, -1, -1, -1, -1);
         NavigableSet<DonorHaplotypes> intBreak=new TreeSet<>();
-        TaxaList tl=myBaseAlignment.getTaxaList();
+        TaxaList tl=myBaseAlignment.taxa();
         for (Map.Entry<Position,Taxon[]> bp : breakPoints.entrySet()) {
             Taxon[] ts=bp.getValue();
             if(ts.length!=2) throw new IllegalArgumentException("Two parents required for DonorHaplotypes");

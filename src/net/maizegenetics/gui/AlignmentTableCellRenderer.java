@@ -113,7 +113,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
         setHorizontalAlignment(SwingConstants.CENTER);
 
-        String alleles = myAlignment.getBaseAsString(row, myAlignmentTableModel.getRealColumnIndex(col));
+        String alleles = myAlignment.genotypeAsString(row, myAlignmentTableModel.getRealColumnIndex(col));
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
@@ -138,7 +138,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
         } else if (myAlignment.isHeterozygous(row, site)) {
-            String alleles = myAlignment.getBaseAsString(row, myAlignmentTableModel.getRealColumnIndex(col));
+            String alleles = myAlignment.genotypeAsString(row, myAlignmentTableModel.getRealColumnIndex(col));
             comp.setBackground(COLORS_NUCLEOTIDES.get(alleles));
         } else {
             comp.setBackground(null);
@@ -164,7 +164,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         if (alleles.length > 0) {
             major = alleles[0];
         }
-        byte[] diploidValues = myAlignment.getBaseArray(row, site);
+        byte[] diploidValues = myAlignment.genotypeArray(row, site);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
@@ -214,7 +214,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         if (alleles.length > 1) {
             minor = alleles[1];
         }
-        byte[] diploidValues = myAlignment.getBaseArray(row, site);
+        byte[] diploidValues = myAlignment.genotypeArray(row, site);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
@@ -241,7 +241,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
             myCachedAlleles.put(site, alleles);
         }
 
-        byte[] diploidValues = myAlignment.getBaseArray(row, site);
+        byte[] diploidValues = myAlignment.genotypeArray(row, site);
         if (alleles.length > 1) {
             byte major = alleles[0];
             byte minor = alleles[1];

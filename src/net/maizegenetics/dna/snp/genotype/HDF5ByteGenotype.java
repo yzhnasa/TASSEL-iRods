@@ -16,8 +16,9 @@ import net.maizegenetics.taxa.TaxaListBuilder;
 import java.util.concurrent.ExecutionException;
 
 /**
- * HDF5 implementation of Genotype
- * Uses caching of genotype, alleleCounts, MAF, and siteCoverage
+ * HDF5 implementation of Genotype Uses caching of genotype, alleleCounts, MAF,
+ * and siteCoverage
+ *
  * @author Ed Buckler
  * @author Terry Casstevens
  */
@@ -45,34 +46,34 @@ class HDF5ByteGenotype extends AbstractGenotype {
         }
     };
 
-
-
-    private LoadingCache<Integer,SiteBlockAttr> mySiteAnnoCache; //key = site
-    private CacheLoader<Integer,SiteBlockAttr> siteAnnotLoader = new CacheLoader<Integer,SiteBlockAttr>() {
-        int lastCachedStartSite=Integer.MIN_VALUE;
+    private LoadingCache<Integer, SiteBlockAttr> mySiteAnnoCache; //key = site
+    private CacheLoader<Integer, SiteBlockAttr> siteAnnotLoader = new CacheLoader<Integer, SiteBlockAttr>() {
+        int lastCachedStartSite = Integer.MIN_VALUE;
         int[][] af;
         byte[][] afOrder;
         float[] maf;
         float[] paf;
+
         public SiteBlockAttr load(Integer key) {
-            int startSite=getStartSite(key);
+            int startSite = getStartSite(key);
             int length = Math.min(HDF5_GENOTYPE_BLOCK_SIZE, getSiteCount() - startSite);
-            System.out.println("Reading from HDF5 site anno:"+startSite);
+            System.out.println("Reading from HDF5 site anno:" + startSite);
             System.out.println("");
-            synchronized(myHDF5Reader) {
-                af= myHDF5Reader.readIntMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_CNT, 6, length, 0l, startSite);
+            synchronized (myHDF5Reader) {
+                af = myHDF5Reader.readIntMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_CNT, 6, length, 0l, startSite);
                 afOrder = myHDF5Reader.readByteMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_FREQ_ORD, 6, length, 0l, startSite);
-                maf= myHDF5Reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.MAF,length, startSite);
-                paf= myHDF5Reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.SITECOV,length, startSite);
-                lastCachedStartSite=startSite;
+                maf = myHDF5Reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.MAF, length, startSite);
+                paf = myHDF5Reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.SITECOV, length, startSite);
+                lastCachedStartSite = startSite;
             }
             //perhaps kickoff a process to load the rest
-            SiteBlockAttr sa=new SiteBlockAttr(startSite,afOrder, af, maf, paf);
+            SiteBlockAttr sa = new SiteBlockAttr(startSite, afOrder, af, maf, paf);
             return sa;
         }
     };
 
     private class SiteBlockAttr {
+
         private final int startSite;  //4
         private final byte[][] myAlleleFreqOrder;  //[
         private final int[][] myAlleleCnt;  //2-6*4=24,  sorted by allele frequency of myAlleleFreqOrder
@@ -80,7 +81,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
         private final float[] siteCov;  //4
 
         public SiteBlockAttr(int startSite, byte[][] myAlleleFreqOrder, int[][] myAlleleCnt,
-                             float[] maf, float[] siteCov) {
+                float[] maf, float[] siteCov) {
             this.startSite = startSite;
             this.myAlleleFreqOrder = myAlleleFreqOrder;
             this.myAlleleCnt = myAlleleCnt;
@@ -89,23 +90,25 @@ class HDF5ByteGenotype extends AbstractGenotype {
         }
 
         public int[][] getAllelesSortedByFrequency(int site) {
-            int offset=site-startSite;
-            int alleleCnt=0;
-            while(myAlleleFreqOrder[alleleCnt][offset]!=Alignment.UNKNOWN_ALLELE) alleleCnt++;
+            int offset = site - startSite;
+            int alleleCnt = 0;
+            while (myAlleleFreqOrder[alleleCnt][offset] != Alignment.UNKNOWN_ALLELE) {
+                alleleCnt++;
+            }
             int result[][] = new int[2][alleleCnt];
             for (int i = 0; i < alleleCnt; i++) {
-                result[0][i]=myAlleleFreqOrder[i][offset];
-                result[1][i]=myAlleleCnt[result[0][i]][offset];
+                result[0][i] = myAlleleFreqOrder[i][offset];
+                result[1][i] = myAlleleCnt[result[0][i]][offset];
             }
             return result;
         }
 
         public float getMAF(int site) {
-            return maf[site-startSite];
+            return maf[site - startSite];
         }
 
         public float getSiteCoverage(int site) {
-            return siteCov[site-startSite];
+            return siteCov[site - startSite];
         }
 
 //        public int getAlleleTotal(int site) {
@@ -115,7 +118,6 @@ class HDF5ByteGenotype extends AbstractGenotype {
 //            return total;
 //        }
     }
-
 
     private static long getCacheKey(int taxon, int site) {
         return ((long) taxon << 33) + (site / HDF5_GENOTYPE_BLOCK_SIZE);
@@ -139,29 +141,29 @@ class HDF5ByteGenotype extends AbstractGenotype {
 
     private HDF5ByteGenotype(IHDF5Reader reader, int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
         super(numTaxa, numSites, phased, alleleEncodings);
-        genotypePaths=new String[numTaxa];
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);  //not the most efficient thing to do, but ensures sort is the same.
-        for (int i=0; i<numTaxa; i++) {
-            genotypePaths[i]=HapMapHDF5Constants.GENOTYPES + "/" + tL.getTaxaName(i);
+        genotypePaths = new String[numTaxa];
+        TaxaList tL = new TaxaListBuilder().buildFromHDF5(reader);  //not the most efficient thing to do, but ensures sort is the same.
+        for (int i = 0; i < numTaxa; i++) {
+            genotypePaths[i] = HapMapHDF5Constants.GENOTYPES + "/" + tL.getTaxaName(i);
         }
         myHDF5Reader = reader;
         myGenoCache = CacheBuilder.newBuilder()
                 .maximumSize((3 * getTaxaCount()) / 2)
                 .build(myGenoLoader);
-        mySiteAnnoCache= CacheBuilder.newBuilder()
+        mySiteAnnoCache = CacheBuilder.newBuilder()
                 .maximumSize(150)
                 .build(siteAnnotLoader);
     }
 
     static HDF5ByteGenotype getInstance(IHDF5Reader reader) {
-        int numTaxa=reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA);
-        int numSites=reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
-        String[][] alleleEncodings=NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
+        int numTaxa = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA);
+        int numSites = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
+        String[][] alleleEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
         return new HDF5ByteGenotype(reader, numTaxa, numSites, false, alleleEncodings);
     }
 
     @Override
-    public byte getBase(int taxon, int site) {
+    public byte genotype(int taxon, int site) {
         long key = getCacheKey(taxon, site);
         try {
             byte[] data = myGenoCache.get(key);
@@ -173,8 +175,8 @@ class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
-        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
+    public String genotypeAsString(int taxon, int site) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(genotype(taxon, site));
     }
 
     @Override
@@ -184,10 +186,10 @@ class HDF5ByteGenotype extends AbstractGenotype {
 
     @Override
     public int[][] getAllelesSortedByFrequency(int site) {
-        try{
-            SiteBlockAttr sa=mySiteAnnoCache.get(getStartSite(site));
+        try {
+            SiteBlockAttr sa = mySiteAnnoCache.get(getStartSite(site));
             return sa.getAllelesSortedByFrequency(site);
-        } catch(ExecutionException e) {
+        } catch (ExecutionException e) {
             e.printStackTrace();
             throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");
         }
@@ -195,10 +197,10 @@ class HDF5ByteGenotype extends AbstractGenotype {
 
     @Override
     public double getMinorAlleleFrequency(int site) {
-        try{
-            SiteBlockAttr sa=mySiteAnnoCache.get(getStartSite(site));
+        try {
+            SiteBlockAttr sa = mySiteAnnoCache.get(getStartSite(site));
             return sa.getMAF(site);
-        } catch(ExecutionException e) {
+        } catch (ExecutionException e) {
             e.printStackTrace();
             throw new UnsupportedOperationException("Error in getMinorAlleleFrequency from cache");
         }

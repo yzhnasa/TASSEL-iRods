@@ -62,20 +62,20 @@ public class AlignmentFilterByGBSUtils {
         int totalScored = 0, totalHets = 0;
         for (int j = 0; j < a.getSequenceCount(); j++) {
             for (int i = 0; i < a.getSiteCount(); i++) {
-                if (a.getBase(j, i) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (a.genotype(j, i) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][j]++;
                     if (isRefAltCoded) {
-                        if (a.getBase(j, i) == hetAllele) {
+                        if (a.genotype(j, i) == hetAllele) {
                             counts[1][j]++;
                         }
                     } else {
-                        if (AlignmentUtils.isHeterozygous(a.getBase(j, i))) {
+                        if (AlignmentUtils.isHeterozygous(a.genotype(j, i))) {
                             counts[1][j]++;
                         }
                     }
                 }
             }
-            //            if(printToScreen) System.out.println(a.getTaxaList().getIdentifier(j).getName()+"\t"+
+            //            if(printToScreen) System.out.println(a.taxa().getIdentifier(j).getName()+"\t"+
             //                    counts[0][j]+"\t"+counts[1][j]);
         }
         for (int c : counts[0]) {
@@ -100,7 +100,7 @@ public class AlignmentFilterByGBSUtils {
                 include[i] = true;
             }
         }
-        return IdGroupUtils.idGroupSubset(a.getTaxaList(), include);
+        return IdGroupUtils.idGroupSubset(a.taxa(), include);
     }
 
     public static int[][] genotypicCountsBySite(Alignment a, boolean isRefAltCoded, boolean printToScreen) {
@@ -114,7 +114,7 @@ public class AlignmentFilterByGBSUtils {
             byte minorAllele = a.getMinorAllele(i);
             minorAllele = (byte) (minorAllele << 4 | minorAllele);
             for (int j = 0; j < a.getSequenceCount(); j++) {
-                byte currentBase = a.getBase(j, i);
+                byte currentBase = a.genotype(j, i);
                 if (currentBase != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][i]++;
                     if (isRefAltCoded) {
@@ -138,7 +138,7 @@ public class AlignmentFilterByGBSUtils {
                 }
             }
             if (printToScreen) {
-                System.out.println(a.getSNPID(i) + "\t" + a.getMinorAlleleFrequency(i) + "\t"
+                System.out.println(a.siteName(i) + "\t" + a.getMinorAlleleFrequency(i) + "\t"
                         + counts[0][i] + "\t" + counts[1][i] + "\t" + (double) counts[1][i] / counts[0][i] + "\t"
                         + (char) majorAllele + "\t" + counts[2][i] + "\t" + (char) minorAllele + "\t" + counts[3][i] + "\t" + counts[4][i]);
             }
@@ -210,7 +210,7 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static double getErrorRateForDuplicatedTaxa(Alignment a, boolean ignoreHets, boolean random, boolean printToScreen) {
-        TaxaList idg = a.getTaxaList();
+        TaxaList idg = a.taxa();
         TreeMap<String, Integer> sortedIds = new TreeMap<String, Integer>();
         for (int i = 0; i < idg.getTaxaCount(); i++) {
             sortedIds.put(idg.get(i).getName().toUpperCase(), i);
@@ -227,11 +227,11 @@ public class AlignmentFilterByGBSUtils {
                     byte pB = Alignment.UNKNOWN_DIPLOID_ALLELE;
                     if (random) {
                         int t = (int) Math.round(Math.random() * (a.getSequenceCount() - 1));
-                        pB = a.getBase(t, i);
+                        pB = a.genotype(t, i);
                     } else {
-                        pB = a.getBase(priorEntry.getValue(), i);
+                        pB = a.genotype(priorEntry.getValue(), i);
                     }
-                    byte cB = a.getBase(entry.getValue(), i);
+                    byte cB = a.genotype(entry.getValue(), i);
                     if (ignoreHets && AlignmentUtils.isHeterozygous(pB)) {
                         continue;
                     }
@@ -300,7 +300,7 @@ public class AlignmentFilterByGBSUtils {
             }
             double bonP = (cntInformative > 0) ? obsMinP * cntInformative : 1;
             if (i % 1000 == 0) {
-                System.out.printf(a.getSNPID(i) + " %d %g %g %g %n", cntInformative, obsMaxR2, obsMinP, bonP);
+                System.out.printf(a.siteName(i) + " %d %g %g %g %n", cntInformative, obsMaxR2, obsMinP, bonP);
             }
             //           if(obsMaxR2<minR2) System.out.println(i+" "+cntInformative+" "+obsMaxR2+" "+obsMinP);
 
@@ -319,7 +319,7 @@ public class AlignmentFilterByGBSUtils {
         for (int t = 0; t < a.getSequenceCount(); t++) {
             byte lastHomozygous = Alignment.UNKNOWN_DIPLOID_ALLELE;
             for (int i = 0; i < a.getSiteCount(); i++) {
-                byte currBase = a.getBase(t, i);
+                byte currBase = a.genotype(t, i);
                 if ((currBase != refAllele) && (currBase != altAllele)) {
                     continue;  //not useful
                 }
@@ -331,7 +331,7 @@ public class AlignmentFilterByGBSUtils {
             }
             sumCO += cos[1][t];
             sumGood += cos[0][t];
-            //  System.out.println(a.getTaxaList().getIdentifier(t).getName()+" "+cos[0][t]+" "+cos[1][t]);
+            //  System.out.println(a.taxa().getIdentifier(t).getName()+" "+cos[0][t]+" "+cos[1][t]);
         }
         System.out.println("TotalHomoMarkers:" + sumGood + " TotalCrossover:" + sumCO);
         //        System.out.println("By Line:"+Arrays.toString(cos[0]));
@@ -351,10 +351,10 @@ public class AlignmentFilterByGBSUtils {
             byte[] base = {-1, -1, -1};
             int[] site = {-1, -1, -1};
             for (int s = 0; s < a.getSiteCount(); s++) {
-                if ((a.getBase(t, s) == refAllele) || (a.getBase(t, s) == altAllele)) {
+                if ((a.genotype(t, s) == refAllele) || (a.genotype(t, s) == altAllele)) {
                     base[0] = base[1];
                     base[1] = base[2];
-                    base[2] = a.getBase(t, s);
+                    base[2] = a.genotype(t, s);
                     site[0] = site[1];
                     site[1] = site[2];
                     site[2] = s;
@@ -411,6 +411,6 @@ public class AlignmentFilterByGBSUtils {
                 include[i] = true;
             }
         }
-        return IdGroupUtils.idGroupSubset(a.getTaxaList(), include);
+        return IdGroupUtils.idGroupSubset(a.taxa(), include);
     }
 }

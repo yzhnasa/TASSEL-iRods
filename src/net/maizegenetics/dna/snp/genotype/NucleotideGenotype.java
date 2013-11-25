@@ -17,8 +17,8 @@ class NucleotideGenotype extends ByteGenotype {
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
-        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
+    public String genotypeAsString(int taxon, int site) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(genotype(taxon, site));
     }
 
     @Override

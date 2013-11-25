@@ -174,7 +174,7 @@ public class AlignmentBuilder {
     public static Alignment getInstance(Genotype genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
         AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(positionList,hdf5File);
         for (int i=0; i<taxaList.getTaxaCount(); i++) {
-            aB.addTaxon(taxaList.get(i),genotype.getBaseRow(i));
+            aB.addTaxon(taxaList.get(i),genotype.genotypeRow(i));
         }
         return aB.build();
     }
@@ -186,7 +186,7 @@ public class AlignmentBuilder {
      * @return alignment backed by new HDF5 file
      */
     public static Alignment getInstance(Alignment a, String hdf5File) {
-        return getInstance(a.getGenotypeMatrix(),a.getPositionList(),a.getTaxaList(),hdf5File);
+        return getInstance(a.getGenotypeMatrix(),a.getPositionList(),a.taxa(),hdf5File);
     }
 
     public static Alignment getInstance(String hdf5File) {
@@ -213,7 +213,7 @@ public class AlignmentBuilder {
 
             for (int t = 0; t < numTaxa; t++) {
                 for (int s = 0; s < blockSize; s++) {
-                    byte[] currentAlleles = alignment.getBaseArray(t, s + bigS);
+                    byte[] currentAlleles = alignment.genotypeArray(t, s + bigS);
                     if ((currentAlleles[0] != majorAllele[s]) && (currentAlleles[0] != minorAllele[s])) {
                         currentAlleles[0] = Alignment.UNKNOWN_ALLELE;
                     }
@@ -224,7 +224,7 @@ public class AlignmentBuilder {
                 }
             }
         }
-        return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
+        return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.taxa());
     }
 
     public static Alignment getHomozygousInstance(Alignment alignment) {
@@ -234,7 +234,7 @@ public class AlignmentBuilder {
         //TODO this would be even faster to work through the SuperByteMatrix, as knowledge of site or taxa is not needed.
         for (int t = 0; t < numTaxa; t++) {
             for (int s = 0; s < numSites; s++) {
-                byte currGeno=alignment.getBase(t, s);
+                byte currGeno=alignment.genotype(t, s);
                 if(AlignmentUtils.isHeterozygous(currGeno)) {
                     builder.setBase(t, s, Alignment.UNKNOWN_DIPLOID_ALLELE);
                 } else {
@@ -243,7 +243,7 @@ public class AlignmentBuilder {
             }
 
         }
-        return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
+        return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.taxa());
     }
 
     /**
@@ -277,9 +277,9 @@ public class AlignmentBuilder {
         int numSites = alignment.getSiteCount();
         GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
         for (int t = 0; t < numTaxa; t++) {
-            for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.getBase(t, s));}
+            for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.genotype(t, s));}
         }
-        return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.getTaxaList());
+        return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.taxa());
     }
 
     /*

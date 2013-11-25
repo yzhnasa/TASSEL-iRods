@@ -216,7 +216,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             for (int i = 0; i < baseAlign.getSiteCount(); i++) {
                 double errorsRate=(double)siteErrors[i]/(double)siteCallCnt[i];
                 if(errorsRate<errorThreshold) continue;
-                bw.write(baseAlign.getSNPID(i)+"\t");
+                bw.write(baseAlign.siteName(i)+"\t");
                 bw.write(baseAlign.getChromosomeName(i) +"\t");
                 bw.write(i+"\t"); //dummy for genetic position
                 bw.write(baseAlign.getPositionInChromosome(i) +"\n"); //dummy for genetic position
@@ -237,7 +237,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         TreeMap<Integer,ArrayList> mergeSets=new TreeMap<Integer,ArrayList>();
         TreeMap<Integer,byte[][]> results=new TreeMap<Integer,byte[][]>(Collections.reverseOrder());
         TreeSet<Integer> unmatched=new TreeSet<Integer>(presentRanking.values());
-        TaxaList inIDG=inAlign.getTaxaList();
+        TaxaList inIDG=inAlign.taxa();
         for (Entry<Integer,Integer> e : presentRanking.entrySet()) {
             int taxon1=e.getValue();
             if(unmatched.contains(taxon1)==false) continue;//already included in another group
@@ -256,16 +256,16 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 ArrayList<String> mergeNames=new ArrayList<String>();
                 mergeNames.add(inIDG.getTaxaName(taxon1));
                 mergeSets.put(taxon1, hits);         
-               // System.out.print(inAlign.getTaxaName(taxon1)+"=");
+               // System.out.print(inAlign.taxaName(taxon1)+"=");
                 for (Integer taxon2 : hits) {
                     unmatched.remove(taxon2);
-                   // System.out.print(inAlign.getTaxaName(taxon2)+"=");
+                   // System.out.print(inAlign.taxaName(taxon2)+"=");
                     mergeNames.add(inIDG.getTaxaName(taxon2));
                 }
               //  System.out.println("");              
                 calls=consensusGameteCalls(inAlign, mergeNames, startSite, endSite, maxErrorInCreatingConsensus, siteOffsetForError);
             } else {
-                calls=inAlign.getBaseRange(taxon1, startSite, endSite+1);
+                calls=inAlign.genotypeRange(taxon1, startSite, endSite+1);
             }
             int[] unkCnt=countUnknown(calls);
             double missingFreq=(double)unkCnt[0]/(double)inAlign.getSiteCount();
@@ -289,7 +289,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             int endSite, double maxError, int siteOffsetForError) {
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {  //why are we working with names rather than numbers
-            taxaIndex[t] = a.getTaxaList().getIndicesMatchingTaxon(taxa.get(t)).get(0);
+            taxaIndex[t] = a.taxa().getIndicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[endSite-startSite+1];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
@@ -301,7 +301,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
             int mjCnt=0, mnCnt=0;
             for (int t = 0; t < taxaIndex.length; t++) {
-                byte ob = a.getBase(taxaIndex[t], s);
+                byte ob = a.genotype(taxaIndex[t], s);
                 if (ob == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     continue;
                 }
@@ -357,7 +357,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             curMj.union(a.getAllelePresenceForAllSites(bestAddTaxa, alleleNumber));
             maxMjCnt=curMj.cardinality();
             maxTaxa.add(bestAddTaxa);
-            System.out.printf("Allele:%d Taxa: %s %d %n",alleleNumber,a.getTaxaName(bestAddTaxa),maxMjCnt);
+            System.out.printf("Allele:%d Taxa: %s %d %n",alleleNumber,a.taxaName(bestAddTaxa),maxMjCnt);
         }
         return maxTaxa;
     }

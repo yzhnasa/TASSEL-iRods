@@ -196,8 +196,8 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[t];
-		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.getTaxaList(), isInCluster1);
-		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.getTaxaList(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster1);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster2);
 		
 		Alignment a1 = FilterAlignment.getInstance(tb, id1);
 		Alignment a2 = FilterAlignment.getInstance(tb, id2);
@@ -225,7 +225,7 @@ public class ImputationUtils {
 			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.getSNPID(0));
 			return null;
 		} else {
-			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getTaxaList(), include));
+			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.taxa(), include));
 			
 			myAlignment = AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
 		}
@@ -340,8 +340,8 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[bestTrial][t];
-		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.getTaxaList(), isInCluster1[bestTrial]);
-		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.getTaxaList(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster1[bestTrial]);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster2);
 		
 		Alignment a1 = FilterAlignment.getInstance(myAlignment, id1);
 		Alignment a2 = FilterAlignment.getInstance(myAlignment, id2);
@@ -684,16 +684,16 @@ public class ImputationUtils {
 								bw.write("\t");
 								int leftndx = leftflank;
 								int rightndx = rightflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								byte leftByte = a.getBase(t, leftndx);
-								byte rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								byte leftByte = a.genotype(t, leftndx);
+								byte rightByte = a.genotype(t, rightndx);
 								if (leftByte ==  missingByte) {
 									if (rightByte == missingByte) bw.write("N");
 									else bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
 								}
 								else if (rightByte ==  missingByte) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
-								else if (a.getBase(t, leftndx) == a.getBase(t, rightndx)) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
+								else if (a.genotype(t, leftndx) == a.genotype(t, rightndx)) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
 								else bw.write("N"); 
 							}
 						} else {
@@ -701,16 +701,16 @@ public class ImputationUtils {
 								bw.write("\t");
 								int leftndx = leftflank;
 								int rightndx = rightflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								byte leftByte = a.getBase(t, leftndx);
-								byte rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								byte leftByte = a.genotype(t, leftndx);
+								byte rightByte = a.genotype(t, rightndx);
 								if (leftByte ==  missingByte) {
 									if (rightByte == missingByte) bw.write("-");
 									else bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
 								}
 								else if (rightByte ==  missingByte) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte)));
-								else if (a.getBase(t, leftndx) == a.getBase(t, rightndx)) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
+								else if (a.genotype(t, leftndx) == a.genotype(t, rightndx)) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
 								else {
 									double leftval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
 									double rightval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
@@ -868,7 +868,7 @@ public class ImputationUtils {
 				int rightflank = 0;
 				
 				for (int t = 0; t < ntaxa; t++) {
-					if (!a.getTaxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.getTaxaName(t))) taxaHeader.append("\t").append(a.getTaxaName(t));
+					if (!a.taxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.taxaName(t))) taxaHeader.append("\t").append(a.taxaName(t));
 				}
 
 				for (ImputedSnp isnp : snpList) {
@@ -879,23 +879,23 @@ public class ImputationUtils {
 
 					if (hapmapFormat) {
 						for (int t = 0; t < ntaxa; t++) {
-							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
-							if (excludeList.contains(a.getTaxaName(t))) continue;
+							if (a.taxaName(t).startsWith(excludeTaxon)) continue;
+							if (excludeList.contains(a.taxaName(t))) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
 							if (leftflank < 0) leftByte = missingByte;
 							else {
 								int leftndx = leftflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								leftByte = a.getBase(t, leftndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								leftByte = a.genotype(t, leftndx);
 							}
 							
 							if (rightflank > nsnps - 1) rightByte = missingByte;
 							else {
 								int rightndx = rightflank;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								rightByte = a.genotype(t, rightndx);
 							}
 							if (leftByte ==  missingByte) {
 								if (rightByte == missingByte) isnp.sb.append("N");
@@ -906,23 +906,23 @@ public class ImputationUtils {
 						}
 					} else {
 						for (int t = 0; t < ntaxa; t++) {
-							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
-							if (excludeList.contains(a.getTaxaName(t))) continue;
+							if (a.taxaName(t).startsWith(excludeTaxon)) continue;
+							if (excludeList.contains(a.taxaName(t))) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
 							int leftndx = leftflank;
 							if (leftflank < 0) leftByte = missingByte;
 							else {
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								leftByte = a.getBase(t, leftndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								leftByte = a.genotype(t, leftndx);
 							}
 							
 							int rightndx = rightflank;
 							if (rightflank > nsnps - 1) rightByte = missingByte;
 							else {
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								rightByte = a.genotype(t, rightndx);
 							}
 							
 							if (leftByte ==  missingByte) {
@@ -989,12 +989,12 @@ public class ImputationUtils {
 	}
 	
 	public static boolean isB73HaplotypeA(Alignment a) {
-		TaxaList ids = a.getTaxaList();
+		TaxaList ids = a.taxa();
 		int ndx = ids.getIndicesMatchingTaxon("B73(PI550473)").get(0);
 		int nsnps = a.getSiteCount();
 		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();
 		for (int s = 0; s < nsnps; s++) {
-			Byte allele = a.getBase(ndx, s);
+			Byte allele = a.genotype(ndx, s);
 			Integer count = alleleCounts.get(allele);
 			if (count == null) alleleCounts.put(allele, 1);
 			else alleleCounts.put(allele, 1 + count);

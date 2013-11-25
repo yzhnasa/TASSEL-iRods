@@ -56,7 +56,7 @@ public interface PositionList extends List<Position> {
      * @param site site
      * @return site name
      */
-    public String getSNPID(int site);
+    public String siteName(int site);
 
     /**
      * Returns total number of sites of this alignment.
@@ -195,7 +195,7 @@ public interface PositionList extends List<Position> {
      *
      * @return the genome assembly.
      */
-    public String getGenomeAssembly();
+    public String genomeVersion();
 
     /**
      * Return whether is positive strand at given site.

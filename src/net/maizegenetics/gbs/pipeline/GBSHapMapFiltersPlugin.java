@@ -93,7 +93,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 if (lowCoverageTaxa == null) {
                     lowCoverageTaxa = getLowCoverageLines(a, tCov);
                 }  // Note: lowCoverageTaxa is based upon the startChromosome only
-                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getTaxaList(), lowCoverageTaxa, false);
+                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), lowCoverageTaxa, false);
                 a = FilterAlignment.getInstance(a, keepTaxa);
                 myLogger.info("TaxaFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
                 if (a.getSiteCount() == 0) {
@@ -112,7 +112,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
 
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
                 String[] highExpectedFTaxa = getHighExpectedFTaxa(a);
-                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getTaxaList(), highExpectedFTaxa, true);
+                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), highExpectedFTaxa, true);
                 Alignment inbredGenos = FilterAlignment.getInstance(a, highExpectedFTaxaIDGroup);
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0, snpLogging, "Filter the sites for minF only based only on the taxa with expectedF >= minF");
                 inbredGenos = null;
@@ -308,14 +308,14 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
         for (int i = 0; i < a.getSequenceCount(); i++) {
             int covered = 0;
             for (int j = 0; j < a.getSiteCount(); j++) {
-                if (a.getBase(i, j) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (a.genotype(i, j) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     covered++;
                 }
             }
             double propCovered = (double) covered / (double) a.getSiteCount();
-            // myLogger.info(a.getTaxaName(i)+":"+propCovered);
+            // myLogger.info(a.taxaName(i)+":"+propCovered);
             if (propCovered < pCoverage) {
-                lowLines.add(a.getTaxaName(i));
+                lowLines.add(a.taxaName(i));
             }
         }
         String[] lowL = lowLines.toArray(new String[0]);
@@ -326,7 +326,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
         ArrayList<String> highFLines = new ArrayList<String>();
         int nInbredTaxa = 0;
         for (int taxon = 0; taxon < a.getSequenceCount(); taxon++) {
-            String fullTaxonName = a.getTaxaName(taxon);
+            String fullTaxonName = a.taxaName(taxon);
             if (taxaFs.containsKey(fullTaxonName)) {
                 if (taxaFs.get(fullTaxonName) >= minF) {
                     highFLines.add(fullTaxonName);

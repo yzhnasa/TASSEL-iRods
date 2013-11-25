@@ -5,8 +5,8 @@ package net.maizegenetics.dna.snp;
 
 import java.util.HashMap;
 import java.util.Map;
-import static net.maizegenetics.dna.snp.Alignment.ALLELE_SCOPE_TYPE.Frequency;
-import static net.maizegenetics.dna.snp.Alignment.ALLELE_SCOPE_TYPE.Reference;
+import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Frequency;
+import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Reference;
 import net.maizegenetics.dna.snp.score.SiteScore;
 import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.dna.snp.bit.BitStorage;
@@ -26,7 +26,7 @@ public class CoreAlignment implements Alignment {
 
     private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
     private final Genotype myGenotype;
-    private final Map<ALLELE_SCOPE_TYPE, BitStorage> myBitStorage = new HashMap<ALLELE_SCOPE_TYPE, BitStorage>();
+    private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new HashMap<ALLELE_SORT_TYPE, BitStorage>();
     private final PositionList myPositionList;
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
@@ -55,78 +55,78 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public byte getBase(int taxon, int site) {
-        return myGenotype.getBase(taxon, site);
+    public byte genotype(int taxon, int site) {
+        return myGenotype.genotype(taxon, site);
     }
 
     @Override
-    public byte[] getBaseArray(int taxon, int site) {
-        return myGenotype.getBaseArray(taxon, site);
+    public byte[] genotypeArray(int taxon, int site) {
+        return myGenotype.genotypeArray(taxon, site);
     }
 
     @Override
-    public byte getBase(int taxon, Chromosome chromosome, int physicalPosition) {
-        return myGenotype.getBase(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
+    public byte genotype(int taxon, Chromosome chromosome, int physicalPosition) {
+        return myGenotype.genotype(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
     @Override
-    public byte[] getBaseRange(int taxon, int startSite, int endSite) {
-        return myGenotype.getBaseRange(taxon, startSite, endSite);
+    public byte[] genotypeRange(int taxon, int startSite, int endSite) {
+        return myGenotype.genotypeRange(taxon, startSite, endSite);
     }
 
     @Override
-    public byte[] getBaseRow(int taxon) {
-        return myGenotype.getBaseRow(taxon);
+    public byte[] genotypeRow(int taxon) {
+        return myGenotype.genotypeRow(taxon);
     }
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
     }
 
     @Override
-    public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
     }
 
     @Override
-    public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
     }
 
     @Override
-    public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
-        return myGenotype.getBaseAsString(taxon, site);
+    public String genotypeAsString(int taxon, int site) {
+        return myGenotype.genotypeAsString(taxon, site);
     }
 
     @Override
-    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
-        return myGenotype.getBaseAsStringRange(taxon, startSite, endSite);
+    public String genotypeAsStringRange(int taxon, int startSite, int endSite) {
+        return myGenotype.genotypeAsStringRange(taxon, startSite, endSite);
     }
 
     @Override
-    public String getBaseAsStringRow(int taxon) {
-        return myGenotype.getBaseAsStringRow(taxon);
+    public String genotypeAsStringRow(int taxon) {
+        return myGenotype.genotypeAsStringRow(taxon);
     }
 
     @Override
-    public String[] getBaseAsStringArray(int taxon, int site) {
-        return myGenotype.getBaseAsStringArray(taxon, site);
+    public String[] genotypeAsStringArray(int taxon, int site) {
+        return myGenotype.genotypeAsStringArray(taxon, site);
     }
 
     @Override
@@ -165,8 +165,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String getSNPID(int site) {
-        return myPositionList.getSNPID(site);
+    public String siteName(int site) {
+        return myPositionList.siteName(site);
     }
 
     @Override
@@ -335,18 +335,18 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public TaxaList getTaxaList() {
+    public TaxaList taxa() {
         return myTaxaList;
     }
 
     @Override
-    public String getTaxaName(int index) {
+    public String taxaName(int index) {
         return myTaxaList.getTaxaName(index);
     }
 
     @Override
-    public String getGenomeAssembly() {
-        return myPositionList.getGenomeAssembly();
+    public String genomeVersion() {
+        return myPositionList.genomeVersion();
     }
 
     @Override
@@ -385,18 +385,18 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
-        return myGenotype.getAlleleEncodings();
+    public String[][] alleleDefinitions() {
+        return myGenotype.alleleDefinitions();
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
-        return myGenotype.getAlleleEncodings(site);
+    public String[] alleleDefinitions(int site) {
+        return myGenotype.alleleDefinitions(site);
     }
 
     @Override
-    public String getBaseAsString(int site, byte value) {
-        return myGenotype.getBaseAsString(site, value);
+    public String genotypeAsString(int site, byte value) {
+        return myGenotype.genotypeAsString(site, value);
     }
 
     @Override
@@ -460,7 +460,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+    public byte[] getAllelesByScope(ALLELE_SORT_TYPE scope, int site) {
         switch (scope) {
             case Frequency:
                 return getAlleles(site);
@@ -471,12 +471,12 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SORT_TYPE scope, int site, int alleleNumber) {
         return getBitStorage(scope).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
-    public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
+    public BitStorage getBitStorage(ALLELE_SORT_TYPE scopeType) {
 
         BitStorage result = myBitStorage.get(scopeType);
         if (result != null) {

@@ -39,33 +39,33 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align) {
-        String name = align.getTaxaName(0) + " Reference";
-        return getInstanceCompareReference(align, align.getBaseRange(0, 0, align.getSiteCount()), name);
+        String name = align.taxaName(0) + " Reference";
+        return getInstanceCompareReference(align, align.genotypeRange(0, 0, align.getSiteCount()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, Taxon id) {
-        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
         String name = id.getName() + " Reference";
-        return getInstanceCompareReference(align, align.getBaseRange(index.get(0), 0, align.getSiteCount()), name);
+        return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.getSiteCount()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, int index) {
         if ((index < 0) || (index >= align.getSequenceCount())) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown index: " + index);
         }
-        String name = align.getTaxaName(index) + " Reference";
-        return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount()), name);
+        String name = align.taxaName(index) + " Reference";
+        return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.getSiteCount()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, String id) {
-        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, align.getBaseRange(index.get(0), 0, align.getSiteCount()), id + " Reference");
+        return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.getSiteCount()), id + " Reference");
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, byte[] ref, String name) {
@@ -89,7 +89,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
             for (int r = 0, m = align.getSequenceCount(); r < m; r++) {
 
                 // TERRY - If allele order switch it should still probably match?
-                if (align.getBase(r, c) != ref[c]) {
+                if (align.genotype(r, c) != ref[c]) {
                     mask[r][currentByteCol] = (byte) (mask[r][currentByteCol] | currentColMask);
                 }
 
@@ -119,7 +119,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
             for (int r = 0, m = align1.getSequenceCount(); r < m; r++) {
 
                 // TERRY - If allele order switch it should still probably match?
-                if (align1.getBase(r, c) != align2.getBase(r, c)) {
+                if (align1.genotype(r, c) != align2.genotype(r, c)) {
                     mask[r][currentByteCol] = (byte) (mask[r][currentByteCol] | currentColMask);
                 }
 

@@ -65,7 +65,7 @@ public class ExportUtils {
             int numTBitWords = a.getAllelePresenceForAllSites(0, 0).getNumWords();
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TBIT_WORDS, numTBitWords);
 
-            String[][] aEncodings = a.getAlleleEncodings();
+            String[][] aEncodings = a.alleleDefinitions();
             //myLogger.info(Arrays.deepToString(aEncodings));
             int numEncodings = aEncodings.length;
             int numStates = aEncodings[0].length;
@@ -111,7 +111,7 @@ public class ExportUtils {
 
             String[] tn = new String[numTaxa];
             for (int i = 0; i < tn.length; i++) {
-                tn[i] = a.getTaxaName(i);
+                tn[i] = a.taxaName(i);
             }
             h5w.createStringVariableLengthArray(HapMapHDF5Constants.TAXA, numTaxa);
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.TAXA, tn);
@@ -163,13 +163,13 @@ public class ExportUtils {
         AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(a.getPositionList(),newHDF5file);
         if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {aB.build(); return newHDF5file;}
         for (int t = 0; t < a.getTaxaCount(); t++) {
-              if((exportTaxa!=null)&&(!exportTaxa.contains(a.getTaxaList().get(t)))) continue;  //taxon not in export list
-              byte[] bases = a.getBaseRow(t);
-              if (keepDepth==false) aB.addTaxon(new Taxon(a.getTaxaName(t)), bases, null);
+              if((exportTaxa!=null)&&(!exportTaxa.contains(a.taxa().get(t)))) continue;  //taxon not in export list
+              byte[] bases = a.genotypeRow(t);
+              if (keepDepth==false) aB.addTaxon(new Taxon(a.taxaName(t)), bases, null);
               else {
                   //todo restore depth save
 //                  MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
-//                  addA.addTaxon(new Taxon(a.getTaxaName(t)), bases, m.getDepthForAlleles(t));
+//                  addA.addTaxon(new Taxon(a.taxaName(t)), bases, m.getDepthForAlleles(t));
               }
         }
         aB.build();
@@ -201,7 +201,7 @@ public class ExportUtils {
 //            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
 //            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
 //            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
-//            String[][] aEncodings = a.getAlleleEncodings();
+//            String[][] aEncodings = a.alleleDefinitions();
 //            int numEncodings = aEncodings.length;
 //            int numStates = aEncodings[0].length;
 //            MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, numStates});
@@ -268,14 +268,14 @@ public class ExportUtils {
 //            h5w.close();
 //            MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
 //            for (int t = 0; t < numTaxa; t++) {
-//                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.getTaxaName(t))<0)) continue;  //taxon not in export list
-//                  byte[] originalBases = a.getBaseRow(t);
+//                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.taxaName(t))<0)) continue;  //taxon not in export list
+//                  byte[] originalBases = a.genotypeRow(t);
 //                  byte[] bases = new byte[snpIndex.length];
 //                  for (int i = 0; i < bases.length; i++) {
 //                      bases[i] = originalBases[snpIndex[i]];
 //                  }
 //
-//                  if (keepDepth==false) addA.addTaxon(new Taxon(a.getTaxaName(t)), bases, null);
+//                  if (keepDepth==false) addA.addTaxon(new Taxon(a.taxaName(t)), bases, null);
 //                  else {
 //                      MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
 //                      byte[][] originalDepth = m.getDepthForAlleles(t);
@@ -285,7 +285,7 @@ public class ExportUtils {
 //                              depth[i][j] = originalDepth[i][snpIndex[j]];
 //                          }
 //                      }
-//                      addA.addTaxon(new Taxon(a.getTaxaName(t)), bases, depth);
+//                      addA.addTaxon(new Taxon(a.taxaName(t)), bases, depth);
 //                  }
 //            }
 //            addA.clean();
@@ -320,10 +320,10 @@ public class ExportUtils {
 //            if(srcA.getSiteCount()!=trgA.getSiteCount()) {
 //                throw new IllegalStateException("ExportUtils: addTaxaFromExistingByteHDF5File: Mismatch in number of sites");
 //            }
-//            System.out.println("Copying first taxon:"+srcA.getTaxaName(0));
+//            System.out.println("Copying first taxon:"+srcA.taxaName(0));
 //            for (int i = 0; i < srcA.getSequenceCount(); i++) {
-//                if (addDepth==true) trgA.addTaxon(srcA.getTaxaList().getIdentifier(i), srcA.getBaseRow(i), srcA.getDepthForAlleles(i));
-//                else trgA.addTaxon(srcA.getTaxaList().getIdentifier(i), srcA.getBaseRow(i), null);
+//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeRow(i), srcA.getDepthForAlleles(i));
+//                else trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeRow(i), null);
 //            }
 //        }
 //
@@ -377,7 +377,7 @@ public class ExportUtils {
                 //not completely sure this does what I want, I need to access the
                 //accession name from every alleleBLOB in bytes [52-201] but there
                 //doesn't seem to be a method to access that in Alignment
-                String sequenceID = alignment.getTaxaName(taxa).trim();
+                String sequenceID = alignment.taxaName(taxa).trim();
                 bw.write(sequenceID);
                 if (taxa != numTaxa - 1) {
                     bw.write(delimChar);
@@ -386,7 +386,7 @@ public class ExportUtils {
             bw.write("\n");
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
-                bw.write(alignment.getSNPID(site));
+                bw.write(alignment.siteName(site));
                 bw.write(delimChar);
 //                byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
 //                int numAlleles = alleles.length;
@@ -395,13 +395,13 @@ public class ExportUtils {
                 if (numAlleles == 0) {
                     bw.write("NA"); //if data does not exist
                 } else if (numAlleles == 1) {
-                    bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
+                    bw.write(alignment.genotypeAsString(site, (byte) sortedAlleles[0][0]));
                 } else {
-                    bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][0]));
+                    bw.write(alignment.genotypeAsString(site, (byte) sortedAlleles[0][0]));
                     for (int allele = 1; allele < sortedAlleles[0].length; allele++) {
                         if (sortedAlleles[0][allele] != Alignment.UNKNOWN_ALLELE) {
                             bw.write('/');
-                            bw.write(alignment.getBaseAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
+                            bw.write(alignment.genotypeAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
                         }
                     }
                 }
@@ -428,20 +428,20 @@ public class ExportUtils {
                     if (diploid == false) {
                         String baseIUPAC = null;
                         try {
-                            baseIUPAC = alignment.getBaseAsString(taxa, site);
+                            baseIUPAC = alignment.genotypeAsString(taxa, site);
                         } catch (Exception e) {
-                            String[] b = alignment.getBaseAsStringArray(taxa, site);
+                            String[] b = alignment.genotypeAsStringArray(taxa, site);
                             bw.close();
-                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): 0x" + Integer.toHexString(alignment.getBase(taxa, site)) + "\nTry Exporting as Diploid Values.");
+                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): 0x" + Integer.toHexString(alignment.genotype(taxa, site)) + "\nTry Exporting as Diploid Values.");
                         }
                         if ((baseIUPAC == null) || baseIUPAC.equals("?")) {
-                            String[] b = alignment.getBaseAsStringArray(taxa, site);
+                            String[] b = alignment.genotypeAsStringArray(taxa, site);
                             bw.close();
-                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): 0x" + Integer.toHexString(alignment.getBase(taxa, site)) + "\nTry Exporting as Diploid Values.");
+                            throw new IllegalArgumentException("There is no String representation for diploid values: " + b[0] + ":" + b[1] + " getBase(): 0x" + Integer.toHexString(alignment.genotype(taxa, site)) + "\nTry Exporting as Diploid Values.");
                         }
                         bw.write(baseIUPAC);
                     } else {
-                        String[] b = alignment.getBaseAsStringArray(taxa, site);
+                        String[] b = alignment.genotypeAsStringArray(taxa, site);
                         if (b.length == 1) {
                             bw.write(b[0]);
                             bw.write(b[0]);
@@ -515,7 +515,7 @@ public class ExportUtils {
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             boolean refTaxon = false;
             for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
-                String taxonName = alignment.getTaxaName(taxa).trim();
+                String taxonName = alignment.taxaName(taxa).trim();
                 if (taxa == 0 && taxonName.contentEquals("REFERENCE_GENOME")) {
                     refTaxon = true;
                 } else {
@@ -546,9 +546,9 @@ public class ExportUtils {
                 //System.out.println(alignment.getPositionInChromosome(site) + " " + refAllele);
                 byte[] alleleValues = null;
                 if (hasDepth) {
-                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
+                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 } else {
-                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Frequency, site);
+                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Frequency, site);
                     //if (nAlleles > alignment.getMaxNumAlleles()) {
                     //    nAlleles = alignment.getMaxNumAlleles();
                     //}
@@ -626,7 +626,7 @@ public class ExportUtils {
                 bw.write(delimChar);
                 bw.write(alignment.getPositionInChromosome(site) + ""); // position
                 bw.write(delimChar);
-                bw.write(alignment.getSNPID(site)); // site name
+                bw.write(alignment.siteName(site)); // site name
                 bw.write(delimChar);
                 bw.write(refAlleleStr); // ref allele
                 bw.write(delimChar);
@@ -685,7 +685,7 @@ public class ExportUtils {
 
                     // GT = genotype
                     String GTstr = "";
-                    byte[] values = alignment.getBaseArray(taxa, site);
+                    byte[] values = alignment.genotypeArray(taxa, site);
 
                     boolean genoOne = false;
                     if (values[0] == Alignment.UNKNOWN_ALLELE) {
@@ -868,7 +868,7 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
-                MAPbw.write(alignment.getSNPID(site)); // rs#
+                MAPbw.write(alignment.siteName(site)); // rs#
                 MAPbw.write(delimChar);
                 MAPbw.write("-9"); // genetic distance unavailable
                 MAPbw.write(delimChar);
@@ -882,14 +882,14 @@ public class ExportUtils {
             Pattern splitter = Pattern.compile(":");
             int numTaxa = alignment.getSequenceCount();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
-                String[] name = splitter.split(alignment.getTaxaName(taxa).trim());
+                String[] name = splitter.split(alignment.taxaName(taxa).trim());
                 if (name.length != 1) {
                     PEDbw.write(name[1]); // namelvl 1 if is available
                 } else {
                     PEDbw.write("-9");
                 }
                 PEDbw.write(delimChar);
-                PEDbw.write(alignment.getTaxaName(taxa).trim()); // namelvl 0
+                PEDbw.write(alignment.taxaName(taxa).trim()); // namelvl 0
                 PEDbw.write(delimChar);
                 PEDbw.write("-9"); // paternal ID unavailable
                 PEDbw.write(delimChar);
@@ -900,7 +900,7 @@ public class ExportUtils {
                 PEDbw.write("-9"); // phenotype unavailable, might have to change to "-9" for missing affection status
                 PEDbw.write(delimChar);
                 for (int site = 0; site < numSites; site++) {
-                    String[] b = getSNPValueForPlink(alignment.getBaseAsStringArray(taxa, site));
+                    String[] b = getSNPValueForPlink(alignment.genotypeAsStringArray(taxa, site));
                     PEDbw.write(b[0]);
                     PEDbw.write(delimChar);
                     PEDbw.write(b[b.length - 1]);
@@ -960,23 +960,23 @@ public class ExportUtils {
             BufferedWriter DATbw = new BufferedWriter(new FileWriter(genoFileName), 1000000);
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
-                MAPbw.write(alignment.getSNPID(site)); // rs#
+                MAPbw.write(alignment.siteName(site)); // rs#
                 MAPbw.write(delimChar);
                 MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
                 MAPbw.write(Integer.toString(alignment.getPositionInChromosome(site))); // position
                 MAPbw.write("\n");
                 DATbw.write(delimChar);
-                DATbw.write(alignment.getSNPID(site));
+                DATbw.write(alignment.siteName(site));
             }
             MAPbw.close();
             DATbw.write("\n");
             int numTaxa = alignment.getSequenceCount();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
-                DATbw.write(alignment.getTaxaName(taxa).trim());
+                DATbw.write(alignment.taxaName(taxa).trim());
                 DATbw.write(delimChar);
                 for (int site = 0; site < numSites; site++) {
-                    String[] b = alignment.getBaseAsStringArray(taxa, site);
+                    String[] b = alignment.genotypeAsStringArray(taxa, site);
                     b = getSNPValueForFlapJack(b);
                     if (b.length == 1) {
                         DATbw.write(b[0]);
@@ -1037,10 +1037,10 @@ public class ExportUtils {
             bw.write("\n");
 
             for (int r = 0, n = theAlignment.getTaxaCount(); r < n; r++) {
-                bw.write(theAlignment.getTaxaName(r));
+                bw.write(theAlignment.taxaName(r));
                 for (int i = 0; i < numSites; i++) {
                     bw.write(delimit);
-                    bw.write(theAlignment.getBaseAsString(r, i));
+                    bw.write(theAlignment.genotypeAsString(r, i));
                 }
                 bw.write("\n");
             }
@@ -1073,7 +1073,7 @@ public class ExportUtils {
             int n = 0;
             while (n < a.getSiteCount()) {
                 if (n == 0) {
-                    format.displayLabel(out, a.getTaxaName(s), 10);
+                    format.displayLabel(out, a.taxaName(s), 10);
                     out.print("     ");
                 } else {
                     out.print("               ");
@@ -1098,7 +1098,7 @@ public class ExportUtils {
         while (n < a.getSiteCount()) {
             for (int s = 0; s < a.getSequenceCount(); s++) {
                 if (n == 0) {
-                    format.displayLabel(out, a.getTaxaName(s), 10);
+                    format.displayLabel(out, a.taxaName(s), 10);
                     out.print("     ");
                 } else {
                     out.print("               ");
@@ -1125,7 +1125,7 @@ public class ExportUtils {
         while (n < a.getSiteCount()) {
             out.println();
             for (int s = 0; s < a.getSequenceCount(); s++) {
-                format.displayLabel(out, a.getTaxaName(s), 10);
+                format.displayLabel(out, a.taxaName(s), 10);
                 out.print("     ");
 
                 printNextSites(a, out, false, s, n, 50);
@@ -1144,7 +1144,7 @@ public class ExportUtils {
             if (i % 10 == 0 && i != 0 && chunked) {
                 out.print(' ');
             }
-            out.print(a.getBaseAsString(seq, start + i));
+            out.print(a.genotypeAsString(seq, start + i));
         }
     }
 

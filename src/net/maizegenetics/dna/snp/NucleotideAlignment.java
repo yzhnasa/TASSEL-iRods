@@ -20,17 +20,17 @@ public class NucleotideAlignment extends CoreAlignment {
     }
 
     @Override
-    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+    public String genotypeAsStringRange(int taxon, int startSite, int endSite) {
         StringBuilder builder = new StringBuilder();
         for (int i = startSite; i < endSite; i++) {
-            builder.append(getBaseAsString(taxon, i));
+            builder.append(genotypeAsString(taxon, i));
         }
         return builder.toString();
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
-        return NucleotideAlignmentConstants.getNucleotideIUPAC(getBase(taxon, site));
+    public String genotypeAsString(int taxon, int site) {
+        return NucleotideAlignmentConstants.getNucleotideIUPAC(genotype(taxon, site));
     }
 
     @Override

@@ -89,7 +89,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
         int numSites = alignment.getSiteCount();
         String[] snpIDs = new String[numSites];
         for (int i = 0; i < numSites; i++) {
-            snpIDs[i] = alignment.getSNPID(i);
+            snpIDs[i] = alignment.siteName(i);
         }
 
         BufferedReader br = null;
@@ -131,7 +131,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
                         if ((pos1 != alignment.getPositionInChromosome(site)) || (!locus1.equals(alignment.getChromosome(site).getName()))) {
                             myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " position and locus do not match alignment.");
-                            myLogger.warn("Alignment SNP ID: " + alignment.getSNPID(site) + "  position: " + alignment.getPositionInChromosome(site) + "  locus: " + alignment.getChromosomeName(site));
+                            myLogger.warn("Alignment SNP ID: " + alignment.siteName(site) + "  position: " + alignment.getPositionInChromosome(site) + "  locus: " + alignment.getChromosomeName(site));
                             continue;
                         }
 
@@ -157,7 +157,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
             //          alignment.clean();
             //TODO check sort of positions.
-            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(), posBuilder.build(), alignment.getTaxaList()), null);
+            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(), posBuilder.build(), alignment.taxa()), null);
 
         } catch (Exception e) {
             myLogger.error("processDatum: problem converting alignment: line: " + count + "  message: " + e.getMessage());

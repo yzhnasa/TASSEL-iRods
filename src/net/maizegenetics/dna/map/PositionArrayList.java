@@ -91,7 +91,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public String getSNPID(int site) {
+    public String siteName(int site) {
         return mySiteList.get(site).getSNPID();
     }
 
@@ -133,11 +133,11 @@ final class PositionArrayList implements PositionList {
         int result=getSiteOfPhysicalPosition(physicalPosition, chromosome);
         if (result < 0) {return result;}
         else {
-            if (snpID.equals(getSNPID(result))) {return result;
+            if (snpID.equals(siteName(result))) {return result;
             } else {
                 int index=result;
                 while ((index < numPositions) && (getPositionInChromosome(index) == physicalPosition)) {
-                    if (snpID.equals(getSNPID(index))) {return index;}
+                    if (snpID.equals(siteName(index))) {return index;}
                     result++;
                 }
                 return -result - 1;
@@ -201,7 +201,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public String getGenomeAssembly() {
+    public String genomeVersion() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

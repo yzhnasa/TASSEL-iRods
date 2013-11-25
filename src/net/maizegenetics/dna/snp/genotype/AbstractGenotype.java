@@ -40,56 +40,56 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public byte[] getBaseArray(int taxon, int site) {
-        return AlignmentUtils.getDiploidValues(getBase(taxon, site));
+    public byte[] genotypeArray(int taxon, int site) {
+        return AlignmentUtils.getDiploidValues(genotype(taxon, site));
     }
 
     @Override
-    public byte[] getBaseRange(int taxon, int startSite, int endSite) {
+    public byte[] genotypeRange(int taxon, int startSite, int endSite) {
         byte[] result = new byte[endSite - startSite];
         for (int i = startSite; i < endSite; i++) {
-            result[i - startSite] = getBase(taxon, i);
+            result[i - startSite] = genotype(taxon, i);
         }
         return result;
     }
 
     @Override
-    public byte[] getBaseRow(int taxon) {
+    public byte[] genotypeRow(int taxon) {
         byte[] result = new byte[mySiteCount];
         for (int i = 0; i < mySiteCount; i++) {
-            result[i] = getBase(taxon, i);
+            result[i] = genotype(taxon, i);
         }
         return result;
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
-        String[][] alleleStates = getAlleleEncodings();
-        byte[] temp = getBaseArray(taxon, site);
+    public String genotypeAsString(int taxon, int site) {
+        String[][] alleleStates = alleleDefinitions();
+        byte[] temp = genotypeArray(taxon, site);
         return alleleStates[0][temp[0]] + ":" + alleleStates[0][temp[1]];
     }
 
     @Override
-    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+    public String genotypeAsStringRange(int taxon, int startSite, int endSite) {
         StringBuilder builder = new StringBuilder();
         for (int i = startSite; i < endSite; i++) {
             if (i != startSite) {
                 builder.append(";");
             }
-            builder.append(getBaseAsString(taxon, i));
+            builder.append(genotypeAsString(taxon, i));
         }
         return builder.toString();
     }
 
     @Override
-    public String getBaseAsStringRow(int taxon) {
-        return getBaseAsStringRange(taxon, 0, mySiteCount);
+    public String genotypeAsStringRow(int taxon) {
+        return genotypeAsStringRange(taxon, 0, mySiteCount);
     }
 
     @Override
-    public String[] getBaseAsStringArray(int taxon, int site) {
-        String[][] alleleStates = getAlleleEncodings();
-        byte[] temp = getBaseArray(taxon, site);
+    public String[] genotypeAsStringArray(int taxon, int site) {
+        String[][] alleleStates = alleleDefinitions();
+        byte[] temp = genotypeArray(taxon, site);
         return new String[]{alleleStates[0][temp[0]], alleleStates[0][temp[1]]};
     }
 
@@ -100,7 +100,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public boolean isHeterozygous(int taxon, int site) {
-        byte[] values = getBaseArray(taxon, site);
+        byte[] values = genotypeArray(taxon, site);
         if (values[0] == values[1]) {
             return false;
         } else {
@@ -124,7 +124,7 @@ abstract class AbstractGenotype implements Genotype {
 
         byte first = Alignment.UNKNOWN_ALLELE;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
-            byte[] current = getBaseArray(i, site);
+            byte[] current = genotypeArray(i, site);
             if (current[0] != Alignment.UNKNOWN_ALLELE) {
                 if (first == Alignment.UNKNOWN_ALLELE) {
                     first = current[0];
@@ -169,12 +169,12 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
+    public String[][] alleleDefinitions() {
         return myAlleleEncodings;
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
+    public String[] alleleDefinitions(int site) {
         if (myAlleleEncodings.length == 1) {
             return myAlleleEncodings[0];
         } else {
@@ -183,13 +183,13 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public String getBaseAsString(int site, byte value) {
-        return getAlleleEncodings(site)[value];
+    public String genotypeAsString(int site, byte value) {
+        return alleleDefinitions(site)[value];
     }
 
     @Override
     public String getDiploidAsString(int site, byte value) {
-        String[] alleleStates = getAlleleEncodings(site);
+        String[] alleleStates = alleleDefinitions(site);
         return alleleStates[(value >>> 4) & 0xf] + ":" + alleleStates[value & 0xf];
     }
 
@@ -203,7 +203,7 @@ abstract class AbstractGenotype implements Genotype {
 
         int result = 0;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
-            byte[] current = getBaseArray(i, site);
+            byte[] current = genotypeArray(i, site);
             if (current[0] != Alignment.UNKNOWN_ALLELE) {
                 result++;
             }
@@ -220,7 +220,7 @@ abstract class AbstractGenotype implements Genotype {
 
         int result = 0;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
-            byte current = getBase(i, site);
+            byte current = genotype(i, site);
             if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                 result++;
             }
@@ -273,7 +273,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public String getMinorAlleleAsString(int site) {
-        return getBaseAsString(site, getMinorAllele(site));
+        return genotypeAsString(site, getMinorAllele(site));
     }
 
     @Override
@@ -313,7 +313,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public String getMajorAlleleAsString(int site) {
-        return getBaseAsString(site, getMajorAllele(site));
+        return genotypeAsString(site, getMajorAllele(site));
     }
 
     @Override
@@ -359,7 +359,7 @@ abstract class AbstractGenotype implements Genotype {
 
         Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
         for (int r = 0; r < myTaxaCount; r++) {
-            String current = getBaseAsString(r, site);
+            String current = genotypeAsString(r, site);
             Integer num = diploidValueCounts.get(current);
             if (num == null) {
                 diploidValueCounts.put(current, ONE_INTEGER);
@@ -465,7 +465,7 @@ abstract class AbstractGenotype implements Genotype {
     @Override
     public Object[][] getMajorMinorCounts() {
 
-        String[][] alleleStates = getAlleleEncodings();
+        String[][] alleleStates = alleleDefinitions();
 
         if (alleleStates.length != 1) {
             return new Object[0][0];
@@ -498,7 +498,7 @@ abstract class AbstractGenotype implements Genotype {
         for (byte x = 0; x < 16; x++) {
             for (byte y = 0; y < 16; y++) {
                 if (counts[x][y] != 0) {
-                    result[0][nextResult] = getBaseAsString(0, x) + ":" + getBaseAsString(0, y);
+                    result[0][nextResult] = genotypeAsString(0, x) + ":" + genotypeAsString(0, y);
                     result[1][nextResult++] = counts[x][y];
                 }
             }
@@ -535,7 +535,7 @@ abstract class AbstractGenotype implements Genotype {
 
         int result = 0;
         for (int i = 0, n = mySiteCount; i < n; i++) {
-            byte[] current = getBaseArray(taxon, i);
+            byte[] current = genotypeArray(taxon, i);
             if (current[0] != Alignment.UNKNOWN_ALLELE) {
                 result++;
             }
@@ -563,7 +563,7 @@ abstract class AbstractGenotype implements Genotype {
 
         int result = 0;
         for (int i = 0, n = mySiteCount; i < n; i++) {
-            byte current = getBase(taxon, i);
+            byte current = genotype(taxon, i);
             if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                 result++;
             }
@@ -598,7 +598,7 @@ abstract class AbstractGenotype implements Genotype {
         int numSites = getSiteCount();
         byte[] result = new byte[numSites];
         for (int i = 0; i < numSites; i++) {
-            result[i] = getBase(taxon, i);
+            result[i] = genotype(taxon, i);
         }
         return result;
     }
@@ -608,7 +608,7 @@ abstract class AbstractGenotype implements Genotype {
         int numSites = end - start;
         byte[] result = new byte[numSites];
         for (int i = start; i < end; i++) {
-            result[i] = getBase(taxon, i);
+            result[i] = genotype(taxon, i);
         }
         return result;
     }
@@ -618,7 +618,7 @@ abstract class AbstractGenotype implements Genotype {
         int numTaxa = getTaxaCount();
         byte[] result = new byte[numTaxa];
         for (int i = 0; i < numTaxa; i++) {
-            result[i] = getBase(i, site);
+            result[i] = genotype(i, site);
         }
         return result;
     }

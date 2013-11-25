@@ -78,7 +78,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             Map<Byte, Integer> charCount = new HashMap<Byte, Integer>();
             for (int j = 0; j < seqCount; j++) {
 
-                byte[] current = input.getBaseArray(j, i);
+                byte[] current = input.genotypeArray(j, i);
                 byte orderedValue = AlignmentUtils.getUnphasedDiploidValue(current[0], current[1]);
                 if (orderedValue != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     Integer count = (Integer) charCount.get(orderedValue);
@@ -140,7 +140,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             }
 
             for (int j = 0; j < seqCount; j++) {
-                byte[] current = input.getBaseArray(j, i);
+                byte[] current = input.genotypeArray(j, i);
                 byte orderedValue = AlignmentUtils.getUnphasedDiploidValue(current[0], current[1]);
                 if (orderedValue == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     for (int k = 0; k < currentSize; k++) {
@@ -156,7 +156,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        return new SimplePhenotype(input.getTaxaList(), traitNames, pcValues);
+        return new SimplePhenotype(input.taxa(), traitNames, pcValues);
     }
 
     public static SimplePhenotype collapseTransform(Alignment input) {
@@ -174,7 +174,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             byte[] allelesByFreq = input.getAlleles(i);
 
             for (int j = 0; j < seqCount; j++) {
-                byte[] current = input.getBaseArray(j, i);
+                byte[] current = input.genotypeArray(j, i);
                 if ((current[0] == Alignment.UNKNOWN_ALLELE) && (current[1] == Alignment.UNKNOWN_ALLELE)) {
                     pcValues[j][i] = Double.NaN;
                 } else {
@@ -190,7 +190,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        return new SimplePhenotype(input.getTaxaList(), traitNames, pcValues);
+        return new SimplePhenotype(input.taxa(), traitNames, pcValues);
 
     }
 

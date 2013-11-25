@@ -71,22 +71,22 @@ class FilterGenotype extends AbstractGenotype {
     }
 
     @Override
-    public byte getBase(int taxon, int site) {
+    public byte genotype(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
             return Alignment.UNKNOWN_ALLELE;
         } else {
-            return myBaseGenotype.getBase(taxaIndex, translateSite(site));
+            return myBaseGenotype.genotype(taxaIndex, translateSite(site));
         }
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
+    public String genotypeAsString(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
             return Alignment.UNKNOWN_ALLELE_STR;
         } else {
-            return myBaseGenotype.getBaseAsString(taxaIndex, translateSite(site));
+            return myBaseGenotype.genotypeAsString(taxaIndex, translateSite(site));
         }
     }
 
@@ -96,15 +96,15 @@ class FilterGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String[][] getAlleleEncodings() {
-        String[][] encodings = myBaseGenotype.getAlleleEncodings();
+    public String[][] alleleDefinitions() {
+        String[][] encodings = myBaseGenotype.alleleDefinitions();
         if (encodings.length == 1) {
             return encodings;
         } else if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
             int numSites = getSiteCount();
             String[][] result = new String[numSites][];
             for (int i = 0; i < numSites; i++) {
-                result[i] = getAlleleEncodings(i);
+                result[i] = alleleDefinitions(i);
             }
             return result;
         } else {
@@ -113,8 +113,8 @@ class FilterGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String[] getAlleleEncodings(int site) {
-        return myBaseGenotype.getAlleleEncodings(translateSite(site));
+    public String[] alleleDefinitions(int site) {
+        return myBaseGenotype.alleleDefinitions(translateSite(site));
     }
 
     @Override
