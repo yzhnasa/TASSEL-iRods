@@ -345,8 +345,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String getGenomeAssembly() {
-        return myPositionList.getGenomeAssembly();
+    public String genomeVersion() {
+        return myPositionList.genomeVersion();
     }
 
     @Override

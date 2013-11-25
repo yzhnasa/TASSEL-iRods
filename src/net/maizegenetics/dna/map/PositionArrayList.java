@@ -201,7 +201,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public String getGenomeAssembly() {
+    public String genomeVersion() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -556,13 +556,13 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getGenomeAssembly() {
-        String first = myAlignments[0].getGenomeAssembly();
+    public String genomeVersion() {
+        String first = myAlignments[0].genomeVersion();
         if (first == null) {
             return null;
         }
         for (int i = 1; i < myAlignments.length; i++) {
-            String current = myAlignments[i].getGenomeAssembly();
+            String current = myAlignments[i].genomeVersion();
             if ((current != null) && (!first.equals(current))) {
                 return null;
             }

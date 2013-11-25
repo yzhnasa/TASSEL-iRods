@@ -293,7 +293,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public String getGenomeAssembly() {
+    public String genomeVersion() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

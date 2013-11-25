@@ -776,8 +776,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public String getGenomeAssembly() {
-        return myBaseAlignment.getGenomeAssembly();
+    public String genomeVersion() {
+        return myBaseAlignment.genomeVersion();
     }
 
     @Override

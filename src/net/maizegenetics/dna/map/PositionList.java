@@ -195,7 +195,7 @@ public interface PositionList extends List<Position> {
      *
      * @return the genome assembly.
      */
-    public String getGenomeAssembly();
+    public String genomeVersion();
 
     /**
      * Return whether is positive strand at given site.
