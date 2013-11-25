@@ -313,9 +313,9 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 }
             }
             double propCovered = (double) covered / (double) a.getSiteCount();
-            // myLogger.info(a.getTaxaName(i)+":"+propCovered);
+            // myLogger.info(a.taxaName(i)+":"+propCovered);
             if (propCovered < pCoverage) {
-                lowLines.add(a.getTaxaName(i));
+                lowLines.add(a.taxaName(i));
             }
         }
         String[] lowL = lowLines.toArray(new String[0]);
@@ -326,7 +326,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
         ArrayList<String> highFLines = new ArrayList<String>();
         int nInbredTaxa = 0;
         for (int taxon = 0; taxon < a.getSequenceCount(); taxon++) {
-            String fullTaxonName = a.getTaxaName(taxon);
+            String fullTaxonName = a.taxaName(taxon);
             if (taxaFs.containsKey(fullTaxonName)) {
                 if (taxaFs.get(fullTaxonName) >= minF) {
                     highFLines.add(fullTaxonName);

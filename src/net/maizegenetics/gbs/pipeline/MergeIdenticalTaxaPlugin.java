@@ -78,12 +78,12 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //            TreeMap<String, List<String>> sortedIds2 = new TreeMap<String, List<String>>();
 //            int uniqueTaxa = 0;
 //            for (int i = 0; i < idg.getTaxaCount(); i++) {
-//                List<String> l = sortedIds2.get(idg.getTaxaName(i));
+//                List<String> l = sortedIds2.get(idg.taxaName(i));
 //                if (l == null) {
-//                    sortedIds2.put(idg.getTaxaName(i), l = new ArrayList<String>());
+//                    sortedIds2.put(idg.taxaName(i), l = new ArrayList<String>());
 //                    uniqueTaxa++;
 //                }
-//                l.add(idg.getTaxaName(i));
+//                l.add(idg.taxaName(i));
 //            }
 //            TaxaListBuilder newGroupBuild = new TaxaListBuilder();
 //            int index = 0;

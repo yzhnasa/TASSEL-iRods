@@ -783,7 +783,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getTaxaName(int index) {
+    public String taxaName(int index) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

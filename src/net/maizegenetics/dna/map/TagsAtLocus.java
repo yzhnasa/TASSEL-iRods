@@ -362,7 +362,7 @@ public class TagsAtLocus {
         tagIndices = new int[nAlignedTags];  // the reference sequence is not included
         allelesAtVariableSitesByTag = new byte[nSites][theTags.size()];
         for (int tg = 0; tg < nAlignedTags; tg++) {
-            int indexInTheTags = Integer.parseInt(tagAlignment.getTaxaName(tg)); // taxaName in tagAlignment is set to indexInTheTags
+            int indexInTheTags = Integer.parseInt(tagAlignment.taxaName(tg)); // taxaName in tagAlignment is set to indexInTheTags
             tagIndices[tg] = indexInTheTags;
             for (int s = 0; s < nSites; s++) {
                 allelesAtVariableSitesByTag[s][tagIndices[tg]] = tagAlignment.getBase(tg, s);
@@ -406,7 +406,7 @@ public class TagsAtLocus {
         tagIndices = new int[nAlignedTags];
         allelesAtVariableSitesByTag = new byte[nSites][theTags.size()];
         for (int tg = 0; tg < nAlignedTags; tg++) {
-            tagIndices[tg] = Integer.parseInt(tagAlignment.getTaxaName(tg).split("_")[0]);  // taxaName in tagAlignment is set to indexInTheTags_"refTag"|"no"
+            tagIndices[tg] = Integer.parseInt(tagAlignment.taxaName(tg).split("_")[0]);  // taxaName in tagAlignment is set to indexInTheTags_"refTag"|"no"
             for (int s = 0; s < nSites; s++) {
                 if (includeReferenceTag && tagIndices[tg] == theTags.size()-1) {
                     refCallsBySite[s] = tagAlignment.getBase(tg, s); // diploid byte for the reference allele/geno

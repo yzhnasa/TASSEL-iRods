@@ -1718,7 +1718,7 @@ public class NucleotideImputationUtils {
 					va.calculate();
 					bestStates.add(va.getMostProbableStateSequence());
 				} else { //do not impute if obs < 20
-					myLogger.info("Fewer then 20 observations for " + a.getTaxaName(t));
+					myLogger.info("Fewer then 20 observations for " + a.taxaName(t));
 					byte[] states = new byte[nobs];
 					byte[] obs = nonMissingObs.get(t);
 					for (int i = 0; i < nobs; i++) {

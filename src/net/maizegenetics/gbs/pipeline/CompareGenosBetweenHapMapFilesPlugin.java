@@ -304,7 +304,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         for (Taxon taxon : a1.taxa()) {
             List<Integer> t2a=a2.taxa().getIndicesMatchingTaxon(taxon);
             for (Integer tIndex : t2a) {
-                taxaSynonyms.put(taxon.getName(), a2.getTaxaName(tIndex));
+                taxaSynonyms.put(taxon.getName(), a2.taxaName(tIndex));
                 ++nCompareTaxa;
             }
             ++nTaxa;
@@ -320,11 +320,11 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         System.out.println("------\t\t------");
         int nTaxaPairs = 0;
         for (int taxon1Index = 0; taxon1Index < a1.getSequenceCount(); taxon1Index++) {
-            String taxon1 = a1.getTaxaName(taxon1Index);
+            String taxon1 = a1.taxaName(taxon1Index);
             if (taxaSynonyms.containsKey(taxon1)) {
                 for (String taxon2 : taxaSynonyms.get(taxon1)) {
                     for (int taxon2Index = 0; taxon2Index < a2.getSequenceCount(); taxon2Index++) {
-                        if (taxon2.equals(a2.getTaxaName(taxon2Index))) {
+                        if (taxon2.equals(a2.taxaName(taxon2Index))) {
                             List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
                             if (synTaxaIndicesForTaxonIndex == null) {
                                 taxaRedirect.put(taxon1Index, synTaxaIndicesForTaxonIndex = new ArrayList<Integer>());
@@ -399,9 +399,9 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             int taxon2Count = 0;
             for (Integer taxon2Index : synTaxaIndicesForTaxonIndex) {
                 StringBuilder builder = new StringBuilder();
-                builder.append(a1.getTaxaName(taxon1Index));
+                builder.append(a1.taxaName(taxon1Index));
                 builder.append(DELIMITER);
-                builder.append(a2.getTaxaName(taxon2Index));
+                builder.append(a2.taxaName(taxon2Index));
                 builder.append(DELIMITER);
                 builder.append(myCompareStatsTaxa[taxon1Count][taxon2Count][NUM_SITES_COMPARED]);
                 builder.append(DELIMITER);

@@ -93,12 +93,12 @@ public class ProjectionAlignmentIO {
             bw.write(baseAlignment.getSequenceCount()+"\t"+pa.getSequenceCount()+"\n");
             bw.write("#Donor Haplotypes\n");
             for (int i = 0; i < baseAlignment.getSequenceCount(); i++) {
-                bw.write(i+"\t"+baseAlignment.getTaxaName(i)+"\n");
+                bw.write(i+"\t"+baseAlignment.taxaName(i)+"\n");
             }
             bw.write("#Taxa Breakpoints\n");
             bw.write("#Block are defined chr:startPos:endPos:donor1:donor2 (-1 means no hypothesis)\n");
             for (int i = 0; i < pa.getSequenceCount(); i++) {
-                bw.write(pa.getTaxaName(i)+"\t");
+                bw.write(pa.taxaName(i)+"\t");
                 NavigableSet<DonorHaplotypes> theDH=pg.getDonorHaplotypes(i);
                 for (DonorHaplotypes dh : theDH) {
                     bw.write(dh.getChromosome().getName()+":"+dh.getStartPosition()+":"+dh.getEndPosition()+":"+

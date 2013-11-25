@@ -868,7 +868,7 @@ public class ImputationUtils {
 				int rightflank = 0;
 				
 				for (int t = 0; t < ntaxa; t++) {
-					if (!a.getTaxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.getTaxaName(t))) taxaHeader.append("\t").append(a.getTaxaName(t));
+					if (!a.taxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.taxaName(t))) taxaHeader.append("\t").append(a.taxaName(t));
 				}
 
 				for (ImputedSnp isnp : snpList) {
@@ -879,8 +879,8 @@ public class ImputationUtils {
 
 					if (hapmapFormat) {
 						for (int t = 0; t < ntaxa; t++) {
-							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
-							if (excludeList.contains(a.getTaxaName(t))) continue;
+							if (a.taxaName(t).startsWith(excludeTaxon)) continue;
+							if (excludeList.contains(a.taxaName(t))) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
@@ -906,8 +906,8 @@ public class ImputationUtils {
 						}
 					} else {
 						for (int t = 0; t < ntaxa; t++) {
-							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
-							if (excludeList.contains(a.getTaxaName(t))) continue;
+							if (a.taxaName(t).startsWith(excludeTaxon)) continue;
+							if (excludeList.contains(a.taxaName(t))) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							

@@ -39,7 +39,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align) {
-        String name = align.getTaxaName(0) + " Reference";
+        String name = align.taxaName(0) + " Reference";
         return getInstanceCompareReference(align, align.getBaseRange(0, 0, align.getSiteCount()), name);
     }
 
@@ -56,7 +56,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
         if ((index < 0) || (index >= align.getSequenceCount())) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown index: " + index);
         }
-        String name = align.getTaxaName(index) + " Reference";
+        String name = align.taxaName(index) + " Reference";
         return getInstanceCompareReference(align, align.getBaseRange(index, 0, align.getSiteCount()), name);
     }
 

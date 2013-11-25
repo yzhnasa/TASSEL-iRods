@@ -62,7 +62,7 @@ public class MarkerPhenotype implements TableReport {
         }
         builder.append("\n");
         for (int i = 0; i < myAlignment.getSequenceCount(); i++) {
-            builder.append(myAlignment.getTaxaName(i));
+            builder.append(myAlignment.taxaName(i));
             builder.append("\t");
             for (int j = 0; j < myPhenotype.getNumberOfTraits(); j++) {
                 builder.append(myPhenotype.getData(i, j));
@@ -115,7 +115,7 @@ public class MarkerPhenotype implements TableReport {
 
         Object[] data;
         data = new String[myPhenotype.getNumberOfTraits() + 2];
-        data[0] = myAlignment.getTaxaName(row);
+        data[0] = myAlignment.taxaName(row);
         for (int c = 0; c < myPhenotype.getNumberOfTraits(); c++) {
             data[c + 1] = "" + myPhenotype.getData(row, c);
         }

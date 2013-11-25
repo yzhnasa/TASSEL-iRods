@@ -51,7 +51,7 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
         if ((index < 0) || (index >= align.getSequenceCount())) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown index: " + index);
         }
-        String name = align.getTaxaName(index) + " Genetic Distance";
+        String name = align.taxaName(index) + " Genetic Distance";
         return new AlignmentMaskGeneticDistance(align, index, name, null);
     }
 

@@ -256,10 +256,10 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 ArrayList<String> mergeNames=new ArrayList<String>();
                 mergeNames.add(inIDG.getTaxaName(taxon1));
                 mergeSets.put(taxon1, hits);         
-               // System.out.print(inAlign.getTaxaName(taxon1)+"=");
+               // System.out.print(inAlign.taxaName(taxon1)+"=");
                 for (Integer taxon2 : hits) {
                     unmatched.remove(taxon2);
-                   // System.out.print(inAlign.getTaxaName(taxon2)+"=");
+                   // System.out.print(inAlign.taxaName(taxon2)+"=");
                     mergeNames.add(inIDG.getTaxaName(taxon2));
                 }
               //  System.out.println("");              
@@ -357,7 +357,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             curMj.union(a.getAllelePresenceForAllSites(bestAddTaxa, alleleNumber));
             maxMjCnt=curMj.cardinality();
             maxTaxa.add(bestAddTaxa);
-            System.out.printf("Allele:%d Taxa: %s %d %n",alleleNumber,a.getTaxaName(bestAddTaxa),maxMjCnt);
+            System.out.printf("Allele:%d Taxa: %s %d %n",alleleNumber,a.taxaName(bestAddTaxa),maxMjCnt);
         }
         return maxTaxa;
     }

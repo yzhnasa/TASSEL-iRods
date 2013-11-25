@@ -643,7 +643,7 @@ public interface Alignment {
      *
      * @return taxa name
      */
-    public String getTaxaName(int index);
+    public String taxaName(int index);
 
     /**
      * Gets the Genome Assembly.

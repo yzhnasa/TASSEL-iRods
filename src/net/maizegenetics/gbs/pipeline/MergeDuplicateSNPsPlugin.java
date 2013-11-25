@@ -372,7 +372,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                                     possibleMerge[t] = callHets ? resolveHet(currMerge[t], geno2) : Alignment.UNKNOWN_DIPLOID_ALLELE;
                                 } catch (Exception e) {
                                     myLogger.warn(
-                                            "Invalid genotypes (" + a.getBaseAsString(t, samePos[s1]) + " and " + a.getBaseAsString(t, samePos[s2]) + ") at position:" + currentPos + " taxon:" + a.getTaxaName(t));
+                                            "Invalid genotypes (" + a.getBaseAsString(t, samePos[s1]) + " and " + a.getBaseAsString(t, samePos[s2]) + ") at position:" + currentPos + " taxon:" + a.taxaName(t));
                                 }
                             } else {
                                 possibleMerge[t] = currMerge[t];
@@ -617,16 +617,16 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         nInbredTaxa = 0;
         try {
             for (int taxon = 0; taxon < a.getSequenceCount(); taxon++) {
-                if (taxaFs.containsKey(a.getTaxaName(taxon))) {
-                    if (taxaFs.get(a.getTaxaName(taxon)) >= 0.8) {
+                if (taxaFs.containsKey(a.taxaName(taxon))) {
+                    if (taxaFs.get(a.taxaName(taxon)) >= 0.8) {
                         useTaxaForCompare[taxon] = true;
                         nInbredTaxa++;
                     }
                 } else {
-                    if (a.getTaxaName(taxon).contentEquals("REFERENCE_GENOME")) {
+                    if (a.taxaName(taxon).contentEquals("REFERENCE_GENOME")) {
                         useTaxaForCompare[taxon] = false;
                     } else {
-                        throw new Exception("Taxon " + a.getTaxaName(taxon) + " not found in the pedigree file");
+                        throw new Exception("Taxon " + a.taxaName(taxon) + " not found in the pedigree file");
                     }
                 }
             }

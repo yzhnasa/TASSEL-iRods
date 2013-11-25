@@ -251,7 +251,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         @Override
         public void run() {
             StringBuilder sb=new StringBuilder();
-            String name=unimpAlign.getTaxaName(taxon);
+            String name=unimpAlign.taxaName(taxon);
             ImputedTaxon impTaxon=new ImputedTaxon(taxon, unimpAlign.getBaseRow(taxon),isOutputProjection);
             int[] unkHets=countUnknownAndHets(impTaxon.getOrigGeno());
             sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d Hets:%d... ", taxon,name,
@@ -972,7 +972,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int gaps=0;
         for (int t = 0; t < iA.getSequenceCount(); t++) {
             int e=0,c=0,u=0,h=0;
-            int oATaxa=oA.taxa().getIndicesMatchingTaxon(iA.getTaxaName(t)).get(0);
+            int oATaxa=oA.taxa().getIndicesMatchingTaxon(iA.taxaName(t)).get(0);
             for (int s = 0; s < iA.getSiteCount(); s++) {
                 if(noMask||(oA.getBase(oATaxa, s)!=mA.getBase(t, s))) {
                     byte ib=iA.getBase(t, s);
@@ -991,7 +991,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                     }
                 }       
             }
-            if(taxaOut) System.out.printf("%s %d %d %d %d %n",iA.getTaxaName(t),u,h,c,e);
+            if(taxaOut) System.out.printf("%s %d %d %d %d %n",iA.taxaName(t),u,h,c,e);
         }
         System.out.println("MFile\tIFile\tGap\tUnimp\tUnimpHets\tCorrect\tErrors");   
         System.out.printf("%s\t%s\t%d\t%d\t%d\t%d\t%d%n",maskFile, impFile, gaps, unimp,hets,correct,errors);   

@@ -51,7 +51,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
         if (index == -1) {
             name = "Alignment Reference";
         } else {
-            name = align.getTaxaName(index) + " Reference";
+            name = align.taxaName(index) + " Reference";
         }
         return new AlignmentMaskReference(align, index, name, getNextColor());
     }
