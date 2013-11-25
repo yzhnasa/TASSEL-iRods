@@ -1,7 +1,5 @@
 package net.maizegenetics.trait;
 
-import net.maizegenetics.trait.MarkerPhenotype;
-import net.maizegenetics.trait.Trait;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -343,7 +341,7 @@ public class MarkerPhenotypeAdapter {
 
     public String getMarkerName(int i) {
         if (i < numberOfMarkersFromAlignment) {
-            return align.getSNPID(i);
+            return align.siteName(i);
         }
         int t = markerIndex.get(i - numberOfMarkersFromAlignment);
         return pheno.getTrait(t).getName();
@@ -460,7 +458,7 @@ public class MarkerPhenotypeAdapter {
             return true;
         }
         if (numberOfMarkersFromAlignment > 0) {
-            if (align.getSNPID(0) != null) {
+            if (align.siteName(0) != null) {
                 return true;
             }
         }

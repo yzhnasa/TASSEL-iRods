@@ -301,7 +301,7 @@ public class FilterAlignment implements Alignment {
         int[] temp = new int[siteNamesToKeep.length];
         int count = 0;
         for (int i = 0, n = a.getSiteCount(); i < n; i++) {
-            if (Arrays.binarySearch(siteNamesToKeep, a.getSNPID(i)) >= 0) {
+            if (Arrays.binarySearch(siteNamesToKeep, a.siteName(i)) >= 0) {
                 temp[count++] = i;
                 if (count == siteNamesToKeep.length) {
                     break;
@@ -326,7 +326,7 @@ public class FilterAlignment implements Alignment {
         int[] temp = new int[a.getSiteCount()];
         int count = 0;
         for (int i = 0, n = a.getSiteCount(); i < n; i++) {
-            if (Arrays.binarySearch(siteNamesToRemove, a.getSNPID(i)) < 0) {
+            if (Arrays.binarySearch(siteNamesToRemove, a.siteName(i)) < 0) {
                 temp[count++] = i;
             }
         }
@@ -607,8 +607,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public String getSNPID(int site) {
-        return myBaseAlignment.getSNPID(translateSite(site));
+    public String siteName(int site) {
+        return myBaseAlignment.siteName(translateSite(site));
     }
 
     @Override

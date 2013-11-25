@@ -161,7 +161,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public String getSNPID(int site) {
+    public String siteName(int site) {
         try {
             return mySiteList.get(site).getSNPID();
         } catch (ExecutionException e) {
@@ -212,11 +212,11 @@ final class PositionHDF5List implements PositionList {
         int result=getSiteOfPhysicalPosition(physicalPosition, chromosome);
         if (result < 0) {return result;}
         else {
-            if (snpID.equals(getSNPID(result))) {return result;
+            if (snpID.equals(siteName(result))) {return result;
             } else {
                 int index=result;
                 while ((index < numPositions) && (getPositionInChromosome(index) == physicalPosition)) {
-                    if (snpID.equals(getSNPID(index))) {return index;}
+                    if (snpID.equals(siteName(index))) {return index;}
                     result++;
                 }
                 return -result - 1;

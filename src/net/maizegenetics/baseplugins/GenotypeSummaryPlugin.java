@@ -278,7 +278,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             int count = 0;
 
             data[i][count++] = i;
-            data[i][count++] = alignment.getSNPID(i);
+            data[i][count++] = alignment.siteName(i);
             if (hasPhysicalPositions) {
                 data[i][count++] = physicalPositions[i];
             } else {

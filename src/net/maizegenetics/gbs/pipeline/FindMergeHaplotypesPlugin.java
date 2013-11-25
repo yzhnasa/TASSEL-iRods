@@ -216,7 +216,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             for (int i = 0; i < baseAlign.getSiteCount(); i++) {
                 double errorsRate=(double)siteErrors[i]/(double)siteCallCnt[i];
                 if(errorsRate<errorThreshold) continue;
-                bw.write(baseAlign.getSNPID(i)+"\t");
+                bw.write(baseAlign.siteName(i)+"\t");
                 bw.write(baseAlign.getChromosomeName(i) +"\t");
                 bw.write(i+"\t"); //dummy for genetic position
                 bw.write(baseAlign.getPositionInChromosome(i) +"\n"); //dummy for genetic position

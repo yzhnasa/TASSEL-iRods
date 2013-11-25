@@ -386,7 +386,7 @@ public class ExportUtils {
             bw.write("\n");
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
-                bw.write(alignment.getSNPID(site));
+                bw.write(alignment.siteName(site));
                 bw.write(delimChar);
 //                byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
 //                int numAlleles = alleles.length;
@@ -626,7 +626,7 @@ public class ExportUtils {
                 bw.write(delimChar);
                 bw.write(alignment.getPositionInChromosome(site) + ""); // position
                 bw.write(delimChar);
-                bw.write(alignment.getSNPID(site)); // site name
+                bw.write(alignment.siteName(site)); // site name
                 bw.write(delimChar);
                 bw.write(refAlleleStr); // ref allele
                 bw.write(delimChar);
@@ -868,7 +868,7 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
-                MAPbw.write(alignment.getSNPID(site)); // rs#
+                MAPbw.write(alignment.siteName(site)); // rs#
                 MAPbw.write(delimChar);
                 MAPbw.write("-9"); // genetic distance unavailable
                 MAPbw.write(delimChar);
@@ -960,14 +960,14 @@ public class ExportUtils {
             BufferedWriter DATbw = new BufferedWriter(new FileWriter(genoFileName), 1000000);
             int numSites = alignment.getSiteCount();
             for (int site = 0; site < numSites; site++) {
-                MAPbw.write(alignment.getSNPID(site)); // rs#
+                MAPbw.write(alignment.siteName(site)); // rs#
                 MAPbw.write(delimChar);
                 MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
                 MAPbw.write(Integer.toString(alignment.getPositionInChromosome(site))); // position
                 MAPbw.write("\n");
                 DATbw.write(delimChar);
-                DATbw.write(alignment.getSNPID(site));
+                DATbw.write(alignment.siteName(site));
             }
             MAPbw.close();
             DATbw.write("\n");

@@ -138,7 +138,7 @@ public class AlignmentFilterByGBSUtils {
                 }
             }
             if (printToScreen) {
-                System.out.println(a.getSNPID(i) + "\t" + a.getMinorAlleleFrequency(i) + "\t"
+                System.out.println(a.siteName(i) + "\t" + a.getMinorAlleleFrequency(i) + "\t"
                         + counts[0][i] + "\t" + counts[1][i] + "\t" + (double) counts[1][i] / counts[0][i] + "\t"
                         + (char) majorAllele + "\t" + counts[2][i] + "\t" + (char) minorAllele + "\t" + counts[3][i] + "\t" + counts[4][i]);
             }
@@ -300,7 +300,7 @@ public class AlignmentFilterByGBSUtils {
             }
             double bonP = (cntInformative > 0) ? obsMinP * cntInformative : 1;
             if (i % 1000 == 0) {
-                System.out.printf(a.getSNPID(i) + " %d %g %g %g %n", cntInformative, obsMaxR2, obsMinP, bonP);
+                System.out.printf(a.siteName(i) + " %d %g %g %g %n", cntInformative, obsMaxR2, obsMinP, bonP);
             }
             //           if(obsMaxR2<minR2) System.out.println(i+" "+cntInformative+" "+obsMaxR2+" "+obsMinP);
 

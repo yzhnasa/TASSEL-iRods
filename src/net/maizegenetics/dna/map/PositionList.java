@@ -56,7 +56,7 @@ public interface PositionList extends List<Position> {
      * @param site site
      * @return site name
      */
-    public String getSNPID(int site);
+    public String siteName(int site);
 
     /**
      * Returns total number of sites of this alignment.

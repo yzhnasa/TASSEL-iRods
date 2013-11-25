@@ -232,9 +232,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getSNPID(int site) {
+    public String siteName(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getSNPID(site - mySiteOffsets[translate]);
+        return myAlignments[translate].siteName(site - mySiteOffsets[translate]);
     }
 
     @Override

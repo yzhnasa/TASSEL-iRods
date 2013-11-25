@@ -88,7 +88,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
 
                 @Override
                 public String getRealElementAt(int index) {
-                    return alignment.getSNPID(index);
+                    return alignment.siteName(index);
                 }
             };
             SelectFromAvailableDialog dialog = new SelectFromAvailableDialog(getParentFrame(), "Site Name Filter", listModel);

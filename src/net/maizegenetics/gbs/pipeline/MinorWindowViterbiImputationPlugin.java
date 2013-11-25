@@ -419,7 +419,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private OpenBitSet[][] createMaskForAlignmentConflicts(Alignment unimpAlign, Alignment[] donorAlign, boolean print) {
         OpenBitSet[][] result=new OpenBitSet[donorAlign.length][4];
         for (int da = 0; da < result.length; da++) {
-            int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getChromosome(0), donorAlign[da].getSNPID(0));
+            int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getChromosome(0), donorAlign[da].siteName(0));
             OpenBitSet goodMask=new OpenBitSet(donorAlign[da].getSiteCount());
             OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].getSiteCount());
             OpenBitSet errorMask=new OpenBitSet(donorAlign[da].getSiteCount());

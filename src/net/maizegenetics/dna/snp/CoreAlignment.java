@@ -165,8 +165,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String getSNPID(int site) {
-        return myPositionList.getSNPID(site);
+    public String siteName(int site) {
+        return myPositionList.siteName(site);
     }
 
     @Override
