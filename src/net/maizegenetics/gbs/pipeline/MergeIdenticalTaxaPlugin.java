@@ -74,7 +74,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //            myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
 //            AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
 //
-//            TaxaList idg = a.getTaxaList();
+//            TaxaList idg = a.taxa();
 //            TreeMap<String, List<String>> sortedIds2 = new TreeMap<String, List<String>>();
 //            int uniqueTaxa = 0;
 //            for (int i = 0; i < idg.getTaxaCount(); i++) {
@@ -127,11 +127,11 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                {
 //                    if (entry.getValue().size() > 1) {
 //                        calls = consensusCalls(a, entry.getValue(), makeHetCalls, majorityRule);
-//                        newTaxon = theMSA.getTaxaList().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
+//                        newTaxon = theMSA.taxa().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
 //                    } else {
-//                        int oldTaxon = a.getTaxaList().whichIdNumber(entry.getValue().get(0));
+//                        int oldTaxon = a.taxa().whichIdNumber(entry.getValue().get(0));
 //                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
-//                        newTaxon = theMSA.getTaxaList().whichIdNumber(entry.getValue().get(0));
+//                        newTaxon = theMSA.taxa().whichIdNumber(entry.getValue().get(0));
 //                    }
 //                    for (int s = 0; s < a.getSiteCount(); s++) {
 //                        theMSA.setBase(newTaxon, s, calls[s]);
@@ -154,7 +154,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                }
 //                else if (inputFormat == INPUT_FORMAT.vcf){
 //                    if (entry.getValue().size() > 1){
-//                        newTaxon = theMSA.getTaxaList().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
+//                        newTaxon = theMSA.taxa().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
 //                        List<String> taxa = entry.getValue();
 //
 //                        //the return result is a two day array result[x][y]
@@ -173,9 +173,9 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //
 //                    }
 //                    else {
-//                        int oldTaxon = a.getTaxaList().getIndicesMatchingTaxon(entry.getValue().get(0)).get(0);
+//                        int oldTaxon = a.taxa().getIndicesMatchingTaxon(entry.getValue().get(0)).get(0);
 //                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount());
-//                        newTaxon = theMSA.getTaxaList().whichIdNumber(entry.getValue().get(0));
+//                        newTaxon = theMSA.taxa().whichIdNumber(entry.getValue().get(0));
 //                        for (int s = 0; s < a.getSiteCount(); s++) {
 //                            theMSA.setBase(newTaxon, s, calls[s]);
 //
@@ -202,7 +202,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         short[][] siteCnt = new short[2][a.getSiteCount()];
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {
-            taxaIndex[t] = a.getTaxaList().getIndicesMatchingTaxon(taxa.get(t)).get(0);
+            taxaIndex[t] = a.taxa().getIndicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[a.getSiteCount()];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
@@ -257,7 +257,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxa.size(); t++) {
-            taxaIndex[t] = a.getTaxaList().getIndicesMatchingTaxon(taxa.get(t)).get(0);
+            taxaIndex[t] = a.taxa().getIndicesMatchingTaxon(taxa.get(t)).get(0);
         }
         for (int s = 0; s < a.getSiteCount(); s++) {
             byte[] alleles = a.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Depth, s);

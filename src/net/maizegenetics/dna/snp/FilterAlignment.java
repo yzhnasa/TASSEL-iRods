@@ -121,7 +121,7 @@ public class FilterAlignment implements Alignment {
             noNeedToFilter = false;
         }
         for (int i = 0, n = subTaxaList.getTaxaCount(); i < n; i++) {
-            List<Integer> ion = a.getTaxaList().getIndicesMatchingTaxon(subTaxaList.get(i));
+            List<Integer> ion = a.taxa().getIndicesMatchingTaxon(subTaxaList.get(i));
 
             if ((ion.size() != 1) || (ion.get(0) != i)) {
                 noNeedToFilter = false;
@@ -139,7 +139,7 @@ public class FilterAlignment implements Alignment {
                     } else {
                         taxaRedirectList.add(ion.get(x));
                     }
-                    idList.add(a.getTaxaList().get(ion.get(x)));
+                    idList.add(a.taxa().get(ion.get(x)));
                 }
             }
         }
@@ -170,7 +170,7 @@ public class FilterAlignment implements Alignment {
     public static Alignment getInstanceRemoveIDs(Alignment a, TaxaList subTaxaList) {
 
         TaxaListBuilder result = new TaxaListBuilder();
-        TaxaList current = a.getTaxaList();
+        TaxaList current = a.taxa();
         for (int i = 0, n = current.getTaxaCount(); i < n; i++) {
             if (subTaxaList.getIndicesMatchingTaxon(current.get(i)).isEmpty()) {
                 result.add(current.get(i));
@@ -189,7 +189,7 @@ public class FilterAlignment implements Alignment {
      */
     private FilterAlignment(Alignment a, int startSite, int endSite, FilterAlignment original) {
 
-        myTaxaList = original == null ? a.getTaxaList() : original.getTaxaList();
+        myTaxaList = original == null ? a.taxa() : original.taxa();
 
         if (startSite > endSite) {
             throw new IllegalArgumentException("FilterAlignment: init: start site: " + startSite + " is larger than end site: " + endSite);
@@ -235,7 +235,7 @@ public class FilterAlignment implements Alignment {
      */
     private FilterAlignment(Alignment a, int[] subSites, FilterAlignment original) {
 
-        myTaxaList = original == null ? a.getTaxaList() : original.getTaxaList();
+        myTaxaList = original == null ? a.taxa() : original.taxa();
 
         myBaseAlignment = a;
         myIsSiteFilter = true;
@@ -741,7 +741,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public TaxaList getTaxaList() {
+    public TaxaList taxa() {
         return myTaxaList;
     }
 

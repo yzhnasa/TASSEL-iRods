@@ -27,7 +27,7 @@ public class MarkerPhenotype implements TableReport {
     }
 
     public static MarkerPhenotype getInstance(Alignment aa, Phenotype ca, boolean union) {
-        TaxaList idGroup = getIdGroup(aa.getTaxaList(), ca.getTaxa(), union);
+        TaxaList idGroup = getIdGroup(aa.taxa(), ca.getTaxa(), union);
         Alignment align = FilterAlignment.getInstance(aa, idGroup);
         Phenotype phenotype = FilterPhenotype.getInstance(ca, idGroup, null);
         return new MarkerPhenotype(align, phenotype);

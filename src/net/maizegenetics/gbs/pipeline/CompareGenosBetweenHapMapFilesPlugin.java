@@ -301,8 +301,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         Alignment a2=ImportUtils.readGuessFormat(f1);
         taxaSynonyms.clear();
         int nTaxa = 0, nCompareTaxa = 0;
-        for (Taxon taxon : a1.getTaxaList()) {
-            List<Integer> t2a=a2.getTaxaList().getIndicesMatchingTaxon(taxon);
+        for (Taxon taxon : a1.taxa()) {
+            List<Integer> t2a=a2.taxa().getIndicesMatchingTaxon(taxon);
             for (Integer tIndex : t2a) {
                 taxaSynonyms.put(taxon.getName(), a2.getTaxaName(tIndex));
                 ++nCompareTaxa;

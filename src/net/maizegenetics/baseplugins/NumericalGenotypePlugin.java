@@ -156,7 +156,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        return new SimplePhenotype(input.getTaxaList(), traitNames, pcValues);
+        return new SimplePhenotype(input.taxa(), traitNames, pcValues);
     }
 
     public static SimplePhenotype collapseTransform(Alignment input) {
@@ -190,7 +190,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        return new SimplePhenotype(input.getTaxaList(), traitNames, pcValues);
+        return new SimplePhenotype(input.taxa(), traitNames, pcValues);
 
     }
 

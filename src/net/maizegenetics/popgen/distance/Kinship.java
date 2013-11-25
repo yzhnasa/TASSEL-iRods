@@ -48,7 +48,7 @@ public class Kinship extends DistanceMatrix {
     public void buildFromMarker() {
 
     	IBSDistanceMatrix adm = new IBSDistanceMatrix(mar, 0, true, null);
-    	dm = new DistanceMatrix(adm.getDistances(), mar.getTaxaList());
+    	dm = new DistanceMatrix(adm.getDistances(), mar.taxa());
     	toSimilarity();
     	getKStatistics();
 //    	pullBackExtrem();

@@ -218,11 +218,11 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             PositionListBuilder posBuilder=new PositionListBuilder();
 //            if (inputFormat == INPUT_FORMAT.hapmap)
 //            {
-//                msa = MutableNucleotideAlignment.getInstance(a.getTaxaList(), a.getSiteCount());
+//                msa = MutableNucleotideAlignment.getInstance(a.taxa(), a.getSiteCount());
 //            }
 //            else if (inputFormat == INPUT_FORMAT.vcf)
 //            {
-//                 msa = MutableVCFAlignment.getInstance(a.getTaxaList(), a.getSiteCount(), myMaxNumAlleles);
+//                 msa = MutableVCFAlignment.getInstance(a.taxa(), a.getSiteCount(), myMaxNumAlleles);
 //            }
             ArrayList<Integer> samePosAL = new ArrayList<Integer>();
             Integer[] samePos = null;
@@ -308,7 +308,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     throw new UnsupportedOperationException("kpUnmergDups is not supported in TASSEL 5.  Is this a problem?");
  //                   deleteRemainingDuplicates(msa);
                 }
-                Alignment aOut=AlignmentBuilder.getInstance(msa.build(),posBuilder.build(),a.getTaxaList());
+                Alignment aOut=AlignmentBuilder.getInstance(msa.build(),posBuilder.build(),a.taxa());
                 ExportUtils.writeToHapmap(aOut, false, outfile, '\t', this);
             }
 //            else if (inputFormat==INPUT_FORMAT.vcf)

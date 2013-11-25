@@ -55,7 +55,7 @@ public class SynonymizerPlugin extends AbstractPlugin {
                 Datum current = input.getData(i);
                 Object currentData = current.getData();
                 if (currentData instanceof Alignment) {
-                    TaxaList idGroup = ((Alignment) currentData).getTaxaList();
+                    TaxaList idGroup = ((Alignment) currentData).taxa();
                     Datum idGroupDatum = new Datum(current.getName(), idGroup, current.getComment());
                     data.add(idGroupDatum);
                 } else if (currentData instanceof Phenotype) {

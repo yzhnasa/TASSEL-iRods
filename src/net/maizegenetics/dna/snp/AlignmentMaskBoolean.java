@@ -44,7 +44,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, Taxon id) {
-        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
@@ -61,7 +61,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, String id) {
-        List<Integer> index = align.getTaxaList().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }

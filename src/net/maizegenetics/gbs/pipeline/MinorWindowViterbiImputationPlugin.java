@@ -304,9 +304,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             sb.append(String.format("Unk:%d PropMissing:%g ", unk[0], (double) unk[0] / (double) impTaxon.getOrigGeno().length));
             sb.append(String.format("Het:%d PropHet:%g ", unk[1], (double)unk[1]/(double)impTaxon.getOrigGeno().length));
             if(!isOutputProjection) {
-                alignBuilder.addTaxon(unimpAlign.getTaxaList().get(taxon), impTaxon.resolveGeno);
+                alignBuilder.addTaxon(unimpAlign.taxa().get(taxon), impTaxon.resolveGeno);
             } else {
-                projBuilder.addTaxon(unimpAlign.getTaxaList().get(taxon),impTaxon.getBreakPoints());
+                projBuilder.addTaxon(unimpAlign.taxa().get(taxon),impTaxon.getBreakPoints());
             }
             double errRate=calcErrorForTaxonAndSite(impTaxon); 
             sb.append(String.format("ErR:%g ", errRate));
@@ -972,7 +972,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int gaps=0;
         for (int t = 0; t < iA.getSequenceCount(); t++) {
             int e=0,c=0,u=0,h=0;
-            int oATaxa=oA.getTaxaList().getIndicesMatchingTaxon(iA.getTaxaName(t)).get(0);
+            int oATaxa=oA.taxa().getIndicesMatchingTaxon(iA.getTaxaName(t)).get(0);
             for (int s = 0; s < iA.getSiteCount(); s++) {
                 if(noMask||(oA.getBase(oATaxa, s)!=mA.getBase(t, s))) {
                     byte ib=iA.getBase(t, s);

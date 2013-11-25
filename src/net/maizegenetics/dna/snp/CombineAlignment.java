@@ -67,9 +67,9 @@ public class CombineAlignment implements Alignment {
             return alignments[0];
         }
 
-        TaxaList firstGroup = alignments[0].getTaxaList();
+        TaxaList firstGroup = alignments[0].taxa();
         for (int i = 1; i < alignments.length; i++) {
-            if (!areTaxaListsEqual(firstGroup, alignments[i].getTaxaList())) {
+            if (!areTaxaListsEqual(firstGroup, alignments[i].taxa())) {
                 throw new IllegalArgumentException("CombineAlignment: getInstance: TaxaLists do not match.");
             }
         }
@@ -102,7 +102,7 @@ public class CombineAlignment implements Alignment {
 
         TaxaList[] groups = new TaxaList[alignments.length];
         for (int i = 0; i < alignments.length; i++) {
-            groups[i] = alignments[i].getTaxaList();
+            groups[i] = alignments[i].taxa();
         }
         TaxaList newTaxa = null;
         if (isUnion) {
@@ -778,7 +778,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public TaxaList getTaxaList() {
+    public TaxaList taxa() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

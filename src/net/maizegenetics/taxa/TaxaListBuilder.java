@@ -56,7 +56,7 @@ public class TaxaListBuilder {
     }
 
     public TaxaListBuilder addAll(Alignment a) {
-        myTaxaList.addAll(a.getTaxaList());
+        myTaxaList.addAll(a.taxa());
         return this;
     }
 

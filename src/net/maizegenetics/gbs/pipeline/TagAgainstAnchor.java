@@ -655,7 +655,7 @@ public class TagAgainstAnchor {
     private void redirect () {
         long lastTimePoint = this.getCurrentTimeNano();
         tbtRedirect = new int[tbt.getTaxaCount()];
-        TaxaList g = anchor.getTaxaList();
+        TaxaList g = anchor.taxa();
         for (int i = 0; i < tbtRedirect.length; i++) {
             tbtRedirect[i] = g.getIndicesMatchingTaxon(tbt.getTaxaName(i)).get(0);
         }

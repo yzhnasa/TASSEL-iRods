@@ -157,7 +157,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
             //          alignment.clean();
             //TODO check sort of positions.
-            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(), posBuilder.build(), alignment.getTaxaList()), null);
+            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(), posBuilder.build(), alignment.taxa()), null);
 
         } catch (Exception e) {
             myLogger.error("processDatum: problem converting alignment: line: " + count + "  message: " + e.getMessage());

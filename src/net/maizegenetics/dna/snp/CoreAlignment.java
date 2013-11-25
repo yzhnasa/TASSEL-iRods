@@ -335,7 +335,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public TaxaList getTaxaList() {
+    public TaxaList taxa() {
         return myTaxaList;
     }
 

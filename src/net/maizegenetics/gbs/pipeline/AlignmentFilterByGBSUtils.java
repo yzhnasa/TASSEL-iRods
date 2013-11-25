@@ -75,7 +75,7 @@ public class AlignmentFilterByGBSUtils {
                     }
                 }
             }
-            //            if(printToScreen) System.out.println(a.getTaxaList().getIdentifier(j).getName()+"\t"+
+            //            if(printToScreen) System.out.println(a.taxa().getIdentifier(j).getName()+"\t"+
             //                    counts[0][j]+"\t"+counts[1][j]);
         }
         for (int c : counts[0]) {
@@ -100,7 +100,7 @@ public class AlignmentFilterByGBSUtils {
                 include[i] = true;
             }
         }
-        return IdGroupUtils.idGroupSubset(a.getTaxaList(), include);
+        return IdGroupUtils.idGroupSubset(a.taxa(), include);
     }
 
     public static int[][] genotypicCountsBySite(Alignment a, boolean isRefAltCoded, boolean printToScreen) {
@@ -210,7 +210,7 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static double getErrorRateForDuplicatedTaxa(Alignment a, boolean ignoreHets, boolean random, boolean printToScreen) {
-        TaxaList idg = a.getTaxaList();
+        TaxaList idg = a.taxa();
         TreeMap<String, Integer> sortedIds = new TreeMap<String, Integer>();
         for (int i = 0; i < idg.getTaxaCount(); i++) {
             sortedIds.put(idg.get(i).getName().toUpperCase(), i);
@@ -331,7 +331,7 @@ public class AlignmentFilterByGBSUtils {
             }
             sumCO += cos[1][t];
             sumGood += cos[0][t];
-            //  System.out.println(a.getTaxaList().getIdentifier(t).getName()+" "+cos[0][t]+" "+cos[1][t]);
+            //  System.out.println(a.taxa().getIdentifier(t).getName()+" "+cos[0][t]+" "+cos[1][t]);
         }
         System.out.println("TotalHomoMarkers:" + sumGood + " TotalCrossover:" + sumCO);
         //        System.out.println("By Line:"+Arrays.toString(cos[0]));
@@ -411,6 +411,6 @@ public class AlignmentFilterByGBSUtils {
                 include[i] = true;
             }
         }
-        return IdGroupUtils.idGroupSubset(a.getTaxaList(), include);
+        return IdGroupUtils.idGroupSubset(a.taxa(), include);
     }
 }

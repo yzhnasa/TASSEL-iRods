@@ -634,7 +634,7 @@ public interface Alignment {
      *
      * @return taxa list.
      */
-    public TaxaList getTaxaList();
+    public TaxaList taxa();
 
     /**
      * Return taxa name at given index.

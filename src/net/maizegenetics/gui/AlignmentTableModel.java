@@ -247,7 +247,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         List result = new ArrayList();
 
-        TaxaList idGroup = myAlignment.getTaxaList();
+        TaxaList idGroup = myAlignment.taxa();
         for (int i = 0, n = idGroup.getTaxaCount(); i < n; i++) {
             result.add(idGroup.get(i));
         }

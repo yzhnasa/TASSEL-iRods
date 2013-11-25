@@ -93,7 +93,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 if (lowCoverageTaxa == null) {
                     lowCoverageTaxa = getLowCoverageLines(a, tCov);
                 }  // Note: lowCoverageTaxa is based upon the startChromosome only
-                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getTaxaList(), lowCoverageTaxa, false);
+                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), lowCoverageTaxa, false);
                 a = FilterAlignment.getInstance(a, keepTaxa);
                 myLogger.info("TaxaFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
                 if (a.getSiteCount() == 0) {
@@ -112,7 +112,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
 
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
                 String[] highExpectedFTaxa = getHighExpectedFTaxa(a);
-                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getTaxaList(), highExpectedFTaxa, true);
+                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), highExpectedFTaxa, true);
                 Alignment inbredGenos = FilterAlignment.getInstance(a, highExpectedFTaxaIDGroup);
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0, snpLogging, "Filter the sites for minF only based only on the taxa with expectedF >= minF");
                 inbredGenos = null;

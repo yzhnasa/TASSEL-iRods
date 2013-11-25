@@ -135,7 +135,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
     private Alignment getFilteredAlignment(Alignment alignment) {
         int numSites = alignment.getSiteCount();
         int numTaxa = alignment.getSequenceCount();
-        TaxaList ids = alignment.getTaxaList();
+        TaxaList ids = alignment.taxa();
 
         TaxaListBuilder keepTaxaList = new TaxaListBuilder();
         for (int t = 0; t < numTaxa; t++) {

@@ -237,7 +237,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         TreeMap<Integer,ArrayList> mergeSets=new TreeMap<Integer,ArrayList>();
         TreeMap<Integer,byte[][]> results=new TreeMap<Integer,byte[][]>(Collections.reverseOrder());
         TreeSet<Integer> unmatched=new TreeSet<Integer>(presentRanking.values());
-        TaxaList inIDG=inAlign.getTaxaList();
+        TaxaList inIDG=inAlign.taxa();
         for (Entry<Integer,Integer> e : presentRanking.entrySet()) {
             int taxon1=e.getValue();
             if(unmatched.contains(taxon1)==false) continue;//already included in another group
@@ -289,7 +289,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             int endSite, double maxError, int siteOffsetForError) {
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {  //why are we working with names rather than numbers
-            taxaIndex[t] = a.getTaxaList().getIndicesMatchingTaxon(taxa.get(t)).get(0);
+            taxaIndex[t] = a.taxa().getIndicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[endSite-startSite+1];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);

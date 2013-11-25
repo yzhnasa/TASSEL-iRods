@@ -163,7 +163,7 @@ public class ExportUtils {
         AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(a.getPositionList(),newHDF5file);
         if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {aB.build(); return newHDF5file;}
         for (int t = 0; t < a.getTaxaCount(); t++) {
-              if((exportTaxa!=null)&&(!exportTaxa.contains(a.getTaxaList().get(t)))) continue;  //taxon not in export list
+              if((exportTaxa!=null)&&(!exportTaxa.contains(a.taxa().get(t)))) continue;  //taxon not in export list
               byte[] bases = a.getBaseRow(t);
               if (keepDepth==false) aB.addTaxon(new Taxon(a.getTaxaName(t)), bases, null);
               else {
@@ -322,8 +322,8 @@ public class ExportUtils {
 //            }
 //            System.out.println("Copying first taxon:"+srcA.getTaxaName(0));
 //            for (int i = 0; i < srcA.getSequenceCount(); i++) {
-//                if (addDepth==true) trgA.addTaxon(srcA.getTaxaList().getIdentifier(i), srcA.getBaseRow(i), srcA.getDepthForAlleles(i));
-//                else trgA.addTaxon(srcA.getTaxaList().getIdentifier(i), srcA.getBaseRow(i), null);
+//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.getBaseRow(i), srcA.getDepthForAlleles(i));
+//                else trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.getBaseRow(i), null);
 //            }
 //        }
 //

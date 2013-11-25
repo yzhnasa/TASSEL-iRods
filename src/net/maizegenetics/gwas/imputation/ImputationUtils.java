@@ -196,8 +196,8 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[t];
-		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.getTaxaList(), isInCluster1);
-		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.getTaxaList(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster1);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster2);
 		
 		Alignment a1 = FilterAlignment.getInstance(tb, id1);
 		Alignment a2 = FilterAlignment.getInstance(tb, id2);
@@ -225,7 +225,7 @@ public class ImputationUtils {
 			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.getSNPID(0));
 			return null;
 		} else {
-			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getTaxaList(), include));
+			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.taxa(), include));
 			
 			myAlignment = AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
 		}
@@ -340,8 +340,8 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[bestTrial][t];
-		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.getTaxaList(), isInCluster1[bestTrial]);
-		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.getTaxaList(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster1[bestTrial]);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster2);
 		
 		Alignment a1 = FilterAlignment.getInstance(myAlignment, id1);
 		Alignment a2 = FilterAlignment.getInstance(myAlignment, id2);
@@ -989,7 +989,7 @@ public class ImputationUtils {
 	}
 	
 	public static boolean isB73HaplotypeA(Alignment a) {
-		TaxaList ids = a.getTaxaList();
+		TaxaList ids = a.taxa();
 		int ndx = ids.getIndicesMatchingTaxon("B73(PI550473)").get(0);
 		int nsnps = a.getSiteCount();
 		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();

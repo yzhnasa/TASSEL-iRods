@@ -151,7 +151,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		//create list of taxa with too much missing data
 		LinkedList<Taxon> taxaDiscardList = new LinkedList<Taxon>();
 		for (int t = 0; t < ntaxa; t++) {
-			if (align.getTotalGametesNotMissingForTaxon(t) < minTaxaGametes) taxaDiscardList.add(align.getTaxaList().get(t));
+			if (align.getTotalGametesNotMissingForTaxon(t) < minTaxaGametes) taxaDiscardList.add(align.taxa().get(t));
 		}
 		if (taxaDiscardList.size() > 0) {
 			myLogger.info("\nThe following taxa will not be included in the analysis because the proportion of nonMissing data is below " + minNonMissingProportionForTaxon + ":\n");
