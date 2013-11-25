@@ -403,7 +403,7 @@ public class MarkerPhenotypeAdapter {
             String[] values = new String[nrows];
             for (int b = 0; b < nblocks; b++) {
                 for (int t = 0; t < ntaxa; t++) {
-                    values[b * ntaxa + t] = markerpheno.getAlignment().getBaseAsString(t, marker);
+                    values[b * ntaxa + t] = markerpheno.getAlignment().genotypeAsString(t, marker);
                 }
             }
             return values;

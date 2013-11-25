@@ -213,7 +213,7 @@ public class AlignmentBuilder {
 
             for (int t = 0; t < numTaxa; t++) {
                 for (int s = 0; s < blockSize; s++) {
-                    byte[] currentAlleles = alignment.getBaseArray(t, s + bigS);
+                    byte[] currentAlleles = alignment.genotypeArray(t, s + bigS);
                     if ((currentAlleles[0] != majorAllele[s]) && (currentAlleles[0] != minorAllele[s])) {
                         currentAlleles[0] = Alignment.UNKNOWN_ALLELE;
                     }
@@ -234,7 +234,7 @@ public class AlignmentBuilder {
         //TODO this would be even faster to work through the SuperByteMatrix, as knowledge of site or taxa is not needed.
         for (int t = 0; t < numTaxa; t++) {
             for (int s = 0; s < numSites; s++) {
-                byte currGeno=alignment.getBase(t, s);
+                byte currGeno=alignment.genotype(t, s);
                 if(AlignmentUtils.isHeterozygous(currGeno)) {
                     builder.setBase(t, s, Alignment.UNKNOWN_DIPLOID_ALLELE);
                 } else {
@@ -277,7 +277,7 @@ public class AlignmentBuilder {
         int numSites = alignment.getSiteCount();
         GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
         for (int t = 0; t < numTaxa; t++) {
-            for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.getBase(t, s));}
+            for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.genotype(t, s));}
         }
         return new CoreAlignment(builder.build(), alignment.getPositionList(), alignment.taxa());
     }

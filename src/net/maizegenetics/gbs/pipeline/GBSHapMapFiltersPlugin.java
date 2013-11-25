@@ -308,7 +308,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
         for (int i = 0; i < a.getSequenceCount(); i++) {
             int covered = 0;
             for (int j = 0; j < a.getSiteCount(); j++) {
-                if (a.getBase(i, j) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (a.genotype(i, j) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     covered++;
                 }
             }

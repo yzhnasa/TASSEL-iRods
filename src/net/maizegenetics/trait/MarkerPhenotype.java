@@ -68,7 +68,7 @@ public class MarkerPhenotype implements TableReport {
                 builder.append(myPhenotype.getData(i, j));
                 builder.append("\t");
             }
-            builder.append(myAlignment.getBaseAsStringRow(i));
+            builder.append(myAlignment.genotypeAsStringRow(i));
         }
         return builder.toString();
     }
@@ -121,7 +121,7 @@ public class MarkerPhenotype implements TableReport {
         }
         int siteCount = Math.min(myAlignment.getSiteCount(), 10);
         StringBuilder builder = new StringBuilder();
-        builder.append(myAlignment.getBaseAsStringRange(row, 0, siteCount));
+        builder.append(myAlignment.genotypeAsStringRange(row, 0, siteCount));
         if (myAlignment.getSiteCount() > 10) {
             builder.append("...");
         }
@@ -153,7 +153,7 @@ public class MarkerPhenotype implements TableReport {
         if (col == haplotypeColumn) {
             int siteCount = Math.min(myAlignment.getSiteCount(), 10);
             StringBuilder builder = new StringBuilder();
-            builder.append(myAlignment.getBaseAsStringRange(row, 0, siteCount));
+            builder.append(myAlignment.genotypeAsStringRange(row, 0, siteCount));
             if (myAlignment.getSiteCount() > 10) {
                 builder.append("...");
             }

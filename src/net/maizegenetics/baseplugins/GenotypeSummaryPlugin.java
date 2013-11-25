@@ -290,7 +290,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             int numAlleles = alleles[0].length;
 
             for (int a = 0; a < numAlleles; a++) {
-                data[i][count++] = alignment.getBaseAsString(i, (byte) alleles[0][a]);
+                data[i][count++] = alignment.genotypeAsString(i, (byte) alleles[0][a]);
                 data[i][count++] = alleles[1][a];
                 data[i][count++] = (double) alleles[1][a] / (double) totalGametes;
                 data[i][count++] = (double) alleles[1][a] / (double) totalGametesNotMissing;

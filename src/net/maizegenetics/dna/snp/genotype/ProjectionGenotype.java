@@ -91,12 +91,12 @@ public class ProjectionGenotype extends AbstractGenotype {
             if(currentDSH[taxon]==null) return Alignment.UNKNOWN_DIPLOID_ALLELE;
             //TODO consider null
         }
-        byte p1=myBaseAlignment.getBase(currentDSH[taxon].getParent1index(),site);
-        byte p2=myBaseAlignment.getBase(currentDSH[taxon].getParent2index(),site);
+        byte p1=myBaseAlignment.genotype(currentDSH[taxon].getParent1index(),site);
+        byte p2=myBaseAlignment.genotype(currentDSH[taxon].getParent2index(),site);
         return AlignmentUtils.getUnphasedDiploidValueNoHets(p1, p2);
     }
 
-    //Currently this is no faster than general getBase.  it should be possible to make this faster.
+    //Currently this is no faster than general genotype.  it should be possible to make this faster.
     private byte getBaseTaxon(int taxon, int site) {
         if(taxon!=cachedTaxon) {
             projForCachedTaxon=new byte[mySiteCount];
@@ -106,7 +106,7 @@ public class ProjectionGenotype extends AbstractGenotype {
         byte result=projForCachedTaxon[site];
         if(result==Alignment.RARE_DIPLOID_ALLELE) {
             DonorSiteHaps currentDSH=breakMaps.get(taxon).get(site);
-            byte[] r=myBaseAlignment.getBaseRange(currentDSH.getParent1index(),currentDSH.getStartSite(),currentDSH.getEndSite()+1);
+            byte[] r=myBaseAlignment.genotypeRange(currentDSH.getParent1index(),currentDSH.getStartSite(),currentDSH.getEndSite()+1);
             System.arraycopy(r,0,projForCachedTaxon,currentDSH.getStartSite(),r.length);
             result=projForCachedTaxon[site];
         }

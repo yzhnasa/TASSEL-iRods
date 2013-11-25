@@ -246,7 +246,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     } else {  // site has a unique position: write its genos to the msa
                         byte[] genos = new byte[a.getSequenceCount()];
                         for (int t = 0; t < a.getSequenceCount(); ++t) {
-                            genos[t] = a.getBase(t, samePos[0]);
+                            genos[t] = a.genotype(t, samePos[0]);
                         }
                         addSiteToMutableAlignment(chr, currentPos, genos, msa, posBuilder);
 //                        if (inputFormat==INPUT_FORMAT.vcf)
@@ -281,7 +281,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             } else {  // site has a unique position: write its genos to the msa
                 byte[] genos = new byte[a.getSequenceCount()];
                 for (int t = 0; t < a.getSequenceCount(); ++t) {
-                    genos[t] = a.getBase(t, samePos[0]);
+                    genos[t] = a.genotype(t, samePos[0]);
                 }
                 addSiteToMutableAlignment(chr, currentPos, genos, msa, posBuilder);
 //                if (inputFormat==INPUT_FORMAT.vcf)
@@ -331,7 +331,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             }
             byte[] currMerge = new byte[a.getSequenceCount()];
             for (int t = 0; t < a.getSequenceCount(); ++t) {
-                currMerge[t] = a.getBase(t, samePos[s1]); // set the current merger of genotypes to those for site s1
+                currMerge[t] = a.genotype(t, samePos[s1]); // set the current merger of genotypes to those for site s1
             }
             byte[] currAlleles = new byte[2];
             currAlleles[0] = a.getMajorAllele(samePos[s1].intValue());
@@ -359,7 +359,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     int nCompare = 0;
                     byte[] possibleMerge = new byte[a.getSequenceCount()];
                     for (int t = 0; t < a.getSequenceCount(); ++t) {
-                        byte geno2 = a.getBase(t, samePos[s2]);
+                        byte geno2 = a.genotype(t, samePos[s2]);
                         if (currMerge[t] != Alignment.UNKNOWN_DIPLOID_ALLELE && geno2 != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                             if (!usePedigree || useTaxaForCompare[t]) {
                                 ++nCompare;
@@ -372,7 +372,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                                     possibleMerge[t] = callHets ? resolveHet(currMerge[t], geno2) : Alignment.UNKNOWN_DIPLOID_ALLELE;
                                 } catch (Exception e) {
                                     myLogger.warn(
-                                            "Invalid genotypes (" + a.getBaseAsString(t, samePos[s1]) + " and " + a.getBaseAsString(t, samePos[s2]) + ") at position:" + currentPos + " taxon:" + a.taxaName(t));
+                                            "Invalid genotypes (" + a.genotypeAsString(t, samePos[s1]) + " and " + a.genotypeAsString(t, samePos[s2]) + ") at position:" + currentPos + " taxon:" + a.taxaName(t));
                                 }
                             } else {
                                 possibleMerge[t] = currMerge[t];
@@ -407,7 +407,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             if (!finished[site]) {
                 byte[] genos = new byte[a.getSequenceCount()];
                 for (int t = 0; t < a.getSequenceCount(); ++t) {
-                    genos[t] = a.getBase(t, samePos[site]);
+                    genos[t] = a.genotype(t, samePos[site]);
                 }
                 addSiteToMutableAlignment(chr, currentPos, genos, msa, posBuild);
             }
@@ -494,7 +494,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //            }
 //            for (int s:samePos)
 //            {
-//                byte singleBase = a.getBase(t, s);
+//                byte singleBase = a.genotype(t, s);
 //                if (singleBase==Alignment.UNKNOWN_DIPLOID_ALLELE)
 //                {
 //                    continue;
@@ -539,7 +539,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                {
 //                    genos = new byte[a.getSequenceCount()];
 //                    for (int t = 0; t < a.getSequenceCount(); ++t) {
-//                        genos[t] = a.getBase(t, s);
+//                        genos[t] = a.genotype(t, s);
 //                    }
 //                    addSiteToMutableAlignment(chr, currentPos, genos, msa);
 //

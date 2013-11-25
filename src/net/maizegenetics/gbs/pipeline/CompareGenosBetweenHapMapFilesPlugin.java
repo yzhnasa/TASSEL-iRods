@@ -432,8 +432,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         summStats[MINOR_ALLELE_FREQ2] = a2.getMinorAlleleFrequency(site2);
         summStats[F_VALUE1] = calculateF(a1, site1);
         summStats[F_VALUE2] = calculateF(a2, site2);
-        String alleleString1 = a1.getBaseAsString(site1, alleles1[0]) + "/" + a1.getBaseAsString(site1, alleles1[1]);
-        String alleleString2 = a2.getBaseAsString(site2, alleles2[0]) + "/" + a2.getBaseAsString(site2, alleles2[1]);
+        String alleleString1 = a1.genotypeAsString(site1, alleles1[0]) + "/" + a1.genotypeAsString(site1, alleles1[1]);
+        String alleleString2 = a2.genotypeAsString(site2, alleles2[0]) + "/" + a2.genotypeAsString(site2, alleles2[1]);
 
         int[][][] compareTaxaStatsSame = null;
         int[][][] compareTaxaStatsDiff = null;
@@ -537,7 +537,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         int nTaxa = a.getSequenceCount();
         // TERRY - Does this make sense?  What if it's het but not major/minor?
         for (int taxon = 0; taxon < nTaxa; taxon++) {
-            byte[] bases = a.getBaseArray(taxon, site);
+            byte[] bases = a.genotypeArray(taxon, site);
             if ((bases[0] == majAllele) && bases[1] == majAllele) {
                 majGenoCnt++;
             } else if ((bases[0] == minAllele) && bases[1] == minAllele) {
@@ -559,12 +559,12 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
     private int[] compareGenotypes(int taxon1Index, int site1, Alignment a1, int taxon2Index, int site2, Alignment a2, boolean sameStrand) {
         int[] compareStats = new int[COMPARE_STATS_LENGTH];
-        byte base1 = a1.getBase(taxon1Index, site1);
+        byte base1 = a1.genotype(taxon1Index, site1);
         byte base2;
         if (sameStrand) {
-            base2 = a2.getBase(taxon2Index, site2);
+            base2 = a2.genotype(taxon2Index, site2);
         } else {
-            base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.getBase(taxon2Index, site2));
+            base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.genotype(taxon2Index, site2));
         }
         if (base1 != Alignment.UNKNOWN_DIPLOID_ALLELE && base2 != Alignment.UNKNOWN_DIPLOID_ALLELE) {
             if (!(AlignmentUtils.isHeterozygous(base1) || AlignmentUtils.isHeterozygous(base2))) {

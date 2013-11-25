@@ -408,17 +408,17 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte getBase(int taxon, int site) {
+    public byte genotype(int taxon, int site) {
         return myGenotype.getBase(taxon, site);
     }
 
     @Override
-    public byte[] getBaseRange(int taxon, int startSite, int endSite) {
+    public byte[] genotypeRange(int taxon, int startSite, int endSite) {
         return myGenotype.getBaseRange(taxon, startSite, endSite);
     }
 
     @Override
-    public byte getBase(int taxon, Chromosome chromosome, int physicalPosition) {
+    public byte genotype(int taxon, Chromosome chromosome, int physicalPosition) {
         return myGenotype.getBase(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
@@ -674,12 +674,12 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getBaseArray(int taxon, int site) {
+    public byte[] genotypeArray(int taxon, int site) {
         return myGenotype.getBaseArray(taxon, site);
     }
 
     @Override
-    public byte[] getBaseRow(int taxon) {
+    public byte[] genotypeRow(int taxon) {
         return myGenotype.getBaseRow(taxon);
     }
 
@@ -699,12 +699,12 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
+    public String genotypeAsString(int taxon, int site) {
         return myGenotype.getBaseAsString(taxon, site);
     }
 
     @Override
-    public String[] getBaseAsStringArray(int taxon, int site) {
+    public String[] genotypeAsStringArray(int taxon, int site) {
         return myGenotype.getBaseAsStringArray(taxon, site);
     }
 
@@ -811,7 +811,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public String getBaseAsString(int site, byte value) {
+    public String genotypeAsString(int site, byte value) {
         return myGenotype.getBaseAsString(site, value);
     }
 
@@ -940,12 +940,12 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+    public String genotypeAsStringRange(int taxon, int startSite, int endSite) {
         return myGenotype.getBaseAsStringRange(taxon, startSite, endSite);
     }
 
     @Override
-    public String getBaseAsStringRow(int taxon) {
+    public String genotypeAsStringRow(int taxon) {
         return myGenotype.getBaseAsStringRow(taxon);
     }
 

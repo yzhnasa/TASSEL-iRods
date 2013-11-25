@@ -684,16 +684,16 @@ public class ImputationUtils {
 								bw.write("\t");
 								int leftndx = leftflank;
 								int rightndx = rightflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								byte leftByte = a.getBase(t, leftndx);
-								byte rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								byte leftByte = a.genotype(t, leftndx);
+								byte rightByte = a.genotype(t, rightndx);
 								if (leftByte ==  missingByte) {
 									if (rightByte == missingByte) bw.write("N");
 									else bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
 								}
 								else if (rightByte ==  missingByte) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
-								else if (a.getBase(t, leftndx) == a.getBase(t, rightndx)) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
+								else if (a.genotype(t, leftndx) == a.genotype(t, rightndx)) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
 								else bw.write("N"); 
 							}
 						} else {
@@ -701,16 +701,16 @@ public class ImputationUtils {
 								bw.write("\t");
 								int leftndx = leftflank;
 								int rightndx = rightflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								byte leftByte = a.getBase(t, leftndx);
-								byte rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								byte leftByte = a.genotype(t, leftndx);
+								byte rightByte = a.genotype(t, rightndx);
 								if (leftByte ==  missingByte) {
 									if (rightByte == missingByte) bw.write("-");
 									else bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
 								}
 								else if (rightByte ==  missingByte) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte)));
-								else if (a.getBase(t, leftndx) == a.getBase(t, rightndx)) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
+								else if (a.genotype(t, leftndx) == a.genotype(t, rightndx)) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
 								else {
 									double leftval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
 									double rightval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
@@ -887,15 +887,15 @@ public class ImputationUtils {
 							if (leftflank < 0) leftByte = missingByte;
 							else {
 								int leftndx = leftflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								leftByte = a.getBase(t, leftndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								leftByte = a.genotype(t, leftndx);
 							}
 							
 							if (rightflank > nsnps - 1) rightByte = missingByte;
 							else {
 								int rightndx = rightflank;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								rightByte = a.genotype(t, rightndx);
 							}
 							if (leftByte ==  missingByte) {
 								if (rightByte == missingByte) isnp.sb.append("N");
@@ -914,15 +914,15 @@ public class ImputationUtils {
 							int leftndx = leftflank;
 							if (leftflank < 0) leftByte = missingByte;
 							else {
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								leftByte = a.getBase(t, leftndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								leftByte = a.genotype(t, leftndx);
 							}
 							
 							int rightndx = rightflank;
 							if (rightflank > nsnps - 1) rightByte = missingByte;
 							else {
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								rightByte = a.genotype(t, rightndx);
 							}
 							
 							if (leftByte ==  missingByte) {
@@ -994,7 +994,7 @@ public class ImputationUtils {
 		int nsnps = a.getSiteCount();
 		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();
 		for (int s = 0; s < nsnps; s++) {
-			Byte allele = a.getBase(ndx, s);
+			Byte allele = a.genotype(ndx, s);
 			Integer count = alleleCounts.get(allele);
 			if (count == null) alleleCounts.put(allele, 1);
 			else alleleCounts.put(allele, 1 + count);

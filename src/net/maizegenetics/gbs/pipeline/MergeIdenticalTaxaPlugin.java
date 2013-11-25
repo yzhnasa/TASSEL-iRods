@@ -130,7 +130,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                        newTaxon = theMSA.taxa().whichIdNumber(entry.getValue().get(0).split(":")[0] + ":MERGE");
 //                    } else {
 //                        int oldTaxon = a.taxa().whichIdNumber(entry.getValue().get(0));
-//                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount() - 1);
+//                        calls = a.genotypeRange(oldTaxon, 0, a.getSiteCount() - 1);
 //                        newTaxon = theMSA.taxa().whichIdNumber(entry.getValue().get(0));
 //                    }
 //                    for (int s = 0; s < a.getSiteCount(); s++) {
@@ -139,7 +139,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                    if (entry.getValue().size() > 1) {
 //                        int known = 0, hets = 0;
 //                        for (int s = 0; s < a.getSiteCount(); s++) {
-//                            byte cb = theMSA.getBase(newTaxon, s);
+//                            byte cb = theMSA.genotype(newTaxon, s);
 //                            if (cb != Alignment.UNKNOWN_DIPLOID_ALLELE) {
 //                                known++;
 //                            }
@@ -174,7 +174,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                    }
 //                    else {
 //                        int oldTaxon = a.taxa().getIndicesMatchingTaxon(entry.getValue().get(0)).get(0);
-//                        calls = a.getBaseRange(oldTaxon, 0, a.getSiteCount());
+//                        calls = a.genotypeRange(oldTaxon, 0, a.getSiteCount());
 //                        newTaxon = theMSA.taxa().whichIdNumber(entry.getValue().get(0));
 //                        for (int s = 0; s < a.getSiteCount(); s++) {
 //                            theMSA.setBase(newTaxon, s, calls[s]);
@@ -215,7 +215,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             //byte het = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(snpValue);
             byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
             for (int t = 0; t < taxaIndex.length; t++) {
-                byte ob = a.getBase(taxaIndex[t], s);
+                byte ob = a.genotype(taxaIndex[t], s);
                 if (ob == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     continue;
                 }

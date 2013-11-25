@@ -265,7 +265,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
               //  System.out.println("");              
                 calls=consensusGameteCalls(inAlign, mergeNames, startSite, endSite, maxErrorInCreatingConsensus, siteOffsetForError);
             } else {
-                calls=inAlign.getBaseRange(taxon1, startSite, endSite+1);
+                calls=inAlign.genotypeRange(taxon1, startSite, endSite+1);
             }
             int[] unkCnt=countUnknown(calls);
             double missingFreq=(double)unkCnt[0]/(double)inAlign.getSiteCount();
@@ -301,7 +301,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
             int mjCnt=0, mnCnt=0;
             for (int t = 0; t < taxaIndex.length; t++) {
-                byte ob = a.getBase(taxaIndex[t], s);
+                byte ob = a.genotype(taxaIndex[t], s);
                 if (ob == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     continue;
                 }

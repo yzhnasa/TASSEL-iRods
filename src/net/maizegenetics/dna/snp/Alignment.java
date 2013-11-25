@@ -78,11 +78,11 @@ public interface Alignment {
      * @return high four bits generally encode the more frequent allele and the
      * lower four bits encode the less frequent allele.
      */
-    public byte getBase(int taxon, int site);
+    public byte genotype(int taxon, int site);
 
     /**
      * Returns diploid values for given taxon and site. Same values as
-     * getBase(), except two values are already separated into two bytes.
+     * genotype(), except two values are already separated into two bytes.
      *
      * @param taxon taxon
      * @param site site
@@ -91,7 +91,7 @@ public interface Alignment {
      * bits. second byte (index 1) holds second allele value in right-most four
      * bits.
      */
-    public byte[] getBaseArray(int taxon, int site);
+    public byte[] genotypeArray(int taxon, int site);
 
     /**
      * Returns diploid values for given taxon, chromosome, and physical
@@ -105,12 +105,12 @@ public interface Alignment {
      * @return first four bits are the first allele value and the second four
      * bits are the second allele value.
      */
-    public byte getBase(int taxon, Chromosome chromosome, int physicalPosition);
+    public byte genotype(int taxon, Chromosome chromosome, int physicalPosition);
 
     /**
      * Returns sequence of diploid allele values for given taxon in specified
      * range (end site excluded). Each value in array is what would be returned
-     * by getBase().
+     * by genotype().
      *
      * @param taxon taxon
      * @param startSite start site
@@ -118,17 +118,17 @@ public interface Alignment {
      *
      * @return sequence of diploid allele values.
      */
-    public byte[] getBaseRange(int taxon, int startSite, int endSite);
+    public byte[] genotypeRange(int taxon, int startSite, int endSite);
 
     /**
      * Returns sequence of diploid allele values for all sites for given taxon.
-     * Each value in array is what would be returned by getBase().
+     * Each value in array is what would be returned by genotype().
      *
      * @param taxon taxon
      *
      * @return sequence of diploid allele values.
      */
-    public byte[] getBaseRow(int taxon);
+    public byte[] genotypeRow(int taxon);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at each
@@ -224,21 +224,21 @@ public interface Alignment {
     public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock);
 
     /**
-     * Returns string representation of diploid values returned by getBase() for
-     * given taxon and site. The two allele values will be separated by a colon
-     * (:) delimiter.
+     * Returns string representation of diploid values returned by genotype()
+     * for given taxon and site. The two allele values will be separated by a
+     * colon (:) delimiter.
      *
      * @param taxon taxon
      * @param site site
      *
      * @return string representation of diploid values.
      */
-    public String getBaseAsString(int taxon, int site);
+    public String genotypeAsString(int taxon, int site);
 
     /**
      * Returns string representation of diploid alleles for given taxon in
      * specified range (end site excluded). Each value in string is what would
-     * be returned by getBaseAsString().
+     * be returned by genotypeAsString().
      *
      * @param taxon taxon
      * @param startSite start site
@@ -246,30 +246,30 @@ public interface Alignment {
      *
      * @return string representation of alleles in range
      */
-    public String getBaseAsStringRange(int taxon, int startSite, int endSite);
+    public String genotypeAsStringRange(int taxon, int startSite, int endSite);
 
     /**
      * Returns string representation of diploid alleles for given taxon for all
      * sites. Each value in string is what would be returned by
-     * getBaseAsString().
+     * genotypeAsString().
      *
      * @param taxon taxon
      *
      * @return string representation of alleles
      */
-    public String getBaseAsStringRow(int taxon);
+    public String genotypeAsStringRow(int taxon);
 
     /**
      * Returns string representation of diploid values returned by
-     * getBaseArray() for given taxon and site. Same two allele values as
-     * getBaseAsString(), except already separated into two Strings.
+     * genotypeArray() for given taxon and site. Same two allele values as
+     * genotypeAsString(), except already separated into two Strings.
      *
      * @param taxon taxon
      * @param site site
      *
      * @return string representations of diploid values.
      */
-    public String[] getBaseAsStringArray(int taxon, int site);
+    public String[] genotypeAsStringArray(int taxon, int site);
 
     /**
      * Return reference diploid allele values at given site.
@@ -312,7 +312,7 @@ public interface Alignment {
 
     /**
      * Returns whether allele values at given taxon and site are heterozygous.
-     * If two values returned by getBase() are different, this will return
+     * If two values returned by genotype() are different, this will return
      * false.
      *
      * @param taxon taxon
@@ -717,7 +717,7 @@ public interface Alignment {
      * Returns allele values as strings for all sites. The first dimension of
      * the array indexes the sites. The second dimension indexes the allele
      * values for given site. The indices for the allele values are used as the
-     * codes to store data. These codes (indices) are returned by the getBase()
+     * codes to store data. These codes (indices) are returned by the genotype()
      * methods. If only one array of allele values is returned, that is the
      * encoding for all sites.
      *
@@ -742,7 +742,7 @@ public interface Alignment {
      *
      * @return String representation
      */
-    public String getBaseAsString(int site, byte value);
+    public String genotypeAsString(int site, byte value);
 
     /**
      * Returns String representation of diploid allele value at site.

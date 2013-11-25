@@ -62,14 +62,14 @@ public class AlignmentFilterByGBSUtils {
         int totalScored = 0, totalHets = 0;
         for (int j = 0; j < a.getSequenceCount(); j++) {
             for (int i = 0; i < a.getSiteCount(); i++) {
-                if (a.getBase(j, i) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (a.genotype(j, i) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][j]++;
                     if (isRefAltCoded) {
-                        if (a.getBase(j, i) == hetAllele) {
+                        if (a.genotype(j, i) == hetAllele) {
                             counts[1][j]++;
                         }
                     } else {
-                        if (AlignmentUtils.isHeterozygous(a.getBase(j, i))) {
+                        if (AlignmentUtils.isHeterozygous(a.genotype(j, i))) {
                             counts[1][j]++;
                         }
                     }
@@ -114,7 +114,7 @@ public class AlignmentFilterByGBSUtils {
             byte minorAllele = a.getMinorAllele(i);
             minorAllele = (byte) (minorAllele << 4 | minorAllele);
             for (int j = 0; j < a.getSequenceCount(); j++) {
-                byte currentBase = a.getBase(j, i);
+                byte currentBase = a.genotype(j, i);
                 if (currentBase != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][i]++;
                     if (isRefAltCoded) {
@@ -227,11 +227,11 @@ public class AlignmentFilterByGBSUtils {
                     byte pB = Alignment.UNKNOWN_DIPLOID_ALLELE;
                     if (random) {
                         int t = (int) Math.round(Math.random() * (a.getSequenceCount() - 1));
-                        pB = a.getBase(t, i);
+                        pB = a.genotype(t, i);
                     } else {
-                        pB = a.getBase(priorEntry.getValue(), i);
+                        pB = a.genotype(priorEntry.getValue(), i);
                     }
-                    byte cB = a.getBase(entry.getValue(), i);
+                    byte cB = a.genotype(entry.getValue(), i);
                     if (ignoreHets && AlignmentUtils.isHeterozygous(pB)) {
                         continue;
                     }
@@ -319,7 +319,7 @@ public class AlignmentFilterByGBSUtils {
         for (int t = 0; t < a.getSequenceCount(); t++) {
             byte lastHomozygous = Alignment.UNKNOWN_DIPLOID_ALLELE;
             for (int i = 0; i < a.getSiteCount(); i++) {
-                byte currBase = a.getBase(t, i);
+                byte currBase = a.genotype(t, i);
                 if ((currBase != refAllele) && (currBase != altAllele)) {
                     continue;  //not useful
                 }
@@ -351,10 +351,10 @@ public class AlignmentFilterByGBSUtils {
             byte[] base = {-1, -1, -1};
             int[] site = {-1, -1, -1};
             for (int s = 0; s < a.getSiteCount(); s++) {
-                if ((a.getBase(t, s) == refAllele) || (a.getBase(t, s) == altAllele)) {
+                if ((a.genotype(t, s) == refAllele) || (a.genotype(t, s) == altAllele)) {
                     base[0] = base[1];
                     base[1] = base[2];
-                    base[2] = a.getBase(t, s);
+                    base[2] = a.genotype(t, s);
                     site[0] = site[1];
                     site[1] = site[2];
                     site[2] = s;

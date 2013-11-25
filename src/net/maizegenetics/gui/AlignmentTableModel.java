@@ -71,7 +71,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         try {
             realColumn = col + myHorizontalStart;
-            result = myAlignment.getBaseAsString(row, realColumn);
+            result = myAlignment.genotypeAsString(row, realColumn);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("row: " + row + "   col: " + col + "   realColumn: " + realColumn);
@@ -87,7 +87,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public Object getRealValueAt(int row, int col) {
-        return myAlignment.getBase(row, col);
+        return myAlignment.genotype(row, col);
     }
 
     public String getColumnName(int col) {
@@ -117,7 +117,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
                     builder.append("; ");
                 }
                 builder.append(NUMBER_FORMAT.format((double) alleles[1][i] / total));
-                builder.append(myAlignment.getBaseAsString(realColumn, (byte) alleles[0][i]));
+                builder.append(myAlignment.genotypeAsString(realColumn, (byte) alleles[0][i]));
             }
 
             return builder.toString();

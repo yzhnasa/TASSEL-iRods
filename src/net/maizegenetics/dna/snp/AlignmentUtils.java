@@ -259,7 +259,7 @@ public class AlignmentUtils {
 
         int[] stateCnt = new int[16];
         for (int i = 0; i < alignment.getTaxaCount(); i++) {
-            byte[] dipB = alignment.getBaseArray(i, site);
+            byte[] dipB = alignment.genotypeArray(i, site);
             if (dipB[0] != Alignment.UNKNOWN_ALLELE) {
                 stateCnt[dipB[0]]++;
             }
@@ -319,7 +319,7 @@ public class AlignmentUtils {
 
         Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
         for (int r = 0; r < numTaxa; r++) {
-            String current = alignment.getBaseAsString(r, site);
+            String current = alignment.genotypeAsString(r, site);
             Integer num = diploidValueCounts.get(current);
             if (num == null) {
                 diploidValueCounts.put(current, ONE_INTEGER);

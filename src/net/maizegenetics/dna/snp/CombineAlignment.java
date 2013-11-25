@@ -162,13 +162,13 @@ public class CombineAlignment implements Alignment {
 
     }
 
-    public byte getBase(int taxon, int site) {
+    public byte genotype(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBase(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotype(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
-    public byte[] getBaseRange(int taxon, int startSite, int endSite) {
+    public byte[] genotypeRange(int taxon, int startSite, int endSite) {
 
         byte[] result = new byte[endSite - startSite];
         int count = 0;
@@ -188,7 +188,7 @@ public class CombineAlignment implements Alignment {
                 secondSite = endSite - mySiteOffsets[secondAlign];
             }
             for (int s = firstSite; s < secondSite; s++) {
-                result[count++] = myAlignments[i].getBase(taxon, s);
+                result[count++] = myAlignments[i].genotype(taxon, s);
             }
         }
         return result;
@@ -196,10 +196,10 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte getBase(int taxon, Chromosome locus, int physicalPosition) {
+    public byte genotype(int taxon, Chromosome locus, int physicalPosition) {
         int site = getSiteOfPhysicalPosition(physicalPosition, locus);
         int translate = translateSite(site);
-        return myAlignments[translate].getBase(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotype(taxon, site - mySiteOffsets[translate]);
     }
 
     /**
@@ -404,16 +404,16 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getBaseArray(int taxon, int site) {
+    public byte[] genotypeArray(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBaseArray(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotypeArray(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
-    public byte[] getBaseRow(int taxon) {
+    public byte[] genotypeRow(int taxon) {
         byte[] result = new byte[getSiteCount()];
         for (int i = 0; i < myAlignments.length; i++) {
-            byte[] current = myAlignments[i].getBaseRow(taxon);
+            byte[] current = myAlignments[i].genotypeRow(taxon);
             System.arraycopy(current, 0, result, myChromosomesOffsets[i], current.length);
         }
         return result;
@@ -436,15 +436,15 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getBaseAsString(int taxon, int site) {
+    public String genotypeAsString(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBaseAsString(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotypeAsString(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
-    public String[] getBaseAsStringArray(int taxon, int site) {
+    public String[] genotypeAsStringArray(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBaseAsStringArray(taxon, site - mySiteOffsets[translate]);
+        return myAlignments[translate].genotypeAsStringArray(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -664,9 +664,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getBaseAsString(int site, byte value) {
+    public String genotypeAsString(int site, byte value) {
         int translate = translateSite(site);
-        return myAlignments[translate].getBaseAsString(site - mySiteOffsets[translate], value);
+        return myAlignments[translate].genotypeAsString(site - mySiteOffsets[translate], value);
     }
 
     @Override
@@ -738,12 +738,12 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getBaseAsStringRange(int taxon, int startSite, int endSite) {
+    public String genotypeAsStringRange(int taxon, int startSite, int endSite) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public String getBaseAsStringRow(int taxon) {
+    public String genotypeAsStringRow(int taxon) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

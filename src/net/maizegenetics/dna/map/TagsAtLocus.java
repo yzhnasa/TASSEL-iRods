@@ -365,7 +365,7 @@ public class TagsAtLocus {
             int indexInTheTags = Integer.parseInt(tagAlignment.taxaName(tg)); // taxaName in tagAlignment is set to indexInTheTags
             tagIndices[tg] = indexInTheTags;
             for (int s = 0; s < nSites; s++) {
-                allelesAtVariableSitesByTag[s][tagIndices[tg]] = tagAlignment.getBase(tg, s);
+                allelesAtVariableSitesByTag[s][tagIndices[tg]] = tagAlignment.genotype(tg, s);
             }
         }
         positionsOfVariableSites = new int[nSites];
@@ -409,9 +409,9 @@ public class TagsAtLocus {
             tagIndices[tg] = Integer.parseInt(tagAlignment.taxaName(tg).split("_")[0]);  // taxaName in tagAlignment is set to indexInTheTags_"refTag"|"no"
             for (int s = 0; s < nSites; s++) {
                 if (includeReferenceTag && tagIndices[tg] == theTags.size()-1) {
-                    refCallsBySite[s] = tagAlignment.getBase(tg, s); // diploid byte for the reference allele/geno
+                    refCallsBySite[s] = tagAlignment.genotype(tg, s); // diploid byte for the reference allele/geno
                 } else {
-                    byte allele = tagAlignment.getBaseArray(tg, s)[0]; // tags only have one base so the 1st allele (index [0]) sufffices
+                    byte allele = tagAlignment.genotypeArray(tg, s)[0]; // tags only have one base so the 1st allele (index [0]) sufffices
                     if (callBiallelicSNPsWithGap && allele == Alignment.UNKNOWN_ALLELE) {
                         allele = NucleotideAlignmentConstants.GAP_ALLELE;
                     }
@@ -550,13 +550,13 @@ public class TagsAtLocus {
             System.out.println("\nHere is an example alignment for a TagLocus (1 out of every 1000 is displayed):");
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  All sites:");
             for (int tg = 0; tg < aseqs.length; tg++) {
-                tagStr = aa.getBaseAsStringRow(tg);
+                tagStr = aa.genotypeAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
                 System.out.println(tagStr + " " + tL.getTaxaName(tg));
             }
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  Polymorphic sites only:");
             for (int tg = 0; tg < aseqs.length; tg++) {
-                tagStr = faa.getBaseAsStringRow(tg);
+                tagStr = faa.genotypeAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
                 System.out.println(tagStr + " " + tL.getTaxaName(tg));
             }
