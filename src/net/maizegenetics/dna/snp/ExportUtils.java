@@ -546,9 +546,9 @@ public class ExportUtils {
                 //System.out.println(alignment.getPositionInChromosome(site) + " " + refAllele);
                 byte[] alleleValues = null;
                 if (hasDepth) {
-                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
+                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 } else {
-                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Frequency, site);
+                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Frequency, site);
                     //if (nAlleles > alignment.getMaxNumAlleles()) {
                     //    nAlleles = alignment.getMaxNumAlleles();
                     //}

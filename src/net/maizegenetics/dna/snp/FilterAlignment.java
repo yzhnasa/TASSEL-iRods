@@ -41,7 +41,7 @@ public class FilterAlignment implements Alignment {
     private int[] myChromosomeOffsets;
     private PositionList myPositionList;
     private final Genotype myGenotype;
-    private final Map<ALLELE_SCOPE_TYPE, BitStorage> myBitStorage = new EnumMap<ALLELE_SCOPE_TYPE, BitStorage>(ALLELE_SCOPE_TYPE.class);
+    private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new EnumMap<ALLELE_SORT_TYPE, BitStorage>(ALLELE_SORT_TYPE.class);
 
     private FilterAlignment(Alignment a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
 
@@ -685,17 +685,17 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -911,8 +911,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
-        if (scope == ALLELE_SCOPE_TYPE.Frequency) {
+    public byte[] getAllelesByScope(ALLELE_SORT_TYPE scope, int site) {
+        if (scope == ALLELE_SORT_TYPE.Frequency) {
             return getAlleles(site);
         } else {
             return myBaseAlignment.getAllelesByScope(scope, translateSite(site));
@@ -920,23 +920,23 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SORT_TYPE scope, int site, int alleleNumber) {
         return getBitStorage(scope).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
     }
 
     @Override
     public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
     }
 
     @Override
     public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -1014,7 +1014,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
+    public BitStorage getBitStorage(ALLELE_SORT_TYPE scopeType) {
 
         BitStorage result = myBitStorage.get(scopeType);
         if (result != null) {

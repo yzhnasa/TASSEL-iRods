@@ -38,7 +38,7 @@ public interface Alignment {
     /**
      * This defines the possible allele scope types.
      */
-    public static enum ALLELE_SCOPE_TYPE {
+    public static enum ALLELE_SORT_TYPE {
 
         /**
          * This is the default where alleles are sorted by frequency. Same as
@@ -862,7 +862,7 @@ public interface Alignment {
      *
      * @return alleles
      */
-    public byte[] getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE scope, int site);
+    public byte[] getAllelesByScope(Alignment.ALLELE_SORT_TYPE scope, int site);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
@@ -874,7 +874,7 @@ public interface Alignment {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresenceForAllTaxaByScope(Alignment.ALLELE_SCOPE_TYPE scope, int site, int alleleNumber);
+    public BitSet getAllelePresenceForAllTaxaByScope(Alignment.ALLELE_SORT_TYPE scope, int site, int alleleNumber);
 
     /**
      * Returns BitStorage for this Genotype
@@ -883,5 +883,5 @@ public interface Alignment {
      *
      * @return BitStorage
      */
-    public BitStorage getBitStorage(Alignment.ALLELE_SCOPE_TYPE scopeType);
+    public BitStorage getBitStorage(Alignment.ALLELE_SORT_TYPE scopeType);
 }

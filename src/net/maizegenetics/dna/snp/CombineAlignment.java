@@ -711,13 +711,13 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+    public byte[] getAllelesByScope(ALLELE_SORT_TYPE scope, int site) {
         int translate = translateSite(site);
         return myAlignments[translate].getAllelesByScope(scope, site - mySiteOffsets[translate]);
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SORT_TYPE scope, int site, int alleleNumber) {
         int translate = translateSite(site);
         return myAlignments[translate].getAllelePresenceForAllTaxaByScope(scope, site - mySiteOffsets[translate], alleleNumber);
     }
@@ -828,7 +828,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
+    public BitStorage getBitStorage(ALLELE_SORT_TYPE scopeType) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

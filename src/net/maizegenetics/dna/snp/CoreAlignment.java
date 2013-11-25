@@ -5,8 +5,8 @@ package net.maizegenetics.dna.snp;
 
 import java.util.HashMap;
 import java.util.Map;
-import static net.maizegenetics.dna.snp.Alignment.ALLELE_SCOPE_TYPE.Frequency;
-import static net.maizegenetics.dna.snp.Alignment.ALLELE_SCOPE_TYPE.Reference;
+import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Frequency;
+import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Reference;
 import net.maizegenetics.dna.snp.score.SiteScore;
 import net.maizegenetics.dna.snp.genotype.Genotype;
 import net.maizegenetics.dna.snp.bit.BitStorage;
@@ -26,7 +26,7 @@ public class CoreAlignment implements Alignment {
 
     private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
     private final Genotype myGenotype;
-    private final Map<ALLELE_SCOPE_TYPE, BitStorage> myBitStorage = new HashMap<ALLELE_SCOPE_TYPE, BitStorage>();
+    private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new HashMap<ALLELE_SORT_TYPE, BitStorage>();
     private final PositionList myPositionList;
     private final TaxaList myTaxaList;
     private final SiteScore mySiteScore;
@@ -81,32 +81,32 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
     }
 
     @Override
     public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
     }
 
     @Override
     public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
     }
 
     @Override
     public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
     }
 
     @Override
     public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SCOPE_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -460,7 +460,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SCOPE_TYPE scope, int site) {
+    public byte[] getAllelesByScope(ALLELE_SORT_TYPE scope, int site) {
         switch (scope) {
             case Frequency:
                 return getAlleles(site);
@@ -471,12 +471,12 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SCOPE_TYPE scope, int site, int alleleNumber) {
+    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SORT_TYPE scope, int site, int alleleNumber) {
         return getBitStorage(scope).getAllelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
-    public BitStorage getBitStorage(ALLELE_SCOPE_TYPE scopeType) {
+    public BitStorage getBitStorage(ALLELE_SORT_TYPE scopeType) {
 
         BitStorage result = myBitStorage.get(scopeType);
         if (result != null) {
