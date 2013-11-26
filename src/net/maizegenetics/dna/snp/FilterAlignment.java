@@ -74,9 +74,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -195,11 +195,11 @@ public class FilterAlignment implements Alignment {
             throw new IllegalArgumentException("FilterAlignment: init: start site: " + startSite + " is larger than end site: " + endSite);
         }
 
-        if ((startSite < 0) || (startSite > a.getSiteCount() - 1)) {
+        if ((startSite < 0) || (startSite > a.numberOfSites() - 1)) {
             throw new IllegalArgumentException("FilterAlignment: init: start site: " + startSite + " is out of range.");
         }
 
-        if ((endSite < 0) || (endSite > a.getSiteCount() - 1)) {
+        if ((endSite < 0) || (endSite > a.numberOfSites() - 1)) {
             throw new IllegalArgumentException("FilterAlignment: init: end site: " + endSite + " is out of range.");
         }
 
@@ -220,9 +220,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -260,9 +260,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -300,7 +300,7 @@ public class FilterAlignment implements Alignment {
         Arrays.sort(siteNamesToKeep);
         int[] temp = new int[siteNamesToKeep.length];
         int count = 0;
-        for (int i = 0, n = a.getSiteCount(); i < n; i++) {
+        for (int i = 0, n = a.numberOfSites(); i < n; i++) {
             if (Arrays.binarySearch(siteNamesToKeep, a.siteName(i)) >= 0) {
                 temp[count++] = i;
                 if (count == siteNamesToKeep.length) {
@@ -323,9 +323,9 @@ public class FilterAlignment implements Alignment {
     public static FilterAlignment getInstanceRemoveSiteNames(Alignment a, String[] siteNamesToRemove) {
 
         Arrays.sort(siteNamesToRemove);
-        int[] temp = new int[a.getSiteCount()];
+        int[] temp = new int[a.numberOfSites()];
         int count = 0;
-        for (int i = 0, n = a.getSiteCount(); i < n; i++) {
+        for (int i = 0, n = a.numberOfSites(); i < n; i++) {
             if (Arrays.binarySearch(siteNamesToRemove, a.siteName(i)) < 0) {
                 temp[count++] = i;
             }
@@ -460,7 +460,7 @@ public class FilterAlignment implements Alignment {
      * @return list of sites
      */
     public int[] getBaseSitesShown() {
-        int numSites = getSiteCount();
+        int numSites = numberOfSites();
         int[] result = new int[numSites];
         for (int i = 0; i < numSites; i++) {
             result[i] = translateSite(i);
@@ -486,7 +486,7 @@ public class FilterAlignment implements Alignment {
             return;
         }
 
-        int numSites = getSiteCount();
+        int numSites = numberOfSites();
         List<Chromosome> chromosomes = new ArrayList<Chromosome>();
         List<Integer> offsets = new ArrayList<Integer>();
         for (int i = 0; i < numSites; i++) {
@@ -553,7 +553,7 @@ public class FilterAlignment implements Alignment {
             if (chromosome.equals(myChromosomes[i])) {
                 int end = 0;
                 if (i == getNumChromosomes() - 1) {
-                    end = getSiteCount();
+                    end = numberOfSites();
                 } else {
                     end = myChromosomeOffsets[i + 1];
                 }
@@ -570,7 +570,7 @@ public class FilterAlignment implements Alignment {
             return null;
         }
 
-        int numSites = getSiteCount();
+        int numSites = numberOfSites();
         int numSeqs = numberOfTaxa();
         float[][] result = new float[numSeqs][numSites];
         for (int i = 0; i < numSites; i++) {
@@ -594,14 +594,14 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteCount() {
+    public int numberOfSites() {
 
         if (myIsSiteFilterByRange) {
             return myRangeEnd - myRangeStart + 1;
         } else if (myIsSiteFilter) {
             return mySiteRedirect.length;
         } else {
-            return myBaseAlignment.getSiteCount();
+            return myBaseAlignment.numberOfSites();
         }
 
     }
@@ -711,8 +711,8 @@ public class FilterAlignment implements Alignment {
     @Override
     public byte[] getReference() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            byte[] result = new byte[getSiteCount()];
-            for (int i = 0, n = getSiteCount(); i < n; i++) {
+            byte[] result = new byte[numberOfSites()];
+            for (int i = 0, n = numberOfSites(); i < n; i++) {
                 result[i] = getReferenceAllele(i);
             }
             return result;
@@ -729,7 +729,7 @@ public class FilterAlignment implements Alignment {
     @Override
     public int[] getPhysicalPositions() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            int numSites = getSiteCount();
+            int numSites = numberOfSites();
             int[] result = new int[numSites];
             for (int i = 0; i < numSites; i++) {
                 result[i] = getPositionInChromosome(i);
@@ -1037,7 +1037,7 @@ public class FilterAlignment implements Alignment {
         if (myPositionList == null) {
             PositionListBuilder pLB = new PositionListBuilder();
             PositionList basePL = getBaseAlignment().getPositionList();
-            for (int i = 0; i < getSiteCount(); i++) {
+            for (int i = 0; i < numberOfSites(); i++) {
                 pLB.add(basePL.get(translateSite(i)));
             }
             myPositionList = pLB.build();

@@ -29,7 +29,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
             throw new IllegalArgumentException("AlignmentMask: init: number of mask rows should equal number of sequences.");
         }
 
-        int numBytesNeeded = getNumMaskColumns(align.getSiteCount());
+        int numBytesNeeded = getNumMaskColumns(align.numberOfSites());
         if (numBytesNeeded != mask[0].length) {
             throw new IllegalArgumentException("AlignmentMask: init: incorrect number of mask columns: " + mask[0].length + "  should be: " + numBytesNeeded);
         }
@@ -40,7 +40,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align) {
         String name = align.taxaName(0) + " Reference";
-        return getInstanceCompareReference(align, align.genotypeRange(0, 0, align.getSiteCount()), name);
+        return getInstanceCompareReference(align, align.genotypeRange(0, 0, align.numberOfSites()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, Taxon id) {
@@ -49,7 +49,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
         String name = id.getName() + " Reference";
-        return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.getSiteCount()), name);
+        return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.numberOfSites()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, int index) {
@@ -57,7 +57,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown index: " + index);
         }
         String name = align.taxaName(index) + " Reference";
-        return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.getSiteCount()), name);
+        return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.numberOfSites()), name);
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, String id) {
@@ -65,7 +65,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.getSiteCount()), id + " Reference");
+        return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.numberOfSites()), id + " Reference");
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, byte[] ref, String name) {
@@ -74,14 +74,14 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: alignment or reference can not be null.");
         }
 
-        if (align.getSiteCount() != ref.length) {
+        if (align.numberOfSites() != ref.length) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: ref length should equal alignment site count.");
         }
 
         int numMaskColumns = getNumMaskColumns(ref.length);
         byte[][] mask = new byte[align.numberOfTaxa()][numMaskColumns];
 
-        for (int c = 0, n = align.getSiteCount(); c < n; c++) {
+        for (int c = 0, n = align.numberOfSites(); c < n; c++) {
 
             int currentByteCol = c / 8;
             byte currentColMask = (byte) (0x80 >>> (c % 8));
@@ -104,14 +104,14 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
     public static AlignmentMaskBoolean getInstanceCompareAlignments(Alignment align1, Alignment align2, String name, MaskType type) {
 
         if ((align1.numberOfTaxa() != align2.numberOfTaxa())
-                || (align1.getSiteCount() != align2.getSiteCount())) {
+                || (align1.numberOfSites() != align2.numberOfSites())) {
             throw new IllegalArgumentException("AlignmentMaskBoolean: getInstanceCompareAlignments: both alignments should have same number of sequences and sites.");
         }
 
-        int numMaskColumns = getNumMaskColumns(align1.getSiteCount());
+        int numMaskColumns = getNumMaskColumns(align1.numberOfSites());
         byte[][] mask = new byte[align1.numberOfTaxa()][numMaskColumns];
 
-        for (int c = 0, n = align1.getSiteCount(); c < n; c++) {
+        for (int c = 0, n = align1.numberOfSites(); c < n; c++) {
 
             int currentByteCol = c / 8;
             byte currentColMask = (byte) (0x80 >>> (c % 8));

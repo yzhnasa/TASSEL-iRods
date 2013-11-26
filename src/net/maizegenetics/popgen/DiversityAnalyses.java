@@ -182,9 +182,9 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
     int countSegregatingSites(Alignment theAlignment) {
         int total = 0;
         if (theAlignment.isAllPolymorphic()) {
-            return theAlignment.getSiteCount();
+            return theAlignment.numberOfSites();
         }
-        for (int i = 0; i < theAlignment.getSiteCount(); i++) {
+        for (int i = 0; i < theAlignment.numberOfSites(); i++) {
             if (theAlignment.isPolymorphic(i)) {
                 total++;
             }

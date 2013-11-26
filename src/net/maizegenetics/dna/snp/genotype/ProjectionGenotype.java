@@ -46,7 +46,7 @@ public class ProjectionGenotype extends AbstractGenotype {
     int[] primDSH; //startSite,endSite,parent1,parent2 array for the
 
     public ProjectionGenotype(Alignment hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
-        super(allBreakPoints.size(), hdAlign.getSiteCount(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
+        super(allBreakPoints.size(), hdAlign.numberOfSites(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         myBaseAlignment = hdAlign;
         this.allBreakPoints = allBreakPoints;
         breakMaps = new ArrayList<>(numberOfTaxa());

@@ -584,7 +584,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int getSiteCount() {
+    public int numberOfSites() {
         return mySiteCount;
     }
 
@@ -595,7 +595,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public byte[] getGenotypeForAllSites(int taxon) {
-        int numSites = getSiteCount();
+        int numSites = numberOfSites();
         byte[] result = new byte[numSites];
         for (int i = 0; i < numSites; i++) {
             result[i] = genotype(taxon, i);

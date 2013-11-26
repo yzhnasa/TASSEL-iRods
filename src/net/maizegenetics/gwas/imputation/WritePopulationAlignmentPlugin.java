@@ -92,7 +92,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
             Alignment outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
 
             if (!Double.isNaN(minSnpCoverage) && !Double.isNaN(maxMafForMono)) {
-                int nsnps = popdata.original.getSiteCount();
+                int nsnps = popdata.original.numberOfSites();
                 double ngametes = 2 * popdata.original.numberOfTaxa();
                 int[] monomorphicSnps = new int[nsnps];
                 int snpCount = 0;
@@ -104,7 +104,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                 }
                 monomorphicSnps = Arrays.copyOf(monomorphicSnps, snpCount);
                 Alignment fa = FilterAlignment.getInstance(popdata.original, monomorphicSnps);
-                if (fa.getSiteCount() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
+                if (fa.numberOfSites() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
                     out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly});
                 } else { //Return both monomorphic and polymorphic sites
                     MutableAlignment outMono = MutableNucleotideAlignment.getInstance(fa);

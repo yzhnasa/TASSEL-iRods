@@ -113,7 +113,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         Alignment aa = (Alignment) inDatum.getData();
 
         if (myEnd == -1) {
-            myEnd = aa.getSiteCount() - 1;
+            myEnd = aa.numberOfSites() - 1;
         }
 
         Chromosome theLocus = myLocus;
@@ -166,7 +166,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             theDialog.dispose();
         }
 
-        if (myStart >= aa.getSiteCount()) {
+        if (myStart >= aa.numberOfSites()) {
             throw new IllegalArgumentException("FilterAlignmentPlugin: starting site can't be past end of alignment.");
         }
         if ((myEnd < 0) || (myEnd < myStart)) {
@@ -176,8 +176,8 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         if (myStart < 0) {
             myStart = 0;
         }
-        if (myEnd >= aa.getSiteCount()) {
-            myEnd = aa.getSiteCount() - 1;
+        if (myEnd >= aa.numberOfSites()) {
+            myEnd = aa.numberOfSites() - 1;
         }
 
         Alignment naa = aa;
@@ -186,7 +186,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             naa = AlignmentBuilder.getInstanceOnlyMajorMinor(naa);
         }
 
-        if ((myStart != 0) || (myEnd < (naa.getSiteCount() - 1))) {
+        if ((myStart != 0) || (myEnd < (naa.numberOfSites() - 1))) {
             naa = AlignmentUtils.removeSitesOutsideRange(naa, myStart, myEnd);
         }
         if (myExtractIndels) {
@@ -219,10 +219,10 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
                 }
             }
         }
-        if (naa.getSiteCount() > 1) {
+        if (naa.numberOfSites() > 1) {
             builder.append(naa.getPositionInChromosome(0));
             builder.append("-");
-            builder.append(naa.getPositionInChromosome(naa.getSiteCount() - 1));
+            builder.append(naa.getPositionInChromosome(naa.numberOfSites() - 1));
         }
         String theName = builder.toString();
         if (myDoSlidingHaps) {
@@ -237,8 +237,8 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         } else {
             theComment = "Point Poly.\n";
         }
-        if (naa.getSiteCount() != 0) {
-            myLogger.info("Resulting Number Sites: " + naa.getSiteCount());
+        if (naa.numberOfSites() != 0) {
+            myLogger.info("Resulting Number Sites: " + naa.numberOfSites());
             return new Datum(theName, naa, theComment);
         } else {
             if (isInteractive()) {
@@ -469,7 +469,7 @@ class DataFilterAlignmentDialog extends JDialog {
             chromsAvailable[i] = theAlignment.getChromosomes()[i].getName().trim();
         }
         totalSeq = theAlignment.numberOfTaxa();
-        siteCount = theAlignment.getSiteCount();
+        siteCount = theAlignment.numberOfSites();
         lblSeqLength.setText(" of " + (siteCount - 1) + " sites");
         lblMinCount.setText("Minimum PERCENTAGE:");
         start = 0;
@@ -877,7 +877,7 @@ class DataFilterAlignmentDialog extends JDialog {
             startPosTextField.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && startPos >= 0);
             endPosTextField.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && endPos >= 0);
             totalSeq = chromFilteredAlignment.numberOfTaxa();
-            siteCount = chromFilteredAlignment.getSiteCount();
+            siteCount = chromFilteredAlignment.numberOfSites();
             lblSeqLength.setText(" of " + (siteCount - 1) + " sites");
             lblMinCount.setText("Minimum Count:");
             start = 0;

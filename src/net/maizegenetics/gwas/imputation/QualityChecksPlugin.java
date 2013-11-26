@@ -139,7 +139,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	
 	public Alignment preFilterAlignment(Alignment align) {
 		int ntaxa = align.numberOfTaxa();
-		int nsites = align.getSiteCount();
+		int nsites = align.numberOfSites();
 		int nTaxaGametes = 2 * nsites;
 		int nSiteGametes = 2 * ntaxa;
 		int minTaxaGametes = (int) Math.ceil(nTaxaGametes * minNonMissingProportionForTaxon);
@@ -184,7 +184,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	private void calculateAverageR2ForSnps(Alignment align, String familyname) {
 		
 		//first filter out monomorphic sites
-		int nsites = align.getSiteCount();
+		int nsites = align.numberOfSites();
 		int[] polysites = new int[nsites];
 		int sitecount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -196,7 +196,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		
 		myLogger.info("Chromosome " + align.getChromosomeName(0) + ", family " + familyname + " has " + sitecount + " polymorphic snps.");
 		
-		nsites = align.getSiteCount();
+		nsites = align.numberOfSites();
 		double[] avgRsq = new double[nsites];
 		
 		for (int s = 0; s < nsites; s++) {
@@ -262,7 +262,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 
     private void saveToFileAverageR2(double[] avgr2, Alignment align, String saveFilename) {
     		BufferedWriter bw = Utils.getBufferedWriter(saveFilename);
-    		int nsites = align.getSiteCount();
+    		int nsites = align.numberOfSites();
     		try {
     			bw.write("Site\tchr\tpos\tr2");
     			bw.newLine();
@@ -284,7 +284,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     }
     
     private void plotAverageR2(double[] avgr2, Alignment align, String saveFilename) {
-    		int nsites = align.getSiteCount();
+    		int nsites = align.numberOfSites();
     		String title = "Average R2 in " + windowSizeForR2 + " bp window, chromosome " + align.getChromosomeName(0);
     		String xLabel = "position(Mbp)";
     		String yLabel ="Average R-squared";
@@ -306,14 +306,14 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	private double[] calculateProportionNonConsensusPerTaxon(Alignment align) {
 		double maxMaf = 0.05;
 		int ntaxa = align.numberOfTaxa();
-		int nsites = align.getSiteCount();
+		int nsites = align.numberOfSites();
 		
 		OpenBitSet lowmaf = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			if (align.getMinorAlleleFrequency(s) < maxMaf) lowmaf.set(s);
 		}
 		
-//		myLogger.info("taxa = " + align.numberOfTaxa() + ", sites = " + align.getSiteCount());
+//		myLogger.info("taxa = " + align.numberOfTaxa() + ", sites = " + align.numberOfSites());
 //		myLogger.info("lowmaf count = " + lowmaf.cardinality());
 		
 		try {

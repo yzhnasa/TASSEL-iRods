@@ -160,12 +160,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         
         OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, true);   
 
-        siteErrors=new int[unimpAlign.getSiteCount()];
-        siteCorrectCnt=new int[unimpAlign.getSiteCount()];
+        siteErrors=new int[unimpAlign.numberOfSites()];
+        siteCorrectCnt=new int[unimpAlign.numberOfSites()];
         taxonErrors=new int[unimpAlign.numberOfTaxa()];
         taxonCorrectCnt=new int[unimpAlign.numberOfTaxa()];
 
-        System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.numberOfTaxa(),unimpAlign.getSiteCount());       
+        System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.numberOfTaxa(),unimpAlign.numberOfSites());       
         System.out.println("Creating mutable alignment");
         Object mna=null;
         if(isOutputProjection) {
@@ -266,7 +266,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getChromosome(0));
                 int blocks=donorAlign[da].getAllelePresenceForAllSites(0, 0).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
-                        donorAlign[da].getSiteCount(),conflictMasks[da][0],conflictMasks[da][1]); 
+                        donorAlign[da].numberOfSites(),conflictMasks[da][0],conflictMasks[da][1]); 
                 int[] donorIndices;
                 if(imputeDonorFile){
                     donorIndices=new int[donorAlign[da].numberOfTaxa()-1];
@@ -336,7 +336,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         for (int i = 0; i < donorAlign.length; i++) {
             System.out.println("Starting Read");
             donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), true, (ProgressListener)null);     
-            System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].getSiteCount());
+            System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
             System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
@@ -351,7 +351,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             System.out.println("Starting Read");
             Alignment fa=FilterAlignment.getInstance(a,theChr[i]);
             donorAlign[i]=AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
-            System.out.printf("Donor file:%s taxa:%d sites:%d %n",theChr[i].toString(), donorAlign[i].numberOfTaxa(),donorAlign[i].getSiteCount());
+            System.out.printf("Donor file:%s taxa:%d sites:%d %n",theChr[i].toString(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
             System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
@@ -420,12 +420,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         OpenBitSet[][] result=new OpenBitSet[donorAlign.length][4];
         for (int da = 0; da < result.length; da++) {
             int donorOffset=unimpAlign.getSiteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getChromosome(0), donorAlign[da].siteName(0));
-            OpenBitSet goodMask=new OpenBitSet(donorAlign[da].getSiteCount());
-            OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].getSiteCount());
-            OpenBitSet errorMask=new OpenBitSet(donorAlign[da].getSiteCount());
-            OpenBitSet invariantMask=new OpenBitSet(donorAlign[da].getSiteCount());
+            OpenBitSet goodMask=new OpenBitSet(donorAlign[da].numberOfSites());
+            OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].numberOfSites());
+            OpenBitSet errorMask=new OpenBitSet(donorAlign[da].numberOfSites());
+            OpenBitSet invariantMask=new OpenBitSet(donorAlign[da].numberOfSites());
             int siteConflicts=0, swaps=0, invariant=0, good=0;
-            for (int i = 0; i < donorAlign[da].getSiteCount(); i++) {
+            for (int i = 0; i < donorAlign[da].numberOfSites(); i++) {
                 /*we have three classes of data:  invariant in one alignment, conflicts about minor and minor,
                 *swaps of major and minor.  Adding the invariant reduces imputation accuracy.
                 *the major/minor swaps should be flipped in the comparisons
@@ -557,7 +557,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         ep.setEmissionProbability(emission);
         int startSite=dh.startBlock*64;
         int endSite=(dh.endBlock*64)+63;
-        if(endSite>=donorAlign.getSiteCount()) endSite=donorAlign.getSiteCount()-1;
+        if(endSite>=donorAlign.numberOfSites()) endSite=donorAlign.numberOfSites()-1;
         int sites=endSite-startSite+1;
         byte[] calls=new byte[sites];
         //System.out.printf("%d %d %d %n",dh.donor1Taxon, startSite, endSite+1);
@@ -858,10 +858,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         boolean print=false;
         int startSite=(setJustFocus)?theDH[0].getFocusStartSite():theDH[0].startSite;
         int endSite=(setJustFocus)?theDH[0].getFocusEndSite():theDH[0].endSite;
-        if(endSite>=donorAlign.getSiteCount()) endSite=donorAlign.getSiteCount()-1;
+        if(endSite>=donorAlign.numberOfSites()) endSite=donorAlign.numberOfSites()-1;
 
 //        int prevPos=(startSite>0)?donorAlign.getPositionInChromosome(startSite-1):-1;
-//        int nextPos=(endSite<donorAlign.getSiteCount()-1)?donorAlign.getPositionInChromosome(endSite+1):-1;
+//        int nextPos=(endSite<donorAlign.numberOfSites()-1)?donorAlign.getPositionInChromosome(endSite+1):-1;
 //        if(prevPos==-1 && nextPos==-1) {
 //            System.out.println(dhaps.toString());
 //        }
@@ -928,7 +928,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         //enter a stop of the DH at the beginning of the next block
 //        int lastDApos=donorAlign.getPositionInChromosome(endSite);
 //        int nextSite=unimpAlign.getSiteOfPhysicalPosition(lastDApos, donorAlign.getChromosome(0))+1;
-//        if(nextSite<unimpAlign.getSiteCount()) impT.breakPoints.put(unimpAlign.getPositionInChromosome(nextSite), new int[]{-1,-1});
+//        if(nextSite<unimpAlign.numberOfSites()) impT.breakPoints.put(unimpAlign.getPositionInChromosome(nextSite), new int[]{-1,-1});
     //    if (print) System.out.println("E:"+mna.genotypeAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         return impT;
     }
@@ -958,13 +958,13 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     public static int[] compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
         boolean taxaOut=false;
         Alignment oA=ImportUtils.readGuessFormat(origFile);
-        System.out.printf("Orig taxa:%d sites:%d %n",oA.numberOfTaxa(),oA.getSiteCount());        
+        System.out.printf("Orig taxa:%d sites:%d %n",oA.numberOfTaxa(),oA.numberOfSites());        
         Alignment mA=null;
         if(noMask==false) {mA=ImportUtils.readGuessFormat(maskFile);
-            System.out.printf("Mask taxa:%d sites:%d %n",mA.numberOfTaxa(),mA.getSiteCount());
+            System.out.printf("Mask taxa:%d sites:%d %n",mA.numberOfTaxa(),mA.numberOfSites());
         }
         Alignment iA=ImportUtils.readGuessFormat(impFile);
-        System.out.printf("Imp taxa:%d sites:%d %n",iA.numberOfTaxa(),iA.getSiteCount());
+        System.out.printf("Imp taxa:%d sites:%d %n",iA.numberOfTaxa(),iA.numberOfSites());
         int correct=0;
         int errors=0;
         int unimp=0;
@@ -973,7 +973,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         for (int t = 0; t < iA.numberOfTaxa(); t++) {
             int e=0,c=0,u=0,h=0;
             int oATaxa=oA.taxa().getIndicesMatchingTaxon(iA.taxaName(t)).get(0);
-            for (int s = 0; s < iA.getSiteCount(); s++) {
+            for (int s = 0; s < iA.numberOfSites(); s++) {
                 if(noMask||(oA.genotype(oATaxa, s)!=mA.genotype(t, s))) {
                     byte ib=iA.genotype(t, s);
                     byte ob=oA.genotype(oATaxa, s);

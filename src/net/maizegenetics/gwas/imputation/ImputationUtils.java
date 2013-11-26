@@ -90,7 +90,7 @@ public class ImputationUtils {
 		//if one parent is in the dataset pick the taxon farthest from it as the other seed
 		//if neither parent is in the dataset choose random seeds
 		int ntaxa = tb.numberOfTaxa();
-		int nsnps = tb.getSiteCount();
+		int nsnps = tb.numberOfSites();
 		int seed1 = parentIndex[0];
 		int seed2 = parentIndex[1];
 		float[] loc1, loc2;
@@ -236,7 +236,7 @@ public class ImputationUtils {
 		//if one parent is in the dataset pick the taxon farthest from it as the other seed
 		//if neither parent is in the dataset choose random seeds
 		ntaxa = myAlignment.numberOfTaxa();
-		int nsnps = myAlignment.getSiteCount();
+		int nsnps = myAlignment.numberOfSites();
 		boolean[][] isInCluster1 = new boolean[ntrials][ntaxa];
 		int bestTrial = -1;
 		float maxDistance = 0;
@@ -435,7 +435,7 @@ public class ImputationUtils {
 		int monoCount = 0;
 		int polyCount = 0;
 		int[] binCount = new int[21];
-		int nsites = a.getSiteCount();
+		int nsites = a.numberOfSites();
 		for (int s = 0; s < nsites; s++) {
 			if (a.getMajorAlleleFrequency(s) > 0.75) monoCount++;
 			else {
@@ -649,7 +649,7 @@ public class ImputationUtils {
 				System.out.println("Imputing data for chromosome " + chr + ", family " + family[fam] + ".");
 				snpFilename = "/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea/namibm.combined.hapmap.f.05r.5.chr" + chr + ".family."+ family[fam] + "parents.hmp.txt";
 				Alignment a = ImportUtils.readFromHapmap(snpFilename, true, null);
-				int nsnps = a.getSiteCount();
+				int nsnps = a.numberOfSites();
 				
 				double startgenpos = agpmap.getCmFromPosition(chr, a.getPositionInChromosome(0));
 				//round up to nearest interval
@@ -862,7 +862,7 @@ public class ImputationUtils {
 					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), "A");
 				}
 				
-				int nsnps = a.getSiteCount();
+				int nsnps = a.numberOfSites();
 				int ntaxa = a.numberOfTaxa();
 				int leftflank = 0;
 				int rightflank = 0;
@@ -991,7 +991,7 @@ public class ImputationUtils {
 	public static boolean isB73HaplotypeA(Alignment a) {
 		TaxaList ids = a.taxa();
 		int ndx = ids.getIndicesMatchingTaxon("B73(PI550473)").get(0);
-		int nsnps = a.getSiteCount();
+		int nsnps = a.numberOfSites();
 		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();
 		for (int s = 0; s < nsnps; s++) {
 			Byte allele = a.genotype(ndx, s);

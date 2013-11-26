@@ -86,7 +86,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             myAlignmentLociMap.put(loci[i].getName(), loci[i]);
         }
 
-        int numSites = alignment.getSiteCount();
+        int numSites = alignment.numberOfSites();
         String[] snpIDs = new String[numSites];
         for (int i = 0; i < numSites; i++) {
             snpIDs[i] = alignment.siteName(i);

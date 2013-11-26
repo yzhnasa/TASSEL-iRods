@@ -101,7 +101,7 @@ class FilterGenotype extends AbstractGenotype {
         if (encodings.length == 1) {
             return encodings;
         } else if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            int numSites = getSiteCount();
+            int numSites = numberOfSites();
             String[][] result = new String[numSites][];
             for (int i = 0; i < numSites; i++) {
                 result[i] = alleleDefinitions(i);

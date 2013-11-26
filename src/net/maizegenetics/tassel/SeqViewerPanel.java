@@ -114,7 +114,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         });
         myHighlightingComboBox.setSelectedItem(type);
 
-        siteCount = myAlignment.getSiteCount();
+        siteCount = myAlignment.numberOfSites();
         start = 0;
         end = siteCount - 1;
         startPos = myAlignment.getPositionInChromosome(0);
@@ -502,7 +502,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
             public void actionPerformed(ActionEvent e) {
                 if (myTableModel.isPhysicalPosition()) {
                     int newSite = myTableModel.getHorizontalCenter() + myTableModel.getHorizontalPageSize() * 3 / 4;
-                    newSite = Math.min(myAlignment.getSiteCount() - 1, newSite);
+                    newSite = Math.min(myAlignment.numberOfSites() - 1, newSite);
                     mySlider.setValue(myAlignment.getPositionInChromosome(newSite));
                 } else {
                     int newValue = mySlider.getValue() + myTableModel.getHorizontalPageSize() * 3 / 4;
@@ -532,7 +532,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
     private void updateSliderPhysicalPositions() {
 
         int min = myAlignment.getPositionInChromosome(0);
-        int max = myAlignment.getPositionInChromosome(myAlignment.getSiteCount() - 1);
+        int max = myAlignment.getPositionInChromosome(myAlignment.numberOfSites() - 1);
         int tableSize = max - min + 1;
         int center = myTableModel.getHorizontalCenter();
         mySlider.setMinimum(min);

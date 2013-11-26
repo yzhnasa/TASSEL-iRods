@@ -344,7 +344,7 @@ public interface Alignment {
      *
      * @return number of sites
      */
-    public int getSiteCount();
+    public int numberOfSites();
 
     /**
      * Return number of sites for given chromosome.

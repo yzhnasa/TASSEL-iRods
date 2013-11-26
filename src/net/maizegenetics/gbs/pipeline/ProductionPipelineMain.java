@@ -565,11 +565,11 @@ public class ProductionPipelineMain {
         Alignment impAlignment = ImportUtils.readGuessFormat(imputedFile);
 
 
-        int siteCount = origAlignment.getSiteCount();
+        int siteCount = origAlignment.numberOfSites();
         int taxaCount = origAlignment.numberOfTaxa();
         int totalSiteCount = siteCount * taxaCount;
 
-        int siteDelta = Math.abs(origAlignment.getSiteCount()- impAlignment.getSiteCount());
+        int siteDelta = Math.abs(origAlignment.numberOfSites()- impAlignment.numberOfSites());
         int taxaDelta = Math.abs(origAlignment.numberOfTaxa() - impAlignment.numberOfTaxa());
 
 

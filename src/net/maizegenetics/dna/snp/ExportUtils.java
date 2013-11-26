@@ -39,7 +39,7 @@ public class ExportUtils {
         IHDF5Writer h5w = null;
         try {
 
-            int numSites = a.getSiteCount();
+            int numSites = a.numberOfSites();
             int numTaxa = a.numberOfTaxa();
 
             newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, ".hmp.h5");
@@ -102,7 +102,7 @@ public class ExportUtils {
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
 
-            //h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.getSiteCount(), a.getMaxNumAlleles());
+            //h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.numberOfSites(), a.getMaxNumAlleles());
             //byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
             //for (int i = 0; i < numSites; i++) {
             //    alleles[i] = a.getAlleles(i);
@@ -248,7 +248,7 @@ public class ExportUtils {
 //                locusIndicesArray[i] = locusToIndex.get(a.getChromosome(snpIndex[i]));
 //            }
 //
-//            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),features);
+//            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.numberOfSites(),features);
 //            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_INDICES, locusIndicesArray,features);
 //
 //            int[] originalPositions = a.getPhysicalPositions();
@@ -317,7 +317,7 @@ public class ExportUtils {
 //           System.out.println("Opening:"+srcFile);
 //            MutableNucleotideAlignmentHDF5 srcA=(MutableNucleotideAlignmentHDF5)ImportUtils.readGuessFormat(srcFile, false);
 //            System.out.println("Target now has taxon:"+trgA.numberOfTaxa());
-//            if(srcA.getSiteCount()!=trgA.getSiteCount()) {
+//            if(srcA.numberOfSites()!=trgA.numberOfSites()) {
 //                throw new IllegalStateException("ExportUtils: addTaxaFromExistingByteHDF5File: Mismatch in number of sites");
 //            }
 //            System.out.println("Copying first taxon:"+srcA.taxaName(0));
@@ -384,7 +384,7 @@ public class ExportUtils {
                 }
             }
             bw.write("\n");
-            int numSites = alignment.getSiteCount();
+            int numSites = alignment.numberOfSites();
             for (int site = 0; site < numSites; site++) {
                 bw.write(alignment.siteName(site));
                 bw.write(delimChar);
@@ -524,7 +524,7 @@ public class ExportUtils {
             }
             bw.newLine();
 
-            for (int site = 0; site < alignment.getSiteCount(); site++) {
+            for (int site = 0; site < alignment.numberOfSites(); site++) {
                 int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
 
 
@@ -864,7 +864,7 @@ public class ExportUtils {
         String pedFileName = Utils.addSuffixIfNeeded(filename, ".plk.ped");
         try {
             MAPbw = new BufferedWriter(new FileWriter(mapFileName), 1000000);
-            int numSites = alignment.getSiteCount();
+            int numSites = alignment.numberOfSites();
             for (int site = 0; site < numSites; site++) {
                 MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
@@ -958,7 +958,7 @@ public class ExportUtils {
 
             BufferedWriter MAPbw = new BufferedWriter(new FileWriter(mapFileName), 1000000);
             BufferedWriter DATbw = new BufferedWriter(new FileWriter(genoFileName), 1000000);
-            int numSites = alignment.getSiteCount();
+            int numSites = alignment.numberOfSites();
             for (int site = 0; site < numSites; site++) {
                 MAPbw.write(alignment.siteName(site)); // rs#
                 MAPbw.write(delimChar);
@@ -1029,7 +1029,7 @@ public class ExportUtils {
             bw = new BufferedWriter(fw);
 
             bw.write("Taxa");
-            int numSites = theAlignment.getSiteCount();
+            int numSites = theAlignment.numberOfSites();
             for (int j = 0; j < numSites; j++) {
                 bw.write(delimit);
                 bw.write(String.valueOf(theAlignment.getPositionInChromosome(j)));
@@ -1066,12 +1066,12 @@ public class ExportUtils {
      */
     public static void printSequential(Alignment a, PrintWriter out) {
         // PHYLIP header line
-        out.println("  " + a.numberOfTaxa() + " " + a.getSiteCount() + "  S");
+        out.println("  " + a.numberOfTaxa() + " " + a.numberOfSites() + "  S");
 
         // Print sequences
         for (int s = 0; s < a.numberOfTaxa(); s++) {
             int n = 0;
-            while (n < a.getSiteCount()) {
+            while (n < a.numberOfSites()) {
                 if (n == 0) {
                     format.displayLabel(out, a.taxaName(s), 10);
                     out.print("     ");
@@ -1092,10 +1092,10 @@ public class ExportUtils {
         int n = 0;
 
         // PHYLIP header line
-        out.println("  " + a.numberOfTaxa() + " " + a.getSiteCount());
+        out.println("  " + a.numberOfTaxa() + " " + a.numberOfSites());
 
         // Print sequences
-        while (n < a.getSiteCount()) {
+        while (n < a.numberOfSites()) {
             for (int s = 0; s < a.numberOfTaxa(); s++) {
                 if (n == 0) {
                     format.displayLabel(out, a.taxaName(s), 10);
@@ -1122,7 +1122,7 @@ public class ExportUtils {
         out.println();
 
         // Print sequences
-        while (n < a.getSiteCount()) {
+        while (n < a.numberOfSites()) {
             out.println();
             for (int s = 0; s < a.numberOfTaxa(); s++) {
                 format.displayLabel(out, a.taxaName(s), 10);
@@ -1139,7 +1139,7 @@ public class ExportUtils {
 
     private static void printNextSites(Alignment a, PrintWriter out, boolean chunked, int seq, int start, int num) {
         // Print next num characters
-        for (int i = 0; (i < num) && (start + i < a.getSiteCount()); i++) {
+        for (int i = 0; (i < num) && (start + i < a.numberOfSites()); i++) {
             // Chunks of 10 characters
             if (i % 10 == 0 && i != 0 && chunked) {
                 out.print(' ');

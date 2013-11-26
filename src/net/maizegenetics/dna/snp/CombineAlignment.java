@@ -37,7 +37,7 @@ public class CombineAlignment implements Alignment {
         mySiteOffsets[0] = 0;
         int count = 0;
         for (int i = 0; i < alignments.length; i++) {
-            count = alignments[i].getSiteCount() + count;
+            count = alignments[i].numberOfSites() + count;
             mySiteOffsets[i + 1] = count;
 
             Chromosome[] chromosomes = alignments[i].getChromosomes();
@@ -183,7 +183,7 @@ public class CombineAlignment implements Alignment {
             if (firstAlign == secondAlign) {
                 secondSite = endSite - mySiteOffsets[firstAlign];
             } else if (i != secondAlign) {
-                secondSite = myAlignments[i].getSiteCount();
+                secondSite = myAlignments[i].numberOfSites();
             } else {
                 secondSite = endSite - mySiteOffsets[secondAlign];
             }
@@ -238,7 +238,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteCount() {
+    public int numberOfSites() {
         return mySiteOffsets[mySiteOffsets.length - 1];
     }
 
@@ -313,10 +313,10 @@ public class CombineAlignment implements Alignment {
         }
 
         int numSeqs = numberOfTaxa();
-        float[][] result = new float[numSeqs][getSiteCount()];
+        float[][] result = new float[numSeqs][numberOfSites()];
         for (int a = 0, n = myAlignments.length; a < n; a++) {
             if (myAlignments[a].hasSiteScores()) {
-                for (int s = 0, m = myAlignments[a].getSiteCount(); s < m; s++) {
+                for (int s = 0, m = myAlignments[a].numberOfSites(); s < m; s++) {
                     for (int t = 0; t < numSeqs; t++) {
                         result[t][mySiteOffsets[a] + s] = myAlignments[a].getSiteScore(t, s);
                     }
@@ -411,7 +411,7 @@ public class CombineAlignment implements Alignment {
 
     @Override
     public byte[] genotypeAllSites(int taxon) {
-        byte[] result = new byte[getSiteCount()];
+        byte[] result = new byte[numberOfSites()];
         for (int i = 0; i < myAlignments.length; i++) {
             byte[] current = myAlignments[i].genotypeAllSites(taxon);
             System.arraycopy(current, 0, result, myChromosomesOffsets[i], current.length);
@@ -466,7 +466,7 @@ public class CombineAlignment implements Alignment {
             }
         }
 
-        byte[] result = new byte[getSiteCount()];
+        byte[] result = new byte[numberOfSites()];
         int count = 0;
         for (int i = 0; i < myAlignments.length; i++) {
             byte[] current = myAlignments[i].getReference();
@@ -499,7 +499,7 @@ public class CombineAlignment implements Alignment {
         if (allNull) {
             return null;
         } else {
-            int[] result = new int[getSiteCount()];
+            int[] result = new int[numberOfSites()];
             int count = 0;
             for (int i = 0; i < myAlignments.length; i++) {
                 int[] current = myAlignments[i].getPhysicalPositions();
@@ -643,10 +643,10 @@ public class CombineAlignment implements Alignment {
         if (allTheSame) {
             myAlleleStates = encodings;
         } else {
-            String[][] result = new String[getSiteCount()][];
+            String[][] result = new String[numberOfSites()][];
             int count = 0;
             for (int i = 0; i < myAlignments.length; i++) {
-                for (int j = 0, n = myAlignments[i].getSiteCount(); j < n; j++) {
+                for (int j = 0, n = myAlignments[i].numberOfSites(); j < n; j++) {
                     result[count++] = myAlignments[i].alleleDefinitions(j);
                 }
             }

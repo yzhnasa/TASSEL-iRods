@@ -133,7 +133,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
     }
 
     private Alignment getFilteredAlignment(Alignment alignment) {
-        int numSites = alignment.getSiteCount();
+        int numSites = alignment.numberOfSites();
         int numTaxa = alignment.numberOfTaxa();
         TaxaList ids = alignment.taxa();
 

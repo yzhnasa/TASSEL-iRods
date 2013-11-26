@@ -205,7 +205,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                      throw new IllegalArgumentException("File format " + inputFormat + " is not recognized!");
                 }
                 
-                myLogger.info("Original Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.getSiteCount());
+                myLogger.info("Original Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
                 if (usePedigree && !maskNonInbredTaxa(a)) {
                     throw new IllegalArgumentException("Mismatch between taxa names in the input hapmap and pedigree files.");
                 }
@@ -214,20 +214,20 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 continue;
             }
             //MutableNucleotideAlignment msa = null;
-            GenotypeBuilder msa=GenotypeBuilder.getInstance(a.numberOfTaxa(),a.getSiteCount());
+            GenotypeBuilder msa=GenotypeBuilder.getInstance(a.numberOfTaxa(),a.numberOfSites());
             PositionListBuilder posBuilder=new PositionListBuilder();
 //            if (inputFormat == INPUT_FORMAT.hapmap)
 //            {
-//                msa = MutableNucleotideAlignment.getInstance(a.taxa(), a.getSiteCount());
+//                msa = MutableNucleotideAlignment.getInstance(a.taxa(), a.numberOfSites());
 //            }
 //            else if (inputFormat == INPUT_FORMAT.vcf)
 //            {
-//                 msa = MutableVCFAlignment.getInstance(a.taxa(), a.getSiteCount(), myMaxNumAlleles);
+//                 msa = MutableVCFAlignment.getInstance(a.taxa(), a.numberOfSites(), myMaxNumAlleles);
 //            }
             ArrayList<Integer> samePosAL = new ArrayList<Integer>();
             Integer[] samePos = null;
             int currentPos = a.getPositionInChromosome(0);
-            for (int s = 0; s < a.getSiteCount(); s++) {  // must be sorted by position, as HapMap files typically are (ImportUtils.readFromHapmap() fails if they aren't)
+            for (int s = 0; s < a.numberOfSites(); s++) {  // must be sorted by position, as HapMap files typically are (ImportUtils.readFromHapmap() fails if they aren't)
                 int newPos = a.getPositionInChromosome(s);
                 if (newPos == currentPos) {   // assumes that the strands are all '+' (in DiscoverySNPCallerPlugin(), - strand genos were complemented)
                     samePosAL.add(s);  // collect markers with the same position
@@ -251,7 +251,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                         addSiteToMutableAlignment(chr, currentPos, genos, msa, posBuilder);
 //                        if (inputFormat==INPUT_FORMAT.vcf)
 //                        {
-//                            int lastSiteIndex = msa.getSiteCount() -1;
+//                            int lastSiteIndex = msa.numberOfSites() -1;
 //                            msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
 //                            msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
 //                            for (int tt=0; tt<a.numberOfTaxa(); tt++)
@@ -286,7 +286,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 addSiteToMutableAlignment(chr, currentPos, genos, msa, posBuilder);
 //                if (inputFormat==INPUT_FORMAT.vcf)
 //                {
-//                    int lastSiteIndex = msa.getSiteCount() -1;
+//                    int lastSiteIndex = msa.numberOfSites() -1;
 //                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
 //                    msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
 //                    for (int tt=0; tt<a.numberOfTaxa(); tt++)
@@ -514,7 +514,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //        if (myMisMatchRate<maxMisMat)
 //        {
 //            addSiteToMutableAlignment(chr, currentPos, genos, msa);
-//            int lastSiteIndex = msa.getSiteCount() - 1;
+//            int lastSiteIndex = msa.numberOfSites() - 1;
 //            msa.setCommonAlleles(lastSiteIndex, CommonAlleles);
 //            msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
 //            for (int t=0; t<taxaCount; t++)
@@ -543,7 +543,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                    }
 //                    addSiteToMutableAlignment(chr, currentPos, genos, msa);
 //
-//                    int lastSiteIndex = msa.getSiteCount() -1;
+//                    int lastSiteIndex = msa.numberOfSites() -1;
 //                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s));
 //                    msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(s));
 //                    for (int tt=0; tt<a.numberOfTaxa(); tt++)
@@ -559,7 +559,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     private void addSiteToMutableAlignment(int chromosome, int position, byte[] genos, GenotypeBuilder theMSA,
                                            PositionListBuilder posBuilder) {
         int currSite=posBuilder.size();
-    //    int currSite = theMSA.getSiteCount();
+    //    int currSite = theMSA.numberOfSites();
         //int currSite = theMSA.getNextFreeSite();
         posBuilder.add(new GeneralPosition.Builder(new Chromosome(String.valueOf(chromosome)),position).build());
 //        theMSA.addSite(currSite);
@@ -575,7 +575,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //
 //        ArrayList<Integer> samePosAL = new ArrayList<Integer>();
 //        int currentPos = theMSA.getPositionInChromosome(0);
-//        for (int s = 0; s < theMSA.getSiteCount(); s++) {
+//        for (int s = 0; s < theMSA.numberOfSites(); s++) {
 //            int newPos = theMSA.getPositionInChromosome(s);
 //            if (newPos == currentPos) {
 //                samePosAL.add(s);  // collect markers with the same position
@@ -609,7 +609,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //        }
 //        snpLogging.close();
 //        theMSA.clean();
-//        myLogger.info("Number of sites written after deleting any remaining, unmerged duplicate SNPs: " + theMSA.getSiteCount());
+//        myLogger.info("Number of sites written after deleting any remaining, unmerged duplicate SNPs: " + theMSA.numberOfSites());
 //    }
 
     private boolean maskNonInbredTaxa(Alignment a) {

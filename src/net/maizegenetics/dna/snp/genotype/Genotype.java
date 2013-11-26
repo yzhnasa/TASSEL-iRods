@@ -424,7 +424,7 @@ public interface Genotype {
      *
      * @return number of sites
      */
-    public int getSiteCount();
+    public int numberOfSites();
 
     /**
      * Get all genotypes for given taxon.

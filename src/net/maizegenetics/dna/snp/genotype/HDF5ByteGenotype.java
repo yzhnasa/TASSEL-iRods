@@ -56,7 +56,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
 
         public SiteBlockAttr load(Integer key) {
             int startSite = getStartSite(key);
-            int length = Math.min(HDF5_GENOTYPE_BLOCK_SIZE, getSiteCount() - startSite);
+            int length = Math.min(HDF5_GENOTYPE_BLOCK_SIZE, numberOfSites() - startSite);
             System.out.println("Reading from HDF5 site anno:" + startSite);
             System.out.println("");
             synchronized (myHDF5Reader) {

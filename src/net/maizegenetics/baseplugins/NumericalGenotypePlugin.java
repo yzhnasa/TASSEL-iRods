@@ -69,7 +69,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
     public static SimplePhenotype separatedTransform(Alignment input) {
 
         int seqCount = input.numberOfTaxa();
-        int siteCount = input.getSiteCount();
+        int siteCount = input.numberOfSites();
 
         Map[] alleleCounts = new Map[siteCount];
 
@@ -162,7 +162,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
     public static SimplePhenotype collapseTransform(Alignment input) {
 
         int seqCount = input.numberOfTaxa();
-        int siteCount = input.getSiteCount();
+        int siteCount = input.numberOfSites();
 
         double[][] pcValues = new double[seqCount][siteCount];
         List<Trait> traitNames = new ArrayList<Trait>();

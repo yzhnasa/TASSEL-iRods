@@ -71,17 +71,17 @@ public class SequenceDiversityPlugin extends AbstractPlugin {
                     windowSize = myDialog.getWindowSize();
                     stepSize = myDialog.getStepSize();
                 } else {
-                    if ((startSite + 1) > aa.getSiteCount()) {
+                    if ((startSite + 1) > aa.numberOfSites()) {
                         startSite = 0;
                     }
-                    if ((endSite < 1) || ((endSite + 1) > aa.getSiteCount())) {
-                        endSite = aa.getSiteCount() - 1;
+                    if ((endSite < 1) || ((endSite + 1) > aa.numberOfSites())) {
+                        endSite = aa.numberOfSites() - 1;
                     }
-                    if ((windowSize + 1) > aa.getSiteCount()) {
-                        windowSize = aa.getSiteCount() - 1;
+                    if ((windowSize + 1) > aa.numberOfSites()) {
+                        windowSize = aa.numberOfSites() - 1;
                     }
-                    if ((stepSize + 1) > aa.getSiteCount()) {
-                        stepSize = aa.getSiteCount() - 1;
+                    if ((stepSize + 1) > aa.numberOfSites()) {
+                        stepSize = aa.numberOfSites() - 1;
                     }
                 }
                 tds = processDatum(current);
@@ -228,7 +228,7 @@ class DiversityDialog extends JDialog {
         super((Frame) null, "Diversity Surveys", true);
         theAlignment = aa;
         try {
-            end = theAlignment.getSiteCount() - 1;
+            end = theAlignment.numberOfSites() - 1;
             jbInit();
             turnOffOptionsIfNotAnnotated();
             pack();
@@ -348,18 +348,18 @@ class DiversityDialog extends JDialog {
     private void endTextField_focusLost(FocusEvent e) {
         try {
             end = Integer.parseInt(endTextField.getText());
-            if ((end <= start) || (end > (theAlignment.getSiteCount() - 1))) {
-                end = this.theAlignment.getSiteCount() - 1;
+            if ((end <= start) || (end > (theAlignment.numberOfSites() - 1))) {
+                end = this.theAlignment.numberOfSites() - 1;
             }
         } catch (Exception ee) {
-            end = this.theAlignment.getSiteCount() - 1;
+            end = this.theAlignment.numberOfSites() - 1;
         }
         endTextField.setText(end + "");
     }
 
     private void turnOffOptionsIfNotAnnotated() {
         boolean annotatedSites = false;
-        //for (int i = 0; i < theAlignment.getSiteCount(); i++) {
+        //for (int i = 0; i < theAlignment.numberOfSites(); i++) {
         //    if (theAlignment.getPositionType(i) != 0) {
         //        annotatedSites = true;
         //        continue;
@@ -482,8 +482,8 @@ class DiversityDialog extends JDialog {
     void stepTextField_focusLost(FocusEvent e) {
         try {
             step = Integer.parseInt(stepTextField.getText());
-            if ((step <= 0) || (step > (theAlignment.getSiteCount() - 1))) {
-                step = this.theAlignment.getSiteCount() - 1;
+            if ((step <= 0) || (step > (theAlignment.numberOfSites() - 1))) {
+                step = this.theAlignment.numberOfSites() - 1;
             }
         } catch (Exception ee) {
             step = 100;
@@ -494,8 +494,8 @@ class DiversityDialog extends JDialog {
     void windowTextField_focusLost(FocusEvent e) {
         try {
             window = Integer.parseInt(windowTextField.getText());
-            if ((window <= 0) || (window > (theAlignment.getSiteCount() - 1))) {
-                window = this.theAlignment.getSiteCount() - 1;
+            if ((window <= 0) || (window > (theAlignment.numberOfSites() - 1))) {
+                window = this.theAlignment.numberOfSites() - 1;
             }
         } catch (Exception ee) {
             window = 400;

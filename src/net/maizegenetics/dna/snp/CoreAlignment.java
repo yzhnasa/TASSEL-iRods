@@ -170,7 +170,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteCount() {
+    public int numberOfSites() {
         return mySiteCount;
     }
 

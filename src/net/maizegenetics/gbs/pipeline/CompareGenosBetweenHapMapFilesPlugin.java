@@ -362,7 +362,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         myLogger.info("\nHapMap format genotype file1 contains " + a1.getChromosomeSiteCount(a1.getChromosome(0)) + " sites on chromosome " + a1.getChromosomeName(0) + "\n");
         myLogger.info("\nHapMap format genotype file2 contains " + a2.getChromosomeSiteCount(a2.getChromosome(0)) + " sites on chromosome " + a2.getChromosomeName(0) + "\n\n");
 
-        int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
+        int nSites1 = a1.numberOfSites(), nSites2 = a2.numberOfSites();
         int s1 = 0, s2 = 0;
         nCompared = 0;
         nSamePosNotComparable = 0;

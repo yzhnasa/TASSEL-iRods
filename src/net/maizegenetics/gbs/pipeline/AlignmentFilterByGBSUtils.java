@@ -61,7 +61,7 @@ public class AlignmentFilterByGBSUtils {
         int[][] counts = new int[2][a.numberOfTaxa()];
         int totalScored = 0, totalHets = 0;
         for (int j = 0; j < a.numberOfTaxa(); j++) {
-            for (int i = 0; i < a.getSiteCount(); i++) {
+            for (int i = 0; i < a.numberOfSites(); i++) {
                 if (a.genotype(j, i) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][j]++;
                     if (isRefAltCoded) {
@@ -104,11 +104,11 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static int[][] genotypicCountsBySite(Alignment a, boolean isRefAltCoded, boolean printToScreen) {
-        int[][] counts = new int[5][a.getSiteCount()];  //total count [0], hets count Aa [1], major homozygous AA [2], minor homo aa [3], gap [4]
+        int[][] counts = new int[5][a.numberOfSites()];  //total count [0], hets count Aa [1], major homozygous AA [2], minor homo aa [3], gap [4]
         if (printToScreen) {
             System.out.println("Locus\tMAF\tTaxaWKnown\tHetNum\tHetRate\tMajorAllele\tMajorCnt\tMinorAllele\tMinorCnt\tGapCnt");
         }
-        for (int i = 0; i < a.getSiteCount(); i++) {
+        for (int i = 0; i < a.numberOfSites(); i++) {
             byte majorAllele = a.getMajorAllele(i);
             majorAllele = (byte) (majorAllele << 4 | majorAllele);
             byte minorAllele = a.getMinorAllele(i);
@@ -176,14 +176,14 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static void getCoverage_MAF_F_Dist(Alignment a, boolean isRefAltCoded) {
-        if (a.getSiteCount() == 0) {
+        if (a.numberOfSites() == 0) {
             return;
         }
         int[][] hetCnt = genotypicCountsBySite(a, isRefAltCoded, false);
-        double[] coverageD = new double[a.getSiteCount()];
-        double[] mafD = new double[a.getSiteCount()];
-        double[] fD = new double[a.getSiteCount()];
-        double[] gapD = new double[a.getSiteCount()];
+        double[] coverageD = new double[a.numberOfSites()];
+        double[] mafD = new double[a.numberOfSites()];
+        double[] fD = new double[a.numberOfSites()];
+        double[] gapD = new double[a.numberOfSites()];
         //       System.out.println("Site Genotypes Hets propHets theMAF expHets relHets obsF");
         for (int i = 0; i < hetCnt[0].length; i++) {
             double propHets = (double) hetCnt[1][i] / (double) hetCnt[0][i];
@@ -223,7 +223,7 @@ public class AlignmentFilterByGBSUtils {
         for (Map.Entry<String, Integer> entry : sortedIds.entrySet()) {
             if (priorEntry.getKey().split(":")[0].equals(entry.getKey().split(":")[0])) {
                 int cntDiffTaxa = 0, cntTotalTaxa = 0;
-                for (int i = 0; i < a.getSiteCount(); i++) {
+                for (int i = 0; i < a.numberOfSites(); i++) {
                     byte pB = Alignment.UNKNOWN_DIPLOID_ALLELE;
                     if (random) {
                         int t = (int) Math.round(Math.random() * (a.numberOfTaxa() - 1));
@@ -277,7 +277,7 @@ public class AlignmentFilterByGBSUtils {
         LinkageDisequilibrium theLD = new LinkageDisequilibrium(a, windowSize,
                 LinkageDisequilibrium.testDesign.SlidingWindow, -1, null, false, -1, null, LinkageDisequilibrium.HetTreatment.Homozygous);
         theLD.run();
-        for (int i = 0; i < a.getSiteCount(); i++) {
+        for (int i = 0; i < a.numberOfSites(); i++) {
             int cntInformative = 0;
             double obsMaxR2 = -1;
             double obsMinP = 1;
@@ -318,7 +318,7 @@ public class AlignmentFilterByGBSUtils {
         int sumGood = 0, sumCO = 0;
         for (int t = 0; t < a.numberOfTaxa(); t++) {
             byte lastHomozygous = Alignment.UNKNOWN_DIPLOID_ALLELE;
-            for (int i = 0; i < a.getSiteCount(); i++) {
+            for (int i = 0; i < a.numberOfSites(); i++) {
                 byte currBase = a.genotype(t, i);
                 if ((currBase != refAllele) && (currBase != altAllele)) {
                     continue;  //not useful
@@ -344,13 +344,13 @@ public class AlignmentFilterByGBSUtils {
         if (byTaxa) {
             cos = new int[2][a.numberOfTaxa()];
         } else {
-            cos = new int[2][a.getSiteCount()];
+            cos = new int[2][a.numberOfSites()];
         }
         int sumGood = 0, sumDCO = 0;
         for (int t = 0; t < a.numberOfTaxa(); t++) {
             byte[] base = {-1, -1, -1};
             int[] site = {-1, -1, -1};
-            for (int s = 0; s < a.getSiteCount(); s++) {
+            for (int s = 0; s < a.numberOfSites(); s++) {
                 if ((a.genotype(t, s) == refAllele) || (a.genotype(t, s) == altAllele)) {
                     base[0] = base[1];
                     base[1] = base[2];

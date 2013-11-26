@@ -25,7 +25,7 @@ public class PolymorphismDistribution extends AbstractTableReport implements Tab
     public void addDistribution(String label, Alignment theSP, boolean poolMinor) {
         maxSeqCount = theSP.numberOfTaxa() * 2;
         int[] pdist = new int[maxSeqCount];
-        for (int i = 0; i < theSP.getSiteCount(); i++) {
+        for (int i = 0; i < theSP.numberOfSites(); i++) {
             if (theSP.isPolymorphic(i)) {
                 int[][] alleleCounts = theSP.getAllelesSortedByFrequency(i);
                 int numAlleles = alleleCounts[0].length;

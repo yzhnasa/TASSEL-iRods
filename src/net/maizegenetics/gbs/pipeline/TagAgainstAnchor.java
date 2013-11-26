@@ -211,7 +211,7 @@ public class TagAgainstAnchor {
                         System.out.println(e.toString());
                     }
                 }
-                System.out.println("Each LD compirison took " + (double)this.getTimeSpanNano(lastTimePoint)/actualChunkSize/anchor.getSiteCount() + " nano seconds");
+                System.out.println("Each LD compirison took " + (double)this.getTimeSpanNano(lastTimePoint)/actualChunkSize/anchor.numberOfSites() + " nano seconds");
                 System.out.println("Multiple threading mapping took " + this.getTimeSpanSecond(lastTimePoint) + " seconds");
                 for (int j = 0; j < jobs.length; j++) {
                     String[] result = jobs[j].getResult();
@@ -681,7 +681,7 @@ public class TagAgainstAnchor {
         long lastTimePoint = this.getCurrentTimeNano();
         Alignment a = ImportUtils.readGuessFormat(hapMapHDF5);
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
-        System.out.println("The anchor map has " + a.getSiteCount() + " sites and " + a.numberOfTaxa() + " taxa");
+        System.out.println("The anchor map has " + a.numberOfSites() + " sites and " + a.numberOfTaxa() + " taxa");
         lastTimePoint = this.getCurrentTimeNano();
         int[] chrOffSet = a.getChromosomesOffsets();
         chromosomeNumber = new int[a.getChromosomes().length];
@@ -693,7 +693,7 @@ public class TagAgainstAnchor {
             chrEndIndex[i] = chrOffSet[i] + a.getChromosomeSiteCount(a.getChromosomes()[i]);
         }
         anchor=AlignmentBuilder.getHomozygousInstance(a);
-        anchorMaf = new double[anchor.getSiteCount()];
+        anchorMaf = new double[anchor.numberOfSites()];
         for (int i = 0; i < anchorMaf.length; i++) {
             anchorMaf[i] = anchor.getMinorAlleleFrequency(i);
         }

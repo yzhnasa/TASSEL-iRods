@@ -44,7 +44,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         myAlignment = alignment;
 
-        myHorizontalCenter = myAlignment.getSiteCount() / 2;
+        myHorizontalCenter = myAlignment.numberOfSites() / 2;
 
         setHorizontalPageSize(horizontalPageSize);
 
@@ -146,7 +146,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public int getRealColumnCount() {
-        return myAlignment.getSiteCount();
+        return myAlignment.numberOfSites();
     }
 
     public int getHorizontalPageSize() {
@@ -219,7 +219,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public void adjustPositionToCenter() {
-        adjustPositionInternal(myAlignment.getSiteCount() / 2);
+        adjustPositionInternal(myAlignment.numberOfSites() / 2);
     }
 
     /**

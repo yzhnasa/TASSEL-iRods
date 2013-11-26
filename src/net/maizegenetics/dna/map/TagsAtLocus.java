@@ -259,11 +259,11 @@ public class TagsAtLocus {
             return null;
         }
         Alignment tagAlignment = getVariableSites();
-        if (tagAlignment == null || tagAlignment.getSiteCount() < 1) {
+        if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             status = "invariant";
             return null;
         }
-        int nSites = tagAlignment.getSiteCount();
+        int nSites = tagAlignment.numberOfSites();
         int nTaxa = theTags.get(0).tagDist.length;
         if (nTaxa < 1) {
             status = "noTaxa";
@@ -294,11 +294,11 @@ public class TagsAtLocus {
             return null;
         }
         Alignment tagAlignment = this.getVariableSites();
-        if (tagAlignment == null || tagAlignment.getSiteCount() < 1) {
+        if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             status = "invariant";
             return null;
         }
-        int nSites = tagAlignment.getSiteCount();
+        int nSites = tagAlignment.numberOfSites();
         int nTaxa = theTags.get(0).tagDist.length;
         if (nTaxa < 1) {
             status = "noTaxa";  // this shouldn't happen but is here just as a check
@@ -349,10 +349,10 @@ public class TagsAtLocus {
             return null;
         }
         Alignment tagAlignment = this.getVariableSites(refSeq);
-        if (tagAlignment == null || tagAlignment.getSiteCount() < 1) {
+        if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             return null;
         }
-        int nSites = tagAlignment.getSiteCount();
+        int nSites = tagAlignment.numberOfSites();
         int nTaxa = theTags.get(0).tagDist.length;  // the number of taxa is the same for all tags
         if (nTaxa < 1) {
             return null;
@@ -562,11 +562,11 @@ public class TagsAtLocus {
             }
             System.out.println();
         }
-        if (faa.getSiteCount() > maxSNPsPerLocus) {
+        if (faa.numberOfSites() > maxSNPsPerLocus) {
             status = "tooManyVariants(>"+maxSNPsPerLocus+")";
             return null;
         }
-        if (faa.getSiteCount() < 1) {
+        if (faa.numberOfSites() < 1) {
             status = "noVarSitesInAlign";
             return null;
         }
@@ -622,7 +622,7 @@ public class TagsAtLocus {
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  FA (alignment filtered for polymorphic sites):\n" + fa.toString());
         }
-        if (fa.getSiteCount() > maxSNPsPerLocus * 5 || fa.getSiteCount() < 1 || fa.numberOfTaxa() < 2) {
+        if (fa.numberOfSites() > maxSNPsPerLocus * 5 || fa.numberOfSites() < 1 || fa.numberOfTaxa() < 2) {
             return null;
         }
         return fa;

@@ -114,7 +114,7 @@ public class SeparatePlugin extends AbstractPlugin {
                         try {
                             endSite = offsets[j + 1] - 1;
                         } catch (Exception e) {
-                            endSite = alignments[i].getSiteCount() - 1;
+                            endSite = alignments[i].numberOfSites() - 1;
                         }
                         Datum td = new Datum(name, FilterAlignment.getInstance(alignments[i], offsets[j], endSite), null);
                         result.add(td);

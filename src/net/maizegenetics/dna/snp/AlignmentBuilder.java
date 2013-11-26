@@ -199,7 +199,7 @@ public class AlignmentBuilder {
 
     public static Alignment getInstanceOnlyMajorMinor(Alignment alignment) {
         int numTaxa = alignment.numberOfTaxa();
-        int numSites = alignment.getSiteCount();
+        int numSites = alignment.numberOfSites();
         GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
         byte[] majorAllele = new byte[64];
         byte[] minorAllele = new byte[64];
@@ -229,7 +229,7 @@ public class AlignmentBuilder {
 
     public static Alignment getHomozygousInstance(Alignment alignment) {
         int numTaxa = alignment.numberOfTaxa();
-        int numSites = alignment.getSiteCount();
+        int numSites = alignment.numberOfSites();
         GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
         //TODO this would be even faster to work through the SuperByteMatrix, as knowledge of site or taxa is not needed.
         for (int t = 0; t < numTaxa; t++) {
@@ -274,7 +274,7 @@ public class AlignmentBuilder {
      */
     private static Alignment copyGenotypeInstance(Alignment alignment) {
         int numTaxa = alignment.numberOfTaxa();
-        int numSites = alignment.getSiteCount();
+        int numSites = alignment.numberOfSites();
         GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
         for (int t = 0; t < numTaxa; t++) {
             for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.genotype(t, s));}

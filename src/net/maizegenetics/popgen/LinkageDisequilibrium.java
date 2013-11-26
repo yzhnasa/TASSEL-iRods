@@ -165,7 +165,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     private void initMatrices() {
-        int numSites = myAlignment.getSiteCount();
+        int numSites = myAlignment.numberOfSites();
         if (myCurrDesign == testDesign.All) {
             myTotalTests = numSites * (numSites - 1) / 2;
         } else if (myCurrDesign == testDesign.SlidingWindow) {
@@ -187,7 +187,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     private long getMapKey(int r, int c) {
-        return (c < r) ? (((long) c * myAlignment.getSiteCount()) + r) : (((long) r * myAlignment.getSiteCount()) + c);
+        return (c < r) ? (((long) c * myAlignment.numberOfSites()) + r) : (((long) r * myAlignment.numberOfSites()) + c);
     }
 
     public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, Alignment alignment, int site1, int site2) {
@@ -323,7 +323,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     private int getRowFromIndex(long index) {
 
         int row = 0;
-        int n = myAlignment.getSiteCount();
+        int n = myAlignment.numberOfSites();
         int w = myWindowSize;
 
         if (myCurrDesign == testDesign.SlidingWindow && n > w + 1 && index >= w * (w + 1) / (double) 2) {
@@ -355,7 +355,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
         int row = getRowFromIndex(index);
         int col = 0;
-        int n = myAlignment.getSiteCount();
+        int n = myAlignment.numberOfSites();
         int w = myWindowSize;
 
         if (myCurrDesign == testDesign.SlidingWindow && n > w + 1 && index >= w * (w + 1) / (double) 2) {
@@ -473,7 +473,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * Returns the counts of the numSites in the alignment
      */
     public int getSiteCount() {
-        return myAlignment.getSiteCount();
+        return myAlignment.numberOfSites();
     }
 
     /**

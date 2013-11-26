@@ -510,7 +510,7 @@ public class AlignmentUtils {
     public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
 
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
-        for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
+        for (int i = 0, n = aa.numberOfSites(); i < n; i++) {
 
             int totalNonMissing = aa.getTotalGametesNotMissing(i);
 
@@ -548,7 +548,7 @@ public class AlignmentUtils {
         if ((firstSite < 0) || (firstSite > lastSite)) {
             return null;
         }
-        if (lastSite > aa.getSiteCount() - 1) {
+        if (lastSite > aa.numberOfSites() - 1) {
             return null;
         }
         return FilterAlignment.getInstance(aa, firstSite, lastSite);

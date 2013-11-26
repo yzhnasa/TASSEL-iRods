@@ -50,7 +50,7 @@ public class MarkerPhenotypeAdapter {
         if (align == null) {
             numberOfMarkersFromAlignment = 0;
         } else {
-            numberOfMarkersFromAlignment = align.getSiteCount();
+            numberOfMarkersFromAlignment = align.numberOfSites();
         }
 
         //now deal with the phenotype

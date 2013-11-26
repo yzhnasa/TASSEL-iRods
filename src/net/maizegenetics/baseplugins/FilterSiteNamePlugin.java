@@ -83,7 +83,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
             AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
                 @Override
                 public int getRealSize() {
-                    return alignment.getSiteCount();
+                    return alignment.numberOfSites();
                 }
 
                 @Override
@@ -114,8 +114,8 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
         }
 
         String theName, theComment;
-        theName = inDatum.getName() + "_" + result.getSiteCount() + "_Sites";
-        theComment = "Subset of " + result.getSiteCount() + " from " + alignment.getSiteCount() + " Sites\n" + inDatum.getComment();
+        theName = inDatum.getName() + "_" + result.numberOfSites() + "_Sites";
+        theComment = "Subset of " + result.numberOfSites() + " from " + alignment.numberOfSites() + " Sites\n" + inDatum.getComment();
         return new Datum(theName, result, theComment);
 
     }

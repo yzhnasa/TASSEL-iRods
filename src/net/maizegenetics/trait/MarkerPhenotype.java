@@ -119,10 +119,10 @@ public class MarkerPhenotype implements TableReport {
         for (int c = 0; c < myPhenotype.getNumberOfTraits(); c++) {
             data[c + 1] = "" + myPhenotype.getData(row, c);
         }
-        int siteCount = Math.min(myAlignment.getSiteCount(), 10);
+        int siteCount = Math.min(myAlignment.numberOfSites(), 10);
         StringBuilder builder = new StringBuilder();
         builder.append(myAlignment.genotypeAsStringRange(row, 0, siteCount));
-        if (myAlignment.getSiteCount() > 10) {
+        if (myAlignment.numberOfSites() > 10) {
             builder.append("...");
         }
         data[myPhenotype.getNumberOfTraits() + 1] = builder.toString();
@@ -151,10 +151,10 @@ public class MarkerPhenotype implements TableReport {
     public Object getValueAt(int row, int col) {
         int haplotypeColumn = myPhenotype.getColumnCount();
         if (col == haplotypeColumn) {
-            int siteCount = Math.min(myAlignment.getSiteCount(), 10);
+            int siteCount = Math.min(myAlignment.numberOfSites(), 10);
             StringBuilder builder = new StringBuilder();
             builder.append(myAlignment.genotypeAsStringRange(row, 0, siteCount));
-            if (myAlignment.getSiteCount() > 10) {
+            if (myAlignment.numberOfSites() > 10) {
                 builder.append("...");
             }
             return builder.toString();
