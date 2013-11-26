@@ -66,7 +66,7 @@ public class PDAnnotation {
         Alignment bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
         //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.numberOfSites(), bna.chromosomalPosition(0), bna.chromosomalPosition(bna.numberOfSites() - 1));
         int siteCnt = bna.numberOfSites();
-        int[] alignmentPhysPos = bna.getPhysicalPositions();
+        int[] alignmentPhysPos = bna.physicalPositions();
         hasData = new int[siteCnt];
         float[] maf = new float[siteCnt];
         byte[] mjAllele = new byte[siteCnt];

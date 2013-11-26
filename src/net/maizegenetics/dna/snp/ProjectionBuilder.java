@@ -32,7 +32,7 @@ public class ProjectionBuilder {
         TaxaList tl=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         ImmutableList breakList=ImmutableList.builder().addAll(allBreakPoints.values()).build();
         return AlignmentBuilder.getInstance(new ProjectionGenotype(baseAlignment, breakList),
-                baseAlignment.getPositionList(),tl);
+                baseAlignment.positionList(),tl);
     }
 
     public ProjectionBuilder(Alignment myBaseAlignment) {

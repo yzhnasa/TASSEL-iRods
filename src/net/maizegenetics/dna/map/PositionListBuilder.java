@@ -144,14 +144,14 @@ public class PositionListBuilder {
      */
     public PositionListBuilder(IHDF5Writer h5w, PositionList a) {
         h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, a.size());
-        String[] lociNames = new String[a.getNumChromosomes()];
+        String[] lociNames = new String[a.numChromosomes()];
         Map<Chromosome, Integer> locusToIndex=new HashMap<>(10);
         Chromosome[] loci = a.getChromosomes();
-        for (int i = 0; i < a.getNumChromosomes(); i++) {
+        for (int i = 0; i < a.numChromosomes(); i++) {
             lociNames[i] = loci[i].getName();
             locusToIndex.put(loci[i],i);
         }
-        h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumChromosomes());
+        h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.numChromosomes());
         h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
 
         int blockSize=1<<16;

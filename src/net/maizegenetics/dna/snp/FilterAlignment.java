@@ -538,7 +538,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getNumChromosomes() {
+    public int numChromosomes() {
         return myChromosomes.length;
     }
 
@@ -549,10 +549,10 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
-        for (int i = 0; i < getNumChromosomes(); i++) {
+        for (int i = 0; i < numChromosomes(); i++) {
             if (chromosome.equals(myChromosomes[i])) {
                 int end = 0;
-                if (i == getNumChromosomes() - 1) {
+                if (i == numChromosomes() - 1) {
                     end = numberOfSites();
                 } else {
                     end = myChromosomeOffsets[i + 1];
@@ -727,7 +727,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int[] getPhysicalPositions() {
+    public int[] physicalPositions() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
             int numSites = numberOfSites();
             int[] result = new int[numSites];
@@ -736,7 +736,7 @@ public class FilterAlignment implements Alignment {
             }
             return result;
         } else {
-            return myBaseAlignment.getPhysicalPositions();
+            return myBaseAlignment.physicalPositions();
         }
     }
 
@@ -1033,10 +1033,10 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public PositionList getPositionList() {
+    public PositionList positionList() {
         if (myPositionList == null) {
             PositionListBuilder pLB = new PositionListBuilder();
-            PositionList basePL = getBaseAlignment().getPositionList();
+            PositionList basePL = getBaseAlignment().positionList();
             for (int i = 0; i < numberOfSites(); i++) {
                 pLB.add(basePL.get(translateSite(i)));
             }

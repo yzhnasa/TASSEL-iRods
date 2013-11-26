@@ -2301,7 +2301,7 @@ public class NucleotideImputationUtils {
     	int[][] transCount = new int[][]{{totalTransitions - hetHet - 2*hetHom, hetHom},{hetHom, hetHet}};
     	
     	tp.setTransitionCounts(transCount, chrlen, ntaxa);
-    	tp.setPositions(a.getPhysicalPositions());
+    	tp.setPositions(a.physicalPositions());
     	
     	//count number of het loci
     	int hetCount = 0;

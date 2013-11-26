@@ -94,7 +94,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
         BufferedReader br = null;
         int count = 1;
-        PositionListBuilder posBuilder = new PositionListBuilder().addAll(alignment.getPositionList());
+        PositionListBuilder posBuilder = new PositionListBuilder().addAll(alignment.positionList());
         try {
             br = Utils.getBufferedReader(myMapFilename);
             Pattern sep = Pattern.compile("\\s+");
@@ -136,7 +136,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                         }
 
                         numChanges++;
-                        GeneralPosition.Builder newPos = new GeneralPosition.Builder(alignment.getPositionList().get(site));
+                        GeneralPosition.Builder newPos = new GeneralPosition.Builder(alignment.positionList().get(site));
                         newPos.chromosome(getLocusObj(locus2)).position(pos2).snpName(snpID);
                         posBuilder.set(site, newPos.build());
 

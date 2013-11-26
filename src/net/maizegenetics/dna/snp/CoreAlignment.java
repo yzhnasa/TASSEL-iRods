@@ -160,7 +160,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public PositionList getPositionList() {
+    public PositionList positionList() {
         return myPositionList;
     }
 
@@ -205,8 +205,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int[] getPhysicalPositions() {
-        return myPositionList.getPhysicalPositions();
+    public int[] physicalPositions() {
+        return myPositionList.physicalPositions();
     }
 
     @Override
@@ -230,8 +230,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getNumChromosomes() {
-        return myPositionList.getNumChromosomes();
+    public int numChromosomes() {
+        return myPositionList.numChromosomes();
     }
 
     @Override

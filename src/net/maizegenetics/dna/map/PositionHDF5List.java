@@ -225,7 +225,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public int[] getPhysicalPositions() {
+    public int[] physicalPositions() {
         int[] result=new int[numPositions];
         IntBuffer ib=IntBuffer.wrap(result);
         for (ChrOffPos cop: myChrOffPosTree.values()) {
@@ -260,7 +260,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public int getNumChromosomes() {
+    public int numChromosomes() {
         return myChrOffPosTree.size();
     }
 

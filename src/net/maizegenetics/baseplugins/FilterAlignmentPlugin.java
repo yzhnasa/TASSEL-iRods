@@ -464,7 +464,7 @@ class DataFilterAlignmentDialog extends JDialog {
         super(f, "Filter Alignment", true);
         theAlignment = a;
         chromFilteredAlignment = theAlignment;
-        chromsAvailable = new String[theAlignment.getNumChromosomes()];
+        chromsAvailable = new String[theAlignment.numChromosomes()];
         for (int i = 0; i < chromsAvailable.length; i++) {
             chromsAvailable[i] = theAlignment.getChromosomes()[i].getName().trim();
         }
@@ -708,14 +708,14 @@ class DataFilterAlignmentDialog extends JDialog {
         mainPanel.add(lblSitePos, new GridBagConstraints(3, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
         mainPanel.add(startPosTextField, new GridBagConstraints(3, 5, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
 
-        lblSitePos.setVisible(theAlignment.getNumChromosomes() == 1 && startPos >= 0);
-        startPosTextField.setVisible(theAlignment.getNumChromosomes() == 1 && startPos >= 0);
+        lblSitePos.setVisible(theAlignment.numChromosomes() == 1 && startPos >= 0);
+        startPosTextField.setVisible(theAlignment.numChromosomes() == 1 && startPos >= 0);
 
         if (!doBatchAnalysis) {
             mainPanel.add(lblEndSite, new GridBagConstraints(0, 6, 1, 1, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
             mainPanel.add(endTextField, new GridBagConstraints(2, 6, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
             mainPanel.add(endPosTextField, new GridBagConstraints(3, 6, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
-            endPosTextField.setVisible(theAlignment.getNumChromosomes() == 1 && endPos >= 0);
+            endPosTextField.setVisible(theAlignment.numChromosomes() == 1 && endPos >= 0);
             mainPanel.add(lblSeqLength, new GridBagConstraints(2, 7, 1, 1, 1.0, 0.6, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 3));
         }
 
@@ -740,19 +740,19 @@ class DataFilterAlignmentDialog extends JDialog {
             JOptionPane.showMessageDialog(this.getParent(), "End site must be a number between 0 and " + (siteCount - 1) + " inclusive.");
         } else if (start > end) {
             JOptionPane.showMessageDialog(this.getParent(), "Start site must be less than the end site.");
-        } else if (startPos < 0 && endPos >= 0 && theAlignment.getNumChromosomes() == 1) {
+        } else if (startPos < 0 && endPos >= 0 && theAlignment.numChromosomes() == 1) {
             JOptionPane.showMessageDialog(this.getParent(), "Start position must be non negative.");
-        } else if (startPos > theAlignment.chromosomalPosition(siteCount - 1) && theAlignment.getNumChromosomes() == 1) {
+        } else if (startPos > theAlignment.chromosomalPosition(siteCount - 1) && theAlignment.numChromosomes() == 1) {
             JOptionPane.showMessageDialog(this.getParent(), "No available SNPs with positions greater than " + theAlignment.chromosomalPosition(siteCount - 1) + ".");
         } else if (isStartPosTextFieldNumeric == false) {
             JOptionPane.showMessageDialog(this.getParent(), "Start position must be a number between 0 and " + theAlignment.chromosomalPosition(siteCount - 1) + " inclusive.");
-        } else if (endPos < 0 && startPos >= 0 && theAlignment.getNumChromosomes() == 1) {
+        } else if (endPos < 0 && startPos >= 0 && theAlignment.numChromosomes() == 1) {
             JOptionPane.showMessageDialog(this.getParent(), "End Position must be non negative.");
-        } else if (endPos < theAlignment.chromosomalPosition(0) && theAlignment.getNumChromosomes() == 1) {
+        } else if (endPos < theAlignment.chromosomalPosition(0) && theAlignment.numChromosomes() == 1) {
             JOptionPane.showMessageDialog(this.getParent(), "No available SNPs with positions less than " + theAlignment.chromosomalPosition(0) + ".");
         } else if (isEndPosTextFieldNumeric == false) {
             JOptionPane.showMessageDialog(this.getParent(), "End position must be a number greater than " + theAlignment.chromosomalPosition(0) + ".");
-        } else if (startPos > endPos && theAlignment.getNumChromosomes() == 1) {
+        } else if (startPos > endPos && theAlignment.numChromosomes() == 1) {
             JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than the end position.");
         } else if (!isChromSelectionValid) {
             JOptionPane.showMessageDialog(this.getParent(), "Invalid chromosome selection");
@@ -873,9 +873,9 @@ class DataFilterAlignmentDialog extends JDialog {
                 }
             }
             chromFilteredAlignment = CombineAlignment.getInstance(selectedAlignments);
-            lblSitePos.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && startPos >= 0);
-            startPosTextField.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && startPos >= 0);
-            endPosTextField.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && endPos >= 0);
+            lblSitePos.setVisible(chromFilteredAlignment.numChromosomes() == 1 && startPos >= 0);
+            startPosTextField.setVisible(chromFilteredAlignment.numChromosomes() == 1 && startPos >= 0);
+            endPosTextField.setVisible(chromFilteredAlignment.numChromosomes() == 1 && endPos >= 0);
             totalSeq = chromFilteredAlignment.numberOfTaxa();
             siteCount = chromFilteredAlignment.numberOfSites();
             lblSeqLength.setText(" of " + (siteCount - 1) + " sites");

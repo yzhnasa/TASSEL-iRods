@@ -88,19 +88,19 @@ public class ExportUtils {
             h5w.createGroup(HapMapHDF5Constants.SBIT);
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
-            String[] lociNames = new String[a.getNumChromosomes()];
+            String[] lociNames = new String[a.numChromosomes()];
             Chromosome[] loci = a.getChromosomes();
-            for (int i = 0; i < a.getNumChromosomes(); i++) {
+            for (int i = 0; i < a.numChromosomes(); i++) {
                 lociNames[i] = loci[i].getName();
             }
-            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumChromosomes());
+            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.numChromosomes());
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
 
-            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumChromosomes());
+            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.numChromosomes());
             h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getChromosomesOffsets());
 
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
-            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
+            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.physicalPositions());
 
             //h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.numberOfSites(), a.maxNumAlleles());
             //byte[][] alleles = new byte[numSites][a.maxNumAlleles()];
@@ -160,7 +160,7 @@ public class ExportUtils {
     * @return 
     */ 
    public static String writeToMutableHDF5(Alignment a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
-        AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(a.getPositionList(),newHDF5file);
+        AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(a.positionList(),newHDF5file);
         if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {aB.build(); return newHDF5file;}
         for (int t = 0; t < a.numberOfTaxa(); t++) {
               if((exportTaxa!=null)&&(!exportTaxa.contains(a.taxa().get(t)))) continue;  //taxon not in export list
@@ -251,7 +251,7 @@ public class ExportUtils {
 //            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.numberOfSites(),features);
 //            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_INDICES, locusIndicesArray,features);
 //
-//            int[] originalPositions = a.getPhysicalPositions();
+//            int[] originalPositions = a.physicalPositions();
 //            int[] outPositions = new int[snpIndex.length];
 //            for (int i = 0; i < snpIndex.length; i++) {
 //                outPositions[i] = originalPositions[snpIndex[i]];

@@ -297,7 +297,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getNumChromosomes() {
+    public int numChromosomes() {
         if (myChromosomesList == null) {
             return 0;
         } else {
@@ -485,11 +485,11 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int[] getPhysicalPositions() {
+    public int[] physicalPositions() {
 
         boolean allNull = true;
         for (int i = 0; i < myAlignments.length; i++) {
-            int[] current = myAlignments[0].getPhysicalPositions();
+            int[] current = myAlignments[0].physicalPositions();
             if ((current != null) && (current.length != 0)) {
                 allNull = false;
                 break;
@@ -502,7 +502,7 @@ public class CombineAlignment implements Alignment {
             int[] result = new int[numberOfSites()];
             int count = 0;
             for (int i = 0; i < myAlignments.length; i++) {
-                int[] current = myAlignments[i].getPhysicalPositions();
+                int[] current = myAlignments[i].physicalPositions();
                 for (int j = 0; j < current.length; j++) {
                     result[count++] = current[j];
                 }
@@ -828,7 +828,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public PositionList getPositionList() {
+    public PositionList positionList() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

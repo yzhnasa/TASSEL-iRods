@@ -377,7 +377,7 @@ public interface Alignment {
      *
      * @return PositionList for all sites.
      */
-    public PositionList getPositionList();
+    public PositionList positionList();
 
     /**
      * Returns the physical position at given site.
@@ -419,7 +419,7 @@ public interface Alignment {
      *
      * @return physical positions.
      */
-    public int[] getPhysicalPositions();
+    public int[] physicalPositions();
 
     /**
      * Return Chromosome Name for given site.
@@ -460,7 +460,7 @@ public interface Alignment {
      *
      * @return number of chromosomes
      */
-    public int getNumChromosomes();
+    public int numChromosomes();
 
     /**
      * Returns starting site for each chromosome.

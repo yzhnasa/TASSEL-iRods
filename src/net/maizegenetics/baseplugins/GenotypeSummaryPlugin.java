@@ -268,7 +268,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         Object[][] data = new Object[numSites][columnNames.size()];
         int totalGametes = numTaxa * 2;
 
-        int[] physicalPositions = alignment.getPhysicalPositions();
+        int[] physicalPositions = alignment.physicalPositions();
         boolean hasPhysicalPositions = ((physicalPositions != null) && (physicalPositions.length != 0));
 
         for (int i = 0; i < numSites; i++) {

@@ -77,7 +77,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
         this.diseq = new double[windowSize][windowSize];
         setXStart();
         setYStart();
-        jump = new int[totalVariableSites+theAA.getNumChromosomes()-1];
+        jump = new int[totalVariableSites+theAA.numChromosomes()-1];
         String locus = theAA.getChromosomeName(0);
         int jumpValue = 0;
         for (int i = 0; i< jump.length; i++) {

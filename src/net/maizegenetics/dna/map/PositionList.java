@@ -124,7 +124,7 @@ public interface PositionList extends List<Position> {
      *
      * @return physical positions.
      */
-    public int[] getPhysicalPositions();
+    public int[] physicalPositions();
 
     /**
      * Return Chromosome Name for given site.
@@ -165,7 +165,7 @@ public interface PositionList extends List<Position> {
      *
      * @return number of chromosomes
      */
-    public int getNumChromosomes();
+    public int numChromosomes();
 
     /**
      * Returns starting site for each chromosome.
