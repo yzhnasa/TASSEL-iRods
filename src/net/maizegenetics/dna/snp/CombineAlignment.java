@@ -410,10 +410,10 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte[] genotypeRow(int taxon) {
+    public byte[] genotypeAllSites(int taxon) {
         byte[] result = new byte[getSiteCount()];
         for (int i = 0; i < myAlignments.length; i++) {
-            byte[] current = myAlignments[i].genotypeRow(taxon);
+            byte[] current = myAlignments[i].genotypeAllSites(taxon);
             System.arraycopy(current, 0, result, myChromosomesOffsets[i], current.length);
         }
         return result;

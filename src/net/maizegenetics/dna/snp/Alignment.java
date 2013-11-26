@@ -128,7 +128,7 @@ public interface Alignment {
      *
      * @return sequence of diploid allele values.
      */
-    public byte[] genotypeRow(int taxon);
+    public byte[] genotypeAllSites(int taxon);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at each

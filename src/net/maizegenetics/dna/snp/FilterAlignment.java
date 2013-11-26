@@ -679,8 +679,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte[] genotypeRow(int taxon) {
-        return myGenotype.genotypeRow(taxon);
+    public byte[] genotypeAllSites(int taxon) {
+        return myGenotype.genotypeAllSites(taxon);
     }
 
     @Override

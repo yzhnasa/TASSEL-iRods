@@ -252,7 +252,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         public void run() {
             StringBuilder sb=new StringBuilder();
             String name=unimpAlign.taxaName(taxon);
-            ImputedTaxon impTaxon=new ImputedTaxon(taxon, unimpAlign.genotypeRow(taxon),isOutputProjection);
+            ImputedTaxon impTaxon=new ImputedTaxon(taxon, unimpAlign.genotypeAllSites(taxon),isOutputProjection);
             int[] unkHets=countUnknownAndHets(impTaxon.getOrigGeno());
             sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d Hets:%d... ", taxon,name,
                     unimpAlign.getAllelePresenceForAllSites(taxon, 0).cardinality(),

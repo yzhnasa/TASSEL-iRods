@@ -164,7 +164,7 @@ public class ExportUtils {
         if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {aB.build(); return newHDF5file;}
         for (int t = 0; t < a.getTaxaCount(); t++) {
               if((exportTaxa!=null)&&(!exportTaxa.contains(a.taxa().get(t)))) continue;  //taxon not in export list
-              byte[] bases = a.genotypeRow(t);
+              byte[] bases = a.genotypeAllSites(t);
               if (keepDepth==false) aB.addTaxon(new Taxon(a.taxaName(t)), bases, null);
               else {
                   //todo restore depth save
@@ -269,7 +269,7 @@ public class ExportUtils {
 //            MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
 //            for (int t = 0; t < numTaxa; t++) {
 //                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.taxaName(t))<0)) continue;  //taxon not in export list
-//                  byte[] originalBases = a.genotypeRow(t);
+//                  byte[] originalBases = a.genotypeAllSites(t);
 //                  byte[] bases = new byte[snpIndex.length];
 //                  for (int i = 0; i < bases.length; i++) {
 //                      bases[i] = originalBases[snpIndex[i]];
@@ -322,8 +322,8 @@ public class ExportUtils {
 //            }
 //            System.out.println("Copying first taxon:"+srcA.taxaName(0));
 //            for (int i = 0; i < srcA.getSequenceCount(); i++) {
-//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeRow(i), srcA.getDepthForAlleles(i));
-//                else trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeRow(i), null);
+//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), srcA.getDepthForAlleles(i));
+//                else trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), null);
 //            }
 //        }
 //

@@ -54,7 +54,7 @@ public interface Genotype {
      *
      * @return sequence of diploid allele values.
      */
-    public byte[] genotypeRow(int taxon);
+    public byte[] genotypeAllSites(int taxon);
 
     /**
      * Returns string representation of diploid values returned by genotype()

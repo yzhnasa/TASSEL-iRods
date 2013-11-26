@@ -656,7 +656,7 @@ public class NucleotideImputationUtils {
 		int ntaxa = a.getSequenceCount();
 		Alignment b = FilterAlignment.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
-			seq = b.genotypeRow(t);
+			seq = b.genotypeAllSites(t);
 			Haplotype hap = new Haplotype(seq, t);
 			int dist0 = hap.distanceFrom(haplotype0);
 			int dist1 = hap.distanceFrom(haplotype1);
@@ -713,7 +713,7 @@ public class NucleotideImputationUtils {
 		int ntaxa = a.getSequenceCount();
 		Alignment b = FilterAlignment.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
-			byte[] seq = b.genotypeRow(t);
+			byte[] seq = b.genotypeAllSites(t);
 			Haplotype hap = new Haplotype(seq, t);
 			int dist0 = hap.distanceFrom(haplotype0);
 			int dist1 = hap.distanceFrom(haplotype1);

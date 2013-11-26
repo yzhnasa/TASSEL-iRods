@@ -54,7 +54,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public byte[] genotypeRow(int taxon) {
+    public byte[] genotypeAllSites(int taxon) {
         byte[] result = new byte[mySiteCount];
         for (int i = 0; i < mySiteCount; i++) {
             result[i] = genotype(taxon, i);
