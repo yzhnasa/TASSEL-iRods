@@ -793,7 +793,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Object[][] getDiploidCounts() {
+    public Object[][] genoCounts() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

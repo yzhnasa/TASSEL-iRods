@@ -130,7 +130,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         long numSites = alignment.numberOfSites();
         long numTaxa = alignment.numberOfTaxa();
 
-        Object[][] diploidValueCounts = alignment.getDiploidCounts();
+        Object[][] diploidValueCounts = alignment.genoCounts();
         int numAlleles = diploidValueCounts[0].length;
 
         if (!myIsSiteSummary) {

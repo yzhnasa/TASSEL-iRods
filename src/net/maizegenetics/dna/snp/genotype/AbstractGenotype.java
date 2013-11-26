@@ -407,7 +407,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public Object[][] getDiploidCounts() {
+    public Object[][] genoCounts() {
 
         Map<String, Long> diploidValueCounts = new HashMap<String, Long>();
         for (int c = 0; c < mySiteCount; c++) {

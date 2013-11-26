@@ -246,7 +246,7 @@ public interface Genotype {
      *
      * @return diploid counts.
      */
-    public Object[][] getDiploidCounts();
+    public Object[][] genoCounts();
 
     /**
      * Returns counts of all major/minor allele combinations from highest

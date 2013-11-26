@@ -999,8 +999,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public Object[][] getDiploidCounts() {
-        return myGenotype.getDiploidCounts();
+    public Object[][] genoCounts() {
+        return myGenotype.genoCounts();
     }
 
     @Override
