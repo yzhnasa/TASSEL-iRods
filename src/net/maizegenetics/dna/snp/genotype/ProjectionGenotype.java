@@ -132,7 +132,7 @@ public class ProjectionGenotype extends AbstractGenotype {
     private byte getBaseSite(int taxon, int site) {
         //test transpose problems
         if (site != cachedSite) {
-            donorForCachedSite = myBaseAlignment.genotypeMatrix().getGenotypeForAllTaxa(site);
+            donorForCachedSite = myBaseAlignment.genotypeMatrix().genotypeForAllTaxa(site);
             cachedSite = site;
         }
         int primPos = taxon << 2;
@@ -156,7 +156,7 @@ public class ProjectionGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String getDiploidAsString(int site, byte value) {
+    public String diploidAsString(int site, byte value) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
 

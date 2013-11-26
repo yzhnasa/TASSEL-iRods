@@ -180,7 +180,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String getDiploidAsString(int site, byte value) {
+    public String diploidAsString(int site, byte value) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
 
@@ -196,7 +196,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    public double getMinorAlleleFrequency(int site) {
+    public double minorAlleleFrequency(int site) {
         try {
             SiteBlockAttr sa = mySiteAnnoCache.get(getStartSite(site));
             return sa.getMAF(site);

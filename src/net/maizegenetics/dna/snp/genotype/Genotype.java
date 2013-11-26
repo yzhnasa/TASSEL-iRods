@@ -123,7 +123,7 @@ public interface Genotype {
      *
      * @return number of heterozygous taxa
      */
-    public int getHeterozygousCount(int site);
+    public int heterozygousCount(int site);
 
     /**
      * Returns whether all sites are polymorphic.
@@ -195,7 +195,7 @@ public interface Genotype {
      *
      * @return String representation
      */
-    public String getDiploidAsString(int site, byte value);
+    public String diploidAsString(int site, byte value);
 
     /**
      * Return max number of alleles defined for any given site.
@@ -229,7 +229,7 @@ public interface Genotype {
      * @param site site
      * @return minor allele count
      */
-    public int getMinorAlleleCount(int site);
+    public int minorAlleleCount(int site);
 
     /**
      * Returns the major allele count for given site.
@@ -237,7 +237,7 @@ public interface Genotype {
      * @param site site
      * @return major allele count
      */
-    public int getMajorAlleleCount(int site);
+    public int majorAlleleCount(int site);
 
     /**
      * Returns counts of all diploid combinations from highest frequency to
@@ -256,7 +256,7 @@ public interface Genotype {
      *
      * @return diploid counts.
      */
-    public Object[][] getMajorMinorCounts();
+    public Object[][] majorMinorCounts();
 
     /**
      * Returns total number of non-missing allele values for given taxon. This
@@ -275,7 +275,7 @@ public interface Genotype {
      *
      * @return number of heterozygous sites
      */
-    public int getHeterozygousCountForTaxon(int taxon);
+    public int heterozygousCountForTaxon(int taxon);
 
     /**
      * Returns total number of non-missing sites for given taxon. Sites are
@@ -319,21 +319,21 @@ public interface Genotype {
      *
      * @return all alleles
      */
-    public byte[] getAlleles(int site);
+    public byte[] alleles(int site);
 
     /**
      * Returns major allele for all sites.
      *
      * @return all major alleles
      */
-    public byte[] getMajorAlleleForAllSites();
+    public byte[] majorAlleleForAllSites();
 
     /**
      * Returns minor allele for all sites.
      *
      * @return all minor alleles
      */
-    public byte[] getMinorAlleleForAllSites();
+    public byte[] minorAlleleForAllSites();
 
     /**
      * Return most common allele at given site. Gap is included as state.
@@ -344,7 +344,7 @@ public interface Genotype {
      *
      * @return most common allele
      */
-    public byte getMajorAllele(int site);
+    public byte majorAllele(int site);
 
     /**
      * Return most common allele at given site. Gap is included as state.
@@ -355,7 +355,7 @@ public interface Genotype {
      *
      * @return most common allele as String
      */
-    public String getMajorAlleleAsString(int site);
+    public String majorAlleleAsString(int site);
 
     /**
      * Return most common minor allele at given site. Gap is included as state.
@@ -366,7 +366,7 @@ public interface Genotype {
      *
      * @return most common minor allele
      */
-    public byte getMinorAllele(int site);
+    public byte minorAllele(int site);
 
     /**
      * Return most common minor allele at given site. Gap is included as state.
@@ -377,7 +377,7 @@ public interface Genotype {
      *
      * @return most common minor allele as String
      */
-    public String getMinorAlleleAsString(int site);
+    public String minorAlleleAsString(int site);
 
     /**
      * Return all minor alleles at given site. Gap is included as state.
@@ -388,7 +388,7 @@ public interface Genotype {
      *
      * @return all minor alleles
      */
-    public byte[] getMinorAlleles(int site);
+    public byte[] minorAlleles(int site);
 
     /**
      * Return frequency for most common minor allele at given site. Gap is
@@ -399,7 +399,7 @@ public interface Genotype {
      *
      * @return frequency
      */
-    public double getMinorAlleleFrequency(int site);
+    public double minorAlleleFrequency(int site);
 
     /**
      * Return frequency for major allele at given site. Gap is included as
@@ -410,7 +410,7 @@ public interface Genotype {
      *
      * @return frequency
      */
-    public double getMajorAlleleFrequency(int site);
+    public double majorAlleleFrequency(int site);
 
     /**
      * Returns number of taxa (samples) in this genotype
@@ -433,7 +433,7 @@ public interface Genotype {
      *
      * @return genotypes
      */
-    public byte[] getGenotypeForAllSites(int taxon);
+    public byte[] genotypeForAllSites(int taxon);
 
     /**
      * Get all genotypes for given taxon from start site (inclusive) to end site
@@ -445,7 +445,7 @@ public interface Genotype {
      *
      * @return genotypes
      */
-    public byte[] getGenotypeForSiteRange(int taxon, int start, int end);
+    public byte[] genotypeForSiteRange(int taxon, int start, int end);
 
     /**
      * Get all genotypes for given site.
@@ -454,7 +454,7 @@ public interface Genotype {
      *
      * @return genotypes
      */
-    public byte[] getGenotypeForAllTaxa(int site);
+    public byte[] genotypeForAllTaxa(int site);
 
     /**
      * Tells this Genotype to transpose it's data to optimize performance for

@@ -812,7 +812,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public byte[] alleles(int site) {
-        return myGenotype.getAlleles(site);
+        return myGenotype.alleles(site);
     }
 
     @Override
@@ -822,12 +822,12 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public double majorAlleleFrequency(int site) {
-        return myGenotype.getMajorAlleleFrequency(site);
+        return myGenotype.majorAlleleFrequency(site);
     }
 
     @Override
     public int heterozygousCount(int site) {
-        return myGenotype.getHeterozygousCount(site);
+        return myGenotype.heterozygousCount(site);
     }
 
     @Override
@@ -847,27 +847,27 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public int minorAlleleCount(int site) {
-        return myGenotype.getMinorAlleleCount(site);
+        return myGenotype.minorAlleleCount(site);
     }
 
     @Override
     public double minorAlleleFrequency(int site) {
-        return myGenotype.getMinorAlleleFrequency(site);
+        return myGenotype.minorAlleleFrequency(site);
     }
 
     @Override
     public int majorAlleleCount(int site) {
-        return myGenotype.getMajorAlleleCount(site);
+        return myGenotype.majorAlleleCount(site);
     }
 
     @Override
     public byte majorAllele(int site) {
-        return myGenotype.getMajorAllele(site);
+        return myGenotype.majorAllele(site);
     }
 
     @Override
     public byte minorAllele(int site) {
-        return myGenotype.getMinorAllele(site);
+        return myGenotype.minorAllele(site);
     }
 
     @Override
@@ -887,7 +887,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public int heterozygousCountForTaxon(int taxon) {
-        return myGenotype.getHeterozygousCountForTaxon(taxon);
+        return myGenotype.heterozygousCountForTaxon(taxon);
     }
 
     @Override
@@ -965,17 +965,17 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public String majorAlleleAsString(int site) {
-        return myGenotype.getMajorAlleleAsString(site);
+        return myGenotype.majorAlleleAsString(site);
     }
 
     @Override
     public String minorAlleleAsString(int site) {
-        return myGenotype.getMinorAlleleAsString(site);
+        return myGenotype.minorAlleleAsString(site);
     }
 
     @Override
     public byte[] minorAlleles(int site) {
-        return myGenotype.getMinorAlleles(site);
+        return myGenotype.minorAlleles(site);
     }
 
     @Override
@@ -990,7 +990,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public String diploidAsString(int site, byte value) {
-        return myGenotype.getDiploidAsString(site, value);
+        return myGenotype.diploidAsString(site, value);
     }
 
     @Override
@@ -1000,7 +1000,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public Object[][] majorMinorCounts() {
-        return myGenotype.getMajorMinorCounts();
+        return myGenotype.majorMinorCounts();
     }
 
     @Override
@@ -1013,7 +1013,7 @@ public class FilterAlignment implements Alignment {
 
         switch (scopeType) {
             case Frequency:
-                result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
+                result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.majorAlleleForAllSites(), myGenotype.minorAlleleForAllSites());
                 break;
             case Reference:
                 result = DynamicBitStorage.getInstance(myGenotype, scopeType, referenceGenotypeForAllSites());
