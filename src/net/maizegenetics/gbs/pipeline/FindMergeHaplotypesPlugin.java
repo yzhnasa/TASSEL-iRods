@@ -122,7 +122,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
 
         propMissing=new double[inAlign.numberOfTaxa()];
         int startBlock=0;
-        int endBlock=inAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
+        int endBlock=inAlign.allelePresenceForAllSites(0, 0).getNumWords();
         TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(inAlign, startBlock, endBlock, minSites, maxHetFreq);
         System.out.printf("Block %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
         System.out.printf("Current Site %d Current block %d EndBlock: %d %n",startSite, startBlock, endBlock);
@@ -174,8 +174,8 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         int sites=64*(endBlock-startBlock+1);
         TreeMap<Integer,Integer> presentRanking=new TreeMap<Integer,Integer>(Collections.reverseOrder());
         for (int i = 0; i < inAlign.numberOfTaxa(); i++) {
-            long[] mj=inAlign.getAllelePresenceForSitesBlock(i, 0, startBlock, endBlock);
-            long[] mn=inAlign.getAllelePresenceForSitesBlock(i, 1, startBlock, endBlock);
+            long[] mj=inAlign.allelePresenceForSitesBlock(i, 0, startBlock, endBlock);
+            long[] mn=inAlign.allelePresenceForSitesBlock(i, 1, startBlock, endBlock);
             int totalSitesNotMissing = 0;
             int hetCnt=0;
             for (int j = 0; j < mj.length; j++) {
@@ -345,7 +345,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             long bestCnt=0;
             int bestAddTaxa=-1;
             for (int t = 0; t < a.numberOfTaxa(); t++) {
-                BitSet testMj=new OpenBitSet(a.getAllelePresenceForAllSites(t, alleleNumber));
+                BitSet testMj=new OpenBitSet(a.allelePresenceForAllSites(t, alleleNumber));
                 testMj.union(curMj);
                 long cnt=testMj.cardinality();
                 if(cnt>bestCnt) {
@@ -354,7 +354,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 }
             }
             if(maxMjCnt==bestCnt) continue;
-            curMj.union(a.getAllelePresenceForAllSites(bestAddTaxa, alleleNumber));
+            curMj.union(a.allelePresenceForAllSites(bestAddTaxa, alleleNumber));
             maxMjCnt=curMj.cardinality();
             maxTaxa.add(bestAddTaxa);
             System.out.printf("Allele:%d Taxa: %s %d %n",alleleNumber,a.taxaName(bestAddTaxa),maxMjCnt);

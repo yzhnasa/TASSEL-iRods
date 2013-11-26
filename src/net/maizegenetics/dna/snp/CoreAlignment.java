@@ -80,33 +80,33 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
+    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber) {
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllSites(taxon, alleleNumber);
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
+    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber) {
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
-    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
     }
 
     @Override
     public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
     }
 
     @Override
     public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
     }
 
     @Override
     public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
+        return getBitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -466,8 +466,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SORT_TYPE scope, int site, int alleleNumber) {
-        return getBitStorage(scope).getAllelePresenceForAllTaxa(site, alleleNumber);
+    public BitSet allelePresenceForAllTaxaBySortType(ALLELE_SORT_TYPE type, int site, int alleleNumber) {
+        return getBitStorage(type).allelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override

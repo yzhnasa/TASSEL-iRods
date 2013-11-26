@@ -255,8 +255,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             ImputedTaxon impTaxon=new ImputedTaxon(taxon, unimpAlign.genotypeAllSites(taxon),isOutputProjection);
             int[] unkHets=countUnknownAndHets(impTaxon.getOrigGeno());
             sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d Hets:%d... ", taxon,name,
-                    unimpAlign.getAllelePresenceForAllSites(taxon, 0).cardinality(),
-                    unimpAlign.getAllelePresenceForAllSites(taxon, 1).cardinality(), unkHets[0], unkHets[1]));
+                    unimpAlign.allelePresenceForAllSites(taxon, 0).cardinality(),
+                    unimpAlign.allelePresenceForAllSites(taxon, 1).cardinality(), unkHets[0], unkHets[1]));
             boolean enoughData=(unimpAlign.totalNonMissingForTaxon(taxon)>minSitesPresent);
 //                System.out.println("Too much missing data");
 //                continue;
@@ -264,7 +264,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             int countFullLength=0;
             for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
                 int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].getChromosome(0));
-                int blocks=donorAlign[da].getAllelePresenceForAllSites(0, 0).getNumWords();
+                int blocks=donorAlign[da].allelePresenceForAllSites(0, 0).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
                         donorAlign[da].numberOfSites(),conflictMasks[da][0],conflictMasks[da][1]); 
                 int[] donorIndices;
@@ -474,8 +474,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int unimpAlignStartBlock=donorOffset/64;
         int shift=(donorOffset-(unimpAlignStartBlock*64));
         int unimpAlignEndBlock=unimpAlignStartBlock+((donorLength+shift-1)/64);
-        OpenBitSet mjUnImp=new OpenBitSet(unimpAlign.getAllelePresenceForSitesBlock(bt, 0, unimpAlignStartBlock, unimpAlignEndBlock+1));
-        OpenBitSet mnUnImp=new OpenBitSet(unimpAlign.getAllelePresenceForSitesBlock(bt, 1, unimpAlignStartBlock, unimpAlignEndBlock+1));
+        OpenBitSet mjUnImp=new OpenBitSet(unimpAlign.allelePresenceForSitesBlock(bt, 0, unimpAlignStartBlock, unimpAlignEndBlock+1));
+        OpenBitSet mnUnImp=new OpenBitSet(unimpAlign.allelePresenceForSitesBlock(bt, 1, unimpAlignStartBlock, unimpAlignEndBlock+1));
         OpenBitSet mjTbs=new OpenBitSet(donorLength);
         OpenBitSet mnTbs=new OpenBitSet(donorLength);
         for (int i = 0; i < donorLength; i++) {
@@ -665,8 +665,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         long[] iMj=modBitsOfTarget[0].getBits();
         long[] iMn=modBitsOfTarget[1].getBits();
         for (int donor1 = 0; donor1 < impT.allDist.length; donor1++) {
-            long[] jMj=donorAlign.getAllelePresenceForAllSites(donor1, 0).getBits();
-            long[] jMn=donorAlign.getAllelePresenceForAllSites(donor1, 1).getBits();
+            long[] jMj=donorAlign.allelePresenceForAllSites(donor1, 0).getBits();
+            long[] jMn=donorAlign.allelePresenceForAllSites(donor1, 1).getBits();
             for (int i = 0; i <blocks; i++) {
                 long same = (iMj[i] & jMj[i]) | (iMn[i] & jMn[i]);
                 long diff = (iMj[i] & jMn[i]) | (iMn[i] & jMj[i]);
@@ -797,12 +797,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         double inc=1e-9;
         double[] donorDist;
         for (int d1: donor1Indices) {
-            long[] mj1=donorAlign.getAllelePresenceForSitesBlock(d1, 0, startBlock, endBlock+1);
-            long[] mn1=donorAlign.getAllelePresenceForSitesBlock(d1, 1, startBlock, endBlock+1);
+            long[] mj1=donorAlign.allelePresenceForSitesBlock(d1, 0, startBlock, endBlock+1);
+            long[] mn1=donorAlign.allelePresenceForSitesBlock(d1, 1, startBlock, endBlock+1);
             for (int d2 : donor2Indices) {
                 if((!viterbiSearch)&&(d1==d2)) continue;
-                long[] mj2=donorAlign.getAllelePresenceForSitesBlock(d2, 0, startBlock, endBlock+1);
-                long[] mn2=donorAlign.getAllelePresenceForSitesBlock(d2, 1, startBlock, endBlock+1);
+                long[] mj2=donorAlign.allelePresenceForSitesBlock(d2, 0, startBlock, endBlock+1);
+                long[] mn2=donorAlign.allelePresenceForSitesBlock(d2, 1, startBlock, endBlock+1);
                 if(viterbiSearch) {
                     donorDist=IBSDistanceMatrix.computeHetBitDistances(mj1, mn1, mj2, mn2, minTestSites);
                     if((d1!=d2)&&(donorDist[0]<this.maximumInbredError)) continue;

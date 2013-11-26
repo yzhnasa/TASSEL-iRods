@@ -204,14 +204,14 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			int end = Math.min(nsites - 1, s + windowSizeForR2);
 			double sum = 0;
 			double count = 0;
-            BitSet sMj = align.getAllelePresenceForAllTaxa(s, 0);
-            BitSet sMn = align.getAllelePresenceForAllTaxa(s, 1);
+            BitSet sMj = align.allelePresenceForAllTaxa(s, 0);
+            BitSet sMn = align.allelePresenceForAllTaxa(s, 1);
 
 			for (int i = start; i <= end; i++) {
 				if (i != s) {
 					int[][] contig = new int[2][2];
-		            BitSet iMj = align.getAllelePresenceForAllTaxa(i, 0);
-		            BitSet iMn = align.getAllelePresenceForAllTaxa(i, 1);
+		            BitSet iMj = align.allelePresenceForAllTaxa(i, 0);
+		            BitSet iMn = align.allelePresenceForAllTaxa(i, 1);
 		            contig[0][0] = (int) OpenBitSet.intersectionCount(sMj, iMj);
 		            contig[1][0] = (int) OpenBitSet.intersectionCount(sMn, iMj);
 		            contig[0][1] = (int) OpenBitSet.intersectionCount(sMj, iMn);
@@ -326,8 +326,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		double[] proportionMinor = new double[ntaxa];
 //		double nmono = lowmaf.cardinality();
 		for (int t = 0; t < ntaxa; t++) {
-			BitSet major = align.getAllelePresenceForAllSites(t, 0);
-			BitSet minor = align.getAllelePresenceForAllSites(t, 1);
+			BitSet major = align.allelePresenceForAllSites(t, 0);
+			BitSet minor = align.allelePresenceForAllSites(t, 1);
 			long minorCount = OpenBitSet.intersectionCount(lowmaf, minor);
 			 
 			OpenBitSet notMissing = new OpenBitSet(major.getBits(), major.getNumWords());

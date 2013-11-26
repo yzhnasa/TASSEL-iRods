@@ -110,7 +110,7 @@ public class DynamicBitStorage implements BitStorage {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
+    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber) {
         try {
             return bitCache.get(getKey(SB.TAXA, myPreferredScope, taxon))[alleleNumber];
         } catch (ExecutionException e) {
@@ -120,7 +120,7 @@ public class DynamicBitStorage implements BitStorage {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
+    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber) {
         try {
             return bitCache.get(getKey(SB.SITE, myPreferredScope, site))[alleleNumber];
         } catch (ExecutionException e) {
@@ -130,8 +130,8 @@ public class DynamicBitStorage implements BitStorage {
     }
 
     @Override
-    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        BitSet result = getAllelePresenceForAllSites(taxon, alleleNumber);
+    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+        BitSet result = allelePresenceForAllSites(taxon, alleleNumber);
         if (result == null) {
             return new long[0];
         }
@@ -139,17 +139,17 @@ public class DynamicBitStorage implements BitStorage {
     }
 
     @Override
-    public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
-    public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
-    public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

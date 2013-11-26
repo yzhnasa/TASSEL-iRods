@@ -59,10 +59,10 @@ public class ExportUtils {
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
 
-            int numSBitWords = a.getAllelePresenceForAllTaxa(0, 0).getNumWords();
+            int numSBitWords = a.allelePresenceForAllTaxa(0, 0).getNumWords();
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SBIT_WORDS, numSBitWords);
 
-            int numTBitWords = a.getAllelePresenceForAllSites(0, 0).getNumWords();
+            int numTBitWords = a.allelePresenceForAllSites(0, 0).getNumWords();
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TBIT_WORDS, numTBitWords);
 
             String[][] aEncodings = a.alleleDefinitions();
@@ -123,7 +123,7 @@ public class ExportUtils {
                 h5w.createLongMatrix(currentSBitPath, numSites, numSBitWords, 1, numSBitWords);
                 long[][] lgarray = new long[numSites][numSBitWords];
                 for (int i = 0; i < numSites; i++) {
-                    lgarray[i] = a.getAllelePresenceForAllTaxa(i, aNum).getBits();
+                    lgarray[i] = a.allelePresenceForAllTaxa(i, aNum).getBits();
                 }
                 h5w.writeLongMatrix(currentSBitPath, lgarray);
 
@@ -131,7 +131,7 @@ public class ExportUtils {
                 h5w.createLongMatrix(currentTBitPath, numTaxa, numTBitWords, 1, numTBitWords);
                 lgarray = new long[numTaxa][numTBitWords];
                 for (int i = 0; i < numTaxa; i++) {
-                    lgarray[i] = a.getAllelePresenceForAllSites(i, aNum).getBits();
+                    lgarray[i] = a.allelePresenceForAllSites(i, aNum).getBits();
                 }
                 h5w.writeLongMatrix(currentTBitPath, lgarray);
 

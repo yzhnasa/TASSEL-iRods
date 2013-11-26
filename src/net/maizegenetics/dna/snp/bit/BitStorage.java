@@ -31,7 +31,7 @@ public interface BitStorage {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber);
+    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
@@ -45,7 +45,7 @@ public interface BitStorage {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber);
+    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at sites
@@ -65,7 +65,7 @@ public interface BitStorage {
      *
      * @return sequence of true/false values.
      */
-    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock);
+    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at each
@@ -80,7 +80,7 @@ public interface BitStorage {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getPhasedAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
@@ -95,7 +95,7 @@ public interface BitStorage {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getPhasedAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at sites
@@ -113,5 +113,5 @@ public interface BitStorage {
      *
      * @return sequence of true/false values.
      */
-    public long[] getPhasedAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock);
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock);
 }

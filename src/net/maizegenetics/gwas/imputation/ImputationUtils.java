@@ -99,19 +99,19 @@ public class ImputationUtils {
 			if (seed2 == -1) {
 				//both parents are not in the data set
 				seed1 = rand.nextInt(ntaxa);
-				loc1 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed1, 0), tb.getAllelePresenceForAllSites(seed1, 1)}, nsnps);
+				loc1 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed1, 0), tb.allelePresenceForAllSites(seed1, 1)}, nsnps);
 				while (seed2 == -1 || seed1 == seed2) {
 					seed2 = rand.nextInt(ntaxa);
 				}
-				loc2 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed2, 0), tb.getAllelePresenceForAllSites(seed2, 1)}, nsnps);
+				loc2 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed2, 0), tb.allelePresenceForAllSites(seed2, 1)}, nsnps);
 			} else {
 				//parent2 is in the data set
-				loc1 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(0, 0), tb.getAllelePresenceForAllSites(0, 1)}, nsnps);
-				loc2 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed2, 0), tb.getAllelePresenceForAllSites(seed2, 1)}, nsnps);
+				loc1 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(0, 0), tb.allelePresenceForAllSites(0, 1)}, nsnps);
+				loc2 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed2, 0), tb.allelePresenceForAllSites(seed2, 1)}, nsnps);
 				seed1 = 0;
 				float prevdist = getManhattanDistance(loc2, loc1, nsnps);
 				for (int t = 1; t < ntaxa; t++) {
-					float[] tloc = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(t, 0), tb.getAllelePresenceForAllSites(t, 1)}, nsnps);
+					float[] tloc = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(t, 0), tb.allelePresenceForAllSites(t, 1)}, nsnps);
 					float dist = getManhattanDistance(loc2, tloc, nsnps);
 					if (dist > prevdist) {
 						prevdist = dist;
@@ -122,12 +122,12 @@ public class ImputationUtils {
 			}
 		} else if (seed2 == -1) {
 			//parent1 is in the data set
-			loc1 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed1, 0), tb.getAllelePresenceForAllSites(seed1, 1)}, nsnps);
-			loc2 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(0, 0), tb.getAllelePresenceForAllSites(0, 1)}, nsnps);
+			loc1 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed1, 0), tb.allelePresenceForAllSites(seed1, 1)}, nsnps);
+			loc2 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(0, 0), tb.allelePresenceForAllSites(0, 1)}, nsnps);
 			seed2 = 0;
 			float prevdist = getManhattanDistance(loc1, loc2, nsnps);
 			for (int t = 1; t < ntaxa; t++) {
-				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(t, 0), tb.getAllelePresenceForAllSites(t, 1)}, nsnps);
+				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(t, 0), tb.allelePresenceForAllSites(t, 1)}, nsnps);
 				float dist = getManhattanDistance(loc1, tloc, nsnps);
 				if (dist > prevdist) {
 					prevdist = dist;
@@ -137,8 +137,8 @@ public class ImputationUtils {
 			}
 		} else {
 			//both parents are in the data set
-			loc1 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed1, 0), tb.getAllelePresenceForAllSites(seed1, 1)}, nsnps);
-			loc2 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed2, 0), tb.getAllelePresenceForAllSites(seed2, 1)}, nsnps);
+			loc1 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed1, 0), tb.allelePresenceForAllSites(seed1, 1)}, nsnps);
+			loc2 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed2, 0), tb.allelePresenceForAllSites(seed2, 1)}, nsnps);
 		}
 		
 		int[] size1 = new int[nsnps];
@@ -155,7 +155,7 @@ public class ImputationUtils {
 		//do initial cluster assignment
 		for (int t = 0; t < ntaxa; t++) {
 			if (t != seed1 && t != seed2) {
-				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(t, 0), tb.getAllelePresenceForAllSites(t, 1)}, nsnps);
+				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(t, 0), tb.allelePresenceForAllSites(t, 1)}, nsnps);
 				float dist1 = getManhattanDistance(loc1, tloc, nsnps);
 				float dist2 = getManhattanDistance(loc2, tloc, nsnps);
 				if (dist1 <= dist2) {
@@ -172,7 +172,7 @@ public class ImputationUtils {
 		for (int iter = 0; iter < maxiter; iter++) {
 			boolean noChanges = true;
 			for (int t = 0; t < ntaxa; t++) {
-				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(t, 0), tb.getAllelePresenceForAllSites(t, 1)}, nsnps);
+				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(t, 0), tb.allelePresenceForAllSites(t, 1)}, nsnps);
 				float dist1 = getManhattanDistance(loc1, tloc, nsnps);
 				float dist2 = getManhattanDistance(loc2, tloc, nsnps);
 				if (dist1 <= dist2 && isInCluster1[t] == false) {
@@ -247,7 +247,7 @@ public class ImputationUtils {
 		
 		//myAlignment.optimizeForTaxa(null);
 		for (int t = 0; t < ntaxa; t++) {
-			taxaLocs[t] = snpsAsFloatVector(new BitSet[]{myAlignment.getAllelePresenceForAllSites(t, 0), myAlignment.getAllelePresenceForAllSites(t, 1)}, nsnps);
+			taxaLocs[t] = snpsAsFloatVector(new BitSet[]{myAlignment.allelePresenceForAllSites(t, 0), myAlignment.allelePresenceForAllSites(t, 1)}, nsnps);
 		}
 		
 		for (int trial = 0; trial < ntrials; trial++) {
@@ -309,7 +309,7 @@ public class ImputationUtils {
 				meanLocs[0] = getMeanLocation(cluster1Locs);
 				meanLocs[1] = getMeanLocation(cluster2Locs);
 				for (int t = 0; t < ntaxa; t++) {
-					float[] tloc = snpsAsFloatVector(new BitSet[]{myAlignment.getAllelePresenceForAllSites(t, 0), myAlignment.getAllelePresenceForAllSites(t, 1)}, nsnps);
+					float[] tloc = snpsAsFloatVector(new BitSet[]{myAlignment.allelePresenceForAllSites(t, 0), myAlignment.allelePresenceForAllSites(t, 1)}, nsnps);
 					float dist1 = getManhattanDistance(meanLocs[0], tloc, nsnps);
 					float dist2 = getManhattanDistance(meanLocs[1], tloc, nsnps);
 					if (dist1 < dist2 && isInCluster1[trial][t] == false) {

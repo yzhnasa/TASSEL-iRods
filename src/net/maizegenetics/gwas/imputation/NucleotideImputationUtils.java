@@ -1494,10 +1494,10 @@ public class NucleotideImputationUtils {
 		int prodCount = 0;
 		int totalCount = 0;
 		
-		long[] m11 = a.getAllelePresenceForAllTaxa(site1, 0).getBits();
-		long[] m12 = a.getAllelePresenceForAllTaxa(site1, 1).getBits();
-		long[] m21 = a.getAllelePresenceForAllTaxa(site2, 0).getBits();
-		long[] m22 = a.getAllelePresenceForAllTaxa(site2, 1).getBits();
+		long[] m11 = a.allelePresenceForAllTaxa(site1, 0).getBits();
+		long[] m12 = a.allelePresenceForAllTaxa(site1, 1).getBits();
+		long[] m21 = a.allelePresenceForAllTaxa(site2, 0).getBits();
+		long[] m22 = a.allelePresenceForAllTaxa(site2, 1).getBits();
 		int n = m11.length;
 		for (int i = 0; i < n; i++) {
 
@@ -1531,10 +1531,10 @@ public class NucleotideImputationUtils {
 //		int prodCount = 0;
 		int totalCount = a.numberOfTaxa();
 				
-		BitSet m11 = a.getAllelePresenceForAllTaxa(site1, 0);
-		BitSet m12 = a.getAllelePresenceForAllTaxa(site1, 1);
-		BitSet m21 = a.getAllelePresenceForAllTaxa(site2, 0);
-		BitSet m22 = a.getAllelePresenceForAllTaxa(site2, 1);
+		BitSet m11 = a.allelePresenceForAllTaxa(site1, 0);
+		BitSet m12 = a.allelePresenceForAllTaxa(site1, 1);
+		BitSet m21 = a.allelePresenceForAllTaxa(site2, 0);
+		BitSet m22 = a.allelePresenceForAllTaxa(site2, 1);
 		OpenBitSet s1present = new OpenBitSet(m11.getBits(), m11.getNumWords());
 		s1present.union(m12);
 		OpenBitSet s2present = new OpenBitSet(m21.getBits(), m21.getNumWords());
@@ -1556,10 +1556,10 @@ public class NucleotideImputationUtils {
 	}
 
 	public static double computeGenotypeR(int site1, int site2, Alignment a) throws IllegalStateException {
-		BitSet s1mj = a.getAllelePresenceForAllTaxa(site1, 0);
-		BitSet s1mn = a.getAllelePresenceForAllTaxa(site1, 1);
-		BitSet s2mj = a.getAllelePresenceForAllTaxa(site2, 0);
-		BitSet s2mn = a.getAllelePresenceForAllTaxa(site2, 1);
+		BitSet s1mj = a.allelePresenceForAllTaxa(site1, 0);
+		BitSet s1mn = a.allelePresenceForAllTaxa(site1, 1);
+		BitSet s2mj = a.allelePresenceForAllTaxa(site2, 0);
+		BitSet s2mn = a.allelePresenceForAllTaxa(site2, 1);
 		OpenBitSet bothpresent = new OpenBitSet(s1mj.getBits(), s1mj.getNumWords());
 		bothpresent.union(s1mn);
 		OpenBitSet s2present = new OpenBitSet(s2mj.getBits(), s2mj.getNumWords());
@@ -1670,9 +1670,9 @@ public class NucleotideImputationUtils {
 		ArrayList<int[]> snpPositions = new ArrayList<int[]>();
 		
 		for (int t = 0; t < ntaxa; t++) {
-			long[] bits = a.getAllelePresenceForAllSites(t, 0).getBits();
+			long[] bits = a.allelePresenceForAllSites(t, 0).getBits();
 			BitSet notMiss = new OpenBitSet(bits, bits.length);
-			notMiss.or(a.getAllelePresenceForAllSites(t, 1));
+			notMiss.or(a.allelePresenceForAllSites(t, 1));
 			notMissingIndex.add(notMiss);
 			notMissingCount[t] = (int) notMiss.cardinality();
 		}
@@ -2073,10 +2073,10 @@ public class NucleotideImputationUtils {
 			String nextSnpLocus = sba.getLocus(nextSite).getName();
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
-	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
-	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
-	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
-	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
+	            BitSet rMj = sba.allelePresenceForAllTaxa(firstSite, 0);
+	            BitSet rMn = sba.allelePresenceForAllTaxa(firstSite, 1);
+	            BitSet cMj = sba.allelePresenceForAllTaxa(nextSite, 0);
+	            BitSet cMn = sba.allelePresenceForAllTaxa(nextSite, 1);
 	            int n = 0;
 	            int[][] contig = new int[2][2];
 	            n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
@@ -2116,10 +2116,10 @@ public class NucleotideImputationUtils {
 			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
-	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
-	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
-	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
-	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
+	            BitSet rMj = sba.allelePresenceForAllTaxa(firstSite, 0);
+	            BitSet rMn = sba.allelePresenceForAllTaxa(firstSite, 1);
+	            BitSet cMj = sba.allelePresenceForAllTaxa(nextSite, 0);
+	            BitSet cMn = sba.allelePresenceForAllTaxa(nextSite, 1);
 	            int[][] contig = new int[2][2];
 	            contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
 	            contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
@@ -2325,8 +2325,8 @@ public class NucleotideImputationUtils {
     	
     	BitSet[] taxaStates = new BitSet[ntaxa];
     	for (int t = 0; t < ntaxa; t++) {
-    		BitSet major = a.getAllelePresenceForAllSites(t, 0);
-    		BitSet minor = a.getAllelePresenceForAllSites(t, 1);
+    		BitSet major = a.allelePresenceForAllSites(t, 0);
+    		BitSet minor = a.allelePresenceForAllSites(t, 1);
     		OpenBitSet notMissing = new OpenBitSet(major.getBits(), major.getNumWords());
     		notMissing.union(minor);
     		OpenBitSet het = new OpenBitSet(major.getBits(), major.getNumWords());

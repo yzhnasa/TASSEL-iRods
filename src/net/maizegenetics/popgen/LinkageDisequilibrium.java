@@ -192,10 +192,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
     public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, Alignment alignment, int site1, int site2) {
         FisherExact fisherExact = new FisherExact((2 * alignment.numberOfTaxa()) + 10);
-        BitSet rMj = alignment.getAllelePresenceForAllTaxa(site1, 0);
-        BitSet rMn = alignment.getAllelePresenceForAllTaxa(site1, 1);
-        BitSet cMj = alignment.getAllelePresenceForAllTaxa(site2, 0);
-        BitSet cMn = alignment.getAllelePresenceForAllTaxa(site2, 1);
+        BitSet rMj = alignment.allelePresenceForAllTaxa(site1, 0);
+        BitSet rMn = alignment.allelePresenceForAllTaxa(site1, 1);
+        BitSet cMj = alignment.allelePresenceForAllTaxa(site2, 0);
+        BitSet cMn = alignment.allelePresenceForAllTaxa(site2, 1);
         return getLDForSitePair(rMj, rMn, cMj, cMn, 2, minTaxaForEstimate, -1.0f, fisherExact);
     }
 
@@ -212,10 +212,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             int c = getColFromIndex(currTest);
             int currentProgress = (int) ((double) 100.0 * ((double) currTest / (double) myTotalTests));
             fireProgress(currentProgress);
-            BitSet rMj = workingAlignment.getAllelePresenceForAllTaxa(r, 0);
-            BitSet rMn = workingAlignment.getAllelePresenceForAllTaxa(r, 1);
-            BitSet cMj = workingAlignment.getAllelePresenceForAllTaxa(c, 0);
-            BitSet cMn = workingAlignment.getAllelePresenceForAllTaxa(c, 1);
+            BitSet rMj = workingAlignment.allelePresenceForAllTaxa(r, 0);
+            BitSet rMn = workingAlignment.allelePresenceForAllTaxa(r, 1);
+            BitSet cMj = workingAlignment.allelePresenceForAllTaxa(c, 0);
+            BitSet cMn = workingAlignment.allelePresenceForAllTaxa(c, 1);
             LDResult ldr = getLDForSitePair(rMj, rMn, cMj, cMn, 2, myMinTaxaForEstimate, -1.0f, myFisherExact);
             if (myIsAccumulativeReport) {
                 if (ldr.r2 == Float.NaN) {

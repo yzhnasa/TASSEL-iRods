@@ -420,18 +420,18 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
+    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber) {
         throw new UnsupportedOperationException("CombineAlignment: getAllelePresenceForAllSites: This operation isn't possible as it spans multiple AlignmentNews. It needs to be optimized for taxa first.");
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
+    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber) {
         int translate = translateSite(site);
-        return myAlignments[translate].getAllelePresenceForAllTaxa(site - mySiteOffsets[translate], alleleNumber);
+        return myAlignments[translate].allelePresenceForAllTaxa(site - mySiteOffsets[translate], alleleNumber);
     }
 
     @Override
-    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
         throw new UnsupportedOperationException("CombineAlignment: getAllelePresenceForSitesBlock: This operation isn't possible as it spans multiple AlignmentNews. It needs to be optimized for taxa first.");
     }
 
@@ -717,9 +717,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SORT_TYPE scope, int site, int alleleNumber) {
+    public BitSet allelePresenceForAllTaxaBySortType(ALLELE_SORT_TYPE type, int site, int alleleNumber) {
         int translate = translateSite(site);
-        return myAlignments[translate].getAllelePresenceForAllTaxaByScope(scope, site - mySiteOffsets[translate], alleleNumber);
+        return myAlignments[translate].allelePresenceForAllTaxaBySortType(type, site - mySiteOffsets[translate], alleleNumber);
     }
 
     @Override
