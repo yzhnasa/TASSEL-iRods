@@ -103,7 +103,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteName) {
             return myAlignment.siteName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.alleles) {
-            int[][] alleles = myAlignment.getAllelesSortedByFrequency(realColumn);
+            int[][] alleles = myAlignment.allelesSortedByFrequency(realColumn);
             int numAlleles = alleles[0].length;
             double total = 0.0;
 

@@ -185,7 +185,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
+    public int[][] allelesSortedByFrequency(int site) {
         try {
             SiteBlockAttr sa = mySiteAnnoCache.get(getStartSite(site));
             return sa.getAllelesSortedByFrequency(site);

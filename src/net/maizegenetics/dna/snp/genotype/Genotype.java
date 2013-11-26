@@ -297,7 +297,7 @@ public interface Genotype {
      *
      * @return sorted list of alleles and counts
      */
-    public int[][] getAllelesSortedByFrequency(int site);
+    public int[][] allelesSortedByFrequency(int site);
 
     /**
      * Return sorted list of diploid vales from highest frequency to lowest at
@@ -308,7 +308,7 @@ public interface Genotype {
      *
      * @return sorted list of diploids and counts
      */
-    public Object[][] getDiploidsSortedByFrequency(int site);
+    public Object[][] genosSortedByFrequency(int site);
 
     /**
      * Returns all alleles at given site in order of frequency. Gap is included

@@ -355,13 +355,13 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
-        return myGenotype.getAllelesSortedByFrequency(site);
+    public int[][] allelesSortedByFrequency(int site) {
+        return myGenotype.allelesSortedByFrequency(site);
     }
 
     @Override
-    public Object[][] getDiploidsSortedByFrequency(int site) {
-        return myGenotype.getDiploidsSortedByFrequency(site);
+    public Object[][] genosSortedByFrequency(int site) {
+        return myGenotype.genosSortedByFrequency(site);
     }
 
     @Override

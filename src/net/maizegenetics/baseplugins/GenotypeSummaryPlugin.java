@@ -286,7 +286,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             }
             data[i][count++] = numTaxa;
 
-            int[][] alleles = alignment.getAllelesSortedByFrequency(i);
+            int[][] alleles = alignment.allelesSortedByFrequency(i);
             int numAlleles = alleles[0].length;
 
             for (int a = 0; a < numAlleles; a++) {

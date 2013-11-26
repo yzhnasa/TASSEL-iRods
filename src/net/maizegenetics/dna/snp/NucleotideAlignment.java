@@ -40,7 +40,7 @@ public class NucleotideAlignment extends CoreAlignment {
 
     @Override
     public boolean isIndel(int site) {
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
         int numAlleles = Math.min(alleles[0].length, 2);
         for (int i = 0; i < numAlleles; i++) {
             if ((alleles[0][i] == NucleotideAlignmentConstants.INSERT_ALLELE) || (alleles[0][i] == NucleotideAlignmentConstants.GAP_ALLELE)) {

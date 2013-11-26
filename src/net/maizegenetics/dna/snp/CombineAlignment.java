@@ -398,9 +398,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
+    public int[][] allelesSortedByFrequency(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getAllelesSortedByFrequency(site - mySiteOffsets[translate]);
+        return myAlignments[translate].allelesSortedByFrequency(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -705,9 +705,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Object[][] getDiploidsSortedByFrequency(int site) {
+    public Object[][] genosSortedByFrequency(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getDiploidsSortedByFrequency(site - mySiteOffsets[translate]);
+        return myAlignments[translate].genosSortedByFrequency(site - mySiteOffsets[translate]);
     }
 
     @Override

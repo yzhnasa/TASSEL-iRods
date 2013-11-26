@@ -94,7 +94,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
+    public int[][] allelesSortedByFrequency(int site) {
         return myAlleleFreqCache.getAllelesSortedByFrequency(site);
     }
 
@@ -250,7 +250,7 @@ abstract class AbstractGenotype implements Genotype {
     @Override
     public int getMinorAlleleCount(int site) {
 
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
 
         if (alleles[0].length >= 2) {
             return alleles[1][1];
@@ -262,7 +262,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public byte getMinorAllele(int site) {
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
 
         if (alleles[0].length >= 2) {
             return (byte) alleles[0][1];
@@ -278,7 +278,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public byte[] getMinorAlleles(int site) {
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
         int resultSize = alleles[0].length - 1;
         byte[] result = new byte[resultSize];
         for (int i = 0; i < resultSize; i++) {
@@ -290,7 +290,7 @@ abstract class AbstractGenotype implements Genotype {
     @Override
     public int getMajorAlleleCount(int site) {
 
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
 
         if (alleles[0].length >= 1) {
             return alleles[1][0];
@@ -302,7 +302,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public byte getMajorAllele(int site) {
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
 
         if (alleles[0].length >= 1) {
             return (byte) alleles[0][0];
@@ -319,7 +319,7 @@ abstract class AbstractGenotype implements Genotype {
     @Override
     public double getMajorAlleleFrequency(int site) {
 
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
 
         int numAlleles = alleles[0].length;
         if (numAlleles >= 1) {
@@ -337,7 +337,7 @@ abstract class AbstractGenotype implements Genotype {
     @Override
     public double getMinorAlleleFrequency(int site) {
 
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
 
         int numAlleles = alleles[0].length;
         if (numAlleles >= 2) {
@@ -353,7 +353,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public Object[][] getDiploidsSortedByFrequency(int site) {
+    public Object[][] genosSortedByFrequency(int site) {
 
         Integer ONE_INTEGER = 1;
 
@@ -411,7 +411,7 @@ abstract class AbstractGenotype implements Genotype {
 
         Map<String, Long> diploidValueCounts = new HashMap<String, Long>();
         for (int c = 0; c < mySiteCount; c++) {
-            Object[][] diploids = getDiploidsSortedByFrequency(c);
+            Object[][] diploids = genosSortedByFrequency(c);
             for (int i = 0; i < diploids[0].length; i++) {
                 String current = (String) diploids[0][i];
                 Long count = (long) ((Integer) diploids[1][i]).intValue();
@@ -574,7 +574,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public byte[] getAlleles(int site) {
-        int[][] alleles = getAllelesSortedByFrequency(site);
+        int[][] alleles = allelesSortedByFrequency(site);
         int resultSize = alleles[0].length;
         byte[] result = new byte[resultSize];
         for (int i = 0; i < resultSize; i++) {

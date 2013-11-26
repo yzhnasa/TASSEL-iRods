@@ -390,7 +390,7 @@ public class ExportUtils {
                 bw.write(delimChar);
 //                byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
 //                int numAlleles = alleles.length;
-                int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
+                int[][] sortedAlleles = alignment.allelesSortedByFrequency(site); // which alleles are actually present among the genotypes
                 int numAlleles = sortedAlleles[0].length;
                 if (numAlleles == 0) {
                     bw.write("NA"); //if data does not exist
@@ -525,7 +525,7 @@ public class ExportUtils {
             bw.newLine();
 
             for (int site = 0; site < alignment.numberOfSites(); site++) {
-                int[][] sortedAlleles = alignment.getAllelesSortedByFrequency(site); // which alleles are actually present among the genotypes
+                int[][] sortedAlleles = alignment.allelesSortedByFrequency(site); // which alleles are actually present among the genotypes
 
 
                 int nAlleles = sortedAlleles[0].length;

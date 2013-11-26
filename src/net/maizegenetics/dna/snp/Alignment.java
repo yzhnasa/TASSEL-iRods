@@ -671,7 +671,7 @@ public interface Alignment {
      *
      * @return sorted list of alleles and counts
      */
-    public int[][] getAllelesSortedByFrequency(int site);
+    public int[][] allelesSortedByFrequency(int site);
 
     /**
      * Return sorted list of diploid vales from highest frequency to lowest at
@@ -682,7 +682,7 @@ public interface Alignment {
      *
      * @return sorted list of diploids and counts
      */
-    public Object[][] getDiploidsSortedByFrequency(int site);
+    public Object[][] genosSortedByFrequency(int site);
 
     /**
      * Returns whether this alignment is phased.

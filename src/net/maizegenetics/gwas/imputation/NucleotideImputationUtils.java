@@ -115,8 +115,8 @@ public class NucleotideImputationUtils {
 		for (int i = 0; i < coreSnps.length; i++) {
 			int snp = coreSnps[i];
 			//debug
-			int[][] acounts = aAlignment.getAllelesSortedByFrequency(snp);
-			int[][] ccounts = cAlignment.getAllelesSortedByFrequency(snp);
+			int[][] acounts = aAlignment.allelesSortedByFrequency(snp);
+			int[][] ccounts = cAlignment.allelesSortedByFrequency(snp);
 
 			byte alleleA = aAlignment.getMajorAllele(snp);
 			byte alleleC = cAlignment.getMajorAllele(snp);
@@ -1109,7 +1109,7 @@ public class NucleotideImputationUtils {
 		int nsites = a.numberOfSites();
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			int[][] freq = a.getAllelesSortedByFrequency(s);
+			int[][] freq = a.allelesSortedByFrequency(s);
 			if (freq[1].length > 1 && freq[1][1] > 2) {
 				int alleleCount = freq[1][0] + freq[1][1];
 				if (alleleCount >= minAlleleCount) polybits.fastSet(s);
@@ -1139,7 +1139,7 @@ public class NucleotideImputationUtils {
 		double totalgametes = 2 * ntaxa;
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			int[][] freq = a.getAllelesSortedByFrequency(s);
+			int[][] freq = a.allelesSortedByFrequency(s);
 			int ngametes = a.getTotalGametesNotMissing(s);
 			double pMissing = (totalgametes - ngametes) / totalgametes;
 			if (freq[1].length > 1 && freq[1][1] > 2 && pMissing <= maxMissing && a.getMinorAlleleFrequency(s) > minMaf) {
@@ -1155,7 +1155,7 @@ public class NucleotideImputationUtils {
 		double totalgametes = 2 * ntaxa;
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			int[][] freq = a.getAllelesSortedByFrequency(s);
+			int[][] freq = a.allelesSortedByFrequency(s);
 			int ngametes = a.getTotalGametesNotMissing(s);
 			double pMissing = (totalgametes - ngametes) / totalgametes;
 			if (freq[1].length > 1 && pMissing <= maxMissing) {
