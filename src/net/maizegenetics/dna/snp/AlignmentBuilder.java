@@ -186,7 +186,7 @@ public class AlignmentBuilder {
      * @return alignment backed by new HDF5 file
      */
     public static Alignment getInstance(Alignment a, String hdf5File) {
-        return getInstance(a.getGenotypeMatrix(),a.positionList(),a.taxa(),hdf5File);
+        return getInstance(a.genotypeMatrix(),a.positionList(),a.taxa(),hdf5File);
     }
 
     public static Alignment getInstance(String hdf5File) {
@@ -207,8 +207,8 @@ public class AlignmentBuilder {
             int blockSize = Math.min(64, numSites - bigS);
 
             for (int s = 0; s < blockSize; s++) {
-                majorAllele[s] = alignment.getMajorAllele(s + bigS);
-                minorAllele[s] = alignment.getMinorAllele(s + bigS);
+                majorAllele[s] = alignment.majorAllele(s + bigS);
+                minorAllele[s] = alignment.minorAllele(s + bigS);
             }
 
             for (int t = 0; t < numTaxa; t++) {

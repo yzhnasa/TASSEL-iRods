@@ -139,7 +139,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
                 int totalGametesNotMissing = alignment.totalGametesNonMissingForSite(i);
                 int totalGametesMissing = totalGametes - totalGametesNotMissing;
                 myNumGametesMissing = myNumGametesMissing + (long) totalGametesMissing;
-                int numHeterozygous = alignment.getHeterozygousCount(i);
+                int numHeterozygous = alignment.heterozygousCount(i);
                 myNumHeterozygous = myNumHeterozygous + (long) numHeterozygous;
             }
         }
@@ -204,7 +204,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         data[count++][1] = (double) myNumHeterozygous / (double) totalDiploids;
 
 
-        Object[][] majorMinorDiploidValueCounts = alignment.getMajorMinorCounts();
+        Object[][] majorMinorDiploidValueCounts = alignment.majorMinorCounts();
         int numMajorMinorAlleles = majorMinorDiploidValueCounts[0].length;
 
         Object[] alleleColumnNames = new String[]{"Alleles", "Number", "Proportion", "Frequency"};
@@ -308,7 +308,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;
 
-            int numHeterozygous = alignment.getHeterozygousCount(i);
+            int numHeterozygous = alignment.heterozygousCount(i);
             myNumHeterozygous = myNumHeterozygous + (long) numHeterozygous;
             data[i][count++] = numHeterozygous;
             data[i][count++] = (double) numHeterozygous / (double) totalNotMissing;
@@ -338,7 +338,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
             int totalGametesNotMissing = alignment.totalGametesNonMissingForTaxon(i);
             int totalGametesMissing = totalGametes - totalGametesNotMissing;
-            int numHeterozygous = alignment.getHeterozygousCountForTaxon(i);
+            int numHeterozygous = alignment.heterozygousCountForTaxon(i);
             int totalSitesNotMissing = alignment.totalNonMissingForTaxon(i);
 
             int count = 0;

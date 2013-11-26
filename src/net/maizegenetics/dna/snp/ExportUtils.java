@@ -89,7 +89,7 @@ public class ExportUtils {
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
 
             String[] lociNames = new String[a.numChromosomes()];
-            Chromosome[] loci = a.getChromosomes();
+            Chromosome[] loci = a.chromosomes();
             for (int i = 0; i < a.numChromosomes(); i++) {
                 lociNames[i] = loci[i].getName();
             }
@@ -97,7 +97,7 @@ public class ExportUtils {
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
 
             h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.numChromosomes());
-            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getChromosomesOffsets());
+            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.chromosomesOffsets());
 
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.physicalPositions());
@@ -105,7 +105,7 @@ public class ExportUtils {
             //h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.numberOfSites(), a.maxNumAlleles());
             //byte[][] alleles = new byte[numSites][a.maxNumAlleles()];
             //for (int i = 0; i < numSites; i++) {
-            //    alleles[i] = a.getAlleles(i);
+            //    alleles[i] = a.alleles(i);
             //}
             //h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
 
@@ -169,7 +169,7 @@ public class ExportUtils {
               else {
                   //todo restore depth save
 //                  MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
-//                  addA.addTaxon(new Taxon(a.taxaName(t)), bases, m.getDepthForAlleles(t));
+//                  addA.addTaxon(new Taxon(a.taxaName(t)), bases, m.depthForAlleles(t));
               }
         }
         aB.build();
@@ -227,7 +227,7 @@ public class ExportUtils {
 //
 //            TreeSet<Chromosome> lset = new TreeSet();
 //            for (int i = 0; i < numSites; i++) {
-//                lset.add(a.getChromosome(snpIndex[i]));
+//                lset.add(a.chromosome(snpIndex[i]));
 //            }
 //            Chromosome[] outLoci = lset.toArray(new Chromosome[lset.size()]);
 //            String[] lociNames = new String[outLoci.length];
@@ -245,7 +245,7 @@ public class ExportUtils {
 //
 //            int[] locusIndicesArray = new int[snpIndex.length];
 //            for (int i = 0; i < locusIndicesArray.length; i++) {
-//                locusIndicesArray[i] = locusToIndex.get(a.getChromosome(snpIndex[i]));
+//                locusIndicesArray[i] = locusToIndex.get(a.chromosome(snpIndex[i]));
 //            }
 //
 //            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.numberOfSites(),features);
@@ -278,7 +278,7 @@ public class ExportUtils {
 //                  if (keepDepth==false) addA.addTaxon(new Taxon(a.taxaName(t)), bases, null);
 //                  else {
 //                      MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
-//                      byte[][] originalDepth = m.getDepthForAlleles(t);
+//                      byte[][] originalDepth = m.depthForAlleles(t);
 //                      byte[][] depth = new byte[originalDepth.length][snpIndex.length];
 //                      for (int i = 0; i < depth.length; i++) {
 //                          for (int j = 0; j < snpIndex.length; j++) {
@@ -322,7 +322,7 @@ public class ExportUtils {
 //            }
 //            System.out.println("Copying first taxon:"+srcA.taxaName(0));
 //            for (int i = 0; i < srcA.numberOfTaxa(); i++) {
-//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), srcA.getDepthForAlleles(i));
+//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), srcA.depthForAlleles(i));
 //                else trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), null);
 //            }
 //        }
@@ -388,7 +388,7 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 bw.write(alignment.siteName(site));
                 bw.write(delimChar);
-//                byte[] alleles = alignment.getAlleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
+//                byte[] alleles = alignment.alleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
 //                int numAlleles = alleles.length;
                 int[][] sortedAlleles = alignment.allelesSortedByFrequency(site); // which alleles are actually present among the genotypes
                 int numAlleles = sortedAlleles[0].length;
@@ -406,7 +406,7 @@ public class ExportUtils {
                     }
                 }
                 bw.write(delimChar);
-                bw.write(alignment.getChromosomeName(site));
+                bw.write(alignment.chromosomeName(site));
                 bw.write(delimChar);
                 bw.write(String.valueOf(alignment.chromosomalPosition(site)));
                 bw.write(delimChar);
@@ -546,9 +546,9 @@ public class ExportUtils {
                 //System.out.println(alignment.chromosomalPosition(site) + " " + refAllele);
                 byte[] alleleValues = null;
                 if (hasDepth) {
-                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
+                    alleleValues = alignment.allelesBySortType(Alignment.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 } else {
-                    alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Frequency, site);
+                    alleleValues = alignment.allelesBySortType(Alignment.ALLELE_SORT_TYPE.Frequency, site);
                     //if (nAlleles > alignment.maxNumAlleles()) {
                     //    nAlleles = alignment.maxNumAlleles();
                     //}
@@ -622,7 +622,7 @@ public class ExportUtils {
                         }
                     }
                 }
-                bw.write(alignment.getChromosomeName(site)); // chromosome
+                bw.write(alignment.chromosomeName(site)); // chromosome
                 bw.write(delimChar);
                 bw.write(alignment.chromosomalPosition(site) + ""); // position
                 bw.write(delimChar);
@@ -659,7 +659,7 @@ public class ExportUtils {
                 if (hasDepth) {
                     int totalDepth = 0;
                     for (int i = 0; i < alignment.numberOfTaxa(); i++) {
-                        byte[] depth = alignment.getDepthForAlleles(i, site);
+                        byte[] depth = alignment.depthForAlleles(i, site);
                         for (int k = 0; k < depth.length; k++) {
                             if (depth[k] != -1) {
                                 totalDepth += depth[k];
@@ -771,7 +771,7 @@ public class ExportUtils {
                     bw.write(":");
 
                     // AD
-                    byte[] siteAlleleDepths = alignment.getDepthForAlleles(taxa, site);
+                    byte[] siteAlleleDepths = alignment.depthForAlleles(taxa, site);
 
                     int siteTotalDepth = 0;
                     if (siteAlleleDepths.length != 0) {
@@ -866,7 +866,7 @@ public class ExportUtils {
             MAPbw = new BufferedWriter(new FileWriter(mapFileName), 1000000);
             int numSites = alignment.numberOfSites();
             for (int site = 0; site < numSites; site++) {
-                MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
+                MAPbw.write(alignment.chromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
                 MAPbw.write(alignment.siteName(site)); // rs#
                 MAPbw.write(delimChar);
@@ -962,7 +962,7 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 MAPbw.write(alignment.siteName(site)); // rs#
                 MAPbw.write(delimChar);
-                MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
+                MAPbw.write(alignment.chromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
                 MAPbw.write(Integer.toString(alignment.chromosomalPosition(site))); // position
                 MAPbw.write("\n");

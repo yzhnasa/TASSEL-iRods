@@ -521,7 +521,7 @@ public class TagAgainstAnchor {
                 }                
             }
             for (int i = 0; i < obsTdist.length; i++) {
-                int chr = Integer.parseInt(anchor.getChromosome(bestSite[i]).getName());
+                int chr = Integer.parseInt(anchor.chromosome(bestSite[i]).getName());
                 double[] result={chr, bestSite[i], anchor.chromosomalPosition(bestSite[i]),bestP[i], countSig[i]};
                 resultReport[i][chrIndex] = result;
             }
@@ -683,19 +683,19 @@ public class TagAgainstAnchor {
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         System.out.println("The anchor map has " + a.numberOfSites() + " sites and " + a.numberOfTaxa() + " taxa");
         lastTimePoint = this.getCurrentTimeNano();
-        int[] chrOffSet = a.getChromosomesOffsets();
-        chromosomeNumber = new int[a.getChromosomes().length];
+        int[] chrOffSet = a.chromosomesOffsets();
+        chromosomeNumber = new int[a.chromosomes().length];
         chrStartIndex = new int[chromosomeNumber.length];
         chrEndIndex = new int[chromosomeNumber.length];
         for (int i = 0; i < chromosomeNumber.length; i++) {
-            chromosomeNumber[i] = a.getChromosomes()[i].getChromosomeNumber();
+            chromosomeNumber[i] = a.chromosomes()[i].getChromosomeNumber();
             chrStartIndex[i] = chrOffSet[i];
-            chrEndIndex[i] = chrOffSet[i] + a.getChromosomeSiteCount(a.getChromosomes()[i]);
+            chrEndIndex[i] = chrOffSet[i] + a.chromosomeSiteCount(a.chromosomes()[i]);
         }
         anchor=AlignmentBuilder.getHomozygousInstance(a);
         anchorMaf = new double[anchor.numberOfSites()];
         for (int i = 0; i < anchorMaf.length; i++) {
-            anchorMaf[i] = anchor.getMinorAlleleFrequency(i);
+            anchorMaf[i] = anchor.minorAlleleFrequency(i);
         }
         System.out.println("Loading and converting to BitAlignment took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         this.screenPrintGbMemoryCurrentUse();

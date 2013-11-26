@@ -72,9 +72,9 @@ public class PDAnnotation {
         byte[] mjAllele = new byte[siteCnt];
         byte[] mnAllele = new byte[siteCnt];
         for (int j = 0; j < siteCnt; j++) {
-            mjAllele[j] = bna.getMajorAlleleAsString(j).getBytes()[0];
-            mnAllele[j] = bna.getMinorAlleleAsString(j).getBytes()[0];
-            maf[j] = (float) bna.getMinorAlleleFrequency(j);
+            mjAllele[j] = bna.majorAlleleAsString(j).getBytes()[0];
+            mnAllele[j] = bna.minorAlleleAsString(j).getBytes()[0];
+            maf[j] = (float) bna.minorAlleleFrequency(j);
         }
         //write positions to hdf "pos"+chromosome
         String chrGroup = "chr" + currChr + "/";

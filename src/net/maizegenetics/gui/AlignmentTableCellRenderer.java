@@ -157,7 +157,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         int site = myAlignmentTableModel.getRealColumnIndex(col);
         byte[] alleles = myCachedAlleles.get(site);
         if (alleles == null) {
-            alleles = myAlignment.getAlleles(site);
+            alleles = myAlignment.alleles(site);
             myCachedAlleles.put(site, alleles);
         }
         byte major = Alignment.UNKNOWN_ALLELE;
@@ -207,7 +207,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         int site = myAlignmentTableModel.getRealColumnIndex(col);
         byte[] alleles = myCachedAlleles.get(site);
         if (alleles == null) {
-            alleles = myAlignment.getAlleles(site);
+            alleles = myAlignment.alleles(site);
             myCachedAlleles.put(site, alleles);
         }
         byte minor = Alignment.UNKNOWN_ALLELE;
@@ -237,7 +237,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         int site = myAlignmentTableModel.getRealColumnIndex(col);
         byte[] alleles = myCachedAlleles.get(site);
         if (alleles == null) {
-            alleles = myAlignment.getAlleles(site);
+            alleles = myAlignment.alleles(site);
             myCachedAlleles.put(site, alleles);
         }
 

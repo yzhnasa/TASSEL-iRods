@@ -103,7 +103,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             Alignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
              minSites,  maxDistance);
             String newExport=exportFile.replace("sX.hmp", "s"+i+".hmp");
-            newExport=newExport.replace("gX", "gc"+mna.getChromosomeName(0)+"s"+i);
+            newExport=newExport.replace("gX", "gc"+mna.chromosomeName(0)+"s"+i);
             ExportUtils.writeToHapmap(mna, false, newExport, '\t', null);
             if(errorExportFile!=null) exportBadSites(baseAlign, errorExportFile, 0.01);  
             mna=null;
@@ -117,7 +117,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         FilterAlignment fa=FilterAlignment.getInstance(baseAlign, startSite, endSite);
         Alignment inAlign=AlignmentBuilder.getGenotypeCopyInstance(fa);
         int sites=inAlign.numberOfSites();
-        System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.getChromosome(0),
+        System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.chromosome(0),
                 inAlign.chromosomalPosition(0),inAlign.numberOfTaxa(),inAlign.numberOfSites());
 
         propMissing=new double[inAlign.numberOfTaxa()];
@@ -139,7 +139,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     }
     
     public static int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
-        Chromosome[] theL=a.getChromosomes();
+        Chromosome[] theL=a.chromosomes();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Chromosome aL: theL) {
             System.out.println("");
@@ -163,7 +163,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         for (int i = 0; i < result.length; i++) {
             result[i]=allDivisions.get(i);
            // 
-            System.out.printf("Chromosome Divisions: %s start:%d end:%d %n", a.getChromosome(result[i][0]).getName(),
+            System.out.printf("Chromosome Divisions: %s start:%d end:%d %n", a.chromosome(result[i][0]).getName(),
                     result[i][0], result[i][1]);
         }
         return result;
@@ -217,7 +217,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 double errorsRate=(double)siteErrors[i]/(double)siteCallCnt[i];
                 if(errorsRate<errorThreshold) continue;
                 bw.write(baseAlign.siteName(i)+"\t");
-                bw.write(baseAlign.getChromosomeName(i) +"\t");
+                bw.write(baseAlign.chromosomeName(i) +"\t");
                 bw.write(i+"\t"); //dummy for genetic position
                 bw.write(baseAlign.chromosomalPosition(i) +"\n"); //dummy for genetic position
             } 
@@ -294,8 +294,8 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         byte[] calls = new byte[endSite-startSite+1];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
         for (int s = startSite; s <= endSite; s++) {
-            byte mjAllele = a.getMajorAllele(s);
-            byte mnAllele = a.getMinorAllele(s);
+            byte mjAllele = a.majorAllele(s);
+            byte mnAllele = a.minorAllele(s);
             byte mj=AlignmentUtils.getUnphasedDiploidValue(mjAllele,mjAllele);
             byte mn=AlignmentUtils.getUnphasedDiploidValue(mnAllele,mnAllele);
             byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);

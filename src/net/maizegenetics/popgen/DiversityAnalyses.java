@@ -94,7 +94,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
      * This will determine what analyses are to be run and run them
      */
     private void runAnalysisForRegion(int start, int end) {
-        Chromosome locus = theAAlignment.getChromosome(start);
+        Chromosome locus = theAAlignment.chromosome(start);
         int chromosome = -1;
         try {
             chromosome = Integer.parseInt(locus.getName());

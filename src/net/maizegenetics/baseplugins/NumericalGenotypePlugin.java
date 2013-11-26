@@ -171,7 +171,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
             traitNames.add(new Trait("S" + i, false, Trait.TYPE_DATA));
 
-            byte[] allelesByFreq = input.getAlleles(i);
+            byte[] allelesByFreq = input.alleles(i);
 
             for (int j = 0; j < seqCount; j++) {
                 byte[] current = input.genotypeArray(j, i);

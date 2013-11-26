@@ -81,10 +81,10 @@ public class ProjectionAlignmentIO {
     }
 
     public static void writeToFile(String outfile, Alignment pa) {
-        if(!(pa.getGenotypeMatrix() instanceof ProjectionGenotype)) {
+        if(!(pa.genotypeMatrix() instanceof ProjectionGenotype)) {
             throw new UnsupportedOperationException("Save only works for Alignments with projection genotypes");
         }
-        ProjectionGenotype pg=(ProjectionGenotype)pa.getGenotypeMatrix();
+        ProjectionGenotype pg=(ProjectionGenotype)pa.genotypeMatrix();
         Alignment baseAlignment=pg.getBaseAlignment();
         BufferedWriter bw = null;
         try {

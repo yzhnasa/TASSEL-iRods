@@ -97,7 +97,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	}
 	
 	private void processFamily(Alignment align, String familyname) {
-		myLogger.info("\nResults for chromosome " + align.getChromosomeName(0) + ", family " + familyname);
+		myLogger.info("\nResults for chromosome " + align.chromosomeName(0) + ", family " + familyname);
 		align = preFilterAlignment(align);
 
 		if (avgr2Filename != null || avgr2Plotname != null) {
@@ -106,11 +106,11 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		
 		if (propNonconsensusFilename != null) {
 			double[] proportion = calculateProportionNonConsensusPerTaxon(align);
-			saveProportionNonConsensusToFile(proportion, align, addFamilyToFilename(propNonconsensusFilename, familyname, align.getChromosomeName(0), ".txt"));
+			saveProportionNonConsensusToFile(proportion, align, addFamilyToFilename(propNonconsensusFilename, familyname, align.chromosomeName(0), ".txt"));
 		}
 		
 		if (summaryFilename != null) {
-			runAndExportGenotypeSummaryForTaxa(align, addFamilyToFilename(summaryFilename, familyname, align.getChromosomeName(0), ".txt"));
+			runAndExportGenotypeSummaryForTaxa(align, addFamilyToFilename(summaryFilename, familyname, align.chromosomeName(0), ".txt"));
 		}
 	}
 	
@@ -188,13 +188,13 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		int[] polysites = new int[nsites];
 		int sitecount = 0;
 		for (int s = 0; s < nsites; s++) {
-			if (align.getMinorAlleleFrequency(s) > 0.15) polysites[sitecount++] = s;  
+			if (align.minorAlleleFrequency(s) > 0.15) polysites[sitecount++] = s;  
 		}
 		polysites = Arrays.copyOf(polysites, sitecount);
 		align = FilterAlignment.getInstance(align, polysites);
 		align = BitAlignment.getInstance(align, true);
 		
-		myLogger.info("Chromosome " + align.getChromosomeName(0) + ", family " + familyname + " has " + sitecount + " polymorphic snps.");
+		myLogger.info("Chromosome " + align.chromosomeName(0) + ", family " + familyname + " has " + sitecount + " polymorphic snps.");
 		
 		nsites = align.numberOfSites();
 		double[] avgRsq = new double[nsites];
@@ -232,7 +232,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			
 		}
 		
-		String chrname = align.getChromosomeName(0);
+		String chrname = align.chromosomeName(0);
 		if (avgr2Filename != null) saveToFileAverageR2(avgRsq, align, addFamilyToFilename(avgr2Filename, familyname, chrname, ".txt"));
 		if (avgr2Plotname != null) plotAverageR2(avgRsq, align, addFamilyToFilename(avgr2Plotname, familyname, chrname, ".png"));
 
@@ -270,7 +270,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     			for (int s = 0; s < nsites; s++) {
     				bw.write(align.getSNPID(s));
     				bw.write("\t");
-    				bw.write(align.getChromosomeName(s));
+    				bw.write(align.chromosomeName(s));
     				bw.write("\t");
     				bw.write(Integer.toString(align.chromosomalPosition(s)));
     				bw.write("\t");
@@ -285,7 +285,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     
     private void plotAverageR2(double[] avgr2, Alignment align, String saveFilename) {
     		int nsites = align.numberOfSites();
-    		String title = "Average R2 in " + windowSizeForR2 + " bp window, chromosome " + align.getChromosomeName(0);
+    		String title = "Average R2 in " + windowSizeForR2 + " bp window, chromosome " + align.chromosomeName(0);
     		String xLabel = "position(Mbp)";
     		String yLabel ="Average R-squared";
     		DefaultXYDataset xydata = new DefaultXYDataset();
@@ -310,7 +310,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		
 		OpenBitSet lowmaf = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			if (align.getMinorAlleleFrequency(s) < maxMaf) lowmaf.set(s);
+			if (align.minorAlleleFrequency(s) < maxMaf) lowmaf.set(s);
 		}
 		
 //		myLogger.info("taxa = " + align.numberOfTaxa() + ", sites = " + align.numberOfSites());
@@ -345,7 +345,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		try {
     			bw.write("Taxon\tchr\tpropNC");
     			bw.newLine();
-    			String chr = align.getChromosomeName(0);
+    			String chr = align.chromosomeName(0);
     			for (int t = 0; t < ntaxa; t++) {
     				bw.write(align.taxaName(t));
     				bw.write("\t");

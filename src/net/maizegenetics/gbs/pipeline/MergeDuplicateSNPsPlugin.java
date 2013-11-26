@@ -252,11 +252,11 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                        if (inputFormat==INPUT_FORMAT.vcf)
 //                        {
 //                            int lastSiteIndex = msa.numberOfSites() -1;
-//                            msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
+//                            msa.setCommonAlleles(lastSiteIndex, a.allelesBySortType(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
 //                            msa.setReferenceAllele(lastSiteIndex, a.referenceGenotype(samePos[0]));
 //                            for (int tt=0; tt<a.numberOfTaxa(); tt++)
 //                            {
-//                                msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, samePos[0]));
+//                                msa.setDepthForAlleles(tt, lastSiteIndex, a.depthForAlleles(tt, samePos[0]));
 //                            }
 //                        }
                     }
@@ -287,11 +287,11 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                if (inputFormat==INPUT_FORMAT.vcf)
 //                {
 //                    int lastSiteIndex = msa.numberOfSites() -1;
-//                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
+//                    msa.setCommonAlleles(lastSiteIndex, a.allelesBySortType(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
 //                    msa.setReferenceAllele(lastSiteIndex, a.referenceGenotype(samePos[0]));
 //                    for (int tt=0; tt<a.numberOfTaxa(); tt++)
 //                    {
-//                        msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, samePos[0]));
+//                        msa.setDepthForAlleles(tt, lastSiteIndex, a.depthForAlleles(tt, samePos[0]));
 //                    }
 //                }
             }
@@ -334,8 +334,8 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 currMerge[t] = a.genotype(t, samePos[s1]); // set the current merger of genotypes to those for site s1
             }
             byte[] currAlleles = new byte[2];
-            currAlleles[0] = a.getMajorAllele(samePos[s1].intValue());
-            currAlleles[1] = a.getMinorAllele(samePos[s1].intValue());
+            currAlleles[0] = a.majorAllele(samePos[s1].intValue());
+            currAlleles[1] = a.minorAllele(samePos[s1].intValue());
             if (currAlleles[0] == NucleotideAlignmentConstants.GAP_ALLELE || currAlleles[1] == NucleotideAlignmentConstants.GAP_ALLELE) {
                 addSiteToMutableAlignment(chr, currentPos, currMerge, msa, posBuild);
                 finished[s1] = true;
@@ -347,8 +347,8 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     continue;  // s2 has already been merged with a previous site (perhaps with different alleles)
                 }
                 byte[] newAlleles = new byte[2];
-                newAlleles[0] = a.getMajorAllele(samePos[s2].intValue());
-                newAlleles[1] = a.getMinorAllele(samePos[s2].intValue());
+                newAlleles[0] = a.majorAllele(samePos[s2].intValue());
+                newAlleles[1] = a.minorAllele(samePos[s2].intValue());
                 Arrays.sort(newAlleles);
                 if (newAlleles[0] == NucleotideAlignmentConstants.GAP_ALLELE || newAlleles[1] == NucleotideAlignmentConstants.GAP_ALLELE) {
                     continue;
@@ -424,7 +424,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //        for (int s:samePos)
 //        {
 //            //get alleles for each site
-//            byte[] alleles = a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s);
+//            byte[] alleles = a.allelesBySortType(Alignment.ALLELE_SCOPE_TYPE.Depth, s);
 //
 //            //initiate new alleles in the allele list into the hashmap
 //            for (byte allele:alleles)
@@ -440,7 +440,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //            //add up the depth for each alleles
 //            for (int t = 0; t < a.numberOfTaxa(); ++t)
 //            {
-//                byte[] currDepth = a.getDepthForAlleles(t, s); // get the current depth for site s taxa t
+//                byte[] currDepth = a.depthForAlleles(t, s); // get the current depth for site s taxa t
 //                for (int i=0; i < alleles.length; i++)
 //                {
 //                    if (currDepth[i]>0)
@@ -544,11 +544,11 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                    addSiteToMutableAlignment(chr, currentPos, genos, msa);
 //
 //                    int lastSiteIndex = msa.numberOfSites() -1;
-//                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s));
+//                    msa.setCommonAlleles(lastSiteIndex, a.allelesBySortType(Alignment.ALLELE_SCOPE_TYPE.Depth, s));
 //                    msa.setReferenceAllele(lastSiteIndex, a.referenceGenotype(s));
 //                    for (int tt=0; tt<a.numberOfTaxa(); tt++)
 //                    {
-//                        msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, s));
+//                        msa.setDepthForAlleles(tt, lastSiteIndex, a.depthForAlleles(tt, s));
 //                    }
 //
 //                }
@@ -583,8 +583,8 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                if (samePosAL.size() > 1) {
 //                    Integer[] samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
 //                    for (int i = 0; i < samePos.length; ++i) {
-//                        if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
-//                                && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
+//                        if (theMSA.majorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
+//                                && theMSA.minorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
 //                            snpLogging.writeEntry(theMSA, samePos[i], null, null, "Delete Remaining Duplicates", "Removed", null, null);
 //                            theMSA.clearSiteForRemoval(samePos[i]);
 //                        }
@@ -600,8 +600,8 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //        if (samePosAL.size() > 1) {
 //            Integer[] samePos = samePosAL.toArray(new Integer[samePosAL.size()]);
 //            for (int i = 0; i < samePos.length; ++i) {
-//                if (theMSA.getMajorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
-//                        && theMSA.getMinorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
+//                if (theMSA.majorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE
+//                        && theMSA.minorAllele(samePos[i].intValue()) != NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {
 //                    snpLogging.writeEntry(theMSA, samePos[i], null, null, "Delete Remaining Duplicates", "Removed", null, null);
 //                    theMSA.clearSiteForRemoval(samePos[i]);
 //                }

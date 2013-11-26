@@ -118,7 +118,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
         Chromosome theLocus = myLocus;
         if ((theLocus == null) && (myLocusStr != null)) {
-            theLocus = aa.getChromosome(myLocusStr);
+            theLocus = aa.chromosome(myLocusStr);
             if (theLocus == null) {
                 throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Alignment doesn't contain locus: " + myLocusStr);
             }
@@ -202,7 +202,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         }
         String theComment;
         StringBuilder builder = new StringBuilder();
-        Chromosome[] loci = naa.getChromosomes();
+        Chromosome[] loci = naa.chromosomes();
         builder.append(inDatum.getName());
         builder.append("_");
         if ((loci != null) && (loci.length != 0)) {
@@ -466,7 +466,7 @@ class DataFilterAlignmentDialog extends JDialog {
         chromFilteredAlignment = theAlignment;
         chromsAvailable = new String[theAlignment.numChromosomes()];
         for (int i = 0; i < chromsAvailable.length; i++) {
-            chromsAvailable[i] = theAlignment.getChromosomes()[i].getName().trim();
+            chromsAvailable[i] = theAlignment.chromosomes()[i].getName().trim();
         }
         totalSeq = theAlignment.numberOfTaxa();
         siteCount = theAlignment.numberOfSites();
@@ -865,8 +865,8 @@ class DataFilterAlignmentDialog extends JDialog {
             for (int i = 0; i < chromsSelected.length; i++) {
                 for (int j = 0; j < availableAlignments.size(); j++) {
                     Alignment current = (Alignment) availableAlignments.get(j).getData();
-                    if (current.getChromosomes().length == 1) {
-                        if (chromsSelected[i].equals(current.getChromosomeName(0))) {
+                    if (current.chromosomes().length == 1) {
+                        if (chromsSelected[i].equals(current.chromosomeName(0))) {
                             selectedAlignments[i] = current;
                         }
                     }

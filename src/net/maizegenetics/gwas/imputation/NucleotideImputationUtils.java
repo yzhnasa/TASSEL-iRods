@@ -118,8 +118,8 @@ public class NucleotideImputationUtils {
 			int[][] acounts = aAlignment.allelesSortedByFrequency(snp);
 			int[][] ccounts = cAlignment.allelesSortedByFrequency(snp);
 
-			byte alleleA = aAlignment.getMajorAllele(snp);
-			byte alleleC = cAlignment.getMajorAllele(snp);
+			byte alleleA = aAlignment.majorAllele(snp);
+			byte alleleC = cAlignment.majorAllele(snp);
 			Asnp[snp] = alleleA;
 			Csnp[snp] = alleleC;
 			
@@ -814,8 +814,8 @@ public class NucleotideImputationUtils {
 		popdata.snpIndex = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			if(ldFilteredBits.fastGet(s)) {
-				popdata.alleleA[s] = popdata.original.getMajorAllele(s);
-				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.alleleA[s] = popdata.original.majorAllele(s);
+				popdata.alleleC[s] = popdata.original.minorAllele(s);
 				popdata.snpIndex.fastSet(s);
 			} 
 		}
@@ -907,8 +907,8 @@ public class NucleotideImputationUtils {
 		popdata.snpIndex = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			if(filteredBits.fastGet(s)) {
-				popdata.alleleA[s] = popdata.original.getMajorAllele(s);
-				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.alleleA[s] = popdata.original.majorAllele(s);
+				popdata.alleleC[s] = popdata.original.minorAllele(s);
 				popdata.snpIndex.fastSet(s);
 			} 
 		}
@@ -1079,8 +1079,8 @@ public class NucleotideImputationUtils {
 		Iterator<Integer> snpit = snpList.iterator();
 		for ( int s = 0; s < nsnps; s++) {
 			byte[] major = new byte[2];
-			major[0] = taxaGroups[0].getMajorAllele(s);
-			major[1] = taxaGroups[1].getMajorAllele(s);
+			major[0] = taxaGroups[0].majorAllele(s);
+			major[1] = taxaGroups[1].majorAllele(s);
 			Integer snpIndex = snpit.next();
 			if(major[0] != Alignment.UNKNOWN_ALLELE && major[1] != Alignment.UNKNOWN_ALLELE && major[0] != major[1]) {
 				family.alleleA[snpIndex] = major[0];
@@ -1126,7 +1126,7 @@ public class NucleotideImputationUtils {
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			int gametesNotMissing = a.totalGametesNonMissingForSite(s);
-			int minorAlleleCount = a.getMinorAlleleCount(s);
+			int minorAlleleCount = a.minorAlleleCount(s);
 			if (gametesNotMissing >= minNotMissingGametes && minorAlleleCount >= minMinorAlleleCount) polybits.fastSet(s);
 		}
 		return polybits;
@@ -1142,7 +1142,7 @@ public class NucleotideImputationUtils {
 			int[][] freq = a.allelesSortedByFrequency(s);
 			int ngametes = a.totalGametesNonMissingForSite(s);
 			double pMissing = (totalgametes - ngametes) / totalgametes;
-			if (freq[1].length > 1 && freq[1][1] > 2 && pMissing <= maxMissing && a.getMinorAlleleFrequency(s) > minMaf) {
+			if (freq[1].length > 1 && freq[1][1] > 2 && pMissing <= maxMissing && a.minorAlleleFrequency(s) > minMaf) {
 				polybits.fastSet(s);
 			}
 		}
@@ -1402,9 +1402,9 @@ public class NucleotideImputationUtils {
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
 			Integer snpIndex = snpIndices.remove();
-			if ( taxaClusters[0].getMajorAllele(s) != taxaClusters[1].getMajorAllele(s) ) {
-//				if ( taxaClusters[0].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && taxaClusters[1].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && 
-//						taxaClusters[0].getMajorAlleleFrequency(s) > .6 &&  taxaClusters[1].getMajorAlleleFrequency(s) > .6) {
+			if ( taxaClusters[0].majorAllele(s) != taxaClusters[1].majorAllele(s) ) {
+//				if ( taxaClusters[0].majorAllele(s) != Alignment.UNKNOWN_ALLELE && taxaClusters[1].majorAllele(s) != Alignment.UNKNOWN_ALLELE && 
+//						taxaClusters[0].majorAlleleFrequency(s) > .6 &&  taxaClusters[1].majorAlleleFrequency(s) > .6) {
 //					include[s] = true;
 //					includedSnps[snpcount++] = s;
 //					snpIndices.add(snpIndex);
@@ -1802,7 +1802,7 @@ public class NucleotideImputationUtils {
 			//if the model has converged  or if the max iterations has been reached print tables
 			if (!hasNotConverged || iter == maxIterations) {
 				StringBuilder sb = new StringBuilder("Family ");
-				sb.append(familyName).append(", chromosome ").append(a.getChromosomeName(0));
+				sb.append(familyName).append(", chromosome ").append(a.chromosomeName(0));
 				if (iter < maxIterations) {
 					sb.append(": EM algorithm converged at iteration ").append(iter).append(".\n");
 				} else {
@@ -1953,7 +1953,7 @@ public class NucleotideImputationUtils {
 		}
 		
 		mna.clean();
-		myLogger.info("Original alignment updated for family " + popdata.name + " chromosome " + popdata.original.getChromosomeName(0) + ".\n");
+		myLogger.info("Original alignment updated for family " + popdata.name + " chromosome " + popdata.original.chromosomeName(0) + ".\n");
 		return mna;
 	}
 
@@ -1999,8 +1999,8 @@ public class NucleotideImputationUtils {
 						Alignment alignB = FilterAlignment.getInstance(subAlignment, new SimpleIdGroup(taxaB));
 						boolean[] include = new boolean[window];
 						for (int s = 0; s < window; s++) {
-							if (alignA.getMajorAllele(s) != alignB.getMajorAllele(s)) {
-								if ( ((double) alignA.getMajorAlleleCount(s))/((double) alignA.getMinorAlleleCount(s)) > 2.0 && ((double) alignB.getMajorAlleleCount(s))/((double) alignB.getMinorAlleleCount(s)) > 2.0) {
+							if (alignA.majorAllele(s) != alignB.majorAllele(s)) {
+								if ( ((double) alignA.majorAlleleCount(s))/((double) alignA.minorAlleleCount(s)) > 2.0 && ((double) alignB.majorAlleleCount(s))/((double) alignB.minorAlleleCount(s)) > 2.0) {
 									include[s] = true;
 								} else include[s] = false;
 							} else {
@@ -2307,7 +2307,7 @@ public class NucleotideImputationUtils {
     	int hetCount = 0;
     	int nonMissingCount = 0;
     	for (int s = 0; s < nsites; s++) {
-    		hetCount += a.getHeterozygousCount(s);
+    		hetCount += a.heterozygousCount(s);
     		nonMissingCount += a.totalGametesNonMissingForSite(s) / 2;
     	}
     	

@@ -132,7 +132,7 @@ public class ProjectionGenotype extends AbstractGenotype {
     private byte getBaseSite(int taxon, int site) {
         //test transpose problems
         if (site != cachedSite) {
-            donorForCachedSite = myBaseAlignment.getGenotypeMatrix().getGenotypeForAllTaxa(site);
+            donorForCachedSite = myBaseAlignment.genotypeMatrix().getGenotypeForAllTaxa(site);
             cachedSite = site;
         }
         int primPos = taxon << 2;
@@ -162,7 +162,7 @@ public class ProjectionGenotype extends AbstractGenotype {
 
     @Override
     public void transposeData(boolean siteInnerLoop) {
-        myBaseAlignment.getGenotypeMatrix().transposeData(siteInnerLoop);
+        myBaseAlignment.genotypeMatrix().transposeData(siteInnerLoop);
         if (siteInnerLoop) {
             currMode = BaseMode.Site;
         } else {

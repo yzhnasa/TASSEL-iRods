@@ -345,22 +345,22 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
     private void findCommonPositionsAndCompare(Alignment a1, Alignment a2) {
 
-        if (a1.getChromosomes().length != 1 || a2.getChromosomes().length != 1) {
+        if (a1.chromosomes().length != 1 || a2.chromosomes().length != 1) {
             myLogger.error("ERROR: both hapmap genotype files should contain only a single chromosome");
             return;
         }
-        if (!a1.getChromosomes()[0].getName().equals(a2.getChromosomes()[0].getName())) {
+        if (!a1.chromosomes()[0].getName().equals(a2.chromosomes()[0].getName())) {
             myLogger.error("ERROR: the hapmap genotype files to compare do not contain the same chromosome");
             return;
         }
-        if (Integer.parseInt(a1.getChromosomes()[0].getName()) != chr || Integer.parseInt(a2.getChromosomes()[0].getName()) != chr) {
+        if (Integer.parseInt(a1.chromosomes()[0].getName()) != chr || Integer.parseInt(a2.chromosomes()[0].getName()) != chr) {
             myLogger.error("ERROR: one or both of the hapmap genotype files to compare do not contain the expected chromosome "
-                    + "(expected:" + chr + "  hmp1:" + a1.getChromosomes()[0].getName() + "  hmp2:" + a2.getChromosomes()[0].getName() + ")");
+                    + "(expected:" + chr + "  hmp1:" + a1.chromosomes()[0].getName() + "  hmp2:" + a2.chromosomes()[0].getName() + ")");
             return;
         }
 
-        myLogger.info("\nHapMap format genotype file1 contains " + a1.getChromosomeSiteCount(a1.getChromosome(0)) + " sites on chromosome " + a1.getChromosomeName(0) + "\n");
-        myLogger.info("\nHapMap format genotype file2 contains " + a2.getChromosomeSiteCount(a2.getChromosome(0)) + " sites on chromosome " + a2.getChromosomeName(0) + "\n\n");
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.chromosomeSiteCount(a1.chromosome(0)) + " sites on chromosome " + a1.chromosomeName(0) + "\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.chromosomeSiteCount(a2.chromosome(0)) + " sites on chromosome " + a2.chromosomeName(0) + "\n\n");
 
         int nSites1 = a1.numberOfSites(), nSites2 = a2.numberOfSites();
         int s1 = 0, s2 = 0;
@@ -419,8 +419,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     }
 
     private int getCompareTypeAndCompare(int site1, Alignment a1, int site2, Alignment a2) {
-        byte[] alleles1 = a1.getAlleles(site1);
-        byte[] alleles2 = a2.getAlleles(site2);
+        byte[] alleles1 = a1.alleles(site1);
+        byte[] alleles2 = a2.alleles(site2);
         SiteCompareType compareType = getSiteCompareType(alleles1, alleles2);
         if (compareType == SiteCompareType.DIFFERENT) {
             nSamePosNotComparable++;
@@ -428,8 +428,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
 
         double[] summStats = new double[summStatsLength];
-        summStats[MINOR_ALLELE_FREQ1] = a1.getMinorAlleleFrequency(site1);
-        summStats[MINOR_ALLELE_FREQ2] = a2.getMinorAlleleFrequency(site2);
+        summStats[MINOR_ALLELE_FREQ1] = a1.minorAlleleFrequency(site1);
+        summStats[MINOR_ALLELE_FREQ2] = a2.minorAlleleFrequency(site2);
         summStats[F_VALUE1] = calculateF(a1, site1);
         summStats[F_VALUE2] = calculateF(a2, site2);
         String alleleString1 = a1.genotypeAsString(site1, alleles1[0]) + "/" + a1.genotypeAsString(site1, alleles1[1]);
@@ -531,8 +531,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     }
 
     private double calculateF(Alignment a, int site) {
-        byte majAllele = a.getMajorAllele(site);
-        byte minAllele = a.getMinorAllele(site);
+        byte majAllele = a.majorAllele(site);
+        byte minAllele = a.minorAllele(site);
         int majGenoCnt = 0, minGenoCnt = 0, hetGenoCnt = 0;
         int nTaxa = a.numberOfTaxa();
         // TERRY - Does this make sense?  What if it's het but not major/minor?

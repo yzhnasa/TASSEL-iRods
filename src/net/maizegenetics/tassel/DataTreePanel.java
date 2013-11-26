@@ -299,7 +299,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
                         builder.append("Number of sites: ");
                         builder.append(a.numberOfSites());
                         builder.append("\n");
-                        Chromosome[] loci = a.getChromosomes();
+                        Chromosome[] loci = a.chromosomes();
                         boolean first = true;
                         int numLoci = 0;
                         if (loci != null) {

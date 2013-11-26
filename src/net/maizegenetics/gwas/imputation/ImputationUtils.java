@@ -437,10 +437,10 @@ public class ImputationUtils {
 		int[] binCount = new int[21];
 		int nsites = a.numberOfSites();
 		for (int s = 0; s < nsites; s++) {
-			if (a.getMajorAlleleFrequency(s) > 0.75) monoCount++;
+			if (a.majorAlleleFrequency(s) > 0.75) monoCount++;
 			else {
 				polyCount++;
-				int bin = (int) Math.floor(20 * a.getMajorAlleleFrequency(s));
+				int bin = (int) Math.floor(20 * a.majorAlleleFrequency(s));
 				binCount[bin]++;
 			}
 		}

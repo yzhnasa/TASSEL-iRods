@@ -99,7 +99,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteNumber) {
             return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.chromosomalPosition(realColumn));
         } else if (myColumnNameType == COLUMN_NAME_TYPE.locus) {
-            return myAlignment.getChromosomeName(realColumn);
+            return myAlignment.chromosomeName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteName) {
             return myAlignment.siteName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.alleles) {
@@ -204,7 +204,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     public void adjustPosition(int position) {
 
         if (isPhysicalPosition()) {
-            position = myAlignment.siteOfPhysicalPosition(position, myAlignment.getChromosome(0));
+            position = myAlignment.siteOfPhysicalPosition(position, myAlignment.chromosome(0));
             if (position < 0) {
                 position = -position;
             }

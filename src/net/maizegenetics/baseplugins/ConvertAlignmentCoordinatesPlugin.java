@@ -79,7 +79,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             throw new IllegalStateException("ConvertAlignmentCoordinatesPlugin: processDatum: datum must be instanceof Alignment.");
         }
 
-        Chromosome[] loci = alignment.getChromosomes();
+        Chromosome[] loci = alignment.chromosomes();
         myLociMap.clear();
         for (int i = 0; i < loci.length; i++) {
             myLociMap.put(loci[i].getName(), loci[i]);
@@ -129,9 +129,9 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                             continue;
                         }
 
-                        if ((pos1 != alignment.chromosomalPosition(site)) || (!locus1.equals(alignment.getChromosome(site).getName()))) {
+                        if ((pos1 != alignment.chromosomalPosition(site)) || (!locus1.equals(alignment.chromosome(site).getName()))) {
                             myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " position and locus do not match alignment.");
-                            myLogger.warn("Alignment SNP ID: " + alignment.siteName(site) + "  position: " + alignment.chromosomalPosition(site) + "  locus: " + alignment.getChromosomeName(site));
+                            myLogger.warn("Alignment SNP ID: " + alignment.siteName(site) + "  position: " + alignment.chromosomalPosition(site) + "  locus: " + alignment.chromosomeName(site));
                             continue;
                         }
 
@@ -157,7 +157,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
             //          alignment.clean();
             //TODO check sort of positions.
-            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(), posBuilder.build(), alignment.taxa()), null);
+            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.genotypeMatrix(), posBuilder.build(), alignment.taxa()), null);
 
         } catch (Exception e) {
             myLogger.error("processDatum: problem converting alignment: line: " + count + "  message: " + e.getMessage());

@@ -109,9 +109,9 @@ public class AlignmentFilterByGBSUtils {
             System.out.println("Locus\tMAF\tTaxaWKnown\tHetNum\tHetRate\tMajorAllele\tMajorCnt\tMinorAllele\tMinorCnt\tGapCnt");
         }
         for (int i = 0; i < a.numberOfSites(); i++) {
-            byte majorAllele = a.getMajorAllele(i);
+            byte majorAllele = a.majorAllele(i);
             majorAllele = (byte) (majorAllele << 4 | majorAllele);
-            byte minorAllele = a.getMinorAllele(i);
+            byte minorAllele = a.minorAllele(i);
             minorAllele = (byte) (minorAllele << 4 | minorAllele);
             for (int j = 0; j < a.numberOfTaxa(); j++) {
                 byte currentBase = a.genotype(j, i);
@@ -138,7 +138,7 @@ public class AlignmentFilterByGBSUtils {
                 }
             }
             if (printToScreen) {
-                System.out.println(a.siteName(i) + "\t" + a.getMinorAlleleFrequency(i) + "\t"
+                System.out.println(a.siteName(i) + "\t" + a.minorAlleleFrequency(i) + "\t"
                         + counts[0][i] + "\t" + counts[1][i] + "\t" + (double) counts[1][i] / counts[0][i] + "\t"
                         + (char) majorAllele + "\t" + counts[2][i] + "\t" + (char) minorAllele + "\t" + counts[3][i] + "\t" + counts[4][i]);
             }

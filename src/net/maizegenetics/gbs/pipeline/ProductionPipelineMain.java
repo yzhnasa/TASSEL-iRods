@@ -586,8 +586,8 @@ public class ProductionPipelineMain {
             for(int i = 0; i < siteCount; i++){
 
                 // heterozygous counts
-                origHetCount += origAlignment.getHeterozygousCount(i);
-                impHetCount += impAlignment.getHeterozygousCount(i);
+                origHetCount += origAlignment.heterozygousCount(i);
+                impHetCount += impAlignment.heterozygousCount(i);
                 hetCountDelta = impHetCount - origHetCount;
 
                 //not missing
@@ -595,14 +595,14 @@ public class ProductionPipelineMain {
                 impTotalSitesNotMissing += impAlignment.totalNonMissingForSite(i);
 
                 // switching of major and minor allele
-                byte origMajorAllele = origAlignment.getMajorAllele(i);
-                byte impMajorAllele = impAlignment.getMajorAllele(i);
+                byte origMajorAllele = origAlignment.majorAllele(i);
+                byte impMajorAllele = impAlignment.majorAllele(i);
                 if(origMajorAllele != impMajorAllele) {
                     flipCount++;
-                    double diff = Math.abs(origAlignment.getMajorAlleleFrequency(i) - impAlignment.getMinorAlleleFrequency(i));
+                    double diff = Math.abs(origAlignment.majorAlleleFrequency(i) - impAlignment.minorAlleleFrequency(i));
                     allelicChangeCount += (int) diff * taxaCount;
                 }else{
-                    double diff = Math.abs(origAlignment.getMajorAlleleFrequency(i) - impAlignment.getMajorAlleleFrequency(i));
+                    double diff = Math.abs(origAlignment.majorAlleleFrequency(i) - impAlignment.majorAlleleFrequency(i));
                     allelicChangeCount += (int) diff * taxaCount;
                 }
             }

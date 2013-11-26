@@ -50,7 +50,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public Genotype getGenotypeMatrix() {
+    public Genotype genotypeMatrix() {
         return myGenotype;
     }
 
@@ -81,32 +81,32 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public BitSet allelePresenceForAllSites(int taxon, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllSites(taxon, alleleNumber);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllSites(taxon, alleleNumber);
     }
 
     @Override
     public BitSet allelePresenceForAllTaxa(int site, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllTaxa(site, alleleNumber);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
     }
 
     @Override
     public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
     }
 
     @Override
     public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
     }
 
     @Override
     public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -155,7 +155,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getHeterozygousCount(int site) {
+    public int heterozygousCount(int site) {
         return myGenotype.getHeterozygousCount(site);
     }
 
@@ -175,12 +175,12 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getChromosomeSiteCount(Chromosome chromosome) {
+    public int chromosomeSiteCount(Chromosome chromosome) {
         return myPositionList.getChromosomeSiteCount(chromosome);
     }
 
     @Override
-    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
+    public int[] startAndEndOfChromosome(Chromosome chromosome) {
         return myPositionList.getStartAndEndOfChromosome(chromosome);
     }
 
@@ -210,22 +210,22 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String getChromosomeName(int site) {
+    public String chromosomeName(int site) {
         return myPositionList.getChromosomeName(site);
     }
 
     @Override
-    public Chromosome getChromosome(int site) {
+    public Chromosome chromosome(int site) {
         return myPositionList.getChromosome(site);
     }
 
     @Override
-    public Chromosome getChromosome(String name) {
+    public Chromosome chromosome(String name) {
         return myPositionList.getChromosome(name);
     }
 
     @Override
-    public Chromosome[] getChromosomes() {
+    public Chromosome[] chromosomes() {
         return myPositionList.getChromosomes();
     }
 
@@ -235,7 +235,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int[] getChromosomesOffsets() {
+    public int[] chromosomesOffsets() {
         return myPositionList.getChromosomesOffsets();
     }
 
@@ -270,7 +270,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getIndelSize(int site) {
+    public int indelSize(int site) {
         return myPositionList.getIndelSize(site);
     }
 
@@ -290,42 +290,42 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public byte getMajorAllele(int site) {
+    public byte majorAllele(int site) {
         return myGenotype.getMajorAllele(site);
     }
 
     @Override
-    public String getMajorAlleleAsString(int site) {
+    public String majorAlleleAsString(int site) {
         return myGenotype.getMajorAlleleAsString(site);
     }
 
     @Override
-    public byte getMinorAllele(int site) {
+    public byte minorAllele(int site) {
         return myGenotype.getMinorAllele(site);
     }
 
     @Override
-    public String getMinorAlleleAsString(int site) {
+    public String minorAlleleAsString(int site) {
         return myGenotype.getMinorAlleleAsString(site);
     }
 
     @Override
-    public byte[] getMinorAlleles(int site) {
+    public byte[] minorAlleles(int site) {
         return myGenotype.getMinorAlleles(site);
     }
 
     @Override
-    public byte[] getAlleles(int site) {
+    public byte[] alleles(int site) {
         return myGenotype.getAlleles(site);
     }
 
     @Override
-    public double getMinorAlleleFrequency(int site) {
+    public double minorAlleleFrequency(int site) {
         return myGenotype.getMinorAlleleFrequency(site);
     }
 
     @Override
-    public double getMajorAlleleFrequency(int site) {
+    public double majorAlleleFrequency(int site) {
         return myGenotype.getMajorAlleleFrequency(site);
     }
 
@@ -350,7 +350,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public Alignment[] getAlignments() {
+    public Alignment[] compositeAlignments() {
         return new Alignment[]{this};
     }
 
@@ -390,7 +390,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public String getDiploidAsString(int site, byte value) {
+    public String diploidAsString(int site, byte value) {
         return myGenotype.getDiploidAsString(site, value);
     }
 
@@ -410,12 +410,12 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getMinorAlleleCount(int site) {
+    public int minorAlleleCount(int site) {
         return myGenotype.getMinorAlleleCount(site);
     }
 
     @Override
-    public int getMajorAlleleCount(int site) {
+    public int majorAlleleCount(int site) {
         return myGenotype.getMajorAlleleCount(site);
     }
 
@@ -425,7 +425,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public Object[][] getMajorMinorCounts() {
+    public Object[][] majorMinorCounts() {
         return myGenotype.getMajorMinorCounts();
     }
 
@@ -435,7 +435,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getHeterozygousCountForTaxon(int taxon) {
+    public int heterozygousCountForTaxon(int taxon) {
         return myGenotype.getHeterozygousCountForTaxon(taxon);
     }
 
@@ -445,15 +445,15 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getDepthForAlleles(int taxon, int site) {
+    public byte[] depthForAlleles(int taxon, int site) {
         return myAlleleDepth.getDepthForAlleles(taxon, site);
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SORT_TYPE scope, int site) {
+    public byte[] allelesBySortType(ALLELE_SORT_TYPE scope, int site) {
         switch (scope) {
             case Frequency:
-                return getAlleles(site);
+                return alleles(site);
             default:
                 myLogger.warn("getAllelesByScope: Unsupported type: " + scope);
                 return null;
@@ -462,11 +462,11 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public BitSet allelePresenceForAllTaxaBySortType(ALLELE_SORT_TYPE type, int site, int alleleNumber) {
-        return getBitStorage(type).allelePresenceForAllTaxa(site, alleleNumber);
+        return bitStorage(type).allelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
-    public BitStorage getBitStorage(ALLELE_SORT_TYPE scopeType) {
+    public BitStorage bitStorage(ALLELE_SORT_TYPE scopeType) {
 
         BitStorage result = myBitStorage.get(scopeType);
         if (result != null) {

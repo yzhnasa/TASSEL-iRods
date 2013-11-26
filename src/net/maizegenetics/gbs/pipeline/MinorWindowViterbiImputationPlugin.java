@@ -208,7 +208,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         System.out.printf("TotalRight %d  TotalWrong %d TotalHets: %d ErrRateExcHet:%g %n",totalRight, totalWrong, totalHets, errRate);
 //        for (int i = 0; i < siteErrors.length; i++) {
 //            System.out.printf("%d %d %d %g %g %n",i,siteCallCnt[i],siteErrors[i], 
-//                    (double)siteErrors[i]/(double)siteCallCnt[i], unimpAlign.getMinorAlleleFrequency(i));
+//                    (double)siteErrors[i]/(double)siteCallCnt[i], unimpAlign.minorAlleleFrequency(i));
 //        }
         if(isOutputProjection) {
             ProjectionAlignmentIO.writeToFile(exportFile, ((ProjectionBuilder)mna).build());
@@ -263,7 +263,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //            }
             int countFullLength=0;
             for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
-                int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].getChromosome(0));
+                int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].chromosome(0));
                 int blocks=donorAlign[da].allelePresenceForAllSites(0, 0).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
                         donorAlign[da].numberOfSites(),conflictMasks[da][0],conflictMasks[da][1]); 
@@ -345,7 +345,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 
     public Alignment[] loadDonors(String donorFile, boolean breakChr){
         Alignment a=ImportUtils.readGuessFormat(donorFile);
-        Chromosome[] theChr=a.getChromosomes();
+        Chromosome[] theChr=a.chromosomes();
         Alignment[] donorAlign=new Alignment[theChr.length];
         for (int i = 0; i < donorAlign.length; i++) {
             System.out.println("Starting Read");
@@ -419,7 +419,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private OpenBitSet[][] createMaskForAlignmentConflicts(Alignment unimpAlign, Alignment[] donorAlign, boolean print) {
         OpenBitSet[][] result=new OpenBitSet[donorAlign.length][4];
         for (int da = 0; da < result.length; da++) {
-            int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].getChromosome(0), donorAlign[da].siteName(0));
+            int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].chromosome(0), donorAlign[da].siteName(0));
             OpenBitSet goodMask=new OpenBitSet(donorAlign[da].numberOfSites());
             OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].numberOfSites());
             OpenBitSet errorMask=new OpenBitSet(donorAlign[da].numberOfSites());
@@ -430,10 +430,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 *swaps of major and minor.  Adding the invariant reduces imputation accuracy.
                 *the major/minor swaps should be flipped in the comparisons
                 */
-                byte tMj=unimpAlign.getMajorAllele(i+donorOffset);
-                byte tMn=unimpAlign.getMinorAllele(i+donorOffset);
-                byte daMj=donorAlign[da].getMajorAllele(i);
-                byte daMn=donorAlign[da].getMinorAllele(i);
+                byte tMj=unimpAlign.majorAllele(i+donorOffset);
+                byte tMn=unimpAlign.minorAllele(i+donorOffset);
+                byte daMj=donorAlign[da].majorAllele(i);
+                byte daMn=donorAlign[da].minorAllele(i);
                 if(daMn==Alignment.UNKNOWN_ALLELE) {
                     invariant++;
                     invariantMask.set(i);
@@ -905,7 +905,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             }
             byte knownBase=impT.getOrigGeno(cs+donorOffset);
             if(!Arrays.equals(prevDonors, currDonors)) {
-                DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.getChromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
+                DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
                         donorAlign.chromosomalPosition(cs),prevDonors[0],prevDonors[1]);
                 impT.addBreakPoint(dhaps);
                 prevDonors=currDonors;
@@ -922,12 +922,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                     impT.resolveGeno[cs+donorOffset]= donorEst;}
             }}
         } //end of cs loop
-        DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.getChromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
+        DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
                 donorAlign.chromosomalPosition(endSite),prevDonors[0],prevDonors[1]);
         impT.addBreakPoint(dhaps);
         //enter a stop of the DH at the beginning of the next block
 //        int lastDApos=donorAlign.chromosomalPosition(endSite);
-//        int nextSite=unimpAlign.siteOfPhysicalPosition(lastDApos, donorAlign.getChromosome(0))+1;
+//        int nextSite=unimpAlign.siteOfPhysicalPosition(lastDApos, donorAlign.chromosome(0))+1;
 //        if(nextSite<unimpAlign.numberOfSites()) impT.breakPoints.put(unimpAlign.chromosomalPosition(nextSite), new int[]{-1,-1});
     //    if (print) System.out.println("E:"+mna.genotypeAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         return impT;

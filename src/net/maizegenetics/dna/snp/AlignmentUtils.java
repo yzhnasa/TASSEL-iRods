@@ -516,7 +516,7 @@ public class AlignmentUtils {
 
             if ((totalNonMissing > 0) && (totalNonMissing >= (minimumCount * 2))) {
 
-                double minorCount = aa.getMinorAlleleCount(i);
+                double minorCount = aa.minorAlleleCount(i);
                 double obsMinProp = 0.0;
                 if (minorCount != 0) {
                     obsMinProp = minorCount / (double) totalNonMissing;

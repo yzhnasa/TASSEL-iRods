@@ -50,7 +50,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			Alignment align = (Alignment) d.getData();
 			ArrayList<PopulationData> familyList = PopulationData.readPedigreeFile(pedfileName);
 			for (PopulationData family : familyList) {
-				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.getChromosomeName(0) + ".");
+				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.chromosomeName(0) + ".");
 				
 				String[] ids = new String[family.members.size()];
 				family.members.toArray(ids);

@@ -40,7 +40,7 @@ public class CombineAlignment implements Alignment {
             count = alignments[i].numberOfSites() + count;
             mySiteOffsets[i + 1] = count;
 
-            Chromosome[] chromosomes = alignments[i].getChromosomes();
+            Chromosome[] chromosomes = alignments[i].chromosomes();
             for (int j = 0; j < chromosomes.length; j++) {
                 myChromosomes.put(chromosomes[j], alignments[i]);
             }
@@ -141,8 +141,8 @@ public class CombineAlignment implements Alignment {
         List<Integer> offsets = new ArrayList<>();
         List<Chromosome> chromosomes = new ArrayList<>();
         for (int i = 0; i < myAlignments.length; i++) {
-            chromosomes.addAll(Arrays.asList(myAlignments[i].getChromosomes()));
-            int[] tempOffsets = myAlignments[i].getChromosomesOffsets();
+            chromosomes.addAll(Arrays.asList(myAlignments[i].chromosomes()));
+            int[] tempOffsets = myAlignments[i].chromosomesOffsets();
             for (int j = 0; j < tempOffsets.length; j++) {
                 offsets.add(tempOffsets[j] + mySiteOffsets[i]);
             }
@@ -243,8 +243,8 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getChromosomeSiteCount(Chromosome locus) {
-        return ((Alignment) myChromosomes.get(locus)).getChromosomeSiteCount(locus);
+    public int chromosomeSiteCount(Chromosome locus) {
+        return ((Alignment) myChromosomes.get(locus)).chromosomeSiteCount(locus);
     }
 
     @Override
@@ -286,13 +286,13 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Chromosome getChromosome(int site) {
+    public Chromosome chromosome(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getChromosome(site - mySiteOffsets[translate]);
+        return myAlignments[translate].chromosome(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public Chromosome[] getChromosomes() {
+    public Chromosome[] chromosomes() {
         return myChromosomesList;
     }
 
@@ -345,9 +345,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getIndelSize(int site) {
+    public int indelSize(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getIndelSize(site - mySiteOffsets[translate]);
+        return myAlignments[translate].indelSize(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -363,38 +363,38 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Alignment[] getAlignments() {
+    public Alignment[] compositeAlignments() {
         return myAlignments;
     }
 
     @Override
-    public byte getMajorAllele(int site) {
+    public byte majorAllele(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getMajorAllele(site - mySiteOffsets[translate]);
+        return myAlignments[translate].majorAllele(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public byte getMinorAllele(int site) {
+    public byte minorAllele(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getMinorAllele(site - mySiteOffsets[translate]);
+        return myAlignments[translate].minorAllele(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public byte[] getMinorAlleles(int site) {
+    public byte[] minorAlleles(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getMinorAlleles(site - mySiteOffsets[translate]);
+        return myAlignments[translate].minorAlleles(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public byte[] getAlleles(int site) {
+    public byte[] alleles(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getAlleles(site - mySiteOffsets[translate]);
+        return myAlignments[translate].alleles(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public double getMinorAlleleFrequency(int site) {
+    public double minorAlleleFrequency(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getMinorAlleleFrequency(site - mySiteOffsets[translate]);
+        return myAlignments[translate].minorAlleleFrequency(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -512,13 +512,13 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getChromosomeName(int site) {
+    public String chromosomeName(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getChromosomeName(site - mySiteOffsets[translate]);
+        return myAlignments[translate].chromosomeName(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public int[] getChromosomesOffsets() {
+    public int[] chromosomesOffsets() {
         return myChromosomesOffsets;
     }
 
@@ -550,9 +550,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public double getMajorAlleleFrequency(int site) {
+    public double majorAlleleFrequency(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getMajorAlleleFrequency(site - mySiteOffsets[translate]);
+        return myAlignments[translate].majorAlleleFrequency(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -675,21 +675,21 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getHeterozygousCount(int site) {
+    public int heterozygousCount(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getHeterozygousCount(site - mySiteOffsets[translate]);
+        return myAlignments[translate].heterozygousCount(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public int getMinorAlleleCount(int site) {
+    public int minorAlleleCount(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getMinorAlleleCount(site - mySiteOffsets[translate]);
+        return myAlignments[translate].minorAlleleCount(site - mySiteOffsets[translate]);
     }
 
     @Override
-    public int getMajorAlleleCount(int site) {
+    public int majorAlleleCount(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getMajorAlleleCount(site - mySiteOffsets[translate]);
+        return myAlignments[translate].majorAlleleCount(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -699,9 +699,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SORT_TYPE scope, int site) {
+    public byte[] allelesBySortType(ALLELE_SORT_TYPE scope, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getAllelesByScope(scope, site - mySiteOffsets[translate]);
+        return myAlignments[translate].allelesBySortType(scope, site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -736,7 +736,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
+    public int[] startAndEndOfChromosome(Chromosome chromosome) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -746,17 +746,17 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Chromosome getChromosome(String name) {
+    public Chromosome chromosome(String name) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public String getMajorAlleleAsString(int site) {
+    public String majorAlleleAsString(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public String getMinorAlleleAsString(int site) {
+    public String minorAlleleAsString(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -771,7 +771,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public String getDiploidAsString(int site, byte value) {
+    public String diploidAsString(int site, byte value) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -786,7 +786,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Object[][] getMajorMinorCounts() {
+    public Object[][] majorMinorCounts() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -796,7 +796,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getHeterozygousCountForTaxon(int taxon) {
+    public int heterozygousCountForTaxon(int taxon) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -806,12 +806,12 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getDepthForAlleles(int taxon, int site) {
+    public byte[] depthForAlleles(int taxon, int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public BitStorage getBitStorage(ALLELE_SORT_TYPE scopeType) {
+    public BitStorage bitStorage(ALLELE_SORT_TYPE scopeType) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -821,7 +821,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Genotype getGenotypeMatrix() {
+    public Genotype genotypeMatrix() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }
