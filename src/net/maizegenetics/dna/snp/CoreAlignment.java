@@ -400,8 +400,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getMaxNumAlleles() {
-        return myGenotype.getMaxNumAlleles();
+    public int maxNumAlleles() {
+        return myGenotype.maxNumAlleles();
     }
 
     @Override

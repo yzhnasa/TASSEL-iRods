@@ -811,8 +811,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getMaxNumAlleles() {
-        return myGenotype.getMaxNumAlleles();
+    public int maxNumAlleles() {
+        return myGenotype.maxNumAlleles();
     }
 
     @Override

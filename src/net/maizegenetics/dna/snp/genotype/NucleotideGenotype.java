@@ -27,7 +27,7 @@ class NucleotideGenotype extends ByteGenotype {
     }
 
     @Override
-    public int getMaxNumAlleles() {
+    public int maxNumAlleles() {
         return NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
     }
 

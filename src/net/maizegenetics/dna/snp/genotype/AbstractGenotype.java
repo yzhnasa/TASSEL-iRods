@@ -194,7 +194,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int getMaxNumAlleles() {
+    public int maxNumAlleles() {
         return DEFAULT_MAX_NUM_ALLELES;
     }
 

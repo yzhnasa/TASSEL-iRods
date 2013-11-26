@@ -752,7 +752,7 @@ public interface Alignment {
      *
      * @return max number of alleles.
      */
-    public int getMaxNumAlleles();
+    public int maxNumAlleles();
 
     /**
      * Returns total number of non-missing allele values for given site. This

@@ -249,7 +249,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         List<String> columnNames = new ArrayList<String>(Arrays.asList(firstColumnNames));
 
-        int maxAlleles = alignment.getMaxNumAlleles();
+        int maxAlleles = alignment.maxNumAlleles();
         if (alignment.retainsRareAlleles()) {
             maxAlleles++;
         }

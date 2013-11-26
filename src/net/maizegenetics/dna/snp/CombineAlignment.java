@@ -670,11 +670,11 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getMaxNumAlleles() {
+    public int maxNumAlleles() {
         int result = 999999;
         for (int i = 0; i < myAlignments.length; i++) {
-            if (myAlignments[i].getMaxNumAlleles() < result) {
-                result = myAlignments[i].getMaxNumAlleles();
+            if (myAlignments[i].maxNumAlleles() < result) {
+                result = myAlignments[i].maxNumAlleles();
             }
         }
         return result;

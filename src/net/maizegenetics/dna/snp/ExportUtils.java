@@ -53,7 +53,7 @@ public class ExportUtils {
             config.dontUseExtendableDataTypes();
             h5w = config.writer();
 
-            //h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
+            //h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.maxNumAlleles());
 
             h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
 
@@ -102,8 +102,8 @@ public class ExportUtils {
             h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
             h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.getPhysicalPositions());
 
-            //h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.numberOfSites(), a.getMaxNumAlleles());
-            //byte[][] alleles = new byte[numSites][a.getMaxNumAlleles()];
+            //h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.numberOfSites(), a.maxNumAlleles());
+            //byte[][] alleles = new byte[numSites][a.maxNumAlleles()];
             //for (int i = 0; i < numSites; i++) {
             //    alleles[i] = a.getAlleles(i);
             //}
@@ -198,7 +198,7 @@ public class ExportUtils {
 //            config.dontUseExtendableDataTypes();
 //            h5w = config.writer();
 //            HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
-//            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.getMaxNumAlleles());
+//            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.maxNumAlleles());
 //            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
 //            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
 //            String[][] aEncodings = a.alleleDefinitions();
@@ -549,8 +549,8 @@ public class ExportUtils {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 } else {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Frequency, site);
-                    //if (nAlleles > alignment.getMaxNumAlleles()) {
-                    //    nAlleles = alignment.getMaxNumAlleles();
+                    //if (nAlleles > alignment.maxNumAlleles()) {
+                    //    nAlleles = alignment.maxNumAlleles();
                     //}
                 }
                 int[] alleleRedirect = new int[nAlleles]; // holds the indices of alleleValues in ref, alt1, [alt2] order (max 3 alleles)
