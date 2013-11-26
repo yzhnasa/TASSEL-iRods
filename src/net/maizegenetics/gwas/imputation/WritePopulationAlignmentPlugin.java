@@ -93,7 +93,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 
             if (!Double.isNaN(minSnpCoverage) && !Double.isNaN(maxMafForMono)) {
                 int nsnps = popdata.original.getSiteCount();
-                double ngametes = 2 * popdata.original.getSequenceCount();
+                double ngametes = 2 * popdata.original.numberOfTaxa();
                 int[] monomorphicSnps = new int[nsnps];
                 int snpCount = 0;
                 for (int s = 0; s < nsnps; s++) {

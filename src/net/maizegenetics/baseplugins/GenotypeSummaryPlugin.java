@@ -128,7 +128,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         Object[] firstColumnNames = new String[]{"Stat Type", "Value"};
 
         long numSites = alignment.getSiteCount();
-        long numTaxa = alignment.getSequenceCount();
+        long numTaxa = alignment.numberOfTaxa();
 
         Object[][] diploidValueCounts = alignment.getDiploidCounts();
         int numAlleles = diploidValueCounts[0].length;
@@ -264,7 +264,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         columnNames.addAll(Arrays.asList(lastColumnNames));
 
         int numSites = alignment.getSiteCount();
-        int numTaxa = alignment.getSequenceCount();
+        int numTaxa = alignment.numberOfTaxa();
         Object[][] data = new Object[numSites][columnNames.size()];
         int totalGametes = numTaxa * 2;
 
@@ -330,7 +330,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             "Number Heterozygous", "Proportion Heterozygous", "Inbreeding Coefficient",
             "Inbreeding Coefficient Scaled by Missing"};
         int numSites = alignment.getSiteCount();
-        int numTaxa = alignment.getSequenceCount();
+        int numTaxa = alignment.numberOfTaxa();
         Object[][] data = new Object[numTaxa][columnNames.length];
 
         int totalGametes = numSites * 2;

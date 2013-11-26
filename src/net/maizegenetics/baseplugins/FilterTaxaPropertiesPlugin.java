@@ -117,9 +117,9 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             }
         }
 
-        if (result.getSequenceCount() != 0) {
-            String theName = inDatum.getName() + "_" + result.getSequenceCount() + "Taxa";
-            myLogger.info("Resulting Number Sequences: " + result.getSequenceCount());
+        if (result.numberOfTaxa() != 0) {
+            String theName = inDatum.getName() + "_" + result.numberOfTaxa() + "Taxa";
+            myLogger.info("Resulting Number Sequences: " + result.numberOfTaxa());
             return new Datum(theName, result, theComment);
         } else {
             if (isInteractive()) {
@@ -134,7 +134,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
 
     private Alignment getFilteredAlignment(Alignment alignment) {
         int numSites = alignment.getSiteCount();
-        int numTaxa = alignment.getSequenceCount();
+        int numTaxa = alignment.numberOfTaxa();
         TaxaList ids = alignment.taxa();
 
         TaxaListBuilder keepTaxaList = new TaxaListBuilder();

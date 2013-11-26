@@ -96,7 +96,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
                     @Override
                     public int getRealSize() {
-                        return alignment.getSequenceCount();
+                        return alignment.numberOfTaxa();
                     }
 
                     @Override
@@ -152,7 +152,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
             } else if (myIdsToRemove != null) {
                 result = FilterAlignment.getInstanceRemoveIDs((Alignment) theData, myIdsToRemove);
             }
-            count = ((Alignment) result).getTaxaCount();
+            count = ((Alignment) result).numberOfTaxa();
         } else if (theData instanceof Phenotype) {
             if (myIdsToKeep != null) {
                 result = FilterPhenotype.getInstance((Phenotype) theData, myIdsToKeep, null);

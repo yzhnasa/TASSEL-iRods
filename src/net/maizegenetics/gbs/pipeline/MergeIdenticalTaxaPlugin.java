@@ -71,13 +71,13 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                 throw new IllegalArgumentException("File format " + inputFormat + " is not recognized!");
 //            }
 //
-//            myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
+//            myLogger.info("Original Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.getSiteCount());
 //            AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
 //
 //            TaxaList idg = a.taxa();
 //            TreeMap<String, List<String>> sortedIds2 = new TreeMap<String, List<String>>();
 //            int uniqueTaxa = 0;
-//            for (int i = 0; i < idg.getTaxaCount(); i++) {
+//            for (int i = 0; i < idg.numberOfTaxa(); i++) {
 //                List<String> l = sortedIds2.get(idg.taxaName(i));
 //                if (l == null) {
 //                    sortedIds2.put(idg.taxaName(i), l = new ArrayList<String>());
@@ -98,7 +98,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                index++;
 //            }
 //            TaxaList newGroup=newGroupBuild.build();
-//            System.out.println("Total taxa:" + idg.getTaxaCount());
+//            System.out.println("Total taxa:" + idg.numberOfTaxa());
 //            System.out.println("Unique taxa:" + uniqueTaxa);
 //            //MutableNucleotideAlignment theMSA = new MutableNucleotideAlignment(newGroup, a.getSiteCount(), a.getLoci());
 //            MutableNucleotideAlignment theMSA = null;
@@ -106,7 +106,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                theMSA = MutableNucleotideAlignment.getInstance(newGroup, a.getSiteCount());
 //            }
 //            else if (inputFormat == INPUT_FORMAT.vcf){
-//                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(),newGroup.getTaxaCount(), a.getSiteCount(), myMaxNumAlleles);
+//                theMSA = MutableVCFAlignment.getInstance(newGroup, a.getSiteCount(),newGroup.numberOfTaxa(), a.getSiteCount(), myMaxNumAlleles);
 //            }
 //            for (int s = 0; s < a.getSiteCount(); s++) {
 //                theMSA.setLocusOfSite(s, a.getChromosome(s));

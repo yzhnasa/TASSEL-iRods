@@ -49,7 +49,7 @@ public class ProjectionGenotype extends AbstractGenotype {
         super(allBreakPoints.size(), hdAlign.getSiteCount(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         myBaseAlignment = hdAlign;
         this.allBreakPoints = allBreakPoints;
-        breakMaps = new ArrayList<>(getTaxaCount());
+        breakMaps = new ArrayList<>(numberOfTaxa());
         for (NavigableSet<DonorHaplotypes> allBreakPoint : allBreakPoints) {
             RangeMap<Integer, DonorSiteHaps> tRM = TreeRangeMap.create();
             for (DonorHaplotypes dh : allBreakPoint) {
@@ -60,7 +60,7 @@ public class ProjectionGenotype extends AbstractGenotype {
             }
             breakMaps.add(tRM);
         }
-        currentDSH = new DonorSiteHaps[getTaxaCount()];
+        currentDSH = new DonorSiteHaps[numberOfTaxa()];
         primDSH = new int[myTaxaCount * 4];
         Arrays.fill(primDSH, Integer.MIN_VALUE);
     }

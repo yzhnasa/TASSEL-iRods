@@ -138,7 +138,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	}
 	
 	public Alignment preFilterAlignment(Alignment align) {
-		int ntaxa = align.getSequenceCount();
+		int ntaxa = align.numberOfTaxa();
 		int nsites = align.getSiteCount();
 		int nTaxaGametes = 2 * nsites;
 		int nSiteGametes = 2 * ntaxa;
@@ -163,7 +163,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			align = FilterAlignment.getInstanceRemoveIDs(align, tL);
 		}
 		
-		myLogger.info("After filtering for taxa, there are " + align.getSequenceCount() + " taxa.");
+		myLogger.info("After filtering for taxa, there are " + align.numberOfTaxa() + " taxa.");
 		
 		//number of non-missing values per site
 		int[] sitesToKeep = new int[nsites];
@@ -305,7 +305,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     
 	private double[] calculateProportionNonConsensusPerTaxon(Alignment align) {
 		double maxMaf = 0.05;
-		int ntaxa = align.getSequenceCount();
+		int ntaxa = align.numberOfTaxa();
 		int nsites = align.getSiteCount();
 		
 		OpenBitSet lowmaf = new OpenBitSet(nsites);
@@ -313,7 +313,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			if (align.getMinorAlleleFrequency(s) < maxMaf) lowmaf.set(s);
 		}
 		
-//		myLogger.info("taxa = " + align.getSequenceCount() + ", sites = " + align.getSiteCount());
+//		myLogger.info("taxa = " + align.numberOfTaxa() + ", sites = " + align.getSiteCount());
 //		myLogger.info("lowmaf count = " + lowmaf.cardinality());
 		
 		try {
@@ -341,7 +341,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	
 	private void saveProportionNonConsensusToFile(double[] propNonconsensus, Alignment align, String saveFilename) {
     		BufferedWriter bw = Utils.getBufferedWriter(saveFilename);
-    		int ntaxa = align.getSequenceCount();
+    		int ntaxa = align.numberOfTaxa();
     		try {
     			bw.write("Taxon\tchr\tpropNC");
     			bw.newLine();

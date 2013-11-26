@@ -162,10 +162,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 
         siteErrors=new int[unimpAlign.getSiteCount()];
         siteCorrectCnt=new int[unimpAlign.getSiteCount()];
-        taxonErrors=new int[unimpAlign.getSequenceCount()];
-        taxonCorrectCnt=new int[unimpAlign.getSequenceCount()];
+        taxonErrors=new int[unimpAlign.numberOfTaxa()];
+        taxonCorrectCnt=new int[unimpAlign.numberOfTaxa()];
 
-        System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.getSequenceCount(),unimpAlign.getSiteCount());       
+        System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.numberOfTaxa(),unimpAlign.getSiteCount());       
         System.out.println("Creating mutable alignment");
         Object mna=null;
         if(isOutputProjection) {
@@ -184,7 +184,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         long time=System.currentTimeMillis();
         int numThreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
-        for (int taxon = 0; taxon < unimpAlign.getSequenceCount(); taxon+=1) {
+        for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon+=1) {
             ImputeOneTaxon theTaxon=new ImputeOneTaxon(taxon, donorAlign, minSitesPresent, conflictMasks,imputeDonorFile, mna);
     //        theTaxon.run();
             pool.execute(theTaxon);
@@ -269,10 +269,10 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                         donorAlign[da].getSiteCount(),conflictMasks[da][0],conflictMasks[da][1]); 
                 int[] donorIndices;
                 if(imputeDonorFile){
-                    donorIndices=new int[donorAlign[da].getSequenceCount()-1];
+                    donorIndices=new int[donorAlign[da].numberOfTaxa()-1];
                     for (int i = 0; i < donorIndices.length; i++) {donorIndices[i]=i; if(i>=taxon) donorIndices[i]++;}
                 } else {
-                    donorIndices=new int[donorAlign[da].getSequenceCount()];
+                    donorIndices=new int[donorAlign[da].numberOfTaxa()];
                     for (int i = 0; i < donorIndices.length; i++) {donorIndices[i]=i;}
                 }
                 DonorHypoth[][] regionHypth=new DonorHypoth[blocks][maxDonorHypotheses];
@@ -311,7 +311,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             double errRate=calcErrorForTaxonAndSite(impTaxon); 
             sb.append(String.format("ErR:%g ", errRate));
 //            double rate=(double)taxon/(double)(System.currentTimeMillis()-time);
-//            double remaining=(unimpAlign.getSequenceCount()-taxon)/(rate*1000);
+//            double remaining=(unimpAlign.numberOfTaxa()-taxon)/(rate*1000);
 //            System.out.printf("TimeLeft:%.1fs %n", remaining);
             System.out.println(sb.toString());
 //            if(isOutputProjection) {
@@ -336,7 +336,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         for (int i = 0; i < donorAlign.length; i++) {
             System.out.println("Starting Read");
             donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), true, (ProgressListener)null);     
-            System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
+            System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].getSiteCount());
             System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
@@ -351,7 +351,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             System.out.println("Starting Read");
             Alignment fa=FilterAlignment.getInstance(a,theChr[i]);
             donorAlign[i]=AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
-            System.out.printf("Donor file:%s taxa:%d sites:%d %n",theChr[i].toString(), donorAlign[i].getSequenceCount(),donorAlign[i].getSiteCount());
+            System.out.printf("Donor file:%s taxa:%d sites:%d %n",theChr[i].toString(), donorAlign[i].numberOfTaxa(),donorAlign[i].getSiteCount());
             System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
@@ -661,7 +661,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
      */
     private void calcInbredDist(ImputedTaxon impT, BitSet[] modBitsOfTarget, Alignment donorAlign) {
         int blocks=modBitsOfTarget[0].getNumWords();
-        impT.allDist=new byte[donorAlign.getSequenceCount()][4][blocks];
+        impT.allDist=new byte[donorAlign.numberOfTaxa()][4][blocks];
         long[] iMj=modBitsOfTarget[0].getBits();
         long[] iMn=modBitsOfTarget[1].getBits();
         for (int donor1 = 0; donor1 < impT.allDist.length; donor1++) {
@@ -698,7 +698,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
         double lastKeytestPropUnmatched=1.0;
         double inc=1e-9;
-        int donorTaxaCnt=donorAlign.getSequenceCount();
+        int donorTaxaCnt=donorAlign.numberOfTaxa();
         for (int d1 : donor1indices) {
             int testSites=0;
             int sameCnt = 0, diffCnt = 0, hetCnt = 0;
@@ -958,19 +958,19 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     public static int[] compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
         boolean taxaOut=false;
         Alignment oA=ImportUtils.readGuessFormat(origFile);
-        System.out.printf("Orig taxa:%d sites:%d %n",oA.getSequenceCount(),oA.getSiteCount());        
+        System.out.printf("Orig taxa:%d sites:%d %n",oA.numberOfTaxa(),oA.getSiteCount());        
         Alignment mA=null;
         if(noMask==false) {mA=ImportUtils.readGuessFormat(maskFile);
-            System.out.printf("Mask taxa:%d sites:%d %n",mA.getSequenceCount(),mA.getSiteCount());
+            System.out.printf("Mask taxa:%d sites:%d %n",mA.numberOfTaxa(),mA.getSiteCount());
         }
         Alignment iA=ImportUtils.readGuessFormat(impFile);
-        System.out.printf("Imp taxa:%d sites:%d %n",iA.getSequenceCount(),iA.getSiteCount());
+        System.out.printf("Imp taxa:%d sites:%d %n",iA.numberOfTaxa(),iA.getSiteCount());
         int correct=0;
         int errors=0;
         int unimp=0;
         int hets=0;
         int gaps=0;
-        for (int t = 0; t < iA.getSequenceCount(); t++) {
+        for (int t = 0; t < iA.numberOfTaxa(); t++) {
             int e=0,c=0,u=0,h=0;
             int oATaxa=oA.taxa().getIndicesMatchingTaxon(iA.taxaName(t)).get(0);
             for (int s = 0; s < iA.getSiteCount(); s++) {

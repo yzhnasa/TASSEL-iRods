@@ -124,16 +124,16 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         }
         double pipbp = dm.meanDistance();
         int segSites = countSegregatingSites(theAlignment);
-        int taxa = theAlignment.getSequenceCount();
+        int taxa = theAlignment.numberOfTaxa();
         theDiversityResults.pipbp = pipbp;
         theDiversityResults.avgSiteCoverage = dm.getAverageTotalSites();
         theDiversityResults.totalSites = sites;
         theDiversityResults.segregatingSites = segSites;
         theDiversityResults.thetapbp = estimateThetaPerbp(segSites, sites, theDiversityResults.avgSiteCoverage, taxa);
 
-        // theDiversityResults.theta=estimateTheta(segSites,sites,theDiversityResults.avgSiteCoverage, theAlignment.getSequenceCount());
+        // theDiversityResults.theta=estimateTheta(segSites,sites,theDiversityResults.avgSiteCoverage, theAlignment.numberOfTaxa());
         theDiversityResults.tajimaD = estimateTajimaD(segSites, theDiversityResults.totalSites, theDiversityResults.avgSiteCoverage,
-                theAlignment.getSequenceCount(), theDiversityResults.pipbp, theDiversityResults.thetapbp);
+                theAlignment.numberOfTaxa(), theDiversityResults.pipbp, theDiversityResults.thetapbp);
         return theDiversityResults;
     }
 

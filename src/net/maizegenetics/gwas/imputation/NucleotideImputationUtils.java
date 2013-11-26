@@ -228,7 +228,7 @@ public class NucleotideImputationUtils {
 		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
 		int nsites = popdata.original.getSiteCount();
-		int ntaxa = popdata.original.getSequenceCount();
+		int ntaxa = popdata.original.numberOfTaxa();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
@@ -313,7 +313,7 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
+		ntaxa = popdata.original.numberOfTaxa();
 		nsites = popdata.original.getSiteCount();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
@@ -352,7 +352,7 @@ public class NucleotideImputationUtils {
 
 	public static void callParentAllelesUsingClusters(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
 		HaplotypeCluster.ReturnHaplotype = HaplotypeCluster.TYPE.majority;
-		int ntaxa = popdata.original.getSequenceCount();
+		int ntaxa = popdata.original.numberOfTaxa();
 		int nOriginalSites = popdata.original.getSiteCount();
 		popdata.alleleA = new byte[nOriginalSites];
 		popdata.alleleC = new byte[nOriginalSites];
@@ -430,7 +430,7 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
+		ntaxa = popdata.original.numberOfTaxa();
 		int nsites = popdata.original.getSiteCount();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
@@ -490,7 +490,7 @@ public class NucleotideImputationUtils {
 		
 		for (int i = 0; i < 3; i++) {
 			Alignment a = FilterAlignment.getInstance(popdata.original, new SimpleIdGroup(subids.get(i)));
-			int ntaxa = a.getSequenceCount();
+			int ntaxa = a.numberOfTaxa();
 			for (int s = 0; s < nsites; s++) {
 				
 				int firstSite = s - halfWindowSize;
@@ -653,7 +653,7 @@ public class NucleotideImputationUtils {
 		ArrayList<Haplotype> cluster0 = new ArrayList<>();
 		ArrayList<Haplotype> cluster1 = new ArrayList<>();
 		
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		Alignment b = FilterAlignment.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
 			seq = b.genotypeAllSites(t);
@@ -710,7 +710,7 @@ public class NucleotideImputationUtils {
 		ArrayList<Haplotype> cluster0 = new ArrayList<>();
 		ArrayList<Haplotype> cluster1 = new ArrayList<>();
 		
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		Alignment b = FilterAlignment.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
 			byte[] seq = b.genotypeAllSites(t);
@@ -808,7 +808,7 @@ public class NucleotideImputationUtils {
 		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
 		int nsites = popdata.original.getSiteCount();
-		int ntaxa = popdata.original.getSequenceCount();
+		int ntaxa = popdata.original.numberOfTaxa();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
@@ -825,7 +825,7 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
+		ntaxa = popdata.original.numberOfTaxa();
 		nsites = popdata.original.getSiteCount();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
@@ -901,7 +901,7 @@ public class NucleotideImputationUtils {
 //		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
 		int nsites = popdata.original.getSiteCount();
-		int ntaxa = popdata.original.getSequenceCount();
+		int ntaxa = popdata.original.numberOfTaxa();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
@@ -917,7 +917,7 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
+		ntaxa = popdata.original.numberOfTaxa();
 		nsites = popdata.original.getSiteCount();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
@@ -1135,7 +1135,7 @@ public class NucleotideImputationUtils {
 	public static BitSet whichSitesArePolymorphic(Alignment a, double maxMissing, double minMaf) {
 		//which sites are polymorphic? minor allele count > 2 and exceed the minimum allele count
 		int nsites = a.getSiteCount();
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		double totalgametes = 2 * ntaxa;
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
@@ -1151,7 +1151,7 @@ public class NucleotideImputationUtils {
 	
 	public static BitSet whichSitesSegregateCorrectly(Alignment a, double maxMissing, double ratio) {
 		int nsites = a.getSiteCount();
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		double totalgametes = 2 * ntaxa;
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
@@ -1342,7 +1342,7 @@ public class NucleotideImputationUtils {
 		Tree myTree = new UPGMATree(dm);
 		TreeClusters clusterMaker = new TreeClusters(myTree);
 		
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		int majorCount = ntaxa;
 		int minorCount = 0;
 		int ngroups = 1;
@@ -1529,7 +1529,7 @@ public class NucleotideImputationUtils {
 //		int s1Count = 0;
 //		int s2Count = 0;
 //		int prodCount = 0;
-		int totalCount = a.getSequenceCount();
+		int totalCount = a.numberOfTaxa();
 				
 		BitSet m11 = a.getAllelePresenceForAllTaxa(site1, 0);
 		BitSet m12 = a.getAllelePresenceForAllTaxa(site1, 1);
@@ -1628,7 +1628,7 @@ public class NucleotideImputationUtils {
 		obsMap.put(CA, (byte) 1);
 		obsMap.put(CC, (byte) 2);
 		
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		int nsites = a.getSiteCount();
 		
 		//initialize the transition matrix
@@ -1959,7 +1959,7 @@ public class NucleotideImputationUtils {
 
 	public static void examineTaxaClusters(Alignment a, BitSet polybits) {
 		int nsnps = a.getSiteCount();
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		int sitecount = 500;
 		int window = 200;
 		while (sitecount < nsnps) {
@@ -2060,7 +2060,7 @@ public class NucleotideImputationUtils {
 		//else sba = SBitAlignment.getInstance(alignIn);
 		
 		int nsites = sba.getSiteCount();
-		int ntaxa = sba.getSequenceCount();
+		int ntaxa = sba.numberOfTaxa();
 		int firstSite = 0;
 		int[] sitesSelected = new int[nsites];
 		int selectCount = 0;
@@ -2291,7 +2291,7 @@ public class NucleotideImputationUtils {
     	
     	TransitionProbability tp = new TransitionProbability();
     	int nsites = a.getSiteCount();
-    	int ntaxa = a.getSequenceCount();
+    	int ntaxa = a.numberOfTaxa();
     	int chrlen = a.getPositionInChromosome(nsites - 1) - a.getPositionInChromosome(0);
     	
     	double phet = estimatedHetFraction;
@@ -2427,7 +2427,7 @@ public class NucleotideImputationUtils {
     }
 
 	public static ArrayList<HaplotypeCluster> clusterWindow(Alignment a, int start, int length, int maxdif) {
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		int end = start + length - 1;
 		ArrayList<Haplotype> haps = new ArrayList<Haplotype>();
 		

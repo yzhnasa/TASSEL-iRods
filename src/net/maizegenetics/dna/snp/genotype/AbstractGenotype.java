@@ -589,7 +589,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int getTaxaCount() {
+    public int numberOfTaxa() {
         return myTaxaCount;
     }
 
@@ -615,7 +615,7 @@ abstract class AbstractGenotype implements Genotype {
 
     @Override
     public byte[] getGenotypeForAllTaxa(int site) {
-        int numTaxa = getTaxaCount();
+        int numTaxa = numberOfTaxa();
         byte[] result = new byte[numTaxa];
         for (int i = 0; i < numTaxa; i++) {
             result[i] = genotype(i, site);

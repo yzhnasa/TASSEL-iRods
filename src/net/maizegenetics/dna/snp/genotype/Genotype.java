@@ -417,7 +417,7 @@ public interface Genotype {
      *
      * @return number of taxa
      */
-    public int getTaxaCount();
+    public int numberOfTaxa();
 
     /**
      * Returns total number of sites in this genotype.

@@ -468,7 +468,7 @@ class DataFilterAlignmentDialog extends JDialog {
         for (int i = 0; i < chromsAvailable.length; i++) {
             chromsAvailable[i] = theAlignment.getChromosomes()[i].getName().trim();
         }
-        totalSeq = theAlignment.getSequenceCount();
+        totalSeq = theAlignment.numberOfTaxa();
         siteCount = theAlignment.getSiteCount();
         lblSeqLength.setText(" of " + (siteCount - 1) + " sites");
         lblMinCount.setText("Minimum PERCENTAGE:");
@@ -876,7 +876,7 @@ class DataFilterAlignmentDialog extends JDialog {
             lblSitePos.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && startPos >= 0);
             startPosTextField.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && startPos >= 0);
             endPosTextField.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && endPos >= 0);
-            totalSeq = chromFilteredAlignment.getSequenceCount();
+            totalSeq = chromFilteredAlignment.numberOfTaxa();
             siteCount = chromFilteredAlignment.getSiteCount();
             lblSeqLength.setText(" of " + (siteCount - 1) + " sites");
             lblMinCount.setText("Minimum Count:");
@@ -1140,7 +1140,7 @@ class DataFilterAlignmentDialog extends JDialog {
             int minCountOriginal = minCount;
             try {
                 minCount = Integer.parseInt(countTextField.getText().trim());
-                if ((minCount > theAlignment.getSequenceCount()) || (minCount < 0)) {
+                if ((minCount > theAlignment.numberOfTaxa()) || (minCount < 0)) {
                     minCount = minCountOriginal;
                 }
             } catch (Exception ee) {

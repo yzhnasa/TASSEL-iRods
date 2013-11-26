@@ -74,9 +74,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -117,7 +117,7 @@ public class FilterAlignment implements Alignment {
         List<Integer> taxaRedirectList = new ArrayList<Integer>();
         List<Taxon> idList = new ArrayList<Taxon>();
         boolean noNeedToFilter = true;
-        if (subTaxaList.getTaxaCount() != a.getTaxaCount()) {
+        if (subTaxaList.getTaxaCount() != a.numberOfTaxa()) {
             noNeedToFilter = false;
         }
         for (int i = 0, n = subTaxaList.getTaxaCount(); i < n; i++) {
@@ -220,9 +220,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -260,9 +260,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), numberOfTaxa(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -571,7 +571,7 @@ public class FilterAlignment implements Alignment {
         }
 
         int numSites = getSiteCount();
-        int numSeqs = getTaxaCount();
+        int numSeqs = numberOfTaxa();
         float[][] result = new float[numSeqs][numSites];
         for (int i = 0; i < numSites; i++) {
             for (int j = 0; j < numSeqs; j++) {
@@ -746,12 +746,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getSequenceCount() {
-        return myTaxaList.getTaxaCount();
-    }
-
-    @Override
-    public int getTaxaCount() {
+    public int numberOfTaxa() {
         return myTaxaList.getTaxaCount();
     }
 

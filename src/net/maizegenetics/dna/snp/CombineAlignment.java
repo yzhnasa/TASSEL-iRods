@@ -22,7 +22,7 @@ public class CombineAlignment implements Alignment {
     private static final long serialVersionUID = -5197800047652332969L;
     private final Alignment[] myAlignments;
     private final int[] mySiteOffsets;
-    private final Map<Chromosome,Alignment> myChromosomes = new HashMap<>();
+    private final Map<Chromosome, Alignment> myChromosomes = new HashMap<>();
     private Chromosome[] myChromosomesList;
     private int[] myChromosomesOffsets;
     private final TaxaList myTaxaList;
@@ -312,7 +312,7 @@ public class CombineAlignment implements Alignment {
             return null;
         }
 
-        int numSeqs = getTaxaCount();
+        int numSeqs = numberOfTaxa();
         float[][] result = new float[numSeqs][getSiteCount()];
         for (int a = 0, n = myAlignments.length; a < n; a++) {
             if (myAlignments[a].hasSiteScores()) {
@@ -753,12 +753,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getSequenceCount() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public int getTaxaCount() {
+    public int numberOfTaxa() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

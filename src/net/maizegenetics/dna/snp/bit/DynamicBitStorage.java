@@ -157,7 +157,7 @@ public class DynamicBitStorage implements BitStorage {
         myGenotype = genotype;
         myPreferredScope = currentScope;
         mySiteCount = myGenotype.getSiteCount();
-        myTaxaCount = myGenotype.getTaxaCount();
+        myTaxaCount = myGenotype.numberOfTaxa();
         myPrefAllele0 = Arrays.copyOf(prefAllele0, prefAllele0.length);
         myPrefAllele1 = Arrays.copyOf(prefAllele1, prefAllele1.length);
         bitCache = CacheBuilder.newBuilder()

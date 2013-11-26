@@ -185,12 +185,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getSequenceCount() {
-        return myTaxaCount;
-    }
-
-    @Override
-    public int getTaxaCount() {
+    public int numberOfTaxa() {
         return myTaxaCount;
     }
 

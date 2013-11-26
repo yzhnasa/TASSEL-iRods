@@ -148,7 +148,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
         }
         myHDF5Reader = reader;
         myGenoCache = CacheBuilder.newBuilder()
-                .maximumSize((3 * getTaxaCount()) / 2)
+                .maximumSize((3 * numberOfTaxa()) / 2)
                 .build(myGenoLoader);
         mySiteAnnoCache = CacheBuilder.newBuilder()
                 .maximumSize(150)

@@ -320,7 +320,7 @@ public class TagAgainstAnchorOriginal {
                 long[] testTag = subTBT.getTag(i);
                 long[] testTagDist;
                 double[][] theResults=new double[chromosomeNumber.length][];
-                testTagDist=getTagsInBits(subTBT, i, tbtRedirect, anchor.getSequenceCount());
+                testTagDist=getTagsInBits(subTBT, i, tbtRedirect, anchor.numberOfTaxa());
                 ScanChromosome[] scanOnChr = new ScanChromosome[chromosomeNumber.length];
                 for (int j = 0; j < chromosomeNumber.length; j++) {
                     scanOnChr[j] = new ScanChromosome(testTagDist, theResults, j, chrStartIndex[j], chrEndIndex[j], pThresh, 1, blastPos);
@@ -570,7 +570,7 @@ public class TagAgainstAnchorOriginal {
         long lastTimePoint = this.getCurrentTimeNano();
         Alignment a = ImportUtils.readGuessFormat(hapMapHDF5);
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
-        System.out.println("The anchor map has " + a.getSiteCount() + " sites and " + a.getTaxaCount() + " taxa");
+        System.out.println("The anchor map has " + a.getSiteCount() + " sites and " + a.numberOfTaxa() + " taxa");
         lastTimePoint = this.getCurrentTimeNano();
         int[] chrOffSet = a.getChromosomesOffsets();
         chromosomeNumber = new int[a.getChromosomes().length];

@@ -566,11 +566,11 @@ public class ProductionPipelineMain {
 
 
         int siteCount = origAlignment.getSiteCount();
-        int taxaCount = origAlignment.getTaxaCount();
+        int taxaCount = origAlignment.numberOfTaxa();
         int totalSiteCount = siteCount * taxaCount;
 
         int siteDelta = Math.abs(origAlignment.getSiteCount()- impAlignment.getSiteCount());
-        int taxaDelta = Math.abs(origAlignment.getTaxaCount() - impAlignment.getTaxaCount());
+        int taxaDelta = Math.abs(origAlignment.numberOfTaxa() - impAlignment.numberOfTaxa());
 
 
         int origTotalSitesNotMissing = 0, impTotalSitesNotMissing = 0, totalSitesNotMissingDelta = 0;

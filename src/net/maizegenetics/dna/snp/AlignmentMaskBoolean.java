@@ -25,7 +25,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
         super(align, name, color, type);
 
-        if (mask.length != align.getSequenceCount()) {
+        if (mask.length != align.numberOfTaxa()) {
             throw new IllegalArgumentException("AlignmentMask: init: number of mask rows should equal number of sequences.");
         }
 
@@ -53,7 +53,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, int index) {
-        if ((index < 0) || (index >= align.getSequenceCount())) {
+        if ((index < 0) || (index >= align.numberOfTaxa())) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown index: " + index);
         }
         String name = align.taxaName(index) + " Reference";
@@ -79,14 +79,14 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
         }
 
         int numMaskColumns = getNumMaskColumns(ref.length);
-        byte[][] mask = new byte[align.getSequenceCount()][numMaskColumns];
+        byte[][] mask = new byte[align.numberOfTaxa()][numMaskColumns];
 
         for (int c = 0, n = align.getSiteCount(); c < n; c++) {
 
             int currentByteCol = c / 8;
             byte currentColMask = (byte) (0x80 >>> (c % 8));
 
-            for (int r = 0, m = align.getSequenceCount(); r < m; r++) {
+            for (int r = 0, m = align.numberOfTaxa(); r < m; r++) {
 
                 // TERRY - If allele order switch it should still probably match?
                 if (align.genotype(r, c) != ref[c]) {
@@ -103,20 +103,20 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
     public static AlignmentMaskBoolean getInstanceCompareAlignments(Alignment align1, Alignment align2, String name, MaskType type) {
 
-        if ((align1.getSequenceCount() != align2.getSequenceCount())
+        if ((align1.numberOfTaxa() != align2.numberOfTaxa())
                 || (align1.getSiteCount() != align2.getSiteCount())) {
             throw new IllegalArgumentException("AlignmentMaskBoolean: getInstanceCompareAlignments: both alignments should have same number of sequences and sites.");
         }
 
         int numMaskColumns = getNumMaskColumns(align1.getSiteCount());
-        byte[][] mask = new byte[align1.getSequenceCount()][numMaskColumns];
+        byte[][] mask = new byte[align1.numberOfTaxa()][numMaskColumns];
 
         for (int c = 0, n = align1.getSiteCount(); c < n; c++) {
 
             int currentByteCol = c / 8;
             byte currentColMask = (byte) (0x80 >>> (c % 8));
 
-            for (int r = 0, m = align1.getSequenceCount(); r < m; r++) {
+            for (int r = 0, m = align1.numberOfTaxa(); r < m; r++) {
 
                 // TERRY - If allele order switch it should still probably match?
                 if (align1.genotype(r, c) != align2.genotype(r, c)) {

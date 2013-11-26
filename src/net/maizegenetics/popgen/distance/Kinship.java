@@ -32,7 +32,7 @@ public class Kinship extends DistanceMatrix {
 
     public Kinship(Alignment mar, boolean areHetsRelated, boolean rescaleKinship) {
         this.mar = mar;
-        numSeqs = this.mar.getTaxaCount();
+        numSeqs = this.mar.numberOfTaxa();
         buildFromMarker();
     }
 

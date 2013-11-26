@@ -44,7 +44,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, int index) {
-        if ((index < -1) || (index >= align.getSequenceCount())) {
+        if ((index < -1) || (index >= align.numberOfTaxa())) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown index: " + index);
         }
         String name;

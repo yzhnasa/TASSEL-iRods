@@ -89,7 +89,7 @@ public class ImputationUtils {
 		//if the parents are in the data set use these as seeds
 		//if one parent is in the dataset pick the taxon farthest from it as the other seed
 		//if neither parent is in the dataset choose random seeds
-		int ntaxa = tb.getSequenceCount();
+		int ntaxa = tb.numberOfTaxa();
 		int nsnps = tb.getSiteCount();
 		int seed1 = parentIndex[0];
 		int seed2 = parentIndex[1];
@@ -208,7 +208,7 @@ public class ImputationUtils {
 	public static Alignment[] getTwoClusters(Alignment inputAlignment, int minGametesPerTaxon) {
 		
 		//filter out low coverage taxa
-		int ntaxa = inputAlignment.getSequenceCount();
+		int ntaxa = inputAlignment.numberOfTaxa();
 		boolean[] include = new boolean[ntaxa];
 		
 		int nIncluded = 0;
@@ -235,7 +235,7 @@ public class ImputationUtils {
 		//if the parents are in the data set use these as seeds
 		//if one parent is in the dataset pick the taxon farthest from it as the other seed
 		//if neither parent is in the dataset choose random seeds
-		ntaxa = myAlignment.getSequenceCount();
+		ntaxa = myAlignment.numberOfTaxa();
 		int nsnps = myAlignment.getSiteCount();
 		boolean[][] isInCluster1 = new boolean[ntrials][ntaxa];
 		int bestTrial = -1;
@@ -863,7 +863,7 @@ public class ImputationUtils {
 				}
 				
 				int nsnps = a.getSiteCount();
-				int ntaxa = a.getSequenceCount();
+				int ntaxa = a.numberOfTaxa();
 				int leftflank = 0;
 				int rightflank = 0;
 				

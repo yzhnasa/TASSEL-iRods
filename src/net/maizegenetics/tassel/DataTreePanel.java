@@ -294,7 +294,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
                     if (book.getData() instanceof Alignment) {
                         Alignment a = (Alignment) book.getData();
                         builder.append("Number of sequences: ");
-                        builder.append(a.getSequenceCount());
+                        builder.append(a.numberOfTaxa());
                         builder.append("\n");
                         builder.append("Number of sites: ");
                         builder.append(a.getSiteCount());

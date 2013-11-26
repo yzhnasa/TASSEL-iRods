@@ -127,7 +127,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      */
     public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
         myAlignment = alignment;
-        myFisherExact = new FisherExact((2 * myAlignment.getSequenceCount()) + 10);
+        myFisherExact = new FisherExact((2 * myAlignment.numberOfTaxa()) + 10);
         myWindowSize = windowSize;
         myCurrDesign = LDType;
         myTestSite = testSite;
@@ -191,7 +191,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, Alignment alignment, int site1, int site2) {
-        FisherExact fisherExact = new FisherExact((2 * alignment.getSequenceCount()) + 10);
+        FisherExact fisherExact = new FisherExact((2 * alignment.numberOfTaxa()) + 10);
         BitSet rMj = alignment.getAllelePresenceForAllTaxa(site1, 0);
         BitSet rMn = alignment.getAllelePresenceForAllTaxa(site1, 1);
         BitSet cMj = alignment.getAllelePresenceForAllTaxa(site2, 0);

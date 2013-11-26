@@ -58,9 +58,9 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static int[][] hetsByLine(Alignment a, boolean isRefAltCoded, boolean printToScreen) {
-        int[][] counts = new int[2][a.getSequenceCount()];
+        int[][] counts = new int[2][a.numberOfTaxa()];
         int totalScored = 0, totalHets = 0;
-        for (int j = 0; j < a.getSequenceCount(); j++) {
+        for (int j = 0; j < a.numberOfTaxa(); j++) {
             for (int i = 0; i < a.getSiteCount(); i++) {
                 if (a.genotype(j, i) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][j]++;
@@ -92,7 +92,7 @@ public class AlignmentFilterByGBSUtils {
 
     public static TaxaList getLowHetIdGroup(Alignment a, boolean isRefAltCoded, double maxHets, int minCount) {
         int[][] hetCnt = hetsByLine(a, isRefAltCoded, false);
-        boolean[] include = new boolean[a.getSequenceCount()];
+        boolean[] include = new boolean[a.numberOfTaxa()];
         for (int i = 0; i < hetCnt[0].length; i++) {
             if (((double) hetCnt[1][i] / (double) hetCnt[0][i] > maxHets) || (hetCnt[0][i] < minCount)) {
                 include[i] = false;
@@ -113,7 +113,7 @@ public class AlignmentFilterByGBSUtils {
             majorAllele = (byte) (majorAllele << 4 | majorAllele);
             byte minorAllele = a.getMinorAllele(i);
             minorAllele = (byte) (minorAllele << 4 | minorAllele);
-            for (int j = 0; j < a.getSequenceCount(); j++) {
+            for (int j = 0; j < a.numberOfTaxa(); j++) {
                 byte currentBase = a.genotype(j, i);
                 if (currentBase != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][i]++;
@@ -191,8 +191,8 @@ public class AlignmentFilterByGBSUtils {
             //        if(theMAF<0.0001) System.out.printf("%d %s %d %d %d %g %n",i,a.getSNPID(i),hetCnt[3][i],hetCnt[1][i],hetCnt[0][i], theMAF);
             double expHets = 2.0 * theMAF * (1 - theMAF);
             fD[i] = 1.0 - (propHets / expHets);
-            coverageD[i] = (double) hetCnt[0][i] / (double) a.getSequenceCount();
-            gapD[i] = (double) hetCnt[4][i] / (double) a.getSequenceCount();
+            coverageD[i] = (double) hetCnt[0][i] / (double) a.numberOfTaxa();
+            gapD[i] = (double) hetCnt[4][i] / (double) a.numberOfTaxa();
         }
         Arrays.sort(mafD);
         Arrays.sort(fD);
@@ -226,7 +226,7 @@ public class AlignmentFilterByGBSUtils {
                 for (int i = 0; i < a.getSiteCount(); i++) {
                     byte pB = Alignment.UNKNOWN_DIPLOID_ALLELE;
                     if (random) {
-                        int t = (int) Math.round(Math.random() * (a.getSequenceCount() - 1));
+                        int t = (int) Math.round(Math.random() * (a.numberOfTaxa() - 1));
                         pB = a.genotype(t, i);
                     } else {
                         pB = a.genotype(priorEntry.getValue(), i);
@@ -313,10 +313,10 @@ public class AlignmentFilterByGBSUtils {
     }
 
     public static int[][] countCrossoversByLine(Alignment a) {
-        int[][] cos = new int[2][a.getSequenceCount()];  //total count of useful markers in
+        int[][] cos = new int[2][a.numberOfTaxa()];  //total count of useful markers in
         //row 0, crossovers in row 1
         int sumGood = 0, sumCO = 0;
-        for (int t = 0; t < a.getSequenceCount(); t++) {
+        for (int t = 0; t < a.numberOfTaxa(); t++) {
             byte lastHomozygous = Alignment.UNKNOWN_DIPLOID_ALLELE;
             for (int i = 0; i < a.getSiteCount(); i++) {
                 byte currBase = a.genotype(t, i);
@@ -342,12 +342,12 @@ public class AlignmentFilterByGBSUtils {
     public static int[][] countDCO(Alignment a, boolean byTaxa) {
         int[][] cos;
         if (byTaxa) {
-            cos = new int[2][a.getSequenceCount()];
+            cos = new int[2][a.numberOfTaxa()];
         } else {
             cos = new int[2][a.getSiteCount()];
         }
         int sumGood = 0, sumDCO = 0;
-        for (int t = 0; t < a.getSequenceCount(); t++) {
+        for (int t = 0; t < a.numberOfTaxa(); t++) {
             byte[] base = {-1, -1, -1};
             int[] site = {-1, -1, -1};
             for (int s = 0; s < a.getSiteCount(); s++) {
@@ -403,7 +403,7 @@ public class AlignmentFilterByGBSUtils {
 
     public static TaxaList getLowDCOIdGroup(Alignment a, boolean isRefAltCoded, double maxDCO, int minCount) {
         int[][] dcoCnt = hetsByLine(a, isRefAltCoded, false);
-        boolean[] include = new boolean[a.getSequenceCount()];
+        boolean[] include = new boolean[a.numberOfTaxa()];
         for (int i = 0; i < dcoCnt[0].length; i++) {
             if (((double) dcoCnt[1][i] / (double) dcoCnt[0][i] > maxDCO) || (dcoCnt[0][i] < minCount)) {
                 include[i] = false;

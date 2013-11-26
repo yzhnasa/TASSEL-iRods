@@ -61,7 +61,7 @@ public class AlleleFreqCache {
     private int[][][] calculateAlleleFreq(int site) {
         int startSite = getStartSite(site);
         int numSites = Math.min(NUM_SITES_TO_CACHE, myGenotype.getSiteCount() - startSite);
-        int numTaxa = myGenotype.getTaxaCount();
+        int numTaxa = myGenotype.numberOfTaxa();
         int[][] alleleFreq = new int[numSites][myMaxNumAlleles];
         for (int taxon = 0; taxon < numTaxa; taxon++) {
             for (int s = 0; s < numSites; s++) {

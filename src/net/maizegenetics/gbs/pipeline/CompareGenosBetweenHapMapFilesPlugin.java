@@ -319,11 +319,11 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         System.out.println("Taxon1\t\tTaxon2");
         System.out.println("------\t\t------");
         int nTaxaPairs = 0;
-        for (int taxon1Index = 0; taxon1Index < a1.getSequenceCount(); taxon1Index++) {
+        for (int taxon1Index = 0; taxon1Index < a1.numberOfTaxa(); taxon1Index++) {
             String taxon1 = a1.taxaName(taxon1Index);
             if (taxaSynonyms.containsKey(taxon1)) {
                 for (String taxon2 : taxaSynonyms.get(taxon1)) {
-                    for (int taxon2Index = 0; taxon2Index < a2.getSequenceCount(); taxon2Index++) {
+                    for (int taxon2Index = 0; taxon2Index < a2.numberOfTaxa(); taxon2Index++) {
                         if (taxon2.equals(a2.taxaName(taxon2Index))) {
                             List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
                             if (synTaxaIndicesForTaxonIndex == null) {
@@ -338,8 +338,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 }
             }
         }
-        myLogger.info("\nHapMap format genotype file1 contains " + a1.getSequenceCount() + " taxa in total\n");
-        myLogger.info("\nHapMap format genotype file2 contains " + a2.getSequenceCount() + " taxa in total\n");
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.numberOfTaxa() + " taxa in total\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.numberOfTaxa() + " taxa in total\n");
         myLogger.info("\n" + nTaxaPairs + " pairs of comparable taxa found in the two hapmap files\n\n");
     }
 
@@ -534,7 +534,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         byte majAllele = a.getMajorAllele(site);
         byte minAllele = a.getMinorAllele(site);
         int majGenoCnt = 0, minGenoCnt = 0, hetGenoCnt = 0;
-        int nTaxa = a.getSequenceCount();
+        int nTaxa = a.numberOfTaxa();
         // TERRY - Does this make sense?  What if it's het but not major/minor?
         for (int taxon = 0; taxon < nTaxa; taxon++) {
             byte[] bases = a.genotypeArray(taxon, site);

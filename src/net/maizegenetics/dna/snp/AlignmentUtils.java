@@ -258,7 +258,7 @@ public class AlignmentUtils {
     public static int[][] getAllelesSortedByFrequency(Alignment alignment, int site) {
 
         int[] stateCnt = new int[16];
-        for (int i = 0; i < alignment.getTaxaCount(); i++) {
+        for (int i = 0; i < alignment.numberOfTaxa(); i++) {
             byte[] dipB = alignment.genotypeArray(i, site);
             if (dipB[0] != Alignment.UNKNOWN_ALLELE) {
                 stateCnt[dipB[0]]++;
@@ -315,7 +315,7 @@ public class AlignmentUtils {
     public static Object[][] getDiploidsSortedByFrequency(Alignment alignment, int site) {
 
         Integer ONE_INTEGER = 1;
-        int numTaxa = alignment.getTaxaCount();
+        int numTaxa = alignment.numberOfTaxa();
 
         Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
         for (int r = 0; r < numTaxa; r++) {

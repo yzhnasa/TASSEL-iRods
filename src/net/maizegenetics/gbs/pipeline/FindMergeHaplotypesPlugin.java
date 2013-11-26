@@ -94,7 +94,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         Alignment baseAlign=ImportUtils.readGuessFormat(inFile);
 
         int[][] divisions=divideChromosome(baseAlign, appoxSitesPerHaplotype);  
-        System.out.printf("In taxa:%d sites:%d %n",baseAlign.getSequenceCount(),baseAlign.getSiteCount());
+        System.out.printf("In taxa:%d sites:%d %n",baseAlign.numberOfTaxa(),baseAlign.getSiteCount());
         siteErrors=new int[baseAlign.getSiteCount()];
         siteCallCnt=new int[baseAlign.getSiteCount()];
         if(startDiv==-1) startDiv=0;
@@ -118,9 +118,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         Alignment inAlign=AlignmentBuilder.getGenotypeCopyInstance(fa);
         int sites=inAlign.getSiteCount();
         System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.getChromosome(0),
-                inAlign.getPositionInChromosome(0),inAlign.getSequenceCount(),inAlign.getSiteCount());
+                inAlign.getPositionInChromosome(0),inAlign.numberOfTaxa(),inAlign.getSiteCount());
 
-        propMissing=new double[inAlign.getSequenceCount()];
+        propMissing=new double[inAlign.numberOfTaxa()];
         int startBlock=0;
         int endBlock=inAlign.getAllelePresenceForAllSites(0, 0).getNumWords();
         TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(inAlign, startBlock, endBlock, minSites, maxHetFreq);
@@ -173,7 +173,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             int minSites, double maxHetFreq) {
         int sites=64*(endBlock-startBlock+1);
         TreeMap<Integer,Integer> presentRanking=new TreeMap<Integer,Integer>(Collections.reverseOrder());
-        for (int i = 0; i < inAlign.getSequenceCount(); i++) {
+        for (int i = 0; i < inAlign.numberOfTaxa(); i++) {
             long[] mj=inAlign.getAllelePresenceForSitesBlock(i, 0, startBlock, endBlock);
             long[] mn=inAlign.getAllelePresenceForSitesBlock(i, 1, startBlock, endBlock);
             int totalSitesNotMissing = 0;
@@ -344,7 +344,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         for (int i = 0; i < numMaxTaxa; i++) {
             long bestCnt=0;
             int bestAddTaxa=-1;
-            for (int t = 0; t < a.getSequenceCount(); t++) {
+            for (int t = 0; t < a.numberOfTaxa(); t++) {
                 BitSet testMj=new OpenBitSet(a.getAllelePresenceForAllSites(t, alleleNumber));
                 testMj.union(curMj);
                 long cnt=testMj.cardinality();

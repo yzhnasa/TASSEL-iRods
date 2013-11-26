@@ -91,7 +91,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         this.minSitesComp = minSiteComp;
         isTrueIBS = trueIBS;
         myListener = listener;
-        numSeqs = theAlignment.getSequenceCount();
+        numSeqs = theAlignment.numberOfTaxa();
         theTBA = theAlignment;
         //  this should have an option to only use the 2 or 3 most common alleles
         setIdGroup(theAlignment.taxa());

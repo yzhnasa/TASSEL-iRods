@@ -366,18 +366,11 @@ public interface Alignment {
     public int[] getStartAndEndOfChromosome(Chromosome chromosome);
 
     /**
-     * Returns number of sequences (taxa).
-     *
-     * @return number of sequences
-     */
-    public int getSequenceCount();
-
-    /**
-     * Returns number of taxa (same as getSequenceCount()
+     * Returns number of taxa (same as numberOfTaxa()
      *
      * @return number of taxa
      */
-    public int getTaxaCount();
+    public int numberOfTaxa();
 
     /**
      * Return the position list for the alignment.

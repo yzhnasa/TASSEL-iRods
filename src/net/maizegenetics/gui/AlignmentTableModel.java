@@ -56,7 +56,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
     // Return values appropriate for the visible table part
     public int getRowCount() {
-        return myAlignment.getSequenceCount();
+        return myAlignment.numberOfTaxa();
     }
 
     public int getColumnCount() {

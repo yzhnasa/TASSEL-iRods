@@ -71,7 +71,7 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
     public DataSet processDatum(Datum input) {
 
         Alignment aa = (Alignment) input.getData();
-        int numTaxa = aa.getSequenceCount();
+        int numTaxa = aa.numberOfTaxa();
         int interestedTaxa = aa.taxa().getIndicesMatchingTaxon(myTaxon).get(0);
         Object[][] theData = new Object[numTaxa][myPhysicalPositions.length];
         for (int t = 0; t < numTaxa; t++) {

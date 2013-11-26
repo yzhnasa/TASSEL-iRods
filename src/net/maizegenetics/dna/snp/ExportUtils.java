@@ -40,7 +40,7 @@ public class ExportUtils {
         try {
 
             int numSites = a.getSiteCount();
-            int numTaxa = a.getSequenceCount();
+            int numTaxa = a.numberOfTaxa();
 
             newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, ".hmp.h5");
             File hdf5File = new File(newHDF5file);
@@ -162,7 +162,7 @@ public class ExportUtils {
    public static String writeToMutableHDF5(Alignment a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
         AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(a.getPositionList(),newHDF5file);
         if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {aB.build(); return newHDF5file;}
-        for (int t = 0; t < a.getTaxaCount(); t++) {
+        for (int t = 0; t < a.numberOfTaxa(); t++) {
               if((exportTaxa!=null)&&(!exportTaxa.contains(a.taxa().get(t)))) continue;  //taxon not in export list
               byte[] bases = a.genotypeAllSites(t);
               if (keepDepth==false) aB.addTaxon(new Taxon(a.taxaName(t)), bases, null);
@@ -186,7 +186,7 @@ public class ExportUtils {
 //        IHDF5Writer h5w = null;
 //        try {
 //            int numSites = snpIndex.length;
-//            int numTaxa = a.getSequenceCount();
+//            int numTaxa = a.numberOfTaxa();
 //            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, "hmp.h5");
 //            File hdf5File = new File(newHDF5file);
 //            if (hdf5File.exists()) {
@@ -264,7 +264,7 @@ public class ExportUtils {
 //  //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
 //
 //            h5w.createGroup(HapMapHDF5Constants.GENOTYPES);
-//            if((exportTaxa!=null)&&(exportTaxa.getTaxaCount()==0)) {h5w.close(); return newHDF5file;}
+//            if((exportTaxa!=null)&&(exportTaxa.numberOfTaxa()==0)) {h5w.close(); return newHDF5file;}
 //            h5w.close();
 //            MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
 //            for (int t = 0; t < numTaxa; t++) {
@@ -316,19 +316,19 @@ public class ExportUtils {
 //        for (String srcFile : sourceFiles) {
 //           System.out.println("Opening:"+srcFile);
 //            MutableNucleotideAlignmentHDF5 srcA=(MutableNucleotideAlignmentHDF5)ImportUtils.readGuessFormat(srcFile, false);
-//            System.out.println("Target now has taxon:"+trgA.getSequenceCount());
+//            System.out.println("Target now has taxon:"+trgA.numberOfTaxa());
 //            if(srcA.getSiteCount()!=trgA.getSiteCount()) {
 //                throw new IllegalStateException("ExportUtils: addTaxaFromExistingByteHDF5File: Mismatch in number of sites");
 //            }
 //            System.out.println("Copying first taxon:"+srcA.taxaName(0));
-//            for (int i = 0; i < srcA.getSequenceCount(); i++) {
+//            for (int i = 0; i < srcA.numberOfTaxa(); i++) {
 //                if (addDepth==true) trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), srcA.getDepthForAlleles(i));
 //                else trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), null);
 //            }
 //        }
 //
 //        trgA.clean();
-//        System.out.println("Target now has taxon:"+trgA.getSequenceCount());
+//        System.out.println("Target now has taxon:"+trgA.numberOfTaxa());
 //    }
 
     /**
@@ -371,7 +371,7 @@ public class ExportUtils {
             bw.write(delimChar);
             bw.write("QCcode");
             bw.write(delimChar);
-            int numTaxa = alignment.getSequenceCount();
+            int numTaxa = alignment.numberOfTaxa();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
                 //finish filling out first row
                 //not completely sure this does what I want, I need to access the
@@ -514,7 +514,7 @@ public class ExportUtils {
             bw.newLine();
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             boolean refTaxon = false;
-            for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
+            for (int taxa = 0; taxa < alignment.numberOfTaxa(); taxa++) {
                 String taxonName = alignment.taxaName(taxa).trim();
                 if (taxa == 0 && taxonName.contentEquals("REFERENCE_GENOME")) {
                     refTaxon = true;
@@ -658,7 +658,7 @@ public class ExportUtils {
 
                 if (hasDepth) {
                     int totalDepth = 0;
-                    for (int i = 0; i < alignment.getSequenceCount(); i++) {
+                    for (int i = 0; i < alignment.numberOfTaxa(); i++) {
                         byte[] depth = alignment.getDepthForAlleles(i, site);
                         for (int k = 0; k < depth.length; k++) {
                             if (depth[k] != -1) {
@@ -677,7 +677,7 @@ public class ExportUtils {
                 } else {
                     bw.write("GT");
                 }
-                for (int taxa = 0; taxa < alignment.getSequenceCount(); taxa++) {
+                for (int taxa = 0; taxa < alignment.numberOfTaxa(); taxa++) {
                     if (taxa == 0 && refTaxon) {
                         continue;  // don't include REFERENCE_GENOME in vcf output
                     }
@@ -880,7 +880,7 @@ public class ExportUtils {
             PEDbw = new BufferedWriter(new FileWriter(pedFileName), 1000000);
             // Compiled : Pattern
             Pattern splitter = Pattern.compile(":");
-            int numTaxa = alignment.getSequenceCount();
+            int numTaxa = alignment.numberOfTaxa();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
                 String[] name = splitter.split(alignment.taxaName(taxa).trim());
                 if (name.length != 1) {
@@ -971,7 +971,7 @@ public class ExportUtils {
             }
             MAPbw.close();
             DATbw.write("\n");
-            int numTaxa = alignment.getSequenceCount();
+            int numTaxa = alignment.numberOfTaxa();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
                 DATbw.write(alignment.taxaName(taxa).trim());
                 DATbw.write(delimChar);
@@ -1036,7 +1036,7 @@ public class ExportUtils {
             }
             bw.write("\n");
 
-            for (int r = 0, n = theAlignment.getTaxaCount(); r < n; r++) {
+            for (int r = 0, n = theAlignment.numberOfTaxa(); r < n; r++) {
                 bw.write(theAlignment.taxaName(r));
                 for (int i = 0; i < numSites; i++) {
                     bw.write(delimit);
@@ -1066,10 +1066,10 @@ public class ExportUtils {
      */
     public static void printSequential(Alignment a, PrintWriter out) {
         // PHYLIP header line
-        out.println("  " + a.getSequenceCount() + " " + a.getSiteCount() + "  S");
+        out.println("  " + a.numberOfTaxa() + " " + a.getSiteCount() + "  S");
 
         // Print sequences
-        for (int s = 0; s < a.getSequenceCount(); s++) {
+        for (int s = 0; s < a.numberOfTaxa(); s++) {
             int n = 0;
             while (n < a.getSiteCount()) {
                 if (n == 0) {
@@ -1092,11 +1092,11 @@ public class ExportUtils {
         int n = 0;
 
         // PHYLIP header line
-        out.println("  " + a.getSequenceCount() + " " + a.getSiteCount());
+        out.println("  " + a.numberOfTaxa() + " " + a.getSiteCount());
 
         // Print sequences
         while (n < a.getSiteCount()) {
-            for (int s = 0; s < a.getSequenceCount(); s++) {
+            for (int s = 0; s < a.numberOfTaxa(); s++) {
                 if (n == 0) {
                     format.displayLabel(out, a.taxaName(s), 10);
                     out.print("     ");
@@ -1124,7 +1124,7 @@ public class ExportUtils {
         // Print sequences
         while (n < a.getSiteCount()) {
             out.println();
-            for (int s = 0; s < a.getSequenceCount(); s++) {
+            for (int s = 0; s < a.numberOfTaxa(); s++) {
                 format.displayLabel(out, a.taxaName(s), 10);
                 out.print("     ");
 
