@@ -681,9 +681,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalGametesNotMissing(int site) {
+    public int totalGametesNonMissingForSite(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getTotalGametesNotMissing(site - mySiteOffsets[translate]);
+        return myAlignments[translate].totalGametesNonMissingForSite(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -788,7 +788,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalNotMissing(int site) {
+    public int totalNonMissingForSite(int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -803,7 +803,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalGametesNotMissingForTaxon(int taxon) {
+    public int totalGametesNonMissingForTaxon(int taxon) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -813,7 +813,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalNotMissingForTaxon(int taxon) {
+    public int totalNonMissingForTaxon(int taxon) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

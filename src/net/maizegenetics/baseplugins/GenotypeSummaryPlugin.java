@@ -136,7 +136,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         if (!myIsSiteSummary) {
             int totalGametes = (int) numTaxa * 2;
             for (int i = 0; i < numSites; i++) {
-                int totalGametesNotMissing = alignment.getTotalGametesNotMissing(i);
+                int totalGametesNotMissing = alignment.totalGametesNonMissingForSite(i);
                 int totalGametesMissing = totalGametes - totalGametesNotMissing;
                 myNumGametesMissing = myNumGametesMissing + (long) totalGametesMissing;
                 int numHeterozygous = alignment.getHeterozygousCount(i);
@@ -273,8 +273,8 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         for (int i = 0; i < numSites; i++) {
 
-            int totalNotMissing = alignment.getTotalNotMissing(i);
-            int totalGametesNotMissing = alignment.getTotalGametesNotMissing(i);
+            int totalNotMissing = alignment.totalNonMissingForSite(i);
+            int totalGametesNotMissing = alignment.totalGametesNonMissingForSite(i);
             int count = 0;
 
             data[i][count++] = i;
@@ -336,10 +336,10 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         int totalGametes = numSites * 2;
         for (int i = 0; i < numTaxa; i++) {
 
-            int totalGametesNotMissing = alignment.getTotalGametesNotMissingForTaxon(i);
+            int totalGametesNotMissing = alignment.totalGametesNonMissingForTaxon(i);
             int totalGametesMissing = totalGametes - totalGametesNotMissing;
             int numHeterozygous = alignment.getHeterozygousCountForTaxon(i);
-            int totalSitesNotMissing = alignment.getTotalNotMissingForTaxon(i);
+            int totalSitesNotMissing = alignment.totalNonMissingForTaxon(i);
 
             int count = 0;
             data[i][count++] = i;

@@ -143,7 +143,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             progress((int) ((double) t / (double) numTaxa * 100.0), null);
 
             if (myMinNotMissing != 0.0) {
-                int totalNotMissing = alignment.getTotalNotMissingForTaxon(t);
+                int totalNotMissing = alignment.totalNonMissingForTaxon(t);
                 double percentNotMissing = (double) totalNotMissing / (double) numSites;
                 if (percentNotMissing < myMinNotMissing) {
                     continue;
@@ -152,7 +152,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
 
             if ((myMinHeterozygous != 0.0) || (myMaxHeterozygous != 1.0)) {
                 int numHeterozygous = alignment.getHeterozygousCountForTaxon(t);
-                int totalSitesNotMissing = alignment.getTotalNotMissingForTaxon(t);
+                int totalSitesNotMissing = alignment.totalNonMissingForTaxon(t);
                 double percentHets = (double) numHeterozygous / (double) totalSitesNotMissing;
                 if ((percentHets < myMinHeterozygous) || (percentHets > myMaxHeterozygous)) {
                     continue;

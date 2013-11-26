@@ -213,7 +213,7 @@ public class ImputationUtils {
 		
 		int nIncluded = 0;
 		for (int t = 0; t < ntaxa; t++) {
-			if (inputAlignment.getTotalGametesNotMissingForTaxon(t) >= minGametesPerTaxon) {
+			if (inputAlignment.totalGametesNonMissingForTaxon(t) >= minGametesPerTaxon) {
 				nIncluded++;
 				include[t] = true;
 			}

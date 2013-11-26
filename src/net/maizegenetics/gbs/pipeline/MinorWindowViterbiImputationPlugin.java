@@ -257,7 +257,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d Hets:%d... ", taxon,name,
                     unimpAlign.getAllelePresenceForAllSites(taxon, 0).cardinality(),
                     unimpAlign.getAllelePresenceForAllSites(taxon, 1).cardinality(), unkHets[0], unkHets[1]));
-            boolean enoughData=(unimpAlign.getTotalNotMissingForTaxon(taxon)>minSitesPresent);
+            boolean enoughData=(unimpAlign.totalNonMissingForTaxon(taxon)>minSitesPresent);
 //                System.out.println("Too much missing data");
 //                continue;
 //            }

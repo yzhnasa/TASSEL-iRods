@@ -97,7 +97,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                 int[] monomorphicSnps = new int[nsnps];
                 int snpCount = 0;
                 for (int s = 0; s < nsnps; s++) {
-                    double coverage = popdata.original.getTotalGametesNotMissing(s) / ngametes;
+                    double coverage = popdata.original.totalGametesNonMissingForSite(s) / ngametes;
                     if (!popdata.snpIndex.fastGet(s) && popdata.original.getMinorAlleleFrequency(s) <= maxMafForMono && coverage >= minSnpCoverage) {
                         monomorphicSnps[snpCount++] = s;
                     }

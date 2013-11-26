@@ -211,7 +211,7 @@ public interface Genotype {
      * @param site site
      * @return number of non-missing allele values.
      */
-    public int getTotalGametesNotMissing(int site);
+    public int totalGametesNonMissingForSite(int site);
 
     /**
      * Returns total number of non-missing taxa for given site. Taxa are
@@ -221,7 +221,7 @@ public interface Genotype {
      *
      * @return number of non-missing taxa..
      */
-    public int getTotalNotMissing(int site);
+    public int totalNonMissingForSite(int site);
 
     /**
      * Returns the minor allele count for given site.
@@ -266,7 +266,7 @@ public interface Genotype {
      *
      * @return number of non-missing allele values.
      */
-    public int getTotalGametesNotMissingForTaxon(int taxon);
+    public int totalGametesNonMissingForTaxon(int taxon);
 
     /**
      * Returns number of heterozygous sites at given taxon.
@@ -285,7 +285,7 @@ public interface Genotype {
      *
      * @return number of non-missing sites.
      */
-    public int getTotalNotMissingForTaxon(int taxon);
+    public int totalNonMissingForTaxon(int taxon);
 
     /**
      * Return sorted list of alleles from highest frequency to lowest at given

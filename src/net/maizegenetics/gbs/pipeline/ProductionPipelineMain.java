@@ -591,8 +591,8 @@ public class ProductionPipelineMain {
                 hetCountDelta = impHetCount - origHetCount;
 
                 //not missing
-                origTotalSitesNotMissing += origAlignment.getTotalNotMissing(i);
-                impTotalSitesNotMissing += impAlignment.getTotalNotMissing(i);
+                origTotalSitesNotMissing += origAlignment.totalNonMissingForSite(i);
+                impTotalSitesNotMissing += impAlignment.totalNonMissingForSite(i);
 
                 // switching of major and minor allele
                 byte origMajorAllele = origAlignment.getMajorAllele(i);

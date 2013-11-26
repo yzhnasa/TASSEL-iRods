@@ -199,7 +199,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int getTotalGametesNotMissing(int site) {
+    public int totalGametesNonMissingForSite(int site) {
 
         int result = 0;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
@@ -216,7 +216,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int getTotalNotMissing(int site) {
+    public int totalNonMissingForSite(int site) {
 
         int result = 0;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
@@ -531,7 +531,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int getTotalGametesNotMissingForTaxon(int taxon) {
+    public int totalGametesNonMissingForTaxon(int taxon) {
 
         int result = 0;
         for (int i = 0, n = mySiteCount; i < n; i++) {
@@ -559,7 +559,7 @@ abstract class AbstractGenotype implements Genotype {
     }
 
     @Override
-    public int getTotalNotMissingForTaxon(int taxon) {
+    public int totalNonMissingForTaxon(int taxon) {
 
         int result = 0;
         for (int i = 0, n = mySiteCount; i < n; i++) {

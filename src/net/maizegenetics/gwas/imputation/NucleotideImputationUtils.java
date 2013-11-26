@@ -843,7 +843,7 @@ public class NucleotideImputationUtils {
 		boolean[] goodCoverage = new boolean[ntaxa];
 		int minGametes = 200;
 		for (int t = 0; t < ntaxa; t++) {
-			if (target.getTotalGametesNotMissingForTaxon(t) > minGametes) goodCoverage[t] = true;
+			if (target.totalGametesNonMissingForTaxon(t) > minGametes) goodCoverage[t] = true;
 			else goodCoverage[t] = false;
 		}
 		
@@ -1125,7 +1125,7 @@ public class NucleotideImputationUtils {
 		int minNotMissingGametes = (int) Math.floor(ngametes * (1 - maxMissing));
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			int gametesNotMissing = a.getTotalGametesNotMissing(s);
+			int gametesNotMissing = a.totalGametesNonMissingForSite(s);
 			int minorAlleleCount = a.getMinorAlleleCount(s);
 			if (gametesNotMissing >= minNotMissingGametes && minorAlleleCount >= minMinorAlleleCount) polybits.fastSet(s);
 		}
@@ -1140,7 +1140,7 @@ public class NucleotideImputationUtils {
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			int[][] freq = a.allelesSortedByFrequency(s);
-			int ngametes = a.getTotalGametesNotMissing(s);
+			int ngametes = a.totalGametesNonMissingForSite(s);
 			double pMissing = (totalgametes - ngametes) / totalgametes;
 			if (freq[1].length > 1 && freq[1][1] > 2 && pMissing <= maxMissing && a.getMinorAlleleFrequency(s) > minMaf) {
 				polybits.fastSet(s);
@@ -1156,7 +1156,7 @@ public class NucleotideImputationUtils {
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			int[][] freq = a.allelesSortedByFrequency(s);
-			int ngametes = a.getTotalGametesNotMissing(s);
+			int ngametes = a.totalGametesNonMissingForSite(s);
 			double pMissing = (totalgametes - ngametes) / totalgametes;
 			if (freq[1].length > 1 && pMissing <= maxMissing) {
 				int Mj = freq[1][0];
@@ -2308,7 +2308,7 @@ public class NucleotideImputationUtils {
     	int nonMissingCount = 0;
     	for (int s = 0; s < nsites; s++) {
     		hetCount += a.getHeterozygousCount(s);
-    		nonMissingCount += a.getTotalGametesNotMissing(s) / 2;
+    		nonMissingCount += a.totalGametesNonMissingForSite(s) / 2;
     	}
     	
     	double estimatedPhet = ((double) hetCount) / ((double) nonMissingCount); 

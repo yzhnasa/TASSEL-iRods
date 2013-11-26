@@ -841,13 +841,13 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalGametesNotMissing(int site) {
-        return myGenotype.getTotalGametesNotMissing(site);
+    public int totalGametesNonMissingForSite(int site) {
+        return myGenotype.totalGametesNonMissingForSite(site);
     }
 
     @Override
-    public int getTotalNotMissing(int site) {
-        return myGenotype.getTotalNotMissing(site);
+    public int totalNonMissingForSite(int site) {
+        return myGenotype.totalNonMissingForSite(site);
     }
 
     @Override
@@ -881,13 +881,13 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalGametesNotMissingForTaxon(int taxon) {
-        return myGenotype.getTotalGametesNotMissingForTaxon(taxon);
+    public int totalGametesNonMissingForTaxon(int taxon) {
+        return myGenotype.totalGametesNonMissingForTaxon(taxon);
     }
 
     @Override
-    public int getTotalNotMissingForTaxon(int taxon) {
-        return myGenotype.getTotalNotMissingForTaxon(taxon);
+    public int totalNonMissingForTaxon(int taxon) {
+        return myGenotype.totalNonMissingForTaxon(taxon);
     }
 
     @Override

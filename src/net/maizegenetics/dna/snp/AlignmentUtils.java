@@ -512,7 +512,7 @@ public class AlignmentUtils {
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
         for (int i = 0, n = aa.numberOfSites(); i < n; i++) {
 
-            int totalNonMissing = aa.getTotalGametesNotMissing(i);
+            int totalNonMissing = aa.totalGametesNonMissingForSite(i);
 
             if ((totalNonMissing > 0) && (totalNonMissing >= (minimumCount * 2))) {
 

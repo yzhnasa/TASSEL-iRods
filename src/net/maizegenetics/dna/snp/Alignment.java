@@ -761,7 +761,7 @@ public interface Alignment {
      * @param site site
      * @return number of non-missing allele values.
      */
-    public int getTotalGametesNotMissing(int site);
+    public int totalGametesNonMissingForSite(int site);
 
     /**
      * Returns total number of non-missing taxa for given site. Taxa are
@@ -771,7 +771,7 @@ public interface Alignment {
      *
      * @return number of non-missing taxa..
      */
-    public int getTotalNotMissing(int site);
+    public int totalNonMissingForSite(int site);
 
     /**
      * Returns the minor allele count for given site.
@@ -816,7 +816,7 @@ public interface Alignment {
      *
      * @return number of non-missing allele values.
      */
-    public int getTotalGametesNotMissingForTaxon(int taxon);
+    public int totalGametesNonMissingForTaxon(int taxon);
 
     /**
      * Returns number of heterozygous sites at given taxon.
@@ -835,7 +835,7 @@ public interface Alignment {
      *
      * @return number of non-missing sites.
      */
-    public int getTotalNotMissingForTaxon(int taxon);
+    public int totalNonMissingForTaxon(int taxon);
 
     /**
      * Returns depth count for each diploid allele at the given taxon and site.
