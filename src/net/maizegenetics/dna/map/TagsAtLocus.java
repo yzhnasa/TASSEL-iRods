@@ -277,7 +277,7 @@ public class TagsAtLocus {
         myCommonAlleles = new byte[maxNumAlleles][nSites];
         myAlleleDepthsInTaxa = new byte[maxNumAlleles][nSites][nTaxa];
         for (int s = 0; s < nSites; s++) {
-            positionsOfVariableSites[s] = tagAlignment.getPositionInChromosome(s);
+            positionsOfVariableSites[s] = tagAlignment.chromosomalPosition(s);
             byte[] commonAlleles = getCommonAlleles(s, nTaxa, includeReferenceTag);
             int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, includeReferenceTag);
             setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
@@ -312,7 +312,7 @@ public class TagsAtLocus {
         myCommonAlleles = new byte[maxNumAlleles][nSites];
         myAlleleDepthsInTaxa = new byte[maxNumAlleles][nSites][nTaxa];
         for (int s = 0; s < nSites; s++) {
-            positionsOfVariableSites[s] = tagAlignment.getPositionInChromosome(s);
+            positionsOfVariableSites[s] = tagAlignment.chromosomalPosition(s);
             byte[] commonAlleles = getCommonAlleles(s, nTaxa, includeReferenceTag); // NOTE: gap could be one of the common alleles (even if callBiallelicSNPsWithGap is false)
             int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, includeReferenceTag);
             setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
@@ -370,7 +370,7 @@ public class TagsAtLocus {
         }
         positionsOfVariableSites = new int[nSites];
         for (int s = 0; s < nSites; s++) {
-            positionsOfVariableSites[s] = tagAlignment.getPositionInChromosome(s);
+            positionsOfVariableSites[s] = tagAlignment.chromosomalPosition(s);
             for (int tx = 0; tx < nTaxa; tx++) {
                 int[] alleleCounts = new int[Byte.MAX_VALUE];
                 for (int tg = 0; tg < nAlignedTags; tg++) {

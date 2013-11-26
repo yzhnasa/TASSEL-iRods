@@ -56,7 +56,7 @@ public class SNPLogging {
 
     public void writeEntry(Alignment a, int site, String tagLocusStart, String strand, String test, String status, String value, String cuttoff) {
         String alleles = a.getMajorAlleleAsString(site) + "/" + a.getMinorAlleleAsString(site);
-        writeEntry(a.getChromosomeName(site), a.getPositionInChromosome(site), alleles, tagLocusStart, strand, test, status, value, cuttoff);
+        writeEntry(a.getChromosomeName(site), a.chromosomalPosition(site), alleles, tagLocusStart, strand, test, status, value, cuttoff);
     }
 
     public void writeEntry(String chr, int position, String alleles, String tagLocusStart, String strand, String test, String status, String value, String cuttoff) {

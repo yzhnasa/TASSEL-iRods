@@ -518,8 +518,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getPositionInChromosome(int site) {
-        return myBaseAlignment.getPositionInChromosome(translateSite(site));
+    public int chromosomalPosition(int site) {
+        return myBaseAlignment.chromosomalPosition(translateSite(site));
     }
 
     @Override
@@ -732,7 +732,7 @@ public class FilterAlignment implements Alignment {
             int numSites = numberOfSites();
             int[] result = new int[numSites];
             for (int i = 0; i < numSites; i++) {
-                result[i] = getPositionInChromosome(i);
+                result[i] = chromosomalPosition(i);
             }
             return result;
         } else {

@@ -248,9 +248,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getPositionInChromosome(int site) {
+    public int chromosomalPosition(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getPositionInChromosome(site - mySiteOffsets[translate]);
+        return myAlignments[translate].chromosomalPosition(site - mySiteOffsets[translate]);
     }
 
     @Override

@@ -1691,7 +1691,7 @@ public class NucleotideImputationUtils {
 				}
 				if (isNotMissing.fastGet(s)) {
 					obs[nmcount] = obsMap.get(a.genotype(t, s));
-					pos[nmcount++] = a.getPositionInChromosome(s);
+					pos[nmcount++] = a.chromosomalPosition(s);
 				}
 				
 			}
@@ -2066,10 +2066,10 @@ public class NucleotideImputationUtils {
 		int selectCount = 0;
 		sitesSelected[selectCount++] = 0;
 		String firstSnpLocus = sba.getLocus(0).getName();
-		int firstSnpPos = sba.getPositionInChromosome(0);
+		int firstSnpPos = sba.chromosomalPosition(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInChromosome(nextSite);
+			int nextSnpPos = sba.chromosomalPosition(nextSite);
 			String nextSnpLocus = sba.getLocus(nextSite).getName();
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
@@ -2087,7 +2087,7 @@ public class NucleotideImputationUtils {
 				double rsq = calculateRSqr(contig[0][0], contig[0][1], contig[1][0], contig[1][1], 2);
 				if (Double.isNaN(rsq) || rsq >= minRsq) sitesSelected[selectCount++] = nextSite;
 				nextSite++;
-				nextSnpPos = sba.getPositionInChromosome(nextSite);
+				nextSnpPos = sba.chromosomalPosition(nextSite);
 				nextSnpLocus = sba.getLocus(nextSite).getName();
 			}
 			firstSite = nextSite;
@@ -2109,10 +2109,10 @@ public class NucleotideImputationUtils {
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
 		Chromosome firstSnpLocus = sba.getLocus(0);
-		int firstSnpPos = sba.getPositionInChromosome(0);
+		int firstSnpPos = sba.chromosomalPosition(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInChromosome(nextSite);
+			int nextSnpPos = sba.chromosomalPosition(nextSite);
 			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
@@ -2134,7 +2134,7 @@ public class NucleotideImputationUtils {
 				}
 				nextSite++;
 				if (nextSite >= nsites) break;
-				nextSnpPos = sba.getPositionInChromosome(nextSite);
+				nextSnpPos = sba.chromosomalPosition(nextSite);
 				nextSnpLocus = sba.getLocus(nextSite);
 			}
 			firstSite = nextSite;
@@ -2158,15 +2158,15 @@ public class NucleotideImputationUtils {
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
 		Chromosome firstSnpLocus = sba.getLocus(0);
-		int firstSnpPos = sba.getPositionInChromosome(0);
+		int firstSnpPos = sba.chromosomalPosition(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInChromosome(nextSite);
+			int nextSnpPos = sba.chromosomalPosition(nextSite);
 			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				nextSite++;
 				if (nextSite >= nsites) break;
-				nextSnpPos = sba.getPositionInChromosome(nextSite);
+				nextSnpPos = sba.chromosomalPosition(nextSite);
 				nextSnpLocus = sba.getLocus(nextSite);
 			}
 			firstSite = nextSite;
@@ -2197,10 +2197,10 @@ public class NucleotideImputationUtils {
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(firstSite);
 		Chromosome firstSnpLocus = sba.getLocus(firstSite);
-		int firstSnpPos = sba.getPositionInChromosome(firstSite);
+		int firstSnpPos = sba.chromosomalPosition(firstSite);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInChromosome(nextSite);
+			int nextSnpPos = sba.chromosomalPosition(nextSite);
 			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			
 			boolean skip = !polybits.fastGet(nextSite) || ( firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64 && computeRForMissingness(firstSite, nextSite, sba)  > 0.8) ;
@@ -2212,7 +2212,7 @@ public class NucleotideImputationUtils {
 					validSite = nextSite < nsites;
 				}
 				if (validSite) {
-					nextSnpPos = sba.getPositionInChromosome(nextSite);
+					nextSnpPos = sba.chromosomalPosition(nextSite);
 					nextSnpLocus = sba.getLocus(nextSite);
 					int dist = nextSnpPos - firstSnpPos;
 					boolean nearbySite = firstSnpLocus.equals(nextSnpLocus) && dist < 64;
@@ -2248,7 +2248,7 @@ public class NucleotideImputationUtils {
 		int selectedCount = 1;
 		int headSite = 0;
 		for (int s = 1; s < nOriginalSites; s++) {
-			int dist = a.getPositionInChromosome(s) - a.getPositionInChromosome(headSite);
+			int dist = a.chromosomalPosition(s) - a.chromosomalPosition(headSite);
 			if (dist >= 64 || computeRForMissingness(headSite, s, a) < 0.7) {
 				selectedSites[selectedCount++] = s;
 				headSite = s;
@@ -2292,7 +2292,7 @@ public class NucleotideImputationUtils {
     	TransitionProbability tp = new TransitionProbability();
     	int nsites = a.numberOfSites();
     	int ntaxa = a.numberOfTaxa();
-    	int chrlen = a.getPositionInChromosome(nsites - 1) - a.getPositionInChromosome(0);
+    	int chrlen = a.chromosomalPosition(nsites - 1) - a.chromosomalPosition(0);
     	
     	double phet = estimatedHetFraction;
     	int totalTransitions = (nsites - 1) * ntaxa /10;
@@ -2455,7 +2455,7 @@ public class NucleotideImputationUtils {
 					bw.write("\tA/C\t");
 					bw.write(chr);
 					bw.write("\t");
-					bw.write(Integer.toString(popdata.original.getPositionInChromosome(s)));
+					bw.write(Integer.toString(popdata.original.chromosomalPosition(s)));
 					bw.write("\tNA\tNA\tNA\tNA\tNA\tNA\tNA\t");
 					bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(popdata.alleleA[s]));
 					bw.write("\t");

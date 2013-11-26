@@ -129,9 +129,9 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                             continue;
                         }
 
-                        if ((pos1 != alignment.getPositionInChromosome(site)) || (!locus1.equals(alignment.getChromosome(site).getName()))) {
+                        if ((pos1 != alignment.chromosomalPosition(site)) || (!locus1.equals(alignment.getChromosome(site).getName()))) {
                             myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " position and locus do not match alignment.");
-                            myLogger.warn("Alignment SNP ID: " + alignment.siteName(site) + "  position: " + alignment.getPositionInChromosome(site) + "  locus: " + alignment.getChromosomeName(site));
+                            myLogger.warn("Alignment SNP ID: " + alignment.siteName(site) + "  position: " + alignment.chromosomalPosition(site) + "  locus: " + alignment.getChromosomeName(site));
                             continue;
                         }
 

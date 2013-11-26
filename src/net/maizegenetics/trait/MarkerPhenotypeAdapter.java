@@ -385,7 +385,7 @@ public class MarkerPhenotypeAdapter {
 
     public int getLocusPosition(int marker) {
         if (marker < numberOfMarkersFromAlignment) {
-            return align.getPositionInChromosome(marker);
+            return align.chromosomalPosition(marker);
         }
         int t = markerIndex.get(marker - numberOfMarkersFromAlignment);
         Object prop = pheno.getTrait(t).getProperty(Trait.PROP_LOCUS_POSITION);

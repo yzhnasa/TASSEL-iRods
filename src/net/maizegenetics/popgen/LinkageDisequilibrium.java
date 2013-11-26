@@ -572,21 +572,21 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             Integer cStr = Integer.valueOf(c);
 
             data[labelOffset++] = myAlignment.getChromosomeName(r);
-            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInChromosome(r));
+            data[labelOffset++] = Integer.valueOf(myAlignment.chromosomalPosition(r));
             data[labelOffset++] = rStr;
 
             data[labelOffset++] = IntegerTwo;
             data[labelOffset++] = rState;
             data[labelOffset++] = NotImplemented;
             data[labelOffset++] = myAlignment.getChromosomeName(c);
-            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInChromosome(c));
+            data[labelOffset++] = Integer.valueOf(myAlignment.chromosomalPosition(c));
             data[labelOffset++] = cStr;
 
             data[labelOffset++] = IntegerTwo;
             data[labelOffset++] = cState;
             data[labelOffset++] = NotImplemented;
             if (myAlignment.getChromosomeName(r).equals(myAlignment.getChromosomeName(c))) {
-                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.getPositionInChromosome(r) - myAlignment.getPositionInChromosome(c)));
+                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.chromosomalPosition(r) - myAlignment.chromosomalPosition(c)));
             } else {
                 data[labelOffset++] = NA;
             }

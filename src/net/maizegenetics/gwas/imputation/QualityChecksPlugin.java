@@ -272,7 +272,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     				bw.write("\t");
     				bw.write(align.getChromosomeName(s));
     				bw.write("\t");
-    				bw.write(Integer.toString(align.getPositionInChromosome(s)));
+    				bw.write(Integer.toString(align.chromosomalPosition(s)));
     				bw.write("\t");
     				bw.write(Double.toString(avgr2[s]));
     				bw.newLine();
@@ -291,7 +291,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		DefaultXYDataset xydata = new DefaultXYDataset();
     		double[][] dataset = new double[2][nsites];
     		for (int s = 0; s < nsites; s++) {
-    			dataset[0][s] = ((double) align.getPositionInChromosome(s)) / 1000000.0 ;
+    			dataset[0][s] = ((double) align.chromosomalPosition(s)) / 1000000.0 ;
     		}
     		dataset[1] = avgr2;
     		xydata.addSeries("avgr2", dataset);

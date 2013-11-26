@@ -190,8 +190,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getPositionInChromosome(int site) {
-        return myPositionList.getPositionInChromosome(site);
+    public int chromosomalPosition(int site) {
+        return myPositionList.chromosomalPosition(site);
     }
 
     @Override

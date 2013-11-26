@@ -101,8 +101,8 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         } catch (Exception e) {
             //do nothing
         }
-        double startChrPosition = theAAlignment.getPositionInChromosome(start);
-        double endChrPosition = theAAlignment.getPositionInChromosome(end);
+        double startChrPosition = theAAlignment.chromosomalPosition(start);
+        double endChrPosition = theAAlignment.chromosomalPosition(end);
         Alignment theFilteredAlignment = FilterAlignment.getInstance(theAAlignment, start, end);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(theFilteredAlignment);
         diversityResultsVector.add(evaluate(theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));

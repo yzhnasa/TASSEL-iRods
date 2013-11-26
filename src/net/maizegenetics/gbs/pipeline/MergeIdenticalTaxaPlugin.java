@@ -110,7 +110,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //            }
 //            for (int s = 0; s < a.numberOfSites(); s++) {
 //                theMSA.setLocusOfSite(s, a.getChromosome(s));
-//                theMSA.setPositionOfSite(s, a.getPositionInChromosome(s));
+//                theMSA.setPositionOfSite(s, a.chromosomalPosition(s));
 //                if (inputFormat == INPUT_FORMAT.vcf){
 //                    theMSA.setReferenceAllele(s, a.getReferenceAllele(s));
 //                    theMSA.setCommonAlleles(s, a.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Depth, s));

@@ -263,7 +263,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //            }
             int countFullLength=0;
             for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
-                int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getChromosome(0));
+                int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].getChromosome(0));
                 int blocks=donorAlign[da].getAllelePresenceForAllSites(0, 0).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
                         donorAlign[da].numberOfSites(),conflictMasks[da][0],conflictMasks[da][1]); 
@@ -419,7 +419,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private OpenBitSet[][] createMaskForAlignmentConflicts(Alignment unimpAlign, Alignment[] donorAlign, boolean print) {
         OpenBitSet[][] result=new OpenBitSet[donorAlign.length][4];
         for (int da = 0; da < result.length; da++) {
-            int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].getPositionInChromosome(0), donorAlign[da].getChromosome(0), donorAlign[da].siteName(0));
+            int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].getChromosome(0), donorAlign[da].siteName(0));
             OpenBitSet goodMask=new OpenBitSet(donorAlign[da].numberOfSites());
             OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].numberOfSites());
             OpenBitSet errorMask=new OpenBitSet(donorAlign[da].numberOfSites());
@@ -593,7 +593,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         for (int i = 0; i < informStates.length; i++) informStates[i]=nonMissingObs.get(i);
         int[] pos=new int[informSites];
         for (int i = 0; i < pos.length; i++) pos[i]=snpPositions.get(i);
-        int chrlength = donorAlign.getPositionInChromosome(endSite) - donorAlign.getPositionInChromosome(startSite);
+        int chrlength = donorAlign.chromosomalPosition(endSite) - donorAlign.chromosomalPosition(startSite);
         tp.setAverageSegmentLength( chrlength / sites );
         tp.setPositions(pos);
         
@@ -860,8 +860,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int endSite=(setJustFocus)?theDH[0].getFocusEndSite():theDH[0].endSite;
         if(endSite>=donorAlign.numberOfSites()) endSite=donorAlign.numberOfSites()-1;
 
-//        int prevPos=(startSite>0)?donorAlign.getPositionInChromosome(startSite-1):-1;
-//        int nextPos=(endSite<donorAlign.numberOfSites()-1)?donorAlign.getPositionInChromosome(endSite+1):-1;
+//        int prevPos=(startSite>0)?donorAlign.chromosomalPosition(startSite-1):-1;
+//        int nextPos=(endSite<donorAlign.numberOfSites()-1)?donorAlign.chromosomalPosition(endSite+1):-1;
 //        if(prevPos==-1 && nextPos==-1) {
 //            System.out.println(dhaps.toString());
 //        }
@@ -905,8 +905,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             }
             byte knownBase=impT.getOrigGeno(cs+donorOffset);
             if(!Arrays.equals(prevDonors, currDonors)) {
-                DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.getChromosome(prevDonorStart), donorAlign.getPositionInChromosome(prevDonorStart),
-                        donorAlign.getPositionInChromosome(cs),prevDonors[0],prevDonors[1]);
+                DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.getChromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
+                        donorAlign.chromosomalPosition(cs),prevDonors[0],prevDonors[1]);
                 impT.addBreakPoint(dhaps);
                 prevDonors=currDonors;
                 prevDonorStart=cs;
@@ -922,13 +922,13 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                     impT.resolveGeno[cs+donorOffset]= donorEst;}
             }}
         } //end of cs loop
-        DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.getChromosome(prevDonorStart), donorAlign.getPositionInChromosome(prevDonorStart),
-                donorAlign.getPositionInChromosome(endSite),prevDonors[0],prevDonors[1]);
+        DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.getChromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
+                donorAlign.chromosomalPosition(endSite),prevDonors[0],prevDonors[1]);
         impT.addBreakPoint(dhaps);
         //enter a stop of the DH at the beginning of the next block
-//        int lastDApos=donorAlign.getPositionInChromosome(endSite);
+//        int lastDApos=donorAlign.chromosomalPosition(endSite);
 //        int nextSite=unimpAlign.siteOfPhysicalPosition(lastDApos, donorAlign.getChromosome(0))+1;
-//        if(nextSite<unimpAlign.numberOfSites()) impT.breakPoints.put(unimpAlign.getPositionInChromosome(nextSite), new int[]{-1,-1});
+//        if(nextSite<unimpAlign.numberOfSites()) impT.breakPoints.put(unimpAlign.chromosomalPosition(nextSite), new int[]{-1,-1});
     //    if (print) System.out.println("E:"+mna.genotypeAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         return impT;
     }

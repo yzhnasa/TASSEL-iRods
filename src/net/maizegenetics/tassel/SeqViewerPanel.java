@@ -117,8 +117,8 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         siteCount = myAlignment.numberOfSites();
         start = 0;
         end = siteCount - 1;
-        startPos = myAlignment.getPositionInChromosome(0);
-        endPos = myAlignment.getPositionInChromosome(end);
+        startPos = myAlignment.chromosomalPosition(0);
+        endPos = myAlignment.chromosomalPosition(end);
 
         mySlider = new JSlider();
         mySlider.addChangeListener(myTableModel);
@@ -479,7 +479,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
                 if (myTableModel.isPhysicalPosition()) {
                     int newSite = myTableModel.getHorizontalCenter() - myTableModel.getHorizontalPageSize() * 3 / 4;
                     newSite = Math.max(0, newSite);
-                    mySlider.setValue(myAlignment.getPositionInChromosome(newSite));
+                    mySlider.setValue(myAlignment.chromosomalPosition(newSite));
                 } else {
                     int newValue = mySlider.getValue() - myTableModel.getHorizontalPageSize() * 3 / 4;
                     newValue = Math.max(mySlider.getMinimum(), newValue);
@@ -503,7 +503,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
                 if (myTableModel.isPhysicalPosition()) {
                     int newSite = myTableModel.getHorizontalCenter() + myTableModel.getHorizontalPageSize() * 3 / 4;
                     newSite = Math.min(myAlignment.numberOfSites() - 1, newSite);
-                    mySlider.setValue(myAlignment.getPositionInChromosome(newSite));
+                    mySlider.setValue(myAlignment.chromosomalPosition(newSite));
                 } else {
                     int newValue = mySlider.getValue() + myTableModel.getHorizontalPageSize() * 3 / 4;
                     newValue = Math.min(mySlider.getMaximum(), newValue);
@@ -531,8 +531,8 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
 
     private void updateSliderPhysicalPositions() {
 
-        int min = myAlignment.getPositionInChromosome(0);
-        int max = myAlignment.getPositionInChromosome(myAlignment.numberOfSites() - 1);
+        int min = myAlignment.chromosomalPosition(0);
+        int max = myAlignment.chromosomalPosition(myAlignment.numberOfSites() - 1);
         int tableSize = max - min + 1;
         int center = myTableModel.getHorizontalCenter();
         mySlider.setMinimum(min);
@@ -552,7 +552,7 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         }
         mySlider.setLabelTable(mySlider.createStandardLabels(spacing));
         mySlider.setMajorTickSpacing(spacing);
-        mySlider.setValue(myAlignment.getPositionInChromosome(center));
+        mySlider.setValue(myAlignment.chromosomalPosition(center));
         mySlider.validate();
         mySliderPane.validate();
         mySliderPane.repaint();

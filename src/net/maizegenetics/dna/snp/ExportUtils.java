@@ -408,7 +408,7 @@ public class ExportUtils {
                 bw.write(delimChar);
                 bw.write(alignment.getChromosomeName(site));
                 bw.write(delimChar);
-                bw.write(String.valueOf(alignment.getPositionInChromosome(site)));
+                bw.write(String.valueOf(alignment.chromosomalPosition(site)));
                 bw.write(delimChar);
                 bw.write("+"); //strand
                 bw.write(delimChar);
@@ -532,7 +532,7 @@ public class ExportUtils {
 
 
                 if (nAlleles == 0) {                                                  //used to be ==0
-                    System.out.println("no alleles at: " + site + " " + alignment.getPositionInChromosome(site));
+                    System.out.println("no alleles at: " + site + " " + alignment.chromosomalPosition(site));
                     continue;
                 }
 
@@ -543,7 +543,7 @@ public class ExportUtils {
                     refGeno = NucleotideAlignmentConstants.getNucleotideDiploidByte(MajorGenotype);
                 }
                 byte refAllele = (byte) (refGeno & 0xF);  // converts from diploid to haploid allele (2nd allele)
-                //System.out.println(alignment.getPositionInChromosome(site) + " " + refAllele);
+                //System.out.println(alignment.chromosomalPosition(site) + " " + refAllele);
                 byte[] alleleValues = null;
                 if (hasDepth) {
                     alleleValues = alignment.getAllelesByScope(Alignment.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
@@ -624,7 +624,7 @@ public class ExportUtils {
                 }
                 bw.write(alignment.getChromosomeName(site)); // chromosome
                 bw.write(delimChar);
-                bw.write(alignment.getPositionInChromosome(site) + ""); // position
+                bw.write(alignment.chromosomalPosition(site) + ""); // position
                 bw.write(delimChar);
                 bw.write(alignment.siteName(site)); // site name
                 bw.write(delimChar);
@@ -872,7 +872,7 @@ public class ExportUtils {
                 MAPbw.write(delimChar);
                 MAPbw.write("-9"); // genetic distance unavailable
                 MAPbw.write(delimChar);
-                MAPbw.write(Integer.toString(alignment.getPositionInChromosome(site))); // position
+                MAPbw.write(Integer.toString(alignment.chromosomalPosition(site))); // position
                 MAPbw.write("\n");
             }
             MAPbw.close();
@@ -964,7 +964,7 @@ public class ExportUtils {
                 MAPbw.write(delimChar);
                 MAPbw.write(alignment.getChromosomeName(site)); // chromosome name
                 MAPbw.write(delimChar);
-                MAPbw.write(Integer.toString(alignment.getPositionInChromosome(site))); // position
+                MAPbw.write(Integer.toString(alignment.chromosomalPosition(site))); // position
                 MAPbw.write("\n");
                 DATbw.write(delimChar);
                 DATbw.write(alignment.siteName(site));
@@ -1032,7 +1032,7 @@ public class ExportUtils {
             int numSites = theAlignment.numberOfSites();
             for (int j = 0; j < numSites; j++) {
                 bw.write(delimit);
-                bw.write(String.valueOf(theAlignment.getPositionInChromosome(j)));
+                bw.write(String.valueOf(theAlignment.chromosomalPosition(j)));
             }
             bw.write("\n");
 

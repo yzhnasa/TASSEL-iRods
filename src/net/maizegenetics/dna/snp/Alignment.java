@@ -386,7 +386,7 @@ public interface Alignment {
      *
      * @return physical position
      */
-    public int getPositionInChromosome(int site);
+    public int chromosomalPosition(int site);
 
     /**
      * Return site of given physical position in chromosome. If the physical

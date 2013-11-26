@@ -188,7 +188,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public int getPositionInChromosome(int site) {
+    public int chromosomalPosition(int site) {
         int i=Arrays.binarySearch(chrOffsets,site);
         if(i<0) i=-(i+1)-1;
         Chromosome chr=chrIndex[i];
@@ -215,7 +215,7 @@ final class PositionHDF5List implements PositionList {
             if (snpName.equals(siteName(result))) {return result;
             } else {
                 int index=result;
-                while ((index < numPositions) && (getPositionInChromosome(index) == physicalPosition)) {
+                while ((index < numPositions) && (chromosomalPosition(index) == physicalPosition)) {
                     if (snpName.equals(siteName(index))) {return index;}
                     result++;
                 }

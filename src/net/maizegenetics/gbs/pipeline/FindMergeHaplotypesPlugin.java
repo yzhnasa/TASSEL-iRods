@@ -118,7 +118,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         Alignment inAlign=AlignmentBuilder.getGenotypeCopyInstance(fa);
         int sites=inAlign.numberOfSites();
         System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.getChromosome(0),
-                inAlign.getPositionInChromosome(0),inAlign.numberOfTaxa(),inAlign.numberOfSites());
+                inAlign.chromosomalPosition(0),inAlign.numberOfTaxa(),inAlign.numberOfSites());
 
         propMissing=new double[inAlign.numberOfTaxa()];
         int startBlock=0;
@@ -219,7 +219,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                 bw.write(baseAlign.siteName(i)+"\t");
                 bw.write(baseAlign.getChromosomeName(i) +"\t");
                 bw.write(i+"\t"); //dummy for genetic position
-                bw.write(baseAlign.getPositionInChromosome(i) +"\n"); //dummy for genetic position
+                bw.write(baseAlign.chromosomalPosition(i) +"\n"); //dummy for genetic position
             } 
             bw.close();
             

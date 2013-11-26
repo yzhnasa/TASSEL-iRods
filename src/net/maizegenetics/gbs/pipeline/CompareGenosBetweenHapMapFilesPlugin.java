@@ -368,18 +368,18 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         nSamePosNotComparable = 0;
         boolean finished = false;
         while (!finished) {
-            while (a1.getPositionInChromosome(s1) != a2.getPositionInChromosome(s2) && s1 < nSites1 && s2 < nSites2) {
-                while (a1.getPositionInChromosome(s1) < a2.getPositionInChromosome(s2) && s1 < nSites1) {
+            while (a1.chromosomalPosition(s1) != a2.chromosomalPosition(s2) && s1 < nSites1 && s2 < nSites2) {
+                while (a1.chromosomalPosition(s1) < a2.chromosomalPosition(s2) && s1 < nSites1) {
                     s1++;
                 }
-                while (a2.getPositionInChromosome(s2) < a1.getPositionInChromosome(s1) && s2 < nSites2) {
+                while (a2.chromosomalPosition(s2) < a1.chromosomalPosition(s1) && s2 < nSites2) {
                     s2++;
                 }
             }
             if (s1 == nSites1 || s2 == nSites2) {
                 finished = true;
-            } else if (a1.getPositionInChromosome(s1) == a2.getPositionInChromosome(s2)) {
-                position = a1.getPositionInChromosome(s1);
+            } else if (a1.chromosomalPosition(s1) == a2.chromosomalPosition(s2)) {
+                position = a1.chromosomalPosition(s1);
                 nCompared += getCompareTypeAndCompare(s1, a1, s2, a2);
                 s2++;  // assumes that a1 is from GBS where duplicate SNPs have been removed (but a2 might contain some duplicates: e.g., hapmap2)
             }

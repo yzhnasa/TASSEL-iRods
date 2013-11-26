@@ -226,9 +226,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //            }
             ArrayList<Integer> samePosAL = new ArrayList<Integer>();
             Integer[] samePos = null;
-            int currentPos = a.getPositionInChromosome(0);
+            int currentPos = a.chromosomalPosition(0);
             for (int s = 0; s < a.numberOfSites(); s++) {  // must be sorted by position, as HapMap files typically are (ImportUtils.readFromHapmap() fails if they aren't)
-                int newPos = a.getPositionInChromosome(s);
+                int newPos = a.chromosomalPosition(s);
                 if (newPos == currentPos) {   // assumes that the strands are all '+' (in DiscoverySNPCallerPlugin(), - strand genos were complemented)
                     samePosAL.add(s);  // collect markers with the same position
                 } else {
@@ -530,7 +530,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //        }
 //        else
 //        {
-//            System.out.println("Not merged position: " + a.getPositionInChromosome(samePos[0]) +  " Mismatch: "+ (int)(myMisMatchRate *100) + "%." );
+//            System.out.println("Not merged position: " + a.chromosomalPosition(samePos[0]) +  " Mismatch: "+ (int)(myMisMatchRate *100) + "%." );
 //
 //
 //            if (kpUnmergDups)
@@ -574,9 +574,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //    private void deleteRemainingDuplicates(MutableNucleotideAlignment theMSA) {
 //
 //        ArrayList<Integer> samePosAL = new ArrayList<Integer>();
-//        int currentPos = theMSA.getPositionInChromosome(0);
+//        int currentPos = theMSA.chromosomalPosition(0);
 //        for (int s = 0; s < theMSA.numberOfSites(); s++) {
-//            int newPos = theMSA.getPositionInChromosome(s);
+//            int newPos = theMSA.chromosomalPosition(s);
 //            if (newPos == currentPos) {
 //                samePosAL.add(s);  // collect markers with the same position
 //            } else {

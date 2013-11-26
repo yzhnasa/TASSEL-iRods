@@ -64,7 +64,7 @@ public class PDAnnotation {
         String chromosomeFile = hapMapDir + hapMapFile_prefix + "chr" + currChr + hapMapFile_suffix;
         System.out.println("Loading:" + chromosomeFile);
         Alignment bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
-        //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.numberOfSites(), bna.getPositionInChromosome(0), bna.getPositionInChromosome(bna.numberOfSites() - 1));
+        //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.numberOfSites(), bna.chromosomalPosition(0), bna.chromosomalPosition(bna.numberOfSites() - 1));
         int siteCnt = bna.numberOfSites();
         int[] alignmentPhysPos = bna.getPhysicalPositions();
         hasData = new int[siteCnt];
