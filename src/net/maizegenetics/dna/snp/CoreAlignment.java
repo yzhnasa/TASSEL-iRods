@@ -240,19 +240,19 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public float getSiteScore(int seq, int site) {
+    public float siteScore(int taxon, int site) {
         if (mySiteScore == null) {
             throw new IllegalStateException("CoreAlignment: getSiteScore: This Alignment has no Site Scores.");
         }
-        return mySiteScore.getSiteScore(seq, site);
+        return mySiteScore.siteScore(taxon, site);
     }
 
     @Override
-    public float[][] getSiteScores() {
+    public float[][] siteScores() {
         if (mySiteScore == null) {
             throw new IllegalStateException("CoreAlignment: getSiteScores: This Alignment has no Site Scores.");
         }
-        return mySiteScore.getSiteScores();
+        return mySiteScore.siteScores();
     }
 
     @Override
@@ -265,8 +265,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public SITE_SCORE_TYPE getSiteScoreType() {
-        return mySiteScore.getSiteScoreType();
+    public SITE_SCORE_TYPE siteScoreType() {
+        return mySiteScore.siteScoreType();
     }
 
     @Override

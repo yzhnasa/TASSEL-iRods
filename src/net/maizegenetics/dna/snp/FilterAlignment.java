@@ -564,7 +564,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public float[][] getSiteScores() {
+    public float[][] siteScores() {
 
         if (!myBaseAlignment.hasSiteScores()) {
             return null;
@@ -579,7 +579,7 @@ public class FilterAlignment implements Alignment {
                 if (taxaIndex == -1) {
                     result[j][i] = -9;
                 } else {
-                    result[j][i] = myBaseAlignment.getSiteScore(taxaIndex, translateSite(i));
+                    result[j][i] = myBaseAlignment.siteScore(taxaIndex, translateSite(i));
                 }
             }
         }
@@ -751,12 +751,12 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public float getSiteScore(int seq, int site) {
-        int taxaIndex = translateTaxon(seq);
+    public float siteScore(int taxon, int site) {
+        int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
             return Float.NaN;
         } else {
-            return myBaseAlignment.getSiteScore(taxaIndex, translateSite(site));
+            return myBaseAlignment.siteScore(taxaIndex, translateSite(site));
         }
     }
 
@@ -766,8 +766,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public SITE_SCORE_TYPE getSiteScoreType() {
-        return myBaseAlignment.getSiteScoreType();
+    public SITE_SCORE_TYPE siteScoreType() {
+        return myBaseAlignment.siteScoreType();
     }
 
     @Override

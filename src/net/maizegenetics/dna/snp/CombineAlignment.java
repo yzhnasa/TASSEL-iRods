@@ -306,7 +306,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public float[][] getSiteScores() {
+    public float[][] siteScores() {
 
         if (!hasSiteScores()) {
             return null;
@@ -318,7 +318,7 @@ public class CombineAlignment implements Alignment {
             if (myAlignments[a].hasSiteScores()) {
                 for (int s = 0, m = myAlignments[a].numberOfSites(); s < m; s++) {
                     for (int t = 0; t < numSeqs; t++) {
-                        result[t][mySiteOffsets[a] + s] = myAlignments[a].getSiteScore(t, s);
+                        result[t][mySiteOffsets[a] + s] = myAlignments[a].siteScore(t, s);
                     }
                 }
             }
@@ -329,9 +329,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public float getSiteScore(int seq, int site) {
+    public float siteScore(int taxon, int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getSiteScore(seq, site - mySiteOffsets[translate]);
+        return myAlignments[translate].siteScore(taxon, site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -523,10 +523,10 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public SITE_SCORE_TYPE getSiteScoreType() {
-        SITE_SCORE_TYPE first = myAlignments[0].getSiteScoreType();
+    public SITE_SCORE_TYPE siteScoreType() {
+        SITE_SCORE_TYPE first = myAlignments[0].siteScoreType();
         for (int i = 1; i < myAlignments.length; i++) {
-            if (first != myAlignments[i].getSiteScoreType()) {
+            if (first != myAlignments[i].siteScoreType()) {
                 return SITE_SCORE_TYPE.MixedScoreTypes;
             }
         }
