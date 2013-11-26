@@ -692,13 +692,6 @@ public interface Alignment {
     public boolean isPhased();
 
     /**
-     * Returns Genetic Map of this Alignment if available.
-     *
-     * @return Genetic Map
-     */
-    public GeneticMap getGeneticMap();
-
-    /**
      * Returns true if this Alignment retains rare alleles. If false, rare
      * alleles are recorded as unknown.
      *

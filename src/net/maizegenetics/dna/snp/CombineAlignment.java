@@ -587,18 +587,6 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public GeneticMap getGeneticMap() {
-        GeneticMap result = myAlignments[0].getGeneticMap();
-        for (int i = 1; i < myAlignments.length; i++) {
-            GeneticMap current = myAlignments[i].getGeneticMap();
-            if ((current == null) || (!current.equals(result))) {
-                return null;
-            }
-        }
-        return result;
-    }
-
-    @Override
     public boolean retainsRareAlleles() {
         for (int i = 0; i < myAlignments.length; i++) {
             if (myAlignments[i].retainsRareAlleles() == false) {

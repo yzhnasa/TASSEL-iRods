@@ -786,11 +786,6 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public GeneticMap getGeneticMap() {
-        return myBaseAlignment.getGeneticMap();
-    }
-
-    @Override
     public boolean retainsRareAlleles() {
         return myGenotype.retainsRareAlleles();
     }

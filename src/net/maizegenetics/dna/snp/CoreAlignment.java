@@ -370,11 +370,6 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public GeneticMap getGeneticMap() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public boolean retainsRareAlleles() {
         return myGenotype.retainsRareAlleles();
     }
