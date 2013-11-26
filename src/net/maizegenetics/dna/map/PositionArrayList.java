@@ -118,7 +118,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return Integer.MIN_VALUE;
         int i=Arrays.binarySearch(cop.position, physicalPosition); //AvgPerObj:227.5715ns  for 2million positions
@@ -129,15 +129,15 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
-        int result=getSiteOfPhysicalPosition(physicalPosition, chromosome);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpName) {
+        int result=siteOfPhysicalPosition(physicalPosition, chromosome);
         if (result < 0) {return result;}
         else {
-            if (snpID.equals(siteName(result))) {return result;
+            if (snpName.equals(siteName(result))) {return result;
             } else {
                 int index=result;
                 while ((index < numPositions) && (getPositionInChromosome(index) == physicalPosition)) {
-                    if (snpID.equals(siteName(index))) {return index;}
+                    if (snpName.equals(siteName(index))) {return index;}
                     result++;
                 }
                 return -result - 1;

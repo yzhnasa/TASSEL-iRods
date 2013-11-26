@@ -70,11 +70,11 @@ public class ProjectionGenotype extends AbstractGenotype {
     }
 
     private int[] siteRangeForDonor(DonorHaplotypes dh) {
-        int start = myBaseAlignment.getSiteOfPhysicalPosition(dh.getStartPosition(), dh.getChromosome());
+        int start = myBaseAlignment.siteOfPhysicalPosition(dh.getStartPosition(), dh.getChromosome());
         if (start < 0) {
             start = -(start + 1);
         }
-        int end = myBaseAlignment.getSiteOfPhysicalPosition(dh.getEndPosition(), dh.getChromosome());
+        int end = myBaseAlignment.siteOfPhysicalPosition(dh.getEndPosition(), dh.getChromosome());
         if (end < 0) {
             end = -(end + 1);
         }

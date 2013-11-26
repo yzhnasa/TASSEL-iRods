@@ -125,14 +125,14 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         }
 
         if (myStartPos != -1) {
-            myStart = aa.getSiteOfPhysicalPosition(myStartPos, theLocus);
+            myStart = aa.siteOfPhysicalPosition(myStartPos, theLocus);
             if (myStart < 0) {
                 myStart = -(myStart + 1);
             }
         }
 
         if (myEndPos != -1) {
-            myEnd = aa.getSiteOfPhysicalPosition(myEndPos, theLocus);
+            myEnd = aa.siteOfPhysicalPosition(myEndPos, theLocus);
             if (myEnd < 0) {
                 myEnd = -(myEnd + 2);
             }
@@ -939,7 +939,7 @@ class DataFilterAlignmentDialog extends JDialog {
             builder.append("\n");
             JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
             try {
-                end = theAlignment.getSiteOfPhysicalPosition(endPos, null);
+                end = theAlignment.siteOfPhysicalPosition(endPos, null);
                 endTextField.setText(String.valueOf(end));
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -976,7 +976,7 @@ class DataFilterAlignmentDialog extends JDialog {
             builder.append("\n");
             JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
             try {
-                start = theAlignment.getSiteOfPhysicalPosition(startPos, null);
+                start = theAlignment.siteOfPhysicalPosition(startPos, null);
                 startTextField.setText(String.valueOf(start));
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -994,7 +994,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 throw new IllegalArgumentException("End Position Can't be Negative.");
             }
 
-            int endSite = theAlignment.getSiteOfPhysicalPosition(endPosFromField, null);
+            int endSite = theAlignment.siteOfPhysicalPosition(endPosFromField, null);
 
             if (endSite < 0) {
                 endSite = -(endSite + 1);
@@ -1040,7 +1040,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 throw new IllegalArgumentException("Start Position Can't be Negative.");
             }
 
-            int startSite = theAlignment.getSiteOfPhysicalPosition(startPosFromField, null);
+            int startSite = theAlignment.siteOfPhysicalPosition(startPosFromField, null);
 
             if (startSite < 0) {
                 startSite = -(startSite + 1);

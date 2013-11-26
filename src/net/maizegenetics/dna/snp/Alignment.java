@@ -398,7 +398,7 @@ public interface Alignment {
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome);
 
     /**
      * Return site of given physical position / SNP ID in chromosome. If the
@@ -408,11 +408,11 @@ public interface Alignment {
      *
      * @param physicalPosition physical position
      * @param chromosome chromosome. if null, the first chromosome is used.
-     * @param snpID SNP ID
+     * @param snpName SNP ID
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpName);
 
     /**
      * Returns all physical positions.

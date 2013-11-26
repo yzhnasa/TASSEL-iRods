@@ -4,8 +4,9 @@ import net.maizegenetics.dna.snp.Alignment;
 import java.util.List;
 
 /**
- * List of positions in the genome.   This type is used by every {@link Alignment}, but it can also be used list
- * of GWAS results and other genomic annotations.
+ * List of positions in the genome. This type is used by every
+ * {@link Alignment}, but it can also be used list of GWAS results and other
+ * genomic annotations.
  *
  * @author Terry Casstevens and Ed Buckler
  */
@@ -20,7 +21,7 @@ public interface PositionList extends List<Position> {
      * bits are the second allele value.
      */
     public byte getReferenceAllele(int site);
-    
+
     /**
      * Returns reference sequence of diploid allele values for given taxon in
      * specified range (end site not included). Each value in array contains
@@ -66,7 +67,8 @@ public interface PositionList extends List<Position> {
     public int getSiteCount();
 
     /**
-     *Return number of sites for given Chromosome 
+     * Return number of sites for given Chromosome
+     *
      * @param chromosome
      * @return number of sites
      */
@@ -92,30 +94,30 @@ public interface PositionList extends List<Position> {
     public int getPositionInChromosome(int site);
 
     /**
-     * Return site of given physical position in chromosome. If the physical position
-     * doesn't exist, (-(insertion point) - 1) is returned. If chromosome is not
-     * found, an exception is thrown.
+     * Return site of given physical position in chromosome. If the physical
+     * position doesn't exist, (-(insertion point) - 1) is returned. If
+     * chromosome is not found, an exception is thrown.
      *
      * @param physicalPosition physical position
      * @param chromosome chromosome. if null, the first chromosome is used.
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome);
 
     /**
-     * Return site of given physical position / SNP ID in chromosome. If the physical
-     * position doesn't exist, (-(insertion point) - 1) is returned. If chromosome is
-     * not found, an exception is thrown. This is to support multiple sites with
-     * the same physical position but different SNP IDs.
+     * Return site of given physical position / SNP ID in chromosome. If the
+     * physical position doesn't exist, (-(insertion point) - 1) is returned. If
+     * chromosome is not found, an exception is thrown. This is to support
+     * multiple sites with the same physical position but different SNP IDs.
      *
      * @param physicalPosition physical position
      * @param chromosome chromosome. if null, the first chromosome is used.
-     * @param snpID SNP ID
+     * @param snpName SNP ID
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpName);
 
     /**
      * Returns all physical positions.

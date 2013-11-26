@@ -197,7 +197,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         OpenBitSet obs=new OpenBitSet(a.numberOfSites());
         int count=0;
         for (int i = 0; i < gm.getNumberOfMarkers(); i++) {
-            int site=a.getSiteOfPhysicalPosition(gm.getPhysicalPosition(i), null);
+            int site=a.siteOfPhysicalPosition(gm.getPhysicalPosition(i), null);
             if(site>0) {obs.set(site);}
             
         }

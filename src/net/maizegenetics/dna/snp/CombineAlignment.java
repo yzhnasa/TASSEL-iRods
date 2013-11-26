@@ -197,7 +197,7 @@ public class CombineAlignment implements Alignment {
 
     @Override
     public byte genotype(int taxon, Chromosome locus, int physicalPosition) {
-        int site = getSiteOfPhysicalPosition(physicalPosition, locus);
+        int site = siteOfPhysicalPosition(physicalPosition, locus);
         int translate = translateSite(site);
         return myAlignments[translate].genotype(taxon, site - mySiteOffsets[translate]);
     }
@@ -254,7 +254,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
         Alignment align = ((Alignment) myChromosomes.get(locus));
         int i = -1;
         for (int j = 0; j < myAlignments.length; j++) {
@@ -266,11 +266,11 @@ public class CombineAlignment implements Alignment {
         if (i == -1) {
             return -1;
         }
-        return mySiteOffsets[i] + align.getSiteOfPhysicalPosition(physicalPosition, locus);
+        return mySiteOffsets[i] + align.siteOfPhysicalPosition(physicalPosition, locus);
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpID) {
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpName) {
         Alignment align = ((Alignment) myChromosomes.get(locus));
         int i = -1;
         for (int j = 0; j < myAlignments.length; j++) {
@@ -282,7 +282,7 @@ public class CombineAlignment implements Alignment {
         if (i == -1) {
             return -1;
         }
-        return mySiteOffsets[i] + align.getSiteOfPhysicalPosition(physicalPosition, locus, snpID);
+        return mySiteOffsets[i] + align.siteOfPhysicalPosition(physicalPosition, locus, snpName);
     }
 
     @Override

@@ -204,7 +204,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     public void adjustPosition(int position) {
 
         if (isPhysicalPosition()) {
-            position = myAlignment.getSiteOfPhysicalPosition(position, myAlignment.getChromosome(0));
+            position = myAlignment.siteOfPhysicalPosition(position, myAlignment.getChromosome(0));
             if (position < 0) {
                 position = -position;
             }

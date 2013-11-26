@@ -348,12 +348,12 @@ public class FilterAlignment implements Alignment {
 
     public static FilterAlignment getInstance(Alignment a, Chromosome chromosome, int startPhysicalPos, int endPhysicalPos) {
 
-        int startSite = a.getSiteOfPhysicalPosition(startPhysicalPos, chromosome);
+        int startSite = a.siteOfPhysicalPosition(startPhysicalPos, chromosome);
         if (startSite < 0) {
             startSite = -(startSite + 1);
         }
 
-        int endSite = a.getSiteOfPhysicalPosition(endPhysicalPos, chromosome);
+        int endSite = a.siteOfPhysicalPosition(endPhysicalPos, chromosome);
         if (endSite < 0) {
             endSite = -(endSite + 2);
         }
@@ -419,7 +419,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public byte genotype(int taxon, Chromosome chromosome, int physicalPosition) {
-        return myGenotype.genotype(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
+        return myGenotype.genotype(taxon, myPositionList.siteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
     public int translateSite(int site) {
@@ -622,8 +622,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
-        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, chromosome);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+        int temp = myBaseAlignment.siteOfPhysicalPosition(physicalPosition, chromosome);
         if (temp < 0) {
             temp = -(temp + 1);
             return -(reverseTranslateSite(temp) + 1);
@@ -632,8 +632,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
-        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpName) {
+        int temp = myBaseAlignment.siteOfPhysicalPosition(physicalPosition, chromosome, snpName);
         if (temp < 0) {
             temp = -(temp + 1);
             return -(reverseTranslateSite(temp) + 1);

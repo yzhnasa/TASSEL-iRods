@@ -66,7 +66,7 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public byte genotype(int taxon, Chromosome chromosome, int physicalPosition) {
-        return myGenotype.genotype(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
+        return myGenotype.genotype(taxon, myPositionList.siteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
     @Override
@@ -195,13 +195,13 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
-        return myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+        return myPositionList.siteOfPhysicalPosition(physicalPosition, chromosome);
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
-        return myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpName) {
+        return myPositionList.siteOfPhysicalPosition(physicalPosition, chromosome, snpName);
     }
 
     @Override
