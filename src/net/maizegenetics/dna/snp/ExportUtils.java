@@ -490,7 +490,7 @@ public class ExportUtils {
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
-            if (alignment.getReferenceAllele(0) == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+            if (alignment.referenceGenotype(0) == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                 bw.write("##Reference allele is not known. The major allele was used as reference allele.");
                 bw.newLine();
             }
@@ -536,7 +536,7 @@ public class ExportUtils {
                     continue;
                 }
 
-                byte refGeno = alignment.getReferenceAllele(site);
+                byte refGeno = alignment.referenceGenotype(site);
                 if (refGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     String myMajorAllele = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][sortedAlleles[0][0]];
                     String MajorGenotype = myMajorAllele + myMajorAllele;

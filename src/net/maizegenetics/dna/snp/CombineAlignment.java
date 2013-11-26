@@ -357,9 +357,9 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte getReferenceAllele(int site) {
+    public byte referenceGenotype(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].getReferenceAllele(site - mySiteOffsets[translate]);
+        return myAlignments[translate].referenceGenotype(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -448,17 +448,17 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getReference(int startSite, int endSite) {
+    public byte[] referenceGenotypes(int startSite, int endSite) {
         int numSites = endSite - startSite;
         byte[] result = new byte[numSites];
         for (int i = 0; i < numSites; i++) {
-            result[i] = getReferenceAllele(startSite + i);
+            result[i] = referenceGenotype(startSite + i);
         }
         return result;
     }
 
     @Override
-    public byte[] getReference() {
+    public byte[] referenceGenotypeForAllSites() {
 
         for (int i = 0; i < myAlignments.length; i++) {
             if (!myAlignments[i].hasReference()) {
@@ -469,7 +469,7 @@ public class CombineAlignment implements Alignment {
         byte[] result = new byte[numberOfSites()];
         int count = 0;
         for (int i = 0; i < myAlignments.length; i++) {
-            byte[] current = myAlignments[i].getReference();
+            byte[] current = myAlignments[i].referenceGenotypeForAllSites();
             for (int j = 0; j < current.length; j++) {
                 result[count++] = current[j];
             }

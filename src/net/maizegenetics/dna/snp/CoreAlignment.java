@@ -130,18 +130,18 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public byte getReferenceAllele(int site) {
-        return myPositionList.getReferenceAllele(site);
+    public byte referenceGenotype(int site) {
+        return myPositionList.referenceGenotype(site);
     }
 
     @Override
-    public byte[] getReference(int startSite, int endSite) {
-        return myPositionList.getReference(startSite, endSite);
+    public byte[] referenceGenotypes(int startSite, int endSite) {
+        return myPositionList.referenceGenotypes(startSite, endSite);
     }
 
     @Override
-    public byte[] getReference() {
-        return myPositionList.getReference();
+    public byte[] referenceGenotypeForAllSites() {
+        return myPositionList.referenceGenotypeForAllSites();
     }
 
     @Override
@@ -483,7 +483,7 @@ public class CoreAlignment implements Alignment {
                 result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
                 break;
             case Reference:
-                result = DynamicBitStorage.getInstance(myGenotype, scopeType, getReference());
+                result = DynamicBitStorage.getInstance(myGenotype, scopeType, referenceGenotypeForAllSites());
                 break;
             default:
                 myLogger.warn("getBitStorage: Unsupported type: " + scopeType);

@@ -20,7 +20,7 @@ public interface PositionList extends List<Position> {
      * @return first four bits are the first allele value and the second four
      * bits are the second allele value.
      */
-    public byte getReferenceAllele(int site);
+    public byte referenceGenotype(int site);
 
     /**
      * Returns reference sequence of diploid allele values for given taxon in
@@ -33,7 +33,7 @@ public interface PositionList extends List<Position> {
      *
      * @return reference sequence of diploid allele values.
      */
-    public byte[] getReference(int startSite, int endSite);
+    public byte[] referenceGenotypes(int startSite, int endSite);
 
     /**
      * Returns reference sequence of diploid allele values. Each value in array
@@ -42,7 +42,7 @@ public interface PositionList extends List<Position> {
      *
      * @return reference sequence of diploid allele values.
      */
-    public byte[] getReference();
+    public byte[] referenceGenotypeForAllSites();
 
     /**
      * Return whether this alignment has defined reference sequence.

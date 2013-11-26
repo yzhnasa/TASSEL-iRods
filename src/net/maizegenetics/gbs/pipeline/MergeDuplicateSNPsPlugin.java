@@ -253,7 +253,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                        {
 //                            int lastSiteIndex = msa.numberOfSites() -1;
 //                            msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
-//                            msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
+//                            msa.setReferenceAllele(lastSiteIndex, a.referenceGenotype(samePos[0]));
 //                            for (int tt=0; tt<a.numberOfTaxa(); tt++)
 //                            {
 //                                msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, samePos[0]));
@@ -288,7 +288,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                {
 //                    int lastSiteIndex = msa.numberOfSites() -1;
 //                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, samePos[0]));
-//                    msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
+//                    msa.setReferenceAllele(lastSiteIndex, a.referenceGenotype(samePos[0]));
 //                    for (int tt=0; tt<a.numberOfTaxa(); tt++)
 //                    {
 //                        msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, samePos[0]));
@@ -516,7 +516,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //            addSiteToMutableAlignment(chr, currentPos, genos, msa);
 //            int lastSiteIndex = msa.numberOfSites() - 1;
 //            msa.setCommonAlleles(lastSiteIndex, CommonAlleles);
-//            msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(samePos[0]));
+//            msa.setReferenceAllele(lastSiteIndex, a.referenceGenotype(samePos[0]));
 //            for (int t=0; t<taxaCount; t++)
 //            {
 //                byte[] alleleDepth = new byte[allelesCount];
@@ -545,7 +545,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //
 //                    int lastSiteIndex = msa.numberOfSites() -1;
 //                    msa.setCommonAlleles(lastSiteIndex, a.getAllelesByScope(Alignment.ALLELE_SCOPE_TYPE.Depth, s));
-//                    msa.setReferenceAllele(lastSiteIndex, a.getReferenceAllele(s));
+//                    msa.setReferenceAllele(lastSiteIndex, a.referenceGenotype(s));
 //                    for (int tt=0; tt<a.numberOfTaxa(); tt++)
 //                    {
 //                        msa.setDepthForAlleles(tt, lastSiteIndex, a.getDepthForAlleles(tt, s));

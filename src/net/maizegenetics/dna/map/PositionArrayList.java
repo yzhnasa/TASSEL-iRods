@@ -69,19 +69,19 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public byte getReferenceAllele(int site) {
+    public byte referenceGenotype(int site) {
         return mySiteList.get(site).getAllele(Allele.REF);
     }
     
     @Override
-    public byte[] getReference(int startSite, int endSite) {
+    public byte[] referenceGenotypes(int startSite, int endSite) {
         byte[] result = new byte[endSite - startSite];
         System.arraycopy(alleles[Allele.REF.index()],startSite,result,0, result.length);
         return result;
     }
 
     @Override
-    public byte[] getReference() {
+    public byte[] referenceGenotypeForAllSites() {
         return Arrays.copyOf(alleles[Allele.REF.index()],alleles[Allele.REF.index()].length);
     }
 

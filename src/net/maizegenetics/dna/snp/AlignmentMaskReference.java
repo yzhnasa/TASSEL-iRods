@@ -58,7 +58,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
 
     @Override
     public byte getMask(int taxon, int site) {
-        if ((myTaxonReference == -1) && (AlignmentUtils.isEqualOrUnknown(myAlignment.genotype(taxon, site), myAlignment.getReferenceAllele(site)))) {
+        if ((myTaxonReference == -1) && (AlignmentUtils.isEqualOrUnknown(myAlignment.genotype(taxon, site), myAlignment.referenceGenotype(site)))) {
             return 0;
         } else if (AlignmentUtils.isEqualOrUnknown(myAlignment.genotypeArray(taxon, site), myAlignment.genotypeArray(myTaxonReference, site))) {
             return 0;

@@ -131,7 +131,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public byte getReferenceAllele(int site) {
+    public byte referenceGenotype(int site) {
         try {
             return mySiteList.get(site).getAllele(Allele.REF);
         } catch (ExecutionException e) {
@@ -141,7 +141,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public byte[] getReference(int startSite, int endSite) {
+    public byte[] referenceGenotypes(int startSite, int endSite) {
         throw new UnsupportedOperationException("Not implemented yet.");
 //        byte[] result = new byte[endSite - startSite];
 //        //System.arraycopy(refAlleles,startSite,result,0, result.length);
@@ -149,7 +149,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public byte[] getReference() {
+    public byte[] referenceGenotypeForAllSites() {
         throw new UnsupportedOperationException("Not implemented yet.");
       //  return null;
        // return Arrays.copyOf(refAlleles,refAlleles.length);

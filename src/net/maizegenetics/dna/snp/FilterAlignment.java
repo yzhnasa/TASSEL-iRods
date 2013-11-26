@@ -589,8 +589,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte getReferenceAllele(int site) {
-        return myBaseAlignment.getReferenceAllele(translateSite(site));
+    public byte referenceGenotype(int site) {
+        return myBaseAlignment.referenceGenotype(translateSite(site));
     }
 
     @Override
@@ -709,15 +709,15 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getReference() {
+    public byte[] referenceGenotypeForAllSites() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
             byte[] result = new byte[numberOfSites()];
             for (int i = 0, n = numberOfSites(); i < n; i++) {
-                result[i] = getReferenceAllele(i);
+                result[i] = referenceGenotype(i);
             }
             return result;
         } else {
-            return myBaseAlignment.getReference();
+            return myBaseAlignment.referenceGenotypeForAllSites();
         }
     }
 
@@ -945,14 +945,14 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getReference(int startSite, int endSite) {
+    public byte[] referenceGenotypes(int startSite, int endSite) {
         if (!hasReference()) {
             return null;
         }
 
         byte[] result = new byte[endSite - startSite];
         for (int i = startSite; i < endSite; i++) {
-            result[i] = getReferenceAllele(i);
+            result[i] = referenceGenotype(i);
         }
         return result;
     }
@@ -1021,7 +1021,7 @@ public class FilterAlignment implements Alignment {
                 result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
                 break;
             case Reference:
-                result = DynamicBitStorage.getInstance(myGenotype, scopeType, getReference());
+                result = DynamicBitStorage.getInstance(myGenotype, scopeType, referenceGenotypeForAllSites());
                 break;
             default:
                 myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
