@@ -64,7 +64,7 @@ public interface PositionList extends List<Position> {
      *
      * @return number of sites
      */
-    public int getSiteCount();
+    public int siteCount();
 
     /**
      * Return number of sites for given Chromosome
@@ -72,7 +72,7 @@ public interface PositionList extends List<Position> {
      * @param chromosome
      * @return number of sites
      */
-    public int getChromosomeSiteCount(Chromosome chromosome);
+    public int chromosomeSiteCount(Chromosome chromosome);
 
     /**
      * Get the first (inclusive) and last (exclusive) site of the specified
@@ -82,7 +82,7 @@ public interface PositionList extends List<Position> {
      *
      * @return first and last site
      */
-    public int[] getStartAndEndOfChromosome(Chromosome chromosome);
+    public int[] startAndEndOfChromosome(Chromosome chromosome);
 
     /**
      * Returns the physical position at given site.
@@ -133,7 +133,7 @@ public interface PositionList extends List<Position> {
      *
      * @return Chromosome Name
      */
-    public String getChromosomeName(int site);
+    public String chromosomeName(int site);
 
     /**
      * Return Chromosome for given site.
@@ -142,7 +142,7 @@ public interface PositionList extends List<Position> {
      *
      * @return Chromosome
      */
-    public Chromosome getChromosome(int site);
+    public Chromosome chromosome(int site);
 
     /**
      * Return Chromosome with matching name. First to match will be returned.
@@ -151,14 +151,14 @@ public interface PositionList extends List<Position> {
      *
      * @return Chromosome
      */
-    public Chromosome getChromosome(String name);
+    public Chromosome chromosome(String name);
 
     /**
      * Return all chromosomes.
      *
      * @return chromosomes
      */
-    public Chromosome[] getChromosomes();
+    public Chromosome[] chromosomes();
 
     /**
      * Return number of chromosomes.
@@ -172,7 +172,7 @@ public interface PositionList extends List<Position> {
      *
      * @return starting site for each chromosome.
      */
-    public int[] getChromosomesOffsets();
+    public int[] chromosomesOffsets();
 
     /**
      * Return size of indel at given site.
@@ -181,7 +181,7 @@ public interface PositionList extends List<Position> {
      *
      * @return indel size
      */
-    public int getIndelSize(int site);
+    public int indelSize(int site);
 
     /**
      * Returns whether give site is an indel.

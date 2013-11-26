@@ -67,7 +67,7 @@ final class PositionHDF5List implements PositionList {
             }
             for (int i=0; i<length; i++) {
                 int site=i+startSite;
-                Chromosome chr=getChromosome(site);
+                Chromosome chr=chromosome(site);
                 ChrOffPos cop=myChrOffPosTree.get(chr);
                 int pos=cop.position[site-cop.startSiteOff];
                 Position p=new GeneralPosition.Builder(chr,pos)
@@ -171,17 +171,17 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public int getSiteCount() {
+    public int siteCount() {
         return numPositions;
     }
 
     @Override
-    public int getChromosomeSiteCount(Chromosome chromosome) {
+    public int chromosomeSiteCount(Chromosome chromosome) {
         return myChrOffPosTree.get(chromosome).position.length;
     }
 
     @Override
-    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
+    public int[] startAndEndOfChromosome(Chromosome chromosome) {
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return null;
         return new int[]{cop.startSiteOff,cop.endSiteOff};
@@ -235,13 +235,13 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public String getChromosomeName(int site) {
-        return getChromosome(site).getName();
+    public String chromosomeName(int site) {
+        return chromosome(site).getName();
        // return rangeMap.get(site).getName();
     }
 
     @Override
-    public Chromosome getChromosome(int site) {
+    public Chromosome chromosome(int site) {
         int i=Arrays.binarySearch(chrOffsets,site);
         if(i<0) i=-(i+1)-1;
         Chromosome chr=chrIndex[i];
@@ -250,12 +250,12 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public Chromosome getChromosome(String name) {
+    public Chromosome chromosome(String name) {
         return myChrNameHash.get(name);
     }
 
     @Override
-    public Chromosome[] getChromosomes() {
+    public Chromosome[] chromosomes() {
         return myChrOffPosTree.keySet().toArray(new Chromosome[0]);
     }
 
@@ -265,7 +265,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public int[] getChromosomesOffsets() {
+    public int[] chromosomesOffsets() {
         int[] result=new int[myChrOffPosTree.size()];
         int index=0;
         for (ChrOffPos cop: myChrOffPosTree.values()) {
@@ -275,7 +275,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public int getIndelSize(int site) {
+    public int indelSize(int site) {
         try{return mySiteList.get(site).getKnownVariants()[1].length();}
     catch (ExecutionException e) {
         e.printStackTrace();

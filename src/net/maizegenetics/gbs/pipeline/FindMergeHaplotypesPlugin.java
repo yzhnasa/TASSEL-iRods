@@ -143,7 +143,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Chromosome aL: theL) {
             System.out.println("");
-            int[] startEnd=a.positionList().getStartAndEndOfChromosome(aL);
+            int[] startEnd=a.positionList().startAndEndOfChromosome(aL);
             //todo chromosome offsets will be need to replace this
             int locusSites=startEnd[1]-startEnd[0]+1;
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);

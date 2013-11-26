@@ -99,7 +99,7 @@ public class AlignmentBuilder {
 
     public AlignmentBuilder addTaxon(Taxon taxon, byte[] genos, byte[] depth) {
         if(myBuildType!=BuildType.TAXA_INC) throw new IllegalArgumentException("addTaxon only be used with AlignmentBuilder.getTaxaIncremental");
-        if(genos.length!=positionList.getSiteCount()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
+        if(genos.length!=positionList.siteCount()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
         if(isHDF5) {
             addTaxon(writer, taxon, genos, null);
 
@@ -126,7 +126,7 @@ public class AlignmentBuilder {
             case TAXA_INC: {
                 //TODO optional sort
                 TaxaList tl=taxaListBuilder.build();
-                GenotypeBuilder gB=GenotypeBuilder.getInstance(tl.getTaxaCount(),positionList.getSiteCount());
+                GenotypeBuilder gB=GenotypeBuilder.getInstance(tl.getTaxaCount(),positionList.siteCount());
                 for (int i=0; i<incGeno.size(); i++) {
                     gB.setBaseRangeForTaxon(i, 0, incGeno.get(i));
                 }
@@ -135,8 +135,8 @@ public class AlignmentBuilder {
             case SITE_INC: {
                 //TODO validate sort order, sort if needed
                 PositionList pl=posListBuilder.build();
-                GenotypeBuilder gB=GenotypeBuilder.getInstance(taxaList.getTaxaCount(),pl.getSiteCount());
-                for (int s=0; s<pl.getSiteCount(); s++) {
+                GenotypeBuilder gB=GenotypeBuilder.getInstance(taxaList.getTaxaCount(),pl.siteCount());
+                for (int s=0; s<pl.siteCount(); s++) {
                     byte[] b=incGeno.get(s);
                     for (int t=0; t<b.length; t++) {
                         gB.setBase(t,s,b[t]);
@@ -336,7 +336,7 @@ public class AlignmentBuilder {
      */
     private synchronized void addTaxon(IHDF5Writer myWriter, Taxon id, byte[] genotype, byte[][] depth) {
         int chunk=1<<16;
-        int myNumSites=positionList.getSiteCount();
+        int myNumSites=positionList.siteCount();
         if(myNumSites<chunk) chunk=myNumSites;
         String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getName();
         if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);

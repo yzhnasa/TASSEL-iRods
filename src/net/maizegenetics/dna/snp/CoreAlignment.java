@@ -41,7 +41,7 @@ public class CoreAlignment implements Alignment {
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
-        mySiteCount = myPositionList.getSiteCount();
+        mySiteCount = myPositionList.siteCount();
         myTaxaCount = myTaxaList.getTaxaCount();
     }
 
@@ -176,12 +176,12 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int chromosomeSiteCount(Chromosome chromosome) {
-        return myPositionList.getChromosomeSiteCount(chromosome);
+        return myPositionList.chromosomeSiteCount(chromosome);
     }
 
     @Override
     public int[] startAndEndOfChromosome(Chromosome chromosome) {
-        return myPositionList.getStartAndEndOfChromosome(chromosome);
+        return myPositionList.startAndEndOfChromosome(chromosome);
     }
 
     @Override
@@ -211,22 +211,22 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public String chromosomeName(int site) {
-        return myPositionList.getChromosomeName(site);
+        return myPositionList.chromosomeName(site);
     }
 
     @Override
     public Chromosome chromosome(int site) {
-        return myPositionList.getChromosome(site);
+        return myPositionList.chromosome(site);
     }
 
     @Override
     public Chromosome chromosome(String name) {
-        return myPositionList.getChromosome(name);
+        return myPositionList.chromosome(name);
     }
 
     @Override
     public Chromosome[] chromosomes() {
-        return myPositionList.getChromosomes();
+        return myPositionList.chromosomes();
     }
 
     @Override
@@ -236,7 +236,7 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int[] chromosomesOffsets() {
-        return myPositionList.getChromosomesOffsets();
+        return myPositionList.chromosomesOffsets();
     }
 
     @Override
@@ -271,7 +271,7 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public int indelSize(int site) {
-        return myPositionList.getIndelSize(site);
+        return myPositionList.indelSize(site);
     }
 
     @Override

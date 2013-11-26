@@ -96,17 +96,17 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int getSiteCount() {
+    public int siteCount() {
         return numPositions;
     }
 
     @Override
-    public int getChromosomeSiteCount(Chromosome chromosome) {
+    public int chromosomeSiteCount(Chromosome chromosome) {
         return myChrOffPosTree.get(chromosome).position.length;
     }
 
     @Override
-    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
+    public int[] startAndEndOfChromosome(Chromosome chromosome) {
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return null;
         return new int[]{cop.startSiteOff,cop.endSiteOff};
@@ -156,22 +156,22 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public String getChromosomeName(int site) {
+    public String chromosomeName(int site) {
         return mySiteList.get(site).getChromosome().getName();
     }
 
     @Override
-    public Chromosome getChromosome(int site) {
+    public Chromosome chromosome(int site) {
         return mySiteList.get(site).getChromosome();
     }
 
     @Override
-    public Chromosome getChromosome(String name) {
+    public Chromosome chromosome(String name) {
         return myChrNameHash.get(name);
     }
 
     @Override
-    public Chromosome[] getChromosomes() {
+    public Chromosome[] chromosomes() {
         return myChrOffPosTree.keySet().toArray(new Chromosome[0]);
     }
 
@@ -181,7 +181,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int[] getChromosomesOffsets() {
+    public int[] chromosomesOffsets() {
         int[] result=new int[myChrOffPosTree.size()];
         int index=0;
         for (ChrOffPos cop: myChrOffPosTree.values()) {
@@ -191,7 +191,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int getIndelSize(int site) {
+    public int indelSize(int site) {
         return mySiteList.get(site).getKnownVariants()[1].length();
     }
 
