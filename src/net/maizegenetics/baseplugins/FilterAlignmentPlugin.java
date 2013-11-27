@@ -113,26 +113,26 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         Alignment aa = (Alignment) inDatum.getData();
 
         if (myEnd == -1) {
-            myEnd = aa.getSiteCount() - 1;
+            myEnd = aa.numberOfSites() - 1;
         }
 
         Chromosome theLocus = myLocus;
         if ((theLocus == null) && (myLocusStr != null)) {
-            theLocus = aa.getChromosome(myLocusStr);
+            theLocus = aa.chromosome(myLocusStr);
             if (theLocus == null) {
                 throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Alignment doesn't contain locus: " + myLocusStr);
             }
         }
 
         if (myStartPos != -1) {
-            myStart = aa.getSiteOfPhysicalPosition(myStartPos, theLocus);
+            myStart = aa.siteOfPhysicalPosition(myStartPos, theLocus);
             if (myStart < 0) {
                 myStart = -(myStart + 1);
             }
         }
 
         if (myEndPos != -1) {
-            myEnd = aa.getSiteOfPhysicalPosition(myEndPos, theLocus);
+            myEnd = aa.siteOfPhysicalPosition(myEndPos, theLocus);
             if (myEnd < 0) {
                 myEnd = -(myEnd + 2);
             }
@@ -166,7 +166,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             theDialog.dispose();
         }
 
-        if (myStart >= aa.getSiteCount()) {
+        if (myStart >= aa.numberOfSites()) {
             throw new IllegalArgumentException("FilterAlignmentPlugin: starting site can't be past end of alignment.");
         }
         if ((myEnd < 0) || (myEnd < myStart)) {
@@ -176,8 +176,8 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         if (myStart < 0) {
             myStart = 0;
         }
-        if (myEnd >= aa.getSiteCount()) {
-            myEnd = aa.getSiteCount() - 1;
+        if (myEnd >= aa.numberOfSites()) {
+            myEnd = aa.numberOfSites() - 1;
         }
 
         Alignment naa = aa;
@@ -186,7 +186,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             naa = AlignmentBuilder.getInstanceOnlyMajorMinor(naa);
         }
 
-        if ((myStart != 0) || (myEnd < (naa.getSiteCount() - 1))) {
+        if ((myStart != 0) || (myEnd < (naa.numberOfSites() - 1))) {
             naa = AlignmentUtils.removeSitesOutsideRange(naa, myStart, myEnd);
         }
         if (myExtractIndels) {
@@ -202,7 +202,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         }
         String theComment;
         StringBuilder builder = new StringBuilder();
-        Chromosome[] loci = naa.getChromosomes();
+        Chromosome[] loci = naa.chromosomes();
         builder.append(inDatum.getName());
         builder.append("_");
         if ((loci != null) && (loci.length != 0)) {
@@ -219,10 +219,10 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
                 }
             }
         }
-        if (naa.getSiteCount() > 1) {
-            builder.append(naa.getPositionInChromosome(0));
+        if (naa.numberOfSites() > 1) {
+            builder.append(naa.chromosomalPosition(0));
             builder.append("-");
-            builder.append(naa.getPositionInChromosome(naa.getSiteCount() - 1));
+            builder.append(naa.chromosomalPosition(naa.numberOfSites() - 1));
         }
         String theName = builder.toString();
         if (myDoSlidingHaps) {
@@ -237,8 +237,8 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         } else {
             theComment = "Point Poly.\n";
         }
-        if (naa.getSiteCount() != 0) {
-            myLogger.info("Resulting Number Sites: " + naa.getSiteCount());
+        if (naa.numberOfSites() != 0) {
+            myLogger.info("Resulting Number Sites: " + naa.numberOfSites());
             return new Datum(theName, naa, theComment);
         } else {
             if (isInteractive()) {
@@ -464,18 +464,18 @@ class DataFilterAlignmentDialog extends JDialog {
         super(f, "Filter Alignment", true);
         theAlignment = a;
         chromFilteredAlignment = theAlignment;
-        chromsAvailable = new String[theAlignment.getNumChromosomes()];
+        chromsAvailable = new String[theAlignment.numChromosomes()];
         for (int i = 0; i < chromsAvailable.length; i++) {
-            chromsAvailable[i] = theAlignment.getChromosomes()[i].getName().trim();
+            chromsAvailable[i] = theAlignment.chromosomes()[i].getName().trim();
         }
-        totalSeq = theAlignment.getSequenceCount();
-        siteCount = theAlignment.getSiteCount();
+        totalSeq = theAlignment.numberOfTaxa();
+        siteCount = theAlignment.numberOfSites();
         lblSeqLength.setText(" of " + (siteCount - 1) + " sites");
         lblMinCount.setText("Minimum PERCENTAGE:");
         start = 0;
         end = siteCount - 1;
-        startPos = theAlignment.getPositionInChromosome(0);
-        endPos = theAlignment.getPositionInChromosome(siteCount - 1);
+        startPos = theAlignment.chromosomalPosition(0);
+        endPos = theAlignment.chromosomalPosition(siteCount - 1);
         minCount = TasselPrefs.getFilterAlignPluginMinCount();
         minFreq = TasselPrefs.getFilterAlignPluginMinFreq();
         maxFreq = TasselPrefs.getFilterAlignPluginMaxFreq();
@@ -708,14 +708,14 @@ class DataFilterAlignmentDialog extends JDialog {
         mainPanel.add(lblSitePos, new GridBagConstraints(3, 4, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 42, 3));
         mainPanel.add(startPosTextField, new GridBagConstraints(3, 5, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
 
-        lblSitePos.setVisible(theAlignment.getNumChromosomes() == 1 && startPos >= 0);
-        startPosTextField.setVisible(theAlignment.getNumChromosomes() == 1 && startPos >= 0);
+        lblSitePos.setVisible(theAlignment.numChromosomes() == 1 && startPos >= 0);
+        startPosTextField.setVisible(theAlignment.numChromosomes() == 1 && startPos >= 0);
 
         if (!doBatchAnalysis) {
             mainPanel.add(lblEndSite, new GridBagConstraints(0, 6, 1, 1, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 37, 14));
             mainPanel.add(endTextField, new GridBagConstraints(2, 6, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
             mainPanel.add(endPosTextField, new GridBagConstraints(3, 6, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 12, 0));
-            endPosTextField.setVisible(theAlignment.getNumChromosomes() == 1 && endPos >= 0);
+            endPosTextField.setVisible(theAlignment.numChromosomes() == 1 && endPos >= 0);
             mainPanel.add(lblSeqLength, new GridBagConstraints(2, 7, 1, 1, 1.0, 0.6, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 3));
         }
 
@@ -740,19 +740,19 @@ class DataFilterAlignmentDialog extends JDialog {
             JOptionPane.showMessageDialog(this.getParent(), "End site must be a number between 0 and " + (siteCount - 1) + " inclusive.");
         } else if (start > end) {
             JOptionPane.showMessageDialog(this.getParent(), "Start site must be less than the end site.");
-        } else if (startPos < 0 && endPos >= 0 && theAlignment.getNumChromosomes() == 1) {
+        } else if (startPos < 0 && endPos >= 0 && theAlignment.numChromosomes() == 1) {
             JOptionPane.showMessageDialog(this.getParent(), "Start position must be non negative.");
-        } else if (startPos > theAlignment.getPositionInChromosome(siteCount - 1) && theAlignment.getNumChromosomes() == 1) {
-            JOptionPane.showMessageDialog(this.getParent(), "No available SNPs with positions greater than " + theAlignment.getPositionInChromosome(siteCount - 1) + ".");
+        } else if (startPos > theAlignment.chromosomalPosition(siteCount - 1) && theAlignment.numChromosomes() == 1) {
+            JOptionPane.showMessageDialog(this.getParent(), "No available SNPs with positions greater than " + theAlignment.chromosomalPosition(siteCount - 1) + ".");
         } else if (isStartPosTextFieldNumeric == false) {
-            JOptionPane.showMessageDialog(this.getParent(), "Start position must be a number between 0 and " + theAlignment.getPositionInChromosome(siteCount - 1) + " inclusive.");
-        } else if (endPos < 0 && startPos >= 0 && theAlignment.getNumChromosomes() == 1) {
+            JOptionPane.showMessageDialog(this.getParent(), "Start position must be a number between 0 and " + theAlignment.chromosomalPosition(siteCount - 1) + " inclusive.");
+        } else if (endPos < 0 && startPos >= 0 && theAlignment.numChromosomes() == 1) {
             JOptionPane.showMessageDialog(this.getParent(), "End Position must be non negative.");
-        } else if (endPos < theAlignment.getPositionInChromosome(0) && theAlignment.getNumChromosomes() == 1) {
-            JOptionPane.showMessageDialog(this.getParent(), "No available SNPs with positions less than " + theAlignment.getPositionInChromosome(0) + ".");
+        } else if (endPos < theAlignment.chromosomalPosition(0) && theAlignment.numChromosomes() == 1) {
+            JOptionPane.showMessageDialog(this.getParent(), "No available SNPs with positions less than " + theAlignment.chromosomalPosition(0) + ".");
         } else if (isEndPosTextFieldNumeric == false) {
-            JOptionPane.showMessageDialog(this.getParent(), "End position must be a number greater than " + theAlignment.getPositionInChromosome(0) + ".");
-        } else if (startPos > endPos && theAlignment.getNumChromosomes() == 1) {
+            JOptionPane.showMessageDialog(this.getParent(), "End position must be a number greater than " + theAlignment.chromosomalPosition(0) + ".");
+        } else if (startPos > endPos && theAlignment.numChromosomes() == 1) {
             JOptionPane.showMessageDialog(this.getParent(), "Start position must be less than the end position.");
         } else if (!isChromSelectionValid) {
             JOptionPane.showMessageDialog(this.getParent(), "Invalid chromosome selection");
@@ -865,25 +865,25 @@ class DataFilterAlignmentDialog extends JDialog {
             for (int i = 0; i < chromsSelected.length; i++) {
                 for (int j = 0; j < availableAlignments.size(); j++) {
                     Alignment current = (Alignment) availableAlignments.get(j).getData();
-                    if (current.getChromosomes().length == 1) {
-                        if (chromsSelected[i].equals(current.getChromosomeName(0))) {
+                    if (current.chromosomes().length == 1) {
+                        if (chromsSelected[i].equals(current.chromosomeName(0))) {
                             selectedAlignments[i] = current;
                         }
                     }
                 }
             }
             chromFilteredAlignment = CombineAlignment.getInstance(selectedAlignments);
-            lblSitePos.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && startPos >= 0);
-            startPosTextField.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && startPos >= 0);
-            endPosTextField.setVisible(chromFilteredAlignment.getNumChromosomes() == 1 && endPos >= 0);
-            totalSeq = chromFilteredAlignment.getSequenceCount();
-            siteCount = chromFilteredAlignment.getSiteCount();
+            lblSitePos.setVisible(chromFilteredAlignment.numChromosomes() == 1 && startPos >= 0);
+            startPosTextField.setVisible(chromFilteredAlignment.numChromosomes() == 1 && startPos >= 0);
+            endPosTextField.setVisible(chromFilteredAlignment.numChromosomes() == 1 && endPos >= 0);
+            totalSeq = chromFilteredAlignment.numberOfTaxa();
+            siteCount = chromFilteredAlignment.numberOfSites();
             lblSeqLength.setText(" of " + (siteCount - 1) + " sites");
             lblMinCount.setText("Minimum Count:");
             start = 0;
             end = siteCount - 1;
-            startPos = chromFilteredAlignment.getPositionInChromosome(0);
-            endPos = chromFilteredAlignment.getPositionInChromosome(siteCount - 1);
+            startPos = chromFilteredAlignment.chromosomalPosition(0);
+            endPos = chromFilteredAlignment.chromosomalPosition(siteCount - 1);
             if (doBatchAnalysis) {
                 countTextField.setText(minPercentage + "");
             } else {
@@ -925,7 +925,7 @@ class DataFilterAlignmentDialog extends JDialog {
             }
 
             end = endFromField;
-            endPos = theAlignment.getPositionInChromosome(end);
+            endPos = theAlignment.chromosomalPosition(end);
             endPosTextField.setText(String.valueOf(endPos));
         } catch (Exception ee) {
             StringBuilder builder = new StringBuilder();
@@ -939,7 +939,7 @@ class DataFilterAlignmentDialog extends JDialog {
             builder.append("\n");
             JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
             try {
-                end = theAlignment.getSiteOfPhysicalPosition(endPos, null);
+                end = theAlignment.siteOfPhysicalPosition(endPos, null);
                 endTextField.setText(String.valueOf(end));
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -962,7 +962,7 @@ class DataFilterAlignmentDialog extends JDialog {
             }
 
             start = startFromField;
-            startPos = theAlignment.getPositionInChromosome(start);
+            startPos = theAlignment.chromosomalPosition(start);
             startPosTextField.setText(String.valueOf(startPos));
         } catch (Exception ee) {
             StringBuilder builder = new StringBuilder();
@@ -976,7 +976,7 @@ class DataFilterAlignmentDialog extends JDialog {
             builder.append("\n");
             JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
             try {
-                start = theAlignment.getSiteOfPhysicalPosition(startPos, null);
+                start = theAlignment.siteOfPhysicalPosition(startPos, null);
                 startTextField.setText(String.valueOf(start));
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -994,7 +994,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 throw new IllegalArgumentException("End Position Can't be Negative.");
             }
 
-            int endSite = theAlignment.getSiteOfPhysicalPosition(endPosFromField, null);
+            int endSite = theAlignment.siteOfPhysicalPosition(endPosFromField, null);
 
             if (endSite < 0) {
                 endSite = -(endSite + 1);
@@ -1005,7 +1005,7 @@ class DataFilterAlignmentDialog extends JDialog {
             }
 
             end = endSite;
-            endPos = theAlignment.getPositionInChromosome(end);
+            endPos = theAlignment.chromosomalPosition(end);
             endTextField.setText(String.valueOf(end));
         } catch (Exception ee) {
             ee.printStackTrace();
@@ -1014,15 +1014,15 @@ class DataFilterAlignmentDialog extends JDialog {
             builder.append(endPosTextField.getText().trim());
             builder.append("\n");
             builder.append("Number Should be a Positive Integer between: \n");
-            builder.append(theAlignment.getPositionInChromosome(0));
+            builder.append(theAlignment.chromosomalPosition(0));
             builder.append(" and ");
-            builder.append(theAlignment.getPositionInChromosome(siteCount - 1));
+            builder.append(theAlignment.chromosomalPosition(siteCount - 1));
             builder.append("\n");
             builder.append(ee.getMessage());
             builder.append("\n");
             JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
             try {
-                endPos = theAlignment.getPositionInChromosome(end);
+                endPos = theAlignment.chromosomalPosition(end);
                 endPosTextField.setText(String.valueOf(endPos));
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -1040,7 +1040,7 @@ class DataFilterAlignmentDialog extends JDialog {
                 throw new IllegalArgumentException("Start Position Can't be Negative.");
             }
 
-            int startSite = theAlignment.getSiteOfPhysicalPosition(startPosFromField, null);
+            int startSite = theAlignment.siteOfPhysicalPosition(startPosFromField, null);
 
             if (startSite < 0) {
                 startSite = -(startSite + 1);
@@ -1051,7 +1051,7 @@ class DataFilterAlignmentDialog extends JDialog {
             }
 
             start = startSite;
-            startPos = theAlignment.getPositionInChromosome(start);
+            startPos = theAlignment.chromosomalPosition(start);
             startTextField.setText(String.valueOf(start));
         } catch (Exception ee) {
             StringBuilder builder = new StringBuilder();
@@ -1059,15 +1059,15 @@ class DataFilterAlignmentDialog extends JDialog {
             builder.append(startPosTextField.getText().trim());
             builder.append("\n");
             builder.append("Number Should be a Positive Integer between: \n");
-            builder.append(theAlignment.getPositionInChromosome(0));
+            builder.append(theAlignment.chromosomalPosition(0));
             builder.append(" and ");
-            builder.append(theAlignment.getPositionInChromosome(siteCount - 1));
+            builder.append(theAlignment.chromosomalPosition(siteCount - 1));
             builder.append("\n");
             builder.append(ee.getMessage());
             builder.append("\n");
             JOptionPane.showMessageDialog(this.getParent(), builder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
             try {
-                startPos = theAlignment.getPositionInChromosome(start);
+                startPos = theAlignment.chromosomalPosition(start);
                 startPosTextField.setText(String.valueOf(startPos));
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -1140,7 +1140,7 @@ class DataFilterAlignmentDialog extends JDialog {
             int minCountOriginal = minCount;
             try {
                 minCount = Integer.parseInt(countTextField.getText().trim());
-                if ((minCount > theAlignment.getSequenceCount()) || (minCount < 0)) {
+                if ((minCount > theAlignment.numberOfTaxa()) || (minCount < 0)) {
                     minCount = minCountOriginal;
                 }
             } catch (Exception ee) {

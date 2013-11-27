@@ -56,7 +56,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
 
         public SiteBlockAttr load(Integer key) {
             int startSite = getStartSite(key);
-            int length = Math.min(HDF5_GENOTYPE_BLOCK_SIZE, getSiteCount() - startSite);
+            int length = Math.min(HDF5_GENOTYPE_BLOCK_SIZE, numberOfSites() - startSite);
             System.out.println("Reading from HDF5 site anno:" + startSite);
             System.out.println("");
             synchronized (myHDF5Reader) {
@@ -144,11 +144,11 @@ class HDF5ByteGenotype extends AbstractGenotype {
         genotypePaths = new String[numTaxa];
         TaxaList tL = new TaxaListBuilder().buildFromHDF5(reader);  //not the most efficient thing to do, but ensures sort is the same.
         for (int i = 0; i < numTaxa; i++) {
-            genotypePaths[i] = HapMapHDF5Constants.GENOTYPES + "/" + tL.getTaxaName(i);
+            genotypePaths[i] = HapMapHDF5Constants.GENOTYPES + "/" + tL.taxaName(i);
         }
         myHDF5Reader = reader;
         myGenoCache = CacheBuilder.newBuilder()
-                .maximumSize((3 * getTaxaCount()) / 2)
+                .maximumSize((3 * numberOfTaxa()) / 2)
                 .build(myGenoLoader);
         mySiteAnnoCache = CacheBuilder.newBuilder()
                 .maximumSize(150)
@@ -180,12 +180,12 @@ class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String getDiploidAsString(int site, byte value) {
+    public String diploidAsString(int site, byte value) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
 
     @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
+    public int[][] allelesSortedByFrequency(int site) {
         try {
             SiteBlockAttr sa = mySiteAnnoCache.get(getStartSite(site));
             return sa.getAllelesSortedByFrequency(site);
@@ -196,7 +196,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    public double getMinorAlleleFrequency(int site) {
+    public double minorAlleleFrequency(int site) {
         try {
             SiteBlockAttr sa = mySiteAnnoCache.get(getStartSite(site));
             return sa.getMAF(site);

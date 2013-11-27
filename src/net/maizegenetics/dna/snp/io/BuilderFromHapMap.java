@@ -72,7 +72,7 @@ public class BuilderFromHapMap {
                 txtLines.add(currLine);
                 lines++;
                 if (lines%linesAtTime==0) {
-                    ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(taxaList.getTaxaCount(), txtLines);
+                    ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(taxaList.numberOfTaxa(), txtLines);
                     pbs.add(pb);
                     //     pb.run();
                     pool.execute(pb);
@@ -81,7 +81,7 @@ public class BuilderFromHapMap {
             }
             r.close();
             if (txtLines.size()>0) {
-                ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(taxaList.getTaxaCount(), txtLines);
+                ProcessHapMapBlock pb=ProcessHapMapBlock.getInstance(taxaList.numberOfTaxa(), txtLines);
                 pbs.add(pb);
                 pool.execute(pb);
             }
@@ -91,7 +91,7 @@ public class BuilderFromHapMap {
             }
             int currentSite=0;
             PositionListBuilder posBuild=new PositionListBuilder();
-            GenotypeBuilder gb=GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.getTaxaCount(), lines);
+            GenotypeBuilder gb=GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), lines);
             for (ProcessHapMapBlock pb : pbs) {
                 posBuild.addAll(pb.getBlkPosList());
                 byte[][] bgTS=pb.getGenoTS();

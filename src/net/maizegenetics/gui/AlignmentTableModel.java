@@ -44,7 +44,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         myAlignment = alignment;
 
-        myHorizontalCenter = myAlignment.getSiteCount() / 2;
+        myHorizontalCenter = myAlignment.numberOfSites() / 2;
 
         setHorizontalPageSize(horizontalPageSize);
 
@@ -56,7 +56,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
     // Return values appropriate for the visible table part
     public int getRowCount() {
-        return myAlignment.getSequenceCount();
+        return myAlignment.numberOfTaxa();
     }
 
     public int getColumnCount() {
@@ -95,15 +95,15 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         int realColumn = col + myHorizontalStart;
 
         if (myColumnNameType == COLUMN_NAME_TYPE.physicalPosition) {
-            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.getPositionInChromosome(realColumn));
+            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.chromosomalPosition(realColumn));
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteNumber) {
-            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.getPositionInChromosome(realColumn));
+            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.chromosomalPosition(realColumn));
         } else if (myColumnNameType == COLUMN_NAME_TYPE.locus) {
-            return myAlignment.getChromosomeName(realColumn);
+            return myAlignment.chromosomeName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteName) {
             return myAlignment.siteName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.alleles) {
-            int[][] alleles = myAlignment.getAllelesSortedByFrequency(realColumn);
+            int[][] alleles = myAlignment.allelesSortedByFrequency(realColumn);
             int numAlleles = alleles[0].length;
             double total = 0.0;
 
@@ -123,7 +123,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
             return builder.toString();
         }
 
-        return String.valueOf(myAlignment.getPositionInChromosome(realColumn));
+        return String.valueOf(myAlignment.chromosomalPosition(realColumn));
 
     }
 
@@ -146,7 +146,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public int getRealColumnCount() {
-        return myAlignment.getSiteCount();
+        return myAlignment.numberOfSites();
     }
 
     public int getHorizontalPageSize() {
@@ -204,7 +204,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     public void adjustPosition(int position) {
 
         if (isPhysicalPosition()) {
-            position = myAlignment.getSiteOfPhysicalPosition(position, myAlignment.getChromosome(0));
+            position = myAlignment.siteOfPhysicalPosition(position, myAlignment.chromosome(0));
             if (position < 0) {
                 position = -position;
             }
@@ -219,7 +219,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public void adjustPositionToCenter() {
-        adjustPositionInternal(myAlignment.getSiteCount() / 2);
+        adjustPositionInternal(myAlignment.numberOfSites() / 2);
     }
 
     /**
@@ -248,7 +248,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         List result = new ArrayList();
 
         TaxaList idGroup = myAlignment.taxa();
-        for (int i = 0, n = idGroup.getTaxaCount(); i < n; i++) {
+        for (int i = 0, n = idGroup.numberOfTaxa(); i < n; i++) {
             result.add(idGroup.get(i));
         }
 

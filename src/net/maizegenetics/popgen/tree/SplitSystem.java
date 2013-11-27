@@ -33,7 +33,7 @@ public class SplitSystem
 	{
 		this.idGroup = idGroup;
 		
-		labelCount = idGroup.getTaxaCount();
+		labelCount = idGroup.numberOfTaxa();
 		splitCount = size;
 		
 		splits = new boolean[splitCount][labelCount];

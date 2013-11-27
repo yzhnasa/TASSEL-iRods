@@ -64,17 +64,17 @@ public class PDAnnotation {
         String chromosomeFile = hapMapDir + hapMapFile_prefix + "chr" + currChr + hapMapFile_suffix;
         System.out.println("Loading:" + chromosomeFile);
         Alignment bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
-        //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.getSiteCount(), bna.getPositionInChromosome(0), bna.getPositionInChromosome(bna.getSiteCount() - 1));
-        int siteCnt = bna.getSiteCount();
-        int[] alignmentPhysPos = bna.getPhysicalPositions();
+        //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.numberOfSites(), bna.chromosomalPosition(0), bna.chromosomalPosition(bna.numberOfSites() - 1));
+        int siteCnt = bna.numberOfSites();
+        int[] alignmentPhysPos = bna.physicalPositions();
         hasData = new int[siteCnt];
         float[] maf = new float[siteCnt];
         byte[] mjAllele = new byte[siteCnt];
         byte[] mnAllele = new byte[siteCnt];
         for (int j = 0; j < siteCnt; j++) {
-            mjAllele[j] = bna.getMajorAlleleAsString(j).getBytes()[0];
-            mnAllele[j] = bna.getMinorAlleleAsString(j).getBytes()[0];
-            maf[j] = (float) bna.getMinorAlleleFrequency(j);
+            mjAllele[j] = bna.majorAlleleAsString(j).getBytes()[0];
+            mnAllele[j] = bna.minorAlleleAsString(j).getBytes()[0];
+            maf[j] = (float) bna.minorAlleleFrequency(j);
         }
         //write positions to hdf "pos"+chromosome
         String chrGroup = "chr" + currChr + "/";

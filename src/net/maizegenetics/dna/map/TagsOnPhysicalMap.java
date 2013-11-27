@@ -1072,10 +1072,10 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
 
     public static HashMap<String, Integer> hapmapSites(Alignment file) {
         HashMap<String, Integer> snps = new HashMap<String, Integer>();
-        for (int site = 0; site < file.getSiteCount(); site++) {        //Visit each site
-            String pos = (file.getChromosomeName(site) + "\t"
-                    + file.getPositionInChromosome(site));
-            if (file.getPositionInChromosome(site) > 2000000000) {
+        for (int site = 0; site < file.numberOfSites(); site++) {        //Visit each site
+            String pos = (file.chromosomeName(site) + "\t"
+                    + file.chromosomalPosition(site));
+            if (file.chromosomalPosition(site) > 2000000000) {
                 System.out.println(pos);
             }
             snps.put(pos, site);

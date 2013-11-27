@@ -69,19 +69,19 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public byte getReferenceAllele(int site) {
+    public byte referenceGenotype(int site) {
         return mySiteList.get(site).getAllele(Allele.REF);
     }
     
     @Override
-    public byte[] getReference(int startSite, int endSite) {
+    public byte[] referenceGenotypes(int startSite, int endSite) {
         byte[] result = new byte[endSite - startSite];
         System.arraycopy(alleles[Allele.REF.index()],startSite,result,0, result.length);
         return result;
     }
 
     @Override
-    public byte[] getReference() {
+    public byte[] referenceGenotypeForAllSites() {
         return Arrays.copyOf(alleles[Allele.REF.index()],alleles[Allele.REF.index()].length);
     }
 
@@ -96,29 +96,29 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int getSiteCount() {
+    public int siteCount() {
         return numPositions;
     }
 
     @Override
-    public int getChromosomeSiteCount(Chromosome chromosome) {
+    public int chromosomeSiteCount(Chromosome chromosome) {
         return myChrOffPosTree.get(chromosome).position.length;
     }
 
     @Override
-    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
+    public int[] startAndEndOfChromosome(Chromosome chromosome) {
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return null;
         return new int[]{cop.startSiteOff,cop.endSiteOff};
     }
 
     @Override
-    public int getPositionInChromosome(int site) {
+    public int chromosomalPosition(int site) {
         return mySiteList.get(site).getPosition();
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return Integer.MIN_VALUE;
         int i=Arrays.binarySearch(cop.position, physicalPosition); //AvgPerObj:227.5715ns  for 2million positions
@@ -129,15 +129,15 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
-        int result=getSiteOfPhysicalPosition(physicalPosition, chromosome);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpName) {
+        int result=siteOfPhysicalPosition(physicalPosition, chromosome);
         if (result < 0) {return result;}
         else {
-            if (snpID.equals(siteName(result))) {return result;
+            if (snpName.equals(siteName(result))) {return result;
             } else {
                 int index=result;
-                while ((index < numPositions) && (getPositionInChromosome(index) == physicalPosition)) {
-                    if (snpID.equals(siteName(index))) {return index;}
+                while ((index < numPositions) && (chromosomalPosition(index) == physicalPosition)) {
+                    if (snpName.equals(siteName(index))) {return index;}
                     result++;
                 }
                 return -result - 1;
@@ -146,7 +146,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int[] getPhysicalPositions() {
+    public int[] physicalPositions() {
         int[] result=new int[numPositions];
         IntBuffer ib=IntBuffer.wrap(result);
         for (ChrOffPos cop: myChrOffPosTree.values()) {
@@ -156,32 +156,32 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public String getChromosomeName(int site) {
+    public String chromosomeName(int site) {
         return mySiteList.get(site).getChromosome().getName();
     }
 
     @Override
-    public Chromosome getChromosome(int site) {
+    public Chromosome chromosome(int site) {
         return mySiteList.get(site).getChromosome();
     }
 
     @Override
-    public Chromosome getChromosome(String name) {
+    public Chromosome chromosome(String name) {
         return myChrNameHash.get(name);
     }
 
     @Override
-    public Chromosome[] getChromosomes() {
+    public Chromosome[] chromosomes() {
         return myChrOffPosTree.keySet().toArray(new Chromosome[0]);
     }
 
     @Override
-    public int getNumChromosomes() {
+    public int numChromosomes() {
         return myChrOffPosTree.size();
     }
 
     @Override
-    public int[] getChromosomesOffsets() {
+    public int[] chromosomesOffsets() {
         int[] result=new int[myChrOffPosTree.size()];
         int index=0;
         for (ChrOffPos cop: myChrOffPosTree.values()) {
@@ -191,7 +191,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int getIndelSize(int site) {
+    public int indelSize(int site) {
         return mySiteList.get(site).getKnownVariants()[1].length();
     }
 

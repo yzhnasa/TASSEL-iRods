@@ -88,7 +88,7 @@ public abstract class AbstractPhenotype implements Phenotype {
 	}
 
 	public int getNumberOfTaxa() {
-		return taxa.getTaxaCount();
+		return taxa.numberOfTaxa();
 	}
 
 	public int getNumberOfTraits() {
@@ -120,7 +120,7 @@ public abstract class AbstractPhenotype implements Phenotype {
 	}
 
 	public int whichTaxon(Taxon taxon) {
-		return taxa.getIndicesMatchingTaxon(taxon).get(0);
+		return taxa.indicesMatchingTaxon(taxon).get(0);
 	}
 
     @Override
@@ -152,7 +152,7 @@ public abstract class AbstractPhenotype implements Phenotype {
 
 	@Override
 	public int getRowCount() {
-		return taxa.getTaxaCount();
+		return taxa.numberOfTaxa();
 	}
 
 	@Override

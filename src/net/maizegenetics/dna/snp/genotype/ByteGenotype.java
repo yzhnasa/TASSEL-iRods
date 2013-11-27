@@ -47,17 +47,17 @@ class ByteGenotype extends AbstractGenotype {
     }
 
     @Override
-    public byte[] getGenotypeForAllSites(int taxon) {
+    public byte[] genotypeForAllSites(int taxon) {
         return myGenotype.getAllColumns(taxon);
     }
 
     @Override
-    public byte[] getGenotypeForSiteRange(int taxon, int start, int end) {
+    public byte[] genotypeForSiteRange(int taxon, int start, int end) {
         return myGenotype.getColumnRange(taxon, start, end);
     }
 
     @Override
-    public byte[] getGenotypeForAllTaxa(int site) {
+    public byte[] genotypeForAllTaxa(int site) {
         return myGenotype.getAllRows(site);
     }
 

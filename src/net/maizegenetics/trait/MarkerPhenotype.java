@@ -52,7 +52,7 @@ public class MarkerPhenotype implements TableReport {
         StringBuilder builder = new StringBuilder();
 
         builder.append("  ");
-        builder.append(myAlignment.getSequenceCount());
+        builder.append(myAlignment.numberOfTaxa());
         builder.append(" ");
         builder.append(myPhenotype.getNumberOfTraits());
         builder.append("Taxa/Trait\t");
@@ -61,7 +61,7 @@ public class MarkerPhenotype implements TableReport {
             builder.append("\t");
         }
         builder.append("\n");
-        for (int i = 0; i < myAlignment.getSequenceCount(); i++) {
+        for (int i = 0; i < myAlignment.numberOfTaxa(); i++) {
             builder.append(myAlignment.taxaName(i));
             builder.append("\t");
             for (int j = 0; j < myPhenotype.getNumberOfTraits(); j++) {
@@ -104,7 +104,7 @@ public class MarkerPhenotype implements TableReport {
     }
 
     public int getRowCount() {
-        return myAlignment.getSequenceCount();
+        return myAlignment.numberOfTaxa();
     }
 
     public int getElementCount() {
@@ -119,10 +119,10 @@ public class MarkerPhenotype implements TableReport {
         for (int c = 0; c < myPhenotype.getNumberOfTraits(); c++) {
             data[c + 1] = "" + myPhenotype.getData(row, c);
         }
-        int siteCount = Math.min(myAlignment.getSiteCount(), 10);
+        int siteCount = Math.min(myAlignment.numberOfSites(), 10);
         StringBuilder builder = new StringBuilder();
         builder.append(myAlignment.genotypeAsStringRange(row, 0, siteCount));
-        if (myAlignment.getSiteCount() > 10) {
+        if (myAlignment.numberOfSites() > 10) {
             builder.append("...");
         }
         data[myPhenotype.getNumberOfTraits() + 1] = builder.toString();
@@ -151,10 +151,10 @@ public class MarkerPhenotype implements TableReport {
     public Object getValueAt(int row, int col) {
         int haplotypeColumn = myPhenotype.getColumnCount();
         if (col == haplotypeColumn) {
-            int siteCount = Math.min(myAlignment.getSiteCount(), 10);
+            int siteCount = Math.min(myAlignment.numberOfSites(), 10);
             StringBuilder builder = new StringBuilder();
             builder.append(myAlignment.genotypeAsStringRange(row, 0, siteCount));
-            if (myAlignment.getSiteCount() > 10) {
+            if (myAlignment.numberOfSites() > 10) {
                 builder.append("...");
             }
             return builder.toString();

@@ -74,7 +74,7 @@ public class NucleotideImputationUtils {
 		String parentA = popdata.parent1;
 		String parentC = popdata.parent2;
 		
-		OpenBitSet ldbits = new OpenBitSet(popdata.original.getSiteCount());
+		OpenBitSet ldbits = new OpenBitSet(popdata.original.numberOfSites());
 		int n = coreSnps.length;
 		for (int i = 0; i < n; i++) ldbits.fastSet(coreSnps[i]);
 		
@@ -102,8 +102,8 @@ public class NucleotideImputationUtils {
 		
 		Alignment aAlignment = FilterAlignment.getInstance(popdata.original, parentAGroup);
 		Alignment cAlignment = FilterAlignment.getInstance(popdata.original, parentCGroup);
-		byte[] Asnp = new byte[popdata.original.getSiteCount()];
-		byte[] Csnp = new byte[popdata.original.getSiteCount()];
+		byte[] Asnp = new byte[popdata.original.numberOfSites()];
+		byte[] Csnp = new byte[popdata.original.numberOfSites()];
 				
 		//set first parent to AA, second parent to CC for snps used to form taxa clusters
 		//SBitAlignment sbitPopAlignment = SBitAlignment.getInstance(popdata.original);
@@ -115,11 +115,11 @@ public class NucleotideImputationUtils {
 		for (int i = 0; i < coreSnps.length; i++) {
 			int snp = coreSnps[i];
 			//debug
-			int[][] acounts = aAlignment.getAllelesSortedByFrequency(snp);
-			int[][] ccounts = cAlignment.getAllelesSortedByFrequency(snp);
+			int[][] acounts = aAlignment.allelesSortedByFrequency(snp);
+			int[][] ccounts = cAlignment.allelesSortedByFrequency(snp);
 
-			byte alleleA = aAlignment.getMajorAllele(snp);
-			byte alleleC = cAlignment.getMajorAllele(snp);
+			byte alleleA = aAlignment.majorAllele(snp);
+			byte alleleC = cAlignment.majorAllele(snp);
 			Asnp[snp] = alleleA;
 			Csnp[snp] = alleleC;
 			
@@ -196,7 +196,7 @@ public class NucleotideImputationUtils {
 		
 		FilterAlignment ldAlignment = FilterAlignment.getInstance(parentAlignment, retainedSites);
 		popdata.snpIndex = ldbits;
-		myLogger.info("number of original sites = " + popdata.original.getSiteCount() + ", number of polymorphic sites = " + polybits.cardinality() + ", number of ld sites = " + ldAlignment.getSiteCount());
+		myLogger.info("number of original sites = " + popdata.original.numberOfSites() + ", number of polymorphic sites = " + polybits.cardinality() + ", number of ld sites = " + ldAlignment.numberOfSites());
 
 		//popdata.imputed = TBitAlignment.getInstance(ldAlignment);
                 popdata.imputed = ConvertSBitTBitPlugin.convertAlignment(ldAlignment, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
@@ -227,8 +227,8 @@ public class NucleotideImputationUtils {
 		}
 		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
-		int nsites = popdata.original.getSiteCount();
-		int ntaxa = popdata.original.getSequenceCount();
+		int nsites = popdata.original.numberOfSites();
+		int ntaxa = popdata.original.numberOfTaxa();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
@@ -313,8 +313,8 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
-		nsites = popdata.original.getSiteCount();
+		ntaxa = popdata.original.numberOfTaxa();
+		nsites = popdata.original.numberOfSites();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -352,8 +352,8 @@ public class NucleotideImputationUtils {
 
 	public static void callParentAllelesUsingClusters(PopulationData popdata, double maxMissing, double minMaf, int windowSize) {
 		HaplotypeCluster.ReturnHaplotype = HaplotypeCluster.TYPE.majority;
-		int ntaxa = popdata.original.getSequenceCount();
-		int nOriginalSites = popdata.original.getSiteCount();
+		int ntaxa = popdata.original.numberOfTaxa();
+		int nOriginalSites = popdata.original.numberOfSites();
 		popdata.alleleA = new byte[nOriginalSites];
 		popdata.alleleC = new byte[nOriginalSites];
 		popdata.snpIndex = new OpenBitSet(nOriginalSites);
@@ -361,7 +361,7 @@ public class NucleotideImputationUtils {
 		int minCount = (int) Math.ceil(1 - (maxMissing * ntaxa));
 		Alignment a = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(popdata.original, minMaf, 1.0, minCount);
 		a = deleteSnpsFromSameTag(a);
-		int nFilteredSites = a.getSiteCount();
+		int nFilteredSites = a.numberOfSites();
 		int[] siteTranslationArray = new int[nFilteredSites];
 		FilterAlignment fa = (FilterAlignment) a;
 		for (int s = 0; s < nFilteredSites; s++) siteTranslationArray[s] = fa.translateSite(s);
@@ -430,8 +430,8 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
-		int nsites = popdata.original.getSiteCount();
+		ntaxa = popdata.original.numberOfTaxa();
+		int nsites = popdata.original.numberOfSites();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -483,14 +483,14 @@ public class NucleotideImputationUtils {
 		}
 		
 		int nsites = (int) popdata.snpIndex.cardinality();
-		int totalsites = popdata.original.getSiteCount();
+		int totalsites = popdata.original.numberOfSites();
 		int[] goodsites = new int[nsites];
 		int ptr = 0;
 		for (int i = 0; i < totalsites; i++) if (popdata.snpIndex.fastGet(i)) goodsites[ptr++] = i;
 		
 		for (int i = 0; i < 3; i++) {
 			Alignment a = FilterAlignment.getInstance(popdata.original, new SimpleIdGroup(subids.get(i)));
-			int ntaxa = a.getSequenceCount();
+			int ntaxa = a.numberOfTaxa();
 			for (int s = 0; s < nsites; s++) {
 				
 				int firstSite = s - halfWindowSize;
@@ -551,7 +551,7 @@ public class NucleotideImputationUtils {
 	
 	public static ArrayList<HaplotypeCluster> extendClusters(Alignment a, ArrayList<HaplotypeCluster> clusters, int[] sites, int[] windowSize, boolean forward) {
 		int maxDiff = 4;
-		int totalSites = a.getSiteCount();
+		int totalSites = a.numberOfSites();
 		int targetSize = windowSize[0];
 
 		int direction;
@@ -653,10 +653,10 @@ public class NucleotideImputationUtils {
 		ArrayList<Haplotype> cluster0 = new ArrayList<>();
 		ArrayList<Haplotype> cluster1 = new ArrayList<>();
 		
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		Alignment b = FilterAlignment.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
-			seq = b.genotypeRow(t);
+			seq = b.genotypeAllSites(t);
 			Haplotype hap = new Haplotype(seq, t);
 			int dist0 = hap.distanceFrom(haplotype0);
 			int dist1 = hap.distanceFrom(haplotype1);
@@ -681,8 +681,8 @@ public class NucleotideImputationUtils {
 	}
 	
 	public static byte[][] getReverseHaplotypes(Alignment a, PopulationData popdata, int windowSize, int maxDiff) {
-		int nFilteredSites = a.getSiteCount();
-		int nOriginalSites = popdata.original.getSiteCount();
+		int nFilteredSites = a.numberOfSites();
+		int nOriginalSites = popdata.original.numberOfSites();
 		
 		//generate again in reverse direction to check
 		byte[] reverseA = new byte[nFilteredSites];
@@ -710,10 +710,10 @@ public class NucleotideImputationUtils {
 		ArrayList<Haplotype> cluster0 = new ArrayList<>();
 		ArrayList<Haplotype> cluster1 = new ArrayList<>();
 		
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		Alignment b = FilterAlignment.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
-			byte[] seq = b.genotypeRow(t);
+			byte[] seq = b.genotypeAllSites(t);
 			Haplotype hap = new Haplotype(seq, t);
 			int dist0 = hap.distanceFrom(haplotype0);
 			int dist1 = hap.distanceFrom(haplotype1);
@@ -807,15 +807,15 @@ public class NucleotideImputationUtils {
 		}
 		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
-		int nsites = popdata.original.getSiteCount();
-		int ntaxa = popdata.original.getSequenceCount();
+		int nsites = popdata.original.numberOfSites();
+		int ntaxa = popdata.original.numberOfTaxa();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			if(ldFilteredBits.fastGet(s)) {
-				popdata.alleleA[s] = popdata.original.getMajorAllele(s);
-				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.alleleA[s] = popdata.original.majorAllele(s);
+				popdata.alleleC[s] = popdata.original.minorAllele(s);
 				popdata.snpIndex.fastSet(s);
 			} 
 		}
@@ -825,8 +825,8 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
-		nsites = popdata.original.getSiteCount();
+		ntaxa = popdata.original.numberOfTaxa();
+		nsites = popdata.original.numberOfSites();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -843,7 +843,7 @@ public class NucleotideImputationUtils {
 		boolean[] goodCoverage = new boolean[ntaxa];
 		int minGametes = 200;
 		for (int t = 0; t < ntaxa; t++) {
-			if (target.getTotalGametesNotMissingForTaxon(t) > minGametes) goodCoverage[t] = true;
+			if (target.totalGametesNonMissingForTaxon(t) > minGametes) goodCoverage[t] = true;
 			else goodCoverage[t] = false;
 		}
 		
@@ -900,15 +900,15 @@ public class NucleotideImputationUtils {
 //		}
 //		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
-		int nsites = popdata.original.getSiteCount();
-		int ntaxa = popdata.original.getSequenceCount();
+		int nsites = popdata.original.numberOfSites();
+		int ntaxa = popdata.original.numberOfTaxa();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			if(filteredBits.fastGet(s)) {
-				popdata.alleleA[s] = popdata.original.getMajorAllele(s);
-				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.alleleA[s] = popdata.original.majorAllele(s);
+				popdata.alleleC[s] = popdata.original.minorAllele(s);
 				popdata.snpIndex.fastSet(s);
 			} 
 		}
@@ -917,8 +917,8 @@ public class NucleotideImputationUtils {
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
-		nsites = popdata.original.getSiteCount();
+		ntaxa = popdata.original.numberOfTaxa();
+		nsites = popdata.original.numberOfSites();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -1075,12 +1075,12 @@ public class NucleotideImputationUtils {
 	 * @param snpList	the list of snps to be called
 	 */
 	public static void callParentAllelesUsingTaxaGroups(PopulationData family, Alignment[] taxaGroups, LinkedList<Integer> snpList) {
-		int nsnps = taxaGroups[0].getSiteCount();
+		int nsnps = taxaGroups[0].numberOfSites();
 		Iterator<Integer> snpit = snpList.iterator();
 		for ( int s = 0; s < nsnps; s++) {
 			byte[] major = new byte[2];
-			major[0] = taxaGroups[0].getMajorAllele(s);
-			major[1] = taxaGroups[1].getMajorAllele(s);
+			major[0] = taxaGroups[0].majorAllele(s);
+			major[1] = taxaGroups[1].majorAllele(s);
 			Integer snpIndex = snpit.next();
 			if(major[0] != Alignment.UNKNOWN_ALLELE && major[1] != Alignment.UNKNOWN_ALLELE && major[0] != major[1]) {
 				family.alleleA[snpIndex] = major[0];
@@ -1106,10 +1106,10 @@ public class NucleotideImputationUtils {
 	
 	public static BitSet whichSitesArePolymorphic(Alignment a, int minAlleleCount) {
 		//which sites are polymorphic? minor allele count > 2 and exceed the minimum allele count
-		int nsites = a.getSiteCount();
+		int nsites = a.numberOfSites();
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			int[][] freq = a.getAllelesSortedByFrequency(s);
+			int[][] freq = a.allelesSortedByFrequency(s);
 			if (freq[1].length > 1 && freq[1][1] > 2) {
 				int alleleCount = freq[1][0] + freq[1][1];
 				if (alleleCount >= minAlleleCount) polybits.fastSet(s);
@@ -1120,13 +1120,13 @@ public class NucleotideImputationUtils {
 	
 	public static BitSet whichSitesArePolymorphic(Alignment a, double maxMissing, int minMinorAlleleCount) {
 		//which sites are polymorphic? minor allele count > 2 and exceed the minimum allele count
-		int nsites = a.getSiteCount();
+		int nsites = a.numberOfSites();
 		int ngametes = 2 * nsites;
 		int minNotMissingGametes = (int) Math.floor(ngametes * (1 - maxMissing));
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			int gametesNotMissing = a.getTotalGametesNotMissing(s);
-			int minorAlleleCount = a.getMinorAlleleCount(s);
+			int gametesNotMissing = a.totalGametesNonMissingForSite(s);
+			int minorAlleleCount = a.minorAlleleCount(s);
 			if (gametesNotMissing >= minNotMissingGametes && minorAlleleCount >= minMinorAlleleCount) polybits.fastSet(s);
 		}
 		return polybits;
@@ -1134,15 +1134,15 @@ public class NucleotideImputationUtils {
 	
 	public static BitSet whichSitesArePolymorphic(Alignment a, double maxMissing, double minMaf) {
 		//which sites are polymorphic? minor allele count > 2 and exceed the minimum allele count
-		int nsites = a.getSiteCount();
-		int ntaxa = a.getSequenceCount();
+		int nsites = a.numberOfSites();
+		int ntaxa = a.numberOfTaxa();
 		double totalgametes = 2 * ntaxa;
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			int[][] freq = a.getAllelesSortedByFrequency(s);
-			int ngametes = a.getTotalGametesNotMissing(s);
+			int[][] freq = a.allelesSortedByFrequency(s);
+			int ngametes = a.totalGametesNonMissingForSite(s);
 			double pMissing = (totalgametes - ngametes) / totalgametes;
-			if (freq[1].length > 1 && freq[1][1] > 2 && pMissing <= maxMissing && a.getMinorAlleleFrequency(s) > minMaf) {
+			if (freq[1].length > 1 && freq[1][1] > 2 && pMissing <= maxMissing && a.minorAlleleFrequency(s) > minMaf) {
 				polybits.fastSet(s);
 			}
 		}
@@ -1150,13 +1150,13 @@ public class NucleotideImputationUtils {
 	}
 	
 	public static BitSet whichSitesSegregateCorrectly(Alignment a, double maxMissing, double ratio) {
-		int nsites = a.getSiteCount();
-		int ntaxa = a.getSequenceCount();
+		int nsites = a.numberOfSites();
+		int ntaxa = a.numberOfTaxa();
 		double totalgametes = 2 * ntaxa;
 		OpenBitSet polybits = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			int[][] freq = a.getAllelesSortedByFrequency(s);
-			int ngametes = a.getTotalGametesNotMissing(s);
+			int[][] freq = a.allelesSortedByFrequency(s);
+			int ngametes = a.totalGametesNonMissingForSite(s);
 			double pMissing = (totalgametes - ngametes) / totalgametes;
 			if (freq[1].length > 1 && pMissing <= maxMissing) {
 				int Mj = freq[1][0];
@@ -1269,7 +1269,7 @@ public class NucleotideImputationUtils {
 		int start = - windowSize / 2;
 		int snpCount = 0;
 		int polyCount = 0;
-		int nsites = a.getSiteCount();
+		int nsites = a.numberOfSites();
 		for (int setnum = 0; setnum < numberToTry; setnum++) {
 			start += snpInterval;
 			if (start < 0) start = 0;
@@ -1342,7 +1342,7 @@ public class NucleotideImputationUtils {
 		Tree myTree = new UPGMATree(dm);
 		TreeClusters clusterMaker = new TreeClusters(myTree);
 		
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		int majorCount = ntaxa;
 		int minorCount = 0;
 		int ngroups = 1;
@@ -1396,15 +1396,15 @@ public class NucleotideImputationUtils {
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
 		Alignment[] taxaClusters = ImputationUtils.getTwoClusters(a, 20);
 		LinkedList<Integer> originalList = new LinkedList<Integer>(snpIndices);
-		int nsites = a.getSiteCount();
+		int nsites = a.numberOfSites();
 		boolean[] include = new boolean[nsites];
 		int[] includedSnps = new int[nsites];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
 			Integer snpIndex = snpIndices.remove();
-			if ( taxaClusters[0].getMajorAllele(s) != taxaClusters[1].getMajorAllele(s) ) {
-//				if ( taxaClusters[0].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && taxaClusters[1].getMajorAllele(s) != Alignment.UNKNOWN_ALLELE && 
-//						taxaClusters[0].getMajorAlleleFrequency(s) > .6 &&  taxaClusters[1].getMajorAlleleFrequency(s) > .6) {
+			if ( taxaClusters[0].majorAllele(s) != taxaClusters[1].majorAllele(s) ) {
+//				if ( taxaClusters[0].majorAllele(s) != Alignment.UNKNOWN_ALLELE && taxaClusters[1].majorAllele(s) != Alignment.UNKNOWN_ALLELE && 
+//						taxaClusters[0].majorAlleleFrequency(s) > .6 &&  taxaClusters[1].majorAlleleFrequency(s) > .6) {
 //					include[s] = true;
 //					includedSnps[snpcount++] = s;
 //					snpIndices.add(snpIndex);
@@ -1459,7 +1459,7 @@ public class NucleotideImputationUtils {
 
 	public static DistanceMatrix snpDistance(Alignment a) {
 		
-		int nsnps = a.getSiteCount();
+		int nsnps = a.numberOfSites();
 		SimpleIdGroup snpIds = new SimpleIdGroup(nsnps, true);
 		double[][] distance = new double[nsnps][nsnps];
 		double sum = 0;
@@ -1494,10 +1494,10 @@ public class NucleotideImputationUtils {
 		int prodCount = 0;
 		int totalCount = 0;
 		
-		long[] m11 = a.getAllelePresenceForAllTaxa(site1, 0).getBits();
-		long[] m12 = a.getAllelePresenceForAllTaxa(site1, 1).getBits();
-		long[] m21 = a.getAllelePresenceForAllTaxa(site2, 0).getBits();
-		long[] m22 = a.getAllelePresenceForAllTaxa(site2, 1).getBits();
+		long[] m11 = a.allelePresenceForAllTaxa(site1, 0).getBits();
+		long[] m12 = a.allelePresenceForAllTaxa(site1, 1).getBits();
+		long[] m21 = a.allelePresenceForAllTaxa(site2, 0).getBits();
+		long[] m22 = a.allelePresenceForAllTaxa(site2, 1).getBits();
 		int n = m11.length;
 		for (int i = 0; i < n; i++) {
 
@@ -1529,12 +1529,12 @@ public class NucleotideImputationUtils {
 //		int s1Count = 0;
 //		int s2Count = 0;
 //		int prodCount = 0;
-		int totalCount = a.getSequenceCount();
+		int totalCount = a.numberOfTaxa();
 				
-		BitSet m11 = a.getAllelePresenceForAllTaxa(site1, 0);
-		BitSet m12 = a.getAllelePresenceForAllTaxa(site1, 1);
-		BitSet m21 = a.getAllelePresenceForAllTaxa(site2, 0);
-		BitSet m22 = a.getAllelePresenceForAllTaxa(site2, 1);
+		BitSet m11 = a.allelePresenceForAllTaxa(site1, 0);
+		BitSet m12 = a.allelePresenceForAllTaxa(site1, 1);
+		BitSet m21 = a.allelePresenceForAllTaxa(site2, 0);
+		BitSet m22 = a.allelePresenceForAllTaxa(site2, 1);
 		OpenBitSet s1present = new OpenBitSet(m11.getBits(), m11.getNumWords());
 		s1present.union(m12);
 		OpenBitSet s2present = new OpenBitSet(m21.getBits(), m21.getNumWords());
@@ -1556,10 +1556,10 @@ public class NucleotideImputationUtils {
 	}
 
 	public static double computeGenotypeR(int site1, int site2, Alignment a) throws IllegalStateException {
-		BitSet s1mj = a.getAllelePresenceForAllTaxa(site1, 0);
-		BitSet s1mn = a.getAllelePresenceForAllTaxa(site1, 1);
-		BitSet s2mj = a.getAllelePresenceForAllTaxa(site2, 0);
-		BitSet s2mn = a.getAllelePresenceForAllTaxa(site2, 1);
+		BitSet s1mj = a.allelePresenceForAllTaxa(site1, 0);
+		BitSet s1mn = a.allelePresenceForAllTaxa(site1, 1);
+		BitSet s2mj = a.allelePresenceForAllTaxa(site2, 0);
+		BitSet s2mn = a.allelePresenceForAllTaxa(site2, 1);
 		OpenBitSet bothpresent = new OpenBitSet(s1mj.getBits(), s1mj.getNumWords());
 		bothpresent.union(s1mn);
 		OpenBitSet s2present = new OpenBitSet(s2mj.getBits(), s2mj.getNumWords());
@@ -1628,8 +1628,8 @@ public class NucleotideImputationUtils {
 		obsMap.put(CA, (byte) 1);
 		obsMap.put(CC, (byte) 2);
 		
-		int ntaxa = a.getSequenceCount();
-		int nsites = a.getSiteCount();
+		int ntaxa = a.numberOfTaxa();
+		int nsites = a.numberOfSites();
 		
 		//initialize the transition matrix
 		double[][] transition = new double[][] {
@@ -1670,9 +1670,9 @@ public class NucleotideImputationUtils {
 		ArrayList<int[]> snpPositions = new ArrayList<int[]>();
 		
 		for (int t = 0; t < ntaxa; t++) {
-			long[] bits = a.getAllelePresenceForAllSites(t, 0).getBits();
+			long[] bits = a.allelePresenceForAllSites(t, 0).getBits();
 			BitSet notMiss = new OpenBitSet(bits, bits.length);
-			notMiss.or(a.getAllelePresenceForAllSites(t, 1));
+			notMiss.or(a.allelePresenceForAllSites(t, 1));
 			notMissingIndex.add(notMiss);
 			notMissingCount[t] = (int) notMiss.cardinality();
 		}
@@ -1691,7 +1691,7 @@ public class NucleotideImputationUtils {
 				}
 				if (isNotMissing.fastGet(s)) {
 					obs[nmcount] = obsMap.get(a.genotype(t, s));
-					pos[nmcount++] = a.getPositionInChromosome(s);
+					pos[nmcount++] = a.chromosomalPosition(s);
 				}
 				
 			}
@@ -1802,7 +1802,7 @@ public class NucleotideImputationUtils {
 			//if the model has converged  or if the max iterations has been reached print tables
 			if (!hasNotConverged || iter == maxIterations) {
 				StringBuilder sb = new StringBuilder("Family ");
-				sb.append(familyName).append(", chromosome ").append(a.getChromosomeName(0));
+				sb.append(familyName).append(", chromosome ").append(a.chromosomeName(0));
 				if (iter < maxIterations) {
 					sb.append(": EM algorithm converged at iteration ").append(iter).append(".\n");
 				} else {
@@ -1953,13 +1953,13 @@ public class NucleotideImputationUtils {
 		}
 		
 		mna.clean();
-		myLogger.info("Original alignment updated for family " + popdata.name + " chromosome " + popdata.original.getChromosomeName(0) + ".\n");
+		myLogger.info("Original alignment updated for family " + popdata.name + " chromosome " + popdata.original.chromosomeName(0) + ".\n");
 		return mna;
 	}
 
 	public static void examineTaxaClusters(Alignment a, BitSet polybits) {
-		int nsnps = a.getSiteCount();
-		int ntaxa = a.getSequenceCount();
+		int nsnps = a.numberOfSites();
+		int ntaxa = a.numberOfTaxa();
 		int sitecount = 500;
 		int window = 200;
 		while (sitecount < nsnps) {
@@ -1999,8 +1999,8 @@ public class NucleotideImputationUtils {
 						Alignment alignB = FilterAlignment.getInstance(subAlignment, new SimpleIdGroup(taxaB));
 						boolean[] include = new boolean[window];
 						for (int s = 0; s < window; s++) {
-							if (alignA.getMajorAllele(s) != alignB.getMajorAllele(s)) {
-								if ( ((double) alignA.getMajorAlleleCount(s))/((double) alignA.getMinorAlleleCount(s)) > 2.0 && ((double) alignB.getMajorAlleleCount(s))/((double) alignB.getMinorAlleleCount(s)) > 2.0) {
+							if (alignA.majorAllele(s) != alignB.majorAllele(s)) {
+								if ( ((double) alignA.majorAlleleCount(s))/((double) alignA.minorAlleleCount(s)) > 2.0 && ((double) alignB.majorAlleleCount(s))/((double) alignB.minorAlleleCount(s)) > 2.0) {
 									include[s] = true;
 								} else include[s] = false;
 							} else {
@@ -2059,24 +2059,24 @@ public class NucleotideImputationUtils {
 		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
 		//else sba = SBitAlignment.getInstance(alignIn);
 		
-		int nsites = sba.getSiteCount();
-		int ntaxa = sba.getSequenceCount();
+		int nsites = sba.numberOfSites();
+		int ntaxa = sba.numberOfTaxa();
 		int firstSite = 0;
 		int[] sitesSelected = new int[nsites];
 		int selectCount = 0;
 		sitesSelected[selectCount++] = 0;
 		String firstSnpLocus = sba.getLocus(0).getName();
-		int firstSnpPos = sba.getPositionInChromosome(0);
+		int firstSnpPos = sba.chromosomalPosition(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInChromosome(nextSite);
+			int nextSnpPos = sba.chromosomalPosition(nextSite);
 			String nextSnpLocus = sba.getLocus(nextSite).getName();
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
-	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
-	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
-	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
-	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
+	            BitSet rMj = sba.allelePresenceForAllTaxa(firstSite, 0);
+	            BitSet rMn = sba.allelePresenceForAllTaxa(firstSite, 1);
+	            BitSet cMj = sba.allelePresenceForAllTaxa(nextSite, 0);
+	            BitSet cMn = sba.allelePresenceForAllTaxa(nextSite, 1);
 	            int n = 0;
 	            int[][] contig = new int[2][2];
 	            n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
@@ -2087,7 +2087,7 @@ public class NucleotideImputationUtils {
 				double rsq = calculateRSqr(contig[0][0], contig[0][1], contig[1][0], contig[1][1], 2);
 				if (Double.isNaN(rsq) || rsq >= minRsq) sitesSelected[selectCount++] = nextSite;
 				nextSite++;
-				nextSnpPos = sba.getPositionInChromosome(nextSite);
+				nextSnpPos = sba.chromosomalPosition(nextSite);
 				nextSnpLocus = sba.getLocus(nextSite).getName();
 			}
 			firstSite = nextSite;
@@ -2104,22 +2104,22 @@ public class NucleotideImputationUtils {
 		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
 		//else sba = SBitAlignment.getInstance(alignIn);
 		
-		int nsites = sba.getSiteCount();
+		int nsites = sba.numberOfSites();
 		int firstSite = 0;
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
 		Chromosome firstSnpLocus = sba.getLocus(0);
-		int firstSnpPos = sba.getPositionInChromosome(0);
+		int firstSnpPos = sba.chromosomalPosition(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInChromosome(nextSite);
+			int nextSnpPos = sba.chromosomalPosition(nextSite);
 			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
-	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
-	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
-	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
-	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
+	            BitSet rMj = sba.allelePresenceForAllTaxa(firstSite, 0);
+	            BitSet rMn = sba.allelePresenceForAllTaxa(firstSite, 1);
+	            BitSet cMj = sba.allelePresenceForAllTaxa(nextSite, 0);
+	            BitSet cMn = sba.allelePresenceForAllTaxa(nextSite, 1);
 	            int[][] contig = new int[2][2];
 	            contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
 	            contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
@@ -2134,7 +2134,7 @@ public class NucleotideImputationUtils {
 				}
 				nextSite++;
 				if (nextSite >= nsites) break;
-				nextSnpPos = sba.getPositionInChromosome(nextSite);
+				nextSnpPos = sba.chromosomalPosition(nextSite);
 				nextSnpLocus = sba.getLocus(nextSite);
 			}
 			firstSite = nextSite;
@@ -2153,20 +2153,20 @@ public class NucleotideImputationUtils {
 		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
 		//else sba = SBitAlignment.getInstance(alignIn);
 		
-		int nsites = sba.getSiteCount();
+		int nsites = sba.numberOfSites();
 		int firstSite = 0;
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
 		Chromosome firstSnpLocus = sba.getLocus(0);
-		int firstSnpPos = sba.getPositionInChromosome(0);
+		int firstSnpPos = sba.chromosomalPosition(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInChromosome(nextSite);
+			int nextSnpPos = sba.chromosomalPosition(nextSite);
 			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
 				nextSite++;
 				if (nextSite >= nsites) break;
-				nextSnpPos = sba.getPositionInChromosome(nextSite);
+				nextSnpPos = sba.chromosomalPosition(nextSite);
 				nextSnpLocus = sba.getLocus(nextSite);
 			}
 			firstSite = nextSite;
@@ -2190,17 +2190,17 @@ public class NucleotideImputationUtils {
 		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
 		//else sba = SBitAlignment.getInstance(alignIn);
 		
-		int nsites = sba.getSiteCount();
+		int nsites = sba.numberOfSites();
 		int firstSite = 0;
 		while (!polybits.fastGet(firstSite)) firstSite++;
 		
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(firstSite);
 		Chromosome firstSnpLocus = sba.getLocus(firstSite);
-		int firstSnpPos = sba.getPositionInChromosome(firstSite);
+		int firstSnpPos = sba.chromosomalPosition(firstSite);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInChromosome(nextSite);
+			int nextSnpPos = sba.chromosomalPosition(nextSite);
 			Chromosome nextSnpLocus = sba.getLocus(nextSite);
 			
 			boolean skip = !polybits.fastGet(nextSite) || ( firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64 && computeRForMissingness(firstSite, nextSite, sba)  > 0.8) ;
@@ -2212,7 +2212,7 @@ public class NucleotideImputationUtils {
 					validSite = nextSite < nsites;
 				}
 				if (validSite) {
-					nextSnpPos = sba.getPositionInChromosome(nextSite);
+					nextSnpPos = sba.chromosomalPosition(nextSite);
 					nextSnpLocus = sba.getLocus(nextSite);
 					int dist = nextSnpPos - firstSnpPos;
 					boolean nearbySite = firstSnpLocus.equals(nextSnpLocus) && dist < 64;
@@ -2241,14 +2241,14 @@ public class NucleotideImputationUtils {
 	}
 	public static Alignment deleteSnpsFromSameTag(Alignment a) {
 		a.optimizeForSites(null);
-		int nOriginalSites = a.getSiteCount();
+		int nOriginalSites = a.numberOfSites();
 		int[] selectedSites = new int[nOriginalSites];
 		
 		selectedSites[0] = 0;
 		int selectedCount = 1;
 		int headSite = 0;
 		for (int s = 1; s < nOriginalSites; s++) {
-			int dist = a.getPositionInChromosome(s) - a.getPositionInChromosome(headSite);
+			int dist = a.chromosomalPosition(s) - a.chromosomalPosition(headSite);
 			if (dist >= 64 || computeRForMissingness(headSite, s, a) < 0.7) {
 				selectedSites[selectedCount++] = s;
 				headSite = s;
@@ -2290,9 +2290,9 @@ public class NucleotideImputationUtils {
     	//observations = hom, het, missing
     	
     	TransitionProbability tp = new TransitionProbability();
-    	int nsites = a.getSiteCount();
-    	int ntaxa = a.getSequenceCount();
-    	int chrlen = a.getPositionInChromosome(nsites - 1) - a.getPositionInChromosome(0);
+    	int nsites = a.numberOfSites();
+    	int ntaxa = a.numberOfTaxa();
+    	int chrlen = a.chromosomalPosition(nsites - 1) - a.chromosomalPosition(0);
     	
     	double phet = estimatedHetFraction;
     	int totalTransitions = (nsites - 1) * ntaxa /10;
@@ -2301,14 +2301,14 @@ public class NucleotideImputationUtils {
     	int[][] transCount = new int[][]{{totalTransitions - hetHet - 2*hetHom, hetHom},{hetHom, hetHet}};
     	
     	tp.setTransitionCounts(transCount, chrlen, ntaxa);
-    	tp.setPositions(a.getPhysicalPositions());
+    	tp.setPositions(a.physicalPositions());
     	
     	//count number of het loci
     	int hetCount = 0;
     	int nonMissingCount = 0;
     	for (int s = 0; s < nsites; s++) {
-    		hetCount += a.getHeterozygousCount(s);
-    		nonMissingCount += a.getTotalGametesNotMissing(s) / 2;
+    		hetCount += a.heterozygousCount(s);
+    		nonMissingCount += a.totalGametesNonMissingForSite(s) / 2;
     	}
     	
     	double estimatedPhet = ((double) hetCount) / ((double) nonMissingCount); 
@@ -2325,8 +2325,8 @@ public class NucleotideImputationUtils {
     	
     	BitSet[] taxaStates = new BitSet[ntaxa];
     	for (int t = 0; t < ntaxa; t++) {
-    		BitSet major = a.getAllelePresenceForAllSites(t, 0);
-    		BitSet minor = a.getAllelePresenceForAllSites(t, 1);
+    		BitSet major = a.allelePresenceForAllSites(t, 0);
+    		BitSet minor = a.allelePresenceForAllSites(t, 1);
     		OpenBitSet notMissing = new OpenBitSet(major.getBits(), major.getNumWords());
     		notMissing.union(minor);
     		OpenBitSet het = new OpenBitSet(major.getBits(), major.getNumWords());
@@ -2377,7 +2377,7 @@ public class NucleotideImputationUtils {
     		a = BitAlignment.getInstance(a, true);
     	}
     	
-    	int nsites = a.getSiteCount();
+    	int nsites = a.numberOfSites();
     	OpenBitSet ldbits = new OpenBitSet(nsites);
     	for (int s = 0; s < nsites; s++) {
     		if (filterBits.fastGet(s)) {
@@ -2392,7 +2392,7 @@ public class NucleotideImputationUtils {
     
     public static double neighborLD(Alignment a, int snp, int window, BitSet filterBits) {
     	double sumr = 0;
-    	int nsites = a.getSiteCount();
+    	int nsites = a.numberOfSites();
     	
     	//test next <window> sites or to the end of the chromosome
     	int site = snp + 10;
@@ -2427,7 +2427,7 @@ public class NucleotideImputationUtils {
     }
 
 	public static ArrayList<HaplotypeCluster> clusterWindow(Alignment a, int start, int length, int maxdif) {
-		int ntaxa = a.getSequenceCount();
+		int ntaxa = a.numberOfTaxa();
 		int end = start + length - 1;
 		ArrayList<Haplotype> haps = new ArrayList<Haplotype>();
 		
@@ -2455,7 +2455,7 @@ public class NucleotideImputationUtils {
 					bw.write("\tA/C\t");
 					bw.write(chr);
 					bw.write("\t");
-					bw.write(Integer.toString(popdata.original.getPositionInChromosome(s)));
+					bw.write(Integer.toString(popdata.original.chromosomalPosition(s)));
 					bw.write("\tNA\tNA\tNA\tNA\tNA\tNA\tNA\t");
 					bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(popdata.alleleA[s]));
 					bw.write("\t");

@@ -40,7 +40,7 @@ public class FilterPhenotype extends AbstractPhenotype {
 
         if (taxa == null) {
             taxaGroup = phenotype.getTaxa();
-            int n = taxaGroup.getTaxaCount();
+            int n = taxaGroup.numberOfTaxa();
             taxa = new int[n];
             for (int i = 0; i < n; i++) {
                 taxa[i] = i;
@@ -87,14 +87,14 @@ public class FilterPhenotype extends AbstractPhenotype {
 
         if (taxa == null) {
             taxaGroup = phenotype.getTaxa();
-            int n = taxaGroup.getTaxaCount();
+            int n = taxaGroup.numberOfTaxa();
             taxaIndex = new int[n];
             for (int i = 0; i < n; i++) {
                 taxaIndex[i] = i;
             }
         } else {
             taxaGroup = taxa;
-            int n = taxaGroup.getTaxaCount();
+            int n = taxaGroup.numberOfTaxa();
             taxaIndex = new int[n];
             for (int i = 0; i < n; i++) {
                 taxaIndex[i] = phenotype.whichTaxon(taxaGroup.get(i));
@@ -128,8 +128,8 @@ public class FilterPhenotype extends AbstractPhenotype {
     public static FilterPhenotype getInstanceRemoveIDs(Phenotype phenotype, TaxaList taxa) {
         TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = phenotype.getTaxa();
-        for (int i = 0, n = current.getTaxaCount(); i < n; i++) {
-            if (taxa.getIndicesMatchingTaxon(current.get(i)).size() == 0) {
+        for (int i = 0, n = current.numberOfTaxa(); i < n; i++) {
+            if (taxa.indicesMatchingTaxon(current.get(i)).size() == 0) {
                 result.add(current.get(i));
             }
         }

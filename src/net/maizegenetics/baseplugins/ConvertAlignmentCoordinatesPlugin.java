@@ -79,14 +79,14 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             throw new IllegalStateException("ConvertAlignmentCoordinatesPlugin: processDatum: datum must be instanceof Alignment.");
         }
 
-        Chromosome[] loci = alignment.getChromosomes();
+        Chromosome[] loci = alignment.chromosomes();
         myLociMap.clear();
         for (int i = 0; i < loci.length; i++) {
             myLociMap.put(loci[i].getName(), loci[i]);
             myAlignmentLociMap.put(loci[i].getName(), loci[i]);
         }
 
-        int numSites = alignment.getSiteCount();
+        int numSites = alignment.numberOfSites();
         String[] snpIDs = new String[numSites];
         for (int i = 0; i < numSites; i++) {
             snpIDs[i] = alignment.siteName(i);
@@ -94,7 +94,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
         BufferedReader br = null;
         int count = 1;
-        PositionListBuilder posBuilder = new PositionListBuilder().addAll(alignment.getPositionList());
+        PositionListBuilder posBuilder = new PositionListBuilder().addAll(alignment.positionList());
         try {
             br = Utils.getBufferedReader(myMapFilename);
             Pattern sep = Pattern.compile("\\s+");
@@ -129,14 +129,14 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                             continue;
                         }
 
-                        if ((pos1 != alignment.getPositionInChromosome(site)) || (!locus1.equals(alignment.getChromosome(site).getName()))) {
+                        if ((pos1 != alignment.chromosomalPosition(site)) || (!locus1.equals(alignment.chromosome(site).getName()))) {
                             myLogger.warn("map file line: " + count + "  SNP ID: " + snpID + "  position: " + pos1 + "  locus: " + locus1 + " position and locus do not match alignment.");
-                            myLogger.warn("Alignment SNP ID: " + alignment.siteName(site) + "  position: " + alignment.getPositionInChromosome(site) + "  locus: " + alignment.getChromosomeName(site));
+                            myLogger.warn("Alignment SNP ID: " + alignment.siteName(site) + "  position: " + alignment.chromosomalPosition(site) + "  locus: " + alignment.chromosomeName(site));
                             continue;
                         }
 
                         numChanges++;
-                        GeneralPosition.Builder newPos = new GeneralPosition.Builder(alignment.getPositionList().get(site));
+                        GeneralPosition.Builder newPos = new GeneralPosition.Builder(alignment.positionList().get(site));
                         newPos.chromosome(getLocusObj(locus2)).position(pos2).snpName(snpID);
                         posBuilder.set(site, newPos.build());
 
@@ -157,7 +157,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
             //          alignment.clean();
             //TODO check sort of positions.
-            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.getGenotypeMatrix(), posBuilder.build(), alignment.taxa()), null);
+            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.genotypeMatrix(), posBuilder.build(), alignment.taxa()), null);
 
         } catch (Exception e) {
             myLogger.error("processDatum: problem converting alignment: line: " + count + "  message: " + e.getMessage());

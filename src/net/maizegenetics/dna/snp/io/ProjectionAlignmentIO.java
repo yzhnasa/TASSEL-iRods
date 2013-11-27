@@ -33,7 +33,7 @@ public class ProjectionAlignmentIO {
             br = Utils.getBufferedReader(paFile);
             String[] sl=Utils.readLineSkipComments(br).split("\t");
             int baseTaxaCnt=Integer.parseInt(sl[0]);
-            if(baseTaxaCnt!=baseHighDensityAlignment.getSequenceCount()) {
+            if(baseTaxaCnt!=baseHighDensityAlignment.numberOfTaxa()) {
                 System.err.println("Error in number of base taxa"); return null;
             }
             int taxaCnt=Integer.parseInt(sl[1]);
@@ -42,7 +42,7 @@ public class ProjectionAlignmentIO {
                 sl=Utils.readLineSkipComments(br).split("\t");
                 int index=Integer.parseInt(sl[0]);
                 Taxon taxon=new Taxon(sl[1]);
-                List<Integer> matches=baseHighDensityAlignment.taxa().getIndicesMatchingTaxon(taxon);
+                List<Integer> matches=baseHighDensityAlignment.taxa().indicesMatchingTaxon(taxon);
                 if(matches.size()==0) {
                     throw new NoSuchElementException("Taxon "+sl[1]+" not found within base taxa");
                 }
@@ -81,23 +81,23 @@ public class ProjectionAlignmentIO {
     }
 
     public static void writeToFile(String outfile, Alignment pa) {
-        if(!(pa.getGenotypeMatrix() instanceof ProjectionGenotype)) {
+        if(!(pa.genotypeMatrix() instanceof ProjectionGenotype)) {
             throw new UnsupportedOperationException("Save only works for Alignments with projection genotypes");
         }
-        ProjectionGenotype pg=(ProjectionGenotype)pa.getGenotypeMatrix();
+        ProjectionGenotype pg=(ProjectionGenotype)pa.genotypeMatrix();
         Alignment baseAlignment=pg.getBaseAlignment();
         BufferedWriter bw = null;
         try {
             String fullFileName = Utils.addSuffixIfNeeded(outfile, ".pa.txt.gz", new String[]{".pa.txt", ".pa.txt.gz"});
             bw = Utils.getBufferedWriter(fullFileName);
-            bw.write(baseAlignment.getSequenceCount()+"\t"+pa.getSequenceCount()+"\n");
+            bw.write(baseAlignment.numberOfTaxa()+"\t"+pa.numberOfTaxa()+"\n");
             bw.write("#Donor Haplotypes\n");
-            for (int i = 0; i < baseAlignment.getSequenceCount(); i++) {
+            for (int i = 0; i < baseAlignment.numberOfTaxa(); i++) {
                 bw.write(i+"\t"+baseAlignment.taxaName(i)+"\n");
             }
             bw.write("#Taxa Breakpoints\n");
             bw.write("#Block are defined chr:startPos:endPos:donor1:donor2 (-1 means no hypothesis)\n");
-            for (int i = 0; i < pa.getSequenceCount(); i++) {
+            for (int i = 0; i < pa.numberOfTaxa(); i++) {
                 bw.write(pa.taxaName(i)+"\t");
                 NavigableSet<DonorHaplotypes> theDH=pg.getDonorHaplotypes(i);
                 for (DonorHaplotypes dh : theDH) {

@@ -28,7 +28,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, Taxon id) {
-        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().indicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);
         }
@@ -36,7 +36,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, String id) {
-        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().indicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);
         }
@@ -44,7 +44,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskReference getInstanceCompareReference(Alignment align, int index) {
-        if ((index < -1) || (index >= align.getSequenceCount())) {
+        if ((index < -1) || (index >= align.numberOfTaxa())) {
             throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown index: " + index);
         }
         String name;
@@ -58,7 +58,7 @@ public class AlignmentMaskReference extends AbstractAlignmentMask {
 
     @Override
     public byte getMask(int taxon, int site) {
-        if ((myTaxonReference == -1) && (AlignmentUtils.isEqualOrUnknown(myAlignment.genotype(taxon, site), myAlignment.getReferenceAllele(site)))) {
+        if ((myTaxonReference == -1) && (AlignmentUtils.isEqualOrUnknown(myAlignment.genotype(taxon, site), myAlignment.referenceGenotype(site)))) {
             return 0;
         } else if (AlignmentUtils.isEqualOrUnknown(myAlignment.genotypeArray(taxon, site), myAlignment.genotypeArray(myTaxonReference, site))) {
             return 0;

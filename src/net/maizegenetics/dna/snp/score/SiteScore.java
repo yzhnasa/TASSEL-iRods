@@ -14,19 +14,19 @@ public interface SiteScore {
     /**
      * Returns the site score of the given sequence and site.
      *
-     * @param seq sequence index
+     * @param taxon taxon index
      * @param site site
      *
      * @return site score.
      */
-    public float getSiteScore(int seq, int site);
+    public float siteScore(int taxon, int site);
 
     /**
      * Returns the site scores.
      *
      * @return site scores.
      */
-    public float[][] getSiteScores();
+    public float[][] siteScores();
 
     /**
      * Returns true if this alignment has site scores.
@@ -40,5 +40,5 @@ public interface SiteScore {
      *
      * @return site score type.
      */
-    public Alignment.SITE_SCORE_TYPE getSiteScoreType();
+    public Alignment.SITE_SCORE_TYPE siteScoreType();
 }

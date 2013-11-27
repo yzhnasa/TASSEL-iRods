@@ -30,7 +30,7 @@ public class CladeSystem {
 	 */
 	public CladeSystem(TaxaList idGroup, int size) {
 		this.idGroup = idGroup;
-		clades = new boolean[size][idGroup.getTaxaCount()];
+		clades = new boolean[size][idGroup.numberOfTaxa()];
 	}
 
 	/** get number of clades */
@@ -81,7 +81,7 @@ public class CladeSystem {
 		
 		for (int i = 0; i < getLabelCount(); i++)
 		{
-			pw.println(idGroup.getTaxaName(i));
+			pw.println(idGroup.taxaName(i));
 		}
 		pw.println();
 		

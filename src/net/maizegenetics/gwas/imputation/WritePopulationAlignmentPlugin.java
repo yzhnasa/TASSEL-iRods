@@ -92,19 +92,19 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
             Alignment outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
 
             if (!Double.isNaN(minSnpCoverage) && !Double.isNaN(maxMafForMono)) {
-                int nsnps = popdata.original.getSiteCount();
-                double ngametes = 2 * popdata.original.getSequenceCount();
+                int nsnps = popdata.original.numberOfSites();
+                double ngametes = 2 * popdata.original.numberOfTaxa();
                 int[] monomorphicSnps = new int[nsnps];
                 int snpCount = 0;
                 for (int s = 0; s < nsnps; s++) {
-                    double coverage = popdata.original.getTotalGametesNotMissing(s) / ngametes;
-                    if (!popdata.snpIndex.fastGet(s) && popdata.original.getMinorAlleleFrequency(s) <= maxMafForMono && coverage >= minSnpCoverage) {
+                    double coverage = popdata.original.totalGametesNonMissingForSite(s) / ngametes;
+                    if (!popdata.snpIndex.fastGet(s) && popdata.original.minorAlleleFrequency(s) <= maxMafForMono && coverage >= minSnpCoverage) {
                         monomorphicSnps[snpCount++] = s;
                     }
                 }
                 monomorphicSnps = Arrays.copyOf(monomorphicSnps, snpCount);
                 Alignment fa = FilterAlignment.getInstance(popdata.original, monomorphicSnps);
-                if (fa.getSiteCount() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
+                if (fa.numberOfSites() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
                     out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly});
                 } else { //Return both monomorphic and polymorphic sites
                     MutableAlignment outMono = MutableNucleotideAlignment.getInstance(fa);

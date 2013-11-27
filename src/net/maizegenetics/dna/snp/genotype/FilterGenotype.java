@@ -22,7 +22,7 @@ class FilterGenotype extends AbstractGenotype {
 
     FilterGenotype(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int rangeStart, int rangeEnd) {
 
-        super(numTaxa, numSites, genotype.isPhased(), null, genotype.getMaxNumAlleles());
+        super(numTaxa, numSites, genotype.isPhased(), null, genotype.maxNumAlleles());
         myBaseGenotype = genotype;
 
         myTaxaRedirect = taxaRedirect;
@@ -47,7 +47,7 @@ class FilterGenotype extends AbstractGenotype {
 
     FilterGenotype(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int[] siteRedirect) {
 
-        super(numTaxa, numSites, genotype.isPhased(), null, genotype.getMaxNumAlleles());
+        super(numTaxa, numSites, genotype.isPhased(), null, genotype.maxNumAlleles());
         myBaseGenotype = genotype;
 
         myTaxaRedirect = taxaRedirect;
@@ -101,7 +101,7 @@ class FilterGenotype extends AbstractGenotype {
         if (encodings.length == 1) {
             return encodings;
         } else if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            int numSites = getSiteCount();
+            int numSites = numberOfSites();
             String[][] result = new String[numSites][];
             for (int i = 0; i < numSites; i++) {
                 result[i] = alleleDefinitions(i);
@@ -118,8 +118,8 @@ class FilterGenotype extends AbstractGenotype {
     }
 
     @Override
-    public int getMaxNumAlleles() {
-        return myBaseGenotype.getMaxNumAlleles();
+    public int maxNumAlleles() {
+        return myBaseGenotype.maxNumAlleles();
     }
 
     public int translateSite(int site) {

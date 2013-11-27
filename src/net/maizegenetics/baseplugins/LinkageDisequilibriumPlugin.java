@@ -73,7 +73,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
             }
 
             if (isInteractive()) {
-                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(((Alignment) current.getData()).getSiteCount(), myPossibleAlignmentName);
+                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(((Alignment) current.getData()).numberOfSites(), myPossibleAlignmentName);
                 myDialog.setLocationRelativeTo(getParentFrame());
                 myDialog.setVisible(true);
                 if (myDialog.isCancel()) {

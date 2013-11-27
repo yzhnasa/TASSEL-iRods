@@ -23,11 +23,11 @@ public class PolymorphismDistribution extends AbstractTableReport implements Tab
 
     //consider whether to output pooled minority alleles or everything
     public void addDistribution(String label, Alignment theSP, boolean poolMinor) {
-        maxSeqCount = theSP.getSequenceCount() * 2;
+        maxSeqCount = theSP.numberOfTaxa() * 2;
         int[] pdist = new int[maxSeqCount];
-        for (int i = 0; i < theSP.getSiteCount(); i++) {
+        for (int i = 0; i < theSP.numberOfSites(); i++) {
             if (theSP.isPolymorphic(i)) {
-                int[][] alleleCounts = theSP.getAllelesSortedByFrequency(i);
+                int[][] alleleCounts = theSP.allelesSortedByFrequency(i);
                 int numAlleles = alleleCounts[0].length;
                 if ((poolMinor == false) || (numAlleles == 2)) {
                     pdist[alleleCounts[1][1]]++;

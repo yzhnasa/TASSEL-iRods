@@ -144,25 +144,25 @@ public class PositionListBuilder {
      */
     public PositionListBuilder(IHDF5Writer h5w, PositionList a) {
         h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, a.size());
-        String[] lociNames = new String[a.getNumChromosomes()];
+        String[] lociNames = new String[a.numChromosomes()];
         Map<Chromosome, Integer> locusToIndex=new HashMap<>(10);
-        Chromosome[] loci = a.getChromosomes();
-        for (int i = 0; i < a.getNumChromosomes(); i++) {
+        Chromosome[] loci = a.chromosomes();
+        for (int i = 0; i < a.numChromosomes(); i++) {
             lociNames[i] = loci[i].getName();
             locusToIndex.put(loci[i],i);
         }
-        h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.getNumChromosomes());
+        h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.numChromosomes());
         h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
 
         int blockSize=1<<16;
-        h5w.createStringArray(HapMapHDF5Constants.SNP_IDS, 15,a.getSiteCount(),blockSize,HapMapHDF5Constants.genDeflation);
-        h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.getSiteCount(),HapMapHDF5Constants.intDeflation);
-        h5w.createIntArray(HapMapHDF5Constants.POSITIONS, a.getSiteCount(), HapMapHDF5Constants.intDeflation);
+        h5w.createStringArray(HapMapHDF5Constants.SNP_IDS, 15,a.siteCount(),blockSize,HapMapHDF5Constants.genDeflation);
+        h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.siteCount(),HapMapHDF5Constants.intDeflation);
+        h5w.createIntArray(HapMapHDF5Constants.POSITIONS, a.siteCount(), HapMapHDF5Constants.intDeflation);
 
-        int blocks=((a.getSiteCount()-1)/blockSize)+1;
+        int blocks=((a.siteCount()-1)/blockSize)+1;
         for (int block = 0; block < blocks; block++) {
             int startPos=block*blockSize;
-            int length=((a.getSiteCount()-startPos)>blockSize)?blockSize:a.getSiteCount()-startPos;
+            int length=((a.siteCount()-startPos)>blockSize)?blockSize:a.siteCount()-startPos;
             String[] snpIDs = new String[length];
             int[] locusIndicesArray = new int[length];
             int[] positions=new int[length];

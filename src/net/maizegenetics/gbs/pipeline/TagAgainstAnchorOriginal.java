@@ -206,7 +206,7 @@ public class TagAgainstAnchorOriginal {
                         System.out.println(e.toString());
                     }
                 }
-                System.out.println("Each LD compirison took " + (double)this.getTimeSpanNano(lastTimePoint)/actualChunkSize/anchor.getSiteCount() + " nano seconds");
+                System.out.println("Each LD compirison took " + (double)this.getTimeSpanNano(lastTimePoint)/actualChunkSize/anchor.numberOfSites() + " nano seconds");
                 System.out.println("Multiple threading mapping took " + this.getTimeSpanSecond(lastTimePoint) + " seconds");
                 for (int j = 0; j < jobs.length; j++) {
                     String[] result = jobs[j].getResult();
@@ -320,7 +320,7 @@ public class TagAgainstAnchorOriginal {
                 long[] testTag = subTBT.getTag(i);
                 long[] testTagDist;
                 double[][] theResults=new double[chromosomeNumber.length][];
-                testTagDist=getTagsInBits(subTBT, i, tbtRedirect, anchor.getSequenceCount());
+                testTagDist=getTagsInBits(subTBT, i, tbtRedirect, anchor.numberOfTaxa());
                 ScanChromosome[] scanOnChr = new ScanChromosome[chromosomeNumber.length];
                 for (int j = 0; j < chromosomeNumber.length; j++) {
                     scanOnChr[j] = new ScanChromosome(testTagDist, theResults, j, chrStartIndex[j], chrEndIndex[j], pThresh, 1, blastPos);
@@ -397,22 +397,22 @@ public class TagAgainstAnchorOriginal {
             int bestSite=-1, countSig=0;
             double bestP=2;
             for (int i = chrStartIndex; i < chrEndIndex; i+=step) {
-                if(Math.abs(anchor.getPositionInChromosome(i)-blockPosition)<blockWindow) continue;
-                OpenBitSet obsMajor = new OpenBitSet(anchor.getAllelePresenceForAllTaxa(i, 0).getBits());
-                OpenBitSet obsMinor = new OpenBitSet(anchor.getAllelePresenceForAllTaxa(i, 1).getBits());
+                if(Math.abs(anchor.chromosomalPosition(i)-blockPosition)<blockWindow) continue;
+                OpenBitSet obsMajor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, 0).getBits());
+                OpenBitSet obsMinor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, 1).getBits());
                 if(obsMinor.cardinality()>4) {
                     double p=fastTestSites(obsTdist, obsMajor, obsMinor, anchorMaf[i], binomFunc);
                     if(p<bestP) {bestP=p; bestSite=i;}
                     if(p<sigThreshold) {
                         countSig++;
-                        if(minSigPos==-1) minSigPos=anchor.getPositionInChromosome(i);
-                        maxSigPos=anchor.getPositionInChromosome(i);
+                        if(minSigPos==-1) minSigPos=anchor.chromosomalPosition(i);
+                        maxSigPos=anchor.chromosomalPosition(i);
                     }
                 }
                 tests++;
             }
-            int chr=Integer.parseInt(anchor.getChromosome(bestSite).getName());
-            double[] result={chr, bestSite, anchor.getPositionInChromosome(bestSite),bestP, countSig};
+            int chr=Integer.parseInt(anchor.chromosome(bestSite).getName());
+            double[] result={chr, bestSite, anchor.chromosomalPosition(bestSite),bestP, countSig};
             resultReport[chrIndex]=result;
         }
     }
@@ -546,7 +546,7 @@ public class TagAgainstAnchorOriginal {
         tbtRedirect = new int[tbt.getTaxaCount()];
         TaxaList g = anchor.taxa();
         for (int i = 0; i < tbtRedirect.length; i++) {
-            tbtRedirect[i] = g.getIndicesMatchingTaxon(tbt.getTaxaName(i)).get(0);
+            tbtRedirect[i] = g.indicesMatchingTaxon(tbt.getTaxaName(i)).get(0);
         }
         System.out.println("Taxa redirection took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
     }
@@ -570,21 +570,21 @@ public class TagAgainstAnchorOriginal {
         long lastTimePoint = this.getCurrentTimeNano();
         Alignment a = ImportUtils.readGuessFormat(hapMapHDF5);
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
-        System.out.println("The anchor map has " + a.getSiteCount() + " sites and " + a.getTaxaCount() + " taxa");
+        System.out.println("The anchor map has " + a.numberOfSites() + " sites and " + a.numberOfTaxa() + " taxa");
         lastTimePoint = this.getCurrentTimeNano();
-        int[] chrOffSet = a.getChromosomesOffsets();
-        chromosomeNumber = new int[a.getChromosomes().length];
+        int[] chrOffSet = a.chromosomesOffsets();
+        chromosomeNumber = new int[a.chromosomes().length];
         chrStartIndex = new int[chromosomeNumber.length];
         chrEndIndex = new int[chromosomeNumber.length];
         for (int i = 0; i < chromosomeNumber.length; i++) {
-            chromosomeNumber[i] = a.getChromosomes()[i].getChromosomeNumber();
+            chromosomeNumber[i] = a.chromosomes()[i].getChromosomeNumber();
             chrStartIndex[i] = chrOffSet[i];
-            chrEndIndex[i] = chrOffSet[i] + a.getChromosomeSiteCount(a.getChromosomes()[i]);
+            chrEndIndex[i] = chrOffSet[i] + a.chromosomeSiteCount(a.chromosomes()[i]);
         }
         anchor=AlignmentBuilder.getHomozygousInstance(a);
-        anchorMaf = new double[anchor.getSiteCount()];
+        anchorMaf = new double[anchor.numberOfSites()];
         for (int i = 0; i < anchorMaf.length; i++) {
-            anchorMaf[i] = anchor.getMinorAlleleFrequency(i);
+            anchorMaf[i] = anchor.minorAlleleFrequency(i);
         }
         System.out.println("Loading and converting to BitAlignment took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         this.screenPrintGbMemoryCurrentUse();

@@ -46,10 +46,10 @@ public class ProjectionGenotype extends AbstractGenotype {
     int[] primDSH; //startSite,endSite,parent1,parent2 array for the
 
     public ProjectionGenotype(Alignment hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
-        super(allBreakPoints.size(), hdAlign.getSiteCount(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
+        super(allBreakPoints.size(), hdAlign.numberOfSites(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         myBaseAlignment = hdAlign;
         this.allBreakPoints = allBreakPoints;
-        breakMaps = new ArrayList<>(getTaxaCount());
+        breakMaps = new ArrayList<>(numberOfTaxa());
         for (NavigableSet<DonorHaplotypes> allBreakPoint : allBreakPoints) {
             RangeMap<Integer, DonorSiteHaps> tRM = TreeRangeMap.create();
             for (DonorHaplotypes dh : allBreakPoint) {
@@ -60,7 +60,7 @@ public class ProjectionGenotype extends AbstractGenotype {
             }
             breakMaps.add(tRM);
         }
-        currentDSH = new DonorSiteHaps[getTaxaCount()];
+        currentDSH = new DonorSiteHaps[numberOfTaxa()];
         primDSH = new int[myTaxaCount * 4];
         Arrays.fill(primDSH, Integer.MIN_VALUE);
     }
@@ -70,11 +70,11 @@ public class ProjectionGenotype extends AbstractGenotype {
     }
 
     private int[] siteRangeForDonor(DonorHaplotypes dh) {
-        int start = myBaseAlignment.getSiteOfPhysicalPosition(dh.getStartPosition(), dh.getChromosome());
+        int start = myBaseAlignment.siteOfPhysicalPosition(dh.getStartPosition(), dh.getChromosome());
         if (start < 0) {
             start = -(start + 1);
         }
-        int end = myBaseAlignment.getSiteOfPhysicalPosition(dh.getEndPosition(), dh.getChromosome());
+        int end = myBaseAlignment.siteOfPhysicalPosition(dh.getEndPosition(), dh.getChromosome());
         if (end < 0) {
             end = -(end + 1);
         }
@@ -132,7 +132,7 @@ public class ProjectionGenotype extends AbstractGenotype {
     private byte getBaseSite(int taxon, int site) {
         //test transpose problems
         if (site != cachedSite) {
-            donorForCachedSite = myBaseAlignment.getGenotypeMatrix().getGenotypeForAllTaxa(site);
+            donorForCachedSite = myBaseAlignment.genotypeMatrix().genotypeForAllTaxa(site);
             cachedSite = site;
         }
         int primPos = taxon << 2;
@@ -156,13 +156,13 @@ public class ProjectionGenotype extends AbstractGenotype {
     }
 
     @Override
-    public String getDiploidAsString(int site, byte value) {
+    public String diploidAsString(int site, byte value) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
 
     @Override
     public void transposeData(boolean siteInnerLoop) {
-        myBaseAlignment.getGenotypeMatrix().transposeData(siteInnerLoop);
+        myBaseAlignment.genotypeMatrix().transposeData(siteInnerLoop);
         if (siteInnerLoop) {
             currMode = BaseMode.Site;
         } else {

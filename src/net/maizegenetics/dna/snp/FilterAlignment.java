@@ -47,7 +47,7 @@ public class FilterAlignment implements Alignment {
 
         myTaxaList = subList;
 
-        if (myTaxaList.getTaxaCount() != taxaRedirect.length) {
+        if (myTaxaList.numberOfTaxa() != taxaRedirect.length) {
             throw new IllegalArgumentException("FilterAlignment: init: subList should be same size as taxaRedirect.");
         }
 
@@ -61,22 +61,22 @@ public class FilterAlignment implements Alignment {
             mySiteRedirect = null;
             myRangeStart = -1;
             myRangeEnd = -1;
-            myChromosomes = myBaseAlignment.getChromosomes();
-            myChromosomeOffsets = myBaseAlignment.getChromosomesOffsets();
+            myChromosomes = myBaseAlignment.chromosomes();
+            myChromosomeOffsets = myBaseAlignment.chromosomesOffsets();
         } else {
             myIsSiteFilter = original.isSiteFilter();
             myIsSiteFilterByRange = original.isSiteFilterByRange();
             mySiteRedirect = original.getSiteRedirect();
             myRangeStart = original.getRangeStart();
             myRangeEnd = original.getRangeEnd();
-            myChromosomes = original.getChromosomes();
-            myChromosomeOffsets = original.getChromosomesOffsets();
+            myChromosomes = original.chromosomes();
+            myChromosomeOffsets = original.chromosomesOffsets();
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -117,11 +117,11 @@ public class FilterAlignment implements Alignment {
         List<Integer> taxaRedirectList = new ArrayList<Integer>();
         List<Taxon> idList = new ArrayList<Taxon>();
         boolean noNeedToFilter = true;
-        if (subTaxaList.getTaxaCount() != a.getTaxaCount()) {
+        if (subTaxaList.numberOfTaxa() != a.numberOfTaxa()) {
             noNeedToFilter = false;
         }
-        for (int i = 0, n = subTaxaList.getTaxaCount(); i < n; i++) {
-            List<Integer> ion = a.taxa().getIndicesMatchingTaxon(subTaxaList.get(i));
+        for (int i = 0, n = subTaxaList.numberOfTaxa(); i < n; i++) {
+            List<Integer> ion = a.taxa().indicesMatchingTaxon(subTaxaList.get(i));
 
             if ((ion.size() != 1) || (ion.get(0) != i)) {
                 noNeedToFilter = false;
@@ -171,8 +171,8 @@ public class FilterAlignment implements Alignment {
 
         TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = a.taxa();
-        for (int i = 0, n = current.getTaxaCount(); i < n; i++) {
-            if (subTaxaList.getIndicesMatchingTaxon(current.get(i)).isEmpty()) {
+        for (int i = 0, n = current.numberOfTaxa(); i < n; i++) {
+            if (subTaxaList.indicesMatchingTaxon(current.get(i)).isEmpty()) {
                 result.add(current.get(i));
             }
         }
@@ -195,11 +195,11 @@ public class FilterAlignment implements Alignment {
             throw new IllegalArgumentException("FilterAlignment: init: start site: " + startSite + " is larger than end site: " + endSite);
         }
 
-        if ((startSite < 0) || (startSite > a.getSiteCount() - 1)) {
+        if ((startSite < 0) || (startSite > a.numberOfSites() - 1)) {
             throw new IllegalArgumentException("FilterAlignment: init: start site: " + startSite + " is out of range.");
         }
 
-        if ((endSite < 0) || (endSite > a.getSiteCount() - 1)) {
+        if ((endSite < 0) || (endSite > a.numberOfSites() - 1)) {
             throw new IllegalArgumentException("FilterAlignment: init: end site: " + endSite + " is out of range.");
         }
 
@@ -220,9 +220,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -260,9 +260,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), mySiteRedirect);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.getGenotypeMatrix(), getTaxaCount(), myTaxaRedirect, getSiteCount(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -300,7 +300,7 @@ public class FilterAlignment implements Alignment {
         Arrays.sort(siteNamesToKeep);
         int[] temp = new int[siteNamesToKeep.length];
         int count = 0;
-        for (int i = 0, n = a.getSiteCount(); i < n; i++) {
+        for (int i = 0, n = a.numberOfSites(); i < n; i++) {
             if (Arrays.binarySearch(siteNamesToKeep, a.siteName(i)) >= 0) {
                 temp[count++] = i;
                 if (count == siteNamesToKeep.length) {
@@ -323,9 +323,9 @@ public class FilterAlignment implements Alignment {
     public static FilterAlignment getInstanceRemoveSiteNames(Alignment a, String[] siteNamesToRemove) {
 
         Arrays.sort(siteNamesToRemove);
-        int[] temp = new int[a.getSiteCount()];
+        int[] temp = new int[a.numberOfSites()];
         int count = 0;
-        for (int i = 0, n = a.getSiteCount(); i < n; i++) {
+        for (int i = 0, n = a.numberOfSites(); i < n; i++) {
             if (Arrays.binarySearch(siteNamesToRemove, a.siteName(i)) < 0) {
                 temp[count++] = i;
             }
@@ -343,17 +343,17 @@ public class FilterAlignment implements Alignment {
     }
 
     public static FilterAlignment getInstance(Alignment a, String chromosome, int startPhysicalPos, int endPhysicalPos) {
-        return getInstance(a, a.getChromosome(chromosome), startPhysicalPos, endPhysicalPos);
+        return getInstance(a, a.chromosome(chromosome), startPhysicalPos, endPhysicalPos);
     }
 
     public static FilterAlignment getInstance(Alignment a, Chromosome chromosome, int startPhysicalPos, int endPhysicalPos) {
 
-        int startSite = a.getSiteOfPhysicalPosition(startPhysicalPos, chromosome);
+        int startSite = a.siteOfPhysicalPosition(startPhysicalPos, chromosome);
         if (startSite < 0) {
             startSite = -(startSite + 1);
         }
 
-        int endSite = a.getSiteOfPhysicalPosition(endPhysicalPos, chromosome);
+        int endSite = a.siteOfPhysicalPosition(endPhysicalPos, chromosome);
         if (endSite < 0) {
             endSite = -(endSite + 2);
         }
@@ -368,7 +368,7 @@ public class FilterAlignment implements Alignment {
     }
 
     public static FilterAlignment getInstance(Alignment a, Chromosome chromosome) {
-        int[] endStart = a.getStartAndEndOfChromosome(chromosome);
+        int[] endStart = a.startAndEndOfChromosome(chromosome);
         return getInstance(a, endStart[0], endStart[1] - 1);
     }
 
@@ -419,7 +419,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public byte genotype(int taxon, Chromosome chromosome, int physicalPosition) {
-        return myGenotype.genotype(taxon, myPositionList.getSiteOfPhysicalPosition(physicalPosition, chromosome));
+        return myGenotype.genotype(taxon, myPositionList.siteOfPhysicalPosition(physicalPosition, chromosome));
     }
 
     public int translateSite(int site) {
@@ -460,7 +460,7 @@ public class FilterAlignment implements Alignment {
      * @return list of sites
      */
     public int[] getBaseSitesShown() {
-        int numSites = getSiteCount();
+        int numSites = numberOfSites();
         int[] result = new int[numSites];
         for (int i = 0; i < numSites; i++) {
             result[i] = translateSite(i);
@@ -481,16 +481,16 @@ public class FilterAlignment implements Alignment {
     private void getLociFromBase() {
 
         if ((!myIsSiteFilter) && (!myIsSiteFilterByRange)) {
-            myChromosomes = myBaseAlignment.getChromosomes();
-            myChromosomeOffsets = myBaseAlignment.getChromosomesOffsets();
+            myChromosomes = myBaseAlignment.chromosomes();
+            myChromosomeOffsets = myBaseAlignment.chromosomesOffsets();
             return;
         }
 
-        int numSites = getSiteCount();
+        int numSites = numberOfSites();
         List<Chromosome> chromosomes = new ArrayList<Chromosome>();
         List<Integer> offsets = new ArrayList<Integer>();
         for (int i = 0; i < numSites; i++) {
-            Chromosome current = getChromosome(i);
+            Chromosome current = chromosome(i);
             if (!chromosomes.contains(current)) {
                 chromosomes.add(current);
                 offsets.add(i);
@@ -508,52 +508,52 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getIndelSize(int site) {
-        return myBaseAlignment.getIndelSize(translateSite(site));
+    public int indelSize(int site) {
+        return myBaseAlignment.indelSize(translateSite(site));
     }
 
     @Override
-    public Chromosome getChromosome(int site) {
-        return myBaseAlignment.getChromosome(translateSite(site));
+    public Chromosome chromosome(int site) {
+        return myBaseAlignment.chromosome(translateSite(site));
     }
 
     @Override
-    public int getPositionInChromosome(int site) {
-        return myBaseAlignment.getPositionInChromosome(translateSite(site));
+    public int chromosomalPosition(int site) {
+        return myBaseAlignment.chromosomalPosition(translateSite(site));
     }
 
     @Override
-    public String getChromosomeName(int site) {
-        return myBaseAlignment.getChromosomeName(translateSite(site));
+    public String chromosomeName(int site) {
+        return myBaseAlignment.chromosomeName(translateSite(site));
     }
 
     @Override
-    public Chromosome getChromosome(String name) {
-        return myBaseAlignment.getChromosome(name);
+    public Chromosome chromosome(String name) {
+        return myBaseAlignment.chromosome(name);
     }
 
     @Override
-    public Chromosome[] getChromosomes() {
+    public Chromosome[] chromosomes() {
         return myChromosomes;
     }
 
     @Override
-    public int getNumChromosomes() {
+    public int numChromosomes() {
         return myChromosomes.length;
     }
 
     @Override
-    public int[] getChromosomesOffsets() {
+    public int[] chromosomesOffsets() {
         return myChromosomeOffsets;
     }
 
     @Override
-    public int[] getStartAndEndOfChromosome(Chromosome chromosome) {
-        for (int i = 0; i < getNumChromosomes(); i++) {
+    public int[] startAndEndOfChromosome(Chromosome chromosome) {
+        for (int i = 0; i < numChromosomes(); i++) {
             if (chromosome.equals(myChromosomes[i])) {
                 int end = 0;
-                if (i == getNumChromosomes() - 1) {
-                    end = getSiteCount();
+                if (i == numChromosomes() - 1) {
+                    end = numberOfSites();
                 } else {
                     end = myChromosomeOffsets[i + 1];
                 }
@@ -564,14 +564,14 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public float[][] getSiteScores() {
+    public float[][] siteScores() {
 
         if (!myBaseAlignment.hasSiteScores()) {
             return null;
         }
 
-        int numSites = getSiteCount();
-        int numSeqs = getTaxaCount();
+        int numSites = numberOfSites();
+        int numSeqs = numberOfTaxa();
         float[][] result = new float[numSeqs][numSites];
         for (int i = 0; i < numSites; i++) {
             for (int j = 0; j < numSeqs; j++) {
@@ -579,7 +579,7 @@ public class FilterAlignment implements Alignment {
                 if (taxaIndex == -1) {
                     result[j][i] = -9;
                 } else {
-                    result[j][i] = myBaseAlignment.getSiteScore(taxaIndex, translateSite(i));
+                    result[j][i] = myBaseAlignment.siteScore(taxaIndex, translateSite(i));
                 }
             }
         }
@@ -589,19 +589,19 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte getReferenceAllele(int site) {
-        return myBaseAlignment.getReferenceAllele(translateSite(site));
+    public byte referenceGenotype(int site) {
+        return myBaseAlignment.referenceGenotype(translateSite(site));
     }
 
     @Override
-    public int getSiteCount() {
+    public int numberOfSites() {
 
         if (myIsSiteFilterByRange) {
             return myRangeEnd - myRangeStart + 1;
         } else if (myIsSiteFilter) {
             return mySiteRedirect.length;
         } else {
-            return myBaseAlignment.getSiteCount();
+            return myBaseAlignment.numberOfSites();
         }
 
     }
@@ -622,8 +622,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
-        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, chromosome);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+        int temp = myBaseAlignment.siteOfPhysicalPosition(physicalPosition, chromosome);
         if (temp < 0) {
             temp = -(temp + 1);
             return -(reverseTranslateSite(temp) + 1);
@@ -632,8 +632,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID) {
-        int temp = myBaseAlignment.getSiteOfPhysicalPosition(physicalPosition, chromosome, snpID);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpName) {
+        int temp = myBaseAlignment.siteOfPhysicalPosition(physicalPosition, chromosome, snpName);
         if (temp < 0) {
             temp = -(temp + 1);
             return -(reverseTranslateSite(temp) + 1);
@@ -679,23 +679,23 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte[] genotypeRow(int taxon) {
-        return myGenotype.genotypeRow(taxon);
+    public byte[] genotypeAllSites(int taxon) {
+        return myGenotype.genotypeAllSites(taxon);
     }
 
     @Override
-    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllSites(taxon, alleleNumber);
+    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber) {
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllSites(taxon, alleleNumber);
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForAllTaxa(site, alleleNumber);
+    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber) {
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
-    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getAllelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -709,15 +709,15 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getReference() {
+    public byte[] referenceGenotypeForAllSites() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            byte[] result = new byte[getSiteCount()];
-            for (int i = 0, n = getSiteCount(); i < n; i++) {
-                result[i] = getReferenceAllele(i);
+            byte[] result = new byte[numberOfSites()];
+            for (int i = 0, n = numberOfSites(); i < n; i++) {
+                result[i] = referenceGenotype(i);
             }
             return result;
         } else {
-            return myBaseAlignment.getReference();
+            return myBaseAlignment.referenceGenotypeForAllSites();
         }
     }
 
@@ -727,16 +727,16 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int[] getPhysicalPositions() {
+    public int[] physicalPositions() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
-            int numSites = getSiteCount();
+            int numSites = numberOfSites();
             int[] result = new int[numSites];
             for (int i = 0; i < numSites; i++) {
-                result[i] = getPositionInChromosome(i);
+                result[i] = chromosomalPosition(i);
             }
             return result;
         } else {
-            return myBaseAlignment.getPhysicalPositions();
+            return myBaseAlignment.physicalPositions();
         }
     }
 
@@ -746,22 +746,17 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getSequenceCount() {
-        return myTaxaList.getTaxaCount();
+    public int numberOfTaxa() {
+        return myTaxaList.numberOfTaxa();
     }
 
     @Override
-    public int getTaxaCount() {
-        return myTaxaList.getTaxaCount();
-    }
-
-    @Override
-    public float getSiteScore(int seq, int site) {
-        int taxaIndex = translateTaxon(seq);
+    public float siteScore(int taxon, int site) {
+        int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
             return Float.NaN;
         } else {
-            return myBaseAlignment.getSiteScore(taxaIndex, translateSite(site));
+            return myBaseAlignment.siteScore(taxaIndex, translateSite(site));
         }
     }
 
@@ -771,8 +766,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public SITE_SCORE_TYPE getSiteScoreType() {
-        return myBaseAlignment.getSiteScoreType();
+    public SITE_SCORE_TYPE siteScoreType() {
+        return myBaseAlignment.siteScoreType();
     }
 
     @Override
@@ -788,11 +783,6 @@ public class FilterAlignment implements Alignment {
     @Override
     public boolean isPhased() {
         return myGenotype.isPhased();
-    }
-
-    @Override
-    public GeneticMap getGeneticMap() {
-        return myBaseAlignment.getGeneticMap();
     }
 
     @Override
@@ -816,28 +806,28 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getMaxNumAlleles() {
-        return myGenotype.getMaxNumAlleles();
+    public int maxNumAlleles() {
+        return myGenotype.maxNumAlleles();
     }
 
     @Override
-    public byte[] getAlleles(int site) {
-        return myGenotype.getAlleles(site);
+    public byte[] alleles(int site) {
+        return myGenotype.alleles(site);
     }
 
     @Override
-    public int[][] getAllelesSortedByFrequency(int site) {
-        return myGenotype.getAllelesSortedByFrequency(site);
+    public int[][] allelesSortedByFrequency(int site) {
+        return myGenotype.allelesSortedByFrequency(site);
     }
 
     @Override
-    public double getMajorAlleleFrequency(int site) {
-        return myGenotype.getMajorAlleleFrequency(site);
+    public double majorAlleleFrequency(int site) {
+        return myGenotype.majorAlleleFrequency(site);
     }
 
     @Override
-    public int getHeterozygousCount(int site) {
-        return myGenotype.getHeterozygousCount(site);
+    public int heterozygousCount(int site) {
+        return myGenotype.heterozygousCount(site);
     }
 
     @Override
@@ -846,97 +836,97 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public int getTotalGametesNotMissing(int site) {
-        return myGenotype.getTotalGametesNotMissing(site);
+    public int totalGametesNonMissingForSite(int site) {
+        return myGenotype.totalGametesNonMissingForSite(site);
     }
 
     @Override
-    public int getTotalNotMissing(int site) {
-        return myGenotype.getTotalNotMissing(site);
+    public int totalNonMissingForSite(int site) {
+        return myGenotype.totalNonMissingForSite(site);
     }
 
     @Override
-    public int getMinorAlleleCount(int site) {
-        return myGenotype.getMinorAlleleCount(site);
+    public int minorAlleleCount(int site) {
+        return myGenotype.minorAlleleCount(site);
     }
 
     @Override
-    public double getMinorAlleleFrequency(int site) {
-        return myGenotype.getMinorAlleleFrequency(site);
+    public double minorAlleleFrequency(int site) {
+        return myGenotype.minorAlleleFrequency(site);
     }
 
     @Override
-    public int getMajorAlleleCount(int site) {
-        return myGenotype.getMajorAlleleCount(site);
+    public int majorAlleleCount(int site) {
+        return myGenotype.majorAlleleCount(site);
     }
 
     @Override
-    public byte getMajorAllele(int site) {
-        return myGenotype.getMajorAllele(site);
+    public byte majorAllele(int site) {
+        return myGenotype.majorAllele(site);
     }
 
     @Override
-    public byte getMinorAllele(int site) {
-        return myGenotype.getMinorAllele(site);
+    public byte minorAllele(int site) {
+        return myGenotype.minorAllele(site);
     }
 
     @Override
-    public Object[][] getDiploidsSortedByFrequency(int site) {
-        return myGenotype.getDiploidsSortedByFrequency(site);
+    public Object[][] genosSortedByFrequency(int site) {
+        return myGenotype.genosSortedByFrequency(site);
     }
 
     @Override
-    public int getTotalGametesNotMissingForTaxon(int taxon) {
-        return myGenotype.getTotalGametesNotMissingForTaxon(taxon);
+    public int totalGametesNonMissingForTaxon(int taxon) {
+        return myGenotype.totalGametesNonMissingForTaxon(taxon);
     }
 
     @Override
-    public int getTotalNotMissingForTaxon(int taxon) {
-        return myGenotype.getTotalNotMissingForTaxon(taxon);
+    public int totalNonMissingForTaxon(int taxon) {
+        return myGenotype.totalNonMissingForTaxon(taxon);
     }
 
     @Override
-    public int getHeterozygousCountForTaxon(int taxon) {
-        return myGenotype.getHeterozygousCountForTaxon(taxon);
+    public int heterozygousCountForTaxon(int taxon) {
+        return myGenotype.heterozygousCountForTaxon(taxon);
     }
 
     @Override
-    public byte[] getDepthForAlleles(int taxon, int site) {
+    public byte[] depthForAlleles(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
             return null;
         } else {
-            return myBaseAlignment.getDepthForAlleles(taxaIndex, translateSite(site));
+            return myBaseAlignment.depthForAlleles(taxaIndex, translateSite(site));
         }
     }
 
     @Override
-    public byte[] getAllelesByScope(ALLELE_SORT_TYPE scope, int site) {
+    public byte[] allelesBySortType(ALLELE_SORT_TYPE scope, int site) {
         if (scope == ALLELE_SORT_TYPE.Frequency) {
-            return getAlleles(site);
+            return alleles(site);
         } else {
-            return myBaseAlignment.getAllelesByScope(scope, translateSite(site));
+            return myBaseAlignment.allelesBySortType(scope, translateSite(site));
         }
     }
 
     @Override
-    public BitSet getAllelePresenceForAllTaxaByScope(ALLELE_SORT_TYPE scope, int site, int alleleNumber) {
-        return getBitStorage(scope).getAllelePresenceForAllTaxa(site, alleleNumber);
+    public BitSet allelePresenceForAllTaxaBySortType(ALLELE_SORT_TYPE type, int site, int alleleNumber) {
+        return bitStorage(type).allelePresenceForAllTaxa(site, alleleNumber);
     }
 
     @Override
     public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
     }
 
     @Override
     public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
     }
 
     @Override
     public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        return getBitStorage(ALLELE_SORT_TYPE.Frequency).getPhasedAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
+        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
     }
 
     @Override
@@ -950,21 +940,21 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public byte[] getReference(int startSite, int endSite) {
+    public byte[] referenceGenotypes(int startSite, int endSite) {
         if (!hasReference()) {
             return null;
         }
 
         byte[] result = new byte[endSite - startSite];
         for (int i = startSite; i < endSite; i++) {
-            result[i] = getReferenceAllele(i);
+            result[i] = referenceGenotype(i);
         }
         return result;
     }
 
     @Override
-    public int getChromosomeSiteCount(Chromosome chromosome) {
-        int[] startEnd = getStartAndEndOfChromosome(chromosome);
+    public int chromosomeSiteCount(Chromosome chromosome) {
+        int[] startEnd = startAndEndOfChromosome(chromosome);
         return startEnd[1] - startEnd[0];
     }
 
@@ -974,47 +964,47 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public String getMajorAlleleAsString(int site) {
-        return myGenotype.getMajorAlleleAsString(site);
+    public String majorAlleleAsString(int site) {
+        return myGenotype.majorAlleleAsString(site);
     }
 
     @Override
-    public String getMinorAlleleAsString(int site) {
-        return myGenotype.getMinorAlleleAsString(site);
+    public String minorAlleleAsString(int site) {
+        return myGenotype.minorAlleleAsString(site);
     }
 
     @Override
-    public byte[] getMinorAlleles(int site) {
-        return myGenotype.getMinorAlleles(site);
+    public byte[] minorAlleles(int site) {
+        return myGenotype.minorAlleles(site);
     }
 
     @Override
     public String taxaName(int index) {
-        return myTaxaList.getTaxaName(index);
+        return myTaxaList.taxaName(index);
     }
 
     @Override
-    public Alignment[] getAlignments() {
+    public Alignment[] compositeAlignments() {
         return new Alignment[]{this};
     }
 
     @Override
-    public String getDiploidAsString(int site, byte value) {
-        return myGenotype.getDiploidAsString(site, value);
+    public String diploidAsString(int site, byte value) {
+        return myGenotype.diploidAsString(site, value);
     }
 
     @Override
-    public Object[][] getDiploidCounts() {
-        return myGenotype.getDiploidCounts();
+    public Object[][] genoCounts() {
+        return myGenotype.genoCounts();
     }
 
     @Override
-    public Object[][] getMajorMinorCounts() {
-        return myGenotype.getMajorMinorCounts();
+    public Object[][] majorMinorCounts() {
+        return myGenotype.majorMinorCounts();
     }
 
     @Override
-    public BitStorage getBitStorage(ALLELE_SORT_TYPE scopeType) {
+    public BitStorage bitStorage(ALLELE_SORT_TYPE scopeType) {
 
         BitStorage result = myBitStorage.get(scopeType);
         if (result != null) {
@@ -1023,10 +1013,10 @@ public class FilterAlignment implements Alignment {
 
         switch (scopeType) {
             case Frequency:
-                result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.getMajorAlleleForAllSites(), myGenotype.getMinorAlleleForAllSites());
+                result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.majorAlleleForAllSites(), myGenotype.minorAlleleForAllSites());
                 break;
             case Reference:
-                result = DynamicBitStorage.getInstance(myGenotype, scopeType, getReference());
+                result = DynamicBitStorage.getInstance(myGenotype, scopeType, referenceGenotypeForAllSites());
                 break;
             default:
                 myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
@@ -1038,11 +1028,11 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public PositionList getPositionList() {
+    public PositionList positionList() {
         if (myPositionList == null) {
             PositionListBuilder pLB = new PositionListBuilder();
-            PositionList basePL = getBaseAlignment().getPositionList();
-            for (int i = 0; i < getSiteCount(); i++) {
+            PositionList basePL = getBaseAlignment().positionList();
+            for (int i = 0; i < numberOfSites(); i++) {
                 pLB.add(basePL.get(translateSite(i)));
             }
             myPositionList = pLB.build();
@@ -1051,7 +1041,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public Genotype getGenotypeMatrix() {
+    public Genotype genotypeMatrix() {
         return myGenotype;
     }
 }

@@ -97,7 +97,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	}
 	
 	private void processFamily(Alignment align, String familyname) {
-		myLogger.info("\nResults for chromosome " + align.getChromosomeName(0) + ", family " + familyname);
+		myLogger.info("\nResults for chromosome " + align.chromosomeName(0) + ", family " + familyname);
 		align = preFilterAlignment(align);
 
 		if (avgr2Filename != null || avgr2Plotname != null) {
@@ -106,11 +106,11 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		
 		if (propNonconsensusFilename != null) {
 			double[] proportion = calculateProportionNonConsensusPerTaxon(align);
-			saveProportionNonConsensusToFile(proportion, align, addFamilyToFilename(propNonconsensusFilename, familyname, align.getChromosomeName(0), ".txt"));
+			saveProportionNonConsensusToFile(proportion, align, addFamilyToFilename(propNonconsensusFilename, familyname, align.chromosomeName(0), ".txt"));
 		}
 		
 		if (summaryFilename != null) {
-			runAndExportGenotypeSummaryForTaxa(align, addFamilyToFilename(summaryFilename, familyname, align.getChromosomeName(0), ".txt"));
+			runAndExportGenotypeSummaryForTaxa(align, addFamilyToFilename(summaryFilename, familyname, align.chromosomeName(0), ".txt"));
 		}
 	}
 	
@@ -138,8 +138,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	}
 	
 	public Alignment preFilterAlignment(Alignment align) {
-		int ntaxa = align.getSequenceCount();
-		int nsites = align.getSiteCount();
+		int ntaxa = align.numberOfTaxa();
+		int nsites = align.numberOfSites();
 		int nTaxaGametes = 2 * nsites;
 		int nSiteGametes = 2 * ntaxa;
 		int minTaxaGametes = (int) Math.ceil(nTaxaGametes * minNonMissingProportionForTaxon);
@@ -151,7 +151,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		//create list of taxa with too much missing data
 		LinkedList<Taxon> taxaDiscardList = new LinkedList<Taxon>();
 		for (int t = 0; t < ntaxa; t++) {
-			if (align.getTotalGametesNotMissingForTaxon(t) < minTaxaGametes) taxaDiscardList.add(align.taxa().get(t));
+			if (align.totalGametesNonMissingForTaxon(t) < minTaxaGametes) taxaDiscardList.add(align.taxa().get(t));
 		}
 		if (taxaDiscardList.size() > 0) {
 			myLogger.info("\nThe following taxa will not be included in the analysis because the proportion of nonMissing data is below " + minNonMissingProportionForTaxon + ":\n");
@@ -163,13 +163,13 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			align = FilterAlignment.getInstanceRemoveIDs(align, tL);
 		}
 		
-		myLogger.info("After filtering for taxa, there are " + align.getSequenceCount() + " taxa.");
+		myLogger.info("After filtering for taxa, there are " + align.numberOfTaxa() + " taxa.");
 		
 		//number of non-missing values per site
 		int[] sitesToKeep = new int[nsites];
 		int nsitesKept = 0;
 		for (int s = 0; s < nsites; s++) {
-			if (align.getTotalGametesNotMissing(s) >= minSiteGametes) sitesToKeep[nsitesKept++] = s;
+			if (align.totalGametesNonMissingForSite(s) >= minSiteGametes) sitesToKeep[nsitesKept++] = s;
 		}
 		
 		if (nsitesKept < nsites) {
@@ -184,19 +184,19 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	private void calculateAverageR2ForSnps(Alignment align, String familyname) {
 		
 		//first filter out monomorphic sites
-		int nsites = align.getSiteCount();
+		int nsites = align.numberOfSites();
 		int[] polysites = new int[nsites];
 		int sitecount = 0;
 		for (int s = 0; s < nsites; s++) {
-			if (align.getMinorAlleleFrequency(s) > 0.15) polysites[sitecount++] = s;  
+			if (align.minorAlleleFrequency(s) > 0.15) polysites[sitecount++] = s;  
 		}
 		polysites = Arrays.copyOf(polysites, sitecount);
 		align = FilterAlignment.getInstance(align, polysites);
 		align = BitAlignment.getInstance(align, true);
 		
-		myLogger.info("Chromosome " + align.getChromosomeName(0) + ", family " + familyname + " has " + sitecount + " polymorphic snps.");
+		myLogger.info("Chromosome " + align.chromosomeName(0) + ", family " + familyname + " has " + sitecount + " polymorphic snps.");
 		
-		nsites = align.getSiteCount();
+		nsites = align.numberOfSites();
 		double[] avgRsq = new double[nsites];
 		
 		for (int s = 0; s < nsites; s++) {
@@ -204,14 +204,14 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			int end = Math.min(nsites - 1, s + windowSizeForR2);
 			double sum = 0;
 			double count = 0;
-            BitSet sMj = align.getAllelePresenceForAllTaxa(s, 0);
-            BitSet sMn = align.getAllelePresenceForAllTaxa(s, 1);
+            BitSet sMj = align.allelePresenceForAllTaxa(s, 0);
+            BitSet sMn = align.allelePresenceForAllTaxa(s, 1);
 
 			for (int i = start; i <= end; i++) {
 				if (i != s) {
 					int[][] contig = new int[2][2];
-		            BitSet iMj = align.getAllelePresenceForAllTaxa(i, 0);
-		            BitSet iMn = align.getAllelePresenceForAllTaxa(i, 1);
+		            BitSet iMj = align.allelePresenceForAllTaxa(i, 0);
+		            BitSet iMn = align.allelePresenceForAllTaxa(i, 1);
 		            contig[0][0] = (int) OpenBitSet.intersectionCount(sMj, iMj);
 		            contig[1][0] = (int) OpenBitSet.intersectionCount(sMn, iMj);
 		            contig[0][1] = (int) OpenBitSet.intersectionCount(sMj, iMn);
@@ -232,7 +232,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			
 		}
 		
-		String chrname = align.getChromosomeName(0);
+		String chrname = align.chromosomeName(0);
 		if (avgr2Filename != null) saveToFileAverageR2(avgRsq, align, addFamilyToFilename(avgr2Filename, familyname, chrname, ".txt"));
 		if (avgr2Plotname != null) plotAverageR2(avgRsq, align, addFamilyToFilename(avgr2Plotname, familyname, chrname, ".png"));
 
@@ -262,7 +262,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 
     private void saveToFileAverageR2(double[] avgr2, Alignment align, String saveFilename) {
     		BufferedWriter bw = Utils.getBufferedWriter(saveFilename);
-    		int nsites = align.getSiteCount();
+    		int nsites = align.numberOfSites();
     		try {
     			bw.write("Site\tchr\tpos\tr2");
     			bw.newLine();
@@ -270,9 +270,9 @@ public class QualityChecksPlugin extends AbstractPlugin {
     			for (int s = 0; s < nsites; s++) {
     				bw.write(align.getSNPID(s));
     				bw.write("\t");
-    				bw.write(align.getChromosomeName(s));
+    				bw.write(align.chromosomeName(s));
     				bw.write("\t");
-    				bw.write(Integer.toString(align.getPositionInChromosome(s)));
+    				bw.write(Integer.toString(align.chromosomalPosition(s)));
     				bw.write("\t");
     				bw.write(Double.toString(avgr2[s]));
     				bw.newLine();
@@ -284,14 +284,14 @@ public class QualityChecksPlugin extends AbstractPlugin {
     }
     
     private void plotAverageR2(double[] avgr2, Alignment align, String saveFilename) {
-    		int nsites = align.getSiteCount();
-    		String title = "Average R2 in " + windowSizeForR2 + " bp window, chromosome " + align.getChromosomeName(0);
+    		int nsites = align.numberOfSites();
+    		String title = "Average R2 in " + windowSizeForR2 + " bp window, chromosome " + align.chromosomeName(0);
     		String xLabel = "position(Mbp)";
     		String yLabel ="Average R-squared";
     		DefaultXYDataset xydata = new DefaultXYDataset();
     		double[][] dataset = new double[2][nsites];
     		for (int s = 0; s < nsites; s++) {
-    			dataset[0][s] = ((double) align.getPositionInChromosome(s)) / 1000000.0 ;
+    			dataset[0][s] = ((double) align.chromosomalPosition(s)) / 1000000.0 ;
     		}
     		dataset[1] = avgr2;
     		xydata.addSeries("avgr2", dataset);
@@ -305,15 +305,15 @@ public class QualityChecksPlugin extends AbstractPlugin {
     
 	private double[] calculateProportionNonConsensusPerTaxon(Alignment align) {
 		double maxMaf = 0.05;
-		int ntaxa = align.getSequenceCount();
-		int nsites = align.getSiteCount();
+		int ntaxa = align.numberOfTaxa();
+		int nsites = align.numberOfSites();
 		
 		OpenBitSet lowmaf = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
-			if (align.getMinorAlleleFrequency(s) < maxMaf) lowmaf.set(s);
+			if (align.minorAlleleFrequency(s) < maxMaf) lowmaf.set(s);
 		}
 		
-//		myLogger.info("taxa = " + align.getSequenceCount() + ", sites = " + align.getSiteCount());
+//		myLogger.info("taxa = " + align.numberOfTaxa() + ", sites = " + align.numberOfSites());
 //		myLogger.info("lowmaf count = " + lowmaf.cardinality());
 		
 		try {
@@ -326,8 +326,8 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		double[] proportionMinor = new double[ntaxa];
 //		double nmono = lowmaf.cardinality();
 		for (int t = 0; t < ntaxa; t++) {
-			BitSet major = align.getAllelePresenceForAllSites(t, 0);
-			BitSet minor = align.getAllelePresenceForAllSites(t, 1);
+			BitSet major = align.allelePresenceForAllSites(t, 0);
+			BitSet minor = align.allelePresenceForAllSites(t, 1);
 			long minorCount = OpenBitSet.intersectionCount(lowmaf, minor);
 			 
 			OpenBitSet notMissing = new OpenBitSet(major.getBits(), major.getNumWords());
@@ -341,11 +341,11 @@ public class QualityChecksPlugin extends AbstractPlugin {
 	
 	private void saveProportionNonConsensusToFile(double[] propNonconsensus, Alignment align, String saveFilename) {
     		BufferedWriter bw = Utils.getBufferedWriter(saveFilename);
-    		int ntaxa = align.getSequenceCount();
+    		int ntaxa = align.numberOfTaxa();
     		try {
     			bw.write("Taxon\tchr\tpropNC");
     			bw.newLine();
-    			String chr = align.getChromosomeName(0);
+    			String chr = align.chromosomeName(0);
     			for (int t = 0; t < ntaxa; t++) {
     				bw.write(align.taxaName(t));
     				bw.write("\t");

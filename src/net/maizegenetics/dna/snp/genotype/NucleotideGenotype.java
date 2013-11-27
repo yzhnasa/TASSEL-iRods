@@ -22,12 +22,12 @@ class NucleotideGenotype extends ByteGenotype {
     }
 
     @Override
-    public String getDiploidAsString(int site, byte value) {
+    public String diploidAsString(int site, byte value) {
         return NucleotideAlignmentConstants.getNucleotideIUPAC(value);
     }
 
     @Override
-    public int getMaxNumAlleles() {
+    public int maxNumAlleles() {
         return NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
     }
 

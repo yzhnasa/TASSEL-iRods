@@ -80,8 +80,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                  throw new IllegalArgumentException("File format " + inputFormat + " is not recognized!");
             }
             
-            myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-            if (a.getSiteCount() == 0) {
+            myLogger.info("Original Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
+            if (a.numberOfSites() == 0) {
                 continue;
             }
             double realDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, false);
@@ -95,8 +95,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 }  // Note: lowCoverageTaxa is based upon the startChromosome only
                 TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), lowCoverageTaxa, false);
                 a = FilterAlignment.getInstance(a, keepTaxa);
-                myLogger.info("TaxaFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-                if (a.getSiteCount() == 0) {
+                myLogger.info("TaxaFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
+                if (a.numberOfSites() == 0) {
                     continue;
                 }
             }
@@ -104,7 +104,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             randomDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, true, false);
             AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(a, false);
             myLogger.info("Ratio of RandomToReal:" + randomDist / realDist);
-            int minCount = (int) Math.round(a.getSequenceCount() * minPresence);
+            int minCount = (int) Math.round(a.numberOfTaxa() * minPresence);
             if (usePedigree) {
                 // filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, -2.0, minCount, minMAF, maxMAF, snpLogging, "Filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa");
@@ -122,13 +122,13 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, minF, minCount, minMAF, maxMAF, snpLogging, "Filter the sites");
                 a = FilterAlignment.getInstance(a, goodLowHetSites);
             }
-            myLogger.info("SiteFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-            if (a.getSiteCount() == 0) {
+            myLogger.info("SiteFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
+            if (a.numberOfSites() == 0) {
                 continue;
             }
             realDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
             randomDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, true, false);
-            System.out.printf("%d %d %g %g %g %n", a.getSiteCount(), minCount, minF, minMAF, randomDist / realDist);
+            System.out.printf("%d %d %g %g %g %n", a.numberOfSites(), minCount, minF, minMAF, randomDist / realDist);
             AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(a, false);
             
             if (inputFormat == INPUT_FORMAT.hapmap)
@@ -146,8 +146,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 a = ImportUtils.readFromHapmap(outfile, null);
                 int[] gs = AlignmentFilterByGBSUtils.getGoodSitesByLD(a, minR2, minBonP, 128, 100, 20, false);
                 a = FilterAlignment.getInstance(a, gs);
-                myLogger.info("LDFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-                if (a.getSiteCount() == 0) {
+                myLogger.info("LDFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
+                if (a.numberOfSites() == 0) {
                     continue;
                 }
                 ExportUtils.writeToHapmap(a, false, outfile, '\t', null);
@@ -305,14 +305,14 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
 
     public static String[] getLowCoverageLines(Alignment a, double pCoverage) {
         ArrayList<String> lowLines = new ArrayList<String>();
-        for (int i = 0; i < a.getSequenceCount(); i++) {
+        for (int i = 0; i < a.numberOfTaxa(); i++) {
             int covered = 0;
-            for (int j = 0; j < a.getSiteCount(); j++) {
+            for (int j = 0; j < a.numberOfSites(); j++) {
                 if (a.genotype(i, j) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
                     covered++;
                 }
             }
-            double propCovered = (double) covered / (double) a.getSiteCount();
+            double propCovered = (double) covered / (double) a.numberOfSites();
             // myLogger.info(a.taxaName(i)+":"+propCovered);
             if (propCovered < pCoverage) {
                 lowLines.add(a.taxaName(i));
@@ -325,7 +325,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
     private String[] getHighExpectedFTaxa(Alignment a) {
         ArrayList<String> highFLines = new ArrayList<String>();
         int nInbredTaxa = 0;
-        for (int taxon = 0; taxon < a.getSequenceCount(); taxon++) {
+        for (int taxon = 0; taxon < a.numberOfTaxa(); taxon++) {
             String fullTaxonName = a.taxaName(taxon);
             if (taxaFs.containsKey(fullTaxonName)) {
                 if (taxaFs.get(fullTaxonName) >= minF) {

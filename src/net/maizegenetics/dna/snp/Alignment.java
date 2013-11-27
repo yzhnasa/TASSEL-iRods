@@ -42,7 +42,7 @@ public interface Alignment {
 
         /**
          * This is the default where alleles are sorted by frequency. Same as
-         * getAlleles().
+         * alleles().
          */
         Frequency,
         /**
@@ -67,7 +67,7 @@ public interface Alignment {
      *
      * @return genotype matrix
      */
-    public Genotype getGenotypeMatrix();
+    public Genotype genotypeMatrix();
 
     /**
      * Returns diploid value (genotype) for a given taxon and site.
@@ -128,7 +128,7 @@ public interface Alignment {
      *
      * @return sequence of diploid allele values.
      */
-    public byte[] genotypeRow(int taxon);
+    public byte[] genotypeAllSites(int taxon);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at each
@@ -142,7 +142,7 @@ public interface Alignment {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresenceForAllSites(int taxon, int alleleNumber);
+    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
@@ -156,7 +156,7 @@ public interface Alignment {
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresenceForAllTaxa(int site, int alleleNumber);
+    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at sites
@@ -173,7 +173,7 @@ public interface Alignment {
      *
      * @return sequence of true/false values.
      */
-    public long[] getAllelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock);
+    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at each
@@ -279,7 +279,7 @@ public interface Alignment {
      * @return first four bits are the first allele value and the second four
      * bits are the second allele value.
      */
-    public byte getReferenceAllele(int site);
+    public byte referenceGenotype(int site);
 
     /**
      * Returns reference sequence of diploid allele values for given taxon in
@@ -292,7 +292,7 @@ public interface Alignment {
      *
      * @return reference sequence of diploid allele values.
      */
-    public byte[] getReference(int startSite, int endSite);
+    public byte[] referenceGenotypes(int startSite, int endSite);
 
     /**
      * Returns reference sequence of diploid allele values. Each value in array
@@ -301,7 +301,7 @@ public interface Alignment {
      *
      * @return reference sequence of diploid allele values.
      */
-    public byte[] getReference();
+    public byte[] referenceGenotypeForAllSites();
 
     /**
      * Return whether this alignment has defined reference sequence.
@@ -329,7 +329,7 @@ public interface Alignment {
      *
      * @return number of heterozygous taxa
      */
-    public int getHeterozygousCount(int site);
+    public int heterozygousCount(int site);
 
     /**
      * Get SNP ID for specified site.
@@ -344,7 +344,7 @@ public interface Alignment {
      *
      * @return number of sites
      */
-    public int getSiteCount();
+    public int numberOfSites();
 
     /**
      * Return number of sites for given chromosome.
@@ -353,7 +353,7 @@ public interface Alignment {
      *
      * @return number of sites
      */
-    public int getChromosomeSiteCount(Chromosome chromosome);
+    public int chromosomeSiteCount(Chromosome chromosome);
 
     /**
      * Get the first (inclusive) and last (exclusive) site of the specified
@@ -363,28 +363,21 @@ public interface Alignment {
      *
      * @return first and last site
      */
-    public int[] getStartAndEndOfChromosome(Chromosome chromosome);
+    public int[] startAndEndOfChromosome(Chromosome chromosome);
 
     /**
-     * Returns number of sequences (taxa).
-     *
-     * @return number of sequences
-     */
-    public int getSequenceCount();
-
-    /**
-     * Returns number of taxa (same as getSequenceCount()
+     * Returns number of taxa (same as numberOfTaxa()
      *
      * @return number of taxa
      */
-    public int getTaxaCount();
+    public int numberOfTaxa();
 
     /**
      * Return the position list for the alignment.
      *
      * @return PositionList for all sites.
      */
-    public PositionList getPositionList();
+    public PositionList positionList();
 
     /**
      * Returns the physical position at given site.
@@ -393,7 +386,7 @@ public interface Alignment {
      *
      * @return physical position
      */
-    public int getPositionInChromosome(int site);
+    public int chromosomalPosition(int site);
 
     /**
      * Return site of given physical position in chromosome. If the physical
@@ -405,7 +398,7 @@ public interface Alignment {
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome);
 
     /**
      * Return site of given physical position / SNP ID in chromosome. If the
@@ -415,18 +408,18 @@ public interface Alignment {
      *
      * @param physicalPosition physical position
      * @param chromosome chromosome. if null, the first chromosome is used.
-     * @param snpID SNP ID
+     * @param snpName SNP ID
      *
      * @return index
      */
-    public int getSiteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpID);
+    public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome, String snpName);
 
     /**
      * Returns all physical positions.
      *
      * @return physical positions.
      */
-    public int[] getPhysicalPositions();
+    public int[] physicalPositions();
 
     /**
      * Return Chromosome Name for given site.
@@ -435,7 +428,7 @@ public interface Alignment {
      *
      * @return Chromosome Name
      */
-    public String getChromosomeName(int site);
+    public String chromosomeName(int site);
 
     /**
      * Return Chromosome for given site.
@@ -444,7 +437,7 @@ public interface Alignment {
      *
      * @return Chromosome
      */
-    public Chromosome getChromosome(int site);
+    public Chromosome chromosome(int site);
 
     /**
      * Return Chromosome with matching name. First to match will be returned.
@@ -453,45 +446,45 @@ public interface Alignment {
      *
      * @return Chromosome
      */
-    public Chromosome getChromosome(String name);
+    public Chromosome chromosome(String name);
 
     /**
      * Return all chromosomes.
      *
      * @return chromosomes
      */
-    public Chromosome[] getChromosomes();
+    public Chromosome[] chromosomes();
 
     /**
      * Return number of chromosomes.
      *
      * @return number of chromosomes
      */
-    public int getNumChromosomes();
+    public int numChromosomes();
 
     /**
      * Returns starting site for each chromosome.
      *
      * @return starting site for each chromosome.
      */
-    public int[] getChromosomesOffsets();
+    public int[] chromosomesOffsets();
 
     /**
-     * Returns the site score of the given sequence and site.
+     * Returns the site score of the given taxon and site.
      *
-     * @param seq sequence index
+     * @param taxon taxon index
      * @param site site
      *
      * @return site score.
      */
-    public float getSiteScore(int seq, int site);
+    public float siteScore(int taxon, int site);
 
     /**
      * Returns the site scores.
      *
      * @return site scores.
      */
-    public float[][] getSiteScores();
+    public float[][] siteScores();
 
     /**
      * Returns true if this alignment has site scores.
@@ -505,7 +498,7 @@ public interface Alignment {
      *
      * @return site score type.
      */
-    public Alignment.SITE_SCORE_TYPE getSiteScoreType();
+    public Alignment.SITE_SCORE_TYPE siteScoreType();
 
     /**
      * Return size of indel at given site.
@@ -514,7 +507,7 @@ public interface Alignment {
      *
      * @return indel size
      */
-    public int getIndelSize(int site);
+    public int indelSize(int site);
 
     /**
      * Returns whether give site is an indel.
@@ -550,7 +543,7 @@ public interface Alignment {
      *
      * @return most common allele
      */
-    public byte getMajorAllele(int site);
+    public byte majorAllele(int site);
 
     /**
      * Return most common allele at given site. Gap is included as state.
@@ -561,7 +554,7 @@ public interface Alignment {
      *
      * @return most common allele as String
      */
-    public String getMajorAlleleAsString(int site);
+    public String majorAlleleAsString(int site);
 
     /**
      * Return most common minor allele at given site. Gap is included as state.
@@ -572,7 +565,7 @@ public interface Alignment {
      *
      * @return most common minor allele
      */
-    public byte getMinorAllele(int site);
+    public byte minorAllele(int site);
 
     /**
      * Return most common minor allele at given site. Gap is included as state.
@@ -583,7 +576,7 @@ public interface Alignment {
      *
      * @return most common minor allele as String
      */
-    public String getMinorAlleleAsString(int site);
+    public String minorAlleleAsString(int site);
 
     /**
      * Return all minor alleles at given site. Gap is included as state.
@@ -594,7 +587,7 @@ public interface Alignment {
      *
      * @return all minor alleles
      */
-    public byte[] getMinorAlleles(int site);
+    public byte[] minorAlleles(int site);
 
     /**
      * Returns all alleles at given site in order of frequency. Gap is included
@@ -605,7 +598,7 @@ public interface Alignment {
      *
      * @return all alleles
      */
-    public byte[] getAlleles(int site);
+    public byte[] alleles(int site);
 
     /**
      * Return frequency for most common minor allele at given site. Gap is
@@ -616,7 +609,7 @@ public interface Alignment {
      *
      * @return frequency
      */
-    public double getMinorAlleleFrequency(int site);
+    public double minorAlleleFrequency(int site);
 
     /**
      * Return frequency for major allele at given site. Gap is included as
@@ -627,7 +620,7 @@ public interface Alignment {
      *
      * @return frequency
      */
-    public double getMajorAlleleFrequency(int site);
+    public double majorAlleleFrequency(int site);
 
     /**
      * Return taxa list of this alignment.
@@ -666,7 +659,7 @@ public interface Alignment {
      *
      * @return list of alignments.
      */
-    public Alignment[] getAlignments();
+    public Alignment[] compositeAlignments();
 
     /**
      * Return sorted list of alleles from highest frequency to lowest at given
@@ -678,7 +671,7 @@ public interface Alignment {
      *
      * @return sorted list of alleles and counts
      */
-    public int[][] getAllelesSortedByFrequency(int site);
+    public int[][] allelesSortedByFrequency(int site);
 
     /**
      * Return sorted list of diploid vales from highest frequency to lowest at
@@ -689,7 +682,7 @@ public interface Alignment {
      *
      * @return sorted list of diploids and counts
      */
-    public Object[][] getDiploidsSortedByFrequency(int site);
+    public Object[][] genosSortedByFrequency(int site);
 
     /**
      * Returns whether this alignment is phased.
@@ -697,13 +690,6 @@ public interface Alignment {
      * @return true if phased.
      */
     public boolean isPhased();
-
-    /**
-     * Returns Genetic Map of this Alignment if available.
-     *
-     * @return Genetic Map
-     */
-    public GeneticMap getGeneticMap();
 
     /**
      * Returns true if this Alignment retains rare alleles. If false, rare
@@ -752,14 +738,14 @@ public interface Alignment {
      *
      * @return String representation
      */
-    public String getDiploidAsString(int site, byte value);
+    public String diploidAsString(int site, byte value);
 
     /**
      * Return max number of alleles defined for any given site.
      *
      * @return max number of alleles.
      */
-    public int getMaxNumAlleles();
+    public int maxNumAlleles();
 
     /**
      * Returns total number of non-missing allele values for given site. This
@@ -768,7 +754,7 @@ public interface Alignment {
      * @param site site
      * @return number of non-missing allele values.
      */
-    public int getTotalGametesNotMissing(int site);
+    public int totalGametesNonMissingForSite(int site);
 
     /**
      * Returns total number of non-missing taxa for given site. Taxa are
@@ -778,7 +764,7 @@ public interface Alignment {
      *
      * @return number of non-missing taxa..
      */
-    public int getTotalNotMissing(int site);
+    public int totalNonMissingForSite(int site);
 
     /**
      * Returns the minor allele count for given site.
@@ -786,7 +772,7 @@ public interface Alignment {
      * @param site site
      * @return minor allele count
      */
-    public int getMinorAlleleCount(int site);
+    public int minorAlleleCount(int site);
 
     /**
      * Returns the major allele count for given site.
@@ -794,7 +780,7 @@ public interface Alignment {
      * @param site site
      * @return major allele count
      */
-    public int getMajorAlleleCount(int site);
+    public int majorAlleleCount(int site);
 
     /**
      * Returns counts of all diploid combinations from highest frequency to
@@ -803,7 +789,7 @@ public interface Alignment {
      *
      * @return diploid counts.
      */
-    public Object[][] getDiploidCounts();
+    public Object[][] genoCounts();
 
     /**
      * Returns counts of all major/minor allele combinations from highest
@@ -813,7 +799,7 @@ public interface Alignment {
      *
      * @return diploid counts.
      */
-    public Object[][] getMajorMinorCounts();
+    public Object[][] majorMinorCounts();
 
     /**
      * Returns total number of non-missing allele values for given taxon. This
@@ -823,7 +809,7 @@ public interface Alignment {
      *
      * @return number of non-missing allele values.
      */
-    public int getTotalGametesNotMissingForTaxon(int taxon);
+    public int totalGametesNonMissingForTaxon(int taxon);
 
     /**
      * Returns number of heterozygous sites at given taxon.
@@ -832,7 +818,7 @@ public interface Alignment {
      *
      * @return number of heterozygous sites
      */
-    public int getHeterozygousCountForTaxon(int taxon);
+    public int heterozygousCountForTaxon(int taxon);
 
     /**
      * Returns total number of non-missing sites for given taxon. Sites are
@@ -842,7 +828,7 @@ public interface Alignment {
      *
      * @return number of non-missing sites.
      */
-    public int getTotalNotMissingForTaxon(int taxon);
+    public int totalNonMissingForTaxon(int taxon);
 
     /**
      * Returns depth count for each diploid allele at the given taxon and site.
@@ -852,7 +838,7 @@ public interface Alignment {
      *
      * @return two counts
      */
-    public byte[] getDepthForAlleles(int taxon, int site);
+    public byte[] depthForAlleles(int taxon, int site);
 
     /**
      * Returns all alleles at given site in order defined by scope.
@@ -862,19 +848,19 @@ public interface Alignment {
      *
      * @return alleles
      */
-    public byte[] getAllelesByScope(Alignment.ALLELE_SORT_TYPE scope, int site);
+    public byte[] allelesBySortType(Alignment.ALLELE_SORT_TYPE scope, int site);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
      * taxon matches a specific allele (based on scope).
      *
-     * @param scope scope
+     * @param type scope
      * @param site site
      * @param alleleNumber allele number
      *
      * @return sequence of true/false values.
      */
-    public BitSet getAllelePresenceForAllTaxaByScope(Alignment.ALLELE_SORT_TYPE scope, int site, int alleleNumber);
+    public BitSet allelePresenceForAllTaxaBySortType(Alignment.ALLELE_SORT_TYPE type, int site, int alleleNumber);
 
     /**
      * Returns BitStorage for this Genotype
@@ -883,5 +869,5 @@ public interface Alignment {
      *
      * @return BitStorage
      */
-    public BitStorage getBitStorage(Alignment.ALLELE_SORT_TYPE scopeType);
+    public BitStorage bitStorage(Alignment.ALLELE_SORT_TYPE scopeType);
 }

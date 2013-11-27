@@ -94,15 +94,15 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
      * This will determine what analyses are to be run and run them
      */
     private void runAnalysisForRegion(int start, int end) {
-        Chromosome locus = theAAlignment.getChromosome(start);
+        Chromosome locus = theAAlignment.chromosome(start);
         int chromosome = -1;
         try {
             chromosome = Integer.parseInt(locus.getName());
         } catch (Exception e) {
             //do nothing
         }
-        double startChrPosition = theAAlignment.getPositionInChromosome(start);
-        double endChrPosition = theAAlignment.getPositionInChromosome(end);
+        double startChrPosition = theAAlignment.chromosomalPosition(start);
+        double endChrPosition = theAAlignment.chromosomalPosition(end);
         Alignment theFilteredAlignment = FilterAlignment.getInstance(theAAlignment, start, end);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(theFilteredAlignment);
         diversityResultsVector.add(evaluate(theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));
@@ -124,16 +124,16 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         }
         double pipbp = dm.meanDistance();
         int segSites = countSegregatingSites(theAlignment);
-        int taxa = theAlignment.getSequenceCount();
+        int taxa = theAlignment.numberOfTaxa();
         theDiversityResults.pipbp = pipbp;
         theDiversityResults.avgSiteCoverage = dm.getAverageTotalSites();
         theDiversityResults.totalSites = sites;
         theDiversityResults.segregatingSites = segSites;
         theDiversityResults.thetapbp = estimateThetaPerbp(segSites, sites, theDiversityResults.avgSiteCoverage, taxa);
 
-        // theDiversityResults.theta=estimateTheta(segSites,sites,theDiversityResults.avgSiteCoverage, theAlignment.getSequenceCount());
+        // theDiversityResults.theta=estimateTheta(segSites,sites,theDiversityResults.avgSiteCoverage, theAlignment.numberOfTaxa());
         theDiversityResults.tajimaD = estimateTajimaD(segSites, theDiversityResults.totalSites, theDiversityResults.avgSiteCoverage,
-                theAlignment.getSequenceCount(), theDiversityResults.pipbp, theDiversityResults.thetapbp);
+                theAlignment.numberOfTaxa(), theDiversityResults.pipbp, theDiversityResults.thetapbp);
         return theDiversityResults;
     }
 
@@ -182,9 +182,9 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
     int countSegregatingSites(Alignment theAlignment) {
         int total = 0;
         if (theAlignment.isAllPolymorphic()) {
-            return theAlignment.getSiteCount();
+            return theAlignment.numberOfSites();
         }
-        for (int i = 0; i < theAlignment.getSiteCount(); i++) {
+        for (int i = 0; i < theAlignment.numberOfSites(); i++) {
             if (theAlignment.isPolymorphic(i)) {
                 total++;
             }

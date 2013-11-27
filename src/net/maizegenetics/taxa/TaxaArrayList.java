@@ -46,12 +46,12 @@ class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public int getTaxaCount() {
+    public int numberOfTaxa() {
         return myNumTaxa;
     }
 
     @Override
-    public String getTaxaName(int index) {
+    public String taxaName(int index) {
         return myTaxaList.get(index).getName();
     }
 
@@ -61,12 +61,12 @@ class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public List<Integer> getIndicesMatchingTaxon(String name) {
+    public List<Integer> indicesMatchingTaxon(String name) {
         return new ArrayList<Integer>(myNameToIndex.get(name));
     }
 
     @Override
-    public List<Integer> getIndicesMatchingTaxon(Taxon taxon) {
+    public List<Integer> indicesMatchingTaxon(Taxon taxon) {
         return new ArrayList<Integer>(myNameToIndex.get(taxon.getName()));
     }
 

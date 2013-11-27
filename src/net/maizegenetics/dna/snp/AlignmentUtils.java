@@ -258,7 +258,7 @@ public class AlignmentUtils {
     public static int[][] getAllelesSortedByFrequency(Alignment alignment, int site) {
 
         int[] stateCnt = new int[16];
-        for (int i = 0; i < alignment.getTaxaCount(); i++) {
+        for (int i = 0; i < alignment.numberOfTaxa(); i++) {
             byte[] dipB = alignment.genotypeArray(i, site);
             if (dipB[0] != Alignment.UNKNOWN_ALLELE) {
                 stateCnt[dipB[0]]++;
@@ -315,7 +315,7 @@ public class AlignmentUtils {
     public static Object[][] getDiploidsSortedByFrequency(Alignment alignment, int site) {
 
         Integer ONE_INTEGER = 1;
-        int numTaxa = alignment.getTaxaCount();
+        int numTaxa = alignment.numberOfTaxa();
 
         Map<String, Integer> diploidValueCounts = new HashMap<String, Integer>();
         for (int r = 0; r < numTaxa; r++) {
@@ -510,13 +510,13 @@ public class AlignmentUtils {
     public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
 
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
-        for (int i = 0, n = aa.getSiteCount(); i < n; i++) {
+        for (int i = 0, n = aa.numberOfSites(); i < n; i++) {
 
-            int totalNonMissing = aa.getTotalGametesNotMissing(i);
+            int totalNonMissing = aa.totalGametesNonMissingForSite(i);
 
             if ((totalNonMissing > 0) && (totalNonMissing >= (minimumCount * 2))) {
 
-                double minorCount = aa.getMinorAlleleCount(i);
+                double minorCount = aa.minorAlleleCount(i);
                 double obsMinProp = 0.0;
                 if (minorCount != 0) {
                     obsMinProp = minorCount / (double) totalNonMissing;
@@ -548,7 +548,7 @@ public class AlignmentUtils {
         if ((firstSite < 0) || (firstSite > lastSite)) {
             return null;
         }
-        if (lastSite > aa.getSiteCount() - 1) {
+        if (lastSite > aa.numberOfSites() - 1) {
             return null;
         }
         return FilterAlignment.getInstance(aa, firstSite, lastSite);

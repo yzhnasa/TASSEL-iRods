@@ -259,11 +259,11 @@ public class TagsAtLocus {
             return null;
         }
         Alignment tagAlignment = getVariableSites();
-        if (tagAlignment == null || tagAlignment.getSiteCount() < 1) {
+        if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             status = "invariant";
             return null;
         }
-        int nSites = tagAlignment.getSiteCount();
+        int nSites = tagAlignment.numberOfSites();
         int nTaxa = theTags.get(0).tagDist.length;
         if (nTaxa < 1) {
             status = "noTaxa";
@@ -277,7 +277,7 @@ public class TagsAtLocus {
         myCommonAlleles = new byte[maxNumAlleles][nSites];
         myAlleleDepthsInTaxa = new byte[maxNumAlleles][nSites][nTaxa];
         for (int s = 0; s < nSites; s++) {
-            positionsOfVariableSites[s] = tagAlignment.getPositionInChromosome(s);
+            positionsOfVariableSites[s] = tagAlignment.chromosomalPosition(s);
             byte[] commonAlleles = getCommonAlleles(s, nTaxa, includeReferenceTag);
             int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, includeReferenceTag);
             setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
@@ -294,11 +294,11 @@ public class TagsAtLocus {
             return null;
         }
         Alignment tagAlignment = this.getVariableSites();
-        if (tagAlignment == null || tagAlignment.getSiteCount() < 1) {
+        if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             status = "invariant";
             return null;
         }
-        int nSites = tagAlignment.getSiteCount();
+        int nSites = tagAlignment.numberOfSites();
         int nTaxa = theTags.get(0).tagDist.length;
         if (nTaxa < 1) {
             status = "noTaxa";  // this shouldn't happen but is here just as a check
@@ -312,7 +312,7 @@ public class TagsAtLocus {
         myCommonAlleles = new byte[maxNumAlleles][nSites];
         myAlleleDepthsInTaxa = new byte[maxNumAlleles][nSites][nTaxa];
         for (int s = 0; s < nSites; s++) {
-            positionsOfVariableSites[s] = tagAlignment.getPositionInChromosome(s);
+            positionsOfVariableSites[s] = tagAlignment.chromosomalPosition(s);
             byte[] commonAlleles = getCommonAlleles(s, nTaxa, includeReferenceTag); // NOTE: gap could be one of the common alleles (even if callBiallelicSNPsWithGap is false)
             int[][] alleleDepthsInTaxa = getAlleleDepthsInTaxa(commonAlleles, s, nTaxa, includeReferenceTag);
             setAlleleDepthsInTaxaForSite(s, alleleDepthsInTaxa, commonAlleles);
@@ -349,16 +349,16 @@ public class TagsAtLocus {
             return null;
         }
         Alignment tagAlignment = this.getVariableSites(refSeq);
-        if (tagAlignment == null || tagAlignment.getSiteCount() < 1) {
+        if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             return null;
         }
-        int nSites = tagAlignment.getSiteCount();
+        int nSites = tagAlignment.numberOfSites();
         int nTaxa = theTags.get(0).tagDist.length;  // the number of taxa is the same for all tags
         if (nTaxa < 1) {
             return null;
         }
         byte[][] callsBySite = new byte[nSites][nTaxa];
-        final int nAlignedTags = tagAlignment.getSequenceCount();
+        final int nAlignedTags = tagAlignment.numberOfTaxa();
         tagIndices = new int[nAlignedTags];  // the reference sequence is not included
         allelesAtVariableSitesByTag = new byte[nSites][theTags.size()];
         for (int tg = 0; tg < nAlignedTags; tg++) {
@@ -370,7 +370,7 @@ public class TagsAtLocus {
         }
         positionsOfVariableSites = new int[nSites];
         for (int s = 0; s < nSites; s++) {
-            positionsOfVariableSites[s] = tagAlignment.getPositionInChromosome(s);
+            positionsOfVariableSites[s] = tagAlignment.chromosomalPosition(s);
             for (int tx = 0; tx < nTaxa; tx++) {
                 int[] alleleCounts = new int[Byte.MAX_VALUE];
                 for (int tg = 0; tg < nAlignedTags; tg++) {
@@ -402,7 +402,7 @@ public class TagsAtLocus {
     }
 
     private void populateAllelesAtVariableSitesByTag(Alignment tagAlignment, int nSites, boolean includeReferenceTag, boolean callBiallelicSNPsWithGap) {
-        int nAlignedTags = tagAlignment.getSequenceCount();
+        int nAlignedTags = tagAlignment.numberOfTaxa();
         tagIndices = new int[nAlignedTags];
         allelesAtVariableSitesByTag = new byte[nSites][theTags.size()];
         for (int tg = 0; tg < nAlignedTags; tg++) {
@@ -552,25 +552,25 @@ public class TagsAtLocus {
             for (int tg = 0; tg < aseqs.length; tg++) {
                 tagStr = aa.genotypeAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
-                System.out.println(tagStr + " " + tL.getTaxaName(tg));
+                System.out.println(tagStr + " " + tL.taxaName(tg));
             }
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  Polymorphic sites only:");
             for (int tg = 0; tg < aseqs.length; tg++) {
                 tagStr = faa.genotypeAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
-                System.out.println(tagStr + " " + tL.getTaxaName(tg));
+                System.out.println(tagStr + " " + tL.taxaName(tg));
             }
             System.out.println();
         }
-        if (faa.getSiteCount() > maxSNPsPerLocus) {
+        if (faa.numberOfSites() > maxSNPsPerLocus) {
             status = "tooManyVariants(>"+maxSNPsPerLocus+")";
             return null;
         }
-        if (faa.getSiteCount() < 1) {
+        if (faa.numberOfSites() < 1) {
             status = "noVarSitesInAlign";
             return null;
         }
-        if (faa.getSequenceCount() < 2) {
+        if (faa.numberOfTaxa() < 2) {
             status = "onlyOneTagInAlign";
             return null;
         }
@@ -622,7 +622,7 @@ public class TagsAtLocus {
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  FA (alignment filtered for polymorphic sites):\n" + fa.toString());
         }
-        if (fa.getSiteCount() > maxSNPsPerLocus * 5 || fa.getSiteCount() < 1 || fa.getSequenceCount() < 2) {
+        if (fa.numberOfSites() > maxSNPsPerLocus * 5 || fa.numberOfSites() < 1 || fa.numberOfTaxa() < 2) {
             return null;
         }
         return fa;

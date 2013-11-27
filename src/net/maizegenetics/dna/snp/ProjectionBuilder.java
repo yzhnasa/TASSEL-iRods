@@ -32,7 +32,7 @@ public class ProjectionBuilder {
         TaxaList tl=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         ImmutableList breakList=ImmutableList.builder().addAll(allBreakPoints.values()).build();
         return AlignmentBuilder.getInstance(new ProjectionGenotype(baseAlignment, breakList),
-                baseAlignment.getPositionList(),tl);
+                baseAlignment.positionList(),tl);
     }
 
     public ProjectionBuilder(Alignment myBaseAlignment) {
@@ -72,7 +72,7 @@ public class ProjectionBuilder {
             if(ts.length!=2) throw new IllegalArgumentException("Two parents required for DonorHaplotypes");
             int[] iT=new int[ts.length];
             for (int i=0; i<iT.length; i++) {
-                List<Integer> r=tl.getIndicesMatchingTaxon(ts[i]);
+                List<Integer> r=tl.indicesMatchingTaxon(ts[i]);
                 if(r.size()==1) {iT[i]=r.get(0);}
                 else {throw new IllegalArgumentException("Taxa not found or duplicated:"+ts[i].getName());}
             }
