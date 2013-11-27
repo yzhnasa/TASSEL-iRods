@@ -972,7 +972,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int gaps=0;
         for (int t = 0; t < iA.numberOfTaxa(); t++) {
             int e=0,c=0,u=0,h=0;
-            int oATaxa=oA.taxa().getIndicesMatchingTaxon(iA.taxaName(t)).get(0);
+            int oATaxa=oA.taxa().indicesMatchingTaxon(iA.taxaName(t)).get(0);
             for (int s = 0; s < iA.numberOfSites(); s++) {
                 if(noMask||(oA.genotype(oATaxa, s)!=mA.genotype(t, s))) {
                     byte ib=iA.genotype(t, s);

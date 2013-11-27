@@ -173,7 +173,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //
 //                    }
 //                    else {
-//                        int oldTaxon = a.taxa().getIndicesMatchingTaxon(entry.getValue().get(0)).get(0);
+//                        int oldTaxon = a.taxa().indicesMatchingTaxon(entry.getValue().get(0)).get(0);
 //                        calls = a.genotypeRange(oldTaxon, 0, a.numberOfSites());
 //                        newTaxon = theMSA.taxa().whichIdNumber(entry.getValue().get(0));
 //                        for (int s = 0; s < a.numberOfSites(); s++) {
@@ -202,7 +202,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         short[][] siteCnt = new short[2][a.numberOfSites()];
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {
-            taxaIndex[t] = a.taxa().getIndicesMatchingTaxon(taxa.get(t)).get(0);
+            taxaIndex[t] = a.taxa().indicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[a.numberOfSites()];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
@@ -257,7 +257,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxa.size(); t++) {
-            taxaIndex[t] = a.taxa().getIndicesMatchingTaxon(taxa.get(t)).get(0);
+            taxaIndex[t] = a.taxa().indicesMatchingTaxon(taxa.get(t)).get(0);
         }
         for (int s = 0; s < a.numberOfSites(); s++) {
             byte[] alleles = a.allelesBySortType(Alignment.ALLELE_SORT_TYPE.Depth, s);

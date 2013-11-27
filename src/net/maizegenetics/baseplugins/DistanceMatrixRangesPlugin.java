@@ -72,7 +72,7 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
 
         Alignment aa = (Alignment) input.getData();
         int numTaxa = aa.numberOfTaxa();
-        int interestedTaxa = aa.taxa().getIndicesMatchingTaxon(myTaxon).get(0);
+        int interestedTaxa = aa.taxa().indicesMatchingTaxon(myTaxon).get(0);
         Object[][] theData = new Object[numTaxa][myPhysicalPositions.length];
         for (int t = 0; t < numTaxa; t++) {
             theData[t][0] = aa.taxaName(t);

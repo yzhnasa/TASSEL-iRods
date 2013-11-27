@@ -144,7 +144,7 @@ class HDF5ByteGenotype extends AbstractGenotype {
         genotypePaths = new String[numTaxa];
         TaxaList tL = new TaxaListBuilder().buildFromHDF5(reader);  //not the most efficient thing to do, but ensures sort is the same.
         for (int i = 0; i < numTaxa; i++) {
-            genotypePaths[i] = HapMapHDF5Constants.GENOTYPES + "/" + tL.getTaxaName(i);
+            genotypePaths[i] = HapMapHDF5Constants.GENOTYPES + "/" + tL.taxaName(i);
         }
         myHDF5Reader = reader;
         myGenoCache = CacheBuilder.newBuilder()

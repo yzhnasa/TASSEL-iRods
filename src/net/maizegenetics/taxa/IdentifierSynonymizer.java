@@ -36,18 +36,18 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         referenceIDGroup = preferredTaxa;
         Taxon currID;
         //Load up the synonym table with all the known names
-        for (int i = 0; i < referenceIDGroup.getTaxaCount(); i++) {
-            idSynonyms.put(referenceIDGroup.getTaxaName(i), i);
+        for (int i = 0; i < referenceIDGroup.numberOfTaxa(); i++) {
+            idSynonyms.put(referenceIDGroup.taxaName(i), i);
         }
         //Find the unknown names and place them in a list
         for (int a = 0; a < alternateTaxaSets.length; a++) {
-            for (int i = 0; i < alternateTaxaSets[a].getTaxaCount(); i++) {
+            for (int i = 0; i < alternateTaxaSets[a].numberOfTaxa(); i++) {
                 currID = alternateTaxaSets[a].get(i);
                 if (idSynonyms.containsKey(currID.getName()) == false) {
                     ArrayList<String> theBest = findBestMatch(currID.toString());
                     if (theBest.size() == 1) {
                         String bs = (String) theBest.get(0);
-                        int indexOfBest = referenceIDGroup.getIndicesMatchingTaxon(bs).get(0);
+                        int indexOfBest = referenceIDGroup.indicesMatchingTaxon(bs).get(0);
                         idSynonyms.put(currID.toString(), indexOfBest);
                     } else {
                         idSynonyms.put(currID.toString(), -1);
@@ -76,14 +76,14 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
                     ignorePunc = true;
                     break;
             }
-            for (int i = 0; i < referenceIDGroup.getTaxaCount(); i++) {
-                sm = scoreMatch(referenceIDGroup.getTaxaName(i), unmatchedString, ignoreCase, ignoreWhite, ignorePunc);
+            for (int i = 0; i < referenceIDGroup.numberOfTaxa(); i++) {
+                sm = scoreMatch(referenceIDGroup.taxaName(i), unmatchedString, ignoreCase, ignoreWhite, ignorePunc);
                 if (sm > maxScore) {
                     bestMatches.clear();
-                    bestMatches.add(referenceIDGroup.getTaxaName(i));
+                    bestMatches.add(referenceIDGroup.taxaName(i));
                     maxScore = sm;
                 } else if (sm == maxScore) {
-                    bestMatches.add(referenceIDGroup.getTaxaName(i));
+                    bestMatches.add(referenceIDGroup.taxaName(i));
                 }
             }
             levelOfRestriction++;
@@ -104,9 +104,9 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         if (levelOfRestriction > 2) {
             ignorePunc = true;
         }
-        for (int i = 0; i < referenceIDGroup.getTaxaCount(); i++) {
-            sm = scoreMatch(referenceIDGroup.getTaxaName(i), unmatchedString, ignoreCase, ignoreWhite, ignorePunc);
-            theSortMap.put(1 - sm - ((double) i / 100000.0), referenceIDGroup.getTaxaName(i));
+        for (int i = 0; i < referenceIDGroup.numberOfTaxa(); i++) {
+            sm = scoreMatch(referenceIDGroup.taxaName(i), unmatchedString, ignoreCase, ignoreWhite, ignorePunc);
+            theSortMap.put(1 - sm - ((double) i / 100000.0), referenceIDGroup.taxaName(i));
         }
         return new ArrayList<>(theSortMap.values());
     }
@@ -195,7 +195,7 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
         Taxon currID;
         for (int a = 0; a < alternateIdGroups.length; a++) {
             TaxaListBuilder tLB=new TaxaListBuilder();
-            for (int i = 0; i < alternateIdGroups[a].getTaxaCount(); i++) {
+            for (int i = 0; i < alternateIdGroups[a].numberOfTaxa(); i++) {
                 currID = alternateIdGroups[a].get(i);
                 if (getPreferredIndex(currID.getName()) > -1) {
                     tLB.add(new Taxon.Builder(getPreferredName(currID.getName())).build());
@@ -214,7 +214,7 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
     public String getPreferredName(String theID) {
         int index = getPreferredIndex(theID);
         if (index > -1) {
-            return referenceIDGroup.getTaxaName(index);
+            return referenceIDGroup.taxaName(index);
         } else {
             return "";
         }
@@ -256,7 +256,7 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
 
     public boolean setRealName(String synName, String realName) {
         int synID = getPreferredIndex(synName);
-        int realID = referenceIDGroup.getIndicesMatchingTaxon(realName).get(0);
+        int realID = referenceIDGroup.indicesMatchingTaxon(realName).get(0);
         if ((synID > -1) && (realID > -1)) {
             realName = "" + getPreferredName(synName);
             idSynonyms.put(synName, new Integer(realID));
@@ -267,7 +267,7 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
     }
 
     public boolean setRealID(String synName, int realID) {
-        if ((realID <= referenceIDGroup.getTaxaCount()) && (realID > -2)) {
+        if ((realID <= referenceIDGroup.numberOfTaxa()) && (realID > -2)) {
             idSynonyms.put(synName, new Integer(realID));
             return true;
         } else {
@@ -276,8 +276,8 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
     }
 
     public Object[] getRealNames() {
-        Object[] idArray = new Object[referenceIDGroup.getTaxaCount()];
-        for (int i = 0; i < referenceIDGroup.getTaxaCount(); i++) {
+        Object[] idArray = new Object[referenceIDGroup.numberOfTaxa()];
+        for (int i = 0; i < referenceIDGroup.numberOfTaxa(); i++) {
             idArray[i] = referenceIDGroup.get(i).toString();
         }
         return idArray;

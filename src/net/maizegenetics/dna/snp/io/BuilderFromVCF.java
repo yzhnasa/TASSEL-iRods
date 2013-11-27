@@ -71,7 +71,7 @@ public class BuilderFromVCF {
                 txtLines.add(currLine);
                 lines++;
                 if (lines%linesAtTime==0) {
-                    ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.getTaxaCount(), txtLines);
+                    ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), txtLines);
                     pbs.add(pb);
                     //     pb.run();
                     pool.execute(pb);
@@ -80,7 +80,7 @@ public class BuilderFromVCF {
             }
             r.close();
             if (txtLines.size()>0) {
-                ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.getTaxaCount(), txtLines);
+                ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), txtLines);
                 pbs.add(pb);
                 pool.execute(pb);
             }
@@ -90,7 +90,7 @@ public class BuilderFromVCF {
             }
             int currentSite=0;
             PositionListBuilder posBuild=new PositionListBuilder();
-            GenotypeBuilder gb=GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.getTaxaCount(), lines);
+            GenotypeBuilder gb=GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), lines);
             for (ProcessVCFBlock pb : pbs) {
                 posBuild.addAll(pb.getBlkPosList());
                 byte[][] bgTS=pb.getGenoTS();

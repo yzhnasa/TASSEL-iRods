@@ -42,7 +42,7 @@ public class CoreAlignment implements Alignment {
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
         mySiteCount = myPositionList.siteCount();
-        myTaxaCount = myTaxaList.getTaxaCount();
+        myTaxaCount = myTaxaList.numberOfTaxa();
     }
 
     CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList) {
@@ -336,7 +336,7 @@ public class CoreAlignment implements Alignment {
 
     @Override
     public String taxaName(int index) {
-        return myTaxaList.getTaxaName(index);
+        return myTaxaList.taxaName(index);
     }
 
     @Override

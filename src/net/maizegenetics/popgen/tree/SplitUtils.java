@@ -145,7 +145,7 @@ public class SplitUtils
 		if (node.isLeaf())
 		{
 			String name = node.getIdentifier().getName();
-			int index = idGroup.getIndicesMatchingTaxon(name).get(0);
+			int index = idGroup.indicesMatchingTaxon(name).get(0);
 
 			if (index < 0)
 			{

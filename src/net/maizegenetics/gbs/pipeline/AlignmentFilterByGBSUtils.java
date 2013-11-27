@@ -40,10 +40,10 @@ public class AlignmentFilterByGBSUtils {
 
     public static TaxaList getFilteredIdGroupByName(TaxaList orig, String[] filter, boolean keepTaxaMatchFilter) {
         ArrayList<Taxon> keepTaxa = new ArrayList<Taxon>();
-        for (int i = 0; i < orig.getTaxaCount(); i++) {
+        for (int i = 0; i < orig.numberOfTaxa(); i++) {
             boolean matchFlag = false;
             for (String s : filter) {
-                if (orig.getTaxaName(i).contains(s)) {
+                if (orig.taxaName(i).contains(s)) {
                     matchFlag = true;
                 }
             }
@@ -212,7 +212,7 @@ public class AlignmentFilterByGBSUtils {
     public static double getErrorRateForDuplicatedTaxa(Alignment a, boolean ignoreHets, boolean random, boolean printToScreen) {
         TaxaList idg = a.taxa();
         TreeMap<String, Integer> sortedIds = new TreeMap<String, Integer>();
-        for (int i = 0; i < idg.getTaxaCount(); i++) {
+        for (int i = 0; i < idg.numberOfTaxa(); i++) {
             sortedIds.put(idg.get(i).getName().toUpperCase(), i);
         }
         long cntDiff = 0, cntTotal = 0;

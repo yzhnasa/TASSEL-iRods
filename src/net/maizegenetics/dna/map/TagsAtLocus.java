@@ -552,13 +552,13 @@ public class TagsAtLocus {
             for (int tg = 0; tg < aseqs.length; tg++) {
                 tagStr = aa.genotypeAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
-                System.out.println(tagStr + " " + tL.getTaxaName(tg));
+                System.out.println(tagStr + " " + tL.taxaName(tg));
             }
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  Polymorphic sites only:");
             for (int tg = 0; tg < aseqs.length; tg++) {
                 tagStr = faa.genotypeAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
-                System.out.println(tagStr + " " + tL.getTaxaName(tg));
+                System.out.println(tagStr + " " + tL.taxaName(tg));
             }
             System.out.println();
         }

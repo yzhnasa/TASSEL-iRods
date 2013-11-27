@@ -89,12 +89,12 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
 
         int index1, index2;
 
-        distance = new double[subset.getTaxaCount()][subset.getTaxaCount()];
+        distance = new double[subset.numberOfTaxa()][subset.numberOfTaxa()];
         for (int i = 0; i < distance.length; i++) {
-            index1 = dm.whichIdNumber(subset.getTaxaName(i));
+            index1 = dm.whichIdNumber(subset.taxaName(i));
             distance[i][i] = dm.distance[index1][index1];
             for (int j = 0; j < i; j++) {
-                index2 = dm.whichIdNumber(subset.getTaxaName(j));
+                index2 = dm.whichIdNumber(subset.taxaName(j));
                 distance[i][j] = dm.distance[index1][index2];
                 distance[j][i] = distance[i][j];
             }
@@ -110,7 +110,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
 
         for (int i = 0; i < distance.length; i++) {
             format.displayLabel(out,
-                    taxaList.getTaxaName(i), 10);
+                    taxaList.taxaName(i), 10);
             out.print("      ");
 
             for (int j = 0; j < distance.length; j++) {
@@ -244,15 +244,15 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     }
 
     public int getIdCount() {
-        return taxaList.getTaxaCount();
+        return taxaList.numberOfTaxa();
     }
 
     public int whichIdNumber(String name) {
-        return taxaList.getIndicesMatchingTaxon(name).get(0);
+        return taxaList.indicesMatchingTaxon(name).get(0);
     }
 
     public int whichIdNumber(Taxon id) {
-        return taxaList.getIndicesMatchingTaxon(id).get(0);
+        return taxaList.indicesMatchingTaxon(id).get(0);
     }
 
     /**

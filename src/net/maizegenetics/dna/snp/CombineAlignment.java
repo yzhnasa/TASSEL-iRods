@@ -122,11 +122,11 @@ public class CombineAlignment implements Alignment {
 
     private static boolean areTaxaListsEqual(TaxaList first, TaxaList second) {
 
-        if (first.getTaxaCount() != second.getTaxaCount()) {
+        if (first.numberOfTaxa() != second.numberOfTaxa()) {
             return false;
         }
 
-        for (int i = 0, n = first.getTaxaCount(); i < n; i++) {
+        for (int i = 0, n = first.numberOfTaxa(); i < n; i++) {
             if (!first.get(i).equals(second.get(i))) {
                 return false;
             }

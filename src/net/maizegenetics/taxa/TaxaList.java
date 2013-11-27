@@ -16,7 +16,7 @@ public interface TaxaList extends List<Taxon> {
      *
      * @return number of taxa
      */
-    public int getTaxaCount();
+    public int numberOfTaxa();
 
     /**
      * Return taxa name at given index.
@@ -25,7 +25,7 @@ public interface TaxaList extends List<Taxon> {
      *
      * @return taxa name
      */
-    public String getTaxaName(int index);
+    public String taxaName(int index);
 
     /**
      * Return a list of all matching taxa indices for a given name. Matches will
@@ -35,7 +35,7 @@ public interface TaxaList extends List<Taxon> {
      *
      * @return Indices for matching taxa (Empty if no match).
      */
-    public List<Integer> getIndicesMatchingTaxon(String name);
+    public List<Integer> indicesMatchingTaxon(String name);
     
     /**
      * Return a list of all matching taxa indices for a given name. Matches will
@@ -45,5 +45,5 @@ public interface TaxaList extends List<Taxon> {
      *
      * @return Indices for matching taxa (Empty if no match).
      */
-    public List<Integer> getIndicesMatchingTaxon(Taxon taxon);
+    public List<Integer> indicesMatchingTaxon(Taxon taxon);
 }

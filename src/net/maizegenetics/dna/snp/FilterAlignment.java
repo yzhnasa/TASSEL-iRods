@@ -47,7 +47,7 @@ public class FilterAlignment implements Alignment {
 
         myTaxaList = subList;
 
-        if (myTaxaList.getTaxaCount() != taxaRedirect.length) {
+        if (myTaxaList.numberOfTaxa() != taxaRedirect.length) {
             throw new IllegalArgumentException("FilterAlignment: init: subList should be same size as taxaRedirect.");
         }
 
@@ -117,11 +117,11 @@ public class FilterAlignment implements Alignment {
         List<Integer> taxaRedirectList = new ArrayList<Integer>();
         List<Taxon> idList = new ArrayList<Taxon>();
         boolean noNeedToFilter = true;
-        if (subTaxaList.getTaxaCount() != a.numberOfTaxa()) {
+        if (subTaxaList.numberOfTaxa() != a.numberOfTaxa()) {
             noNeedToFilter = false;
         }
-        for (int i = 0, n = subTaxaList.getTaxaCount(); i < n; i++) {
-            List<Integer> ion = a.taxa().getIndicesMatchingTaxon(subTaxaList.get(i));
+        for (int i = 0, n = subTaxaList.numberOfTaxa(); i < n; i++) {
+            List<Integer> ion = a.taxa().indicesMatchingTaxon(subTaxaList.get(i));
 
             if ((ion.size() != 1) || (ion.get(0) != i)) {
                 noNeedToFilter = false;
@@ -171,8 +171,8 @@ public class FilterAlignment implements Alignment {
 
         TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = a.taxa();
-        for (int i = 0, n = current.getTaxaCount(); i < n; i++) {
-            if (subTaxaList.getIndicesMatchingTaxon(current.get(i)).isEmpty()) {
+        for (int i = 0, n = current.numberOfTaxa(); i < n; i++) {
+            if (subTaxaList.indicesMatchingTaxon(current.get(i)).isEmpty()) {
                 result.add(current.get(i));
             }
         }
@@ -747,7 +747,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public int numberOfTaxa() {
-        return myTaxaList.getTaxaCount();
+        return myTaxaList.numberOfTaxa();
     }
 
     @Override
@@ -980,7 +980,7 @@ public class FilterAlignment implements Alignment {
 
     @Override
     public String taxaName(int index) {
-        return myTaxaList.getTaxaName(index);
+        return myTaxaList.taxaName(index);
     }
 
     @Override

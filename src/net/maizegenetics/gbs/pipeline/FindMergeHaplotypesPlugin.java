@@ -254,13 +254,13 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             if(((hits.size()+1)<this.minTaxaInGroup)) continue;
             if(hits.size()>0) {
                 ArrayList<String> mergeNames=new ArrayList<String>();
-                mergeNames.add(inIDG.getTaxaName(taxon1));
+                mergeNames.add(inIDG.taxaName(taxon1));
                 mergeSets.put(taxon1, hits);         
                // System.out.print(inAlign.taxaName(taxon1)+"=");
                 for (Integer taxon2 : hits) {
                     unmatched.remove(taxon2);
                    // System.out.print(inAlign.taxaName(taxon2)+"=");
-                    mergeNames.add(inIDG.getTaxaName(taxon2));
+                    mergeNames.add(inIDG.taxaName(taxon2));
                 }
               //  System.out.println("");              
                 calls=consensusGameteCalls(inAlign, mergeNames, startSite, endSite, maxErrorInCreatingConsensus, siteOffsetForError);
@@ -272,7 +272,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             double hetFreq=(double)unkCnt[1]/(double)(inAlign.numberOfSites()-unkCnt[0]);
             if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq))) {
                 int index=(hits.size()*200000)+taxon1;
-                System.out.printf("Output %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.getTaxaName(taxon1),
+                System.out.printf("Output %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.taxaName(taxon1),
                         hits.size(), missingFreq, hetFreq, index);
                 byte[][] callPlusNames=new byte[2][];
                 callPlusNames[0]=calls;
@@ -289,7 +289,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             int endSite, double maxError, int siteOffsetForError) {
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {  //why are we working with names rather than numbers
-            taxaIndex[t] = a.taxa().getIndicesMatchingTaxon(taxa.get(t)).get(0);
+            taxaIndex[t] = a.taxa().indicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[endSite-startSite+1];
         Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);

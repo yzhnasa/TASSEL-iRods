@@ -32,7 +32,7 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, Taxon id) {
-        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().indicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }
@@ -40,7 +40,7 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
     }
 
     public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, String id) {
-        List<Integer> index = align.taxa().getIndicesMatchingTaxon(id);
+        List<Integer> index = align.taxa().indicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }

@@ -116,7 +116,7 @@ public class BuilderFromGenotypeHDF5 {
         int[][] oldTaxaToNewTaxa=new int[inTL.size()][];
         for (int i=0; i<inTL.size(); i++) {
             TaxaList aTL=inTL.get(i);
-            oldTaxaToNewTaxa[i]=new int[aTL.getTaxaCount()];
+            oldTaxaToNewTaxa[i]=new int[aTL.numberOfTaxa()];
             for (int j=0; j<aTL.size(); j++) {
                 oldTaxaToNewTaxa[i][j]=newTaxaList.indexOf(aTL.get(j));
                 if(oldTaxaToNewTaxa[i][j]<0) {
@@ -142,7 +142,7 @@ public class BuilderFromGenotypeHDF5 {
             System.out.println("Write taxon:"+aT.getName());
             byte[] geno=new byte[numberOfSites];
             for (int i=0; i<sourceA.size(); i++) {
-                int taxonIndex=sourceA.get(i).taxa().getIndicesMatchingTaxon(aT).get(0);
+                int taxonIndex=sourceA.get(i).taxa().indicesMatchingTaxon(aT).get(0);
                 byte[] r=sourceA.get(i).genotypeAllSites(taxonIndex);
                 for (int j=0; j<oldSiteToNewSite[i].length; j++) {
                     geno[oldSiteToNewSite[i][j]]=r[j];

@@ -139,8 +139,8 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
             dialog.dispose();
         }
 
-        if (((myIdsToKeep == null) || (myIdsToKeep.getTaxaCount() == 0))
-                && ((myIdsToRemove == null) || (myIdsToRemove.getTaxaCount() == 0))) {
+        if (((myIdsToKeep == null) || (myIdsToKeep.numberOfTaxa() == 0))
+                && ((myIdsToRemove == null) || (myIdsToRemove.numberOfTaxa() == 0))) {
             return null;
         }
 
