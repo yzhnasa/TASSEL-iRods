@@ -377,7 +377,7 @@ public interface Alignment {
      *
      * @return PositionList for all sites.
      */
-    public PositionList positionList();
+    public PositionList positions();
 
     /**
      * Returns the physical position at given site.

@@ -816,7 +816,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public PositionList positionList() {
+    public PositionList positions() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

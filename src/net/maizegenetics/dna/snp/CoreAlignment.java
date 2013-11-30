@@ -160,7 +160,7 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public PositionList positionList() {
+    public PositionList positions() {
         return myPositionList;
     }
 

@@ -186,7 +186,7 @@ public class AlignmentBuilder {
      * @return alignment backed by new HDF5 file
      */
     public static Alignment getInstance(Alignment a, String hdf5File) {
-        return getInstance(a.genotypeMatrix(),a.positionList(),a.taxa(),hdf5File);
+        return getInstance(a.genotypeMatrix(),a.positions(),a.taxa(),hdf5File);
     }
 
     public static Alignment getInstance(String hdf5File) {
@@ -224,7 +224,7 @@ public class AlignmentBuilder {
                 }
             }
         }
-        return new CoreAlignment(builder.build(), alignment.positionList(), alignment.taxa());
+        return new CoreAlignment(builder.build(), alignment.positions(), alignment.taxa());
     }
 
     public static Alignment getHomozygousInstance(Alignment alignment) {
@@ -243,7 +243,7 @@ public class AlignmentBuilder {
             }
 
         }
-        return new CoreAlignment(builder.build(), alignment.positionList(), alignment.taxa());
+        return new CoreAlignment(builder.build(), alignment.positions(), alignment.taxa());
     }
 
     /**
@@ -279,7 +279,7 @@ public class AlignmentBuilder {
         for (int t = 0; t < numTaxa; t++) {
             for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.genotype(t, s));}
         }
-        return new CoreAlignment(builder.build(), alignment.positionList(), alignment.taxa());
+        return new CoreAlignment(builder.build(), alignment.positions(), alignment.taxa());
     }
 
     /*

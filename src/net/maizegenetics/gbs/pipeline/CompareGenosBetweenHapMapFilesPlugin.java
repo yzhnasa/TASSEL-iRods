@@ -307,8 +307,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         nCompared = 0;
         nSamePosNotComparable = 0;
         for (int s1=0; s1<a1.numberOfSites(); s1++) {
-            Position p1=a1.positionList().get(s1);
-            int s2=a2.siteOfPhysicalPosition(p1.getPosition(),p1.getChromosome());
+            Position p1=a1.positions().get(s1);
+            int s2=a2.siteOfPhysicalPosition(p1.getPosition(), p1.getChromosome());
             if (s2>=0) {
                 position = a1.chromosomalPosition(s1);
                 nCompared += getCompareTypeAndCompare(s1, a1, s2, a2);

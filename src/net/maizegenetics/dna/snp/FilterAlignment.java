@@ -1028,10 +1028,10 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public PositionList positionList() {
+    public PositionList positions() {
         if (myPositionList == null) {
             PositionListBuilder pLB = new PositionListBuilder();
-            PositionList basePL = getBaseAlignment().positionList();
+            PositionList basePL = getBaseAlignment().positions();
             for (int i = 0; i < numberOfSites(); i++) {
                 pLB.add(basePL.get(translateSite(i)));
             }

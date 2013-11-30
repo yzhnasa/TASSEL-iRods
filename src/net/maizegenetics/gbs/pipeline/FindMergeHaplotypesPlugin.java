@@ -135,7 +135,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             gB.setBaseRangeForTaxon(index,0,calls[0]);
             index++;
         }
-        return AlignmentBuilder.getInstance(gB.build(),inAlign.positionList(),tLB.build());
+        return AlignmentBuilder.getInstance(gB.build(),inAlign.positions(),tLB.build());
     }
     
     public static int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
@@ -143,7 +143,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Chromosome aL: theL) {
             System.out.println("");
-            int[] startEnd=a.positionList().startAndEndOfChromosome(aL);
+            int[] startEnd=a.positions().startAndEndOfChromosome(aL);
             //todo chromosome offsets will be need to replace this
             int locusSites=startEnd[1]-startEnd[0]+1;
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
