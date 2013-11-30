@@ -262,7 +262,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         taxaSynonyms.clear();
         int nTaxa = 0, nCompareTaxa = 0;
         for (Taxon taxon : a1.taxa()) {
-            List<Integer> t2a=a2.taxa().getIndicesMatchingTaxon(taxon);
+            List<Integer> t2a=a2.taxa().indicesMatchingTaxon(taxon);
             for (Integer tIndex : t2a) {
                 taxaSynonyms.put(taxon.getName(), a2.taxaName(tIndex));
                 ++nCompareTaxa;
@@ -279,11 +279,11 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         System.out.println("Taxon1\t\tTaxon2");
         System.out.println("------\t\t------");
         int nTaxaPairs = 0;
-        for (int taxon1Index = 0; taxon1Index < a1.getSequenceCount(); taxon1Index++) {
+        for (int taxon1Index = 0; taxon1Index < a1.numberOfTaxa(); taxon1Index++) {
             String taxon1 = a1.taxaName(taxon1Index);
             if (taxaSynonyms.containsKey(taxon1)) {
                 for (String taxon2 : taxaSynonyms.get(taxon1)) {
-                    for (int taxon2Index = 0; taxon2Index < a2.getSequenceCount(); taxon2Index++) {
+                    for (int taxon2Index = 0; taxon2Index < a2.numberOfTaxa(); taxon2Index++) {
                         if (taxon2.equals(a2.taxaName(taxon2Index))) {
                             List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
                             if (synTaxaIndicesForTaxonIndex == null) {
@@ -298,19 +298,19 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 }
             }
         }
-        myLogger.info("\nHapMap format genotype file1 contains " + a1.getSequenceCount() + " taxa in total\n");
-        myLogger.info("\nHapMap format genotype file2 contains " + a2.getSequenceCount() + " taxa in total\n");
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.numberOfTaxa() + " taxa in total\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.numberOfTaxa() + " taxa in total\n");
         myLogger.info("\n" + nTaxaPairs + " pairs of comparable taxa found in the two hapmap files\n\n");
     }
 
     private void findCommonPositionsAndCompare(Alignment a1, Alignment a2) {
         nCompared = 0;
         nSamePosNotComparable = 0;
-        for (int s1=0; s1<a1.getSiteCount(); s1++) {
-            Position p1=a1.getPositionList().get(s1);
-            int s2=a2.getSiteOfPhysicalPosition(p1.getPosition(),p1.getChromosome());
+        for (int s1=0; s1<a1.numberOfSites(); s1++) {
+            Position p1=a1.positionList().get(s1);
+            int s2=a2.siteOfPhysicalPosition(p1.getPosition(),p1.getChromosome());
             if (s2>=0) {
-                position = a1.getPositionInChromosome(s1);
+                position = a1.chromosomalPosition(s1);
                 nCompared += getCompareTypeAndCompare(s1, a1, s2, a2);
                 }
         }
@@ -349,8 +349,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     }
 
     private int getCompareTypeAndCompare(int site1, Alignment a1, int site2, Alignment a2) {
-        byte[] alleles1 = a1.getAlleles(site1);
-        byte[] alleles2 = a2.getAlleles(site2);
+        byte[] alleles1 = a1.alleles(site1);
+        byte[] alleles2 = a2.alleles(site2);
         SiteCompareType compareType = getSiteCompareType(alleles1, alleles2);
         if (compareType == SiteCompareType.DIFFERENT) {
             nSamePosNotComparable++;
@@ -358,8 +358,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
 
         double[] summStats = new double[summStatsLength];
-        summStats[MINOR_ALLELE_FREQ1] = a1.getMinorAlleleFrequency(site1);
-        summStats[MINOR_ALLELE_FREQ2] = a2.getMinorAlleleFrequency(site2);
+        summStats[MINOR_ALLELE_FREQ1] = a1.minorAlleleFrequency(site1);
+        summStats[MINOR_ALLELE_FREQ2] = a2.minorAlleleFrequency(site2);
         summStats[F_VALUE1] = calculateF(a1, site1);
         summStats[F_VALUE2] = calculateF(a2, site2);
         String alleleString1 = a1.genotypeAsString(site1, alleles1[0]) + "/" + a1.genotypeAsString(site1, alleles1[1]);
@@ -461,10 +461,10 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     }
 
     private double calculateF(Alignment a, int site) {
-        byte majAllele = a.getMajorAllele(site);
-        byte minAllele = a.getMinorAllele(site);
+        byte majAllele = a.majorAllele(site);
+        byte minAllele = a.minorAllele(site);
         int majGenoCnt = 0, minGenoCnt = 0, hetGenoCnt = 0;
-        int nTaxa = a.getSequenceCount();
+        int nTaxa = a.numberOfTaxa();
         // TERRY - Does this make sense?  What if it's het but not major/minor?
         for (int taxon = 0; taxon < nTaxa; taxon++) {
             byte[] bases = a.genotypeArray(taxon, site);

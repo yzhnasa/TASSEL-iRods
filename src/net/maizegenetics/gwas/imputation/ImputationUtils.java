@@ -222,7 +222,7 @@ public class ImputationUtils {
 		
 		Alignment myAlignment;
 		if (nIncluded < 10) {
-			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.getSNPID(0));
+			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.siteName(0));
 			return null;
 		} else {
 			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.taxa(), include));
