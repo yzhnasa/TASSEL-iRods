@@ -3,10 +3,8 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentUtils;
-import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
@@ -18,13 +16,6 @@ import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.dna.tag.TagsByTaxaByteFileMap;
 import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
-import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.dna.map.GeneralPosition;
-import net.maizegenetics.dna.map.Position;
-import net.maizegenetics.taxa.TaxaList;
-import net.maizegenetics.taxa.TaxaListBuilder;
-import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -48,27 +39,24 @@ import java.util.HashMap;
  * @author Ed Buckler
  */
 public class DiscoverySNPCallerPlugin extends AbstractPlugin {
-    private static final String refGenName="REFERENCE_GENOME";
     private double minF = -2.0, minMAF = 0.01;
     private int minMAC = 10;
-    //    static boolean ignoreTriallelic=false;
     private boolean inclRare = false;  // false = only call the two most common alleles at a site
     private boolean inclGaps = false;  // false = ignore sites where the major or the 1st minor alleles are gaps
     private boolean callBiallelicSNPsWithGap = false;  // true = call sites with a biallelic SNP plus a gap (e.g., A/C/-)
-    private boolean isUpdateTOPM = false;
     private boolean useTBTByte = false;
     static double defaultMinPropTaxaWithLocus = 0.1;
     private static Logger myLogger = Logger.getLogger(DiscoverySNPCallerPlugin.class);
     TagsOnPhysicalMap theTOPM = null;
     TagsByTaxa theTBT = null;
-    File inputFile = null;
+    File inputTBTFile = null;
     private String inTOPMFile = null;
     private String outTOPMFile = null;
     private boolean usePedigree = false;
     HashMap<String, Double> taxaFs = null;
     boolean[] useTaxaForMinF = null;
     int nInbredTaxa = Integer.MIN_VALUE;
-    String suppliedOutputFileName;
+    String logFileName = "TagLocusLogFile.txt";
     int startChr = Integer.MAX_VALUE;
     int endChr = Integer.MIN_VALUE;
     private static ArgsEngine myArgsEngine = null;
@@ -96,70 +84,66 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
-        myLogger.info("Finding SNPs in " + inputFile.getAbsolutePath() + ".");
+        myLogger.info("Finding SNPs in " + inputTBTFile.getAbsolutePath() + ".");
         myLogger.info(String.format("StartChr:%d EndChr:%d %n", startChr, endChr));
         theTOPM.sortTable(true);
         myLogger.info("\nAs a check, here are the first 5 tags in the TOPM (sorted by position):");
         theTOPM.printRows(5, true, true);
+        DataOutputStream locusLogDOS = openLocusLog(logFileName);
+        if (customSNPLogging) myCustomSNPLog = new CustomSNPLog(logFileName);
         for (int chr = startChr; chr <= endChr; chr++) {
             myLogger.info("\n\nProcessing chromosome " + chr + "...");
-            String out = suppliedOutputFileName.replace("+", "" + chr);
-            if (customSNPLogging) myCustomSNPLog = new CustomSNPLog(out, false);
-            myLogger.info("Creating Mutable Alignment to hold genotypes for chr" + chr);
-            TaxaList tL;
-            if (includeReference) {tL=new TaxaListBuilder().add(new Taxon(refGenName)).addAll(theTBT.getTaxaList()).build();}
-            else {tL=new TaxaListBuilder().add(new Taxon(refGenName)).addAll(theTBT.getTaxaList()).build();}
-            AlignmentBuilder aB=AlignmentBuilder.getSiteIncremental(tL);
-//            MutableNucleotideAlignment theMSA = vcf ? createMutableVCFAlignment(theTBT, maxSize + 100, includeReference)
-//                    : createMutableAlignment(theTBT, maxSize + 100, includeReference);
             if (includeReference) {
                 refGenomeChr = readReferenceGenomeChr(refGenomeFileStr, chr);
-                if (refGenomeChr == null) continue;
+                if (refGenomeChr == null) {
+                    myLogger.info("  WARNING: chromosome "+chr+" not found in the reference genome file. Skipping this chromosome.");
+                    continue;
+                }
             }
-            runTagsToSNPByAlignment(aB, out, chr, false);
-            if (customSNPLogging) myCustomSNPLog.close();
+            discoverSNPsOnChromosome(chr, locusLogDOS);
             myLogger.info("Finished processing chromosome " + chr + "\n\n");
         }
-        if (this.isUpdateTOPM) {
-            if (outTOPMFile.endsWith(".txt")) {
-                theTOPM.writeTextFile(new File(outTOPMFile));
-            } else {
-                theTOPM.writeBinaryFile(new File(outTOPMFile));
-            }
+        if (outTOPMFile.endsWith(".txt")) {
+            theTOPM.writeTextFile(new File(outTOPMFile));
+        } else {
+            theTOPM.writeBinaryFile(new File(outTOPMFile));
         }
+        try{ locusLogDOS.close(); } catch(Exception e) { catchLocusLogException(e); }
+        if (customSNPLogging) myCustomSNPLog.close();
         ConcurrencyTools.shutdown();
         return null;
     }
 
     private void printUsage() {
         myLogger.info(
-                "\n\n\nThe available options for the DiscoverySNPCallerPlugin are as follows:\n"
-                + "-i       Input .tbt file\n"
-                + "-y       Use byte-formatted TBT file (*.tbt.byte)\n"
-                + "-m       TagsOnPhysicalMap file containing genomic positions of tags\n"
-                + "-o    Update TagsOnPhysicalMap file with allele calls for Production Pipeline, save to specified file (default: no updating)\n"
-                + "-mnF     Minimum F (inbreeding coefficient) (default: " + minF + "  = no filter)\n"
-                + "-p       Pedigree file containing full sample names (or expected names after merging) & expected inbreeding\n"
-                + "         coefficient (F) for each.  Only taxa with expected F >= mnF used to calculate F = 1-Ho/He.\n"
-                + "         (default: use ALL taxa to calculate F)\n"
-                + "-mnMAF   Minimum minor allele frequency (default: " + minMAF + ")\n"
-                + "-mnMAC   Minimum minor allele count (default: " + minMAC + ")\n"
-                + "-mnLCov  Minimum locus coverage (proportion of Taxa with a genotype) (default: " + defaultMinPropTaxaWithLocus + ")\n"
-                + "-errRate Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
-                + "-ref     Path to reference genome in fasta format. Ensures that a tag from the reference genome is always included\n"
-                + "         when the tags at a locus are aligned against each other to call SNPs. The reference allele for each site\n"
-                + "         is then provided in the output HapMap files, under the taxon name \"REFERENCE_GENOME\" (first taxon).\n"
-                + "         DEFAULT: Don't use reference genome.\n"
+            "\n\n\nThe available options for the DiscoverySNPCallerPlugin are as follows:\n"
+            + "-i       Input TagsByTaxa file (if hdf5 format, use .hdf or .h5 extension)\n"
+            + "-y       Use byte format TagsByTaxa file (*.tbt.byte)\n"
+            + "-m       TagsOnPhysicalMap (TOPM) file containing genomic positions of tags\n"
+            + "-o       Output TagsOnPhysicalMap (TOPM) file with allele calls (variants) added (for use with ProductionSNPCallerPlugin)\n"
+            + "-log     TagLocus log file name (default: "+logFileName+")\n"
+            + "-mnF     Minimum F (inbreeding coefficient) (default: " + minF + "  = no filter)\n"
+            + "-p       Pedigree file containing full sample names (or expected names after merging) & expected inbreeding\n"
+            + "         coefficient (F) for each.  Only taxa with expected F >= mnF used to calculate F = 1-Ho/He.\n"
+            + "         (default: use ALL taxa to calculate F)\n"
+            + "-mnMAF   Minimum minor allele frequency (default: " + minMAF + ")\n"
+            + "-mnMAC   Minimum minor allele count (default: " + minMAC + ")\n"
+            + "-mnLCov  Minimum locus coverage (proportion of Taxa with a genotype) (default: " + defaultMinPropTaxaWithLocus + ")\n"
+            + "-errRate Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
+            + "-ref     Path to reference genome in fasta format. Ensures that a tag from the reference genome is always included\n"
+            + "         when the tags at a locus are aligned against each other to call SNPs. The reference allele for each site\n"
+            + "         is then provided in the output HapMap files, under the taxon name \"REFERENCE_GENOME\" (first taxon).\n"
+            + "         DEFAULT: Don't use reference genome.\n"
 //                + "-LocusBorder  All tags on either strand with start postions that differ by less than the specified\n"
 //                + "              integer (LocusBorder) are aligned to the reference genome to call SNPs at a locus.\n"
 //                + "              By default (without the -LocusBorder option), only tags with identical start postions and\n"
 //                + "              strand are grouped as a locus.\n"
 //                + "              Use of the -LocusBorder option requires that the -ref option is also invoked.\n"
-                + "-inclRare  Include the rare alleles at site (3 or 4th states) (default: " + inclRare + ")\n"
-                + "-inclGaps  Include sites where major or minor allele is a GAP (default: " + inclGaps + ")\n"
-                + "-callBiSNPsWGap  Include sites where the third allele is a GAP (default: " + callBiallelicSNPsWithGap + ") (mutually exclusive with inclGaps)\n"
-                + "-sC       Start chromosome\n"
-                + "-eC       End chromosome\n\n\n");
+            + "-inclRare  Include the rare alleles at site (3 or 4th states) (default: " + inclRare + ")\n"
+            + "-inclGaps  Include sites where major or minor allele is a GAP (default: " + inclGaps + ")\n"
+            + "-callBiSNPsWGap  Include sites where the third allele is a GAP (default: " + callBiallelicSNPsWithGap + ") (mutually exclusive with inclGaps)\n"
+            + "-sC       Start chromosome\n"
+            + "-eC       End chromosome\n\n\n");
     }
 
     @Override
@@ -172,10 +156,11 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
 
         if (myArgsEngine == null) {
             myArgsEngine = new ArgsEngine();
-            myArgsEngine.add("-i", "--input-file", true);
+            myArgsEngine.add("-i", "--input-tbt-file", true);
             myArgsEngine.add("-y", "--useTBTByte", false);
             myArgsEngine.add("-m", "--physical-map", true);
-            myArgsEngine.add("-o", "--updated-physical-map", true);
+            myArgsEngine.add("-o", "--physical-map-with-variants", true);
+            myArgsEngine.add("-log", "--TagLocus-log-file", true);
             myArgsEngine.add("-mnF", "--minFInbreeding", true);
             myArgsEngine.add("-p", "--pedigree-file", true);
             myArgsEngine.add("-mnMAF", "--minMinorAlleleFreq", true);
@@ -198,16 +183,16 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             useTBTByte = true;
         }
         if (myArgsEngine.getBoolean("-i")) {
-            String inputFileName = myArgsEngine.getString("-i");
-            inputFile = new File(inputFileName);
-            if (!inputFile.exists() || !inputFile.isFile()) {
+            String inputTBTFileName = myArgsEngine.getString("-i");
+            inputTBTFile = new File(inputTBTFileName);
+            if (!inputTBTFile.exists() || !inputTBTFile.isFile()) {
                 printUsage();
                 throw new IllegalArgumentException("Can't find the TagsByTaxa input file (-i option: " + myArgsEngine.getString("-i") + ").");
             }
-            if (inputFileName.endsWith(".hdf") || inputFileName.endsWith(".h5")) {
-                theTBT = new TagsByTaxaByteHDF5TagGroups(inputFileName);
+            if (inputTBTFileName.endsWith(".hdf") || inputTBTFileName.endsWith(".h5")) {
+                theTBT = new TagsByTaxaByteHDF5TagGroups(inputTBTFileName);
             } else if (useTBTByte) {
-                theTBT = new TagsByTaxaByteFileMap(inputFileName);
+                theTBT = new TagsByTaxaByteFileMap(inputTBTFileName);
             }
         } else {
             printUsage();
@@ -228,8 +213,36 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             throw new IllegalArgumentException("Please specify a physical map file.");
         }
         if (myArgsEngine.getBoolean("-o")) {
-            this.isUpdateTOPM = true;
-            this.outTOPMFile = myArgsEngine.getString("-o");
+            outTOPMFile = myArgsEngine.getString("-o");
+            String outFolder = outTOPMFile.substring(0,outTOPMFile.lastIndexOf(File.separator));
+            File outDir = new File(outFolder);
+            try {
+                if (!outDir.getCanonicalFile().isDirectory()) {
+                    throw new Exception();
+                }
+            } catch (Exception e) {
+                printUsage();
+                throw new IllegalArgumentException("Path to the output TOPM file (with variants added) does not exist (-o option: " + outTOPMFile + ")");
+            }
+        } else {
+            printUsage();
+            throw new IllegalArgumentException("Please specify an  output (variant-added) TOPM file.");
+        }
+        if (myArgsEngine.getBoolean("-log")) {
+            logFileName = myArgsEngine.getString("-log");
+            String logFolder = logFileName.substring(0,logFileName.lastIndexOf(File.separator));
+            File logDir = new File(logFolder);
+            try {
+                if (!logDir.getCanonicalFile().isDirectory()) {
+                    throw new Exception();
+                }
+            } catch (Exception e) {
+                printUsage();
+                throw new IllegalArgumentException("Path to the TagLocus log file does not exist (-log option: " + logFileName + ")");
+            }
+        } else {
+            String outFolder = outTOPMFile.substring(0,outTOPMFile.lastIndexOf(File.separator));
+            logFileName = outFolder + File.separator + logFileName;
         }
         if (myArgsEngine.getBoolean("-mnF")) {
             minF = Double.parseDouble(myArgsEngine.getString("-mnF"));
@@ -327,10 +340,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void runTagsToSNPByAlignment(AlignmentBuilder theMSA, String outHapMap,
-                                        int targetChromo, boolean requireGeneticSupport) {
+    public void discoverSNPsOnChromosome(int targetChromo, DataOutputStream locusLogDOS) {
         long time = System.currentTimeMillis();
-        DataOutputStream locusLogDOS = openLocusLog(outHapMap);
         TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE,Byte.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,includeReference,fuzzyStartPositions,errorRate);
         int[] currPos = null;
         int countLoci = 0;
@@ -339,13 +350,12 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             int ri = theTOPM.getReadIndexForPositionIndex(i);  // process tags in order of physical position
             int[] newPos = theTOPM.getPositionArray(ri);
             if (newPos[CHR] != targetChromo) continue;    //Skip tags from other chromosomes
-            if (requireGeneticSupport && (theTOPM.getMapP(ri) < 2)) continue; //Skip tags with low mapP scores
             if ((fuzzyStartPositions && nearbyTag(newPos, currPos)) || Arrays.equals(newPos, currPos)) {
                 currTAL.addTag(ri, theTOPM, theTBT, includeReference, fuzzyStartPositions);
             } else {
                 int nTaxaCovered = currTAL.getNumberTaxaCovered();
                 if (currTAL.getSize()>1 && nTaxaCovered >= minTaxaWithLocus) {  // finish the current TAL
-                    siteCnt+=addSitesToMutableAlignment(currTAL, theMSA, locusLogDOS);  // note that with fuzzyStartPositions there may be no overlapping tags!!
+                    siteCnt+=findSNPsInTagLocus(currTAL, locusLogDOS);  // note that with fuzzyStartPositions there may be no overlapping tags!!
                     countLoci++;
                     if (siteCnt % 100 == 0) {
                         double rate = (double) siteCnt / (double) (System.currentTimeMillis() - time);
@@ -363,12 +373,11 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             }
         }
         if ((currTAL.getSize() > 1) && (currTAL.getNumberTaxaCovered() >= minTaxaWithLocus)) { // then finish the final TAL for the targetChromo
-            addSitesToMutableAlignment(currTAL, theMSA, locusLogDOS);
+            findSNPsInTagLocus(currTAL, locusLogDOS);
         } else if (currPos!=null) {
             logRejectedTagLocus(currTAL,locusLogDOS);
         }
         myLogger.info("Number of marker sites recorded for chr" + targetChromo + ": " + siteCnt);
-        try{ locusLogDOS.close(); } catch(Exception e) { catchLocusLogException(e); }
     }
 
     boolean nearbyTag(int[] newTagPos, int[] currTagPos) {
@@ -384,10 +393,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return false;
     }
     
-    private synchronized int addSitesToMutableAlignment(TagsAtLocus theTAL, AlignmentBuilder theMSA,
-                                        DataOutputStream locusLogDOS) {
+    private synchronized int findSNPsInTagLocus(TagsAtLocus theTAL, DataOutputStream locusLogDOS) {
         boolean refTagUsed = false;
-        byte[][] commonAlleles = null;
         if (theTAL.getSize() < 2) {
             logRejectedTagLocus(theTAL,locusLogDOS);
             return 0;  // need at least two (overlapping!) sequences to make an alignment
@@ -432,18 +439,12 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 }
             }
             varSiteKept[s] = true;
-            GeneralPosition.Builder gpb=new GeneralPosition.Builder(new Chromosome(String.valueOf(theTAL.getChromosome())), position);
-            int offset = (includeReference && !fuzzyStartPositions)?1:0;
-
-            if (isUpdateTOPM & !customFiltering) {
+            if (!customFiltering) {
                 updateTOPM(theTAL, s, position, strand, alleles);
             }
-//            if (currSite % 100 == 0) {
-//                System.out.printf("Site:%d Position:%d %n", currSite, position);
-//            }
         }
         logAcceptedTagLocus(theTAL.getLocusReport(minTaxaWithLocus, varSiteKept), locusLogDOS);
-        if (isUpdateTOPM & customFiltering) {  
+        if (customFiltering) {  
             updateTOPM(theTAL, varSiteKept, SiteQualityScores);
         }
         return callsBySite.length;
@@ -647,15 +648,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return false;
     }
 
-    private DataOutputStream openLocusLog(String outHapMap) {
-        String logFileName;
-        if (outHapMap.endsWith(".hmp.txt")) {
-            logFileName = outHapMap.replace(".hmp.txt", ".LocusLog.txt");
-        } else if (outHapMap.endsWith(".hmp.txt.gz")) {
-            logFileName = outHapMap.replace(".hmp.txt.gz", ".LocusLog.txt");
-        } else {
-            logFileName = outHapMap + ".LocusLog.txt";
-        }
+    private DataOutputStream openLocusLog(String logFileName) {
         try {
             DataOutputStream locusLogDOS 
                     = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(logFileName)), 65536));
@@ -1075,25 +1068,19 @@ class CustomSNPLog {
         "nOutbredHets"            +"\t"+
         "passed?"                 +"\n";
     
-    public CustomSNPLog(String outHapMapFile, boolean append) {
-        String logFileName;
-        if (outHapMapFile.endsWith(".hmp.txt")) {
-            logFileName = outHapMapFile.replace(".hmp.txt", ".customSNPLog.txt");
-        } else if (outHapMapFile.endsWith(".hmp.txt.gz")) {
-            logFileName = outHapMapFile.replace(".hmp.txt.gz", ".customSNPLog.txt");
-        } else {
-            logFileName = outHapMapFile + ".customSNPLog.txt";
-        }
-        if ((logFileName == null) || (logFileName.length() == 0)) {
+    public CustomSNPLog(String locusLogFileName) {
+        if ((locusLogFileName == null) || (locusLogFileName.length() == 0)) {
             myWriter = null;
         } else {
+            String locusLogFileDir = locusLogFileName.substring(0,locusLogFileName.lastIndexOf(File.separator));
+            String snpLogFileName = locusLogFileDir + "customSNPLog.txt";
             boolean exists = false;
-            File file = new File(logFileName);
+            File file = new File(snpLogFileName);
             if (file.exists()) {
                 exists = true;
             }
-            myWriter = Utils.getBufferedWriter(logFileName, append);
-            if (!exists || !append) {
+            myWriter = Utils.getBufferedWriter(snpLogFileName, false);
+            if (!exists) {
                 try {
                     myWriter.append(HEADER);
                 } catch (Exception e) {
