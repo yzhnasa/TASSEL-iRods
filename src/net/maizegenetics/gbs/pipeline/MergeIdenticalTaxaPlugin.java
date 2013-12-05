@@ -94,7 +94,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                } else {
 //                    newGroupBuild.add(new Taxon.Builder(l.get(0)).build());
 //                }
-//                //System.out.println(newGroup.getIdentifier(index).getFullName());
+//                //System.out.println(newGroup.getTaxon(index).getFullName());
 //                index++;
 //            }
 //            TaxaList newGroup=newGroupBuild.build();

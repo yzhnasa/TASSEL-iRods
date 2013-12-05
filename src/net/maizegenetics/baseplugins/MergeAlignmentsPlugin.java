@@ -107,8 +107,8 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 //        for (int i = 0; i < alignments.length; i++) {
 //
 //            TaxaList currentIds = alignments[i].getTaxaList();
-//            for (int j = 0, n = currentIds.getIdCount(); j < n; j++) {
-//                Taxon current = currentIds.getIdentifier(j);
+//            for (int j = 0, n = currentIds.numberOfTaxa(); j < n; j++) {
+//                Taxon current = currentIds.getTaxon(j);
 //                if (taxa.contains(current)) {
 //                    Taxon match = taxa.floor(current);
 //                    Taxon merged = Identifier.getMergedInstance(match, current);
@@ -195,10 +195,10 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 //            myLogger.info("Merging Alignment: " + (i + 1) + " of " + alignments.length);
 //            Alignment currentAlignment = alignments[i];
 //            IdGroup ids = currentAlignment.getTaxaList();
-//            int numSeqs = ids.getIdCount();
+//            int numSeqs = ids.numberOfTaxa();
 //            int[] taxaIndices = new int[numSeqs];
 //            for (int t = 0; t < numSeqs; t++) {
-//                taxaIndices[t] = taxaList.indexOf(ids.getIdentifier(t));
+//                taxaIndices[t] = taxaList.indexOf(ids.getTaxon(t));
 //            }
 //            for (int s = 0, n = currentAlignment.getSiteCount(); s < n; s++) {
 //                String siteName = currentAlignment.getSNPID(s);

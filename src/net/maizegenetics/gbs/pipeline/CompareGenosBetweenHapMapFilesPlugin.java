@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.maizegenetics.dna.map.Position;
@@ -351,7 +352,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     private int getCompareTypeAndCompare(int site1, Alignment a1, int site2, Alignment a2) {
         byte[] alleles1 = a1.alleles(site1);
         byte[] alleles2 = a2.alleles(site2);
-        SiteCompareType compareType = getSiteCompareType(alleles1, alleles2);
+        SiteCompareType compareType=(a1.positions().get(site1).getStrand()==a2.positions().get(site2).getStrand())?
+                SiteCompareType.SAME_STRAND:SiteCompareType.DIFFERENT;
         if (compareType == SiteCompareType.DIFFERENT) {
             nSamePosNotComparable++;
             return 0;
@@ -362,21 +364,13 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         summStats[MINOR_ALLELE_FREQ2] = a2.minorAlleleFrequency(site2);
         summStats[F_VALUE1] = calculateF(a1, site1);
         summStats[F_VALUE2] = calculateF(a2, site2);
-        String alleleString1 = a1.genotypeAsString(site1, alleles1[0]) + "/" + a1.genotypeAsString(site1, alleles1[1]);
-        String alleleString2 = a2.genotypeAsString(site2, alleles2[0]) + "/" + a2.genotypeAsString(site2, alleles2[1]);
+        String alleleString1 = Joiner.on("/").join(AlignmentUtils.convertNucleotideGenotypesToStringList(alleles1));
+        String alleleString2 = Joiner.on("/").join(AlignmentUtils.convertNucleotideGenotypesToStringList(alleles2));
 
-        int[][][] compareTaxaStatsSame = null;
-        int[][][] compareTaxaStatsDiff = null;
-        if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-            compareTaxaStatsSame = new int[taxaRedirect.size()][][];
-        }
+        int[][][] compareTaxaStatsSame = new int[taxaRedirect.size()][][];
 
-        if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-            compareTaxaStatsDiff = new int[taxaRedirect.size()][][];
-        }
 
         int[] compareStatsSame = null;
-        int[] compareStatsDiff = null;
         int taxon1Count = 0;
         for (Integer taxon1Index : taxaRedirect.keySet()) {
             List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
@@ -384,17 +378,10 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 myCompareStatsTaxa[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
             }
 
-            if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-                compareTaxaStatsSame[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
-            }
-
-            if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-                compareTaxaStatsDiff[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
-            }
+            compareTaxaStatsSame[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
 
             int taxon2Count = 0;
             for (Integer taxon2Index : synTaxaIndicesForTaxonIndex) {
-
                 if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
                     int[] tempStats = compareGenotypes(taxon1Index, site1, a1, taxon2Index, site2, a2, true);
                     if (compareStatsSame == null) {
@@ -408,43 +395,13 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                     compareTaxaStatsSame[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_COMPARED] = tempStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
                     compareTaxaStatsSame[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_DIFF] = tempStats[NUM_TAXA_HOMOZYGOUS_DIFF];
                 }
-
-                if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-                    int[] tempStats = compareGenotypes(taxon1Index, site1, a1, taxon2Index, site2, a2, false);
-                    if (compareStatsDiff == null) {
-                        compareStatsDiff = new int[COMPARE_STATS_LENGTH];
-                    }
-                    for (int i = 0; i < COMPARE_STATS_LENGTH; i++) {
-                        compareStatsDiff[i] += tempStats[i];
-                    }
-                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_COMPARED] = 1;
-                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_DIFF] = tempStats[NUM_TAXA_DIFFERENT];
-                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_COMPARED] = tempStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
-                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_DIFF] = tempStats[NUM_TAXA_HOMOZYGOUS_DIFF];
-                }
-
                 taxon2Count++;
             }
             taxon1Count++;
         }
 
-        int[] compareResults;
-        if (compareStatsSame == null) {
-            compareResults = compareStatsDiff;
-            addTaxaStats(myCompareStatsTaxa, compareTaxaStatsDiff);
-        } else if (compareStatsDiff == null) {
-            compareResults = compareStatsSame;
-            addTaxaStats(myCompareStatsTaxa, compareTaxaStatsSame);
-        } else {
-            if (compareStatsSame[NUM_TAXA_DIFFERENT] <= compareStatsDiff[NUM_TAXA_DIFFERENT]) {
-                compareResults = compareStatsSame;
-                addTaxaStats(myCompareStatsTaxa, compareTaxaStatsSame);
-            } else {
-                compareResults = compareStatsDiff;
-                addTaxaStats(myCompareStatsTaxa, compareTaxaStatsDiff);
-            }
-        }
-
+        int[] compareResults= compareStatsSame;
+        addTaxaStats(myCompareStatsTaxa, compareTaxaStatsSame);
         writeCompareStats(compareResults, alleleString1, alleleString2, compareType, summStats);
 
         return 1;

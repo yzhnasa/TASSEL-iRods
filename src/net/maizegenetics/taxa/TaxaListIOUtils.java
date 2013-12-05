@@ -12,9 +12,9 @@ public class TaxaListIOUtils {
    /*
     public static TreeMultimap<String,String> getMapOfTextAnnotatedIds(TaxaList annoIdGroup, String annoName) {
         TreeMultimap<String,String> annoMap=TreeMultimap.create();
-        for (int i = 0; i < annoIdGroup.getIdCount(); i++) {
-            if(annoIdGroup.getIdentifier(i) instanceof AnnotatedIdentifier) {
-                AnnotatedIdentifier ai=(AnnotatedIdentifier)annoIdGroup.getIdentifier(i);
+        for (int i = 0; i < annoIdGroup.numberOfTaxa(); i++) {
+            if(annoIdGroup.getTaxon(i) instanceof AnnotatedIdentifier) {
+                AnnotatedIdentifier ai=(AnnotatedIdentifier)annoIdGroup.getTaxon(i);
                 for (String key : ai.getTextAnnotation(annoName)) {
                     annoMap.put(key,ai.getFullName());
                 } 
@@ -25,9 +25,9 @@ public class TaxaListIOUtils {
     
     public static TreeMultimap<String,String> getMapOfTextAnnotatedIds(TaxaList annoIdGroup, String keyAnnoName, String valueAnnoName) {
         TreeMultimap<String,String> annoMap=TreeMultimap.create();
-        for (int i = 0; i < annoIdGroup.getIdCount(); i++) {
-            if(annoIdGroup.getIdentifier(i) instanceof AnnotatedIdentifier) {
-                AnnotatedIdentifier ai=(AnnotatedIdentifier)annoIdGroup.getIdentifier(i);
+        for (int i = 0; i < annoIdGroup.numberOfTaxa(); i++) {
+            if(annoIdGroup.getTaxon(i) instanceof AnnotatedIdentifier) {
+                AnnotatedIdentifier ai=(AnnotatedIdentifier)annoIdGroup.getTaxon(i);
                 for (String key : ai.getTextAnnotation(keyAnnoName)) {
                     String[] values=ai.getTextAnnotation(valueAnnoName);
                     for (String value : values) {

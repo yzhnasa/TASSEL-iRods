@@ -75,7 +75,7 @@ public class AlignmentFilterByGBSUtils {
                     }
                 }
             }
-            //            if(printToScreen) System.out.println(a.taxa().getIdentifier(j).getName()+"\t"+
+            //            if(printToScreen) System.out.println(a.taxa().getTaxon(j).getName()+"\t"+
             //                    counts[0][j]+"\t"+counts[1][j]);
         }
         for (int c : counts[0]) {
@@ -331,7 +331,7 @@ public class AlignmentFilterByGBSUtils {
             }
             sumCO += cos[1][t];
             sumGood += cos[0][t];
-            //  System.out.println(a.taxa().getIdentifier(t).getName()+" "+cos[0][t]+" "+cos[1][t]);
+            //  System.out.println(a.taxa().getTaxon(t).getName()+" "+cos[0][t]+" "+cos[1][t]);
         }
         System.out.println("TotalHomoMarkers:" + sumGood + " TotalCrossover:" + sumCO);
         //        System.out.println("By Line:"+Arrays.toString(cos[0]));

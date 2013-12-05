@@ -49,7 +49,7 @@ public class DistanceMatrixUtils implements Serializable {
 			}
 			alias = new int[mat1.getSize()];
 			for (int i = 0; i < alias.length; i++) {
-				alias[i] = mat2.whichIdNumber(mat1.getIdentifier(i).getName());
+				alias[i] = mat2.whichIdNumber(mat1.getTaxon(i).getName());
 			}
 		} else {
 			alias = new int[mat1.getSize()];
@@ -95,7 +95,7 @@ public class DistanceMatrixUtils implements Serializable {
 	 */
 	public static DistanceMatrix minus(DistanceMatrix parent, int taxaToRemove) {
 
-		int size = parent.getIdCount() - 1;
+		int size = parent.numberOfTaxa() - 1;
 
 		double[][] distances = new double[size][size];
 		Taxon[] ids = new Taxon[size];
@@ -104,7 +104,7 @@ public class DistanceMatrixUtils implements Serializable {
 			if (counti == taxaToRemove) {
 				counti += 1;
 			}
-			ids[i] = parent.getIdentifier(counti);
+			ids[i] = parent.getTaxon(counti);
 
 			countj = 0;
 			final double[][] parentDistance = parent.getDistances();

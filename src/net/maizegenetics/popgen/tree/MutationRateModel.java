@@ -140,7 +140,7 @@ public abstract class MutationRateModel implements Units,
 //			throw new IllegalArgumentException("Incompatible units, expecting "+getUnits()+", found (in toScale) "+toScale.getUnits());
 //		}
 //		TimeOrderCharacterData scaled = toScale.clone(toScale);
-//		double[] times = new double[scaled.getIdCount()];
+//		double[] times = new double[scaled.numberOfTaxa()];
 //		for (int i = 0; i < times.length; i++) {
 //			times[i] = getExpectedSubstitutions(scaled.getTime(i));
 //		}

@@ -175,7 +175,7 @@ public class CompressedMLMusingDoubleMatrix {
 
             //create the Z matrix
             count = 0;
-            DoubleMatrix Z = DoubleMatrixFactory.DEFAULT.make(nonMissingObs, kin.getIdCount());
+            DoubleMatrix Z = DoubleMatrixFactory.DEFAULT.make(nonMissingObs, kin.numberOfTaxa());
             for (int i = 0; i < totalObs; i++) {
                 if (!missing[i]) {
                     Z.set(count++, kin.whichIdNumber(theTaxa[i]), 1);

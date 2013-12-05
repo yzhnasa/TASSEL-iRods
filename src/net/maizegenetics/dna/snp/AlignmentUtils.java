@@ -242,6 +242,19 @@ public class AlignmentUtils {
         return result;
     }
 
+    /**
+     * Converts the byte representation of genotypes to string list of genotypes
+     * @param data
+     * @return list of the genotypes.
+     */
+    public static List<String> convertNucleotideGenotypesToStringList(byte[] data) {
+        List<String> result=new ArrayList<>();
+        for (byte b : data) {
+            result.add(NucleotideAlignmentConstants.getHaplotypeNucleotide(b));
+        }
+        return result;
+    }
+
     public static List<String> getAlleles(String[][] data, int site) {
         Object[][] alleles = getAllelesSortedByFrequency(data, site);
         if ((alleles == null) || (alleles.length == 0)) {

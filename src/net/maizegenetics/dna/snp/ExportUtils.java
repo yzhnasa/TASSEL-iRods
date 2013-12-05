@@ -322,8 +322,8 @@ public class ExportUtils {
 //            }
 //            System.out.println("Copying first taxon:"+srcA.taxaName(0));
 //            for (int i = 0; i < srcA.numberOfTaxa(); i++) {
-//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), srcA.depthForAlleles(i));
-//                else trgA.addTaxon(srcA.taxa().getIdentifier(i), srcA.genotypeAllSites(i), null);
+//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getTaxon(i), srcA.genotypeAllSites(i), srcA.depthForAlleles(i));
+//                else trgA.addTaxon(srcA.taxa().getTaxon(i), srcA.genotypeAllSites(i), null);
 //            }
 //        }
 //

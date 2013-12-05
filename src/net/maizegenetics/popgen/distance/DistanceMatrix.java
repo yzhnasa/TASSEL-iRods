@@ -239,11 +239,11 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     }
 
     //IdGroup interface
-    public Taxon getIdentifier(int i) {
+    public Taxon getTaxon(int i) {
         return taxaList.get(i);
     }
 
-    public int getIdCount() {
+    public int numberOfTaxa() {
         return taxaList.numberOfTaxa();
     }
 
@@ -357,7 +357,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
         String[] colNames = new String[getSize() + 1];
         colNames[0] = "Taxa";
         for (int i = 0; i < distance[0].length; i++) {
-            colNames[i + 1] = getIdentifier(i).toString();
+            colNames[i + 1] = getTaxon(i).toString();
         }
         return colNames;
     }
@@ -372,7 +372,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     public Object[] getRow(int row) {
 
         Object[] result = new Object[distance[row].length + 1];
-        result[0] = getIdentifier(row);
+        result[0] = getTaxon(row);
         for (int j = 1; j <= distance[row].length; j++) {
             result[j] = "" + distance[row][j - 1];
         }
@@ -419,7 +419,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		if (columnIndex == 0) return getIdentifier(rowIndex);
+		if (columnIndex == 0) return getTaxon(rowIndex);
 		return new Double(distance[rowIndex][columnIndex - 1]);
 	}
 
@@ -427,7 +427,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
         if (col == 0) {
             return "Taxa";
         }
-        return getIdentifier(col-1).toString();
+        return getTaxon(col-1).toString();
     }
 
 
