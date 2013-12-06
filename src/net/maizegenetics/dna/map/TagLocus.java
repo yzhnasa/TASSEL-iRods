@@ -1,5 +1,5 @@
 /*
- * TagsAtLocus
+ * TagLocus
  */
 package net.maizegenetics.dna.map;
 
@@ -12,7 +12,6 @@ import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
-import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
@@ -34,12 +33,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
 /**
  * Aligns and calls SNPs for all tags at a given locus.
  * 
  * @author jcg233
  */
-public class TagsAtLocus {
+public class TagLocus {
 
     ArrayList<SingleTagByTaxa> theTags = new ArrayList<SingleTagByTaxa>();
     private int minStartPosition;
@@ -98,7 +98,7 @@ public class TagsAtLocus {
         System.out.println("\n");
     }
 
-    public TagsAtLocus(int chromosome, byte strand, int startPosition, int tagLength, 
+    public TagLocus(int chromosome, byte strand, int startPosition, int tagLength, 
             boolean includeRefGenome, boolean fuzzyStartPositions, double errorRate) {
         this.chromosome = chromosome;
         this.strand = (includeRefGenome && fuzzyStartPositions) ? 1 : strand;
@@ -873,7 +873,6 @@ public class TagsAtLocus {
         return sb.toString();
     }
 }
-
 class SingleTagByTaxa {
 
     int tagTOPMIndex;
@@ -892,7 +891,7 @@ class SingleTagByTaxa {
         long[] tag = theTOPM.getTag(tagTOPMIndex);
         tagTBTIndex = theTBT.getTagIndex(tag);
         taxaWithTag = (tagTBTIndex > -1) ? theTBT.getNumberOfTaxaWithTag(tagTBTIndex) : 0;
-        if (taxaWithTag > 0) {  // tags with 0 taxaWithTag will not be added to TagsAtLocus
+        if (taxaWithTag > 0) {  // tags with 0 taxaWithTag will not be added to TagLocus
             startPosition = theTOPM.getStartPosition(tagTOPMIndex);
             tagLength = theTOPM.getTagLength(tagTOPMIndex);
             divergence = theTOPM.getDivergence(tagTOPMIndex);

@@ -10,7 +10,7 @@ import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
 import net.maizegenetics.dna.map.TOPMInterface;
-import net.maizegenetics.dna.map.TagsAtLocus;
+import net.maizegenetics.dna.map.TagLocus;
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.dna.tag.TagsByTaxaByteFileMap;
@@ -342,7 +342,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
 
     public void discoverSNPsOnChromosome(int targetChromo, DataOutputStream locusLogDOS) {
         long time = System.currentTimeMillis();
-        TagsAtLocus currTAL = new TagsAtLocus(Integer.MIN_VALUE,Byte.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,includeReference,fuzzyStartPositions,errorRate);
+        TagLocus currTAL = new TagLocus(Integer.MIN_VALUE,Byte.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,includeReference,fuzzyStartPositions,errorRate);
         int[] currPos = null;
         int countLoci = 0;
         int siteCnt=0;
@@ -365,7 +365,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
                 currPos = newPos; // start a new TAL with the current tag
                 if ((currPos[STRAND] != TagsOnPhysicalMap.BYTE_MISSING) && (currPos[START_POS] != TOPMInterface.INT_MISSING)) {  // we already know that currPos[CHR]==targetChromo
-                    currTAL = new TagsAtLocus(currPos[CHR],(byte) currPos[STRAND],currPos[START_POS],theTOPM.getTagLength(ri),includeReference,fuzzyStartPositions,errorRate);
+                    currTAL = new TagLocus(currPos[CHR],(byte) currPos[STRAND],currPos[START_POS],theTOPM.getTagLength(ri),includeReference,fuzzyStartPositions,errorRate);
                     currTAL.addTag(ri, theTOPM, theTBT, includeReference, fuzzyStartPositions);
                 } else {
                     currPos = null;  // invalid position
@@ -393,7 +393,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return false;
     }
     
-    private synchronized int findSNPsInTagLocus(TagsAtLocus theTAL, DataOutputStream locusLogDOS) {
+    private synchronized int findSNPsInTagLocus(TagLocus theTAL, DataOutputStream locusLogDOS) {
         boolean refTagUsed = false;
         if (theTAL.getSize() < 2) {
             logRejectedTagLocus(theTAL,locusLogDOS);
@@ -450,7 +450,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return callsBySite.length;
     }
 
-    private void updateTOPM(TagsAtLocus myTAL, boolean[] varSiteKept, TagLocusSiteQualityScores SiteQualityScores) {
+    private void updateTOPM(TagLocus myTAL, boolean[] varSiteKept, TagLocusSiteQualityScores SiteQualityScores) {
         SiteQualityScores.sortByQuality();
         byte strand = myTAL.getStrand();
         for (int s = 0; s < SiteQualityScores.getSize(); s++) {
@@ -461,7 +461,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         }
     }
 
-    private void updateTOPM(TagsAtLocus myTAL, int variableSite, int position, int strand, byte[] alleles) {
+    private void updateTOPM(TagLocus myTAL, int variableSite, int position, int strand, byte[] alleles) {
         for (int tg = 0; tg < myTAL.getSize(); tg++) {
             int topmTagIndex = myTAL.getTOPMIndexOfTag(tg);
             if (topmTagIndex == Integer.MIN_VALUE) continue; // skip the reference genome tag (which may not be in the TOPM)
@@ -661,7 +661,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return null;
     }
     
-    private void logRejectedTagLocus(TagsAtLocus currTAL, DataOutputStream locusLogDOS) {
+    private void logRejectedTagLocus(TagLocus currTAL, DataOutputStream locusLogDOS) {
         int start, end;
         if (currTAL.getStrand() == -1) {
             end = currTAL.getMinStartPosition();
@@ -897,7 +897,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return nBases;
     }
 
-    private String getRefSeqInRegion(TagsAtLocus theTAL) {
+    private String getRefSeqInRegion(TagLocus theTAL) {
         int basesPerLong = BaseEncoder.chunkSize;
         int refSeqStartPosition = theTAL.getMinStartPosition() - 128;
         int startIndex = Math.max((refSeqStartPosition / basesPerLong) - 1, 0);
@@ -911,7 +911,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return sb.toString();
     }
 
-    private void addRefTag(TagsAtLocus theTAL) {
+    private void addRefTag(TagLocus theTAL) {
         String refTag;
         int basesPerLong = BaseEncoder.chunkSize;
         int refSeqStartPos, refSeqEndPos;
@@ -1142,7 +1142,7 @@ class CustomSNPLogRecord {
     private boolean pass;
     private static final String DELIM = "\t";
     
-    public CustomSNPLogRecord(int site, TagsAtLocus myTAL, int position, boolean[] isInbred, boolean includeReference) {
+    public CustomSNPLogRecord(int site, TagLocus myTAL, int position, boolean[] isInbred, boolean includeReference) {
         chr = myTAL.getChromosome();
         tagLocusStartPos = myTAL.getMinStartPosition();
         tagLocusStrand = myTAL.getStrand();
