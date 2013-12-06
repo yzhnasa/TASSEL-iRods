@@ -26,7 +26,7 @@ import java.util.NavigableSet;
  *
  * @author Ed Buckler
  */
-public class ProjectionGenotype extends AbstractGenotype {
+public class ProjectionGenotype extends AbstractGenotypeCallTable {
 
     private final Alignment myBaseAlignment;  //high density marker alignment that is being projected. It was suggested that this
     //just have a pointer to a genotype, which would work, excepting for saving the file, when the base taxa names are needed.

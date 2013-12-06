@@ -1,5 +1,5 @@
 /*
- *  AbstractGenotype
+ *  AbstractGenotypeCallTable
  */
 package net.maizegenetics.dna.snp.genotypecall;
 
@@ -17,9 +17,9 @@ import java.util.Map;
  *
  * @author Terry Casstevens
  */
-abstract class AbstractGenotype implements Genotype {
+abstract class AbstractGenotypeCallTable implements Genotype {
 
-    private static final Logger myLogger = Logger.getLogger(AbstractGenotype.class);
+    private static final Logger myLogger = Logger.getLogger(AbstractGenotypeCallTable.class);
     private static final int DEFAULT_MAX_NUM_ALLELES = NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;
     protected final int myTaxaCount;
     protected final int mySiteCount;
@@ -27,7 +27,7 @@ abstract class AbstractGenotype implements Genotype {
     private final boolean myIsPhased;
     private final AlleleFreqCache myAlleleFreqCache;
 
-    AbstractGenotype(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings, int maxNumAlleles) {
+    AbstractGenotypeCallTable(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings, int maxNumAlleles) {
         myTaxaCount = numTaxa;
         mySiteCount = numSites;
         myIsPhased = phased;
@@ -35,7 +35,7 @@ abstract class AbstractGenotype implements Genotype {
         myAlleleFreqCache = new AlleleFreqCache(this, maxNumAlleles);
     }
 
-    AbstractGenotype(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
+    AbstractGenotypeCallTable(int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
         this(numTaxa, numSites, phased, alleleEncodings, DEFAULT_MAX_NUM_ALLELES);
     }
 

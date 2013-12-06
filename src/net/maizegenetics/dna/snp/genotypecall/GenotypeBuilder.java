@@ -73,11 +73,11 @@ public class GenotypeBuilder {
     }
 
     public static Genotype getFilteredInstance(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int rangeStart, int rangeEnd) {
-        return new FilterGenotype(genotype, numTaxa, taxaRedirect, numSites, rangeStart, rangeEnd);
+        return new FilterGenotypeCallTable(genotype, numTaxa, taxaRedirect, numSites, rangeStart, rangeEnd);
     }
 
     public static Genotype getFilteredInstance(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int[] siteRedirect) {
-        return new FilterGenotype(genotype, numTaxa, taxaRedirect, numSites, siteRedirect);
+        return new FilterGenotypeCallTable(genotype, numTaxa, taxaRedirect, numSites, siteRedirect);
     }
 
     public GenotypeBuilder setBase(int taxon, int site, byte value) {
@@ -180,7 +180,7 @@ public class GenotypeBuilder {
         if (NucleotideAlignmentConstants.isNucleotideEncodings(myAlleleEncodings)) {
             return new NucleotideGenotype(temp, myIsPhased);
         } else {
-            return new ByteGenotype(temp, myIsPhased, myAlleleEncodings);
+            return new ByteGenotypeCallTable(temp, myIsPhased, myAlleleEncodings);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- *  ByteGenotype
+ *  ByteGenotypeCallTable
  */
 package net.maizegenetics.dna.snp.genotypecall;
 
@@ -11,14 +11,14 @@ import org.apache.log4j.Logger;
  *
  * @author Terry Casstevens
  */
-class ByteGenotype extends AbstractGenotype {
+class ByteGenotypeCallTable extends AbstractGenotypeCallTable {
 
-    private static final Logger myLogger = Logger.getLogger(ByteGenotype.class);
+    private static final Logger myLogger = Logger.getLogger(ByteGenotypeCallTable.class);
     private SuperByteMatrix myGenotype;
     private SuperByteMatrix mySiteInnerLoop;
     private SuperByteMatrix myTaxonInnerLoop;
 
-    ByteGenotype(byte[][] genotype, boolean phased, String[][] alleleEncodings) {
+    ByteGenotypeCallTable(byte[][] genotype, boolean phased, String[][] alleleEncodings) {
         super(genotype.length, genotype[0].length, phased, alleleEncodings);
         mySiteInnerLoop = SuperByteMatrixBuilder.getInstance(myTaxaCount, mySiteCount);
         myGenotype = mySiteInnerLoop;
@@ -30,7 +30,7 @@ class ByteGenotype extends AbstractGenotype {
         }
     }
 
-    ByteGenotype(SuperByteMatrix genotype, boolean phased, String[][] alleleEncodings) {
+    ByteGenotypeCallTable(SuperByteMatrix genotype, boolean phased, String[][] alleleEncodings) {
         super(genotype.getNumRows(), genotype.getNumColumns(), phased, alleleEncodings);
         if (genotype.isColumnInnerLoop()) {
             mySiteInnerLoop = genotype;

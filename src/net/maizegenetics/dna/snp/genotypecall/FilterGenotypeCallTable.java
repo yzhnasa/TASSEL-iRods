@@ -1,5 +1,5 @@
 /*
- *  FilterGenotype
+ *  FilterGenotypeCallTable
  */
 package net.maizegenetics.dna.snp.genotypecall;
 
@@ -9,7 +9,7 @@ import net.maizegenetics.dna.snp.Alignment;
  *
  * @author Terry Casstevens
  */
-class FilterGenotype extends AbstractGenotype {
+class FilterGenotypeCallTable extends AbstractGenotypeCallTable {
 
     private final Genotype myBaseGenotype;
     private final boolean myIsTaxaFilter;
@@ -20,7 +20,7 @@ class FilterGenotype extends AbstractGenotype {
     private final int myRangeStart;
     private final int myRangeEnd;
 
-    FilterGenotype(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int rangeStart, int rangeEnd) {
+    FilterGenotypeCallTable(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int rangeStart, int rangeEnd) {
 
         super(numTaxa, numSites, genotype.isPhased(), null, genotype.maxNumAlleles());
         myBaseGenotype = genotype;
@@ -45,7 +45,7 @@ class FilterGenotype extends AbstractGenotype {
 
     }
 
-    FilterGenotype(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int[] siteRedirect) {
+    FilterGenotypeCallTable(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int[] siteRedirect) {
 
         super(numTaxa, numSites, genotype.isPhased(), null, genotype.maxNumAlleles());
         myBaseGenotype = genotype;

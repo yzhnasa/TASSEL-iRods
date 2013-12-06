@@ -10,7 +10,7 @@ import net.maizegenetics.util.SuperByteMatrix;
  *
  * @author Terry Casstevens
  */
-class NucleotideGenotype extends ByteGenotype {
+class NucleotideGenotype extends ByteGenotypeCallTable {
 
     NucleotideGenotype(SuperByteMatrix genotype, boolean phased) {
         super(genotype, phased, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
