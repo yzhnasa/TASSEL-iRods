@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author Terry Casstevens
  */
-abstract class AbstractGenotypeCallTable implements Genotype {
+abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
 
     private static final Logger myLogger = Logger.getLogger(AbstractGenotypeCallTable.class);
     private static final int DEFAULT_MAX_NUM_ALLELES = NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES;

@@ -5,8 +5,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
@@ -76,7 +76,7 @@ public class ReadPolymorphismUtils {
             }
         }
 
-        Genotype genotype = GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(nTaxa, nMarkers)
+        GenotypeCallTable genotype = GenotypeCallTableBuilder.getUnphasedNucleotideGenotypeBuilder(nTaxa, nMarkers)
                 .setBases(finalData)
                 .build();
 

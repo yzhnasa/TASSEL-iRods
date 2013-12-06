@@ -4,7 +4,7 @@ import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.ProjectionBuilder;
-import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotype;
+import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotypeCallTable;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.DonorHaplotypes;
@@ -81,10 +81,10 @@ public class ProjectionAlignmentIO {
     }
 
     public static void writeToFile(String outfile, Alignment pa) {
-        if(!(pa.genotypeMatrix() instanceof ProjectionGenotype)) {
+        if(!(pa.genotypeMatrix() instanceof ProjectionGenotypeCallTable)) {
             throw new UnsupportedOperationException("Save only works for Alignments with projection genotypes");
         }
-        ProjectionGenotype pg=(ProjectionGenotype)pa.genotypeMatrix();
+        ProjectionGenotypeCallTable pg=(ProjectionGenotypeCallTable)pa.genotypeMatrix();
         Alignment baseAlignment=pg.getBaseAlignment();
         BufferedWriter bw = null;
         try {

@@ -2,7 +2,7 @@ package net.maizegenetics.dna.snp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotype;
+import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotypeCallTable;
 import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
@@ -31,7 +31,7 @@ public class ProjectionBuilder {
     public static Alignment getInstance(Alignment baseAlignment, ImmutableMap<Taxon, NavigableSet<DonorHaplotypes>> allBreakPoints) {
         TaxaList tl=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         ImmutableList breakList=ImmutableList.builder().addAll(allBreakPoints.values()).build();
-        return AlignmentBuilder.getInstance(new ProjectionGenotype(baseAlignment, breakList),
+        return AlignmentBuilder.getInstance(new ProjectionGenotypeCallTable(baseAlignment, breakList),
                 baseAlignment.positions(),tl);
     }
 

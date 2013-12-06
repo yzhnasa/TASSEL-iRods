@@ -17,7 +17,7 @@ public class AlleleFreqCache {
     private static final int NUM_SITES_TO_CACHE = 1 << SHIFT_AMOUNT;
     public static final int SITE_BLOCK_MASK = ~(NUM_SITES_TO_CACHE - 1);
     private static final int MAX_CACHE_SIZE = 150;
-    private final Genotype myGenotype;
+    private final GenotypeCallTable myGenotype;
     private final int myMaxNumAlleles;
     private final Map<Integer, int[][][]> myCachedInternal = new LinkedHashMap<Integer, int[][][]>((3 * MAX_CACHE_SIZE) / 2) {
         @Override
@@ -29,7 +29,7 @@ public class AlleleFreqCache {
     private final int myMaxNumThreads = Runtime.getRuntime().availableProcessors();
     private int myNumRunningThreads = 0;
 
-    public AlleleFreqCache(Genotype genotype, int maxNumAlleles) {
+    public AlleleFreqCache(GenotypeCallTable genotype, int maxNumAlleles) {
         myGenotype = genotype;
         myMaxNumAlleles = maxNumAlleles;
     }

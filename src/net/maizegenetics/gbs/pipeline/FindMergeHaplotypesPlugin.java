@@ -12,7 +12,7 @@ import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.taxa.TaxaList;
@@ -128,7 +128,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         System.out.printf("Current Site %d Current block %d EndBlock: %d %n",startSite, startBlock, endBlock);
         TreeMap<Integer,byte[][]> results=mergeWithinWindow(inAlign, presentRanking, startBlock, endBlock, maxDistance, startSite);
         TaxaListBuilder tLB=new TaxaListBuilder();
-        GenotypeBuilder gB=GenotypeBuilder.getInstance(results.size(),inAlign.numberOfSites());
+        GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(results.size(),inAlign.numberOfSites());
         int index=0;
         for (byte[][] calls : results.values()) {
             tLB.add(new Taxon("h"+index+(new String(calls[1]))));

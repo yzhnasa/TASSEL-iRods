@@ -11,8 +11,8 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.snp.score.SiteScore;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.taxa.TaxaList;
@@ -37,7 +37,7 @@ import java.util.Arrays;
  */
 public class AlignmentBuilder {
 
-    private Genotype genotype=null;
+    private GenotypeCallTable genotype=null;
 
     //Fields for incremental taxa
     private PositionList positionList=null;
@@ -126,7 +126,7 @@ public class AlignmentBuilder {
             case TAXA_INC: {
                 //TODO optional sort
                 TaxaList tl=taxaListBuilder.build();
-                GenotypeBuilder gB=GenotypeBuilder.getInstance(tl.numberOfTaxa(),positionList.siteCount());
+                GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(tl.numberOfTaxa(),positionList.siteCount());
                 for (int i=0; i<incGeno.size(); i++) {
                     gB.setBaseRangeForTaxon(i, 0, incGeno.get(i));
                 }
@@ -135,7 +135,7 @@ public class AlignmentBuilder {
             case SITE_INC: {
                 //TODO validate sort order, sort if needed
                 PositionList pl=posListBuilder.build();
-                GenotypeBuilder gB=GenotypeBuilder.getInstance(taxaList.numberOfTaxa(),pl.siteCount());
+                GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(taxaList.numberOfTaxa(),pl.siteCount());
                 for (int s=0; s<pl.siteCount(); s++) {
                     byte[] b=incGeno.get(s);
                     for (int t=0; t<b.length; t++) {
@@ -148,7 +148,7 @@ public class AlignmentBuilder {
         return null;
     }
 
-    public static Alignment getInstance(Genotype genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    public static Alignment getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         return new CoreAlignment(genotype, positionList, taxaList, siteScore, alleleDepth);
     }
 
@@ -159,7 +159,7 @@ public class AlignmentBuilder {
      * @param taxaList
      * @return new alignment
      */
-    public static Alignment getInstance(Genotype genotype, PositionList positionList, TaxaList taxaList) {
+    public static Alignment getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
         return new CoreAlignment(genotype, positionList, taxaList);
     }
 
@@ -171,7 +171,7 @@ public class AlignmentBuilder {
      * @param hdf5File name of the file
      * @return alignment backed by new HDF5 file
      */
-    public static Alignment getInstance(Genotype genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
+    public static Alignment getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
         AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(positionList,hdf5File);
         for (int i=0; i<taxaList.numberOfTaxa(); i++) {
             aB.addTaxon(taxaList.get(i),genotype.genotypeAllSites(i));
@@ -193,14 +193,14 @@ public class AlignmentBuilder {
         IHDF5Reader reader=HDF5Factory.openForReading(hdf5File);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
         PositionList pL=PositionListBuilder.getInstance(reader);
-        Genotype geno=GenotypeBuilder.buildHDF5(reader);
+        GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
         return AlignmentBuilder.getInstance(geno, pL, tL);
     }
 
     public static Alignment getInstanceOnlyMajorMinor(Alignment alignment) {
         int numTaxa = alignment.numberOfTaxa();
         int numSites = alignment.numberOfSites();
-        GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
+        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
         byte[] majorAllele = new byte[64];
         byte[] minorAllele = new byte[64];
         for (int bigS = 0; bigS < numSites; bigS += 64) {
@@ -230,7 +230,7 @@ public class AlignmentBuilder {
     public static Alignment getHomozygousInstance(Alignment alignment) {
         int numTaxa = alignment.numberOfTaxa();
         int numSites = alignment.numberOfSites();
-        GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
+        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
         //TODO this would be even faster to work through the SuperByteMatrix, as knowledge of site or taxa is not needed.
         for (int t = 0; t < numTaxa; t++) {
             for (int s = 0; s < numSites; s++) {
@@ -275,7 +275,7 @@ public class AlignmentBuilder {
     private static Alignment copyGenotypeInstance(Alignment alignment) {
         int numTaxa = alignment.numberOfTaxa();
         int numSites = alignment.numberOfSites();
-        GenotypeBuilder builder = GenotypeBuilder.getInstance(numTaxa, numSites);
+        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
         for (int t = 0; t < numTaxa; t++) {
             for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.genotype(t, s));}
         }

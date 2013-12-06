@@ -26,7 +26,7 @@ import java.util.NavigableSet;
  *
  * @author Ed Buckler
  */
-public class ProjectionGenotype extends AbstractGenotypeCallTable {
+public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
 
     private final Alignment myBaseAlignment;  //high density marker alignment that is being projected. It was suggested that this
     //just have a pointer to a genotype, which would work, excepting for saving the file, when the base taxa names are needed.
@@ -45,7 +45,7 @@ public class ProjectionGenotype extends AbstractGenotypeCallTable {
     private int cachedTaxon = -1;
     int[] primDSH; //startSite,endSite,parent1,parent2 array for the
 
-    public ProjectionGenotype(Alignment hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
+  public ProjectionGenotypeCallTable(Alignment hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
         super(allBreakPoints.size(), hdAlign.numberOfSites(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         myBaseAlignment = hdAlign;
         this.allBreakPoints = allBreakPoints;

@@ -5,7 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE;
 import net.maizegenetics.dna.snp.AlignmentUtils;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.util.BitSet;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class DynamicBitStorage implements BitStorage {
 
-    private Genotype myGenotype;
+    private GenotypeCallTable myGenotype;
     private ALLELE_SORT_TYPE myPreferredScope = ALLELE_SORT_TYPE.Frequency;
     private byte[] myPrefAllele0;  //usually 0 is major or reference
     private byte[] myPrefAllele1;  //usually 1 is minor or alternate
@@ -153,7 +153,7 @@ public class DynamicBitStorage implements BitStorage {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    public DynamicBitStorage(Genotype genotype, ALLELE_SORT_TYPE currentScope, byte[] prefAllele0, byte[] prefAllele1) {
+    public DynamicBitStorage(GenotypeCallTable genotype, ALLELE_SORT_TYPE currentScope, byte[] prefAllele0, byte[] prefAllele1) {
         myGenotype = genotype;
         myPreferredScope = currentScope;
         mySiteCount = myGenotype.numberOfSites();
@@ -165,7 +165,7 @@ public class DynamicBitStorage implements BitStorage {
                 .build(bitLoader);
     }
 
-    public static DynamicBitStorage getInstance(Genotype genotype, ALLELE_SORT_TYPE currentScope, byte[] prefAllele) {
+    public static DynamicBitStorage getInstance(GenotypeCallTable genotype, ALLELE_SORT_TYPE currentScope, byte[] prefAllele) {
         int numSites = prefAllele.length;
         byte[] prefAllele0 = new byte[numSites];
         byte[] prefAllele1 = new byte[numSites];

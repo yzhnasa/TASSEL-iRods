@@ -7,7 +7,7 @@ package net.maizegenetics.dna.snp.genotypecall;
  *
  * @author terry
  */
-public interface Genotype {
+public interface GenotypeCallTable {
 
     /**
      * Returns diploid value (genotype) for a given taxon and site.

@@ -9,7 +9,7 @@ import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.PositionList;
@@ -506,7 +506,7 @@ public class TagsAtLocus {
         }
         int nSites=profile.getAlignedSequence(1).getSequenceAsString().length();
         TaxaListBuilder tlB=new TaxaListBuilder();
-        GenotypeBuilder gB=GenotypeBuilder.getInstance(theTags.size(),nSites);
+        GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(theTags.size(),nSites);
         String[] aseqs = new String[theTags.size()];
         //String[] names = new String[theTags.size()];
         boolean refTagWithGaps = false;
@@ -614,7 +614,7 @@ public class TagsAtLocus {
         int nSites=aseqs[0].length();
         PositionListBuilder pALB=new PositionListBuilder();
         for (int i=0; i<nSites; i++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,i).build());}
-        GenotypeBuilder gB=GenotypeBuilder.getInstance(theTags.size(),nSites);
+        GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(theTags.size(),nSites);
         for (int i=0; i<aseqs.length; i++) {gB.setBaseRangeForTaxon(i,0,aseqs[i].getBytes());}
         a=AlignmentBuilder.getInstance(gB.build(),pALB.build(),tL);
 //        a = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);

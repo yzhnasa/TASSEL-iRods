@@ -5,8 +5,8 @@ package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.bit.BitStorage;
 import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
@@ -40,7 +40,7 @@ public class FilterAlignment implements Alignment {
     private Chromosome[] myChromosomes;
     private int[] myChromosomeOffsets;
     private PositionList myPositionList;
-    private final Genotype myGenotype;
+    private final GenotypeCallTable myGenotype;
     private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new EnumMap<ALLELE_SORT_TYPE, BitStorage>(ALLELE_SORT_TYPE.class);
 
     private FilterAlignment(Alignment a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
@@ -74,9 +74,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
+            myGenotype = GenotypeCallTableBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeCallTableBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -220,9 +220,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
+            myGenotype = GenotypeCallTableBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeCallTableBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -260,9 +260,9 @@ public class FilterAlignment implements Alignment {
         }
 
         if (myIsSiteFilter) {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
+            myGenotype = GenotypeCallTableBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), mySiteRedirect);
         } else {
-            myGenotype = GenotypeBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
+            myGenotype = GenotypeCallTableBuilder.getFilteredInstance(myBaseAlignment.genotypeMatrix(), numberOfTaxa(), myTaxaRedirect, numberOfSites(), myRangeStart, myRangeEnd);
         }
 
     }
@@ -1041,7 +1041,7 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public Genotype genotypeMatrix() {
+    public GenotypeCallTable genotypeMatrix() {
         return myGenotype;
     }
 }

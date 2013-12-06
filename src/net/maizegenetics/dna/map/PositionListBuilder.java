@@ -8,7 +8,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import com.google.common.base.Preconditions;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.util.HDF5Utils;
 
 import java.util.*;
@@ -193,12 +193,12 @@ public class PositionListBuilder {
         }
     }
 
-    public PositionList build(GenotypeBuilder genotypes) {
+    public PositionList build(GenotypeCallTableBuilder genotypes) {
         sortPositions(genotypes);
         return new PositionArrayList(myPositions);
     }
 
-    public PositionListBuilder sortPositions(GenotypeBuilder genotypes) {
+    public PositionListBuilder sortPositions(GenotypeCallTableBuilder genotypes) {
         int numPositions = myPositions.size();
         if (numPositions != genotypes.getSiteCount()) {
             throw new IllegalArgumentException("PositionListBuilder: sortPositions: position list size: " + numPositions + " doesn't match genotypes num position: " + genotypes.getSiteCount());

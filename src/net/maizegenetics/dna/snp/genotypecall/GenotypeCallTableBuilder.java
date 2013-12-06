@@ -16,13 +16,13 @@ import java.util.regex.Pattern;
  *
  * @author Terry Casstevens
  */
-public class GenotypeBuilder {
+public class GenotypeCallTableBuilder {
 
     private SuperByteMatrix myGenotype;
     private boolean myIsPhased = false;
     private String[][] myAlleleEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
 
-    private GenotypeBuilder(SuperByteMatrix genotype) {
+    private GenotypeCallTableBuilder(SuperByteMatrix genotype) {
         myGenotype = genotype;
     }
 
@@ -36,7 +36,7 @@ public class GenotypeBuilder {
      *
      * @return Genotype Builder
      */
-    public static GenotypeBuilder getInstance(int numTaxa, int numSites) {
+    public static GenotypeCallTableBuilder getInstance(int numTaxa, int numSites) {
         return getUnphasedNucleotideGenotypeBuilder(numTaxa, numSites);
     }
 
@@ -50,10 +50,10 @@ public class GenotypeBuilder {
      *
      * @return Genotype Builder
      */
-    public static GenotypeBuilder getInstanceTranspose(int numTaxa, int numSites) {
+    public static GenotypeCallTableBuilder getInstanceTranspose(int numTaxa, int numSites) {
         SuperByteMatrix matrix = SuperByteMatrixBuilder.getInstanceTranspose(numTaxa, numSites);
         matrix.setAll(Alignment.UNKNOWN_DIPLOID_ALLELE);
-        return new GenotypeBuilder(matrix);
+        return new GenotypeCallTableBuilder(matrix);
     }
 
     /**
@@ -66,26 +66,26 @@ public class GenotypeBuilder {
      *
      * @return Genotype Builder
      */
-    public static GenotypeBuilder getUnphasedNucleotideGenotypeBuilder(int numTaxa, int numSites) {
+    public static GenotypeCallTableBuilder getUnphasedNucleotideGenotypeBuilder(int numTaxa, int numSites) {
         SuperByteMatrix matrix = SuperByteMatrixBuilder.getInstance(numTaxa, numSites);
         matrix.setAll(Alignment.UNKNOWN_DIPLOID_ALLELE);
-        return new GenotypeBuilder(matrix);
+        return new GenotypeCallTableBuilder(matrix);
     }
 
-    public static Genotype getFilteredInstance(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int rangeStart, int rangeEnd) {
+    public static GenotypeCallTable getFilteredInstance(GenotypeCallTable genotype, int numTaxa, int[] taxaRedirect, int numSites, int rangeStart, int rangeEnd) {
         return new FilterGenotypeCallTable(genotype, numTaxa, taxaRedirect, numSites, rangeStart, rangeEnd);
     }
 
-    public static Genotype getFilteredInstance(Genotype genotype, int numTaxa, int[] taxaRedirect, int numSites, int[] siteRedirect) {
+    public static GenotypeCallTable getFilteredInstance(GenotypeCallTable genotype, int numTaxa, int[] taxaRedirect, int numSites, int[] siteRedirect) {
         return new FilterGenotypeCallTable(genotype, numTaxa, taxaRedirect, numSites, siteRedirect);
     }
 
-    public GenotypeBuilder setBase(int taxon, int site, byte value) {
+    public GenotypeCallTableBuilder setBase(int taxon, int site, byte value) {
         myGenotype.set(taxon, site, value);
         return this;
     }
 
-    public GenotypeBuilder setBaseRangeForTaxon(int taxon, int startSite, byte[] value) {
+    public GenotypeCallTableBuilder setBaseRangeForTaxon(int taxon, int startSite, byte[] value) {
         //TODO this needs an array copy method, startSite was eliminated
         for (int i = 0; i < value.length; i++) {
             myGenotype.set(taxon, i + startSite, value[i]);
@@ -93,7 +93,7 @@ public class GenotypeBuilder {
         return this;
     }
 
-    public GenotypeBuilder setBases(String[] data) {
+    public GenotypeCallTableBuilder setBases(String[] data) {
 
         int numTaxa = data.length;
 
@@ -109,7 +109,7 @@ public class GenotypeBuilder {
 
     }
 
-    public GenotypeBuilder setBases(String[][] data) {
+    public GenotypeCallTableBuilder setBases(String[][] data) {
 
         if ((data == null) || (data.length == 0)) {
             throw new IllegalArgumentException("BitAlignment: getInstance: data can not be empty.");
@@ -148,12 +148,12 @@ public class GenotypeBuilder {
         return this;
     }
 
-    public GenotypeBuilder isPhased(boolean isPhased) {
+    public GenotypeCallTableBuilder isPhased(boolean isPhased) {
         myIsPhased = isPhased;
         return this;
     }
 
-    public GenotypeBuilder alleleEncodings(String[][] alleleEncodings) {
+    public GenotypeCallTableBuilder alleleEncodings(String[][] alleleEncodings) {
         myAlleleEncodings = alleleEncodings;
         return this;
     }
@@ -174,21 +174,21 @@ public class GenotypeBuilder {
         myGenotype.reorderColumns(newIndices);
     }
 
-    public Genotype build() {
+    public GenotypeCallTable build() {
         SuperByteMatrix temp = myGenotype;
         myGenotype = null;
         if (NucleotideAlignmentConstants.isNucleotideEncodings(myAlleleEncodings)) {
-            return new NucleotideGenotype(temp, myIsPhased);
+            return new NucleotideGenotypeCallTable(temp, myIsPhased);
         } else {
             return new ByteGenotypeCallTable(temp, myIsPhased, myAlleleEncodings);
         }
     }
 
-    public static Genotype buildHDF5(String filename) {
-        return HDF5ByteGenotype.getInstance(HDF5Factory.openForReading(filename));
+    public static GenotypeCallTable buildHDF5(String filename) {
+        return HDF5ByteGenotypeCallTable.getInstance(HDF5Factory.openForReading(filename));
     }
 
-    public static Genotype buildHDF5(IHDF5Reader reader) {
-        return HDF5ByteGenotype.getInstance(reader);
+    public static GenotypeCallTable buildHDF5(IHDF5Reader reader) {
+        return HDF5ByteGenotypeCallTable.getInstance(reader);
     }
 }

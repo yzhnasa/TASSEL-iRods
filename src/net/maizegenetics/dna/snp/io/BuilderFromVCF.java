@@ -8,8 +8,8 @@ import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
@@ -90,7 +90,7 @@ public class BuilderFromVCF {
             }
             int currentSite=0;
             PositionListBuilder posBuild=new PositionListBuilder();
-            GenotypeBuilder gb=GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), lines);
+            GenotypeCallTableBuilder gb=GenotypeCallTableBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), lines);
             for (ProcessVCFBlock pb : pbs) {
                 posBuild.addAll(pb.getBlkPosList());
                 byte[][] bgTS=pb.getGenoTS();
@@ -102,7 +102,7 @@ public class BuilderFromVCF {
             if (posBuild.validateOrdering()==false) {
                 throw new IllegalStateException("BuilderFromHapMap: Ordering incorrect HapMap must be ordered by position");
             }
-            Genotype g=gb.build();
+            GenotypeCallTable g=gb.build();
             result=AlignmentBuilder.getInstance(g, posBuild.build(), taxaList);
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();

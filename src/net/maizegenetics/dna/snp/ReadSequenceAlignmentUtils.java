@@ -12,8 +12,8 @@ import net.maizegenetics.taxa.TaxaList;
 
 import java.io.IOException;
 import java.io.PushbackReader;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.taxa.TaxaListBuilder;
 
 /**
@@ -151,7 +151,7 @@ public class ReadSequenceAlignmentUtils {
             sites[i] = Integer.toString(i);
         }
 
-        Genotype genotype = GenotypeBuilder.getUnphasedNucleotideGenotypeBuilder(numSeqs, numSites)
+        GenotypeCallTable genotype = GenotypeCallTableBuilder.getUnphasedNucleotideGenotypeBuilder(numSeqs, numSites)
                 .setBases(s)
                 .build();
 

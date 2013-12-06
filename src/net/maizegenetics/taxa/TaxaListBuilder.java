@@ -8,7 +8,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,7 +96,7 @@ public class TaxaListBuilder {
         return Collections.unmodifiableList(myTaxaList);
     }
 
-    public TaxaListBuilder sortTaxaAlphabetically(GenotypeBuilder genotypes) {
+    public TaxaListBuilder sortTaxaAlphabetically(GenotypeCallTableBuilder genotypes) {
         int numTaxa = myTaxaList.size();
         if (numTaxa != genotypes.getTaxaCount()) {
             throw new IllegalArgumentException("TaxaListBuilder: sortTaxaAlphabetically: taxa list size: " + numTaxa + " doesn't match genotypes num taxa: " + genotypes.getTaxaCount());

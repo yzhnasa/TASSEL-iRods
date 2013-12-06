@@ -9,7 +9,7 @@ import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.PositionListBuilder;
@@ -214,7 +214,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 continue;
             }
             //MutableNucleotideAlignment msa = null;
-            GenotypeBuilder msa=GenotypeBuilder.getInstance(a.numberOfTaxa(),a.numberOfSites());
+            GenotypeCallTableBuilder msa=GenotypeCallTableBuilder.getInstance(a.numberOfTaxa(),a.numberOfSites());
             PositionListBuilder posBuilder=new PositionListBuilder();
 //            if (inputFormat == INPUT_FORMAT.hapmap)
 //            {
@@ -320,7 +320,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
     }
 
     private void processSNPsWithSamePosition(Integer[] samePos, Alignment a, int chr, int currentPos,
-                                             GenotypeBuilder msa, PositionListBuilder posBuild) {
+                                             GenotypeCallTableBuilder msa, PositionListBuilder posBuild) {
         boolean[] finished = new boolean[samePos.length];
         for (int i = 0; i < finished.length; ++i) {
             finished[i] = false;   // indicates if the site has already been merged with a previous site OR written as is to msa
@@ -556,7 +556,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //        }
 //    }
     
-    private void addSiteToMutableAlignment(int chromosome, int position, byte[] genos, GenotypeBuilder theMSA,
+    private void addSiteToMutableAlignment(int chromosome, int position, byte[] genos, GenotypeCallTableBuilder theMSA,
                                            PositionListBuilder posBuilder) {
         int currSite=posBuilder.size();
     //    int currSite = theMSA.numberOfSites();

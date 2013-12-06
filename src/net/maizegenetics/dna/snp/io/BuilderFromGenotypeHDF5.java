@@ -4,8 +4,8 @@ import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.taxa.TaxaList;
@@ -44,7 +44,7 @@ public class BuilderFromGenotypeHDF5 {
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
         PositionList pL=PositionListBuilder.getInstance(reader);
-        Genotype geno=GenotypeBuilder.buildHDF5(reader);
+        GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
         return AlignmentBuilder.getInstance(geno,pL, tL);
     }
 

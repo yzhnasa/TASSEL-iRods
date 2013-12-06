@@ -4,7 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.bit.BitStorage;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.taxa.TaxaList;
@@ -821,7 +821,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Genotype genotypeMatrix() {
+    public GenotypeCallTable genotypeMatrix() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

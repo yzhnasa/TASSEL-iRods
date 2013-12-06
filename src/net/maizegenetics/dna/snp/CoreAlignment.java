@@ -8,7 +8,7 @@ import java.util.Map;
 import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Frequency;
 import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Reference;
 import net.maizegenetics.dna.snp.score.SiteScore;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.bit.BitStorage;
 import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
@@ -25,7 +25,7 @@ import org.apache.log4j.Logger;
 public class CoreAlignment implements Alignment {
 
     private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
-    private final Genotype myGenotype;
+    private final GenotypeCallTable myGenotype;
     private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new HashMap<ALLELE_SORT_TYPE, BitStorage>();
     private final PositionList myPositionList;
     private final TaxaList myTaxaList;
@@ -34,7 +34,7 @@ public class CoreAlignment implements Alignment {
     private final int mySiteCount;
     private final int myTaxaCount;
 
-    CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    CoreAlignment(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         //todo need check dimensions
         myGenotype = genotype;
         myPositionList = positionList;
@@ -45,12 +45,12 @@ public class CoreAlignment implements Alignment {
         myTaxaCount = myTaxaList.numberOfTaxa();
     }
 
-    CoreAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList) {
+    CoreAlignment(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
         this(genotype, positionList, taxaList, null, null);
     }
 
     @Override
-    public Genotype genotypeMatrix() {
+    public GenotypeCallTable genotypeMatrix() {
         return myGenotype;
     }
 

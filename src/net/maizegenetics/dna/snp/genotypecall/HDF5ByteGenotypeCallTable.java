@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
  * @author Ed Buckler
  * @author Terry Casstevens
  */
-class HDF5ByteGenotype extends AbstractGenotypeCallTable {
+class HDF5ByteGenotypeCallTable extends AbstractGenotypeCallTable {
 
     private static final int SHIFT_AMOUNT = 16;
 
@@ -139,7 +139,7 @@ class HDF5ByteGenotype extends AbstractGenotypeCallTable {
         return genotypePaths[taxon];
     }
 
-    private HDF5ByteGenotype(IHDF5Reader reader, int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
+    private HDF5ByteGenotypeCallTable(IHDF5Reader reader, int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
         super(numTaxa, numSites, phased, alleleEncodings);
         genotypePaths = new String[numTaxa];
         TaxaList tL = new TaxaListBuilder().buildFromHDF5(reader);  //not the most efficient thing to do, but ensures sort is the same.
@@ -155,11 +155,11 @@ class HDF5ByteGenotype extends AbstractGenotypeCallTable {
                 .build(siteAnnotLoader);
     }
 
-    static HDF5ByteGenotype getInstance(IHDF5Reader reader) {
+    static HDF5ByteGenotypeCallTable getInstance(IHDF5Reader reader) {
         int numTaxa = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA);
         int numSites = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
         String[][] alleleEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
-        return new HDF5ByteGenotype(reader, numTaxa, numSites, false, alleleEncodings);
+        return new HDF5ByteGenotypeCallTable(reader, numTaxa, numSites, false, alleleEncodings);
     }
 
     @Override

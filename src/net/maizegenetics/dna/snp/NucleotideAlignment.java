@@ -4,7 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
-import net.maizegenetics.dna.snp.genotypecall.Genotype;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.score.SiteScore;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.taxa.TaxaList;
@@ -15,7 +15,7 @@ import net.maizegenetics.taxa.TaxaList;
  */
 public class NucleotideAlignment extends CoreAlignment {
 
-    public NucleotideAlignment(Genotype genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    public NucleotideAlignment(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         super(genotype, positionList, taxaList, siteScore, alleleDepth);
     }
 
