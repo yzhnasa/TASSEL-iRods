@@ -1,7 +1,7 @@
 package net.maizegenetics.gwas.imputation;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 public class PhasedEmissionProbability extends EmissionProbability {
@@ -17,7 +17,7 @@ public class PhasedEmissionProbability extends EmissionProbability {
 		//state is an ordered pair of haplotypes, obs is the observed genotype, node is the site
 		//P(obs=X|state=H1H2) = P(obs=X|state=H1H2, H1=A, H2=A)P(H1=A)P(H2=A) + P(obs=X|state=H1H2, H1=A, H2=C)P(H1=A)P(H2=C) + ... + P(obs=X|state=H1H2, H1=T, H2=T)P(H1=T)P(H2=T)
 		double prob = 0.0;
-		byte[] haplotypes = AlignmentUtils.getDiploidValues((byte) state);
+		byte[] haplotypes = GenotypeTableUtils.getDiploidValues((byte) state);
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < 4; j++) {
 				prob += conditionalProbability(obs, i, j) * parentHaplotypeProbability[node][haplotypes[0]][i] * parentHaplotypeProbability[node][haplotypes[1]][j];

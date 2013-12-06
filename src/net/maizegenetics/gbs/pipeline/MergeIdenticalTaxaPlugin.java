@@ -1,7 +1,7 @@
 package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -143,7 +143,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
 //                            if (cb != Alignment.UNKNOWN_DIPLOID_ALLELE) {
 //                                known++;
 //                            }
-//                            if (AlignmentUtils.isHeterozygous(cb)) {
+//                            if (GenotypeTableUtils.isHeterozygous(cb)) {
 //                                hets++;
 //                            }
 //                        }
@@ -209,11 +209,11 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         for (int s = 0; s < a.numberOfSites(); s++) {
             byte mjAllele = a.majorAllele(s);
             byte mnAllele = a.minorAllele(s);
-            byte mj=AlignmentUtils.getDiploidValue(mjAllele,mjAllele);
-            byte mn=AlignmentUtils.getDiploidValue(mnAllele,mnAllele);
+            byte mj=GenotypeTableUtils.getDiploidValue(mjAllele,mjAllele);
+            byte mn=GenotypeTableUtils.getDiploidValue(mnAllele,mnAllele);
        //     byte[] snpValue = {mj, mn};
             //byte het = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(snpValue);
-            byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
+            byte het = GenotypeTableUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
             for (int t = 0; t < taxaIndex.length; t++) {
                 byte ob = a.genotype(taxaIndex[t], s);
                 if (ob == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
@@ -223,7 +223,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
                     siteCnt[0][s]++;
                 } else if (ob == mn) {
                     siteCnt[1][s]++;
-                } else if (AlignmentUtils.isEqual(ob, het)) {
+                } else if (GenotypeTableUtils.isEqual(ob, het)) {
                     siteCnt[0][s]++;
                     siteCnt[1][s]++;
                 }

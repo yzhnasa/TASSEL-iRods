@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -104,11 +104,11 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
         GenotypeTable result = null;
 
         if (((mySitesToKeep != null) && (mySitesToKeep.length != 0))) {
-            result = FilterAlignment.getInstance(alignment, mySitesToKeep);
+            result = FilterGenotypeTable.getInstance(alignment, mySitesToKeep);
         } else if (((mySiteNamesToKeep != null) && (mySiteNamesToKeep.length != 0))) {
-            result = FilterAlignment.getInstance(alignment, mySiteNamesToKeep);
+            result = FilterGenotypeTable.getInstance(alignment, mySiteNamesToKeep);
         } else if (((mySiteNamesToRemove != null) && (mySiteNamesToRemove.length != 0))) {
-            result = FilterAlignment.getInstanceRemoveSiteNames(alignment, mySiteNamesToRemove);
+            result = FilterGenotypeTable.getInstanceRemoveSiteNames(alignment, mySiteNamesToRemove);
         } else {
             return null;
         }

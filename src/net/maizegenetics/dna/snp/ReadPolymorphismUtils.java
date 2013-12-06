@@ -82,7 +82,7 @@ public class ReadPolymorphismUtils {
 
         TaxaList taxaList = new TaxaListBuilder().addAll(taxa).build();
 
-        return AlignmentBuilder.getInstance(genotype, null, taxaList);
+        return GenotypeTableBuilder.getInstance(genotype, null, taxaList);
 
     }
 

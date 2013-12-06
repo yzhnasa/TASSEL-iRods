@@ -1,5 +1,5 @@
 /*
- *  NucleotideAlignment
+ *  NucleotideGenotypeTable
  */
 package net.maizegenetics.dna.snp;
 
@@ -13,9 +13,9 @@ import net.maizegenetics.taxa.TaxaList;
  *
  * @author Terry Casstevens
  */
-public class NucleotideAlignment extends CoreAlignment {
+public class NucleotideGenotypeTable extends CoreGenotypeTable {
 
-    public NucleotideAlignment(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    public NucleotideGenotypeTable(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         super(genotype, positionList, taxaList, siteScore, alleleDepth);
     }
 

@@ -4,11 +4,11 @@
 package net.maizegenetics.gbs.pipeline;
 
 
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ProjectionBuilder;
-import net.maizegenetics.dna.snp.AlignmentUtils;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
@@ -174,9 +174,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             if(exportFile.contains("hmp.h5")) {
 //                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, new SimpleIdGroup(0), false);
 //                mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
-                mna= AlignmentBuilder.getTaxaIncremental(this.unimpAlign.positions(),exportFile);
+                mna= GenotypeTableBuilder.getTaxaIncremental(this.unimpAlign.positions(),exportFile);
             }else {
-                mna= AlignmentBuilder.getTaxaIncremental(this.unimpAlign.positions());
+                mna= GenotypeTableBuilder.getTaxaIncremental(this.unimpAlign.positions());
 //                mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
             }
 
@@ -213,7 +213,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         if(isOutputProjection) {
             ProjectionAlignmentIO.writeToFile(exportFile, ((ProjectionBuilder)mna).build());
         } else {
-            AlignmentBuilder ab=(AlignmentBuilder)mna;
+            GenotypeTableBuilder ab=(GenotypeTableBuilder)mna;
             if(ab.isHDF5()) {
                 ab.build();
             } else {
@@ -230,7 +230,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int minSitesPresent;
         OpenBitSet[][] conflictMasks;
         boolean imputeDonorFile;
-        AlignmentBuilder alignBuilder=null;
+        GenotypeTableBuilder alignBuilder=null;
         ProjectionBuilder projBuilder=null;
         
         
@@ -241,7 +241,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             this.minSitesPresent=minSitesPresent;
             this.conflictMasks=conflictMasks;
             this.imputeDonorFile=imputeDonorFile;
-            if(mna instanceof AlignmentBuilder) {alignBuilder=(AlignmentBuilder)mna;}
+            if(mna instanceof GenotypeTableBuilder) {alignBuilder=(GenotypeTableBuilder)mna;}
             else if(mna instanceof ProjectionBuilder) {projBuilder=(ProjectionBuilder)mna;}
             else {throw new IllegalArgumentException("Only Aligmnent or Projection Builders may be used.");}
         }
@@ -349,8 +349,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         GenotypeTable[] donorAlign=new GenotypeTable[theChr.length];
         for (int i = 0; i < donorAlign.length; i++) {
             System.out.println("Starting Read");
-            GenotypeTable fa=FilterAlignment.getInstance(a,theChr[i]);
-            donorAlign[i]=AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
+            GenotypeTable fa=FilterGenotypeTable.getInstance(a,theChr[i]);
+            donorAlign[i]=GenotypeTableBuilder.getGenotypeCopyInstance((FilterGenotypeTable)fa);
             System.out.printf("Donor file:%s taxa:%d sites:%d %n",theChr[i].toString(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
             System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
@@ -464,7 +464,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int cnt=0, cntHets=0;
         for (int i = 0; i < a.length; i++) {
             if(a[i]==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {cnt++;}
-            else if(AlignmentUtils.isHeterozygous(a[i])) {cntHets++;}
+            else if(GenotypeTableUtils.isHeterozygous(a[i])) {cntHets++;}
         }
         return new int[]{cnt,cntHets};
     }
@@ -898,7 +898,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                         if(i==0) currDonors=new int[]{theDH[0].donor2Taxon, theDH[0].donor2Taxon};
                     }
                     else {
-                        donorEst=AlignmentUtils.getUnphasedDiploidValueNoHets(bD1, bD2);
+                        donorEst=GenotypeTableUtils.getUnphasedDiploidValueNoHets(bD1, bD2);
                         if(i==0) currDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor2Taxon};
                     }
                 }
@@ -916,8 +916,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             
             impT.impGeno[cs+donorOffset]= donorEst;  //predicted based on neighbor
             if(knownBase==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {impT.resolveGeno[cs+donorOffset]= donorEst;}
-            else {if(AlignmentUtils.isHeterozygous(donorEst)) {
-                if(resolveHetIfUndercalled&&AlignmentUtils.isPartiallyEqual(knownBase,donorEst)) 
+            else {if(GenotypeTableUtils.isHeterozygous(donorEst)) {
+                if(resolveHetIfUndercalled&&GenotypeTableUtils.isPartiallyEqual(knownBase,donorEst)) 
                 {//System.out.println(theDH[0].targetTaxon+":"+knownBase+":"+donorEst);
                     impT.resolveGeno[cs+donorOffset]= donorEst;}
             }}
@@ -938,7 +938,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             byte donorEst=impT.getImpGeno(cs);
             byte knownBase=impT.getOrigGeno(cs);
             if((knownBase!=GenotypeTable.UNKNOWN_DIPLOID_ALLELE)&&(donorEst!=GenotypeTable.UNKNOWN_DIPLOID_ALLELE)) {
-                if(AlignmentUtils.isHeterozygous(donorEst)||AlignmentUtils.isHeterozygous(knownBase)) {
+                if(GenotypeTableUtils.isHeterozygous(donorEst)||GenotypeTableUtils.isHeterozygous(knownBase)) {
                     totalHets++;
                 } else if(knownBase==donorEst) {
                     totalRight++;
@@ -983,7 +983,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                         correct++;
                         c++;
                     } else {
-                        if(AlignmentUtils.isHeterozygous(ob)||AlignmentUtils.isHeterozygous(ib)) {hets++; h++;}
+                        if(GenotypeTableUtils.isHeterozygous(ob)||GenotypeTableUtils.isHeterozygous(ib)) {hets++; h++;}
                         else {errors++; 
                             e++;
 //                            if(t==0) System.out.printf("%d %d %s %s %n",t,s,oA.genotypeAsString(oATaxa, s), iA.genotypeAsString(t, s));

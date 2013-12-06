@@ -5,7 +5,7 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.DonorHaplotypes;
 
@@ -109,7 +109,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
         }
         byte p1 = myBaseAlignment.genotype(currentDSH[taxon].getParent1index(), site);
         byte p2 = myBaseAlignment.genotype(currentDSH[taxon].getParent2index(), site);
-        return AlignmentUtils.getUnphasedDiploidValueNoHets(p1, p2);
+        return GenotypeTableUtils.getUnphasedDiploidValueNoHets(p1, p2);
     }
 
     //Currently this is no faster than general genotype.  it should be possible to make this faster.
@@ -147,7 +147,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
             //TODO consider null
         }
         //       if(primDSH[primPos]==primDSH[primPos+1]) return donorForCachedSite[primDSH[primPos]];
-        return AlignmentUtils.getUnphasedDiploidValueNoHets(donorForCachedSite[primDSH[primPos]], donorForCachedSite[primDSH[primPos + 1]]);
+        return GenotypeTableUtils.getUnphasedDiploidValueNoHets(donorForCachedSite[primDSH[primPos]], donorForCachedSite[primDSH[primPos + 1]]);
     }
 
     @Override

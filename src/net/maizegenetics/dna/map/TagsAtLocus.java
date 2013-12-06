@@ -6,8 +6,8 @@ package net.maizegenetics.dna.map;
 import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
@@ -533,16 +533,16 @@ public class TagsAtLocus {
             tlB.add(new Taxon(names));
         }
         profile = null;
-        GenotypeTable aa = AlignmentBuilder.getInstance(gB.build(),pALB.build(),tlB.build());;
+        GenotypeTable aa = GenotypeTableBuilder.getInstance(gB.build(),pALB.build(),tlB.build());;
 //        if (refTagWithGaps) {
-//            aa=AlignmentBuilder.getInstance(gB.build(),pALB.build(),tlB.build());
+//            aa=GenotypeTableBuilder.getInstance(gB.build(),pALB.build(),tlB.build());
 //            //aseqs = sequence
 //            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, positions, 5, new Chromosome[]{Chromosome.UNKNOWN},
 //                    new int[]{0}, null, false, true);
 //        } else {
 //            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
 //        }
-        GenotypeTable faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
+        GenotypeTable faa = GenotypeTableUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
 //        if (printOutAlignments && refTagWithGaps) {
         if (printOutAlignments && (minStartPosition % 1000 == 0)) {
             TaxaList tL=tlB.build();
@@ -616,9 +616,9 @@ public class TagsAtLocus {
         for (int i=0; i<nSites; i++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,i).build());}
         GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(theTags.size(),nSites);
         for (int i=0; i<aseqs.length; i++) {gB.setBaseRangeForTaxon(i,0,aseqs[i].getBytes());}
-        a=AlignmentBuilder.getInstance(gB.build(),pALB.build(),tL);
+        a=GenotypeTableBuilder.getInstance(gB.build(),pALB.build(),tL);
 //        a = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
-        GenotypeTable fa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(a, 0.000001, 1.0, 2);
+        GenotypeTable fa = GenotypeTableUtils.removeSitesBasedOnFreqIgnoreMissing(a, 0.000001, 1.0, 2);
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  FA (alignment filtered for polymorphic sites):\n" + fa.toString());
         }
@@ -811,14 +811,14 @@ public class TagsAtLocus {
             if (a2Count < likelihoodRatioThreshAlleleCnt[totCount]) {
                 return a1;  // call it a homozygote
             } else {
-                return AlignmentUtils.getDiploidValue(a1, a2);  // call it a het
+                return GenotypeTableUtils.getDiploidValue(a1, a2);  // call it a het
                 //return IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(a1, a2); // call it a het
             }
         } else {
             if (a2Count / totCount < 0.1) {
                 return a1;  // call it a homozygote
             } else {
-                return AlignmentUtils.getDiploidValue(a1, a2);  // call it a het
+                return GenotypeTableUtils.getDiploidValue(a1, a2);  // call it a het
                 //return IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(a1, a2); // call it a het
             }
         }

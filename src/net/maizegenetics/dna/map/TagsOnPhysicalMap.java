@@ -22,7 +22,7 @@ import net.maizegenetics.gbs.util.SAMUtils;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
@@ -249,7 +249,7 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
                 for (int j = 0; j < myMaxVariants; j++) {
                     currVO[j] = dis.readByte();
                     currVD[j] = dis.readByte();
-                    if((currVD[j]>0xf)&&(AlignmentUtils.isHeterozygous(currVD[j]))) {//ascii bytes need to be converted to TASSEL 4
+                    if((currVD[j]>0xf)&&(GenotypeTableUtils.isHeterozygous(currVD[j]))) {//ascii bytes need to be converted to TASSEL 4
  //                       System.out.printf("row:%d vd:%d %n", row, variantDefs[row][j]);
                         currVD[j]=NucleotideAlignmentConstants.getNucleotideAlleleByte(String.valueOf((char)currVD[j]));
                     }

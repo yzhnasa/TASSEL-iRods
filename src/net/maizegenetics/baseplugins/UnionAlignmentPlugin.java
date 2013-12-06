@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.CombineAlignment;
+import net.maizegenetics.dna.snp.CombineGenotypeTable;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.CombinePhenotype;
@@ -73,7 +73,7 @@ public class UnionAlignmentPlugin extends AbstractPlugin {
                 for (int i = 0; i < aaVector.size(); i++) {
                     temp[i] = (GenotypeTable) aaVector.get(i).getData();
                 }
-                aa = CombineAlignment.getInstance(temp, isUnion);
+                aa = CombineGenotypeTable.getInstance(temp, isUnion);
                 result = aa;
             }
             if (caVector.size() > 0) {

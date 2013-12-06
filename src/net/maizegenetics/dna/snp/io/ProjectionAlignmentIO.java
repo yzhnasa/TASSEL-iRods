@@ -1,7 +1,7 @@
 package net.maizegenetics.dna.snp.io;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.ProjectionBuilder;
 import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotypeCallTable;
@@ -23,7 +23,7 @@ import java.util.*;
 public class ProjectionAlignmentIO {
 
     public static GenotypeTable getInstance(String paFile, String baseHighDensityAlignmentFile) {
-        if(baseHighDensityAlignmentFile.endsWith(".h5")) return getInstance(paFile, AlignmentBuilder.getInstance(baseHighDensityAlignmentFile));
+        if(baseHighDensityAlignmentFile.endsWith(".h5")) return getInstance(paFile, GenotypeTableBuilder.getInstance(baseHighDensityAlignmentFile));
         return getInstance(paFile, ImportUtils.readFromHapmap(baseHighDensityAlignmentFile, null));
     }
 

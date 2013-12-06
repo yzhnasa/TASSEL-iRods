@@ -1,8 +1,8 @@
 package net.maizegenetics.gwas.imputation;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -100,8 +100,8 @@ public class NucleotideImputationUtils {
 			parentCGroup = taxaGroup[1];
 		} 
 		
-		GenotypeTable aAlignment = FilterAlignment.getInstance(popdata.original, parentAGroup);
-		GenotypeTable cAlignment = FilterAlignment.getInstance(popdata.original, parentCGroup);
+		GenotypeTable aAlignment = FilterGenotypeTable.getInstance(popdata.original, parentAGroup);
+		GenotypeTable cAlignment = FilterGenotypeTable.getInstance(popdata.original, parentCGroup);
 		byte[] Asnp = new byte[popdata.original.numberOfSites()];
 		byte[] Csnp = new byte[popdata.original.numberOfSites()];
 				
@@ -194,7 +194,7 @@ public class NucleotideImputationUtils {
 			}
 		}
 		
-		FilterAlignment ldAlignment = FilterAlignment.getInstance(parentAlignment, retainedSites);
+		FilterGenotypeTable ldAlignment = FilterGenotypeTable.getInstance(parentAlignment, retainedSites);
 		popdata.snpIndex = ldbits;
 		myLogger.info("number of original sites = " + popdata.original.numberOfSites() + ", number of polymorphic sites = " + polybits.cardinality() + ", number of ld sites = " + ldAlignment.numberOfSites());
 
@@ -262,7 +262,7 @@ public class NucleotideImputationUtils {
 			}
 			
 			//mask the hets
-//			MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(FilterAlignment.getInstance(popdata.original, snpIndex));
+//			MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(FilterGenotypeTable.getInstance(popdata.original, snpIndex));
 //			int n = snpIndex.length;
 //			byte missing = NucleotideAlignmentConstants.getNucleotideDiploidByte('N');
 //			for (int i = 0; i < n; i++) {
@@ -272,7 +272,7 @@ public class NucleotideImputationUtils {
 //			}
 //			mna.clean();
 			
-			GenotypeTable windowAlignment = FilterAlignment.getInstance(popdata.original, snpIndex);
+			GenotypeTable windowAlignment = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
 			LinkedList<Integer> snpList = new LinkedList<Integer>(); //snpList is a list of snps (indices) in this window
 			for (int s:snpIndex) snpList.add(s);
 			
@@ -296,7 +296,7 @@ public class NucleotideImputationUtils {
 //				int[] selectSnps = new int[snpList.size()];
 //				int cnt = 0;
 //				for (Integer s : snpList) selectSnps[cnt++] = s;
-//				SBitAlignment sba = SBitAlignment.getInstance(FilterAlignment.getInstance(popdata.original, selectSnps));
+//				SBitAlignment sba = SBitAlignment.getInstance(FilterGenotypeTable.getInstance(popdata.original, selectSnps));
 //				IBSDistanceMatrix dm = new IBSDistanceMatrix(sba);
 //				estimateMissingDistances(dm);
 //				Tree myTree = new UPGMATree(dm);
@@ -322,7 +322,7 @@ public class NucleotideImputationUtils {
 		}
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
-		GenotypeTable target = FilterAlignment.getInstance(popdata.original, snpIndex);
+		GenotypeTable target = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
 		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
 		
 		nsnps = snpIndex.length;
@@ -359,11 +359,11 @@ public class NucleotideImputationUtils {
 		popdata.snpIndex = new OpenBitSet(nOriginalSites);
 
 		int minCount = (int) Math.ceil(1 - (maxMissing * ntaxa));
-		GenotypeTable a = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(popdata.original, minMaf, 1.0, minCount);
+		GenotypeTable a = GenotypeTableUtils.removeSitesBasedOnFreqIgnoreMissing(popdata.original, minMaf, 1.0, minCount);
 		a = deleteSnpsFromSameTag(a);
 		int nFilteredSites = a.numberOfSites();
 		int[] siteTranslationArray = new int[nFilteredSites];
-		FilterAlignment fa = (FilterAlignment) a;
+		FilterGenotypeTable fa = (FilterGenotypeTable) a;
 		for (int s = 0; s < nFilteredSites; s++) siteTranslationArray[s] = fa.translateSite(s);
 		
 		//find a window with only two distinct haplotype clusters
@@ -439,7 +439,7 @@ public class NucleotideImputationUtils {
 		}
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
-		GenotypeTable target = FilterAlignment.getInstance(popdata.original, snpIndex);
+		GenotypeTable target = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
 		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
 		
 		nsnps = snpIndex.length;
@@ -489,7 +489,7 @@ public class NucleotideImputationUtils {
 		for (int i = 0; i < totalsites; i++) if (popdata.snpIndex.fastGet(i)) goodsites[ptr++] = i;
 		
 		for (int i = 0; i < 3; i++) {
-			GenotypeTable a = FilterAlignment.getInstance(popdata.original, new SimpleIdGroup(subids.get(i)));
+			GenotypeTable a = FilterGenotypeTable.getInstance(popdata.original, new SimpleIdGroup(subids.get(i)));
 			int ntaxa = a.numberOfTaxa();
 			for (int s = 0; s < nsites; s++) {
 				
@@ -654,7 +654,7 @@ public class NucleotideImputationUtils {
 		ArrayList<Haplotype> cluster1 = new ArrayList<>();
 		
 		int ntaxa = a.numberOfTaxa();
-		GenotypeTable b = FilterAlignment.getInstance(a, selectedSites);
+		GenotypeTable b = FilterGenotypeTable.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
 			seq = b.genotypeAllSites(t);
 			Haplotype hap = new Haplotype(seq, t);
@@ -711,7 +711,7 @@ public class NucleotideImputationUtils {
 		ArrayList<Haplotype> cluster1 = new ArrayList<>();
 		
 		int ntaxa = a.numberOfTaxa();
-		GenotypeTable b = FilterAlignment.getInstance(a, selectedSites);
+		GenotypeTable b = FilterGenotypeTable.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
 			byte[] seq = b.genotypeAllSites(t);
 			Haplotype hap = new Haplotype(seq, t);
@@ -834,9 +834,9 @@ public class NucleotideImputationUtils {
 		}
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
-		GenotypeTable target = FilterAlignment.getInstance(popdata.original, snpIndex);
+		GenotypeTable target = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
 		myLogger.info("filtered on snps");
-		AlignmentUtils.optimizeForTaxa(target);
+		GenotypeTableUtils.optimizeForTaxa(target);
 		myLogger.info("optimized for taxa");
 		
 		//remove taxa with low coverage
@@ -849,7 +849,7 @@ public class NucleotideImputationUtils {
 		
 		myLogger.info("identified low coverage taxa");
 		TaxaList targetids = IdGroupUtils.idGroupSubset(target.getIdGroup(), goodCoverage);
-		GenotypeTable target2 = FilterAlignment.getInstance(target, targetids);
+		GenotypeTable target2 = FilterGenotypeTable.getInstance(target, targetids);
 		
 		myLogger.info("Filtered on taxa.");
 		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target2);
@@ -926,7 +926,7 @@ public class NucleotideImputationUtils {
 		}
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
-		GenotypeTable target = FilterAlignment.getInstance(popdata.original, snpIndex);
+		GenotypeTable target = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
 		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
 		
 		nsnps = snpIndex.length;
@@ -1292,7 +1292,7 @@ public class NucleotideImputationUtils {
 			if (windowCount < windowSize) snpIds = Arrays.copyOf(snpIds, windowCount);
 			
 			//create a filtered alignment containing only the test snps
-			FilterAlignment filteredPopAlignment = FilterAlignment.getInstance(a, snpIds);
+			FilterGenotypeTable filteredPopAlignment = FilterGenotypeTable.getInstance(a, snpIds);
 			
 			//cluster polymorphic snps within the window by creating a UPGMA tree (cluster on snps)
 			GenotypeTable haplotypeAlignment = BitAlignment.getInstance(filteredPopAlignment, true);
@@ -1336,8 +1336,8 @@ public class NucleotideImputationUtils {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
 		
-		//IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterAlignment.getInstance(a, coreSnps)));
-                IBSDistanceMatrix dm = new IBSDistanceMatrix(ConvertSBitTBitPlugin.convertAlignment(FilterAlignment.getInstance(a, coreSnps), ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null));
+		//IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterGenotypeTable.getInstance(a, coreSnps)));
+                IBSDistanceMatrix dm = new IBSDistanceMatrix(ConvertSBitTBitPlugin.convertAlignment(FilterGenotypeTable.getInstance(a, coreSnps), ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null));
 		estimateMissingDistances(dm);
 		Tree myTree = new UPGMATree(dm);
 		TreeClusters clusterMaker = new TreeClusters(myTree);
@@ -1422,7 +1422,7 @@ public class NucleotideImputationUtils {
 		if (snpcount > 5) {
 			includedSnps = Arrays.copyOf(includedSnps, snpcount);
 			if (snpcount == nsites) return taxaClusters;
-			else return ImputationUtils.getTwoClusters(FilterAlignment.getInstance(a, includedSnps), 20);
+			else return ImputationUtils.getTwoClusters(FilterGenotypeTable.getInstance(a, includedSnps), 20);
 		} else {
 			snpIndices.clear();
 			snpIndices.addAll(originalList);
@@ -1970,7 +1970,7 @@ public class NucleotideImputationUtils {
 				sitecount++;
 			}
 			if (sitecount < nsnps) {
-				GenotypeTable subAlignment = BitAlignment.getInstance(FilterAlignment.getInstance(a, snpndx), true);
+				GenotypeTable subAlignment = BitAlignment.getInstance(FilterGenotypeTable.getInstance(a, snpndx), true);
 				IBSDistanceMatrix dm = new IBSDistanceMatrix(subAlignment);
 				estimateMissingDistances(dm);
 
@@ -1995,8 +1995,8 @@ public class NucleotideImputationUtils {
 							if (groups[t] == order[0]) taxaA[cntA++] = taxon;
 							else if (groups[t] == order[1]) taxaB[cntB++] = taxon;
 						}
-						GenotypeTable alignA = FilterAlignment.getInstance(subAlignment, new SimpleIdGroup(taxaA));
-						GenotypeTable alignB = FilterAlignment.getInstance(subAlignment, new SimpleIdGroup(taxaB));
+						GenotypeTable alignA = FilterGenotypeTable.getInstance(subAlignment, new SimpleIdGroup(taxaA));
+						GenotypeTable alignB = FilterGenotypeTable.getInstance(subAlignment, new SimpleIdGroup(taxaB));
 						boolean[] include = new boolean[window];
 						for (int s = 0; s < window; s++) {
 							if (alignA.majorAllele(s) != alignB.majorAllele(s)) {
@@ -2018,7 +2018,7 @@ public class NucleotideImputationUtils {
 							if (include[s]) goodSnpIndex[cnt++] = s;
 						}
 						
-						IBSDistanceMatrix dm2 = new IBSDistanceMatrix(BitAlignment.getInstance(FilterAlignment.getInstance(subAlignment, goodSnpIndex), true));
+						IBSDistanceMatrix dm2 = new IBSDistanceMatrix(BitAlignment.getInstance(FilterGenotypeTable.getInstance(subAlignment, goodSnpIndex), true));
 						estimateMissingDistances(dm2);
 						Tree thisTree = new UPGMATree(dm2);
 						
@@ -2096,7 +2096,7 @@ public class NucleotideImputationUtils {
 			sitesSelected[selectCount++] = firstSite;
 		}
 		
-		return FilterAlignment.getInstance(sba, sitesSelected);
+		return FilterGenotypeTable.getInstance(sba, sitesSelected);
 	}
 	
 	public static OpenBitSet whichSnpsAreFromSameTag(GenotypeTable alignIn, double minRsq) {
@@ -2255,7 +2255,7 @@ public class NucleotideImputationUtils {
 			} 
 		}
 		selectedSites = Arrays.copyOf(selectedSites, selectedCount);
-		return FilterAlignment.getInstance(a, selectedSites);
+		return FilterGenotypeTable.getInstance(a, selectedSites);
 	}
 	
     static double calculateRSqr(int countAB, int countAb, int countaB, int countab, int minTaxaForEstimate) {

@@ -15,7 +15,7 @@
 package net.maizegenetics.tassel;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableMask;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.dna.map.Chromosome;
@@ -322,8 +322,8 @@ public class DataTreePanel extends JPanel implements PluginListener {
                             builder.append("\n");
                         }
                     }
-                    if (book.getData() instanceof FilterAlignment) {
-                        FilterAlignment a = (FilterAlignment) book.getData();
+                    if (book.getData() instanceof FilterGenotypeTable) {
+                        FilterGenotypeTable a = (FilterGenotypeTable) book.getData();
                         builder.append("FilterAlignment...\n");
                         if (a.isSiteFilter()) {
                             builder.append("Site Filter\n");

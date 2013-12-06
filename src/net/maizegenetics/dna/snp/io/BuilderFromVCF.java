@@ -4,9 +4,9 @@ import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.map.Position;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
@@ -103,7 +103,7 @@ public class BuilderFromVCF {
                 throw new IllegalStateException("BuilderFromHapMap: Ordering incorrect HapMap must be ordered by position");
             }
             GenotypeCallTable g=gb.build();
-            result=AlignmentBuilder.getInstance(g, posBuild.build(), taxaList);
+            result=GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList);
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         }
@@ -195,7 +195,7 @@ class ProcessVCFBlock implements Runnable {
                 int a1=input.charAt(offset)-'0';
                 int a2=input.charAt(offset+2)-'0';
                 if(a1<0 || a2<0 ) {gTS[t][s]=GenotypeTable.UNKNOWN_DIPLOID_ALLELE;}
-                else {gTS[t][s]=AlignmentUtils.getDiploidValue(alleles[a1],alleles[a2]);}
+                else {gTS[t][s]=GenotypeTableUtils.getDiploidValue(alleles[a1],alleles[a2]);}
               //  System.out.print(gTS[t][s] + "\t");
             }
 //            System.out.println();

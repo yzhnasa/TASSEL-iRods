@@ -4,7 +4,7 @@
 package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
@@ -493,7 +493,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
      * @return
      */
     private byte[] isSiteGood(byte[] calls) {
-        int[][] alleles = AlignmentUtils.getAllelesSortedByFrequency(calls);
+        int[][] alleles = GenotypeTableUtils.getAllelesSortedByFrequency(calls);
         if (alleles[0].length < 2) {
             return null; // quantitative SNP calling rendered the site invariant
         }
@@ -507,8 +507,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         }
         byte homMaj = (byte) ((majAllele << 4) | majAllele);
         byte homMin = (byte) ((minAllele << 4) | minAllele);
-        byte hetG1 = AlignmentUtils.getDiploidValue(majAllele, minAllele);
-        byte hetG2 = AlignmentUtils.getDiploidValue(minAllele, majAllele);
+        byte hetG1 = GenotypeTableUtils.getDiploidValue(majAllele, minAllele);
+        byte hetG2 = GenotypeTableUtils.getDiploidValue(minAllele, majAllele);
         if (minF > -1.0) { // only test for minF if the parameter has been set above the theoretical minimum
             double obsF = calculateF(calls, alleles, hetG1, hetG2, theMAF);
             if (obsF < minF) return null;
@@ -523,7 +523,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         if (usePedigree) {
             byte[] callsToUse = filterCallsForInbreds(calls);
             //int[][] allelesToUse = getSortedAlleleCounts(callsToUse);
-            int[][] allelesToUse = AlignmentUtils.getAllelesSortedByFrequency(callsToUse);
+            int[][] allelesToUse = GenotypeTableUtils.getAllelesSortedByFrequency(callsToUse);
             if (allelesToUse[0].length < 2) {
                 return 1.0;  // lack of variation in the known inbreds will NOT reject a SNP
             }
@@ -535,8 +535,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             byte majAllele = (byte) allelesToUse[0][0];
             byte minAllele = (byte) allelesToUse[0][1];
             //byte newHetG = IUPACNucleotides.getDegerateSNPByteFromTwoSNPs(majAllele, minAllele);
-            byte newHetG1 = AlignmentUtils.getDiploidValue(majAllele, minAllele);
-            byte newHetG2 = AlignmentUtils.getDiploidValue(minAllele, majAllele);
+            byte newHetG1 = GenotypeTableUtils.getDiploidValue(majAllele, minAllele);
+            byte newHetG2 = GenotypeTableUtils.getDiploidValue(minAllele, majAllele);
             for (byte i : callsToUse) {
                 if (i == newHetG1 || i == newHetG2) {
                     hetGCnt++;
@@ -578,7 +578,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             return byteAlleles;
         } else {
             setBadCallsToMissing(calls,homMaj,homMin,hetG1,hetG2,majAllele,minAllele);
-            alleles = AlignmentUtils.getAllelesSortedByFrequency(calls); // the allele frequency & number of alleles may have been altered by setBadCallsToMissing()
+            alleles = GenotypeTableUtils.getAllelesSortedByFrequency(calls); // the allele frequency & number of alleles may have been altered by setBadCallsToMissing()
             if (alleles[0].length < 2) {
                 return null; // setBadCallsToMissing() rendered the site invariant
             } else if (alleles[0].length == 2) {
@@ -640,10 +640,10 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         if (call == homMin) return true;
         if (call == hetG1) return true;
         if (call == hetG2) return true;
-        if (call == AlignmentUtils.getDiploidValue(majAllele,NucleotideAlignmentConstants.GAP_ALLELE)) return true;
-        if (call == AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,majAllele)) return true;
-        if (call == AlignmentUtils.getDiploidValue(minAllele,NucleotideAlignmentConstants.GAP_ALLELE)) return true;
-        if (call == AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,minAllele)) return true;
+        if (call == GenotypeTableUtils.getDiploidValue(majAllele,NucleotideAlignmentConstants.GAP_ALLELE)) return true;
+        if (call == GenotypeTableUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,majAllele)) return true;
+        if (call == GenotypeTableUtils.getDiploidValue(minAllele,NucleotideAlignmentConstants.GAP_ALLELE)) return true;
+        if (call == GenotypeTableUtils.getDiploidValue(NucleotideAlignmentConstants.GAP_ALLELE,minAllele)) return true;
         if (call == NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) return true;
         return false;
     }

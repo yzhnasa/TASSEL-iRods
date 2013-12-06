@@ -1,7 +1,7 @@
 package net.maizegenetics.trait;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.trait.FilterPhenotype;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.taxa.IdGroupUtils;
@@ -28,13 +28,13 @@ public class MarkerPhenotype implements TableReport {
 
     public static MarkerPhenotype getInstance(GenotypeTable aa, Phenotype ca, boolean union) {
         TaxaList idGroup = getIdGroup(aa.taxa(), ca.getTaxa(), union);
-        GenotypeTable align = FilterAlignment.getInstance(aa, idGroup);
+        GenotypeTable align = FilterGenotypeTable.getInstance(aa, idGroup);
         Phenotype phenotype = FilterPhenotype.getInstance(ca, idGroup, null);
         return new MarkerPhenotype(align, phenotype);
     }
 
     public static MarkerPhenotype getInstance(MarkerPhenotype aac, TaxaList group) {
-        GenotypeTable aa = FilterAlignment.getInstance(aac.getAlignment(), group);
+        GenotypeTable aa = FilterGenotypeTable.getInstance(aac.getAlignment(), group);
         Phenotype ca = FilterPhenotype.getInstance(aac.getPhenotype(), group, null);
         return new MarkerPhenotype(aa, ca);
     }

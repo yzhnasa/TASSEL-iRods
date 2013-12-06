@@ -1,5 +1,5 @@
 /*
- *  AlignmentBuilder
+ *  GenotypeTableBuilder
  */
 package net.maizegenetics.dna.snp;
 
@@ -27,15 +27,15 @@ import java.util.Arrays;
  * Create new alignments.  New alignments are built from a minimum of TaxaList, PositionList, and Genotypes.  Depth and Scores are optional
  * features of alignments.
  * <p></p>
- * If you know the taxa,position, and genotypes are known from the beginning use:
- * Alignment a=AlignmentBuilder.getInstance(genotype, positionList, taxaList);
- *
- * In many situations only
+ If you know the taxa,position, and genotypes are known from the beginning use:
+ Alignment a=GenotypeTableBuilder.getInstance(genotype, positionList, taxaList);
+
+ In many situations only
  *
  * @author Terry Casstevens
  * @author Ed Buckler
  */
-public class AlignmentBuilder {
+public class GenotypeTableBuilder {
 
     private GenotypeCallTable genotype=null;
 
@@ -56,7 +56,7 @@ public class AlignmentBuilder {
     /*
     Builder for in memory taxa incremental
      */
-    private AlignmentBuilder(PositionList positionList) {
+    private GenotypeTableBuilder(PositionList positionList) {
         this.positionList=positionList;
         this.myBuildType=BuildType.TAXA_INC;
         incGeno=new ArrayList<>();
@@ -66,26 +66,26 @@ public class AlignmentBuilder {
     /*
         Builder for in memory site incremental
      */
-    private AlignmentBuilder(TaxaList taxaList) {
+    private GenotypeTableBuilder(TaxaList taxaList) {
         this.taxaList=taxaList;
         this.myBuildType=BuildType.SITE_INC;
         incGeno=new ArrayList<>();
         posListBuilder=new PositionListBuilder();
     }
 
-    public static AlignmentBuilder getTaxaIncremental(PositionList positionList) {
-        return new AlignmentBuilder(positionList);
+    public static GenotypeTableBuilder getTaxaIncremental(PositionList positionList) {
+        return new GenotypeTableBuilder(positionList);
     }
 
-    public static AlignmentBuilder getTaxaIncremental(PositionList positionList, String newHDF5File) {
-        return new AlignmentBuilder(positionList,newHDF5File);
+    public static GenotypeTableBuilder getTaxaIncremental(PositionList positionList, String newHDF5File) {
+        return new GenotypeTableBuilder(positionList,newHDF5File);
     }
 
-    public static AlignmentBuilder getSiteIncremental(TaxaList taxaList) {
-        return new AlignmentBuilder(taxaList);
+    public static GenotypeTableBuilder getSiteIncremental(TaxaList taxaList) {
+        return new GenotypeTableBuilder(taxaList);
     }
 
-    public AlignmentBuilder addSite(Position pos, byte[] genos) {
+    public GenotypeTableBuilder addSite(Position pos, byte[] genos) {
         if((myBuildType!=BuildType.SITE_INC)||isHDF5) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getSiteIncremental and without HDF5");
         if(genos.length!=taxaList.numberOfTaxa()) throw new IndexOutOfBoundsException("Number of taxa and genotypes do not agree");
         posListBuilder.add(pos);
@@ -93,11 +93,11 @@ public class AlignmentBuilder {
         return this;
     }
 
-    public AlignmentBuilder addTaxon(Taxon taxon, byte[] genos) {
+    public GenotypeTableBuilder addTaxon(Taxon taxon, byte[] genos) {
         return addTaxon(taxon, genos, null);
     }
 
-    public AlignmentBuilder addTaxon(Taxon taxon, byte[] genos, byte[] depth) {
+    public GenotypeTableBuilder addTaxon(Taxon taxon, byte[] genos, byte[] depth) {
         if(myBuildType!=BuildType.TAXA_INC) throw new IllegalArgumentException("addTaxon only be used with AlignmentBuilder.getTaxaIncremental");
         if(genos.length!=positionList.siteCount()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
         if(isHDF5) {
@@ -130,7 +130,7 @@ public class AlignmentBuilder {
                 for (int i=0; i<incGeno.size(); i++) {
                     gB.setBaseRangeForTaxon(i, 0, incGeno.get(i));
                 }
-                return new CoreAlignment(gB.build(), positionList, tl);
+                return new CoreGenotypeTable(gB.build(), positionList, tl);
             }
             case SITE_INC: {
                 //TODO validate sort order, sort if needed
@@ -142,14 +142,14 @@ public class AlignmentBuilder {
                         gB.setBase(t,s,b[t]);
                     }
                 }
-                return new CoreAlignment(gB.build(), pl, taxaList);
+                return new CoreGenotypeTable(gB.build(), pl, taxaList);
             }
         }
         return null;
     }
 
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
-        return new CoreAlignment(genotype, positionList, taxaList, siteScore, alleleDepth);
+        return new CoreGenotypeTable(genotype, positionList, taxaList, siteScore, alleleDepth);
     }
 
     /**
@@ -160,7 +160,7 @@ public class AlignmentBuilder {
      * @return new alignment
      */
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
-        return new CoreAlignment(genotype, positionList, taxaList);
+        return new CoreGenotypeTable(genotype, positionList, taxaList);
     }
 
     /**
@@ -172,7 +172,7 @@ public class AlignmentBuilder {
      * @return alignment backed by new HDF5 file
      */
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
-        AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(positionList,hdf5File);
+        GenotypeTableBuilder aB=GenotypeTableBuilder.getTaxaIncremental(positionList,hdf5File);
         for (int i=0; i<taxaList.numberOfTaxa(); i++) {
             aB.addTaxon(taxaList.get(i),genotype.genotypeAllSites(i));
         }
@@ -194,7 +194,7 @@ public class AlignmentBuilder {
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
         PositionList pL=PositionListBuilder.getInstance(reader);
         GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
-        return AlignmentBuilder.getInstance(geno, pL, tL);
+        return GenotypeTableBuilder.getInstance(geno, pL, tL);
     }
 
     public static GenotypeTable getInstanceOnlyMajorMinor(GenotypeTable alignment) {
@@ -220,11 +220,11 @@ public class AlignmentBuilder {
                     if ((currentAlleles[1] != majorAllele[s]) && (currentAlleles[1] != minorAllele[s])) {
                         currentAlleles[1] = GenotypeTable.UNKNOWN_ALLELE;
                     }
-                    builder.setBase(t, s, AlignmentUtils.getDiploidValue(currentAlleles[0], currentAlleles[1]));
+                    builder.setBase(t, s, GenotypeTableUtils.getDiploidValue(currentAlleles[0], currentAlleles[1]));
                 }
             }
         }
-        return new CoreAlignment(builder.build(), alignment.positions(), alignment.taxa());
+        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
     }
 
     public static GenotypeTable getHomozygousInstance(GenotypeTable alignment) {
@@ -235,7 +235,7 @@ public class AlignmentBuilder {
         for (int t = 0; t < numTaxa; t++) {
             for (int s = 0; s < numSites; s++) {
                 byte currGeno=alignment.genotype(t, s);
-                if(AlignmentUtils.isHeterozygous(currGeno)) {
+                if(GenotypeTableUtils.isHeterozygous(currGeno)) {
                     builder.setBase(t, s, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
                 } else {
                     builder.setBase(t, s, currGeno);
@@ -243,7 +243,7 @@ public class AlignmentBuilder {
             }
 
         }
-        return new CoreAlignment(builder.build(), alignment.positions(), alignment.taxa());
+        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
     }
 
     /**
@@ -252,7 +252,7 @@ public class AlignmentBuilder {
      * @param alignment
      * @return alignment backed by a single SuperByteMatrix
      */
-    public static GenotypeTable getGenotypeCopyInstance(FilterAlignment alignment) {
+    public static GenotypeTable getGenotypeCopyInstance(FilterGenotypeTable alignment) {
         return copyGenotypeInstance(alignment);
     }
 
@@ -262,7 +262,7 @@ public class AlignmentBuilder {
      * @param alignment
      * @return alignment backed by a single SuperByteMatrix
      */
-    public static GenotypeTable getGenotypeCopyInstance(CombineAlignment alignment) {
+    public static GenotypeTable getGenotypeCopyInstance(CombineGenotypeTable alignment) {
         return copyGenotypeInstance(alignment);
     }
 
@@ -279,7 +279,7 @@ public class AlignmentBuilder {
         for (int t = 0; t < numTaxa; t++) {
             for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.genotype(t, s));}
         }
-        return new CoreAlignment(builder.build(), alignment.positions(), alignment.taxa());
+        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
     }
 
     /*
@@ -291,7 +291,7 @@ public class AlignmentBuilder {
      * @param positionList
      * @param hdf5File
      */
-    private AlignmentBuilder(PositionList positionList, String hdf5File) {
+    private GenotypeTableBuilder(PositionList positionList, String hdf5File) {
         IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
         //config.overwrite();
         config.dontUseExtendableDataTypes();
@@ -352,7 +352,7 @@ public class AlignmentBuilder {
 
     /**
      * Annotates the HDF5 HapMap file after it is built.
-     * Currently, placed in the AlignmentBuilder as it still above genotypes, taxa, and sites.
+     * Currently, placed in the GenotypeTableBuilder as it still above genotypes, taxa, and sites.
      * @param writer
      */
     private void annotateHDF5File(IHDF5Writer writer) {
@@ -371,10 +371,10 @@ public class AlignmentBuilder {
             int covSum=0;  //coverage of the taxon
             int hetSum=0;
             for (int s = 0; s < sites; s++) {
-                byte[] b = AlignmentUtils.getDiploidValues(genotype[s]);
+                byte[] b = GenotypeTableUtils.getDiploidValues(genotype[s]);
                 if(b[0]<6) af[b[0]][s]++;
                 if(b[1]<6) af[b[1]][s]++;
-                if(AlignmentUtils.isHeterozygous(genotype[s])) hetSum++;
+                if(GenotypeTableUtils.isHeterozygous(genotype[s])) hetSum++;
                 if(genotype[s]!=GenotypeTable.UNKNOWN_DIPLOID_ALLELE) covSum++;
             }
             coverage[taxon]=(float)covSum/(float)sites;

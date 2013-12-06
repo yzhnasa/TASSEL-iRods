@@ -1,5 +1,5 @@
 /*
- * CoreAlignment
+ * CoreGenotypeTable
  */
 package net.maizegenetics.dna.snp;
 
@@ -22,9 +22,9 @@ import org.apache.log4j.Logger;
  *
  * @author terry
  */
-public class CoreAlignment implements GenotypeTable {
+public class CoreGenotypeTable implements GenotypeTable {
 
-    private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
+    private static final Logger myLogger = Logger.getLogger(CoreGenotypeTable.class);
     private final GenotypeCallTable myGenotype;
     private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new HashMap<ALLELE_SORT_TYPE, BitStorage>();
     private final PositionList myPositionList;
@@ -34,7 +34,7 @@ public class CoreAlignment implements GenotypeTable {
     private final int mySiteCount;
     private final int myTaxaCount;
 
-    CoreAlignment(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+    CoreGenotypeTable(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
         //todo need check dimensions
         myGenotype = genotype;
         myPositionList = positionList;
@@ -45,7 +45,7 @@ public class CoreAlignment implements GenotypeTable {
         myTaxaCount = myTaxaList.numberOfTaxa();
     }
 
-    CoreAlignment(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
+    CoreGenotypeTable(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
         this(genotype, positionList, taxaList, null, null);
     }
 

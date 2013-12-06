@@ -8,7 +8,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -364,8 +364,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         summStats[MINOR_ALLELE_FREQ2] = a2.minorAlleleFrequency(site2);
         summStats[F_VALUE1] = calculateF(a1, site1);
         summStats[F_VALUE2] = calculateF(a2, site2);
-        String alleleString1 = Joiner.on("/").join(AlignmentUtils.convertNucleotideGenotypesToStringList(alleles1));
-        String alleleString2 = Joiner.on("/").join(AlignmentUtils.convertNucleotideGenotypesToStringList(alleles2));
+        String alleleString1 = Joiner.on("/").join(GenotypeTableUtils.convertNucleotideGenotypesToStringList(alleles1));
+        String alleleString2 = Joiner.on("/").join(GenotypeTableUtils.convertNucleotideGenotypesToStringList(alleles2));
 
         int[][][] compareTaxaStatsSame = new int[taxaRedirect.size()][][];
 
@@ -429,7 +429,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 majGenoCnt++;
             } else if ((bases[0] == minAllele) && bases[1] == minAllele) {
                 minGenoCnt++;
-            } else if (AlignmentUtils.isEqual(bases, new byte[]{majAllele, minAllele})) {
+            } else if (GenotypeTableUtils.isEqual(bases, new byte[]{majAllele, minAllele})) {
                 hetGenoCnt++;
             }
         }
@@ -454,14 +454,14 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.genotype(taxon2Index, site2));
         }
         if (base1 != GenotypeTable.UNKNOWN_DIPLOID_ALLELE && base2 != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
-            if (!(AlignmentUtils.isHeterozygous(base1) || AlignmentUtils.isHeterozygous(base2))) {
+            if (!(GenotypeTableUtils.isHeterozygous(base1) || GenotypeTableUtils.isHeterozygous(base2))) {
                 if (base1 != base2) {
                     ++compareStats[NUM_TAXA_DIFFERENT];
                     ++compareStats[NUM_TAXA_HOMOZYGOUS_DIFF];
                 }
                 ++compareStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
             } else {
-                if (!AlignmentUtils.isEqual(base1, base2)) {
+                if (!GenotypeTableUtils.isEqual(base1, base2)) {
                     ++compareStats[NUM_TAXA_DIFFERENT];
                 }
             }
@@ -542,8 +542,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 //            return SiteCompareType.DIFFERENT; // both must be biallelic to be compared
 //        }
 
-        byte diploidValue1 = AlignmentUtils.getDiploidValue(alleles1[0], alleles1[1]);
-        byte diploidValue2 = AlignmentUtils.getDiploidValue(alleles2[0], alleles2[1]);
+        byte diploidValue1 = GenotypeTableUtils.getDiploidValue(alleles1[0], alleles1[1]);
+        byte diploidValue2 = GenotypeTableUtils.getDiploidValue(alleles2[0], alleles2[1]);
 
         String iupac1 = NucleotideAlignmentConstants.getNucleotideIUPAC(diploidValue1);
         String iupac2 = NucleotideAlignmentConstants.getNucleotideIUPAC(diploidValue2);

@@ -3,9 +3,9 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
@@ -308,7 +308,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     throw new UnsupportedOperationException("kpUnmergDups is not supported in TASSEL 5.  Is this a problem?");
  //                   deleteRemainingDuplicates(msa);
                 }
-                GenotypeTable aOut=AlignmentBuilder.getInstance(msa.build(),posBuilder.build(),a.taxa());
+                GenotypeTable aOut=GenotypeTableBuilder.getInstance(msa.build(),posBuilder.build(),a.taxa());
                 ExportUtils.writeToHapmap(aOut, false, outfile, '\t', this);
             }
 //            else if (inputFormat==INPUT_FORMAT.vcf)
@@ -364,7 +364,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                             if (!usePedigree || useTaxaForCompare[t]) {
                                 ++nCompare;
                             }
-                            if (!AlignmentUtils.isEqual(currMerge[t], geno2)) {
+                            if (!GenotypeTableUtils.isEqual(currMerge[t], geno2)) {
                                 if (!usePedigree || useTaxaForCompare[t]) {
                                     ++nMismatch;
                                 }
@@ -500,7 +500,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //                    continue;
 //                }
 //                nCompared ++;
-//                if (!AlignmentUtils.isEqual(mergedGeno, singleBase))
+//                if (!GenotypeTableUtils.isEqual(mergedGeno, singleBase))
 //                {
 //                    nMisMatch ++;
 //                }

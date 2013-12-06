@@ -9,7 +9,7 @@ package net.maizegenetics.baseplugins;
 import net.maizegenetics.gui.AbstractAvailableListModel;
 import net.maizegenetics.gui.SelectFromAvailableDialog;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.trait.FilterPhenotype;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.taxa.TaxaList;
@@ -148,9 +148,9 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
         int count = 0;
         if (theData instanceof GenotypeTable) {
             if (myIdsToKeep != null) {
-                result = FilterAlignment.getInstance((GenotypeTable) theData, myIdsToKeep, false);
+                result = FilterGenotypeTable.getInstance((GenotypeTable) theData, myIdsToKeep, false);
             } else if (myIdsToRemove != null) {
-                result = FilterAlignment.getInstanceRemoveIDs((GenotypeTable) theData, myIdsToRemove);
+                result = FilterGenotypeTable.getInstanceRemoveIDs((GenotypeTable) theData, myIdsToRemove);
             }
             count = ((GenotypeTable) result).numberOfTaxa();
         } else if (theData instanceof Phenotype) {

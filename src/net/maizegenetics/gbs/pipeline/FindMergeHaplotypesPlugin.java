@@ -4,11 +4,11 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GeneticMap;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
@@ -114,8 +114,8 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     
     private GenotypeTable createHaplotypeAlignment(int startSite, int endSite, GenotypeTable baseAlign,
             int minSites, double maxDistance) {
-        FilterAlignment fa=FilterAlignment.getInstance(baseAlign, startSite, endSite);
-        GenotypeTable inAlign=AlignmentBuilder.getGenotypeCopyInstance(fa);
+        FilterGenotypeTable fa=FilterGenotypeTable.getInstance(baseAlign, startSite, endSite);
+        GenotypeTable inAlign=GenotypeTableBuilder.getGenotypeCopyInstance(fa);
         int sites=inAlign.numberOfSites();
         System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.chromosome(0),
                 inAlign.chromosomalPosition(0),inAlign.numberOfTaxa(),inAlign.numberOfSites());
@@ -135,7 +135,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             gB.setBaseRangeForTaxon(index,0,calls[0]);
             index++;
         }
-        return AlignmentBuilder.getInstance(gB.build(),inAlign.positions(),tLB.build());
+        return GenotypeTableBuilder.getInstance(gB.build(),inAlign.positions(),tLB.build());
     }
     
     public static int[][] divideChromosome(GenotypeTable a, int appoxSitesPerHaplotype) {
@@ -296,9 +296,9 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         for (int s = startSite; s <= endSite; s++) {
             byte mjAllele = a.majorAllele(s);
             byte mnAllele = a.minorAllele(s);
-            byte mj=AlignmentUtils.getUnphasedDiploidValue(mjAllele,mjAllele);
-            byte mn=AlignmentUtils.getUnphasedDiploidValue(mnAllele,mnAllele);
-            byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
+            byte mj=GenotypeTableUtils.getUnphasedDiploidValue(mjAllele,mjAllele);
+            byte mn=GenotypeTableUtils.getUnphasedDiploidValue(mnAllele,mnAllele);
+            byte het = GenotypeTableUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
             int mjCnt=0, mnCnt=0;
             for (int t = 0; t < taxaIndex.length; t++) {
                 byte ob = a.genotype(taxaIndex[t], s);
@@ -309,7 +309,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
                     mjCnt++;
                 } else if (ob == mn) {
                     mnCnt++;
-                } else if (AlignmentUtils.isEqual(ob, het)) {
+                } else if (GenotypeTableUtils.isEqual(ob, het)) {
                     mjCnt++;
                     mnCnt++;
                 }
@@ -366,7 +366,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         int cnt=0, cntHet=0;
         for (int i = 0; i < b.length; i++) {
             if(b[i]==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {cnt++;}
-            else if(AlignmentUtils.isHeterozygous(b[i])) {cntHet++;}
+            else if(GenotypeTableUtils.isHeterozygous(b[i])) {cntHet++;}
         }
         int[] result={cnt,cntHet};
         return result;

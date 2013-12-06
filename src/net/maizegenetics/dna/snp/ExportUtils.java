@@ -160,7 +160,7 @@ public class ExportUtils {
     * @return 
     */ 
    public static String writeToMutableHDF5(GenotypeTable a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
-        AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(a.positions(),newHDF5file);
+        GenotypeTableBuilder aB=GenotypeTableBuilder.getTaxaIncremental(a.positions(),newHDF5file);
         if((exportTaxa!=null)&&(exportTaxa.numberOfTaxa()==0)) {aB.build(); return newHDF5file;}
         for (int t = 0; t < a.numberOfTaxa(); t++) {
               if((exportTaxa!=null)&&(!exportTaxa.contains(a.taxa().get(t)))) continue;  //taxon not in export list

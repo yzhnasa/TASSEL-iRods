@@ -1,8 +1,8 @@
 package net.maizegenetics.gwas.imputation;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -57,7 +57,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				
 				myLogger.info("creating family alignment for family " + family.name);
                 TaxaList tL=new TaxaListBuilder().addAll(ids).build();
-				family.original =  AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)FilterAlignment.getInstance(align, tL, false));
+				family.original =  GenotypeTableBuilder.getGenotypeCopyInstance((FilterGenotypeTable)FilterGenotypeTable.getInstance(align, tL, false));
 				myLogger.info("family alignment created");
 				if (useClusterAlgorithm)  NucleotideImputationUtils.callParentAllelesUsingClusters(family, maxMissing, minMinorAlleleFrequency, windowSize);
 				else if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);

@@ -155,7 +155,7 @@ public class ReadSequenceAlignmentUtils {
                 .setBases(s)
                 .build();
 
-        return AlignmentBuilder.getInstance(genotype, null, idGroup);
+        return GenotypeTableBuilder.getInstance(genotype, null, idGroup);
     }
 
     private static int readSeqLineP(PushbackReader in, int s, int pos, int maxPos, char[][] data, String[] identifiers,

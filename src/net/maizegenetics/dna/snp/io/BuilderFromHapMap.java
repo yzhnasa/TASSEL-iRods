@@ -4,9 +4,9 @@ import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.map.Position;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
@@ -104,7 +104,7 @@ public class BuilderFromHapMap {
                 throw new IllegalStateException("BuilderFromHapMap: Ordering incorrect HapMap must be ordered by position");
             }
             GenotypeCallTable g=gb.build();
-            result=AlignmentBuilder.getInstance(g, posBuild.build(), taxaList);
+            result=GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList);
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         }
@@ -209,7 +209,7 @@ class ProcessHapMapBlock implements Runnable {
                 for (int i=offset; i<len; i+=3) {
                     //System.out.println(i+":"+input.charAt(i+1)+input.charAt(i));
                     //there is a phasing conflict with the existing import approach
-                    gTS[(i-offset)/3][s]=AlignmentUtils.getDiploidValue(NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i+1)),
+                    gTS[(i-offset)/3][s]=GenotypeTableUtils.getDiploidValue(NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i+1)),
                             NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i)));
                 }
             }

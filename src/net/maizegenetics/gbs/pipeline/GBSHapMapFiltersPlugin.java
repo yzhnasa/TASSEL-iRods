@@ -2,7 +2,7 @@ package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -94,7 +94,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                     lowCoverageTaxa = getLowCoverageLines(a, tCov);
                 }  // Note: lowCoverageTaxa is based upon the startChromosome only
                 TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), lowCoverageTaxa, false);
-                a = FilterAlignment.getInstance(a, keepTaxa);
+                a = FilterGenotypeTable.getInstance(a, keepTaxa);
                 myLogger.info("TaxaFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
                 if (a.numberOfSites() == 0) {
                     continue;
@@ -108,19 +108,19 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             if (usePedigree) {
                 // filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, -2.0, minCount, minMAF, maxMAF, snpLogging, "Filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa");
-                a = FilterAlignment.getInstance(a, goodLowHetSites);
+                a = FilterGenotypeTable.getInstance(a, goodLowHetSites);
 
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
                 String[] highExpectedFTaxa = getHighExpectedFTaxa(a);
                 TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), highExpectedFTaxa, true);
-                GenotypeTable inbredGenos = FilterAlignment.getInstance(a, highExpectedFTaxaIDGroup);
+                GenotypeTable inbredGenos = FilterGenotypeTable.getInstance(a, highExpectedFTaxaIDGroup);
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0, snpLogging, "Filter the sites for minF only based only on the taxa with expectedF >= minF");
                 inbredGenos = null;
                 System.gc();
-                a = FilterAlignment.getInstance(a, goodLowFSites);
+                a = FilterGenotypeTable.getInstance(a, goodLowFSites);
             } else {
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, minF, minCount, minMAF, maxMAF, snpLogging, "Filter the sites");
-                a = FilterAlignment.getInstance(a, goodLowHetSites);
+                a = FilterGenotypeTable.getInstance(a, goodLowHetSites);
             }
             myLogger.info("SiteFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
             if (a.numberOfSites() == 0) {
@@ -145,7 +145,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             if (hLD) {
                 a = ImportUtils.readFromHapmap(outfile, null);
                 int[] gs = AlignmentFilterByGBSUtils.getGoodSitesByLD(a, minR2, minBonP, 128, 100, 20, false);
-                a = FilterAlignment.getInstance(a, gs);
+                a = FilterGenotypeTable.getInstance(a, gs);
                 myLogger.info("LDFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
                 if (a.numberOfSites() == 0) {
                     continue;

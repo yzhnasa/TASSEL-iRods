@@ -1,5 +1,5 @@
 /*
- * CombineAlignment
+ * CombineGenotypeTable
  */
 package net.maizegenetics.dna.snp;
 
@@ -17,7 +17,7 @@ import java.util.*;
  *
  * @author terry
  */
-public class CombineAlignment implements GenotypeTable {
+public class CombineGenotypeTable implements GenotypeTable {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private final GenotypeTable[] myAlignments;
@@ -28,7 +28,7 @@ public class CombineAlignment implements GenotypeTable {
     private final TaxaList myTaxaList;
     private String[][] myAlleleStates;
 
-    private CombineAlignment(TaxaList taxaList, GenotypeTable[] alignments) {
+    private CombineGenotypeTable(TaxaList taxaList, GenotypeTable[] alignments) {
 
         myTaxaList = taxaList;
         myAlignments = alignments;
@@ -74,7 +74,7 @@ public class CombineAlignment implements GenotypeTable {
             }
         }
 
-        return new CombineAlignment(firstGroup, alignments);
+        return new CombineGenotypeTable(firstGroup, alignments);
 
     }
 
@@ -113,10 +113,10 @@ public class CombineAlignment implements GenotypeTable {
 
         GenotypeTable[] newAlignmentNews = new GenotypeTable[alignments.length];
         for (int i = 0; i < alignments.length; i++) {
-            newAlignmentNews[i] = FilterAlignment.getInstance(alignments[i], newTaxa);
+            newAlignmentNews[i] = FilterGenotypeTable.getInstance(alignments[i], newTaxa);
         }
 
-        return new CombineAlignment(newTaxa, newAlignmentNews);
+        return new CombineGenotypeTable(newTaxa, newAlignmentNews);
 
     }
 

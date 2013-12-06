@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -103,7 +103,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                     }
                 }
                 monomorphicSnps = Arrays.copyOf(monomorphicSnps, snpCount);
-                GenotypeTable fa = FilterAlignment.getInstance(popdata.original, monomorphicSnps);
+                GenotypeTable fa = FilterGenotypeTable.getInstance(popdata.original, monomorphicSnps);
                 if (fa.numberOfSites() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
                     out = MutableSingleEncodeAlignment.getInstance(new GenotypeTable[]{outPoly});
                 } else { //Return both monomorphic and polymorphic sites

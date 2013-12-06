@@ -1,5 +1,5 @@
 /*
- * ProjectionAlignment
+ * ProjectionGenotypeTable
  */
 package net.maizegenetics.dna.snp;
 
@@ -22,7 +22,7 @@ import java.util.SortedSet;
  * @deprecated  Use the ProjectionBuilder that returns a CoreAlignment with ProjectionGenotype
  */
 @Deprecated
-public class ProjectionAlignment {
+public class ProjectionGenotypeTable {
     private BitStorage myFreqBitStorage;
     private BitStorage myReferenceBitStorage;
     private final TaxaList myTaxaList;
@@ -38,7 +38,7 @@ public class ProjectionAlignment {
     public long cacheUseCnt=0, lookupCnt=0;
 
     
-    ProjectionAlignment(GenotypeTable hdAlign, Map<Taxon,SortedSet<DonorHaplotypes>> allBreakPoints) {
+    ProjectionGenotypeTable(GenotypeTable hdAlign, Map<Taxon,SortedSet<DonorHaplotypes>> allBreakPoints) {
         myTaxaList=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         myBaseAlignment = hdAlign;
         this.allBreakPoints=allBreakPoints;

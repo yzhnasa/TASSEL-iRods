@@ -28,7 +28,7 @@ import net.maizegenetics.baseplugins.ExportPlugin;
 import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.pal.alignment.BitAlignment;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -87,7 +87,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 					String[] names = new String[family.members.size()];
 					family.members.toArray(names);
                     TaxaList tL=new TaxaListBuilder().addAll(names).build();
-					GenotypeTable align = FilterAlignment.getInstance(anAlignment, tL, false);
+					GenotypeTable align = FilterGenotypeTable.getInstance(anAlignment, tL, false);
 					processFamily(align, family.name);
 				}
 			}
@@ -160,7 +160,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 //			Taxon[] ids = new Taxon[taxaDiscardList.size()];
 //			taxaDiscardList.toArray(ids);
             TaxaList tL=new TaxaListBuilder().addAll(taxaDiscardList).build();
-			align = FilterAlignment.getInstanceRemoveIDs(align, tL);
+			align = FilterGenotypeTable.getInstanceRemoveIDs(align, tL);
 		}
 		
 		myLogger.info("After filtering for taxa, there are " + align.numberOfTaxa() + " taxa.");
@@ -175,7 +175,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		if (nsitesKept < nsites) {
 			myLogger.info(nsitesKept + " sites had more than " + minSiteGametes + " and were retained.");
 			sitesToKeep = Arrays.copyOf(sitesToKeep, nsitesKept);
-			align = FilterAlignment.getInstance(align, sitesToKeep);
+			align = FilterGenotypeTable.getInstance(align, sitesToKeep);
 		}
 		
 		return align;
@@ -191,7 +191,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			if (align.minorAlleleFrequency(s) > 0.15) polysites[sitecount++] = s;  
 		}
 		polysites = Arrays.copyOf(polysites, sitecount);
-		align = FilterAlignment.getInstance(align, polysites);
+		align = FilterGenotypeTable.getInstance(align, polysites);
 		align = BitAlignment.getInstance(align, true);
 		
 		myLogger.info("Chromosome " + align.chromosomeName(0) + ", family " + familyname + " has " + sitecount + " polymorphic snps.");

@@ -4,7 +4,7 @@
 package net.maizegenetics.dna.snp.genotypecall;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 import org.apache.log4j.Logger;
@@ -41,7 +41,7 @@ abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
 
     @Override
     public byte[] genotypeArray(int taxon, int site) {
-        return AlignmentUtils.getDiploidValues(genotype(taxon, site));
+        return GenotypeTableUtils.getDiploidValues(genotype(taxon, site));
     }
 
     @Override

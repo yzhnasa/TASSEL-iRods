@@ -4,7 +4,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.PositionListBuilder;
@@ -157,7 +157,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
             //          alignment.clean();
             //TODO check sort of positions.
-            return new Datum(input.getName() + "_NewCoordinates", AlignmentBuilder.getInstance(alignment.genotypeMatrix(), posBuilder.build(), alignment.taxa()), null);
+            return new Datum(input.getName() + "_NewCoordinates", GenotypeTableBuilder.getInstance(alignment.genotypeMatrix(), posBuilder.build(), alignment.taxa()), null);
 
         } catch (Exception e) {
             myLogger.error("processDatum: problem converting alignment: line: " + count + "  message: " + e.getMessage());

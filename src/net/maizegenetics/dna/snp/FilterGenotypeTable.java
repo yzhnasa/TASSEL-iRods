@@ -1,5 +1,5 @@
 /*
- * FilterAlignment
+ * FilterGenotypeTable
  */
 package net.maizegenetics.dna.snp;
 
@@ -24,10 +24,10 @@ import java.util.*;
  *
  * @author terry
  */
-public class FilterAlignment implements GenotypeTable {
+public class FilterGenotypeTable implements GenotypeTable {
 
     private static final long serialVersionUID = -5197800047652332969L;
-    private static final Logger myLogger = Logger.getLogger(FilterAlignment.class);
+    private static final Logger myLogger = Logger.getLogger(FilterGenotypeTable.class);
     private final boolean myIsTaxaFilter;
     private final boolean myIsSiteFilter;
     private final boolean myIsSiteFilterByRange;
@@ -43,7 +43,7 @@ public class FilterAlignment implements GenotypeTable {
     private final GenotypeCallTable myGenotype;
     private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new EnumMap<ALLELE_SORT_TYPE, BitStorage>(ALLELE_SORT_TYPE.class);
 
-    private FilterAlignment(GenotypeTable a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
+    private FilterGenotypeTable(GenotypeTable a, TaxaList subList, int[] taxaRedirect, FilterGenotypeTable original) {
 
         myTaxaList = subList;
 
@@ -82,7 +82,7 @@ public class FilterAlignment implements GenotypeTable {
     }
 
     /**
-     * This returns FilterAlignment with only specified subTaxaList. Defaults to
+     * This returns FilterGenotypeTable with only specified subTaxaList. Defaults to
      * retain unknown taxa.
      *
      * @param a alignment
@@ -95,7 +95,7 @@ public class FilterAlignment implements GenotypeTable {
     }
 
     /**
-     * This returns FilterAlignment with only specified subTaxaList. If
+     * This returns FilterGenotypeTable with only specified subTaxaList. If
      * retainUnknownTaxa is true then Alignment will return unknown values for
      * missing taxa.
      *
@@ -108,10 +108,10 @@ public class FilterAlignment implements GenotypeTable {
     public static GenotypeTable getInstance(GenotypeTable a, TaxaList subTaxaList, boolean retainUnknownTaxa) {
 
         GenotypeTable baseAlignment = a;
-        FilterAlignment original = null;
-        if (baseAlignment instanceof FilterAlignment) {
-            original = (FilterAlignment) a;
-            baseAlignment = ((FilterAlignment) a).getBaseAlignment();
+        FilterGenotypeTable original = null;
+        if (baseAlignment instanceof FilterGenotypeTable) {
+            original = (FilterGenotypeTable) a;
+            baseAlignment = ((FilterGenotypeTable) a).getBaseAlignment();
         }
 
         List<Integer> taxaRedirectList = new ArrayList<Integer>();
@@ -134,8 +134,8 @@ public class FilterAlignment implements GenotypeTable {
                 }
             } else {
                 for (int x = 0; x < ion.size(); x++) {
-                    if (a instanceof FilterAlignment) {
-                        taxaRedirectList.add(((FilterAlignment) a).translateTaxon(ion.get(x)));
+                    if (a instanceof FilterGenotypeTable) {
+                        taxaRedirectList.add(((FilterGenotypeTable) a).translateTaxon(ion.get(x)));
                     } else {
                         taxaRedirectList.add(ion.get(x));
                     }
@@ -155,7 +155,7 @@ public class FilterAlignment implements GenotypeTable {
 
         TaxaList resultTaxaList = new TaxaListBuilder().addAll(idList).build();
 
-        return new FilterAlignment(baseAlignment, resultTaxaList, taxaRedirect, original);
+        return new FilterGenotypeTable(baseAlignment, resultTaxaList, taxaRedirect, original);
 
     }
 
@@ -176,7 +176,7 @@ public class FilterAlignment implements GenotypeTable {
                 result.add(current.get(i));
             }
         }
-        return FilterAlignment.getInstance(a, result.build());
+        return FilterGenotypeTable.getInstance(a, result.build());
 
     }
 
@@ -187,7 +187,7 @@ public class FilterAlignment implements GenotypeTable {
      * @param startSite start site (included)
      * @param endSite end site (included)
      */
-    private FilterAlignment(GenotypeTable a, int startSite, int endSite, FilterAlignment original) {
+    private FilterGenotypeTable(GenotypeTable a, int startSite, int endSite, FilterGenotypeTable original) {
 
         myTaxaList = original == null ? a.taxa() : original.taxa();
 
@@ -233,7 +233,7 @@ public class FilterAlignment implements GenotypeTable {
      * @param a base alignment
      * @param subSites site to include
      */
-    private FilterAlignment(GenotypeTable a, int[] subSites, FilterAlignment original) {
+    private FilterGenotypeTable(GenotypeTable a, int[] subSites, FilterGenotypeTable original) {
 
         myTaxaList = original == null ? a.taxa() : original.taxa();
 
@@ -267,35 +267,35 @@ public class FilterAlignment implements GenotypeTable {
 
     }
 
-    public static FilterAlignment getInstance(GenotypeTable a, int[] subSites) {
+    public static FilterGenotypeTable getInstance(GenotypeTable a, int[] subSites) {
 
-        if (a instanceof FilterAlignment) {
-            FilterAlignment original = (FilterAlignment) a;
-            GenotypeTable baseAlignment = ((FilterAlignment) a).getBaseAlignment();
+        if (a instanceof FilterGenotypeTable) {
+            FilterGenotypeTable original = (FilterGenotypeTable) a;
+            GenotypeTable baseAlignment = ((FilterGenotypeTable) a).getBaseAlignment();
             if (original.isSiteFilter()) {
                 int[] newSubSites = new int[subSites.length];
                 for (int i = 0; i < subSites.length; i++) {
                     newSubSites[i] = original.translateSite(subSites[i]);
                 }
-                return new FilterAlignment(baseAlignment, newSubSites, original);
+                return new FilterGenotypeTable(baseAlignment, newSubSites, original);
             } else if (original.isSiteFilterByRange()) {
                 int[] newSubSites = new int[subSites.length];
                 for (int i = 0; i < subSites.length; i++) {
                     newSubSites[i] = original.translateSite(subSites[i]);
                 }
-                return new FilterAlignment(baseAlignment, newSubSites, original);
+                return new FilterGenotypeTable(baseAlignment, newSubSites, original);
             } else if (original.isTaxaFilter()) {
-                return new FilterAlignment(baseAlignment, subSites, original);
+                return new FilterGenotypeTable(baseAlignment, subSites, original);
             } else {
                 throw new IllegalStateException("FilterAlignment: getInstance: original not in known state.");
             }
         } else {
-            return new FilterAlignment(a, subSites, null);
+            return new FilterGenotypeTable(a, subSites, null);
         }
 
     }
 
-    public static FilterAlignment getInstance(GenotypeTable a, String[] siteNamesToKeep) {
+    public static FilterGenotypeTable getInstance(GenotypeTable a, String[] siteNamesToKeep) {
 
         Arrays.sort(siteNamesToKeep);
         int[] temp = new int[siteNamesToKeep.length];
@@ -320,7 +320,7 @@ public class FilterAlignment implements GenotypeTable {
 
     }
 
-    public static FilterAlignment getInstanceRemoveSiteNames(GenotypeTable a, String[] siteNamesToRemove) {
+    public static FilterGenotypeTable getInstanceRemoveSiteNames(GenotypeTable a, String[] siteNamesToRemove) {
 
         Arrays.sort(siteNamesToRemove);
         int[] temp = new int[a.numberOfSites()];
@@ -342,11 +342,11 @@ public class FilterAlignment implements GenotypeTable {
 
     }
 
-    public static FilterAlignment getInstance(GenotypeTable a, String chromosome, int startPhysicalPos, int endPhysicalPos) {
+    public static FilterGenotypeTable getInstance(GenotypeTable a, String chromosome, int startPhysicalPos, int endPhysicalPos) {
         return getInstance(a, a.chromosome(chromosome), startPhysicalPos, endPhysicalPos);
     }
 
-    public static FilterAlignment getInstance(GenotypeTable a, Chromosome chromosome, int startPhysicalPos, int endPhysicalPos) {
+    public static FilterGenotypeTable getInstance(GenotypeTable a, Chromosome chromosome, int startPhysicalPos, int endPhysicalPos) {
 
         int startSite = a.siteOfPhysicalPosition(startPhysicalPos, chromosome);
         if (startSite < 0) {
@@ -367,14 +367,14 @@ public class FilterAlignment implements GenotypeTable {
 
     }
 
-    public static FilterAlignment getInstance(GenotypeTable a, Chromosome chromosome) {
+    public static FilterGenotypeTable getInstance(GenotypeTable a, Chromosome chromosome) {
         int[] endStart = a.startAndEndOfChromosome(chromosome);
         return getInstance(a, endStart[0], endStart[1] - 1);
     }
 
     /**
-     * Factory method that returns a FilterAlignment viewing sites between start
-     * site and end site inclusive.
+     * Factory method that returns a FilterGenotypeTable viewing sites between start
+ site and end site inclusive.
      *
      * @param a alignment
      * @param startSite start site
@@ -382,27 +382,27 @@ public class FilterAlignment implements GenotypeTable {
      *
      * @return Filter Alignment
      */
-    public static FilterAlignment getInstance(GenotypeTable a, int startSite, int endSite) {
+    public static FilterGenotypeTable getInstance(GenotypeTable a, int startSite, int endSite) {
 
-        if (a instanceof FilterAlignment) {
-            FilterAlignment original = (FilterAlignment) a;
-            GenotypeTable baseAlignment = ((FilterAlignment) a).getBaseAlignment();
+        if (a instanceof FilterGenotypeTable) {
+            FilterGenotypeTable original = (FilterGenotypeTable) a;
+            GenotypeTable baseAlignment = ((FilterGenotypeTable) a).getBaseAlignment();
             if (original.isSiteFilter()) {
                 int[] subSites = new int[endSite - startSite + 1];
                 int[] originalSites = original.getSiteRedirect();
                 for (int i = startSite; i <= endSite; i++) {
                     subSites[i - startSite] = originalSites[i];
                 }
-                return new FilterAlignment(baseAlignment, subSites, original);
+                return new FilterGenotypeTable(baseAlignment, subSites, original);
             } else if (original.isSiteFilterByRange()) {
-                return new FilterAlignment(baseAlignment, original.translateSite(startSite), original.translateSite(endSite), original);
+                return new FilterGenotypeTable(baseAlignment, original.translateSite(startSite), original.translateSite(endSite), original);
             } else if (original.isTaxaFilter()) {
-                return new FilterAlignment(baseAlignment, startSite, endSite, original);
+                return new FilterGenotypeTable(baseAlignment, startSite, endSite, original);
             } else {
                 throw new IllegalStateException("FilterAlignment: getInstance: original not in known state.");
             }
         } else {
-            return new FilterAlignment(a, startSite, endSite, null);
+            return new FilterGenotypeTable(a, startSite, endSite, null);
         }
 
     }
@@ -435,8 +435,8 @@ public class FilterAlignment implements GenotypeTable {
     }
 
     /**
-     * Returns site of this FilterAlignment based on given site from embedded
-     * Alignment.
+     * Returns site of this FilterGenotypeTable based on given site from embedded
+ Alignment.
      *
      * @param site site
      * @return site in this alignment

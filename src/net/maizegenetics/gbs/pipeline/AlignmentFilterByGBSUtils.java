@@ -5,7 +5,7 @@ package net.maizegenetics.gbs.pipeline;
 
 import cern.colt.list.IntArrayList;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.taxa.IdGroupUtils;
@@ -69,7 +69,7 @@ public class AlignmentFilterByGBSUtils {
                             counts[1][j]++;
                         }
                     } else {
-                        if (AlignmentUtils.isHeterozygous(a.genotype(j, i))) {
+                        if (GenotypeTableUtils.isHeterozygous(a.genotype(j, i))) {
                             counts[1][j]++;
                         }
                     }
@@ -118,21 +118,21 @@ public class AlignmentFilterByGBSUtils {
                 if (currentBase != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][i]++;
                     if (isRefAltCoded) {
-                        if (AlignmentUtils.isEqual(currentBase, hetAllele)) {
+                        if (GenotypeTableUtils.isEqual(currentBase, hetAllele)) {
                             counts[1][i]++;
                         }
                     } else {
-                        if (AlignmentUtils.isHeterozygous(currentBase)) {
+                        if (GenotypeTableUtils.isHeterozygous(currentBase)) {
                             counts[1][i]++;
                         }
                     }
-                    if (AlignmentUtils.isEqual(currentBase, majorAllele)) {
+                    if (GenotypeTableUtils.isEqual(currentBase, majorAllele)) {
                         counts[2][i]++;
                     }
-                    if (AlignmentUtils.isEqual(currentBase, minorAllele)) {
+                    if (GenotypeTableUtils.isEqual(currentBase, minorAllele)) {
                         counts[3][i]++;
                     }
-                    if (AlignmentUtils.isEqual(currentBase, NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE)) {
+                    if (GenotypeTableUtils.isEqual(currentBase, NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE)) {
                         counts[4][i]++;
                     }
                 }
@@ -232,15 +232,15 @@ public class AlignmentFilterByGBSUtils {
                         pB = a.genotype(priorEntry.getValue(), i);
                     }
                     byte cB = a.genotype(entry.getValue(), i);
-                    if (ignoreHets && AlignmentUtils.isHeterozygous(pB)) {
+                    if (ignoreHets && GenotypeTableUtils.isHeterozygous(pB)) {
                         continue;
                     }
-                    if (ignoreHets && AlignmentUtils.isHeterozygous(cB)) {
+                    if (ignoreHets && GenotypeTableUtils.isHeterozygous(cB)) {
                         continue;
                     }
                     if ((pB != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) && (cB != GenotypeTable.UNKNOWN_DIPLOID_ALLELE)) {
                         cntTotalTaxa++;
-                        if (!AlignmentUtils.isEqual(pB, cB)) {
+                        if (!GenotypeTableUtils.isEqual(pB, cB)) {
                             cntDiffTaxa++;
                         }
                     }

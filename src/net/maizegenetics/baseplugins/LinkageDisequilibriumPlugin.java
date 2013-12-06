@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -37,7 +37,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     private int myTestSite = -1;
     private int myNumAccumulateIntervals = 100;
     private boolean myIsAccumulateResults = false;
-    private FilterAlignment myPossibleAlignmentForSiteList;
+    private FilterGenotypeTable myPossibleAlignmentForSiteList;
     private String myPossibleAlignmentName;
     private int[] myPossibleSiteList;
     private LinkageDisequilibrium.HetTreatment myHetTreatment = LinkageDisequilibrium.HetTreatment.Haplotype;
@@ -62,7 +62,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 
             if (alignInList.size() > 1) {
                 try {
-                    FilterAlignment temp = (FilterAlignment) alignInList.get(1).getData();
+                    FilterGenotypeTable temp = (FilterGenotypeTable) alignInList.get(1).getData();
                     if (temp.getBaseAlignment() == current.getData()) {
                         myPossibleAlignmentForSiteList = temp;
                         myPossibleAlignmentName = alignInList.get(1).getName();

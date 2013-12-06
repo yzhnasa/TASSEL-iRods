@@ -8,13 +8,13 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.dna.snp.CombineAlignment;
+import net.maizegenetics.dna.snp.CombineGenotypeTable;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.prefs.TasselPrefs;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
@@ -34,7 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 
 import org.apache.log4j.Logger;
 
@@ -183,11 +183,11 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         GenotypeTable naa = aa;
 
         if (myFilterMinorSNPs) {
-            naa = AlignmentBuilder.getInstanceOnlyMajorMinor(naa);
+            naa = GenotypeTableBuilder.getInstanceOnlyMajorMinor(naa);
         }
 
         if ((myStart != 0) || (myEnd < (naa.numberOfSites() - 1))) {
-            naa = AlignmentUtils.removeSitesOutsideRange(naa, myStart, myEnd);
+            naa = GenotypeTableUtils.removeSitesOutsideRange(naa, myStart, myEnd);
         }
         if (myExtractIndels) {
             //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, myMinFreq, myMinCount);
@@ -195,7 +195,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
         } else {
             //naa = AnnotatedAlignmentUtils.removeSitesBasedOnFreqIgnoreGapsMissing(naa, myMinFreq, myMinCount);
         }
-        naa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(naa, myMinFreq, myMaxFreq, myMinCount);
+        naa = GenotypeTableUtils.removeSitesBasedOnFreqIgnoreMissing(naa, myMinFreq, myMaxFreq, myMinCount);
         if (myDoSlidingHaps) {
             //naa = AnnotatedAlignmentUtils.extractSlidingHaplotypes(naa, myWinSize, myStepSize);
             throw new UnsupportedOperationException();
@@ -872,7 +872,7 @@ class DataFilterAlignmentDialog extends JDialog {
                     }
                 }
             }
-            chromFilteredAlignment = CombineAlignment.getInstance(selectedAlignments);
+            chromFilteredAlignment = CombineGenotypeTable.getInstance(selectedAlignments);
             lblSitePos.setVisible(chromFilteredAlignment.numChromosomes() == 1 && startPos >= 0);
             startPosTextField.setVisible(chromFilteredAlignment.numChromosomes() == 1 && startPos >= 0);
             endPosTextField.setVisible(chromFilteredAlignment.numChromosomes() == 1 && endPos >= 0);

@@ -8,7 +8,7 @@ package net.maizegenetics.popgen;
 
 import cern.colt.map.OpenLongObjectHashMap;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.stats.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
@@ -203,7 +203,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         //It will ignore hets, make a new Alignment and set all het calls to missing. Otherwise set the pointer to the old alignment
         GenotypeTable workingAlignment;
         if (ignoreHets) {
-            workingAlignment =AlignmentBuilder.getHomozygousInstance(myAlignment);
+            workingAlignment =GenotypeTableBuilder.getHomozygousInstance(myAlignment);
         } else {
             workingAlignment = myAlignment;
         }

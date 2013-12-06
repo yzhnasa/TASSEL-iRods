@@ -9,7 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
@@ -46,22 +46,22 @@ import org.apache.log4j.Logger;
  * The output format is HDF5 genotypes with allelic depth stored. SNP calling 
  * is quantitative with the option of using either the Glaubitz/Buckler binomial
  * method (pHet/pErr > 1 = het), or the VCF/Stacks method.
- * 
- * Samples on multiple lanes with the same LibraryPrepID are merged prior to 
- * SNP calling (so that SNP calling is based upon all available reads).
- *
- * It requires a TOPM with variants added from a previous "Discovery Pipeline"
- * run.  In binary topm or HDF5 format (TOPMInterface).
- *
- * //TODO Work with Jeff to redo the strategy for counting sites
- * Proposed strategy.
- * Use AlignmentBuilder with getTaxaIncrement
- * Make Array[TaxaNumber] of resizable int arrays that are scaled to ~750K entries.
- * Total size should be ~1.15Gb for 384 taxa (4bytes x 750K x 384).
- * Read entire alignment file
- * Process each taxon individually.  Sort.  Call SNPs.  Output results.
- * Total memory footprint ~1.15Gb + PositionToSite (could be primitive colt OpenIntIntHashMap, but only takes 32M bytes)  + TOPM SiteList
- * This at least eliminates the 3Gb overhead of mutableDepthAlignment.
+ 
+ Samples on multiple lanes with the same LibraryPrepID are merged prior to 
+ SNP calling (so that SNP calling is based upon all available reads).
+
+ It requires a TOPM with variants added from a previous "Discovery Pipeline"
+ run.  In binary topm or HDF5 format (TOPMInterface).
+
+ //TODO Work with Jeff to redo the strategy for counting sites
+ Proposed strategy.
+ Use GenotypeTableBuilder with getTaxaIncrement
+ Make Array[TaxaNumber] of resizable int arrays that are scaled to ~750K entries.
+ Total size should be ~1.15Gb for 384 taxa (4bytes x 750K x 384).
+ Read entire alignment file
+ Process each taxon individually.  Sort.  Call SNPs.  Output results.
+ Total memory footprint ~1.15Gb + PositionToSite (could be primitive colt OpenIntIntHashMap, but only takes 32M bytes)  + TOPM SiteList
+ This at least eliminates the 3Gb overhead of mutableDepthAlignment.
  *
  * @author jcg233
  */
@@ -83,7 +83,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private TreeMap<String,ArrayList<String>> LibraryPrepIDToFlowCellLanes = new TreeMap<String,ArrayList<String>>();
     private TreeMap<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
     private HashMap<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
-    private AlignmentBuilder genos = null;
+    private GenotypeTableBuilder genos = null;
     private HashMap<Integer,Integer>[] PositionToSite = null;  // indices = chrIndices.  For a given position (key), eaach HashMap provides the site in the MutableNucleotideDepthAlignment (value)
     private int totalNSites = 0;
     private TreeMap<String,Integer> RawReadCountsForFullSampleName = new TreeMap<String,Integer>();
@@ -452,7 +452,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         generateQuickTaxaLookup(finalSampleNames);
         myLogger.info("\nCounting sites in TOPM file");
         ArrayList<int[]> uniquePositions = getUniquePositions();
-        genos = AlignmentBuilder.getTaxaIncremental(new SimpleIdGroup(finalSampleNames), totalNSites); // keeps depth for all 6 alleles
+        genos = GenotypeTableBuilder.getTaxaIncremental(new SimpleIdGroup(finalSampleNames), totalNSites); // keeps depth for all 6 alleles
         System.out.println("\nAdding sites from the TOPM file to the alignment (genotypes) object");
         int currSite = 0;
         for (int i = 0; i < uniquePositions.size(); i++) {

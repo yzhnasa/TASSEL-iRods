@@ -15,7 +15,7 @@
 package net.maizegenetics.popgen;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.util.AbstractTableReport;
@@ -103,7 +103,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         }
         double startChrPosition = theAAlignment.chromosomalPosition(start);
         double endChrPosition = theAAlignment.chromosomalPosition(end);
-        GenotypeTable theFilteredAlignment = FilterAlignment.getInstance(theAAlignment, start, end);
+        GenotypeTable theFilteredAlignment = FilterGenotypeTable.getInstance(theAAlignment, start, end);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(theFilteredAlignment);
         diversityResultsVector.add(evaluate(theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));
         if (thePolymorphismDistribution != null) {

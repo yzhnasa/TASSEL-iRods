@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.trait.Trait;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -79,7 +79,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             for (int j = 0; j < seqCount; j++) {
 
                 byte[] current = input.genotypeArray(j, i);
-                byte orderedValue = AlignmentUtils.getUnphasedDiploidValue(current[0], current[1]);
+                byte orderedValue = GenotypeTableUtils.getUnphasedDiploidValue(current[0], current[1]);
                 if (orderedValue != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     Integer count = (Integer) charCount.get(orderedValue);
                     if (count != null) {
@@ -141,7 +141,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
             for (int j = 0; j < seqCount; j++) {
                 byte[] current = input.genotypeArray(j, i);
-                byte orderedValue = AlignmentUtils.getUnphasedDiploidValue(current[0], current[1]);
+                byte orderedValue = GenotypeTableUtils.getUnphasedDiploidValue(current[0], current[1]);
                 if (orderedValue == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     for (int k = 0; k < currentSize; k++) {
                         pcValues[j][k + offset] = Double.NaN;

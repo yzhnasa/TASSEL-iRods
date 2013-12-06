@@ -58,9 +58,9 @@ public class GenotypeTableMaskReference extends AbstractGenotypeTableMask {
 
     @Override
     public byte getMask(int taxon, int site) {
-        if ((myTaxonReference == -1) && (AlignmentUtils.isEqualOrUnknown(myAlignment.genotype(taxon, site), myAlignment.referenceGenotype(site)))) {
+        if ((myTaxonReference == -1) && (GenotypeTableUtils.isEqualOrUnknown(myAlignment.genotype(taxon, site), myAlignment.referenceGenotype(site)))) {
             return 0;
-        } else if (AlignmentUtils.isEqualOrUnknown(myAlignment.genotypeArray(taxon, site), myAlignment.genotypeArray(myTaxonReference, site))) {
+        } else if (GenotypeTableUtils.isEqualOrUnknown(myAlignment.genotypeArray(taxon, site), myAlignment.genotypeArray(myTaxonReference, site))) {
             return 0;
         } else {
             return 1;

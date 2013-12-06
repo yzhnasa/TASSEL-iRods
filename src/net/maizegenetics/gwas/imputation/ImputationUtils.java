@@ -1,8 +1,8 @@
 package net.maizegenetics.gwas.imputation;
 
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.gwas.NAM.AGPMap;
@@ -199,8 +199,8 @@ public class ImputationUtils {
 		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster1);
 		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster2);
 		
-		GenotypeTable a1 = FilterAlignment.getInstance(tb, id1);
-		GenotypeTable a2 = FilterAlignment.getInstance(tb, id2);
+		GenotypeTable a1 = FilterGenotypeTable.getInstance(tb, id1);
+		GenotypeTable a2 = FilterGenotypeTable.getInstance(tb, id2);
 		
 		return new GenotypeTable[]{a1, a2};
 	}
@@ -225,9 +225,9 @@ public class ImputationUtils {
 			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.siteName(0));
 			return null;
 		} else {
-			GenotypeTable fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.taxa(), include));
+			GenotypeTable fa = FilterGenotypeTable.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.taxa(), include));
 			
-			myAlignment = AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
+			myAlignment = GenotypeTableBuilder.getGenotypeCopyInstance((FilterGenotypeTable)fa);
 		}
 		int ntrials = 5;
 		int maxiter = 5;
@@ -343,8 +343,8 @@ public class ImputationUtils {
 		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster1[bestTrial]);
 		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster2);
 		
-		GenotypeTable a1 = FilterAlignment.getInstance(myAlignment, id1);
-		GenotypeTable a2 = FilterAlignment.getInstance(myAlignment, id2);
+		GenotypeTable a1 = FilterGenotypeTable.getInstance(myAlignment, id1);
+		GenotypeTable a2 = FilterGenotypeTable.getInstance(myAlignment, id2);
 		
 		return new GenotypeTable[]{a1, a2};
 	}

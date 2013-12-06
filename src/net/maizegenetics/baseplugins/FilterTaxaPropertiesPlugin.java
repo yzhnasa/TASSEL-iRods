@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -161,7 +161,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
 
             keepTaxaList.add(ids.get(t));
         }
-        return FilterAlignment.getInstance(alignment, keepTaxaList.build(), false);
+        return FilterGenotypeTable.getInstance(alignment, keepTaxaList.build(), false);
     }
 
     public double getMinNotMissing() {

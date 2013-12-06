@@ -7,7 +7,7 @@
 package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.dna.map.Chromosome;
@@ -116,7 +116,7 @@ public class SeparatePlugin extends AbstractPlugin {
                         } catch (Exception e) {
                             endSite = alignments[i].numberOfSites() - 1;
                         }
-                        Datum td = new Datum(name, FilterAlignment.getInstance(alignments[i], offsets[j], endSite), null);
+                        Datum td = new Datum(name, FilterGenotypeTable.getInstance(alignments[i], offsets[j], endSite), null);
                         result.add(td);
                     }
                 }

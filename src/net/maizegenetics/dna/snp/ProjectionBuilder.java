@@ -31,7 +31,7 @@ public class ProjectionBuilder {
     public static GenotypeTable getInstance(GenotypeTable baseAlignment, ImmutableMap<Taxon, NavigableSet<DonorHaplotypes>> allBreakPoints) {
         TaxaList tl=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         ImmutableList breakList=ImmutableList.builder().addAll(allBreakPoints.values()).build();
-        return AlignmentBuilder.getInstance(new ProjectionGenotypeCallTable(baseAlignment, breakList),
+        return GenotypeTableBuilder.getInstance(new ProjectionGenotypeCallTable(baseAlignment, breakList),
                 baseAlignment.positions(),tl);
     }
 

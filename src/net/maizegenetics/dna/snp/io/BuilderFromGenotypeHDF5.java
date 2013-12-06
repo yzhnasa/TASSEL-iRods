@@ -3,7 +3,7 @@ package net.maizegenetics.dna.snp.io;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.PositionList;
@@ -45,7 +45,7 @@ public class BuilderFromGenotypeHDF5 {
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
         PositionList pL=PositionListBuilder.getInstance(reader);
         GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
-        return AlignmentBuilder.getInstance(geno,pL, tL);
+        return GenotypeTableBuilder.getInstance(geno,pL, tL);
     }
 
     /**
@@ -125,7 +125,7 @@ public class BuilderFromGenotypeHDF5 {
                 }
             }
         }
-        AlignmentBuilder ab=AlignmentBuilder.getTaxaIncremental(pal,newMerge);
+        GenotypeTableBuilder ab=GenotypeTableBuilder.getTaxaIncremental(pal,newMerge);
         System.gc();
 
 //        System.out.println(Arrays.deepToString(oldTaxaToNewTaxa));
@@ -134,7 +134,7 @@ public class BuilderFromGenotypeHDF5 {
         System.out.println("Opening alignments");
         List<GenotypeTable> sourceA=new ArrayList<>();
         for (String infile : infiles) {
-            sourceA.add(AlignmentBuilder.getInstance(infile));
+            sourceA.add(GenotypeTableBuilder.getInstance(infile));
         }
 
 

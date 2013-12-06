@@ -4,7 +4,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import net.maizegenetics.dna.snp.GenotypeTable.ALLELE_SORT_TYPE;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.util.BitSet;
 
@@ -55,7 +55,7 @@ public class DynamicBitStorage implements BitStorage {
                 byte[] a1 = myPrefAllele0;
                 byte[] a2 = myPrefAllele1;
                 int taxon = getSiteOrTaxonFromKey(key);
-                bs = AlignmentUtils.calcBitPresenceFromGenotype(myGenotype.genotypeAllSites(taxon), a1, a2); //allele comp
+                bs = GenotypeTableUtils.calcBitPresenceFromGenotype(myGenotype.genotypeAllSites(taxon), a1, a2); //allele comp
                 return bs;
             } else {
                 ArrayList<Long> toFill = new ArrayList<>();
@@ -87,7 +87,7 @@ public class DynamicBitStorage implements BitStorage {
             for (int i = 0; i < length; i++) {
                 byte a1 = myPrefAllele0[site + i];
                 byte a2 = myPrefAllele1[site + i];
-                BitSet[] bs = AlignmentUtils.calcBitPresenceFromGenotype(genotypeTBlock[i], a1, a2);
+                BitSet[] bs = GenotypeTableUtils.calcBitPresenceFromGenotype(genotypeTBlock[i], a1, a2);
                 result.put(getKey(SB.SITE, myPreferredScope, site + i), bs);
             }
             return result;

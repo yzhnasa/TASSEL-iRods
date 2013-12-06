@@ -2,7 +2,7 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -212,7 +212,7 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
         TaxaList ids =new TaxaListBuilder().addAll(taxanames).build();
 		
 		start = System.currentTimeMillis();
-		GenotypeTable b = FilterAlignment.getInstance(a, ids);
+		GenotypeTable b = FilterGenotypeTable.getInstance(a, ids);
 		System.out.format("Time elapsed for filtering alignment = %d\n", System.currentTimeMillis() - start);
 		
 		start = System.currentTimeMillis();

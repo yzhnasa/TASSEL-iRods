@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import javax.swing.*;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.FilterAlignment;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.util.SimpleTableReport;
 import net.maizegenetics.util.TableReport;
@@ -80,7 +80,7 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
         String[] columnNames = new String[myPhysicalPositions.length];
         columnNames[0] = "Taxa";
         for (int i = 1, n = myPhysicalPositions.length; i < n; i++) {
-            GenotypeTable alignment = FilterAlignment.getInstance(aa, myLocus, myPhysicalPositions[i - 1], myPhysicalPositions[i]);
+            GenotypeTable alignment = FilterGenotypeTable.getInstance(aa, myLocus, myPhysicalPositions[i - 1], myPhysicalPositions[i]);
             columnNames[i] = String.valueOf(myPhysicalPositions[i - 1] + "-" + String.valueOf(myPhysicalPositions[i]));
             if (alignment == null) {
                 for (int t = 0; t < numTaxa; t++) {

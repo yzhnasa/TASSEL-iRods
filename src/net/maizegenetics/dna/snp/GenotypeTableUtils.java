@@ -1,5 +1,5 @@
 /*
- * AlignmentUtils
+ * GenotypeTableUtils
  */
 package net.maizegenetics.dna.snp;
 
@@ -14,12 +14,12 @@ import java.util.regex.Pattern;
  *
  * @author terry
  */
-public class AlignmentUtils {
+public class GenotypeTableUtils {
 
     private static final Integer ONE = Integer.valueOf(1);
     private static final byte HIGHMASK = (byte) 0x0F;
 
-    private AlignmentUtils() {
+    private GenotypeTableUtils() {
         // utility class
     }
 
@@ -395,7 +395,7 @@ public class AlignmentUtils {
         }
 
         for (int site = 0; site < numSites; site++) {
-            List<String> alleles = AlignmentUtils.getAlleles(data, site);
+            List<String> alleles = GenotypeTableUtils.getAlleles(data, site);
             if (alleles != null) {
                 int numAlleles = Math.min(alleles.size(), maxNumAlleles);
                 for (int k = 0; k < numAlleles; k++) {
@@ -503,7 +503,7 @@ public class AlignmentUtils {
      */
     public static GenotypeTable removeSitesBasedOnFreqIgnoreMissing(GenotypeTable aa, double minimumProportion, double maximumProportion, int minimumCount) {
         int[] includeSites = getIncludedSitesBasedOnFreqIgnoreMissing(aa, minimumProportion, maximumProportion, minimumCount);
-        GenotypeTable mlaa = FilterAlignment.getInstance(aa, includeSites);
+        GenotypeTable mlaa = FilterGenotypeTable.getInstance(aa, includeSites);
         return mlaa;
     }
 
@@ -564,7 +564,7 @@ public class AlignmentUtils {
         if (lastSite > aa.numberOfSites() - 1) {
             return null;
         }
-        return FilterAlignment.getInstance(aa, firstSite, lastSite);
+        return FilterGenotypeTable.getInstance(aa, firstSite, lastSite);
     }
 
     /**
@@ -829,19 +829,19 @@ public class AlignmentUtils {
             if (mj == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
-            if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
+            if (g == GenotypeTableUtils.getDiploidValuePhased(mj, mj)) {
                 rMj.fastSet(i);
                 continue;
             }
             if (mn == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
-            if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
+            if (g == GenotypeTableUtils.getDiploidValuePhased(mn, mn)) {
                 rMn.fastSet(i);
                 continue;
             }
-            byte het = AlignmentUtils.getUnphasedDiploidValue(mj, mn);
-            if (AlignmentUtils.isEqual(g, het)) {
+            byte het = GenotypeTableUtils.getUnphasedDiploidValue(mj, mn);
+            if (GenotypeTableUtils.isEqual(g, het)) {
                 rMj.fastSet(i);
                 rMn.fastSet(i);
             }
@@ -875,19 +875,19 @@ public class AlignmentUtils {
             if (mj == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
-            if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
+            if (g == GenotypeTableUtils.getDiploidValuePhased(mj, mj)) {
                 rMj.fastSet(i);
                 continue;
             }
             if (mn == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
-            if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
+            if (g == GenotypeTableUtils.getDiploidValuePhased(mn, mn)) {
                 rMn.fastSet(i);
                 continue;
             }
-            byte het = AlignmentUtils.getUnphasedDiploidValue(mj, mn);
-            if (AlignmentUtils.isEqual(g, het)) {
+            byte het = GenotypeTableUtils.getUnphasedDiploidValue(mj, mn);
+            if (GenotypeTableUtils.isEqual(g, het)) {
                 rMj.fastSet(i);
                 rMn.fastSet(i);
             }
@@ -912,19 +912,19 @@ public class AlignmentUtils {
             if (mj == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
-            if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
+            if (g == GenotypeTableUtils.getDiploidValuePhased(mj, mj)) {
                 rMj.fastSet(i);
                 continue;
             }
             if (mn == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
-            if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
+            if (g == GenotypeTableUtils.getDiploidValuePhased(mn, mn)) {
                 rMn.fastSet(i);
                 continue;
             }
-            byte het = AlignmentUtils.getUnphasedDiploidValue(mj, mn);
-            if (AlignmentUtils.isEqual(g, het)) {
+            byte het = GenotypeTableUtils.getUnphasedDiploidValue(mj, mn);
+            if (GenotypeTableUtils.isEqual(g, het)) {
                 rMj.fastSet(i);
                 rMn.fastSet(i);
             }

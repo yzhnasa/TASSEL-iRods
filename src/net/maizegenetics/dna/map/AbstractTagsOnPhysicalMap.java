@@ -9,7 +9,7 @@ import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
 import net.maizegenetics.dna.tag.AbstractTags;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.dna.snp.AlignmentUtils;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.map.Chromosome;
 
@@ -176,7 +176,7 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
             byte vd=getVariantDef(row, j);
             if(vd==TOPMInterface.BYTE_MISSING) {sb.append(printWithMissing(vd) + "\t");}
             else {
-                byte genotype=AlignmentUtils.getDiploidValue(vd, vd);
+                byte genotype=GenotypeTableUtils.getDiploidValue(vd, vd);
                 sb.append(NucleotideAlignmentConstants.getNucleotideIUPAC(genotype) + "\t");
             }
         }

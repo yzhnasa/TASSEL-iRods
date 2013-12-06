@@ -10,7 +10,7 @@ import net.maizegenetics.dna.tag.TagsByTaxaByte;
 import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.AlignmentBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
@@ -581,7 +581,7 @@ public class TagAgainstAnchorOriginal {
             chrStartIndex[i] = chrOffSet[i];
             chrEndIndex[i] = chrOffSet[i] + a.chromosomeSiteCount(a.chromosomes()[i]);
         }
-        anchor=AlignmentBuilder.getHomozygousInstance(a);
+        anchor=GenotypeTableBuilder.getHomozygousInstance(a);
         anchorMaf = new double[anchor.numberOfSites()];
         for (int i = 0; i < anchorMaf.length; i++) {
             anchorMaf[i] = anchor.minorAlleleFrequency(i);
