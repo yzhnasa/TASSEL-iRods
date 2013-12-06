@@ -1,7 +1,7 @@
 /*
  *  ByteGenotype
  */
-package net.maizegenetics.dna.snp.genotype;
+package net.maizegenetics.dna.snp.genotypecall;
 
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;

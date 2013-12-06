@@ -1,7 +1,7 @@
 /*
  *  AlleleFreqCache
  */
-package net.maizegenetics.dna.snp.genotype;
+package net.maizegenetics.dna.snp.genotypecall;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

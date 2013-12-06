@@ -12,8 +12,8 @@ import net.maizegenetics.taxa.TaxaList;
 
 import java.io.IOException;
 import java.io.PushbackReader;
-import net.maizegenetics.dna.snp.genotype.Genotype;
-import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.Genotype;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
 import net.maizegenetics.taxa.TaxaListBuilder;
 
 /**

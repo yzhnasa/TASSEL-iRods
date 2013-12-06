@@ -1,7 +1,7 @@
 /*
  * Genotype
  */
-package net.maizegenetics.dna.snp.genotype;
+package net.maizegenetics.dna.snp.genotypecall;
 
 /**
  *

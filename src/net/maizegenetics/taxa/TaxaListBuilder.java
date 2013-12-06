@@ -8,7 +8,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 import net.maizegenetics.dna.snp.Alignment;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
-import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;

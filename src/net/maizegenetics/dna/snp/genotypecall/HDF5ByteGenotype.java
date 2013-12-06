@@ -1,7 +1,7 @@
 /*
  *  HDF5ByteGenotype
  */
-package net.maizegenetics.dna.snp.genotype;
+package net.maizegenetics.dna.snp.genotypecall;
 
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import com.google.common.cache.CacheBuilder;

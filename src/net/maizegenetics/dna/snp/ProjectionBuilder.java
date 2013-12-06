@@ -2,7 +2,7 @@ package net.maizegenetics.dna.snp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.maizegenetics.dna.snp.genotype.ProjectionGenotype;
+import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotype;
 import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;

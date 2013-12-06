@@ -12,7 +12,7 @@ import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
-import net.maizegenetics.dna.snp.genotype.GenotypeBuilder;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeBuilder;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.taxa.TaxaList;

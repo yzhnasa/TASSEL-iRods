@@ -8,7 +8,7 @@ import java.util.Map;
 import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Frequency;
 import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Reference;
 import net.maizegenetics.dna.snp.score.SiteScore;
-import net.maizegenetics.dna.snp.genotype.Genotype;
+import net.maizegenetics.dna.snp.genotypecall.Genotype;
 import net.maizegenetics.dna.snp.bit.BitStorage;
 import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
