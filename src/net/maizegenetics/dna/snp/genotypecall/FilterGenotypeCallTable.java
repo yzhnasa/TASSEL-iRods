@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.dna.snp.genotypecall;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 
 /**
  *
@@ -74,7 +74,7 @@ class FilterGenotypeCallTable extends AbstractGenotypeCallTable {
     public byte genotype(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
-            return Alignment.UNKNOWN_ALLELE;
+            return GenotypeTable.UNKNOWN_ALLELE;
         } else {
             return myBaseGenotype.genotype(taxaIndex, translateSite(site));
         }
@@ -84,7 +84,7 @@ class FilterGenotypeCallTable extends AbstractGenotypeCallTable {
     public String genotypeAsString(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
-            return Alignment.UNKNOWN_ALLELE_STR;
+            return GenotypeTable.UNKNOWN_ALLELE_STR;
         } else {
             return myBaseGenotype.genotypeAsString(taxaIndex, translateSite(site));
         }

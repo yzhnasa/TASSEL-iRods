@@ -5,7 +5,7 @@ import net.maizegenetics.util.AbstractTableReport;
 
 import java.io.Serializable;
 import java.util.Vector;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 
 /**
  *This class provides the distribution of polymorphisms
@@ -22,7 +22,7 @@ public class PolymorphismDistribution extends AbstractTableReport implements Tab
     }
 
     //consider whether to output pooled minority alleles or everything
-    public void addDistribution(String label, Alignment theSP, boolean poolMinor) {
+    public void addDistribution(String label, GenotypeTable theSP, boolean poolMinor) {
         maxSeqCount = theSP.numberOfTaxa() * 2;
         int[] pdist = new int[maxSeqCount];
         for (int i = 0; i < theSP.numberOfSites(); i++) {

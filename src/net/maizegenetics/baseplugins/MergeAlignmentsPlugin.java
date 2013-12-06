@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -29,7 +29,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 
     public DataSet performFunction(DataSet input) {
 
-        List<Datum> inputs = input.getDataOfType(Alignment.class);
+        List<Datum> inputs = input.getDataOfType(GenotypeTable.class);
 
         if ((inputs == null) || (inputs.size() < 2)) {
             if (isInteractive()) {
@@ -41,12 +41,12 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
         }
 
         try {
-            Alignment[] alignments = new Alignment[inputs.size()];
+            GenotypeTable[] alignments = new GenotypeTable[inputs.size()];
             for (int i = 0; i < inputs.size(); i++) {
-                alignments[i] = (Alignment) ((Datum) inputs.get(i)).getData();
+                alignments[i] = (GenotypeTable) ((Datum) inputs.get(i)).getData();
             }
 
-            Alignment alignment = getInstance(alignments);
+            GenotypeTable alignment = getInstance(alignments);
             DataSet result = new DataSet(new Datum("Merged Alignment", alignment, null), this);
 
             fireDataSetReturned(new PluginEvent(result, MergeAlignmentsPlugin.class));
@@ -79,7 +79,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
     }
 
     //todo TAS-54 covers some of these topics, as we want general merging rule sets
-    public static Alignment getInstance(Alignment[] alignments) {
+    public static GenotypeTable getInstance(GenotypeTable[] alignments) {
        throw new UnsupportedOperationException("Logic for merging can be done much better now in TASSEL 5");
 //        if ((alignments == null) || (alignments.length == 0)) {
 //            return null;

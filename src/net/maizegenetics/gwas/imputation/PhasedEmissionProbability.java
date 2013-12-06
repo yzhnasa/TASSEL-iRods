@@ -1,6 +1,6 @@
 package net.maizegenetics.gwas.imputation;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
@@ -41,7 +41,7 @@ public class PhasedEmissionProbability extends EmissionProbability {
 		parentHaplotypeProbability = probability;
 	}
 	
-	public void setParentHaplotypeProbability(Alignment a) {
+	public void setParentHaplotypeProbability(GenotypeTable a) {
 		
 	}
 	

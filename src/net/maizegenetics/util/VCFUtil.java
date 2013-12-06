@@ -5,7 +5,7 @@
 package net.maizegenetics.util;
 
 import java.util.HashMap;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 
 /**
  *
@@ -116,12 +116,12 @@ public class VCFUtil {
             depth += alleleDepth[i];
         }
         if (depth == 0) {
-            return (byte)((Alignment.UNKNOWN_ALLELE << 4) | Alignment.UNKNOWN_ALLELE);
+            return (byte)((GenotypeTable.UNKNOWN_ALLELE << 4) | GenotypeTable.UNKNOWN_ALLELE);
         }
         int max = 0;
-        byte maxAllele = Alignment.UNKNOWN_ALLELE;
+        byte maxAllele = GenotypeTable.UNKNOWN_ALLELE;
         int nextMax = 0;
-        byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
+        byte nextMaxAllele = GenotypeTable.UNKNOWN_ALLELE;
         for (int i = 0; i < alleles.length; i++) {
             if (alleleDepth[i] > max) {
                 nextMax = max;

@@ -5,7 +5,7 @@
 package net.maizegenetics.dna.map;
 
 import com.google.common.collect.ComparisonChain;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.GeneralAnnotationUtils;
 
@@ -104,7 +104,7 @@ public final class GeneralPosition implements Position {
         public Builder(Chromosome chr, int position) {
             myChromosome = Chromosome.getCanonicalChromosome(chr);
             myPosition = position;
-            Arrays.fill(myAlleles,Alignment.UNKNOWN_ALLELE);
+            Arrays.fill(myAlleles,GenotypeTable.UNKNOWN_ALLELE);
         }
 
         /**Constructor requires a Position before annotation of the position*/

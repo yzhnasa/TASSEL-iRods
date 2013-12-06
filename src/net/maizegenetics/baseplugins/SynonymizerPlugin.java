@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.taxa.IdentifierSynonymizer;
 import net.maizegenetics.taxa.TaxaList;
@@ -54,8 +54,8 @@ public class SynonymizerPlugin extends AbstractPlugin {
             for (int i = 0, n = input.getSize(); i < n; i++) {
                 Datum current = input.getData(i);
                 Object currentData = current.getData();
-                if (currentData instanceof Alignment) {
-                    TaxaList idGroup = ((Alignment) currentData).taxa();
+                if (currentData instanceof GenotypeTable) {
+                    TaxaList idGroup = ((GenotypeTable) currentData).taxa();
                     Datum idGroupDatum = new Datum(current.getName(), idGroup, current.getComment());
                     data.add(idGroupDatum);
                 } else if (currentData instanceof Phenotype) {

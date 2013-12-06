@@ -9,7 +9,7 @@ import edu.cornell.lassp.houle.RngPack.RandomJava;
 import net.maizegenetics.dna.tag.TagsByTaxaByte;
 import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.taxa.TaxaList;
@@ -28,7 +28,7 @@ import java.util.List;
  * @author Fei Lu
  */
 public class TagAgainstAnchor {
-    Alignment anchor;
+    GenotypeTable anchor;
     double[] anchorMaf;
     int[] chromosomeNumber;
     /**First SNP index of a chromosome in the whole SNP list */
@@ -679,7 +679,7 @@ public class TagAgainstAnchor {
      */
     private void loadAnchorMap (String hapMapHDF5) {
         long lastTimePoint = this.getCurrentTimeNano();
-        Alignment a = ImportUtils.readGuessFormat(hapMapHDF5);
+        GenotypeTable a = ImportUtils.readGuessFormat(hapMapHDF5);
         System.out.println("Loading hapmap HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         System.out.println("The anchor map has " + a.numberOfSites() + " sites and " + a.numberOfTaxa() + " taxa");
         lastTimePoint = this.getCurrentTimeNano();

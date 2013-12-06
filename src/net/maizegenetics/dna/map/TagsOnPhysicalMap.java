@@ -21,7 +21,7 @@ import net.maizegenetics.dna.tag.Tags;
 import net.maizegenetics.gbs.util.SAMUtils;
 import net.maizegenetics.gbs.util.BaseEncoder;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
@@ -1070,7 +1070,7 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         return snps;
     }
 
-    public static HashMap<String, Integer> hapmapSites(Alignment file) {
+    public static HashMap<String, Integer> hapmapSites(GenotypeTable file) {
         HashMap<String, Integer> snps = new HashMap<String, Integer>();
         for (int site = 0; site < file.numberOfSites(); site++) {        //Visit each site
             String pos = (file.chromosomeName(site) + "\t"

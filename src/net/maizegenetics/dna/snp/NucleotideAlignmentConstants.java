@@ -29,7 +29,7 @@ public final class NucleotideAlignmentConstants {
     public static final byte UNDEFINED_DIPLOID_ALLELE = (byte) 0x66;
     public static final String[][] NUCLEOTIDE_ALLELES = new String[][]{{"A", "C", "G", "T", "+", "-",
             UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR,
-            UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, Alignment.RARE_ALLELE_STR, Alignment.UNKNOWN_ALLELE_STR}};
+            UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, GenotypeTable.RARE_ALLELE_STR, GenotypeTable.UNKNOWN_ALLELE_STR}};
     /**
      * Number of nucleotide states excluding rare and unknown.
      */
@@ -262,7 +262,7 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_ALLELE_HASH.put("T", T_ALLELE); // T
         NUCLEOTIDE_ALLELE_HASH.put("+", INSERT_ALLELE); // +
         NUCLEOTIDE_ALLELE_HASH.put("-", GAP_ALLELE); // -
-        NUCLEOTIDE_ALLELE_HASH.put("N", Alignment.UNKNOWN_ALLELE); // N
+        NUCLEOTIDE_ALLELE_HASH.put("N", GenotypeTable.UNKNOWN_ALLELE); // N
     }
 
     private NucleotideAlignmentConstants() {

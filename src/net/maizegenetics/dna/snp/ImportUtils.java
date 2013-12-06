@@ -39,7 +39,7 @@ public class ImportUtils {
         // Utility Class - do not instantiate.
     }
 
-    public static Alignment readGuessFormat(String fileName) {
+    public static GenotypeTable readGuessFormat(String fileName) {
         try {
             if (fileName.endsWith("hmp.h5") || fileName.endsWith("mhmp.h5")) {
                 return BuilderFromGenotypeHDF5.getBuilder(fileName).build();
@@ -91,7 +91,7 @@ public class ImportUtils {
     }
 
     // add support for SNP ID?
-    public static Alignment readFromVCF(final String filename, ProgressListener listener, int maxKeptAlleles) {
+    public static GenotypeTable readFromVCF(final String filename, ProgressListener listener, int maxKeptAlleles) {
         return null; //TODO Restore VCF
 //
 //        int minPosition = Integer.MAX_VALUE;
@@ -358,15 +358,15 @@ public class ImportUtils {
 //        }
     }
 
-    public static Alignment readFromVCF(final String filename, ProgressListener listener) {
+    public static GenotypeTable readFromVCF(final String filename, ProgressListener listener) {
         return readFromVCF(filename, listener, VCFUtil.VCF_DEFAULT_MAX_NUM_ALLELES);
     }
 
-    public static Alignment readFromHapmap(final String filename, ProgressListener listener) {
+    public static GenotypeTable readFromHapmap(final String filename, ProgressListener listener) {
         return readFromHapmap(filename, true, listener);
     }
 
-    public static Alignment readFromHapmap(final String filename, boolean isSBit, ProgressListener listener) {
+    public static GenotypeTable readFromHapmap(final String filename, boolean isSBit, ProgressListener listener) {
         return BuilderFromHapMap.getBuilder(filename).build();
     }
 
@@ -374,7 +374,7 @@ public class ImportUtils {
 
 
 
-    public static Alignment readFromPLink(final String pedFilename, final String mapFilename, ProgressListener listener) {
+    public static GenotypeTable readFromPLink(final String pedFilename, final String mapFilename, ProgressListener listener) {
 //        return readFromPLink(pedFilename, mapFilename, true, listener);
         return null; //TODO restore PLINK
     }

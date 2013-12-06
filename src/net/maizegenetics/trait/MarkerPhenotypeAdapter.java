@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import net.maizegenetics.jGLiM.BasicLevel;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 
 import net.maizegenetics.taxa.Taxon;
 
@@ -16,7 +16,7 @@ public class MarkerPhenotypeAdapter {
 
     protected MarkerPhenotype markerpheno;
     protected Phenotype pheno;
-    protected Alignment align;
+    protected GenotypeTable align;
     protected int numberOfPhenotypes;
     protected int numberOfFactorTraits;
     protected int numberOfCovariates;

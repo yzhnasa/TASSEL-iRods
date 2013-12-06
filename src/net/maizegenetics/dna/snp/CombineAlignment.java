@@ -17,18 +17,18 @@ import java.util.*;
  *
  * @author terry
  */
-public class CombineAlignment implements Alignment {
+public class CombineAlignment implements GenotypeTable {
 
     private static final long serialVersionUID = -5197800047652332969L;
-    private final Alignment[] myAlignments;
+    private final GenotypeTable[] myAlignments;
     private final int[] mySiteOffsets;
-    private final Map<Chromosome, Alignment> myChromosomes = new HashMap<>();
+    private final Map<Chromosome, GenotypeTable> myChromosomes = new HashMap<>();
     private Chromosome[] myChromosomesList;
     private int[] myChromosomesOffsets;
     private final TaxaList myTaxaList;
     private String[][] myAlleleStates;
 
-    private CombineAlignment(TaxaList taxaList, Alignment[] alignments) {
+    private CombineAlignment(TaxaList taxaList, GenotypeTable[] alignments) {
 
         myTaxaList = taxaList;
         myAlignments = alignments;
@@ -57,7 +57,7 @@ public class CombineAlignment implements Alignment {
      * @param alignments
      * @return
      */
-    public static Alignment getInstance(Alignment[] alignments) {
+    public static GenotypeTable getInstance(GenotypeTable[] alignments) {
 
         if ((alignments == null) || (alignments.length == 0)) {
             throw new IllegalArgumentException("CombineAlignment: getInstance: must provide alignments.");
@@ -90,7 +90,7 @@ public class CombineAlignment implements Alignment {
      * @param isUnion whether to union or intersect join
      * @return
      */
-    public static Alignment getInstance(Alignment[] alignments, boolean isUnion) {
+    public static GenotypeTable getInstance(GenotypeTable[] alignments, boolean isUnion) {
 
         if ((alignments == null) || (alignments.length == 0)) {
             throw new IllegalArgumentException("CombineAlignment: getInstance: must provide alignments.");
@@ -111,7 +111,7 @@ public class CombineAlignment implements Alignment {
             newTaxa = TaxaListUtils.getCommonTaxa(groups);
         }
 
-        Alignment[] newAlignmentNews = new Alignment[alignments.length];
+        GenotypeTable[] newAlignmentNews = new GenotypeTable[alignments.length];
         for (int i = 0; i < alignments.length; i++) {
             newAlignmentNews[i] = FilterAlignment.getInstance(alignments[i], newTaxa);
         }
@@ -244,7 +244,7 @@ public class CombineAlignment implements Alignment {
 
     @Override
     public int chromosomeSiteCount(Chromosome locus) {
-        return ((Alignment) myChromosomes.get(locus)).chromosomeSiteCount(locus);
+        return ((GenotypeTable) myChromosomes.get(locus)).chromosomeSiteCount(locus);
     }
 
     @Override
@@ -255,7 +255,7 @@ public class CombineAlignment implements Alignment {
 
     @Override
     public int siteOfPhysicalPosition(int physicalPosition, Chromosome locus) {
-        Alignment align = ((Alignment) myChromosomes.get(locus));
+        GenotypeTable align = ((GenotypeTable) myChromosomes.get(locus));
         int i = -1;
         for (int j = 0; j < myAlignments.length; j++) {
             if (myAlignments[j] == align) {
@@ -271,7 +271,7 @@ public class CombineAlignment implements Alignment {
 
     @Override
     public int siteOfPhysicalPosition(int physicalPosition, Chromosome locus, String snpName) {
-        Alignment align = ((Alignment) myChromosomes.get(locus));
+        GenotypeTable align = ((GenotypeTable) myChromosomes.get(locus));
         int i = -1;
         for (int j = 0; j < myAlignments.length; j++) {
             if (myAlignments[j] == align) {
@@ -336,7 +336,7 @@ public class CombineAlignment implements Alignment {
 
     @Override
     public boolean hasSiteScores() {
-        for (Alignment align : myAlignments) {
+        for (GenotypeTable align : myAlignments) {
             if (align.hasSiteScores()) {
                 return true;
             }
@@ -363,7 +363,7 @@ public class CombineAlignment implements Alignment {
     }
 
     @Override
-    public Alignment[] compositeAlignments() {
+    public GenotypeTable[] compositeAlignments() {
         return myAlignments;
     }
 

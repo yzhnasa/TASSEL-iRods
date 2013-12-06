@@ -4,7 +4,7 @@
 package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.dna.snp.AlignmentBuilder;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
@@ -190,7 +190,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
             infile = suppliedInputFileName.replace("+", "" + chr);
             outfile = suppliedOutputFileName.replace("+", "" + chr);
             myLogger.info("Reading: " + infile);
-            Alignment a;
+            GenotypeTable a;
             try {
                 if (inputFormat == INPUT_FORMAT.hapmap)
                 {
@@ -308,7 +308,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     throw new UnsupportedOperationException("kpUnmergDups is not supported in TASSEL 5.  Is this a problem?");
  //                   deleteRemainingDuplicates(msa);
                 }
-                Alignment aOut=AlignmentBuilder.getInstance(msa.build(),posBuilder.build(),a.taxa());
+                GenotypeTable aOut=AlignmentBuilder.getInstance(msa.build(),posBuilder.build(),a.taxa());
                 ExportUtils.writeToHapmap(aOut, false, outfile, '\t', this);
             }
 //            else if (inputFormat==INPUT_FORMAT.vcf)
@@ -319,7 +319,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
         return null;
     }
 
-    private void processSNPsWithSamePosition(Integer[] samePos, Alignment a, int chr, int currentPos,
+    private void processSNPsWithSamePosition(Integer[] samePos, GenotypeTable a, int chr, int currentPos,
                                              GenotypeCallTableBuilder msa, PositionListBuilder posBuild) {
         boolean[] finished = new boolean[samePos.length];
         for (int i = 0; i < finished.length; ++i) {
@@ -360,7 +360,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                     byte[] possibleMerge = new byte[a.numberOfTaxa()];
                     for (int t = 0; t < a.numberOfTaxa(); ++t) {
                         byte geno2 = a.genotype(t, samePos[s2]);
-                        if (currMerge[t] != Alignment.UNKNOWN_DIPLOID_ALLELE && geno2 != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                        if (currMerge[t] != GenotypeTable.UNKNOWN_DIPLOID_ALLELE && geno2 != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                             if (!usePedigree || useTaxaForCompare[t]) {
                                 ++nCompare;
                             }
@@ -369,7 +369,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                                     ++nMismatch;
                                 }
                                 try {
-                                    possibleMerge[t] = callHets ? resolveHet(currMerge[t], geno2) : Alignment.UNKNOWN_DIPLOID_ALLELE;
+                                    possibleMerge[t] = callHets ? resolveHet(currMerge[t], geno2) : GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                                 } catch (Exception e) {
                                     myLogger.warn(
                                             "Invalid genotypes (" + a.genotypeAsString(t, samePos[s1]) + " and " + a.genotypeAsString(t, samePos[s2]) + ") at position:" + currentPos + " taxon:" + a.taxaName(t));
@@ -377,9 +377,9 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                             } else {
                                 possibleMerge[t] = currMerge[t];
                             }
-                        } else if (currMerge[t] == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                        } else if (currMerge[t] == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                             possibleMerge[t] = geno2;
-                        } else if (geno2 == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                        } else if (geno2 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                             possibleMerge[t] = currMerge[t];
                         }
                     }
@@ -612,7 +612,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
 //        myLogger.info("Number of sites written after deleting any remaining, unmerged duplicate SNPs: " + theMSA.numberOfSites());
 //    }
 
-    private boolean maskNonInbredTaxa(Alignment a) {
+    private boolean maskNonInbredTaxa(GenotypeTable a) {
         useTaxaForCompare = new boolean[a.numberOfTaxa()];  // initialized to false
         nInbredTaxa = 0;
         try {

@@ -1,5 +1,5 @@
 /*
- * AlignmentMaskBoolean
+ * GenotypeTableMaskBoolean
  */
 package net.maizegenetics.dna.snp;
 
@@ -12,16 +12,16 @@ import net.maizegenetics.taxa.Taxon;
  *
  * @author terry
  */
-public class AlignmentMaskBoolean extends AbstractAlignmentMask {
+public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private final byte[][] myMask;
 
-    public AlignmentMaskBoolean(Alignment align, byte[][] mask, String name, MaskType type) {
+    public GenotypeTableMaskBoolean(GenotypeTable align, byte[][] mask, String name, MaskType type) {
         this(align, mask, name, getNextColor(), type);
     }
 
-    public AlignmentMaskBoolean(Alignment align, byte[][] mask, String name, Color color, MaskType type) {
+    public GenotypeTableMaskBoolean(GenotypeTable align, byte[][] mask, String name, Color color, MaskType type) {
 
         super(align, name, color, type);
 
@@ -38,12 +38,12 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
     }
 
-    public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align) {
+    public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align) {
         String name = align.taxaName(0) + " Reference";
         return getInstanceCompareReference(align, align.genotypeRange(0, 0, align.numberOfSites()), name);
     }
 
-    public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, Taxon id) {
+    public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, Taxon id) {
         List<Integer> index = align.taxa().indicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
@@ -52,7 +52,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
         return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.numberOfSites()), name);
     }
 
-    public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, int index) {
+    public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, int index) {
         if ((index < 0) || (index >= align.numberOfTaxa())) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown index: " + index);
         }
@@ -60,7 +60,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
         return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.numberOfSites()), name);
     }
 
-    public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, String id) {
+    public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, String id) {
         List<Integer> index = align.taxa().indicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
@@ -68,7 +68,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
         return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.numberOfSites()), id + " Reference");
     }
 
-    public static AlignmentMaskBoolean getInstanceCompareReference(Alignment align, byte[] ref, String name) {
+    public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, byte[] ref, String name) {
 
         if ((align == null) || (ref == null)) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: alignment or reference can not be null.");
@@ -97,11 +97,11 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
         }
 
-        return new AlignmentMaskBoolean(align, mask, name, MaskType.reference);
+        return new GenotypeTableMaskBoolean(align, mask, name, MaskType.reference);
 
     }
 
-    public static AlignmentMaskBoolean getInstanceCompareAlignments(Alignment align1, Alignment align2, String name, MaskType type) {
+    public static GenotypeTableMaskBoolean getInstanceCompareAlignments(GenotypeTable align1, GenotypeTable align2, String name, MaskType type) {
 
         if ((align1.numberOfTaxa() != align2.numberOfTaxa())
                 || (align1.numberOfSites() != align2.numberOfSites())) {
@@ -127,7 +127,7 @@ public class AlignmentMaskBoolean extends AbstractAlignmentMask {
 
         }
 
-        return new AlignmentMaskBoolean(align1, mask, name, type);
+        return new GenotypeTableMaskBoolean(align1, mask, name, type);
 
     }
 

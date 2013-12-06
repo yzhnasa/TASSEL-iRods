@@ -1,6 +1,6 @@
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.dna.snp.ImportUtils;
@@ -55,7 +55,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             infile = suppliedInputFileName.replace("+", "" + chr);
             outfile = suppliedOutputFileName.replace("+", "" + chr);
             myLogger.info("Reading: " + infile);
-            Alignment a;
+            GenotypeTable a;
             
             if (inputFormat == INPUT_FORMAT.hapmap)
             {
@@ -113,7 +113,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
                 String[] highExpectedFTaxa = getHighExpectedFTaxa(a);
                 TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), highExpectedFTaxa, true);
-                Alignment inbredGenos = FilterAlignment.getInstance(a, highExpectedFTaxaIDGroup);
+                GenotypeTable inbredGenos = FilterAlignment.getInstance(a, highExpectedFTaxaIDGroup);
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0, snpLogging, "Filter the sites for minF only based only on the taxa with expectedF >= minF");
                 inbredGenos = null;
                 System.gc();
@@ -303,12 +303,12 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
         snpLogging = new SNPLogging(snpLogFileName, this.getClass());
     }
 
-    public static String[] getLowCoverageLines(Alignment a, double pCoverage) {
+    public static String[] getLowCoverageLines(GenotypeTable a, double pCoverage) {
         ArrayList<String> lowLines = new ArrayList<String>();
         for (int i = 0; i < a.numberOfTaxa(); i++) {
             int covered = 0;
             for (int j = 0; j < a.numberOfSites(); j++) {
-                if (a.genotype(i, j) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (a.genotype(i, j) != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     covered++;
                 }
             }
@@ -322,7 +322,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
         return lowL;
     }
 
-    private String[] getHighExpectedFTaxa(Alignment a) {
+    private String[] getHighExpectedFTaxa(GenotypeTable a) {
         ArrayList<String> highFLines = new ArrayList<String>();
         int nInbredTaxa = 0;
         for (int taxon = 0; taxon < a.numberOfTaxa(); taxon++) {

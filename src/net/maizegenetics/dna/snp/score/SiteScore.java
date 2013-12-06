@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.dna.snp.score;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 
 /**
  *
@@ -40,5 +40,5 @@ public interface SiteScore {
      *
      * @return site score type.
      */
-    public Alignment.SITE_SCORE_TYPE siteScoreType();
+    public GenotypeTable.SITE_SCORE_TYPE siteScoreType();
 }

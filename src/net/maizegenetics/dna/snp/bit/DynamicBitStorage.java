@@ -3,7 +3,7 @@ package net.maizegenetics.dna.snp.bit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE;
+import net.maizegenetics.dna.snp.GenotypeTable.ALLELE_SORT_TYPE;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.util.BitSet;

@@ -9,17 +9,17 @@ import java.awt.Color;
  *
  * @author terry
  */
-abstract public class AbstractAlignmentMask implements AlignmentMask {
+abstract public class AbstractGenotypeTableMask implements GenotypeTableMask {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private final String myName;
     private Color myColor;
-    private final Alignment myAlignment;
+    private final GenotypeTable myAlignment;
     private static Color myLastColor = null;
     private static int myIncrementAmount = 0x7D;
     private final MaskType myMaskType;
 
-    public AbstractAlignmentMask(Alignment align, String name, Color color, MaskType type) {
+    public AbstractGenotypeTableMask(GenotypeTable align, String name, Color color, MaskType type) {
         myAlignment = align;
         myName = name;
         myColor = color;
@@ -52,7 +52,7 @@ abstract public class AbstractAlignmentMask implements AlignmentMask {
         myColor = color;
     }
 
-    public Alignment getAlignment() {
+    public GenotypeTable getAlignment() {
         return myAlignment;
     }
 

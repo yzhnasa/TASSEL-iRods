@@ -7,7 +7,7 @@
 package net.maizegenetics.popgen;
 
 import cern.colt.map.OpenLongObjectHashMap;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.stats.statistics.FisherExact;
@@ -88,7 +88,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         Haplotype, Homozygous, Genotype
     };
     private static final Logger myLogger = Logger.getLogger(LinkageDisequilibrium.class);
-    private Alignment myAlignment;
+    private GenotypeTable myAlignment;
 //    private Alignment mySBitAlignment;
     private int myMinTaxaForEstimate = 20;
     private int myWindowSize = 50;
@@ -125,7 +125,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param sitesList
      * @param hetTreatment
      */
-    public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
+    public LinkageDisequilibrium(GenotypeTable alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
         myAlignment = alignment;
         myFisherExact = new FisherExact((2 * myAlignment.numberOfTaxa()) + 10);
         myWindowSize = windowSize;
@@ -190,7 +190,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         return (c < r) ? (((long) c * myAlignment.numberOfSites()) + r) : (((long) r * myAlignment.numberOfSites()) + c);
     }
 
-    public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, Alignment alignment, int site1, int site2) {
+    public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, GenotypeTable alignment, int site1, int site2) {
         FisherExact fisherExact = new FisherExact((2 * alignment.numberOfTaxa()) + 10);
         BitSet rMj = alignment.allelePresenceForAllTaxa(site1, 0);
         BitSet rMn = alignment.allelePresenceForAllTaxa(site1, 1);
@@ -201,7 +201,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
     private void calculateBitLDForHaplotype(boolean ignoreHets) {
         //It will ignore hets, make a new Alignment and set all het calls to missing. Otherwise set the pointer to the old alignment
-        Alignment workingAlignment;
+        GenotypeTable workingAlignment;
         if (ignoreHets) {
             workingAlignment =AlignmentBuilder.getHomozygousInstance(myAlignment);
         } else {
@@ -480,7 +480,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * Returns an annotated aligment if one was used for this LD this could be
      * used to access information of locus position
      */
-    public Alignment getAlignment() {
+    public GenotypeTable getAlignment() {
         return myAlignment;
     }
 

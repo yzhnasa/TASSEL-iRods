@@ -7,7 +7,7 @@ package net.maizegenetics.gbs.pipeline;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.CheckSum;
@@ -561,8 +561,8 @@ public class ProductionPipelineMain {
     public static String compareOriginalAgainstImputed(String originalFile, String imputedFile){
 
         StringBuffer sb = new StringBuffer();
-        Alignment origAlignment = ImportUtils.readGuessFormat(originalFile);
-        Alignment impAlignment = ImportUtils.readGuessFormat(imputedFile);
+        GenotypeTable origAlignment = ImportUtils.readGuessFormat(originalFile);
+        GenotypeTable impAlignment = ImportUtils.readGuessFormat(imputedFile);
 
 
         int siteCount = origAlignment.numberOfSites();

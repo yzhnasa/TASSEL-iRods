@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.dna.snp.genotypecall;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
@@ -122,18 +122,18 @@ abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
     @Override
     public boolean isPolymorphic(int site) {
 
-        byte first = Alignment.UNKNOWN_ALLELE;
+        byte first = GenotypeTable.UNKNOWN_ALLELE;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
             byte[] current = genotypeArray(i, site);
-            if (current[0] != Alignment.UNKNOWN_ALLELE) {
-                if (first == Alignment.UNKNOWN_ALLELE) {
+            if (current[0] != GenotypeTable.UNKNOWN_ALLELE) {
+                if (first == GenotypeTable.UNKNOWN_ALLELE) {
                     first = current[0];
                 } else if (first != current[0]) {
                     return true;
                 }
             }
-            if (current[1] != Alignment.UNKNOWN_ALLELE) {
-                if (first == Alignment.UNKNOWN_ALLELE) {
+            if (current[1] != GenotypeTable.UNKNOWN_ALLELE) {
+                if (first == GenotypeTable.UNKNOWN_ALLELE) {
                     first = current[1];
                 } else if (first != current[1]) {
                     return true;
@@ -204,10 +204,10 @@ abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
         int result = 0;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
             byte[] current = genotypeArray(i, site);
-            if (current[0] != Alignment.UNKNOWN_ALLELE) {
+            if (current[0] != GenotypeTable.UNKNOWN_ALLELE) {
                 result++;
             }
-            if (current[1] != Alignment.UNKNOWN_ALLELE) {
+            if (current[1] != GenotypeTable.UNKNOWN_ALLELE) {
                 result++;
             }
         }
@@ -221,7 +221,7 @@ abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
         int result = 0;
         for (int i = 0, n = myTaxaCount; i < n; i++) {
             byte current = genotype(i, site);
-            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+            if (current != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                 result++;
             }
         }
@@ -267,7 +267,7 @@ abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
         if (alleles[0].length >= 2) {
             return (byte) alleles[0][1];
         } else {
-            return Alignment.UNKNOWN_ALLELE;
+            return GenotypeTable.UNKNOWN_ALLELE;
         }
     }
 
@@ -307,7 +307,7 @@ abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
         if (alleles[0].length >= 1) {
             return (byte) alleles[0][0];
         } else {
-            return Alignment.UNKNOWN_ALLELE;
+            return GenotypeTable.UNKNOWN_ALLELE;
         }
     }
 
@@ -536,10 +536,10 @@ abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
         int result = 0;
         for (int i = 0, n = mySiteCount; i < n; i++) {
             byte[] current = genotypeArray(taxon, i);
-            if (current[0] != Alignment.UNKNOWN_ALLELE) {
+            if (current[0] != GenotypeTable.UNKNOWN_ALLELE) {
                 result++;
             }
-            if (current[1] != Alignment.UNKNOWN_ALLELE) {
+            if (current[1] != GenotypeTable.UNKNOWN_ALLELE) {
                 result++;
             }
         }
@@ -564,7 +564,7 @@ abstract class AbstractGenotypeCallTable implements GenotypeCallTable {
         int result = 0;
         for (int i = 0, n = mySiteCount; i < n; i++) {
             byte current = genotype(taxon, i);
-            if (current != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+            if (current != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                 result++;
             }
         }

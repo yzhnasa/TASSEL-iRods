@@ -5,7 +5,7 @@ package net.maizegenetics.dna.map;
 
 import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
@@ -186,7 +186,7 @@ public class TagsAtLocus {
     
     public byte getRefGeno(int site) {
         if (refCallsBySite == null || site > refCallsBySite.length-1) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
         } else {
             return refCallsBySite[site];
         }
@@ -258,7 +258,7 @@ public class TagsAtLocus {
             status = "invariant";
             return null;
         }
-        Alignment tagAlignment = getVariableSites();
+        GenotypeTable tagAlignment = getVariableSites();
         if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             status = "invariant";
             return null;
@@ -293,7 +293,7 @@ public class TagsAtLocus {
             status = "invariant";
             return null;
         }
-        Alignment tagAlignment = this.getVariableSites();
+        GenotypeTable tagAlignment = this.getVariableSites();
         if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             status = "invariant";
             return null;
@@ -322,7 +322,7 @@ public class TagsAtLocus {
                     count += alleleDepthsInTaxa[a][tx];
                 }
                 if (count == 0) {
-                    callsBySite[s][tx] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    callsBySite[s][tx] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                     continue;
                 }
                 // check for each possible homozygote
@@ -348,7 +348,7 @@ public class TagsAtLocus {
         if (theTags.size() < 2) {
             return null;
         }
-        Alignment tagAlignment = this.getVariableSites(refSeq);
+        GenotypeTable tagAlignment = this.getVariableSites(refSeq);
         if (tagAlignment == null || tagAlignment.numberOfSites() < 1) {
             return null;
         }
@@ -376,7 +376,7 @@ public class TagsAtLocus {
                 for (int tg = 0; tg < nAlignedTags; tg++) {
                     int tagIndex = tagIndices[tg];
                     byte baseToAdd = allelesAtVariableSitesByTag[s][tagIndex];
-                    if (baseToAdd == Alignment.UNKNOWN_DIPLOID_ALLELE && callBiallelicSNPsWithGap && maxStartPosition == minStartPosition) {
+                    if (baseToAdd == GenotypeTable.UNKNOWN_DIPLOID_ALLELE && callBiallelicSNPsWithGap && maxStartPosition == minStartPosition) {
                         baseToAdd = NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
                     }
                     alleleCounts[baseToAdd] += theTags.get(tagIndex).tagDist[tx];
@@ -401,7 +401,7 @@ public class TagsAtLocus {
         }
     }
 
-    private void populateAllelesAtVariableSitesByTag(Alignment tagAlignment, int nSites, boolean includeReferenceTag, boolean callBiallelicSNPsWithGap) {
+    private void populateAllelesAtVariableSitesByTag(GenotypeTable tagAlignment, int nSites, boolean includeReferenceTag, boolean callBiallelicSNPsWithGap) {
         int nAlignedTags = tagAlignment.numberOfTaxa();
         tagIndices = new int[nAlignedTags];
         allelesAtVariableSitesByTag = new byte[nSites][theTags.size()];
@@ -412,7 +412,7 @@ public class TagsAtLocus {
                     refCallsBySite[s] = tagAlignment.genotype(tg, s); // diploid byte for the reference allele/geno
                 } else {
                     byte allele = tagAlignment.genotypeArray(tg, s)[0]; // tags only have one base so the 1st allele (index [0]) sufffices
-                    if (callBiallelicSNPsWithGap && allele == Alignment.UNKNOWN_ALLELE) {
+                    if (callBiallelicSNPsWithGap && allele == GenotypeTable.UNKNOWN_ALLELE) {
                         allele = NucleotideAlignmentConstants.GAP_ALLELE;
                     }
                     allelesAtVariableSitesByTag[s][tagIndices[tg]] = allele;
@@ -476,7 +476,7 @@ public class TagsAtLocus {
         ;
     }
 
-    private Alignment getVariableSites() {
+    private GenotypeTable getVariableSites() {
         if (theTags.size() < 2) {
             status = "invariant";
             return null;
@@ -533,7 +533,7 @@ public class TagsAtLocus {
             tlB.add(new Taxon(names));
         }
         profile = null;
-        Alignment aa = AlignmentBuilder.getInstance(gB.build(),pALB.build(),tlB.build());;
+        GenotypeTable aa = AlignmentBuilder.getInstance(gB.build(),pALB.build(),tlB.build());;
 //        if (refTagWithGaps) {
 //            aa=AlignmentBuilder.getInstance(gB.build(),pALB.build(),tlB.build());
 //            //aseqs = sequence
@@ -542,7 +542,7 @@ public class TagsAtLocus {
 //        } else {
 //            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
 //        }
-        Alignment faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
+        GenotypeTable faa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
 //        if (printOutAlignments && refTagWithGaps) {
         if (printOutAlignments && (minStartPosition % 1000 == 0)) {
             TaxaList tL=tlB.build();
@@ -577,7 +577,7 @@ public class TagsAtLocus {
         return faa;
     }
 
-    private Alignment getVariableSites(String refSeq) {
+    private GenotypeTable getVariableSites(String refSeq) {
         if (theTags.size() < 2) {
             return null;
         }
@@ -609,7 +609,7 @@ public class TagsAtLocus {
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
             writeAlignment(refSeq, myAlign, minRefGenIndex, maxRefGenIndex);
         }
-        Alignment a = null;
+        GenotypeTable a = null;
         TaxaList tL=new TaxaListBuilder().addAll(names).build();
         int nSites=aseqs[0].length();
         PositionListBuilder pALB=new PositionListBuilder();
@@ -618,7 +618,7 @@ public class TagsAtLocus {
         for (int i=0; i<aseqs.length; i++) {gB.setBaseRangeForTaxon(i,0,aseqs[i].getBytes());}
         a=AlignmentBuilder.getInstance(gB.build(),pALB.build(),tL);
 //        a = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, TasselPrefs.getAlignmentMaxAllelesToRetain(), new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, TasselPrefs.getAlignmentRetainRareAlleles(), true);
-        Alignment fa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(a, 0.000001, 1.0, 2);
+        GenotypeTable fa = AlignmentUtils.removeSitesBasedOnFreqIgnoreMissing(a, 0.000001, 1.0, 2);
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  FA (alignment filtered for polymorphic sites):\n" + fa.toString());
         }
@@ -764,9 +764,9 @@ public class TagsAtLocus {
     
     private byte resolveHetGeno(byte[] alleles, int[][] allelesInTaxa, int tx) {
         int max = 0;
-        byte maxAllele = Alignment.UNKNOWN_ALLELE;
+        byte maxAllele = GenotypeTable.UNKNOWN_ALLELE;
         int nextMax = 0;
-        byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
+        byte nextMaxAllele = GenotypeTable.UNKNOWN_ALLELE;
         for (int a = 0; a < maxNumAlleles; a++) {
             if (allelesInTaxa[a][tx] > max) {
                 nextMax = max;
@@ -798,7 +798,7 @@ public class TagsAtLocus {
         int[][] sortedAlleleCounts = sortAllelesByCount(alleleCounts);
         int a1Count = sortedAlleleCounts[1][0];
         if (a1Count == 0) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
         }
         int a2Count = sortedAlleleCounts[1][1];  // What if a3Count = a2Count? -- this situation is not dealt with
         byte a1 = (byte) sortedAlleleCounts[0][0];

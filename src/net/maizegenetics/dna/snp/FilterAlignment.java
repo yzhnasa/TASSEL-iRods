@@ -24,14 +24,14 @@ import java.util.*;
  *
  * @author terry
  */
-public class FilterAlignment implements Alignment {
+public class FilterAlignment implements GenotypeTable {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private static final Logger myLogger = Logger.getLogger(FilterAlignment.class);
     private final boolean myIsTaxaFilter;
     private final boolean myIsSiteFilter;
     private final boolean myIsSiteFilterByRange;
-    private final Alignment myBaseAlignment;
+    private final GenotypeTable myBaseAlignment;
     private final TaxaList myTaxaList;
     private final int[] myTaxaRedirect;
     private final int[] mySiteRedirect;
@@ -43,7 +43,7 @@ public class FilterAlignment implements Alignment {
     private final GenotypeCallTable myGenotype;
     private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new EnumMap<ALLELE_SORT_TYPE, BitStorage>(ALLELE_SORT_TYPE.class);
 
-    private FilterAlignment(Alignment a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
+    private FilterAlignment(GenotypeTable a, TaxaList subList, int[] taxaRedirect, FilterAlignment original) {
 
         myTaxaList = subList;
 
@@ -90,7 +90,7 @@ public class FilterAlignment implements Alignment {
      *
      * @return filter alignment
      */
-    public static Alignment getInstance(Alignment a, TaxaList subTaxaList) {
+    public static GenotypeTable getInstance(GenotypeTable a, TaxaList subTaxaList) {
         return getInstance(a, subTaxaList, true);
     }
 
@@ -105,9 +105,9 @@ public class FilterAlignment implements Alignment {
      *
      * @return filter alignment
      */
-    public static Alignment getInstance(Alignment a, TaxaList subTaxaList, boolean retainUnknownTaxa) {
+    public static GenotypeTable getInstance(GenotypeTable a, TaxaList subTaxaList, boolean retainUnknownTaxa) {
 
-        Alignment baseAlignment = a;
+        GenotypeTable baseAlignment = a;
         FilterAlignment original = null;
         if (baseAlignment instanceof FilterAlignment) {
             original = (FilterAlignment) a;
@@ -167,7 +167,7 @@ public class FilterAlignment implements Alignment {
      *
      * @return Filtered Alignment
      */
-    public static Alignment getInstanceRemoveIDs(Alignment a, TaxaList subTaxaList) {
+    public static GenotypeTable getInstanceRemoveIDs(GenotypeTable a, TaxaList subTaxaList) {
 
         TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = a.taxa();
@@ -187,7 +187,7 @@ public class FilterAlignment implements Alignment {
      * @param startSite start site (included)
      * @param endSite end site (included)
      */
-    private FilterAlignment(Alignment a, int startSite, int endSite, FilterAlignment original) {
+    private FilterAlignment(GenotypeTable a, int startSite, int endSite, FilterAlignment original) {
 
         myTaxaList = original == null ? a.taxa() : original.taxa();
 
@@ -233,7 +233,7 @@ public class FilterAlignment implements Alignment {
      * @param a base alignment
      * @param subSites site to include
      */
-    private FilterAlignment(Alignment a, int[] subSites, FilterAlignment original) {
+    private FilterAlignment(GenotypeTable a, int[] subSites, FilterAlignment original) {
 
         myTaxaList = original == null ? a.taxa() : original.taxa();
 
@@ -267,11 +267,11 @@ public class FilterAlignment implements Alignment {
 
     }
 
-    public static FilterAlignment getInstance(Alignment a, int[] subSites) {
+    public static FilterAlignment getInstance(GenotypeTable a, int[] subSites) {
 
         if (a instanceof FilterAlignment) {
             FilterAlignment original = (FilterAlignment) a;
-            Alignment baseAlignment = ((FilterAlignment) a).getBaseAlignment();
+            GenotypeTable baseAlignment = ((FilterAlignment) a).getBaseAlignment();
             if (original.isSiteFilter()) {
                 int[] newSubSites = new int[subSites.length];
                 for (int i = 0; i < subSites.length; i++) {
@@ -295,7 +295,7 @@ public class FilterAlignment implements Alignment {
 
     }
 
-    public static FilterAlignment getInstance(Alignment a, String[] siteNamesToKeep) {
+    public static FilterAlignment getInstance(GenotypeTable a, String[] siteNamesToKeep) {
 
         Arrays.sort(siteNamesToKeep);
         int[] temp = new int[siteNamesToKeep.length];
@@ -320,7 +320,7 @@ public class FilterAlignment implements Alignment {
 
     }
 
-    public static FilterAlignment getInstanceRemoveSiteNames(Alignment a, String[] siteNamesToRemove) {
+    public static FilterAlignment getInstanceRemoveSiteNames(GenotypeTable a, String[] siteNamesToRemove) {
 
         Arrays.sort(siteNamesToRemove);
         int[] temp = new int[a.numberOfSites()];
@@ -342,11 +342,11 @@ public class FilterAlignment implements Alignment {
 
     }
 
-    public static FilterAlignment getInstance(Alignment a, String chromosome, int startPhysicalPos, int endPhysicalPos) {
+    public static FilterAlignment getInstance(GenotypeTable a, String chromosome, int startPhysicalPos, int endPhysicalPos) {
         return getInstance(a, a.chromosome(chromosome), startPhysicalPos, endPhysicalPos);
     }
 
-    public static FilterAlignment getInstance(Alignment a, Chromosome chromosome, int startPhysicalPos, int endPhysicalPos) {
+    public static FilterAlignment getInstance(GenotypeTable a, Chromosome chromosome, int startPhysicalPos, int endPhysicalPos) {
 
         int startSite = a.siteOfPhysicalPosition(startPhysicalPos, chromosome);
         if (startSite < 0) {
@@ -367,7 +367,7 @@ public class FilterAlignment implements Alignment {
 
     }
 
-    public static FilterAlignment getInstance(Alignment a, Chromosome chromosome) {
+    public static FilterAlignment getInstance(GenotypeTable a, Chromosome chromosome) {
         int[] endStart = a.startAndEndOfChromosome(chromosome);
         return getInstance(a, endStart[0], endStart[1] - 1);
     }
@@ -382,11 +382,11 @@ public class FilterAlignment implements Alignment {
      *
      * @return Filter Alignment
      */
-    public static FilterAlignment getInstance(Alignment a, int startSite, int endSite) {
+    public static FilterAlignment getInstance(GenotypeTable a, int startSite, int endSite) {
 
         if (a instanceof FilterAlignment) {
             FilterAlignment original = (FilterAlignment) a;
-            Alignment baseAlignment = ((FilterAlignment) a).getBaseAlignment();
+            GenotypeTable baseAlignment = ((FilterAlignment) a).getBaseAlignment();
             if (original.isSiteFilter()) {
                 int[] subSites = new int[endSite - startSite + 1];
                 int[] originalSites = original.getSiteRedirect();
@@ -641,7 +641,7 @@ public class FilterAlignment implements Alignment {
         return reverseTranslateSite(temp);
     }
 
-    public Alignment getBaseAlignment() {
+    public GenotypeTable getBaseAlignment() {
         return myBaseAlignment;
     }
 
@@ -984,8 +984,8 @@ public class FilterAlignment implements Alignment {
     }
 
     @Override
-    public Alignment[] compositeAlignments() {
-        return new Alignment[]{this};
+    public GenotypeTable[] compositeAlignments() {
+        return new GenotypeTable[]{this};
     }
 
     @Override

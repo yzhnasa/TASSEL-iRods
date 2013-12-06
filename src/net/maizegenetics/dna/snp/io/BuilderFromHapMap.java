@@ -5,7 +5,7 @@ import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
@@ -54,9 +54,9 @@ public class BuilderFromHapMap {
     }
 
     //TODO provide options on caching to use, read only some sites, etc.
-    public Alignment build() {
+    public GenotypeTable build() {
         long time=System.nanoTime();
-        Alignment result=null;
+        GenotypeTable result=null;
         try {
             int numThreads=Runtime.getRuntime().availableProcessors();
             ExecutorService pool=Executors.newFixedThreadPool(numThreads);

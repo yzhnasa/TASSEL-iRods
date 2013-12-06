@@ -1,5 +1,5 @@
 /*
- * AlignmentMaskGeneticDistance
+ * GenotypeTableMaskGeneticDistance
  */
 package net.maizegenetics.dna.snp;
 
@@ -15,7 +15,7 @@ import java.util.Map;
  *
  * @author terry
  */
-public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
+public class GenotypeTableMaskGeneticDistance extends AbstractGenotypeTableMask {
 
     private static final long serialVersionUID = -5197800047652332969L;
     private Map<Integer, Byte> myCache = new LinkedHashMap<Integer, Byte>() {
@@ -24,14 +24,14 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
         }
     };
     private final int myTaxonReference;
-    private Alignment myTBitAlignment = null;
+    private GenotypeTable myTBitAlignment = null;
 
-    private AlignmentMaskGeneticDistance(Alignment align, int taxonReference, String name, Color color) {
-        super(align, name, color, AlignmentMask.MaskType.reference);
+    private GenotypeTableMaskGeneticDistance(GenotypeTable align, int taxonReference, String name, Color color) {
+        super(align, name, color, GenotypeTableMask.MaskType.reference);
         myTaxonReference = taxonReference;
     }
 
-    public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, Taxon id) {
+    public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, Taxon id) {
         List<Integer> index = align.taxa().indicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
@@ -39,7 +39,7 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
         return getInstanceCompareReference(align, index.get(0));
     }
 
-    public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, String id) {
+    public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, String id) {
         List<Integer> index = align.taxa().indicesMatchingTaxon(id);
         if ((index == null) || (index.size() == 0)) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
@@ -47,12 +47,12 @@ public class AlignmentMaskGeneticDistance extends AbstractAlignmentMask {
         return getInstanceCompareReference(align, index.get(0));
     }
 
-    public static AlignmentMaskGeneticDistance getInstanceCompareReference(Alignment align, int index) {
+    public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, int index) {
         if ((index < 0) || (index >= align.numberOfTaxa())) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown index: " + index);
         }
         String name = align.taxaName(index) + " Genetic Distance";
-        return new AlignmentMaskGeneticDistance(align, index, name, null);
+        return new GenotypeTableMaskGeneticDistance(align, index, name, null);
     }
 
     @Override

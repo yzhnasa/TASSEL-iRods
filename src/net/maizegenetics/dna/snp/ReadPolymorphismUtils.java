@@ -20,7 +20,7 @@ public class ReadPolymorphismUtils {
     private ReadPolymorphismUtils() {
     }
 
-    public static Alignment readPolymorphismFile(String inFile) throws IOException {
+    public static GenotypeTable readPolymorphismFile(String inFile) throws IOException {
         BufferedReader br = Utils.getBufferedReader(inFile);
         String inline = br.readLine();
         String[] markerNames = null;
@@ -67,9 +67,9 @@ public class ReadPolymorphismUtils {
             taxa[t] = taxonData[0];
             for (int s = 0; s < nMarkers; s++) {
                 if (taxonData[s + 1].equals("?")) {
-                    finalData[t][s] = Alignment.UNKNOWN_ALLELE_STR;
+                    finalData[t][s] = GenotypeTable.UNKNOWN_ALLELE_STR;
                 } else if (taxonData[s + 1].equals("?:?")) {
-                    finalData[t][s] = Alignment.UNKNOWN_DIPLOID_ALLELE_STR;
+                    finalData[t][s] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR;
                 } else {
                     finalData[t][s] = taxonData[s + 1];
                 }

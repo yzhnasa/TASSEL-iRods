@@ -5,7 +5,7 @@ package net.maizegenetics.dna.snp.genotypecall;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
@@ -52,7 +52,7 @@ public class GenotypeCallTableBuilder {
      */
     public static GenotypeCallTableBuilder getInstanceTranspose(int numTaxa, int numSites) {
         SuperByteMatrix matrix = SuperByteMatrixBuilder.getInstanceTranspose(numTaxa, numSites);
-        matrix.setAll(Alignment.UNKNOWN_DIPLOID_ALLELE);
+        matrix.setAll(GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
         return new GenotypeCallTableBuilder(matrix);
     }
 
@@ -68,7 +68,7 @@ public class GenotypeCallTableBuilder {
      */
     public static GenotypeCallTableBuilder getUnphasedNucleotideGenotypeBuilder(int numTaxa, int numSites) {
         SuperByteMatrix matrix = SuperByteMatrixBuilder.getInstance(numTaxa, numSites);
-        matrix.setAll(Alignment.UNKNOWN_DIPLOID_ALLELE);
+        matrix.setAll(GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
         return new GenotypeCallTableBuilder(matrix);
     }
 
@@ -122,10 +122,10 @@ public class GenotypeCallTableBuilder {
             if (data[0][0].contains(":")) {
                 Pattern colon = Pattern.compile(":");
                 for (int taxon = 0; taxon < numTaxa; taxon++) {
-                    if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_DIPLOID_ALLELE_STR)) {
-                        setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                    if (data[taxon][site].equalsIgnoreCase(GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR)) {
+                        setBase(taxon, site, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
                     } else if (data[taxon][site].equals("?") || data[taxon][site].equals("?:?")) {
-                        setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                        setBase(taxon, site, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
                     } else {
                         String[] siteval = colon.split(data[taxon][site]);
                         byte first = NucleotideAlignmentConstants.getNucleotideAlleleByte(siteval[0]);
@@ -135,10 +135,10 @@ public class GenotypeCallTableBuilder {
                 }
             } else {
                 for (int taxon = 0; taxon < numTaxa; taxon++) {
-                    if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
-                        setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                    if (data[taxon][site].equalsIgnoreCase(GenotypeTable.UNKNOWN_ALLELE_STR)) {
+                        setBase(taxon, site, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
                     } else if (data[taxon][site].equals("?")) {
-                        setBase(taxon, site, Alignment.UNKNOWN_DIPLOID_ALLELE);
+                        setBase(taxon, site, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
                     } else {
                         setBase(taxon, site, NucleotideAlignmentConstants.getNucleotideAlleleByte(data[taxon][site]));
                     }

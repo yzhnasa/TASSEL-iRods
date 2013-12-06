@@ -1,6 +1,6 @@
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -59,9 +59,9 @@ public class KinshipPlugin extends AbstractPlugin {
 
                 try {
 
-                    if (current.getData() instanceof Alignment) {
+                    if (current.getData() instanceof GenotypeTable) {
                         //this section implements additional options for calculating kinship
-                        Alignment theAlignment = (Alignment) current.getData();
+                        GenotypeTable theAlignment = (GenotypeTable) current.getData();
                         kin = new Kinship(theAlignment);
 
                     } else if (current.getData() instanceof SimplePhenotype) { //pedigree data

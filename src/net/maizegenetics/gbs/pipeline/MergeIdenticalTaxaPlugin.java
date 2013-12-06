@@ -1,6 +1,6 @@
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -198,14 +198,14 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         return null;
     }
 
-    public static byte[] consensusCalls(Alignment a, List<String> taxa, boolean callhets, double majority) {
+    public static byte[] consensusCalls(GenotypeTable a, List<String> taxa, boolean callhets, double majority) {
         short[][] siteCnt = new short[2][a.numberOfSites()];
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {
             taxaIndex[t] = a.taxa().indicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[a.numberOfSites()];
-        Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
+        Arrays.fill(calls, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
         for (int s = 0; s < a.numberOfSites(); s++) {
             byte mjAllele = a.majorAllele(s);
             byte mnAllele = a.minorAllele(s);
@@ -216,7 +216,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             byte het = AlignmentUtils.getUnphasedDiploidValue(mjAllele, mnAllele);
             for (int t = 0; t < taxaIndex.length; t++) {
                 byte ob = a.genotype(taxaIndex[t], s);
-                if (ob == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (ob == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     continue;
                 }
                 if (ob == mj) {
@@ -243,7 +243,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
         return calls;
     }
 
-    public static byte[][] consensusCallsForVCF  (Alignment a, List<String> taxa, int MaxNumAlleles)
+    public static byte[][] consensusCallsForVCF  (GenotypeTable a, List<String> taxa, int MaxNumAlleles)
     {
         //the return result is a two day array result[x][y]
         //y: site index
@@ -260,7 +260,7 @@ public class MergeIdenticalTaxaPlugin extends AbstractPlugin {
             taxaIndex[t] = a.taxa().indicesMatchingTaxon(taxa.get(t)).get(0);
         }
         for (int s = 0; s < a.numberOfSites(); s++) {
-            byte[] alleles = a.allelesBySortType(Alignment.ALLELE_SORT_TYPE.Depth, s);
+            byte[] alleles = a.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Depth, s);
             
 
             int[] alleleDepth = new int[alleles.length];

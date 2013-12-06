@@ -14,7 +14,7 @@
  */
 package net.maizegenetics.popgen;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.dna.map.Chromosome;
@@ -47,7 +47,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
     /** whether to use a sliding window*/
     boolean slideWindow = false;
     /** the base annotated alignment, it should be unprocessed (raw alignment)*/
-    Alignment theAAlignment;
+    GenotypeTable theAAlignment;
     /** the nature of the sites being evaluated, currently set to ALL POLYMORPHISMs, need to add specifics indels and SNPs.*/
 
     List<DiversityResults> diversityResultsVector = new ArrayList<>();
@@ -59,7 +59,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
      * @param slidingWindow if true a sliding window will be run
      *
      */
-    public DiversityAnalyses(Alignment aa, boolean slidingWindow, int start, int end, int window, int step,
+    public DiversityAnalyses(GenotypeTable aa, boolean slidingWindow, int start, int end, int window, int step,
             PolymorphismDistribution thePolymorphismDistribution) {
         this.startSite = start;
         this.endSite = end;
@@ -72,7 +72,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         runAnalyses();
     }
 
-    public DiversityAnalyses(Alignment aa, boolean slidingWindow, int start, int end, int window, int step) {
+    public DiversityAnalyses(GenotypeTable aa, boolean slidingWindow, int start, int end, int window, int step) {
         this(aa, slidingWindow, start, end, window, step, null);
     }
 
@@ -103,7 +103,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         }
         double startChrPosition = theAAlignment.chromosomalPosition(start);
         double endChrPosition = theAAlignment.chromosomalPosition(end);
-        Alignment theFilteredAlignment = FilterAlignment.getInstance(theAAlignment, start, end);
+        GenotypeTable theFilteredAlignment = FilterAlignment.getInstance(theAAlignment, start, end);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(theFilteredAlignment);
         diversityResultsVector.add(evaluate(theFilteredAlignment, adm, start, end, chromosome, startChrPosition, endChrPosition));
         if (thePolymorphismDistribution != null) {
@@ -111,7 +111,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         }
     }
 
-    DiversityResults evaluate(Alignment theAlignment, IBSDistanceMatrix dm,
+    DiversityResults evaluate(GenotypeTable theAlignment, IBSDistanceMatrix dm,
             int start, int end, int chromosome, double startChrPosition, double endChrPosition) {
         int sites = end - start + 1;
         DiversityResults theDiversityResults = new DiversityResults(start, end, chromosome, startChrPosition, endChrPosition);
@@ -179,7 +179,7 @@ public class DiversityAnalyses extends AbstractTableReport implements TableRepor
         return D;
     }
 
-    int countSegregatingSites(Alignment theAlignment) {
+    int countSegregatingSites(GenotypeTable theAlignment) {
         int total = 0;
         if (theAlignment.isAllPolymorphic()) {
             return theAlignment.numberOfSites();

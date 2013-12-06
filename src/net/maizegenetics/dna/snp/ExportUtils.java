@@ -35,7 +35,7 @@ public class ExportUtils {
         // Utility Class - do not instantiate.
     }
 
-    public static String writeToHDF5(Alignment a, String newHDF5file) {
+    public static String writeToHDF5(GenotypeTable a, String newHDF5file) {
         IHDF5Writer h5w = null;
         try {
 
@@ -148,7 +148,7 @@ public class ExportUtils {
         }
     }
     
-    public static String writeToMutableHDF5(Alignment a, String newHDF5file) {
+    public static String writeToMutableHDF5(GenotypeTable a, String newHDF5file) {
         return writeToMutableHDF5(a, newHDF5file, null, false);
     }
    
@@ -159,7 +159,7 @@ public class ExportUtils {
     * @param exportTaxa  subset of taxa (if null exports ALL taxa)
     * @return 
     */ 
-   public static String writeToMutableHDF5(Alignment a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
+   public static String writeToMutableHDF5(GenotypeTable a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
         AlignmentBuilder aB=AlignmentBuilder.getTaxaIncremental(a.positions(),newHDF5file);
         if((exportTaxa!=null)&&(exportTaxa.numberOfTaxa()==0)) {aB.build(); return newHDF5file;}
         for (int t = 0; t < a.numberOfTaxa(); t++) {
@@ -340,7 +340,7 @@ public class ExportUtils {
      * @param filename
      * @param delimChar
      */
-    public static String writeToHapmap(Alignment alignment, boolean diploid, String filename, char delimChar, ProgressListener listener) {
+    public static String writeToHapmap(GenotypeTable alignment, boolean diploid, String filename, char delimChar, ProgressListener listener) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
@@ -399,7 +399,7 @@ public class ExportUtils {
                 } else {
                     bw.write(alignment.genotypeAsString(site, (byte) sortedAlleles[0][0]));
                     for (int allele = 1; allele < sortedAlleles[0].length; allele++) {
-                        if (sortedAlleles[0][allele] != Alignment.UNKNOWN_ALLELE) {
+                        if (sortedAlleles[0][allele] != GenotypeTable.UNKNOWN_ALLELE) {
                             bw.write('/');
                             bw.write(alignment.genotypeAsString(site, (byte) sortedAlleles[0][allele]));  // will write out a third allele if it exists
                         }
@@ -481,7 +481,7 @@ public class ExportUtils {
      * @param filename
      * @return
      */
-    public static String writeToVCF(Alignment alignment, String filename, char delimChar) {
+    public static String writeToVCF(GenotypeTable alignment, String filename, char delimChar) {
         //todo restore depth
         boolean hasDepth=false;  //in future test for this
         try {
@@ -490,7 +490,7 @@ public class ExportUtils {
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
-            if (alignment.referenceGenotype(0) == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+            if (alignment.referenceGenotype(0) == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                 bw.write("##Reference allele is not known. The major allele was used as reference allele.");
                 bw.newLine();
             }
@@ -537,7 +537,7 @@ public class ExportUtils {
                 }
 
                 byte refGeno = alignment.referenceGenotype(site);
-                if (refGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (refGeno == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     String myMajorAllele = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][sortedAlleles[0][0]];
                     String MajorGenotype = myMajorAllele + myMajorAllele;
                     refGeno = NucleotideAlignmentConstants.getNucleotideDiploidByte(MajorGenotype);
@@ -546,9 +546,9 @@ public class ExportUtils {
                 //System.out.println(alignment.chromosomalPosition(site) + " " + refAllele);
                 byte[] alleleValues = null;
                 if (hasDepth) {
-                    alleleValues = alignment.allelesBySortType(Alignment.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
+                    alleleValues = alignment.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 } else {
-                    alleleValues = alignment.allelesBySortType(Alignment.ALLELE_SORT_TYPE.Frequency, site);
+                    alleleValues = alignment.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Frequency, site);
                     //if (nAlleles > alignment.maxNumAlleles()) {
                     //    nAlleles = alignment.maxNumAlleles();
                     //}
@@ -556,7 +556,7 @@ public class ExportUtils {
                 int[] alleleRedirect = new int[nAlleles]; // holds the indices of alleleValues in ref, alt1, [alt2] order (max 3 alleles)
                 String refAlleleStr;
                 int refUnknownOffset = 0;
-                if (refGeno == Alignment.UNKNOWN_DIPLOID_ALLELE) {  // reference allele unknown - report the alleles in maj, min1, [min2] order
+                if (refGeno == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {  // reference allele unknown - report the alleles in maj, min1, [min2] order
                     refUnknownOffset = 1;
                     refAlleleStr = ".";
                     int aRedirectIndex = 0;
@@ -688,7 +688,7 @@ public class ExportUtils {
                     byte[] values = alignment.genotypeArray(taxa, site);
 
                     boolean genoOne = false;
-                    if (values[0] == Alignment.UNKNOWN_ALLELE) {
+                    if (values[0] == GenotypeTable.UNKNOWN_ALLELE) {
                         GTstr += "./";
                         genoOne = true;
                     } else {
@@ -726,7 +726,7 @@ public class ExportUtils {
 //                    }
 
                     boolean genoTwo = false;
-                    if (values[1] == Alignment.UNKNOWN_ALLELE) {
+                    if (values[1] == GenotypeTable.UNKNOWN_ALLELE) {
                         GTstr += ".";
                         genoTwo = true;
                     } else {
@@ -853,7 +853,7 @@ public class ExportUtils {
      * @param filename
      * @param delimChar
      */
-    public static String writeToPlink(Alignment alignment, String filename, char delimChar) {
+    public static String writeToPlink(GenotypeTable alignment, String filename, char delimChar) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
@@ -947,7 +947,7 @@ public class ExportUtils {
      * @param filename
      * @param delimChar
      */
-    public static String writeToFlapjack(Alignment alignment, String filename, char delimChar) {
+    public static String writeToFlapjack(GenotypeTable alignment, String filename, char delimChar) {
         if (delimChar != ' ' && delimChar != '\t') {
             throw new IllegalArgumentException("Delimiter charater must be either a blank space or a tab.");
         }
@@ -1015,7 +1015,7 @@ public class ExportUtils {
         return base;
     }
 
-    public static String saveDelimitedAlignment(Alignment theAlignment, String delimit, String saveFile) {
+    public static String saveDelimitedAlignment(GenotypeTable theAlignment, String delimit, String saveFile) {
 
         if ((saveFile == null) || (saveFile.length() == 0)) {
             return null;
@@ -1064,7 +1064,7 @@ public class ExportUtils {
     /**
      * print alignment (in PHYLIP SEQUENTIAL format)
      */
-    public static void printSequential(Alignment a, PrintWriter out) {
+    public static void printSequential(GenotypeTable a, PrintWriter out) {
         // PHYLIP header line
         out.println("  " + a.numberOfTaxa() + " " + a.numberOfSites() + "  S");
 
@@ -1088,7 +1088,7 @@ public class ExportUtils {
     /**
      * print alignment (in PHYLIP 3.4 INTERLEAVED format)
      */
-    public static void printInterleaved(Alignment a, PrintWriter out) {
+    public static void printInterleaved(GenotypeTable a, PrintWriter out) {
         int n = 0;
 
         // PHYLIP header line
@@ -1114,7 +1114,7 @@ public class ExportUtils {
     /**
      * Print alignment (in CLUSTAL W format)
      */
-    public static void printCLUSTALW(Alignment a, PrintWriter out) {
+    public static void printCLUSTALW(GenotypeTable a, PrintWriter out) {
         int n = 0;
 
         // CLUSTAL W header line
@@ -1137,7 +1137,7 @@ public class ExportUtils {
         }
     }
 
-    private static void printNextSites(Alignment a, PrintWriter out, boolean chunked, int seq, int start, int num) {
+    private static void printNextSites(GenotypeTable a, PrintWriter out, boolean chunked, int seq, int start, int num) {
         // Print next num characters
         for (int i = 0; (i < num) && (start + i < a.numberOfSites()); i++) {
             // Chunks of 10 characters
@@ -1148,7 +1148,7 @@ public class ExportUtils {
         }
     }
 
-    public static String writeAlignmentToSerialGZ(Alignment sba, String outFile) {
+    public static String writeAlignmentToSerialGZ(GenotypeTable sba, String outFile) {
 
         long time = System.currentTimeMillis();
 

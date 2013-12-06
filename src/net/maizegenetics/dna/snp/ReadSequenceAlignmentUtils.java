@@ -42,9 +42,9 @@ public class ReadSequenceAlignmentUtils {
      * read from stream, while letting the user set the maximum label (taxa)
      * label length as non-standard phylip formats now exist
      */
-    public static Alignment readBasicAlignments(PushbackReader input, int maxLabelLength)
+    public static GenotypeTable readBasicAlignments(PushbackReader input, int maxLabelLength)
             throws IOException {
-        Alignment saa = null;
+        GenotypeTable saa = null;
         saa = readFile(input, maxLabelLength);
         return saa;
     }
@@ -53,20 +53,20 @@ public class ReadSequenceAlignmentUtils {
      * read from file, while letting the user set the maximum label (taxa) label
      * length as non-standard phylip formats now exist
      */
-    public static Alignment readBasicAlignments(String file, int maxLabelLength)
+    public static GenotypeTable readBasicAlignments(String file, int maxLabelLength)
             throws IOException {
         PushbackReader input = InputSource.openFile(file);
-        Alignment saa = readBasicAlignments(input, maxLabelLength);
+        GenotypeTable saa = readBasicAlignments(input, maxLabelLength);
         input.close();
         return saa;
     }
 
-    private static Alignment readFile(PushbackReader in, int maxLabelLength) throws IOException {
+    private static GenotypeTable readFile(PushbackReader in, int maxLabelLength) throws IOException {
         return readPHYLIP(in, maxLabelLength);
     }
 
     // Read alignment (in PHYLIP 3.4 INTERLEAVED or PHYLIP SEQUENTIAL format)
-    private static Alignment readPHYLIP(PushbackReader in, int maxLabelLength) {
+    private static GenotypeTable readPHYLIP(PushbackReader in, int maxLabelLength) {
         FormattedInput fi = FormattedInput.getInstance();
         TaxaList idGroup;
         int numSeqs = 0, numSites = 0, lineLength = 0;

@@ -4,7 +4,7 @@
 package net.maizegenetics.gbs.pipeline;
 
 import cern.colt.list.IntArrayList;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.popgen.LinkageDisequilibrium;
@@ -57,12 +57,12 @@ public class AlignmentFilterByGBSUtils {
         return newGroup;
     }
 
-    public static int[][] hetsByLine(Alignment a, boolean isRefAltCoded, boolean printToScreen) {
+    public static int[][] hetsByLine(GenotypeTable a, boolean isRefAltCoded, boolean printToScreen) {
         int[][] counts = new int[2][a.numberOfTaxa()];
         int totalScored = 0, totalHets = 0;
         for (int j = 0; j < a.numberOfTaxa(); j++) {
             for (int i = 0; i < a.numberOfSites(); i++) {
-                if (a.genotype(j, i) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (a.genotype(j, i) != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][j]++;
                     if (isRefAltCoded) {
                         if (a.genotype(j, i) == hetAllele) {
@@ -90,7 +90,7 @@ public class AlignmentFilterByGBSUtils {
         return counts;
     }
 
-    public static TaxaList getLowHetIdGroup(Alignment a, boolean isRefAltCoded, double maxHets, int minCount) {
+    public static TaxaList getLowHetIdGroup(GenotypeTable a, boolean isRefAltCoded, double maxHets, int minCount) {
         int[][] hetCnt = hetsByLine(a, isRefAltCoded, false);
         boolean[] include = new boolean[a.numberOfTaxa()];
         for (int i = 0; i < hetCnt[0].length; i++) {
@@ -103,7 +103,7 @@ public class AlignmentFilterByGBSUtils {
         return IdGroupUtils.idGroupSubset(a.taxa(), include);
     }
 
-    public static int[][] genotypicCountsBySite(Alignment a, boolean isRefAltCoded, boolean printToScreen) {
+    public static int[][] genotypicCountsBySite(GenotypeTable a, boolean isRefAltCoded, boolean printToScreen) {
         int[][] counts = new int[5][a.numberOfSites()];  //total count [0], hets count Aa [1], major homozygous AA [2], minor homo aa [3], gap [4]
         if (printToScreen) {
             System.out.println("Locus\tMAF\tTaxaWKnown\tHetNum\tHetRate\tMajorAllele\tMajorCnt\tMinorAllele\tMinorCnt\tGapCnt");
@@ -115,7 +115,7 @@ public class AlignmentFilterByGBSUtils {
             minorAllele = (byte) (minorAllele << 4 | minorAllele);
             for (int j = 0; j < a.numberOfTaxa(); j++) {
                 byte currentBase = a.genotype(j, i);
-                if (currentBase != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (currentBase != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     counts[0][i]++;
                     if (isRefAltCoded) {
                         if (AlignmentUtils.isEqual(currentBase, hetAllele)) {
@@ -147,11 +147,11 @@ public class AlignmentFilterByGBSUtils {
         return counts;
     }
 
-    public static int[] getLowHetSNPs(Alignment a, boolean isRefAltCoded, double minF, int minCount, double minMAF, double maxMAF) {
+    public static int[] getLowHetSNPs(GenotypeTable a, boolean isRefAltCoded, double minF, int minCount, double minMAF, double maxMAF) {
         return getLowHetSNPs(a, isRefAltCoded, minF, minCount, minMAF, maxMAF, null, null);
     }
 
-    public static int[] getLowHetSNPs(Alignment a, boolean isRefAltCoded, double minF, int minCount, double minMAF, double maxMAF, SNPLogging snpLogging, String logTest) {
+    public static int[] getLowHetSNPs(GenotypeTable a, boolean isRefAltCoded, double minF, int minCount, double minMAF, double maxMAF, SNPLogging snpLogging, String logTest) {
         String REMOVED_STATUS = "Removed";
         int[][] hetCnt = genotypicCountsBySite(a, isRefAltCoded, false);
         IntArrayList goodSites = new IntArrayList();
@@ -175,7 +175,7 @@ public class AlignmentFilterByGBSUtils {
         return goodSites.elements();
     }
 
-    public static void getCoverage_MAF_F_Dist(Alignment a, boolean isRefAltCoded) {
+    public static void getCoverage_MAF_F_Dist(GenotypeTable a, boolean isRefAltCoded) {
         if (a.numberOfSites() == 0) {
             return;
         }
@@ -209,7 +209,7 @@ public class AlignmentFilterByGBSUtils {
 
     }
 
-    public static double getErrorRateForDuplicatedTaxa(Alignment a, boolean ignoreHets, boolean random, boolean printToScreen) {
+    public static double getErrorRateForDuplicatedTaxa(GenotypeTable a, boolean ignoreHets, boolean random, boolean printToScreen) {
         TaxaList idg = a.taxa();
         TreeMap<String, Integer> sortedIds = new TreeMap<String, Integer>();
         for (int i = 0; i < idg.numberOfTaxa(); i++) {
@@ -224,7 +224,7 @@ public class AlignmentFilterByGBSUtils {
             if (priorEntry.getKey().split(":")[0].equals(entry.getKey().split(":")[0])) {
                 int cntDiffTaxa = 0, cntTotalTaxa = 0;
                 for (int i = 0; i < a.numberOfSites(); i++) {
-                    byte pB = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    byte pB = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                     if (random) {
                         int t = (int) Math.round(Math.random() * (a.numberOfTaxa() - 1));
                         pB = a.genotype(t, i);
@@ -238,7 +238,7 @@ public class AlignmentFilterByGBSUtils {
                     if (ignoreHets && AlignmentUtils.isHeterozygous(cB)) {
                         continue;
                     }
-                    if ((pB != Alignment.UNKNOWN_DIPLOID_ALLELE) && (cB != Alignment.UNKNOWN_DIPLOID_ALLELE)) {
+                    if ((pB != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) && (cB != GenotypeTable.UNKNOWN_DIPLOID_ALLELE)) {
                         cntTotalTaxa++;
                         if (!AlignmentUtils.isEqual(pB, cB)) {
                             cntDiffTaxa++;
@@ -268,7 +268,7 @@ public class AlignmentFilterByGBSUtils {
         return totalER;
     }
 
-    public static int[] getGoodSitesByLD(Alignment a, double minR2, double minBonferroniP, int minPosDist, int windowSize,
+    public static int[] getGoodSitesByLD(GenotypeTable a, double minR2, double minBonferroniP, int minPosDist, int windowSize,
             int minCnt, boolean keepUnproven) {
         IntArrayList goodSites = new IntArrayList();
         //LinkageDisequilibrium theLD = new LinkageDisequilibrium(a, true, 100,
@@ -312,12 +312,12 @@ public class AlignmentFilterByGBSUtils {
         return goodSites.elements();
     }
 
-    public static int[][] countCrossoversByLine(Alignment a) {
+    public static int[][] countCrossoversByLine(GenotypeTable a) {
         int[][] cos = new int[2][a.numberOfTaxa()];  //total count of useful markers in
         //row 0, crossovers in row 1
         int sumGood = 0, sumCO = 0;
         for (int t = 0; t < a.numberOfTaxa(); t++) {
-            byte lastHomozygous = Alignment.UNKNOWN_DIPLOID_ALLELE;
+            byte lastHomozygous = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
             for (int i = 0; i < a.numberOfSites(); i++) {
                 byte currBase = a.genotype(t, i);
                 if ((currBase != refAllele) && (currBase != altAllele)) {
@@ -339,7 +339,7 @@ public class AlignmentFilterByGBSUtils {
         return cos;
     }
 
-    public static int[][] countDCO(Alignment a, boolean byTaxa) {
+    public static int[][] countDCO(GenotypeTable a, boolean byTaxa) {
         int[][] cos;
         if (byTaxa) {
             cos = new int[2][a.numberOfTaxa()];
@@ -389,7 +389,7 @@ public class AlignmentFilterByGBSUtils {
         return cos;
     }
 
-    public static int[] getLowDCOSNPs(Alignment a, double maxDCOrate, int minCount) {
+    public static int[] getLowDCOSNPs(GenotypeTable a, double maxDCOrate, int minCount) {
         int[][] dcoCnt = countDCO(a, false);
         IntList goodSites = new IntList();
         for (int i = 0; i < dcoCnt[0].length; i++) {
@@ -401,7 +401,7 @@ public class AlignmentFilterByGBSUtils {
         return goodSites.toArray();
     }
 
-    public static TaxaList getLowDCOIdGroup(Alignment a, boolean isRefAltCoded, double maxDCO, int minCount) {
+    public static TaxaList getLowDCOIdGroup(GenotypeTable a, boolean isRefAltCoded, double maxDCO, int minCount) {
         int[][] dcoCnt = hetsByLine(a, isRefAltCoded, false);
         boolean[] include = new boolean[a.numberOfTaxa()];
         for (int i = 0; i < dcoCnt[0].length; i++) {

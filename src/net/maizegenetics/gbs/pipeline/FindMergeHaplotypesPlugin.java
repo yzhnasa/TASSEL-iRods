@@ -6,7 +6,7 @@ package net.maizegenetics.gbs.pipeline;
 
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.GeneticMap;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.dna.snp.ExportUtils;
@@ -91,7 +91,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     public void runFindMergeHaplotypes(String inFile, String exportFile,
             String errorExportFile, double maxDistance, int minSites, int appoxSitesPerHaplotype) {
         System.out.println("Reading: "+inFile);
-        Alignment baseAlign=ImportUtils.readGuessFormat(inFile);
+        GenotypeTable baseAlign=ImportUtils.readGuessFormat(inFile);
 
         int[][] divisions=divideChromosome(baseAlign, appoxSitesPerHaplotype);  
         System.out.printf("In taxa:%d sites:%d %n",baseAlign.numberOfTaxa(),baseAlign.numberOfSites());
@@ -100,7 +100,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         if(startDiv==-1) startDiv=0;
         if(endDiv==-1) endDiv=divisions.length-1;
         for (int i = startDiv; i <=endDiv; i++) {
-            Alignment mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
+            GenotypeTable mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
              minSites,  maxDistance);
             String newExport=exportFile.replace("sX.hmp", "s"+i+".hmp");
             newExport=newExport.replace("gX", "gc"+mna.chromosomeName(0)+"s"+i);
@@ -112,10 +112,10 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         
     }
     
-    private Alignment createHaplotypeAlignment(int startSite, int endSite, Alignment baseAlign,
+    private GenotypeTable createHaplotypeAlignment(int startSite, int endSite, GenotypeTable baseAlign,
             int minSites, double maxDistance) {
         FilterAlignment fa=FilterAlignment.getInstance(baseAlign, startSite, endSite);
-        Alignment inAlign=AlignmentBuilder.getGenotypeCopyInstance(fa);
+        GenotypeTable inAlign=AlignmentBuilder.getGenotypeCopyInstance(fa);
         int sites=inAlign.numberOfSites();
         System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.chromosome(0),
                 inAlign.chromosomalPosition(0),inAlign.numberOfTaxa(),inAlign.numberOfSites());
@@ -138,7 +138,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         return AlignmentBuilder.getInstance(gB.build(),inAlign.positions(),tLB.build());
     }
     
-    public static int[][] divideChromosome(Alignment a, int appoxSitesPerHaplotype) {
+    public static int[][] divideChromosome(GenotypeTable a, int appoxSitesPerHaplotype) {
         Chromosome[] theL=a.chromosomes();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Chromosome aL: theL) {
@@ -169,7 +169,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         return result;
     }
     
-    private TreeMap<Integer,Integer> createPresentRankingForWindow(Alignment inAlign, int startBlock, int endBlock, 
+    private TreeMap<Integer,Integer> createPresentRankingForWindow(GenotypeTable inAlign, int startBlock, int endBlock, 
             int minSites, double maxHetFreq) {
         int sites=64*(endBlock-startBlock+1);
         TreeMap<Integer,Integer> presentRanking=new TreeMap<Integer,Integer>(Collections.reverseOrder());
@@ -193,7 +193,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         return presentRanking;
     }
     
-    private BitSet maskBadSites(GeneticMap gm, Alignment a) {
+    private BitSet maskBadSites(GeneticMap gm, GenotypeTable a) {
         OpenBitSet obs=new OpenBitSet(a.numberOfSites());
         int count=0;
         for (int i = 0; i < gm.getNumberOfMarkers(); i++) {
@@ -207,7 +207,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         return obs;
     }
     
-    private void exportBadSites(Alignment baseAlign, String exportMap, double errorThreshold) {
+    private void exportBadSites(GenotypeTable baseAlign, String exportMap, double errorThreshold) {
         BufferedWriter bw = null;
         try {
             String fullFileName = Utils.addSuffixIfNeeded(exportMap, ".txt", new String[]{".txt"});
@@ -229,7 +229,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         }
     }
     
-    private TreeMap<Integer,byte[][]> mergeWithinWindow(Alignment inAlign, TreeMap<Integer,Integer> presentRanking,
+    private TreeMap<Integer,byte[][]> mergeWithinWindow(GenotypeTable inAlign, TreeMap<Integer,Integer> presentRanking,
             int startBlock, int endBlock, double maxDistance, int siteOffsetForError){
         int startSite=startBlock*64;
         int endSite=63+(endBlock*64);
@@ -285,14 +285,14 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         return results;
     }
     
-    private byte[] consensusGameteCalls(Alignment a, List<String> taxa, int startSite, 
+    private byte[] consensusGameteCalls(GenotypeTable a, List<String> taxa, int startSite, 
             int endSite, double maxError, int siteOffsetForError) {
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {  //why are we working with names rather than numbers
             taxaIndex[t] = a.taxa().indicesMatchingTaxon(taxa.get(t)).get(0);
         }
         byte[] calls = new byte[endSite-startSite+1];
-        Arrays.fill(calls, Alignment.UNKNOWN_DIPLOID_ALLELE);
+        Arrays.fill(calls, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
         for (int s = startSite; s <= endSite; s++) {
             byte mjAllele = a.majorAllele(s);
             byte mnAllele = a.minorAllele(s);
@@ -302,7 +302,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             int mjCnt=0, mnCnt=0;
             for (int t = 0; t < taxaIndex.length; t++) {
                 byte ob = a.genotype(taxaIndex[t], s);
-                if (ob == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                if (ob == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     continue;
                 }
                 if (ob == mj) {
@@ -337,7 +337,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         return calls;
     }
     
-    public static ArrayList<Integer> maxMajorAllelesTaxa(Alignment a, int numMaxTaxa, int alleleNumber) {
+    public static ArrayList<Integer> maxMajorAllelesTaxa(GenotypeTable a, int numMaxTaxa, int alleleNumber) {
         ArrayList<Integer> maxTaxa=new ArrayList<Integer>();
         OpenBitSet curMj=new OpenBitSet(a.numberOfSites());
         long maxMjCnt=curMj.cardinality();
@@ -365,7 +365,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     private int[] countUnknown(byte[] b) {
         int cnt=0, cntHet=0;
         for (int i = 0; i < b.length; i++) {
-            if(b[i]==Alignment.UNKNOWN_DIPLOID_ALLELE) {cnt++;}
+            if(b[i]==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {cnt++;}
             else if(AlignmentUtils.isHeterozygous(b[i])) {cntHet++;}
         }
         int[] result={cnt,cntHet};

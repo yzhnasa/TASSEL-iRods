@@ -32,7 +32,7 @@ import java.util.TreeSet;
 import javax.swing.ImageIcon;
 import net.maizegenetics.dna.map.TOPMInterface;
 import net.maizegenetics.dna.map.TOPMUtils;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.VCFUtil;
 import org.apache.commons.math.distribution.BinomialDistributionImpl;
@@ -626,7 +626,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         int startPos = topm.getStartPosition(tagIndex);
         for (int variant = 0; variant < topm.getMaxNumVariants(); variant++) {
             byte newBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 allele encodings
-            if ((newBase == TOPMInterface.BYTE_MISSING) || (newBase == Alignment.UNKNOWN_ALLELE)) {
+            if ((newBase == TOPMInterface.BYTE_MISSING) || (newBase == GenotypeTable.UNKNOWN_ALLELE)) {
                 continue;
             }
             int offset = topm.getVariantPosOff(tagIndex, variant);
@@ -685,7 +685,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             count += depths[a];
         }
         if (count == 0) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
         }
         // check for each possible homozygote
         for (int a = 0; a < depths.length; a++) {
@@ -699,9 +699,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     
     private byte resolveHetGeno(byte[] depths) {
         int max = 0;
-        byte maxAllele = Alignment.UNKNOWN_ALLELE;
+        byte maxAllele = GenotypeTable.UNKNOWN_ALLELE;
         int nextMax = 0;
-        byte nextMaxAllele = Alignment.UNKNOWN_ALLELE;
+        byte nextMaxAllele = GenotypeTable.UNKNOWN_ALLELE;
         for (int a = 0; a < depths.length; a++) {
             if (depths[a] > max) {
                 nextMax = max;

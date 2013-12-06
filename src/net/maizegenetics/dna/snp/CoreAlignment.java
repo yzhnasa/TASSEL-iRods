@@ -5,8 +5,8 @@ package net.maizegenetics.dna.snp;
 
 import java.util.HashMap;
 import java.util.Map;
-import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Frequency;
-import static net.maizegenetics.dna.snp.Alignment.ALLELE_SORT_TYPE.Reference;
+import static net.maizegenetics.dna.snp.GenotypeTable.ALLELE_SORT_TYPE.Frequency;
+import static net.maizegenetics.dna.snp.GenotypeTable.ALLELE_SORT_TYPE.Reference;
 import net.maizegenetics.dna.snp.score.SiteScore;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.bit.BitStorage;
@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
  *
  * @author terry
  */
-public class CoreAlignment implements Alignment {
+public class CoreAlignment implements GenotypeTable {
 
     private static final Logger myLogger = Logger.getLogger(CoreAlignment.class);
     private final GenotypeCallTable myGenotype;
@@ -350,8 +350,8 @@ public class CoreAlignment implements Alignment {
     }
 
     @Override
-    public Alignment[] compositeAlignments() {
-        return new Alignment[]{this};
+    public GenotypeTable[] compositeAlignments() {
+        return new GenotypeTable[]{this};
     }
 
     @Override

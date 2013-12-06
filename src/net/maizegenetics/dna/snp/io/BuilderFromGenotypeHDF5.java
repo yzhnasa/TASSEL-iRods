@@ -2,7 +2,7 @@ package net.maizegenetics.dna.snp.io;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
@@ -40,7 +40,7 @@ public class BuilderFromGenotypeHDF5 {
     //TODO provide options on caching to use, read only some sites, etc.
     //TODO update to the newest version
     //TODO subset??
-    public Alignment build() {
+    public GenotypeTable build() {
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
         PositionList pL=PositionListBuilder.getInstance(reader);
@@ -132,7 +132,7 @@ public class BuilderFromGenotypeHDF5 {
 
         //Transfer the genotypes
         System.out.println("Opening alignments");
-        List<Alignment> sourceA=new ArrayList<>();
+        List<GenotypeTable> sourceA=new ArrayList<>();
         for (String infile : infiles) {
             sourceA.add(AlignmentBuilder.getInstance(infile));
         }

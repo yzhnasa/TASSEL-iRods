@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.*;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -34,7 +34,7 @@ public class DistanceMatrixPlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
             if (alignInList.size() < 1) {
                 String message = "Invalid selection.  Please select sequence alignment.";
                 if (isInteractive()) {
@@ -65,16 +65,16 @@ public class DistanceMatrixPlugin extends AbstractPlugin {
     }
 
     public DataSet processDatum(Datum input) {
-        Alignment aa = (Alignment) input.getData();
+        GenotypeTable aa = (GenotypeTable) input.getData();
         DistanceMatrix adm = getDistanceMatrix(aa, this);
         return new DataSet(new Datum("Matrix:" + input.getName(), adm, "Distance Matrix"), this);
     }
 
-    public static DistanceMatrix getDistanceMatrix(Alignment alignment) {
+    public static DistanceMatrix getDistanceMatrix(GenotypeTable alignment) {
         return new IBSDistanceMatrix(alignment);
     }
 
-    public static DistanceMatrix getDistanceMatrix(Alignment alignment, ProgressListener listener) {
+    public static DistanceMatrix getDistanceMatrix(GenotypeTable alignment, ProgressListener listener) {
         return new IBSDistanceMatrix(alignment, listener);
     }
 

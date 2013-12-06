@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.snp.CombineAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -73,7 +73,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
 
             if (alignInList.size() < 1) {
                 String gpMessage = "Invalid selection.  Please select genotype alignment.";
@@ -110,7 +110,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
     }
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
-        Alignment aa = (Alignment) inDatum.getData();
+        GenotypeTable aa = (GenotypeTable) inDatum.getData();
 
         if (myEnd == -1) {
             myEnd = aa.numberOfSites() - 1;
@@ -180,7 +180,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             myEnd = aa.numberOfSites() - 1;
         }
 
-        Alignment naa = aa;
+        GenotypeTable naa = aa;
 
         if (myFilterMinorSNPs) {
             naa = AlignmentBuilder.getInstanceOnlyMajorMinor(naa);
@@ -408,8 +408,8 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
 
 class DataFilterAlignmentDialog extends JDialog {
 
-    Alignment theAlignment;
-    Alignment chromFilteredAlignment;
+    GenotypeTable theAlignment;
+    GenotypeTable chromFilteredAlignment;
     int start = 0, end, startPos, endPos, minCount = 0, totalSeq, siteCount = 0;
     String[] chromsAvailable;
     String[] chromsSelected;
@@ -460,7 +460,7 @@ class DataFilterAlignmentDialog extends JDialog {
     private boolean isChromSelectionValid = true;
     private ChromosomeFilterDialog myChromFilter;
 
-    public DataFilterAlignmentDialog(Alignment a, Frame f) {
+    public DataFilterAlignmentDialog(GenotypeTable a, Frame f) {
         super(f, "Filter Alignment", true);
         theAlignment = a;
         chromFilteredAlignment = theAlignment;
@@ -860,11 +860,11 @@ class DataFilterAlignmentDialog extends JDialog {
         myChromFilter.setVisible(true);
         if (!myChromFilter.isCanceled()) {
             chromsSelected = myChromFilter.getChromsSelected();
-            Alignment[] selectedAlignments = new Alignment[chromsSelected.length];
+            GenotypeTable[] selectedAlignments = new GenotypeTable[chromsSelected.length];
             List<Datum> availableAlignments = SeparatePlugin.separateAlignmentIntoLoci(theAlignment, null);
             for (int i = 0; i < chromsSelected.length; i++) {
                 for (int j = 0; j < availableAlignments.size(); j++) {
-                    Alignment current = (Alignment) availableAlignments.get(j).getData();
+                    GenotypeTable current = (GenotypeTable) availableAlignments.get(j).getData();
                     if (current.chromosomes().length == 1) {
                         if (chromsSelected[i].equals(current.chromosomeName(0))) {
                             selectedAlignments[i] = current;
@@ -900,7 +900,7 @@ class DataFilterAlignmentDialog extends JDialog {
         return chromsSelected;
     }
 
-    public Alignment getChromFilteredAlignment() {
+    public GenotypeTable getChromFilteredAlignment() {
         return chromFilteredAlignment;
     }
 

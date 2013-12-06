@@ -25,17 +25,17 @@ import java.util.TreeSet;
  * @author Ed Buckler
  */
 public class ProjectionBuilder {
-    private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
+    private final GenotypeTable myBaseAlignment;  //high density marker alignment that is being projected.
     private ImmutableMap.Builder<Taxon,NavigableSet<DonorHaplotypes>> allBreakPoints;
 
-    public static Alignment getInstance(Alignment baseAlignment, ImmutableMap<Taxon, NavigableSet<DonorHaplotypes>> allBreakPoints) {
+    public static GenotypeTable getInstance(GenotypeTable baseAlignment, ImmutableMap<Taxon, NavigableSet<DonorHaplotypes>> allBreakPoints) {
         TaxaList tl=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         ImmutableList breakList=ImmutableList.builder().addAll(allBreakPoints.values()).build();
         return AlignmentBuilder.getInstance(new ProjectionGenotypeCallTable(baseAlignment, breakList),
                 baseAlignment.positions(),tl);
     }
 
-    public ProjectionBuilder(Alignment myBaseAlignment) {
+    public ProjectionBuilder(GenotypeTable myBaseAlignment) {
         this.myBaseAlignment=myBaseAlignment;
         allBreakPoints=new ImmutableMap.Builder<>();
     }
@@ -51,7 +51,7 @@ public class ProjectionBuilder {
         return this;
     }
 
-    public Alignment build() {
+    public GenotypeTable build() {
         ImmutableMap<Taxon,NavigableSet<DonorHaplotypes>> immBreak=allBreakPoints.build();
         System.out.println(immBreak.size());
         return getInstance(myBaseAlignment,immBreak);

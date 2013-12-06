@@ -5,7 +5,7 @@ package net.maizegenetics.gbs.pipeline;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.util.Utils;
 import org.apache.log4j.Logger;
 
@@ -54,7 +54,7 @@ public class SNPLogging {
         }
     }
 
-    public void writeEntry(Alignment a, int site, String tagLocusStart, String strand, String test, String status, String value, String cuttoff) {
+    public void writeEntry(GenotypeTable a, int site, String tagLocusStart, String strand, String test, String status, String value, String cuttoff) {
         String alleles = a.majorAlleleAsString(site) + "/" + a.minorAlleleAsString(site);
         writeEntry(a.chromosomeName(site), a.chromosomalPosition(site), alleles, tagLocusStart, strand, test, status, value, cuttoff);
     }

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.*;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.util.SimpleTableReport;
@@ -38,7 +38,7 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
             if (alignInList.size() < 1) {
                 String message = "Invalid selection.  Please select sequence alignment.";
                 if (isInteractive()) {
@@ -70,7 +70,7 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
 
     public DataSet processDatum(Datum input) {
 
-        Alignment aa = (Alignment) input.getData();
+        GenotypeTable aa = (GenotypeTable) input.getData();
         int numTaxa = aa.numberOfTaxa();
         int interestedTaxa = aa.taxa().indicesMatchingTaxon(myTaxon).get(0);
         Object[][] theData = new Object[numTaxa][myPhysicalPositions.length];
@@ -80,7 +80,7 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
         String[] columnNames = new String[myPhysicalPositions.length];
         columnNames[0] = "Taxa";
         for (int i = 1, n = myPhysicalPositions.length; i < n; i++) {
-            Alignment alignment = FilterAlignment.getInstance(aa, myLocus, myPhysicalPositions[i - 1], myPhysicalPositions[i]);
+            GenotypeTable alignment = FilterAlignment.getInstance(aa, myLocus, myPhysicalPositions[i - 1], myPhysicalPositions[i]);
             columnNames[i] = String.valueOf(myPhysicalPositions[i - 1] + "-" + String.valueOf(myPhysicalPositions[i]));
             if (alignment == null) {
                 for (int t = 0; t < numTaxa; t++) {

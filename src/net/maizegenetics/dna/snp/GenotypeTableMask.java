@@ -1,5 +1,5 @@
 /*
- * AlignmentMask
+ * GenotypeTableMask
  */
 package net.maizegenetics.dna.snp;
 
@@ -12,7 +12,7 @@ import java.io.Serializable;
  *
  * @author terry
  */
-public interface AlignmentMask extends Serializable {
+public interface GenotypeTableMask extends Serializable {
 
     /**
      * This defines the type of mask.
@@ -29,7 +29,7 @@ public interface AlignmentMask extends Serializable {
 
     public void setColor(Color color);
 
-    public Alignment getAlignment();
+    public GenotypeTable getAlignment();
 
     public MaskType getMaskType();
 

@@ -1,6 +1,6 @@
 package net.maizegenetics.trait;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.trait.Phenotype;
 
 /**
@@ -18,7 +18,7 @@ public interface DataTable {
 	/**
 	 * @return	the Alignment which this DataTable contains
 	 */
-	Alignment getAlignment();
+	GenotypeTable getAlignment();
 	
 	/**
 	 * @return	the Phenotype which this DataTable contains

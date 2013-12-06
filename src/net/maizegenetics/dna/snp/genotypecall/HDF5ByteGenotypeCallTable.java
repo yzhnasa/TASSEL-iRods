@@ -7,7 +7,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.TaxaList;
@@ -92,7 +92,7 @@ class HDF5ByteGenotypeCallTable extends AbstractGenotypeCallTable {
         public int[][] getAllelesSortedByFrequency(int site) {
             int offset = site - startSite;
             int alleleCnt = 0;
-            while (myAlleleFreqOrder[alleleCnt][offset] != Alignment.UNKNOWN_ALLELE) {
+            while (myAlleleFreqOrder[alleleCnt][offset] != GenotypeTable.UNKNOWN_ALLELE) {
                 alleleCnt++;
             }
             int result[][] = new int[2][alleleCnt];

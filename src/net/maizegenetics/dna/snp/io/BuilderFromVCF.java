@@ -5,7 +5,7 @@ import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
@@ -53,9 +53,9 @@ public class BuilderFromVCF {
     }
 
     //TODO provide options on caching to use, read only some sites, etc.
-    public Alignment build() {
+    public GenotypeTable build() {
         long time=System.nanoTime();
-        Alignment result=null;
+        GenotypeTable result=null;
         try {
             int numThreads=Runtime.getRuntime().availableProcessors();
             ExecutorService pool=Executors.newFixedThreadPool(numThreads);
@@ -194,7 +194,7 @@ class ProcessVCFBlock implements Runnable {
                 int offset=tabPos[NUM_HAPMAP_NON_TAXA_HEADERS-1+t]+1;
                 int a1=input.charAt(offset)-'0';
                 int a2=input.charAt(offset+2)-'0';
-                if(a1<0 || a2<0 ) {gTS[t][s]=Alignment.UNKNOWN_DIPLOID_ALLELE;}
+                if(a1<0 || a2<0 ) {gTS[t][s]=GenotypeTable.UNKNOWN_DIPLOID_ALLELE;}
                 else {gTS[t][s]=AlignmentUtils.getDiploidValue(alleles[a1],alleles[a2]);}
               //  System.out.print(gTS[t][s] + "\t");
             }

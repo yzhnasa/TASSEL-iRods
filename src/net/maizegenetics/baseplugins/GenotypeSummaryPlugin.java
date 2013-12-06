@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.util.SimpleTableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -48,7 +48,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             myNumGametesMissing = 0;
             myNumHeterozygous = 0;
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
 
             if (alignInList.size() != 1) {
                 String gpMessage = "Invalid selection.  Please select one genotype alignment.";
@@ -74,7 +74,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             }
 
             Datum current = alignInList.get(0);
-            Alignment alignment = (Alignment) current.getData();
+            GenotypeTable alignment = (GenotypeTable) current.getData();
             String name = current.getName();
 
             List<Datum> summaryTables = new ArrayList<Datum>();
@@ -123,7 +123,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     }
 
-    private SimpleTableReport[] getOverallSummary(Alignment alignment) {
+    private SimpleTableReport[] getOverallSummary(GenotypeTable alignment) {
 
         Object[] firstColumnNames = new String[]{"Stat Type", "Value"};
 
@@ -149,7 +149,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         long numDiploidsMissing = 0;
         for (int j = 0; j < numAlleles; j++) {
-            if ((diploidValueCounts[0][j].equals(Alignment.UNKNOWN_ALLELE_STR)) || (diploidValueCounts[0][j].equals(Alignment.UNKNOWN_DIPLOID_ALLELE_STR))) {
+            if ((diploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_ALLELE_STR)) || (diploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR))) {
                 numDiploidsMissing = (Long) diploidValueCounts[1][j];
                 break;
             }
@@ -222,7 +222,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         numDiploidsMissing = 0;
         for (int j = 0; j < numMajorMinorAlleles; j++) {
-            if ((majorMinorDiploidValueCounts[0][j].equals(Alignment.UNKNOWN_ALLELE_STR)) || (majorMinorDiploidValueCounts[0][j].equals(Alignment.UNKNOWN_DIPLOID_ALLELE_STR))) {
+            if ((majorMinorDiploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_ALLELE_STR)) || (majorMinorDiploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR))) {
                 numDiploidsMissing = (Long) majorMinorDiploidValueCounts[1][j];
                 break;
             }
@@ -240,7 +240,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             new SimpleTableReport("Allele Summary", alleleColumnNames, data2)};
     }
 
-    private SimpleTableReport getSiteSummary(Alignment alignment) {
+    private SimpleTableReport getSiteSummary(GenotypeTable alignment) {
 
         String[] firstColumnNames = new String[]{"Site Number", "Site Name", "Physical Position", "Number of Taxa", "Major Allele", "Major Allele Gametes", "Major Allele Proportion", "Major Allele Frequency",
             "Minor Allele", "Minor Allele Gametes", "Minor Allele Proportion", "Minor Allele Frequency"};
@@ -324,7 +324,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     }
 
-    private SimpleTableReport getTaxaSummary(Alignment alignment) {
+    private SimpleTableReport getTaxaSummary(GenotypeTable alignment) {
 
         Object[] columnNames = new String[]{"Taxa", "Taxa Name", "Number of Sites", "Gametes Missing", "Proportion Missing",
             "Number Heterozygous", "Proportion Heterozygous", "Inbreeding Coefficient",

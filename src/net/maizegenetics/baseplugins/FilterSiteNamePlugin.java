@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterAlignment;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -49,7 +49,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
 
         try {
 
-            List inputData = input.getDataOfType(Alignment.class);
+            List inputData = input.getDataOfType(GenotypeTable.class);
             if (inputData.size() != 1) {
                 if (isInteractive()) {
                     JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select a single alignment.");
@@ -77,7 +77,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
 
-        final Alignment alignment = (Alignment) inDatum.getData();
+        final GenotypeTable alignment = (GenotypeTable) inDatum.getData();
 
         if (isInteractive) {
             AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
@@ -101,7 +101,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
             dialog.dispose();
         }
 
-        Alignment result = null;
+        GenotypeTable result = null;
 
         if (((mySitesToKeep != null) && (mySitesToKeep.length != 0))) {
             result = FilterAlignment.getInstance(alignment, mySitesToKeep);

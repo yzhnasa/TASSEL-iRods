@@ -1,7 +1,7 @@
 package net.maizegenetics.gwas.imputation;
 
 import net.maizegenetics.dna.snp.AlignmentBuilder;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
@@ -80,9 +80,9 @@ public class ImputationUtils {
 		return order;
 	}
 	
-	public static Alignment[] getTwoClusters(Alignment a, int[] parentIndex) {
+	public static GenotypeTable[] getTwoClusters(GenotypeTable a, int[] parentIndex) {
 		int maxiter = 5;
-		Alignment tb = a;
+		GenotypeTable tb = a;
 		//if (a instanceof TBitAlignment) tb = (TBitAlignment) a;
 		//else tb = TBitAlignment.getInstance(a);
 		
@@ -199,13 +199,13 @@ public class ImputationUtils {
 		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster1);
 		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster2);
 		
-		Alignment a1 = FilterAlignment.getInstance(tb, id1);
-		Alignment a2 = FilterAlignment.getInstance(tb, id2);
+		GenotypeTable a1 = FilterAlignment.getInstance(tb, id1);
+		GenotypeTable a2 = FilterAlignment.getInstance(tb, id2);
 		
-		return new Alignment[]{a1, a2};
+		return new GenotypeTable[]{a1, a2};
 	}
 	
-	public static Alignment[] getTwoClusters(Alignment inputAlignment, int minGametesPerTaxon) {
+	public static GenotypeTable[] getTwoClusters(GenotypeTable inputAlignment, int minGametesPerTaxon) {
 		
 		//filter out low coverage taxa
 		int ntaxa = inputAlignment.numberOfTaxa();
@@ -220,12 +220,12 @@ public class ImputationUtils {
 			else include[t] = false;
 		}
 		
-		Alignment myAlignment;
+		GenotypeTable myAlignment;
 		if (nIncluded < 10) {
 			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.siteName(0));
 			return null;
 		} else {
-			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.taxa(), include));
+			GenotypeTable fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.taxa(), include));
 			
 			myAlignment = AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
 		}
@@ -343,10 +343,10 @@ public class ImputationUtils {
 		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster1[bestTrial]);
 		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster2);
 		
-		Alignment a1 = FilterAlignment.getInstance(myAlignment, id1);
-		Alignment a2 = FilterAlignment.getInstance(myAlignment, id2);
+		GenotypeTable a1 = FilterAlignment.getInstance(myAlignment, id1);
+		GenotypeTable a2 = FilterAlignment.getInstance(myAlignment, id2);
 		
-		return new Alignment[]{a1, a2};
+		return new GenotypeTable[]{a1, a2};
 	}
 	
 	public static float[] snpsAsFloatVector(BitSet[] alleles, int nsnps) {
@@ -431,7 +431,7 @@ public class ImputationUtils {
 		return result;
 	}
 	
-	public static void printAlleleStats(Alignment a, String name) {
+	public static void printAlleleStats(GenotypeTable a, String name) {
 		int monoCount = 0;
 		int polyCount = 0;
 		int[] binCount = new int[21];
@@ -648,7 +648,7 @@ public class ImputationUtils {
 			for (int fam = 0; fam < 25; fam++) {
 				System.out.println("Imputing data for chromosome " + chr + ", family " + family[fam] + ".");
 				snpFilename = "/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea/namibm.combined.hapmap.f.05r.5.chr" + chr + ".family."+ family[fam] + "parents.hmp.txt";
-				Alignment a = ImportUtils.readFromHapmap(snpFilename, true, null);
+				GenotypeTable a = ImportUtils.readFromHapmap(snpFilename, true, null);
 				int nsnps = a.numberOfSites();
 				
 				double startgenpos = agpmap.getCmFromPosition(chr, a.chromosomalPosition(0));
@@ -823,7 +823,7 @@ public class ImputationUtils {
 			StringBuilder taxaHeader = new StringBuilder();
 			for (File snpfile : snpFiles) {
 				System.out.println("Imputing data for " + snpfile.getName() + ".");
-				Alignment a = ImportUtils.readFromHapmap(snpfile.getPath(), true, null);
+				GenotypeTable a = ImportUtils.readFromHapmap(snpfile.getPath(), true, null);
 				
 				boolean b73isA = isB73HaplotypeA(a);
 				HashMap<Byte, String> byteToNumberString = new HashMap<Byte, String>();
@@ -988,7 +988,7 @@ public class ImputationUtils {
 		
 	}
 	
-	public static boolean isB73HaplotypeA(Alignment a) {
+	public static boolean isB73HaplotypeA(GenotypeTable a) {
 		TaxaList ids = a.taxa();
 		int ndx = ids.indicesMatchingTaxon("B73(PI550473)").get(0);
 		int nsnps = a.numberOfSites();

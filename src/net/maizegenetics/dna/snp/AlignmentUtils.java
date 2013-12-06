@@ -40,10 +40,10 @@ public class AlignmentUtils {
         for (int i = 0; i < data.length; i++) {
             byte first = (byte) ((data[i] >>> 4) & 0xf);
             byte second = (byte) (data[i] & 0xf);
-            if (first < Alignment.RARE_ALLELE) {
+            if (first < GenotypeTable.RARE_ALLELE) {
                 stateCnt[first]++;
             }
-            if (second < Alignment.RARE_ALLELE) {
+            if (second < GenotypeTable.RARE_ALLELE) {
                 stateCnt[second]++;
             }
         }
@@ -110,10 +110,10 @@ public class AlignmentUtils {
         for (int i = 0; i < data.length; i++) {
             byte first = (byte) ((data[i][site] >>> 4) & 0xf);
             byte second = (byte) (data[i][site] & 0xf);
-            if (first < Alignment.RARE_ALLELE) {
+            if (first < GenotypeTable.RARE_ALLELE) {
                 stateCnt[first]++;
             }
-            if (second < Alignment.RARE_ALLELE) {
+            if (second < GenotypeTable.RARE_ALLELE) {
                 stateCnt[second]++;
             }
         }
@@ -179,14 +179,14 @@ public class AlignmentUtils {
             String first;
             String second;
             if ((temp == null) || (temp.length == 0)) {
-                first = second = Alignment.UNKNOWN_ALLELE_STR;
+                first = second = GenotypeTable.UNKNOWN_ALLELE_STR;
             } else if (temp.length == 1) {
                 first = second = temp[0].trim();
             } else {
                 first = temp[0].trim();
                 second = temp[1].trim();
             }
-            if (!first.equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
+            if (!first.equalsIgnoreCase(GenotypeTable.UNKNOWN_ALLELE_STR)) {
                 Integer count = stateCnt.get(first);
                 if (count == null) {
                     stateCnt.put(first, ONE);
@@ -194,7 +194,7 @@ public class AlignmentUtils {
                     stateCnt.put(first, count + 1);
                 }
             }
-            if (!second.equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
+            if (!second.equalsIgnoreCase(GenotypeTable.UNKNOWN_ALLELE_STR)) {
                 Integer count = stateCnt.get(second);
                 if (count == null) {
                     stateCnt.put(second, ONE);
@@ -268,15 +268,15 @@ public class AlignmentUtils {
         return result;
     }
 
-    public static int[][] getAllelesSortedByFrequency(Alignment alignment, int site) {
+    public static int[][] getAllelesSortedByFrequency(GenotypeTable alignment, int site) {
 
         int[] stateCnt = new int[16];
         for (int i = 0; i < alignment.numberOfTaxa(); i++) {
             byte[] dipB = alignment.genotypeArray(i, site);
-            if (dipB[0] != Alignment.UNKNOWN_ALLELE) {
+            if (dipB[0] != GenotypeTable.UNKNOWN_ALLELE) {
                 stateCnt[dipB[0]]++;
             }
-            if (dipB[1] != Alignment.UNKNOWN_ALLELE) {
+            if (dipB[1] != GenotypeTable.UNKNOWN_ALLELE) {
                 stateCnt[dipB[1]]++;
             }
         }
@@ -325,7 +325,7 @@ public class AlignmentUtils {
 
     }
 
-    public static Object[][] getDiploidsSortedByFrequency(Alignment alignment, int site) {
+    public static Object[][] getDiploidsSortedByFrequency(GenotypeTable alignment, int site) {
 
         Integer ONE_INTEGER = 1;
         int numTaxa = alignment.numberOfTaxa();
@@ -386,10 +386,10 @@ public class AlignmentUtils {
         String[][] alleleStates = new String[numSites][16];
         for (int i = 0; i < numSites; i++) {
             for (int j = 0; j < 16; j++) {
-                if (j == Alignment.RARE_ALLELE) {
-                    alleleStates[i][j] = Alignment.RARE_ALLELE_STR;
+                if (j == GenotypeTable.RARE_ALLELE) {
+                    alleleStates[i][j] = GenotypeTable.RARE_ALLELE_STR;
                 } else {
-                    alleleStates[i][j] = Alignment.UNKNOWN_ALLELE_STR;
+                    alleleStates[i][j] = GenotypeTable.UNKNOWN_ALLELE_STR;
                 }
             }
         }
@@ -452,13 +452,13 @@ public class AlignmentUtils {
         if (data[0][0].contains(":")) {
             Pattern colon = Pattern.compile(":");
             for (int taxon = 0; taxon < numTaxa; taxon++) {
-                if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_DIPLOID_ALLELE_STR)) {
-                    dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                if (data[taxon][site].equalsIgnoreCase(GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR)) {
+                    dataBytes[taxon][site] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                 } else if (data[taxon][site].equals("?") || data[taxon][site].equals("?:?")) {
-                    dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    dataBytes[taxon][site] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                 } else {
                     String[] siteval = colon.split(data[taxon][site]);
-                    int[] byteval = new int[]{Alignment.RARE_ALLELE, Alignment.RARE_ALLELE};
+                    int[] byteval = new int[]{GenotypeTable.RARE_ALLELE, GenotypeTable.RARE_ALLELE};
                     for (int k = 0; k < maxNumAlleles; k++) {
                         if (alleleStates[k].equals(siteval[0])) {
                             byteval[0] = k;
@@ -472,12 +472,12 @@ public class AlignmentUtils {
             }
         } else {
             for (int taxon = 0; taxon < numTaxa; taxon++) {
-                if (data[taxon][site].equalsIgnoreCase(Alignment.UNKNOWN_ALLELE_STR)) {
-                    dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                if (data[taxon][site].equalsIgnoreCase(GenotypeTable.UNKNOWN_ALLELE_STR)) {
+                    dataBytes[taxon][site] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                 } else if (data[taxon][site].equals("?")) {
-                    dataBytes[taxon][site] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    dataBytes[taxon][site] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                 } else {
-                    dataBytes[taxon][site] = Alignment.RARE_DIPLOID_ALLELE;
+                    dataBytes[taxon][site] = GenotypeTable.RARE_DIPLOID_ALLELE;
                     for (byte k = 0; k < maxNumAlleles; k++) {
                         if (alleleStates[k].equals(data[taxon][site])) {
                             dataBytes[taxon][site] = (byte) (k | (k << 4));
@@ -501,9 +501,9 @@ public class AlignmentUtils {
      * @param minimumCount minimum number of sequences with a good bases (not N
      * or ?), where GAP IS CONSIDERED A GOOD BASE
      */
-    public static Alignment removeSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
+    public static GenotypeTable removeSitesBasedOnFreqIgnoreMissing(GenotypeTable aa, double minimumProportion, double maximumProportion, int minimumCount) {
         int[] includeSites = getIncludedSitesBasedOnFreqIgnoreMissing(aa, minimumProportion, maximumProportion, minimumCount);
-        Alignment mlaa = FilterAlignment.getInstance(aa, includeSites);
+        GenotypeTable mlaa = FilterAlignment.getInstance(aa, includeSites);
         return mlaa;
     }
 
@@ -520,7 +520,7 @@ public class AlignmentUtils {
      * @param minimumCount minimum number of sequences with a good base or a gap
      * (but not N or ?)
      */
-    public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(Alignment aa, double minimumProportion, double maximumProportion, int minimumCount) {
+    public static int[] getIncludedSitesBasedOnFreqIgnoreMissing(GenotypeTable aa, double minimumProportion, double maximumProportion, int minimumCount) {
 
         ArrayList<Integer> includeAL = new ArrayList<Integer>();
         for (int i = 0, n = aa.numberOfSites(); i < n; i++) {
@@ -557,7 +557,7 @@ public class AlignmentUtils {
      * @param firstSite first site to keep in the range
      * @param lastSite last site to keep in the range
      */
-    public static Alignment removeSitesOutsideRange(Alignment aa, int firstSite, int lastSite) {
+    public static GenotypeTable removeSitesOutsideRange(GenotypeTable aa, int firstSite, int lastSite) {
         if ((firstSite < 0) || (firstSite > lastSite)) {
             return null;
         }
@@ -634,8 +634,8 @@ public class AlignmentUtils {
      */
     public static boolean isEqualOrUnknown(byte[] alleles1, byte[] alleles2) {
 
-        if (((alleles1[0] == Alignment.UNKNOWN_ALLELE) && (alleles1[1] == Alignment.UNKNOWN_ALLELE))
-                || ((alleles2[0] == Alignment.UNKNOWN_ALLELE) && (alleles2[1] == Alignment.UNKNOWN_ALLELE))) {
+        if (((alleles1[0] == GenotypeTable.UNKNOWN_ALLELE) && (alleles1[1] == GenotypeTable.UNKNOWN_ALLELE))
+                || ((alleles2[0] == GenotypeTable.UNKNOWN_ALLELE) && (alleles2[1] == GenotypeTable.UNKNOWN_ALLELE))) {
             return true;
         }
 
@@ -659,7 +659,7 @@ public class AlignmentUtils {
      */
     public static boolean isEqualOrUnknown(byte diploidAllele1, byte diploidAllele2) {
 
-        if ((diploidAllele1 == Alignment.UNKNOWN_DIPLOID_ALLELE) || (diploidAllele2 == Alignment.UNKNOWN_DIPLOID_ALLELE)) {
+        if ((diploidAllele1 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) || (diploidAllele2 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE)) {
             return true;
         }
 
@@ -776,17 +776,17 @@ public class AlignmentUtils {
         if ((g2 == g1)&&(!isHeterozygous(g1))) {
             return g1;
         }
-        if (g1 == Alignment.UNKNOWN_DIPLOID_ALLELE) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if (g1 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
+            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
         }
-        if (g2 == Alignment.UNKNOWN_DIPLOID_ALLELE) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+        if (g2 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
+            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
         }
         if (isHeterozygous(g1)) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
         }
         if (isHeterozygous(g2)) {
-            return Alignment.UNKNOWN_DIPLOID_ALLELE;
+            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
         }
 
         return getUnphasedDiploidValue(g1, g2);
@@ -826,14 +826,14 @@ public class AlignmentUtils {
             byte mj = mjA[i];
             byte mn = mnA[i];
             //           System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
-            if (mj == Alignment.UNKNOWN_ALLELE) {
+            if (mj == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
             if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
                 rMj.fastSet(i);
                 continue;
             }
-            if (mn == Alignment.UNKNOWN_ALLELE) {
+            if (mn == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
             if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
@@ -872,14 +872,14 @@ public class AlignmentUtils {
             byte mj = mjBB.get();
             byte mn = mnBB.get();
             // System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
-            if (mj == Alignment.UNKNOWN_ALLELE) {
+            if (mj == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
             if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
                 rMj.fastSet(i);
                 continue;
             }
-            if (mn == Alignment.UNKNOWN_ALLELE) {
+            if (mn == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
             if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {
@@ -909,14 +909,14 @@ public class AlignmentUtils {
         OpenBitSet rMn = new OpenBitSet(genotype.length);
         for (int i = 0; i < sites; i++) {
             byte g = genotype[i];
-            if (mj == Alignment.UNKNOWN_ALLELE) {
+            if (mj == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
             if (g == AlignmentUtils.getDiploidValuePhased(mj, mj)) {
                 rMj.fastSet(i);
                 continue;
             }
-            if (mn == Alignment.UNKNOWN_ALLELE) {
+            if (mn == GenotypeTable.UNKNOWN_ALLELE) {
                 continue;
             }
             if (g == AlignmentUtils.getDiploidValuePhased(mn, mn)) {

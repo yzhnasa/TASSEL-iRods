@@ -30,7 +30,7 @@ public class ProjectionAlignment {
     private int[][] mySiteBreaks;  //temporary - saving not needed
     private int[][][] myHDTaxa;  //taxa ids should be saved
     private int[][] myPosBreaks;  //positions should be saved
-    private final Alignment myBaseAlignment;  //high density marker alignment that is being projected.
+    private final GenotypeTable myBaseAlignment;  //high density marker alignment that is being projected.
     private Map<Taxon,SortedSet<DonorHaplotypes>> allBreakPoints;
     private int myNumSites;
     
@@ -38,7 +38,7 @@ public class ProjectionAlignment {
     public long cacheUseCnt=0, lookupCnt=0;
 
     
-    ProjectionAlignment(Alignment hdAlign, Map<Taxon,SortedSet<DonorHaplotypes>> allBreakPoints) {
+    ProjectionAlignment(GenotypeTable hdAlign, Map<Taxon,SortedSet<DonorHaplotypes>> allBreakPoints) {
         myTaxaList=new TaxaListBuilder().addAll(allBreakPoints.keySet()).build();
         myBaseAlignment = hdAlign;
         this.allBreakPoints=allBreakPoints;

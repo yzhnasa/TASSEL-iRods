@@ -1,6 +1,6 @@
 package net.maizegenetics.dna.snp.io;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.ProjectionBuilder;
@@ -22,12 +22,12 @@ import java.util.*;
  */
 public class ProjectionAlignmentIO {
 
-    public static Alignment getInstance(String paFile, String baseHighDensityAlignmentFile) {
+    public static GenotypeTable getInstance(String paFile, String baseHighDensityAlignmentFile) {
         if(baseHighDensityAlignmentFile.endsWith(".h5")) return getInstance(paFile, AlignmentBuilder.getInstance(baseHighDensityAlignmentFile));
         return getInstance(paFile, ImportUtils.readFromHapmap(baseHighDensityAlignmentFile, null));
     }
 
-    public static Alignment getInstance(String paFile, Alignment baseHighDensityAlignment) {
+    public static GenotypeTable getInstance(String paFile, GenotypeTable baseHighDensityAlignment) {
         BufferedReader br = null;
         try {
             br = Utils.getBufferedReader(paFile);
@@ -80,12 +80,12 @@ public class ProjectionAlignmentIO {
         }
     }
 
-    public static void writeToFile(String outfile, Alignment pa) {
+    public static void writeToFile(String outfile, GenotypeTable pa) {
         if(!(pa.genotypeMatrix() instanceof ProjectionGenotypeCallTable)) {
             throw new UnsupportedOperationException("Save only works for Alignments with projection genotypes");
         }
         ProjectionGenotypeCallTable pg=(ProjectionGenotypeCallTable)pa.genotypeMatrix();
-        Alignment baseAlignment=pg.getBaseAlignment();
+        GenotypeTable baseAlignment=pg.getBaseAlignment();
         BufferedWriter bw = null;
         try {
             String fullFileName = Utils.addSuffixIfNeeded(outfile, ".pa.txt.gz", new String[]{".pa.txt", ".pa.txt.gz"});

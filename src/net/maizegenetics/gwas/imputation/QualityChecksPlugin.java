@@ -26,7 +26,7 @@ import org.jfree.data.xy.DefaultXYDataset;
 
 import net.maizegenetics.baseplugins.ExportPlugin;
 import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
@@ -70,7 +70,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			hasFileAppender = true;
 		}
 		
-		List<Datum> datumList = input.getDataOfType(Alignment.class);
+		List<Datum> datumList = input.getDataOfType(GenotypeTable.class);
 		ArrayList<PopulationData> familyList;
 		if (pedigreeFile != null) {
 			familyList = PopulationData.readPedigreeFile(pedigreeFile);
@@ -79,7 +79,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		}
 		
 		for (Datum datum : datumList) {
-			Alignment anAlignment = (Alignment) datum.getData();
+			GenotypeTable anAlignment = (GenotypeTable) datum.getData();
 			if (pedigreeFile == null) {
 				processFamily(anAlignment, null);
 			} else {
@@ -87,7 +87,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 					String[] names = new String[family.members.size()];
 					family.members.toArray(names);
                     TaxaList tL=new TaxaListBuilder().addAll(names).build();
-					Alignment align = FilterAlignment.getInstance(anAlignment, tL, false);
+					GenotypeTable align = FilterAlignment.getInstance(anAlignment, tL, false);
 					processFamily(align, family.name);
 				}
 			}
@@ -96,7 +96,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		return null;
 	}
 	
-	private void processFamily(Alignment align, String familyname) {
+	private void processFamily(GenotypeTable align, String familyname) {
 		myLogger.info("\nResults for chromosome " + align.chromosomeName(0) + ", family " + familyname);
 		align = preFilterAlignment(align);
 
@@ -137,7 +137,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		return sb.toString();
 	}
 	
-	public Alignment preFilterAlignment(Alignment align) {
+	public GenotypeTable preFilterAlignment(GenotypeTable align) {
 		int ntaxa = align.numberOfTaxa();
 		int nsites = align.numberOfSites();
 		int nTaxaGametes = 2 * nsites;
@@ -181,7 +181,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		return align;
 	}
 	
-	private void calculateAverageR2ForSnps(Alignment align, String familyname) {
+	private void calculateAverageR2ForSnps(GenotypeTable align, String familyname) {
 		
 		//first filter out monomorphic sites
 		int nsites = align.numberOfSites();
@@ -260,7 +260,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
         return rsqr;
     }
 
-    private void saveToFileAverageR2(double[] avgr2, Alignment align, String saveFilename) {
+    private void saveToFileAverageR2(double[] avgr2, GenotypeTable align, String saveFilename) {
     		BufferedWriter bw = Utils.getBufferedWriter(saveFilename);
     		int nsites = align.numberOfSites();
     		try {
@@ -283,7 +283,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		}
     }
     
-    private void plotAverageR2(double[] avgr2, Alignment align, String saveFilename) {
+    private void plotAverageR2(double[] avgr2, GenotypeTable align, String saveFilename) {
     		int nsites = align.numberOfSites();
     		String title = "Average R2 in " + windowSizeForR2 + " bp window, chromosome " + align.chromosomeName(0);
     		String xLabel = "position(Mbp)";
@@ -303,7 +303,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		}
     }
     
-	private double[] calculateProportionNonConsensusPerTaxon(Alignment align) {
+	private double[] calculateProportionNonConsensusPerTaxon(GenotypeTable align) {
 		double maxMaf = 0.05;
 		int ntaxa = align.numberOfTaxa();
 		int nsites = align.numberOfSites();
@@ -339,7 +339,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		return proportionMinor;
 	}
 	
-	private void saveProportionNonConsensusToFile(double[] propNonconsensus, Alignment align, String saveFilename) {
+	private void saveProportionNonConsensusToFile(double[] propNonconsensus, GenotypeTable align, String saveFilename) {
     		BufferedWriter bw = Utils.getBufferedWriter(saveFilename);
     		int ntaxa = align.numberOfTaxa();
     		try {
@@ -360,7 +360,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     		}
 	}
 	
-	private void runAndExportGenotypeSummaryForTaxa(Alignment align, String outfile) {
+	private void runAndExportGenotypeSummaryForTaxa(GenotypeTable align, String outfile) {
 		
 		GenotypeSummaryPlugin gsp = new GenotypeSummaryPlugin(null,false);
 		gsp.setCaculateOverview(false);

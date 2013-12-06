@@ -8,7 +8,7 @@ import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
@@ -59,13 +59,13 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
             } else {
                 filename = baseFileName + "parents.hmp.txt";
             }
-            Alignment[] allOfTheAlignments = new Alignment[theData.size()];
+            GenotypeTable[] allOfTheAlignments = new GenotypeTable[theData.size()];
             int count = 0;
             for (Datum datum : theData) {
                 PopulationData family = (PopulationData) datum.getData();
                 allOfTheAlignments[count++] = createOutputAlignment(family, asNucleotides);
             }
-            Alignment alignment = MutableSingleEncodeAlignment.getInstance(allOfTheAlignments);
+            GenotypeTable alignment = MutableSingleEncodeAlignment.getInstance(allOfTheAlignments);
             ExportUtils.writeToHapmap(alignment, outputDiploid, filename, '\t', null);
         } else {
             for (Datum datum : theData) {
@@ -82,14 +82,14 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 
     }
 
-    private Alignment createOutputAlignment(PopulationData popdata, boolean asNucleotides) {
-        Alignment out = null;
+    private GenotypeTable createOutputAlignment(PopulationData popdata, boolean asNucleotides) {
+        GenotypeTable out = null;
 
         if (!asNucleotides) {
             out = popdata.imputed;
         } else {
             //change the parent calls to original nucleotides
-            Alignment outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
+            GenotypeTable outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
 
             if (!Double.isNaN(minSnpCoverage) && !Double.isNaN(maxMafForMono)) {
                 int nsnps = popdata.original.numberOfSites();
@@ -103,9 +103,9 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                     }
                 }
                 monomorphicSnps = Arrays.copyOf(monomorphicSnps, snpCount);
-                Alignment fa = FilterAlignment.getInstance(popdata.original, monomorphicSnps);
+                GenotypeTable fa = FilterAlignment.getInstance(popdata.original, monomorphicSnps);
                 if (fa.numberOfSites() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
-                    out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly});
+                    out = MutableSingleEncodeAlignment.getInstance(new GenotypeTable[]{outPoly});
                 } else { //Return both monomorphic and polymorphic sites
                     MutableAlignment outMono = MutableNucleotideAlignment.getInstance(fa);
                     // fill in all values with the major allele
@@ -118,7 +118,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                             outMono.setBase(t, s, major);
                         }
                     }
-                    out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly, outMono});
+                    out = MutableSingleEncodeAlignment.getInstance(new GenotypeTable[]{outPoly, outMono});
                 }
             }
         }

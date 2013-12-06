@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Phenotype;
@@ -54,16 +54,16 @@ public class SeparatePlugin extends AbstractPlugin {
                     String phenoName = current.getName() + "_pheno";
                     Datum phenoDatum = new Datum(phenoName, pheno, null);
 
-                    Alignment align = mp.getAlignment();
+                    GenotypeTable align = mp.getAlignment();
                     String alignName = current.getName() + "_align";
                     Datum alignDatum = new Datum(alignName, align, null);
 
                     DataSet tds = new DataSet(new Datum[]{phenoDatum, alignDatum}, this);
                     result.add(tds);
 
-                } else if (currentValue instanceof Alignment) {
+                } else if (currentValue instanceof GenotypeTable) {
 
-                    List<Datum> alignments = separateAlignmentIntoLoci((Alignment) currentValue, current.getName(), myChromosomesToSeparate);
+                    List<Datum> alignments = separateAlignmentIntoLoci((GenotypeTable) currentValue, current.getName(), myChromosomesToSeparate);
                     if (alignments.size() > 0) {
                         DataSet tds = new DataSet(alignments, this);
                         result.add(tds);
@@ -90,14 +90,14 @@ public class SeparatePlugin extends AbstractPlugin {
 
     }
 
-    public static List<Datum> separateAlignmentIntoLoci(Alignment alignment, String dataSetName) {
+    public static List<Datum> separateAlignmentIntoLoci(GenotypeTable alignment, String dataSetName) {
         return separateAlignmentIntoLoci(alignment, dataSetName, null);
     }
 
-    public static List<Datum> separateAlignmentIntoLoci(Alignment alignment, String dataSetName, String[] chromosomesToSeparate) {
+    public static List<Datum> separateAlignmentIntoLoci(GenotypeTable alignment, String dataSetName, String[] chromosomesToSeparate) {
 
         List<Datum> result = new ArrayList<Datum>();
-        Alignment[] alignments = alignment.compositeAlignments();
+        GenotypeTable[] alignments = alignment.compositeAlignments();
         for (int i = 0; i < alignments.length; i++) {
             int[] offsets = alignments[i].chromosomesOffsets();
             if (offsets.length > 1) {

@@ -3,7 +3,7 @@ package net.maizegenetics.pd;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.util.Utils;
@@ -63,7 +63,7 @@ public class PDAnnotation {
         int[] hasData = null;  //recorder if there is any GWAS data for a site; TODO perhaps increment
         String chromosomeFile = hapMapDir + hapMapFile_prefix + "chr" + currChr + hapMapFile_suffix;
         System.out.println("Loading:" + chromosomeFile);
-        Alignment bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
+        GenotypeTable bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
         //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.numberOfSites(), bna.chromosomalPosition(0), bna.chromosomalPosition(bna.numberOfSites() - 1));
         int siteCnt = bna.numberOfSites();
         int[] alignmentPhysPos = bna.physicalPositions();

@@ -1,6 +1,6 @@
 package net.maizegenetics.trait;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.trait.FilterPhenotype;
 import net.maizegenetics.util.TableReport;
@@ -12,7 +12,7 @@ import net.maizegenetics.taxa.TaxaList;
  */
 public class MarkerPhenotype implements TableReport {
 
-    private Alignment myAlignment;  //alignment to hold markers
+    private GenotypeTable myAlignment;  //alignment to hold markers
     private Phenotype myPhenotype;  //alignment to hold characters
 
     /**
@@ -21,20 +21,20 @@ public class MarkerPhenotype implements TableReport {
      * @param alignment alignment
      * @param phenotype phenotype
      */
-    private MarkerPhenotype(Alignment alignment, Phenotype phenotype) {
+    private MarkerPhenotype(GenotypeTable alignment, Phenotype phenotype) {
         myAlignment = alignment;
         myPhenotype = phenotype;
     }
 
-    public static MarkerPhenotype getInstance(Alignment aa, Phenotype ca, boolean union) {
+    public static MarkerPhenotype getInstance(GenotypeTable aa, Phenotype ca, boolean union) {
         TaxaList idGroup = getIdGroup(aa.taxa(), ca.getTaxa(), union);
-        Alignment align = FilterAlignment.getInstance(aa, idGroup);
+        GenotypeTable align = FilterAlignment.getInstance(aa, idGroup);
         Phenotype phenotype = FilterPhenotype.getInstance(ca, idGroup, null);
         return new MarkerPhenotype(align, phenotype);
     }
 
     public static MarkerPhenotype getInstance(MarkerPhenotype aac, TaxaList group) {
-        Alignment aa = FilterAlignment.getInstance(aac.getAlignment(), group);
+        GenotypeTable aa = FilterAlignment.getInstance(aac.getAlignment(), group);
         Phenotype ca = FilterPhenotype.getInstance(aac.getPhenotype(), group, null);
         return new MarkerPhenotype(aa, ca);
     }
@@ -73,7 +73,7 @@ public class MarkerPhenotype implements TableReport {
         return builder.toString();
     }
 
-    public Alignment getAlignment() {
+    public GenotypeTable getAlignment() {
         return myAlignment;
     }
 

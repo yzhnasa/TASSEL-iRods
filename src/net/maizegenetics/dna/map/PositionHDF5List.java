@@ -4,7 +4,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.map.Position.Allele;
 
@@ -136,7 +136,7 @@ final class PositionHDF5List implements PositionList {
             return mySiteList.get(site).getAllele(Allele.REF);
         } catch (ExecutionException e) {
             e.printStackTrace();
-            return Alignment.UNKNOWN_ALLELE;
+            return GenotypeTable.UNKNOWN_ALLELE;
         }
     }
 

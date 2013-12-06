@@ -6,7 +6,7 @@ import cern.colt.function.IntComparator;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 
@@ -55,7 +55,7 @@ public class TaxaListBuilder {
         return this;
     }
 
-    public TaxaListBuilder addAll(Alignment a) {
+    public TaxaListBuilder addAll(GenotypeTable a) {
         myTaxaList.addAll(a.taxa());
         return this;
     }

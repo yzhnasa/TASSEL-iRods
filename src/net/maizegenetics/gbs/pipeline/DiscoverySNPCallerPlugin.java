@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import cern.colt.GenericSorting;
@@ -476,7 +476,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             // so that all tags in the tagAlignment have the same corresponding variants in the TOPM, add a variant no matter what (set to missing if needed)
             byte offset = (byte) (position - myTAL.getMinStartPosition());
             if (!matched) {
-                baseToAdd = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                baseToAdd = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
             }
             if (strand == -1) {
                 baseToAdd = complementAllele(baseToAdd);  // record everything relative to the plus strand
@@ -621,7 +621,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 if (isGoodBiallelicWithGapCall(calls[i],homMaj,homMin,hetG1,hetG2,majAllele,minAllele)) {
                     continue;
                 } else {
-                    calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    calls[i] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                 }
             }
         } else {
@@ -629,7 +629,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 if ((calls[i] == homMaj) || (calls[i] == homMin) || (calls[i] == hetG1) || (calls[i] == hetG2)) {
                     continue;
                 } else {
-                    calls[i] = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                    calls[i] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                 }
             }
         }
@@ -964,11 +964,11 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             case 0x35: comp = 0x05; break;   // T- -> A-
             case 0x53: comp = 0x50; break;   // -T -> -A
             case 0x55: comp = 0x55; break;   // -- -> --            
-            case Alignment.UNKNOWN_DIPLOID_ALLELE:
-                comp = Alignment.UNKNOWN_DIPLOID_ALLELE;
+            case GenotypeTable.UNKNOWN_DIPLOID_ALLELE:
+                comp = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                 break;
             default:
-                comp = Alignment.UNKNOWN_DIPLOID_ALLELE;
+                comp = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
                 break;
         }
         return comp;
@@ -983,7 +983,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             case 0x03: comp=NucleotideAlignmentConstants.A_ALLELE; break;   // T -> A
             case 0x05: comp=NucleotideAlignmentConstants.GAP_ALLELE; break; // - -> -
             default:
-                comp = Alignment.UNKNOWN_ALLELE; break;
+                comp = GenotypeTable.UNKNOWN_ALLELE; break;
         }
         return comp;
     }

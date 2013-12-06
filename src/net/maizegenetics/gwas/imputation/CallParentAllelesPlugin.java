@@ -1,6 +1,6 @@
 package net.maizegenetics.gwas.imputation;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.taxa.TaxaList;
@@ -43,11 +43,11 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			return null;
 		}
 		
-		List<Datum> inputAlignments = input.getDataOfType(Alignment.class);
+		List<Datum> inputAlignments = input.getDataOfType(GenotypeTable.class);
 		LinkedList<Datum> datumList = new LinkedList<Datum>();
 
 		for (Datum d : inputAlignments) {
-			Alignment align = (Alignment) d.getData();
+			GenotypeTable align = (GenotypeTable) d.getData();
 			ArrayList<PopulationData> familyList = PopulationData.readPedigreeFile(pedfileName);
 			for (PopulationData family : familyList) {
 				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.chromosomeName(0) + ".");

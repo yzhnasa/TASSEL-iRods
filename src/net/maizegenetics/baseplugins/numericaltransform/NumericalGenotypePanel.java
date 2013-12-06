@@ -1,6 +1,6 @@
 package net.maizegenetics.baseplugins.numericaltransform;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.plugindef.Datum;
 
 import javax.swing.*;
@@ -16,7 +16,7 @@ public class NumericalGenotypePanel extends JPanel {
     public NumericalGenotypePanel(Datum theDatum) throws Exception {
 
         try {
-            if (!(theDatum.getData() instanceof Alignment)) {
+            if (!(theDatum.getData() instanceof GenotypeTable)) {
                 throw new Exception("Must be a Genotype");
             }
 

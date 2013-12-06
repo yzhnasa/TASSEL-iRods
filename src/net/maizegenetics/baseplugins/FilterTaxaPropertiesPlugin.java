@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
@@ -49,7 +49,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
 
             if (alignInList.size() != 1) {
                 String gpMessage = "Invalid selection.  Please Select One Genotype Alignment.";
@@ -78,7 +78,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
     }
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
-        Alignment aa = (Alignment) inDatum.getData();
+        GenotypeTable aa = (GenotypeTable) inDatum.getData();
 
         if (isInteractive) {
             FilterTaxaPropertiesDialog theDialog = new FilterTaxaPropertiesDialog();
@@ -95,7 +95,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             theDialog.dispose();
         }
 
-        Alignment result = getFilteredAlignment(aa);
+        GenotypeTable result = getFilteredAlignment(aa);
 
         StringBuilder builder = new StringBuilder();
         builder.append("Filter Alignment by Taxa Properties...\n");
@@ -132,7 +132,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
         }
     }
 
-    private Alignment getFilteredAlignment(Alignment alignment) {
+    private GenotypeTable getFilteredAlignment(GenotypeTable alignment) {
         int numSites = alignment.numberOfSites();
         int numTaxa = alignment.numberOfTaxa();
         TaxaList ids = alignment.taxa();

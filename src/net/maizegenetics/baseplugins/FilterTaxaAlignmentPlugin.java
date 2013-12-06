@@ -8,7 +8,7 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.gui.AbstractAvailableListModel;
 import net.maizegenetics.gui.SelectFromAvailableDialog;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterAlignment;
 import net.maizegenetics.trait.FilterPhenotype;
 import net.maizegenetics.trait.Phenotype;
@@ -57,7 +57,7 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
             Datum inputDatum = (Datum) inputData.get(0);
 
-            if (!(inputDatum.getData() instanceof Alignment) && !(inputDatum.getData() instanceof Phenotype)) {
+            if (!(inputDatum.getData() instanceof GenotypeTable) && !(inputDatum.getData() instanceof Phenotype)) {
                 if (isInteractive()) {
                     JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select a single sequence or phenotype.");
                 } else {
@@ -89,8 +89,8 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
         if (isInteractive) {
             TaxaList origIdGroup = null;
             SelectFromAvailableDialog dialog = null;
-            if (theData instanceof Alignment) {
-                final Alignment alignment = (Alignment) theData;
+            if (theData instanceof GenotypeTable) {
+                final GenotypeTable alignment = (GenotypeTable) theData;
                 origIdGroup = alignment.taxa();
                 AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
 
@@ -146,13 +146,13 @@ public class FilterTaxaAlignmentPlugin extends AbstractPlugin {
 
         Object result = null;
         int count = 0;
-        if (theData instanceof Alignment) {
+        if (theData instanceof GenotypeTable) {
             if (myIdsToKeep != null) {
-                result = FilterAlignment.getInstance((Alignment) theData, myIdsToKeep, false);
+                result = FilterAlignment.getInstance((GenotypeTable) theData, myIdsToKeep, false);
             } else if (myIdsToRemove != null) {
-                result = FilterAlignment.getInstanceRemoveIDs((Alignment) theData, myIdsToRemove);
+                result = FilterAlignment.getInstanceRemoveIDs((GenotypeTable) theData, myIdsToRemove);
             }
-            count = ((Alignment) result).numberOfTaxa();
+            count = ((GenotypeTable) result).numberOfTaxa();
         } else if (theData instanceof Phenotype) {
             if (myIdsToKeep != null) {
                 result = FilterPhenotype.getInstance((Phenotype) theData, myIdsToKeep, null);

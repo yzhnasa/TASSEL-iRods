@@ -4,7 +4,7 @@
  */
 package net.maizegenetics.gui;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.taxa.TaxaList;
 
 import javax.swing.*;
@@ -29,14 +29,14 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     };
     private COLUMN_NAME_TYPE myColumnNameType = COLUMN_NAME_TYPE.physicalPosition;
     private boolean myIsPhysicalPosition = true;
-    private final Alignment myAlignment;
+    private final GenotypeTable myAlignment;
     // Left and Right variables
     private int myHorizontalPageSize = 0;
     private int myHorizontalCenter = 0;
     private int myHorizontalStart = 0;
     private int myHorizontalEnd = 0;
 
-    public AlignmentTableModel(Alignment alignment, int horizontalPageSize) {
+    public AlignmentTableModel(GenotypeTable alignment, int horizontalPageSize) {
 
         if (alignment == null) {
             throw new IllegalArgumentException("AlignmentTableModel: init: alignment can not be null.");
@@ -50,7 +50,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
     }
 
-    public AlignmentTableModel(Alignment alignment) {
+    public AlignmentTableModel(GenotypeTable alignment) {
         this(alignment, 100);
     }
 

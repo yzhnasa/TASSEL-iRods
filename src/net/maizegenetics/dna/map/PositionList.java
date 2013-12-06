@@ -1,11 +1,11 @@
 package net.maizegenetics.dna.map;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import java.util.List;
 
 /**
  * List of positions in the genome. This type is used by every
- * {@link Alignment}, but it can also be used list of GWAS results and other
+ * {@link GenotypeTable}, but it can also be used list of GWAS results and other
  * genomic annotations.
  *
  * @author Terry Casstevens and Ed Buckler

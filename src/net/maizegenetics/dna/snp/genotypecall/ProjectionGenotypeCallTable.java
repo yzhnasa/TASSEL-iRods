@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.DonorHaplotypes;
@@ -28,7 +28,7 @@ import java.util.NavigableSet;
  */
 public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
 
-    private final Alignment myBaseAlignment;  //high density marker alignment that is being projected. It was suggested that this
+    private final GenotypeTable myBaseAlignment;  //high density marker alignment that is being projected. It was suggested that this
     //just have a pointer to a genotype, which would work, excepting for saving the file, when the base taxa names are needed.
     private ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints;
 
@@ -45,7 +45,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
     private int cachedTaxon = -1;
     int[] primDSH; //startSite,endSite,parent1,parent2 array for the
 
-  public ProjectionGenotypeCallTable(Alignment hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
+  public ProjectionGenotypeCallTable(GenotypeTable hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
         super(allBreakPoints.size(), hdAlign.numberOfSites(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         myBaseAlignment = hdAlign;
         this.allBreakPoints = allBreakPoints;
@@ -95,7 +95,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
      *
      * @return base Alignment
      */
-    public Alignment getBaseAlignment() {
+    public GenotypeTable getBaseAlignment() {
         return myBaseAlignment;
     }
 
@@ -103,7 +103,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
         if ((currentDSH[taxon] == null) || (!currentDSH[taxon].containsSite(site))) {
             currentDSH[taxon] = breakMaps.get(taxon).get(site);
             if (currentDSH[taxon] == null) {
-                return Alignment.UNKNOWN_DIPLOID_ALLELE;
+                return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
             }
             //TODO consider null
         }
@@ -116,11 +116,11 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
     private byte getBaseTaxon(int taxon, int site) {
         if (taxon != cachedTaxon) {
             projForCachedTaxon = new byte[mySiteCount];
-            Arrays.fill(projForCachedTaxon, Alignment.RARE_DIPLOID_ALLELE);
+            Arrays.fill(projForCachedTaxon, GenotypeTable.RARE_DIPLOID_ALLELE);
             cachedTaxon = taxon;
         }
         byte result = projForCachedTaxon[site];
-        if (result == Alignment.RARE_DIPLOID_ALLELE) {
+        if (result == GenotypeTable.RARE_DIPLOID_ALLELE) {
             DonorSiteHaps currentDSH = breakMaps.get(taxon).get(site);
             byte[] r = myBaseAlignment.genotypeRange(currentDSH.getParent1index(), currentDSH.getStartSite(), currentDSH.getEndSite() + 1);
             System.arraycopy(r, 0, projForCachedTaxon, currentDSH.getStartSite(), r.length);

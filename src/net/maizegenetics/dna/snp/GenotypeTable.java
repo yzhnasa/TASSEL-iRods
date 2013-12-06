@@ -15,7 +15,7 @@ import net.maizegenetics.util.BitSet;
  *
  * @author terry
  */
-public interface Alignment {
+public interface GenotypeTable {
 
     /**
      * This encoding is used to lump together allele values with frequencies too
@@ -498,7 +498,7 @@ public interface Alignment {
      *
      * @return site score type.
      */
-    public Alignment.SITE_SCORE_TYPE siteScoreType();
+    public GenotypeTable.SITE_SCORE_TYPE siteScoreType();
 
     /**
      * Return size of indel at given site.
@@ -659,7 +659,7 @@ public interface Alignment {
      *
      * @return list of alignments.
      */
-    public Alignment[] compositeAlignments();
+    public GenotypeTable[] compositeAlignments();
 
     /**
      * Return sorted list of alleles from highest frequency to lowest at given
@@ -848,7 +848,7 @@ public interface Alignment {
      *
      * @return alleles
      */
-    public byte[] allelesBySortType(Alignment.ALLELE_SORT_TYPE scope, int site);
+    public byte[] allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE scope, int site);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
@@ -860,7 +860,7 @@ public interface Alignment {
      *
      * @return sequence of true/false values.
      */
-    public BitSet allelePresenceForAllTaxaBySortType(Alignment.ALLELE_SORT_TYPE type, int site, int alleleNumber);
+    public BitSet allelePresenceForAllTaxaBySortType(GenotypeTable.ALLELE_SORT_TYPE type, int site, int alleleNumber);
 
     /**
      * Returns BitStorage for this Genotype
@@ -869,5 +869,5 @@ public interface Alignment {
      *
      * @return BitStorage
      */
-    public BitStorage bitStorage(Alignment.ALLELE_SORT_TYPE scopeType);
+    public BitStorage bitStorage(GenotypeTable.ALLELE_SORT_TYPE scopeType);
 }

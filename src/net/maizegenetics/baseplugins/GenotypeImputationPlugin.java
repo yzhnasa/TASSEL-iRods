@@ -8,10 +8,10 @@ package net.maizegenetics.baseplugins;
 
 import net.maizegenetics.baseplugins.GenotypeImputationPlugin.ImpMethod;
 import net.maizegenetics.gui.DialogUtils;
-import net.maizegenetics.dna.snp.Alignment;
-import net.maizegenetics.dna.snp.AlignmentMask;
-import net.maizegenetics.dna.snp.AlignmentMask.MaskType;
-import net.maizegenetics.dna.snp.AlignmentMaskBoolean;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableMask;
+import net.maizegenetics.dna.snp.GenotypeTableMask.MaskType;
+import net.maizegenetics.dna.snp.GenotypeTableMaskBoolean;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
@@ -69,7 +69,7 @@ public class GenotypeImputationPlugin extends AbstractDisplayPlugin {
     
     public DataSet performFunctionOLD(DataSet input) {
         
-        List<Datum> alignInList = input.getDataOfType(Alignment.class);
+        List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
         List result = new ArrayList();
         
         try {
@@ -120,16 +120,16 @@ public class GenotypeImputationPlugin extends AbstractDisplayPlugin {
     }
     
     public DataSet processDatum(Datum inDatum) {
-        Alignment align = (Alignment) inDatum.getData();
+        GenotypeTable align = (GenotypeTable) inDatum.getData();
         //Alignment impP1A = BasicImputation.imputeBySite(align, minLength, maxMismatch);
-        Alignment impP1A=null; //TODO these needs to be hooked to our new imputation methods both Peter's & Ed's
+        GenotypeTable impP1A=null; //TODO these needs to be hooked to our new imputation methods both Peter's & Ed's
         
         String theName, theComment;
         theName = inDatum.getName() + "_Imp";
         theComment = "Imputed Data Of\n" + inDatum.getComment();
         Datum outDatum = new Datum(theName, impP1A, theComment);
         
-        AlignmentMask mask = AlignmentMaskBoolean.getInstanceCompareAlignments(impP1A, align, "Imputed", MaskType.imputed);
+        GenotypeTableMask mask = GenotypeTableMaskBoolean.getInstanceCompareAlignments(impP1A, align, "Imputed", MaskType.imputed);
         Datum maskDatum = new Datum(mask.toString(), mask, null);
         
         DataSet result = new DataSet(new Datum[]{outDatum, maskDatum}, this);

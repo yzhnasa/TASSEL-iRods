@@ -6,7 +6,7 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.popgen.LinkageDisequilibrium;
 
 import javax.swing.*;
@@ -32,7 +32,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
     public final static int RSQUARE = 2;
     double minimumChromosomeLength = 10;
     LinkageDisequilibrium theLD;
-    Alignment theAA;
+    GenotypeTable theAA;
     boolean includeBlockSchematic, chromosomalScale;
     boolean includeLabels = true;
     int totalVariableSites, totalLoci, totalChromosomes, totalIntervals, totalBlocks;

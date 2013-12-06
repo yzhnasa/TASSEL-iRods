@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.dna.snp.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.AlignmentBuilder;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
@@ -41,7 +41,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
 
             if (alignInList.size() != 1) {
                 String gpMessage = "Invalid selection.  Please select one genotype alignment.";
@@ -71,10 +71,10 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             throw new IllegalStateException("ConvertAlignmentCoordinatesPlugin: processDatum: map filename not set.");
         }
 
-        Alignment alignment = null;
+        GenotypeTable alignment = null;
 
-        if (input.getData() instanceof Alignment) {
-            alignment = (Alignment) input.getData();
+        if (input.getData() instanceof GenotypeTable) {
+            alignment = (GenotypeTable) input.getData();
         } else {
             throw new IllegalStateException("ConvertAlignmentCoordinatesPlugin: processDatum: datum must be instanceof Alignment.");
         }
