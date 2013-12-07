@@ -1,5 +1,5 @@
 /**
- * Position package supports lists of positions and their annotation.
+ * Package supports lists of positions and their annotation.
  * <p>
  *     Definitions:
  *     <p></p>

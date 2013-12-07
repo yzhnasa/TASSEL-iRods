@@ -1,5 +1,5 @@
 /**
- * Basic data structures for holding tags.
+ * Data structures for holding tags (contiguous DNA).
  *<p>
  * Definitions:
  * <li>Read:  a single sequence from a sequencer
@@ -17,10 +17,10 @@
  * If tags are shorter than current length, then they are padded with polyA.
  * The length of the tag is recorded in TagLength.
  *<p>
- * All the basic data structures inherit from {@link net.maizegenetics.gbs.tagdist.Tags}.
- * {@link net.maizegenetics.gbs.tagdist.TagCounts} adds
+ * All the basic data structures inherit from {@link net.maizegenetics.dna.tag.Tags}.
+ * {@link net.maizegenetics.dna.tag.TagCounts} adds
  * information on the number of reads.  
- * {@link net.maizegenetics.gbs.tagdist.TagsByTaxa} add information on the
+ * {@link net.maizegenetics.dna.tag.TagsByTaxa} add information on the
  * distributions of Tags across taxa.
  *
  */

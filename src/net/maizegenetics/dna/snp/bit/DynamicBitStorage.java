@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Provides rapid conversion routines and caching from byte encoding of
  * nucleotides to bit encoding. Only two alleles are supported for each scope
- * (e.g. Major & minor, or Reference & Alternate).
+ * (e.g. Major and minor, or Reference and Alternate).
  * <p></p>
  * The cache is designed to support multiple scopes, but currently scope must be
  * passed in at construction.

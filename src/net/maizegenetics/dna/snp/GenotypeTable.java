@@ -1,6 +1,3 @@
-/*
- * Alignment
- */
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.bit.BitStorage;
@@ -11,9 +8,15 @@ import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 
 /**
- * This supports heterozygous diploid alignments.
+ * A representation of the SNP and indel variation for a set of taxa and genomic positions.
+ * <p></p>
+ * GenotypeTable always consist of a TaxaList, PositionList, and GenotypeCallTable.  Additionally, as needed they
+ * also can represent allele in a bit form, with sequencing depth, or other scores (e.g. quality scores).
+ * <p></p>
+ * Use GenotypeTableBuilder to create GenotypeTable.
  *
- * @author terry
+ * @author Terry Casstevens
+ * @author Ed Buckler
  */
 public interface GenotypeTable {
 
@@ -50,8 +53,8 @@ public interface GenotypeTable {
          */
         Depth,
         /**
-         * This uses the allele frequency of a base/global Alignment determine
-         * sort order of alleles. That Alignment is usually a superset.
+         * This uses the allele frequency of a base/global Genotype table determine
+         * sort order of alleles. That Genotype table is usually a superset.
          */
         Global_Frequency,
         /**
@@ -62,7 +65,7 @@ public interface GenotypeTable {
 
     /**
      * Returns the immutable Genotype matrix. Taxa and Positions are not part of
-     * the matrix. This method is used for copying Alignments, when either the
+     * the matrix. This method is used for copying Genotype tables, when either the
      * Taxa or Positions have changed.
      *
      * @return genotype matrix
@@ -304,9 +307,9 @@ public interface GenotypeTable {
     public byte[] referenceGenotypeForAllSites();
 
     /**
-     * Return whether this alignment has defined reference sequence.
+     * Return whether this genotype table has defined reference sequence.
      *
-     * @return true if this alignment has reference sequence.
+     * @return true if this genotype table has reference sequence.
      */
     public boolean hasReference();
 
@@ -340,7 +343,7 @@ public interface GenotypeTable {
     public String siteName(int site);
 
     /**
-     * Returns total number of sites of this alignment.
+     * Returns total number of sites of this genotype table.
      *
      * @return number of sites
      */
@@ -357,7 +360,7 @@ public interface GenotypeTable {
 
     /**
      * Get the first (inclusive) and last (exclusive) site of the specified
-     * chromosome in this alignment.
+     * chromosome in this genotype table.
      *
      * @param chromosome chromosome
      *
@@ -373,7 +376,7 @@ public interface GenotypeTable {
     public int numberOfTaxa();
 
     /**
-     * Return the position list for the alignment.
+     * Return the position list for the genotype table.
      *
      * @return PositionList for all sites.
      */
@@ -487,14 +490,14 @@ public interface GenotypeTable {
     public float[][] siteScores();
 
     /**
-     * Returns true if this alignment has site scores.
+     * Returns true if this genotype table has site scores.
      *
-     * @return true if this alignment has site scores.
+     * @return true if this genotype table has site scores.
      */
     public boolean hasSiteScores();
 
     /**
-     * Return what type of site scores this alignment has.
+     * Return what type of site scores this genotype table has.
      *
      * @return site score type.
      */
@@ -623,7 +626,7 @@ public interface GenotypeTable {
     public double majorAlleleFrequency(int site);
 
     /**
-     * Return taxa list of this alignment.
+     * Return taxa list of this genotype table.
      *
      * @return taxa list.
      */
@@ -655,15 +658,15 @@ public interface GenotypeTable {
     public boolean isPositiveStrand(int site);
 
     /**
-     * Returns individual alignments within this alignment.
+     * Returns individual genotype tables within this genotype table.
      *
-     * @return list of alignments.
+     * @return list of genotype tables.
      */
     public GenotypeTable[] compositeAlignments();
 
     /**
      * Return sorted list of alleles from highest frequency to lowest at given
-     * site in alignment. Resulting double dimension array holds alleles (bytes)
+     * site in genotype table. Resulting double dimension array holds alleles (bytes)
      * in result[0]. And the counts are in result[1]. Counts haploid values
      * twice and diploid values once. Higher ploids are not supported.
      *
@@ -675,7 +678,7 @@ public interface GenotypeTable {
 
     /**
      * Return sorted list of diploid vales from highest frequency to lowest at
-     * given site in alignment. Resulting double dimension array holds diploids
+     * given site in genotype table. Resulting double dimension array holds diploids
      * (Strings) in result[0]. And the counts are in result[1] (Integers).
      *
      * @param site site
@@ -685,14 +688,14 @@ public interface GenotypeTable {
     public Object[][] genosSortedByFrequency(int site);
 
     /**
-     * Returns whether this alignment is phased.
+     * Returns whether this genotype table is phased.
      *
      * @return true if phased.
      */
     public boolean isPhased();
 
     /**
-     * Returns true if this Alignment retains rare alleles. If false, rare
+     * Returns true if this genotype table retains rare alleles. If false, rare
      * alleles are recorded as unknown.
      *
      * @return whether rare alleles are retained.
@@ -784,7 +787,7 @@ public interface GenotypeTable {
 
     /**
      * Returns counts of all diploid combinations from highest frequency to
-     * lowest for whole alignment. Resulting double dimension array holds
+     * lowest for whole genotype table. Resulting double dimension array holds
      * diploids (Strings) in result[0]. And the counts are in result[1] (Longs).
      *
      * @return diploid counts.
@@ -793,7 +796,7 @@ public interface GenotypeTable {
 
     /**
      * Returns counts of all major/minor allele combinations from highest
-     * frequency to lowest for whole alignment. Resulting double dimension array
+     * frequency to lowest for whole genotype table. Resulting double dimension array
      * holds major/minor allele (Strings) in result[0]. And the counts are in
      * result[1] (Longs).
      *

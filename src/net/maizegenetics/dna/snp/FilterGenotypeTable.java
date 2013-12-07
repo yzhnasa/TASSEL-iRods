@@ -19,10 +19,10 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 /**
- * All taxa and site filtering should be controlled through this class. It
- * essentially creates views of the baseAlignment
+ * All taxa and site filtering of GenotypeTables.  The class
+ * essentially creates views of the baseGenotypeTable
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public class FilterGenotypeTable implements GenotypeTable {
 

@@ -22,9 +22,11 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * The class exports PAL alignment data types to various file formats.
+ * Exports Genotype Tables to various file formats.
  *
- * @author Jon, Terry, Ed
+ * @author Jon Zhang
+ * @author Terry Casstevens
+ * @author Ed Buckler
  */
 public class ExportUtils {
 

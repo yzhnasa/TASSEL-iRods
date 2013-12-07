@@ -14,8 +14,9 @@ import net.maizegenetics.util.BitSet;
 import java.util.*;
 
 /**
- *
- * @author terry
+ * Combines multiple GenotypeTables together.
+ * 
+ * @author Terry Casstevens
  */
 public class CombineGenotypeTable implements GenotypeTable {
 
@@ -28,21 +29,21 @@ public class CombineGenotypeTable implements GenotypeTable {
     private final TaxaList myTaxaList;
     private String[][] myAlleleStates;
 
-    private CombineGenotypeTable(TaxaList taxaList, GenotypeTable[] alignments) {
+    private CombineGenotypeTable(TaxaList taxaList, GenotypeTable[] genoTables) {
 
         myTaxaList = taxaList;
-        myAlignments = alignments;
-        mySiteOffsets = new int[alignments.length + 1];
+        myAlignments = genoTables;
+        mySiteOffsets = new int[genoTables.length + 1];
 
         mySiteOffsets[0] = 0;
         int count = 0;
-        for (int i = 0; i < alignments.length; i++) {
-            count = alignments[i].numberOfSites() + count;
+        for (int i = 0; i < genoTables.length; i++) {
+            count = genoTables[i].numberOfSites() + count;
             mySiteOffsets[i + 1] = count;
 
-            Chromosome[] chromosomes = alignments[i].chromosomes();
+            Chromosome[] chromosomes = genoTables[i].chromosomes();
             for (int j = 0; j < chromosomes.length; j++) {
-                myChromosomes.put(chromosomes[j], alignments[i]);
+                myChromosomes.put(chromosomes[j], genoTables[i]);
             }
         }
 
@@ -50,59 +51,59 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     /**
-     * This factory method combines given alignments. If only one alignment,
+     * This factory method combines given genoTables. If only one genotypeTable,
      * then it is returned unchanged. Otherwise, this requires that each
-     * alignment has the same Identifiers in the same order.
+     * genotypeTable has the same Taxa in the same order.
      *
-     * @param alignments
+     * @param genoTables
      * @return
      */
-    public static GenotypeTable getInstance(GenotypeTable[] alignments) {
+    public static GenotypeTable getInstance(GenotypeTable[] genoTables) {
 
-        if ((alignments == null) || (alignments.length == 0)) {
-            throw new IllegalArgumentException("CombineAlignment: getInstance: must provide alignments.");
+        if ((genoTables == null) || (genoTables.length == 0)) {
+            throw new IllegalArgumentException("CombineAlignment: getInstance: must provide genoTables.");
         }
 
-        if (alignments.length == 1) {
-            return alignments[0];
+        if (genoTables.length == 1) {
+            return genoTables[0];
         }
 
-        TaxaList firstGroup = alignments[0].taxa();
-        for (int i = 1; i < alignments.length; i++) {
-            if (!areTaxaListsEqual(firstGroup, alignments[i].taxa())) {
+        TaxaList firstGroup = genoTables[0].taxa();
+        for (int i = 1; i < genoTables.length; i++) {
+            if (!areTaxaListsEqual(firstGroup, genoTables[i].taxa())) {
                 throw new IllegalArgumentException("CombineAlignment: getInstance: TaxaLists do not match.");
             }
         }
 
-        return new CombineGenotypeTable(firstGroup, alignments);
+        return new CombineGenotypeTable(firstGroup, genoTables);
 
     }
 
     /**
-     * This factory method combines given alignments. If only one alignment,
+     * This factory method combines given genoTables. If only one genotypeTable,
      * then it is returned unchanged. If isUnion equals true, a union join of
-     * the Identifiers will be used to construct the combination. Any alignment
+     * the Identifiers will be used to construct the combination. Any genotypeTable
      * not containing one of the Identifiers will return unknown value for those
      * locations. If isUnion equals false, a intersect join of the Identifiers
      * will be used.
      *
-     * @param alignments alignments to combine
+     * @param genoTables genoTables to combine
      * @param isUnion whether to union or intersect join
      * @return
      */
-    public static GenotypeTable getInstance(GenotypeTable[] alignments, boolean isUnion) {
+    public static GenotypeTable getInstance(GenotypeTable[] genoTables, boolean isUnion) {
 
-        if ((alignments == null) || (alignments.length == 0)) {
-            throw new IllegalArgumentException("CombineAlignment: getInstance: must provide alignments.");
+        if ((genoTables == null) || (genoTables.length == 0)) {
+            throw new IllegalArgumentException("CombineAlignment: getInstance: must provide genoTables.");
         }
 
-        if (alignments.length == 1) {
-            return alignments[0];
+        if (genoTables.length == 1) {
+            return genoTables[0];
         }
 
-        TaxaList[] groups = new TaxaList[alignments.length];
-        for (int i = 0; i < alignments.length; i++) {
-            groups[i] = alignments[i].taxa();
+        TaxaList[] groups = new TaxaList[genoTables.length];
+        for (int i = 0; i < genoTables.length; i++) {
+            groups[i] = genoTables[i].taxa();
         }
         TaxaList newTaxa = null;
         if (isUnion) {
@@ -111,9 +112,9 @@ public class CombineGenotypeTable implements GenotypeTable {
             newTaxa = TaxaListUtils.getCommonTaxa(groups);
         }
 
-        GenotypeTable[] newAlignmentNews = new GenotypeTable[alignments.length];
-        for (int i = 0; i < alignments.length; i++) {
-            newAlignmentNews[i] = FilterGenotypeTable.getInstance(alignments[i], newTaxa);
+        GenotypeTable[] newAlignmentNews = new GenotypeTable[genoTables.length];
+        for (int i = 0; i < genoTables.length; i++) {
+            newAlignmentNews[i] = FilterGenotypeTable.getInstance(genoTables[i], newTaxa);
         }
 
         return new CombineGenotypeTable(newTaxa, newAlignmentNews);
@@ -203,10 +204,10 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     /**
-     * Returns which alignment to use.
+     * Returns which genotypeTable to use.
      *
      * @param site
-     * @return alignment index.
+     * @return genotypeTable index.
      */
     public int translateSite(int site) {
 

@@ -1,4 +1,5 @@
 /**
+ * Support for bit level encoding of allele presence and absence.
  * Background on Bit Encoding in TASSEL:<p></p>
  TASSEL has been optimized for several things.  One of TASSEL&rsquo;s optimization is for very fast comparison
  of the sequence of two taxa for millions of sites (e.g. genetic distance or imputation), or the comparison of
