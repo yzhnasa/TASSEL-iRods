@@ -282,29 +282,6 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
         return true;
     }
 
-    /**
-     * @param fromID the thing (taxa,sequence) from which we want to find the closest (excluding self)
-     * @param exclusion indexes of things that should not be considered, may be null
-     * @return the index of the thing closest to the specified
-     * @note if fromID not a valid name then return -1
-     */
-    public int getClosestIndex(String fromID, String[] exclusion) {
-        int index = whichIdNumber(fromID);
-        if (index < 0) {
-            return -1;
-        }
-        int[] exclusionIndexes;
-        if (exclusion == null) {
-            exclusionIndexes = null;
-        } else {
-            exclusionIndexes = new int[exclusion.length];
-            for (int i = 0; i < exclusion.length; i++) {
-                exclusionIndexes[i] = whichIdNumber(exclusion[i]);
-            }
-        }
-        return getClosestIndex(index, exclusionIndexes);
-    }
-
     private final boolean isIn(int value, int[] set) {
         if (set == null) {
             return false;
