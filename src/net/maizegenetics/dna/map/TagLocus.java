@@ -486,7 +486,6 @@ public class TagLocus {
             return null;
         }
         if (indexOfRef == Integer.MIN_VALUE) this.assignRefTag();
-        boolean checkReplicateProfiles = false;
         boolean printOutAlignments = true;
         List<DNASequence> lst = new ArrayList<DNASequence>();
         int tagIndex = 0;
@@ -499,63 +498,47 @@ public class TagLocus {
             ++tagIndex;
         }
         Profile<DNASequence, NucleotideCompound> profile = Alignments.getMultipleSequenceAlignment(lst);
-        if (checkReplicateProfiles) {
-            System.out.printf("Clustal1:%d%n%s%n", minStartPosition, profile);
-            Profile<DNASequence, NucleotideCompound> profile2 = Alignments.getMultipleSequenceAlignment(lst);
-            System.out.printf("Clustal2:%d%n%s%n", minStartPosition, profile2);
-        }
         int nSites=profile.getAlignedSequence(1).getSequenceAsString().length();
-        TaxaListBuilder tlB=new TaxaListBuilder();
+        String[] alignedSeqs = new String[theTags.size()];
         GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(theTags.size(),nSites);
-        String[] aseqs = new String[theTags.size()];
-        //String[] names = new String[theTags.size()];
-        boolean refTagWithGaps = false;
+        TaxaListBuilder tlB=new TaxaListBuilder();
         int[] positions = null;
         PositionListBuilder pALB=new PositionListBuilder();
         for (int i=0; i<nSites; i++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,i).build());}
-        for (int i = 0; i < aseqs.length; i++) {
-            //aseqs[i] = profile.getAlignedSequence(i + 1).getSequenceAsString();
-            gB.setBaseRangeForTaxon(i,0,profile.getAlignedSequence(i + 1).getSequenceAsString().getBytes());
-            String names = profile.getAlignedSequence(i + 1).getOriginalSequence().getOriginalHeader();
-            if (names.split("_")[1].equals("refTag")) {  // names were set to indexInTheTags_"refTag"|"no"
-                if (aseqs[i].contains("-")) {
-                    refTagWithGaps = true;
-                    positions = new int[aseqs[i].length()];
+        for (int i = 0; i < alignedSeqs.length; i++) {
+            alignedSeqs[i] = profile.getAlignedSequence(i + 1).getSequenceAsString();
+            String taxonName = profile.getAlignedSequence(i + 1).getOriginalSequence().getOriginalHeader();
+            if (taxonName.split("_")[1].equals("refTag")) {  // name was set to indexInTheTags_"refTag"|"no"
+                if (alignedSeqs[i].contains("-")) {
+                    positions = new int[alignedSeqs[i].length()];
                     positions[0] = 0;
                     pALB=new PositionListBuilder();
                     pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,0).build());
-                    for (int site = 1; site < aseqs[i].length(); site++) {
-                        positions[site] = (aseqs[i].charAt(site) == '-') ? (positions[site - 1]) : (positions[site - 1] + 1);
+                    for (int site = 1; site < alignedSeqs[i].length(); site++) {
+                        positions[site] = (alignedSeqs[i].charAt(site) == '-') ? (positions[site - 1]) : (positions[site - 1] + 1);
                     }
                     for (int site=0; site<nSites; site++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,positions[site]).build());}
                 }
             }
-            tlB.add(new Taxon(names));
+            tlB.add(new Taxon(taxonName));
         }
         profile = null;
-        GenotypeTable aa = GenotypeTableBuilder.getInstance(gB.build(),pALB.build(),tlB.build());;
-//        if (refTagWithGaps) {
-//            aa=GenotypeTableBuilder.getInstance(gB.build(),pALB.build(),tlB.build());
-//            //aseqs = sequence
-//            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, positions, 5, new Chromosome[]{Chromosome.UNKNOWN},
-//                    new int[]{0}, null, false, true);
-//        } else {
-//            aa = BitAlignment.getNucleotideInstance(tL, aseqs, null, null, null, 5, new Chromosome[]{Chromosome.UNKNOWN}, new int[]{0}, null, false, true);
-//        }
+        gB.setBases(alignedSeqs);
+        GenotypeTable aa = GenotypeTableBuilder.getInstance(gB.build(),pALB.build(),tlB.build());
+        System.out.println(aa.genotypeAsStringRow(0));
         GenotypeTable faa = GenotypeTableUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
-//        if (printOutAlignments && refTagWithGaps) {
         if (printOutAlignments && (minStartPosition % 1000 == 0)) {
             TaxaList tL=tlB.build();
             String tagStr;
             System.out.println("\nHere is an example alignment for a TagLocus (1 out of every 1000 is displayed):");
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  All sites:");
-            for (int tg = 0; tg < aseqs.length; tg++) {
+            for (int tg = 0; tg < alignedSeqs.length; tg++) {
                 tagStr = aa.genotypeAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
                 System.out.println(tagStr + " " + tL.taxaName(tg));
             }
             System.out.println("chr" + chromosome + "  pos:" + minStartPosition + "  strand:" + strand + "  Polymorphic sites only:");
-            for (int tg = 0; tg < aseqs.length; tg++) {
+            for (int tg = 0; tg < alignedSeqs.length; tg++) {
                 tagStr = faa.genotypeAsStringRow(tg);
                 tagStr = tagStr.replaceAll(";", "");
                 System.out.println(tagStr + " " + tL.taxaName(tg));

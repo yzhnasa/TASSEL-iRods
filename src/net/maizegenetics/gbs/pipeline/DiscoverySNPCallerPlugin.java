@@ -56,7 +56,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
     HashMap<String, Double> taxaFs = null;
     boolean[] useTaxaForMinF = null;
     int nInbredTaxa = Integer.MIN_VALUE;
-    String logFileName = "TagLocusLogFile.txt";
+    String logFileName = "TagLocusLog.txt";
     int startChr = Integer.MAX_VALUE;
     int endChr = Integer.MIN_VALUE;
     private static ArgsEngine myArgsEngine = null;
@@ -1072,8 +1072,8 @@ class CustomSNPLog {
         if ((locusLogFileName == null) || (locusLogFileName.length() == 0)) {
             myWriter = null;
         } else {
-            String locusLogFileDir = locusLogFileName.substring(0,locusLogFileName.lastIndexOf(File.separator));
-            String snpLogFileName = locusLogFileDir + "customSNPLog.txt";
+            String locusLogFileDir = locusLogFileName.substring(0,locusLogFileName.lastIndexOf(File.separator)+1);
+            String snpLogFileName = locusLogFileDir + "CustomSNPLog.txt";
             boolean exists = false;
             File file = new File(snpLogFileName);
             if (file.exists()) {
