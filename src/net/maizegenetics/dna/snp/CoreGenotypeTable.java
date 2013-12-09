@@ -3,24 +3,27 @@
  */
 package net.maizegenetics.dna.snp;
 
-import java.util.HashMap;
-import java.util.Map;
-import static net.maizegenetics.dna.snp.GenotypeTable.ALLELE_SORT_TYPE.Frequency;
-import static net.maizegenetics.dna.snp.GenotypeTable.ALLELE_SORT_TYPE.Reference;
-import net.maizegenetics.dna.snp.score.SiteScore;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.snp.bit.BitStorage;
 import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
-import net.maizegenetics.dna.map.PositionList;
-import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.score.SiteScore;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
+ * Basic implementation of a {@link GenotypeTable}.  Use the GenotypeTableBuilder to construct.
  *
- * @author terry
+ * @see GenotypeTable
+ * @see GenotypeTableBuilder
+ *
+ * @author Terry Casstevens
  */
 public class CoreGenotypeTable implements GenotypeTable {
 
