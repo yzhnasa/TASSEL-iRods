@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.phenotype;
+package net.maizegenetics.phenotype;
 
 public class NumericAttribute implements PhenotypeAttribute {
 	private String name;

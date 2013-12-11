@@ -1,4 +1,4 @@
-package net.maizegenetics.pal.phenotype;
+package net.maizegenetics.phenotype;
 
 import com.google.common.collect.ImmutableBiMap;
 

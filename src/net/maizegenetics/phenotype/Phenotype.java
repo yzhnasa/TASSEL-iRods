@@ -1,10 +1,10 @@
-package net.maizegenetics.pal.phenotype;
+package net.maizegenetics.phenotype;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.util.TableReport;
 
 import com.google.common.collect.ArrayListMultimap;
 
