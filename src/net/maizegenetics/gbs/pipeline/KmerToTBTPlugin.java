@@ -3,9 +3,13 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
-import net.maizegenetics.gbs.tagdist.*;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
+import net.maizegenetics.dna.tag.TagsByTaxa;
+import net.maizegenetics.dna.tag.TagsByTaxaShort;
+import net.maizegenetics.dna.tag.TagsByTaxaByte;
+import net.maizegenetics.dna.tag.TagCounts;
+import net.maizegenetics.dna.tag.Tags;
+import net.maizegenetics.dna.map.TagsOnPhysicalMap;
+import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

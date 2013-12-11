@@ -7,8 +7,8 @@ package net.maizegenetics.gbs.pipeline;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.CheckSum;
 import net.maizegenetics.util.SMTPClient;
@@ -561,16 +561,16 @@ public class ProductionPipelineMain {
     public static String compareOriginalAgainstImputed(String originalFile, String imputedFile){
 
         StringBuffer sb = new StringBuffer();
-        Alignment origAlignment = ImportUtils.readGuessFormat(originalFile);
-        Alignment impAlignment = ImportUtils.readGuessFormat(imputedFile);
+        GenotypeTable origAlignment = ImportUtils.readGuessFormat(originalFile);
+        GenotypeTable impAlignment = ImportUtils.readGuessFormat(imputedFile);
 
 
-        int siteCount = origAlignment.getSiteCount();
-        int taxaCount = origAlignment.getTaxaCount();
+        int siteCount = origAlignment.numberOfSites();
+        int taxaCount = origAlignment.numberOfTaxa();
         int totalSiteCount = siteCount * taxaCount;
 
-        int siteDelta = Math.abs(origAlignment.getSiteCount()- impAlignment.getSiteCount());
-        int taxaDelta = Math.abs(origAlignment.getTaxaCount() - impAlignment.getTaxaCount());
+        int siteDelta = Math.abs(origAlignment.numberOfSites()- impAlignment.numberOfSites());
+        int taxaDelta = Math.abs(origAlignment.numberOfTaxa() - impAlignment.numberOfTaxa());
 
 
         int origTotalSitesNotMissing = 0, impTotalSitesNotMissing = 0, totalSitesNotMissingDelta = 0;
@@ -586,23 +586,23 @@ public class ProductionPipelineMain {
             for(int i = 0; i < siteCount; i++){
 
                 // heterozygous counts
-                origHetCount += origAlignment.getHeterozygousCount(i);
-                impHetCount += impAlignment.getHeterozygousCount(i);
+                origHetCount += origAlignment.heterozygousCount(i);
+                impHetCount += impAlignment.heterozygousCount(i);
                 hetCountDelta = impHetCount - origHetCount;
 
                 //not missing
-                origTotalSitesNotMissing += origAlignment.getTotalNotMissing(i);
-                impTotalSitesNotMissing += impAlignment.getTotalNotMissing(i);
+                origTotalSitesNotMissing += origAlignment.totalNonMissingForSite(i);
+                impTotalSitesNotMissing += impAlignment.totalNonMissingForSite(i);
 
                 // switching of major and minor allele
-                byte origMajorAllele = origAlignment.getMajorAllele(i);
-                byte impMajorAllele = impAlignment.getMajorAllele(i);
+                byte origMajorAllele = origAlignment.majorAllele(i);
+                byte impMajorAllele = impAlignment.majorAllele(i);
                 if(origMajorAllele != impMajorAllele) {
                     flipCount++;
-                    double diff = Math.abs(origAlignment.getMajorAlleleFrequency(i) - impAlignment.getMinorAlleleFrequency(i));
+                    double diff = Math.abs(origAlignment.majorAlleleFrequency(i) - impAlignment.minorAlleleFrequency(i));
                     allelicChangeCount += (int) diff * taxaCount;
                 }else{
-                    double diff = Math.abs(origAlignment.getMajorAlleleFrequency(i) - impAlignment.getMajorAlleleFrequency(i));
+                    double diff = Math.abs(origAlignment.majorAlleleFrequency(i) - impAlignment.majorAlleleFrequency(i));
                     allelicChangeCount += (int) diff * taxaCount;
                 }
             }

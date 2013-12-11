@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.dna.snp.GenotypeTable;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -147,7 +147,7 @@ public class FlapjackLoadPlugin extends AbstractPlugin {
 
     public DataSet loadFile(String theGenoFile, String theMapFile, String chromosome) {
 
-        Alignment result = null;
+        GenotypeTable result = null;
         //Terry - fix this
         try {
             if (isPhysicalMap) {

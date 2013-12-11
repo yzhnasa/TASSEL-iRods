@@ -33,7 +33,7 @@ import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import net.maizegenetics.baseplugins.chart.XYScatterAndLinePanel;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.Datum;
 
 /**

@@ -6,9 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.gui.LinkageDisequilibriumComponent;
-import net.maizegenetics.pal.gui.LinkageDisequilibriumMinimapComponent;
-import net.maizegenetics.pal.popgen.LinkageDisequilibrium;
+import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 
@@ -66,7 +64,7 @@ public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin {
                     JOptionPane.showMessageDialog(this.getParentFrame(), "Unable to create LD plot " + er);
                 }
             } else if (getSaveFile() != null) {
-//                LinkageDisequilibriumComponent ldc = new LinkageDisequilibriumComponent(theLD, blockSchematic, chromosomalView, theLD.getSiteCount(), Math.max(1, theLD.getSiteCount()), Math.max(1, theLD.getSiteCount()));
+//                LinkageDisequilibriumComponent ldc = new LinkageDisequilibriumComponent(theLD, blockSchematic, chromosomalView, theLD.numberOfSites(), Math.max(1, theLD.numberOfSites()), Math.max(1, theLD.numberOfSites()));
                 LinkageDisequilibriumComponent ldc = new LinkageDisequilibriumComponent(theLD, blockSchematic, chromosomalView, theLD.getSiteCount(), (int)Math.ceil(theLD.getSiteCount()/2.0), (int)Math.ceil(theLD.getSiteCount()/2.0));
                 ldc.setUpperCorner(upperCorner);
                 ldc.setLowerCorner(lowerCorner);
@@ -214,7 +212,7 @@ class LinkageDiseqDisplayDialog extends JDialog {
 
         this.theLinkageDiseqDisplayPlugin = theQAF;
         this.theLinkageDisequilibrium = theLinkageDisequilibrium;
-        maxWindowSize = theLinkageDisequilibrium.getSiteCount() + theLinkageDisequilibrium.getAlignment().getNumChromosomes() - 1;
+        maxWindowSize = theLinkageDisequilibrium.getSiteCount() + theLinkageDisequilibrium.getAlignment().numChromosomes() - 1;
 
         myXPos = (int)Math.ceil(maxWindowSize/2.0);
         myYPos = (int)Math.ceil(maxWindowSize/2.0);

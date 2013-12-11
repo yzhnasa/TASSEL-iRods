@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -29,7 +29,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 
     public DataSet performFunction(DataSet input) {
 
-        List<Datum> inputs = input.getDataOfType(Alignment.class);
+        List<Datum> inputs = input.getDataOfType(GenotypeTable.class);
 
         if ((inputs == null) || (inputs.size() < 2)) {
             if (isInteractive()) {
@@ -41,12 +41,12 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
         }
 
         try {
-            Alignment[] alignments = new Alignment[inputs.size()];
+            GenotypeTable[] alignments = new GenotypeTable[inputs.size()];
             for (int i = 0; i < inputs.size(); i++) {
-                alignments[i] = (Alignment) ((Datum) inputs.get(i)).getData();
+                alignments[i] = (GenotypeTable) ((Datum) inputs.get(i)).getData();
             }
 
-            Alignment alignment = getInstance(alignments);
+            GenotypeTable alignment = getInstance(alignments);
             DataSet result = new DataSet(new Datum("Merged Alignment", alignment, null), this);
 
             fireDataSetReturned(new PluginEvent(result, MergeAlignmentsPlugin.class));
@@ -79,7 +79,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
     }
 
     //todo TAS-54 covers some of these topics, as we want general merging rule sets
-    public static Alignment getInstance(Alignment[] alignments) {
+    public static GenotypeTable getInstance(GenotypeTable[] alignments) {
        throw new UnsupportedOperationException("Logic for merging can be done much better now in TASSEL 5");
 //        if ((alignments == null) || (alignments.length == 0)) {
 //            return null;
@@ -106,9 +106,9 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 //
 //        for (int i = 0; i < alignments.length; i++) {
 //
-//            TaxaList currentIds = alignments[i].getIdGroup();
-//            for (int j = 0, n = currentIds.getIdCount(); j < n; j++) {
-//                Taxon current = currentIds.getIdentifier(j);
+//            TaxaList currentIds = alignments[i].getTaxaList();
+//            for (int j = 0, n = currentIds.numberOfTaxa(); j < n; j++) {
+//                Taxon current = currentIds.getTaxon(j);
 //                if (taxa.contains(current)) {
 //                    Taxon match = taxa.floor(current);
 //                    Taxon merged = Identifier.getMergedInstance(match, current);
@@ -194,11 +194,11 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 //        for (int i = 0; i < alignments.length; i++) {
 //            myLogger.info("Merging Alignment: " + (i + 1) + " of " + alignments.length);
 //            Alignment currentAlignment = alignments[i];
-//            IdGroup ids = currentAlignment.getIdGroup();
-//            int numSeqs = ids.getIdCount();
+//            IdGroup ids = currentAlignment.getTaxaList();
+//            int numSeqs = ids.numberOfTaxa();
 //            int[] taxaIndices = new int[numSeqs];
 //            for (int t = 0; t < numSeqs; t++) {
-//                taxaIndices[t] = taxaList.indexOf(ids.getIdentifier(t));
+//                taxaIndices[t] = taxaList.indexOf(ids.getTaxon(t));
 //            }
 //            for (int s = 0, n = currentAlignment.getSiteCount(); s < n; s++) {
 //                String siteName = currentAlignment.getSNPID(s);

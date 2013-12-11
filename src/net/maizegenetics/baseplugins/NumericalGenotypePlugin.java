@@ -6,10 +6,10 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
-import net.maizegenetics.pal.alignment.Trait;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.trait.SimplePhenotype;
+import net.maizegenetics.trait.Trait;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -42,17 +42,17 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
      */
     public DataSet performFunction(DataSet dataSet) {
 
-        List data = dataSet.getDataOfType(Alignment.class);
+        List data = dataSet.getDataOfType(GenotypeTable.class);
         if ((data != null) && (data.size() == 1)) {
             Datum datum = (Datum) data.get(0);
             if (myTransformType == TRANSFORM_TYPE.collapse) {
-                Alignment input = (Alignment) datum.getData();
+                GenotypeTable input = (GenotypeTable) datum.getData();
                 SimplePhenotype result = collapseTransform(input);
                 DataSet tds = new DataSet(new Datum(datum.getName() + "_Collapse", result, null), this);
                 fireDataSetReturned(tds);
                 return tds;
             } else if (myTransformType == TRANSFORM_TYPE.separated) {
-                Alignment input = (Alignment) datum.getData();
+                GenotypeTable input = (GenotypeTable) datum.getData();
                 SimplePhenotype result = separatedTransform(input);
                 DataSet tds = new DataSet(new Datum(datum.getName() + "_Separated", result, null), this);
                 fireDataSetReturned(tds);
@@ -66,10 +66,10 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
     }
 
-    public static SimplePhenotype separatedTransform(Alignment input) {
+    public static SimplePhenotype separatedTransform(GenotypeTable input) {
 
-        int seqCount = input.getSequenceCount();
-        int siteCount = input.getSiteCount();
+        int seqCount = input.numberOfTaxa();
+        int siteCount = input.numberOfSites();
 
         Map[] alleleCounts = new Map[siteCount];
 
@@ -78,9 +78,9 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             Map<Byte, Integer> charCount = new HashMap<Byte, Integer>();
             for (int j = 0; j < seqCount; j++) {
 
-                byte[] current = input.getBaseArray(j, i);
-                byte orderedValue = AlignmentUtils.getUnphasedDiploidValue(current[0], current[1]);
-                if (orderedValue != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                byte[] current = input.genotypeArray(j, i);
+                byte orderedValue = GenotypeTableUtils.getUnphasedDiploidValue(current[0], current[1]);
+                if (orderedValue != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     Integer count = (Integer) charCount.get(orderedValue);
                     if (count != null) {
                         charCount.put(orderedValue, new Integer(count.intValue() + 1));
@@ -140,9 +140,9 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
             }
 
             for (int j = 0; j < seqCount; j++) {
-                byte[] current = input.getBaseArray(j, i);
-                byte orderedValue = AlignmentUtils.getUnphasedDiploidValue(current[0], current[1]);
-                if (orderedValue == Alignment.UNKNOWN_DIPLOID_ALLELE) {
+                byte[] current = input.genotypeArray(j, i);
+                byte orderedValue = GenotypeTableUtils.getUnphasedDiploidValue(current[0], current[1]);
+                if (orderedValue == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     for (int k = 0; k < currentSize; k++) {
                         pcValues[j][k + offset] = Double.NaN;
                     }
@@ -156,13 +156,13 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        return new SimplePhenotype(input.getTaxaList(), traitNames, pcValues);
+        return new SimplePhenotype(input.taxa(), traitNames, pcValues);
     }
 
-    public static SimplePhenotype collapseTransform(Alignment input) {
+    public static SimplePhenotype collapseTransform(GenotypeTable input) {
 
-        int seqCount = input.getSequenceCount();
-        int siteCount = input.getSiteCount();
+        int seqCount = input.numberOfTaxa();
+        int siteCount = input.numberOfSites();
 
         double[][] pcValues = new double[seqCount][siteCount];
         List<Trait> traitNames = new ArrayList<Trait>();
@@ -171,11 +171,11 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
             traitNames.add(new Trait("S" + i, false, Trait.TYPE_DATA));
 
-            byte[] allelesByFreq = input.getAlleles(i);
+            byte[] allelesByFreq = input.alleles(i);
 
             for (int j = 0; j < seqCount; j++) {
-                byte[] current = input.getBaseArray(j, i);
-                if ((current[0] == Alignment.UNKNOWN_ALLELE) && (current[1] == Alignment.UNKNOWN_ALLELE)) {
+                byte[] current = input.genotypeArray(j, i);
+                if ((current[0] == GenotypeTable.UNKNOWN_ALLELE) && (current[1] == GenotypeTable.UNKNOWN_ALLELE)) {
                     pcValues[j][i] = Double.NaN;
                 } else {
                     pcValues[j][i] = 1.0;
@@ -190,7 +190,7 @@ public class NumericalGenotypePlugin extends AbstractPlugin {
 
         }
 
-        return new SimplePhenotype(input.getTaxaList(), traitNames, pcValues);
+        return new SimplePhenotype(input.taxa(), traitNames, pcValues);
 
     }
 

@@ -1,10 +1,10 @@
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
+import net.maizegenetics.dna.snp.ImportUtils;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -55,7 +55,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             infile = suppliedInputFileName.replace("+", "" + chr);
             outfile = suppliedOutputFileName.replace("+", "" + chr);
             myLogger.info("Reading: " + infile);
-            Alignment a;
+            GenotypeTable a;
             
             if (inputFormat == INPUT_FORMAT.hapmap)
             {
@@ -80,8 +80,8 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                  throw new IllegalArgumentException("File format " + inputFormat + " is not recognized!");
             }
             
-            myLogger.info("Original Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-            if (a.getSiteCount() == 0) {
+            myLogger.info("Original Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
+            if (a.numberOfSites() == 0) {
                 continue;
             }
             double realDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, false);
@@ -93,10 +93,10 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
                 if (lowCoverageTaxa == null) {
                     lowCoverageTaxa = getLowCoverageLines(a, tCov);
                 }  // Note: lowCoverageTaxa is based upon the startChromosome only
-                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getTaxaList(), lowCoverageTaxa, false);
-                a = FilterAlignment.getInstance(a, keepTaxa);
-                myLogger.info("TaxaFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-                if (a.getSiteCount() == 0) {
+                TaxaList keepTaxa = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), lowCoverageTaxa, false);
+                a = FilterGenotypeTable.getInstance(a, keepTaxa);
+                myLogger.info("TaxaFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
+                if (a.numberOfSites() == 0) {
                     continue;
                 }
             }
@@ -104,31 +104,31 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             randomDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, true, false);
             AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(a, false);
             myLogger.info("Ratio of RandomToReal:" + randomDist / realDist);
-            int minCount = (int) Math.round(a.getSequenceCount() * minPresence);
+            int minCount = (int) Math.round(a.numberOfTaxa() * minPresence);
             if (usePedigree) {
                 // filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, -2.0, minCount, minMAF, maxMAF, snpLogging, "Filter the sites for minCount, minMAF and maxMAF (but not minF) based on all of the taxa");
-                a = FilterAlignment.getInstance(a, goodLowHetSites);
+                a = FilterGenotypeTable.getInstance(a, goodLowHetSites);
 
                 // filter the sites for minF only based only on the taxa with expectedF >= minF
                 String[] highExpectedFTaxa = getHighExpectedFTaxa(a);
-                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.getTaxaList(), highExpectedFTaxa, true);
-                Alignment inbredGenos = FilterAlignment.getInstance(a, highExpectedFTaxaIDGroup);
+                TaxaList highExpectedFTaxaIDGroup = AlignmentFilterByGBSUtils.getFilteredIdGroupByName(a.taxa(), highExpectedFTaxa, true);
+                GenotypeTable inbredGenos = FilterGenotypeTable.getInstance(a, highExpectedFTaxaIDGroup);
                 int[] goodLowFSites = AlignmentFilterByGBSUtils.getLowHetSNPs(inbredGenos, false, minF, 0, -0.1, 2.0, snpLogging, "Filter the sites for minF only based only on the taxa with expectedF >= minF");
                 inbredGenos = null;
                 System.gc();
-                a = FilterAlignment.getInstance(a, goodLowFSites);
+                a = FilterGenotypeTable.getInstance(a, goodLowFSites);
             } else {
                 int[] goodLowHetSites = AlignmentFilterByGBSUtils.getLowHetSNPs(a, false, minF, minCount, minMAF, maxMAF, snpLogging, "Filter the sites");
-                a = FilterAlignment.getInstance(a, goodLowHetSites);
+                a = FilterGenotypeTable.getInstance(a, goodLowHetSites);
             }
-            myLogger.info("SiteFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-            if (a.getSiteCount() == 0) {
+            myLogger.info("SiteFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
+            if (a.numberOfSites() == 0) {
                 continue;
             }
             realDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, false, true);
             randomDist = AlignmentFilterByGBSUtils.getErrorRateForDuplicatedTaxa(a, true, true, false);
-            System.out.printf("%d %d %g %g %g %n", a.getSiteCount(), minCount, minF, minMAF, randomDist / realDist);
+            System.out.printf("%d %d %g %g %g %n", a.numberOfSites(), minCount, minF, minMAF, randomDist / realDist);
             AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(a, false);
             
             if (inputFormat == INPUT_FORMAT.hapmap)
@@ -145,9 +145,9 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             if (hLD) {
                 a = ImportUtils.readFromHapmap(outfile, null);
                 int[] gs = AlignmentFilterByGBSUtils.getGoodSitesByLD(a, minR2, minBonP, 128, 100, 20, false);
-                a = FilterAlignment.getInstance(a, gs);
-                myLogger.info("LDFiltered Alignment  Taxa:" + a.getSequenceCount() + " Sites:" + a.getSiteCount());
-                if (a.getSiteCount() == 0) {
+                a = FilterGenotypeTable.getInstance(a, gs);
+                myLogger.info("LDFiltered Alignment  Taxa:" + a.numberOfTaxa() + " Sites:" + a.numberOfSites());
+                if (a.numberOfSites() == 0) {
                     continue;
                 }
                 ExportUtils.writeToHapmap(a, false, outfile, '\t', null);
@@ -303,30 +303,30 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
         snpLogging = new SNPLogging(snpLogFileName, this.getClass());
     }
 
-    public static String[] getLowCoverageLines(Alignment a, double pCoverage) {
+    public static String[] getLowCoverageLines(GenotypeTable a, double pCoverage) {
         ArrayList<String> lowLines = new ArrayList<String>();
-        for (int i = 0; i < a.getSequenceCount(); i++) {
+        for (int i = 0; i < a.numberOfTaxa(); i++) {
             int covered = 0;
-            for (int j = 0; j < a.getSiteCount(); j++) {
-                if (a.getBase(i, j) != Alignment.UNKNOWN_DIPLOID_ALLELE) {
+            for (int j = 0; j < a.numberOfSites(); j++) {
+                if (a.genotype(i, j) != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     covered++;
                 }
             }
-            double propCovered = (double) covered / (double) a.getSiteCount();
-            // myLogger.info(a.getTaxaName(i)+":"+propCovered);
+            double propCovered = (double) covered / (double) a.numberOfSites();
+            // myLogger.info(a.taxaName(i)+":"+propCovered);
             if (propCovered < pCoverage) {
-                lowLines.add(a.getTaxaName(i));
+                lowLines.add(a.taxaName(i));
             }
         }
         String[] lowL = lowLines.toArray(new String[0]);
         return lowL;
     }
 
-    private String[] getHighExpectedFTaxa(Alignment a) {
+    private String[] getHighExpectedFTaxa(GenotypeTable a) {
         ArrayList<String> highFLines = new ArrayList<String>();
         int nInbredTaxa = 0;
-        for (int taxon = 0; taxon < a.getSequenceCount(); taxon++) {
-            String fullTaxonName = a.getTaxaName(taxon);
+        for (int taxon = 0; taxon < a.numberOfTaxa(); taxon++) {
+            String fullTaxonName = a.taxaName(taxon);
             if (taxaFs.containsKey(fullTaxonName)) {
                 if (taxaFs.get(fullTaxonName) >= minF) {
                     highFLines.add(fullTaxonName);

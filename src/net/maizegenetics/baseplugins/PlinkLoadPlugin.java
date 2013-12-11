@@ -7,7 +7,8 @@
 package net.maizegenetics.baseplugins;
 
 
-import net.maizegenetics.pal.alignment.*;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.ImportUtils;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -132,7 +133,7 @@ public class PlinkLoadPlugin extends AbstractPlugin {
 
         // Terry - fix this.
         //Alignment result = null;
-        Alignment result = ImportUtils.readFromPLink(thePedFile, theMapFile, this);
+        GenotypeTable result = ImportUtils.readFromPLink(thePedFile, theMapFile, this);
         Datum td = new Datum(Utils.getFilename(thePedFile, FileLoadPlugin.FILE_EXT_PLINK_PED), result, null);
         DataSet tds = new DataSet(td, this);
         fireDataSetReturned(new PluginEvent(tds, PlinkLoadPlugin.class));

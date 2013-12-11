@@ -11,7 +11,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import net.maizegenetics.baseplugins.QQDisplayPlugin;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;

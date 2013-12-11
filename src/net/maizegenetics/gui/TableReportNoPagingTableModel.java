@@ -7,7 +7,7 @@ package net.maizegenetics.gui;
 
 import javax.swing.table.AbstractTableModel;
 
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 
 /**
  *

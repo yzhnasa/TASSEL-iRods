@@ -14,11 +14,11 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.PhenotypeUtils;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableMask;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.PhenotypeUtils;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -26,17 +26,17 @@ import net.maizegenetics.plugindef.Datum;
 
 import net.maizegenetics.prefs.TasselPrefs;
 
-import net.maizegenetics.pal.report.Report;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.report.TableReportUtils;
+import net.maizegenetics.util.Report;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.util.TableReportUtils;
 
 import net.maizegenetics.gui.DialogUtils;
 
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
 
-import net.maizegenetics.pal.distance.DistanceMatrix;
-import net.maizegenetics.pal.distance.WriteDistanceMatrix;
+import net.maizegenetics.popgen.distance.DistanceMatrix;
+import net.maizegenetics.popgen.distance.WriteDistanceMatrix;
 
 import net.maizegenetics.tassel.TASSELMainFrame;
 
@@ -95,8 +95,8 @@ public class ExportPlugin extends AbstractPlugin {
             try {
                 Object data = input.getData(0).getData();
 
-                if (data instanceof Alignment) {
-                    filename = performFunctionForAlignment((Alignment) data);
+                if (data instanceof GenotypeTable) {
+                    filename = performFunctionForAlignment((GenotypeTable) data);
                 } else if (data instanceof Phenotype) {
                     filename = performFunctionForPhenotype((Phenotype) data);
                 } else if (data instanceof DistanceMatrix) {
@@ -216,7 +216,7 @@ public class ExportPlugin extends AbstractPlugin {
 
     }
 
-    public String performFunctionForAlignment(Alignment inputAlignment) {
+    public String performFunctionForAlignment(GenotypeTable inputAlignment) {
 
         if (isInteractive()) {
             ExportPluginDialog theDialog = new ExportPluginDialog();
@@ -265,15 +265,15 @@ public class ExportPlugin extends AbstractPlugin {
                     DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) node.getChildAt(i);
                     Datum currentDatum = (Datum) currentNode.getUserObject();
                     Object currentMask = currentDatum.getData();
-                    if (currentMask instanceof AlignmentMask) {
-                        AlignmentMask.MaskType maskType = ((AlignmentMask) currentMask).getMaskType();
-                        if (maskType == AlignmentMask.MaskType.imputed) {
+                    if (currentMask instanceof GenotypeTableMask) {
+                        GenotypeTableMask.MaskType maskType = ((GenotypeTableMask) currentMask).getMaskType();
+                        if (maskType == GenotypeTableMask.MaskType.imputed) {
                             ImputeDisplayOptionDialog imputeOptionDialog = new ImputeDisplayOptionDialog();
                             imputeOptionDialog.setLocationRelativeTo(getParentFrame());
                             imputeOptionDialog.setVisible(true);
                             if (imputeOptionDialog.getDisplayImputed()) {
                                 //TODO emailed Terry about whether to keep
-//                                resultFile = ExportUtils.writeToHapmap(inputAlignment, (AlignmentMask) currentMask, myIsDiploid, mySaveFile, '\t', this);
+//                                resultFile = ExportUtils.writeToHapmap(inputAlignment, (GenotypeTableMask) currentMask, myIsDiploid, mySaveFile, '\t', this);
 //                                foundImputed = true;
                             } else if (i == (n - 1)) {
                                 resultFile = ExportUtils.writeToHapmap(inputAlignment, myIsDiploid, mySaveFile, '\t', this);

@@ -14,12 +14,15 @@
  */
 package net.maizegenetics.tassel;
 
-import net.maizegenetics.pal.position.Chromosome;
-import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.distance.DistanceMatrix;
-import net.maizegenetics.pal.taxa.IdentifierSynonymizer;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.tree.Tree;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableMask;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.popgen.distance.DistanceMatrix;
+import net.maizegenetics.taxa.IdentifierSynonymizer;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.popgen.tree.Tree;
 
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -194,12 +197,12 @@ public class DataTreePanel extends JPanel implements PluginListener {
                 Component result = super.getTreeCellRendererComponent(pTree, pValue, pIsSelected,
                         pIsExpanded, pIsLeaf, pRow, pHasFocus);
                 Object data = nodeInfo.getData();
-                if (data instanceof AlignmentMask) {
-                    result.setForeground(((AlignmentMask) nodeInfo.getData()).getColor());
+                if (data instanceof GenotypeTableMask) {
+                    result.setForeground(((GenotypeTableMask) nodeInfo.getData()).getColor());
                 }
 
-                if (data instanceof Alignment) {
-                    Alignment align = (Alignment) data;
+                if (data instanceof GenotypeTable) {
+                    GenotypeTable align = (GenotypeTable) data;
                     setIcon(sBitIcon);
                 }
                 return result;
@@ -288,15 +291,15 @@ public class DataTreePanel extends JPanel implements PluginListener {
                         myLogger.info("This is not serializable.");
                     }
                     StringBuilder builder = new StringBuilder();
-                    if (book.getData() instanceof Alignment) {
-                        Alignment a = (Alignment) book.getData();
+                    if (book.getData() instanceof GenotypeTable) {
+                        GenotypeTable a = (GenotypeTable) book.getData();
                         builder.append("Number of sequences: ");
-                        builder.append(a.getSequenceCount());
+                        builder.append(a.numberOfTaxa());
                         builder.append("\n");
                         builder.append("Number of sites: ");
-                        builder.append(a.getSiteCount());
+                        builder.append(a.numberOfSites());
                         builder.append("\n");
-                        Chromosome[] loci = a.getChromosomes();
+                        Chromosome[] loci = a.chromosomes();
                         boolean first = true;
                         int numLoci = 0;
                         if (loci != null) {
@@ -319,8 +322,8 @@ public class DataTreePanel extends JPanel implements PluginListener {
                             builder.append("\n");
                         }
                     }
-                    if (book.getData() instanceof FilterAlignment) {
-                        FilterAlignment a = (FilterAlignment) book.getData();
+                    if (book.getData() instanceof FilterGenotypeTable) {
+                        FilterGenotypeTable a = (FilterGenotypeTable) book.getData();
                         builder.append("FilterAlignment...\n");
                         if (a.isSiteFilter()) {
                             builder.append("Site Filter\n");
@@ -350,8 +353,8 @@ public class DataTreePanel extends JPanel implements PluginListener {
                         builder.append(tr.getElementCount());
                         builder.append("\n");
                     }
-                    if (book.getData() instanceof AlignmentMask) {
-                        AlignmentMask mask = (AlignmentMask) book.getData();
+                    if (book.getData() instanceof GenotypeTableMask) {
+                        GenotypeTableMask mask = (GenotypeTableMask) book.getData();
                     }
 
                     String comment = book.getComment();
@@ -381,15 +384,15 @@ public class DataTreePanel extends JPanel implements PluginListener {
                                 }
                                 myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
                             }
-                        } else if (book.getData() instanceof Alignment) {
-                            Alignment align = (Alignment) book.getData();
+                        } else if (book.getData() instanceof GenotypeTable) {
+                            GenotypeTable align = (GenotypeTable) book.getData();
                             List masks = new ArrayList();
                             for (int i = 0, n = node.getChildCount(); i < n; i++) {
                                 try {
                                     DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) node.getChildAt(i);
                                     Datum currentDatum = (Datum) currentNode.getUserObject();
                                     Object currentMask = currentDatum.getData();
-                                    if ((currentMask != null) && (currentMask instanceof AlignmentMask)) {
+                                    if ((currentMask != null) && (currentMask instanceof GenotypeTableMask)) {
                                         masks.add(currentMask);
                                     }
                                 } catch (Exception ex) {
@@ -399,15 +402,15 @@ public class DataTreePanel extends JPanel implements PluginListener {
 
                             SeqViewerPanel seqViewer = null;
                             if (masks.size() != 0) {
-                                AlignmentMask[] masksArray = new AlignmentMask[masks.size()];
+                                GenotypeTableMask[] masksArray = new GenotypeTableMask[masks.size()];
                                 masks.toArray(masksArray);
                                 seqViewer = SeqViewerPanel.getInstance(align, masksArray, getThis());
                             } else {
                                 seqViewer = SeqViewerPanel.getInstance(align, getThis());
                             }
                             myTASSELMainFrame.mainDisplayPanel.add(seqViewer, BorderLayout.CENTER);
-                        } else if (book.getData() instanceof AlignmentMask) {
-                            AlignmentMask mask = (AlignmentMask) book.getData();
+                        } else if (book.getData() instanceof GenotypeTableMask) {
+                            GenotypeTableMask mask = (GenotypeTableMask) book.getData();
                             if (mask.getColor() != null) {
                                 Color tempColor = JColorChooser.showDialog(myTASSELMainFrame, "Select Mask Color...", mask.getColor());
                                 //myTree.setSelectionPath(new TreePath(parentNode.getPath()));
@@ -554,14 +557,14 @@ public class DataTreePanel extends JPanel implements PluginListener {
             }
 
 
-            if (d.getData() instanceof Alignment) {
+            if (d.getData() instanceof GenotypeTable) {
                 addDatum(NODE_TYPE_SEQUENCE, d);
                 continue;
 
             }
 
 
-            if (d.getData() instanceof AlignmentMask) {
+            if (d.getData() instanceof GenotypeTableMask) {
                 addDatum(d);
                 continue;
 
@@ -617,7 +620,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
     }
 
     public synchronized void addDatum(String dataParent, Datum theDatum) {
-        if (theDatum.getData() instanceof AlignmentMask) {
+        if (theDatum.getData() instanceof GenotypeTableMask) {
             addDatum(theDatum);
             return;
         }
@@ -641,18 +644,18 @@ public class DataTreePanel extends JPanel implements PluginListener {
     }
 
     public synchronized void addDatum(Datum theDatum) {
-        AlignmentMask mask = null;
+        GenotypeTableMask mask = null;
         try {
-            mask = (AlignmentMask) theDatum.getData();
+            mask = (GenotypeTableMask) theDatum.getData();
         } catch (Exception e) {
             throw new IllegalArgumentException("DataTreePanel: addDatum: input must be AlignmentMask.");
         }
-        Alignment align = mask.getAlignment();
+        GenotypeTable align = mask.getAlignment();
         Iterator itr = myNodeHash.values().iterator();
         while (itr.hasNext()) {
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) itr.next();
             Object current = ((Datum) parentNode.getUserObject()).getData();
-            if ((current instanceof Alignment) && (current == align)) {
+            if ((current instanceof GenotypeTable) && (current == align)) {
                 DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(theDatum);
                 myTreeModel.insertNodeInto(childNode, parentNode, parentNode.getChildCount());
                 myTree.scrollPathToVisible(new TreePath(childNode.getPath()));
@@ -756,7 +759,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
             }
 
             try {
-                if (((Datum) currentNode.getUserObject()).getData() instanceof AlignmentMask) {
+                if (((Datum) currentNode.getUserObject()).getData() instanceof GenotypeTableMask) {
                     myLastNode = null;
                     myTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) parent).getPath()));
                     myTree.scrollPathToVisible(new TreePath(((DefaultMutableTreeNode) parent).getPath()));
@@ -767,8 +770,8 @@ public class DataTreePanel extends JPanel implements PluginListener {
             }
 
             try {
-                if (((Datum) currentNode.getUserObject()).getData() instanceof Alignment) {
-                    SeqViewerPanel.removeInstance((Alignment) ((Datum) currentNode.getUserObject()).getData());
+                if (((Datum) currentNode.getUserObject()).getData() instanceof GenotypeTable) {
+                    SeqViewerPanel.removeInstance((GenotypeTable) ((Datum) currentNode.getUserObject()).getData());
                 }
             } catch (Exception e) {
                 // do nothing

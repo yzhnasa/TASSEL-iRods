@@ -6,12 +6,12 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.pal.distance.IBSDistanceMatrix;
+import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,7 +43,7 @@ public class CreateTreePlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
             if (alignInList.size() < 1) {
                 String message = "Invalid selection.  Please select sequence or marker alignment.";
                 if (isInteractive()) {
@@ -87,17 +87,17 @@ public class CreateTreePlugin extends AbstractPlugin {
     }
 
     public DataSet processDatum(Datum input, boolean isNJ, boolean isSaveMatrix) {
-        Alignment aa = (Alignment) input.getData();
+        GenotypeTable aa = (GenotypeTable) input.getData();
         // SitePattern sp = new SitePattern(aa);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(aa, this);
         // adm.recompute(sp);
-        net.maizegenetics.pal.tree.Tree theTree;
+        net.maizegenetics.popgen.tree.Tree theTree;
         List<Datum> results = new ArrayList<Datum>();
         if (isNJ) {
-            theTree = new net.maizegenetics.pal.tree.NeighborJoiningTree(adm);
+            theTree = new net.maizegenetics.popgen.tree.NeighborJoiningTree(adm);
             results.add(new Datum("Tree:" + input.getName(), theTree, "NJ Tree"));
         } else {
-            theTree = new net.maizegenetics.pal.tree.UPGMATree(adm);
+            theTree = new net.maizegenetics.popgen.tree.UPGMATree(adm);
             results.add(new Datum("Tree:" + input.getName(), theTree, "UPGMA Tree"));
         }
         if (isSaveMatrix) {

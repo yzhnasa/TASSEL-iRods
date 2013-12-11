@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 
-import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 

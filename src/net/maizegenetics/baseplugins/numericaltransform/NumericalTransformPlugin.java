@@ -7,9 +7,9 @@
 package net.maizegenetics.baseplugins.numericaltransform;
 
 import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -25,7 +25,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.maizegenetics.pal.alignment.Trait;
+import net.maizegenetics.trait.Trait;
 
 /**
  *
@@ -44,7 +44,7 @@ public class NumericalTransformPlugin extends AbstractPlugin {
         try {
 
             List<Datum> phenotypeList = input.getDataOfType(Phenotype.class);
-            List<Datum> alignmentList = input.getDataOfType(Alignment.class);
+            List<Datum> alignmentList = input.getDataOfType(GenotypeTable.class);
 
             if (phenotypeList.size() + alignmentList.size() < 1) {
                 JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select genotype or phenotype data.");
@@ -153,7 +153,7 @@ class NumTransformDialog extends JDialog {
     private Datum myInput;
     private List<Datum> myResults = new ArrayList<Datum>();
     private Phenotype myCharacterAlignment;
-    private Alignment myGenotype;
+    private GenotypeTable myGenotype;
     private JTabbedPane myTabbedPane = new JTabbedPane();
     private int myTransformTabIndex = -1;
     private int myImputationTabIndex = -1;
@@ -174,8 +174,8 @@ class NumTransformDialog extends JDialog {
 
         if (theDatum.getData() instanceof Phenotype) {
             myCharacterAlignment = (Phenotype) theDatum.getData();
-        } else if (theDatum.getData() instanceof Alignment) {
-            myGenotype = (Alignment) theDatum.getData();
+        } else if (theDatum.getData() instanceof GenotypeTable) {
+            myGenotype = (GenotypeTable) theDatum.getData();
         } else {
             throw new Exception("Must be Phenotype or Genotype");
         }

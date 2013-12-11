@@ -6,8 +6,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.maizegenetics.pal.report.AbstractTableReport;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.AbstractTableReport;
+import net.maizegenetics.util.TableReport;
 
 /**
  * Created using IntelliJ IDEA.

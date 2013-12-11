@@ -1,9 +1,13 @@
 package net.maizegenetics.gwas.imputation;
 
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.gwas.NAM.AGPMap;
-import net.maizegenetics.pal.alignment.*;
-import net.maizegenetics.pal.taxa.IdGroupUtils;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.taxa.IdGroupUtils;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 import org.apache.log4j.Logger;
 
@@ -76,17 +80,17 @@ public class ImputationUtils {
 		return order;
 	}
 	
-	public static Alignment[] getTwoClusters(Alignment a, int[] parentIndex) {
+	public static GenotypeTable[] getTwoClusters(GenotypeTable a, int[] parentIndex) {
 		int maxiter = 5;
-		Alignment tb = a;
+		GenotypeTable tb = a;
 		//if (a instanceof TBitAlignment) tb = (TBitAlignment) a;
 		//else tb = TBitAlignment.getInstance(a);
 		
 		//if the parents are in the data set use these as seeds
 		//if one parent is in the dataset pick the taxon farthest from it as the other seed
 		//if neither parent is in the dataset choose random seeds
-		int ntaxa = tb.getSequenceCount();
-		int nsnps = tb.getSiteCount();
+		int ntaxa = tb.numberOfTaxa();
+		int nsnps = tb.numberOfSites();
 		int seed1 = parentIndex[0];
 		int seed2 = parentIndex[1];
 		float[] loc1, loc2;
@@ -95,19 +99,19 @@ public class ImputationUtils {
 			if (seed2 == -1) {
 				//both parents are not in the data set
 				seed1 = rand.nextInt(ntaxa);
-				loc1 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed1, 0), tb.getAllelePresenceForAllSites(seed1, 1)}, nsnps);
+				loc1 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed1, 0), tb.allelePresenceForAllSites(seed1, 1)}, nsnps);
 				while (seed2 == -1 || seed1 == seed2) {
 					seed2 = rand.nextInt(ntaxa);
 				}
-				loc2 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed2, 0), tb.getAllelePresenceForAllSites(seed2, 1)}, nsnps);
+				loc2 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed2, 0), tb.allelePresenceForAllSites(seed2, 1)}, nsnps);
 			} else {
 				//parent2 is in the data set
-				loc1 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(0, 0), tb.getAllelePresenceForAllSites(0, 1)}, nsnps);
-				loc2 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed2, 0), tb.getAllelePresenceForAllSites(seed2, 1)}, nsnps);
+				loc1 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(0, 0), tb.allelePresenceForAllSites(0, 1)}, nsnps);
+				loc2 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed2, 0), tb.allelePresenceForAllSites(seed2, 1)}, nsnps);
 				seed1 = 0;
 				float prevdist = getManhattanDistance(loc2, loc1, nsnps);
 				for (int t = 1; t < ntaxa; t++) {
-					float[] tloc = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(t, 0), tb.getAllelePresenceForAllSites(t, 1)}, nsnps);
+					float[] tloc = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(t, 0), tb.allelePresenceForAllSites(t, 1)}, nsnps);
 					float dist = getManhattanDistance(loc2, tloc, nsnps);
 					if (dist > prevdist) {
 						prevdist = dist;
@@ -118,12 +122,12 @@ public class ImputationUtils {
 			}
 		} else if (seed2 == -1) {
 			//parent1 is in the data set
-			loc1 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed1, 0), tb.getAllelePresenceForAllSites(seed1, 1)}, nsnps);
-			loc2 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(0, 0), tb.getAllelePresenceForAllSites(0, 1)}, nsnps);
+			loc1 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed1, 0), tb.allelePresenceForAllSites(seed1, 1)}, nsnps);
+			loc2 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(0, 0), tb.allelePresenceForAllSites(0, 1)}, nsnps);
 			seed2 = 0;
 			float prevdist = getManhattanDistance(loc1, loc2, nsnps);
 			for (int t = 1; t < ntaxa; t++) {
-				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(t, 0), tb.getAllelePresenceForAllSites(t, 1)}, nsnps);
+				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(t, 0), tb.allelePresenceForAllSites(t, 1)}, nsnps);
 				float dist = getManhattanDistance(loc1, tloc, nsnps);
 				if (dist > prevdist) {
 					prevdist = dist;
@@ -133,8 +137,8 @@ public class ImputationUtils {
 			}
 		} else {
 			//both parents are in the data set
-			loc1 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed1, 0), tb.getAllelePresenceForAllSites(seed1, 1)}, nsnps);
-			loc2 = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(seed2, 0), tb.getAllelePresenceForAllSites(seed2, 1)}, nsnps);
+			loc1 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed1, 0), tb.allelePresenceForAllSites(seed1, 1)}, nsnps);
+			loc2 = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(seed2, 0), tb.allelePresenceForAllSites(seed2, 1)}, nsnps);
 		}
 		
 		int[] size1 = new int[nsnps];
@@ -151,7 +155,7 @@ public class ImputationUtils {
 		//do initial cluster assignment
 		for (int t = 0; t < ntaxa; t++) {
 			if (t != seed1 && t != seed2) {
-				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(t, 0), tb.getAllelePresenceForAllSites(t, 1)}, nsnps);
+				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(t, 0), tb.allelePresenceForAllSites(t, 1)}, nsnps);
 				float dist1 = getManhattanDistance(loc1, tloc, nsnps);
 				float dist2 = getManhattanDistance(loc2, tloc, nsnps);
 				if (dist1 <= dist2) {
@@ -168,7 +172,7 @@ public class ImputationUtils {
 		for (int iter = 0; iter < maxiter; iter++) {
 			boolean noChanges = true;
 			for (int t = 0; t < ntaxa; t++) {
-				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.getAllelePresenceForAllSites(t, 0), tb.getAllelePresenceForAllSites(t, 1)}, nsnps);
+				float[] tloc = snpsAsFloatVector(new BitSet[]{tb.allelePresenceForAllSites(t, 0), tb.allelePresenceForAllSites(t, 1)}, nsnps);
 				float dist1 = getManhattanDistance(loc1, tloc, nsnps);
 				float dist2 = getManhattanDistance(loc2, tloc, nsnps);
 				if (dist1 <= dist2 && isInCluster1[t] == false) {
@@ -192,38 +196,38 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[t];
-		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.getTaxaList(), isInCluster1);
-		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.getTaxaList(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster1);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(tb.taxa(), isInCluster2);
 		
-		Alignment a1 = FilterAlignment.getInstance(tb, id1);
-		Alignment a2 = FilterAlignment.getInstance(tb, id2);
+		GenotypeTable a1 = FilterGenotypeTable.getInstance(tb, id1);
+		GenotypeTable a2 = FilterGenotypeTable.getInstance(tb, id2);
 		
-		return new Alignment[]{a1, a2};
+		return new GenotypeTable[]{a1, a2};
 	}
 	
-	public static Alignment[] getTwoClusters(Alignment inputAlignment, int minGametesPerTaxon) {
+	public static GenotypeTable[] getTwoClusters(GenotypeTable inputAlignment, int minGametesPerTaxon) {
 		
 		//filter out low coverage taxa
-		int ntaxa = inputAlignment.getSequenceCount();
+		int ntaxa = inputAlignment.numberOfTaxa();
 		boolean[] include = new boolean[ntaxa];
 		
 		int nIncluded = 0;
 		for (int t = 0; t < ntaxa; t++) {
-			if (inputAlignment.getTotalGametesNotMissingForTaxon(t) >= minGametesPerTaxon) {
+			if (inputAlignment.totalGametesNonMissingForTaxon(t) >= minGametesPerTaxon) {
 				nIncluded++;
 				include[t] = true;
 			}
 			else include[t] = false;
 		}
 		
-		Alignment myAlignment;
+		GenotypeTable myAlignment;
 		if (nIncluded < 10) {
-			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.getSNPID(0));
+			myLogger.info("Included lines less than 10 in getTwoClusters, poor coverage in interval starting at " + inputAlignment.siteName(0));
 			return null;
 		} else {
-			Alignment fa = FilterAlignment.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.getTaxaList(), include));
+			GenotypeTable fa = FilterGenotypeTable.getInstance(inputAlignment, IdGroupUtils.idGroupSubset(inputAlignment.taxa(), include));
 			
-			myAlignment = AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)fa);
+			myAlignment = GenotypeTableBuilder.getGenotypeCopyInstance((FilterGenotypeTable)fa);
 		}
 		int ntrials = 5;
 		int maxiter = 5;
@@ -231,8 +235,8 @@ public class ImputationUtils {
 		//if the parents are in the data set use these as seeds
 		//if one parent is in the dataset pick the taxon farthest from it as the other seed
 		//if neither parent is in the dataset choose random seeds
-		ntaxa = myAlignment.getSequenceCount();
-		int nsnps = myAlignment.getSiteCount();
+		ntaxa = myAlignment.numberOfTaxa();
+		int nsnps = myAlignment.numberOfSites();
 		boolean[][] isInCluster1 = new boolean[ntrials][ntaxa];
 		int bestTrial = -1;
 		float maxDistance = 0;
@@ -243,7 +247,7 @@ public class ImputationUtils {
 		
 		//myAlignment.optimizeForTaxa(null);
 		for (int t = 0; t < ntaxa; t++) {
-			taxaLocs[t] = snpsAsFloatVector(new BitSet[]{myAlignment.getAllelePresenceForAllSites(t, 0), myAlignment.getAllelePresenceForAllSites(t, 1)}, nsnps);
+			taxaLocs[t] = snpsAsFloatVector(new BitSet[]{myAlignment.allelePresenceForAllSites(t, 0), myAlignment.allelePresenceForAllSites(t, 1)}, nsnps);
 		}
 		
 		for (int trial = 0; trial < ntrials; trial++) {
@@ -305,7 +309,7 @@ public class ImputationUtils {
 				meanLocs[0] = getMeanLocation(cluster1Locs);
 				meanLocs[1] = getMeanLocation(cluster2Locs);
 				for (int t = 0; t < ntaxa; t++) {
-					float[] tloc = snpsAsFloatVector(new BitSet[]{myAlignment.getAllelePresenceForAllSites(t, 0), myAlignment.getAllelePresenceForAllSites(t, 1)}, nsnps);
+					float[] tloc = snpsAsFloatVector(new BitSet[]{myAlignment.allelePresenceForAllSites(t, 0), myAlignment.allelePresenceForAllSites(t, 1)}, nsnps);
 					float dist1 = getManhattanDistance(meanLocs[0], tloc, nsnps);
 					float dist2 = getManhattanDistance(meanLocs[1], tloc, nsnps);
 					if (dist1 < dist2 && isInCluster1[trial][t] == false) {
@@ -336,13 +340,13 @@ public class ImputationUtils {
 		//make alignments based on the clusters
 		boolean[] isInCluster2 = new boolean[ntaxa];
 		for (int t = 0; t < ntaxa; t++) isInCluster2[t] = !isInCluster1[bestTrial][t];
-		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.getTaxaList(), isInCluster1[bestTrial]);
-		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.getTaxaList(), isInCluster2);
+		TaxaList id1 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster1[bestTrial]);
+		TaxaList id2 = IdGroupUtils.idGroupSubset(myAlignment.taxa(), isInCluster2);
 		
-		Alignment a1 = FilterAlignment.getInstance(myAlignment, id1);
-		Alignment a2 = FilterAlignment.getInstance(myAlignment, id2);
+		GenotypeTable a1 = FilterGenotypeTable.getInstance(myAlignment, id1);
+		GenotypeTable a2 = FilterGenotypeTable.getInstance(myAlignment, id2);
 		
-		return new Alignment[]{a1, a2};
+		return new GenotypeTable[]{a1, a2};
 	}
 	
 	public static float[] snpsAsFloatVector(BitSet[] alleles, int nsnps) {
@@ -427,16 +431,16 @@ public class ImputationUtils {
 		return result;
 	}
 	
-	public static void printAlleleStats(Alignment a, String name) {
+	public static void printAlleleStats(GenotypeTable a, String name) {
 		int monoCount = 0;
 		int polyCount = 0;
 		int[] binCount = new int[21];
-		int nsites = a.getSiteCount();
+		int nsites = a.numberOfSites();
 		for (int s = 0; s < nsites; s++) {
-			if (a.getMajorAlleleFrequency(s) > 0.75) monoCount++;
+			if (a.majorAlleleFrequency(s) > 0.75) monoCount++;
 			else {
 				polyCount++;
-				int bin = (int) Math.floor(20 * a.getMajorAlleleFrequency(s));
+				int bin = (int) Math.floor(20 * a.majorAlleleFrequency(s));
 				binCount[bin]++;
 			}
 		}
@@ -644,14 +648,14 @@ public class ImputationUtils {
 			for (int fam = 0; fam < 25; fam++) {
 				System.out.println("Imputing data for chromosome " + chr + ", family " + family[fam] + ".");
 				snpFilename = "/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea/namibm.combined.hapmap.f.05r.5.chr" + chr + ".family."+ family[fam] + "parents.hmp.txt";
-				Alignment a = ImportUtils.readFromHapmap(snpFilename, true, null);
-				int nsnps = a.getSiteCount();
+				GenotypeTable a = ImportUtils.readFromHapmap(snpFilename, true, null);
+				int nsnps = a.numberOfSites();
 				
-				double startgenpos = agpmap.getCmFromPosition(chr, a.getPositionInChromosome(0));
+				double startgenpos = agpmap.getCmFromPosition(chr, a.chromosomalPosition(0));
 				//round up to nearest interval
 				startgenpos = ((double) (Math.ceil(startgenpos / interval))) * interval;
 				
-				double endgenpos = agpmap.getCmFromPosition(chr, a.getPositionInChromosome(nsnps - 1));
+				double endgenpos = agpmap.getCmFromPosition(chr, a.chromosomalPosition(nsnps - 1));
 				//round down to nearest interval
 				endgenpos = ((double)(Math.floor(endgenpos / interval))) * interval;
 
@@ -672,7 +676,7 @@ public class ImputationUtils {
 						bw.write("\t");
 						bw.write(genpos);
 						if (hapmapFormat) bw.write("\tNA\tNA\tNA\tNA\tNA\tNA");
-						while (physpos > a.getPositionInChromosome(rightflank)) rightflank++;
+						while (physpos > a.chromosomalPosition(rightflank)) rightflank++;
 						leftflank = rightflank - 1;
 						
 						if (hapmapFormat) {
@@ -680,16 +684,16 @@ public class ImputationUtils {
 								bw.write("\t");
 								int leftndx = leftflank;
 								int rightndx = rightflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								byte leftByte = a.getBase(t, leftndx);
-								byte rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								byte leftByte = a.genotype(t, leftndx);
+								byte rightByte = a.genotype(t, rightndx);
 								if (leftByte ==  missingByte) {
 									if (rightByte == missingByte) bw.write("N");
 									else bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
 								}
 								else if (rightByte ==  missingByte) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
-								else if (a.getBase(t, leftndx) == a.getBase(t, rightndx)) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
+								else if (a.genotype(t, leftndx) == a.genotype(t, rightndx)) bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
 								else bw.write("N"); 
 							}
 						} else {
@@ -697,21 +701,21 @@ public class ImputationUtils {
 								bw.write("\t");
 								int leftndx = leftflank;
 								int rightndx = rightflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								byte leftByte = a.getBase(t, leftndx);
-								byte rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								byte leftByte = a.genotype(t, leftndx);
+								byte rightByte = a.genotype(t, rightndx);
 								if (leftByte ==  missingByte) {
 									if (rightByte == missingByte) bw.write("-");
 									else bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
 								}
 								else if (rightByte ==  missingByte) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte)));
-								else if (a.getBase(t, leftndx) == a.getBase(t, rightndx)) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
+								else if (a.genotype(t, leftndx) == a.genotype(t, rightndx)) bw.write(byteToNumberString.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte)));
 								else {
 									double leftval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(leftByte));
 									double rightval = byteToNumber.get(NucleotideAlignmentConstants.getNucleotideIUPAC(rightByte));
-									int leftpos = a.getPositionInChromosome(leftndx);
-									int rightpos = a.getPositionInChromosome(rightndx);
+									int leftpos = a.chromosomalPosition(leftndx);
+									int rightpos = a.chromosomalPosition(rightndx);
 									double pd = ((double) (physpos - leftpos)) / ((double) (rightpos - leftpos));
 									double thisval = leftval * (1 - pd) + rightval * pd;
 									bw.write(Double.toString(thisval));
@@ -819,7 +823,7 @@ public class ImputationUtils {
 			StringBuilder taxaHeader = new StringBuilder();
 			for (File snpfile : snpFiles) {
 				System.out.println("Imputing data for " + snpfile.getName() + ".");
-				Alignment a = ImportUtils.readFromHapmap(snpfile.getPath(), true, null);
+				GenotypeTable a = ImportUtils.readFromHapmap(snpfile.getPath(), true, null);
 				
 				boolean b73isA = isB73HaplotypeA(a);
 				HashMap<Byte, String> byteToNumberString = new HashMap<Byte, String>();
@@ -858,40 +862,40 @@ public class ImputationUtils {
 					byteToNucleotide.put(NucleotideAlignmentConstants.getNucleotideDiploidByte("CC"), "A");
 				}
 				
-				int nsnps = a.getSiteCount();
-				int ntaxa = a.getSequenceCount();
+				int nsnps = a.numberOfSites();
+				int ntaxa = a.numberOfTaxa();
 				int leftflank = 0;
 				int rightflank = 0;
 				
 				for (int t = 0; t < ntaxa; t++) {
-					if (!a.getTaxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.getTaxaName(t))) taxaHeader.append("\t").append(a.getTaxaName(t));
+					if (!a.taxaName(t).startsWith(excludeTaxon) && !excludeList.contains(a.taxaName(t))) taxaHeader.append("\t").append(a.taxaName(t));
 				}
 
 				for (ImputedSnp isnp : snpList) {
-					while (rightflank < nsnps && isnp.physicalPos > a.getPositionInChromosome(rightflank)) rightflank++;
-//					System.out.println("rightflank= " + rightflank + ", snp physicalPos= " + isnp.physicalPos + ", position of rightflank= " + a.getPositionInChromosome(rightflank)); //debug
+					while (rightflank < nsnps && isnp.physicalPos > a.chromosomalPosition(rightflank)) rightflank++;
+//					System.out.println("rightflank= " + rightflank + ", snp physicalPos= " + isnp.physicalPos + ", position of rightflank= " + a.chromosomalPosition(rightflank)); //debug
 					leftflank = rightflank - 1;
-//					System.out.println("leftflank= " + leftflank + ", snp physicalPos= " + isnp.physicalPos + ", position of leftflank= " + a.getPositionInChromosome(leftflank)); //debug
+//					System.out.println("leftflank= " + leftflank + ", snp physicalPos= " + isnp.physicalPos + ", position of leftflank= " + a.chromosomalPosition(leftflank)); //debug
 
 					if (hapmapFormat) {
 						for (int t = 0; t < ntaxa; t++) {
-							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
-							if (excludeList.contains(a.getTaxaName(t))) continue;
+							if (a.taxaName(t).startsWith(excludeTaxon)) continue;
+							if (excludeList.contains(a.taxaName(t))) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
 							if (leftflank < 0) leftByte = missingByte;
 							else {
 								int leftndx = leftflank;
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								leftByte = a.getBase(t, leftndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								leftByte = a.genotype(t, leftndx);
 							}
 							
 							if (rightflank > nsnps - 1) rightByte = missingByte;
 							else {
 								int rightndx = rightflank;
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								rightByte = a.genotype(t, rightndx);
 							}
 							if (leftByte ==  missingByte) {
 								if (rightByte == missingByte) isnp.sb.append("N");
@@ -902,23 +906,23 @@ public class ImputationUtils {
 						}
 					} else {
 						for (int t = 0; t < ntaxa; t++) {
-							if (a.getTaxaName(t).startsWith(excludeTaxon)) continue;
-							if (excludeList.contains(a.getTaxaName(t))) continue;
+							if (a.taxaName(t).startsWith(excludeTaxon)) continue;
+							if (excludeList.contains(a.taxaName(t))) continue;
 							isnp.sb.append("\t");
 							byte leftByte, rightByte;
 							
 							int leftndx = leftflank;
 							if (leftflank < 0) leftByte = missingByte;
 							else {
-								while (a.getBase(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
-								leftByte = a.getBase(t, leftndx);
+								while (a.genotype(t, leftndx) ==  missingByte && leftndx > 0) leftndx--;
+								leftByte = a.genotype(t, leftndx);
 							}
 							
 							int rightndx = rightflank;
 							if (rightflank > nsnps - 1) rightByte = missingByte;
 							else {
-								while (a.getBase(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
-								rightByte = a.getBase(t, rightndx);
+								while (a.genotype(t, rightndx) ==  missingByte && rightndx < nsnps - 1) rightndx++;
+								rightByte = a.genotype(t, rightndx);
 							}
 							
 							if (leftByte ==  missingByte) {
@@ -930,8 +934,8 @@ public class ImputationUtils {
 							else {
 								double leftval = byteToNumber.get(leftByte);
 								double rightval = byteToNumber.get(rightByte);
-								int leftpos = a.getPositionInChromosome(leftndx);
-								int rightpos = a.getPositionInChromosome(rightndx);
+								int leftpos = a.chromosomalPosition(leftndx);
+								int rightpos = a.chromosomalPosition(rightndx);
 								double pd = ((double) (isnp.physicalPos - leftpos)) / ((double) (rightpos - leftpos));
 								double thisval = leftval * (1 - pd) + rightval * pd;
 								isnp.sb.append(Double.toString(thisval));
@@ -984,13 +988,13 @@ public class ImputationUtils {
 		
 	}
 	
-	public static boolean isB73HaplotypeA(Alignment a) {
-		TaxaList ids = a.getTaxaList();
-		int ndx = ids.getIndicesMatchingTaxon("B73(PI550473)").get(0);
-		int nsnps = a.getSiteCount();
+	public static boolean isB73HaplotypeA(GenotypeTable a) {
+		TaxaList ids = a.taxa();
+		int ndx = ids.indicesMatchingTaxon("B73(PI550473)").get(0);
+		int nsnps = a.numberOfSites();
 		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();
 		for (int s = 0; s < nsnps; s++) {
-			Byte allele = a.getBase(ndx, s);
+			Byte allele = a.genotype(ndx, s);
 			Integer count = alleleCounts.get(allele);
 			if (count == null) alleleCounts.put(allele, 1);
 			else alleleCounts.put(allele, 1 + count);

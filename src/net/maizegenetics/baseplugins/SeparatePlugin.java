@@ -6,11 +6,11 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.alignment.MarkerPhenotype;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -54,16 +54,16 @@ public class SeparatePlugin extends AbstractPlugin {
                     String phenoName = current.getName() + "_pheno";
                     Datum phenoDatum = new Datum(phenoName, pheno, null);
 
-                    Alignment align = mp.getAlignment();
+                    GenotypeTable align = mp.getAlignment();
                     String alignName = current.getName() + "_align";
                     Datum alignDatum = new Datum(alignName, align, null);
 
                     DataSet tds = new DataSet(new Datum[]{phenoDatum, alignDatum}, this);
                     result.add(tds);
 
-                } else if (currentValue instanceof Alignment) {
+                } else if (currentValue instanceof GenotypeTable) {
 
-                    List<Datum> alignments = separateAlignmentIntoLoci((Alignment) currentValue, current.getName(), myChromosomesToSeparate);
+                    List<Datum> alignments = separateAlignmentIntoLoci((GenotypeTable) currentValue, current.getName(), myChromosomesToSeparate);
                     if (alignments.size() > 0) {
                         DataSet tds = new DataSet(alignments, this);
                         result.add(tds);
@@ -90,18 +90,18 @@ public class SeparatePlugin extends AbstractPlugin {
 
     }
 
-    public static List<Datum> separateAlignmentIntoLoci(Alignment alignment, String dataSetName) {
+    public static List<Datum> separateAlignmentIntoLoci(GenotypeTable alignment, String dataSetName) {
         return separateAlignmentIntoLoci(alignment, dataSetName, null);
     }
 
-    public static List<Datum> separateAlignmentIntoLoci(Alignment alignment, String dataSetName, String[] chromosomesToSeparate) {
+    public static List<Datum> separateAlignmentIntoLoci(GenotypeTable alignment, String dataSetName, String[] chromosomesToSeparate) {
 
         List<Datum> result = new ArrayList<Datum>();
-        Alignment[] alignments = alignment.getAlignments();
+        GenotypeTable[] alignments = alignment.compositeAlignments();
         for (int i = 0; i < alignments.length; i++) {
-            int[] offsets = alignments[i].getChromosomesOffsets();
+            int[] offsets = alignments[i].chromosomesOffsets();
             if (offsets.length > 1) {
-                Chromosome[] loci = alignments[i].getChromosomes();
+                Chromosome[] loci = alignments[i].chromosomes();
                 for (int j = 0; j < offsets.length; j++) {
                     if (alignmentInList(loci[j], chromosomesToSeparate)) {
                         String name;
@@ -114,19 +114,19 @@ public class SeparatePlugin extends AbstractPlugin {
                         try {
                             endSite = offsets[j + 1] - 1;
                         } catch (Exception e) {
-                            endSite = alignments[i].getSiteCount() - 1;
+                            endSite = alignments[i].numberOfSites() - 1;
                         }
-                        Datum td = new Datum(name, FilterAlignment.getInstance(alignments[i], offsets[j], endSite), null);
+                        Datum td = new Datum(name, FilterGenotypeTable.getInstance(alignments[i], offsets[j], endSite), null);
                         result.add(td);
                     }
                 }
             } else {
-                if ((alignments.length > 1) && (alignmentInList(alignments[i].getChromosomes()[0], chromosomesToSeparate))) {
+                if ((alignments.length > 1) && (alignmentInList(alignments[i].chromosomes()[0], chromosomesToSeparate))) {
                     String name;
                     if (dataSetName == null) {
-                        name = "Alignment_chrom" + alignments[i].getChromosome(0);
+                        name = "Alignment_chrom" + alignments[i].chromosome(0);
                     } else {
-                        name = dataSetName + "_chrom" + alignments[i].getChromosome(0);
+                        name = dataSetName + "_chrom" + alignments[i].chromosome(0);
                     }
                     Datum td = new Datum(name, alignments[i], null);
                     result.add(td);

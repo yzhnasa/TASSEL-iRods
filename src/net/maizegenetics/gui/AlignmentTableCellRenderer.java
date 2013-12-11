@@ -14,11 +14,11 @@ import java.util.Map;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentMask;
-import net.maizegenetics.pal.alignment.AlignmentMaskGeneticDistance;
-import net.maizegenetics.pal.alignment.AlignmentMaskReference;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableMask;
+import net.maizegenetics.dna.snp.GenotypeTableMaskGeneticDistance;
+import net.maizegenetics.dna.snp.GenotypeTableMaskReference;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
  *
@@ -48,8 +48,8 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         Nucleotide, NucleotideHeterozygous, MajorAllele, MinorAllele, MajorMinorAllele, Heterozygous, ReferenceMasks, GeneticDistanceMasks, None
     };
     private final AlignmentTableModel myAlignmentTableModel;
-    private final Alignment myAlignment;
-    private AlignmentMask[] myMasks;
+    private final GenotypeTable myAlignment;
+    private GenotypeTableMask[] myMasks;
     private RENDERING_TYPE myRenderingType = RENDERING_TYPE.Nucleotide;
     private final Map<Integer, byte[]> myCachedAlleles = new LinkedHashMap<Integer, byte[]>() {
         protected boolean removeEldestEntry(Map.Entry eldest) {
@@ -57,7 +57,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         }
     };
 
-    public AlignmentTableCellRenderer(AlignmentTableModel model, Alignment alignment, AlignmentMask[] masks) {
+    public AlignmentTableCellRenderer(AlignmentTableModel model, GenotypeTable alignment, GenotypeTableMask[] masks) {
         myAlignmentTableModel = model;
         myAlignment = alignment;
         myMasks = masks;
@@ -113,11 +113,11 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
         setHorizontalAlignment(SwingConstants.CENTER);
 
-        String alleles = myAlignment.getBaseAsString(row, myAlignmentTableModel.getRealColumnIndex(col));
+        String alleles = myAlignment.genotypeAsString(row, myAlignmentTableModel.getRealColumnIndex(col));
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
-        } else if (alleles.equals(Alignment.UNKNOWN_ALLELE_STR)) {
+        } else if (alleles.equals(GenotypeTable.UNKNOWN_ALLELE_STR)) {
             comp.setBackground(null);
         } else {
             comp.setBackground(COLORS_NUCLEOTIDES.get(alleles));
@@ -138,7 +138,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
         } else if (myAlignment.isHeterozygous(row, site)) {
-            String alleles = myAlignment.getBaseAsString(row, myAlignmentTableModel.getRealColumnIndex(col));
+            String alleles = myAlignment.genotypeAsString(row, myAlignmentTableModel.getRealColumnIndex(col));
             comp.setBackground(COLORS_NUCLEOTIDES.get(alleles));
         } else {
             comp.setBackground(null);
@@ -157,14 +157,14 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         int site = myAlignmentTableModel.getRealColumnIndex(col);
         byte[] alleles = myCachedAlleles.get(site);
         if (alleles == null) {
-            alleles = myAlignment.getAlleles(site);
+            alleles = myAlignment.alleles(site);
             myCachedAlleles.put(site, alleles);
         }
-        byte major = Alignment.UNKNOWN_ALLELE;
+        byte major = GenotypeTable.UNKNOWN_ALLELE;
         if (alleles.length > 0) {
             major = alleles[0];
         }
-        byte[] diploidValues = myAlignment.getBaseArray(row, site);
+        byte[] diploidValues = myAlignment.genotypeArray(row, site);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
@@ -207,14 +207,14 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         int site = myAlignmentTableModel.getRealColumnIndex(col);
         byte[] alleles = myCachedAlleles.get(site);
         if (alleles == null) {
-            alleles = myAlignment.getAlleles(site);
+            alleles = myAlignment.alleles(site);
             myCachedAlleles.put(site, alleles);
         }
-        byte minor = Alignment.UNKNOWN_ALLELE;
+        byte minor = GenotypeTable.UNKNOWN_ALLELE;
         if (alleles.length > 1) {
             minor = alleles[1];
         }
-        byte[] diploidValues = myAlignment.getBaseArray(row, site);
+        byte[] diploidValues = myAlignment.genotypeArray(row, site);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
@@ -237,11 +237,11 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         int site = myAlignmentTableModel.getRealColumnIndex(col);
         byte[] alleles = myCachedAlleles.get(site);
         if (alleles == null) {
-            alleles = myAlignment.getAlleles(site);
+            alleles = myAlignment.alleles(site);
             myCachedAlleles.put(site, alleles);
         }
 
-        byte[] diploidValues = myAlignment.getBaseArray(row, site);
+        byte[] diploidValues = myAlignment.genotypeArray(row, site);
         if (alleles.length > 1) {
             byte major = alleles[0];
             byte minor = alleles[1];
@@ -284,7 +284,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
         setHorizontalAlignment(SwingConstants.CENTER);
 
-        AlignmentMask[] masks = getAlignmentMasksOfClass(AlignmentMaskReference.class);
+        GenotypeTableMask[] masks = getAlignmentMasksOfClass(GenotypeTableMaskReference.class);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
@@ -335,7 +335,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
         setHorizontalAlignment(SwingConstants.CENTER);
 
-        AlignmentMask[] masks = getAlignmentMasksOfClass(AlignmentMaskGeneticDistance.class);
+        GenotypeTableMask[] masks = getAlignmentMasksOfClass(GenotypeTableMaskGeneticDistance.class);
 
         if (isSelected) {
             comp.setBackground(Color.DARK_GRAY);
@@ -384,17 +384,17 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         return result;
     }
 
-    private AlignmentMask[] getAlignmentMasksOfClass(Class type) {
+    private GenotypeTableMask[] getAlignmentMasksOfClass(Class type) {
         if ((myMasks == null) || (myMasks.length == 0)) {
             return null;
         }
-        List<AlignmentMask> masks = new ArrayList<AlignmentMask>();
+        List<GenotypeTableMask> masks = new ArrayList<GenotypeTableMask>();
         for (int i = 0; i < myMasks.length; i++) {
             if (type.isInstance(myMasks[i])) {
                 masks.add(myMasks[i]);
             }
         }
-        AlignmentMask[] result = new AlignmentMask[masks.size()];
+        GenotypeTableMask[] result = new GenotypeTableMask[masks.size()];
         masks.toArray(result);
         return result;
     }
@@ -407,7 +407,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
         myRenderingType = type;
     }
 
-    public void setMasks(AlignmentMask[] masks) {
+    public void setMasks(GenotypeTableMask[] masks) {
         myMasks = masks;
     }
 }

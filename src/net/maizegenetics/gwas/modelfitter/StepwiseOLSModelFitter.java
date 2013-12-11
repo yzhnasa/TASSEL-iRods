@@ -2,11 +2,11 @@ package net.maizegenetics.gwas.modelfitter;
 
 import net.maizegenetics.jGLiM.LinearModelUtils;
 import net.maizegenetics.jGLiM.dm.*;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapterUtils;
-import net.maizegenetics.pal.report.SimpleTableReport;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.position.Chromosome;
+import net.maizegenetics.trait.MarkerPhenotypeAdapter;
+import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
+import net.maizegenetics.util.SimpleTableReport;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 
@@ -37,16 +37,16 @@ public class StepwiseOLSModelFitter {
 	private ArrayList<double[]> covariateList;
 	private LinkedList<Object[]> resultRowsAnova = new LinkedList<Object[]>();
 	private LinkedList<Object[]> rowsSiteEffectTable = new LinkedList<Object[]>();
-    private MODEL_TYPE modelType = MODEL_TYPE.pvalue;
-        
+        private MODEL_TYPE modelType = MODEL_TYPE.bic;
 	private String datasetName;
         private double globalbestbic = Double.MAX_VALUE; //Rationale: the optimal model has minimum BIC. Thus, initialize bestbic with the largest possible double java can handle.
         private double globalbestmbic = Double.MAX_VALUE;
-        public enum MODEL_TYPE {pvalue, bic, mbic};
+        private double globalbestaic = Double.MAX_VALUE;
+        public enum MODEL_TYPE {pvalue, bic, mbic, aic};
         private boolean test;
         
         
-	private final String[] anovaReportHeader = new String[]{"Trait", "Name","Locus","Position","df","SS","MS", "F", "pr>F"};
+	private final String[] anovaReportHeader = new String[]{"Trait", "Name","Locus","Position","df","SS","MS", "F", "pr>F", "BIC", "mBIC", "AIC"};
 	
         public void setModelType(MODEL_TYPE modelType){
             this.modelType = modelType;
@@ -118,6 +118,7 @@ public class StepwiseOLSModelFitter {
                 for (int f = 0 ; f < n; f++) {
                 	double[] newcov = new double[numberNotMissing];
                 	double[] oldcov = covariateList.get(f);
+                	ptr = 0;
                     for (int i = 0; i < totalNumber; i++) {
                     	if (!missing[i]) newcov[ptr++] = oldcov[i];
                     }
@@ -163,7 +164,7 @@ public class StepwiseOLSModelFitter {
 		}
 		numberOfBaseModelEffects = currentModel.size();
 		
-		while(forwardStep()) {
+		while(forwardStep()){
 			while(backwardStep());
 		}
 		
@@ -175,16 +176,22 @@ public class StepwiseOLSModelFitter {
 	
 	public boolean forwardStep() {
 		double bestss = 0;
-                double bestbic = 1.7E+308;
-                double bestmbic = 1.7E+308;
+                double bestbic = Double.MAX_VALUE;
+                double bestmbic = Double.MAX_VALUE;
+                double bestaic = Double.MAX_VALUE;
 		ModelEffect besteffect = null;
 		
 		SweepFastLinearModel sflm = new SweepFastLinearModel(currentModel, y);
 		PartitionedLinearModel plm = new PartitionedLinearModel(currentModel, sflm);
 		int numberOfSites = myData.getNumberOfMarkers();
 		
+                System.out.println("We are in forwardStep()");
+                
+                double[] temperrorssdf = sflm.getResidualSSdf();
+                System.out.println("The value of errorss in before the loop forwardStep() is: " + temperrorssdf[0]);
 		for (int s = 0; s < numberOfSites; s++) {
 			//create the appropriate marker effect
+                         
 			ModelEffect markerEffect = null;
 			SNP snp = new SNP(myData.getMarkerName(s), new Chromosome(myData.getLocusName(s)), (int) myData.getMarkerChromosomePosition(s), s);
 			Object[] markerValues = myData.getMarkerValue(currentPhenotypeIndex, s);
@@ -216,20 +223,25 @@ public class StepwiseOLSModelFitter {
 				}
 			}
 			
+                        
 			plm.testNewModelEffect(markerEffect);
 			double modelss = plm.getModelSS();
                         
+                        currentModel.add(markerEffect); //Temporary; Remove if wrong
+                        SweepFastLinearModel sflm2 = new SweepFastLinearModel(currentModel, y); 
                         //Calculate the BIC
-                        double errorss = plm.getErrorSS();
-                        double modeldf = plm.getModeldf();
-                        double p = modeldf+2; // modeldf corresponds to the slope estimates of each predictor, and 2 is for the intercept and the residual variance
-                        double bic = (n*Math.log(errorss/n)) + (p*Math.log(n)) ; 
-                                
+                        double [] errorss = sflm2.getResidualSSdf();
+                        double [] modeldf = sflm2.getFullModelSSdf();
+                        double pForBIC  = modeldf[1]; 
+                        double bic = (n*Math.log(errorss[0]/n)) + (pForBIC*Math.log(n)) ;
+                        double aic = (n*Math.log(errorss[0]/n)) + (2*pForBIC) ;
+                         if(s==2) System.out.println("The value of errorss in forwardStep() is: " + errorss[0]);
+                         
                         //Calculate the mBIC
                         int numberOfTwoWayInteractions = (numberOfSites*(numberOfSites-1))/2;
-                        double pForMbic = plm.getModeldf();
+                        double pForMbic = modeldf[1];
                         double qForMbic = 0; //This is going to be the number of two-way interaction terms. For now, this is not implemented, and thus I am setting it equal to zer
-                        double mbic = (n*Math.log(errorss)) + ((pForMbic+qForMbic)*Math.log(n)) + (2*pForMbic*(Math.log((numberOfSites/2.2)-1))) + 
+                        double mbic = (n*Math.log(errorss[0])) + ((pForMbic+qForMbic)*Math.log(n)) + (2*pForMbic*(Math.log((numberOfSites/2.2)-1))) + 
                                        (2*qForMbic*(Math.log((numberOfTwoWayInteractions/2.2)-1) ));
                         
                         switch(modelType){
@@ -240,16 +252,22 @@ public class StepwiseOLSModelFitter {
                                 test = bic < bestbic;
                                 break;
                             case mbic:
-                                //Not implemented yet
+                                test = mbic < bestmbic;
+                                break;
+                            case aic:
+                                test = aic < bestaic;
                                 break;
                         }
 			if (test) {
+                                bestmbic = mbic;
                                 bestbic = bic;
+                                bestaic = aic;
 				bestss = modelss;
 				besteffect = markerEffect;
 			}
+                        currentModel.remove(markerEffect); //Temporary; Remove if wrong
 		}
-		
+
 		//if the p-value for the select SNP is less than the enter limit, add it to the model and recalculate the model solution
 		plm.testNewModelEffect(besteffect);
 		double[] Fp = plm.getFp();
@@ -271,47 +289,210 @@ public class StepwiseOLSModelFitter {
                         return false;
                     } 
                 } else if(modelType == MODEL_TYPE.mbic){
-                    return false;
+                    if(bestmbic < globalbestmbic){
+                        globalbestmbic = bestmbic;
+                        //System.out.println("***********The value of globalbestmbic at the end of forwardStep() is " + globalbestmbic);
+                        currentModel.add(besteffect);
+                        if (currentModel.size() == maxNumberOfMarkers + numberOfBaseModelEffects) return false;
+                        return true;
+                    } else{
+                        return false;
+                    }
+                } else if(modelType == MODEL_TYPE.aic){
+                    if(bestaic < globalbestaic){
+                        globalbestaic = bestaic;
+                        //System.out.println("***********The value of globalbestmbic at the end of forwardStep() is " + globalbestmbic);
+                        currentModel.add(besteffect);
+                        if (currentModel.size() == maxNumberOfMarkers + numberOfBaseModelEffects) return false;
+                        return true;
+                    } else{
+                        return false;
+                    } 
                 }  else{
                     return false;
                 }  
-                   
+               
+                
 	}
 	
 	public boolean backwardStep() {
 		int numberOfTerms = currentModel.size();
 		if (numberOfTerms <= numberOfBaseModelEffects) return false;
-		
-		SweepFastLinearModel sflm = new SweepFastLinearModel(currentModel, y);
-	
+                double bestbic = Double.MAX_VALUE;
+                double bestmbic = Double.MAX_VALUE;
+                double bestaic = Double.MAX_VALUE;
+                
+		int n = y.length;
+                int numberOfSites = myData.getNumberOfMarkers();
+                
+		SweepFastLinearModel sflm0 = new SweepFastLinearModel(currentModel, y);
+                
+                
 		//find the model term (snps only) with the largest p-value
 		double maxp = 0;
 		double minF= -1;
 		int maxterm = 0;
-		double[] errorssdf = sflm.getResidualSSdf();
+		ModelEffect worstMarkerEffect = null;
+                double[] errorssdf = sflm0.getResidualSSdf();
 
+                //double[] ResSSdf = sflm.getResidualSSdf();
+                //double[] ModelSSdf = sflm.getFullModelSSdf();
+                
+               // double SStotal = ModelSSdf[0] + ResSSdf[0];
 		for (int t = numberOfBaseModelEffects; t < numberOfTerms; t++) {
-			double[] termssdf = sflm.getIncrementalSSdf(t);
+                        double bic;
+                        double mbic;
+                        double aic;
+                        ModelEffect markerEffect = null;
+			double[] termssdf = sflm0.getIncrementalSSdf(t);
 			double F = termssdf[0]/termssdf[1]/errorssdf[0]*errorssdf[1];
 			double p;
-			try {
-				p = LinearModelUtils.Ftest(F, termssdf[1], errorssdf[1]);
-				if (p > maxp) {
-					maxterm = t;
+                        if(modelType != MODEL_TYPE.pvalue){
+                            
+//                            SNP snp = new SNP(myData.getMarkerName(t), new Locus(myData.getLocusName(t)), (int) myData.getMarkerChromosomePosition(t), t);
+//                            Object[] markerValues = myData.getMarkerValue(currentPhenotypeIndex, t);
+//			
+//                            System.out.println("INCORRECT: The SNP being created on Line 342 is: " + snp);    
+//                            if (myData.isMarkerDiscrete(t)) {
+//                                    //int n = markerValues.length;
+//                                    ArrayList<Object> markerIds = new ArrayList<Object>();
+//                                    int[] levels = ModelEffectUtils.getIntegerLevels(markerValues, markerIds);
+//                                    snp.alleles = markerIds;
+//				
+//                                    if (isNested) {
+//					//not implemented yet
+//					markerEffect = new FactorModelEffect(levels, true, snp);
+//                                    } else {
+//					markerEffect = new FactorModelEffect(levels, true, snp);
+//                                	}
+//                            } else {
+//                                    //int n = markerValues.length;
+//                                    double[] cov = new double[n];
+//                                    for (int i = 0; i < n; i++) cov[i] = ((Double) markerValues[i]).doubleValue();
+//				
+//                                    if (isNested) {
+//					CovariateModelEffect cme = new CovariateModelEffect(cov);
+//					markerEffect = new NestedCovariateModelEffect(cme, nestingEffect);
+//					markerEffect.setID(snp);
+//                                    } else {
+//					markerEffect = new CovariateModelEffect(cov, snp);
+//                                    }
+//                            }
+//                        
+
+                         ModelEffect meTest1 = currentModel.remove(t);
+                         SNP snpRemoved = (SNP) meTest1.getID(); 
+                         System.out.println("CORRECT The SNP just removed is: " + snpRemoved);
+
+                         SweepFastLinearModel sflm = new SweepFastLinearModel(currentModel, y); 
+                         //Calculate the BIC
+                         double [] errorss = sflm.getResidualSSdf();
+                         double [] modeldf = sflm.getFullModelSSdf();
+                         double pForBIC  = modeldf[1]; 
+                         bic = (n*Math.log(errorss[0]/n)) + (pForBIC*Math.log(n)) ; 
+                         aic = (n*Math.log(errorss[0]/n)) + (2*pForBIC) ;
+                         
+                         //Calculate the mBIC
+                         int numberOfTwoWayInteractions = (numberOfSites*(numberOfSites-1))/2;
+                         double pForMbic = modeldf[1];
+                         double qForMbic = 0; //This is going to be the number of two-way interaction terms. For now, this is not implemented, and thus I am setting it equal to zer
+                         mbic = (n*Math.log(errorss[0])) + ((pForMbic+qForMbic)*Math.log(n)) + (2*pForMbic*(Math.log((numberOfSites/2.2)-1))) + 
+                                       (2*qForMbic*(Math.log((numberOfTwoWayInteractions/2.2)-1) ));
+                         
+  
+                         currentModel.add(t, meTest1);
+                         
+                         sflm = new SweepFastLinearModel(currentModel, y); 
+                         
+                         
+                        } else{
+                            bic = Double.MAX_VALUE;
+                            mbic = Double.MAX_VALUE;
+                            aic = Double.MAX_VALUE;
+                        }
+                        
+                        try{
+                            p = LinearModelUtils.Ftest(F, termssdf[1], errorssdf[1]);  
+                        } catch (Exception e){
+                            p = Double.NaN;
+                        }
+                        
+                          
+                         switch(modelType){
+                            case pvalue:
+                                try {
+                                    if (p > maxp) {
+                                        maxterm = t;
 					maxp = p;
 					minF = F; 
-				}
-			} catch(Exception e){
-				p = Double.NaN;
-			}
+                                    }
+                                } catch(Exception e){
+                                    
+                                }
+                                break;
+                            case bic:
+                                if(bic < bestbic){
+                                    bestbic = bic;
+                                    bestaic = aic;
+                                    bestmbic = mbic;
+                                    maxterm = t;  //Actually, this should be "minterm" becasue we are finding the model with the minimum BIC, but I am keeping this as "maxterm" for simpilicity of the calculations
+				    worstMarkerEffect = markerEffect;
+                                    maxp = p;
+				    minF = F; 
+                                }
+                                break;
+                            case mbic:
+                                if(mbic < bestmbic){
+                                    bestbic = bic;
+                                    bestaic = aic;
+                                    bestmbic = mbic;
+                                    maxterm = t;
+                                    worstMarkerEffect = markerEffect;
+				    maxp = p;
+				    minF = F;
+                                }
+                                break;
+                            case aic:
+                                if(aic < bestaic){
+                                    bestbic = bic;
+                                    bestaic = aic;
+                                    bestmbic = mbic;
+                                    maxterm = t;
+                                    worstMarkerEffect = markerEffect;
+				    maxp = p;
+				    minF = F;
+                                }
+                                break;
+                        } 
+                      
 		}
-
+               
+                
 		//if that maxp is >= exitlimit, then remove maxterm from the model, recalculate the model, and return true;
-		if (maxp >= exitlimit) {
-			ModelEffect me = currentModel.remove(maxterm);
-			return true;
+                switch(modelType){
+                    case pvalue:
+                        test = maxp >= exitlimit;
+                        break;
+                    case bic:
+                        test = bestbic < globalbestbic;
+                        break;
+                    case mbic:
+                        test = bestmbic < globalbestmbic;
+                        break;
+                    case aic:
+                        test = bestaic < globalbestaic;
+                        break;
+                }
+                
+               
+		if ((test)&&(maxterm != 0)) {
+                    ModelEffect me = currentModel.remove(maxterm);
+                    globalbestbic = bestbic;
+                    globalbestmbic = bestmbic;
+                    globalbestaic = bestaic;
+                    return true;
 		}
-
+ 
 		return false;
 	}
 	
@@ -320,18 +501,45 @@ public class StepwiseOLSModelFitter {
 		int ncol = anovaReportHeader.length;
 		LinkedList<Object[]> reportTable = new LinkedList<Object[]>();
 		double[] residualSSdf = sflm.getResidualSSdf();
+                int n = y.length;
+                int numberOfSites = myData.getNumberOfMarkers();
+                
+                
+                //Calcualte the BIC
+                double [] errorss = sflm.getResidualSSdf();
+                double [] modeldf = sflm.getFullModelSSdf();
+                double pForBIC  = modeldf[1];
+                double bic = (n*Math.log(errorss[0]/n)) + (pForBIC*Math.log(n)) ; 
+                double aic = (n*Math.log(errorss[0]/n)) + (2*pForBIC) ;
+                
+                System.out.println("error ss is " + errorss[0]);
+                System.out.println("pForBIC is " + pForBIC);
+                System.out.println("n is " + n);
+                
+                
+                //Calculate the mBIC
+                int numberOfTwoWayInteractions = (numberOfSites*(numberOfSites-1))/2;
+                double pForMbic = modeldf[1];
+                double qForMbic = 0; //This is going to be the number of two-way interaction terms. For now, this is not implemented, and thus I am setting it equal to zer
+                double mbic = (n*Math.log(errorss[0])) + ((pForMbic+qForMbic)*Math.log(n)) + (2*pForMbic*(Math.log((numberOfSites/2.2)-1))) + 
+                              (2*qForMbic*(Math.log((numberOfTwoWayInteractions/2.2)-1) ));
+
 		int effectPtr = 0;
 		for (ModelEffect me : currentModel) {
 			Object[] reportRow = new Object[ncol];
 			int ptr = 0;
 			reportRow[ptr++] = traitname;
-			reportRow[ptr++] = me.getID().toString();
+			
 			if (me.getID() instanceof SNP) {
 				SNP snp = (SNP) me.getID();
+                                reportRow[ptr++] = snp.name;
 				reportRow[ptr++] = snp.locus.getName();
 				reportRow[ptr++] = Integer.toString(snp.position);
 			} else {
-				reportRow[ptr++] = "--";
+				if (me.getID() instanceof String) reportRow[ptr++] = me.getID().toString();
+				else if (me instanceof FactorModelEffect) reportRow[ptr++] = ((Object[]) me.getID())[0].toString();
+				else reportRow[ptr++] = me.getID().toString();
+                                reportRow[ptr++] = "--";
 				reportRow[ptr++] = "--";
 			}
 			double[] effectSSdf = sflm.getMarginalSSdf(effectPtr);
@@ -348,6 +556,9 @@ public class StepwiseOLSModelFitter {
 			reportRow[ptr++] = new Double(ms);
 			reportRow[ptr++] = new Double(Fval);
 			reportRow[ptr++] = new Double(pval);
+                        reportRow[ptr++] = new Double(bic);
+                        reportRow[ptr++] = new Double(mbic);
+                        reportRow[ptr++] = new Double(aic);
 			reportTable.add(reportRow);
 			effectPtr++;
 		}

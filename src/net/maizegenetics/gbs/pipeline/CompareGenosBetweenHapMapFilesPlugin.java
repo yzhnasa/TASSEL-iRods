@@ -3,12 +3,17 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.ImportUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import com.google.common.base.Joiner;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import net.maizegenetics.dna.map.Position;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.dna.snp.ImportUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.ArgsEngine;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
@@ -32,7 +37,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     private ArgsEngine myArgsEngine = null;
     private String hmp1FileStr, hmp2FileStr;
     private int startChr, endChr, chr, position;
-    private HashMap<String, List<String>> taxaSynonyms = new HashMap<String, List<String>>();
+    private Multimap<String, String> taxaSynonyms = HashMultimap.create();
+
     private HashMap<Integer, List<Integer>> taxaRedirect = new HashMap<Integer, List<Integer>>();
     private final String DELIMITER = "\t";
 
@@ -90,8 +96,6 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             myArgsEngine = new ArgsEngine();
             myArgsEngine.add("-hmp1", "--hapmap-file1", true);
             myArgsEngine.add("-hmp2", "--hapmap-file2", true);
-            myArgsEngine.add("-sC", "--startChrom", true);
-            myArgsEngine.add("-eC", "--endChrom", true);
             myArgsEngine.add("-syn", "--synonym-file", true);
             myArgsEngine.add("-o", "--output-file", true);
         }
@@ -107,60 +111,25 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 throw new IllegalArgumentException("Problem reading the file containing the synonym table for full taxon names. Progam aborted.");
             }
         } else {
-            printUsage();
-            throw new IllegalArgumentException("Please specify a file containing the synonym table for full taxon names (option -syn).");
-        }
-        if (myArgsEngine.getBoolean("-sC")) {
-            startChr = Integer.parseInt(myArgsEngine.getString("-sC"));
-        } else {
-            printUsage();
-            throw new IllegalArgumentException("Please provide a start chromosome (integer).\n");
-        }
-        if (myArgsEngine.getBoolean("-eC")) {
-            endChr = Integer.parseInt(myArgsEngine.getString("-eC"));
-        } else {
-            printUsage();
-            throw new IllegalArgumentException("Please provide an end chromosome (integer).\n");
+            createTaxaSynonymsFromAlignment(myArgsEngine.getString("-hmp1"),myArgsEngine.getString("-hmp2"));
+          //  printUsage();
+          //  throw new IllegalArgumentException("Please specify a file containing the synonym table for full taxon names (option -syn).");
         }
         if (myArgsEngine.getBoolean("-hmp1")) {
             hmp1FileStr = myArgsEngine.getString("-hmp1");
-            if ((hmp1FileStr.contains(File.separator) && hmp1FileStr.substring(hmp1FileStr.lastIndexOf(File.separator)).contains("+"))
-                    || hmp1FileStr.contains("+")) {
-                for (int chr = startChr; chr <= endChr; chr++) {
-                    String infile = hmp1FileStr.replace("+", "" + chr);
-                    File hmp1File = new File(infile);
-                    if (!hmp1File.exists() || !hmp1File.isFile()) {
-                        printUsage();
-                        throw new IllegalArgumentException("Can't find the first hapmap format genotype input file (-hmp1 option: " + infile + ").");
-                    }
-                }
-            } else {
+            File hmp1File = new File(hmp1FileStr);
+            if (!hmp1File.exists() || !hmp1File.isFile()) {
                 printUsage();
-                throw new IllegalArgumentException("The name of the first hapmap input file should contain a \"+\" wildcard character in place of the chromosome number (-hmp1 option: " + hmp1FileStr + ").");
+                throw new IllegalArgumentException("Can't find the first hapmap format genotype input file (-hmp1 option: " + hmp1FileStr + ").");
             }
-        } else {
-            printUsage();
-            throw new IllegalArgumentException("Please specify the first hapmap format genotype input file (option -hmp1).");
         }
         if (myArgsEngine.getBoolean("-hmp2")) {
             hmp2FileStr = myArgsEngine.getString("-hmp2");
-            if ((hmp2FileStr.contains(File.separator) && hmp2FileStr.substring(hmp2FileStr.lastIndexOf(File.separator)).contains("+"))
-                    || hmp2FileStr.contains("+")) {
-                for (int chr = startChr; chr <= endChr; chr++) {
-                    String infile = hmp2FileStr.replace("+", "" + chr);
-                    File hmp2File = new File(infile);
-                    if (!hmp2File.exists() || !hmp2File.isFile()) {
-                        printUsage();
-                        throw new IllegalArgumentException("Can't find the second hapmap format genotype input file (-hmp2 option: " + infile + ").");
-                    }
-                }
-            } else {
+            File hmp1File = new File(hmp1FileStr);
+            if (!hmp1File.exists() || !hmp1File.isFile()) {
                 printUsage();
-                throw new IllegalArgumentException("The name of the second hapmap input file should contain a \"+\" wildcard character in place of the chromosome number (-hmp2 option: " + hmp2FileStr + ").");
+                throw new IllegalArgumentException("Can't find the first hapmap format genotype input file (-hmp1 option: " + hmp2FileStr + ").");
             }
-        } else {
-            printUsage();
-            throw new IllegalArgumentException("Please specify the second hapmap format genotype input file (option -hmp2).");
         }
         if (myArgsEngine.getBoolean("-o")) {
             String outFileStr = myArgsEngine.getString("-o");
@@ -180,27 +149,23 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
-        for (chr = startChr; chr <= endChr; chr++) {
-            String infile1 = hmp1FileStr.replace("+", "" + chr);
-            String infile2 = hmp2FileStr.replace("+", "" + chr);
-            myLogger.info("Comparing: " + infile1 + " to " + infile2);
-            Alignment a1, a2;
-            try {
-                a1 = ImportUtils.readFromHapmap(infile1, null);
-            } catch (Exception e) {
-                myLogger.info("Could not read the first input hapmap file for chr" + chr + ":\n\t" + infile1 + "\n\tSkipping...");
-                continue;
-            }
-            try {
-                a2 = ImportUtils.readFromHapmap(infile2, null);
-            } catch (Exception e) {
-                myLogger.info("Could not read the second input hapmap file for chr" + chr + ":\n\t" + infile2 + "\n\tSkipping...");
-                continue;
-            }
-            populateTaxaRedirect(a1, a2);
-            myCompareStatsTaxa = new int[taxaRedirect.size()][][];
-            findCommonPositionsAndCompare(a1, a2);
+        myLogger.info("Comparing: " + hmp1FileStr + " to " + hmp2FileStr);
+        GenotypeTable a1, a2;
+        try {
+            a1 = ImportUtils.readGuessFormat(hmp1FileStr);
+        } catch (Exception e) {
+            myLogger.info("Could not read the first input hapmap file for chr" + chr + ":\n\t" + hmp2FileStr + "\n\tSkipping...");
+            return null;
         }
+        try {
+            a2 = ImportUtils.readGuessFormat(hmp2FileStr);
+        } catch (Exception e) {
+            myLogger.info("Could not read the second input hapmap file for chr" + chr + ":\n\t" + hmp2FileStr + "\n\tSkipping...");
+            return null;
+        }
+        populateTaxaRedirect(a1, a2);
+        myCompareStatsTaxa = new int[taxaRedirect.size()][][];
+        findCommonPositionsAndCompare(a1, a2);
 
         int[] comparisons = new int[myNumCalculations];
         double comparisonMean = 0.0;
@@ -277,11 +242,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             while ((inputLine = br.readLine()) != null) {
                 String[] cells = inputLine.split("\t");
                 if (!(cells[0].equals("NA") || cells[1].equals("NA"))) {
-                    List<String> synTaxaForTaxon = taxaSynonyms.get(cells[0]);
-                    if (synTaxaForTaxon == null) {
-                        taxaSynonyms.put(cells[0], synTaxaForTaxon = new ArrayList<String>());
-                    }
-                    synTaxaForTaxon.add(cells[1]);
+                    taxaSynonyms.put(cells[0],cells[1]);
                     ++nCompareTaxa;
                 }
                 ++nTaxa;
@@ -296,18 +257,35 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         return true;
     }
 
-    private void populateTaxaRedirect(Alignment a1, Alignment a2) {
+    private boolean createTaxaSynonymsFromAlignment(String f1, String f2) {
+        GenotypeTable a1=ImportUtils.readGuessFormat(f1);
+        GenotypeTable a2=ImportUtils.readGuessFormat(f1);
+        taxaSynonyms.clear();
+        int nTaxa = 0, nCompareTaxa = 0;
+        for (Taxon taxon : a1.taxa()) {
+            List<Integer> t2a=a2.taxa().indicesMatchingTaxon(taxon);
+            for (Integer tIndex : t2a) {
+                taxaSynonyms.put(taxon.getName(), a2.taxaName(tIndex));
+                ++nCompareTaxa;
+            }
+            ++nTaxa;
+        }
+        myLogger.info(nTaxa + " pairs of taxa full names read are identical between alignments: " + nCompareTaxa + " of these will be compared (if found in the genotype files)");
+        return true;
+    }
+
+    private void populateTaxaRedirect(GenotypeTable a1, GenotypeTable a2) {
         taxaRedirect.clear();
         myLogger.info("\n\nMaking list of comparable taxa found in the two hapmap files...\n");
         System.out.println("Taxon1\t\tTaxon2");
         System.out.println("------\t\t------");
         int nTaxaPairs = 0;
-        for (int taxon1Index = 0; taxon1Index < a1.getSequenceCount(); taxon1Index++) {
-            String taxon1 = a1.getTaxaName(taxon1Index);
+        for (int taxon1Index = 0; taxon1Index < a1.numberOfTaxa(); taxon1Index++) {
+            String taxon1 = a1.taxaName(taxon1Index);
             if (taxaSynonyms.containsKey(taxon1)) {
                 for (String taxon2 : taxaSynonyms.get(taxon1)) {
-                    for (int taxon2Index = 0; taxon2Index < a2.getSequenceCount(); taxon2Index++) {
-                        if (taxon2.equals(a2.getTaxaName(taxon2Index))) {
+                    for (int taxon2Index = 0; taxon2Index < a2.numberOfTaxa(); taxon2Index++) {
+                        if (taxon2.equals(a2.taxaName(taxon2Index))) {
                             List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
                             if (synTaxaIndicesForTaxonIndex == null) {
                                 taxaRedirect.put(taxon1Index, synTaxaIndicesForTaxonIndex = new ArrayList<Integer>());
@@ -321,51 +299,21 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 }
             }
         }
-        myLogger.info("\nHapMap format genotype file1 contains " + a1.getSequenceCount() + " taxa in total\n");
-        myLogger.info("\nHapMap format genotype file2 contains " + a2.getSequenceCount() + " taxa in total\n");
+        myLogger.info("\nHapMap format genotype file1 contains " + a1.numberOfTaxa() + " taxa in total\n");
+        myLogger.info("\nHapMap format genotype file2 contains " + a2.numberOfTaxa() + " taxa in total\n");
         myLogger.info("\n" + nTaxaPairs + " pairs of comparable taxa found in the two hapmap files\n\n");
     }
 
-    private void findCommonPositionsAndCompare(Alignment a1, Alignment a2) {
-
-        if (a1.getChromosomes().length != 1 || a2.getChromosomes().length != 1) {
-            myLogger.error("ERROR: both hapmap genotype files should contain only a single chromosome");
-            return;
-        }
-        if (!a1.getChromosomes()[0].getName().equals(a2.getChromosomes()[0].getName())) {
-            myLogger.error("ERROR: the hapmap genotype files to compare do not contain the same chromosome");
-            return;
-        }
-        if (Integer.parseInt(a1.getChromosomes()[0].getName()) != chr || Integer.parseInt(a2.getChromosomes()[0].getName()) != chr) {
-            myLogger.error("ERROR: one or both of the hapmap genotype files to compare do not contain the expected chromosome "
-                    + "(expected:" + chr + "  hmp1:" + a1.getChromosomes()[0].getName() + "  hmp2:" + a2.getChromosomes()[0].getName() + ")");
-            return;
-        }
-
-        myLogger.info("\nHapMap format genotype file1 contains " + a1.getChromosomeSiteCount(a1.getChromosome(0)) + " sites on chromosome " + a1.getChromosomeName(0) + "\n");
-        myLogger.info("\nHapMap format genotype file2 contains " + a2.getChromosomeSiteCount(a2.getChromosome(0)) + " sites on chromosome " + a2.getChromosomeName(0) + "\n\n");
-
-        int nSites1 = a1.getSiteCount(), nSites2 = a2.getSiteCount();
-        int s1 = 0, s2 = 0;
+    private void findCommonPositionsAndCompare(GenotypeTable a1, GenotypeTable a2) {
         nCompared = 0;
         nSamePosNotComparable = 0;
-        boolean finished = false;
-        while (!finished) {
-            while (a1.getPositionInChromosome(s1) != a2.getPositionInChromosome(s2) && s1 < nSites1 && s2 < nSites2) {
-                while (a1.getPositionInChromosome(s1) < a2.getPositionInChromosome(s2) && s1 < nSites1) {
-                    s1++;
-                }
-                while (a2.getPositionInChromosome(s2) < a1.getPositionInChromosome(s1) && s2 < nSites2) {
-                    s2++;
-                }
-            }
-            if (s1 == nSites1 || s2 == nSites2) {
-                finished = true;
-            } else if (a1.getPositionInChromosome(s1) == a2.getPositionInChromosome(s2)) {
-                position = a1.getPositionInChromosome(s1);
+        for (int s1=0; s1<a1.numberOfSites(); s1++) {
+            Position p1=a1.positions().get(s1);
+            int s2=a2.siteOfPhysicalPosition(p1.getPosition(), p1.getChromosome());
+            if (s2>=0) {
+                position = a1.chromosomalPosition(s1);
                 nCompared += getCompareTypeAndCompare(s1, a1, s2, a2);
-                s2++;  // assumes that a1 is from GBS where duplicate SNPs have been removed (but a2 might contain some duplicates: e.g., hapmap2)
-            }
+                }
         }
         myLogger.info(nCompared + " sites compared on chromosome " + chr
                 + "\nAn additional " + nSamePosNotComparable + " sites on chromosome " + chr + " had the same position but incomparable alleles\n");
@@ -373,7 +321,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         outputTaxaReport(a1, a2);
     }
 
-    private void outputTaxaReport(Alignment a1, Alignment a2) {
+    private void outputTaxaReport(GenotypeTable a1, GenotypeTable a2) {
 
         System.out.println("Taxon1\tTaxon2\tNum_Sites_Compared\tNum_Sites_Diff\tNum_Sites_Homo_Compared\tNum_Sites_Homo_Diff");
         int taxon1Count = 0;
@@ -382,9 +330,9 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
             int taxon2Count = 0;
             for (Integer taxon2Index : synTaxaIndicesForTaxonIndex) {
                 StringBuilder builder = new StringBuilder();
-                builder.append(a1.getTaxaName(taxon1Index));
+                builder.append(a1.taxaName(taxon1Index));
                 builder.append(DELIMITER);
-                builder.append(a2.getTaxaName(taxon2Index));
+                builder.append(a2.taxaName(taxon2Index));
                 builder.append(DELIMITER);
                 builder.append(myCompareStatsTaxa[taxon1Count][taxon2Count][NUM_SITES_COMPARED]);
                 builder.append(DELIMITER);
@@ -401,35 +349,28 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
 
     }
 
-    private int getCompareTypeAndCompare(int site1, Alignment a1, int site2, Alignment a2) {
-        byte[] alleles1 = a1.getAlleles(site1);
-        byte[] alleles2 = a2.getAlleles(site2);
-        SiteCompareType compareType = getSiteCompareType(alleles1, alleles2);
+    private int getCompareTypeAndCompare(int site1, GenotypeTable a1, int site2, GenotypeTable a2) {
+        byte[] alleles1 = a1.alleles(site1);
+        byte[] alleles2 = a2.alleles(site2);
+        SiteCompareType compareType=(a1.positions().get(site1).getStrand()==a2.positions().get(site2).getStrand())?
+                SiteCompareType.SAME_STRAND:SiteCompareType.DIFFERENT;
         if (compareType == SiteCompareType.DIFFERENT) {
             nSamePosNotComparable++;
             return 0;
         }
 
         double[] summStats = new double[summStatsLength];
-        summStats[MINOR_ALLELE_FREQ1] = a1.getMinorAlleleFrequency(site1);
-        summStats[MINOR_ALLELE_FREQ2] = a2.getMinorAlleleFrequency(site2);
+        summStats[MINOR_ALLELE_FREQ1] = a1.minorAlleleFrequency(site1);
+        summStats[MINOR_ALLELE_FREQ2] = a2.minorAlleleFrequency(site2);
         summStats[F_VALUE1] = calculateF(a1, site1);
         summStats[F_VALUE2] = calculateF(a2, site2);
-        String alleleString1 = a1.getBaseAsString(site1, alleles1[0]) + "/" + a1.getBaseAsString(site1, alleles1[1]);
-        String alleleString2 = a2.getBaseAsString(site2, alleles2[0]) + "/" + a2.getBaseAsString(site2, alleles2[1]);
+        String alleleString1 = Joiner.on("/").join(GenotypeTableUtils.convertNucleotideGenotypesToStringList(alleles1));
+        String alleleString2 = Joiner.on("/").join(GenotypeTableUtils.convertNucleotideGenotypesToStringList(alleles2));
 
-        int[][][] compareTaxaStatsSame = null;
-        int[][][] compareTaxaStatsDiff = null;
-        if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-            compareTaxaStatsSame = new int[taxaRedirect.size()][][];
-        }
+        int[][][] compareTaxaStatsSame = new int[taxaRedirect.size()][][];
 
-        if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-            compareTaxaStatsDiff = new int[taxaRedirect.size()][][];
-        }
 
         int[] compareStatsSame = null;
-        int[] compareStatsDiff = null;
         int taxon1Count = 0;
         for (Integer taxon1Index : taxaRedirect.keySet()) {
             List<Integer> synTaxaIndicesForTaxonIndex = taxaRedirect.get(taxon1Index);
@@ -437,17 +378,10 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                 myCompareStatsTaxa[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
             }
 
-            if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-                compareTaxaStatsSame[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
-            }
-
-            if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-                compareTaxaStatsDiff[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
-            }
+            compareTaxaStatsSame[taxon1Count] = new int[synTaxaIndicesForTaxonIndex.size()][COMPARE_TAXA_STATS_LENGTH];
 
             int taxon2Count = 0;
             for (Integer taxon2Index : synTaxaIndicesForTaxonIndex) {
-
                 if ((compareType == SiteCompareType.SAME_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
                     int[] tempStats = compareGenotypes(taxon1Index, site1, a1, taxon2Index, site2, a2, true);
                     if (compareStatsSame == null) {
@@ -461,43 +395,13 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
                     compareTaxaStatsSame[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_COMPARED] = tempStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
                     compareTaxaStatsSame[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_DIFF] = tempStats[NUM_TAXA_HOMOZYGOUS_DIFF];
                 }
-
-                if ((compareType == SiteCompareType.DIFF_STRAND) || (compareType == SiteCompareType.EITHER_STRAND)) {
-                    int[] tempStats = compareGenotypes(taxon1Index, site1, a1, taxon2Index, site2, a2, false);
-                    if (compareStatsDiff == null) {
-                        compareStatsDiff = new int[COMPARE_STATS_LENGTH];
-                    }
-                    for (int i = 0; i < COMPARE_STATS_LENGTH; i++) {
-                        compareStatsDiff[i] += tempStats[i];
-                    }
-                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_COMPARED] = 1;
-                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_DIFF] = tempStats[NUM_TAXA_DIFFERENT];
-                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_COMPARED] = tempStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
-                    compareTaxaStatsDiff[taxon1Count][taxon2Count][NUM_SITES_HOMOZYGOUS_DIFF] = tempStats[NUM_TAXA_HOMOZYGOUS_DIFF];
-                }
-
                 taxon2Count++;
             }
             taxon1Count++;
         }
 
-        int[] compareResults;
-        if (compareStatsSame == null) {
-            compareResults = compareStatsDiff;
-            addTaxaStats(myCompareStatsTaxa, compareTaxaStatsDiff);
-        } else if (compareStatsDiff == null) {
-            compareResults = compareStatsSame;
-            addTaxaStats(myCompareStatsTaxa, compareTaxaStatsSame);
-        } else {
-            if (compareStatsSame[NUM_TAXA_DIFFERENT] <= compareStatsDiff[NUM_TAXA_DIFFERENT]) {
-                compareResults = compareStatsSame;
-                addTaxaStats(myCompareStatsTaxa, compareTaxaStatsSame);
-            } else {
-                compareResults = compareStatsDiff;
-                addTaxaStats(myCompareStatsTaxa, compareTaxaStatsDiff);
-            }
-        }
-
+        int[] compareResults= compareStatsSame;
+        addTaxaStats(myCompareStatsTaxa, compareTaxaStatsSame);
         writeCompareStats(compareResults, alleleString1, alleleString2, compareType, summStats);
 
         return 1;
@@ -513,19 +417,19 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
     }
 
-    private double calculateF(Alignment a, int site) {
-        byte majAllele = a.getMajorAllele(site);
-        byte minAllele = a.getMinorAllele(site);
+    private double calculateF(GenotypeTable a, int site) {
+        byte majAllele = a.majorAllele(site);
+        byte minAllele = a.minorAllele(site);
         int majGenoCnt = 0, minGenoCnt = 0, hetGenoCnt = 0;
-        int nTaxa = a.getSequenceCount();
+        int nTaxa = a.numberOfTaxa();
         // TERRY - Does this make sense?  What if it's het but not major/minor?
         for (int taxon = 0; taxon < nTaxa; taxon++) {
-            byte[] bases = a.getBaseArray(taxon, site);
+            byte[] bases = a.genotypeArray(taxon, site);
             if ((bases[0] == majAllele) && bases[1] == majAllele) {
                 majGenoCnt++;
             } else if ((bases[0] == minAllele) && bases[1] == minAllele) {
                 minGenoCnt++;
-            } else if (AlignmentUtils.isEqual(bases, new byte[]{majAllele, minAllele})) {
+            } else if (GenotypeTableUtils.isEqual(bases, new byte[]{majAllele, minAllele})) {
                 hetGenoCnt++;
             }
         }
@@ -540,24 +444,24 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         }
     }
 
-    private int[] compareGenotypes(int taxon1Index, int site1, Alignment a1, int taxon2Index, int site2, Alignment a2, boolean sameStrand) {
+    private int[] compareGenotypes(int taxon1Index, int site1, GenotypeTable a1, int taxon2Index, int site2, GenotypeTable a2, boolean sameStrand) {
         int[] compareStats = new int[COMPARE_STATS_LENGTH];
-        byte base1 = a1.getBase(taxon1Index, site1);
+        byte base1 = a1.genotype(taxon1Index, site1);
         byte base2;
         if (sameStrand) {
-            base2 = a2.getBase(taxon2Index, site2);
+            base2 = a2.genotype(taxon2Index, site2);
         } else {
-            base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.getBase(taxon2Index, site2));
+            base2 = NucleotideAlignmentConstants.getNucleotideDiploidComplement(a2.genotype(taxon2Index, site2));
         }
-        if (base1 != Alignment.UNKNOWN_DIPLOID_ALLELE && base2 != Alignment.UNKNOWN_DIPLOID_ALLELE) {
-            if (!(AlignmentUtils.isHeterozygous(base1) || AlignmentUtils.isHeterozygous(base2))) {
+        if (base1 != GenotypeTable.UNKNOWN_DIPLOID_ALLELE && base2 != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
+            if (!(GenotypeTableUtils.isHeterozygous(base1) || GenotypeTableUtils.isHeterozygous(base2))) {
                 if (base1 != base2) {
                     ++compareStats[NUM_TAXA_DIFFERENT];
                     ++compareStats[NUM_TAXA_HOMOZYGOUS_DIFF];
                 }
                 ++compareStats[NUM_TAXA_HOMOZYGOUS_COMPARED];
             } else {
-                if (!AlignmentUtils.isEqual(base1, base2)) {
+                if (!GenotypeTableUtils.isEqual(base1, base2)) {
                     ++compareStats[NUM_TAXA_DIFFERENT];
                 }
             }
@@ -634,12 +538,12 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
     public static SiteCompareType getSiteCompareType(byte[] alleles1, byte[] alleles2) {
 
         //if (alleles1.length != 2 || alleles2.length != 2) {
-        if (alleles1.length < 2 || alleles2.length < 2) {
-            return SiteCompareType.DIFFERENT; // both must be biallelic to be compared
-        }
+//        if (alleles1.length < 2 || alleles2.length < 2) {
+//            return SiteCompareType.DIFFERENT; // both must be biallelic to be compared
+//        }
 
-        byte diploidValue1 = AlignmentUtils.getDiploidValue(alleles1[0], alleles1[1]);
-        byte diploidValue2 = AlignmentUtils.getDiploidValue(alleles2[0], alleles2[1]);
+        byte diploidValue1 = GenotypeTableUtils.getDiploidValue(alleles1[0], alleles1[1]);
+        byte diploidValue2 = GenotypeTableUtils.getDiploidValue(alleles2[0], alleles2[1]);
 
         String iupac1 = NucleotideAlignmentConstants.getNucleotideIUPAC(diploidValue1);
         String iupac2 = NucleotideAlignmentConstants.getNucleotideIUPAC(diploidValue2);
@@ -654,8 +558,8 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         char hetg1 = iupac1.charAt(0);
         char hetg2 = iupac2.charAt(0);
 
-        if (hetg1 == '0' || hetg1 == '-' || hetg1 == '+' || hetg1 == Alignment.UNKNOWN_ALLELE_CHAR
-                || hetg2 == '0' || hetg2 == '-' || hetg2 == '+' || hetg2 == Alignment.UNKNOWN_ALLELE_CHAR) {
+        if (hetg1 == '0' || hetg1 == '-' || hetg1 == '+' || hetg1 == GenotypeTable.UNKNOWN_ALLELE_CHAR
+                || hetg2 == '0' || hetg2 == '-' || hetg2 == '+' || hetg2 == GenotypeTable.UNKNOWN_ALLELE_CHAR) {
             return SiteCompareType.DIFFERENT; // indel sites not compared
         }
         if (hetg1 == 'K' && hetg2 == 'K') {
