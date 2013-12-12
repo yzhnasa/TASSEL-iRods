@@ -44,7 +44,7 @@ public class CoreGenotypeTable implements GenotypeTable {
         myTaxaList = taxaList;
         mySiteScore = siteScore;
         myAlleleDepth = alleleDepth;
-        mySiteCount = myPositionList.siteCount();
+        mySiteCount = myPositionList.numberOfSites();
         myTaxaCount = myTaxaList.numberOfTaxa();
     }
 

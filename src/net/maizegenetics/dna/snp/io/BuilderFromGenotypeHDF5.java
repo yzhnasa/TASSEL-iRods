@@ -82,7 +82,7 @@ public class BuilderFromGenotypeHDF5 {
             System.out.println("..."+infiles[i]);
             IHDF5Reader reader=HDF5Factory.openForReading(infiles[i]);
             PositionList aPL=PositionListBuilder.getInstance(reader);
-            oldSiteToNewSite[i]=new int[aPL.siteCount()];
+            oldSiteToNewSite[i]=new int[aPL.numberOfSites()];
             for (int j=0; j<aPL.size(); j++) {
                 oldSiteToNewSite[i][j]=pal.indexOf(aPL.get(j));
                 if(oldSiteToNewSite[i][j]<0) {
@@ -100,7 +100,7 @@ public class BuilderFromGenotypeHDF5 {
             System.gc();
         }
         System.out.println(misses);
-        int numberOfSites=pal.siteCount();
+        int numberOfSites=pal.numberOfSites();
         //Get taxa List
         //This could be combined with above.
         List<TaxaList> inTL=new ArrayList<>();

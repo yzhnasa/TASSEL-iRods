@@ -171,7 +171,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public int siteCount() {
+    public int numberOfSites() {
         return numPositions;
     }
 

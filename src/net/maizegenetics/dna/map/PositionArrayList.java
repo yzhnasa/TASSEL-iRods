@@ -96,7 +96,7 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public int siteCount() {
+    public int numberOfSites() {
         return numPositions;
     }
 

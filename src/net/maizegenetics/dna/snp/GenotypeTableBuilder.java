@@ -110,7 +110,7 @@ public class GenotypeTableBuilder {
 
     public GenotypeTableBuilder addTaxon(Taxon taxon, byte[] genos, byte[] depth) {
         if(myBuildType!=BuildType.TAXA_INC) throw new IllegalArgumentException("addTaxon only be used with AlignmentBuilder.getTaxaIncremental");
-        if(genos.length!=positionList.siteCount()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
+        if(genos.length!=positionList.numberOfSites()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
         if(isHDF5) {
             addTaxon(writer, taxon, genos, null);
 
@@ -137,7 +137,7 @@ public class GenotypeTableBuilder {
             case TAXA_INC: {
                 //TODO optional sort
                 TaxaList tl=taxaListBuilder.build();
-                GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(tl.numberOfTaxa(),positionList.siteCount());
+                GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(tl.numberOfTaxa(),positionList.numberOfSites());
                 for (int i=0; i<incGeno.size(); i++) {
                     gB.setBaseRangeForTaxon(i, 0, incGeno.get(i));
                 }
@@ -146,8 +146,8 @@ public class GenotypeTableBuilder {
             case SITE_INC: {
                 //TODO validate sort order, sort if needed
                 PositionList pl=posListBuilder.build();
-                GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(taxaList.numberOfTaxa(),pl.siteCount());
-                for (int s=0; s<pl.siteCount(); s++) {
+                GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(taxaList.numberOfTaxa(),pl.numberOfSites());
+                for (int s=0; s<pl.numberOfSites(); s++) {
                     byte[] b=incGeno.get(s);
                     for (int t=0; t<b.length; t++) {
                         gB.setBase(t,s,b[t]);
@@ -160,8 +160,8 @@ public class GenotypeTableBuilder {
     }
 
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
-        if (genotype.numberOfSites() != positionList.siteCount()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.siteCount());
+        if (genotype.numberOfSites() != positionList.numberOfSites()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
         }
         if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
             throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
@@ -177,8 +177,8 @@ public class GenotypeTableBuilder {
      * @return new alignment
      */
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
-        if (genotype.numberOfSites() != positionList.siteCount()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.siteCount());
+        if (genotype.numberOfSites() != positionList.numberOfSites()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
         }
         if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
             throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
@@ -195,8 +195,8 @@ public class GenotypeTableBuilder {
      * @return alignment backed by new HDF5 file
      */
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
-        if (genotype.numberOfSites() != positionList.siteCount()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.siteCount());
+        if (genotype.numberOfSites() != positionList.numberOfSites()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
         }
         if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
             throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
@@ -365,7 +365,7 @@ public class GenotypeTableBuilder {
      */
     private synchronized void addTaxon(IHDF5Writer myWriter, Taxon id, byte[] genotype, byte[][] depth) {
         int chunk=1<<16;
-        int myNumSites=positionList.siteCount();
+        int myNumSites=positionList.numberOfSites();
         if(myNumSites<chunk) chunk=myNumSites;
         String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getName();
         if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);

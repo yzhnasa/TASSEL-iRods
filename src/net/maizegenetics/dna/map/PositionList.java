@@ -64,7 +64,7 @@ public interface PositionList extends List<Position> {
      *
      * @return number of sites
      */
-    public int siteCount();
+    public int numberOfSites();
 
     /**
      * Return number of sites for given Chromosome
