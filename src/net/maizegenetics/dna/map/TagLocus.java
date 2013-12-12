@@ -32,6 +32,7 @@ import org.biojava3.core.sequence.compound.NucleotideCompound;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.maizegenetics.dna.snp.ExportUtils;
 
 
 /**
@@ -502,7 +503,6 @@ public class TagLocus {
         String[] alignedSeqs = new String[theTags.size()];
         GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(theTags.size(),nSites);
         TaxaListBuilder tlB=new TaxaListBuilder();
-        int[] positions = null;
         PositionListBuilder pALB=new PositionListBuilder();
         for (int i=0; i<nSites; i++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,i).build());}
         for (int i = 0; i < alignedSeqs.length; i++) {
@@ -510,14 +510,14 @@ public class TagLocus {
             String taxonName = profile.getAlignedSequence(i + 1).getOriginalSequence().getOriginalHeader();
             if (taxonName.split("_")[1].equals("refTag")) {  // name was set to indexInTheTags_"refTag"|"no"
                 if (alignedSeqs[i].contains("-")) {
-                    positions = new int[alignedSeqs[i].length()];
-                    positions[0] = 0;
                     pALB=new PositionListBuilder();
                     pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,0).build());
+                    int prevPosition = 0;
                     for (int site = 1; site < alignedSeqs[i].length(); site++) {
-                        positions[site] = (alignedSeqs[i].charAt(site) == '-') ? (positions[site - 1]) : (positions[site - 1] + 1);
+                        int currPosition = (alignedSeqs[i].charAt(site) == '-') ? prevPosition : prevPosition + 1;
+                        pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,currPosition).build());
+                        prevPosition = currPosition;
                     }
-                    for (int site=0; site<nSites; site++) {pALB.add(new GeneralPosition.Builder(Chromosome.UNKNOWN,positions[site]).build());}
                 }
             }
             tlB.add(new Taxon(taxonName));
@@ -525,7 +525,6 @@ public class TagLocus {
         profile = null;
         gB.setBases(alignedSeqs);
         GenotypeTable aa = GenotypeTableBuilder.getInstance(gB.build(),pALB.build(),tlB.build());
-        System.out.println(aa.genotypeAsStringRow(0));
         GenotypeTable faa = GenotypeTableUtils.removeSitesBasedOnFreqIgnoreMissing(aa, 0.000001, 1.0, 2);
         if (printOutAlignments && (minStartPosition % 1000 == 0)) {
             TaxaList tL=tlB.build();
@@ -560,13 +559,13 @@ public class TagLocus {
         return faa;
     }
 
-    private GenotypeTable getVariableSites(String refSeq) {
+    private GenotypeTable getVariableSites(String refSeqInRegion) {
         if (theTags.size() < 2) {
             return null;
         }
         boolean printOutAlignments = true;
         int startRefGenIndex = 0, endRefGenIndex = 1, startTagIndex = 2, endTagIndex = 3; // relevant indices in alignStats[]  (alignedTagLen=4)
-        DNASequence dsRefSeq = new DNASequence(refSeq);
+        DNASequence dsRefSeq = new DNASequence(refSeqInRegion);
         dsRefSeq.setCompoundSet(AmbiguityDNACompoundSet.getDNACompoundSet());
         int minRefGenIndex = Integer.MAX_VALUE, maxRefGenIndex = Integer.MIN_VALUE;
         ArrayList<SequencePair<DNASequence, NucleotideCompound>> pairwiseAligns = new ArrayList<SequencePair<DNASequence, NucleotideCompound>>();
@@ -577,7 +576,7 @@ public class TagLocus {
             SequencePair<DNASequence, NucleotideCompound> psa = Alignments.getPairwiseAlignment(ds, dsRefSeq, PairwiseSequenceAlignerType.LOCAL, gapPen, subMatrix);
             int[] alignStats = getAlignStats(psa, printOutAlignments, tagIndex, sTBT.tagLength, sTBT.tagStrand);
             minRefGenIndex = adjustMinRefGenIndex(minRefGenIndex, alignStats[startRefGenIndex], alignStats[startTagIndex]);
-            maxRefGenIndex = adjustMaxRefGenIndex(maxRefGenIndex, alignStats[endRefGenIndex], alignStats[endTagIndex], sTBT.tagLength, refSeq);
+            maxRefGenIndex = adjustMaxRefGenIndex(maxRefGenIndex, alignStats[endRefGenIndex], alignStats[endTagIndex], sTBT.tagLength, refSeqInRegion);
             pairwiseAligns.add(psa);
             ++tagIndex;
         }
@@ -588,9 +587,9 @@ public class TagLocus {
         //Todo where are aseqs and names filled out?
         String[] aseqs = new String[theTags.size()];  // omit the reference genome sequence
         String[] names = new String[theTags.size()];
-        char[][] myAlign = getAlignment(pairwiseAligns, refSeq, minRefGenIndex, maxRefGenIndex, aseqs, names);
+        char[][] myAlign = getAlignment(pairwiseAligns, refSeqInRegion, minRefGenIndex, maxRefGenIndex, aseqs, names);
         if (printOutAlignments && minStartPosition > 10000000 && minStartPosition < 10100000) {
-            writeAlignment(refSeq, myAlign, minRefGenIndex, maxRefGenIndex);
+            writeAlignment(refSeqInRegion, myAlign, minRefGenIndex, maxRefGenIndex);
         }
         GenotypeTable a = null;
         TaxaList tL=new TaxaListBuilder().addAll(names).build();
