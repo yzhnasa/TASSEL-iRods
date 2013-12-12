@@ -78,6 +78,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
             copy[i] = new double[dm.distance[i].length];
             System.arraycopy(dm.distance[i], 0, copy[i], 0, dm.distance[i].length);
         }
+        distance = copy;
         taxaList= dm.taxaList;
     }
 
