@@ -22,7 +22,6 @@ class ByteGenotypeCallTable extends AbstractGenotypeCallTable {
         super(genotype.length, genotype[0].length, phased, alleleEncodings);
         mySiteInnerLoop = SuperByteMatrixBuilder.getInstance(myTaxaCount, mySiteCount);
         myGenotype = mySiteInnerLoop;
-        System.out.println("myGenotype class: " + myGenotype.getClass().getName());
         for (int t = 0; t < myTaxaCount; t++) {
             for (int s = 0; s < mySiteCount; s++) {
                 myGenotype.set(t, s, genotype[t][s]);
@@ -38,7 +37,6 @@ class ByteGenotypeCallTable extends AbstractGenotypeCallTable {
             myTaxonInnerLoop = genotype;
         }
         myGenotype = genotype;
-        System.out.println("myGenotype class: " + myGenotype.getClass().getName());
     }
 
     @Override
