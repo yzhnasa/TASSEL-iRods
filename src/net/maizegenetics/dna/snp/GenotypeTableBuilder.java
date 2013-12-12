@@ -160,6 +160,12 @@ public class GenotypeTableBuilder {
     }
 
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+        if (genotype.numberOfSites() != positionList.siteCount()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.siteCount());
+        }
+        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
+        }
         return new CoreGenotypeTable(genotype, positionList, taxaList, siteScore, alleleDepth);
     }
 
@@ -171,6 +177,12 @@ public class GenotypeTableBuilder {
      * @return new alignment
      */
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
+        if (genotype.numberOfSites() != positionList.siteCount()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.siteCount());
+        }
+        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
+        }
         return new CoreGenotypeTable(genotype, positionList, taxaList);
     }
 
@@ -183,6 +195,12 @@ public class GenotypeTableBuilder {
      * @return alignment backed by new HDF5 file
      */
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
+        if (genotype.numberOfSites() != positionList.siteCount()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.siteCount());
+        }
+        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
+        }
         GenotypeTableBuilder aB=GenotypeTableBuilder.getTaxaIncremental(positionList,hdf5File);
         for (int i=0; i<taxaList.numberOfTaxa(); i++) {
             aB.addTaxon(taxaList.get(i),genotype.genotypeAllSites(i));
