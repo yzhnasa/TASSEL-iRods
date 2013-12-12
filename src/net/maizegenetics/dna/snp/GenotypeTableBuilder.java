@@ -24,13 +24,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Create new alignments.  New alignments are built from a minimum of TaxaList, PositionList, and Genotypes.  Depth and Scores are optional
- * features of alignments.
+ * Builder for GenotypeTables.  New genotypeTables are built from a minimum of TaxaList, PositionList, and
+ * GenotypeCallTable.  Depth and Scores are optional features of GenotypeTables.
  * <p></p>
  If you know the taxa,position, and genotypes are known from the beginning use:
- Alignment a=GenotypeTableBuilder.getInstance(genotype, positionList, taxaList);
+ GenotypeTable a=GenotypeTableBuilder.getInstance(genotype, positionList, taxaList);
 
- In many situations only
+ In many situations only GenotypeTables are built incrementally, either by Taxa or Site.
+ <p></p>
+ For taxa building:
+ {@code
+     GenotypeTableBuilder gtb=GenotypeTableBuilder.getTaxaIncremental(gbs.positions(),outFile);
+     for (int i=0; i<hm2.numberOfTaxa(); i++) {
+         Taxon taxon=hm2.taxa().get(i);
+         byte[] geno=hm2.genotypeAllSites(i);
+         gtb.addTaxon(taxon,geno);
+         }
+     GenotypeTable gt=gtb.build();
+ }
  *
  * @author Terry Casstevens
  * @author Ed Buckler

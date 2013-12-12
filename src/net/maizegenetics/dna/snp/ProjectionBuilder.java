@@ -15,12 +15,13 @@ import java.util.NavigableSet;
 import java.util.TreeSet;
 
 /**
- * Builds a projection alignment.  Projection alignments use defined haplotypes and breakpoints
- * that point to high density genotypes (base Alignment).  These are used to efficiently store
+ * Builder for a projection alignment.  Projection alignments use defined haplotypes and breakpoints
+ * that point to high density genotypes (base GenotypeTable).  These are used to efficiently store
  * and connect low density maps with imputed high density genotypes.
  * <p></p>
- * The alignment built by this builder is a CoreAlignment with a ProjectionGenotype.  The taxa come from the
- * projection alignment file, while the sites and positions are the same as the base alignment.
+ * The alignment built by this builder is a CoreGenotypeTable with a ProjectionGenotypeCallTable.  The
+ * taxa come from the projection alignment file, while the sites and positions are the
+ * same as the base alignment.
  *
  * @author Ed Buckler
  */
