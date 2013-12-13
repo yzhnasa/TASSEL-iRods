@@ -493,15 +493,15 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
      * @return
      */
     private byte[] isSiteGood(byte[] calls) {
-        int[][] alleles = GenotypeTableUtils.getAllelesSortedByFrequency(calls);
-        if (alleles[0].length < 2) {
+        int[][] allelesByFreq = GenotypeTableUtils.getAllelesSortedByFrequency(calls);
+        if (allelesByFreq[0].length < 2) {
             return null; // quantitative SNP calling rendered the site invariant
         }
-        int aCnt = alleles[1][0] + alleles[1][1];
-        double theMAF = (double) alleles[1][1] / (double) aCnt;
-        if ((theMAF < minMAF) && (alleles[1][1] < minMAC)) return null;  // note that a site only needs to pass one of the criteria, minMAF &/or minMAC
-        byte majAllele = (byte) alleles[0][0];
-        byte minAllele = (byte) alleles[0][1];
+        int aCnt = allelesByFreq[1][0] + allelesByFreq[1][1];
+        double theMAF = (double) allelesByFreq[1][1] / (double) aCnt;
+        if ((theMAF < minMAF) && (allelesByFreq[1][1] < minMAC)) return null;  // note that a site only needs to pass one of the criteria, minMAF &/or minMAC
+        byte majAllele = (byte) allelesByFreq[0][0];
+        byte minAllele = (byte) allelesByFreq[0][1];
         if (!inclGaps && ((majAllele == NucleotideAlignmentConstants.GAP_ALLELE) || (minAllele == NucleotideAlignmentConstants.GAP_ALLELE))) {
             return null;
         }
@@ -510,10 +510,10 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         byte hetG1 = GenotypeTableUtils.getDiploidValue(majAllele, minAllele);
         byte hetG2 = GenotypeTableUtils.getDiploidValue(minAllele, majAllele);
         if (minF > -1.0) { // only test for minF if the parameter has been set above the theoretical minimum
-            double obsF = calculateF(calls, alleles, hetG1, hetG2, theMAF);
+            double obsF = calculateF(calls, allelesByFreq, hetG1, hetG2, theMAF);
             if (obsF < minF) return null;
         }
-        return getGoodAlleles(calls,alleles,homMaj,homMin,hetG1,hetG2,majAllele,minAllele);
+        return getGoodAlleles(calls,allelesByFreq,homMaj,homMin,hetG1,hetG2,majAllele,minAllele);
     }
 
     private double calculateF(byte[] calls, int[][] alleles, byte hetG1, byte hetG2, double theMAF) { 
@@ -569,40 +569,40 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         }
     }
     
-    private byte[] getGoodAlleles(byte[] calls,int[][] alleles,byte homMaj,byte homMin,byte hetG1,byte hetG2,byte majAllele,byte minAllele) {
+    private byte[] getGoodAlleles(byte[] calls,int[][] allelesByFreq,byte homMaj,byte homMin,byte hetG1,byte hetG2,byte majAllele,byte minAllele) {
         if (inclRare) {
-            byte[] byteAlleles = new byte[alleles[0].length];
-            for (int a = 0; a < alleles[0].length; a++) {
-                byteAlleles[a] = (byte) alleles[0][a];
+            byte[] byteAlleles = new byte[allelesByFreq[0].length];
+            for (int a = 0; a < allelesByFreq[0].length; a++) {
+                byteAlleles[a] = (byte) allelesByFreq[0][a];
             }
             return byteAlleles;
         } else {
             setBadCallsToMissing(calls,homMaj,homMin,hetG1,hetG2,majAllele,minAllele);
-            alleles = GenotypeTableUtils.getAllelesSortedByFrequency(calls); // the allele frequency & number of alleles may have been altered by setBadCallsToMissing()
-            if (alleles[0].length < 2) {
+            allelesByFreq = GenotypeTableUtils.getAllelesSortedByFrequency(calls); // the allele frequency & number of alleles may have been altered by setBadCallsToMissing()
+            if (allelesByFreq[0].length < 2) {
                 return null; // setBadCallsToMissing() rendered the site invariant
-            } else if (alleles[0].length == 2) {
-                return getMajMinAllelesOnly(alleles);
+            } else if (allelesByFreq[0].length == 2) {
+                return getMajMinAllelesOnly(allelesByFreq);
             } else {
                 if (callBiallelicSNPsWithGap) {
                     boolean hasGap = false;
-                    for (int a = 2; a < alleles[0].length; a++) {  // NOTE: the maj & min alleles are not checked (we know that they are NOT gap (inclGaps mutually exclusive with callBiallelicSNPsWithGap)
-                        if (((byte) alleles[0][a]) == NucleotideAlignmentConstants.GAP_ALLELE) {
+                    for (int a = 2; a < allelesByFreq[0].length; a++) {  // NOTE: the maj & min alleles are not checked (we know that they are NOT gap (inclGaps mutually exclusive with callBiallelicSNPsWithGap)
+                        if (((byte) allelesByFreq[0][a]) == NucleotideAlignmentConstants.GAP_ALLELE) {
                             hasGap = true;
                             break;
                         }
                     }
                     if (hasGap) {
                         byte[] byteAlleles = new byte[3];
-                        byteAlleles[0] = (byte) alleles[0][0];
-                        byteAlleles[1] = (byte) alleles[0][1];
+                        byteAlleles[0] = (byte) allelesByFreq[0][0];
+                        byteAlleles[1] = (byte) allelesByFreq[0][1];
                         byteAlleles[2] = NucleotideAlignmentConstants.GAP_ALLELE;
                         return byteAlleles;
                     } else {
-                        return getMajMinAllelesOnly(alleles);
+                        return getMajMinAllelesOnly(allelesByFreq);
                     }
                 } else {
-                    return getMajMinAllelesOnly(alleles);
+                    return getMajMinAllelesOnly(allelesByFreq);
                 }
             }
         }
