@@ -360,7 +360,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                     if (siteCnt % 100 == 0) {
                         double rate = (double) siteCnt / (double) (System.currentTimeMillis() - time);
                         myLogger.info(String.format(
-                                "Chr:%d Pos:%d Loci=%d SNPs=%d rate=%g SNP/millisec %n", currPos[CHR], currPos[START_POS], countLoci, siteCnt, rate));
+                                "Chr:%d Pos:%d Loci=%d SNPs=%d rate=%g SNP/millisec", currPos[CHR], currPos[START_POS], countLoci, siteCnt, rate));
                     }
                 } else if (currPos!=null) { logRejectedTagLocus(currTAL,locusLogDOS); }
                 currPos = newPos; // start a new TAL with the current tag
