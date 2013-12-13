@@ -4,15 +4,14 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.*;
 
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-
 import net.maizegenetics.prefs.TasselPrefs;
-
 import net.maizegenetics.util.Utils;
 
 import javax.swing.*;
@@ -26,9 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-
 import java.io.*;
-import net.maizegenetics.pal.alignment.io.ProjectionAlignmentIO;
 
 import org.apache.log4j.Logger;
 /**
@@ -147,7 +144,7 @@ public class ProjectionLoadPlugin extends AbstractPlugin {
 
     public DataSet loadFile(String theRecombinationBreakpoints, String theHighDensityMarkers) {
 
-        Alignment theAlignmentForGenotype = null;
+        GenotypeTable theAlignmentForGenotype = null;
         //Terry - fix this
         try {
         theAlignmentForGenotype = ProjectionAlignmentIO.getInstance(theRecombinationBreakpoints, theHighDensityMarkers);
