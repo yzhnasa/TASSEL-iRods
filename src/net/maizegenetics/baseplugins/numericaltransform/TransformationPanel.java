@@ -1,7 +1,7 @@
 package net.maizegenetics.baseplugins.numericaltransform;
 
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.plugindef.Datum;
 
 import javax.swing.*;

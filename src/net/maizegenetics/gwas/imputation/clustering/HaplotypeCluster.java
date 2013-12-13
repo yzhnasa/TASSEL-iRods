@@ -7,7 +7,7 @@ import java.util.Iterator;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
  * A HaplotypeCluster is a List of Haplotypes that are all similar. Size and score are

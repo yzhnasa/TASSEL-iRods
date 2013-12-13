@@ -8,9 +8,9 @@
 
 package net.maizegenetics.popgen.tree;
 
-import net.maizegenetics.pal.io.FormattedOutput;
-import net.maizegenetics.pal.math.OrthogonalHints;
-import net.maizegenetics.pal.report.Report;
+import net.maizegenetics.util.FormattedOutput;
+import net.maizegenetics.stats.math.OrthogonalHints;
+import net.maizegenetics.util.Report;
 
 import java.io.Serializable;
 
@@ -140,7 +140,7 @@ public abstract class MutationRateModel implements Units,
 //			throw new IllegalArgumentException("Incompatible units, expecting "+getUnits()+", found (in toScale) "+toScale.getUnits());
 //		}
 //		TimeOrderCharacterData scaled = toScale.clone(toScale);
-//		double[] times = new double[scaled.getIdCount()];
+//		double[] times = new double[scaled.numberOfTaxa()];
 //		for (int i = 0; i < times.length; i++) {
 //			times[i] = getExpectedSubstitutions(scaled.getTime(i));
 //		}

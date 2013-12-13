@@ -6,8 +6,8 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -37,7 +37,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     private int myTestSite = -1;
     private int myNumAccumulateIntervals = 100;
     private boolean myIsAccumulateResults = false;
-    private FilterAlignment myPossibleAlignmentForSiteList;
+    private FilterGenotypeTable myPossibleAlignmentForSiteList;
     private String myPossibleAlignmentName;
     private int[] myPossibleSiteList;
     private LinkageDisequilibrium.HetTreatment myHetTreatment = LinkageDisequilibrium.HetTreatment.Haplotype;
@@ -52,7 +52,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     public DataSet performFunction(DataSet input) {
 
         try {
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
             if (alignInList.size() < 1) {
                 JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection.  Please select sequence or marker alignment.");
                 return null;
@@ -62,7 +62,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
 
             if (alignInList.size() > 1) {
                 try {
-                    FilterAlignment temp = (FilterAlignment) alignInList.get(1).getData();
+                    FilterGenotypeTable temp = (FilterGenotypeTable) alignInList.get(1).getData();
                     if (temp.getBaseAlignment() == current.getData()) {
                         myPossibleAlignmentForSiteList = temp;
                         myPossibleAlignmentName = alignInList.get(1).getName();
@@ -73,7 +73,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
             }
 
             if (isInteractive()) {
-                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(((Alignment) current.getData()).getSiteCount(), myPossibleAlignmentName);
+                LinkageDiseqDialog myDialog = new LinkageDiseqDialog(((GenotypeTable) current.getData()).numberOfSites(), myPossibleAlignmentName);
                 myDialog.setLocationRelativeTo(getParentFrame());
                 myDialog.setVisible(true);
                 if (myDialog.isCancel()) {
@@ -120,7 +120,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
     }
 
     private DataSet processDatum(Datum input) {
-        Alignment aa = (Alignment) input.getData();
+        GenotypeTable aa = (GenotypeTable) input.getData();
         LinkageDisequilibrium theLD = new LinkageDisequilibrium(aa, myWindowSize, myLDType, myTestSite, this, myIsAccumulateResults, myNumAccumulateIntervals, myPossibleSiteList, myHetTreatment);
         try {
             theLD.run();

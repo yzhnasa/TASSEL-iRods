@@ -14,7 +14,7 @@
  */
 package net.maizegenetics.popgen.distance;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.ProgressListener;
@@ -28,7 +28,7 @@ import net.maizegenetics.util.ProgressListener;
  * along the identity diagonal is 0 (isTrueIBS = false), but changing isTrueIBS = true will calculate
  * the identity.
  * <p>
- * The distance estimates become wildly inaccuate when two few sites are used to calculate
+ * The distance estimates become wildly inaccuate when too few sites are used to calculate
  * distance.  The minSiteComp parameter can be used to control the minimum number of sites
  * used for a calculation.  If there are insufficient sites in the estimate, then Double.NaN
  * is returned.
@@ -40,7 +40,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
 
     private ProgressListener myListener = null;
     private int numSeqs;
-    private Alignment theTBA = null;
+    private GenotypeTable theTBA = null;
     /**
      * Holds the average numbers of sites in the comparisons
      */
@@ -53,7 +53,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      *
      * @param theAlignment Alignment used to computed distances
      */
-    public IBSDistanceMatrix(Alignment theAlignment) {
+    public IBSDistanceMatrix(GenotypeTable theAlignment) {
         this(theAlignment, 0, null);
     }
 
@@ -63,7 +63,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @param theAlignment Alignment used to computed distances
      * @param listener Listener to track progress in calculations
      */
-    public IBSDistanceMatrix(Alignment theAlignment, ProgressListener listener) {
+    public IBSDistanceMatrix(GenotypeTable theAlignment, ProgressListener listener) {
         this(theAlignment, 0, listener);
     }
 
@@ -74,7 +74,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @param minSiteComp Minimum number of sites needed to estimate distance
      * @param listener Listener to track progress in calculations
      */
-    public IBSDistanceMatrix(Alignment theAlignment, int minSiteComp, ProgressListener listener) {
+    public IBSDistanceMatrix(GenotypeTable theAlignment, int minSiteComp, ProgressListener listener) {
         this(theAlignment, minSiteComp, false, listener);
     }
 
@@ -86,15 +86,15 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @param trueIBS estimate diagonal distance based IBS (default = false, i=i=0.0)
      * @param listener Listener to track progress in calculations
      */
-    public IBSDistanceMatrix(Alignment theAlignment, int minSiteComp, boolean trueIBS, ProgressListener listener) {
+    public IBSDistanceMatrix(GenotypeTable theAlignment, int minSiteComp, boolean trueIBS, ProgressListener listener) {
         super();
         this.minSitesComp = minSiteComp;
         isTrueIBS = trueIBS;
         myListener = listener;
-        numSeqs = theAlignment.getSequenceCount();
+        numSeqs = theAlignment.numberOfTaxa();
         theTBA = theAlignment;
         //  this should have an option to only use the 2 or 3 most common alleles
-        setIdGroup(theAlignment.getTaxaList());
+        setIdGroup(theAlignment.taxa());
         computeHetBitDistances();
     }
 
@@ -106,14 +106,14 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         int count = 0;
         double[][] distance = new double[numSeqs][numSeqs];
         for (int i = 0; i < numSeqs; i++) {
-            long[] iMj = theTBA.getAllelePresenceForAllSites(i, 0).getBits();
-            long[] iMn = theTBA.getAllelePresenceForAllSites(i, 1).getBits();
+            long[] iMj = theTBA.allelePresenceForAllSites(i, 0).getBits();
+            long[] iMn = theTBA.allelePresenceForAllSites(i, 1).getBits();
             for (int j = i; j < numSeqs; j++) {
                 if (j == i && !isTrueIBS) {
                     distance[i][i] = 0;
                 } else {
-                    long[] jMj = theTBA.getAllelePresenceForAllSites(j, 0).getBits();
-                    long[] jMn = theTBA.getAllelePresenceForAllSites(j, 1).getBits();
+                    long[] jMj = theTBA.allelePresenceForAllSites(j, 0).getBits();
+                    long[] jMn = theTBA.allelePresenceForAllSites(j, 1).getBits();
                     double[] result=computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesComp);
                     distance[i][j] = distance[j][i] = result[0];
                     avgTotalSites += result[1];  //this assumes not hets
@@ -133,7 +133,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @param taxon2 index of taxon 2
      * @return array of {distance, number of sites used in comparison}
      */
-    public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2) {
+    public static double[] computeHetBitDistances(GenotypeTable theTBA, int taxon1, int taxon2) {
         return computeHetBitDistances(theTBA, taxon1, taxon2, 0, false);
     }
 
@@ -147,12 +147,12 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * 
      * @return array of {distance, number of sites used in comparison}
      */
-    public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
+    public static double[] computeHetBitDistances(GenotypeTable theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
       //  if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
-        long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
-        long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
-        long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
-        long[] jMn = theTBA.getAllelePresenceForAllSites(taxon2, 1).getBits();
+        long[] iMj = theTBA.allelePresenceForAllSites(taxon1, 0).getBits();
+        long[] iMn = theTBA.allelePresenceForAllSites(taxon1, 1).getBits();
+        long[] jMj = theTBA.allelePresenceForAllSites(taxon2, 0).getBits();
+        long[] jMn = theTBA.allelePresenceForAllSites(taxon2, 1).getBits();
         return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1); 
     }
     
@@ -170,18 +170,18 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * 
      * @return array of {distance, number of sites used in comparison}
      */
-    public static double[] computeHetBitDistances(Alignment theTBA, int taxon1, int taxon2, 
+    public static double[] computeHetBitDistances(GenotypeTable theTBA, int taxon1, int taxon2, 
             int minSitesCompared, int startWord, int endWord, BitSet maskBadSet) {
        // if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
-        long[] iMj = theTBA.getAllelePresenceForAllSites(taxon1, 0).getBits();
-        long[] iMn = theTBA.getAllelePresenceForAllSites(taxon1, 1).getBits();
+        long[] iMj = theTBA.allelePresenceForAllSites(taxon1, 0).getBits();
+        long[] iMn = theTBA.allelePresenceForAllSites(taxon1, 1).getBits();
         if(maskBadSet!=null) {
             long[] maskBad=maskBadSet.getBits();
             for (int i = 0; i < iMj.length; i++) {iMj[i]=iMj[i]& maskBad[i];}
             for (int i = 0; i < iMn.length; i++) {iMn[i]=iMn[i]& maskBad[i];}
         }
-        long[] jMj = theTBA.getAllelePresenceForAllSites(taxon2, 0).getBits();
-        long[] jMn = theTBA.getAllelePresenceForAllSites(taxon2, 1).getBits();
+        long[] jMj = theTBA.allelePresenceForAllSites(taxon2, 0).getBits();
+        long[] jMn = theTBA.allelePresenceForAllSites(taxon2, 1).getBits();
         return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1);
     }
     

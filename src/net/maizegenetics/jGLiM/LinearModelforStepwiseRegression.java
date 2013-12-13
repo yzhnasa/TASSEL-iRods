@@ -2,7 +2,7 @@ package net.maizegenetics.jGLiM;
 
 import java.util.ArrayList;
 
-import net.maizegenetics.pal.report.SimpleTableReport;
+import net.maizegenetics.util.SimpleTableReport;
 
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix1D;

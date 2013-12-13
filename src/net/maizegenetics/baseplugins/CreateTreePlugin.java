@@ -6,7 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -43,7 +43,7 @@ public class CreateTreePlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
             if (alignInList.size() < 1) {
                 String message = "Invalid selection.  Please select sequence or marker alignment.";
                 if (isInteractive()) {
@@ -87,7 +87,7 @@ public class CreateTreePlugin extends AbstractPlugin {
     }
 
     public DataSet processDatum(Datum input, boolean isNJ, boolean isSaveMatrix) {
-        Alignment aa = (Alignment) input.getData();
+        GenotypeTable aa = (GenotypeTable) input.getData();
         // SitePattern sp = new SitePattern(aa);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(aa, this);
         // adm.recompute(sp);

@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
  * HaplotypeClusterer clusters haplotypes by distance as defined in the Haplotype class.

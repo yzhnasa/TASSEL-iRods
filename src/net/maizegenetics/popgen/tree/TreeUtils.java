@@ -6,11 +6,11 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.popgen.tree;
 
-import net.maizegenetics.pal.io.FormattedOutput;
-import net.maizegenetics.pal.math.MersenneTwisterFast;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.util.FormattedOutput;
+import net.maizegenetics.stats.math.MersenneTwisterFast;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 
 import java.io.PrintWriter;
 

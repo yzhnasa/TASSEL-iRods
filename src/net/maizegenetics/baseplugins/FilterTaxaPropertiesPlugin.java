@@ -6,10 +6,10 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -49,7 +49,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
 
             if (alignInList.size() != 1) {
                 String gpMessage = "Invalid selection.  Please Select One Genotype Alignment.";
@@ -78,7 +78,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
     }
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
-        Alignment aa = (Alignment) inDatum.getData();
+        GenotypeTable aa = (GenotypeTable) inDatum.getData();
 
         if (isInteractive) {
             FilterTaxaPropertiesDialog theDialog = new FilterTaxaPropertiesDialog();
@@ -95,7 +95,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             theDialog.dispose();
         }
 
-        Alignment result = getFilteredAlignment(aa);
+        GenotypeTable result = getFilteredAlignment(aa);
 
         StringBuilder builder = new StringBuilder();
         builder.append("Filter Alignment by Taxa Properties...\n");
@@ -117,9 +117,9 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             }
         }
 
-        if (result.getSequenceCount() != 0) {
-            String theName = inDatum.getName() + "_" + result.getSequenceCount() + "Taxa";
-            myLogger.info("Resulting Number Sequences: " + result.getSequenceCount());
+        if (result.numberOfTaxa() != 0) {
+            String theName = inDatum.getName() + "_" + result.numberOfTaxa() + "Taxa";
+            myLogger.info("Resulting Number Sequences: " + result.numberOfTaxa());
             return new Datum(theName, result, theComment);
         } else {
             if (isInteractive()) {
@@ -132,10 +132,10 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
         }
     }
 
-    private Alignment getFilteredAlignment(Alignment alignment) {
-        int numSites = alignment.getSiteCount();
-        int numTaxa = alignment.getSequenceCount();
-        TaxaList ids = alignment.getTaxaList();
+    private GenotypeTable getFilteredAlignment(GenotypeTable alignment) {
+        int numSites = alignment.numberOfSites();
+        int numTaxa = alignment.numberOfTaxa();
+        TaxaList ids = alignment.taxa();
 
         TaxaListBuilder keepTaxaList = new TaxaListBuilder();
         for (int t = 0; t < numTaxa; t++) {
@@ -143,7 +143,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             progress((int) ((double) t / (double) numTaxa * 100.0), null);
 
             if (myMinNotMissing != 0.0) {
-                int totalNotMissing = alignment.getTotalNotMissingForTaxon(t);
+                int totalNotMissing = alignment.totalNonMissingForTaxon(t);
                 double percentNotMissing = (double) totalNotMissing / (double) numSites;
                 if (percentNotMissing < myMinNotMissing) {
                     continue;
@@ -151,8 +151,8 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
             }
 
             if ((myMinHeterozygous != 0.0) || (myMaxHeterozygous != 1.0)) {
-                int numHeterozygous = alignment.getHeterozygousCountForTaxon(t);
-                int totalSitesNotMissing = alignment.getTotalNotMissingForTaxon(t);
+                int numHeterozygous = alignment.heterozygousCountForTaxon(t);
+                int totalSitesNotMissing = alignment.totalNonMissingForTaxon(t);
                 double percentHets = (double) numHeterozygous / (double) totalSitesNotMissing;
                 if ((percentHets < myMinHeterozygous) || (percentHets > myMaxHeterozygous)) {
                     continue;
@@ -161,7 +161,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
 
             keepTaxaList.add(ids.get(t));
         }
-        return FilterAlignment.getInstance(alignment, keepTaxaList.build(), false);
+        return FilterGenotypeTable.getInstance(alignment, keepTaxaList.build(), false);
     }
 
     public double getMinNotMissing() {

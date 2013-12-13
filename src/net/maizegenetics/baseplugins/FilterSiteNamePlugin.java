@@ -6,8 +6,8 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -49,7 +49,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
 
         try {
 
-            List inputData = input.getDataOfType(Alignment.class);
+            List inputData = input.getDataOfType(GenotypeTable.class);
             if (inputData.size() != 1) {
                 if (isInteractive()) {
                     JOptionPane.showMessageDialog(getParentFrame(), "Invalid selection. Please select a single alignment.");
@@ -77,18 +77,18 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
 
     private Datum processDatum(Datum inDatum, boolean isInteractive) {
 
-        final Alignment alignment = (Alignment) inDatum.getData();
+        final GenotypeTable alignment = (GenotypeTable) inDatum.getData();
 
         if (isInteractive) {
             AbstractAvailableListModel listModel = new AbstractAvailableListModel() {
                 @Override
                 public int getRealSize() {
-                    return alignment.getSiteCount();
+                    return alignment.numberOfSites();
                 }
 
                 @Override
                 public String getRealElementAt(int index) {
-                    return alignment.getSNPID(index);
+                    return alignment.siteName(index);
                 }
             };
             SelectFromAvailableDialog dialog = new SelectFromAvailableDialog(getParentFrame(), "Site Name Filter", listModel);
@@ -101,21 +101,21 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
             dialog.dispose();
         }
 
-        Alignment result = null;
+        GenotypeTable result = null;
 
         if (((mySitesToKeep != null) && (mySitesToKeep.length != 0))) {
-            result = FilterAlignment.getInstance(alignment, mySitesToKeep);
+            result = FilterGenotypeTable.getInstance(alignment, mySitesToKeep);
         } else if (((mySiteNamesToKeep != null) && (mySiteNamesToKeep.length != 0))) {
-            result = FilterAlignment.getInstance(alignment, mySiteNamesToKeep);
+            result = FilterGenotypeTable.getInstance(alignment, mySiteNamesToKeep);
         } else if (((mySiteNamesToRemove != null) && (mySiteNamesToRemove.length != 0))) {
-            result = FilterAlignment.getInstanceRemoveSiteNames(alignment, mySiteNamesToRemove);
+            result = FilterGenotypeTable.getInstanceRemoveSiteNames(alignment, mySiteNamesToRemove);
         } else {
             return null;
         }
 
         String theName, theComment;
-        theName = inDatum.getName() + "_" + result.getSiteCount() + "_Sites";
-        theComment = "Subset of " + result.getSiteCount() + " from " + alignment.getSiteCount() + " Sites\n" + inDatum.getComment();
+        theName = inDatum.getName() + "_" + result.numberOfSites() + "_Sites";
+        theComment = "Subset of " + result.numberOfSites() + " from " + alignment.numberOfSites() + " Sites\n" + inDatum.getComment();
         return new Datum(theName, result, theComment);
 
     }

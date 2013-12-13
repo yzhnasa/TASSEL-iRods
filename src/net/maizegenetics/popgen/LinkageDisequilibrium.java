@@ -7,10 +7,10 @@
 package net.maizegenetics.popgen;
 
 import cern.colt.map.OpenLongObjectHashMap;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentBuilder;
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.statistics.FisherExact;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.stats.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
@@ -88,7 +88,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         Haplotype, Homozygous, Genotype
     };
     private static final Logger myLogger = Logger.getLogger(LinkageDisequilibrium.class);
-    private Alignment myAlignment;
+    private GenotypeTable myAlignment;
 //    private Alignment mySBitAlignment;
     private int myMinTaxaForEstimate = 20;
     private int myWindowSize = 50;
@@ -125,9 +125,9 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param sitesList
      * @param hetTreatment
      */
-    public LinkageDisequilibrium(Alignment alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
+    public LinkageDisequilibrium(GenotypeTable alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
         myAlignment = alignment;
-        myFisherExact = new FisherExact((2 * myAlignment.getSequenceCount()) + 10);
+        myFisherExact = new FisherExact((2 * myAlignment.numberOfTaxa()) + 10);
         myWindowSize = windowSize;
         myCurrDesign = LDType;
         myTestSite = testSite;
@@ -165,7 +165,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     private void initMatrices() {
-        int numSites = myAlignment.getSiteCount();
+        int numSites = myAlignment.numberOfSites();
         if (myCurrDesign == testDesign.All) {
             myTotalTests = numSites * (numSites - 1) / 2;
         } else if (myCurrDesign == testDesign.SlidingWindow) {
@@ -187,23 +187,23 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     }
 
     private long getMapKey(int r, int c) {
-        return (c < r) ? (((long) c * myAlignment.getSiteCount()) + r) : (((long) r * myAlignment.getSiteCount()) + c);
+        return (c < r) ? (((long) c * myAlignment.numberOfSites()) + r) : (((long) r * myAlignment.numberOfSites()) + c);
     }
 
-    public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, Alignment alignment, int site1, int site2) {
-        FisherExact fisherExact = new FisherExact((2 * alignment.getSequenceCount()) + 10);
-        BitSet rMj = alignment.getAllelePresenceForAllTaxa(site1, 0);
-        BitSet rMn = alignment.getAllelePresenceForAllTaxa(site1, 1);
-        BitSet cMj = alignment.getAllelePresenceForAllTaxa(site2, 0);
-        BitSet cMn = alignment.getAllelePresenceForAllTaxa(site2, 1);
+    public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, GenotypeTable alignment, int site1, int site2) {
+        FisherExact fisherExact = new FisherExact((2 * alignment.numberOfTaxa()) + 10);
+        BitSet rMj = alignment.allelePresenceForAllTaxa(site1, 0);
+        BitSet rMn = alignment.allelePresenceForAllTaxa(site1, 1);
+        BitSet cMj = alignment.allelePresenceForAllTaxa(site2, 0);
+        BitSet cMn = alignment.allelePresenceForAllTaxa(site2, 1);
         return getLDForSitePair(rMj, rMn, cMj, cMn, 2, minTaxaForEstimate, -1.0f, fisherExact);
     }
 
     private void calculateBitLDForHaplotype(boolean ignoreHets) {
         //It will ignore hets, make a new Alignment and set all het calls to missing. Otherwise set the pointer to the old alignment
-        Alignment workingAlignment;
+        GenotypeTable workingAlignment;
         if (ignoreHets) {
-            workingAlignment =AlignmentBuilder.getHomozygousInstance(myAlignment);
+            workingAlignment =GenotypeTableBuilder.getHomozygousInstance(myAlignment);
         } else {
             workingAlignment = myAlignment;
         }
@@ -212,10 +212,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             int c = getColFromIndex(currTest);
             int currentProgress = (int) ((double) 100.0 * ((double) currTest / (double) myTotalTests));
             fireProgress(currentProgress);
-            BitSet rMj = workingAlignment.getAllelePresenceForAllTaxa(r, 0);
-            BitSet rMn = workingAlignment.getAllelePresenceForAllTaxa(r, 1);
-            BitSet cMj = workingAlignment.getAllelePresenceForAllTaxa(c, 0);
-            BitSet cMn = workingAlignment.getAllelePresenceForAllTaxa(c, 1);
+            BitSet rMj = workingAlignment.allelePresenceForAllTaxa(r, 0);
+            BitSet rMn = workingAlignment.allelePresenceForAllTaxa(r, 1);
+            BitSet cMj = workingAlignment.allelePresenceForAllTaxa(c, 0);
+            BitSet cMn = workingAlignment.allelePresenceForAllTaxa(c, 1);
             LDResult ldr = getLDForSitePair(rMj, rMn, cMj, cMn, 2, myMinTaxaForEstimate, -1.0f, myFisherExact);
             if (myIsAccumulativeReport) {
                 if (ldr.r2 == Float.NaN) {
@@ -323,7 +323,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
     private int getRowFromIndex(long index) {
 
         int row = 0;
-        int n = myAlignment.getSiteCount();
+        int n = myAlignment.numberOfSites();
         int w = myWindowSize;
 
         if (myCurrDesign == testDesign.SlidingWindow && n > w + 1 && index >= w * (w + 1) / (double) 2) {
@@ -355,7 +355,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
         int row = getRowFromIndex(index);
         int col = 0;
-        int n = myAlignment.getSiteCount();
+        int n = myAlignment.numberOfSites();
         int w = myWindowSize;
 
         if (myCurrDesign == testDesign.SlidingWindow && n > w + 1 && index >= w * (w + 1) / (double) 2) {
@@ -473,14 +473,14 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * Returns the counts of the numSites in the alignment
      */
     public int getSiteCount() {
-        return myAlignment.getSiteCount();
+        return myAlignment.numberOfSites();
     }
 
     /**
      * Returns an annotated aligment if one was used for this LD this could be
      * used to access information of locus position
      */
-    public Alignment getAlignment() {
+    public GenotypeTable getAlignment() {
         return myAlignment;
     }
 
@@ -565,28 +565,28 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             int r = getRowFromIndex(row);
             int c = getColFromIndex(row);
 
-            String rState = myAlignment.getMajorAlleleAsString(r) + ":" + myAlignment.getMinorAlleleAsString(r);
+            String rState = myAlignment.majorAlleleAsString(r) + ":" + myAlignment.minorAlleleAsString(r);
             Integer rStr = Integer.valueOf(r);
 
-            String cState = myAlignment.getMajorAlleleAsString(c) + ":" + myAlignment.getMinorAlleleAsString(c);
+            String cState = myAlignment.majorAlleleAsString(c) + ":" + myAlignment.minorAlleleAsString(c);
             Integer cStr = Integer.valueOf(c);
 
-            data[labelOffset++] = myAlignment.getChromosomeName(r);
-            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInChromosome(r));
+            data[labelOffset++] = myAlignment.chromosomeName(r);
+            data[labelOffset++] = Integer.valueOf(myAlignment.chromosomalPosition(r));
             data[labelOffset++] = rStr;
 
             data[labelOffset++] = IntegerTwo;
             data[labelOffset++] = rState;
             data[labelOffset++] = NotImplemented;
-            data[labelOffset++] = myAlignment.getChromosomeName(c);
-            data[labelOffset++] = Integer.valueOf(myAlignment.getPositionInChromosome(c));
+            data[labelOffset++] = myAlignment.chromosomeName(c);
+            data[labelOffset++] = Integer.valueOf(myAlignment.chromosomalPosition(c));
             data[labelOffset++] = cStr;
 
             data[labelOffset++] = IntegerTwo;
             data[labelOffset++] = cState;
             data[labelOffset++] = NotImplemented;
-            if (myAlignment.getChromosomeName(r).equals(myAlignment.getChromosomeName(c))) {
-                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.getPositionInChromosome(r) - myAlignment.getPositionInChromosome(c)));
+            if (myAlignment.chromosomeName(r).equals(myAlignment.chromosomeName(c))) {
+                data[labelOffset++] = Integer.valueOf(Math.abs(myAlignment.chromosomalPosition(r) - myAlignment.chromosomalPosition(c)));
             } else {
                 data[labelOffset++] = NA;
             }

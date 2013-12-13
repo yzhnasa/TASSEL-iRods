@@ -12,7 +12,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import net.maizegenetics.gbs.homology.TagMatchFinder;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa;
+import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.gbs.util.ReadsByTaxa;
 

@@ -1,7 +1,7 @@
 package net.maizegenetics.gwas.imputation.clustering;
 
-import net.maizegenetics.pal.alignment.AlignmentUtils;
-import net.maizegenetics.pal.alignment.NucleotideAlignmentConstants;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
  * A Haplotype is a sequence which can be either a true haplotype or a genotype.
@@ -100,9 +100,9 @@ public class Haplotype implements Comparable<Haplotype>{
 			byte b0 = hap0[s];
 			byte b1 = hap1[s];
 			if (b0 != b1 && b0 != N && b1 != N) {
-				if (AlignmentUtils.isHeterozygous(b0)) {
-					if (!AlignmentUtils.isHeterozygous(b1)) d++;
-				} else if (AlignmentUtils.isHeterozygous(b1)) d++;
+				if (GenotypeTableUtils.isHeterozygous(b0)) {
+					if (!GenotypeTableUtils.isHeterozygous(b1)) d++;
+				} else if (GenotypeTableUtils.isHeterozygous(b1)) d++;
 				else d += 2;
 			}
 		}

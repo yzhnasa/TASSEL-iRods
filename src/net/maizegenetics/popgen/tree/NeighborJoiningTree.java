@@ -91,7 +91,7 @@ public class NeighborJoiningTree extends SimpleTree
 		for (int i = 0; i < numClusters; i++)
 		{
 			Node tmp = NodeFactory.createNode();
-			tmp.setIdentifier(m.getIdentifier(i));
+			tmp.setIdentifier(m.getTaxon(i));
 			getRoot().addChild(tmp);
 		}
 

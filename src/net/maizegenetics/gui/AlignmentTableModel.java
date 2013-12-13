@@ -4,8 +4,8 @@
  */
 package net.maizegenetics.gui;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.taxa.TaxaList;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.taxa.TaxaList;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -29,14 +29,14 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     };
     private COLUMN_NAME_TYPE myColumnNameType = COLUMN_NAME_TYPE.physicalPosition;
     private boolean myIsPhysicalPosition = true;
-    private final Alignment myAlignment;
+    private final GenotypeTable myAlignment;
     // Left and Right variables
     private int myHorizontalPageSize = 0;
     private int myHorizontalCenter = 0;
     private int myHorizontalStart = 0;
     private int myHorizontalEnd = 0;
 
-    public AlignmentTableModel(Alignment alignment, int horizontalPageSize) {
+    public AlignmentTableModel(GenotypeTable alignment, int horizontalPageSize) {
 
         if (alignment == null) {
             throw new IllegalArgumentException("AlignmentTableModel: init: alignment can not be null.");
@@ -44,19 +44,19 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         myAlignment = alignment;
 
-        myHorizontalCenter = myAlignment.getSiteCount() / 2;
+        myHorizontalCenter = myAlignment.numberOfSites() / 2;
 
         setHorizontalPageSize(horizontalPageSize);
 
     }
 
-    public AlignmentTableModel(Alignment alignment) {
+    public AlignmentTableModel(GenotypeTable alignment) {
         this(alignment, 100);
     }
 
     // Return values appropriate for the visible table part
     public int getRowCount() {
-        return myAlignment.getSequenceCount();
+        return myAlignment.numberOfTaxa();
     }
 
     public int getColumnCount() {
@@ -71,7 +71,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         try {
             realColumn = col + myHorizontalStart;
-            result = myAlignment.getBaseAsString(row, realColumn);
+            result = myAlignment.genotypeAsString(row, realColumn);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("row: " + row + "   col: " + col + "   realColumn: " + realColumn);
@@ -87,7 +87,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public Object getRealValueAt(int row, int col) {
-        return myAlignment.getBase(row, col);
+        return myAlignment.genotype(row, col);
     }
 
     public String getColumnName(int col) {
@@ -95,15 +95,15 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
         int realColumn = col + myHorizontalStart;
 
         if (myColumnNameType == COLUMN_NAME_TYPE.physicalPosition) {
-            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.getPositionInChromosome(realColumn));
+            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.chromosomalPosition(realColumn));
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteNumber) {
-            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.getPositionInChromosome(realColumn));
+            return String.valueOf(realColumn) + ": " + String.valueOf(myAlignment.chromosomalPosition(realColumn));
         } else if (myColumnNameType == COLUMN_NAME_TYPE.locus) {
-            return myAlignment.getChromosomeName(realColumn);
+            return myAlignment.chromosomeName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.siteName) {
-            return myAlignment.getSNPID(realColumn);
+            return myAlignment.siteName(realColumn);
         } else if (myColumnNameType == COLUMN_NAME_TYPE.alleles) {
-            int[][] alleles = myAlignment.getAllelesSortedByFrequency(realColumn);
+            int[][] alleles = myAlignment.allelesSortedByFrequency(realColumn);
             int numAlleles = alleles[0].length;
             double total = 0.0;
 
@@ -117,13 +117,13 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
                     builder.append("; ");
                 }
                 builder.append(NUMBER_FORMAT.format((double) alleles[1][i] / total));
-                builder.append(myAlignment.getBaseAsString(realColumn, (byte) alleles[0][i]));
+                builder.append(myAlignment.genotypeAsString(realColumn, (byte) alleles[0][i]));
             }
 
             return builder.toString();
         }
 
-        return String.valueOf(myAlignment.getPositionInChromosome(realColumn));
+        return String.valueOf(myAlignment.chromosomalPosition(realColumn));
 
     }
 
@@ -146,7 +146,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public int getRealColumnCount() {
-        return myAlignment.getSiteCount();
+        return myAlignment.numberOfSites();
     }
 
     public int getHorizontalPageSize() {
@@ -204,7 +204,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     public void adjustPosition(int position) {
 
         if (isPhysicalPosition()) {
-            position = myAlignment.getSiteOfPhysicalPosition(position, myAlignment.getChromosome(0));
+            position = myAlignment.siteOfPhysicalPosition(position, myAlignment.chromosome(0));
             if (position < 0) {
                 position = -position;
             }
@@ -219,7 +219,7 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
     }
 
     public void adjustPositionToCenter() {
-        adjustPositionInternal(myAlignment.getSiteCount() / 2);
+        adjustPositionInternal(myAlignment.numberOfSites() / 2);
     }
 
     /**
@@ -247,8 +247,8 @@ public class AlignmentTableModel extends AbstractTableModel implements ChangeLis
 
         List result = new ArrayList();
 
-        TaxaList idGroup = myAlignment.getTaxaList();
-        for (int i = 0, n = idGroup.getTaxaCount(); i < n; i++) {
+        TaxaList idGroup = myAlignment.taxa();
+        for (int i = 0, n = idGroup.numberOfTaxa(); i < n; i++) {
             result.add(idGroup.get(i));
         }
 

@@ -6,7 +6,7 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.popgen.LinkageDisequilibrium;
 
 import javax.swing.*;
@@ -32,7 +32,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
     public final static int RSQUARE = 2;
     double minimumChromosomeLength = 10;
     LinkageDisequilibrium theLD;
-    Alignment theAA;
+    GenotypeTable theAA;
     boolean includeBlockSchematic, chromosomalScale;
     boolean includeLabels = true;
     int totalVariableSites, totalLoci, totalChromosomes, totalIntervals, totalBlocks;
@@ -77,13 +77,13 @@ public class LinkageDisequilibriumComponent extends JComponent {
         this.diseq = new double[windowSize][windowSize];
         setXStart();
         setYStart();
-        jump = new int[totalVariableSites+theAA.getNumChromosomes()-1];
-        String locus = theAA.getChromosomeName(0);
+        jump = new int[totalVariableSites+theAA.numChromosomes()-1];
+        String locus = theAA.chromosomeName(0);
         int jumpValue = 0;
         for (int i = 0; i< jump.length; i++) {
-            if (!locus.equals(theAA.getChromosomeName(i+jumpValue))) {
+            if (!locus.equals(theAA.chromosomeName(i+jumpValue))) {
                 jumpValue--;
-                locus = theAA.getChromosomeName(i);
+                locus = theAA.chromosomeName(i);
                 jump[i] = 1;
             } else {
                 jump[i] = jumpValue;
@@ -281,9 +281,9 @@ public class LinkageDisequilibriumComponent extends JComponent {
         String currLocus = "";
         for (int r = 0; r < totalVariableSites; r++)
         {
-            if (!currLocus.equals(theAA.getChromosomeName(r))) {
+            if (!currLocus.equals(theAA.chromosomeName(r))) {
                 totalLoci++;
-                currLocus = theAA.getChromosomeName(r);
+                currLocus = theAA.chromosomeName(r);
             }
         }
         //the number of separate totalBlocks
@@ -303,16 +303,16 @@ public class LinkageDisequilibriumComponent extends JComponent {
         int c = -1;
         currLocus = "unknown locus";
         for (int r = 0; r < totalVariableSites; r++) {
-            if (!currLocus.equals(theAA.getChromosomeName(r))) {
+            if (!currLocus.equals(theAA.chromosomeName(r))) {
                 c++;
-                currLocus = theAA.getChromosomeName(r);
+                currLocus = theAA.chromosomeName(r);
                 blockNames[c] = currLocus;
             }
-            if (blockStart[c] > theAA.getPositionInChromosome(r)) {
-                blockStart[c] = theAA.getPositionInChromosome(r);
+            if (blockStart[c] > theAA.chromosomalPosition(r)) {
+                blockStart[c] = theAA.chromosomalPosition(r);
             }
-            if (blockEnd[c] < theAA.getPositionInChromosome(r)) {
-                blockEnd[c] = theAA.getPositionInChromosome(r);
+            if (blockEnd[c] < theAA.chromosomalPosition(r)) {
+                blockEnd[c] = theAA.chromosomalPosition(r);
             }
         }
         for (int i = 0; i < totalBlocks; i++) {
@@ -354,17 +354,17 @@ public class LinkageDisequilibriumComponent extends JComponent {
             }
             int currB = 0;
             for (int i = 1; i < myXStart; i++) {
-                if (!theAA.getChromosomeName(i+jump[i]).equals(theAA.getChromosomeName(i+jump[i] - 1))) {
+                if (!theAA.chromosomeName(i+jump[i]).equals(theAA.chromosomeName(i+jump[i] - 1))) {
                     currB++;
                 }
             }
-            endPos[0] = blockBeginPos[currB] + (theAA.getPositionInChromosome(myXStart+jump[myXStart]) - blockStart[currB]) / (blockEnd[currB] - blockStart[currB]) / totalBlocks;
+            endPos[0] = blockBeginPos[currB] + (theAA.chromosomalPosition(myXStart+jump[myXStart]) - blockStart[currB]) / (blockEnd[currB] - blockStart[currB]) / totalBlocks;
 
             for (int r = myXStart+1; r < myXEnd; r++) {
-                if (!theAA.getChromosomeName(r+jump[r]).equals(theAA.getChromosomeName(r+jump[r] - 1))) {
+                if (!theAA.chromosomeName(r+jump[r]).equals(theAA.chromosomeName(r+jump[r] - 1))) {
                     currB++;
                 }
-                endPos[r-myXStart] = blockBeginPos[currB] + (theAA.getPositionInChromosome(r+jump[r]) - blockStart[currB]) / (blockEnd[currB] - blockStart[currB]) / totalBlocks;
+                endPos[r-myXStart] = blockBeginPos[currB] + (theAA.chromosomalPosition(r+jump[r]) - blockStart[currB]) / (blockEnd[currB] - blockStart[currB]) / totalBlocks;
             }
         }
     }
@@ -421,7 +421,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
         g.setColor(theColor.black);
         for (int c = myYStart; c < myYEnd; c++) {
             if (jump[c] != 1) {
-                s = theAA.getChromosomeName(c+jump[c]) + "s" + theAA.getPositionInChromosome(c+jump[c]);
+                s = theAA.chromosomeName(c+jump[c]) + "s" + theAA.chromosomalPosition(c+jump[c]);
             } else {
                 s = "";
             }
@@ -629,7 +629,7 @@ public class LinkageDisequilibriumComponent extends JComponent {
             if (jump[r] != 1 && mouseX > xPos[r-myXStart] && mouseX < xPos[r-myXStart+1]) {
                 for (int c = myYStart; c < myYEnd; c++) {
                     if (jump[c] != 1 && mouseY > yPos[c-myYStart] && mouseY < yPos[c-myYStart+1]) {
-                        return theAA.getSNPID(r+jump[r]) + ": " + theAA.getPositionInChromosome(r+jump[r]) + ", " + theAA.getSNPID(c+jump[c]) + ": " + theAA.getPositionInChromosome(c+jump[c]) + ", Value: " + format.format(diseq[r-myXStart][c-myYStart]);
+                        return theAA.siteName(r+jump[r]) + ": " + theAA.chromosomalPosition(r+jump[r]) + ", " + theAA.siteName(c+jump[c]) + ": " + theAA.chromosomalPosition(c+jump[c]) + ", Value: " + format.format(diseq[r-myXStart][c-myYStart]);
                     }
                 }
             }

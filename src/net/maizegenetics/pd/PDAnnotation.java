@@ -3,9 +3,9 @@ package net.maizegenetics.pd;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.HapMapHDF5Constants;
-import net.maizegenetics.pal.alignment.ImportUtils;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.HapMapHDF5Constants;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.util.Utils;
 
 import java.io.BufferedReader;
@@ -63,18 +63,18 @@ public class PDAnnotation {
         int[] hasData = null;  //recorder if there is any GWAS data for a site; TODO perhaps increment
         String chromosomeFile = hapMapDir + hapMapFile_prefix + "chr" + currChr + hapMapFile_suffix;
         System.out.println("Loading:" + chromosomeFile);
-        Alignment bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
-        //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.getSiteCount(), bna.getPositionInChromosome(0), bna.getPositionInChromosome(bna.getSiteCount() - 1));
-        int siteCnt = bna.getSiteCount();
-        int[] alignmentPhysPos = bna.getPhysicalPositions();
+        GenotypeTable bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
+        //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.numberOfSites(), bna.chromosomalPosition(0), bna.chromosomalPosition(bna.numberOfSites() - 1));
+        int siteCnt = bna.numberOfSites();
+        int[] alignmentPhysPos = bna.physicalPositions();
         hasData = new int[siteCnt];
         float[] maf = new float[siteCnt];
         byte[] mjAllele = new byte[siteCnt];
         byte[] mnAllele = new byte[siteCnt];
         for (int j = 0; j < siteCnt; j++) {
-            mjAllele[j] = bna.getMajorAlleleAsString(j).getBytes()[0];
-            mnAllele[j] = bna.getMinorAlleleAsString(j).getBytes()[0];
-            maf[j] = (float) bna.getMinorAlleleFrequency(j);
+            mjAllele[j] = bna.majorAlleleAsString(j).getBytes()[0];
+            mnAllele[j] = bna.minorAlleleAsString(j).getBytes()[0];
+            maf[j] = (float) bna.minorAlleleFrequency(j);
         }
         //write positions to hdf "pos"+chromosome
         String chrGroup = "chr" + currChr + "/";

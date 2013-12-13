@@ -1,7 +1,7 @@
 package net.maizegenetics.popgen.tree;
 
-import net.maizegenetics.pal.io.FormattedOutput;
-import net.maizegenetics.pal.math.MersenneTwisterFast;
+import net.maizegenetics.util.FormattedOutput;
+import net.maizegenetics.stats.math.MersenneTwisterFast;
 
 /**
  * Implements LOCAL (Larget and Simon, 1999) and stochastic NNI moves for unrooted trees.

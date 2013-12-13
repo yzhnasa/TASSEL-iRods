@@ -4,7 +4,7 @@
  */
 
 package net.maizegenetics.gbs.pipeline;
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

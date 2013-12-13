@@ -12,7 +12,7 @@ import java.io.FileOutputStream;
 
 import javax.swing.ImageIcon;
 
-import net.maizegenetics.gbs.maps.TagsOnPhysicalMap;
+import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

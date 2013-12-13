@@ -1,5 +1,12 @@
 package net.maizegenetics.stats.MLM;
 
+import net.maizegenetics.dna.snp.GeneticMap;
+import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.MarkerPhenotypeAdapter;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.Trait;
+import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.baseplugins.MLMPlugin;
 import net.maizegenetics.jGLiM.LinearModelUtils;
 import net.maizegenetics.jGLiM.SymmetricMatrixInverterDM;
@@ -8,12 +15,11 @@ import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.jGLiM.dm.SweepFast;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
-import net.maizegenetics.pal.report.SimpleTableReport;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
-import net.maizegenetics.pal.taxa.Taxon;
+import net.maizegenetics.util.SimpleTableReport;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.popgen.tree.UPGMATree;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.stats.EMMA.EMMAforDoubleMatrix;
@@ -27,8 +33,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
@@ -171,7 +175,7 @@ public class CompressedMLMusingDoubleMatrix {
 
             //create the Z matrix
             count = 0;
-            DoubleMatrix Z = DoubleMatrixFactory.DEFAULT.make(nonMissingObs, kin.getIdCount());
+            DoubleMatrix Z = DoubleMatrixFactory.DEFAULT.make(nonMissingObs, kin.numberOfTaxa());
             for (int i = 0; i < totalObs; i++) {
                 if (!missing[i]) {
                     Z.set(count++, kin.whichIdNumber(theTaxa[i]), 1);
@@ -908,8 +912,8 @@ public class CompressedMLMusingDoubleMatrix {
         TreeSet<Taxon> kinSet = new TreeSet<Taxon>();
         for (int i = 0; i < n; i++) {
 //            int col = kinshipMatrix.whichIdNumber(phenotypeTaxa[i]);
-        	TaxaList kinshipTaxa = kinshipMatrix.getIdGroup();
-            List<Integer> thisTaxon = kinshipTaxa.getIndicesMatchingTaxon(phenotypeTaxa[i]);
+        	TaxaList kinshipTaxa = kinshipMatrix.getTaxaList();
+            List<Integer> thisTaxon = kinshipTaxa.indicesMatchingTaxon(phenotypeTaxa[i]);
             if (!missing[i]) {
                 if (thisTaxon.size() == 0) {
                     missing[i] = true;

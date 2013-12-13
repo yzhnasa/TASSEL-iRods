@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.util.BitSet;
 
 public class PopulationData {
@@ -22,8 +22,8 @@ public class PopulationData {
 	public double contribution2;
 	public int Fgen;
 	public double inbredCoef = -1;
-	public Alignment original;
-	public Alignment imputed;
+	public GenotypeTable original;
+	public GenotypeTable imputed;
 	public byte[] alleleA;
 	public byte[] alleleC;
 

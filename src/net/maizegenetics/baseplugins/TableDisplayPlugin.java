@@ -7,8 +7,8 @@
 package net.maizegenetics.baseplugins;
 
 
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.report.TableReportUtils;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.util.TableReportUtils;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.baseplugins.AbstractDisplayPlugin.FileFormat;
@@ -141,7 +141,7 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
  */
 class TablePluginDialog extends JDialog implements Printable {
 
-    net.maizegenetics.pal.report.TableReport theTableSource;
+    net.maizegenetics.util.TableReport theTableSource;
     TableDisplayPlugin theTableDisplayPlugin;
     JPanel panel1 = new JPanel();
     BorderLayout borderLayout1 = new BorderLayout();

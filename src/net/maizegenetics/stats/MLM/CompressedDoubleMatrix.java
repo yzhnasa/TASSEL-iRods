@@ -8,7 +8,6 @@ import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.popgen.tree.Tree;
 import net.maizegenetics.popgen.tree.TreeClusters;
-import net.maizegenetics.popgen.tree.UPGMATree;
 
 public class CompressedDoubleMatrix {
 	protected DistanceMatrix kinshipMatrix;
@@ -34,7 +33,7 @@ public class CompressedDoubleMatrix {
 		int nrow = kinshipMatrix.getSize();
 		
 		distance2clusterIndex = new int[nrow];
-		for (int i = 0; i < nrow; i++) distance2clusterIndex[i] = myTree.whichIdNumber(kinshipMatrix.getIdentifier(i));
+		for (int i = 0; i < nrow; i++) distance2clusterIndex[i] = myTree.whichIdNumber(kinshipMatrix.getTaxon(i));
 	}
 
 	public int getNumberOfGroups() {

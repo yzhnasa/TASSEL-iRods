@@ -1,11 +1,11 @@
 package net.maizegenetics.popgen;
 
-import net.maizegenetics.pal.report.TableReport;
-import net.maizegenetics.pal.report.AbstractTableReport;
+import net.maizegenetics.util.TableReport;
+import net.maizegenetics.util.AbstractTableReport;
 
 import java.io.Serializable;
 import java.util.Vector;
-import net.maizegenetics.pal.alignment.Alignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
 
 /**
  *This class provides the distribution of polymorphisms
@@ -22,12 +22,12 @@ public class PolymorphismDistribution extends AbstractTableReport implements Tab
     }
 
     //consider whether to output pooled minority alleles or everything
-    public void addDistribution(String label, Alignment theSP, boolean poolMinor) {
-        maxSeqCount = theSP.getSequenceCount() * 2;
+    public void addDistribution(String label, GenotypeTable theSP, boolean poolMinor) {
+        maxSeqCount = theSP.numberOfTaxa() * 2;
         int[] pdist = new int[maxSeqCount];
-        for (int i = 0; i < theSP.getSiteCount(); i++) {
+        for (int i = 0; i < theSP.numberOfSites(); i++) {
             if (theSP.isPolymorphic(i)) {
-                int[][] alleleCounts = theSP.getAllelesSortedByFrequency(i);
+                int[][] alleleCounts = theSP.allelesSortedByFrequency(i);
                 int numAlleles = alleleCounts[0].length;
                 if ((poolMinor == false) || (numAlleles == 2)) {
                     pdist[alleleCounts[1][1]]++;

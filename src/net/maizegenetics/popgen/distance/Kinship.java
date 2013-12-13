@@ -1,7 +1,7 @@
 package net.maizegenetics.popgen.distance;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.SimplePhenotype;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.trait.SimplePhenotype;
 
 import java.awt.*;
 
@@ -16,7 +16,7 @@ public class Kinship extends DistanceMatrix {
 
     Frame parentFrame;
     DistanceMatrix dm;
-    Alignment mar;
+    GenotypeTable mar;
     SimplePhenotype ped;
     int[][] parents;
     private double kMin = 99999;
@@ -26,13 +26,13 @@ public class Kinship extends DistanceMatrix {
     private double cutOff = 2;
     private int numSeqs;
 
-    public Kinship(Alignment mar) {
+    public Kinship(GenotypeTable mar) {
         this(mar, false, true);
     }
 
-    public Kinship(Alignment mar, boolean areHetsRelated, boolean rescaleKinship) {
+    public Kinship(GenotypeTable mar, boolean areHetsRelated, boolean rescaleKinship) {
         this.mar = mar;
-        numSeqs = this.mar.getTaxaCount();
+        numSeqs = this.mar.numberOfTaxa();
         buildFromMarker();
     }
 
@@ -48,7 +48,7 @@ public class Kinship extends DistanceMatrix {
     public void buildFromMarker() {
 
     	IBSDistanceMatrix adm = new IBSDistanceMatrix(mar, 0, true, null);
-    	dm = new DistanceMatrix(adm.getDistances(), mar.getTaxaList());
+    	dm = new DistanceMatrix(adm.getDistances(), mar.taxa());
     	toSimilarity();
     	getKStatistics();
 //    	pullBackExtrem();

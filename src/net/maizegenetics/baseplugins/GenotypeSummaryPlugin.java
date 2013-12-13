@@ -3,8 +3,8 @@
  */
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.report.SimpleTableReport;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.util.SimpleTableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -48,7 +48,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             myNumGametesMissing = 0;
             myNumHeterozygous = 0;
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
 
             if (alignInList.size() != 1) {
                 String gpMessage = "Invalid selection.  Please select one genotype alignment.";
@@ -74,7 +74,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             }
 
             Datum current = alignInList.get(0);
-            Alignment alignment = (Alignment) current.getData();
+            GenotypeTable alignment = (GenotypeTable) current.getData();
             String name = current.getName();
 
             List<Datum> summaryTables = new ArrayList<Datum>();
@@ -123,23 +123,23 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     }
 
-    private SimpleTableReport[] getOverallSummary(Alignment alignment) {
+    private SimpleTableReport[] getOverallSummary(GenotypeTable alignment) {
 
         Object[] firstColumnNames = new String[]{"Stat Type", "Value"};
 
-        long numSites = alignment.getSiteCount();
-        long numTaxa = alignment.getSequenceCount();
+        long numSites = alignment.numberOfSites();
+        long numTaxa = alignment.numberOfTaxa();
 
-        Object[][] diploidValueCounts = alignment.getDiploidCounts();
+        Object[][] diploidValueCounts = alignment.genoCounts();
         int numAlleles = diploidValueCounts[0].length;
 
         if (!myIsSiteSummary) {
             int totalGametes = (int) numTaxa * 2;
             for (int i = 0; i < numSites; i++) {
-                int totalGametesNotMissing = alignment.getTotalGametesNotMissing(i);
+                int totalGametesNotMissing = alignment.totalGametesNonMissingForSite(i);
                 int totalGametesMissing = totalGametes - totalGametesNotMissing;
                 myNumGametesMissing = myNumGametesMissing + (long) totalGametesMissing;
-                int numHeterozygous = alignment.getHeterozygousCount(i);
+                int numHeterozygous = alignment.heterozygousCount(i);
                 myNumHeterozygous = myNumHeterozygous + (long) numHeterozygous;
             }
         }
@@ -149,7 +149,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         long numDiploidsMissing = 0;
         for (int j = 0; j < numAlleles; j++) {
-            if ((diploidValueCounts[0][j].equals(Alignment.UNKNOWN_ALLELE_STR)) || (diploidValueCounts[0][j].equals(Alignment.UNKNOWN_DIPLOID_ALLELE_STR))) {
+            if ((diploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_ALLELE_STR)) || (diploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR))) {
                 numDiploidsMissing = (Long) diploidValueCounts[1][j];
                 break;
             }
@@ -204,7 +204,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
         data[count++][1] = (double) myNumHeterozygous / (double) totalDiploids;
 
 
-        Object[][] majorMinorDiploidValueCounts = alignment.getMajorMinorCounts();
+        Object[][] majorMinorDiploidValueCounts = alignment.majorMinorCounts();
         int numMajorMinorAlleles = majorMinorDiploidValueCounts[0].length;
 
         Object[] alleleColumnNames = new String[]{"Alleles", "Number", "Proportion", "Frequency"};
@@ -222,7 +222,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         numDiploidsMissing = 0;
         for (int j = 0; j < numMajorMinorAlleles; j++) {
-            if ((majorMinorDiploidValueCounts[0][j].equals(Alignment.UNKNOWN_ALLELE_STR)) || (majorMinorDiploidValueCounts[0][j].equals(Alignment.UNKNOWN_DIPLOID_ALLELE_STR))) {
+            if ((majorMinorDiploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_ALLELE_STR)) || (majorMinorDiploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR))) {
                 numDiploidsMissing = (Long) majorMinorDiploidValueCounts[1][j];
                 break;
             }
@@ -240,7 +240,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             new SimpleTableReport("Allele Summary", alleleColumnNames, data2)};
     }
 
-    private SimpleTableReport getSiteSummary(Alignment alignment) {
+    private SimpleTableReport getSiteSummary(GenotypeTable alignment) {
 
         String[] firstColumnNames = new String[]{"Site Number", "Site Name", "Physical Position", "Number of Taxa", "Major Allele", "Major Allele Gametes", "Major Allele Proportion", "Major Allele Frequency",
             "Minor Allele", "Minor Allele Gametes", "Minor Allele Proportion", "Minor Allele Frequency"};
@@ -249,7 +249,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         List<String> columnNames = new ArrayList<String>(Arrays.asList(firstColumnNames));
 
-        int maxAlleles = alignment.getMaxNumAlleles();
+        int maxAlleles = alignment.maxNumAlleles();
         if (alignment.retainsRareAlleles()) {
             maxAlleles++;
         }
@@ -263,22 +263,22 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
         columnNames.addAll(Arrays.asList(lastColumnNames));
 
-        int numSites = alignment.getSiteCount();
-        int numTaxa = alignment.getSequenceCount();
+        int numSites = alignment.numberOfSites();
+        int numTaxa = alignment.numberOfTaxa();
         Object[][] data = new Object[numSites][columnNames.size()];
         int totalGametes = numTaxa * 2;
 
-        int[] physicalPositions = alignment.getPhysicalPositions();
+        int[] physicalPositions = alignment.physicalPositions();
         boolean hasPhysicalPositions = ((physicalPositions != null) && (physicalPositions.length != 0));
 
         for (int i = 0; i < numSites; i++) {
 
-            int totalNotMissing = alignment.getTotalNotMissing(i);
-            int totalGametesNotMissing = alignment.getTotalGametesNotMissing(i);
+            int totalNotMissing = alignment.totalNonMissingForSite(i);
+            int totalGametesNotMissing = alignment.totalGametesNonMissingForSite(i);
             int count = 0;
 
             data[i][count++] = i;
-            data[i][count++] = alignment.getSNPID(i);
+            data[i][count++] = alignment.siteName(i);
             if (hasPhysicalPositions) {
                 data[i][count++] = physicalPositions[i];
             } else {
@@ -286,11 +286,11 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             }
             data[i][count++] = numTaxa;
 
-            int[][] alleles = alignment.getAllelesSortedByFrequency(i);
+            int[][] alleles = alignment.allelesSortedByFrequency(i);
             int numAlleles = alleles[0].length;
 
             for (int a = 0; a < numAlleles; a++) {
-                data[i][count++] = alignment.getBaseAsString(i, (byte) alleles[0][a]);
+                data[i][count++] = alignment.genotypeAsString(i, (byte) alleles[0][a]);
                 data[i][count++] = alleles[1][a];
                 data[i][count++] = (double) alleles[1][a] / (double) totalGametes;
                 data[i][count++] = (double) alleles[1][a] / (double) totalGametesNotMissing;
@@ -308,7 +308,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;
 
-            int numHeterozygous = alignment.getHeterozygousCount(i);
+            int numHeterozygous = alignment.heterozygousCount(i);
             myNumHeterozygous = myNumHeterozygous + (long) numHeterozygous;
             data[i][count++] = numHeterozygous;
             data[i][count++] = (double) numHeterozygous / (double) totalNotMissing;
@@ -324,26 +324,26 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
 
     }
 
-    private SimpleTableReport getTaxaSummary(Alignment alignment) {
+    private SimpleTableReport getTaxaSummary(GenotypeTable alignment) {
 
         Object[] columnNames = new String[]{"Taxa", "Taxa Name", "Number of Sites", "Gametes Missing", "Proportion Missing",
             "Number Heterozygous", "Proportion Heterozygous", "Inbreeding Coefficient",
             "Inbreeding Coefficient Scaled by Missing"};
-        int numSites = alignment.getSiteCount();
-        int numTaxa = alignment.getSequenceCount();
+        int numSites = alignment.numberOfSites();
+        int numTaxa = alignment.numberOfTaxa();
         Object[][] data = new Object[numTaxa][columnNames.length];
 
         int totalGametes = numSites * 2;
         for (int i = 0; i < numTaxa; i++) {
 
-            int totalGametesNotMissing = alignment.getTotalGametesNotMissingForTaxon(i);
+            int totalGametesNotMissing = alignment.totalGametesNonMissingForTaxon(i);
             int totalGametesMissing = totalGametes - totalGametesNotMissing;
-            int numHeterozygous = alignment.getHeterozygousCountForTaxon(i);
-            int totalSitesNotMissing = alignment.getTotalNotMissingForTaxon(i);
+            int numHeterozygous = alignment.heterozygousCountForTaxon(i);
+            int totalSitesNotMissing = alignment.totalNonMissingForTaxon(i);
 
             int count = 0;
             data[i][count++] = i;
-            data[i][count++] = alignment.getTaxaName(i);
+            data[i][count++] = alignment.taxaName(i);
             data[i][count++] = numSites;
             data[i][count++] = totalGametesMissing;
             data[i][count++] = (double) totalGametesMissing / (double) totalGametes;

@@ -8,9 +8,9 @@ import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -59,13 +59,13 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
             } else {
                 filename = baseFileName + "parents.hmp.txt";
             }
-            Alignment[] allOfTheAlignments = new Alignment[theData.size()];
+            GenotypeTable[] allOfTheAlignments = new GenotypeTable[theData.size()];
             int count = 0;
             for (Datum datum : theData) {
                 PopulationData family = (PopulationData) datum.getData();
                 allOfTheAlignments[count++] = createOutputAlignment(family, asNucleotides);
             }
-            Alignment alignment = MutableSingleEncodeAlignment.getInstance(allOfTheAlignments);
+            GenotypeTable alignment = MutableSingleEncodeAlignment.getInstance(allOfTheAlignments);
             ExportUtils.writeToHapmap(alignment, outputDiploid, filename, '\t', null);
         } else {
             for (Datum datum : theData) {
@@ -82,30 +82,30 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
 
     }
 
-    private Alignment createOutputAlignment(PopulationData popdata, boolean asNucleotides) {
-        Alignment out = null;
+    private GenotypeTable createOutputAlignment(PopulationData popdata, boolean asNucleotides) {
+        GenotypeTable out = null;
 
         if (!asNucleotides) {
             out = popdata.imputed;
         } else {
             //change the parent calls to original nucleotides
-            Alignment outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
+            GenotypeTable outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
 
             if (!Double.isNaN(minSnpCoverage) && !Double.isNaN(maxMafForMono)) {
-                int nsnps = popdata.original.getSiteCount();
-                double ngametes = 2 * popdata.original.getSequenceCount();
+                int nsnps = popdata.original.numberOfSites();
+                double ngametes = 2 * popdata.original.numberOfTaxa();
                 int[] monomorphicSnps = new int[nsnps];
                 int snpCount = 0;
                 for (int s = 0; s < nsnps; s++) {
-                    double coverage = popdata.original.getTotalGametesNotMissing(s) / ngametes;
-                    if (!popdata.snpIndex.fastGet(s) && popdata.original.getMinorAlleleFrequency(s) <= maxMafForMono && coverage >= minSnpCoverage) {
+                    double coverage = popdata.original.totalGametesNonMissingForSite(s) / ngametes;
+                    if (!popdata.snpIndex.fastGet(s) && popdata.original.minorAlleleFrequency(s) <= maxMafForMono && coverage >= minSnpCoverage) {
                         monomorphicSnps[snpCount++] = s;
                     }
                 }
                 monomorphicSnps = Arrays.copyOf(monomorphicSnps, snpCount);
-                Alignment fa = FilterAlignment.getInstance(popdata.original, monomorphicSnps);
-                if (fa.getSiteCount() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
-                    out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly});
+                GenotypeTable fa = FilterGenotypeTable.getInstance(popdata.original, monomorphicSnps);
+                if (fa.numberOfSites() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
+                    out = MutableSingleEncodeAlignment.getInstance(new GenotypeTable[]{outPoly});
                 } else { //Return both monomorphic and polymorphic sites
                     MutableAlignment outMono = MutableNucleotideAlignment.getInstance(fa);
                     // fill in all values with the major allele
@@ -118,7 +118,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                             outMono.setBase(t, s, major);
                         }
                     }
-                    out = MutableSingleEncodeAlignment.getInstance(new Alignment[]{outPoly, outMono});
+                    out = MutableSingleEncodeAlignment.getInstance(new GenotypeTable[]{outPoly, outMono});
                 }
             }
         }

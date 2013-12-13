@@ -1,10 +1,10 @@
 package net.maizegenetics.baseplugins;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.ExportUtils;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.Utils;
@@ -186,7 +186,7 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
 		flp.setOpenFiles(new String[]{inputFilename});
 		DataSet ds = flp.performFunction(null);
 		
-		Alignment a = (Alignment) ds.getData(0).getData();
+		GenotypeTable a = (GenotypeTable) ds.getData(0).getData();
 		System.out.format("Time elapsed for reading hdf5 file = %d\n", System.currentTimeMillis() - start);
 		
 		LinkedList<String> pedlist = new LinkedList<String>();
@@ -212,7 +212,7 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
         TaxaList ids =new TaxaListBuilder().addAll(taxanames).build();
 		
 		start = System.currentTimeMillis();
-		Alignment b = FilterAlignment.getInstance(a, ids);
+		GenotypeTable b = FilterGenotypeTable.getInstance(a, ids);
 		System.out.format("Time elapsed for filtering alignment = %d\n", System.currentTimeMillis() - start);
 		
 		start = System.currentTimeMillis();

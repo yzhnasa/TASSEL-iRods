@@ -11,10 +11,10 @@ import javax.swing.JOptionPane;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
-import net.maizegenetics.pal.alignment.MarkerPhenotype;
-import net.maizegenetics.pal.alignment.MarkerPhenotypeAdapter;
-import net.maizegenetics.pal.alignment.Phenotype;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.MarkerPhenotypeAdapter;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

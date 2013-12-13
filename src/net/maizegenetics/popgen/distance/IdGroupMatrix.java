@@ -1,7 +1,7 @@
 package net.maizegenetics.popgen.distance;
 
 
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.TableReport;
 
 import java.io.Serializable;
 

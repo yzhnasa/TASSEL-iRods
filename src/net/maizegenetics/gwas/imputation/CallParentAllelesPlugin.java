@@ -1,10 +1,10 @@
 package net.maizegenetics.gwas.imputation;
 
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.AlignmentBuilder;
-import net.maizegenetics.pal.alignment.FilterAlignment;
-import net.maizegenetics.pal.taxa.TaxaList;
-import net.maizegenetics.pal.taxa.TaxaListBuilder;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -43,21 +43,21 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			return null;
 		}
 		
-		List<Datum> inputAlignments = input.getDataOfType(Alignment.class);
+		List<Datum> inputAlignments = input.getDataOfType(GenotypeTable.class);
 		LinkedList<Datum> datumList = new LinkedList<Datum>();
 
 		for (Datum d : inputAlignments) {
-			Alignment align = (Alignment) d.getData();
+			GenotypeTable align = (GenotypeTable) d.getData();
 			ArrayList<PopulationData> familyList = PopulationData.readPedigreeFile(pedfileName);
 			for (PopulationData family : familyList) {
-				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.getChromosomeName(0) + ".");
+				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.chromosomeName(0) + ".");
 				
 				String[] ids = new String[family.members.size()];
 				family.members.toArray(ids);
 				
 				myLogger.info("creating family alignment for family " + family.name);
                 TaxaList tL=new TaxaListBuilder().addAll(ids).build();
-				family.original =  AlignmentBuilder.getGenotypeCopyInstance((FilterAlignment)FilterAlignment.getInstance(align, tL, false));
+				family.original =  GenotypeTableBuilder.getGenotypeCopyInstance((FilterGenotypeTable)FilterGenotypeTable.getInstance(align, tL, false));
 				myLogger.info("family alignment created");
 				if (useClusterAlgorithm)  NucleotideImputationUtils.callParentAllelesUsingClusters(family, maxMissing, minMinorAlleleFrequency, windowSize);
 				else if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);

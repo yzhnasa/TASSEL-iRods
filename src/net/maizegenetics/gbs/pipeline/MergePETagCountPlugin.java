@@ -4,8 +4,8 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.gbs.tagdist.PETagCounts;
-import net.maizegenetics.gbs.tagdist.TagsByTaxa.FilePacking;
+import net.maizegenetics.dna.tag.PETagCounts;
+import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

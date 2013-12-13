@@ -6,7 +6,7 @@ import java.util.Arrays;
 import net.maizegenetics.jGLiM.LinearModelUtils;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.pal.report.SimpleTableReport;
+import net.maizegenetics.util.SimpleTableReport;
 
 public class LinearModelForStepwiseRegression {
     ArrayList<ModelEffect> modelEffects;

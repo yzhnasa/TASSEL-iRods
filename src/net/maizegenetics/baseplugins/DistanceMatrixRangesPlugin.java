@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.*;
-import net.maizegenetics.pal.alignment.Alignment;
-import net.maizegenetics.pal.alignment.FilterAlignment;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
-import net.maizegenetics.pal.report.SimpleTableReport;
-import net.maizegenetics.pal.report.TableReport;
+import net.maizegenetics.util.SimpleTableReport;
+import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -38,7 +38,7 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
 
         try {
 
-            List<Datum> alignInList = input.getDataOfType(Alignment.class);
+            List<Datum> alignInList = input.getDataOfType(GenotypeTable.class);
             if (alignInList.size() < 1) {
                 String message = "Invalid selection.  Please select sequence alignment.";
                 if (isInteractive()) {
@@ -70,17 +70,17 @@ public class DistanceMatrixRangesPlugin extends AbstractPlugin {
 
     public DataSet processDatum(Datum input) {
 
-        Alignment aa = (Alignment) input.getData();
-        int numTaxa = aa.getSequenceCount();
-        int interestedTaxa = aa.getTaxaList().getIndicesMatchingTaxon(myTaxon).get(0);
+        GenotypeTable aa = (GenotypeTable) input.getData();
+        int numTaxa = aa.numberOfTaxa();
+        int interestedTaxa = aa.taxa().indicesMatchingTaxon(myTaxon).get(0);
         Object[][] theData = new Object[numTaxa][myPhysicalPositions.length];
         for (int t = 0; t < numTaxa; t++) {
-            theData[t][0] = aa.getTaxaName(t);
+            theData[t][0] = aa.taxaName(t);
         }
         String[] columnNames = new String[myPhysicalPositions.length];
         columnNames[0] = "Taxa";
         for (int i = 1, n = myPhysicalPositions.length; i < n; i++) {
-            Alignment alignment = FilterAlignment.getInstance(aa, myLocus, myPhysicalPositions[i - 1], myPhysicalPositions[i]);
+            GenotypeTable alignment = FilterGenotypeTable.getInstance(aa, myLocus, myPhysicalPositions[i - 1], myPhysicalPositions[i]);
             columnNames[i] = String.valueOf(myPhysicalPositions[i - 1] + "-" + String.valueOf(myPhysicalPositions[i]));
             if (alignment == null) {
                 for (int t = 0; t < numTaxa; t++) {

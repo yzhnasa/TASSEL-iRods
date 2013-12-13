@@ -6,9 +6,13 @@
  */
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.CombineGenotypeTable;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.MarkerPhenotype;
+import net.maizegenetics.trait.CombinePhenotype;
 import java.awt.Frame;
 
-import net.maizegenetics.pal.alignment.*;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -51,9 +55,9 @@ public class UnionAlignmentPlugin extends AbstractPlugin {
                     + "(Ctrl + mouse click).  Please select genotype, trait, and population structure data to isUnion "
                     + "from the data tree.";
 
-            Alignment aa = null;
+            GenotypeTable aa = null;
             Phenotype ca = null;
-            List<Datum> aaVector = input.getDataOfType(Alignment.class);
+            List<Datum> aaVector = input.getDataOfType(GenotypeTable.class);
             List<Datum> caVector = input.getDataOfType(Phenotype.class);
             if ((aaVector.size() + caVector.size()) < 2) {
                 JOptionPane.showMessageDialog(getParentFrame(), userMessage);
@@ -63,13 +67,13 @@ public class UnionAlignmentPlugin extends AbstractPlugin {
             StringWriter sw = new StringWriter();
             Object result = null;
             if (aaVector.size() == 1) {
-                aa = (Alignment) aaVector.get(0).getData();
+                aa = (GenotypeTable) aaVector.get(0).getData();
             } else if (aaVector.size() > 1) {
-                Alignment[] temp = new Alignment[aaVector.size()];
+                GenotypeTable[] temp = new GenotypeTable[aaVector.size()];
                 for (int i = 0; i < aaVector.size(); i++) {
-                    temp[i] = (Alignment) aaVector.get(i).getData();
+                    temp[i] = (GenotypeTable) aaVector.get(i).getData();
                 }
-                aa = CombineAlignment.getInstance(temp, isUnion);
+                aa = CombineGenotypeTable.getInstance(temp, isUnion);
                 result = aa;
             }
             if (caVector.size() > 0) {
