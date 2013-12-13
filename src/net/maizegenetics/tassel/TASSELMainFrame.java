@@ -510,8 +510,11 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         FlapjackLoadPlugin flapjackLoadPlugin = new FlapjackLoadPlugin(this, true);
         flapjackLoadPlugin.addListener(myDataTreePanel);
+        
+        ProjectionLoadPlugin projectionLoadPlugin = new ProjectionLoadPlugin(this, true);
+        projectionLoadPlugin.addListener(myDataTreePanel);
 
-        result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, flapjackLoadPlugin), KeyEvent.VK_L));
+        result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, flapjackLoadPlugin, projectionLoadPlugin), KeyEvent.VK_L));
         result.add(createMenuItem(new ExportPlugin(this, true)));
         result.add(createMenuItem(new GenotypeImputationPlugin(this, true)));
         result.add(createMenuItem(new NumericalTransformPlugin(this, true)));

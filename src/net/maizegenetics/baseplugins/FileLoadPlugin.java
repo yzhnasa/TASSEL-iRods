@@ -21,9 +21,11 @@ import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
+
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -44,12 +46,13 @@ public class FileLoadPlugin extends AbstractPlugin {
     private TasselFileType myFileType = TasselFileType.Unknown;
     private PlinkLoadPlugin myPlinkLoadPlugin = null;
     private FlapjackLoadPlugin myFlapjackLoadPlugin = null;
+    private ProjectionLoadPlugin myProjectionLoadPlugin = null;
     private JFileChooser myOpenFileChooser = new JFileChooser(TasselPrefs.getOpenDir());
 
     public enum TasselFileType {
 
         SqrMatrix, Annotated, Sequence, Polymorphism, Numerical, Unknown, Fasta,
-        Hapmap, Plink, Phenotype, Flapjack, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
+        Hapmap, Plink, Phenotype, Flapjack, ProjectionAlignment, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
         Serial, HapmapDiploid, Text, HDF5, VCF, ByteHDF5
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
@@ -69,10 +72,11 @@ public class FileLoadPlugin extends AbstractPlugin {
         super(parentFrame, isInteractive);
     }
 
-    public FileLoadPlugin(Frame parentFrame, boolean isInteractive, PlinkLoadPlugin plinkLoadPlugin, FlapjackLoadPlugin flapjackLoadPlugin) {
+    public FileLoadPlugin(Frame parentFrame, boolean isInteractive, PlinkLoadPlugin plinkLoadPlugin, FlapjackLoadPlugin flapjackLoadPlugin, ProjectionLoadPlugin projectionLoadPlugin) {
         super(parentFrame, isInteractive);
         myPlinkLoadPlugin = plinkLoadPlugin;
         myFlapjackLoadPlugin = flapjackLoadPlugin;
+        myProjectionLoadPlugin = projectionLoadPlugin;
     }
 
     public DataSet performFunction(DataSet input) {
@@ -96,6 +100,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                     return myFlapjackLoadPlugin.performFunction(null);
                 }
 
+                if (myFileType == TasselFileType.ProjectionAlignment) {
+                    return myProjectionLoadPlugin.performFunction(null);
+                }
+                
                 setOpenFiles(getOpenFilesByChooser());
                 theDialog.dispose();
             }
@@ -506,6 +514,7 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton loadMatrixRadioButton = new JRadioButton("Load square numerical matrix (eg. kinship) (phylip)");
     JRadioButton guessRadioButton = new JRadioButton("I will make my best guess and try.");
     JRadioButton flapjackRadioButton = new JRadioButton("Load Flapjack");
+    JRadioButton projectionAlignmentRadioButton = new JRadioButton("Load Projection Alignment");
     JRadioButton geneticMapRadioButton = new JRadioButton("Load a Genetic Map");
     JRadioButton tableReportRadioButton = new JRadioButton("Load a Table Report");
 
@@ -541,6 +550,7 @@ class FileLoadPluginDialog extends JDialog {
         setResizable(false);
 
         conversionButtonGroup.add(flapjackRadioButton);
+        conversionButtonGroup.add(projectionAlignmentRadioButton);
         conversionButtonGroup.add(hapMapRadioButton);
         conversionButtonGroup.add(hdf5RadioButton);
         conversionButtonGroup.add(vcfRadioButton);
@@ -611,6 +621,7 @@ class FileLoadPluginDialog extends JDialog {
         result.add(vcfRadioButton);
         result.add(plinkRadioButton);
         result.add(flapjackRadioButton);
+        result.add(projectionAlignmentRadioButton);
         result.add(sequenceAlignRadioButton);
         result.add(fastaRadioButton);
         result.add(polymorphismAlignRadioButton);
@@ -672,6 +683,9 @@ class FileLoadPluginDialog extends JDialog {
         if (flapjackRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Flapjack;
         }
+        if (projectionAlignmentRadioButton.isSelected()) {
+            return FileLoadPlugin.TasselFileType.ProjectionAlignment;
+        }        
         if (sequenceAlignRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Sequence;
         }
