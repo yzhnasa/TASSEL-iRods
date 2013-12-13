@@ -10,7 +10,7 @@ import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.taxa.TaxaList;
 
 /**
- *
+ * GenotypeTable containing DNA nucleotide data.
  * @author Terry Casstevens
  */
 public class NucleotideGenotypeTable extends CoreGenotypeTable {

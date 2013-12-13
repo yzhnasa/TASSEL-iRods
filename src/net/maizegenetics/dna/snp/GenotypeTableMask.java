@@ -9,8 +9,8 @@ import java.io.Serializable;
 
 
 /**
- *
- * @author terry
+ * Todo TAS-97
+ * @author Terry Casstevens
  */
 public interface GenotypeTableMask extends Serializable {
 

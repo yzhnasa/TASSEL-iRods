@@ -8,8 +8,8 @@ import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 
 /**
- *
- * @author terry
+ * Definition of fields and directories of the GenotypeTable in a HDF5 file format.
+ * @author Terry Casstevens
  */
 public final class HapMapHDF5Constants {
     // Paths

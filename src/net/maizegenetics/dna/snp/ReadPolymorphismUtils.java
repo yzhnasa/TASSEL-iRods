@@ -1,17 +1,22 @@
 package net.maizegenetics.dna.snp;
 
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.util.Utils;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 
-import net.maizegenetics.taxa.TaxaList;
-import net.maizegenetics.taxa.TaxaListBuilder;
-import net.maizegenetics.util.Utils;
-
+/**
+ * Methods for reading non-standard file format.
+ * @deprecated
+ */
+@Deprecated
 public class ReadPolymorphismUtils {
 
     private static Pattern WHITESPACE = Pattern.compile("\\s+");

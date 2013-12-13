@@ -11,8 +11,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- *
- * @author terry
+ * Utility methods for comparing, sorting, and counting genotypes.
+ * @author Terry Casstevens
+ * @author Ed Buckler
  */
 public class GenotypeTableUtils {
 

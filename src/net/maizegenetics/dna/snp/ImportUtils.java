@@ -15,7 +15,7 @@ import java.io.BufferedReader;
 import java.util.regex.Pattern;
 
 /**
- * The class imports Alignment from various file formats.
+ * Methods for importing GenotypeTables from various file formats.
  *
  * @author terry
  */

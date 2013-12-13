@@ -19,8 +19,8 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 /**
- * All taxa and site filtering of GenotypeTables.  The class
- * essentially creates views of the baseGenotypeTable
+ * Taxa and site filtering of GenotypeTables.  The class
+ * essentially creates views of the baseGenotypeTable through arrays for indirection.
  *
  * @author Terry Casstevens
  */
