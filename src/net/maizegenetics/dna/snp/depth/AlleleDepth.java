@@ -24,5 +24,5 @@ public interface AlleleDepth {
      */
     public byte[] getDepthForAlleles(int taxon, int site);
     
-    public byte getDepthForAlleles(int taxon, int site, int allele);
+    public byte getDepthForAllele(int taxon, int site, int allele);
 }

@@ -31,7 +31,7 @@ class MemoryAlleleDepth implements AlleleDepth {
     }
 
     @Override
-    public byte getDepthForAlleles(int taxon, int site, int allele) {
+    public byte getDepthForAllele(int taxon, int site, int allele) {
         return myDepths[allele].get(taxon, site);
     }
 }
