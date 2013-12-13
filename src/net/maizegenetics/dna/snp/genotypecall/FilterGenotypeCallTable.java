@@ -6,7 +6,9 @@ package net.maizegenetics.dna.snp.genotypecall;
 import net.maizegenetics.dna.snp.GenotypeTable;
 
 /**
- *
+ * Filtering class for GenotypeCallTable.  This class is generally never used directly, but rather used through
+ * FilterGenotypeTable.
+ * @see net.maizegenetics.dna.snp.FilterGenotypeTable
  * @author Terry Casstevens
  */
 class FilterGenotypeCallTable extends AbstractGenotypeCallTable {

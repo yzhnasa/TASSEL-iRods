@@ -4,8 +4,14 @@
 package net.maizegenetics.dna.snp.genotypecall;
 
 /**
+ * Interface for genotype calls for a table of taxa and sites.  GenotypeCallTable only contain information on
+ * the genotype calls - the call table does not have the TaxaList or PositionList.  The calls are diploid genotype
+ * calls stored and retrieved as bytes.  Conversions to string are also provided.
+ * <p></p>
+ * Generally these methods are accessed through the GenotypeTable interface.
+ * @see net.maizegenetics.dna.snp.GenotypeTable;
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public interface GenotypeCallTable {
 

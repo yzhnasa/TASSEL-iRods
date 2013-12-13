@@ -7,6 +7,7 @@ import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.SuperByteMatrix;
 
 /**
+ * In memory GenotypeCallTable for nucleotide data.
  *
  * @author Terry Casstevens
  */

@@ -4,6 +4,7 @@
 package net.maizegenetics.dna.snp.depth;
 
 /**
+ * In memory allele depth class.  In memory allele depth occupies 6-fold more memory than the allele calls.
  *
  * @author Terry Casstevens
  */

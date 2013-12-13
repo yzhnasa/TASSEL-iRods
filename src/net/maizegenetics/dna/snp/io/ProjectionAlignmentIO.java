@@ -85,7 +85,7 @@ public class ProjectionAlignmentIO {
             throw new UnsupportedOperationException("Save only works for Alignments with projection genotypes");
         }
         ProjectionGenotypeCallTable pg=(ProjectionGenotypeCallTable)pa.genotypeMatrix();
-        GenotypeTable baseAlignment=pg.getBaseAlignment();
+        GenotypeTable baseAlignment=pg.getBaseGenotypeTable();
         BufferedWriter bw = null;
         try {
             String fullFileName = Utils.addSuffixIfNeeded(outfile, ".pa.txt.gz", new String[]{".pa.txt", ".pa.txt.gz"});

@@ -8,8 +8,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
+ * Cache for allele frequency statistics.  Allele frequency can be expensive to recalculate at large scale, so these class
+ * efficiently loops through blocks of sites and caches the statistics on them.
  *
  * @author Terry Casstevens
+ * @author Ed Buckler
  */
 public class AlleleFreqCache {
 

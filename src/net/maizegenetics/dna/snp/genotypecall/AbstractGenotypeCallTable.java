@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- *
+ * Abstract implementation of methods of GenotypeCallTable.
  * @author Terry Casstevens
  */
 abstract class AbstractGenotypeCallTable implements GenotypeCallTable {

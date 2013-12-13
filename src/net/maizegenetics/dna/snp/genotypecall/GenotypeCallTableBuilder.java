@@ -13,6 +13,8 @@ import net.maizegenetics.util.SuperByteMatrixBuilder;
 import java.util.regex.Pattern;
 
 /**
+ * Builder to construct a GenotypeCallTable.  This builder is generally only used in complex situations, where
+ * the GenotypeTableBuilder does not suffice.
  *
  * @author Terry Casstevens
  */

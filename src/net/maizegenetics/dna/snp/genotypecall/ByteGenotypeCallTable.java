@@ -8,6 +8,11 @@ import net.maizegenetics.util.SuperByteMatrixBuilder;
 import org.apache.log4j.Logger;
 
 /**
+ * In memory byte implementation of GenotypeCallTable backed the high efficiency SuperByteMatrix class.
+ * Although the GenotypeCallTable is accessed as two dimensional array, for efficiency it is actually
+ * backed single dimension arrays with either site or taxa as the inner loop.
+ *
+ * @see SuperByteMatrix
  *
  * @author Terry Casstevens
  */

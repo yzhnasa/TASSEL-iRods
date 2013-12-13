@@ -16,7 +16,7 @@ import net.maizegenetics.taxa.TaxaListBuilder;
 import java.util.concurrent.ExecutionException;
 
 /**
- * HDF5 implementation of Genotype Uses caching of genotype, alleleCounts, MAF,
+ * HDF5 implementation of GenotypeTable. Uses caching of GenotypeTable, alleleCounts, MAF,
  * and siteCoverage
  *
  * @author Ed Buckler

@@ -14,21 +14,21 @@ import java.util.Arrays;
 import java.util.NavigableSet;
 
 /**
- * Projection genotype use defined haplotypes and breakpoints that point to high
- * density genotypes (baseAlignment). These are used to efficiently store and
+ * Projection genotype use defined haplotypes and breakpoints that point to a high
+ * density genotypes (base GenotypeTable). These are used to efficiently store and
  * connect low density maps with imputed high density genotypes.
  * <p>
  * </p>
- * The alignment built by this builder is a CoreAlignment with a
- * ProjectionGenotype. The taxa indices come from the projection alignment file,
- * while the site indices are the same as the base alignment. TODO this
+ * The alignment built by this builder is a CoreGenotypeTable with a
+ * ProjectionGenotypeCallTable. The taxa indices come from the projection alignment file,
+ * while the site indices are the same as the base GenotypeTable. TODO this
  * implement a projection interface with the getDonorHaplotypes method
  *
  * @author Ed Buckler
  */
 public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
 
-    private final GenotypeTable myBaseAlignment;  //high density marker alignment that is being projected. It was suggested that this
+    private final GenotypeTable myBaseGenoTable;  //high density marker alignment that is being projected. It was suggested that this
     //just have a pointer to a genotype, which would work, excepting for saving the file, when the base taxa names are needed.
     private ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints;
 
@@ -47,7 +47,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
 
   public ProjectionGenotypeCallTable(GenotypeTable hdAlign, ImmutableList<NavigableSet<DonorHaplotypes>> allBreakPoints) {
         super(allBreakPoints.size(), hdAlign.numberOfSites(), false, NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
-        myBaseAlignment = hdAlign;
+        myBaseGenoTable= hdAlign;
         this.allBreakPoints = allBreakPoints;
         breakMaps = new ArrayList<>(numberOfTaxa());
         for (NavigableSet<DonorHaplotypes> allBreakPoint : allBreakPoints) {
@@ -70,11 +70,11 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
     }
 
     private int[] siteRangeForDonor(DonorHaplotypes dh) {
-        int start = myBaseAlignment.siteOfPhysicalPosition(dh.getStartPosition(), dh.getChromosome());
+        int start = myBaseGenoTable.siteOfPhysicalPosition(dh.getStartPosition(), dh.getChromosome());
         if (start < 0) {
             start = -(start + 1);
         }
-        int end = myBaseAlignment.siteOfPhysicalPosition(dh.getEndPosition(), dh.getChromosome());
+        int end = myBaseGenoTable.siteOfPhysicalPosition(dh.getEndPosition(), dh.getChromosome());
         if (end < 0) {
             end = -(end + 1);
         }
@@ -91,12 +91,12 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
     }
 
     /**
-     * Returns the high density base alignment of the projection genotype.
+     * Returns the high density base genotypeTable of the projection genotypeTable.
      *
-     * @return base Alignment
+     * @return base GenotypeTable
      */
-    public GenotypeTable getBaseAlignment() {
-        return myBaseAlignment;
+    public GenotypeTable getBaseGenotypeTable() {
+        return myBaseGenoTable;
     }
 
     private byte getBaseGeneral(int taxon, int site) {
@@ -107,8 +107,8 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
             }
             //TODO consider null
         }
-        byte p1 = myBaseAlignment.genotype(currentDSH[taxon].getParent1index(), site);
-        byte p2 = myBaseAlignment.genotype(currentDSH[taxon].getParent2index(), site);
+        byte p1 = myBaseGenoTable.genotype(currentDSH[taxon].getParent1index(), site);
+        byte p2 = myBaseGenoTable.genotype(currentDSH[taxon].getParent2index(), site);
         return GenotypeTableUtils.getUnphasedDiploidValueNoHets(p1, p2);
     }
 
@@ -122,7 +122,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
         byte result = projForCachedTaxon[site];
         if (result == GenotypeTable.RARE_DIPLOID_ALLELE) {
             DonorSiteHaps currentDSH = breakMaps.get(taxon).get(site);
-            byte[] r = myBaseAlignment.genotypeRange(currentDSH.getParent1index(), currentDSH.getStartSite(), currentDSH.getEndSite() + 1);
+            byte[] r = myBaseGenoTable.genotypeRange(currentDSH.getParent1index(), currentDSH.getStartSite(), currentDSH.getEndSite() + 1);
             System.arraycopy(r, 0, projForCachedTaxon, currentDSH.getStartSite(), r.length);
             result = projForCachedTaxon[site];
         }
@@ -132,7 +132,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
     private byte getBaseSite(int taxon, int site) {
         //test transpose problems
         if (site != cachedSite) {
-            donorForCachedSite = myBaseAlignment.genotypeMatrix().genotypeForAllTaxa(site);
+            donorForCachedSite = myBaseGenoTable.genotypeMatrix().genotypeForAllTaxa(site);
             cachedSite = site;
         }
         int primPos = taxon << 2;
@@ -162,7 +162,7 @@ public class ProjectionGenotypeCallTable extends AbstractGenotypeCallTable {
 
     @Override
     public void transposeData(boolean siteInnerLoop) {
-        myBaseAlignment.genotypeMatrix().transposeData(siteInnerLoop);
+        myBaseGenoTable.genotypeMatrix().transposeData(siteInnerLoop);
         if (siteInnerLoop) {
             currMode = BaseMode.Site;
         } else {

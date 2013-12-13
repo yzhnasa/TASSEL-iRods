@@ -8,7 +8,7 @@ import net.maizegenetics.util.BitSet;
 /**
  * Interface provides genotypes in a binary fashion to be used in rapid
  * computation. See the package descriptions
- * {@link net.maizegenetics.pal.alignment.bit} for more information on how bits
+ * {@link net.maizegenetics.dna.snp.bit} for more information on how bits
  * encoding is used throughout TASSEL.
  *
  * @author Terry Casstevens
