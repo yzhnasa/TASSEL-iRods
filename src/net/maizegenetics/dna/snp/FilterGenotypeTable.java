@@ -1020,9 +1020,6 @@ public class FilterGenotypeTable implements GenotypeTable {
             case Frequency:
                 result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.majorAlleleForAllSites(), myGenotype.minorAlleleForAllSites());
                 break;
-            case Reference:
-                result = DynamicBitStorage.getInstance(myGenotype, scopeType, referenceGenotypeForAllSites());
-                break;
             default:
                 myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
                 return null;
