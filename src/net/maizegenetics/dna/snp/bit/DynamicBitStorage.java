@@ -165,14 +165,4 @@ public class DynamicBitStorage implements BitStorage {
                 .build(bitLoader);
     }
 
-    public static DynamicBitStorage getInstance(GenotypeCallTable genotype, ALLELE_SORT_TYPE currentScope, byte[] prefAllele) {
-        int numSites = prefAllele.length;
-        byte[] prefAllele0 = new byte[numSites];
-        byte[] prefAllele1 = new byte[numSites];
-        for (int i = 0; i < numSites; i++) {
-            prefAllele0[i] = (byte) (prefAllele[i] >>> 4);
-            prefAllele1[i] = (byte) (prefAllele[i] & 0xf);
-        }
-        return new DynamicBitStorage(genotype, currentScope, prefAllele0, prefAllele1);
-    }
 }
