@@ -679,6 +679,11 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     @Override
+    public byte[] genotypeAllTaxa(int site) {
+        return myGenotype.genotypeForAllTaxa(site);
+    }
+
+    @Override
     public byte[] genotypeAllSites(int taxon) {
         return myGenotype.genotypeAllSites(taxon);
     }

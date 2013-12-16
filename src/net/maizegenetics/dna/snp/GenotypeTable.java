@@ -134,6 +134,16 @@ public interface GenotypeTable {
     public byte[] genotypeAllSites(int taxon);
 
     /**
+     * Returns sequence of diploid allele values for all taxa for given site.
+     * Each value in array is what would be returned by genotype().
+     *
+     * @param site site
+     *
+     * @return sequence of diploid allele values.
+     */
+    public byte[] genotypeAllTaxa(int site);
+
+    /**
      * Returns sequence of true/false values indicating whether taxon at each
      * site matches a specific allele (based on frequency). Allele number of
      * value 0 would be the major allele. Allele number of value 1 would be the

@@ -108,7 +108,7 @@ public class BuilderFromVCF {
             e.printStackTrace();
         }
         long totalTime=System.nanoTime()-time;
-        System.out.printf("BuilderFromHapMap data timing %gs %n", totalTime/1e9);
+        System.out.printf("BuilderFromVCF data timing %gs %n", totalTime/1e9);
         return result;
     }
 
