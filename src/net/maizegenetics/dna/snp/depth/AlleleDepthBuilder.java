@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.dna.snp.depth;
 
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -198,8 +199,9 @@ public class AlleleDepthBuilder {
 
     public AlleleDepth build() {
         if (myIsHDF5) {
+            IHDF5Reader reader = myHDF5Writer;
             myHDF5Writer = null;
-            return null;
+            return new HDF5AlleleDepth(reader);
         } else {
             SuperByteMatrix[] temp = new SuperByteMatrix[myDepths.size()];
             temp = myDepths.toArray(temp);
