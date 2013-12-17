@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.dna.snp.depth;
 
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,48 +20,48 @@ public class AlleleDepthBuilder {
 
     private List<SuperByteMatrix> myDepths = null;
     private final boolean myIsHDF5;
+    private IHDF5Writer myHDF5Writer = null;
     private final int myMaxNumAlleles;
     private final int myNumSites;
     private int myNumTaxa = 0;
 
-    private AlleleDepthBuilder(boolean hdf5, int numSites, int maxNumAlleles) {
-        myIsHDF5 = hdf5;
+    private AlleleDepthBuilder(IHDF5Writer writer, int numSites, int maxNumAlleles) {
+        myIsHDF5 = true;
+        myHDF5Writer = writer;
         myMaxNumAlleles = maxNumAlleles;
         myNumSites = numSites;
-
-        if (myIsHDF5) {
-
-        } else {
-            myDepths = new ArrayList<>();
-        }
     }
 
-    private AlleleDepthBuilder(boolean hdf5, int numTaxa, int numSites, int maxNumAlleles) {
-        myIsHDF5 = hdf5;
+    private AlleleDepthBuilder(int numSites, int maxNumAlleles) {
+        myIsHDF5 = false;
+        myHDF5Writer = null;
+        myMaxNumAlleles = maxNumAlleles;
+        myNumSites = numSites;
+        myDepths = new ArrayList<>();
+    }
+
+    private AlleleDepthBuilder(int numTaxa, int numSites, int maxNumAlleles) {
+        myIsHDF5 = false;
+        myHDF5Writer = null;
         myMaxNumAlleles = maxNumAlleles;
         myNumSites = numSites;
         myNumTaxa = numTaxa;
-
-        if (myIsHDF5) {
-
-        } else {
-            myDepths = new ArrayList<>();
-            for (int i = 0; i < myNumTaxa; i++) {
-                myDepths.add(SuperByteMatrixBuilder.getInstance(myNumSites, myMaxNumAlleles));
-            }
+        myDepths = new ArrayList<>();
+        for (int i = 0; i < myNumTaxa; i++) {
+            myDepths.add(SuperByteMatrixBuilder.getInstance(myNumSites, myMaxNumAlleles));
         }
     }
 
     public static AlleleDepthBuilder getInstance(int numTaxa, int numSites, int maxNumAlleles) {
-        return new AlleleDepthBuilder(false, numTaxa, numSites, maxNumAlleles);
+        return new AlleleDepthBuilder(numTaxa, numSites, maxNumAlleles);
     }
 
     public static AlleleDepthBuilder getNucleotideInstance(int numTaxa, int numSites) {
-        return new AlleleDepthBuilder(false, numTaxa, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+        return new AlleleDepthBuilder(numTaxa, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
     }
 
-    public static AlleleDepthBuilder getHDF5NucleotideInstance(int numSites) {
-        return new AlleleDepthBuilder(true, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+    public static AlleleDepthBuilder getHDF5NucleotideInstance(IHDF5Writer writer, int numSites) {
+        return new AlleleDepthBuilder(writer, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
     }
 
     /**
@@ -176,7 +177,7 @@ public class AlleleDepthBuilder {
         }
         return this;
     }
-    
+
     /**
      * Add taxon and set values for all sites and alleles for that taxon.
      *
@@ -197,6 +198,7 @@ public class AlleleDepthBuilder {
 
     public AlleleDepth build() {
         if (myIsHDF5) {
+            myHDF5Writer = null;
             return null;
         } else {
             SuperByteMatrix[] temp = new SuperByteMatrix[myDepths.size()];
