@@ -32,4 +32,14 @@ public class HDF5AlleleDepth implements AlleleDepth {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
+    public int depthForTaxon(int taxon) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public int depthForSite(int site) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }
