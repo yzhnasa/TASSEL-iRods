@@ -3,7 +3,8 @@ package net.maizegenetics.dna.snp.bit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
+import com.google.common.cache.Weigher;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.util.BitSet;
@@ -13,8 +14,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
-import net.maizegenetics.dna.snp.GenotypeTable;
 
 /**
  * Provides rapid conversion routines and caching from byte encoding of
@@ -48,6 +47,10 @@ public class DynamicBitStorageNew implements BitStorageNew {
         SB(int index) {
             this.index = index;
         }
+    };
+    Weigher<Long, BitSet> weighByLength = new Weigher<Long, BitSet>() {
+        public int weigh(Long key, BitSet value) {
+            return value.getNumWords()*8; } //words are longs so *8 converts to bytes
     };
     private LoadingCache<Long, BitSet> bitCache;
     private CacheLoader<Long, BitSet> bitLoader = new CacheLoader<Long, BitSet>() {
@@ -145,7 +148,8 @@ public class DynamicBitStorageNew implements BitStorageNew {
         myTaxaCount = myGenotype.numberOfTaxa();
         myPrefAllele = Arrays.copyOf(prefAllele, prefAllele.length);
         bitCache = CacheBuilder.newBuilder()
-                .maximumSize(3_000_000)
+                .maximumWeight(300_000_000)
+                .weigher(weighByLength)
                 .build(bitLoader);
     }
 
