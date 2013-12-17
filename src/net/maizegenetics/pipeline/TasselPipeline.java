@@ -42,12 +42,12 @@ public class TasselPipeline implements PluginListener {
 
     private static final Logger myLogger = Logger.getLogger(TasselPipeline.class);
     private final TASSELMainFrame myMainFrame;
-    private final Map<String, List> myForks = new LinkedHashMap<String, List>();
+    private final Map<String, List> myForks = new LinkedHashMap<>();
     private String myCurrentFork = null;
     private List<Plugin> myCurrentPipe = null;
     private Plugin myFirstPlugin = null;
-    private final List<ThreadedPluginListener> myThreads = new ArrayList();
-    private final Map<Plugin, Integer> myProgressValues = new HashMap<Plugin, Integer>();
+    private final List<ThreadedPluginListener> myThreads = new ArrayList<>();
+    private final Map<Plugin, Integer> myProgressValues = new HashMap<>();
 
     /**
      * Creates a new instance of TasselPipeline
