@@ -22,9 +22,9 @@ public interface AlleleDepth {
      *
      * @return array of counts
      */
-    public int[] getDepthForAlleles(int taxon, int site);
+    public int[] depthForAlleles(int taxon, int site);
     
-    public int getDepthForAllele(int taxon, int site, int allele);
+    public int depthForAllele(int taxon, int site, int allele);
     
     /**
      * Returns total depth for given taxon and site.
@@ -34,6 +34,6 @@ public interface AlleleDepth {
      * 
      * @return total depth
      */
-    public int getDepth(int taxon, int site);
+    public int depth(int taxon, int site);
     
 }
