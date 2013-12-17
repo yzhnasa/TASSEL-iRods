@@ -52,15 +52,19 @@ public class AlleleDepthBuilder {
     }
 
     public static AlleleDepthBuilder getInstance(int numTaxa, int numSites, int maxNumAlleles) {
-        return new AlleleDepthBuilder(numTaxa, numSites, maxNumAlleles);
+        return new AlleleDepthBuilder(false, numTaxa, numSites, maxNumAlleles);
     }
 
     public static AlleleDepthBuilder getNucleotideInstance(int numTaxa, int numSites) {
-        return new AlleleDepthBuilder(numTaxa, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+        return new AlleleDepthBuilder(false, numTaxa, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+    }
+
+    public static AlleleDepthBuilder getHDF5NucleotideInstance(int numSites) {
+        return new AlleleDepthBuilder(true, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
     }
 
     public AlleleDepthBuilder setDepth(int taxon, int site, byte allele, byte value) {
-        myDepths[allele].set(taxon, site, value);
+        myDepths.get(taxon).set(site, allele, value);
         return this;
     }
 
