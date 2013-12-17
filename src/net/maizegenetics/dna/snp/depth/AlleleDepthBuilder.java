@@ -89,5 +89,4 @@ public class AlleleDepthBuilder {
             return new MemoryAlleleDepth(temp);
         }
     }
-    }
 }
