@@ -3,24 +3,51 @@
  */
 package net.maizegenetics.dna.snp.depth;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
 
 /**
- * Builder to store information on DNA read depths. TODO this needs methods to
- * support incremental depth building. What about HDF5 depth building?
+ * Builder to store information on DNA read depths.
  *
  * @author Terry Casstevens
  */
 public class AlleleDepthBuilder {
 
-    private SuperByteMatrix[] myDepths = null;
+    private List<SuperByteMatrix> myDepths = null;
+    private final boolean myIsHDF5;
+    private final int myMaxNumAlleles;
+    private final int myNumSites;
+    private int myNumTaxa = 0;
 
-    private AlleleDepthBuilder(int numTaxa, int numSites, int maxNumAlleles) {
-        myDepths = new SuperByteMatrix[maxNumAlleles];
-        for (int i = 0; i < maxNumAlleles; i++) {
-            myDepths[i] = SuperByteMatrixBuilder.getInstance(numTaxa, numSites);
+    private AlleleDepthBuilder(boolean hdf5, int numSites, int maxNumAlleles) {
+        myIsHDF5 = hdf5;
+        myMaxNumAlleles = maxNumAlleles;
+        myNumSites = numSites;
+
+        if (myIsHDF5) {
+
+        } else {
+            myDepths = new ArrayList<>();
+        }
+    }
+
+    private AlleleDepthBuilder(boolean hdf5, int numTaxa, int numSites, int maxNumAlleles) {
+        myIsHDF5 = hdf5;
+        myMaxNumAlleles = maxNumAlleles;
+        myNumSites = numSites;
+        myNumTaxa = numTaxa;
+
+        if (myIsHDF5) {
+
+        } else {
+            myDepths = new ArrayList<>();
+            for (int i = 0; i < myNumTaxa; i++) {
+                myDepths.add(SuperByteMatrixBuilder.getInstance(myNumSites, myMaxNumAlleles));
+            }
         }
     }
 
@@ -49,8 +76,14 @@ public class AlleleDepthBuilder {
     }
 
     public AlleleDepth build() {
-        SuperByteMatrix[] temp = myDepths;
-        myDepths = null;
-        return new MemoryAlleleDepth(temp);
+        if (myIsHDF5) {
+            return null;
+        } else {
+            SuperByteMatrix[] temp = new SuperByteMatrix[myDepths.size()];
+            temp = myDepths.toArray(temp);
+            myDepths = null;
+            return new MemoryAlleleDepth(temp);
+        }
+    }
     }
 }
