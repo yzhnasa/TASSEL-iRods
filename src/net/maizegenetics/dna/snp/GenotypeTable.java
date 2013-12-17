@@ -62,6 +62,45 @@ public interface GenotypeTable {
          */
         Reference
     };
+    
+    /**
+     * This defines the possible alleles.
+     */
+    public static enum WHICH_ALLELE {
+
+        /**
+         * Major Allele - Most frequent allele.
+         */
+        Major,
+        /**
+         * Minor Allele - Second most frequent allele.
+         */
+        Minor,
+        /**
+         * Global Major Allele
+         */
+        Global_Major,
+        /**
+         * Global Minor Allele
+         */
+        Global_Minor,
+        /**
+         * Reference Allele
+         */
+        Reference,
+        /**
+         * Alternate to Reference Allele
+         */
+        Alternate,
+        /**
+         * High Coverage Allele
+         */
+        HighCoverage,
+        /**
+         * Low Coverage Allele
+         */
+        LowCoverage
+    };
 
     /**
      * Returns the immutable Genotype matrix. Taxa and Positions are not part of

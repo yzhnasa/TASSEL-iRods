@@ -849,6 +849,26 @@ public class GenotypeTableUtils {
         }
         return new BitSet[]{rMj, rMn};
     }
+    
+    public static BitSet calcBitPresenceFromGenotype(byte[] genotype, byte[] referenceValues) {
+        int sites = genotype.length;
+        if (genotype.length != referenceValues.length) {
+            throw new ArrayIndexOutOfBoundsException("GenotypeTableUtils: calcBitPresenceFromGenotype: Input genotypes unequal in length");
+        }
+        OpenBitSet result = new OpenBitSet(genotype.length);
+        for (int i = 0; i < sites; i++) {
+            
+            if (referenceValues[i] == GenotypeTable.UNKNOWN_ALLELE) {
+                // do nothing
+            } else if (referenceValues[i] == (byte) (genotype[i] & 0xf)) {
+                result.fastSet(i);
+            } else if (referenceValues[i] == (byte) ((genotype[i] >>> 4) & 0xf)) {
+                result.fastSet(i);
+            }
+
+        }
+        return result;
+    }
 
     /**
      * Method for getting TBits rapidly from major and minor allele arrays
@@ -931,5 +951,23 @@ public class GenotypeTableUtils {
             }
         }
         return new BitSet[]{rMj, rMn};
+    }
+    
+    public static BitSet calcBitPresenceFromGenotype(byte[] genotype, byte referenceValue) {
+        int sites = genotype.length;
+        OpenBitSet result = new OpenBitSet(genotype.length);
+        if (referenceValue == GenotypeTable.UNKNOWN_ALLELE) {
+            return result;
+        }
+        for (int i = 0; i < sites; i++) {
+
+            if (referenceValue == (byte) (genotype[i] & 0xf)) {
+                result.fastSet(i);
+            } else if (referenceValue == (byte) ((genotype[i] >>> 4) & 0xf)) {
+                result.fastSet(i);
+            }
+
+        }
+        return result;
     }
 }
