@@ -159,6 +159,42 @@ public class AlleleDepthBuilder {
         return this;
     }
 
+    /**
+     * Add taxon and set values for all sites and alleles for that taxon.
+     *
+     * @param taxon taxon
+     * @param values depth values
+     *
+     * @return builder
+     */
+    public AlleleDepthBuilder addTaxon(int taxon, byte[][] values) {
+        if (myIsHDF5) {
+
+        } else {
+            myDepths.add(SuperByteMatrixBuilder.getInstance(myNumSites, myMaxNumAlleles));
+            setDepth(taxon, values);
+        }
+        return this;
+    }
+    
+    /**
+     * Add taxon and set values for all sites and alleles for that taxon.
+     *
+     * @param taxon taxon
+     * @param values depth values
+     *
+     * @return builder
+     */
+    public AlleleDepthBuilder addTaxon(int taxon, int[][] values) {
+        if (myIsHDF5) {
+
+        } else {
+            myDepths.add(SuperByteMatrixBuilder.getInstance(myNumSites, myMaxNumAlleles));
+            setDepth(taxon, values);
+        }
+        return this;
+    }
+
     public AlleleDepth build() {
         if (myIsHDF5) {
             return null;
