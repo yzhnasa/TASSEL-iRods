@@ -22,16 +22,25 @@ class MemoryAlleleDepth implements AlleleDepth {
     }
 
     @Override
-    public byte[] getDepthForAlleles(int taxon, int site) {
-        byte[] result = new byte[myNumAlleles];
+    public int[] getDepthForAlleles(int taxon, int site) {
+        int[] result = new int[myNumAlleles];
         for (int a = 0; a < myNumAlleles; a++) {
-            result[a] = myDepths[a].get(taxon, site);
+            result[a] = getDepthForAllele(taxon, site, a);
         }
         return result;
     }
 
     @Override
-    public byte getDepthForAllele(int taxon, int site, int allele) {
-        return myDepths[allele].get(taxon, site);
+    public int getDepthForAllele(int taxon, int site, int allele) {
+        return AlleleDepthUtil.depthByteToInt(myDepths[taxon].get(site, allele));
+    }
+
+    @Override
+    public int getDepth(int taxon, int site) {
+        int result = 0;
+        for (int a = 0; a < myNumAlleles; a++) {
+            result += getDepthForAllele(taxon, site, a);
+        }
+        return result;
     }
 }

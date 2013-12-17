@@ -890,7 +890,7 @@ public interface GenotypeTable {
      *
      * @return two counts
      */
-    public byte[] depthForAlleles(int taxon, int site);
+    public int[] depthForAlleles(int taxon, int site);
 
     /**
      * Returns all alleles at given site in order defined by scope.

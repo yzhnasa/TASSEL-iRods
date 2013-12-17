@@ -819,7 +819,7 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte[] depthForAlleles(int taxon, int site) {
+    public int[] depthForAlleles(int taxon, int site) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

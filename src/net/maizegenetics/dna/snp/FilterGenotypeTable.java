@@ -896,7 +896,7 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte[] depthForAlleles(int taxon, int site) {
+    public int[] depthForAlleles(int taxon, int site) {
         int taxaIndex = translateTaxon(taxon);
         if (taxaIndex == -1) {
             return null;

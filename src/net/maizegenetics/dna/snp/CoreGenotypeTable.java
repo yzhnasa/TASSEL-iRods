@@ -453,7 +453,7 @@ public class CoreGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte[] depthForAlleles(int taxon, int site) {
+    public int[] depthForAlleles(int taxon, int site) {
         return myAlleleDepth.getDepthForAlleles(taxon, site);
     }
 
