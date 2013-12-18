@@ -98,7 +98,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private Table<Chromosome,Integer,Integer> PositionToSite = null;  // indices = chrIndices.  For a given position (key), each HashMap provides the site in the MutableNucleotideDepthAlignment (value)
     private int totalNSites = 0;
 
-    //Documentation of readdepth per sample
+    //Documentation of read depth per sample
     private Map<String,Integer> RawReadCountsForFullSampleName = new TreeMap<>();
     private Map<String,Integer> RawReadCountsForFinalSampleName = new TreeMap<>();
     private Map<String,Integer> MatchedReadCountsForFullSampleName = new TreeMap<>();
