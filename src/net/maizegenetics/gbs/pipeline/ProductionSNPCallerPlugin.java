@@ -9,7 +9,17 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 
+import cern.colt.list.IntArrayList;
+import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
+import com.google.common.collect.TreeMultimap;
+import net.maizegenetics.dna.map.*;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
@@ -19,19 +29,14 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.gbs.homology.TagMatchFinder;
 import net.maizegenetics.dna.snp.ExportUtils;
-import net.maizegenetics.dna.map.Chromosome;
+
 import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import javax.swing.ImageIcon;
-import net.maizegenetics.dna.map.TOPMInterface;
-import net.maizegenetics.dna.map.TOPMUtils;
+
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.pal.ids.SimpleIdGroup;
 import net.maizegenetics.util.VCFUtil;
@@ -63,7 +68,7 @@ import org.apache.log4j.Logger;
  Total memory footprint ~1.15Gb + PositionToSite (could be primitive colt OpenIntIntHashMap, but only takes 32M bytes)  + TOPM SiteList
  This at least eliminates the 3Gb overhead of mutableDepthAlignment.
  *
- * @author jcg233
+ * @author Jeff Glaubitz
  */
 public class ProductionSNPCallerPlugin extends AbstractPlugin {
 
@@ -77,19 +82,27 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private int maxDivergence = 0;
     private int[] chromosomes = null;
     private boolean fastq = true;
-    private HashMap<String,Integer> KeyFileColumns = new HashMap<String,Integer>();
-    private TreeMap<String,Boolean> FlowcellLanes = new TreeMap<String,Boolean>();  // true = corresponding fastq (or qseq) file is present in input directory
-    private TreeMap<String,String> FullNameToFinalName = new TreeMap<String,String>();
-    private TreeMap<String,ArrayList<String>> LibraryPrepIDToFlowCellLanes = new TreeMap<String,ArrayList<String>>();
-    private TreeMap<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
-    private HashMap<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
-    private GenotypeTableBuilder genos = null;
-    private HashMap<Integer,Integer>[] PositionToSite = null;  // indices = chrIndices.  For a given position (key), eaach HashMap provides the site in the MutableNucleotideDepthAlignment (value)
+    private HashMap<String,Integer> KeyFileColumns = new HashMap<>();
+    private Map<String,Boolean> FlowcellLanes = new TreeMap<>();  // true = corresponding fastq (or qseq) file is present in input directory
+    private Map<String,String> FullNameToFinalName = new TreeMap<>();
+//    private Map<String,ArrayList<String>> LibraryPrepIDToFlowCellLanes = new TreeMap<String,ArrayList<String>>();
+    private Multimap<String, String> LibraryPrepIDToFlowCellLanes = TreeMultimap.create();
+    private Map<String,String> LibraryPrepIDToSampleName = new TreeMap<String,String>();
+ //   private Map<String,Integer> FinalNameToTaxonIndex = new HashMap<String,Integer>();
+
+
+    private GenotypeTableBuilder genos = null; //output genotype table
+    private TaxaList taxaList=null;
+    private PositionList positionList=null;
+    private IntArrayList[] obsTagsForEachTaxon=null;
+    private Table<Chromosome,Integer,Integer> PositionToSite = null;  // indices = chrIndices.  For a given position (key), each HashMap provides the site in the MutableNucleotideDepthAlignment (value)
     private int totalNSites = 0;
-    private TreeMap<String,Integer> RawReadCountsForFullSampleName = new TreeMap<String,Integer>();
-    private TreeMap<String,Integer> RawReadCountsForFinalSampleName = new TreeMap<String,Integer>();
-    private TreeMap<String,Integer> MatchedReadCountsForFullSampleName = new TreeMap<String,Integer>();
-    private TreeMap<String,Integer> MatchedReadCountsForFinalSampleName = new TreeMap<String,Integer>();
+
+    //Documentation of readdepth per sample
+    private Map<String,Integer> RawReadCountsForFullSampleName = new TreeMap<>();
+    private Map<String,Integer> RawReadCountsForFinalSampleName = new TreeMap<>();
+    private Map<String,Integer> MatchedReadCountsForFullSampleName = new TreeMap<>();
+    private Map<String,Integer> MatchedReadCountsForFinalSampleName = new TreeMap<>();
     private boolean stacksL = false;  // if true, use vcf likelihood method for calling hets
     private double errorRate = 0.01;
     private final static int maxCountAtGeno = 500;  // maximum value for likelihoodRatioThreshAlleleCnt[] lookup table
@@ -210,14 +223,18 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
         readKeyFile();  // TODO: read/write full set of metadata
         matchKeyFileToAvailableRawSeqFiles();
-        setUpMutableNucleotideAlignmentWithDepth();
+
+        setUpGenotypeTableBuilder();
+        obsTagsForEachTaxon=new IntArrayList[taxaList.numberOfTaxa()];
+        for (IntArrayList intArrayList : obsTagsForEachTaxon) intArrayList=new IntArrayList(750_000);
         readRawSequencesAndRecordDepth();  // TODO: read the machine name from the fastq/qseq file
         callGenotypes();
         writeHapMapGenotypes();
         writeReadsPerSampleReports();
-        writeHDF5Genotypes();  // TODO: ensure that reference allele gets added at some point
+  //      writeHDF5Genotypes();  // TODO: ensure that reference allele gets added at some point
         return null;
     }
+
 
     private void readRawSequencesAndRecordDepth() {
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
@@ -245,8 +262,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                         counters[2]++;  // goodMatched++;
                         MatchedReadCountsForFullSampleName.put(rr.getTaxonName(),MatchedReadCountsForFullSampleName.get(rr.getTaxonName())+1);
                         MatchedReadCountsForFinalSampleName.put(FullNameToFinalName.get(rr.getTaxonName()),MatchedReadCountsForFinalSampleName.get(FullNameToFinalName.get(rr.getTaxonName()))+1);
-                        int taxonIndex = FinalNameToTaxonIndex.get(FullNameToFinalName.get(rr.getTaxonName()));
-                        incrementDepthForTagVariants(tagIndex, taxonIndex);
+                        int taxonIndex = taxaList.indicesMatchingTaxon(FullNameToFinalName.get(rr.getTaxonName())).get(0);
+                        obsTagsForEachTaxon[taxonIndex].add(tagIndex);
                     }
                 }
                 br.close();
@@ -373,11 +390,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
 
         String flowCellLane = cells[KeyFileColumns.get("Flowcell")]+":"+cells[KeyFileColumns.get("Lane")];
         FlowcellLanes.put(flowCellLane, false);
-        ArrayList<String> flowcellLanesForLibPrep = LibraryPrepIDToFlowCellLanes.get(libPrepID);
-        if (flowcellLanesForLibPrep == null) {
-            LibraryPrepIDToFlowCellLanes.put(libPrepID, flowcellLanesForLibPrep = new ArrayList<String>());
-        }
-        flowcellLanesForLibPrep.add(flowCellLane);
+        LibraryPrepIDToFlowCellLanes.put(libPrepID,flowCellLane);
 
         String prevSample = LibraryPrepIDToSampleName.get(libPrepID);
         if (prevSample == null) {
@@ -447,43 +460,21 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
     }
 
-    private void setUpMutableNucleotideAlignmentWithDepth() {
-        String[] finalSampleNames = getFinalSampleNames();
-        generateQuickTaxaLookup(finalSampleNames);
+    private void setUpGenotypeTableBuilder() {
+        taxaList= new TaxaListBuilder().addAll(getFinalSampleNames()).sortTaxaAlphabetically().build();
         myLogger.info("\nCounting sites in TOPM file");
-        ArrayList<int[]> uniquePositions = getUniquePositions();
-        genos = GenotypeTableBuilder.getTaxaIncremental(new SimpleIdGroup(finalSampleNames), totalNSites); // keeps depth for all 6 alleles
-        System.out.println("\nAdding sites from the TOPM file to the alignment (genotypes) object");
-        int currSite = 0;
-        for (int i = 0; i < uniquePositions.size(); i++) {
-            String chromosome = Integer.toString(chromosomes[i]);
-            int[] positsOnChr = uniquePositions.get(i);
-            for (int j=0, nSitesOnChr=positsOnChr.length; j<nSitesOnChr; j++) {
-                genos.addSite(currSite);
-                genos.setLocusOfSite(currSite, new Chromosome(chromosome));
-                genos.setPositionOfSite(currSite, positsOnChr[j]);
-                genos.setSNPID(currSite, genos.getSNPID(currSite));  
-                currSite++;
-            }
-        }
-        uniquePositions = null;
-        System.gc();
-        genos.clean();
-        generateFastSiteLookup();
+        PositionList uniquePositions = getUniquePositions();
+        genos = GenotypeTableBuilder.getTaxaIncremental(uniquePositions); //todo consider outputting to HDF5
+        generateFastSiteLookup(uniquePositions);
     }
-    
-    private void generateQuickTaxaLookup(String[] finalSampleNames) {
-        for (int taxonIndex=0; taxonIndex<finalSampleNames.length; taxonIndex++) {
-            FinalNameToTaxonIndex.put(finalSampleNames[taxonIndex], taxonIndex);
-        }
-    }
+
     
     private String[] getFinalSampleNames() {
         TreeSet<String> finalSampleNamesTS = new TreeSet<String>(); // this will keep the names sorted (by short name, then remainder)
         TreeSet<String> samplesInKeyFileWithNoRawSeqFile = new TreeSet<String>();
         for (String LibPrepID : LibraryPrepIDToSampleName.keySet()) {
             String sample = LibraryPrepIDToSampleName.get(LibPrepID);
-            ArrayList<String> flowcellLanesForLibPrep = LibraryPrepIDToFlowCellLanes.get(LibPrepID);
+            Collection<String> flowcellLanesForLibPrep = LibraryPrepIDToFlowCellLanes.get(LibPrepID);
             String tempFullName="(NoCorrespondingRawSeqFileForLibPrepID):"+LibPrepID;
             int nRepSamplesWithRawSeqFile = 0;
             for (String flowcellLane : flowcellLanesForLibPrep) {
@@ -532,36 +523,30 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         System.out.println("\n");
     }
 
-    private ArrayList<int[]> getUniquePositions() {
-        totalNSites = 0;
-        ArrayList<int[]> uniquePositions = new ArrayList<int[]>();
+    private PositionList getUniquePositions() {
+        //todo Move this code to TOPM
+        PositionListBuilder plb=new PositionListBuilder();
         chromosomes = topm.getChromosomes();
-        System.out.println("\nThe TOPM contains the following chromosomes (and # sites per chromosome):");
-        int maxChr = Integer.MIN_VALUE;
-        HashMap<Integer,Integer> ChrToNSites = new HashMap<Integer,Integer>();
-        for (int i = 0; i < chromosomes.length; i++) {
-            if (chromosomes[i] > maxChr) maxChr = chromosomes[i];
-            uniquePositions.add(topm.getUniquePositions(i));
-            int nSitesInChr = uniquePositions.get(i).length;
-            ChrToNSites.put(chromosomes[i], nSitesInChr);
-            totalNSites += nSitesInChr;
-            System.out.println("   "+chromosomes[i]+"   ("+nSitesInChr+" sites)");
-        }
-        PositionToSite = new HashMap[maxChr+1];
-        for (int c = 0; c <= maxChr; c++) {
-            if (ChrToNSites.containsKey(c)) {
-                int capacity = (int) ((double) ChrToNSites.get(c) * 1.25);
-                PositionToSite[c] = new HashMap<Integer,Integer>(capacity);
+        for (Integer chrNum : chromosomes) {
+            Chromosome chr=new Chromosome(chrNum.toString());
+            for (int pos : topm.getUniquePositions(chrNum)) {
+                Position p=new GeneralPosition.Builder(chr,pos).build();
+                plb.add(p);
             }
         }
+        PositionList pl=plb.sortPositions().build();
+        totalNSites = pl.numberOfSites();
         System.out.println("In total, the TOPM contains "+chromosomes.length+" chromosomes and "+totalNSites+" sites.");
-        return uniquePositions;
+        return pl;
     }
     
-    private void generateFastSiteLookup() {
-        for (int site=0, nSites=genos.getSiteCount(); site<nSites; site++) {
-            PositionToSite[Integer.parseInt(genos.getChromosome(site).getName())].put(genos.getPositionInChromosome(site), site);
+    private void generateFastSiteLookup(PositionList pl) {
+        ImmutableTable.Builder ptsB=new ImmutableTable.Builder<Chromosome, Integer, Integer>();
+        for (int i = 0; i < pl.numberOfSites(); i++) {
+            Position position=pl.get(i);
+            ptsB.put(position.getChromosome(),position.getPosition(),i);
         }
+        PositionToSite=ptsB.build();
     }
 
     private BufferedReader getBufferedReaderForRawSeqFile(int fileNum) {
@@ -617,7 +602,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         return tagIndex;
     }
 
-    private void incrementDepthForTagVariants(int tagIndex, int taxonIndex) {
+    private void incrementDepthForTagVariants(int tagIndex, int[][] cDepth, int increment) {
         int chromosome = topm.getChromosome(tagIndex);
         if (chromosome == TOPMInterface.INT_MISSING) {
             return;
@@ -632,32 +617,46 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             int offset = topm.getVariantPosOff(tagIndex, variant);
             int pos = startPos + offset;
 //            int currSite = genos.getSiteOfPhysicalPosition(pos, locus);
-            int currSite = PositionToSite[chromosome].get(pos);
+            int currSite = PositionToSite.get(chromosome,pos);
             if (currSite < 0) {
                 continue;
             }
-            genos.incrementDepthForAllele(taxonIndex, currSite, newBase);
+            cDepth[newBase][currSite]+=increment;
         }
     }
     
     private void callGenotypes() {
         System.out.print("\nCalling genotypes...");
+        for (int currTaxonIndex = 0; currTaxonIndex < obsTagsForEachTaxon.length; currTaxonIndex++) {
+            IntArrayList currTagList=obsTagsForEachTaxon[currTaxonIndex];
+            currTagList.sort();
+            int[][] cDepth=new int[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][positionList.numberOfSites()];
+            int prevTag=currTagList.getQuick(0);
+            int currInc=0;
+            for (int t = 0; t < currTagList.size(); t++) {
+                int tag=currTagList.getQuick(t);
+                if(tag==prevTag) {currInc++;}
+                else {
+                    incrementDepthForTagVariants(prevTag,cDepth, currInc);
+                    prevTag=tag;
+                    currInc=1;
+                }
+            }
+            incrementDepthForTagVariants(prevTag,cDepth, currInc);
+            byte[] cGeno=resolveGenosForTaxon(cDepth);
+            genos.addTaxon(taxaList.get(currTaxonIndex),cGeno,cDepth);  //GenotypeBuilder needs to take of int to byte conversion.
+        }
+        genos.build();
         topm = null;  // no longer needed in memory
         System.gc();
-        for (int taxon = 0, nTaxa = genos.getSequenceCount(); taxon < nTaxa; taxon++) {
-            byte[] callsForTaxon = resolveGenosForTaxon(taxon);
-            genos.setBaseRange(taxon, 0, callsForTaxon);
-        }
         System.out.print("   ...done\n");
-        genos.clean();
         System.out.println("\n\nDistribution of site summary stats:\n");
         AlignmentFilterByGBSUtils.getCoverage_MAF_F_Dist(genos, false);
     }
     
-    private byte[] resolveGenosForTaxon(int taxon) {
-        byte[][] depthsForTaxon = genos.getDepthsForAllSites(taxon);
+    private byte[] resolveGenosForTaxon(int[][] depthsForTaxon) {
         int nAlleles = depthsForTaxon.length;
-        byte[] depthsAtSite = new byte[nAlleles];
+        int[] depthsAtSite = new int[nAlleles];
         int nSites = depthsForTaxon[0].length;
         byte[] genos = new byte[nSites];
         for (int site = 0; site < nSites; site++) {
@@ -669,7 +668,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         return genos;
     }
     
-    private byte resolveGeno(byte[] depths) {
+    private byte resolveGeno(int[] depths) {
         if (stacksL) {
             int nAlleles = depths.length;
             byte[] alleles = new byte[nAlleles];
@@ -697,7 +696,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         return resolveHetGeno(depths);
     }
     
-    private byte resolveHetGeno(byte[] depths) {
+    private byte resolveHetGeno(int[] depths) {
         int max = 0;
         byte maxAllele = GenotypeTable.UNKNOWN_ALLELE;
         int nextMax = 0;
@@ -738,43 +737,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         System.out.println("\nGenotypes written to:\n"+outFileS+"\n");
     }
     
-    private void writeHDF5Genotypes() {
-        String hdf5FileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
-        hdf5FileS = hdf5FileS.replaceAll(".txt", ".hmp.h5");
-        hdf5FileS = hdf5FileS.replaceAll("_key", "");
-        File hdf5File = new File(hdf5FileS);
-        if (hdf5File.exists()) {
-            if(!hdf5File.delete()) {
-                System.out.println("Can't delete exitsting HDF5 genotypes file");
-            }
-        }
-        ExportUtils.writeToMutableHDF5(genos, hdf5FileS);
-        MutableNucleotideAlignmentHDF5 hdf5Genos = MutableNucleotideAlignmentHDF5.getInstance(hdf5FileS);
-        addDepthToHDF5(hdf5Genos);
-//        addReferenceAllelesToHDF5(hdf5Genos);
-    }
-    
-    private void addDepthToHDF5(MutableNucleotideAlignmentHDF5 hdf5Genos) {
-        System.out.print("\nAdding allele depths at each genotype to HDF5 genotypes file...");
-        int nSNPIDMismatches = 0;
-        for (int s=0, nSites=genos.getSiteCount(); s < nSites; s++) {
-            if (!genos.getSNPID(s).equals(hdf5Genos.getSNPID(s))) {
-                nSNPIDMismatches++;
-            }
-        }
-        if (nSNPIDMismatches > 0) {
-            throwSNPIDMismatchError(nSNPIDMismatches);
-        }
-        for (int taxon = 0, nTaxa = genos.getSequenceCount(); taxon < nTaxa; taxon++) {
-            int hdf5Taxon = hdf5Genos.getIdGroup().whichIdNumber(genos.getTaxaName(taxon));
-            if (hdf5Taxon == -1) {
-                throwMissingTaxonInHDF5Error(genos.getTaxaName(taxon));
-            } else {
-                hdf5Genos.setAllDepth(hdf5Taxon, genos.getDepthsForAllSites(taxon));
-            }
-        }
-        System.out.print("   ...finished\n");
-    }
+
     
     private void throwSNPIDMismatchError(int nMismatches) {
         String SNPIDMismatchMessage =
