@@ -36,11 +36,6 @@ class TaxaArrayList implements TaxaList {
             }
             myNameToIndex.put(Taxon.getName(), index);
 
-            //TODO Ed, we need to talk about this. -Terry
-            //if (!Taxon.getFullName().equals(Taxon.getName())) {
-            //    myNameToIndex.put(Taxon.getName(), index);
-            //}
-
             index++;
         }
     }
