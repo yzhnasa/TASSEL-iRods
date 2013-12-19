@@ -418,7 +418,7 @@ public interface GenotypeTable {
     public int[] startAndEndOfChromosome(Chromosome chromosome);
 
     /**
-     * Returns number of taxa (same as numberOfTaxa()
+     * Returns number of taxa
      *
      * @return number of taxa
      */
