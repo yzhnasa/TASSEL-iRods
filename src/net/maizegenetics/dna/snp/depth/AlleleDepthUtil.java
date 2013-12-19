@@ -3,6 +3,8 @@
  */
 package net.maizegenetics.dna.snp.depth;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Terry Casstevens
@@ -10,8 +12,17 @@ package net.maizegenetics.dna.snp.depth;
  */
 public class AlleleDepthUtil {
 
-    private static double LOG_BASE = 1.0746;  // logbase^128 = 10,000
-    private static double LOG_CONV = 1.0 / Math.log(LOG_BASE);
+    private static final double LOG_BASE = 1.0746;  // LOG_BASE^128 = 10,356
+    private static final double LOG_CONV = 1.0 / Math.log(LOG_BASE);
+    private static final double DECODE_LOG_CONV = Math.log(LOG_BASE);
+    private static final int[] BYTE_TO_INT = new int[256];
+
+    static {
+        Arrays.fill(BYTE_TO_INT, -1);
+        for (int i = 0; i < 256; i++) {
+            BYTE_TO_INT[i] = decode((byte) i);
+        }
+    }
 
     private AlleleDepthUtil() {
         // utility
@@ -21,7 +32,7 @@ public class AlleleDepthUtil {
         if (depth > 127) {
             depth = (int) (-LOG_CONV * Math.log(depth));
             if (depth < -128) {
-                depth = -127;
+                depth = -128;
             }
         }
 
@@ -29,11 +40,14 @@ public class AlleleDepthUtil {
     }
 
     public static int depthByteToInt(byte depth) {
-        if (depth < 128) {
+        return BYTE_TO_INT[depth & 0xFF];
+    }
+
+    private static int decode(byte depth) {
+        if (depth >= 0) {
             return depth;
         } else {
-            // TODO: Need calculation for higher depths.
-            return 127;
+            return (int) (Math.exp(-DECODE_LOG_CONV * (depth - 0.5)));
         }
     }
 
