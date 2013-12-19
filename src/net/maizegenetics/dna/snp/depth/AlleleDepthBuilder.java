@@ -5,9 +5,11 @@ package net.maizegenetics.dna.snp.depth;
 
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
@@ -31,6 +33,9 @@ public class AlleleDepthBuilder {
         myHDF5Writer = writer;
         myMaxNumAlleles = maxNumAlleles;
         myNumSites = numSites;
+        if (!myHDF5Writer.exists(HapMapHDF5Constants.DEPTH)) {
+            myHDF5Writer.createGroup(HapMapHDF5Constants.DEPTH);
+        }
     }
 
     private AlleleDepthBuilder(int numSites, int maxNumAlleles) {
