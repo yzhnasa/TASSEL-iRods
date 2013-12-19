@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.dna.snp.depth;
 
+import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
 
@@ -20,6 +22,8 @@ import net.maizegenetics.util.SuperByteMatrixBuilder;
  * @author Terry Casstevens
  */
 public class AlleleDepthBuilder {
+
+    private static final HDF5IntStorageFeatures HDF5_FEATURES = HDF5IntStorageFeatures.createDeflation(2);
 
     private List<SuperByteMatrix> myDepths = null;
     private final boolean myIsHDF5;
@@ -77,15 +81,15 @@ public class AlleleDepthBuilder {
      * @param taxon taxon
      * @param site site
      * @param allele allele
-     * @param value value
+     * @param depth value
      *
      * @return builder
      */
-    public AlleleDepthBuilder setDepth(int taxon, int site, byte allele, int value) {
+    public AlleleDepthBuilder setDepth(int taxon, int site, byte allele, int depth) {
         if (myIsHDF5) {
             throw new IllegalStateException("AlleleDepthBuilder: setDepth: use addTaxon for HDF5 files.");
         }
-        myDepths.get(taxon).set(site, allele, AlleleDepthUtil.depthIntToByte(value));
+        myDepths.get(taxon).set(site, allele, AlleleDepthUtil.depthIntToByte(depth));
         return this;
     }
 
@@ -94,25 +98,25 @@ public class AlleleDepthBuilder {
      * Value will be translated using AlleleDepthUtil.
      *
      * @param taxon Index of taxon
-     * @param value array[sites][allele] of all values
+     * @param depths array[sites][allele] of all values
      *
      * @return builder
      */
-    public AlleleDepthBuilder setDepth(int taxon, int[][] value) {
+    public AlleleDepthBuilder setDepth(int taxon, int[][] depths) {
         if (myIsHDF5) {
             throw new IllegalStateException("AlleleDepthBuilder: setDepth: use addTaxon for HDF5 files.");
         }
-        int numSites = value.length;
+        int numSites = depths.length;
         if (numSites != myNumSites) {
             throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of sites: " + numSites + " should have: " + myNumSites);
         }
-        int numAlleles = value[0].length;
+        int numAlleles = depths[0].length;
         if (numAlleles != myMaxNumAlleles) {
             throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of alleles: " + numAlleles + " should have: " + myMaxNumAlleles);
         }
         for (int s = 0; s < myNumSites; s++) {
             for (int a = 0; a < myMaxNumAlleles; a++) {
-                setDepth(taxon, s, (byte) a, value[s][a]);
+                setDepth(taxon, s, (byte) a, depths[s][a]);
             }
         }
         return this;
@@ -125,15 +129,15 @@ public class AlleleDepthBuilder {
      * @param taxon taxon
      * @param site site
      * @param allele allele
-     * @param value value
+     * @param depth value
      *
      * @return builder
      */
-    public AlleleDepthBuilder setDepth(int taxon, int site, byte allele, byte value) {
+    public AlleleDepthBuilder setDepth(int taxon, int site, byte allele, byte depth) {
         if (myIsHDF5) {
             throw new IllegalStateException("AlleleDepthBuilder: setDepth: use addTaxon for HDF5 files.");
         }
-        myDepths.get(taxon).set(site, allele, value);
+        myDepths.get(taxon).set(site, allele, depth);
         return this;
     }
 
@@ -142,44 +146,58 @@ public class AlleleDepthBuilder {
      * Values should have already been translated using AlleleDepthUtil.
      *
      * @param taxon Index of taxon
-     * @param value array[sites][allele] of all values
+     * @param depths array[sites][allele] of all values
      *
      * @return builder
      */
-    public AlleleDepthBuilder setDepth(int taxon, byte[][] value) {
+    public AlleleDepthBuilder setDepth(int taxon, byte[][] depths) {
         if (myIsHDF5) {
             throw new IllegalStateException("AlleleDepthBuilder: setDepth: use addTaxon for HDF5 files.");
         }
-        int numSites = value.length;
+        int numSites = depths.length;
         if (numSites != myNumSites) {
             throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of sites: " + numSites + " should have: " + myNumSites);
         }
-        int numAlleles = value[0].length;
+        int numAlleles = depths[0].length;
         if (numAlleles != myMaxNumAlleles) {
             throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of alleles: " + numAlleles + " should have: " + myMaxNumAlleles);
         }
         for (int s = 0; s < myNumSites; s++) {
             for (int a = 0; a < myMaxNumAlleles; a++) {
-                setDepth(taxon, s, (byte) a, value[s][a]);
+                setDepth(taxon, s, (byte) a, depths[s][a]);
             }
         }
         return this;
     }
 
+    private String getTaxaDepthPath(Taxon taxon) {
+        return HapMapHDF5Constants.DEPTH + "/" + taxon.getName();
+    }
+
     /**
      * Add taxon and set values for all sites and alleles for that taxon.
      *
      * @param taxon taxon
-     * @param values depth values
+     * @param depths depth values
      *
      * @return builder
      */
-    public AlleleDepthBuilder addTaxon(int taxon, byte[][] values) {
+    public AlleleDepthBuilder addTaxon(Taxon taxon, byte[][] depths) {
         if (myIsHDF5) {
-
+            if ((depths == null) || (depths.length != 6)) {
+                throw new IllegalStateException("AlleleDepthBuilder: addTaxon: Set A, C, G, T, -, + at once");
+            }
+            if (depths[0].length != myNumSites) {
+                throw new IllegalStateException("AlleleDepthBuilder: addTaxon: Number of sites: " + depths[0].length + " should be: " + myNumSites);
+            }
+            synchronized (myHDF5Writer) {
+                myHDF5Writer.writeByteMatrix(getTaxaDepthPath(taxon), depths, HDF5_FEATURES);
+            }
+            myNumTaxa++;
         } else {
             myDepths.add(SuperByteMatrixBuilder.getInstance(myNumSites, myMaxNumAlleles));
-            setDepth(taxon, values);
+            setDepth(myNumTaxa, depths);
+            myNumTaxa++;
         }
         return this;
     }
@@ -188,16 +206,30 @@ public class AlleleDepthBuilder {
      * Add taxon and set values for all sites and alleles for that taxon.
      *
      * @param taxon taxon
-     * @param values depth values
+     * @param depths depth values
      *
      * @return builder
      */
-    public AlleleDepthBuilder addTaxon(int taxon, int[][] values) {
+    public AlleleDepthBuilder addTaxon(Taxon taxon, int[][] depths) {
         if (myIsHDF5) {
-
+            int numAlleles = depths.length;
+            if ((depths == null) || (numAlleles != 6)) {
+                throw new IllegalStateException("AlleleDepthBuilder: addTaxon: Set A, C, G, T, -, + at once");
+            }
+            if (depths[0].length != myNumSites) {
+                throw new IllegalStateException("AlleleDepthBuilder: addTaxon: Number of sites: " + depths[0].length + " should be: " + myNumSites);
+            }
+            byte[][] result = new byte[numAlleles][myNumSites];
+            for (int a = 0; a < numAlleles; a++) {
+                for (int s = 0; s < myNumSites; s++) {
+                    result[a][s] = AlleleDepthUtil.depthIntToByte(depths[a][s]);
+                }
+            }
+            return addTaxon(taxon, result);
         } else {
             myDepths.add(SuperByteMatrixBuilder.getInstance(myNumSites, myMaxNumAlleles));
-            setDepth(taxon, values);
+            setDepth(myNumTaxa, depths);
+            myNumTaxa++;
         }
         return this;
     }
