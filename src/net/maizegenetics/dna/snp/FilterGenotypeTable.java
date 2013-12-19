@@ -121,7 +121,7 @@ public class FilterGenotypeTable implements GenotypeTable {
             noNeedToFilter = false;
         }
         for (int i = 0, n = subTaxaList.numberOfTaxa(); i < n; i++) {
-            List<Integer> ion = a.taxa().indicesMatchingTaxon(subTaxaList.get(i));
+            List<Integer> ion = a.taxa().indexMatchingTaxon(subTaxaList.get(i));
 
             if ((ion.size() != 1) || (ion.get(0) != i)) {
                 noNeedToFilter = false;
@@ -172,7 +172,7 @@ public class FilterGenotypeTable implements GenotypeTable {
         TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = a.taxa();
         for (int i = 0, n = current.numberOfTaxa(); i < n; i++) {
-            if (subTaxaList.indicesMatchingTaxon(current.get(i)).isEmpty()) {
+            if (subTaxaList.indexMatchingTaxon(current.get(i))<0) {
                 result.add(current.get(i));
             }
         }

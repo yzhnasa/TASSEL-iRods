@@ -2,14 +2,13 @@ package net.maizegenetics.dna.snp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotypeCallTable;
 import net.maizegenetics.dna.map.Position;
+import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotypeCallTable;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.DonorHaplotypes;
 
-import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
@@ -73,8 +72,8 @@ public class ProjectionBuilder {
             if(ts.length!=2) throw new IllegalArgumentException("Two parents required for DonorHaplotypes");
             int[] iT=new int[ts.length];
             for (int i=0; i<iT.length; i++) {
-                List<Integer> r=tl.indicesMatchingTaxon(ts[i]);
-                if(r.size()==1) {iT[i]=r.get(0);}
+                int r=tl.indexMatchingTaxon(ts[i]);
+                if(r>=0) {iT[i]=r;}
                 else {throw new IllegalArgumentException("Taxa not found or duplicated:"+ts[i].getName());}
             }
             DonorHaplotypes dh=new DonorHaplotypes(bp.getKey().getChromosome(), bp.getKey().getPosition(),

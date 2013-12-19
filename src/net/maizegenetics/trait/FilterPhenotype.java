@@ -1,6 +1,5 @@
 package net.maizegenetics.trait;
 
-import net.maizegenetics.trait.AbstractPhenotype;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
@@ -129,7 +128,7 @@ public class FilterPhenotype extends AbstractPhenotype {
         TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = phenotype.getTaxa();
         for (int i = 0, n = current.numberOfTaxa(); i < n; i++) {
-            if (taxa.indicesMatchingTaxon(current.get(i)).size() == 0) {
+            if (taxa.indexMatchingTaxon(current.get(i))<= 0) {
                 result.add(current.get(i));
             }
         }

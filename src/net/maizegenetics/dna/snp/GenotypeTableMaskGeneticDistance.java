@@ -8,7 +8,6 @@ import net.maizegenetics.taxa.Taxon;
 
 import java.awt.*;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,19 +31,19 @@ public class GenotypeTableMaskGeneticDistance extends AbstractGenotypeTableMask 
     }
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, Taxon id) {
-        List<Integer> index = align.taxa().indicesMatchingTaxon(id);
-        if ((index == null) || (index.size() == 0)) {
+        int index = align.taxa().indexMatchingTaxon(id);
+        if (index<0) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, index.get(0));
+        return getInstanceCompareReference(align, index);
     }
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, String id) {
-        List<Integer> index = align.taxa().indicesMatchingTaxon(id);
-        if ((index == null) || (index.size() == 0)) {
+        int index = align.taxa().indexMatchingTaxon(id);
+        if (index<0) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, index.get(0));
+        return getInstanceCompareReference(align, index);
     }
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, int index) {

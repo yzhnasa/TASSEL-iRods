@@ -1,7 +1,6 @@
 package net.maizegenetics.taxa;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.ImmutableMap;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -20,24 +19,25 @@ class TaxaArrayList implements TaxaList {
     private static final Logger myLogger = Logger.getLogger(TaxaArrayList.class);
     private final List<Taxon> myTaxaList;
     private final int myNumTaxa;
-    private final Multimap<String, Integer> myNameToIndex;
+    private final ImmutableMap<String, Integer> myNameToIndex;
 
     TaxaArrayList(TaxaListBuilder builder) {
 
         List<Taxon> srcList = builder.getImmutableList();
         myTaxaList = new ArrayList<Taxon>(srcList.size());
         myNumTaxa = srcList.size();
-        myNameToIndex = HashMultimap.create(srcList.size() * 2, 1);
         int index = 0;
+        ImmutableMap.Builder<String, Integer> nToIBuilder=new ImmutableMap.Builder<>();
         for (Taxon Taxon : srcList) {
             myTaxaList.add(Taxon);
-            if (myNameToIndex.containsKey(Taxon.getName())) {
-                myLogger.warn("init: Taxa name is duplicated :" + Taxon.getName());
-            }
-            myNameToIndex.put(Taxon.getName(), index);
+//            if (myNameToIndex.containsKey(Taxon.getName())) {   //Todo move logic to TaxaListBuilder
+//                myLogger.warn("init: Taxa name is duplicated :" + Taxon.getName());
+//            }
+            nToIBuilder.put(Taxon.getName(), index);
 
             index++;
         }
+        myNameToIndex=nToIBuilder.build();
     }
 
     @Override
@@ -56,13 +56,15 @@ class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public List<Integer> indicesMatchingTaxon(String name) {
-        return new ArrayList<Integer>(myNameToIndex.get(name));
+    public int indexMatchingTaxon(String name) {
+        Integer index=myNameToIndex.get(name);
+        if(index==null) return -1;
+        return index;
     }
 
     @Override
-    public List<Integer> indicesMatchingTaxon(Taxon taxon) {
-        return new ArrayList<Integer>(myNameToIndex.get(taxon.getName()));
+    public int indexMatchingTaxon(Taxon taxon) {
+        return indexMatchingTaxon(taxon.getName());
     }
 
     @Override
@@ -152,12 +154,7 @@ class TaxaArrayList implements TaxaList {
 
     @Override
     public int indexOf(Object o) {
-        Taxon at=(Taxon)o;   //uses the hashMap to do this quickly
-        Collection<Integer> result=myNameToIndex.get(at.getName());
-        for (Integer i : result) {
-            if(myTaxaList.get(i).equals(at)) return i;
-        }
-        return -1;
+        return indexMatchingTaxon((Taxon)o);
     }
 
     @Override

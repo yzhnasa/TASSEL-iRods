@@ -3,10 +3,9 @@
  */
 package net.maizegenetics.dna.snp;
 
-import java.awt.Color;
-import java.util.List;
-
 import net.maizegenetics.taxa.Taxon;
+
+import java.awt.*;
 
 /**
  *
@@ -44,12 +43,12 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
     }
 
     public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, Taxon id) {
-        List<Integer> index = align.taxa().indicesMatchingTaxon(id);
-        if ((index == null) || (index.size() == 0)) {
+        int index = align.taxa().indexMatchingTaxon(id);
+        if (index<0) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
         String name = id.getName() + " Reference";
-        return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.numberOfSites()), name);
+        return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.numberOfSites()), name);
     }
 
     public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, int index) {
@@ -61,11 +60,11 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
     }
 
     public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, String id) {
-        List<Integer> index = align.taxa().indicesMatchingTaxon(id);
-        if ((index == null) || (index.size() == 0)) {
+        int index = align.taxa().indexMatchingTaxon(id);
+        if (index <0) {
             throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
         }
-        return getInstanceCompareReference(align, align.genotypeRange(index.get(0), 0, align.numberOfSites()), id + " Reference");
+        return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.numberOfSites()), id + " Reference");
     }
 
     public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, byte[] ref, String name) {

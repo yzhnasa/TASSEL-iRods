@@ -47,7 +47,7 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
                     ArrayList<String> theBest = findBestMatch(currID.toString());
                     if (theBest.size() == 1) {
                         String bs = (String) theBest.get(0);
-                        int indexOfBest = referenceIDGroup.indicesMatchingTaxon(bs).get(0);
+                        int indexOfBest = referenceIDGroup.indexMatchingTaxon(bs);
                         idSynonyms.put(currID.toString(), indexOfBest);
                     } else {
                         idSynonyms.put(currID.toString(), -1);
@@ -256,7 +256,7 @@ public class IdentifierSynonymizer extends AbstractTableReport implements Serial
 
     public boolean setRealName(String synName, String realName) {
         int synID = getPreferredIndex(synName);
-        int realID = referenceIDGroup.indicesMatchingTaxon(realName).get(0);
+        int realID = referenceIDGroup.indexMatchingTaxon(realName);
         if ((synID > -1) && (realID > -1)) {
             realName = "" + getPreferredName(synName);
             idSynonyms.put(synName, new Integer(realID));

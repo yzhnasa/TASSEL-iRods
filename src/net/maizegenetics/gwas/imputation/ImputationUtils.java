@@ -990,7 +990,7 @@ public class ImputationUtils {
 	
 	public static boolean isB73HaplotypeA(GenotypeTable a) {
 		TaxaList ids = a.taxa();
-		int ndx = ids.indicesMatchingTaxon("B73(PI550473)").get(0);
+		int ndx = ids.indexMatchingTaxon("B73(PI550473)");
 		int nsnps = a.numberOfSites();
 		HashMap<Byte, Integer> alleleCounts = new HashMap<Byte, Integer>();
 		for (int s = 0; s < nsnps; s++) {

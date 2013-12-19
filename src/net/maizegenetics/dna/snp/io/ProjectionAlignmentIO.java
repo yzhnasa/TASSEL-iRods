@@ -42,14 +42,11 @@ public class ProjectionAlignmentIO {
                 sl=Utils.readLineSkipComments(br).split("\t");
                 int index=Integer.parseInt(sl[0]);
                 Taxon taxon=new Taxon(sl[1]);
-                List<Integer> matches=baseHighDensityAlignment.taxa().indicesMatchingTaxon(taxon);
-                if(matches.size()==0) {
+                int matches=baseHighDensityAlignment.taxa().indexMatchingTaxon(taxon);
+                if(matches<=0) {
                     throw new NoSuchElementException("Taxon "+sl[1]+" not found within base taxa");
                 }
-                if(matches.size()>1) {
-                    throw new NoSuchElementException("Taxon "+sl[1]+" found multiple times within base taxa");
-                }
-                paIndexToBaseIndex.put(index, matches.get(0));
+                paIndexToBaseIndex.put(index, matches);
             }
             ProjectionBuilder pb=new ProjectionBuilder(baseHighDensityAlignment);
             for (int i = 0; i < taxaCnt; i++) {

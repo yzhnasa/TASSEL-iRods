@@ -12,7 +12,7 @@ import java.util.List;
 public interface TaxaList extends List<Taxon> {
 
     /**
-     * Returns number of taxa (same as getSequenceCount()
+     * Returns number of taxa
      *
      * @return number of taxa
      */
@@ -28,22 +28,20 @@ public interface TaxaList extends List<Taxon> {
     public String taxaName(int index);
 
     /**
-     * Return a list of all matching taxa indices for a given name. Matches will
-     * depend on the Tassel Preference ID Join Strict.
+     * Return a list of all matching taxa indices for a given name.
      *
      * @param name name
      *
-     * @return Indices for matching taxa (Empty if no match).
+     * @return Indices for matching taxa (-1 if no match).
      */
-    public List<Integer> indicesMatchingTaxon(String name);
+    public int indexMatchingTaxon(String name);
     
     /**
-     * Return a list of all matching taxa indices for a given name. Matches will
-     * depend on the Tassel Preference ID Join Strict.
+     * Return a list of all matching taxa indices for a given name.
      *
      * @param taxon taxon
      *
-     * @return Indices for matching taxa (Empty if no match).
+     * @return Indices for matching taxa (-1 if no match).
      */
-    public List<Integer> indicesMatchingTaxon(Taxon taxon);
+    public int indexMatchingTaxon(Taxon taxon);
 }

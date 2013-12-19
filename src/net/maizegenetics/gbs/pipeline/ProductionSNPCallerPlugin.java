@@ -19,7 +19,6 @@ import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
-import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.gbs.homology.ParseBarcodeRead;
 import net.maizegenetics.gbs.homology.ReadBarcodeResult;
@@ -262,7 +261,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                         counters[2]++;  // goodMatched++;
                         MatchedReadCountsForFullSampleName.put(rr.getTaxonName(),MatchedReadCountsForFullSampleName.get(rr.getTaxonName())+1);
                         MatchedReadCountsForFinalSampleName.put(FullNameToFinalName.get(rr.getTaxonName()),MatchedReadCountsForFinalSampleName.get(FullNameToFinalName.get(rr.getTaxonName()))+1);
-                        int taxonIndex = taxaList.indicesMatchingTaxon(FullNameToFinalName.get(rr.getTaxonName())).get(0);
+                        int taxonIndex = taxaList.indexMatchingTaxon(FullNameToFinalName.get(rr.getTaxonName())).get(0);
                         obsTagsForEachTaxon[taxonIndex].add(tagIndex);
                     }
                 }
