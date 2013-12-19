@@ -31,7 +31,7 @@ public class GenotypeTableMaskGeneticDistance extends AbstractGenotypeTableMask 
     }
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, Taxon id) {
-        int index = align.taxa().indexMatchingTaxon(id);
+        int index = align.taxa().indexOf(id);
         if (index<0) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }
@@ -39,7 +39,7 @@ public class GenotypeTableMaskGeneticDistance extends AbstractGenotypeTableMask 
     }
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, String id) {
-        int index = align.taxa().indexMatchingTaxon(id);
+        int index = align.taxa().indexOf(id);
         if (index<0) {
             throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }

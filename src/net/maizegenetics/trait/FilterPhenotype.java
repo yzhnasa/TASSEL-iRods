@@ -128,7 +128,7 @@ public class FilterPhenotype extends AbstractPhenotype {
         TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = phenotype.getTaxa();
         for (int i = 0, n = current.numberOfTaxa(); i < n; i++) {
-            if (taxa.indexMatchingTaxon(current.get(i))<= 0) {
+            if (taxa.indexOf(current.get(i))<= 0) {
                 result.add(current.get(i));
             }
         }

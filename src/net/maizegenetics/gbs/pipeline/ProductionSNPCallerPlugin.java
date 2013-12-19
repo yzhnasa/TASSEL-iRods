@@ -261,7 +261,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                         counters[2]++;  // goodMatched++;
                         MatchedReadCountsForFullSampleName.put(rr.getTaxonName(),MatchedReadCountsForFullSampleName.get(rr.getTaxonName())+1);
                         MatchedReadCountsForFinalSampleName.put(FullNameToFinalName.get(rr.getTaxonName()),MatchedReadCountsForFinalSampleName.get(FullNameToFinalName.get(rr.getTaxonName()))+1);
-                        int taxonIndex = taxaList.indexMatchingTaxon(FullNameToFinalName.get(rr.getTaxonName())).get(0);
+                        int taxonIndex = taxaList.indexOf(FullNameToFinalName.get(rr.getTaxonName())).get(0);
                         obsTagsForEachTaxon[taxonIndex].add(tagIndex);
                     }
                 }

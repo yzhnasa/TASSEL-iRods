@@ -42,7 +42,7 @@ public class ProjectionAlignmentIO {
                 sl=Utils.readLineSkipComments(br).split("\t");
                 int index=Integer.parseInt(sl[0]);
                 Taxon taxon=new Taxon(sl[1]);
-                int matches=baseHighDensityAlignment.taxa().indexMatchingTaxon(taxon);
+                int matches=baseHighDensityAlignment.taxa().indexOf(taxon);
                 if(matches<=0) {
                     throw new NoSuchElementException("Taxon "+sl[1]+" not found within base taxa");
                 }

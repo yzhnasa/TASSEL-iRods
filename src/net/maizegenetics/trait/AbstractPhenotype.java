@@ -120,7 +120,7 @@ public abstract class AbstractPhenotype implements Phenotype {
 	}
 
 	public int whichTaxon(Taxon taxon) {
-		return taxa.indexMatchingTaxon(taxon);
+		return taxa.indexOf(taxon);
 	}
 
     @Override

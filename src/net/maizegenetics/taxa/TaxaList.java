@@ -34,7 +34,7 @@ public interface TaxaList extends List<Taxon> {
      *
      * @return Indices for matching taxa (-1 if no match).
      */
-    public int indexMatchingTaxon(String name);
+    public int indexOf(String name);
     
     /**
      * Return a list of all matching taxa indices for a given name.
@@ -43,5 +43,5 @@ public interface TaxaList extends List<Taxon> {
      *
      * @return Indices for matching taxa (-1 if no match).
      */
-    public int indexMatchingTaxon(Taxon taxon);
+    public int indexOf(Taxon taxon);
 }

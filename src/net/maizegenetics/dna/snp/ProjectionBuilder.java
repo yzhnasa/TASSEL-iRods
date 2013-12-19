@@ -72,7 +72,7 @@ public class ProjectionBuilder {
             if(ts.length!=2) throw new IllegalArgumentException("Two parents required for DonorHaplotypes");
             int[] iT=new int[ts.length];
             for (int i=0; i<iT.length; i++) {
-                int r=tl.indexMatchingTaxon(ts[i]);
+                int r=tl.indexOf(ts[i]);
                 if(r>=0) {iT[i]=r;}
                 else {throw new IllegalArgumentException("Taxa not found or duplicated:"+ts[i].getName());}
             }

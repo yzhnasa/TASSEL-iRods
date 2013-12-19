@@ -289,7 +289,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
             int endSite, double maxError, int siteOffsetForError) {
         int[] taxaIndex = new int[taxa.size()];
         for (int t = 0; t < taxaIndex.length; t++) {  //why are we working with names rather than numbers
-            taxaIndex[t] = a.taxa().indexMatchingTaxon(taxa.get(t));
+            taxaIndex[t] = a.taxa().indexOf(taxa.get(t));
         }
         byte[] calls = new byte[endSite-startSite+1];
         Arrays.fill(calls, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);

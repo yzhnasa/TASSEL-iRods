@@ -249,11 +249,11 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     }
 
     public int whichIdNumber(String name) {
-        return taxaList.indexMatchingTaxon(name);
+        return taxaList.indexOf(name);
     }
 
     public int whichIdNumber(Taxon id) {
-        return taxaList.indexMatchingTaxon(id);
+        return taxaList.indexOf(id);
     }
 
     /**

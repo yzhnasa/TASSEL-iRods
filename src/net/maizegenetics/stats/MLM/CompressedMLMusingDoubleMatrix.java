@@ -913,7 +913,7 @@ public class CompressedMLMusingDoubleMatrix {
         for (int i = 0; i < n; i++) {
 //            int col = kinshipMatrix.whichIdNumber(phenotypeTaxa[i]);
         	TaxaList kinshipTaxa = kinshipMatrix.getTaxaList();
-            int thisTaxon = kinshipTaxa.indexMatchingTaxon(phenotypeTaxa[i]);
+            int thisTaxon = kinshipTaxa.indexOf(phenotypeTaxa[i]);
             if (!missing[i]) {
                 if (thisTaxon<0) {
                     missing[i] = true;

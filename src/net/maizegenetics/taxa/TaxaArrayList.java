@@ -56,15 +56,15 @@ class TaxaArrayList implements TaxaList {
     }
 
     @Override
-    public int indexMatchingTaxon(String name) {
+    public int indexOf(String name) {
         Integer index=myNameToIndex.get(name);
         if(index==null) return -1;
         return index;
     }
 
     @Override
-    public int indexMatchingTaxon(Taxon taxon) {
-        return indexMatchingTaxon(taxon.getName());
+    public int indexOf(Taxon taxon) {
+        return indexOf(taxon.getName());
     }
 
     @Override
@@ -154,7 +154,7 @@ class TaxaArrayList implements TaxaList {
 
     @Override
     public int indexOf(Object o) {
-        return indexMatchingTaxon((Taxon)o);
+        return indexOf((Taxon) o);
     }
 
     @Override

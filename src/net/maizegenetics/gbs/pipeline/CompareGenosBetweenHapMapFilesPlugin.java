@@ -263,7 +263,7 @@ public class CompareGenosBetweenHapMapFilesPlugin extends AbstractPlugin {
         taxaSynonyms.clear();
         int nTaxa = 0, nCompareTaxa = 0;
         for (Taxon taxon : a1.taxa()) {
-            int t2a=a2.taxa().indexMatchingTaxon(taxon);
+            int t2a=a2.taxa().indexOf(taxon);
             if(t2a>=0) {
                 taxaSynonyms.put(taxon.getName(), a2.taxaName(t2a));
                 ++nCompareTaxa;

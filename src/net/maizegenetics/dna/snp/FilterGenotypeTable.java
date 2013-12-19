@@ -120,29 +120,29 @@ public class FilterGenotypeTable implements GenotypeTable {
         if (subTaxaList.numberOfTaxa() != a.numberOfTaxa()) {
             noNeedToFilter = false;
         }
-        for (int i = 0, n = subTaxaList.numberOfTaxa(); i < n; i++) {
-            List<Integer> ion = a.taxa().indexMatchingTaxon(subTaxaList.get(i));
-
-            if ((ion.size() != 1) || (ion.get(0) != i)) {
-                noNeedToFilter = false;
-            }
-
-            if (ion.isEmpty()) {
-                if (retainUnknownTaxa) {
-                    taxaRedirectList.add(-1);
-                    idList.add(subTaxaList.get(i));
-                }
-            } else {
-                for (int x = 0; x < ion.size(); x++) {
-                    if (a instanceof FilterGenotypeTable) {
-                        taxaRedirectList.add(((FilterGenotypeTable) a).translateTaxon(ion.get(x)));
-                    } else {
-                        taxaRedirectList.add(ion.get(x));
-                    }
-                    idList.add(a.taxa().get(ion.get(x)));
-                }
-            }
-        }
+//        for (int i = 0, n = subTaxaList.numberOfTaxa(); i < n; i++) {
+//            List<Integer> ion = a.taxa().indexOf(subTaxaList.get(i));
+//
+//            if ((ion.size() != 1) || (ion != i)) {
+//                noNeedToFilter = false;
+//            }
+//
+//            if (ion.isEmpty()) {
+//                if (retainUnknownTaxa) {
+//                    taxaRedirectList.add(-1);
+//                    idList.add(subTaxaList.get(i));
+//                }
+//            } else {
+//                for (int x = 0; x < ion.size(); x++) {
+//                    if (a instanceof FilterGenotypeTable) {
+//                        taxaRedirectList.add(((FilterGenotypeTable) a).translateTaxon(ion.get(x)));
+//                    } else {
+//                        taxaRedirectList.add(ion.get(x));
+//                    }
+//                    idList.add(a.taxa().get(ion.get(x)));
+//                }
+//            }
+//        }
 
         if (noNeedToFilter) {
             return a;
@@ -172,7 +172,7 @@ public class FilterGenotypeTable implements GenotypeTable {
         TaxaListBuilder result = new TaxaListBuilder();
         TaxaList current = a.taxa();
         for (int i = 0, n = current.numberOfTaxa(); i < n; i++) {
-            if (subTaxaList.indexMatchingTaxon(current.get(i))<0) {
+            if (subTaxaList.indexOf(current.get(i))<0) {
                 result.add(current.get(i));
             }
         }
