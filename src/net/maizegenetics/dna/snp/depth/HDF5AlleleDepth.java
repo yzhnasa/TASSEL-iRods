@@ -9,11 +9,12 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
  *
  * @author Terry Casstevens
  */
-public class HDF5AlleleDepth implements AlleleDepth {
+public class HDF5AlleleDepth extends AbstractAlleleDepth {
 
     private final IHDF5Reader myReader;
 
-    public HDF5AlleleDepth(IHDF5Reader reader) {
+    HDF5AlleleDepth(IHDF5Reader reader) {
+        super(6);
         myReader = reader;
     }
 
@@ -28,17 +29,7 @@ public class HDF5AlleleDepth implements AlleleDepth {
     }
 
     @Override
-    public int depth(int taxon, int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public int depthForTaxon(int taxon) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public int depthForSite(int site) {
+    public byte depthForAlleleByte(int taxon, int site, int allele) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
