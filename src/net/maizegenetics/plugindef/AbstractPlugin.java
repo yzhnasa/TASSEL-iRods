@@ -41,6 +41,7 @@ abstract public class AbstractPlugin implements Plugin {
      *
      * @return menu
      */
+    @Override
     public JMenu getMenu() {
         return null;
     }
@@ -50,6 +51,7 @@ abstract public class AbstractPlugin implements Plugin {
      *
      * @param input input
      */
+    @Override
     public void receiveInput(Plugin input) {
 
         if (input == null) {
@@ -69,33 +71,38 @@ abstract public class AbstractPlugin implements Plugin {
      *
      * @return panel
      */
+    @Override
     public JPanel getPanel() {
         return null;
     }
 
     /**
-     * If interactive = true, the plugin will create dialogs and panels to interacts with the user
+     * If interactive = true, the plugin will create dialogs and panels to
+     * interacts with the user
      *
      * @return boolean
      */
+    @Override
     public boolean isInteractive() {
         return myIsInteractive;
     }
 
     /**
-     * Parent Frame for this plugin.  Can be null.
+     * Parent Frame for this plugin. Can be null.
      *
      * @return frame
      */
+    @Override
     public Frame getParentFrame() {
         return myParentFrame;
     }
 
     /**
-     *  Adds listener to this plugin.
+     * Adds listener to this plugin.
      *
      * @param listener listener to add
      */
+    @Override
     public void addListener(PluginListener listener) {
 
         synchronized (myListeners) {
@@ -183,6 +190,11 @@ abstract public class AbstractPlugin implements Plugin {
 
     }
 
+    @Override
+    public String getCitation() {
+        return "Bradbury PJ, Zhang Z, Kroon DE, Casstevens TM, Ramdoss Y, Buckler ES. (2007) TASSEL: Software for association mapping of complex traits in diverse samples. Bioinformatics 23:2633-2635.";
+    }
+
     //
     // Methods for PluginListener.
     //
@@ -191,6 +203,7 @@ abstract public class AbstractPlugin implements Plugin {
      *
      * @param event event
      */
+    @Override
     public void dataSetReturned(PluginEvent event) {
 
         DataSet input = (DataSet) event.getSource();
@@ -202,6 +215,7 @@ abstract public class AbstractPlugin implements Plugin {
     /**
      * No operation for this abstract class.
      */
+    @Override
     public void progress(PluginEvent event) {
         // The default action of a plugin is to do
         // nothing when another plugin reports its
@@ -264,14 +278,17 @@ abstract public class AbstractPlugin implements Plugin {
 
     }
 
+    @Override
     public void setThreaded(boolean threaded) {
         myThreaded = threaded;
     }
 
+    @Override
     public boolean cancel() {
         return false;
     }
 
+    @Override
     public void run() {
         performFunction(null);
     }
@@ -282,7 +299,8 @@ abstract public class AbstractPlugin implements Plugin {
     }
 
     @Override
-    public void setParameters(String [] args) {
+    public void setParameters(String[] args) {
         throw new UnsupportedOperationException();
     }
+
 }

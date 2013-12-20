@@ -109,4 +109,11 @@ public interface Plugin extends PluginListener, ProgressListener, Runnable {
      * @param args arguments
      */
     public void setParameters(String [] args);
+    
+    /**
+     * Returns Citation for this plugin.
+     * 
+     * @return Citation
+     */
+    public String getCitation();
 }
