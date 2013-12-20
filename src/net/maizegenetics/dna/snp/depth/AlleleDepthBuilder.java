@@ -95,7 +95,8 @@ public class AlleleDepthBuilder {
 
     /**
      * Set allele for the all sites and alleles for a taxon simultaneously.
-     * Value will be translated using AlleleDepthUtil.
+     * Value will be translated using AlleleDepthUtil. First dimension of depths
+     * is number of alleles (6 for Nucleotide) and second dimension is sites.
      *
      * @param taxon Index of taxon
      * @param depths array[sites][allele] of all values
@@ -106,16 +107,16 @@ public class AlleleDepthBuilder {
         if (myIsHDF5) {
             throw new IllegalStateException("AlleleDepthBuilder: setDepth: use addTaxon for HDF5 files.");
         }
-        int numSites = depths.length;
-        if (numSites != myNumSites) {
-            throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of sites: " + numSites + " should have: " + myNumSites);
-        }
-        int numAlleles = depths[0].length;
+        int numAlleles = depths.length;
         if (numAlleles != myMaxNumAlleles) {
             throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of alleles: " + numAlleles + " should have: " + myMaxNumAlleles);
         }
-        for (int s = 0; s < myNumSites; s++) {
-            for (int a = 0; a < myMaxNumAlleles; a++) {
+        int numSites = depths[0].length;
+        if (numSites != myNumSites) {
+            throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of sites: " + numSites + " should have: " + myNumSites);
+        }
+        for (int a = 0; a < myMaxNumAlleles; a++) {
+            for (int s = 0; s < myNumSites; s++) {
                 setDepth(taxon, s, (byte) a, depths[s][a]);
             }
         }
@@ -143,7 +144,9 @@ public class AlleleDepthBuilder {
 
     /**
      * Set allele for the all sites and alleles for a taxon simultaneously.
-     * Values should have already been translated using AlleleDepthUtil.
+     * Values should have already been translated using AlleleDepthUtil. First
+     * dimension of depths is number of alleles (6 for Nucleotide) and second
+     * dimension is sites.
      *
      * @param taxon Index of taxon
      * @param depths array[sites][allele] of all values
@@ -154,16 +157,16 @@ public class AlleleDepthBuilder {
         if (myIsHDF5) {
             throw new IllegalStateException("AlleleDepthBuilder: setDepth: use addTaxon for HDF5 files.");
         }
-        int numSites = depths.length;
-        if (numSites != myNumSites) {
-            throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of sites: " + numSites + " should have: " + myNumSites);
-        }
-        int numAlleles = depths[0].length;
+        int numAlleles = depths.length;
         if (numAlleles != myMaxNumAlleles) {
             throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of alleles: " + numAlleles + " should have: " + myMaxNumAlleles);
         }
-        for (int s = 0; s < myNumSites; s++) {
-            for (int a = 0; a < myMaxNumAlleles; a++) {
+        int numSites = depths[0].length;
+        if (numSites != myNumSites) {
+            throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of sites: " + numSites + " should have: " + myNumSites);
+        }
+        for (int a = 0; a < myMaxNumAlleles; a++) {
+            for (int s = 0; s < myNumSites; s++) {
                 setDepth(taxon, s, (byte) a, depths[s][a]);
             }
         }
@@ -175,7 +178,9 @@ public class AlleleDepthBuilder {
     }
 
     /**
-     * Add taxon and set values for all sites and alleles for that taxon.
+     * Add taxon and set values for all sites and alleles for that taxon. First
+     * dimension of depths is number of alleles (6 for Nucleotide) and second
+     * dimension is sites.
      *
      * @param taxon taxon
      * @param depths depth values
@@ -203,7 +208,9 @@ public class AlleleDepthBuilder {
     }
 
     /**
-     * Add taxon and set values for all sites and alleles for that taxon.
+     * Add taxon and set values for all sites and alleles for that taxon. First
+     * dimension of depths is number of alleles (6 for Nucleotide) and second
+     * dimension is sites.
      *
      * @param taxon taxon
      * @param depths depth values
