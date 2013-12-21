@@ -8,11 +8,15 @@ import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 
 /**
- * A representation of the SNP and indel variation for a set of taxa and genomic positions.
- * <p></p>
- * GenotypeTable always consist of a TaxaList, PositionList, and GenotypeCallTable.  Additionally, as needed they
- * also can represent allele in a bit form, with sequencing depth, or other scores (e.g. quality scores).
- * <p></p>
+ * A representation of the SNP and indel variation for a set of taxa and genomic
+ * positions.
+ * <p>
+ * </p>
+ * GenotypeTable always consist of a TaxaList, PositionList, and
+ * GenotypeCallTable. Additionally, as needed they also can represent allele in
+ * a bit form, with sequencing depth, or other scores (e.g. quality scores).
+ * <p>
+ * </p>
  * Use GenotypeTableBuilder to create GenotypeTable.
  *
  * @author Terry Casstevens
@@ -53,8 +57,9 @@ public interface GenotypeTable {
          */
         Depth,
         /**
-         * This uses the allele frequency of a base/global Genotype table determine
-         * sort order of alleles. That Genotype table is usually a superset.
+         * This uses the allele frequency of a base/global Genotype table
+         * determine sort order of alleles. That Genotype table is usually a
+         * superset.
          */
         Global_Frequency,
         /**
@@ -62,7 +67,7 @@ public interface GenotypeTable {
          */
         Reference
     };
-    
+
     /**
      * This defines the possible alleles.
      */
@@ -71,41 +76,58 @@ public interface GenotypeTable {
         /**
          * Major Allele - Most frequent allele.
          */
-        Major,
+        Major(0),
         /**
          * Minor Allele - Second most frequent allele.
          */
-        Minor,
+        Minor(1),
         /**
          * Global Major Allele
          */
-        Global_Major,
+        Global_Major(2),
         /**
          * Global Minor Allele
          */
-        Global_Minor,
+        Global_Minor(3),
         /**
          * Reference Allele
          */
-        Reference,
+        Reference(4),
         /**
          * Alternate to Reference Allele
          */
-        Alternate,
+        Alternate(5),
         /**
          * High Coverage Allele
          */
-        HighCoverage,
+        HighCoverage(6),
         /**
          * Low Coverage Allele
          */
-        LowCoverage
+        LowCoverage(7);
+
+        private final int myIndex;
+        /**
+         * Count of the number of allele types
+         */
+        public final static int COUNT = WHICH_ALLELE.values().length;
+
+        WHICH_ALLELE(int index) {
+            myIndex = index;
+        }
+
+        /**
+         * Sequential index that can be use for primitive arrays
+         */
+        public int index() {
+            return myIndex;
+        }
     };
 
     /**
      * Returns the immutable Genotype matrix. Taxa and Positions are not part of
-     * the matrix. This method is used for copying Genotype tables, when either the
-     * Taxa or Positions have changed.
+     * the matrix. This method is used for copying Genotype tables, when either
+     * the Taxa or Positions have changed.
      *
      * @return genotype matrix
      */
@@ -715,9 +737,9 @@ public interface GenotypeTable {
 
     /**
      * Return sorted list of alleles from highest frequency to lowest at given
-     * site in genotype table. Resulting double dimension array holds alleles (bytes)
-     * in result[0]. And the counts are in result[1]. Counts haploid values
-     * twice and diploid values once. Higher ploids are not supported.
+     * site in genotype table. Resulting double dimension array holds alleles
+     * (bytes) in result[0]. And the counts are in result[1]. Counts haploid
+     * values twice and diploid values once. Higher ploids are not supported.
      *
      * @param site site
      *
@@ -727,8 +749,9 @@ public interface GenotypeTable {
 
     /**
      * Return sorted list of diploid vales from highest frequency to lowest at
-     * given site in genotype table. Resulting double dimension array holds diploids
-     * (Strings) in result[0]. And the counts are in result[1] (Integers).
+     * given site in genotype table. Resulting double dimension array holds
+     * diploids (Strings) in result[0]. And the counts are in result[1]
+     * (Integers).
      *
      * @param site site
      *
@@ -845,9 +868,9 @@ public interface GenotypeTable {
 
     /**
      * Returns counts of all major/minor allele combinations from highest
-     * frequency to lowest for whole genotype table. Resulting double dimension array
-     * holds major/minor allele (Strings) in result[0]. And the counts are in
-     * result[1] (Longs).
+     * frequency to lowest for whole genotype table. Resulting double dimension
+     * array holds major/minor allele (Strings) in result[0]. And the counts are
+     * in result[1] (Longs).
      *
      * @return diploid counts.
      */
