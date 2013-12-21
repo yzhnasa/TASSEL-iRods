@@ -204,14 +204,14 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			int end = Math.min(nsites - 1, s + windowSizeForR2);
 			double sum = 0;
 			double count = 0;
-            BitSet sMj = align.allelePresenceForAllTaxa(s, 0);
-            BitSet sMn = align.allelePresenceForAllTaxa(s, 1);
+            BitSet sMj = align.allelePresenceForAllTaxa(s, GenotypeTable.WHICH_ALLELE.Major);
+            BitSet sMn = align.allelePresenceForAllTaxa(s, GenotypeTable.WHICH_ALLELE.Minor);
 
 			for (int i = start; i <= end; i++) {
 				if (i != s) {
 					int[][] contig = new int[2][2];
-		            BitSet iMj = align.allelePresenceForAllTaxa(i, 0);
-		            BitSet iMn = align.allelePresenceForAllTaxa(i, 1);
+		            BitSet iMj = align.allelePresenceForAllTaxa(i, GenotypeTable.WHICH_ALLELE.Major);
+		            BitSet iMn = align.allelePresenceForAllTaxa(i, GenotypeTable.WHICH_ALLELE.Minor);
 		            contig[0][0] = (int) OpenBitSet.intersectionCount(sMj, iMj);
 		            contig[1][0] = (int) OpenBitSet.intersectionCount(sMn, iMj);
 		            contig[0][1] = (int) OpenBitSet.intersectionCount(sMj, iMn);
