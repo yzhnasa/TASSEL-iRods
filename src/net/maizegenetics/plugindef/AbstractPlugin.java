@@ -11,12 +11,15 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author terryc
  */
 abstract public class AbstractPlugin implements Plugin {
+
+    private static final Logger myLogger = Logger.getLogger(AbstractPlugin.class);
 
     private final List<PluginListener> myListeners = new ArrayList<>();
     private final List<Plugin> myInputs = new ArrayList<>();
@@ -169,6 +172,19 @@ abstract public class AbstractPlugin implements Plugin {
             while (itr.hasNext()) {
                 PluginListener current = itr.next();
                 current.progress(event);
+            }
+        }
+
+        DataSet ds = (DataSet) event.getSource();
+        if (ds != null) {
+            List percentage = ds.getDataOfType(Integer.class);
+
+            if (percentage.size() > 0) {
+                Datum datum = (Datum) percentage.get(0);
+                Integer percent = (Integer) datum.getData();
+                if (percent == 100) {
+                    myLogger.info(getClass().getName() + "  Citation: " + getCitation());
+                }
             }
         }
 
