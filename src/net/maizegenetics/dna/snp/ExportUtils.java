@@ -61,10 +61,10 @@ public class ExportUtils {
 
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
 
-            int numSBitWords = a.allelePresenceForAllTaxa(0, 0).getNumWords();
+            int numSBitWords = a.allelePresenceForAllTaxa(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords();
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SBIT_WORDS, numSBitWords);
 
-            int numTBitWords = a.allelePresenceForAllSites(0, 0).getNumWords();
+            int numTBitWords = a.allelePresenceForAllSites(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords();
             h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TBIT_WORDS, numTBitWords);
 
             String[][] aEncodings = a.alleleDefinitions();
@@ -119,7 +119,7 @@ public class ExportUtils {
             h5w.writeStringVariableLengthArray(HapMapHDF5Constants.TAXA, tn);
 
             //for (int aNum = 0; aNum < a.getTotalNumAlleles(); aNum++) {
-            for (int aNum = 0; aNum < 6; aNum++) {
+            for (GenotypeTable.WHICH_ALLELE aNum: GenotypeTable.WHICH_ALLELE.frequencyAlleles()) {
 
                 String currentSBitPath = HapMapHDF5Constants.SBIT + "/" + aNum;
                 h5w.createLongMatrix(currentSBitPath, numSites, numSBitWords, 1, numSBitWords);

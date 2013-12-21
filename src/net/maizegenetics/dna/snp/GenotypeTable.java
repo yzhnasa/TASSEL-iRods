@@ -1,9 +1,9 @@
 package net.maizegenetics.dna.snp;
 
-import net.maizegenetics.dna.snp.bit.BitStorage;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.PositionList;
+import net.maizegenetics.dna.snp.bit.BitStorage;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 
@@ -104,7 +104,11 @@ public interface GenotypeTable {
         /**
          * Low Coverage Allele
          */
-        LowCoverage(7);
+        LowCoverage(7),
+        /**
+         * Remaining Minor Alleles
+         */
+        Minor2(8), Minor3(9), Minor4(10), Minor5(11);
 
         private final int myIndex;
         /**
@@ -121,6 +125,12 @@ public interface GenotypeTable {
          */
         public int index() {
             return myIndex;
+        }
+
+        private static WHICH_ALLELE[] FREQ_ALLELES = new WHICH_ALLELE[]{Major, Minor, Minor2, Minor3, Minor4, Minor5};
+
+        public static WHICH_ALLELE[] frequencyAlleles() {
+            return FREQ_ALLELES;
         }
     };
 
@@ -212,25 +222,11 @@ public interface GenotypeTable {
      * allele value and so on.
      *
      * @param taxon taxon
-     * @param alleleNumber allele number
+     * @param allele allele
      *
      * @return sequence of true/false values.
      */
-    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber);
-
-    /**
-     * Returns sequence of true/false values indicating whether site at each
-     * taxon matches a specific allele (based on frequency). Allele number of
-     * value 0 would be the major allele. Allele number of value 1 would be the
-     * minor allele. Allele number of value 2 would be the third most frequent
-     * allele value and so on.
-     *
-     * @param site site
-     * @param alleleNumber allele number
-     *
-     * @return sequence of true/false values.
-     */
-    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber);
+    public BitSet allelePresenceForAllSites(int taxon, WHICH_ALLELE allele);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at sites
@@ -241,13 +237,13 @@ public interface GenotypeTable {
      * frequent allele value and so on.
      *
      * @param taxon taxon
-     * @param alleleNumber allele number
+     * @param allele allele
      * @param startBlock starting block
      * @param endBlock end block
      *
      * @return sequence of true/false values.
      */
-    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock);
+    public long[] allelePresenceForSitesBlock(int taxon, WHICH_ALLELE allele, int startBlock, int endBlock);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at each
@@ -258,11 +254,11 @@ public interface GenotypeTable {
      *
      * @param taxon taxon
      * @param firstParent true for first parent (false for second parent)
-     * @param alleleNumber allele number
+     * @param allele allele
      *
      * @return sequence of true/false values.
      */
-    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, WHICH_ALLELE allele);
 
     /**
      * Returns sequence of true/false values indicating whether site at each
@@ -273,11 +269,11 @@ public interface GenotypeTable {
      *
      * @param site site
      * @param firstParent true for first parent (false for second parent)
-     * @param alleleNumber allele number
+     * @param allele allele
      *
      * @return sequence of true/false values.
      */
-    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, WHICH_ALLELE allele);
 
     /**
      * Returns sequence of true/false values indicating whether taxon at sites
@@ -289,13 +285,13 @@ public interface GenotypeTable {
      *
      * @param taxon taxon
      * @param firstParent true for first parent (false for second parent)
-     * @param alleleNumber allele number
+     * @param allele allele
      * @param startBlock starting block
      * @param endBlock end block
      *
      * @return sequence of true/false values.
      */
-    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock);
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, WHICH_ALLELE allele, int startBlock, int endBlock);
 
     /**
      * Returns string representation of diploid values returned by genotype()
@@ -927,22 +923,21 @@ public interface GenotypeTable {
 
     /**
      * Returns sequence of true/false values indicating whether site at each
-     * taxon matches a specific allele (based on scope).
+     * taxon matches a specific allele.
      *
-     * @param type scope
      * @param site site
-     * @param alleleNumber allele number
+     * @param allele allele
      *
      * @return sequence of true/false values.
      */
-    public BitSet allelePresenceForAllTaxaBySortType(GenotypeTable.ALLELE_SORT_TYPE type, int site, int alleleNumber);
+    public BitSet allelePresenceForAllTaxa(int site, WHICH_ALLELE allele);
 
     /**
      * Returns BitStorage for this Genotype
      *
-     * @param scopeType type
+     * @param allele allele
      *
      * @return BitStorage
      */
-    public BitStorage bitStorage(GenotypeTable.ALLELE_SORT_TYPE scopeType);
+    public BitStorage bitStorage(GenotypeTable.WHICH_ALLELE allele);
 }

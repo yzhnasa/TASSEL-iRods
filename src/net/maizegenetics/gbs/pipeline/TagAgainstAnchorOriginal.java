@@ -398,8 +398,8 @@ public class TagAgainstAnchorOriginal {
             double bestP=2;
             for (int i = chrStartIndex; i < chrEndIndex; i+=step) {
                 if(Math.abs(anchor.chromosomalPosition(i)-blockPosition)<blockWindow) continue;
-                OpenBitSet obsMajor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, 0).getBits());
-                OpenBitSet obsMinor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, 1).getBits());
+                OpenBitSet obsMajor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, GenotypeTable.WHICH_ALLELE.Major).getBits());
+                OpenBitSet obsMinor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, GenotypeTable.WHICH_ALLELE.Minor).getBits());
                 if(obsMinor.cardinality()>4) {
                     double p=fastTestSites(obsTdist, obsMajor, obsMinor, anchorMaf[i], binomFunc);
                     if(p<bestP) {bestP=p; bestSite=i;}

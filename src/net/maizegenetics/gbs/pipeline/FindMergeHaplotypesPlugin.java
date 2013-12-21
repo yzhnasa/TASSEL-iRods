@@ -122,7 +122,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
 
         propMissing=new double[inAlign.numberOfTaxa()];
         int startBlock=0;
-        int endBlock=inAlign.allelePresenceForAllSites(0, 0).getNumWords();
+        int endBlock=inAlign.allelePresenceForAllSites(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords();
         TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(inAlign, startBlock, endBlock, minSites, maxHetFreq);
         System.out.printf("Block %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
         System.out.printf("Current Site %d Current block %d EndBlock: %d %n",startSite, startBlock, endBlock);
@@ -174,8 +174,8 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         int sites=64*(endBlock-startBlock+1);
         TreeMap<Integer,Integer> presentRanking=new TreeMap<Integer,Integer>(Collections.reverseOrder());
         for (int i = 0; i < inAlign.numberOfTaxa(); i++) {
-            long[] mj=inAlign.allelePresenceForSitesBlock(i, 0, startBlock, endBlock);
-            long[] mn=inAlign.allelePresenceForSitesBlock(i, 1, startBlock, endBlock);
+            long[] mj=inAlign.allelePresenceForSitesBlock(i, GenotypeTable.WHICH_ALLELE.Major, startBlock, endBlock);
+            long[] mn=inAlign.allelePresenceForSitesBlock(i, GenotypeTable.WHICH_ALLELE.Minor, startBlock, endBlock);
             int totalSitesNotMissing = 0;
             int hetCnt=0;
             for (int j = 0; j < mj.length; j++) {
@@ -337,7 +337,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
         return calls;
     }
     
-    public static ArrayList<Integer> maxMajorAllelesTaxa(GenotypeTable a, int numMaxTaxa, int alleleNumber) {
+    public static ArrayList<Integer> maxMajorAllelesTaxa(GenotypeTable a, int numMaxTaxa, GenotypeTable.WHICH_ALLELE alleleNumber) {
         ArrayList<Integer> maxTaxa=new ArrayList<Integer>();
         OpenBitSet curMj=new OpenBitSet(a.numberOfSites());
         long maxMjCnt=curMj.cardinality();

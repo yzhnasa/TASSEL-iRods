@@ -41,7 +41,7 @@ public class FilterGenotypeTable implements GenotypeTable {
     private int[] myChromosomeOffsets;
     private PositionList myPositionList;
     private final GenotypeCallTable myGenotype;
-    private final Map<ALLELE_SORT_TYPE, BitStorage> myBitStorage = new EnumMap<ALLELE_SORT_TYPE, BitStorage>(ALLELE_SORT_TYPE.class);
+    private final Map<WHICH_ALLELE, BitStorage> myBitStorage = new HashMap<>();
 
     private FilterGenotypeTable(GenotypeTable a, TaxaList subList, int[] taxaRedirect, FilterGenotypeTable original) {
 
@@ -689,18 +689,13 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber) {
-        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllSites(taxon, alleleNumber);
+    public BitSet allelePresenceForAllSites(int taxon, WHICH_ALLELE allele) {
+        return bitStorage(allele).allelePresenceForAllSites(taxon);
     }
 
     @Override
-    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber) {
-        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForAllTaxa(site, alleleNumber);
-    }
-
-    @Override
-    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        return bitStorage(ALLELE_SORT_TYPE.Frequency).allelePresenceForSitesBlock(taxon, alleleNumber, startBlock, endBlock);
+    public long[] allelePresenceForSitesBlock(int taxon, WHICH_ALLELE allele, int startBlock, int endBlock) {
+        return bitStorage(allele).allelePresenceForSitesBlock(taxon, startBlock, endBlock);
     }
 
     @Override
@@ -915,23 +910,23 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public BitSet allelePresenceForAllTaxaBySortType(ALLELE_SORT_TYPE type, int site, int alleleNumber) {
-        return bitStorage(type).allelePresenceForAllTaxa(site, alleleNumber);
+    public BitSet allelePresenceForAllTaxa(int site, WHICH_ALLELE allele) {
+        return bitStorage(allele).allelePresenceForAllTaxa(site);
     }
 
     @Override
-    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllSites(taxon, firstParent, alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, WHICH_ALLELE allele) {
+        return bitStorage(allele).haplotypeAllelePresenceForAllSites(taxon, firstParent);
     }
 
     @Override
-    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForAllTaxa(site, firstParent, alleleNumber);
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, WHICH_ALLELE allele) {
+        return bitStorage(allele).haplotypeAllelePresenceForAllTaxa(site, firstParent);
     }
 
     @Override
-    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        return bitStorage(ALLELE_SORT_TYPE.Frequency).haplotypeAllelePresenceForSitesBlock(taxon, firstParent, alleleNumber, startBlock, endBlock);
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, WHICH_ALLELE allele, int startBlock, int endBlock) {
+        return bitStorage(allele).haplotypeAllelePresenceForSitesBlock(taxon, firstParent, startBlock, endBlock);
     }
 
     @Override
@@ -1007,25 +1002,27 @@ public class FilterGenotypeTable implements GenotypeTable {
     public Object[][] majorMinorCounts() {
         return myGenotype.majorMinorCounts();
     }
-
+    
     @Override
-    public BitStorage bitStorage(ALLELE_SORT_TYPE scopeType) {
-
-        BitStorage result = myBitStorage.get(scopeType);
+    public BitStorage bitStorage(WHICH_ALLELE allele) {
+        BitStorage result = myBitStorage.get(allele);
         if (result != null) {
             return result;
         }
 
-        switch (scopeType) {
-            case Frequency:
-                result = new DynamicBitStorage(myGenotype, scopeType, myGenotype.majorAlleleForAllSites(), myGenotype.minorAlleleForAllSites());
+        switch (allele) {
+            case Major:
+                result = new DynamicBitStorage(myGenotype, allele, myGenotype.majorAlleleForAllSites());
+                break;
+            case Minor:
+                result = new DynamicBitStorage(myGenotype, allele, myGenotype.minorAlleleForAllSites());
                 break;
             default:
-                myLogger.warn("getBitStorage: Unsupported type: " + scopeType);
+                myLogger.warn("bitStorage: Unsupported allele: " + allele);
                 return null;
         }
 
-        myBitStorage.put(scopeType, result);
+        myBitStorage.put(allele, result);
         return result;
     }
 

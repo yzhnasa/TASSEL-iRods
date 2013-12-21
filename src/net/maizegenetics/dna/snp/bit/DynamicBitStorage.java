@@ -3,7 +3,8 @@ package net.maizegenetics.dna.snp.bit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import net.maizegenetics.dna.snp.GenotypeTable.ALLELE_SORT_TYPE;
+import com.google.common.cache.Weigher;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.util.BitSet;
@@ -30,13 +31,11 @@ import java.util.concurrent.ExecutionException;
 public class DynamicBitStorage implements BitStorage {
 
     private GenotypeCallTable myGenotype;
-    private ALLELE_SORT_TYPE myPreferredScope = ALLELE_SORT_TYPE.Frequency;
-    private byte[] myPrefAllele0;  //usually 0 is major or reference
-    private byte[] myPrefAllele1;  //usually 1 is minor or alternate
+    private final GenotypeTable.WHICH_ALLELE myWhichAllele;
+    private byte[] myPrefAllele;
     private final int myTaxaCount;
     private final int mySiteCount;
-    public static final int SBoff = 58;
-    public static final int AllScopeoff = 52;
+    private static final int SBoff = 58;
 
     private enum SB {
 
@@ -47,15 +46,18 @@ public class DynamicBitStorage implements BitStorage {
             this.index = index;
         }
     };
-    private LoadingCache<Long, BitSet[]> bitCache; //taxon id number, BitSet[2] = {MajorBitSet, MinorBitSet}
-    private CacheLoader<Long, BitSet[]> bitLoader = new CacheLoader<Long, BitSet[]>() {
-        public BitSet[] load(Long key) {
-            BitSet[] bs;
+    Weigher<Long, BitSet> weighByLength = new Weigher<Long, BitSet>() {
+        public int weigh(Long key, BitSet value) {
+            return value.getNumWords()*8; } //words are longs so *8 converts to bytes
+    };
+    private LoadingCache<Long, BitSet> bitCache;
+    private CacheLoader<Long, BitSet> bitLoader = new CacheLoader<Long, BitSet>() {
+        public BitSet load(Long key) {
+            BitSet bs;
             if (getDirectionFromKey(key) == SB.TAXA) {
-                byte[] a1 = myPrefAllele0;
-                byte[] a2 = myPrefAllele1;
+                byte[] a1 = myPrefAllele;
                 int taxon = getSiteOrTaxonFromKey(key);
-                bs = GenotypeTableUtils.calcBitPresenceFromGenotype(myGenotype.genotypeAllSites(taxon), a1, a2); //allele comp
+                bs = GenotypeTableUtils.calcBitPresenceFromGenotype(myGenotype.genotypeAllSites(taxon), a1); //allele comp
                 return bs;
             } else {
                 ArrayList<Long> toFill = new ArrayList<>();
@@ -71,11 +73,11 @@ public class DynamicBitStorage implements BitStorage {
         }
 
         @Override
-        public Map<Long, BitSet[]> loadAll(Iterable<? extends Long> keys) throws Exception {
+        public Map<Long, BitSet> loadAll(Iterable<? extends Long> keys) throws Exception {
             long key = keys.iterator().next();
             //This pivoting code is needed if myGenotype is store in taxa direction
             //It runs about 7 times faster than getting base sequentially across taxa.
-            HashMap<Long, BitSet[]> result = new HashMap<Long, BitSet[]>(64);
+            HashMap<Long, BitSet> result = new HashMap<Long, BitSet>(64);
             int site = getSiteOrTaxonFromKey(key);
             int length = (mySiteCount - site < 64) ? mySiteCount - site : 64;
             byte[][] genotypeTBlock = new byte[length][myTaxaCount];
@@ -85,17 +87,16 @@ public class DynamicBitStorage implements BitStorage {
                 }
             }
             for (int i = 0; i < length; i++) {
-                byte a1 = myPrefAllele0[site + i];
-                byte a2 = myPrefAllele1[site + i];
-                BitSet[] bs = GenotypeTableUtils.calcBitPresenceFromGenotype(genotypeTBlock[i], a1, a2);
-                result.put(getKey(SB.SITE, myPreferredScope, site + i), bs);
+                byte a1 = myPrefAllele[site + i];
+                BitSet bs = GenotypeTableUtils.calcBitPresenceFromGenotype(genotypeTBlock[i], a1);
+                result.put(getKey(SB.SITE, site + i), bs);
             }
             return result;
         }
     };
 
-    private long getKey(SB direction, ALLELE_SORT_TYPE aT, int siteOrTaxon) {
-        return ((long) direction.index << SBoff) | ((long) aT.ordinal() << AllScopeoff) | (long) siteOrTaxon;
+    private long getKey(SB direction, int siteOrTaxon) {
+        return ((long) direction.index << SBoff) | (long) siteOrTaxon;
     }
 
     private int getSiteOrTaxonFromKey(long key) {
@@ -110,9 +111,9 @@ public class DynamicBitStorage implements BitStorage {
     }
 
     @Override
-    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber) {
+    public BitSet allelePresenceForAllSites(int taxon) {
         try {
-            return bitCache.get(getKey(SB.TAXA, myPreferredScope, taxon))[alleleNumber];
+            return bitCache.get(getKey(SB.TAXA, taxon));
         } catch (ExecutionException e) {
             e.printStackTrace();
             return null;
@@ -120,9 +121,9 @@ public class DynamicBitStorage implements BitStorage {
     }
 
     @Override
-    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber) {
+    public BitSet allelePresenceForAllTaxa(int site) {
         try {
-            return bitCache.get(getKey(SB.SITE, myPreferredScope, site))[alleleNumber];
+            return bitCache.get(getKey(SB.SITE, site));
         } catch (ExecutionException e) {
             e.printStackTrace();
             return null;
@@ -130,38 +131,38 @@ public class DynamicBitStorage implements BitStorage {
     }
 
     @Override
-    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        BitSet result = allelePresenceForAllSites(taxon, alleleNumber);
+    public long[] allelePresenceForSitesBlock(int taxon, int startBlock, int endBlock) {
+        BitSet result = allelePresenceForAllSites(taxon);
         if (result == null) {
             return new long[0];
         }
         return result.getBits(startBlock, endBlock - 1);   //BitSet is inclusive, while this method is exclusive.
     }
-
+    
     @Override
-    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int startBlock, int endBlock) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public DynamicBitStorage(GenotypeCallTable genotype, ALLELE_SORT_TYPE currentScope, byte[] prefAllele0, byte[] prefAllele1) {
+    public DynamicBitStorage(GenotypeCallTable genotype, GenotypeTable.WHICH_ALLELE allele, byte[] prefAllele) {
         myGenotype = genotype;
-        myPreferredScope = currentScope;
+        myWhichAllele = allele;
         mySiteCount = myGenotype.numberOfSites();
         myTaxaCount = myGenotype.numberOfTaxa();
-        myPrefAllele0 = Arrays.copyOf(prefAllele0, prefAllele0.length);
-        myPrefAllele1 = Arrays.copyOf(prefAllele1, prefAllele1.length);
+        myPrefAllele = Arrays.copyOf(prefAllele, prefAllele.length);
         bitCache = CacheBuilder.newBuilder()
-                .maximumSize(3_000_000)
+                .maximumWeight(300_000_000)
+                .weigher(weighByLength)
                 .build(bitLoader);
     }
 

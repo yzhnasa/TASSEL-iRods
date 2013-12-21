@@ -192,10 +192,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
 
     public static LDResult calculateBitLDForHaplotype(boolean ignoreHets, int minTaxaForEstimate, GenotypeTable alignment, int site1, int site2) {
         FisherExact fisherExact = new FisherExact((2 * alignment.numberOfTaxa()) + 10);
-        BitSet rMj = alignment.allelePresenceForAllTaxa(site1, 0);
-        BitSet rMn = alignment.allelePresenceForAllTaxa(site1, 1);
-        BitSet cMj = alignment.allelePresenceForAllTaxa(site2, 0);
-        BitSet cMn = alignment.allelePresenceForAllTaxa(site2, 1);
+        BitSet rMj = alignment.allelePresenceForAllTaxa(site1, GenotypeTable.WHICH_ALLELE.Major);
+        BitSet rMn = alignment.allelePresenceForAllTaxa(site1, GenotypeTable.WHICH_ALLELE.Minor);
+        BitSet cMj = alignment.allelePresenceForAllTaxa(site2, GenotypeTable.WHICH_ALLELE.Major);
+        BitSet cMn = alignment.allelePresenceForAllTaxa(site2, GenotypeTable.WHICH_ALLELE.Minor);
         return getLDForSitePair(rMj, rMn, cMj, cMn, 2, minTaxaForEstimate, -1.0f, fisherExact);
     }
 
@@ -212,10 +212,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             int c = getColFromIndex(currTest);
             int currentProgress = (int) ((double) 100.0 * ((double) currTest / (double) myTotalTests));
             fireProgress(currentProgress);
-            BitSet rMj = workingAlignment.allelePresenceForAllTaxa(r, 0);
-            BitSet rMn = workingAlignment.allelePresenceForAllTaxa(r, 1);
-            BitSet cMj = workingAlignment.allelePresenceForAllTaxa(c, 0);
-            BitSet cMn = workingAlignment.allelePresenceForAllTaxa(c, 1);
+            BitSet rMj = workingAlignment.allelePresenceForAllTaxa(r, GenotypeTable.WHICH_ALLELE.Major);
+            BitSet rMn = workingAlignment.allelePresenceForAllTaxa(r, GenotypeTable.WHICH_ALLELE.Minor);
+            BitSet cMj = workingAlignment.allelePresenceForAllTaxa(c, GenotypeTable.WHICH_ALLELE.Major);
+            BitSet cMn = workingAlignment.allelePresenceForAllTaxa(c, GenotypeTable.WHICH_ALLELE.Minor);
             LDResult ldr = getLDForSitePair(rMj, rMn, cMj, cMn, 2, myMinTaxaForEstimate, -1.0f, myFisherExact);
             if (myIsAccumulativeReport) {
                 if (ldr.r2 == Float.NaN) {

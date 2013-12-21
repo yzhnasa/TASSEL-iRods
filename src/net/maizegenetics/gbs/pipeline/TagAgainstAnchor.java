@@ -505,8 +505,8 @@ public class TagAgainstAnchor {
                 bestP[i] = 2;
             }
             for (int i = chrStartIndex; i < chrEndIndex; i+=step) {
-                OpenBitSet obsMajor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, 0).getBits());
-                OpenBitSet obsMinor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, 1).getBits());
+                OpenBitSet obsMajor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, GenotypeTable.WHICH_ALLELE.Major).getBits());
+                OpenBitSet obsMinor = new OpenBitSet(anchor.allelePresenceForAllTaxa(i, GenotypeTable.WHICH_ALLELE.Minor).getBits());
                 if (obsMinor.cardinality()>4) {
                     for (int j = 0; j < obsTdist.length; j++) {
                         if(Math.abs(anchor.chromosomalPosition(i)-blockPosition[j])<blockWindow) continue;

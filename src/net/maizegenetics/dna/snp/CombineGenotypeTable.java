@@ -433,19 +433,13 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public BitSet allelePresenceForAllSites(int taxon, int alleleNumber) {
-        throw new UnsupportedOperationException("CombineAlignment: getAllelePresenceForAllSites: This operation isn't possible as it spans multiple AlignmentNews. It needs to be optimized for taxa first.");
+    public BitSet allelePresenceForAllSites(int taxon, WHICH_ALLELE allele) {
+        throw new UnsupportedOperationException("CombineAlignment: getAllelePresenceForAllSites: This operation isn't possible as it spans multiple GenotypeTables.");
     }
 
     @Override
-    public BitSet allelePresenceForAllTaxa(int site, int alleleNumber) {
-        int translate = translateSite(site);
-        return myAlignments[translate].allelePresenceForAllTaxa(site - mySiteOffsets[translate], alleleNumber);
-    }
-
-    @Override
-    public long[] allelePresenceForSitesBlock(int taxon, int alleleNumber, int startBlock, int endBlock) {
-        throw new UnsupportedOperationException("CombineAlignment: getAllelePresenceForSitesBlock: This operation isn't possible as it spans multiple AlignmentNews. It needs to be optimized for taxa first.");
+    public long[] allelePresenceForSitesBlock(int taxon, WHICH_ALLELE allele, int startBlock, int endBlock) {
+        throw new UnsupportedOperationException("CombineAlignment: getAllelePresenceForSitesBlock: This operation isn't possible as it spans multiple GenotypeTables.");
     }
 
     @Override
@@ -718,23 +712,23 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public BitSet allelePresenceForAllTaxaBySortType(ALLELE_SORT_TYPE type, int site, int alleleNumber) {
+    public BitSet allelePresenceForAllTaxa(int site, WHICH_ALLELE allele) {
         int translate = translateSite(site);
-        return myAlignments[translate].allelePresenceForAllTaxaBySortType(type, site - mySiteOffsets[translate], alleleNumber);
+        return myAlignments[translate].allelePresenceForAllTaxa(site - mySiteOffsets[translate], allele);
     }
 
     @Override
-    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, int alleleNumber) {
+    public BitSet haplotypeAllelePresenceForAllSites(int taxon, boolean firstParent, WHICH_ALLELE allele) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, int alleleNumber) {
+    public BitSet haplotypeAllelePresenceForAllTaxa(int site, boolean firstParent, WHICH_ALLELE allele) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, int alleleNumber, int startBlock, int endBlock) {
+    public long[] haplotypeAllelePresenceForSitesBlock(int taxon, boolean firstParent, WHICH_ALLELE allele, int startBlock, int endBlock) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -824,10 +818,10 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public BitStorage bitStorage(ALLELE_SORT_TYPE scopeType) {
+    public BitStorage bitStorage(WHICH_ALLELE allele) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
+    
     @Override
     public PositionList positions() {
         throw new UnsupportedOperationException("Not supported yet.");
