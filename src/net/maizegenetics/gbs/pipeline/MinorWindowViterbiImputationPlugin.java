@@ -4,26 +4,18 @@
 package net.maizegenetics.gbs.pipeline;
 
 
-import net.maizegenetics.dna.snp.GenotypeTableBuilder;
-import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.ProjectionBuilder;
-import net.maizegenetics.dna.snp.GenotypeTableUtils;
-import net.maizegenetics.dna.snp.FilterGenotypeTable;
-import net.maizegenetics.dna.snp.ExportUtils;
-import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
-import net.maizegenetics.dna.snp.ImportUtils;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.dna.snp.*;
+import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
 import net.maizegenetics.gwas.imputation.EmissionProbability;
 import net.maizegenetics.gwas.imputation.TransitionProbability;
 import net.maizegenetics.gwas.imputation.ViterbiAlgorithm;
-import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
-import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
-import net.maizegenetics.popgen.DonorHypoth;
-import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.util.DonorHaplotypes;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.popgen.DonorHypoth;
+import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.*;
 import net.maizegenetics.util.BitSet;
@@ -36,6 +28,12 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+import static net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE.Major;
+import static net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE.Minor;
+import static net.maizegenetics.dna.snp.GenotypeTableUtils.isHeterozygous;
+import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
 
 /**
  * Imputation approach that relies on nearest neighbor searches of defined haplotypes, 
@@ -255,8 +253,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             ImputedTaxon impTaxon=new ImputedTaxon(taxon, unimpAlign.genotypeAllSites(taxon),isOutputProjection);
             int[] unkHets=countUnknownAndHets(impTaxon.getOrigGeno());
             sb.append(String.format("Imputing %d:%s Mj:%d, Mn:%d Unk:%d Hets:%d... ", taxon,name,
-                    unimpAlign.allelePresenceForAllSites(taxon, GenotypeTable.WHICH_ALLELE.Major).cardinality(),
-                    unimpAlign.allelePresenceForAllSites(taxon, GenotypeTable.WHICH_ALLELE.Minor).cardinality(), unkHets[0], unkHets[1]));
+                    unimpAlign.allelePresenceForAllSites(taxon, Major).cardinality(),
+                    unimpAlign.allelePresenceForAllSites(taxon, Minor).cardinality(), unkHets[0], unkHets[1]));
             boolean enoughData=(unimpAlign.totalNonMissingForTaxon(taxon)>minSitesPresent);
 //                System.out.println("Too much missing data");
 //                continue;
@@ -264,7 +262,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             int countFullLength=0;
             for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
                 int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].chromosome(0));
-                int blocks=donorAlign[da].allelePresenceForAllSites(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords();
+                int blocks=donorAlign[da].allelePresenceForAllSites(0, Major).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset, 
                         donorAlign[da].numberOfSites(),conflictMasks[da][0],conflictMasks[da][1]); 
                 int[] donorIndices;
@@ -463,8 +461,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
     private int[] countUnknownAndHets(byte[] a) {
         int cnt=0, cntHets=0;
         for (int i = 0; i < a.length; i++) {
-            if(a[i]==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {cnt++;}
-            else if(GenotypeTableUtils.isHeterozygous(a[i])) {cntHets++;}
+            if(a[i]==UNKNOWN_DIPLOID_ALLELE) {cnt++;}
+            else if(isHeterozygous(a[i])) {cntHets++;}
         }
         return new int[]{cnt,cntHets};
     }
@@ -474,8 +472,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         int unimpAlignStartBlock=donorOffset/64;
         int shift=(donorOffset-(unimpAlignStartBlock*64));
         int unimpAlignEndBlock=unimpAlignStartBlock+((donorLength+shift-1)/64);
-        OpenBitSet mjUnImp=new OpenBitSet(unimpAlign.allelePresenceForSitesBlock(bt, GenotypeTable.WHICH_ALLELE.Major, unimpAlignStartBlock, unimpAlignEndBlock+1));
-        OpenBitSet mnUnImp=new OpenBitSet(unimpAlign.allelePresenceForSitesBlock(bt, GenotypeTable.WHICH_ALLELE.Minor, unimpAlignStartBlock, unimpAlignEndBlock+1));
+        OpenBitSet mjUnImp=new OpenBitSet(unimpAlign.allelePresenceForSitesBlock(bt, Major, unimpAlignStartBlock, unimpAlignEndBlock+1));
+        OpenBitSet mnUnImp=new OpenBitSet(unimpAlign.allelePresenceForSitesBlock(bt, Minor, unimpAlignStartBlock, unimpAlignEndBlock+1));
         OpenBitSet mjTbs=new OpenBitSet(donorLength);
         OpenBitSet mnTbs=new OpenBitSet(donorLength);
         for (int i = 0; i < donorLength; i++) {
@@ -568,12 +566,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         ArrayList<Byte> nonMissingObs = new ArrayList<Byte>();
         ArrayList<Integer> snpPositions = new ArrayList<Integer>();
         for(int cs=0; cs<sites; cs++) {
-            if(t1b[cs]==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) continue; 
-            if(d1b[cs]==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) continue;
-            if(d2b[cs]==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) continue;
-            if(t1b[cs]==NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) continue; 
-            if(d1b[cs]==NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) continue;
-            if(d2b[cs]==NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) continue;
+            if(t1b[cs]==UNKNOWN_DIPLOID_ALLELE) continue;
+            if(d1b[cs]==UNKNOWN_DIPLOID_ALLELE) continue;
+            if(d2b[cs]==UNKNOWN_DIPLOID_ALLELE) continue;
+            if(t1b[cs]==GAP_DIPLOID_ALLELE) continue;
+            if(d1b[cs]==GAP_DIPLOID_ALLELE) continue;
+            if(d2b[cs]==GAP_DIPLOID_ALLELE) continue;
             if(d1b[cs]==d2b[cs]) {
                 if(t1b[cs]!=d1b[cs]) nonMendel++;
                 continue;
@@ -665,8 +663,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         long[] iMj=modBitsOfTarget[0].getBits();
         long[] iMn=modBitsOfTarget[1].getBits();
         for (int donor1 = 0; donor1 < impT.allDist.length; donor1++) {
-            long[] jMj=donorAlign.allelePresenceForAllSites(donor1, GenotypeTable.WHICH_ALLELE.Major).getBits();
-            long[] jMn=donorAlign.allelePresenceForAllSites(donor1, GenotypeTable.WHICH_ALLELE.Minor).getBits();
+            long[] jMj=donorAlign.allelePresenceForAllSites(donor1, Major).getBits();
+            long[] jMn=donorAlign.allelePresenceForAllSites(donor1, Minor).getBits();
             for (int i = 0; i <blocks; i++) {
                 long same = (iMj[i] & jMj[i]) | (iMn[i] & jMn[i]);
                 long diff = (iMj[i] & jMn[i]) | (iMn[i] & jMj[i]);
@@ -797,12 +795,12 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         double inc=1e-9;
         double[] donorDist;
         for (int d1: donor1Indices) {
-            long[] mj1=donorAlign.allelePresenceForSitesBlock(d1, GenotypeTable.WHICH_ALLELE.Major, startBlock, endBlock+1);
-            long[] mn1=donorAlign.allelePresenceForSitesBlock(d1, GenotypeTable.WHICH_ALLELE.Minor, startBlock, endBlock+1);
+            long[] mj1=donorAlign.allelePresenceForSitesBlock(d1, Major, startBlock, endBlock+1);
+            long[] mn1=donorAlign.allelePresenceForSitesBlock(d1, Minor, startBlock, endBlock+1);
             for (int d2 : donor2Indices) {
                 if((!viterbiSearch)&&(d1==d2)) continue;
-                long[] mj2=donorAlign.allelePresenceForSitesBlock(d2, GenotypeTable.WHICH_ALLELE.Major, startBlock, endBlock+1);
-                long[] mn2=donorAlign.allelePresenceForSitesBlock(d2, GenotypeTable.WHICH_ALLELE.Minor, startBlock, endBlock+1);
+                long[] mj2=donorAlign.allelePresenceForSitesBlock(d2, Major, startBlock, endBlock+1);
+                long[] mn2=donorAlign.allelePresenceForSitesBlock(d2, Minor, startBlock, endBlock+1);
                 if(viterbiSearch) {
                     donorDist=IBSDistanceMatrix.computeHetBitDistances(mj1, mn1, mj2, mn2, minTestSites);
                     if((d1!=d2)&&(donorDist[0]<this.maximumInbredError)) continue;
@@ -880,9 +878,9 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //        }
         int[] currDonors=prevDonors;
         for(int cs=startSite; cs<=endSite; cs++) {
-            byte donorEst=GenotypeTable.UNKNOWN_DIPLOID_ALLELE; 
+            byte donorEst=UNKNOWN_DIPLOID_ALLELE;
             byte neighbor=0;
-            for (int i = 0; (i < theDH.length) && (donorEst==GenotypeTable.UNKNOWN_DIPLOID_ALLELE); i++) {
+            for (int i = 0; (i < theDH.length) && (donorEst==UNKNOWN_DIPLOID_ALLELE); i++) {
                 neighbor++;
                 if((theDH[i]==null)||(theDH[i].donor1Taxon<0)) continue;
                 if(theDH[i].getErrorRate()>this.maximumInbredError) continue;
@@ -915,8 +913,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
             else {impT.chgHis[cs+donorOffset]=(byte)neighbor;}
             
             impT.impGeno[cs+donorOffset]= donorEst;  //predicted based on neighbor
-            if(knownBase==GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {impT.resolveGeno[cs+donorOffset]= donorEst;}
-            else {if(GenotypeTableUtils.isHeterozygous(donorEst)) {
+            if(knownBase==UNKNOWN_DIPLOID_ALLELE) {impT.resolveGeno[cs+donorOffset]= donorEst;}
+            else {if(isHeterozygous(donorEst)) {
                 if(resolveHetIfUndercalled&&GenotypeTableUtils.isPartiallyEqual(knownBase,donorEst)) 
                 {//System.out.println(theDH[0].targetTaxon+":"+knownBase+":"+donorEst);
                     impT.resolveGeno[cs+donorOffset]= donorEst;}
@@ -937,8 +935,8 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         for (int cs = 0; cs < impT.getOrigGeno().length; cs++) {
             byte donorEst=impT.getImpGeno(cs);
             byte knownBase=impT.getOrigGeno(cs);
-            if((knownBase!=GenotypeTable.UNKNOWN_DIPLOID_ALLELE)&&(donorEst!=GenotypeTable.UNKNOWN_DIPLOID_ALLELE)) {
-                if(GenotypeTableUtils.isHeterozygous(donorEst)||GenotypeTableUtils.isHeterozygous(knownBase)) {
+            if((knownBase!=UNKNOWN_DIPLOID_ALLELE)&&(donorEst!=UNKNOWN_DIPLOID_ALLELE)) {
+                if(isHeterozygous(donorEst)||isHeterozygous(knownBase)) {
                     totalHets++;
                 } else if(knownBase==donorEst) {
                     totalRight++;
@@ -977,13 +975,13 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
                 if(noMask||(oA.genotype(oATaxa, s)!=mA.genotype(t, s))) {
                     byte ib=iA.genotype(t, s);
                     byte ob=oA.genotype(oATaxa, s);
-                    if((ib==GenotypeTable.UNKNOWN_DIPLOID_ALLELE)||(ob==GenotypeTable.UNKNOWN_DIPLOID_ALLELE)) {unimp++; u++;}
-                    else if(ib==NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE) {gaps++;}
+                    if((ib==UNKNOWN_DIPLOID_ALLELE)||(ob==UNKNOWN_DIPLOID_ALLELE)) {unimp++; u++;}
+                    else if(ib==GAP_DIPLOID_ALLELE) {gaps++;}
                     else if(ib==ob) {
                         correct++;
                         c++;
                     } else {
-                        if(GenotypeTableUtils.isHeterozygous(ob)||GenotypeTableUtils.isHeterozygous(ib)) {hets++; h++;}
+                        if(isHeterozygous(ob)||isHeterozygous(ib)) {hets++; h++;}
                         else {errors++; 
                             e++;
 //                            if(t==0) System.out.printf("%d %d %s %s %n",t,s,oA.genotypeAsString(oATaxa, s), iA.genotypeAsString(t, s));

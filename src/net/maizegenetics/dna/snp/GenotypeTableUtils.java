@@ -10,6 +10,8 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static net.maizegenetics.dna.snp.GenotypeTable.*;
+
 /**
  * Utility methods for comparing, sorting, and counting genotypes.
  * @author Terry Casstevens
@@ -41,10 +43,10 @@ public class GenotypeTableUtils {
         for (int i = 0; i < data.length; i++) {
             byte first = (byte) ((data[i] >>> 4) & 0xf);
             byte second = (byte) (data[i] & 0xf);
-            if (first < GenotypeTable.RARE_ALLELE) {
+            if (first < RARE_ALLELE) {
                 stateCnt[first]++;
             }
-            if (second < GenotypeTable.RARE_ALLELE) {
+            if (second < RARE_ALLELE) {
                 stateCnt[second]++;
             }
         }
@@ -111,10 +113,10 @@ public class GenotypeTableUtils {
         for (int i = 0; i < data.length; i++) {
             byte first = (byte) ((data[i][site] >>> 4) & 0xf);
             byte second = (byte) (data[i][site] & 0xf);
-            if (first < GenotypeTable.RARE_ALLELE) {
+            if (first < RARE_ALLELE) {
                 stateCnt[first]++;
             }
-            if (second < GenotypeTable.RARE_ALLELE) {
+            if (second < RARE_ALLELE) {
                 stateCnt[second]++;
             }
         }
@@ -180,14 +182,14 @@ public class GenotypeTableUtils {
             String first;
             String second;
             if ((temp == null) || (temp.length == 0)) {
-                first = second = GenotypeTable.UNKNOWN_ALLELE_STR;
+                first = second = UNKNOWN_ALLELE_STR;
             } else if (temp.length == 1) {
                 first = second = temp[0].trim();
             } else {
                 first = temp[0].trim();
                 second = temp[1].trim();
             }
-            if (!first.equalsIgnoreCase(GenotypeTable.UNKNOWN_ALLELE_STR)) {
+            if (!first.equalsIgnoreCase(UNKNOWN_ALLELE_STR)) {
                 Integer count = stateCnt.get(first);
                 if (count == null) {
                     stateCnt.put(first, ONE);
@@ -195,7 +197,7 @@ public class GenotypeTableUtils {
                     stateCnt.put(first, count + 1);
                 }
             }
-            if (!second.equalsIgnoreCase(GenotypeTable.UNKNOWN_ALLELE_STR)) {
+            if (!second.equalsIgnoreCase(UNKNOWN_ALLELE_STR)) {
                 Integer count = stateCnt.get(second);
                 if (count == null) {
                     stateCnt.put(second, ONE);
@@ -387,10 +389,10 @@ public class GenotypeTableUtils {
         String[][] alleleStates = new String[numSites][16];
         for (int i = 0; i < numSites; i++) {
             for (int j = 0; j < 16; j++) {
-                if (j == GenotypeTable.RARE_ALLELE) {
+                if (j == RARE_ALLELE) {
                     alleleStates[i][j] = GenotypeTable.RARE_ALLELE_STR;
                 } else {
-                    alleleStates[i][j] = GenotypeTable.UNKNOWN_ALLELE_STR;
+                    alleleStates[i][j] = UNKNOWN_ALLELE_STR;
                 }
             }
         }
@@ -453,13 +455,13 @@ public class GenotypeTableUtils {
         if (data[0][0].contains(":")) {
             Pattern colon = Pattern.compile(":");
             for (int taxon = 0; taxon < numTaxa; taxon++) {
-                if (data[taxon][site].equalsIgnoreCase(GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR)) {
-                    dataBytes[taxon][site] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+                if (data[taxon][site].equalsIgnoreCase(UNKNOWN_DIPLOID_ALLELE_STR)) {
+                    dataBytes[taxon][site] = UNKNOWN_DIPLOID_ALLELE;
                 } else if (data[taxon][site].equals("?") || data[taxon][site].equals("?:?")) {
-                    dataBytes[taxon][site] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+                    dataBytes[taxon][site] = UNKNOWN_DIPLOID_ALLELE;
                 } else {
                     String[] siteval = colon.split(data[taxon][site]);
-                    int[] byteval = new int[]{GenotypeTable.RARE_ALLELE, GenotypeTable.RARE_ALLELE};
+                    int[] byteval = new int[]{RARE_ALLELE, RARE_ALLELE};
                     for (int k = 0; k < maxNumAlleles; k++) {
                         if (alleleStates[k].equals(siteval[0])) {
                             byteval[0] = k;
@@ -473,12 +475,12 @@ public class GenotypeTableUtils {
             }
         } else {
             for (int taxon = 0; taxon < numTaxa; taxon++) {
-                if (data[taxon][site].equalsIgnoreCase(GenotypeTable.UNKNOWN_ALLELE_STR)) {
-                    dataBytes[taxon][site] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+                if (data[taxon][site].equalsIgnoreCase(UNKNOWN_ALLELE_STR)) {
+                    dataBytes[taxon][site] = UNKNOWN_DIPLOID_ALLELE;
                 } else if (data[taxon][site].equals("?")) {
-                    dataBytes[taxon][site] = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+                    dataBytes[taxon][site] = UNKNOWN_DIPLOID_ALLELE;
                 } else {
-                    dataBytes[taxon][site] = GenotypeTable.RARE_DIPLOID_ALLELE;
+                    dataBytes[taxon][site] = RARE_DIPLOID_ALLELE;
                     for (byte k = 0; k < maxNumAlleles; k++) {
                         if (alleleStates[k].equals(data[taxon][site])) {
                             dataBytes[taxon][site] = (byte) (k | (k << 4));
@@ -660,7 +662,7 @@ public class GenotypeTableUtils {
      */
     public static boolean isEqualOrUnknown(byte diploidAllele1, byte diploidAllele2) {
 
-        if ((diploidAllele1 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) || (diploidAllele2 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE)) {
+        if ((diploidAllele1 == UNKNOWN_DIPLOID_ALLELE) || (diploidAllele2 == UNKNOWN_DIPLOID_ALLELE)) {
             return true;
         }
 
@@ -777,17 +779,17 @@ public class GenotypeTableUtils {
         if ((g2 == g1)&&(!isHeterozygous(g1))) {
             return g1;
         }
-        if (g1 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
-            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+        if (g1 == UNKNOWN_DIPLOID_ALLELE) {
+            return UNKNOWN_DIPLOID_ALLELE;
         }
-        if (g2 == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
-            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+        if (g2 == UNKNOWN_DIPLOID_ALLELE) {
+            return UNKNOWN_DIPLOID_ALLELE;
         }
         if (isHeterozygous(g1)) {
-            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+            return UNKNOWN_DIPLOID_ALLELE;
         }
         if (isHeterozygous(g2)) {
-            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+            return UNKNOWN_DIPLOID_ALLELE;
         }
 
         return getUnphasedDiploidValue(g1, g2);
@@ -827,22 +829,22 @@ public class GenotypeTableUtils {
             byte mj = mjA[i];
             byte mn = mnA[i];
             //           System.out.printf("inc:%d g:%d mj:%d mn:%d %n", i, g, mj, mn);
-            if (mj == GenotypeTable.UNKNOWN_ALLELE) {
+            if (mj == UNKNOWN_ALLELE) {
                 continue;
             }
-            if (g == GenotypeTableUtils.getDiploidValuePhased(mj, mj)) {
+            if (g == getDiploidValuePhased(mj, mj)) {
                 rMj.fastSet(i);
                 continue;
             }
-            if (mn == GenotypeTable.UNKNOWN_ALLELE) {
+            if (mn == UNKNOWN_ALLELE) {
                 continue;
             }
-            if (g == GenotypeTableUtils.getDiploidValuePhased(mn, mn)) {
+            if (g == getDiploidValuePhased(mn, mn)) {
                 rMn.fastSet(i);
                 continue;
             }
-            byte het = GenotypeTableUtils.getUnphasedDiploidValue(mj, mn);
-            if (GenotypeTableUtils.isEqual(g, het)) {
+            byte het = getUnphasedDiploidValue(mj, mn);
+            if (isEqual(g, het)) {
                 rMj.fastSet(i);
                 rMn.fastSet(i);
             }
@@ -858,7 +860,7 @@ public class GenotypeTableUtils {
         OpenBitSet result = new OpenBitSet(genotype.length);
         for (int i = 0; i < sites; i++) {
             
-            if (referenceValues[i] == GenotypeTable.UNKNOWN_ALLELE) {
+            if (referenceValues[i] == UNKNOWN_ALLELE) {
                 // do nothing
             } else if (referenceValues[i] == (byte) (genotype[i] & 0xf)) {
                 result.fastSet(i);
@@ -930,14 +932,14 @@ public class GenotypeTableUtils {
         OpenBitSet rMn = new OpenBitSet(genotype.length);
         for (int i = 0; i < sites; i++) {
             byte g = genotype[i];
-            if (mj == GenotypeTable.UNKNOWN_ALLELE) {
+            if (mj == UNKNOWN_ALLELE) {
                 continue;
             }
             if (g == GenotypeTableUtils.getDiploidValuePhased(mj, mj)) {
                 rMj.fastSet(i);
                 continue;
             }
-            if (mn == GenotypeTable.UNKNOWN_ALLELE) {
+            if (mn == UNKNOWN_ALLELE) {
                 continue;
             }
             if (g == GenotypeTableUtils.getDiploidValuePhased(mn, mn)) {
@@ -956,7 +958,7 @@ public class GenotypeTableUtils {
     public static BitSet calcBitPresenceFromGenotype(byte[] genotype, byte referenceValue) {
         int sites = genotype.length;
         OpenBitSet result = new OpenBitSet(genotype.length);
-        if (referenceValue == GenotypeTable.UNKNOWN_ALLELE) {
+        if (referenceValue == UNKNOWN_ALLELE) {
             return result;
         }
         for (int i = 0; i < sites; i++) {
