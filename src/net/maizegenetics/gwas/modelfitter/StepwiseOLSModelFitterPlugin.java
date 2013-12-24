@@ -1,6 +1,7 @@
 package net.maizegenetics.gwas.modelfitter;
 
 import java.awt.Frame;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -9,7 +10,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
 
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.MarkerPhenotypeAdapter;
@@ -28,6 +28,8 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
     int maxNumberOfMarkers = 1000;
     boolean nestMarkers = false;
     int nestingFactorIndex;
+    private StepwiseOLSModelFitter.MODEL_TYPE modelType = StepwiseOLSModelFitter.MODEL_TYPE.mbic;
+
     
     public StepwiseOLSModelFitterPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
@@ -75,6 +77,12 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 			}
 			StepwiseOLSModelFitterDialog myDialog = new StepwiseOLSModelFitterDialog(mainEffects, getParentFrame());
 
+			if (myDialog.wasCancelled()) {
+				myDialog.dispose();
+				fireProgress(100);
+				return null;
+			}
+			
 			double[] limits = myDialog.getEnterLimits();
 			if (limits.length == 1) enterlimit = limits[0];
 			else if (limits.length > 1) enterlimits = limits;
@@ -84,6 +92,7 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 			else if (limits.length > 1) exitlimits = limits;
 
 			nestMarkers = myDialog.isNested();
+            modelType = myDialog.getModelType();
 
 			if (nestMarkers) {
 				String blahblah = myDialog.getNestedEffect();
@@ -104,7 +113,8 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 		modelFitter.setMaxNumberOfMarkers(maxNumberOfMarkers);
 		modelFitter.setNested(nestMarkers);
 		modelFitter.setNestingEffectIndex(nestingFactorIndex);
-		
+		modelFitter.setModelType(modelType);
+                
 		modelFitter.runAnalysis();
 		
 		TableReport trResults = modelFitter.getAnovaReport();
@@ -120,13 +130,17 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 
 	@Override
 	public ImageIcon getIcon() {
-		// TODO Auto-generated method stub
-		return null;
+        URL imageURL = StepwiseOLSModelFitterPlugin.class.getResource("stepwise.gif");
+        if (imageURL == null) {
+            return null;
+        } else {
+            return new ImageIcon(imageURL);
+        }
 	}
 
 	@Override
 	public String getButtonName() {
-		return "Model";
+		return "Stepwise";
 	}
 
 	@Override
@@ -160,6 +174,11 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 
 	public void setNestingFactorIndex(int nestingFactorIndex) {
 		this.nestingFactorIndex = nestingFactorIndex;
+	}
+
+	public String getCitation(){
+		String citation = "Written in 2013 by Peter Bradbury and Alex Lipka";
+		return citation;
 	}
 
 	@Override
