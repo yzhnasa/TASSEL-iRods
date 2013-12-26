@@ -9,6 +9,7 @@ import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.DonorHaplotypes;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
@@ -49,6 +50,14 @@ public class ProjectionBuilder {
     public synchronized ProjectionBuilder addTaxon(Taxon taxon, NavigableSet<DonorHaplotypes> breakPoints) {
         allBreakPoints.put(taxon,breakPoints);
         return this;
+    }
+
+    public synchronized ProjectionBuilder addTaxon(Taxon taxon, Collection<DonorHaplotypes> breakPoints) {
+        NavigableSet<DonorHaplotypes> tBreak=new TreeSet<>();
+        for (DonorHaplotypes breakPoint : breakPoints) {
+            tBreak.add(breakPoint);
+        }
+        return addTaxon(taxon,tBreak);
     }
 
     public GenotypeTable build() {
