@@ -361,7 +361,7 @@ public class MarkerPhenotypeAdapter {
 
     public double getMarkerChromosomePosition(int marker) {
         if (marker < numberOfMarkersFromAlignment) {
-            return Double.NaN;
+            return align.chromosomalPosition(marker);
         }
         int t = markerIndex.get(marker - numberOfMarkersFromAlignment);
         Object chrpos = pheno.getTrait(t).getProperty(Trait.PROP_POSITION);

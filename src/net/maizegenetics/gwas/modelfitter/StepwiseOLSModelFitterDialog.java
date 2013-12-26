@@ -10,12 +10,14 @@ import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
 
@@ -32,8 +34,15 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 	String enterlim, exitlim;
 	String[] mainEffects = null;
 	int indexOfSelectedEffect = 0;
-	boolean wasCancelled = false;
+	boolean wasCancelled = true;
 	int numberOfMainEffects = 0;
+
+	ButtonGroup modelSelectionButtonGroup = new ButtonGroup();
+	JRadioButton PvalueRadioButton = new JRadioButton("Use P-value thresholds");
+	JRadioButton mBICRadioButton = new JRadioButton("mBIC model selection");
+	JRadioButton BICRadioButton = new JRadioButton("BIC model selection");
+	JRadioButton AICRadioButton = new JRadioButton("AIC model selection");
+
 	
 	public StepwiseOLSModelFitterDialog(String[] mainEffects, Frame parentFrame) {
 		super();
@@ -51,6 +60,12 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
         myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
         myPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         contentPane.add(myPanel);
+        
+        modelSelectionButtonGroup.add(PvalueRadioButton);
+        modelSelectionButtonGroup.add(mBICRadioButton);
+        modelSelectionButtonGroup.add(BICRadioButton);
+        modelSelectionButtonGroup.add(AICRadioButton);
+        PvalueRadioButton.setSelected(true);
         
 		if (numberOfMainEffects > 1) {
 			chkNested = new JCheckBox("Nest markers within a factor", null, false);
@@ -117,14 +132,30 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 		
 		Box maxBox = Box.createHorizontalBox();
 		maxBox.add(new JLabel("Maximum number of markers"));
-		txtMax = new JTextField("1000", 6);
+		txtMax = new JTextField("30", 6);
 		maxBox.add(txtMax);
 		myPanel.add(maxBox);
 		
 		myPanel.add(Box.createVerticalStrut(20));
-		JLabel sep3 = new JLabel("-----------------------");
-		myPanel.add(sep3);
-		sep3.setAlignmentX(CENTER_ALIGNMENT);
+        myPanel.add(Box.createVerticalStrut(20));
+        JLabel sep3 = new JLabel("-----------------------");
+        myPanel.add(sep3);
+        sep3.setAlignmentX(CENTER_ALIGNMENT);  
+
+        myPanel.add(PvalueRadioButton);
+        myPanel.add(mBICRadioButton);
+        myPanel.add(BICRadioButton);
+        myPanel.add(AICRadioButton);
+
+        PvalueRadioButton.setAlignmentX(CENTER_ALIGNMENT);
+        mBICRadioButton.setAlignmentX(CENTER_ALIGNMENT);
+        BICRadioButton.setAlignmentX(CENTER_ALIGNMENT);
+        AICRadioButton.setAlignmentX(CENTER_ALIGNMENT);
+
+        myPanel.add(Box.createVerticalStrut(20));
+        JLabel sep4 = new JLabel("-----------------------");
+        myPanel.add(sep4);
+		sep4.setAlignmentX(CENTER_ALIGNMENT);
 		myPanel.add(Box.createVerticalStrut(20));
 		
 		Box buttonBox = Box.createHorizontalBox();
@@ -138,6 +169,18 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 		btnCancel.setActionCommand("cancel");
 		myPanel.add(buttonBox);
 		buttonBox.setAlignmentX(CENTER_ALIGNMENT);
+
+		myPanel.add(Box.createVerticalStrut(20));
+		JLabel sep5 = new JLabel("------Developed by Peter Bradbury and Alex Lipka, 2013-----------------");
+		myPanel.add(sep5);
+		sep5.setAlignmentX(CENTER_ALIGNMENT);
+		JLabel note1 = new JLabel("Note: Because the Stepwise method does not allow missing marker data,");
+		JLabel note2 = new JLabel("the marker value N will be treated as a marker class, not missing data.");
+		note1.setAlignmentX(CENTER_ALIGNMENT);
+		note2.setAlignmentX(CENTER_ALIGNMENT);
+		myPanel.add(note1);
+		myPanel.add(note2);
+                
 		pack();
 		setVisible(true);
 	}
@@ -154,6 +197,7 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 				lblWhich.setEnabled(false);
 			}
 		} else if (e.getActionCommand().equals("ok")) {
+			wasCancelled = false;
 			setVisible(false);
 		} else if (e.getActionCommand().equals("cancel")) {
 			wasCancelled = true;
@@ -188,4 +232,24 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 	public int getMaxNumberOfMarkers() {
 		return Integer.parseInt(txtMax.getText());
 	}
+        
+
+	public StepwiseOLSModelFitter.MODEL_TYPE getModelType(){
+		if (PvalueRadioButton.isSelected()) {
+			return StepwiseOLSModelFitter.MODEL_TYPE.pvalue;
+		}
+		if (mBICRadioButton.isSelected()) {
+			return StepwiseOLSModelFitter.MODEL_TYPE.mbic;
+		}
+		if (BICRadioButton.isSelected()) {
+			return StepwiseOLSModelFitter.MODEL_TYPE.bic;
+		}
+		if (AICRadioButton.isSelected()) {
+			return StepwiseOLSModelFitter.MODEL_TYPE.aic;
+		}
+		return StepwiseOLSModelFitter.MODEL_TYPE.pvalue;
+
+	}
+
+        
 }
