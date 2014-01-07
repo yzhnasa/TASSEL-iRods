@@ -23,11 +23,12 @@ public class GenotypeTableMaskGeneticDistance extends AbstractGenotypeTableMask 
         }
     };
     private final int myTaxonReference;
-    private GenotypeTable myTBitAlignment = null;
+    private final GenotypeTable myAlignment;
 
     private GenotypeTableMaskGeneticDistance(GenotypeTable align, int taxonReference, String name, Color color) {
         super(align, name, color, GenotypeTableMask.MaskType.reference);
         myTaxonReference = taxonReference;
+        myAlignment = align;
     }
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, Taxon id) {
@@ -62,11 +63,7 @@ public class GenotypeTableMaskGeneticDistance extends AbstractGenotypeTableMask 
             return result;
         }
 
-//        if (myTBitAlignment == null) {
-//            myTBitAlignment = AlignmentUtils.optimizeForTaxa(myAlignment);
-//        }
-
-        result = (byte) (IBSDistanceMatrix.computeHetBitDistances(myTBitAlignment, taxon, myTaxonReference)[0] * 255.0);
+        result = (byte) (IBSDistanceMatrix.computeHetBitDistances(myAlignment, taxon, myTaxonReference)[0] * 255.0);
         myCache.put(taxon, result);
         return result;
 
