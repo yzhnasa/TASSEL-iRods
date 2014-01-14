@@ -88,6 +88,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
             myLogger.info("Tassel Version: " + version + "  Date: " + versionDate);
             myLogger.info("Max Available Memory Reported by JVM: " + Utils.getMaxHeapSizeMB() + " MB");
+            myLogger.info("Java Version: " + System.getProperty("java.version"));
         } catch (Exception e) {
             e.printStackTrace();
         }

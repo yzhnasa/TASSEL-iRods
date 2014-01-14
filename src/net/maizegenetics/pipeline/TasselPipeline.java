@@ -78,6 +78,7 @@ public class TasselPipeline implements PluginListener {
 
             myLogger.info("Tassel Version: " + myMainFrame.version + "  Date: " + myMainFrame.versionDate);
             myLogger.info("Max Available Memory Reported by JVM: " + Utils.getMaxHeapSizeMB() + " MB");
+            myLogger.info("Java Version: " + System.getProperty("java.version"));
 
             parseArgs(args);
 
