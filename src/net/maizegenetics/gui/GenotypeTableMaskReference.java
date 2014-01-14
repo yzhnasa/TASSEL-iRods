@@ -1,15 +1,18 @@
 /*
  * GenotypeTableMaskReference
  */
-package net.maizegenetics.dna.snp;
+package net.maizegenetics.gui;
 
 import net.maizegenetics.taxa.Taxon;
 
 import java.awt.*;
 
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+
 /**
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public class GenotypeTableMaskReference extends AbstractGenotypeTableMask {
 
@@ -29,23 +32,23 @@ public class GenotypeTableMaskReference extends AbstractGenotypeTableMask {
 
     public static GenotypeTableMaskReference getInstanceCompareReference(GenotypeTable align, Taxon id) {
         int index = align.taxa().indexOf(id);
-        if (index< 0) {
-            throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);
+        if (index < 0) {
+            throw new IllegalArgumentException("GenotypeTableMaskReference: getInstanceCompareReference: unknown id: " + id);
         }
         return getInstanceCompareReference(align, index);
     }
 
     public static GenotypeTableMaskReference getInstanceCompareReference(GenotypeTable align, String id) {
         int index = align.taxa().indexOf(id);
-        if (index <0) {
-            throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown id: " + id);
+        if (index < 0) {
+            throw new IllegalArgumentException("GenotypeTableMaskReference: getInstanceCompareReference: unknown id: " + id);
         }
         return getInstanceCompareReference(align, index);
     }
 
     public static GenotypeTableMaskReference getInstanceCompareReference(GenotypeTable align, int index) {
         if ((index < -1) || (index >= align.numberOfTaxa())) {
-            throw new IllegalArgumentException("AlignmentMaskReference: getInstanceCompareReference: unknown index: " + index);
+            throw new IllegalArgumentException("GenotypeTableMaskReference: getInstanceCompareReference: unknown index: " + index);
         }
         String name;
         if (index == -1) {

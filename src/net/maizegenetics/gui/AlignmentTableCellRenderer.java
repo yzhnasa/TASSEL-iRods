@@ -15,9 +15,6 @@ import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTableMask;
-import net.maizegenetics.dna.snp.GenotypeTableMaskGeneticDistance;
-import net.maizegenetics.dna.snp.GenotypeTableMaskReference;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**

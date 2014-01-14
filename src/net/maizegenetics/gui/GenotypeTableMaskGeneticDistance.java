@@ -1,18 +1,20 @@
 /*
  * GenotypeTableMaskGeneticDistance
  */
-package net.maizegenetics.dna.snp;
+package net.maizegenetics.gui;
 
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.taxa.Taxon;
+import net.maizegenetics.dna.snp.GenotypeTable;
 
 import java.awt.*;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public class GenotypeTableMaskGeneticDistance extends AbstractGenotypeTableMask {
 
@@ -33,23 +35,23 @@ public class GenotypeTableMaskGeneticDistance extends AbstractGenotypeTableMask 
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, Taxon id) {
         int index = align.taxa().indexOf(id);
-        if (index<0) {
-            throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
+        if (index < 0) {
+            throw new IllegalArgumentException("GenotypeTableMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }
         return getInstanceCompareReference(align, index);
     }
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, String id) {
         int index = align.taxa().indexOf(id);
-        if (index<0) {
-            throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
+        if (index < 0) {
+            throw new IllegalArgumentException("GenotypeTableMaskGeneticDistance: getInstanceCompareReference: unknown id: " + id);
         }
         return getInstanceCompareReference(align, index);
     }
 
     public static GenotypeTableMaskGeneticDistance getInstanceCompareReference(GenotypeTable align, int index) {
         if ((index < 0) || (index >= align.numberOfTaxa())) {
-            throw new IllegalArgumentException("AlignmentMaskGeneticDistance: getInstanceCompareReference: unknown index: " + index);
+            throw new IllegalArgumentException("GenotypeTableMaskGeneticDistance: getInstanceCompareReference: unknown index: " + index);
         }
         String name = align.taxaName(index) + " Genetic Distance";
         return new GenotypeTableMaskGeneticDistance(align, index, name, null);

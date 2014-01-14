@@ -51,15 +51,15 @@ import net.maizegenetics.gui.RowHeaderRenderer;
 import net.maizegenetics.gui.TableRowHeaderListModel;
 import net.maizegenetics.gui.VerticalLabelUI;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTableMask;
-import net.maizegenetics.dna.snp.GenotypeTableMaskGeneticDistance;
-import net.maizegenetics.dna.snp.GenotypeTableMaskReference;
+import net.maizegenetics.gui.GenotypeTableMask;
+import net.maizegenetics.gui.GenotypeTableMaskGeneticDistance;
+import net.maizegenetics.gui.GenotypeTableMaskReference;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.Datum;
 
 /**
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public class SeqViewerPanel extends JPanel implements ComponentListener, TableModelListener {
 
@@ -311,7 +311,6 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         //JRadioButton allelesRetained = new JRadioButton("Alleles Retained");
         //allelesRetained.setActionCommand(AlignmentTableModel.COLUMN_NAME_TYPE.allelesRetained.toString());
         //allelesRetained.addActionListener(radioListener);
-
         searchLabel = new JLabel();
         searchLabel.setPreferredSize(new Dimension(70, 25));
         searchField = new JTextField();

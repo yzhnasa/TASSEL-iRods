@@ -1,13 +1,15 @@
 /*
  * AbstractAlignmentMask
  */
-package net.maizegenetics.dna.snp;
+package net.maizegenetics.gui;
 
 import java.awt.Color;
 
+import net.maizegenetics.dna.snp.GenotypeTable;
+
 /**
  *
- * @author terry
+ * @author Terry Casstevens
  */
 abstract public class AbstractGenotypeTableMask implements GenotypeTableMask {
 

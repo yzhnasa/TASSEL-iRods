@@ -1,15 +1,17 @@
 /*
  * GenotypeTableMaskBoolean
  */
-package net.maizegenetics.dna.snp;
+package net.maizegenetics.gui;
 
 import net.maizegenetics.taxa.Taxon;
 
 import java.awt.*;
 
+import net.maizegenetics.dna.snp.GenotypeTable;
+
 /**
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
 
@@ -25,12 +27,12 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
         super(align, name, color, type);
 
         if (mask.length != align.numberOfTaxa()) {
-            throw new IllegalArgumentException("AlignmentMask: init: number of mask rows should equal number of sequences.");
+            throw new IllegalArgumentException("GenotypeTableMaskBoolean: init: number of mask rows should equal number of sequences.");
         }
 
         int numBytesNeeded = getNumMaskColumns(align.numberOfSites());
         if (numBytesNeeded != mask[0].length) {
-            throw new IllegalArgumentException("AlignmentMask: init: incorrect number of mask columns: " + mask[0].length + "  should be: " + numBytesNeeded);
+            throw new IllegalArgumentException("GenotypeTableMaskBoolean: init: incorrect number of mask columns: " + mask[0].length + "  should be: " + numBytesNeeded);
         }
 
         myMask = mask;
@@ -44,8 +46,8 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
 
     public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, Taxon id) {
         int index = align.taxa().indexOf(id);
-        if (index<0) {
-            throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
+        if (index < 0) {
+            throw new IllegalArgumentException("GenotypeTableMaskBoolean: getInstanceCompareReference: unknown id: " + id);
         }
         String name = id.getName() + " Reference";
         return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.numberOfSites()), name);
@@ -53,7 +55,7 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
 
     public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, int index) {
         if ((index < 0) || (index >= align.numberOfTaxa())) {
-            throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown index: " + index);
+            throw new IllegalArgumentException("GenotypeTableMaskBoolean: getInstanceCompareReference: unknown index: " + index);
         }
         String name = align.taxaName(index) + " Reference";
         return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.numberOfSites()), name);
@@ -61,8 +63,8 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
 
     public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, String id) {
         int index = align.taxa().indexOf(id);
-        if (index <0) {
-            throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: unknown id: " + id);
+        if (index < 0) {
+            throw new IllegalArgumentException("GenotypeTableMaskBoolean: getInstanceCompareReference: unknown id: " + id);
         }
         return getInstanceCompareReference(align, align.genotypeRange(index, 0, align.numberOfSites()), id + " Reference");
     }
@@ -70,11 +72,11 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
     public static GenotypeTableMaskBoolean getInstanceCompareReference(GenotypeTable align, byte[] ref, String name) {
 
         if ((align == null) || (ref == null)) {
-            throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: alignment or reference can not be null.");
+            throw new IllegalArgumentException("GenotypeTableMaskBoolean: getInstanceCompareReference: alignment or reference can not be null.");
         }
 
         if (align.numberOfSites() != ref.length) {
-            throw new IllegalArgumentException("AlignmentMask: getInstanceCompareReference: ref length should equal alignment site count.");
+            throw new IllegalArgumentException("GenotypeTableMaskBoolean: getInstanceCompareReference: ref length should equal alignment site count.");
         }
 
         int numMaskColumns = getNumMaskColumns(ref.length);
@@ -104,7 +106,7 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
 
         if ((align1.numberOfTaxa() != align2.numberOfTaxa())
                 || (align1.numberOfSites() != align2.numberOfSites())) {
-            throw new IllegalArgumentException("AlignmentMaskBoolean: getInstanceCompareAlignments: both alignments should have same number of sequences and sites.");
+            throw new IllegalArgumentException("GenotypeTableMaskBoolean: getInstanceCompareAlignments: both alignments should have same number of sequences and sites.");
         }
 
         int numMaskColumns = getNumMaskColumns(align1.numberOfSites());
@@ -130,7 +132,7 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
 
     }
 
-    public static int getNumMaskColumns(int numSites) {
+    private static int getNumMaskColumns(int numSites) {
         int numMaskColumns = numSites / 8;
         if (numSites % 8 > 0) {
             numMaskColumns++;
@@ -138,6 +140,7 @@ public class GenotypeTableMaskBoolean extends AbstractGenotypeTableMask {
         return numMaskColumns;
     }
 
+    @Override
     public byte getMask(int taxon, int site) {
         int maskColumn = site / 8;
         int shift = 7 - (site % 8);

@@ -16,7 +16,7 @@ package net.maizegenetics.tassel;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTableMask;
+import net.maizegenetics.gui.GenotypeTableMask;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.popgen.distance.DistanceMatrix;

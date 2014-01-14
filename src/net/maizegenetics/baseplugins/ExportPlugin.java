@@ -15,7 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTableMask;
+import net.maizegenetics.gui.GenotypeTableMask;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.PhenotypeUtils;
