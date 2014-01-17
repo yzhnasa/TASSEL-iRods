@@ -50,7 +50,7 @@ public class FileLoadPlugin extends AbstractPlugin {
 
     public enum TasselFileType {
 
-        SqrMatrix, Annotated, Sequence, Polymorphism, Numerical, Unknown, Fasta,
+        SqrMatrix, Annotated, Sequence, Numerical, Unknown, Fasta,
         Hapmap, Plink, Phenotype, ProjectionAlignment, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
         Serial, HapmapDiploid, Text, HDF5, VCF, ByteHDF5
     };
@@ -259,8 +259,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                 }
                 if (isTrait || (isMarker && isNumeric)) {
                     guess = TasselFileType.Phenotype;
-                } else if (isMarker) {
-                    guess = TasselFileType.Polymorphism;
                 } else if (isMap) {
                     guess = TasselFileType.GeneticMap;
                 } else {
@@ -270,10 +268,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                 guess = TasselFileType.Fasta;
             } else if (sval1.length == 1) {
                 guess = TasselFileType.SqrMatrix;
-            } else if (line1.indexOf(':') > 0) {
-                guess = TasselFileType.Polymorphism;
-            } else if ((sval1.length == 2) && (lociMatchNumber)) {
-                guess = TasselFileType.Polymorphism;
             } else if ((line1.startsWith("#Nexus")) || (line1.startsWith("#NEXUS")) || (line1.startsWith("CLUSTAL"))
                     || ((sval1.length == 2) && (sval2.length == 2))) {
                 guess = TasselFileType.Sequence;
@@ -321,10 +315,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                 }
                 case Sequence: {
                     result = ReadSequenceAlignmentUtils.readBasicAlignments(inFile, 40);
-                    break;
-                }
-                case Polymorphism: {
-                    result = ReadPolymorphismUtils.readPolymorphismFile(inFile);
                     break;
                 }
                 case Annotated: {
@@ -488,7 +478,6 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton plinkRadioButton = new JRadioButton("Load Plink");
     JRadioButton sequenceAlignRadioButton = new JRadioButton("Load sequence alignment (phylip, NEXUS)");
     JRadioButton fastaRadioButton = new JRadioButton("Load FASTA file");
-    JRadioButton polymorphismAlignRadioButton = new JRadioButton("Load polymorphism alignment (custom)");
     JRadioButton annotatedAlignRadioButton = new JRadioButton("Load annotated alignment (custom)");
     JRadioButton numericalRadioButton = new JRadioButton("Load numerical trait data or covariates");
     JRadioButton loadMatrixRadioButton = new JRadioButton("Load square numerical matrix (eg. kinship) (phylip)");
@@ -535,7 +524,6 @@ class FileLoadPluginDialog extends JDialog {
         conversionButtonGroup.add(plinkRadioButton);
         conversionButtonGroup.add(sequenceAlignRadioButton);
         conversionButtonGroup.add(fastaRadioButton);
-        conversionButtonGroup.add(polymorphismAlignRadioButton);
         conversionButtonGroup.add(loadMatrixRadioButton);
         conversionButtonGroup.add(numericalRadioButton);
         conversionButtonGroup.add(annotatedAlignRadioButton);
@@ -601,7 +589,6 @@ class FileLoadPluginDialog extends JDialog {
         result.add(projectionAlignmentRadioButton);
         result.add(sequenceAlignRadioButton);
         result.add(fastaRadioButton);
-        result.add(polymorphismAlignRadioButton);
         result.add(annotatedAlignRadioButton);
         result.add(numericalRadioButton);
         result.add(loadMatrixRadioButton);
@@ -665,9 +652,6 @@ class FileLoadPluginDialog extends JDialog {
         }
         if (fastaRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Fasta;
-        }
-        if (polymorphismAlignRadioButton.isSelected()) {
-            return FileLoadPlugin.TasselFileType.Polymorphism;
         }
         if (loadMatrixRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.SqrMatrix;

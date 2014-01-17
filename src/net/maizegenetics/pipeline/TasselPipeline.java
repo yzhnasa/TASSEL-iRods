@@ -209,9 +209,6 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-s")) {
                     String inputFile = args[index++].trim();
                     loadFile(inputFile, FileLoadPlugin.TasselFileType.Sequence);
-                } else if (current.equalsIgnoreCase("-p")) {
-                    String inputFile = args[index++].trim();
-                    loadFile(inputFile, FileLoadPlugin.TasselFileType.Polymorphism);
                 } else if (current.equalsIgnoreCase("-a")) {
                     String inputFile = args[index++].trim();
                     loadFile(inputFile, FileLoadPlugin.TasselFileType.Annotated);
