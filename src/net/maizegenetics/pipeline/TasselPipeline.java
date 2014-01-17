@@ -67,16 +67,16 @@ public class TasselPipeline implements PluginListener {
         try {
 
             if ((args.length == 1) && (args[0].equalsIgnoreCase("-versionComment"))) {
-                System.out.println("Version " + myMainFrame.version + " on " + myMainFrame.versionDate);
+                System.out.println("Version " + TASSELMainFrame.version + " on " + TASSELMainFrame.versionDate);
                 return;
             }
 
             if ((args.length == 1) && (args[0].equalsIgnoreCase("-versionTag"))) {
-                System.out.println("V" + myMainFrame.version);
+                System.out.println("V" + TASSELMainFrame.version);
                 return;
             }
 
-            myLogger.info("Tassel Version: " + myMainFrame.version + "  Date: " + myMainFrame.versionDate);
+            myLogger.info("Tassel Version: " + TASSELMainFrame.version + "  Date: " + TASSELMainFrame.versionDate);
             myLogger.info("Max Available Memory Reported by JVM: " + Utils.getMaxHeapSizeMB() + " MB");
             myLogger.info("Java Version: " + System.getProperty("java.version"));
 
@@ -252,27 +252,6 @@ public class TasselPipeline implements PluginListener {
                     }
                     PlinkLoadPlugin plugin = new PlinkLoadPlugin(myMainFrame, false);
                     plugin.setPedFile(pedFile);
-                    plugin.setMapFile(mapFile);
-                    integratePlugin(plugin, true);
-                } else if (current.equalsIgnoreCase("-flapjack")) {
-                    String genoFile = null;
-                    String mapFile = null;
-                    for (int i = 0; i < 2; i++) {
-                        String fileType = args[index++].trim();
-                        String filename = args[index++].trim();
-                        if (fileType.equalsIgnoreCase("-geno")) {
-                            genoFile = filename;
-                        } else if (fileType.equalsIgnoreCase("-map")) {
-                            mapFile = filename;
-                        } else {
-                            throw new IllegalArgumentException("TasselPipeline: parseArgs: -flapjack: unknown file type: " + fileType);
-                        }
-                    }
-                    if ((genoFile == null) || (mapFile == null)) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: -flapjack must specify both ped and map files.");
-                    }
-                    FlapjackLoadPlugin plugin = new FlapjackLoadPlugin(myMainFrame, false);
-                    plugin.setGenoFile(genoFile);
                     plugin.setMapFile(mapFile);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-fasta")) {

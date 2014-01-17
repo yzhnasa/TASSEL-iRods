@@ -285,8 +285,6 @@ public class ExportPlugin extends AbstractPlugin {
             }
         } else if (myFileType == FileLoadPlugin.TasselFileType.Plink) {
             resultFile = ExportUtils.writeToPlink(inputAlignment, mySaveFile, '\t');
-        } else if (myFileType == FileLoadPlugin.TasselFileType.Flapjack) {
-            resultFile = ExportUtils.writeToFlapjack(inputAlignment, mySaveFile, '\t');
         } else if (myFileType == FileLoadPlugin.TasselFileType.Phylip_Seq) {
             PrintWriter out = null;
             try {
@@ -463,7 +461,6 @@ public class ExportPlugin extends AbstractPlugin {
         private JRadioButton myByteHDF5RadioButton = new JRadioButton("Write ByteHDF5");
         private JRadioButton myVCFRadioButton = new JRadioButton("Write VCF");
         private JRadioButton myPlinkRadioButton = new JRadioButton("Write Plink");
-        private JRadioButton myFlapjackRadioButton = new JRadioButton("Write Flapjack");
         private JRadioButton myPhylipRadioButton = new JRadioButton("Write Phylip (Sequential)");
         private JRadioButton myPhylipInterRadioButton = new JRadioButton("Write Phylip (Interleaved)");
         private JRadioButton myTabTableRadioButton = new JRadioButton("Write Tab Delimited");
@@ -504,7 +501,6 @@ public class ExportPlugin extends AbstractPlugin {
             myButtonGroup.add(myByteHDF5RadioButton);
             myButtonGroup.add(myVCFRadioButton);
             myButtonGroup.add(myPlinkRadioButton);
-            myButtonGroup.add(myFlapjackRadioButton);
             myButtonGroup.add(myPhylipRadioButton);
             myButtonGroup.add(myPhylipInterRadioButton);
             myButtonGroup.add(myTabTableRadioButton);
@@ -565,7 +561,6 @@ public class ExportPlugin extends AbstractPlugin {
             result.add(myByteHDF5RadioButton);
             result.add(myVCFRadioButton);
             result.add(myPlinkRadioButton);
-            result.add(myFlapjackRadioButton);
             result.add(myPhylipRadioButton);
             result.add(myPhylipInterRadioButton);
             result.add(myTabTableRadioButton);
@@ -620,9 +615,6 @@ public class ExportPlugin extends AbstractPlugin {
             }
             if (myPlinkRadioButton.isSelected()) {
                 return FileLoadPlugin.TasselFileType.Plink;
-            }
-            if (myFlapjackRadioButton.isSelected()) {
-                return FileLoadPlugin.TasselFileType.Flapjack;
             }
             if (myPhylipRadioButton.isSelected()) {
                 return FileLoadPlugin.TasselFileType.Phylip_Seq;

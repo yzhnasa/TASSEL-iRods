@@ -39,7 +39,7 @@ public class TasselPipelineXMLUtil {
      * These are flags that create plugins.
      */
     private static final String[] TAG_STRINGS = new String[]{"-t", "-s",
-        "-p", "-a", "-k", "-q", "-h", "-b", "-g", "-r", "-plink", "-flapjack", "-fasta", "-geneticMap",
+        "-p", "-a", "-k", "-q", "-h", "-b", "-g", "-r", "-plink", "-fasta", "-geneticMap",
         "-taxaJoinStrict", "-union", "-intersect", "-excludeLastTrait", "-mlm", "-glm", "-wd_csv", "-wd_tab",
         "-td_csv", "-td_tab", "-td_gui", "-wxls", "-ld", "-ldd", "-ck", "-gs", "-export",
         "-impute", "-filterAlign", "-includeTaxa", "-includeTaxaInFile", "-excludeTaxa"};

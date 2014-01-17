@@ -45,22 +45,19 @@ public class FileLoadPlugin extends AbstractPlugin {
     private String[] myOpenFiles = null;
     private TasselFileType myFileType = TasselFileType.Unknown;
     private PlinkLoadPlugin myPlinkLoadPlugin = null;
-    private FlapjackLoadPlugin myFlapjackLoadPlugin = null;
     private ProjectionLoadPlugin myProjectionLoadPlugin = null;
     private JFileChooser myOpenFileChooser = new JFileChooser(TasselPrefs.getOpenDir());
 
     public enum TasselFileType {
 
         SqrMatrix, Annotated, Sequence, Polymorphism, Numerical, Unknown, Fasta,
-        Hapmap, Plink, Phenotype, Flapjack, ProjectionAlignment, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
+        Hapmap, Plink, Phenotype, ProjectionAlignment, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
         Serial, HapmapDiploid, Text, HDF5, VCF, ByteHDF5
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
     public static final String FILE_EXT_HAPMAP_GZ = ".hmp.txt.gz";
     public static final String FILE_EXT_PLINK_MAP = ".plk.map";
     public static final String FILE_EXT_PLINK_PED = ".plk.ped";
-    public static final String FILE_EXT_FLAPJACK_MAP = ".flpjk.map";
-    public static final String FILE_EXT_FLAPJACK_GENO = ".flpjk.geno";
     public static final String FILE_EXT_SERIAL_GZ = ".serial.gz";
     public static final String FILE_EXT_HDF5 = ".hmp.h5";
     public static final String FILE_EXT_VCF = ".vcf";
@@ -72,10 +69,9 @@ public class FileLoadPlugin extends AbstractPlugin {
         super(parentFrame, isInteractive);
     }
 
-    public FileLoadPlugin(Frame parentFrame, boolean isInteractive, PlinkLoadPlugin plinkLoadPlugin, FlapjackLoadPlugin flapjackLoadPlugin, ProjectionLoadPlugin projectionLoadPlugin) {
+    public FileLoadPlugin(Frame parentFrame, boolean isInteractive, PlinkLoadPlugin plinkLoadPlugin, ProjectionLoadPlugin projectionLoadPlugin) {
         super(parentFrame, isInteractive);
         myPlinkLoadPlugin = plinkLoadPlugin;
-        myFlapjackLoadPlugin = flapjackLoadPlugin;
         myProjectionLoadPlugin = projectionLoadPlugin;
     }
 
@@ -94,10 +90,6 @@ public class FileLoadPlugin extends AbstractPlugin {
 
                 if (myFileType == TasselFileType.Plink) {
                     return myPlinkLoadPlugin.performFunction(null);
-                }
-
-                if (myFileType == TasselFileType.Flapjack) {
-                    return myFlapjackLoadPlugin.performFunction(null);
                 }
 
                 if (myFileType == TasselFileType.ProjectionAlignment) {
@@ -140,18 +132,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                             alreadyLoaded.add(myOpenFiles[i]);
                             alreadyLoaded.add(thePedFile);
                             myPlinkLoadPlugin.loadFile(thePedFile, myOpenFiles[i], null);
-                        } else if (myOpenFiles[i].endsWith(FILE_EXT_FLAPJACK_GENO)) {
-                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.Flapjack);
-                            String theMapFile = myOpenFiles[i].replaceFirst(FILE_EXT_FLAPJACK_GENO, FILE_EXT_FLAPJACK_MAP);
-                            alreadyLoaded.add(myOpenFiles[i]);
-                            alreadyLoaded.add(theMapFile);
-                            myFlapjackLoadPlugin.loadFile(myOpenFiles[i], theMapFile, null);
-                        } else if (myOpenFiles[i].endsWith(FILE_EXT_FLAPJACK_MAP)) {
-                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.Flapjack);
-                            String theGenoFile = myOpenFiles[i].replaceFirst(FILE_EXT_FLAPJACK_MAP, FILE_EXT_FLAPJACK_GENO);
-                            alreadyLoaded.add(myOpenFiles[i]);
-                            alreadyLoaded.add(theGenoFile);
-                            myFlapjackLoadPlugin.loadFile(theGenoFile, myOpenFiles[i], null);
                         } else if (myOpenFiles[i].endsWith(FILE_EXT_SERIAL_GZ)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Serial);
                             alreadyLoaded.add(myOpenFiles[i]);
@@ -513,7 +493,6 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton numericalRadioButton = new JRadioButton("Load numerical trait data or covariates");
     JRadioButton loadMatrixRadioButton = new JRadioButton("Load square numerical matrix (eg. kinship) (phylip)");
     JRadioButton guessRadioButton = new JRadioButton("I will make my best guess and try.");
-    JRadioButton flapjackRadioButton = new JRadioButton("Load Flapjack");
     JRadioButton projectionAlignmentRadioButton = new JRadioButton("Load Projection Alignment");
     JRadioButton geneticMapRadioButton = new JRadioButton("Load a Genetic Map");
     JRadioButton tableReportRadioButton = new JRadioButton("Load a Table Report");
@@ -549,7 +528,6 @@ class FileLoadPluginDialog extends JDialog {
 
         setResizable(false);
 
-        conversionButtonGroup.add(flapjackRadioButton);
         conversionButtonGroup.add(projectionAlignmentRadioButton);
         conversionButtonGroup.add(hapMapRadioButton);
         conversionButtonGroup.add(hdf5RadioButton);
@@ -620,7 +598,6 @@ class FileLoadPluginDialog extends JDialog {
         result.add(hdf5RadioButton);
         result.add(vcfRadioButton);
         result.add(plinkRadioButton);
-        result.add(flapjackRadioButton);
         result.add(projectionAlignmentRadioButton);
         result.add(sequenceAlignRadioButton);
         result.add(fastaRadioButton);
@@ -679,9 +656,6 @@ class FileLoadPluginDialog extends JDialog {
         }
         if (plinkRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Plink;
-        }
-        if (flapjackRadioButton.isSelected()) {
-            return FileLoadPlugin.TasselFileType.Flapjack;
         }
         if (projectionAlignmentRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.ProjectionAlignment;
