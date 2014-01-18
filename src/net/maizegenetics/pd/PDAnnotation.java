@@ -16,7 +16,6 @@ import java.util.*;
 public class PDAnnotation {
 
     private static final String HAS_DATA = "HasData"; // summary index where if any trait has a value at that location, value is set to 1
-    private boolean myIsSBit = true;
 
     private String hapMapFile_prefix = "/maizeHapMapV2_B73RefGenV2_201203028_";
     private String hapMapFile_suffix = "h.hmp.txt.gz";
@@ -63,7 +62,7 @@ public class PDAnnotation {
         int[] hasData = null;  //recorder if there is any GWAS data for a site; TODO perhaps increment
         String chromosomeFile = hapMapDir + hapMapFile_prefix + "chr" + currChr + hapMapFile_suffix;
         System.out.println("Loading:" + chromosomeFile);
-        GenotypeTable bna = ImportUtils.readFromHapmap(chromosomeFile, myIsSBit, null /*progressListener*/);
+        GenotypeTable bna = ImportUtils.readFromHapmap(chromosomeFile, null /*progressListener*/);
         //System.out.printf("Sites:%d StartPosition:%d EndPosition:%d %n", bna.numberOfSites(), bna.chromosomalPosition(0), bna.chromosomalPosition(bna.numberOfSites() - 1));
         int siteCnt = bna.numberOfSites();
         int[] alignmentPhysPos = bna.physicalPositions();

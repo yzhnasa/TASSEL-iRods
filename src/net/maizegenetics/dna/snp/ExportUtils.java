@@ -3,12 +3,7 @@
  */
 package net.maizegenetics.dna.snp;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
-import ch.systemsx.cisd.hdf5.HDF5Factory;
-import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import net.maizegenetics.util.FormattedOutput;
-import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.ExceptionUtils;
@@ -37,119 +32,6 @@ public class ExportUtils {
         // Utility Class - do not instantiate.
     }
 
-    public static String writeToHDF5(GenotypeTable a, String newHDF5file) {
-        IHDF5Writer h5w = null;
-        try {
-
-            int numSites = a.numberOfSites();
-            int numTaxa = a.numberOfTaxa();
-
-            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, ".hmp.h5");
-            File hdf5File = new File(newHDF5file);
-            if (hdf5File.exists()) {
-                throw new IllegalArgumentException("ExportUtils: writeToHDF5: File already exists: " + newHDF5file);
-            }
-            IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
-            myLogger.info("Writing HDF5 file: " + newHDF5file);
-            config.overwrite();
-            config.dontUseExtendableDataTypes();
-            h5w = config.writer();
-
-            //h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.maxNumAlleles());
-
-            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
-
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
-
-            int numSBitWords = a.allelePresenceForAllTaxa(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords();
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SBIT_WORDS, numSBitWords);
-
-            int numTBitWords = a.allelePresenceForAllSites(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords();
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TBIT_WORDS, numTBitWords);
-
-            String[][] aEncodings = a.alleleDefinitions();
-            //myLogger.info(Arrays.deepToString(aEncodings));
-            int numEncodings = aEncodings.length;
-            int numStates = aEncodings[0].length;
-            MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, numStates});
-            for (int s = 0; s < numEncodings; s++) {
-                for (int x = 0; x < numStates; x++) {
-                    alleleEncodings.set(aEncodings[s][x], s, x);
-                }
-            }
-
-            h5w.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
-            h5w.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
-            MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
-            if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
-                throw new IllegalStateException("ExportUtils: writeToHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
-            }
-
-            //h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, a.getSNPIDs());
-
-            h5w.createGroup(HapMapHDF5Constants.SBIT);
-            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
-
-            String[] lociNames = new String[a.numChromosomes()];
-            Chromosome[] loci = a.chromosomes();
-            for (int i = 0; i < a.numChromosomes(); i++) {
-                lociNames[i] = loci[i].getName();
-            }
-            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.numChromosomes());
-            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
-
-            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.numChromosomes());
-            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.chromosomesOffsets());
-
-            h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
-            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, a.physicalPositions());
-
-            //h5w.createByteMatrix(HapMapHDF5Constants.ALLELES, a.numberOfSites(), a.maxNumAlleles());
-            //byte[][] alleles = new byte[numSites][a.maxNumAlleles()];
-            //for (int i = 0; i < numSites; i++) {
-            //    alleles[i] = a.alleles(i);
-            //}
-            //h5w.writeByteMatrix(HapMapHDF5Constants.ALLELES, alleles);
-
-            String[] tn = new String[numTaxa];
-            for (int i = 0; i < tn.length; i++) {
-                tn[i] = a.taxaName(i);
-            }
-            h5w.createStringVariableLengthArray(HapMapHDF5Constants.TAXA, numTaxa);
-            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.TAXA, tn);
-
-            //for (int aNum = 0; aNum < a.getTotalNumAlleles(); aNum++) {
-            for (GenotypeTable.WHICH_ALLELE aNum: GenotypeTable.WHICH_ALLELE.frequencyAlleles()) {
-
-                String currentSBitPath = HapMapHDF5Constants.SBIT + "/" + aNum;
-                h5w.createLongMatrix(currentSBitPath, numSites, numSBitWords, 1, numSBitWords);
-                long[][] lgarray = new long[numSites][numSBitWords];
-                for (int i = 0; i < numSites; i++) {
-                    lgarray[i] = a.allelePresenceForAllTaxa(i, aNum).getBits();
-                }
-                h5w.writeLongMatrix(currentSBitPath, lgarray);
-
-                String currentTBitPath = HapMapHDF5Constants.TBIT + "/" + aNum;
-                h5w.createLongMatrix(currentTBitPath, numTaxa, numTBitWords, 1, numTBitWords);
-                lgarray = new long[numTaxa][numTBitWords];
-                for (int i = 0; i < numTaxa; i++) {
-                    lgarray[i] = a.allelePresenceForAllSites(i, aNum).getBits();
-                }
-                h5w.writeLongMatrix(currentTBitPath, lgarray);
-
-            }
-
-            return newHDF5file;
-
-        } finally {
-            try {
-                h5w.close();
-            } catch (Exception e) {
-                // do nothing
-            }
-        }
-    }
-    
     public static String writeToMutableHDF5(GenotypeTable a, String newHDF5file) {
         return writeToMutableHDF5(a, newHDF5file, null, false);
     }

@@ -17,7 +17,8 @@ import java.util.regex.Pattern;
 /**
  * Methods for importing GenotypeTables from various file formats.
  *
- * @author terry
+ * @author Terry Casstevens
+ * @author Ed Buckler
  */
 public class ImportUtils {
 
@@ -363,10 +364,6 @@ public class ImportUtils {
     }
 
     public static GenotypeTable readFromHapmap(final String filename, ProgressListener listener) {
-        return readFromHapmap(filename, true, listener);
-    }
-
-    public static GenotypeTable readFromHapmap(final String filename, boolean isSBit, ProgressListener listener) {
         return BuilderFromHapMap.getBuilder(filename).build();
     }
 

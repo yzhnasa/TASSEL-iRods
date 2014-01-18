@@ -333,7 +333,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
         GenotypeTable[] donorAlign=new GenotypeTable[d.size()];
         for (int i = 0; i < donorAlign.length; i++) {
             System.out.println("Starting Read");
-            donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), true, (ProgressListener)null);     
+            donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), (ProgressListener)null);     
             System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
             System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);

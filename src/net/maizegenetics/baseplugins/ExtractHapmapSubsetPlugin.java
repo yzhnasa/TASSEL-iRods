@@ -217,7 +217,6 @@ public class ExtractHapmapSubsetPlugin extends AbstractPlugin {
 		
 		start = System.currentTimeMillis();
 		if (outputFilename.contains(".h5")) ExportUtils.writeToMutableHDF5(b, outputFilename);
-		else ExportUtils.writeToHDF5(b, outputFilename);
 		System.out.format("Time elapsed for writing new file = %d\n", System.currentTimeMillis() - start);
 	}
 }

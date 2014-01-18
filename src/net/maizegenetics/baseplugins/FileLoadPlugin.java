@@ -52,7 +52,7 @@ public class FileLoadPlugin extends AbstractPlugin {
 
         SqrMatrix, Sequence, Numerical, Unknown, Fasta,
         Hapmap, Plink, Phenotype, ProjectionAlignment, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
-        Serial, HapmapDiploid, Text, HDF5, VCF, ByteHDF5
+        Serial, HapmapDiploid, Text, VCF, HDF5
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
     public static final String FILE_EXT_HAPMAP_GZ = ".hmp.txt.gz";
@@ -294,12 +294,11 @@ public class FileLoadPlugin extends AbstractPlugin {
                     if (inFile.endsWith(".gz")) {
                         suffix = FILE_EXT_HAPMAP_GZ;
                     }
-                    result = ImportUtils.readFromHapmap(inFile, true, this);
+                    result = ImportUtils.readFromHapmap(inFile, this);
                     break;
                 }
                 case HDF5: {
                     suffix = FILE_EXT_HDF5;
-//                    result = BitAlignmentHDF5.getInstance(inFile);
                     result = ImportUtils.readGuessFormat(inFile);
                     break;
                 }
