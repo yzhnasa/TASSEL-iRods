@@ -472,7 +472,7 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton plinkRadioButton = new JRadioButton("Load Plink");
     JRadioButton sequenceAlignRadioButton = new JRadioButton("Load sequence alignment (phylip, NEXUS)");
     JRadioButton fastaRadioButton = new JRadioButton("Load FASTA file");
-    JRadioButton numericalRadioButton = new JRadioButton("Load numerical trait data or covariates");
+    JRadioButton numericalRadioButton = new JRadioButton("Load Trait (data, covariates, or factors)");
     JRadioButton loadMatrixRadioButton = new JRadioButton("Load square numerical matrix (eg. kinship) (phylip)");
     JRadioButton guessRadioButton = new JRadioButton("I will make my best guess and try.");
     JRadioButton projectionAlignmentRadioButton = new JRadioButton("Load Projection Alignment");
