@@ -50,7 +50,7 @@ public class FileLoadPlugin extends AbstractPlugin {
 
     public enum TasselFileType {
 
-        SqrMatrix, Annotated, Sequence, Numerical, Unknown, Fasta,
+        SqrMatrix, Sequence, Numerical, Unknown, Fasta,
         Hapmap, Plink, Phenotype, ProjectionAlignment, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
         Serial, HapmapDiploid, Text, HDF5, VCF, ByteHDF5
     };
@@ -208,9 +208,7 @@ public class FileLoadPlugin extends AbstractPlugin {
                     lociMatchNumber = true;
                 }
             }
-            if (sval1[0].equalsIgnoreCase("<Annotated>")) {
-                guess = TasselFileType.Annotated;
-            } else if (line1.startsWith("<") || line1.startsWith("#")) {
+            if (line1.startsWith("<") || line1.startsWith("#")) {
                 boolean isTrait = false;
                 boolean isMarker = false;
                 boolean isNumeric = false;
@@ -315,10 +313,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                 }
                 case Sequence: {
                     result = ReadSequenceAlignmentUtils.readBasicAlignments(inFile, 40);
-                    break;
-                }
-                case Annotated: {
-                    result = ReadPhenotypeUtils.readAnnotatedAlignment(inFile);
                     break;
                 }
                 case Numerical: {
@@ -478,7 +472,6 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton plinkRadioButton = new JRadioButton("Load Plink");
     JRadioButton sequenceAlignRadioButton = new JRadioButton("Load sequence alignment (phylip, NEXUS)");
     JRadioButton fastaRadioButton = new JRadioButton("Load FASTA file");
-    JRadioButton annotatedAlignRadioButton = new JRadioButton("Load annotated alignment (custom)");
     JRadioButton numericalRadioButton = new JRadioButton("Load numerical trait data or covariates");
     JRadioButton loadMatrixRadioButton = new JRadioButton("Load square numerical matrix (eg. kinship) (phylip)");
     JRadioButton guessRadioButton = new JRadioButton("I will make my best guess and try.");
@@ -526,7 +519,6 @@ class FileLoadPluginDialog extends JDialog {
         conversionButtonGroup.add(fastaRadioButton);
         conversionButtonGroup.add(loadMatrixRadioButton);
         conversionButtonGroup.add(numericalRadioButton);
-        conversionButtonGroup.add(annotatedAlignRadioButton);
         conversionButtonGroup.add(geneticMapRadioButton);
         conversionButtonGroup.add(tableReportRadioButton);
         conversionButtonGroup.add(guessRadioButton);
@@ -589,7 +581,6 @@ class FileLoadPluginDialog extends JDialog {
         result.add(projectionAlignmentRadioButton);
         result.add(sequenceAlignRadioButton);
         result.add(fastaRadioButton);
-        result.add(annotatedAlignRadioButton);
         result.add(numericalRadioButton);
         result.add(loadMatrixRadioButton);
         result.add(geneticMapRadioButton);
@@ -658,9 +649,6 @@ class FileLoadPluginDialog extends JDialog {
         }
         if (numericalRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Unknown;
-        }
-        if (annotatedAlignRadioButton.isSelected()) {
-            return FileLoadPlugin.TasselFileType.Annotated;
         }
         if (geneticMapRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.GeneticMap;
