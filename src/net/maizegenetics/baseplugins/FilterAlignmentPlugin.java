@@ -122,6 +122,11 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
             if (theLocus == null) {
                 throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Alignment doesn't contain locus: " + myLocusStr);
             }
+            if (myStartPos == -1) {
+                int[] startEnd = aa.startAndEndOfChromosome(theLocus);
+                myStart = startEnd[0];
+                myEnd = startEnd[1];
+            }
         }
 
         if (myStartPos != -1) {
