@@ -363,6 +363,20 @@ public class ImportUtils {
         return readFromVCF(filename, listener, VCFUtil.VCF_DEFAULT_MAX_NUM_ALLELES);
     }
 
+    /**
+     * Read GenotypeTable from HapMap file
+     * @param filename input HapMap file name
+     * @return a genotype table
+     */
+    public static GenotypeTable readFromHapmap(final String filename) {
+        return BuilderFromHapMap.getBuilder(filename).build();
+    }
+    /**
+     * Read GenotypeTable from HapMap file
+     * @param filename input HapMap file name
+     * @param listener progress listener to track reading rate
+     * @return a genotype table
+     */
     public static GenotypeTable readFromHapmap(final String filename, ProgressListener listener) {
         return BuilderFromHapMap.getBuilder(filename).build();
     }

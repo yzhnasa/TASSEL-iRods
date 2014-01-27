@@ -216,13 +216,25 @@ public class ExportUtils {
 //    }
 
     /**
-     * Writes multiple alignments to single Hapmap file. Currently no error
-     * checking
-     *
-     * @param alignment array of alignments
-     * @param diploid
-     * @param filename
-     * @param delimChar
+     * Write a GenotypeTable to HapMap format with standard settings - unphased single character, tab delimiter,
+     * and no progress tracking.
+     * @param alignment  genotype table
+     * @param filename   outfile name (will add ".hmp.txt" if needed)
+     * @return name of the outfile with the appropriate suffix
+     */
+    public static String writeToHapmap(GenotypeTable alignment, String filename) {
+        return writeToHapmap(alignment, false, filename, '\t',null);
+    }
+
+
+    /**
+     * Write a GenotypeTable to HapMap format.
+     * @param alignment  genotype table
+     * @param diploid  true uses phased two letter encoding, false one letter unphased
+     * @param filename   outfile name (will add ".hmp.txt" if needed)
+     * @param delimChar  delimiter character normally tab
+     * @param listener  progress listener, (null if unneeded)
+     * @return name of the outfile with the appropriate suffix
      */
     public static String writeToHapmap(GenotypeTable alignment, boolean diploid, String filename, char delimChar, ProgressListener listener) {
         if (delimChar != ' ' && delimChar != '\t') {
