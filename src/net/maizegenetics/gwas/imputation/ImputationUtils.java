@@ -648,7 +648,7 @@ public class ImputationUtils {
 			for (int fam = 0; fam < 25; fam++) {
 				System.out.println("Imputing data for chromosome " + chr + ", family " + family[fam] + ".");
 				snpFilename = "/Volumes/Macintosh HD 2/results/recombination study/nam/final.Panzea/namibm.combined.hapmap.f.05r.5.chr" + chr + ".family."+ family[fam] + "parents.hmp.txt";
-				GenotypeTable a = ImportUtils.readFromHapmap(snpFilename, true, null);
+				GenotypeTable a = ImportUtils.readFromHapmap(snpFilename);
 				int nsnps = a.numberOfSites();
 				
 				double startgenpos = agpmap.getCmFromPosition(chr, a.chromosomalPosition(0));
@@ -823,7 +823,7 @@ public class ImputationUtils {
 			StringBuilder taxaHeader = new StringBuilder();
 			for (File snpfile : snpFiles) {
 				System.out.println("Imputing data for " + snpfile.getName() + ".");
-				GenotypeTable a = ImportUtils.readFromHapmap(snpfile.getPath(), true, null);
+				GenotypeTable a = ImportUtils.readFromHapmap(snpfile.getPath());
 				
 				boolean b73isA = isB73HaplotypeA(a);
 				HashMap<Byte, String> byteToNumberString = new HashMap<Byte, String>();
