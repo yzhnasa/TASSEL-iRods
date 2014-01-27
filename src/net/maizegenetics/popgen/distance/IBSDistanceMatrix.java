@@ -186,6 +186,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         long[] jMj = theTBA.allelePresenceForAllSites(taxon2, Major).getBits();
         long[] jMn = theTBA.allelePresenceForAllSites(taxon2, Minor).getBits();
         return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1);
+        //return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, startWord, endWord);   //TODO start & endWord not being used
     }
     
     /**
