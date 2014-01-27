@@ -231,10 +231,7 @@ public interface GenotypeTable {
     /**
      * Returns sequence of true/false values indicating whether taxon at sites
      * (in given blocks, 64 sites per block including start block but excluding
-     * end block) matches a specific allele (based on frequency). Allele number
-     * of value 0 would be the major allele. Allele number of value 1 would be
-     * the minor allele. Allele number of value 2 would be the third most
-     * frequent allele value and so on.
+     * end block) matches a specific allele.
      *
      * @param taxon taxon
      * @param allele allele
@@ -247,10 +244,7 @@ public interface GenotypeTable {
 
     /**
      * Returns sequence of true/false values indicating whether taxon at each
-     * site for given parent matches a specific allele (based on frequency).
-     * Allele number of value 0 would be the major allele. Allele number of
-     * value 1 would be the minor allele. Allele number of value 2 would be the
-     * third most frequent allele value and so on.
+     * site for given parent matches a specific allele.
      *
      * @param taxon taxon
      * @param firstParent true for first parent (false for second parent)

@@ -155,7 +155,7 @@ class ProcessHapMapBlock implements Runnable {
         } else if ((avg>2.99)&&(avg<3.01)) {
             isOneLetter=false;
         } else {
-            throw new IllegalStateException("ProcessHapMapBlock: Genotype coded wrong use one or 2 letters per genotype");
+            throw new IllegalStateException("ProcessHapMapBlock: Genotype coded wrong use 1 or 2 letters per genotype");
         }
     }
 
