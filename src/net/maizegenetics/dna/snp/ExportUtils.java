@@ -387,7 +387,7 @@ public class ExportUtils {
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
             if (alignment.referenceGenotype(0) == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
-                bw.write("##Reference allele is not known. The major allele was used as reference allele.");
+                bw.write("##Tassel=<ID=GenotypeTable,Version=5,Description=\"Reference allele is not known. The major allele was used as reference allele\">");
                 bw.newLine();
             }
             bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">");
