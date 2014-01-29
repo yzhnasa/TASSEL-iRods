@@ -138,7 +138,7 @@ public class TasselPipeline implements PluginListener {
             try {
 
                 String current = args[index++];
-                String emDash="\u2014";
+                String emDash = "\u2014";
                 current = current.replaceFirst(emDash, "-");
 
                 if (!current.startsWith("-")) {
@@ -1307,7 +1307,13 @@ public class TasselPipeline implements PluginListener {
                             String[] result = new String[pluginArgs.size()];
                             result = (String[]) pluginArgs.toArray(result);
 
-                            plugin.setParameters(result);
+                            try {
+                                plugin.setParameters(result);
+                            } catch (Exception e) {
+                                // Self-describing Plugin Should already output Usage and any other error information.
+                                ExceptionUtils.logExceptionCauses(e, myLogger, Level.ERROR);
+                                System.exit(1);
+                            }
                             integratePlugin(plugin, true);
                         } else {
                             throw new IllegalArgumentException("TasselPipeline: parseArgs: Unknown parameter: " + current);
