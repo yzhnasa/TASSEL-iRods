@@ -9,6 +9,7 @@ import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.GeneralAnnotationUtils;
 
+import java.text.NumberFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,6 +91,7 @@ public final class GeneralPosition implements Position {
         private String mySNPID=null;
         private boolean isNucleotide=true;
         private boolean isIndel=false;
+        private NumberFormat nf=NumberFormat.getInstance();
         private Map.Entry<String, String> myKnownVariants=null;
 
         //in an allele annotation objects
@@ -165,6 +167,15 @@ public final class GeneralPosition implements Position {
             Map.Entry<String, String> ent=getCanonicalAnnotation(key,value.toString());
             myAnnotations.add(ent);
             return this;
+        }
+
+        /**Add non-standard annotation with key-value separated by '='*/
+        public Builder addAnno(String keyValue) {
+            String[] sub=keyValue.split("=");
+            if(sub.length==1) {
+                return addAnno(keyValue,"TRUE");
+            }
+            return addAnno(sub[0],sub[1]);
         }
 
         public GeneralPosition build() {
