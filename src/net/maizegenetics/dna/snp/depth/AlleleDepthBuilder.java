@@ -6,15 +6,14 @@ package net.maizegenetics.dna.snp.depth;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Builder to store information on DNA read depths.
@@ -94,7 +93,7 @@ public class AlleleDepthBuilder {
     }
 
     /**
-     * Set allele for the all sites and alleles for a taxon simultaneously.
+     * Set depth for the all sites and alleles for a taxon simultaneously.
      * Value will be translated using AlleleDepthUtil. First dimension of depths
      * is number of alleles (6 for Nucleotide) and second dimension is sites.
      *
@@ -118,6 +117,32 @@ public class AlleleDepthBuilder {
         for (int a = 0; a < myMaxNumAlleles; a++) {
             for (int s = 0; s < myNumSites; s++) {
                 setDepth(taxon, s, (byte) a, depths[s][a]);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Set depth for the all sites and alleles for a taxon simultaneously.
+     * First dimension of depths
+     * is number of alleles (6 for Nucleotide) and second dimension is sites.
+     *
+     * @param taxon Index of taxon
+     * @param depths array[sites][allele] of all values
+     *
+     * @return builder
+     */
+    public AlleleDepthBuilder setDepthRangeForTaxon(int taxon, int siteOffset, byte[][] depths) {
+        if (myIsHDF5) {
+            throw new IllegalStateException("AlleleDepthBuilder: setDepth: use addTaxon for HDF5 files.");
+        }
+        int numAlleles = depths.length;
+        if (numAlleles != myMaxNumAlleles) {
+            throw new IllegalArgumentException("AlleleDepthBuilder: setDepth: value number of alleles: " + numAlleles + " should have: " + myMaxNumAlleles);
+        }
+        for (int a = 0; a < myMaxNumAlleles; a++) {
+            for (int s = 0; s < depths[0].length; s++) {
+                setDepth(taxon, s+siteOffset, (byte) a, depths[a][s]);
             }
         }
         return this;
