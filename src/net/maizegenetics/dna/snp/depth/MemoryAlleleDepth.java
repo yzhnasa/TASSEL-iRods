@@ -16,7 +16,7 @@ class MemoryAlleleDepth extends AbstractAlleleDepth {
     private final SuperByteMatrix[] myDepths;
 
     MemoryAlleleDepth(SuperByteMatrix[] depths) {
-        super(depths.length);
+        super(6);
         myDepths = depths;
     }
 
