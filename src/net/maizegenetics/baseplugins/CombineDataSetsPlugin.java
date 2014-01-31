@@ -22,7 +22,7 @@ import java.util.Set;
 
 /**
  *
- * @author terryc
+ * @author Terry Casstevens
  */
 public class CombineDataSetsPlugin extends AbstractPlugin {
 
@@ -45,16 +45,19 @@ public class CombineDataSetsPlugin extends AbstractPlugin {
 
         try {
 
-            if ((myDataSets.containsValue(null)) || myOnceDataSets.containsValue(null)) {
-                return null;
+            List dataSets = null;
+            synchronized (myDataSets) {
+                if ((myDataSets.containsValue(null)) || myOnceDataSets.containsValue(null)) {
+                    return null;
+                }
+
+                dataSets = new ArrayList();
+
+                dataSets.addAll(myDataSets.values());
+                dataSets.addAll(myOnceDataSets.values());
+
+                reset();
             }
-
-            List dataSets = new ArrayList();
-
-            dataSets.addAll(myDataSets.values());
-            dataSets.addAll(myOnceDataSets.values());
-
-            reset();
 
             DataSet result = DataSet.getDataSet(dataSets, this);
             fireDataSetReturned(result);
@@ -68,8 +71,7 @@ public class CombineDataSetsPlugin extends AbstractPlugin {
     }
 
     /**
-     * Same as performFunction except this doesn't wait to
-     * receive all inputs.
+     * Same as performFunction except this doesn't wait to receive all inputs.
      */
     public void flush() {
 
@@ -138,8 +140,8 @@ public class CombineDataSetsPlugin extends AbstractPlugin {
     }
 
     /**
-     * Add given plugin as source to receive data sets
-     * only once and use that data set in every resulting output.
+     * Add given plugin as source to receive data sets only once and use that
+     * data set in every resulting output.
      *
      * @param plugin plugin
      */
@@ -149,8 +151,7 @@ public class CombineDataSetsPlugin extends AbstractPlugin {
     }
 
     /**
-     * Add given plugin as source to receive data sets
-     * iteratively.
+     * Add given plugin as source to receive data sets iteratively.
      *
      * @param plugin plugin
      */
