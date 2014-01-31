@@ -148,6 +148,7 @@ public final class NucleotideAlignmentConstants {
     }
     private static final byte[] NUCLEOTIDE_DIPLOID_ARRAY = new byte[256];
 
+
     static {
         Arrays.fill(NUCLEOTIDE_DIPLOID_ARRAY, UNDEFINED_DIPLOID_ALLELE);
         for (String temp : NUCLEOTIDE_DIPLOID_HASH.keySet()) {
@@ -254,6 +255,7 @@ public final class NucleotideAlignmentConstants {
         }
     }
     private static final Map<String, Byte> NUCLEOTIDE_ALLELE_HASH = new HashMap<String, Byte>();
+    private static final byte[] NUCLEOTIDE_ALLELE_ARRAY = new byte[256];
 
     static {
         NUCLEOTIDE_ALLELE_HASH.put("A", A_ALLELE); // A
@@ -263,6 +265,10 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_ALLELE_HASH.put("+", INSERT_ALLELE); // +
         NUCLEOTIDE_ALLELE_HASH.put("-", GAP_ALLELE); // -
         NUCLEOTIDE_ALLELE_HASH.put("N", GenotypeTable.UNKNOWN_ALLELE); // N
+        Arrays.fill(NUCLEOTIDE_ALLELE_ARRAY,GenotypeTable.UNKNOWN_ALLELE);
+        for(Map.Entry<String,Byte> en: NUCLEOTIDE_ALLELE_HASH.entrySet()) {
+            NUCLEOTIDE_ALLELE_ARRAY[en.getKey().charAt(0)]=en.getValue();
+        }
     }
 
     private NucleotideAlignmentConstants() {
@@ -298,6 +304,22 @@ public final class NucleotideAlignmentConstants {
     public static byte getNucleotideAlleleByte(String value) {
         try {
             return NUCLEOTIDE_ALLELE_HASH.get(value).byteValue();
+        } catch (NullPointerException e) {
+            throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideAlleleByte: unknown allele value: " + value);
+        }
+    }
+
+    /**
+     * Returns haploid byte value for given nucleotide value. Only right-most
+     * four bits used.
+     *
+     * @param value haploid allele value
+     *
+     * @return nucleotide haploid allele byte value
+     */
+    public static byte getNucleotideAlleleByte(char value) {
+        try {
+            return NUCLEOTIDE_ALLELE_ARRAY[value];
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("NucleotideAlignmentConstants: getNucleotideAlleleByte: unknown allele value: " + value);
         }
