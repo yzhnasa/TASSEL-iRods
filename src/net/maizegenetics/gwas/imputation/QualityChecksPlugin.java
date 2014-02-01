@@ -27,9 +27,8 @@ import org.jfree.data.xy.DefaultXYDataset;
 import net.maizegenetics.baseplugins.ExportPlugin;
 import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.pal.alignment.BitAlignment;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
-import net.maizegenetics.pal.ids.SimpleIdGroup;
+import net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -192,7 +191,6 @@ public class QualityChecksPlugin extends AbstractPlugin {
 		}
 		polysites = Arrays.copyOf(polysites, sitecount);
 		align = FilterGenotypeTable.getInstance(align, polysites);
-		align = BitAlignment.getInstance(align, true);
 		
 		myLogger.info("Chromosome " + align.chromosomeName(0) + ", family " + familyname + " has " + sitecount + " polymorphic snps.");
 		
@@ -268,7 +266,7 @@ public class QualityChecksPlugin extends AbstractPlugin {
     			bw.newLine();
     			
     			for (int s = 0; s < nsites; s++) {
-    				bw.write(align.getSNPID(s));
+    				bw.write(align.siteName(s));
     				bw.write("\t");
     				bw.write(align.chromosomeName(s));
     				bw.write("\t");
@@ -313,21 +311,10 @@ public class QualityChecksPlugin extends AbstractPlugin {
 			if (align.minorAlleleFrequency(s) < maxMaf) lowmaf.set(s);
 		}
 		
-//		myLogger.info("taxa = " + align.numberOfTaxa() + ", sites = " + align.numberOfSites());
-//		myLogger.info("lowmaf count = " + lowmaf.cardinality());
-		
-		try {
-			align.optimizeForTaxa(null);
-		} catch(Exception e) {
-			align = BitAlignment.getInstance(align, false);
-		}
-		
-		
 		double[] proportionMinor = new double[ntaxa];
-//		double nmono = lowmaf.cardinality();
 		for (int t = 0; t < ntaxa; t++) {
-			BitSet major = align.allelePresenceForAllSites(t, 0);
-			BitSet minor = align.allelePresenceForAllSites(t, 1);
+			BitSet major = align.allelePresenceForAllSites(t, WHICH_ALLELE.Major);
+			BitSet minor = align.allelePresenceForAllSites(t, WHICH_ALLELE.Minor);
 			long minorCount = OpenBitSet.intersectionCount(lowmaf, minor);
 			 
 			OpenBitSet notMissing = new OpenBitSet(major.getBits(), major.getNumWords());

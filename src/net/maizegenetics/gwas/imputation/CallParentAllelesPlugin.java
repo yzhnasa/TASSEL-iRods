@@ -9,6 +9,8 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
+
+import org.apache.log4j.Appender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -33,7 +35,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	private boolean useMultipleBCFilter = false;
 	private boolean useClusterAlgorithm = false;
 	private boolean checkSubPops = false;
-	private boolean useHets;
+	private boolean useHets = true;
 	
 	public CallParentAllelesPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -61,6 +63,21 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				myLogger.info("creating family alignment for family " + family.name);
                 TaxaList tL=new TaxaListBuilder().addAll(ids).build();
 				family.original =  GenotypeTableBuilder.getGenotypeCopyInstance((FilterGenotypeTable)FilterGenotypeTable.getInstance(align, tL, false));
+				
+				if (!useHets) {
+					byte N = NucleotideAlignmentConstants.getNucleotideDiploidByte('N');
+					MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(family.original);
+					int nsites = mna.getSiteCount();
+					int ntaxa = mna.getSequenceCount();
+					for (int s = 0; s < nsites; s++) {
+						for (int t = 0; t < ntaxa; t++) {
+							if (AlignmentUtils.isHeterozygous(mna.getBase(t, s))) mna.setBase(t, s, N);
+						}
+					}
+					mna.clean();
+					family.original = BitNucleotideAlignment.getInstance(mna, true);
+				}
+				
 				myLogger.info("family alignment created");
 				if (useClusterAlgorithm)  NucleotideImputationUtils.callParentAllelesUsingClusters(family, maxMissing, minMinorAlleleFrequency, windowSize, checkSubPops);
 				else if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
@@ -115,16 +132,13 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				if (param.toUpperCase().startsWith("T")) useMultipleBCFilter = true;
 			}
 			else if (args[i].equals("-l") || args[i].equalsIgnoreCase("-logconfig")) {
-				DOMConfigurator.configure(args[++i]);
-			}
-			else if (args[i].equals("-logfile")) {
 				addFileLogger(args[++i]);
 			}
-			else if (args[i].equals("-cluster")) {
-				useClusterAlgorithm = true;
+			else if (args[i].equals("-logfile")) {
+				setFileLogger(args[++i]);
 			}
-			else if (args[i].equals("-subpops")) {
-				checkSubPops = true;
+			else if (args[i].startsWith("-clust")) {
+				useClusterAlgorithm = true;
 			}
 			else if (args[i].equals("-subpops")) {
 				checkSubPops = true;
@@ -139,7 +153,24 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	
 	private void addFileLogger(String filename) {
 		try {
+			Appender fileAppender = Logger.getRootLogger().getAppender("fileAppender");
+			if (fileAppender == null) {
+				FileAppender filelog = new FileAppender(new PatternLayout("%d %-5p  [%c{1}] %m %n"), filename, true);
+				filelog.setName("fileAppender");
+				Logger.getRootLogger().addAppender(filelog);
+			}
+		} catch(Exception e) {
+			myLogger.info("log file could not be instantiated");
+			e.printStackTrace();
+		}
+	}
+	
+	private void setFileLogger(String filename) {
+		try {
+			Appender fileAppender = Logger.getRootLogger().getAppender("fileAppender");
+			if (fileAppender != null) Logger.getRootLogger().removeAppender(fileAppender);
 			FileAppender filelog = new FileAppender(new PatternLayout("%d %-5p  [%c{1}] %m %n"), filename, true);
+			filelog.setName("fileAppender");
 			Logger.getRootLogger().addAppender(filelog);
 		} catch(Exception e) {
 			myLogger.info("log file could not be instantiated");
@@ -182,7 +213,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		return null;
 	}
 
-	private String getUsage() {
+	public String getUsage() {
 		StringBuilder usage = new StringBuilder("The CallParentAllelesPlugin requires the following parameter:\n");
 		usage.append("-p or -pedigrees : a file containing pedigrees of the individuals to be imputed\n");
 		usage.append("The following parameters are optional:\n");
