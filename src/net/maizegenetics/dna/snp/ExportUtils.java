@@ -384,7 +384,7 @@ public class ExportUtils {
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
-            if (gt.referenceGenotype(0) == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
+            if (gt.referenceGenotype(0) == GenotypeTable.UNKNOWN_ALLELE) {
                 bw.write("##Tassel=<ID=GenotypeTable,Version=5,Description=\"Reference allele is not known. The major allele was used as reference allele\">");
                 bw.newLine();
             }
@@ -425,8 +425,6 @@ public class ExportUtils {
 
             for (int site = 0; site < gt.numberOfSites(); site++) {
                 int[][] sortedAlleles = gt.allelesSortedByFrequency(site); // which alleles are actually present among the genotypes
-
-
                 int nAlleles = sortedAlleles[0].length;
 
 
@@ -436,7 +434,7 @@ public class ExportUtils {
                 }
 
                 byte refGeno = gt.referenceGenotype(site);
-                if (refGeno == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
+                if (refGeno == GenotypeTable.UNKNOWN_ALLELE) {
                     String myMajorAllele = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][sortedAlleles[0][0]];
                     String MajorGenotype = myMajorAllele + myMajorAllele;
                     refGeno = NucleotideAlignmentConstants.getNucleotideDiploidByte(MajorGenotype);
@@ -455,7 +453,7 @@ public class ExportUtils {
                 int[] alleleRedirect = new int[nAlleles]; // holds the indices of alleleValues in ref, alt1, [alt2] order (max 3 alleles)
                 String refAlleleStr;
                 int refUnknownOffset = 0;
-                if (refGeno == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {  // reference allele unknown - report the alleles in maj, min1, [min2] order
+                if (refGeno == GenotypeTable.UNKNOWN_ALLELE) {  // reference allele unknown - report the alleles in maj, min1, [min2] order
                     refUnknownOffset = 1;
                     refAlleleStr = ".";
                     int aRedirectIndex = 0;
