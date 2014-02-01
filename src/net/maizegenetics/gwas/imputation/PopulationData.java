@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.BitSet;
 
 public class PopulationData {
@@ -26,6 +27,9 @@ public class PopulationData {
 	public GenotypeTable imputed;
 	public byte[] alleleA;
 	public byte[] alleleC;
+	public boolean useSubpopulations;
+	ArrayList<TaxaList> subpopulationGroups;
+	ArrayList<BitSet> subpoplationSiteIndex;
 
 	/**
 	 * @param popFilename	the name of the file containing pedigree information for a group of populations

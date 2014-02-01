@@ -62,7 +62,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
                 TaxaList tL=new TaxaListBuilder().addAll(ids).build();
 				family.original =  GenotypeTableBuilder.getGenotypeCopyInstance((FilterGenotypeTable)FilterGenotypeTable.getInstance(align, tL, false));
 				myLogger.info("family alignment created");
-				if (useClusterAlgorithm)  NucleotideImputationUtils.callParentAllelesUsingClusters(family, maxMissing, minMinorAlleleFrequency, windowSize);
+				if (useClusterAlgorithm)  NucleotideImputationUtils.callParentAllelesUsingClusters(family, maxMissing, minMinorAlleleFrequency, windowSize, checkSubPops);
 				else if (useBCFilter && (family.contribution1 == 0.75 || family.contribution1 == 0.25)) NucleotideImputationUtils.callParentAllelesByWindowForBackcrosses(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
 				else if (useMultipleBCFilter) NucleotideImputationUtils.callParentAllelesByWindowForMultipleBC(family, maxMissing, 1, windowSize);
 				else NucleotideImputationUtils.callParentAllelesByWindow(family, maxMissing, minMinorAlleleFrequency, windowSize, minRforSnps);
@@ -122,6 +122,9 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			}
 			else if (args[i].equals("-cluster")) {
 				useClusterAlgorithm = true;
+			}
+			else if (args[i].equals("-subpops")) {
+				checkSubPops = true;
 			}
 			else if (args[i].equals("-subpops")) {
 				checkSubPops = true;
