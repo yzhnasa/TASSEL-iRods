@@ -3,13 +3,10 @@
  */
 package net.maizegenetics.dna.snp;
 
-import net.maizegenetics.util.FormattedOutput;
+import com.google.common.base.Joiner;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.util.ExceptionUtils;
-import net.maizegenetics.util.ProgressListener;
-import net.maizegenetics.util.Utils;
-import net.maizegenetics.util.VCFUtil;
+import net.maizegenetics.util.*;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -373,11 +370,12 @@ public class ExportUtils {
     /**
      * Writes given alignment to a VCF file
      *
-     * @param alignment
+     * @param gt
      * @param filename
      * @return
      */
-    public static String writeToVCF(GenotypeTable alignment, String filename, char delimChar) {
+    public static String writeToVCF(GenotypeTable gt, String filename) {
+        final char delimChar='\t';
         //todo restore depth
         boolean hasDepth=false;  //in future test for this
         try {
@@ -386,7 +384,7 @@ public class ExportUtils {
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
-            if (alignment.referenceGenotype(0) == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
+            if (gt.referenceGenotype(0) == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                 bw.write("##Tassel=<ID=GenotypeTable,Version=5,Description=\"Reference allele is not known. The major allele was used as reference allele\">");
                 bw.newLine();
             }
@@ -408,10 +406,15 @@ public class ExportUtils {
 
             bw.write("##INFO=<ID=AF,Number=.,Type=Float,Description=\"Allele Frequency\">");
             bw.newLine();
+            for (Taxon taxon : gt.taxa()) {
+                String annoString=Joiner.on(',').withKeyValueSeparator("=").join(taxon.getAnnotationAsMap());
+                bw.write("##SAMPLE=<ID="+taxon.getName()+","+annoString+">");
+                bw.newLine();
+            }
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             boolean refTaxon = false;
-            for (int taxa = 0; taxa < alignment.numberOfTaxa(); taxa++) {
-                String taxonName = alignment.taxaName(taxa).trim();
+            for (int taxa = 0; taxa < gt.numberOfTaxa(); taxa++) {
+                String taxonName = gt.taxaName(taxa).trim();
                 if (taxa == 0 && taxonName.contentEquals("REFERENCE_GENOME")) {
                     refTaxon = true;
                 } else {
@@ -420,19 +423,19 @@ public class ExportUtils {
             }
             bw.newLine();
 
-            for (int site = 0; site < alignment.numberOfSites(); site++) {
-                int[][] sortedAlleles = alignment.allelesSortedByFrequency(site); // which alleles are actually present among the genotypes
+            for (int site = 0; site < gt.numberOfSites(); site++) {
+                int[][] sortedAlleles = gt.allelesSortedByFrequency(site); // which alleles are actually present among the genotypes
 
 
                 int nAlleles = sortedAlleles[0].length;
 
 
                 if (nAlleles == 0) {                                                  //used to be ==0
-                    System.out.println("no alleles at: " + site + " " + alignment.chromosomalPosition(site));
+                    System.out.println("no alleles at: " + site + " " + gt.chromosomalPosition(site));
                     continue;
                 }
 
-                byte refGeno = alignment.referenceGenotype(site);
+                byte refGeno = gt.referenceGenotype(site);
                 if (refGeno == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
                     String myMajorAllele = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][sortedAlleles[0][0]];
                     String MajorGenotype = myMajorAllele + myMajorAllele;
@@ -442,9 +445,9 @@ public class ExportUtils {
                 //System.out.println(alignment.chromosomalPosition(site) + " " + refAllele);
                 byte[] alleleValues = null;
                 if (hasDepth) {
-                    alleleValues = alignment.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
+                    alleleValues = gt.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
                 } else {
-                    alleleValues = alignment.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Frequency, site);
+                    alleleValues = gt.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Frequency, site);
                     //if (nAlleles > alignment.maxNumAlleles()) {
                     //    nAlleles = alignment.maxNumAlleles();
                     //}
@@ -518,11 +521,11 @@ public class ExportUtils {
                         }
                     }
                 }
-                bw.write(alignment.chromosomeName(site)); // chromosome
+                bw.write(gt.chromosomeName(site)); // chromosome
                 bw.write(delimChar);
-                bw.write(alignment.chromosomalPosition(site) + ""); // position
+                bw.write(gt.chromosomalPosition(site) + ""); // position
                 bw.write(delimChar);
-                bw.write(alignment.siteName(site)); // site name
+                bw.write(gt.siteName(site)); // site name
                 bw.write(delimChar);
                 bw.write(refAlleleStr); // ref allele
                 bw.write(delimChar);
@@ -554,8 +557,8 @@ public class ExportUtils {
 
                 if (hasDepth) {
                     int totalDepth = 0;
-                    for (int i = 0; i < alignment.numberOfTaxa(); i++) {
-                        int[] depth = alignment.depthForAlleles(i, site);
+                    for (int i = 0; i < gt.numberOfTaxa(); i++) {
+                        int[] depth = gt.depthForAlleles(i, site);
                         for (int k = 0; k < depth.length; k++) {
                             if (depth[k] != -1) {
                                 totalDepth += depth[k];
@@ -573,7 +576,7 @@ public class ExportUtils {
                 } else {
                     bw.write("GT");
                 }
-                for (int taxa = 0; taxa < alignment.numberOfTaxa(); taxa++) {
+                for (int taxa = 0; taxa < gt.numberOfTaxa(); taxa++) {
                     if (taxa == 0 && refTaxon) {
                         continue;  // don't include REFERENCE_GENOME in vcf output
                     }
@@ -581,7 +584,7 @@ public class ExportUtils {
 
                     // GT = genotype
                     String GTstr = "";
-                    byte[] values = alignment.genotypeArray(taxa, site);
+                    byte[] values = gt.genotypeArray(taxa, site);
 
                     boolean genoOne = false;
                     if (values[0] == GenotypeTable.UNKNOWN_ALLELE) {
@@ -667,7 +670,7 @@ public class ExportUtils {
                     bw.write(":");
 
                     // AD
-                    int[] siteAlleleDepths = alignment.depthForAlleles(taxa, site);
+                    int[] siteAlleleDepths = gt.depthForAlleles(taxa, site);
 
                     int siteTotalDepth = 0;
                     if (siteAlleleDepths.length != 0) {
