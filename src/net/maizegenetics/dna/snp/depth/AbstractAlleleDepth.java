@@ -10,9 +10,13 @@ package net.maizegenetics.dna.snp.depth;
 public abstract class AbstractAlleleDepth implements AlleleDepth {
     
     private final int myNumAlleles;
+    private final int myNumTaxa;
+    private final int myNumSites;
     
-    AbstractAlleleDepth(int numAlleles) {
+    AbstractAlleleDepth(int numAlleles, int numTaxa, int numSites) {
         myNumAlleles = numAlleles;
+        myNumTaxa = numTaxa;
+        myNumSites = numSites;
     }
     
     @Override
@@ -40,12 +44,20 @@ public abstract class AbstractAlleleDepth implements AlleleDepth {
     
     @Override
     public int depthForTaxon(int taxon) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int result = 0;
+        for (int site=0; site<myNumSites; site++) {
+            result += depth(taxon, site);
+        }
+        return result;
     }
     
     @Override
     public int depthForSite(int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int result = 0;
+        for (int taxon=0; taxon<myNumTaxa; taxon++) {
+            result += depth(taxon, site);
+        }
+        return result;
     }
     
 }

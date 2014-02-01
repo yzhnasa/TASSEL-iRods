@@ -1,5 +1,6 @@
 package net.maizegenetics.dna.snp;
 
+import net.maizegenetics.dna.snp.depth.AlleleDepth;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.PositionList;
@@ -551,6 +552,13 @@ public interface GenotypeTable {
     public float[][] siteScores();
 
     /**
+     * Returns true if this genotype table has sequencing depth.
+     *
+     * @return true if this genotype table has sequencing depth.
+     */
+    public boolean hasDepth();
+
+    /**
      * Returns true if this genotype table has site scores.
      *
      * @return true if this genotype table has site scores.
@@ -894,6 +902,13 @@ public interface GenotypeTable {
      * @return number of non-missing sites.
      */
     public int totalNonMissingForTaxon(int taxon);
+
+    /**
+     * Returns allele depth object (null if not present)
+     *
+     * @return allele depth associated with genotypeTable
+     */
+    public AlleleDepth depth();
 
     /**
      * Returns depth count for each diploid allele at the given taxon and site.

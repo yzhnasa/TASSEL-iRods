@@ -4,11 +4,11 @@
 package net.maizegenetics.dna.snp.depth;
 
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import net.maizegenetics.dna.snp.HapMapHDF5Constants;
+import net.maizegenetics.taxa.TaxaList;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import net.maizegenetics.dna.snp.HapMapHDF5Constants;
-import net.maizegenetics.taxa.TaxaList;
 
 /**
  *
@@ -30,7 +30,9 @@ public class HDF5AlleleDepth extends AbstractAlleleDepth {
     private final TaxaList myTaxa;
     
     HDF5AlleleDepth(IHDF5Reader reader) {
-        super(6);
+        super(6,
+                reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES),
+                reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA));
         myReader = reader;
         myNumSites = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
         // TODO: Some how we need to get taxa names.  Either passed

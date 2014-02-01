@@ -275,7 +275,7 @@ public class AlleleDepthBuilder {
             SuperByteMatrix[] temp = new SuperByteMatrix[myDepths.size()];
             temp = myDepths.toArray(temp);
             myDepths = null;
-            return new MemoryAlleleDepth(temp);
+            return new MemoryAlleleDepth(temp, myNumTaxa, myNumSites);
         }
     }
 }

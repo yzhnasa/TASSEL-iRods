@@ -5,6 +5,7 @@ package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.bit.BitStorage;
 import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
+import net.maizegenetics.dna.snp.depth.AlleleDepth;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
@@ -887,6 +888,16 @@ public class FilterGenotypeTable implements GenotypeTable {
     @Override
     public int heterozygousCountForTaxon(int taxon) {
         return myGenotype.heterozygousCountForTaxon(taxon);
+    }
+
+    @Override
+    public boolean hasDepth() {
+        return myBaseAlignment.hasDepth();
+    }
+
+    @Override
+    public AlleleDepth depth() {
+        throw new UnsupportedOperationException("Not supported");
     }
 
     @Override
