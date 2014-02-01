@@ -99,6 +99,30 @@ public class HaplotypeClusterer {
 	}
 	
 	/**
+	 * Removes all haplotypes within maxdistance of the haplotype of the first cluster.
+	 * After the haplotypes have been removed clusters are remade and sorted.
+	 * @param maxdistance	all haplotypes within maxdistance or less of the haplotype of the first cluster are removed from the haplotypeList
+	 */
+	public HaplotypeCluster removeFirstHaplotypes(int maxdistance) {
+		
+		//remove all haplotypes maxdistance or less from the haplotype of cluster 0
+		Iterator<Haplotype> hapit = haplotypeList.listIterator();
+		byte[] firstHaplotype = clusterList.get(0).getHaplotype();
+		ArrayList<Haplotype> haplist = new ArrayList<Haplotype>();
+		while (hapit.hasNext()) {
+			Haplotype testhap = hapit.next();
+			if (Haplotype.getDistance(firstHaplotype, testhap.seq) <= maxdistance) {
+				haplist.add(testhap);
+				hapit.remove();
+			}
+		}
+
+		makeClusters();
+		sortClusters();
+		return new HaplotypeCluster(haplist, haplist.size());
+	}
+	
+	/**
 	 * Sorts clusters according to HaplotypeCluster sort order.
 	 */
 	public void sortClusters() {
@@ -248,13 +272,14 @@ public class HaplotypeClusterer {
 	 * @return merges clusters whose maximum pairwise difference is less or equal to maxdiff
 	 */
 	public static ArrayList<HaplotypeCluster> getMergedClusters(ArrayList<HaplotypeCluster> candidateClusters, int maxdiff) {
-		Collections.sort(candidateClusters);
+		ArrayList<HaplotypeCluster> candidates = new ArrayList<HaplotypeCluster>(candidateClusters);
+		Collections.sort(candidates);
 		ArrayList<HaplotypeCluster> mergedClusterList = new ArrayList<HaplotypeCluster>();
 
-		while (candidateClusters.size() > 0) {
-			HaplotypeCluster headCluster = candidateClusters.remove(0);
+		while (candidates.size() > 0) {
+			HaplotypeCluster headCluster = candidates.remove(0);
 			mergedClusterList.add(headCluster);
-			Iterator<HaplotypeCluster> cit = candidateClusters.iterator();
+			Iterator<HaplotypeCluster> cit = candidates.iterator();
 			while (cit.hasNext()) {
 				HaplotypeCluster candidate = cit.next();
 				boolean mergePair = doMerge(headCluster, candidate, maxdiff);

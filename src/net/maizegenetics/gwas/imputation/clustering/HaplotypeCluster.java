@@ -2,6 +2,7 @@ package net.maizegenetics.gwas.imputation.clustering;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 
 import com.google.common.collect.HashMultiset;
@@ -19,6 +20,7 @@ import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 public class HaplotypeCluster implements Comparable<HaplotypeCluster> {
 	private ArrayList<Haplotype> hapList;
 	private double score = 0;
+	private ArrayList<int[][]> alleleCounts = null;
 
 	/**
 	 * TYPE determines how the haplotype will be represented. 
@@ -170,6 +172,51 @@ public class HaplotypeCluster implements Comparable<HaplotypeCluster> {
 	}
 	
 	/**
+	 * 
+	 * @param site
+	 * @return	the alleles at this site with respective count, sorted by count, high to low
+	 */
+	public int[][] getAllelesAtSite(int site) {
+		if (alleleCounts == null) countAllelesAtAllSites();
+		return alleleCounts.get(site);
+	}
+	
+	public void countAllelesAtAllSites() {
+		alleleCounts = new ArrayList<int[][]>();
+		byte NN = NucleotideAlignmentConstants.getNucleotideDiploidByte("NN");
+		int nsites = hapList.get(0).seqlen;
+		int nhaps = hapList.size();
+		
+		for (int s = 0; s < nsites; s++) {
+			Multiset<Byte> alleleset = HashMultiset.create();
+			for (Haplotype hap : hapList) {
+				byte val = hap.seq[s];
+				if (val != NN) alleleset.add(val);
+			}
+			int nalleles = alleleset.elementSet().size();
+			int[][] alleleStats = new int[nalleles][2];
+			int alleleCount = 0;
+			for (Byte allele:alleleset.elementSet()) {
+				alleleStats[alleleCount][0] = allele;
+				alleleStats[alleleCount++][1] = alleleset.count(allele);
+			}
+			
+			//sort alleleStats by count, decreasing order
+			if (nalleles > 1) {
+				for (int i = 0; i < nalleles - 1; i++) for (int j = i + 1; j < nalleles; j++) {
+					if (alleleStats[i][1] < alleleStats[j][1]) {
+						int[] tmp = alleleStats[i];
+						alleleStats[i] = alleleStats[j];
+						alleleStats[j] = tmp;
+					}
+				}
+			}
+			
+			alleleCounts.add(alleleStats);
+		}
+	}
+	
+	/**
 	 * This function returns a copy of the component Haplotypes not references to them.
 	 * @return	a deep copy of this cluster.
 	 */
@@ -294,6 +341,19 @@ public class HaplotypeCluster implements Comparable<HaplotypeCluster> {
 		return sb.toString();
 	}
 
+	public int getNumberOfSites() {
+		return hapList.get(0).seqlen;
+	}
+	
+	public int[] listTaxaInCluster() {
+		int ntaxa = hapList.size();
+		int[] taxa = new int[ntaxa];
+		int tcount = 0;
+		for (Haplotype hap:hapList) taxa[tcount++] = hap.taxonIndex;
+		Arrays.sort(taxa);
+		return taxa;
+	}
+	
 	@Override
 	public String toString() {
 		return getHaplotypeAsString();
