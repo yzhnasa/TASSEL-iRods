@@ -128,12 +128,12 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
     @Override
     public void setParameters(String[] args) {
         if (args == null || args.length == 0) {
-            myLogger.error(getUsage());
+            myLogger.info(getUsage());
             return;
         }
 
         int narg = args.length;
-        for (int i = 0; i < narg - 1; i++) {
+        for (int i = 0; i < narg; i++) {
             if (args[i].equals("-f") || args[i].equalsIgnoreCase("-file")) {
                 baseFileName = args[++i];
             } else if (args[i].equals("-m") || args[i].equalsIgnoreCase("-merge")) {
@@ -179,7 +179,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
             } else if (args[i].equals("-x") || args[i].equalsIgnoreCase("-maxMono")) {
                 maxMafForMono = Double.parseDouble(args[++i]);
             } else if (args[i].equals("?")) {
-                myLogger.error(getUsage());
+                myLogger.info(getUsage());
             }
         }
     }
@@ -215,16 +215,16 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
         return null;
     }
 
-    private String getUsage() {
+    public String getUsage() {
         StringBuilder usage = new StringBuilder("The WritePopulationAlignmentPlugin requires the following parameter:\n");
         usage.append("-f or -file : The base file name for the ouput. .hmp.txt will be appended.\n");
         usage.append("The following parameters are optional:\n");
-        usage.append("-m or -merge : if true families are merged into a single file, if false each family is output to a separate file (default = true)");
-        usage.append("-o or -outputType : parents = output parent calls, nucleotides = output nucleotides, both = output both");
-        usage.append("-d or -diploid : if true output is AA/CC/AC, if false output is A/C/M");
-        usage.append("-c or -minCoverage : the minimum coverage for a monomorphic snp to be included in the nucleotide output (default = NaN, no monomorphic SNPs included)");
-        usage.append("-x or -maxMono : the maximum minor allele frequency used to call monomorphic snps (default = NaN, none called)");
-        usage.append("? : print the parameter list.");
+        usage.append("-m or -merge : if true families are merged into a single file, if false each family is output to a separate file (default = true)\n");
+        usage.append("-o or -outputType : parents = output parent calls, nucleotides = output nucleotides, both = output both\n");
+        usage.append("-d or -diploid : if true output is AA/CC/AC, if false output is A/C/M\n");
+        usage.append("-c or -minCoverage : the minimum coverage for a monomorphic snp to be included in the nucleotide output (default = NaN, no monomorphic SNPs included)\n");
+        usage.append("-x or -maxMono : the maximum minor allele frequency used to call monomorphic snps (default = NaN, none called)\n");
+        usage.append("? : print the parameter list.\n");
 
         return usage.toString();
     }

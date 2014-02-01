@@ -32,6 +32,9 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	private boolean useBCFilter = true;
 	private boolean useMultipleBCFilter = false;
 	private boolean useClusterAlgorithm = false;
+	private boolean checkSubPops = false;
+	private boolean useHets;
+	
 	public CallParentAllelesPlugin(Frame parentFrame) {
         super(parentFrame, false);
 	}
@@ -120,7 +123,14 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 			else if (args[i].equals("-cluster")) {
 				useClusterAlgorithm = true;
 			}
-			else if (args[i].equals("?")) myLogger.error(getUsage());
+			else if (args[i].equals("-subpops")) {
+				checkSubPops = true;
+			}
+			else if (args[i].equals("-nohets")) {
+				useHets = false;
+			}
+			
+			else if (args[i].equals("?")) myLogger.info(getUsage());
 		}
 	}
 	
@@ -179,8 +189,10 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		usage.append("-f or -minMaf : minimum minor allele frequency used to filter SNPs. If negative, filters on expected segregation ratio from parental contribution (default = -1)\n");
 		usage.append("-b or -bc1 : use BC1 specific filter (default = true)\n");
 		usage.append("-n or -bcn : use multipe backcross specific filter (default = false)\n");
-		usage.append("-l or -logconfig : an xml configuration file for the logger. Default will be to print all messages to console.\n");
-//		usage.append("-cluster : use the cluster algorithm.\n");
+		usage.append("-logfile : the name of a file to which all logged messages will be printed.\n");
+		usage.append("-cluster : use the cluster algorithm. minMaf defaults to 0.05.\n");
+		usage.append("-subpops : filter sites for heterozygosity in subpopulations.\n");
+		usage.append("-nohets : delete het calls from original data before imputing.\n");
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();

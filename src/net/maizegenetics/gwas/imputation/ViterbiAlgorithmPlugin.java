@@ -55,12 +55,11 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 	@Override
 	public void setParameters(String[] args) {
 		if (args == null || args.length == 0) {
-//			myLogger.error(getUsage());
 			return;
 		}
 		
 		int narg = args.length;
-		for (int i = 0; i < narg - 1; i++) {
+		for (int i = 0; i < narg; i++) {
 			if (args[i].equals("-g") || args[i].equalsIgnoreCase("-fillgaps")) {
 				String val = args[++i];
 				if (val.toUpperCase().startsWith("T")) fillGapsInAlignment = true;
@@ -72,7 +71,7 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 				if (vr.toLowerCase().startsWith("t")) useVariableTransition = true;
 			} else if (args[i].equals("-f") || args[i].equalsIgnoreCase("-varRecombFile")) {
 				variableRecombFilename = args[++i];
-			} else if (args[i].equals("?")) myLogger.error(getUsage());
+			} else if (args[i].equals("?")) myLogger.info(getUsage());
 		}
 	}
 
@@ -99,12 +98,12 @@ public class ViterbiAlgorithmPlugin extends AbstractPlugin {
 		this.probHeterozygous = probHeterozygous;
 	}
 
-	private String getUsage() {
+	public String getUsage() {
 		StringBuilder usage = new StringBuilder("The ViterbiAlgorithmPlugin can take the following optional parameters:\n");
 		usage.append("-g or -fillgaps : true if missing values between SNPs from the same parent should be imputed to that parent, false otherwise (default = true)\n");
 		usage.append("-h or -phet : expected frequency of heterozygous loci (default = 0.07). If the inbreeding coefficient is specified in the pedigree file that will used to calculate this value.\n");
-		usage.append("-v or -varRecomb : If true use recombination rates that vary along the chromosome");
-		usage.append("-f or -varRecombFile : The name of the file containing recombination rate as a function of position");
+		usage.append("-v or -varRecomb : If true use recombination rates that vary along the chromosome\n");
+		usage.append("-f or -varRecombFile : The name of the file containing recombination rate as a function of position\n");
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();
