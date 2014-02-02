@@ -1,6 +1,7 @@
 package net.maizegenetics.dna.snp.io;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
 import net.maizegenetics.dna.map.Chromosome;
@@ -123,8 +124,8 @@ public class BuilderFromVCF {
                 if (lines%linesAtTime==0) {
                     ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);
                     pbs.add(pb);
-                    //     pb.run();
-                    pool.execute(pb);
+                         pb.run();
+                    //pool.execute(pb);
                     txtLines=new ArrayList<>(linesAtTime);
                 }
             }
@@ -175,13 +176,35 @@ public class BuilderFromVCF {
         if(s==null) return null;
         if(!(s.startsWith("<") && s.endsWith(">"))) return null;
         String value=s.substring(1,s.length()-1);
-        System.out.println(s);
+ //       System.out.println(s);
+        value=getReplaceCommaWithQuote(value);
+ //       System.out.println(value);
         Map<String, String> splitKeyValues = Splitter.on(",")
                 .omitEmptyStrings()
                 .trimResults()
                 .withKeyValueSeparator("=")
                 .split(value);
-         return splitKeyValues;
+        ImmutableMap.Builder<String,String> im=new ImmutableMap.Builder<>();
+        for (Map.Entry<String, String> ssEntry : splitKeyValues.entrySet()) {
+            String v=ssEntry.getValue();
+            if(v.contains(""+(char) ((int) ','+256)) || v.contains(""+(char) ((int) '='+256))) {
+                v=v.replace((char)((int)','+256),',');
+                v=v.replace((char)((int)'='+256),'=');
+            }
+            im.put(ssEntry.getKey(),v);
+        }
+         return im.build();
+    }
+
+    private static String getReplaceCommaWithQuote(String s) {
+        StringBuilder sb =new StringBuilder(s);
+        boolean inQuote=false;
+        for (int i=0; i<sb.length(); i++) {
+            if(sb.charAt(i)=='\"') inQuote=(!inQuote);
+            if(inQuote && sb.charAt(i)==',') sb.setCharAt(i,(char)((int)','+256));//(char)167);
+            if(inQuote && sb.charAt(i)=='=') sb.setCharAt(i,(char)((int)'='+256));//(char)167);
+        }
+        return sb.toString();
     }
 
     private TaxaList processTaxa(String readLn, Table<String,String,String> taxaAnnotation) {
@@ -332,15 +355,8 @@ class ProcessVCFBlock implements Runnable {
                 String[] formatS=input.substring(tabPos[hp.FORMAT_INDEX-1]+1, tabPos[hp.FORMAT_INDEX]).split(":");
                 iAD=firstEqualIndex(formatS,"AD");
             }
-//            System.out.println(s);
-//            System.out.println(input);
             int t=0;
-//            System.out.println(input);
-//            System.out.println(input.substring(tabPos[hp.NUM_HAPMAP_NON_TAXA_HEADERS-1]+1));
-//            System.out.println(input.substring(10));
             for(String taxaAllG: Splitter.on("\t").split(input.substring(tabPos[hp.NUM_HAPMAP_NON_TAXA_HEADERS-1]+1))) {
- //           for (int t = 0; t < taxaN; t++) {
-                //if we starting parsing out lots of things then split would be useful
                 int f=0;
                 for(String fieldS: Splitter.on(":").split(taxaAllG)) {
                     if(f==iGT) {
@@ -357,10 +373,8 @@ class ProcessVCFBlock implements Runnable {
                     }
                     f++;
                 }
-              //  System.out.print(gTS[t][s] + "\t");
                 t++;
             }
-//            System.out.println();
         }
         txtL=null;
     }

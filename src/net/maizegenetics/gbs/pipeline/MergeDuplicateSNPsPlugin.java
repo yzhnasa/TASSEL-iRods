@@ -198,7 +198,7 @@ public class MergeDuplicateSNPsPlugin extends AbstractPlugin {
                 }
                 else if (inputFormat == INPUT_FORMAT.vcf)
                 {
-                    a = ImportUtils.readFromVCF(infile, this, myMaxNumAlleles);
+                    a = ImportUtils.readFromVCF(infile, this, true);
                 }
                 else
                 {

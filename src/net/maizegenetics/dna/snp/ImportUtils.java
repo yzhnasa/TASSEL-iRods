@@ -5,10 +5,10 @@ package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.io.BuilderFromGenotypeHDF5;
 import net.maizegenetics.dna.snp.io.BuilderFromHapMap;
+import net.maizegenetics.dna.snp.io.BuilderFromVCF;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.ProgressListener;
 import net.maizegenetics.util.Utils;
-import net.maizegenetics.util.VCFUtil;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -25,16 +25,6 @@ public class ImportUtils {
     private static final Logger myLogger = Logger.getLogger(ImportUtils.class);
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
     public static final int NUM_HAPMAP_NON_TAXA_HEADERS = 11;
-    public static final int HAPMAP_SNPID_COLUMN_INDEX = 0;
-    public static final int HAPMAP_CHROMOSOME_COLUMN_INDEX = 2;
-    public static final int HAPMAP_POSITION_COLUMN_INDEX = 3;
-    public static final int NUM_VCF_NON_TAXA_COLUMNS = 9;
-    public static final int VCF_CHROMOSOME_COLUMN_INDEX = 0;
-    public static final int VCF_POSITION_COLUMN_INDEX = 1;
-    public static final int VCF_SNPID_COLUMN_INDEX = 2;
-    public static final int VCF_REF_COLUMN_INDEX = 3;
-    public static final int VCF_ALT_COLUMN_INDEX = 4;
-    public static final int VCF_FORMAT_COLUMN_INDEX = 8;
 
     private ImportUtils() {
         // Utility Class - do not instantiate.
@@ -91,276 +81,13 @@ public class ImportUtils {
         }
     }
 
-    // add support for SNP ID?
-    public static GenotypeTable readFromVCF(final String filename, ProgressListener listener, int maxKeptAlleles) {
-        return null; //TODO Restore VCF
-//
-//        int minPosition = Integer.MAX_VALUE;
-//        String currLocus = null;
-//
-//        Pattern colonPattern = Pattern.compile(":");
-//        Pattern commaPattern = Pattern.compile(",");
-//
-//        long currentTime = System.currentTimeMillis();
-//        int numHeader = getNumHeaderRowsVCF(filename);
-//        int numSites = Utils.getNumberLines(filename) - numHeader;
-//        myLogger.info("readFromVCF: Number of Header Rows: " + numHeader);
-//        myLogger.info("readFromVCF: Number of Sites: " + numSites);
-//
-//        long prevTime = currentTime;
-//        currentTime = System.currentTimeMillis();
-//        myLogger.info("readFromVCF: Time to count lines: " + ((currentTime - prevTime) / 1000));
-//
-//
-//        BufferedReader fileIn = null;
-//        try {
-//            fileIn = Utils.getBufferedReader(filename, 1000000);
-//            String currLine = null;
-//            for (int i = 0; i < numHeader; i++) {
-//                currLine = fileIn.readLine();
-//            }
-//
-//            // get taxa names
-//            String[] header = WHITESPACE_PATTERN.split(currLine);
-//            int numTaxa = header.length - NUM_VCF_NON_TAXA_COLUMNS;
-//            String[] taxaNames = new String[numTaxa];
-//            System.arraycopy(header, NUM_VCF_NON_TAXA_COLUMNS, taxaNames, 0, numTaxa);
-//            IdGroup idGroup = new SimpleIdGroup(taxaNames);
-//
-//            String[] snpID = new String[numSites];
-//
-//            MutableVCFAlignment result = MutableVCFAlignment.getInstance(idGroup, numSites, numTaxa, numSites, maxKeptAlleles);
-//
-//
-//            int prevPos = -1;
-//            int currPos = -1;
-//            int locusStart = 0;
-//
-//            for (int site = 0; site < numSites; site++) {
-//                currLine = fileIn.readLine();
-//                String[] currSite = WHITESPACE_PATTERN.split(currLine);
-//                // 1	6407	S1000_6407	.	A,C	20	PASS	NS=929;DP=2210;AF=0.01,0.01	GT:AD:DP:GQ:PL	./.	0/0:2,0,0:2:79:0,6,72	1/2:0,1,1:2:54:0,5,34
-//                String temp = currSite[VCF_CHROMOSOME_COLUMN_INDEX];
-//                currPos = Integer.parseInt(currSite[VCF_POSITION_COLUMN_INDEX]);
-//                snpID[site] = currSite[VCF_SNPID_COLUMN_INDEX];
-//                String ref = currSite[VCF_REF_COLUMN_INDEX];
-//                String alt = currSite[VCF_ALT_COLUMN_INDEX];
-//                String format = currSite[VCF_FORMAT_COLUMN_INDEX];
-//                String[] dataByTaxa = new String[numTaxa];
-//                System.arraycopy(currSite, NUM_VCF_NON_TAXA_COLUMNS, dataByTaxa, 0, numTaxa);
-//
-//                //Currently this code can only support alleles that are encoded in single charactor,
-//                //Indels need to be encoded as "+" or "-", multi-charactor indels are not supported
-//                if (ref.length() > 1) {
-//                    throw new IllegalStateException("ImportUtils: readFromVCF: the reference allele must be in single charactor. Multi-character indels need to be converted to '+' or '-'. At position " + currPos + ", the ref allele '" + ref + "' is not supported.");
-//                }
-//                String[] altsplitted = alt.split(",");
-//                for (String t : altsplitted) {
-//                    if (t.length() != 1) {
-//                        throw new IllegalStateException("ImportUtils: readFromVCF: the alternative allele must be in single charactor. Multi-character indels need to be converted to '+' or '-'. At position " + currPos + ", the alternative allele '" + t + "' is not supported.");
-//                    }
-//                }
-//                alt = alt.replaceAll(",", "");
-//
-//                // find alleles for current site, check to see if number of alleles is supported
-//                int numAlleles = alt.length() + 1;
-//                int oriNumAlleles = numAlleles;
-//                String alleleString = ref + alt;
-//                if (numAlleles > maxKeptAlleles) {
-//                    System.out.println("read VCF position " + currPos + ": extra allele(s) removed.");
-//                    numAlleles = maxKeptAlleles;
-//                    alleleString = alleleString.substring(0, numAlleles);
-//                    //throw new IllegalStateException("ImportUtils: readFromVCF: number of Alleles is larger than allowed currently in TASSEL: " + numAlleles + " alleles found, " + maxKeptAlleles + " alleles allowed, in line " + (numHeader + site + 1));
-//                }
-//
-//
-//                byte[] alleles = new byte[numAlleles];
-//
-//                for (int allele = 0; allele < numAlleles; allele++) {
-//                    String currAllele = alleleString.substring(allele, allele + 1);
-//                    if (currAllele.equals(".")) {
-//                        alleles[allele] = (byte) -1;
-//                    } else if (currAllele.equalsIgnoreCase("A")) {
-//                        alleles[allele] = NucleotideAlignmentConstants.A_ALLELE;
-//                    } else if (currAllele.equalsIgnoreCase("C")) {
-//                        alleles[allele] = NucleotideAlignmentConstants.C_ALLELE;
-//                    } else if (currAllele.equalsIgnoreCase("G")) {
-//                        alleles[allele] = NucleotideAlignmentConstants.G_ALLELE;
-//                    } else if (currAllele.equalsIgnoreCase("T")) {
-//                        alleles[allele] = NucleotideAlignmentConstants.T_ALLELE;
-//                    } else if (currAllele.equals("+")) {
-//                        alleles[allele] = NucleotideAlignmentConstants.INSERT_ALLELE;
-//                    } else if (currAllele.equals("-")) {
-//                        alleles[allele] = NucleotideAlignmentConstants.GAP_ALLELE;
-//                    } else {
-//                        throw new IllegalStateException("ImportUtils: readFromVCF: a unsupported allele detected in this VCF file: " + currAllele + " in line " + (numHeader + site + 1));
-//                    }
-//                }
-//
-//
-//                result.setCommonAlleles(site, alleles);
-//                result.setPositionOfSite(site, currPos);
-//                if (!ref.equals(".")) {
-//                    result.setReferenceAllele(site, NucleotideAlignmentConstants.getNucleotideDiploidByte(ref));
-//                }
-//
-//                // get the possible alleles for each site in to an byte array
-//                // result.setCommonAlleles(site, values);
-//
-//                // figure out order of format
-//                int genoIndex = -1;
-//                int alleleDepthIndex = -1;
-//
-//                String[] formatSplit = colonPattern.split(format);
-//                int numDataFields = formatSplit.length;
-//                for (int i = 0; i < formatSplit.length; i++) {
-//                    if (formatSplit[i].equalsIgnoreCase("GT")) {
-//                        genoIndex = i;
-//                    } else if (formatSplit[i].equalsIgnoreCase("AD")) {
-//                        alleleDepthIndex = i;
-//                    }
-//                }
-//
-//                if (genoIndex == -1) {
-//                    throw new IllegalStateException("ImportUtils: readFromVCF: no genotype data found in this VCF file at line: " + (numHeader + site + 1));
-//                }
-//
-//                //if (alleleDepthIndex == -1) {
-//                //throw new IllegalStateException("ImportUtils: readFromVCF: no allele depth data found in this VCF file at line: " + (numHeader + site + 1));
-//                //}
-//
-//
-//                for (int taxa = 0; taxa < numTaxa; taxa++) {
-//                    String[] dataSplit = colonPattern.split(dataByTaxa[taxa]);
-//                    if (dataSplit[0].startsWith("./.")) {
-//                        byte[] depths = new byte[numAlleles];
-//                        java.util.Arrays.fill(depths, (byte) 0);
-//                        result.setDepthForAlleles(taxa, site, depths);
-//                        continue;
-//                    }
-//                    // for whatever reason if the actual data fields do not match up with the format column
-//                    // assume the data is unknown
-//                    byte calledGenotypeValue = (byte) 0xFF;
-//                    if (dataSplit.length != numDataFields) {
-//                        result.setBase(taxa, 0, calledGenotypeValue);
-//                    } else {
-//                        String[] genotypes = Pattern.compile("[/|]").split(dataSplit[genoIndex]);
-//                        // String genotypes = dataSplit[genoIndex].replaceAll("/", "").replaceAll("|", "");
-//                        if (genotypes.length > 2) {
-//                            throw new IllegalStateException("ImportUtils: readFromVCF: number of genotypes larger than supported by TASSEL at line: " + (numHeader + site + 1));
-//                        }
-//                        boolean recallgenotypeflag = false; //this flag  indicate whethere to recall genotypes, this happens when some alleles are removed
-//                        for (int i = 0; i < genotypes.length; i++) {
-//                            calledGenotypeValue <<= 4;
-//                            String currGenotype = genotypes[i];
-//                            if (currGenotype.equals(".")) {
-//                                calledGenotypeValue |= 0x0F;
-//                            } else {
-//                                int currGenoInt = Integer.parseInt(currGenotype);
-//                                if (currGenoInt == 14) {
-//                                    calledGenotypeValue |= 0x0E;
-//                                } else {
-//                                    if (currGenoInt > (numAlleles - 1)) {
-//                                        recallgenotypeflag = true;
-//                                        break;
-//                                    } else {
-//                                        currGenotype = alleleString.substring(currGenoInt, currGenoInt + 1);
-//                                        if (currGenotype.equalsIgnoreCase("A")) {
-//                                            calledGenotypeValue |= 0x00;
-//                                        } else if (currGenotype.equalsIgnoreCase("C")) {
-//                                            calledGenotypeValue |= 0x01;
-//                                        } else if (currGenotype.equalsIgnoreCase("G")) {
-//                                            calledGenotypeValue |= 0x02;
-//                                        } else if (currGenotype.equalsIgnoreCase("T")) {
-//                                            calledGenotypeValue |= 0x03;
-//                                        } else if (currGenotype.equals("+")) {
-//                                            calledGenotypeValue |= 0x04;
-//                                        } else if (currGenotype.equals("-")) {
-//                                            calledGenotypeValue |= 0x05;
-//                                        } else {
-//                                            throw new IllegalStateException("ImportUtils: readFromVCF: a unsupported allele detected in this VCF file: " + currGenotype + " in line " + (numHeader + site + 1));
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//
-//                        //the called genotype will be set later, incase the genotype needs to be recalled
-//                        if (alleleDepthIndex >= 0) {
-//                            String alleleDepths = dataSplit[alleleDepthIndex];
-//                            String[] stringDepths = commaPattern.split(alleleDepths);
-//                            if (stringDepths.length != oriNumAlleles) {
-//                                throw new IllegalStateException("ImportUtils: readFromVCF: number of allele depth values does not match number of alleles in line: " + (numHeader + site + 1) + " taxa number: " + taxa);
-//                            }
-//
-//                            byte[] depths = new byte[numAlleles];
-//                            int[] intDepths = new int[numAlleles];
-//                            for (int i = 0; i < numAlleles; i++) {
-//                                int depth = Integer.parseInt(stringDepths[i]);
-//                                intDepths[i] = depth;
-//                                if (depth > 127) {
-//                                    myLogger.info("Depth value for genotype " + i + " had an original value of " + depth + ". Converted to the maximum of 127. In line: " + (numHeader + site + 1) + " taxa number: " + taxa);
-//                                    depth = 127;
-//                                }
-//                                depths[i] = (byte) depth;
-//                            }
-//                            if (recallgenotypeflag == true) {
-//                                //recall genotype now
-//                                calledGenotypeValue = VCFUtil.resolveVCFGeno(alleles, intDepths);
-//                            }
-//                            result.setDepthForAlleles(taxa, site, depths);
-//                        }
-//
-//                        result.setBase(taxa, site, calledGenotypeValue);
-//
-//                    }
-//                }
-//
-//                if (currLocus == null) {
-//                    currLocus = temp;
-//                    minPosition = currPos;
-//                } else if (!temp.equals(currLocus)) {
-//                    Chromosome newLocus = new Chromosome(currLocus, currLocus, minPosition, prevPos, null, null);
-//
-//                    for (int i = locusStart; i < site; i++) {
-//                        result.setLocusOfSite(i, newLocus);
-//                    }
-//                    currLocus = temp;
-//                    minPosition = currPos;
-//                    locusStart = site;
-//                    prevPos = -1;
-//                }
-//
-//                if (currPos < prevPos) {
-//                    throw new IllegalStateException("ImportUtils: readFromVCF: Sites are not properly sorted for chromosome: " + currLocus + " at " + currPos + " and " + prevPos);
-//                }
-//
-//                prevPos = currPos;
-//            }
-//
-//            if (currLocus != null) {
-//                Chromosome newLocus = new Chromosome(currLocus, currLocus, minPosition, prevPos, null, null);
-//
-//                for (int i = locusStart; i < numSites; i++) {
-//                    result.setLocusOfSite(i, newLocus);
-//                }
-//            }
-//            result.clean();
-//            return result;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            throw new IllegalArgumentException("ImportUtils: readFromVCF: Problem creating Alignment: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
-//        } finally {
-//            try {
-//                fileIn.close();
-//            } catch (Exception ex) {
-//                // do nothing
-//            }
-//        }
+    public static GenotypeTable readFromVCF(final String filename, ProgressListener listener, boolean ignoreDepth) {
+        if(ignoreDepth) return BuilderFromVCF.getBuilder(filename).keepDepth().build();
+        return BuilderFromVCF.getBuilder(filename).build();
     }
 
     public static GenotypeTable readFromVCF(final String filename, ProgressListener listener) {
-        return readFromVCF(filename, listener, VCFUtil.VCF_DEFAULT_MAX_NUM_ALLELES);
+        return readFromVCF(filename, listener, true);
     }
 
     /**
