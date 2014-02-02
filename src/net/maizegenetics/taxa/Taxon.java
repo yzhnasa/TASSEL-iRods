@@ -253,6 +253,11 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
         }
 
         public Taxon build() {
+            Collections.sort(myAnnotations, new Comparator<Map.Entry<String, String>>(){
+                public int compare(Map.Entry<String, String> s1, Map.Entry<String, String> s2) {
+                    return s1.getKey().compareTo(s2.getKey());
+                }
+            });
             return new Taxon(this);
         }
     }
