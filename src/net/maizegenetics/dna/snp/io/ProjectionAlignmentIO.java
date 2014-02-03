@@ -7,7 +7,7 @@ import net.maizegenetics.dna.snp.ProjectionBuilder;
 import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotypeCallTable;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.util.DonorHaplotypes;
+import net.maizegenetics.dna.map.DonorHaplotypes;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
 

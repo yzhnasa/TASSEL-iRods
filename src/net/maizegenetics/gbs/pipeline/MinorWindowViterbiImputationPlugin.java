@@ -7,6 +7,7 @@ package net.maizegenetics.gbs.pipeline;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.dna.map.DonorHaplotypes;
 import net.maizegenetics.dna.snp.*;
 import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
 import net.maizegenetics.gwas.imputation.EmissionProbability;
