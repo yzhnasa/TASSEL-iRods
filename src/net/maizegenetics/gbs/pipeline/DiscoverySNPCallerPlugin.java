@@ -3,15 +3,15 @@
  */
 package net.maizegenetics.gbs.pipeline;
 
-import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTableUtils;
-import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
 import net.maizegenetics.dna.map.TOPMInterface;
 import net.maizegenetics.dna.map.TagLocus;
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.dna.tag.TagsByTaxaByteFileMap;
 import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
@@ -28,6 +28,8 @@ import java.awt.*;
 import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
+
+import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.*;
 
 
 /**
@@ -479,7 +481,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
                 baseToAdd = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
             }
             if (strand == -1) {
-                baseToAdd = complementAllele(baseToAdd);  // record everything relative to the plus strand
+                baseToAdd = NucleotideAlignmentConstants.getNucleotideComplement(baseToAdd);  // record everything relative to the plus strand
             }
             // convert from allele from 0-15 style to IUPAC ASCII character value (e.g., (byte) 'A') (maintains compatibility with Tassel3 TOPM)
             baseToAdd = getIUPACAllele(baseToAdd);
@@ -936,21 +938,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         theTAL.addRefTag(refTag, theTOPM.getTagSizeInLong(), theTOPM.getNullTag());
     }
 
-    
-    public static byte complementAllele(byte allele) {
-        byte comp = Byte.MIN_VALUE;
-        switch (allele) {
-            case 0x00: comp=NucleotideAlignmentConstants.T_ALLELE; break;   // A -> T
-            case 0x01: comp=NucleotideAlignmentConstants.G_ALLELE; break;   // C -> G
-            case 0x02: comp=NucleotideAlignmentConstants.C_ALLELE; break;   // G -> C
-            case 0x03: comp=NucleotideAlignmentConstants.A_ALLELE; break;   // T -> A
-            case 0x05: comp=NucleotideAlignmentConstants.GAP_ALLELE; break; // - -> -
-            default:
-                comp = GenotypeTable.UNKNOWN_ALLELE; break;
-        }
-        return comp;
-    }
-    
+
+    //TODO remove this.  It should be in some other class, like BaseEncoder
     public static byte getIUPACAllele(byte allele) {
         byte iupacAllele = (byte) 'N';
         switch (allele) {
@@ -965,6 +954,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         return iupacAllele;
     }
 
+    //TODO delete this chunk of code and use getNucleotideDiploidComplement
     public static char complement(char geno) {
         char comp = 'X';
         switch (geno) {
@@ -990,6 +980,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
     public static String revComplement(String seq) {
         StringBuilder sb = new StringBuilder();
         for (int i = seq.length()-1; i >= 0; i--) {
+            //TODO figure out why this is not exactly the same
+            //sb.append(getNucleotideDiploidComplement((byte) seq.charAt(i)));
             sb.append(complement(seq.charAt(i)));
         }
         return sb.toString();
@@ -1111,10 +1103,10 @@ class CustomSNPLogRecord {
         tagLocusStrand = myTAL.getStrand();
         snpPosition = position;
         byte[][] byteAlleles = myTAL.getCommonAlleles();
-        majAllele= tagLocusStrand==-1? DiscoverySNPCallerPlugin.complementAllele(byteAlleles[0][site]) : byteAlleles[0][site];
-        minAllele= tagLocusStrand==-1? DiscoverySNPCallerPlugin.complementAllele(byteAlleles[1][site]) : byteAlleles[1][site];
-        alleles = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][majAllele] + "/" 
-                + NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][minAllele];
+        majAllele= tagLocusStrand==-1? getNucleotideComplement(byteAlleles[0][site]) : byteAlleles[0][site];
+        minAllele= tagLocusStrand==-1? getNucleotideComplement(byteAlleles[1][site]) : byteAlleles[1][site];
+        alleles = NUCLEOTIDE_ALLELES[0][majAllele] + "/"
+                + NUCLEOTIDE_ALLELES[0][minAllele];
         nTagsAtLocus = (includeReference) ? myTAL.getSize()-1 :  myTAL.getSize();
         nReads = myTAL.getTotalNReads();
         nTaxaCovered = myTAL.getNumberTaxaCovered();
