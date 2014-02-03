@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.tree;
 
 import java.awt.Frame;
 import java.net.URL;

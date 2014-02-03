@@ -6,6 +6,7 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.tree.CreateTreePlugin;
 import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.dna.map.TagsOnPhysMapHDF5;

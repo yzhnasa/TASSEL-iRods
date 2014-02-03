@@ -19,6 +19,8 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.analysis.tree.CreateTreePlugin;
+import net.maizegenetics.analysis.tree.ArchaeopteryxPlugin;
 import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
