@@ -8,7 +8,7 @@ package net.maizegenetics.gbs.util;
  * Missing data at the end is padded with poly-A or (0).  This missing end, is tracked
  * by the tag length attribute.
  * <p>
- * Some of these methods should be transitioned to {@link net.maizegenetics.pal.alignment.NucleotideAlignmentConstants},
+ * Some of these methods should be transitioned to {@link net.maizegenetics.dna.snp.NucleotideAlignmentConstants},
  * however, BaseEncoder only supports four states, while NucleotideAlignment includes gaps, insertions, and missing.
  * 
  * @author Ed Buckler
@@ -182,7 +182,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Returns the byte {@link net.maizegenetics.pal.alignment.NucleotideAlignmentConstants} representation
+     * Returns the byte {@link net.maizegenetics.dna.snp.NucleotideAlignmentConstants} representation
      * used by TASSEL for the 2-bit encoded long.
      * <p>
      * e.g. A > 2-bit encode 00 > byte (0)
@@ -200,7 +200,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Returns the byte {@link net.maizegenetics.pal.alignment.NucleotideAlignmentConstants} representation
+     * Returns the byte {@link net.maizegenetics.dna.snp.NucleotideAlignmentConstants} representation
      * used by TASSEL for the 2-bit encoded long.
      * <p>
      * e.g. A > 2-bit encode 00 > byte (0)
@@ -222,7 +222,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Returns the 2-bit encoded long represented by 32 bytes representing {@link net.maizegenetics.pal.alignment.NucleotideAlignmentConstants} 
+     * Returns the 2-bit encoded long represented by 32 bytes representing {@link net.maizegenetics.dna.snp.NucleotideAlignmentConstants}
      * representation
      * <p>
      * @param b array of bytes encoding NucleotideAlignmentConstants
