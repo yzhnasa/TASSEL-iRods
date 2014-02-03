@@ -216,8 +216,8 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 
 	public static void callParentAllelesUsingClusters(PopulationData popdata, double maxMissing, double minMaf, int windowSize, boolean checkSubpops) {
 		HaplotypeCluster.ReturnHaplotype = HaplotypeCluster.TYPE.majority;
-		int ntaxa = popdata.original.getSequenceCount();
-		int nOriginalSites = popdata.original.getSiteCount();
+		int ntaxa = popdata.original.numberOfTaxa();
+		int nOriginalSites = popdata.original.numberOfSites();
 		popdata.alleleA = new byte[nOriginalSites];
 		popdata.alleleC = new byte[nOriginalSites];
 		popdata.snpIndex = new OpenBitSet(nOriginalSites);
@@ -227,10 +227,10 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 //		a = deleteSnpsFromSameTag(a);
 		double maxHet = 0.06;
 		if (minMaf < 0) minMaf = 0.05;
-		Alignment a = filterSnpsByTag(popdata.original, minMaf, maxMissing, maxHet);
-		int nFilteredSites = a.getSiteCount();
+		GenotypeTable a = filterSnpsByTag(popdata.original, minMaf, maxMissing, maxHet);
+		int nFilteredSites = a.numberOfSites();
 		int[] siteTranslationArray = new int[nFilteredSites];
-		FilterAlignment fa = (FilterAlignment) a;
+		FilterGenotypeTable fa = (FilterGenotypeTable) a;
 		for (int s = 0; s < nFilteredSites; s++) siteTranslationArray[s] = fa.translateSite(s);
 		
 		//find a window with only two distinct haplotype clusters
@@ -293,8 +293,8 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
-		int nsites = popdata.original.getSiteCount();
+		ntaxa = popdata.original.numberOfTaxa();
+		int nsites = popdata.original.numberOfSites();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -303,70 +303,61 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
 		nsnps = snpIndex.length;
-		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
-		MutableNucleotideAlignment mna;
+		GenotypeTable target = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
 		
 		createSubPops(popdata, checkSubpops);
 		checksubpops(popdata, 20);
 
 		//filter on taxa ids
 		int npops = popdata.subpopulationGroups.size();
-		IdGroup[] idsubgroups = new IdGroup[npops];
-		popdata.subpopulationGroups.toArray(idsubgroups);
-		target = FilterAlignment.getInstance(target, IdGroupUtils.getAllIds(idsubgroups));
-		mna = MutableNucleotideAlignment.getInstance(target);
+		TaxaList[] taxaLists = new TaxaList[popdata.subpopulationGroups.size()];
+		popdata.subpopulationGroups.toArray(taxaLists);
+		TaxaList allTaxa = TaxaListUtils.getAllTaxa(taxaLists);
+		target = FilterGenotypeTable.getInstance(target, allTaxa);
+		GenotypeTableBuilder builder = GenotypeTableBuilder.getTaxaIncremental(target.positions());
 
 		for (int p = 0; p < npops; p++) {
-			//create an index back to mna for the taxa
-			ntaxa = popdata.subpopulationGroups.get(p).getIdCount();
+			//create an index back to target for the taxa
+			TaxaList popTaxaList = popdata.subpopulationGroups.get(p);
+			ntaxa = popTaxaList.numberOfTaxa();
 			int[] taxaIndex = new int[ntaxa];
-			for (int t = 0; t < ntaxa; t++) taxaIndex[t] = mna.getIdGroup().whichIdNumber(popdata.subpopulationGroups.get(p).getIdentifier(t));
+			for (int t = 0; t < ntaxa; t++) taxaIndex[t] = target.taxa().indexOf(popTaxaList.get(t));
 
 			BitSet subpopSnpUse = popdata.subpoplationSiteIndex.get(p);
-			for (int s = 0; s < nsnps; s++) {
-				if (subpopSnpUse.fastGet(snpIndex[s])) {    //use this snp in this sub population
+			for (int t = 0; t < ntaxa; t++) {
+				byte[] taxonGeno = new byte[nsnps];
+				int taxonTargetIndex = target.taxa().indexOf(popTaxaList.get(t));
+				for (int s = 0; s < nsnps; s++) {
 					byte Aallele = popdata.alleleA[snpIndex[s]];
 					byte Callele = popdata.alleleC[snpIndex[s]];
-					byte het = AlignmentUtils.getUnphasedDiploidValue(Aallele, Callele);
-					for (int t = 0; t < ntaxa; t++) {
-						byte val = mna.getBase(taxaIndex[t], s);
-						if (val == Aallele) {
-							mna.setBase(taxaIndex[t], s, AA);
-						} else if (val == Callele) {
-							mna.setBase(taxaIndex[t], s, CC);
-						} else if (AlignmentUtils.isEqual(val, het)) {
-							mna.setBase(taxaIndex[t], s, AC);
-						} else {
-							mna.setBase(taxaIndex[t], s, NN);
-						}
-					}
-				} else {   //do not use this snp
-					for (int t = 0; t < ntaxa; t++) {
-						mna.setBase(taxaIndex[t], s, NN);
-					}
+					byte[] val = GenotypeTableUtils.getDiploidValues(target.genotype(taxonTargetIndex, s));
+					if (val[0] == Aallele && val[1] == Aallele) taxonGeno[s] = AA;
+					else if (val[0] == Callele && val[1] == Callele) taxonGeno[s] = CC;
+					else if ((val[0] == Aallele && val[1] == Callele)||(val[0] == Callele && val[1] == Aallele)) taxonGeno[s] = AC;
+					else taxonGeno[s] = NN;
 				}
+				builder.addTaxon(popTaxaList.get(t), taxonGeno);
 			}
 		}
 
-		mna.clean();
-		popdata.imputed = BitAlignment.getInstance(mna, true); 
+		popdata.imputed = builder.build(); 
 	}
 	
 	public static void callParentAllelesUsingClustersOnly(PopulationData popdata, double maxMissing, double minMaf, int windowSize, boolean checkSubpops ) {
 		double mindiff = 0.7; //the minimum distance for which two clusters will be considered to be from different haplotypes
 		int overlap = 10; //overlap between windows used to link adjacent windows
 		HaplotypeCluster.ReturnHaplotype = HaplotypeCluster.TYPE.majority;
-		int ntaxa = popdata.original.getSequenceCount();
-		int nOriginalSites = popdata.original.getSiteCount();
+		int ntaxa = popdata.original.numberOfTaxa();
+		int nOriginalSites = popdata.original.numberOfSites();
 		popdata.alleleA = new byte[nOriginalSites];
 		popdata.alleleC = new byte[nOriginalSites];
 		popdata.snpIndex = new OpenBitSet(nOriginalSites);
 
 		double maxHet = 0.06;
-		Alignment a = filterSnpsByTag(popdata.original, minMaf, maxMissing, maxHet);
-		int nFilteredSites = a.getSiteCount();
+		GenotypeTable a = filterSnpsByTag(popdata.original, minMaf, maxMissing, maxHet);
+		int nFilteredSites = a.numberOfSites();
 		int[] siteTranslationArray = new int[nFilteredSites];
-		FilterAlignment fa = (FilterAlignment) a;
+		FilterGenotypeTable fa = (FilterGenotypeTable) a;
 		for (int s = 0; s < nFilteredSites; s++) siteTranslationArray[s] = fa.translateSite(s);
 
 		//iterate through windows
@@ -403,7 +394,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			} else if (diff4 >= mindiff){
 				hap1 = clusters.get(4).getHaplotype();
 			} else {
-				throw new IllegalArgumentException(String.format("No second haplotype at site %d, position %d.", start, a.getPositionInLocus(start)));
+				throw new IllegalArgumentException(String.format("No second haplotype at site %d, position %d.", start, a.chromosomalPosition(start)));
 			}
 			
 			if (start == 0) {
@@ -455,7 +446,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 					prevA = hap1;
 					prevC = hap0;	
 				} else {
-					throw new IllegalArgumentException(String.format("Haplotypes fail to approximately match previous haplotypes at site %d, position %d.", start, a.getPositionInLocus(start)));
+					throw new IllegalArgumentException(String.format("Haplotypes fail to approximately match previous haplotypes at site %d, position %d.", start, a.chromosomalPosition(start)));
 				}
 			}
 		}
@@ -466,7 +457,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		
 		int nsnps = (int) popdata.snpIndex.cardinality();
 //		ntaxa = popdata.original.getSequenceCount();
-		int nsites = popdata.original.getSiteCount();
+		int nsites = popdata.original.numberOfSites();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -475,42 +466,35 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
 		nsnps = snpIndex.length;
-		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
-
-		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
+		GenotypeTable target = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
+		GenotypeTableBuilder builder = GenotypeTableBuilder.getTaxaIncremental(target.positions());
 		
 		//assign parent calls to imputed alignment
 		int nsubpops = popdata.subpopulationGroups.size();
-		IdGroup mainIds = a.getIdGroup();
 		for (int sp = 0; sp < nsubpops; sp++) {
 			BitSet SI = popdata.subpoplationSiteIndex.get(sp);
-			IdGroup ids = popdata.subpopulationGroups.get(sp);
-			ntaxa = ids.getIdCount();
+			TaxaList subpopTaxa = popdata.subpopulationGroups.get(sp);
+			ntaxa = subpopTaxa.numberOfTaxa();
 			for (int t = 0; t < ntaxa; t++) {
-				int tnum = mainIds.whichIdNumber(ids.getIdentifier(t));
+				int taxaTargetIndex = target.taxa().indexOf(subpopTaxa.get(t));
+				byte[] taxonGeno = new byte[nsnps];
 				for (int s = 0; s < nsnps; s++) {
 					if (SI.fastGet(snpIndex[s])) {
 						byte Aallele = popdata.alleleA[snpIndex[s]];
 						byte Callele = popdata.alleleC[snpIndex[s]];
-						byte het = AlignmentUtils.getUnphasedDiploidValue(Aallele, Callele);
-						byte val = mna.getBase(tnum, s);
-						if (val == Aallele) {
-							mna.setBase(tnum, s, AA);
-						} else if (val == Callele) {
-							mna.setBase(tnum, s, CC);
-						} else if (AlignmentUtils.isEqual(val, het)) {
-							mna.setBase(tnum, s, AC);
-						} else {
-							mna.setBase(tnum, s, NN);
-						}
-					} else {
-						mna.setBase(tnum, s, NN);
+						byte[] val = GenotypeTableUtils.getDiploidValues(target.genotype(taxaTargetIndex, s));
+						if (val[0] == Aallele && val[1] == Aallele) taxonGeno[s] = AA;
+						else if (val[0] == Callele && val[1] == Callele) taxonGeno[s] = CC;
+						else if ((val[0] == Aallele && val[1] == Callele) || (val[0] == Callele && val[1] == Aallele)) taxonGeno[s] = AC;
+						else taxonGeno[s] = NN;
 					}
 				}
+				builder.addTaxon(subpopTaxa.get(t), taxonGeno);
 			}
 		}
-		mna.clean();
-		popdata.imputed = BitAlignment.getInstance(mna, true); 
+		
+
+		popdata.imputed = builder.build(); 
 
 	}
 	
@@ -541,37 +525,25 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 	}
 	
 	public static void createSubPops(PopulationData popdata, boolean isNAM) {
-		popdata.subpopulationGroups = new ArrayList<IdGroup>();
+		popdata.subpopulationGroups = new ArrayList<TaxaList>();
 
 		if (isNAM) {
 			//create the population subgoups
-			IdGroup allIds = popdata.original.getIdGroup();
-			ArrayList<LinkedList<Identifier>> subids = new ArrayList<LinkedList<Identifier>>();
-			for (int i = 0; i < 3; i++) subids.add(new LinkedList<Identifier>());
-			int nids = allIds.getIdCount();
-			for (int i = 0; i < nids; i++) {
-				Identifier id = allIds.getIdentifier(i);
-				//add this next few lines to deal with founders added to the file
-				String taxonName = id.getFullName();
-				if (!taxonName.startsWith("Z0")) {
-					subids.get(0).add(id);
-				} else {
-					int ent = Integer.parseInt(taxonName.substring(5,9));
-					if (ent < 68) subids.get(0).add(id);
-					else if (ent < 135) subids.get(1).add(id);
-					else if (ent < 201) subids.get(2).add(id);
-					else {
-						int pop = SubpopulationFinder.getNamSubPopulation(id);
-						if (pop >= 0) subids.get(pop).add(id);
-					}
-				}
+			TaxaListBuilder[] sublists = new TaxaListBuilder[3];
+			for (int i = 0; i < 3; i++) sublists[i] = new TaxaListBuilder();
+			for (Taxon taxon:popdata.original.taxa()) {
+				int pop = SubpopulationFinder.getNamSubPopulation(taxon);
+				if (pop > 0) sublists[pop].add(taxon);
 			}
 			
 			//add the subgroups to popdata
-			for (int i = 0; i < 3; i++) if (subids.get(i).size() > 0) popdata.subpopulationGroups.add(new SimpleIdGroup(subids.get(i)));
+			for (int i = 0; i < 3; i++) {
+				TaxaList poplist = sublists[i].build();
+				if (poplist.size() > 0) popdata.subpopulationGroups.add(poplist);
+			}
 
 		} else {
-			popdata.subpopulationGroups.add(popdata.original.getIdGroup());
+			popdata.subpopulationGroups.add(popdata.original.taxa());
 		}
 	}
 	
@@ -579,10 +551,10 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		double minMatchScore = 0.9;
 		
 		int nsubpops = popdata.subpopulationGroups.size();
-		int totalsites = popdata.original.getSiteCount();
+		int totalsites = popdata.original.numberOfSites();
 		popdata.subpoplationSiteIndex = new ArrayList<BitSet>();
 		for (int i = 0; i < nsubpops; i++) {
-			Alignment a = FilterAlignment.getInstance(popdata.original, popdata.subpopulationGroups.get(i) );
+			GenotypeTable a = FilterGenotypeTable.getInstance(popdata.original, popdata.subpopulationGroups.get(i) );
 			OpenBitSet snpUseIndex = new OpenBitSet(totalsites);
 			popdata.subpoplationSiteIndex.add(snpUseIndex);
 			
@@ -591,12 +563,12 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			int nsites = (int) popdata.snpIndex.cardinality();
 			int[] goodsites = new int[nsites];
 			int ptr = 0;
-			for (int ts = 0; ts < totalsites; ts++) if (popdata.snpIndex.fastGet(ts) && a.getMinorAlleleFrequency(ts) > 0) goodsites[ptr++] = ts;
+			for (int ts = 0; ts < totalsites; ts++) if (popdata.snpIndex.fastGet(ts) && a.minorAlleleFrequency(ts) > 0) goodsites[ptr++] = ts;
 			nsites = ptr;
 			goodsites = Arrays.copyOf(goodsites, ptr);
 			
 			//calculate site scores for the goodsites
-			int ntaxa = a.getSequenceCount();
+			int ntaxa = a.numberOfTaxa();
 			double[] score = new double[nsites];
 			for (int s = 0; s < nsites; s++) {
 				
@@ -615,13 +587,13 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 				int matchCount = 0;
 				int totalCount = 0;
 				for (int t = 0; t < ntaxa; t++) {
-					byte tgeno = a.getBase(t, goodsites[s]);
+					byte tgeno = a.genotype(t, goodsites[s]);
 					byte[] matchAllele;
 					if (tgeno == Aallele || tgeno == Callele) {
 						if (tgeno == Aallele) matchAllele = popdata.alleleA;
 						else matchAllele = popdata.alleleC;
 						for (int s2 = firstSite; s2 <= lastSite; s2++) if (s2 != s) {
-							byte tgeno2 = a.getBase(t, goodsites[s2]);
+							byte tgeno2 = a.genotype(t, goodsites[s2]);
 							if (tgeno2 != NN) {
 								totalCount += 1;
 								if (tgeno2 == matchAllele[goodsites[s2]]) matchCount++;
@@ -664,13 +636,13 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 					int matchCount = 0;
 					int totalCount = 0;
 					for (int t = 0; t < ntaxa; t++) {
-						byte tgeno = a.getBase(t, goodsites[s]);
+						byte tgeno = a.genotype(t, goodsites[s]);
 						byte[] matchAllele;
 						if (tgeno == Aallele || tgeno == Callele) {
 							if (tgeno == Aallele) matchAllele = popdata.alleleA;
 							else matchAllele = popdata.alleleC;
 							for (int s2 = firstSite; s2 <= lastSite; s2++) if (bestsites[s2] != goodsites[s]) {
-								byte tgeno2 = a.getBase(t, bestsites[s2]);
+								byte tgeno2 = a.genotype(t, bestsites[s2]);
 								if (tgeno2 != NN) {
 									totalCount += 1;
 									if (tgeno2 == matchAllele[bestsites[s2]]) matchCount++;
@@ -704,9 +676,9 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		return orig;
 	}
 	
-	public static ArrayList<HaplotypeCluster> extendClusters(Alignment a, ArrayList<HaplotypeCluster> clusters, int[] sites, int[] windowSize, boolean forward) {
+	public static ArrayList<HaplotypeCluster> extendClusters(GenotypeTable a, ArrayList<HaplotypeCluster> clusters, int[] sites, int[] windowSize, boolean forward) {
 		int maxDiff = 4;
-		int totalSites = a.getSiteCount();
+		int totalSites = a.numberOfSites();
 		int targetSize = windowSize[0];
 
 		int direction;
@@ -731,7 +703,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			for (Iterator<Haplotype> iterator = hc.getIterator(); iterator.hasNext();) {
 				Haplotype hap = iterator.next();
 				int taxon = hap.taxonIndex;
-				byte allele = a.getBase(taxon, nextSite);
+				byte allele = a.genotype(taxon, nextSite);
 				if (allele != Haplotype.N) {
 					snpset0.add(NucleotideAlignmentConstants.getNucleotideIUPAC(allele));
 				}
@@ -741,7 +713,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			for (Iterator<Haplotype> iterator = hc.getIterator(); iterator.hasNext();) {
 				Haplotype hap = iterator.next();
 				int taxon = hap.taxonIndex;
-				byte allele = a.getBase(taxon, nextSite);
+				byte allele = a.genotype(taxon, nextSite);
 				if (allele != Haplotype.N) {
 					snpset1.add(NucleotideAlignmentConstants.getNucleotideIUPAC(allele));
 				}
@@ -801,10 +773,10 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		ArrayList<Haplotype> cluster0 = new ArrayList<>();
 		ArrayList<Haplotype> cluster1 = new ArrayList<>();
 		
-		int ntaxa = a.getSequenceCount();
-		Alignment b = FilterAlignment.getInstance(a, selectedSites);
+		int ntaxa = a.numberOfTaxa();
+		GenotypeTable b = FilterGenotypeTable.getInstance(a, selectedSites);
 		for (int t = 0; t < ntaxa; t++) {
-			seq = b.getBaseRow(t);
+			seq = b.genotypeAllSites(t);
 			Haplotype hap = new Haplotype(seq, t);
 			int dist0 = hap.distanceFrom(haplotype0);
 			int dist1 = hap.distanceFrom(haplotype1);
@@ -822,68 +794,6 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		newClusters.add(new HaplotypeCluster(cluster0));
 		newClusters.add(new HaplotypeCluster(cluster1));
 		return newClusters;
-	}
-	
-	public static byte[][] getReverseHaplotypes(Alignment a, PopulationData popdata, int windowSize, int maxDiff) {
-		int nFilteredSites = a.getSiteCount();
-		int nOriginalSites = popdata.original.getSiteCount();
-		
-		//generate again in reverse direction to check
-		byte[] reverseA = new byte[nFilteredSites];
-		byte[] reverseC = new byte[nFilteredSites];
-		Arrays.fill(reverseA, (byte) NN);
-		Arrays.fill(reverseC, (byte) NN);
-		
-		byte[] lastAhap = new byte[windowSize]; /*the A haplotype at the end of the chromosome*/
-		byte[] lastChap = new byte[windowSize]; /*the C haplotype at the end of the chromosome*/
-		int testSite = nOriginalSites - 1;
-		int[] selectedSites = new int[windowSize];
-		
-		for (int i = windowSize - 1; i >= 0; i-- ) {
-			while(!popdata.snpIndex.fastGet(testSite)) testSite--;
-			lastAhap[i] = popdata.alleleA[testSite];
-			lastChap[i] = popdata.alleleC[testSite];
-			testSite--;
-		}
-		Haplotype haplotype0 = new Haplotype(lastAhap);
-		Haplotype haplotype1 = new Haplotype(lastChap);
-		
-		int base = nFilteredSites - windowSize;
-		for (int i = 0; i < windowSize; i++) selectedSites[i] = base + i;
-		
-		ArrayList<Haplotype> cluster0 = new ArrayList<>();
-		ArrayList<Haplotype> cluster1 = new ArrayList<>();
-		
-		int ntaxa = a.getSequenceCount();
-		Alignment b = FilterAlignment.getInstance(a, selectedSites);
-		for (int t = 0; t < ntaxa; t++) {
-			byte[] seq = b.getBaseRow(t);
-			Haplotype hap = new Haplotype(seq, t);
-			int dist0 = hap.distanceFrom(haplotype0);
-			int dist1 = hap.distanceFrom(haplotype1);
-			if (dist0 <= maxDiff && dist1 > maxDiff) cluster0.add(hap);
-			else if (dist0 > maxDiff && dist1 <= maxDiff) cluster1.add(hap);
-		}
-
-		//extend to left
-		ArrayList<HaplotypeCluster> seedClusters = new ArrayList<HaplotypeCluster>();
-		seedClusters.add(new HaplotypeCluster(cluster0));
-		seedClusters.add(new HaplotypeCluster(cluster1));
-		int[] siteNumber = new int[]{windowSize};
-		int[] sites = selectedSites;
-		
-		while (siteNumber[0] == windowSize && sites[0] > 0) {
-			seedClusters = extendClusters(a, seedClusters, sites, siteNumber, false);
-			byte[] h0 = seedClusters.get(0).getMajorityHaplotype();
-			byte[] h1 = seedClusters.get(1).getMajorityHaplotype();
-			
-			for (int i = windowSize - siteNumber[0] ;i < windowSize; i++) {
-				reverseA[sites[i]] = h0[i];
-				reverseC[sites[i]] = h1[i];
-			}
-		}
-
-		return new byte[][]{reverseA, reverseC};
 	}
 	
 	public static String getMajorAlleleFromSnpset(Multiset<String> snpset, double alpha) {
@@ -951,15 +861,15 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		}
 		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
 		
-		int nsites = popdata.original.getSiteCount();
-		int ntaxa = popdata.original.getSequenceCount();
+		int nsites = popdata.original.numberOfSites();
+		int ntaxa = popdata.original.numberOfTaxa();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			if(ldFilteredBits.fastGet(s)) {
 				popdata.alleleA[s] = popdata.original.majorAllele(s);
-				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.alleleC[s] = popdata.original.minorAllele(s);
 				popdata.snpIndex.fastSet(s);
 			} 
 		}
@@ -969,8 +879,8 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
-		nsites = popdata.original.getSiteCount();
+		ntaxa = popdata.original.numberOfTaxa();
+		nsites = popdata.original.numberOfSites();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -978,52 +888,39 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		}
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
-		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
+		GenotypeTable target = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
 		myLogger.info("filtered on snps");
-		AlignmentUtils.optimizeForTaxa(target);
-		myLogger.info("optimized for taxa");
 		
 		//remove taxa with low coverage
-		boolean[] goodCoverage = new boolean[ntaxa];
+		TaxaListBuilder taxaBuilder = new TaxaListBuilder();
 		int minGametes = 200;
 		for (int t = 0; t < ntaxa; t++) {
-			if (target.getTotalGametesNotMissingForTaxon(t) > minGametes) goodCoverage[t] = true;
-			else goodCoverage[t] = false;
+			if (target.totalGametesNonMissingForTaxon(t) > minGametes) taxaBuilder.add(target.taxa().get(t));
 		}
 		
+		GenotypeTable target2 = FilterGenotypeTable.getInstance(target, taxaBuilder.build());
 		myLogger.info("identified low coverage taxa");
-		IdGroup targetids = IdGroupUtils.idGroupSubset(target.getIdGroup(), goodCoverage);
-		Alignment target2 = FilterAlignment.getInstance(target, targetids);
-		
-		myLogger.info("Filtered on taxa.");
-		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target2);
-		myLogger.info("created mutable alignment.");
+
 		nsnps = snpIndex.length;
-		ntaxa = mna.getSequenceCount();
+		ntaxa = target2.numberOfTaxa();
+		GenotypeTableBuilder builder = GenotypeTableBuilder.getSiteIncremental(target2.taxa());
+		
 		for (int s = 0; s < nsnps; s++) {
 			byte Aallele = popdata.alleleA[snpIndex[s]];
 			byte Callele = popdata.alleleC[snpIndex[s]];
-			byte genotypeA = (byte) (Aallele << 4 | Aallele);
-			byte genotypeC = (byte) (Callele << 4 | Callele);
-			byte het1 = (byte) (Aallele << 4 | Callele);
-			byte het2 = (byte) (Callele << 4 | Aallele);
+			byte[] siteGeno = new byte[ntaxa];
 			for (int t = 0; t < ntaxa; t++) {
-				byte val = mna.getBase(t, s);
-				if (val == genotypeA) {
-					mna.setBase(t, s, AA);
-				} else if (val == genotypeC) {
-					mna.setBase(t, s, CC);
-				} else if (val == het1 || val == het2) {
-					mna.setBase(t, s, AC);
-				} else {
-					mna.setBase(t, s, NN);
-				}
+				byte[] val = GenotypeTableUtils.getDiploidValues(target2.genotype(t, s));
+				if (val[0] == Aallele && val[1] == Aallele) siteGeno[t] = AA;
+				else if (val[0] == Callele && val[1] == Callele) siteGeno[t] = CC;
+				else if ((val[0] == Aallele && val[1] == Callele)||(val[0] == Callele && val[1] == Aallele)) siteGeno[t] = AC;
+				else siteGeno[t] = NN;
 			}
+			builder.addSite(target2.positions().get(s), siteGeno);
 		}
+
 		myLogger.info("called alleles");
-		mna.clean();
-		myLogger.info("cleaned mna");
-		popdata.imputed = BitAlignment.getInstance(mna, true); 
+		popdata.imputed = builder.build(); 
 	}
 	
 	public static void callParentAllelesByWindowForMultipleBC(PopulationData popdata, double maxMissing, int  minMinorAlleleCount, int windowSize) {
@@ -1035,24 +932,15 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		filteredBits.and(polybits);
 		System.out.println("filteredBits.cardinality = " + filteredBits.cardinality());
 		
-//		BitSet ldFilteredBits;
-//		if (minR > 0) {
-//			int halfWindow = windowSize / 2;
-//			ldFilteredBits = ldfilter(popdata.original, halfWindow, minR, filteredBits);
-//		} else {
-//			ldFilteredBits = filteredBits;
-//		}
-//		myLogger.info("ldFilteredBits.cardinality = " + ldFilteredBits.cardinality());
-		
-		int nsites = popdata.original.getSiteCount();
-		int ntaxa = popdata.original.getSequenceCount();
+		int nsites = popdata.original.numberOfSites();
+		int ntaxa = popdata.original.numberOfTaxa();
 		popdata.alleleA = new byte[nsites];
 		popdata.alleleC = new byte[nsites];
 		popdata.snpIndex = new OpenBitSet(nsites);
 		for (int s = 0; s < nsites; s++) {
 			if(filteredBits.fastGet(s)) {
-				popdata.alleleA[s] = popdata.original.getMajorAllele(s);
-				popdata.alleleC[s] = popdata.original.getMinorAllele(s);
+				popdata.alleleA[s] = popdata.original.majorAllele(s);
+				popdata.alleleC[s] = popdata.original.minorAllele(s);
 				popdata.snpIndex.fastSet(s);
 			} 
 		}
@@ -1061,8 +949,8 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		
 		//create the imputed array with A/C calls
 		int nsnps = (int) popdata.snpIndex.cardinality();
-		ntaxa = popdata.original.getSequenceCount();
-		nsites = popdata.original.getSiteCount();
+		ntaxa = popdata.original.numberOfTaxa();
+		nsites = popdata.original.numberOfSites();
 		int[] snpIndex = new int[nsnps];
 		int snpcount = 0;
 		for (int s = 0; s < nsites; s++) {
@@ -1070,101 +958,30 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		}
 		
 		snpIndex = Arrays.copyOf(snpIndex, snpcount);
-		Alignment target = FilterAlignment.getInstance(popdata.original, snpIndex);
-		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
+		GenotypeTable target = FilterGenotypeTable.getInstance(popdata.original, snpIndex);
+//		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(target);
 		
 		nsnps = snpIndex.length;
+		GenotypeTableBuilder builder = GenotypeTableBuilder.getSiteIncremental(target.taxa());
+		
 		for (int s = 0; s < nsnps; s++) {
 			byte Aallele = popdata.alleleA[snpIndex[s]];
 			byte Callele = popdata.alleleC[snpIndex[s]];
-			byte genotypeA = (byte) (Aallele << 4 | Aallele);
-			byte genotypeC = (byte) (Callele << 4 | Callele);
-			byte het1 = (byte) (Aallele << 4 | Callele);
-			byte het2 = (byte) (Callele << 4 | Aallele);
+			byte[] siteGeno = new byte[ntaxa];
 			for (int t = 0; t < ntaxa; t++) {
-				byte val = mna.getBase(t, s);
-				if (val == genotypeA) {
-					mna.setBase(t, s, AA);
-				} else if (val == genotypeC) {
-					mna.setBase(t, s, CC);
-				} else if (val == het1 || val == het2) {
-					mna.setBase(t, s, AC);
-				} else {
-					mna.setBase(t, s, NN);
-				}
+				byte[] val = GenotypeTableUtils.getDiploidValues(target.genotype(t, s));
+				if (val[0] == Aallele && val[1] == Aallele) siteGeno[t] = AA;
+				else if (val[0] == Callele && val[1] == Callele) siteGeno[t] = CC;
+				else if ((val[0] == Aallele && val[1] == Callele)||(val[0] == Callele && val[1] == Aallele)) siteGeno[t] = AC;
+				else siteGeno[t] = NN;
 			}
+			builder.addSite(target.positions().get(s), siteGeno);
 		}
-		mna.clean();
-		popdata.imputed = BitAlignment.getInstance(mna, true); 
-	}
-	
-	public static void checkAlignmentOrder(Alignment[] alignments, PopulationData family, double r) {
-		boolean swapAlignments = false;
-		boolean parentsInSameGroup = false;
-		boolean parentsInWrongGroups = false;
-		double minR = -0.05;
-		
-		int p1group, p2group;
-		
-		//if parent 1 is in alignment 0, p1group = 0
-		//if parent1 is in alignment 1, p1group = 1
-		//if parent 1 is not in either alignment p1group = -1
-		//likewise for parent 2
-		if (alignments[0].getIdGroup().whichIdNumber(family.parent1) > -1) p1group = 0;
-		else if (alignments[1].getIdGroup().whichIdNumber(family.parent1) > -1) p1group = 1;
-		else p1group = -1;
 
-		if (alignments[1].getIdGroup().whichIdNumber(family.parent2) > -1) p2group = 1;
-		else if (alignments[0].getIdGroup().whichIdNumber(family.parent2) > -1) p2group = 0;
-		else p2group = -1;
-
-		//find out if parents are either in the same group or if they are in groups opposite expected
-		//parent 1 is expected to be in group 0 since it was used to seed group 0
-		if (p1group == 0) {
-			if (p2group == 0) {
-				parentsInSameGroup = true;
-			} else if (p2group == 1) {
-				if (r < 0) parentsInWrongGroups = true;
-			} else {
-				if (r < 0) parentsInWrongGroups = true;
-			}
-		} else if (p1group == 1) {
-			if (p2group == 0) {
-				if (r > 0) parentsInWrongGroups = true;
-			} else if (p2group == 1) {
-				parentsInSameGroup = true;
-			} else {
-				if (r > 0) parentsInWrongGroups = true;
-			}
-		} else {
-			if (p2group == 0) {
-				if (r > 0) parentsInWrongGroups = true;
-			} else if (p2group == 1) {
-				if (r < 0) parentsInWrongGroups = true;
-			} else {
-				//do nothing
-			}
-		}
-		
-		//r is the correlation between taxa assignments in this window and the previous one
-		//if r is negative then parental assignments should be swapped, which will make it positive
-		//this can happen when the parents are not in the data set and the assignment of parents to group is arbitrary
-		if (r < minR) swapAlignments = true;
-		if (swapAlignments) {
-			Alignment temp = alignments[0];
-			alignments[0] = alignments[1];
-			alignments[1] = temp;
-		}
-		
-		if (parentsInSameGroup) {
-			myLogger.warn("Both parents in the same group for family " + family.name + " at " + alignments[0].getSNPID(0));
-		}
-		
-		if (parentsInWrongGroups) {
-			myLogger.warn("Parents in unexpected group for family " + family.name + " at " + alignments[0].getSNPID(0));
-		}
+		myLogger.info("called alleles");
+		popdata.imputed = builder.build(); 
 	}
-	
+
 	public static void checkAlignmentOrderIgnoringParents(GenotypeTable[] alignments, PopulationData family, double r) {
 		boolean swapAlignments = false;
 		double minR = -0.05;
@@ -1248,20 +1065,6 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		return num / Math.sqrt(p1 * q1 * p2 * q2);
 	}
 	
-	public static BitSet whichSitesArePolymorphic(Alignment a, int minAlleleCount) {
-		//which sites are polymorphic? minor allele count > 2 and exceed the minimum allele count
-		int nsites = a.getSiteCount();
-		OpenBitSet polybits = new OpenBitSet(nsites);
-		for (int s = 0; s < nsites; s++) {
-			int[][] freq = a.getAllelesSortedByFrequency(s);
-			if (freq[1].length > 1 && freq[1][1] > 2) {
-				int alleleCount = freq[1][0] + freq[1][1];
-				if (alleleCount >= minAlleleCount) polybits.fastSet(s);
-			}
-		}
-		return polybits;
-	}
-	
 	public static BitSet whichSitesArePolymorphic(GenotypeTable a, double maxMissing, int minMinorAlleleCount) {
 		int ntaxa = a.numberOfTaxa();
 		double minMaf = ((double) minMinorAlleleCount) / ((double) (2 * ntaxa));
@@ -1322,208 +1125,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 
 		return Math.exp(logprob);
 	}
-	
-	//returns a byte array containing the A allele as element 0 and the C allele as element 1, or null if the snp is not in LD
-	public static byte[] recodeParentalSnps(int snp, LinkedList<Integer> testSnps, MutableNucleotideAlignment snpAlignment, double minr) {
-		int ntaxa = snpAlignment.getSequenceCount();
-		byte[] snpvals = new byte[ntaxa];
-		for (int t = 0; t < ntaxa; t++) {
-			snpvals[t] = snpAlignment.getBase(t, snp);
-		}
-		
-		int[] acount = new int[5];
-		int[] ccount = new int[5];
-		for (int t = 0; t < ntaxa; t++) {
-			Integer ndx = genotypeMap.get(snpvals[t]);
-			if (ndx != null) {
-				int indx = ndx.intValue();
-				for (Integer testsnp:testSnps) {
-					byte testval = snpAlignment.getBase(t, testsnp);
-					if (testval == AA) acount[ndx]++;
-					else if (testval == CC) ccount[ndx]++;
-				}
-			}
-		}
-		
-		//calculate r
-		int maxa = 0;
-		int maxc = 0;
-		for (int i = 1; i < 4; i++) {
-			if (acount[i] > acount[maxa]) maxa = i;
-			if (ccount[i] > ccount[maxc]) maxc = i;
-		}
-		
-		int[][] counts = new int[2][2];
-		int N = 0;
-		N += acount[maxa];
-		N += acount[maxc];
-		N += ccount[maxa];
-		N += ccount[maxc];
-		
-		double sumx = acount[maxa] + acount[maxc];
-		double sumy = acount[maxa] + ccount[maxa];
-		double sumxy = acount[maxa];
-		
-		double r = (sumxy - sumx * sumy / N) / Math.sqrt( (sumx - sumx * sumx / N) * (sumy - sumy * sumy / N) );
-		r = Math.abs(r);
-		
-		//if abs(r) > minr, recode the snp
-		if ( maxa != maxc && r >= minr) {
-			byte hetval = genoval[maxa][maxc];
-			for (int t = 0; t < ntaxa; t++) {
-				byte val = snpvals[t];
-				if (val == byteval[maxa]) snpAlignment.setBase(t, snp, AA);
-				else if (val == byteval[maxc]) snpAlignment.setBase(t, snp, CC);
-				else if (val == hetval) snpAlignment.setBase(t, snp, AC);
-				else snpAlignment.setBase(t, snp, NN);
-			}
-			return new byte[]{(byte) maxa, (byte) maxc};
-		}
-		
-		return null;
-	}
 
-	/**
-	 * This function finds a set of snps within a window of the specified size (100) that are in LD with each other. It trys multiple windows and uses the
-	 * window that yields the largest number of snps. 
-	 * @param a	the input alignment
-	 * @param polybits	a BitSet corresponding to SNPs in a, set if a snp is polymorphic. Only polymorphic SNPs will be considered.
-	 * @param numberToTry the number of windows to try. The function will use the window returning the largest set of SNPs.
-	 * @return indices of the core snps. 
-	 */
-	public static int[] findCoreSnps(Alignment a, BitSet polybits, int windowSize, int numberToTry, double cutHeightForSnpClusters) {
-		
-		//define a window
-		int totalpoly = (int) polybits.cardinality();
-		int[][] snpSets = new int[numberToTry][];
-		
-		//find windowSize polymorphic snps centered on the midpoint
-		int snpInterval = totalpoly / (numberToTry + 1);
-		int start = - windowSize / 2;
-		int snpCount = 0;
-		int polyCount = 0;
-		int nsites = a.getSiteCount();
-		for (int setnum = 0; setnum < numberToTry; setnum++) {
-			start += snpInterval;
-			if (start < 0) start = 0;
-			while (polyCount < start) {
-				if (polybits.fastGet(snpCount)) polyCount++;
-				snpCount++;
-			}
-			
-			int[] snpIds = new int[windowSize];
-			int windowCount = 0;
-			while (windowCount < windowSize && snpCount < nsites) {
-				if (polybits.fastGet(snpCount)) {
-					snpIds[windowCount++] = snpCount;
-					polyCount++;
-				}
-				snpCount++;
-			}
-			
-			//adjust the size of the array if all the snps were used before the array was filled
-			if (windowCount < windowSize) snpIds = Arrays.copyOf(snpIds, windowCount);
-			
-			//create a filtered alignment containing only the test snps
-			FilterAlignment filteredPopAlignment = FilterAlignment.getInstance(a, snpIds);
-			
-			//cluster polymorphic snps within the window by creating a UPGMA tree (cluster on snps)
-			Alignment haplotypeAlignment = BitAlignment.getInstance(filteredPopAlignment, true);
-			UPGMATree myTree = new UPGMATree(snpDistance(haplotypeAlignment));
-			
-			//debug - display the tree 
-//			TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
-//			tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
-
-			//cut the tree to create two parent groups
-			TreeClusters clusterMaker = new TreeClusters(myTree);
-			int[] groups = clusterMaker.getGroups(cutHeightForSnpClusters);
-			
-			//find the biggest group
-			int maxGroup = 0;
-			for (int grp:groups) maxGroup = Math.max(maxGroup, grp);
-			int ngroups = maxGroup + 1;
-			int[] groupCount = new int[ngroups];
-			for (int grp:groups) groupCount[grp]++;
-			int[]groupIndex = ImputationUtils.reverseOrder(groupCount);
-			
-			snpSets[setnum] = new int[ groupCount[groupIndex[0]] ];
-			int count = 0;
-			for (int i = 0; i < snpIds.length; i++) {
-				if (groups[i] == groupIndex[0]) {
-					int snpIndex = Integer.parseInt(myTree.getIdentifier(i).getFullName());
-					snpSets[setnum][count++] = snpIds[snpIndex];
-				}
-			}
-			Arrays.sort(snpSets[setnum]);
-		}
-		
-		int bestSet = 0;
-		for (int i = 1; i < numberToTry; i++) {
-			if (snpSets[i].length > snpSets[bestSet].length) bestSet = i;
-		}
-		return snpSets[bestSet];
-	}
-	
-	public static IdGroup[] findTaxaGroups(Alignment a, int[] coreSnps) {
-		
-		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
-		
-		//IBSDistanceMatrix dm = new IBSDistanceMatrix(SBitAlignment.getInstance(FilterAlignment.getInstance(a, coreSnps)));
-                IBSDistanceMatrix dm = new IBSDistanceMatrix(ConvertSBitTBitPlugin.convertAlignment(FilterAlignment.getInstance(a, coreSnps), ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null));
-		estimateMissingDistances(dm);
-		Tree myTree = new UPGMATree(dm);
-		TreeClusters clusterMaker = new TreeClusters(myTree);
-		
-		int ntaxa = a.getSequenceCount();
-		int majorCount = ntaxa;
-		int minorCount = 0;
-		int ngroups = 1;
-		int[] groups = new int[0];
-		int[] groupCount = null;
-		int majorGroup = 0;
-		int minorGroup = 1;
-		
-		while (majorCount > ntaxa / 2 && minorCount < 10) {
-			ngroups++;
-			groups = clusterMaker.getGroups(ngroups);
-			groupCount = new int[ngroups];
-			for (int gr : groups) groupCount[gr]++;
-			
-			for (int i = 1; i < ngroups; i++) {
-				if (groupCount[i] > groupCount[majorGroup]) {
-					minorGroup = majorGroup;
-					majorGroup = i;
-				} else if (groupCount[i] > groupCount[minorGroup]) minorGroup = i;
-			}
-			
-			majorCount = groupCount[majorGroup];
-			minorCount = groupCount[minorGroup];
-		}
-
-		//debug - display the tree 
-		TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
-		tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
-
-		 //List groups
-		for (int i = 0; i < ngroups; i++) {
-			if (groupCount[i] > 5) myLogger.info("Taxa group " + i + " has " + groupCount[i] + " members.");
-		}
-		
-		//create major and minor id groups
-		String[] majorids = new String[groupCount[majorGroup]];
-		String[] minorids = new String[groupCount[minorGroup]];
-		majorCount = 0;
-		minorCount = 0;
-		for (int i = 0; i < groups.length; i++) {
-			if (groups[i] == majorGroup) majorids[majorCount++] = myTree.getIdentifier(i).getFullName();
-			else if (groups[i] == minorGroup) minorids[minorCount++] = myTree.getIdentifier(i).getFullName();
-		}
-		IdGroup majorTaxa = new SimpleIdGroup(majorids);
-		IdGroup minorTaxa =  new SimpleIdGroup(minorids);
-		return new IdGroup[]{majorTaxa,minorTaxa};
-	}
-	
 	public static GenotypeTable[] getTaxaGroupAlignments(GenotypeTable a, int[] parentIndex, LinkedList<Integer> snpIndices) {
 		
 		//cluster taxa for these snps to find parental haplotypes (cluster on taxa)
@@ -1582,37 +1184,6 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		}
 	}
 
-	public static DistanceMatrix snpDistance(Alignment a) {
-		
-		int nsnps = a.getSiteCount();
-		SimpleIdGroup snpIds = new SimpleIdGroup(nsnps, true);
-		double[][] distance = new double[nsnps][nsnps];
-		double sum = 0;
-		int count = 0;
-		for (int i = 0; i < nsnps; i++) {
-			for (int j = i; j < nsnps; j++) {
-				double r = computeGenotypeR(i, j, a);
-				distance[i][j] = distance[j][i] = 1 - r*r;
-				if (!Double.isNaN(distance[i][j])) {
-					sum += distance[i][j];
-					count++;
-				}
-			}
-		}
-		
-		//set missing to average
-		double avg = sum/count;
-		for (int i = 0; i < nsnps; i++) {
-			for (int j = i; j < nsnps; j++) {
-				if (Double.isNaN(distance[i][j])) {
-					distance[i][j] = distance[j][i] = avg;
-				}
-			}
-		}
-		
-		return new DistanceMatrix(distance, snpIds);
-	}
-	
 	public static double computeRForAlleles(int site1, int site2, GenotypeTable a) {
 		int s1Count = 0;
 		int s2Count = 0;
@@ -1738,12 +1309,11 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		return num / denom;
 	}
 	
-	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName) {
+	public static GenotypeTable imputeUsingViterbiFiveState(GenotypeTable a, double probHeterozygous, String familyName) {
 		return imputeUsingViterbiFiveState(a, probHeterozygous, familyName, false);
 	}
 	
-	public static MutableNucleotideAlignment imputeUsingViterbiFiveState(Alignment a, double probHeterozygous, String familyName, boolean useVariableRecombitionRates) {
-		a = ConvertSBitTBitPlugin.convertAlignment(a, ConvertSBitTBitPlugin.CONVERT_TYPE.tbit, null);
+	public static GenotypeTable imputeUsingViterbiFiveState(GenotypeTable a, double probHeterozygous, String familyName, boolean useVariableRecombitionRates) {
 		//states are in {all A; 3A:1C; 1A:1C, 1A:3C; all C}
 		//obs are in {A, C, M}, where M is heterozygote A/C
 		int maxIterations = 50;
@@ -1753,8 +1323,8 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		obsMap.put(CA, (byte) 1);
 		obsMap.put(CC, (byte) 2);
 		
-		int ntaxa = a.getSequenceCount();
-		int nsites = a.getSiteCount();
+		int ntaxa = a.numberOfTaxa();
+		int nsites = a.numberOfSites();
 		
 		//initialize the transition matrix
 		double[][] transition = new double[][] {
@@ -1767,13 +1337,13 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		
 		TransitionProbability tp;
 		if (useVariableRecombitionRates) {
-			tp = new TransitionProbabilityWithVariableRecombination(a.getLocusName(0));
+			tp = new TransitionProbabilityWithVariableRecombination(a.chromosomeName(0));
 		} else {
 			tp = new TransitionProbability();
 		}
 		
 		tp.setTransitionProbability(transition);
-		int chrlength = a.getPositionInLocus(nsites - 1) - a.getPositionInLocus(0);
+		int chrlength = a.chromosomalPosition(nsites - 1) - a.chromosomalPosition(0);
 		tp.setAverageSegmentLength( chrlength / nsites );
 		
                 //initialize the emission matrix, states (5) in rows, observations (3) in columns
@@ -1795,9 +1365,9 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		ArrayList<int[]> snpPositions = new ArrayList<int[]>();
 		
 		for (int t = 0; t < ntaxa; t++) {
-			long[] bits = a.getAllelePresenceForAllSites(t, 0).getBits();
+			long[] bits = a.allelePresenceForAllSites(t, WHICH_ALLELE.Major).getBits();
 			BitSet notMiss = new OpenBitSet(bits, bits.length);
-			notMiss.or(a.getAllelePresenceForAllSites(t, 1));
+			notMiss.or(a.allelePresenceForAllSites(t, WHICH_ALLELE.Minor));
 			notMissingIndex.add(notMiss);
 			notMissingCount[t] = (int) notMiss.cardinality();
 		}
@@ -1810,13 +1380,13 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			BitSet isNotMissing = notMissingIndex.get(t);
 			int nmcount = 0;
 			for (int s = 0; s < nsites; s++) {
-				byte base = a.getBase(t, s);
-				if (isNotMissing.fastGet(s) && obsMap.get(a.getBase(t, s)) == null) {
+				byte base = a.genotype(t, s);
+				if (isNotMissing.fastGet(s) && obsMap.get(a.genotype(t, s)) == null) {
 					myLogger.info("null from " + Byte.toString(base));
 				}
 				if (isNotMissing.fastGet(s)) {
-					obs[nmcount] = obsMap.get(a.getBase(t, s));
-					pos[nmcount++] = a.getPositionInLocus(s);
+					obs[nmcount] = obsMap.get(a.genotype(t, s));
+					pos[nmcount++] = a.chromosomalPosition(s);
 				}
 				
 			}
@@ -1843,7 +1413,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 					va.calculate();
 					bestStates.add(va.getMostProbableStateSequence());
 				} else { //do not impute if obs < 20
-					myLogger.info("Fewer then 20 observations for " + a.getTaxaName(t));
+					myLogger.info("Fewer then 20 observations for " + a.taxa().taxaName(t));
 					byte[] states = new byte[nobs];
 					byte[] obs = nonMissingObs.get(t);
 					for (int i = 0; i < nobs; i++) {
@@ -1927,7 +1497,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			//if the model has converged  or if the max iterations has been reached print tables
 			if (!hasNotConverged || iter == maxIterations) {
 				StringBuilder sb = new StringBuilder("Family ");
-				sb.append(familyName).append(", chromosome ").append(a.getLocusName(0));
+				sb.append(familyName).append(", chromosome ").append(a.chromosomeName(0));
 				if (iter < maxIterations) {
 					sb.append(": EM algorithm converged at iteration ").append(iter).append(".\n");
 				} else {
@@ -1983,75 +1553,68 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			
 		}
 		
-		MutableNucleotideAlignment result = MutableNucleotideAlignment.getInstance(a);
-		nsites = result.getSiteCount();
+		GenotypeTableBuilder builder = GenotypeTableBuilder.getTaxaIncremental(a.positions());
+		nsites = a.numberOfSites();
 		for (int t = 0; t < ntaxa; t++) {
 			BitSet hasData = notMissingIndex.get(t);
 			byte[] states = bestStates.get(t);
 			int stateCount = 0;
+			byte[] taxonGeno = new byte[nsites];
+			Arrays.fill(taxonGeno, NN);
 			for (int s = 0; s < nsites; s++) {
 				if (hasData.fastGet(s)) {
-					if (states[stateCount] == 0) result.setBase(t, s, AA);
-					else if (states[stateCount] < 4) result.setBase(t, s, AC);
-					else if (states[stateCount] == 4) result.setBase(t, s, CC);
+					if (states[stateCount] == 0) taxonGeno[s] = AA;
+					else if (states[stateCount] < 4) taxonGeno[s] = AC;
+					else if (states[stateCount] == 4) taxonGeno[s] = CC;
 					stateCount++;
 				}
 			}
 		}
 		
-		result.clean();
-		
-		return result;
+		return builder.build();
 	}
 
 	public static void fillGapsInAlignment(PopulationData popdata) {
-		MutableNucleotideAlignment a;
-		if (popdata.imputed instanceof MutableNucleotideAlignment) {
-			a = (MutableNucleotideAlignment) popdata.imputed;
-		} else {
-			a = MutableNucleotideAlignment.getInstance(popdata.imputed);
-			popdata.imputed = a;
-		}
-		
-		int ntaxa = a.getSequenceCount();
-		int nsites = a.getSiteCount();
+		int ntaxa = popdata.imputed.numberOfTaxa();
+		int nsites = popdata.imputed.numberOfSites();
+		GenotypeTableBuilder builder = GenotypeTableBuilder.getTaxaIncremental(popdata.imputed.positions());
 		for (int t = 0; t < ntaxa; t++) {
 			int prevsite = -1;
 			byte prevValue = -1;
+			byte[] taxonGeno = new byte[nsites];
+			Arrays.fill(taxonGeno, NN);
 			for (int s = 0; s < nsites; s++) {
-				byte val = a.getBase(t, s);
+				byte val = popdata.imputed.genotype(t, s);
 				if (val != NN) {
 					if (prevsite == -1) {
 						prevsite = s;
 						prevValue = val;
 					} else if(val == prevValue) {
 						for (int site = prevsite + 1; site < s; site++) {
-							a.setBase(t, site, prevValue);
-							prevsite = s;
+							taxonGeno[site] = prevValue;
 						}
+						prevsite = s;
 					} else {
 						prevsite = s;
 						prevValue = val;
 					}
 				}
 			}
+			builder.addTaxon(popdata.imputed.taxa().get(t), taxonGeno);
 		}
 
-		a.clean();
-		popdata.imputed = a;		
+		popdata.imputed = builder.build();		
 	}
 
-	public static Alignment convertParentCallsToNucleotides(PopulationData popdata) {
+	public static GenotypeTable convertParentCallsToNucleotides(PopulationData popdata) {
 		//set monomorphic sites to major (or only allele) (or not)
 		//set polymorphic sites consistent with flanking markers if equal, unchanged otherwise
 		//do not change sites that are not clearly monomorhpic or polymorphic
 
-		MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(popdata.imputed);
+		GenotypeTableBuilder builder = GenotypeTableBuilder.getSiteIncremental(popdata.imputed.taxa());
 		BitSet isPopSnp = popdata.snpIndex;
-		if (isPopSnp.cardinality() != mna.getSiteCount()) myLogger.info("size of imputed snps not equal to snpIndex cardinality in convertParentCallsToNucleotides.");
 		int nsites = (int) isPopSnp.capacity();
-		double ngametes = nsites * 2;
-		int ntaxa = mna.getSequenceCount();
+		int ntaxa = popdata.imputed.taxa().numberOfTaxa();
 		int imputedSnpCount = 0;
 		
 		for (int s = 0; s < nsites; s++) {
@@ -2061,190 +1624,48 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 				byte AAcall = (byte) ((Acall << 4) | Acall);
 				byte CCcall = (byte) ((Ccall << 4) | Ccall);
 				byte ACcall = (byte) ((Acall << 4) | Ccall);
+				byte[] geno = new byte[ntaxa];
 				for (int t = 0; t < ntaxa; t++) {
-					byte parentCall = popdata.imputed.getBase(t, imputedSnpCount);
+					byte parentCall = popdata.imputed.genotype(t, imputedSnpCount);
 					if (parentCall == AA) {
-						mna.setBase(t, imputedSnpCount, AAcall);
+						geno[t] = AAcall;
 					} else if (parentCall == CC) {
-						mna.setBase(t, imputedSnpCount, CCcall);
+						geno[t] = CCcall;
 					} else if (parentCall == AC || parentCall == CA) {
-						mna.setBase(t, imputedSnpCount, ACcall);
+						geno[t] = ACcall;
 					} else {
-						mna.setBase(t, imputedSnpCount, NN);
+						geno[t] = NN;
 					}
 				}
+				builder.addSite(popdata.imputed.positions().get(imputedSnpCount), geno);
 				imputedSnpCount++;
 			}
 		}
 		
-		mna.clean();
-		myLogger.info("Original alignment updated for family " + popdata.name + " chromosome " + popdata.original.getLocusName(0) + ".\n");
-		return mna;
+		myLogger.info("Original alignment updated for family " + popdata.name + " chromosome " + popdata.original.chromosomeName(0) + ".\n");
+		return builder.build();
 	}
 
-	public static void examineTaxaClusters(Alignment a, BitSet polybits) {
-		int nsnps = a.getSiteCount();
-		int ntaxa = a.getSequenceCount();
-		int sitecount = 500;
-		int window = 200;
-		while (sitecount < nsnps) {
-			int[] snpndx = new int[window];
-			int snpcount = 0;
-			while (snpcount < window && sitecount < nsnps) {
-				if (polybits.fastGet(sitecount)) snpndx[snpcount++] = sitecount;
-				sitecount++;
-			}
-			if (sitecount < nsnps) {
-				Alignment subAlignment = BitAlignment.getInstance(FilterAlignment.getInstance(a, snpndx), true);
-				IBSDistanceMatrix dm = new IBSDistanceMatrix(subAlignment);
-				estimateMissingDistances(dm);
-
-				Tree myTree = new UPGMATree(dm);
-				TreeClusters tc = new TreeClusters(myTree);
-				
-				int[] groups = null;
-				int[] order = null;
-				int ngrp = 2;
-				while (true) {
-					groups = tc.getGroups(ngrp);
-					int[] grpSize = new int[ngrp];
-					for (int g:groups) grpSize[g]++;
-					order = ImputationUtils.reverseOrder(grpSize);
-					if (((double) grpSize[order[0]]) / ((double) grpSize[order[1]]) < 2.0) {
-						String[] taxaA = new String[grpSize[order[0]]];
-						String[] taxaB = new String[grpSize[order[1]]];
-						int cntA = 0;
-						int cntB = 0;
-						for (int t = 0; t < ntaxa; t++) {
-							String taxon = myTree.getIdentifier(t).getFullName();
-							if (groups[t] == order[0]) taxaA[cntA++] = taxon;
-							else if (groups[t] == order[1]) taxaB[cntB++] = taxon;
-						}
-						Alignment alignA = FilterAlignment.getInstance(subAlignment, new SimpleIdGroup(taxaA));
-						Alignment alignB = FilterAlignment.getInstance(subAlignment, new SimpleIdGroup(taxaB));
-						boolean[] include = new boolean[window];
-						for (int s = 0; s < window; s++) {
-							if (alignA.getMajorAllele(s) != alignB.getMajorAllele(s)) {
-								if ( ((double) alignA.getMajorAlleleCount(s))/((double) alignA.getMinorAlleleCount(s)) > 2.0 && ((double) alignB.getMajorAlleleCount(s))/((double) alignB.getMinorAlleleCount(s)) > 2.0) {
-									include[s] = true;
-								} else include[s] = false;
-							} else {
-								System.out.println("alleles equal at " + s);
-								include[s] = false;
-							}
-						}
-						
-						int ngoodsnps = 0;
-						for (boolean b:include) if (b) ngoodsnps++;
-						
-						int[] goodSnpIndex = new int[ngoodsnps];
-						int cnt = 0;
-						for (int s = 0; s < window; s++) {
-							if (include[s]) goodSnpIndex[cnt++] = s;
-						}
-						
-						IBSDistanceMatrix dm2 = new IBSDistanceMatrix(BitAlignment.getInstance(FilterAlignment.getInstance(subAlignment, goodSnpIndex), true));
-						estimateMissingDistances(dm2);
-						Tree thisTree = new UPGMATree(dm2);
-						
-						//display the tree 
-						TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
-						tdp.performFunction(new DataSet(new Datum("Snp Tree", thisTree, "Snp Tree"), null));
-						
-						
-						System.out.println("n good snps = " + ngoodsnps);
-						break;
-					}
-//					else if (ngrp > 2) {
-//						if (((double) grpSize[order[0]]) / ((double) (grpSize[order[1]] + grpSize[order[2]])) < 1.5) {
-//							
-//						}
-//					}
-					ngrp++;
-					
-					if (ngrp > 20) break;
-				}
-				
-				//display the tree 
-				TreeDisplayPlugin tdp = new TreeDisplayPlugin(null, true);
-				tdp.performFunction(new DataSet(new Datum("Snp Tree", myTree, "Snp Tree"), null));
-			}
-		}
-		
-	}
-	
-	/**
-	 * SNPs on the same tag will have correlated errors. While alignments do not have information about which SNPs come from the same tag, SNPs from one tag will be <64 bp distant. 
-	 * They will also be highly correlated. This function tests removes the second of any pair of SNPs that could come from the same tag.
-	 * @param alignIn	the input Alignment
-	 * @return	an alignment with the one of any correlated pairs of SNPs removed
-	 */
-	public static Alignment removeSNPsFromSameTag(Alignment alignIn, double minRsq) {
-		Alignment sba = ConvertSBitTBitPlugin.convertAlignment(alignIn, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
+	public static OpenBitSet whichSnpsAreFromSameTag(GenotypeTable geno, double minRsq) {
 		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
 		//else sba = SBitAlignment.getInstance(alignIn);
 		
-		int nsites = sba.getSiteCount();
-		int ntaxa = sba.getSequenceCount();
-		int firstSite = 0;
-		int[] sitesSelected = new int[nsites];
-		int selectCount = 0;
-		sitesSelected[selectCount++] = 0;
-		String firstSnpLocus = sba.getLocus(0).getName();
-		int firstSnpPos = sba.getPositionInLocus(0);
-		while (firstSite < nsites - 1) {
-			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInLocus(nextSite);
-			String nextSnpLocus = sba.getLocus(nextSite).getName();
-			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
-				//calculate r^2 between snps
-	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
-	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
-	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
-	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
-	            int n = 0;
-	            int[][] contig = new int[2][2];
-	            n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
-	            n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
-	            n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
-	            n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
-				
-				double rsq = calculateRSqr(contig[0][0], contig[0][1], contig[1][0], contig[1][1], 2);
-				if (Double.isNaN(rsq) || rsq >= minRsq) sitesSelected[selectCount++] = nextSite;
-				nextSite++;
-				nextSnpPos = sba.getPositionInLocus(nextSite);
-				nextSnpLocus = sba.getLocus(nextSite).getName();
-			}
-			firstSite = nextSite;
-			firstSnpLocus = nextSnpLocus;
-			firstSnpPos = nextSnpPos;
-			sitesSelected[selectCount++] = firstSite;
-		}
-		
-		return FilterAlignment.getInstance(sba, sitesSelected);
-	}
-	
-	public static OpenBitSet whichSnpsAreFromSameTag(Alignment alignIn, double minRsq) {
-		Alignment sba = ConvertSBitTBitPlugin.convertAlignment(alignIn, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
-		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
-		//else sba = SBitAlignment.getInstance(alignIn);
-		
-		int nsites = sba.getSiteCount();
+		int nsites = geno.numberOfSites();
 		int firstSite = 0;
 		OpenBitSet isSelected = new OpenBitSet(nsites);
 		isSelected.fastSet(0);
-		Locus firstSnpLocus = sba.getLocus(0);
-		int firstSnpPos = sba.getPositionInLocus(0);
+		Chromosome firstSnpChr = geno.chromosome(0);
+		int firstSnpPos = geno.chromosomalPosition(0);
 		while (firstSite < nsites - 1) {
 			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInLocus(nextSite);
-			Locus nextSnpLocus = sba.getLocus(nextSite);
-			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
+			int nextSnpPos = geno.chromosomalPosition(nextSite);
+			Chromosome nextSnpChr = geno.chromosome(nextSite);
+			while (firstSnpChr.equals(nextSnpChr) && nextSnpPos - firstSnpPos < 64) {
 				//calculate r^2 between snps
-	            BitSet rMj = sba.getAllelePresenceForAllTaxa(firstSite, 0);
-	            BitSet rMn = sba.getAllelePresenceForAllTaxa(firstSite, 1);
-	            BitSet cMj = sba.getAllelePresenceForAllTaxa(nextSite, 0);
-	            BitSet cMn = sba.getAllelePresenceForAllTaxa(nextSite, 1);
+	            BitSet rMj = geno.allelePresenceForAllTaxa(firstSite, WHICH_ALLELE.Major);
+	            BitSet rMn = geno.allelePresenceForAllTaxa(firstSite, WHICH_ALLELE.Minor);
+	            BitSet cMj = geno.allelePresenceForAllTaxa(nextSite, WHICH_ALLELE.Major);
+	            BitSet cMn = geno.allelePresenceForAllTaxa(nextSite, WHICH_ALLELE.Minor);
 	            int[][] contig = new int[2][2];
 	            contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
 	            contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
@@ -2259,44 +1680,12 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 				}
 				nextSite++;
 				if (nextSite >= nsites) break;
-				nextSnpPos = sba.getPositionInLocus(nextSite);
-				nextSnpLocus = sba.getLocus(nextSite);
+				nextSnpPos = geno.chromosomalPosition(nextSite);
+				nextSnpChr = geno.chromosome(nextSite);
 			}
 			firstSite = nextSite;
 			if (firstSite < nsites) {
-				firstSnpLocus = nextSnpLocus;
-				firstSnpPos = nextSnpPos;
-				isSelected.fastSet(firstSite);
-			}
-		}
-		
-		return isSelected;
-	}
-	
-	public static OpenBitSet whichSnpsAreFromSameTag(Alignment alignIn) {
-		Alignment sba = ConvertSBitTBitPlugin.convertAlignment(alignIn, ConvertSBitTBitPlugin.CONVERT_TYPE.sbit, null);
-		//if (alignIn instanceof SBitAlignment) sba = (SBitAlignment) alignIn;
-		//else sba = SBitAlignment.getInstance(alignIn);
-		
-		int nsites = sba.getSiteCount();
-		int firstSite = 0;
-		OpenBitSet isSelected = new OpenBitSet(nsites);
-		isSelected.fastSet(0);
-		Locus firstSnpLocus = sba.getLocus(0);
-		int firstSnpPos = sba.getPositionInLocus(0);
-		while (firstSite < nsites - 1) {
-			int nextSite = firstSite + 1;
-			int nextSnpPos = sba.getPositionInLocus(nextSite);
-			Locus nextSnpLocus = sba.getLocus(nextSite);
-			while (firstSnpLocus.equals(nextSnpLocus) && nextSnpPos - firstSnpPos < 64) {
-				nextSite++;
-				if (nextSite >= nsites) break;
-				nextSnpPos = sba.getPositionInLocus(nextSite);
-				nextSnpLocus = sba.getLocus(nextSite);
-			}
-			firstSite = nextSite;
-			if (firstSite < nsites) {
-				firstSnpLocus = nextSnpLocus;
+				firstSnpChr = nextSnpChr;
 				firstSnpPos = nextSnpPos;
 				isSelected.fastSet(firstSite);
 			}
@@ -2333,11 +1722,11 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 					validSite = nextSite < nsites;
 				}
 				if (validSite) {
-					nextSnpPos = sba.getPositionInLocus(nextSite);
-					nextSnpLocus = sba.getLocus(nextSite);
+					nextSnpPos = geno.chromosomalPosition(nextSite);
+					nextChr = geno.chromosome(nextSite);
 					int dist = nextSnpPos - firstSnpPos;
-					boolean nearbySite = firstSnpLocus.equals(nextSnpLocus) && dist < 64;
-					double r = computeRForMissingness(firstSite, nextSite, sba);
+					boolean nearbySite = firstChr.equals(nextChr) && dist < 64;
+					double r = computeRForMissingness(firstSite, nextSite, geno);
 					boolean correlatedSite = r  > 0.7;
 					if (nearbySite && correlatedSite) {
 						skip = true;
@@ -2345,14 +1734,12 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 						validSite = nextSite < nsites;
 					} else skip = false;
 					
-					//debug 
-//					System.out.println("first site = " + firstSnpPos + ", dist = " + dist + ", r = " + r);
 				} else skip = false;
 			}
 			
 			firstSite = nextSite;
 			if (firstSite < nsites) {
-				firstSnpLocus = nextSnpLocus;
+				firstChr = nextChr;
 				firstSnpPos = nextSnpPos;
 				isSelected.fastSet(firstSite);
 			}
@@ -2361,39 +1748,19 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		return isSelected;
 	}
 	
-	public static Alignment deleteSnpsFromSameTag(Alignment a) {
-		a.optimizeForSites(null);
-		int nOriginalSites = a.getSiteCount();
+	public static GenotypeTable filterSnpsByTag(GenotypeTable a, double minMaf, double maxMissing, double maxHet) {
+		int nOriginalSites = a.numberOfSites();
 		int[] selectedSites = new int[nOriginalSites];
+		int ntaxa = a.numberOfTaxa();
 		
 		selectedSites[0] = 0;
 		int selectedCount = 1;
 		int headSite = 0;
 		for (int s = 1; s < nOriginalSites; s++) {
-			int dist = a.getPositionInLocus(s) - a.getPositionInLocus(headSite);
-			if (dist >= 64 || computeRForMissingness(headSite, s, a) < 0.7) {
-				selectedSites[selectedCount++] = s;
-				headSite = s;
-			} 
-		}
-		selectedSites = Arrays.copyOf(selectedSites, selectedCount);
-		return FilterAlignment.getInstance(a, selectedSites);
-	}
-	
-	public static Alignment filterSnpsByTag(Alignment a, double minMaf, double maxMissing, double maxHet) {
-		a.optimizeForSites(null);
-		int nOriginalSites = a.getSiteCount();
-		int[] selectedSites = new int[nOriginalSites];
-		int ntaxa = a.getSequenceCount();
-		
-		selectedSites[0] = 0;
-		int selectedCount = 1;
-		int headSite = 0;
-		for (int s = 1; s < nOriginalSites; s++) {
-			int dist = a.getPositionInLocus(s) - a.getPositionInLocus(headSite);
-			double maf = a.getMinorAlleleFrequency(s);
-			int npresent = a.getTotalNotMissing(s);
-			int nhet = a.getHeterozygousCount(s);
+			int dist = a.chromosomalPosition(s) - a.chromosomalPosition(headSite);
+			double maf = a.minorAlleleFrequency(s);
+			int npresent = a.totalNonMissingForSite(s);
+			int nhet = a.heterozygousCount(s);
 			double pmissing = ((double) (ntaxa - npresent)) /((double) ntaxa);
 			double phet = ((double) nhet) / ((double) npresent);
 			if ((dist >= 64 || computeRForMissingness(headSite, s, a) < 0.7) && maf >= minMaf && pmissing <= maxMissing && phet <= maxHet) {
@@ -2402,7 +1769,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			} 
 		}
 		selectedSites = Arrays.copyOf(selectedSites, selectedCount);
-		return FilterAlignment.getInstance(a, selectedSites);
+		return FilterGenotypeTable.getInstance(a, selectedSites);
 
 	}
 	
@@ -2428,96 +1795,6 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
         return rsqr;
     }
 
-    public static OpenBitSet filterSnpsOnLDandDistance(Alignment alignIn) {
-    	return null;
-    }
-
-    public static BitSet[] hetMasker(Alignment a, double estimatedHetFraction) {
-    	//set up Viterbi algorithm
-    	//states in hom, het
-    	//observations = hom, het, missing
-    	
-    	TransitionProbability tp = new TransitionProbability();
-    	int nsites = a.getSiteCount();
-    	int ntaxa = a.getSequenceCount();
-    	int chrlen = a.getPositionInLocus(nsites - 1) - a.getPositionInLocus(0);
-    	
-    	double phet = estimatedHetFraction;
-    	int totalTransitions = (nsites - 1) * ntaxa /10;
-    	int hetHet = (int) Math.floor(phet*totalTransitions);
-    	int hetHom = 2 * ntaxa;
-    	int[][] transCount = new int[][]{{totalTransitions - hetHet - 2*hetHom, hetHom},{hetHom, hetHet}};
-    	
-    	tp.setTransitionCounts(transCount, chrlen, ntaxa);
-    	tp.setPositions(a.getPhysicalPositions());
-    	
-    	//count number of het loci
-    	int hetCount = 0;
-    	int nonMissingCount = 0;
-    	for (int s = 0; s < nsites; s++) {
-    		hetCount += a.getHeterozygousCount(s);
-    		nonMissingCount += a.getTotalGametesNotMissing(s) / 2;
-    	}
-    	
-    	double estimatedPhet = ((double) hetCount) / ((double) nonMissingCount); 
-    	double expectedPhet = 0.08;
-    	double hetGivenHet = Math.min(.9, estimatedPhet/expectedPhet);
-    	
-    	double[] initialProb = new double[]{1 - expectedPhet, expectedPhet};
-    	
-    	try {
-    		a.optimizeForTaxa(null);
-    	} catch (Exception e) {
-    		a = BitAlignment.getInstance(a, false);
-    	}
-    	
-    	BitSet[] taxaStates = new BitSet[ntaxa];
-    	for (int t = 0; t < ntaxa; t++) {
-    		BitSet major = a.getAllelePresenceForAllSites(t, 0);
-    		BitSet minor = a.getAllelePresenceForAllSites(t, 1);
-    		OpenBitSet notMissing = new OpenBitSet(major.getBits(), major.getNumWords());
-    		notMissing.union(minor);
-    		OpenBitSet het = new OpenBitSet(major.getBits(), major.getNumWords());
-    		het.intersect(minor);
-    		
-    		double nNotMissing = notMissing.cardinality();
-    		byte[] obs = new byte[nsites];
-    		for (int s = 0; s < nsites; s++) {
-    			if (notMissing.fastGet(s)) {
-    				if (het.fastGet(s)) obs[s] = 1;
-    				else obs[s] = 0;
-    			} else {
-    				obs[s] = 2;
-    			}
-    		}
-    		
-    		EmissionProbability ep = new EmissionProbability();
-    		
-    		//states rows, observations columns
-    		double[][] probMatrix = new double[2][3];
-    		
-    		// homozygous state
-    		probMatrix[0][2] = (nsites - nNotMissing) / ((double) nsites); //observe missing
-    		probMatrix[0][0] = .998 * (1 - probMatrix[0][2]); //observe hom
-    		probMatrix[0][1] = .002 * (1 - probMatrix[0][2]);//observe het
-    		//heterozygous state
-    		probMatrix[1][2] = probMatrix[0][2]; //observe missing
-    		probMatrix[1][0] = (1 - hetGivenHet) * (1 - probMatrix[0][2]); //observe hom
-    		probMatrix[1][1] = hetGivenHet * (1 - probMatrix[0][2]);//observe het
-    		
-    		ep.setEmissionProbability(probMatrix);
-    		
-    		ViterbiAlgorithm va = new ViterbiAlgorithm(obs, tp, ep, initialProb);
-    		va.calculate();
-    		byte[] states = va.getMostProbableStateSequence();
-    		OpenBitSet bitStates = new OpenBitSet(nsites);
-    		for (int s = 0; s < nsites; s++) if (states[s] == 1) bitStates.fastSet(s);
-    		taxaStates[t] = bitStates;
-    	}
-    	
-    	return taxaStates;
-    }
-    
     public static BitSet ldfilter(GenotypeTable a, int window, double minR, BitSet filterBits) {
     	int nsites = a.numberOfSites();
     	OpenBitSet ldbits = new OpenBitSet(nsites);
@@ -2568,13 +1845,13 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
     	return sumr / sitesTestedCount;
     }
 
-	public static ArrayList<HaplotypeCluster> clusterWindow(Alignment a, int start, int length, int maxdif) {
-		int ntaxa = a.getSequenceCount();
+	public static ArrayList<HaplotypeCluster> clusterWindow(GenotypeTable a, int start, int length, int maxdif) {
+		int ntaxa = a.numberOfTaxa();
 		int end = start + length;
 		ArrayList<Haplotype> haps = new ArrayList<Haplotype>();
 		
 		for (int t = 0; t < ntaxa; t++) {
-			haps.add(new Haplotype(a.getBaseRange(t, start, end), t));
+			haps.add(new Haplotype(a.genotypeRange(t, start, end), t));
 		}
 		
 		HaplotypeClusterer hc = new HaplotypeClusterer(haps);
@@ -2598,48 +1875,21 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 		return mergedClusters;
 	}
 
-	public static void exportParentHaplotypes(String filename, PopulationData popdata, String chr) {
-		int nsites = popdata.alleleA.length;
-		int imputedCount = 0;
-		
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
-			bw.write("rs#\talleles\tchrom\tpos\tstrand\tassembly#\tcenter\tprotLSID\tassayLSID\tpanelLSID\tQCcode\tparentA\tparentC\n");
-			for (int s = 0; s < nsites; s++) {
-				if (popdata.snpIndex.fastGet(s)) {
-					bw.write(popdata.original.getSNPID(s));
-					bw.write("\tA/C\t");
-					bw.write(chr);
-					bw.write("\t");
-					bw.write(Integer.toString(popdata.original.getPositionInLocus(s)));
-					bw.write("\tNA\tNA\tNA\tNA\tNA\tNA\tNA\t");
-					bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(popdata.alleleA[s]));
-					bw.write("\t");
-					bw.write(NucleotideAlignmentConstants.getNucleotideIUPAC(popdata.alleleC[s]));
-					bw.write("\n");
-				}
-			}
-			
-			bw.close();
-		} catch(IOException e){
-			e.printStackTrace();
-			System.exit(-1);
-		}
-	}
-	
 	/**
 	 * Checks whether alleleA is parent1 and alleleC is parent2. If not, switches them.
 	 * @param popdata
 	 */
 	public static void checkParentage(PopulationData popdata) {
 		myLogger.info(String.format("Checking parents of %s", popdata.name));
-		IdGroup ids = popdata.original.getIdGroup();
+//		IdGroup ids = popdata.original.getIdGroup();
+		TaxaList myTaxaList = popdata.original.taxa();
 		LinkedList<Integer> p1list = new LinkedList<Integer>();
 		LinkedList<Integer> p2list = new LinkedList<Integer>();
-		int nsites = popdata.original.getSiteCount();
+		int nsites = popdata.original.numberOfSites();
+		int ntaxa = popdata.original.numberOfTaxa();
 		
-		for (int t = 0; t < ids.getIdCount(); t++) {
-			String tname = ids.getIdentifier(t).getFullName();
+		for (int t = 0; t < ntaxa; t++) {
+			String tname = myTaxaList.taxaName(t);
 			if (tname.toUpperCase().contains(popdata.parent1.toUpperCase())) p1list.add(t);
 			if (tname.toUpperCase().contains(popdata.parent2.toUpperCase())) p2list.add(t);
 		}
@@ -2654,7 +1904,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			int other = 0;
 			for (int s = 0; s < nsites; s++) {
 				if (popdata.snpIndex.fastGet(s)) {
-					byte thisAllele = popdata.original.getBase(tndx, s);
+					byte thisAllele = popdata.original.genotype(tndx, s);
 					if (thisAllele != NN) {
 						total++;
 						if (thisAllele == popdata.alleleA[s]) amatches++;
@@ -2665,7 +1915,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			}
 			consistent += amatches;
 			notConsistent += cmatches;
-			myLogger.info(String.format("%s: total = %d, amatches = %d, cmatches = %d, other = %d", ids.getIdentifier(tndx).getFullName(), total, amatches, cmatches, other));
+			myLogger.info(String.format("%s: total = %d, amatches = %d, cmatches = %d, other = %d", myTaxaList.taxaName(tndx), total, amatches, cmatches, other));
 		}
 		
 		for (Integer tndx : p2list) {
@@ -2675,7 +1925,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			int other = 0;
 			for (int s = 0; s < nsites; s++) {
 				if (popdata.snpIndex.fastGet(s)) {
-					byte thisAllele = popdata.original.getBase(tndx, s);
+					byte thisAllele = popdata.original.genotype(tndx, s);
 					if (thisAllele != NN) {
 						total++;
 						if (thisAllele == popdata.alleleA[s]) amatches++;
@@ -2686,7 +1936,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			}
 			consistent += cmatches;
 			notConsistent += amatches;
-			myLogger.info(String.format("%s: total = %d, amatches = %d, cmatches = %d, other = %d", ids.getIdentifier(tndx).getFullName(), total, amatches, cmatches, other));
+			myLogger.info(String.format("%s: total = %d, amatches = %d, cmatches = %d, other = %d", myTaxaList.taxaName(tndx), total, amatches, cmatches, other));
 		}
 		
 		double probNotConsistent = 0;

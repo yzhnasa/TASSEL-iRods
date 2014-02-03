@@ -8,10 +8,11 @@ import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
 
+import net.maizegenetics.dna.snp.CombineGenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
-import net.maizegenetics.pal.alignment.MutableNucleotideAlignment;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -65,7 +66,7 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                 PopulationData family = (PopulationData) datum.getData();
                 allOfTheAlignments[count++] = createOutputAlignment(family, asNucleotides);
             }
-            GenotypeTable alignment = MutableSingleEncodeAlignment.getInstance(allOfTheAlignments);
+            GenotypeTable alignment = CombineGenotypeTable.getInstance(allOfTheAlignments, true);
             ExportUtils.writeToHapmap(alignment, outputDiploid, filename, '\t', null);
         } else {
             for (Datum datum : theData) {
@@ -83,17 +84,18 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
     }
 
     private GenotypeTable createOutputAlignment(PopulationData popdata, boolean asNucleotides) {
-        GenotypeTable out = null;
+    	GenotypeTable out = null;
 
         if (!asNucleotides) {
             out = popdata.imputed;
         } else {
             //change the parent calls to original nucleotides
-            GenotypeTable outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
+        	GenotypeTable outPoly = NucleotideImputationUtils.convertParentCallsToNucleotides(popdata);
 
             if (!Double.isNaN(minSnpCoverage) && !Double.isNaN(maxMafForMono)) {
                 int nsnps = popdata.original.numberOfSites();
                 double ngametes = 2 * popdata.original.numberOfTaxa();
+                
                 int[] monomorphicSnps = new int[nsnps];
                 int snpCount = 0;
                 for (int s = 0; s < nsnps; s++) {
@@ -105,20 +107,21 @@ public class WritePopulationAlignmentPlugin extends AbstractPlugin {
                 monomorphicSnps = Arrays.copyOf(monomorphicSnps, snpCount);
                 GenotypeTable fa = FilterGenotypeTable.getInstance(popdata.original, monomorphicSnps);
                 if (fa.numberOfSites() == 0) {	//If there are no monomorphic sites (e.g, have been pre-filtered), just return polymorphic ones
-                    out = MutableSingleEncodeAlignment.getInstance(new GenotypeTable[]{outPoly});
+                    out = outPoly;
                 } else { //Return both monomorphic and polymorphic sites
-                    MutableAlignment outMono = MutableNucleotideAlignment.getInstance(fa);
+                	GenotypeTableBuilder builder = GenotypeTableBuilder.getSiteIncremental(fa.taxa());
+                	
                     // fill in all values with the major allele
-                    nsnps = outMono.getSiteCount();
-                    int ntaxa = outMono.getSequenceCount();
+                    nsnps = fa.numberOfSites();
+                    int ntaxa = fa.numberOfTaxa();
                     for (int s = 0; s < nsnps; s++) {
-                        byte majorAllele = outMono.getMajorAllele(s);
+                        byte majorAllele = fa.majorAllele(s);
                         byte major = (byte) ((majorAllele << 4) | majorAllele);
-                        for (int t = 0; t < ntaxa; t++) {
-                            outMono.setBase(t, s, major);
-                        }
+                        byte[] snpgeno = new byte[ntaxa];
+                        Arrays.fill(snpgeno, major);
+                        builder.addSite(fa.positions().get(s), snpgeno);
                     }
-                    out = MutableSingleEncodeAlignment.getInstance(new GenotypeTable[]{outPoly, outMono});
+                    out = builder.build();
                 }
             }
         }
