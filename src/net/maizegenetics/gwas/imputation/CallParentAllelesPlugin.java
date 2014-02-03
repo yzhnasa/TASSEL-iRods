@@ -3,6 +3,8 @@ package net.maizegenetics.gwas.imputation;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -65,17 +67,19 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 				family.original =  GenotypeTableBuilder.getGenotypeCopyInstance((FilterGenotypeTable)FilterGenotypeTable.getInstance(align, tL, false));
 				
 				if (!useHets) {
-					byte N = NucleotideAlignmentConstants.getNucleotideDiploidByte('N');
-					MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(family.original);
-					int nsites = mna.getSiteCount();
-					int ntaxa = mna.getSequenceCount();
+					byte NN = NucleotideAlignmentConstants.getNucleotideDiploidByte('N');
+//					MutableNucleotideAlignment mna = MutableNucleotideAlignment.getInstance(family.original);
+					GenotypeTableBuilder builder = GenotypeTableBuilder.getSiteIncremental(family.original.taxa());
+					int nsites = family.original.numberOfSites();
+					int ntaxa = family.original.numberOfTaxa();
 					for (int s = 0; s < nsites; s++) {
+						byte[] siteGeno = family.original.genotypeAllTaxa(s);
 						for (int t = 0; t < ntaxa; t++) {
-							if (AlignmentUtils.isHeterozygous(mna.getBase(t, s))) mna.setBase(t, s, N);
+							if (GenotypeTableUtils.isHeterozygous(siteGeno[t])) siteGeno[t] = NN;
 						}
+						builder.addSite(family.original.positions().get(s), siteGeno);
 					}
-					mna.clean();
-					family.original = BitNucleotideAlignment.getInstance(mna, true);
+					family.original = builder.build();
 				}
 				
 				myLogger.info("family alignment created");

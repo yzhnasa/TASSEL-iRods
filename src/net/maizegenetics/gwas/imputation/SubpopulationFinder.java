@@ -2,7 +2,7 @@ package net.maizegenetics.gwas.imputation;
 
 import java.util.HashMap;
 
-import net.maizegenetics.pal.ids.Identifier;
+import net.maizegenetics.taxa.Taxon;
 
 
 public class SubpopulationFinder {
@@ -246,7 +246,7 @@ public class SubpopulationFinder {
 		else return pop;
 	}
 	
-	public static int getNamSubPopulation(Identifier taxonId) {
-		return getNamSubPopulation(taxonId.getName());
+	public static int getNamSubPopulation(Taxon taxon) {
+		return getNamSubPopulation(taxon.getName());
 	}
 }
