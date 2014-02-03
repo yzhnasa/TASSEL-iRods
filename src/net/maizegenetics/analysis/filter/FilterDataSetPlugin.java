@@ -5,7 +5,7 @@
  *
  */
 
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.filter;
 
 import javax.swing.ImageIcon;
 
