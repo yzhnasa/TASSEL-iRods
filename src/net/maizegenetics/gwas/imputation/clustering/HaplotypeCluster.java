@@ -7,7 +7,10 @@ import java.util.Iterator;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Multiset.Entry;
 
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
@@ -25,7 +28,7 @@ public class HaplotypeCluster implements Comparable<HaplotypeCluster> {
 	/**
 	 * TYPE determines how the haplotype will be represented. 
 	 * If majority, the most common allele at a locus within the cluster will be used.
-	 * If unanimous, then the alleles used will be those for which all taxa within the cluster are the same.
+	 * If unanimous, then the alleles used will be those for which almost all taxa within the cluster are the same. One error is allowed.
 	 */
 	public enum TYPE {majority, unanimous}
 	
@@ -183,7 +186,7 @@ public class HaplotypeCluster implements Comparable<HaplotypeCluster> {
 	
 	public void countAllelesAtAllSites() {
 		alleleCounts = new ArrayList<int[][]>();
-		byte NN = NucleotideAlignmentConstants.getNucleotideDiploidByte("NN");
+		byte NN = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
 		int nsites = hapList.get(0).seqlen;
 		int nhaps = hapList.size();
 		
@@ -307,26 +310,37 @@ public class HaplotypeCluster implements Comparable<HaplotypeCluster> {
 	}
 	
 	/**
-	 * The unanimous haplotype of this cluster. Only monomorphic sites are reported. Others will be unknown. 
+	 * The unanimous haplotype of this cluster. Only monomorphic sites are reported. Others will be unknown. One off-type call is allowed.
 	 * @return a byte array representing the haplotype of this cluster
 	 */
 	public byte[] getUnanimousHaplotype() {
 		int nsites = hapList.get(0).seqlen;
 		byte[] hap = new byte[nsites];
-		Arrays.fill(hap, N);
-		Iterator<Haplotype> hit = hapList.iterator();
-		while(hit.hasNext()) {
-			Haplotype h = hit.next();
-			for (int s = 0; s < nsites; s++) {
-				if (h.seq[s] != N && hap[s] != -1) {
-					if (hap[s] == N) hap[s] = h.seq[s];
-					else if(hap[s] != h.seq[s]) hap[s] = -1;
+		for (int s = 0; s < nsites; s++) {
+			Multiset<Byte> byteset = HashMultiset.create();
+			for (Haplotype haplo : hapList) {
+				if (haplo.seq[s] != N) byteset.add(haplo.seq[s]);
+			}
+			
+			if (byteset.size() == 0) {
+				hap[s] = N;
+			} else {
+				Iterator<Entry<Byte>> it = byteset.entrySet().iterator();
+				int count = 0;
+				hap[s] = N;
+				while (it.hasNext()) {
+					Entry<Byte> ent = it.next();
+					if (!GenotypeTableUtils.isHeterozygous(ent.getElement()) && ent.getCount() > 1) {
+						if (count > 1) hap[s] = N;
+						else {
+							hap[s] = ent.getElement();
+							count = ent.getCount();
+						}
+					}
 				}
 			}
 		}
-		for (int s = 0; s < nsites; s++) {
-			if (hap[s] == -1) hap[s] = N;
-		}
+		
 		return hap;
 	}
 	

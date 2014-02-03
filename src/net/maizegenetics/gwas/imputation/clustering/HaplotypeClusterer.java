@@ -177,6 +177,18 @@ public class HaplotypeClusterer {
 	}
 	
 	/**
+	 * @param cluster0	
+	 * @param cluster1	
+	 * @return the minimum of the number of haplotypes in cluster0 not in cluster1 and the number of haplotypes in cluster 1 not in cluster0 divided my the minimum number of haplotypes in the two clusters
+	 */
+	public static double clusterDistanceDistinctHaplotypeProportion(HaplotypeCluster cluster0, HaplotypeCluster cluster1){
+		int count0 = cluster0.getCountOfHaplotypesNotInThisCluster(cluster1);
+		int count1 = cluster1.getCountOfHaplotypesNotInThisCluster(cluster0);
+		double minNumber = Math.min(cluster0.getSize(), cluster1.getSize());
+		return Math.min(count0, count1) / minNumber;
+	}
+	
+	/**
 	 * @param cluster0
 	 * @param cluster1
 	 * @return the number of alleles difference between the cluster haplotypes
@@ -185,6 +197,27 @@ public class HaplotypeClusterer {
 		byte[] hap0 = cluster0.getHaplotype();
 		byte[] hap1 = cluster1.getHaplotype();
 		return Haplotype.getDistance(hap0, hap1);
+	}
+	
+	/**
+	 * @param cluster0
+	 * @param cluster1
+	 * @return the number of alleles difference between the cluster haplotypes divided by the number of nonmissing sites
+	 */
+	public static double clusterDistanceClusterDiffProportion(HaplotypeCluster cluster0, HaplotypeCluster cluster1){
+		byte[] hap0 = cluster0.getHaplotype();
+		byte[] hap1 = cluster1.getHaplotype();
+		int n = hap0.length;
+		double notmissing = 0;
+		double notmatching = 0;
+		byte N = NucleotideAlignmentConstants.getNucleotideDiploidByte('N');
+		for (int i = 0; i < n; i++) {
+			if (hap0[i] != N && hap1[i] != N) {
+				notmissing++;
+				if (hap0[i] != hap1[i]) notmatching++;
+			}
+		}
+		return notmatching/notmissing;
 	}
 	
 	/**
