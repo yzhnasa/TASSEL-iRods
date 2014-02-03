@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.maizegenetics.gbs.pipeline;
+package net.maizegenetics.analysis.imputation;
 
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GeneticMap;

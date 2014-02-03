@@ -936,43 +936,6 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         theTAL.addRefTag(refTag, theTOPM.getTagSizeInLong(), theTOPM.getNullTag());
     }
 
-    public static byte complementGeno(byte geno) {
-        byte comp = Byte.MIN_VALUE;
-        switch (geno) {
-            case 0x00: comp = 0x33; break;   // AA -> TT
-            case 0x01: comp = 0x32; break;   // AC -> TG
-            case 0x02: comp = 0x31; break;   // AG -> TC
-            case 0x03: comp = 0x30; break;   // AT -> TA
-            case 0x11: comp = 0x22; break;   // CC -> GG
-            case 0x10: comp = 0x23; break;   // CA -> GT
-            case 0x12: comp = 0x21; break;   // CG -> GC
-            case 0x13: comp = 0x20; break;   // CT -> GA
-            case 0x22: comp = 0x11; break;   // GG -> CC
-            case 0x20: comp = 0x13; break;   // GA -> CT
-            case 0x21: comp = 0x12; break;   // GC -> CG
-            case 0x23: comp = 0x10; break;   // GT -> CA
-            case 0x33: comp = 0x00; break;   // TT -> AA
-            case 0x30: comp = 0x03; break;   // TA -> AT
-            case 0x31: comp = 0x02; break;   // TC -> AG
-            case 0x32: comp = 0x01; break;   // TG -> AC
-            case 0x05: comp = 0x35; break;   // A- -> T-
-            case 0x50: comp = 0x53; break;   // -A -> -T
-            case 0x15: comp = 0x25; break;   // C- -> G-
-            case 0x51: comp = 0x52; break;   // -C -> -G
-            case 0x25: comp = 0x15; break;   // G- -> C-
-            case 0x52: comp = 0x51; break;   // -G -> -C
-            case 0x35: comp = 0x05; break;   // T- -> A-
-            case 0x53: comp = 0x50; break;   // -T -> -A
-            case 0x55: comp = 0x55; break;   // -- -> --            
-            case GenotypeTable.UNKNOWN_DIPLOID_ALLELE:
-                comp = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
-                break;
-            default:
-                comp = GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
-                break;
-        }
-        return comp;
-    }
     
     public static byte complementAllele(byte allele) {
         byte comp = Byte.MIN_VALUE;

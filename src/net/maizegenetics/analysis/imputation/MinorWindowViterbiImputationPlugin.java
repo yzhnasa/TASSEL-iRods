@@ -1,7 +1,7 @@
 /*
  * MinorWindowViterbiImputationPlugin
  */
-package net.maizegenetics.gbs.pipeline;
+package net.maizegenetics.analysis.imputation;
 
 
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,7 +43,7 @@ import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.GAP_DIPLOID
  * <p>
  * The algorithm relies on having a series of donor haplotypes.  If phased haplotypes are 
  * already known, they can be used directly.  If they need to be reconstructed, the 
- * {@link FindMergeHaplotypesPlugin} can be used to create haplotypes for windows
+ * {@link net.maizegenetics.analysis.imputation.FindMergeHaplotypesPlugin} can be used to create haplotypes for windows
  * across the genome.
  * <p>
  * Imputation is done one taxon at a time using the donor haplotypes.  The strategy is as
