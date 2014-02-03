@@ -3,6 +3,7 @@
  */
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.analysis.filter.FilterAlignmentPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;

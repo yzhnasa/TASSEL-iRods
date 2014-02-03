@@ -6,6 +6,11 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.filter.FilterTaxaAlignmentPlugin;
+import net.maizegenetics.analysis.filter.FilterSiteNamePlugin;
+import net.maizegenetics.analysis.filter.FilterAlignmentPlugin;
+import net.maizegenetics.analysis.filter.FilterTraitsPlugin;
+import net.maizegenetics.analysis.tree.CreateTreePlugin;
 import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.dna.map.TagsOnPhysMapHDF5;

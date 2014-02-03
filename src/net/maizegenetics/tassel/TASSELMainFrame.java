@@ -19,6 +19,13 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.analysis.filter.FilterTaxaAlignmentPlugin;
+import net.maizegenetics.analysis.filter.FilterTaxaPropertiesPlugin;
+import net.maizegenetics.analysis.filter.FilterSiteNamePlugin;
+import net.maizegenetics.analysis.filter.FilterAlignmentPlugin;
+import net.maizegenetics.analysis.filter.FilterTraitsPlugin;
+import net.maizegenetics.analysis.tree.CreateTreePlugin;
+import net.maizegenetics.analysis.tree.ArchaeopteryxPlugin;
 import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
 import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;

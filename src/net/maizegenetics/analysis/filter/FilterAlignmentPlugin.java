@@ -4,7 +4,7 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.filter;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.map.Chromosome;
@@ -34,6 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import net.maizegenetics.baseplugins.SeparatePlugin;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 
 import org.apache.log4j.Logger;

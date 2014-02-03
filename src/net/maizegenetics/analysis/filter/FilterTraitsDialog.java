@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.filter;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
