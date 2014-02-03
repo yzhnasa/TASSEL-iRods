@@ -7,7 +7,7 @@ import net.maizegenetics.dna.snp.genotypecall.ProjectionGenotypeCallTable;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.util.DonorHaplotypes;
+import net.maizegenetics.dna.map.DonorHaplotypes;
 
 import java.util.Collection;
 import java.util.Map;

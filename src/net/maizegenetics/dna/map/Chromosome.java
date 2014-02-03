@@ -3,6 +3,7 @@ package net.maizegenetics.dna.map;
 import net.maizegenetics.util.GeneralAnnotation;
 
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -102,6 +103,15 @@ public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
     @Override
     public Map.Entry<String,String>[] getAllAnnotationEntries() {
         return myGA.getAllAnnotationEntries();
+    }
+
+    @Override
+    public Map<String, String> getAnnotationAsMap() {
+        Map<String,String> result=new TreeMap<>();
+        for (Map.Entry<String, String> en : myGA.getAllAnnotationEntries()) {
+            result.put(en.getKey(),en.getValue());
+        }
+        return result;
     }
 
     @Override

@@ -6,58 +6,32 @@
  */
 package net.maizegenetics.baseplugins;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.gui.GenotypeTableMask;
 import net.maizegenetics.dna.snp.ExportUtils;
-import net.maizegenetics.trait.Phenotype;
-import net.maizegenetics.trait.PhenotypeUtils;
-
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.gui.DialogUtils;
+import net.maizegenetics.gui.GenotypeTableMask;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
-
-import net.maizegenetics.prefs.TasselPrefs;
-
-import net.maizegenetics.util.Report;
-import net.maizegenetics.util.TableReport;
-import net.maizegenetics.util.TableReportUtils;
-
-import net.maizegenetics.gui.DialogUtils;
-
-import net.maizegenetics.util.ExceptionUtils;
-import net.maizegenetics.util.Utils;
-
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.popgen.distance.WriteDistanceMatrix;
-
+import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.tassel.TASSELMainFrame;
+import net.maizegenetics.trait.Phenotype;
+import net.maizegenetics.trait.PhenotypeUtils;
+import net.maizegenetics.util.*;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-
-import java.awt.Frame;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-
 import java.net.URL;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-
-
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -316,7 +290,7 @@ public class ExportPlugin extends AbstractPlugin {
         } else if (myFileType == FileLoadPlugin.TasselFileType.HDF5) {
             resultFile = ExportUtils.writeToMutableHDF5(inputAlignment, mySaveFile);
         } else if (myFileType == FileLoadPlugin.TasselFileType.VCF) {
-            resultFile = ExportUtils.writeToVCF(inputAlignment, mySaveFile, '\t');
+            resultFile = ExportUtils.writeToVCF(inputAlignment, mySaveFile);
         } else {
             throw new IllegalStateException("ExportPlugin: performFunction: Unknown Alignment File Format: " + myFileType);
         }

@@ -10,10 +10,7 @@ import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.GeneralAnnotationUtils;
 
 import java.text.NumberFormat;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 //import java.util.Objects;
@@ -372,6 +369,15 @@ public final class GeneralPosition implements Position {
     @Override
     public Map.Entry<String,String>[] getAllAnnotationEntries() {
         return Arrays.copyOf(myVariantsAndAnno,myVariantsAndAnno.length);
+    }
+
+    @Override
+    public Map<String, String> getAnnotationAsMap() {
+        Map<String,String> result=new TreeMap<>();
+        for (Map.Entry<String, String> en : myVariantsAndAnno) {
+            result.put(en.getKey(),en.getValue());
+        }
+        return result;
     }
     
 }

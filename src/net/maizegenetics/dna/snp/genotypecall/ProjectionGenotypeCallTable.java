@@ -7,7 +7,7 @@ import com.google.common.collect.TreeRangeMap;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
-import net.maizegenetics.util.DonorHaplotypes;
+import net.maizegenetics.dna.map.DonorHaplotypes;
 
 import java.util.ArrayList;
 import java.util.Arrays;

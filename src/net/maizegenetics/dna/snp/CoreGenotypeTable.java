@@ -449,6 +449,16 @@ public class CoreGenotypeTable implements GenotypeTable {
     }
 
     @Override
+    public boolean hasDepth() {
+        return (myAlleleDepth!=null);
+    }
+
+    @Override
+    public AlleleDepth depth() {
+        return myAlleleDepth;
+    }
+
+    @Override
     public int[] depthForAlleles(int taxon, int site) {
         return myAlleleDepth.depthForAlleles(taxon, site);
     }

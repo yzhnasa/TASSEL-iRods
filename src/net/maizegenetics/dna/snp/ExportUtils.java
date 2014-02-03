@@ -3,16 +3,16 @@
  */
 package net.maizegenetics.dna.snp;
 
-import net.maizegenetics.util.FormattedOutput;
+import com.google.common.base.Joiner;
+import com.google.common.primitives.Ints;
+import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.util.ExceptionUtils;
-import net.maizegenetics.util.ProgressListener;
-import net.maizegenetics.util.Utils;
-import net.maizegenetics.util.VCFUtil;
+import net.maizegenetics.util.*;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
@@ -373,20 +373,21 @@ public class ExportUtils {
     /**
      * Writes given alignment to a VCF file
      *
-     * @param alignment
+     * @param gt
      * @param filename
      * @return
      */
-    public static String writeToVCF(GenotypeTable alignment, String filename, char delimChar) {
+    public static String writeToVCF(GenotypeTable gt, String filename) {
+        final char delimChar='\t';
         //todo restore depth
-        boolean hasDepth=false;  //in future test for this
+        boolean hasDepth=gt.hasDepth();  //in future test for this
         try {
 
             filename = Utils.addSuffixIfNeeded(filename, ".vcf", new String[]{".vcf", ".vcf.gz"});
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
-            if (alignment.referenceGenotype(0) == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
+            if (gt.referenceGenotype(0) == GenotypeTable.UNKNOWN_ALLELE) {
                 bw.write("##Tassel=<ID=GenotypeTable,Version=5,Description=\"Reference allele is not known. The major allele was used as reference allele\">");
                 bw.newLine();
             }
@@ -404,146 +405,63 @@ public class ExportUtils {
             bw.newLine();
             bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">");
             bw.newLine();
-
-
             bw.write("##INFO=<ID=AF,Number=.,Type=Float,Description=\"Allele Frequency\">");
             bw.newLine();
+            for (Taxon taxon : gt.taxa()) {
+                String annoString=Joiner.on(',').withKeyValueSeparator("=").join(taxon.getAnnotationAsMap());
+                bw.write("##SAMPLE=<ID="+taxon.getName()+","+annoString+">");
+                bw.newLine();
+            }
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             boolean refTaxon = false;
-            for (int taxa = 0; taxa < alignment.numberOfTaxa(); taxa++) {
-                String taxonName = alignment.taxaName(taxa).trim();
-                if (taxa == 0 && taxonName.contentEquals("REFERENCE_GENOME")) {
-                    refTaxon = true;
-                } else {
-                    bw.write(delimChar + taxonName);;
-                }
+            for (int taxa = 0; taxa < gt.numberOfTaxa(); taxa++) {
+                String taxonName = gt.taxaName(taxa).trim();
+                bw.write(delimChar + taxonName);
             }
             bw.newLine();
 
-            for (int site = 0; site < alignment.numberOfSites(); site++) {
-                int[][] sortedAlleles = alignment.allelesSortedByFrequency(site); // which alleles are actually present among the genotypes
+            for (int site = 0; site < gt.numberOfSites(); site++) {
+                Position p=gt.positions().get(site);
+                byte refAllele=p.getAllele(Position.Allele.REF);
+                int[] sortedAlleles = gt.allelesSortedByFrequency(site)[0]; // which alleles are actually present among the genotypes
+                int indexOfRefAllele=Ints.indexOf(sortedAlleles,refAllele);
+                if(indexOfRefAllele<0) indexOfRefAllele=0;
+                if(indexOfRefAllele!=0) {
+                    int t=sortedAlleles[0];
+                    sortedAlleles[0]=sortedAlleles[indexOfRefAllele];
+                    sortedAlleles[indexOfRefAllele]=t;
+                }
 
+                int nAlleles = sortedAlleles.length;
+                String[] alleleRedirect=new String[16];
+                Arrays.fill(alleleRedirect,".");
+                for (int i=0; i<sortedAlleles.length; i++) {
+                    alleleRedirect[sortedAlleles[i]]=""+i;
+                }
 
-                int nAlleles = sortedAlleles[0].length;
-
-
+                bw.write(gt.chromosomeName(site)); // chromosome
+                bw.write(delimChar);
+                bw.write(gt.chromosomalPosition(site) + ""); // position
+                bw.write(delimChar);
+                bw.write(gt.siteName(site)); // site name
+                bw.write(delimChar);
                 if (nAlleles == 0) {                                                  //used to be ==0
-                    System.out.println("no alleles at: " + site + " " + alignment.chromosomalPosition(site));
+                    System.out.println("A0:"+gt.chromosomeName(site)+":"+gt.chromosomalPosition(site));
+                    bw.write(".\t.\t.\tPASS\t.\tGT");
+                    for (int taxa = 0; taxa < gt.numberOfTaxa(); taxa++) bw.write("\t./.");
+                    bw.newLine();
                     continue;
                 }
-
-                byte refGeno = alignment.referenceGenotype(site);
-                if (refGeno == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {
-                    String myMajorAllele = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES[0][sortedAlleles[0][0]];
-                    String MajorGenotype = myMajorAllele + myMajorAllele;
-                    refGeno = NucleotideAlignmentConstants.getNucleotideDiploidByte(MajorGenotype);
-                }
-                byte refAllele = (byte) (refGeno & 0xF);  // converts from diploid to haploid allele (2nd allele)
-                //System.out.println(alignment.chromosomalPosition(site) + " " + refAllele);
-                byte[] alleleValues = null;
-                if (hasDepth) {
-                    alleleValues = alignment.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Depth, site); // storage order of the alleles in the alignment (myCommonAlleles & myAlleleDepth) (length always 3, EVEN IF THERE ARE ONLY 2 in the genos)
-                } else {
-                    alleleValues = alignment.allelesBySortType(GenotypeTable.ALLELE_SORT_TYPE.Frequency, site);
-                    //if (nAlleles > alignment.maxNumAlleles()) {
-                    //    nAlleles = alignment.maxNumAlleles();
-                    //}
-                }
-                int[] alleleRedirect = new int[nAlleles]; // holds the indices of alleleValues in ref, alt1, [alt2] order (max 3 alleles)
-                String refAlleleStr;
-                int refUnknownOffset = 0;
-                if (refGeno == GenotypeTable.UNKNOWN_DIPLOID_ALLELE) {  // reference allele unknown - report the alleles in maj, min1, [min2] order
-                    refUnknownOffset = 1;
-                    refAlleleStr = ".";
-                    int aRedirectIndex = 0;
-                    for (int sortedAIndex = 0; sortedAIndex < nAlleles; sortedAIndex++) {
-                        for (int aValuesIndex = 0; aValuesIndex < alleleValues.length; aValuesIndex++) {
-                            if (alleleValues[aValuesIndex] == sortedAlleles[0][sortedAIndex]) {
-                                alleleRedirect[aRedirectIndex] = aValuesIndex;
-                                ++aRedirectIndex;
-                                break;
-                            }
-                        }
-                    }
-                } else {  // refAllele known
-                    refAlleleStr = NucleotideAlignmentConstants.NUCLEOTIDE_IUPAC_HASH.get(refGeno);
-                    //refAlleleStr = String.valueOf(refGeno);
-
-                    // check if the reference allele is found among the genotypes
-                    boolean refAlleleAmongGenos = false;
-                    boolean refAlleleInAllelValues = false;
-                    for (int sortedAIndex = 0; sortedAIndex < nAlleles; sortedAIndex++) {
-                        if (sortedAlleles[0][sortedAIndex] == refAllele) {
-                            refAlleleAmongGenos = true;
-                            for (int aValuesIndex = 0; aValuesIndex < alleleValues.length; aValuesIndex++) {
-                                if (alleleValues[aValuesIndex] == refAllele) {
-                                    refAlleleInAllelValues = true;
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                    }
-                    if (refAlleleInAllelValues) {
-                        // the refAllele index in alleleValues should be stored in alleleRedirect[0], and the remaining in desc order of freq
-                        int aRedirectIndex = 1;
-                        for (int sortedAIndex = 0; sortedAIndex < nAlleles; sortedAIndex++) {
-                            for (int aValuesIndex = 0; aValuesIndex < alleleValues.length; aValuesIndex++) {
-                                if (alleleValues[aValuesIndex] == sortedAlleles[0][sortedAIndex]) {
-                                    if (alleleValues[aValuesIndex] == refAllele) {
-                                        alleleRedirect[0] = aValuesIndex;
-                                    } else {
-                                        alleleRedirect[aRedirectIndex] = aValuesIndex;
-                                        ++aRedirectIndex;
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        // alleleRedirect[0] set to -1, the remaining in desc order of freq: maj, min1, [min2]
-                        if (!refAlleleAmongGenos) {
-                            alleleRedirect = new int[alleleRedirect.length + 1];
-                        }
-                        alleleRedirect[0] = -1;
-                        int aRedirectIndex = 1;
-                        for (int sortedAIndex = 0; sortedAIndex < nAlleles; sortedAIndex++) {
-                            for (int aValuesIndex = 0; aValuesIndex < alleleValues.length; aValuesIndex++) {
-                                if (alleleValues[aValuesIndex] == sortedAlleles[0][sortedAIndex]) {
-                                    alleleRedirect[aRedirectIndex] = aValuesIndex;
-                                    ++aRedirectIndex;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                bw.write(alignment.chromosomeName(site)); // chromosome
-                bw.write(delimChar);
-                bw.write(alignment.chromosomalPosition(site) + ""); // position
-                bw.write(delimChar);
-                bw.write(alignment.siteName(site)); // site name
-                bw.write(delimChar);
-                bw.write(refAlleleStr); // ref allele
+                bw.write(NucleotideAlignmentConstants.getHaplotypeNucleotide((byte)sortedAlleles[0])); // ref allele
                 bw.write(delimChar);
 
                 StringBuilder altAllelesBuilder = new StringBuilder("");
-                int firstAltAllele = (refAlleleStr == ".") ? 0 : 1;  // if ref allele is unknown, ALL alleles are alt
-                for (int i = firstAltAllele; i < alleleRedirect.length; i++) {
-                    if (i != firstAltAllele) {
-                        altAllelesBuilder.append(",");
-                    }
-                    byte diploidByte = (byte) ((alleleValues[alleleRedirect[i]] << 4) | alleleValues[alleleRedirect[i]]);
-                    String AlleleStr = NucleotideAlignmentConstants.NUCLEOTIDE_IUPAC_HASH.get(diploidByte);
-                    if (AlleleStr == null) {
-                        altAllelesBuilder.append(".");
-                    } else {
-                        altAllelesBuilder.append(AlleleStr);
-                    }
+                for (int aa=1; aa<sortedAlleles.length; aa++) {
+                    altAllelesBuilder.append(NucleotideAlignmentConstants.getHaplotypeNucleotide((byte)sortedAlleles[aa])+",");
                 }
-                String altAlleles = altAllelesBuilder.toString();
-                altAlleles = (altAlleles.equals("")) ? "." : altAlleles;
-                bw.write(altAlleles); // alt alleles
+                if(altAllelesBuilder.length()==0) {altAllelesBuilder.append(".");}
+                else {altAllelesBuilder.deleteCharAt(altAllelesBuilder.length()-1);}
+                bw.write(altAllelesBuilder.toString()); // alt alleles
                 bw.write(delimChar);
 
                 bw.write("."); // qual score
@@ -553,16 +471,7 @@ public class ExportUtils {
                 bw.write(delimChar);
 
                 if (hasDepth) {
-                    int totalDepth = 0;
-                    for (int i = 0; i < alignment.numberOfTaxa(); i++) {
-                        int[] depth = alignment.depthForAlleles(i, site);
-                        for (int k = 0; k < depth.length; k++) {
-                            if (depth[k] != -1) {
-                                totalDepth += depth[k];
-                            }
-                        }
-                    }
-                    bw.write("DP=" + totalDepth); // DP
+                    bw.write("DP=" + gt.depth().depthForSite(site)); // DP
                 } else {
                     bw.write("."); // DP
                 }
@@ -573,170 +482,51 @@ public class ExportUtils {
                 } else {
                     bw.write("GT");
                 }
-                for (int taxa = 0; taxa < alignment.numberOfTaxa(); taxa++) {
-                    if (taxa == 0 && refTaxon) {
-                        continue;  // don't include REFERENCE_GENOME in vcf output
-                    }
+                for (int taxa = 0; taxa < gt.numberOfTaxa(); taxa++) {
                     bw.write(delimChar);
-
                     // GT = genotype
-                    String GTstr = "";
-                    byte[] values = alignment.genotypeArray(taxa, site);
-
-                    boolean genoOne = false;
-                    if (values[0] == GenotypeTable.UNKNOWN_ALLELE) {
-                        GTstr += "./";
-                        genoOne = true;
-                    } else {
-                        for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/[alt2] order (if no alt2,length=2)
-                            if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
-                                if (values[0] == refAllele) {
-
-                                    GTstr += (i + refUnknownOffset) + "/";
-                                    genoOne = true;
-                                    break;
-                                }
-                            } else if (values[0] == alleleValues[alleleRedirect[i]]) {
-                                GTstr += (i + refUnknownOffset) + "/";
-                                genoOne = true;
-                                break;
-                            }
-                        }
-                    }
-//                    if (!genoOne) { 
-                    //bw.write("./.");
-//                        if (values[0] == NucleotideAlignmentConstants.A_ALLELE) {
-//                            bw.write("A/");
-//                        } else if (values[0] == NucleotideAlignmentConstants.C_ALLELE) {
-//                            bw.write("C/");
-//                        } else if (values[0] == NucleotideAlignmentConstants.G_ALLELE) {
-//                            bw.write("G/");
-//                        } else if (values[0] == NucleotideAlignmentConstants.T_ALLELE) {
-//                            bw.write("T/");
-//                        } else if (values[0] == NucleotideAlignmentConstants.GAP_ALLELE) {
-//                            bw.write("-/");
-//                        } else {
-//                            bw.write(values[0] + "/");
-//                            // throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
-//                        }
-//                    }
-
-                    boolean genoTwo = false;
-                    if (values[1] == GenotypeTable.UNKNOWN_ALLELE) {
-                        GTstr += ".";
-                        genoTwo = true;
-                    } else {
-                        for (int i = 0; i < alleleRedirect.length; i++) { // alleleRedirect stores the alleles in ref/alt1/alt2 order (if no alt2,length=2)
-                            if (i == 0 && alleleRedirect[i] == -1) {  // refAllele known but either not among genos or not in alleleValues
-                                if (values[1] == refAllele) {
-                                    GTstr += (i + refUnknownOffset) + "";
-                                    genoTwo = true;
-                                    break;
-                                }
-                            } else if (values[1] == alleleValues[alleleRedirect[i]]) {
-                                GTstr += (i + refUnknownOffset) + "";
-                                genoTwo = true;
-                                break;
-                            }
-                        }
-                    }
-//                    if (!genoTwo) {
-//                        if (values[1] == NucleotideAlignmentConstants.A_ALLELE) {
-//                            bw.write("A");
-//                        } else if (values[1] == NucleotideAlignmentConstants.C_ALLELE) {
-//                            bw.write("C");
-//                        } else if (values[1] == NucleotideAlignmentConstants.G_ALLELE) {
-//                            bw.write("G");
-//                        } else if (values[1] == NucleotideAlignmentConstants.T_ALLELE) {
-//                            bw.write("T");
-//                        } else if (values[1] == NucleotideAlignmentConstants.GAP_ALLELE) {
-//                            bw.write("-");
-//                        } else {
-//                            bw.write(values[1] + "");
-//                            // throw new IllegalArgumentException("Unknown allele value: " + alleleValues[i]);
-//                        }
-//                    }
-                    if (genoOne && genoTwo) {
-                        bw.write(GTstr);
-                    } else {
-                        bw.write("./.");
-                    }
+                    byte[] values = gt.genotypeArray(taxa, site);
+                    bw.write(alleleRedirect[values[0]]);
+                    bw.write("/");
+                    bw.write(alleleRedirect[values[1]]);
                     if (!(hasDepth)) {
                         continue;
                     }
                     bw.write(":");
 
                     // AD
-                    int[] siteAlleleDepths = alignment.depthForAlleles(taxa, site);
+                    int[] siteAlleleDepths = gt.depthForAlleles(taxa, site);
 
                     int siteTotalDepth = 0;
-                    if (siteAlleleDepths.length != 0) {
-                        for (int a = 0; a < alleleRedirect.length; a++) {
-                            if (a == 0 && alleleRedirect[a] == -1) {  // refAllele known but is not among the genotypes
-                                bw.write("0");
-                                continue;
-                            }
-                            if (a != 0) {
-                                bw.write(",");
-                            }
-                            bw.write(((int) (siteAlleleDepths[alleleRedirect[a]])) + "");
-                            siteTotalDepth += siteAlleleDepths[alleleRedirect[a]];
-                        }
-                    } else {
-                        bw.write(".,.,.");
+                    for (int ss=0; ss<sortedAlleles.length; ss++) {
+                        bw.write(""+siteAlleleDepths[sortedAlleles[ss]]);
+                        if(ss<sortedAlleles.length-1) bw.write(',');
+                        siteTotalDepth+=siteAlleleDepths[sortedAlleles[ss]];
                     }
                     bw.write(":");
-
                     // DP
                     bw.write(siteTotalDepth + "");
                     bw.write(":");
-
-                    if (siteAlleleDepths.length != 0) {
-                        int[] scores;
-                        if (siteAlleleDepths.length == 1) {
-                            int dep1 = siteAlleleDepths[alleleRedirect[0]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[0]];
-                            scores = VCFUtil.getScore(dep1, 0);
-                        } else {
-                            if (alleleRedirect[0] == -1) {
-                                int dep1 = 0;
-                                int dep2 = 0;
-                                if (alleleRedirect.length > 2) {
-                                    dep1 = siteAlleleDepths[alleleRedirect[1]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[1]];
-                                    dep2 = siteAlleleDepths[alleleRedirect[2]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[2]];
-                                } else if (alleleRedirect.length == 2) {
-                                    dep1 = 0;
-                                    dep2 = siteAlleleDepths[alleleRedirect[1]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[1]];
-                                }
-                                scores = VCFUtil.getScore(dep1, dep2);
-                            } else {
-                                int dep1 = siteAlleleDepths[alleleRedirect[0]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[0]];
-                                int dep2 = 0;
-                                if (alleleRedirect.length > 1) {
-                                    dep2 = siteAlleleDepths[alleleRedirect[1]] > 127 ? 127 : siteAlleleDepths[alleleRedirect[1]];
-                                }
-                                scores = VCFUtil.getScore(dep1, dep2);
-                            }
-                        }
-
-                        // GQ
-                        if (scores == null) {
-                            scores = new int[]{-1, -1, -1, -1};
-                        }
-                        bw.write(scores[3] + "");
-                        bw.write(":");
-
-                        // PL
-                        bw.write(scores[0] + "," + scores[1] + "," + scores[2]);
-                    } else {
-                        bw.write(".:.,.");
-                    }
+                    int[] scores = new int[]{-1, -1, -1, -1};
+                    if(values[0]!=GenotypeTable.UNKNOWN_ALLELE) {
+                        int altDepth=(sortedAlleles.length<2)?0:siteAlleleDepths[sortedAlleles[1]];
+                        scores= VCFUtil.getScore(siteAlleleDepths[sortedAlleles[0]], altDepth);}  //this is not correct
+                  //  else {scores= VCFUtil.getScore(siteAlleleDepths[values[0]], siteAlleleDepths[values[1]]);} //this is not correct
+                    // GQ
+                    bw.write(scores[3] + "");
+                    bw.write(":");
+                    // PL
+                    bw.write(scores[0] + "," + scores[1] + "," + scores[2]);
+//                    } else {
+//                        bw.write(".:.,.");
+//                    }
                 }
                 bw.newLine();
             }
             bw.flush();
             bw.close();
         } catch (Exception e) {
-            e.printStackTrace();;
+            e.printStackTrace();
             throw new IllegalArgumentException("Error writing VCF file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
         }
         return filename;

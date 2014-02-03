@@ -7,6 +7,7 @@ package net.maizegenetics.gbs.pipeline;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+import net.maizegenetics.analysis.imputation.MinorWindowViterbiImputationPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.prefs.TasselPrefs;

@@ -4,7 +4,6 @@
  */
 package net.maizegenetics.util;
 
-import java.util.HashMap;
 import net.maizegenetics.dna.snp.GenotypeTable;
 
 /**
@@ -19,14 +18,9 @@ public class VCFUtil {
     private static double v3;
     private static int[][][] myGenoScoreMap;
     public static final int VCF_DEFAULT_MAX_NUM_ALLELES = 3;
-        
-    private VCFUtil ()
-    {
-        
-    }
-    
-    private static void initVCFScoreMap() {
-        error = 0.001;
+
+    static  {
+        error = 0.001; //TODO this seems low, is this the standard
         v1 = Math.log10(1.0 - error * 3.0 /4.0);
         v2 = Math.log10(error/4);
         v3 = Math.log10(0.5 - (error/4.0));
@@ -37,11 +31,16 @@ public class VCFUtil {
             }
         }
     }
+
+    private VCFUtil ()
+    {
+        
+    }
+    
+
     
     public static int[] getScore(int i, int j) {
-        if (myGenoScoreMap == null) {
-            initVCFScoreMap();
-        }
+        if(i>127 || j>127) return calcScore(i,j);
         return myGenoScoreMap[i][j];
     }
     

@@ -3,6 +3,7 @@ package net.maizegenetics.util;
 import com.google.common.collect.ImmutableMultimap;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Not sure we want to do this, but if we do then we need to use the myAnno approach, as it massively reduces the overhead
@@ -63,5 +64,14 @@ public class AbstractAnnotation implements GeneralAnnotation {
     @Override
     public Map.Entry[] getAllAnnotationEntries() {
         return new Map.Entry[0];  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Map<String, String> getAnnotationAsMap() {
+        Map<String,String> result=new TreeMap<>();
+        for (Map.Entry<String, Object> en : getAllAnnotationEntries()) {
+            result.put(en.getKey(),en.getValue().toString());
+        }
+        return result;
     }
 }

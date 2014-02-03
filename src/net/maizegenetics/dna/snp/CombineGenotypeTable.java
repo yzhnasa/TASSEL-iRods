@@ -4,6 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.snp.bit.BitStorage;
+import net.maizegenetics.dna.snp.depth.AlleleDepth;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.PositionList;
@@ -809,6 +810,16 @@ public class CombineGenotypeTable implements GenotypeTable {
 
     @Override
     public int totalNonMissingForTaxon(int taxon) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean hasDepth() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public AlleleDepth depth() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -49,6 +49,12 @@ public interface GeneralAnnotation {
      */
     public Map.Entry<String, String>[] getAllAnnotationEntries();
 
+    /**
+     * Returns all annotations in a TreeMap.
+     * @return Map of annotations
+     */
+    public Map<String, String> getAnnotationAsMap();
+
     //should we provide methods, to average the quantitative annotations, the first annotation
     //
 

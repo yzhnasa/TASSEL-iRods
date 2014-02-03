@@ -69,7 +69,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             else if (inputFormat == INPUT_FORMAT.vcf)
             {
                 try {
-                    a = ImportUtils.readFromVCF(infile, this, myMaxNumAlleles);
+                    a = ImportUtils.readFromVCF(infile, this, true);
                 } catch (Exception e) {
                     myLogger.info("Could not read input vcf file for chr" + chr + ":\n\t" + infile + "\n\tSkipping...");
                     continue;
@@ -137,7 +137,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             }
             else
             {
-                ExportUtils.writeToVCF(a, outfile, '\t');
+                ExportUtils.writeToVCF(a, outfile);
             }
             
             myLogger.info("File written after basic filtering:" + outfile);

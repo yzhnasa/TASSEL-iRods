@@ -10,10 +10,7 @@ import net.maizegenetics.util.GeneralAnnotation;
 import net.maizegenetics.util.GeneralAnnotationUtils;
 
 import java.io.Serializable;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -149,6 +146,15 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
         return Arrays.copyOf(myAnno, myAnno.length);
     }
 
+    @Override
+    public Map<String, String> getAnnotationAsMap() {
+        Map<String,String> result=new TreeMap<>();
+        for (Map.Entry<String, String> en : myAnno) {
+            result.put(en.getKey(),en.getValue());
+        }
+        return result;
+    }
+
     /**
      * A builder for creating immutable Taxon instances.
      * <p> Example:
@@ -247,6 +253,11 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
         }
 
         public Taxon build() {
+            Collections.sort(myAnnotations, new Comparator<Map.Entry<String, String>>(){
+                public int compare(Map.Entry<String, String> s1, Map.Entry<String, String> s2) {
+                    return s1.getKey().compareTo(s2.getKey());
+                }
+            });
             return new Taxon(this);
         }
     }

@@ -20,16 +20,20 @@ public final class NucleotideAlignmentConstants {
     public static final byte T_ALLELE = (byte) 0x3;
     public static final byte INSERT_ALLELE = (byte) 0x4;
     public static final byte GAP_ALLELE = (byte) 0x5;
+    public static final byte UNDEFINED_ALLELE = (byte) 0x6;
+    
     // Diploid Byte Values for Nucleotide Alleles
     public static final byte GAP_DIPLOID_ALLELE = (byte) 0x55;
+    public static final byte UNDEFINED_DIPLOID_ALLELE = (byte) 0x66;
+    
     // String Values for Nucleotide Alleles
     public static final String INSERT_ALLELE_STR = "+";
     public static final String GAP_ALLELE_STR = "-";
     public static final String UNDEFINED_ALLELE_STR = "X";
-    public static final byte UNDEFINED_DIPLOID_ALLELE = (byte) 0x66;
+
     public static final String[][] NUCLEOTIDE_ALLELES = new String[][]{{"A", "C", "G", "T", "+", "-",
-            UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR,
-            UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, GenotypeTable.RARE_ALLELE_STR, GenotypeTable.UNKNOWN_ALLELE_STR}};
+        UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR,
+        UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, UNDEFINED_ALLELE_STR, GenotypeTable.RARE_ALLELE_STR, GenotypeTable.UNKNOWN_ALLELE_STR}};
     /**
      * Number of nucleotide states excluding rare and unknown.
      */
@@ -148,7 +152,6 @@ public final class NucleotideAlignmentConstants {
     }
     private static final byte[] NUCLEOTIDE_DIPLOID_ARRAY = new byte[256];
 
-
     static {
         Arrays.fill(NUCLEOTIDE_DIPLOID_ARRAY, UNDEFINED_DIPLOID_ALLELE);
         for (String temp : NUCLEOTIDE_DIPLOID_HASH.keySet()) {
@@ -265,9 +268,9 @@ public final class NucleotideAlignmentConstants {
         NUCLEOTIDE_ALLELE_HASH.put("+", INSERT_ALLELE); // +
         NUCLEOTIDE_ALLELE_HASH.put("-", GAP_ALLELE); // -
         NUCLEOTIDE_ALLELE_HASH.put("N", GenotypeTable.UNKNOWN_ALLELE); // N
-        Arrays.fill(NUCLEOTIDE_ALLELE_ARRAY,GenotypeTable.UNKNOWN_ALLELE);
-        for(Map.Entry<String,Byte> en: NUCLEOTIDE_ALLELE_HASH.entrySet()) {
-            NUCLEOTIDE_ALLELE_ARRAY[en.getKey().charAt(0)]=en.getValue();
+        Arrays.fill(NUCLEOTIDE_ALLELE_ARRAY, UNDEFINED_ALLELE);
+        for (Map.Entry<String, Byte> en : NUCLEOTIDE_ALLELE_HASH.entrySet()) {
+            NUCLEOTIDE_ALLELE_ARRAY[en.getKey().charAt(0)] = en.getValue();
         }
     }
 
