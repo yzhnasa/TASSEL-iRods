@@ -24,8 +24,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultXYDataset;
 
-import net.maizegenetics.baseplugins.ExportPlugin;
-import net.maizegenetics.baseplugins.GenotypeSummaryPlugin;
+import net.maizegenetics.analysis.data.ExportPlugin;
+import net.maizegenetics.analysis.data.GenotypeSummaryPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE;

@@ -4,7 +4,7 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.data;
 
 import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.dna.snp.ImportUtils;
@@ -34,6 +34,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import net.maizegenetics.baseplugins.PlinkLoadPlugin;
+import net.maizegenetics.baseplugins.ProjectionLoadPlugin;
 
 /**
  *

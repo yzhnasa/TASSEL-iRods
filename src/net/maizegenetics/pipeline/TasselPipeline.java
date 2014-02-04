@@ -6,6 +6,16 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.data.CombineDataSetsPlugin;
+import net.maizegenetics.analysis.data.MergeAlignmentsPlugin;
+import net.maizegenetics.analysis.data.MergeAlignmentsSameSitesPlugin;
+import net.maizegenetics.analysis.data.UnionAlignmentPlugin;
+import net.maizegenetics.analysis.data.FileLoadPlugin;
+import net.maizegenetics.analysis.data.IntersectionAlignmentPlugin;
+import net.maizegenetics.analysis.data.GenotypeSummaryPlugin;
+import net.maizegenetics.analysis.data.SeparatePlugin;
+import net.maizegenetics.analysis.data.SynonymizerPlugin;
+import net.maizegenetics.analysis.data.ExportMultiplePlugin;
 import net.maizegenetics.analysis.filter.FilterTaxaAlignmentPlugin;
 import net.maizegenetics.analysis.filter.FilterSiteNamePlugin;
 import net.maizegenetics.analysis.filter.FilterAlignmentPlugin;

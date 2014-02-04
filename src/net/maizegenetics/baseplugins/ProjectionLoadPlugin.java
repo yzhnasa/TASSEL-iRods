@@ -5,6 +5,7 @@
 package net.maizegenetics.baseplugins;
 
 
+import net.maizegenetics.analysis.data.FileLoadPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
 import net.maizegenetics.plugindef.AbstractPlugin;

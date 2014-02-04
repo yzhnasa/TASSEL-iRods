@@ -4,7 +4,7 @@
  * Created on December 18, 2009
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.data;
 
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.GenotypeTable;

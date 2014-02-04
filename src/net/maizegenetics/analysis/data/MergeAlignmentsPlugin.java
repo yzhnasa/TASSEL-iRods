@@ -1,7 +1,7 @@
 /*
  * MergeAlignmentsPlugin
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.data;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.plugindef.AbstractPlugin;

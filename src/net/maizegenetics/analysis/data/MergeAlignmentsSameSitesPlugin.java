@@ -1,7 +1,7 @@
 /*
  * MergeAlignmentsSameSitesPlugin
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.data;
 
 import java.awt.Frame;
 

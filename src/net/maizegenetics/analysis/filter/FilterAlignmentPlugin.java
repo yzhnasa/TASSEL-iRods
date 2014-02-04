@@ -34,7 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.maizegenetics.baseplugins.SeparatePlugin;
+import net.maizegenetics.analysis.data.SeparatePlugin;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 
 import org.apache.log4j.Logger;

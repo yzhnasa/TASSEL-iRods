@@ -19,6 +19,14 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.analysis.data.MergeAlignmentsPlugin;
+import net.maizegenetics.analysis.data.UnionAlignmentPlugin;
+import net.maizegenetics.analysis.data.FileLoadPlugin;
+import net.maizegenetics.analysis.data.IntersectionAlignmentPlugin;
+import net.maizegenetics.analysis.data.GenotypeSummaryPlugin;
+import net.maizegenetics.analysis.data.ExportPlugin;
+import net.maizegenetics.analysis.data.SeparatePlugin;
+import net.maizegenetics.analysis.data.SynonymizerPlugin;
 import net.maizegenetics.analysis.filter.FilterTaxaAlignmentPlugin;
 import net.maizegenetics.analysis.filter.FilterTaxaPropertiesPlugin;
 import net.maizegenetics.analysis.filter.FilterSiteNamePlugin;

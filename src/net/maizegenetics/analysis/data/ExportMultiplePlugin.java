@@ -4,7 +4,7 @@
  * Created on December 21, 2010
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.data;
 
 import java.awt.Frame;
 
