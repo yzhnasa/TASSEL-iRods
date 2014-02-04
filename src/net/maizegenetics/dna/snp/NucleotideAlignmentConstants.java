@@ -250,11 +250,14 @@ public final class NucleotideAlignmentConstants {
 
     }
     private static final String[] NUCLEOTIDE_IUPAC_ARRAY = new String[256];
+    private static final char[] NUCLEOTIDE_IUPAC_CHARARRAY = new char[256];
 
     static {
-        Arrays.fill(NUCLEOTIDE_IUPAC_ARRAY, null);
+        Arrays.fill(NUCLEOTIDE_IUPAC_ARRAY, QUESTION_MARK);
+        Arrays.fill(NUCLEOTIDE_IUPAC_CHARARRAY,QUESTION_MARK.charAt(0));
         for (Byte temp : NUCLEOTIDE_IUPAC_HASH.keySet()) {
             NUCLEOTIDE_IUPAC_ARRAY[temp & 0xFF] = NUCLEOTIDE_IUPAC_HASH.get(temp);
+            NUCLEOTIDE_IUPAC_CHARARRAY[temp & 0xFF] = NUCLEOTIDE_IUPAC_HASH.get(temp).charAt(0);
         }
     }
     private static final Map<String, Byte> NUCLEOTIDE_ALLELE_HASH = new HashMap<String, Byte>();
@@ -364,6 +367,17 @@ public final class NucleotideAlignmentConstants {
         } catch (NullPointerException e) {
             return QUESTION_MARK;
         }
+    }
+
+    /**
+     * Returns the IUPAC char for the given diploid allele value.
+     *
+     * @param value diploid allele value
+     *
+     * @return IUPAC char
+     */
+    public static char getNucleotideIUPACChar(byte value) {
+        return NUCLEOTIDE_IUPAC_CHARARRAY[value & 0xFF];
     }
 
     /**
