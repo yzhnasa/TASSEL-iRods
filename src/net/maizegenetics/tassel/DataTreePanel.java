@@ -30,10 +30,10 @@ import net.maizegenetics.plugindef.Plugin;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.plugindef.PluginListener;
 
-import net.maizegenetics.baseplugins.FixedEffectLMPlugin;
+import net.maizegenetics.analysis.association.FixedEffectLMPlugin;
 import net.maizegenetics.baseplugins.SequenceDiversityPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
-import net.maizegenetics.baseplugins.MLMPlugin;
+import net.maizegenetics.analysis.association.MLMPlugin;
 
 import net.maizegenetics.util.Utils;
 

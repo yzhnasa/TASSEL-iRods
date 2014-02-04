@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.association;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.association;
 
 import net.maizegenetics.dna.snp.GeneticMap;
 import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;

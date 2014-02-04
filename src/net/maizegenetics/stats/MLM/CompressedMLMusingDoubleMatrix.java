@@ -7,7 +7,7 @@ import net.maizegenetics.trait.MarkerPhenotypeAdapter;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Trait;
 import net.maizegenetics.trait.SimplePhenotype;
-import net.maizegenetics.baseplugins.MLMPlugin;
+import net.maizegenetics.analysis.association.MLMPlugin;
 import net.maizegenetics.jGLiM.LinearModelUtils;
 import net.maizegenetics.jGLiM.SymmetricMatrixInverterDM;
 import net.maizegenetics.jGLiM.dm.FactorModelEffect;

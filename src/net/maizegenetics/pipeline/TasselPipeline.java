@@ -6,6 +6,8 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.association.FixedEffectLMPlugin;
+import net.maizegenetics.analysis.association.MLMPlugin;
 import net.maizegenetics.analysis.data.PlinkLoadPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
