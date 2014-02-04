@@ -953,36 +953,11 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
         }
         return iupacAllele;
     }
-
-    //TODO delete this chunk of code and use getNucleotideDiploidComplement
-    public static char complement(char geno) {
-        char comp = 'X';
-        switch (geno) {
-            case 'A':  comp = 'T';  break;
-            case 'C':  comp = 'G';  break;
-            case 'G':  comp = 'C';  break;
-            case 'T':  comp = 'A';  break;
-            case 'K':  comp = 'M';  break;
-            case 'M':  comp = 'K';  break;
-            case 'R':  comp = 'Y';  break;
-            case 'S':  comp = 'S';  break;
-            case 'W':  comp = 'W';  break;
-            case 'Y':  comp = 'R';  break;
-            case '-':  comp = '-';  break;  // both strands have the deletion
-            case '+':  comp = '+';  break;  // both strands have the insertion
-            case '0':  comp = '0';  break;
-            case 'N':  comp = 'N';  break;
-            default:   comp = 'N';  break;
-        }
-        return comp;
-    }
     
     public static String revComplement(String seq) {
         StringBuilder sb = new StringBuilder();
         for (int i = seq.length()-1; i >= 0; i--) {
-            //TODO figure out why this is not exactly the same
-            //sb.append(getNucleotideDiploidComplement((byte) seq.charAt(i)));
-            sb.append(complement(seq.charAt(i)));
+            sb.append(NucleotideAlignmentConstants.getNucleotideDiploidIUPACComplement(seq.charAt(i)));
         }
         return sb.toString();
     }

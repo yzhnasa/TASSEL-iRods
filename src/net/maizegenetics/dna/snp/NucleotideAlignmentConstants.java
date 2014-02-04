@@ -250,13 +250,17 @@ public final class NucleotideAlignmentConstants {
     }
     private static final String[] NUCLEOTIDE_IUPAC_ARRAY = new String[256];
     private static final char[] NUCLEOTIDE_IUPAC_CHARARRAY = new char[256];
+    private static final char[] NUCLEOTIDE_IUPAC_CHARCOMPLEMENT_ARRAY = new char[256];
 
     static {
         Arrays.fill(NUCLEOTIDE_IUPAC_ARRAY, UNDEFINED_ALLELE_STR);
         Arrays.fill(NUCLEOTIDE_IUPAC_CHARARRAY,UNDEFINED_ALLELE_STR.charAt(0));
+        Arrays.fill(NUCLEOTIDE_IUPAC_CHARCOMPLEMENT_ARRAY,UNDEFINED_ALLELE_STR.charAt(0));
         for (Byte temp : NUCLEOTIDE_IUPAC_HASH.keySet()) {
             NUCLEOTIDE_IUPAC_ARRAY[temp & 0xFF] = NUCLEOTIDE_IUPAC_HASH.get(temp);
             NUCLEOTIDE_IUPAC_CHARARRAY[temp & 0xFF] = NUCLEOTIDE_IUPAC_HASH.get(temp).charAt(0);
+            byte compByte=getNucleotideDiploidComplement(temp);
+            NUCLEOTIDE_IUPAC_CHARCOMPLEMENT_ARRAY[ NUCLEOTIDE_IUPAC_HASH.get(temp).charAt(0)]=NUCLEOTIDE_IUPAC_HASH.get(compByte).charAt(0);
         }
     }
     private static final Map<String, Byte> NUCLEOTIDE_ALLELE_HASH = new HashMap<String, Byte>();
@@ -421,7 +425,19 @@ public final class NucleotideAlignmentConstants {
         first = getNucleotideComplement(first);
         second = getNucleotideComplement(second);
         return (byte) ((first << 4) | second);
+    }
 
+    /**
+     * Returns the Nucleotide Complement of the given diploid IUPAC encoded
+     * alleles.
+     *
+     * @param diploidAllele diploid IUPAC
+     *
+     * @return Nucleotide Complement in IUPAC
+     */
+    public static char getNucleotideDiploidIUPACComplement(char diploidAllele) {
+        if(diploidAllele>256) return UNDEFINED_ALLELE_STR.charAt(0);
+        return NUCLEOTIDE_IUPAC_CHARCOMPLEMENT_ARRAY[diploidAllele];
     }
 
     /**
