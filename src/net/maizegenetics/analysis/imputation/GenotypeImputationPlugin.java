@@ -4,10 +4,10 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.imputation;
 
 import net.maizegenetics.analysis.chart.AbstractDisplayPlugin;
-import net.maizegenetics.baseplugins.GenotypeImputationPlugin.ImpMethod;
+import net.maizegenetics.analysis.imputation.GenotypeImputationPlugin.ImpMethod;
 import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.gui.GenotypeTableMask;
