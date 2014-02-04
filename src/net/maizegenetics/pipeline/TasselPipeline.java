@@ -6,6 +6,7 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.data.PlinkLoadPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
 import net.maizegenetics.analysis.data.CombineDataSetsPlugin;

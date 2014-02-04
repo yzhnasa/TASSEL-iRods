@@ -4,7 +4,7 @@
  * Created on December 18, 2009
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.data;
 
 
 import net.maizegenetics.analysis.data.FileLoadPlugin;
