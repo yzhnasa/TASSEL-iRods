@@ -1,6 +1,5 @@
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.data;
 
-import net.maizegenetics.analysis.data.FileLoadPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
