@@ -6,6 +6,8 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.chart.AbstractDisplayPlugin;
+import net.maizegenetics.analysis.chart.TableDisplayPlugin;
 import net.maizegenetics.analysis.numericaltransform.NumericalGenotypePlugin;
 import net.maizegenetics.analysis.data.ConvertAlignmentCoordinatesPlugin;
 import net.maizegenetics.analysis.association.FixedEffectLMPlugin;

@@ -9,7 +9,6 @@ package net.maizegenetics.analysis.chart;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
-import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 
 import javax.swing.*;
 import java.awt.*;

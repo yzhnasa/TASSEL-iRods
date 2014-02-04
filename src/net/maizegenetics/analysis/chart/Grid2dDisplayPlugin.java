@@ -4,7 +4,7 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.chart;
 
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.DataSet;
@@ -108,7 +108,7 @@ public class Grid2dDisplayPlugin extends AbstractDisplayPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = Grid2dDisplayPlugin.class.getResource("images/2DPlot.gif");
+        URL imageURL = Grid2dDisplayPlugin.class.getResource("/net/maizegenetics/analysis/images/2DPlot.gif");
         if (imageURL == null) {
             return null;
         } else {

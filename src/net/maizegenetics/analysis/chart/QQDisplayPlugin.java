@@ -32,7 +32,6 @@ import javax.swing.JTextField;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
-import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.Datum;
 

@@ -19,6 +19,8 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.analysis.chart.TableDisplayPlugin;
+import net.maizegenetics.analysis.chart.Grid2dDisplayPlugin;
 import net.maizegenetics.analysis.chart.ManhattanDisplayPlugin;
 import net.maizegenetics.analysis.chart.QQDisplayPlugin;
 import net.maizegenetics.analysis.association.FixedEffectLMPlugin;

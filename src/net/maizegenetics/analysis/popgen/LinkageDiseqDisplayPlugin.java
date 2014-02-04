@@ -18,7 +18,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.util.List;
-import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
+import net.maizegenetics.analysis.chart.AbstractDisplayPlugin;
 
 
 /**

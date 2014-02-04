@@ -20,7 +20,6 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.Datum;
 

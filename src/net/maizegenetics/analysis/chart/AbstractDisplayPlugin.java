@@ -4,7 +4,7 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.chart;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.prefs.TasselPrefs;

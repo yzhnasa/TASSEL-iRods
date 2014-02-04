@@ -6,6 +6,7 @@
  */
 package net.maizegenetics.baseplugins;
 
+import net.maizegenetics.analysis.chart.AbstractDisplayPlugin;
 import net.maizegenetics.baseplugins.GenotypeImputationPlugin.ImpMethod;
 import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.dna.snp.GenotypeTable;

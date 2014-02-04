@@ -4,14 +4,14 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.chart;
 
 
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.util.TableReportUtils;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
-import net.maizegenetics.baseplugins.AbstractDisplayPlugin.FileFormat;
+import net.maizegenetics.analysis.chart.AbstractDisplayPlugin.FileFormat;
 import net.maizegenetics.gui.TableReportNoPagingTableModel;
 
 import javax.swing.*;
@@ -103,7 +103,7 @@ public class TableDisplayPlugin extends AbstractDisplayPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = TableDisplayPlugin.class.getResource("images/Table.gif");
+        URL imageURL = TableDisplayPlugin.class.getResource("/net/maizegenetics/analysis/images/Table.gif");
         if (imageURL == null) {
             return null;
         } else {
