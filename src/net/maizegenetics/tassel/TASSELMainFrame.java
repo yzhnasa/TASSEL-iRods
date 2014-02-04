@@ -19,6 +19,7 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.analysis.data.ProjectionLoadPlugin;
 import net.maizegenetics.analysis.distance.KinshipPlugin;
 import net.maizegenetics.analysis.chart.TableDisplayPlugin;
 import net.maizegenetics.analysis.chart.Grid2dDisplayPlugin;
