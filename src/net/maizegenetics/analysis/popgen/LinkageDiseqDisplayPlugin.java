@@ -4,7 +4,7 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.popgen;
 
 import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.DataSet;
@@ -18,6 +18,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.util.List;
+import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 
 
 /**

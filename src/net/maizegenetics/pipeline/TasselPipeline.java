@@ -6,6 +6,8 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
+import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
 import net.maizegenetics.analysis.data.CombineDataSetsPlugin;
 import net.maizegenetics.analysis.data.MergeAlignmentsPlugin;
 import net.maizegenetics.analysis.data.MergeAlignmentsSameSitesPlugin;
@@ -26,7 +28,7 @@ import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.dna.map.TagsOnPhysMapHDF5;
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.snp.io.BuilderFromHapMap;
-import net.maizegenetics.baseplugins.LinkageDisequilibriumComponent;
+import net.maizegenetics.analysis.popgen.LinkageDisequilibriumComponent;
 import net.maizegenetics.popgen.LinkageDisequilibrium.HetTreatment;
 import net.maizegenetics.popgen.LinkageDisequilibrium.testDesign;
 import net.maizegenetics.taxa.TaxaListBuilder;

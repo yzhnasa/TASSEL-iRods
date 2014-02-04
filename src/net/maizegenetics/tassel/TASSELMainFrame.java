@@ -19,6 +19,8 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
+import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
 import net.maizegenetics.analysis.data.MergeAlignmentsPlugin;
 import net.maizegenetics.analysis.data.UnionAlignmentPlugin;
 import net.maizegenetics.analysis.data.FileLoadPlugin;

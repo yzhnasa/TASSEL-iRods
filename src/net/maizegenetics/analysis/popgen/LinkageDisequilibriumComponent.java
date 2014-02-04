@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.popgen;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.popgen.LinkageDisequilibrium;

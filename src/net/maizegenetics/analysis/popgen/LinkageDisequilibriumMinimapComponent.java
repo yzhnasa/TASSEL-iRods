@@ -3,7 +3,7 @@
  *
  */
 
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.popgen;
 
 import java.awt.Color;
 import java.awt.Dimension;
