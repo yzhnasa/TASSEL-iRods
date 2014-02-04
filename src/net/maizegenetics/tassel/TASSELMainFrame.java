@@ -19,6 +19,8 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.analysis.chart.ManhattanDisplayPlugin;
+import net.maizegenetics.analysis.chart.QQDisplayPlugin;
 import net.maizegenetics.analysis.association.FixedEffectLMPlugin;
 import net.maizegenetics.analysis.association.MLMPlugin;
 import net.maizegenetics.analysis.data.PlinkLoadPlugin;
@@ -40,7 +42,7 @@ import net.maizegenetics.analysis.filter.FilterTraitsPlugin;
 import net.maizegenetics.analysis.tree.CreateTreePlugin;
 import net.maizegenetics.analysis.tree.ArchaeopteryxPlugin;
 import net.maizegenetics.baseplugins.*;
-import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
+import net.maizegenetics.analysis.chart.ChartDisplayPlugin;
 import net.maizegenetics.analysis.association.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
 import net.maizegenetics.gui.PrintHeapAction;

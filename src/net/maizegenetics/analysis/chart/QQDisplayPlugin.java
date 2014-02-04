@@ -4,7 +4,7 @@
  * Created on December 13, 2010
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.chart;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -32,7 +32,7 @@ import javax.swing.JTextField;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
-import net.maizegenetics.baseplugins.chart.XYScatterAndLinePanel;
+import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.Datum;
 
@@ -134,7 +134,7 @@ public class QQDisplayPlugin extends AbstractDisplayPlugin {
      */
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = QQDisplayPlugin.class.getResource("images/QQPlot.gif");
+        URL imageURL = QQDisplayPlugin.class.getResource("/net/maizegenetics/analysis/images/QQPlot.gif");
         if (imageURL == null) {
             return null;
         } else {

@@ -1,7 +1,7 @@
 /*
  * XYScatterAndLinePanel
  */
-package net.maizegenetics.baseplugins.chart;
+package net.maizegenetics.analysis.chart;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import net.maizegenetics.baseplugins.QQDisplayPlugin;
 import net.maizegenetics.util.TableReport;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;

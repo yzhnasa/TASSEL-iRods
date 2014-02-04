@@ -4,7 +4,7 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins.chart;
+package net.maizegenetics.analysis.chart;
 
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.DataSet;

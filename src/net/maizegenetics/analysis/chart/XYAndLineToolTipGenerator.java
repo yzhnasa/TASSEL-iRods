@@ -1,7 +1,7 @@
 /*
  * XYAndLineToolTipGenerator
  */
-package net.maizegenetics.baseplugins.chart;
+package net.maizegenetics.analysis.chart;
 
 import java.text.DecimalFormat;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins.chart;
+package net.maizegenetics.analysis.chart;
 
 import org.jfree.chart.JFreeChart;
 

@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package net.maizegenetics.baseplugins.chart;
+package net.maizegenetics.analysis.chart;
 
 import java.text.DecimalFormat;
 import org.jfree.chart.labels.AbstractXYItemLabelGenerator;

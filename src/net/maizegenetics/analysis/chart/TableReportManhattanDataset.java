@@ -1,7 +1,7 @@
 /*
  * TableReportManhattanDataset
  */
-package net.maizegenetics.baseplugins.chart;
+package net.maizegenetics.analysis.chart;
 
 import net.maizegenetics.util.TableReport;
 import org.jfree.data.xy.DefaultTableXYDataset;

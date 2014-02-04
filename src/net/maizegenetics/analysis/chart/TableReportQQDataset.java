@@ -1,7 +1,7 @@
 /*
  * TableReportQQDataset
  */
-package net.maizegenetics.baseplugins.chart;
+package net.maizegenetics.analysis.chart;
 
 import java.util.Arrays;
 import java.util.HashMap;

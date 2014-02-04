@@ -1,7 +1,7 @@
 /*
  * ManhattanDisplayPlugin
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.chart;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -20,7 +20,7 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import net.maizegenetics.baseplugins.chart.XYScatterMultipleYPanel;
+import net.maizegenetics.baseplugins.AbstractDisplayPlugin;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.Datum;
 
@@ -131,7 +131,7 @@ public class ManhattanDisplayPlugin extends AbstractDisplayPlugin {
      */
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = QQDisplayPlugin.class.getResource("images/ManhattanPlot.gif");
+        URL imageURL = QQDisplayPlugin.class.getResource("/net/maizegenetics/analysis/images/ManhattanPlot.gif");
         if (imageURL == null) {
             return null;
         } else {
