@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins.numericaltransform;
+package net.maizegenetics.analysis.numericaltransform;
 
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.SimplePhenotype;

@@ -4,9 +4,8 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins.numericaltransform;
+package net.maizegenetics.analysis.numericaltransform;
 
-import net.maizegenetics.baseplugins.NumericalGenotypePlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.SimplePhenotype;

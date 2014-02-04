@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins.numericaltransform;
+package net.maizegenetics.analysis.numericaltransform;
 
 import java.math.BigDecimal;
 import java.math.MathContext;

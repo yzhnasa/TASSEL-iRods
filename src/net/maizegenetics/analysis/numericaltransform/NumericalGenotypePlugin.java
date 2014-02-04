@@ -4,7 +4,7 @@
  * Created on May 8, 2008
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.numericaltransform;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;

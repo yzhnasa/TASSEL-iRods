@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins.numericaltransform;
+package net.maizegenetics.analysis.numericaltransform;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.plugindef.Datum;

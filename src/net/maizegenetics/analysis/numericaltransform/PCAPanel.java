@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins.numericaltransform;
+package net.maizegenetics.analysis.numericaltransform;
 
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;

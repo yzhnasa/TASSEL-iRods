@@ -44,7 +44,7 @@ import net.maizegenetics.analysis.tree.ArchaeopteryxPlugin;
 import net.maizegenetics.baseplugins.*;
 import net.maizegenetics.analysis.chart.ChartDisplayPlugin;
 import net.maizegenetics.analysis.association.RidgeRegressionEmmaPlugin;
-import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
+import net.maizegenetics.analysis.numericaltransform.NumericalTransformPlugin;
 import net.maizegenetics.gui.PrintHeapAction;
 import net.maizegenetics.gwas.modelfitter.StepwiseOLSModelFitterPlugin;
 import net.maizegenetics.plugindef.*;
