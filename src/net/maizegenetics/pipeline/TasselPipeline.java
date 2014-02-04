@@ -6,17 +6,39 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.popgen.SequenceDiversityPlugin;
+import net.maizegenetics.analysis.distance.KinshipPlugin;
+import net.maizegenetics.analysis.distance.DistanceMatrixRangesPlugin;
+import net.maizegenetics.analysis.distance.DistanceMatrixPlugin;
+import net.maizegenetics.analysis.chart.AbstractDisplayPlugin;
+import net.maizegenetics.analysis.chart.TableDisplayPlugin;
+import net.maizegenetics.analysis.numericaltransform.NumericalGenotypePlugin;
+import net.maizegenetics.analysis.data.ConvertAlignmentCoordinatesPlugin;
+import net.maizegenetics.analysis.association.FixedEffectLMPlugin;
+import net.maizegenetics.analysis.association.MLMPlugin;
+import net.maizegenetics.analysis.data.PlinkLoadPlugin;
+import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
+import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
+import net.maizegenetics.analysis.data.CombineDataSetsPlugin;
+import net.maizegenetics.analysis.data.MergeAlignmentsPlugin;
+import net.maizegenetics.analysis.data.MergeAlignmentsSameSitesPlugin;
+import net.maizegenetics.analysis.data.UnionAlignmentPlugin;
+import net.maizegenetics.analysis.data.FileLoadPlugin;
+import net.maizegenetics.analysis.data.IntersectionAlignmentPlugin;
+import net.maizegenetics.analysis.data.GenotypeSummaryPlugin;
+import net.maizegenetics.analysis.data.SeparatePlugin;
+import net.maizegenetics.analysis.data.SynonymizerPlugin;
+import net.maizegenetics.analysis.data.ExportMultiplePlugin;
 import net.maizegenetics.analysis.filter.FilterTaxaAlignmentPlugin;
 import net.maizegenetics.analysis.filter.FilterSiteNamePlugin;
 import net.maizegenetics.analysis.filter.FilterAlignmentPlugin;
 import net.maizegenetics.analysis.filter.FilterTraitsPlugin;
 import net.maizegenetics.analysis.tree.CreateTreePlugin;
-import net.maizegenetics.baseplugins.*;
-import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
+import net.maizegenetics.analysis.association.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.dna.map.TagsOnPhysMapHDF5;
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.snp.io.BuilderFromHapMap;
-import net.maizegenetics.baseplugins.LinkageDisequilibriumComponent;
+import net.maizegenetics.analysis.popgen.LinkageDisequilibriumComponent;
 import net.maizegenetics.popgen.LinkageDisequilibrium.HetTreatment;
 import net.maizegenetics.popgen.LinkageDisequilibrium.testDesign;
 import net.maizegenetics.taxa.TaxaListBuilder;
@@ -886,65 +908,6 @@ public class TasselPipeline implements PluginListener {
                     }
                     plugin.setAlignmentFileType(fileType);
 
-                } else if (current.equalsIgnoreCase("-impute")) {
-                    GenotypeImputationPlugin plugin = new GenotypeImputationPlugin(myMainFrame, false);
-                    integratePlugin(plugin, true);
-                } else if (current.equalsIgnoreCase("-imputeMethod")) {
-                    GenotypeImputationPlugin plugin = (GenotypeImputationPlugin) findLastPluginFromCurrentPipe(new Class[]{GenotypeImputationPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Impute step defined: " + current);
-                    }
-                    String temp = args[index++].trim();
-                    if (temp.equalsIgnoreCase(GenotypeImputationPlugin.ImpMethod.Length.toString())) {
-                        plugin.setMethod(GenotypeImputationPlugin.ImpMethod.Length);
-                    } else if (temp.equalsIgnoreCase(GenotypeImputationPlugin.ImpMethod.MajorAllele.toString())) {
-                        plugin.setMethod(GenotypeImputationPlugin.ImpMethod.MajorAllele);
-                    } else if (temp.equalsIgnoreCase(GenotypeImputationPlugin.ImpMethod.IBDProb.toString())) {
-                        plugin.setMethod(GenotypeImputationPlugin.ImpMethod.IBDProb);
-                    } else if (temp.equalsIgnoreCase(GenotypeImputationPlugin.ImpMethod.SimilarWindow.toString())) {
-                        plugin.setMethod(GenotypeImputationPlugin.ImpMethod.SimilarWindow);
-                    } else {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Not defined impute method: " + temp);
-                    }
-                } else if (current.equalsIgnoreCase("-imputeMinLength")) {
-                    GenotypeImputationPlugin plugin = (GenotypeImputationPlugin) findLastPluginFromCurrentPipe(new Class[]{GenotypeImputationPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Impute step defined: " + current);
-                    }
-                    String temp = args[index++].trim();
-                    int minLength = 0;
-                    try {
-                        minLength = Integer.parseInt(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing impute min length: " + temp);
-                    }
-                    plugin.setMinLength(minLength);
-                } else if (current.equalsIgnoreCase("-imputeMaxMismatch")) {
-                    GenotypeImputationPlugin plugin = (GenotypeImputationPlugin) findLastPluginFromCurrentPipe(new Class[]{GenotypeImputationPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Impute step defined: " + current);
-                    }
-                    String temp = args[index++].trim();
-                    int maxMismatch = 0;
-                    try {
-                        maxMismatch = Integer.parseInt(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing impute max mismatch: " + temp);
-                    }
-                    plugin.setMaxMisMatch(maxMismatch);
-                } else if (current.equalsIgnoreCase("-imputeMinProb")) {
-                    GenotypeImputationPlugin plugin = (GenotypeImputationPlugin) findLastPluginFromCurrentPipe(new Class[]{GenotypeImputationPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Impute step defined: " + current);
-                    }
-                    String temp = args[index++].trim();
-                    double minProb = 0;
-                    try {
-                        minProb = Double.parseDouble(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing impute min probability: " + temp);
-                    }
-                    plugin.setMinProb(minProb);
                 } else if (current.equalsIgnoreCase("-filterAlign")) {
                     FilterAlignmentPlugin plugin = new FilterAlignmentPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);

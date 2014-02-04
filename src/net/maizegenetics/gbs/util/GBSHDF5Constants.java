@@ -15,6 +15,14 @@ public class GBSHDF5Constants {
     public static final String BEST_STRAND="bestStrand";
     public static final String BEST_CHR="bestChr";
     public static final String BEST_STARTPOS="bestStartPos";
+    public static final String BEST_ENDPOS="bestEndPos";
+    public static final String BEST_DIVERGENCE="bestDivergence";
+    public static final String BEST_MAPP="bestMapP";
+    public static final String BEST_DCOP="bestDcoP";
+    public static final String BEST_EVIDENCE="bestEvidence";
+    public static final String BEST_MAPINDEX="bestMapIndex";
+    public static final String GENETICMAMMPING="gm";
+    public static final String GENETICMAMMPINGGW="gmgw";
     public static final String MAPBASE="map";
     public static final String VARIANTDEF="variantDef";
     public static final String VARIANTPOSOFF="variantPosOff";

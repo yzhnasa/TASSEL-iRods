@@ -16,7 +16,7 @@ import java.awt.*;
 import java.io.File;
 
 /**
- * Merge PETagCounts file of each taxon into one master PETagCounts file
+ * Merge PETagCounts file of each taxon into one master PETagCounts file (collapsed and sorted)
  * @author Fei Lu
  */
 public class MergePETagCountPlugin extends AbstractPlugin {

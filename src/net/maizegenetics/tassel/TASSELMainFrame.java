@@ -19,6 +19,26 @@
 //Company:    NCSU
 package net.maizegenetics.tassel;
 
+import net.maizegenetics.analysis.popgen.SequenceDiversityPlugin;
+import net.maizegenetics.analysis.data.ProjectionLoadPlugin;
+import net.maizegenetics.analysis.distance.KinshipPlugin;
+import net.maizegenetics.analysis.chart.TableDisplayPlugin;
+import net.maizegenetics.analysis.chart.Grid2dDisplayPlugin;
+import net.maizegenetics.analysis.chart.ManhattanDisplayPlugin;
+import net.maizegenetics.analysis.chart.QQDisplayPlugin;
+import net.maizegenetics.analysis.association.FixedEffectLMPlugin;
+import net.maizegenetics.analysis.association.MLMPlugin;
+import net.maizegenetics.analysis.data.PlinkLoadPlugin;
+import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
+import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
+import net.maizegenetics.analysis.data.MergeAlignmentsPlugin;
+import net.maizegenetics.analysis.data.UnionAlignmentPlugin;
+import net.maizegenetics.analysis.data.FileLoadPlugin;
+import net.maizegenetics.analysis.data.IntersectionAlignmentPlugin;
+import net.maizegenetics.analysis.data.GenotypeSummaryPlugin;
+import net.maizegenetics.analysis.data.ExportPlugin;
+import net.maizegenetics.analysis.data.SeparatePlugin;
+import net.maizegenetics.analysis.data.SynonymizerPlugin;
 import net.maizegenetics.analysis.filter.FilterTaxaAlignmentPlugin;
 import net.maizegenetics.analysis.filter.FilterTaxaPropertiesPlugin;
 import net.maizegenetics.analysis.filter.FilterSiteNamePlugin;
@@ -26,10 +46,9 @@ import net.maizegenetics.analysis.filter.FilterAlignmentPlugin;
 import net.maizegenetics.analysis.filter.FilterTraitsPlugin;
 import net.maizegenetics.analysis.tree.CreateTreePlugin;
 import net.maizegenetics.analysis.tree.ArchaeopteryxPlugin;
-import net.maizegenetics.baseplugins.*;
-import net.maizegenetics.baseplugins.chart.ChartDisplayPlugin;
-import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
-import net.maizegenetics.baseplugins.numericaltransform.NumericalTransformPlugin;
+import net.maizegenetics.analysis.chart.ChartDisplayPlugin;
+import net.maizegenetics.analysis.association.RidgeRegressionEmmaPlugin;
+import net.maizegenetics.analysis.numericaltransform.NumericalTransformPlugin;
 import net.maizegenetics.gui.PrintHeapAction;
 import net.maizegenetics.gwas.modelfitter.StepwiseOLSModelFitterPlugin;
 import net.maizegenetics.plugindef.*;
@@ -524,7 +543,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, projectionLoadPlugin), KeyEvent.VK_L));
         result.add(createMenuItem(new ExportPlugin(this, true)));
-        result.add(createMenuItem(new GenotypeImputationPlugin(this, true)));
         result.add(createMenuItem(new NumericalTransformPlugin(this, true)));
         result.add(createMenuItem(new SynonymizerPlugin(this, true)));
         result.add(createMenuItem(new IntersectionAlignmentPlugin(this, true)));

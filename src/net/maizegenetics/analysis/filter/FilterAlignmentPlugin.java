@@ -34,7 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.maizegenetics.baseplugins.SeparatePlugin;
+import net.maizegenetics.analysis.data.SeparatePlugin;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 
 import org.apache.log4j.Logger;
@@ -385,7 +385,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = FilterAlignmentPlugin.class.getResource("images/Filter.gif");
+        URL imageURL = FilterAlignmentPlugin.class.getResource("/net/maizegenetics/analysis/images/Filter.gif");
         if (imageURL == null) {
             return null;
         } else {

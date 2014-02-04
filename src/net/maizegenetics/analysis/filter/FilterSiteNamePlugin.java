@@ -172,7 +172,7 @@ public class FilterSiteNamePlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = FilterSiteNamePlugin.class.getResource("images/Filter.gif");
+        URL imageURL = FilterSiteNamePlugin.class.getResource("/net/maizegenetics/analysis/images/Filter.gif");
         if (imageURL == null) {
             return null;
         } else {

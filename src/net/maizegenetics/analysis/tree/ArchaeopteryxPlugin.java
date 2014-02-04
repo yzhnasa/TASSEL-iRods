@@ -52,7 +52,7 @@ public class ArchaeopteryxPlugin extends AbstractPlugin {
 
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = ArchaeopteryxPlugin.class.getResource("images/Tree.gif");
+        URL imageURL = ArchaeopteryxPlugin.class.getResource("/net/maizegenetics/analysis/images/Tree.gif");
         if (imageURL == null) {
             return null;
         } else {

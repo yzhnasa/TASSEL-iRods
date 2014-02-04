@@ -203,7 +203,7 @@ public class FilterTaxaPropertiesPlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = FilterTaxaPropertiesPlugin.class.getResource("images/Filter_horizontal.gif");
+        URL imageURL = FilterTaxaPropertiesPlugin.class.getResource("/net/maizegenetics/analysis/images/Filter_horizontal.gif");
         if (imageURL == null) {
             return null;
         } else {
