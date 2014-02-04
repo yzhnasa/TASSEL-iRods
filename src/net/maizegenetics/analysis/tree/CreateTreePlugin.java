@@ -137,7 +137,7 @@ public class CreateTreePlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = CreateTreePlugin.class.getResource("images/Tree.gif");
+        URL imageURL = CreateTreePlugin.class.getResource("/net/maizegenetics/analysis/images/Tree.gif");
         if (imageURL == null) {
             return null;
         } else {
