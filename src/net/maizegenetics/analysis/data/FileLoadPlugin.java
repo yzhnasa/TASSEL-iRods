@@ -426,7 +426,7 @@ public class FileLoadPlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = FileLoadPlugin.class.getResource("images/LoadFile.gif");
+        URL imageURL = FileLoadPlugin.class.getResource("/net/maizegenetics/analysis/images/LoadFile.gif");
         if (imageURL == null) {
             return null;
         } else {

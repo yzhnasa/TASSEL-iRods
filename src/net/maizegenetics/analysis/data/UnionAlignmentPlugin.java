@@ -121,7 +121,7 @@ public class UnionAlignmentPlugin extends AbstractPlugin {
      */
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = UnionAlignmentPlugin.class.getResource("images/UnionJoin.gif");
+        URL imageURL = UnionAlignmentPlugin.class.getResource("/net/maizegenetics/analysis/images/UnionJoin.gif");
         if (imageURL == null) {
             return null;
         } else {

@@ -360,7 +360,7 @@ public class ExportPlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = ExportPlugin.class.getResource("images/Export16.gif");
+        URL imageURL = ExportPlugin.class.getResource("/net/maizegenetics/analysis/images/Export16.gif");
         if (imageURL == null) {
             return null;
         } else {

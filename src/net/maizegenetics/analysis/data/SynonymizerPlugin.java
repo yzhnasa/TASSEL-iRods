@@ -170,7 +170,7 @@ public class SynonymizerPlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = SynonymizerPlugin.class.getResource("images/Synonymizer.gif");
+        URL imageURL = SynonymizerPlugin.class.getResource("/net/maizegenetics/analysis/images/Synonymizer.gif");
         if (imageURL == null) {
             return null;
         } else {

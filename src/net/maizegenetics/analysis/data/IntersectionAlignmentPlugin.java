@@ -46,7 +46,7 @@ public class IntersectionAlignmentPlugin extends UnionAlignmentPlugin {
      */
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = IntersectionAlignmentPlugin.class.getResource("images/IntersectJoin.gif");
+        URL imageURL = IntersectionAlignmentPlugin.class.getResource("/net/maizegenetics/analysis/images/IntersectJoin.gif");
         if (imageURL == null) {
             return null;
         } else {

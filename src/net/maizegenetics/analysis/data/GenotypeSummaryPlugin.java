@@ -382,7 +382,7 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
     }
 
     public ImageIcon getIcon() {
-        URL imageURL = GenotypeSummaryPlugin.class.getResource("images/summary.gif");
+        URL imageURL = GenotypeSummaryPlugin.class.getResource("/net/maizegenetics/analysis/images/summary.gif");
         if (imageURL == null) {
             return null;
         } else {

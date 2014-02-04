@@ -1101,7 +1101,7 @@ public class FixedEffectLMPlugin extends AbstractPlugin {
 
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = FixedEffectLMPlugin.class.getResource("images/LinearAssociation.gif");
+        URL imageURL = FixedEffectLMPlugin.class.getResource("/net/maizegenetics/analysis/images/LinearAssociation.gif");
         if (imageURL == null) {
             return null;
         } else {

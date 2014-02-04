@@ -168,7 +168,7 @@ public class SeparatePlugin extends AbstractPlugin {
      */
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = SeparatePlugin.class.getResource("images/Separate.gif");
+        URL imageURL = SeparatePlugin.class.getResource("/net/maizegenetics/analysis/images/Separate.gif");
         if (imageURL == null) {
             return null;
         } else {

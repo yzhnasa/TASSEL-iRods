@@ -60,7 +60,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = SeparatePlugin.class.getResource("images/Merge.gif");
+        URL imageURL = SeparatePlugin.class.getResource("/net/maizegenetics/analysis/images/Merge.gif");
         if (imageURL == null) {
             return null;
         } else {

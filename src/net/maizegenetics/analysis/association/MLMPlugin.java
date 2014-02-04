@@ -179,7 +179,7 @@ public class MLMPlugin extends AbstractPlugin {
     }
 
     public ImageIcon getIcon() {
-        URL imageURL = MLMPlugin.class.getResource("images/Mix.gif");
+        URL imageURL = MLMPlugin.class.getResource("/net/maizegenetics/analysis/images/Mix.gif");
         if (imageURL == null) {
             return null;
         } else {
