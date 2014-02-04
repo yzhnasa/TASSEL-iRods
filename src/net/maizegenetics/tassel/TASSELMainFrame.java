@@ -537,7 +537,6 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, projectionLoadPlugin), KeyEvent.VK_L));
         result.add(createMenuItem(new ExportPlugin(this, true)));
-        result.add(createMenuItem(new GenotypeImputationPlugin(this, true)));
         result.add(createMenuItem(new NumericalTransformPlugin(this, true)));
         result.add(createMenuItem(new SynonymizerPlugin(this, true)));
         result.add(createMenuItem(new IntersectionAlignmentPlugin(this, true)));

@@ -902,65 +902,6 @@ public class TasselPipeline implements PluginListener {
                     }
                     plugin.setAlignmentFileType(fileType);
 
-                } else if (current.equalsIgnoreCase("-impute")) {
-                    GenotypeImputationPlugin plugin = new GenotypeImputationPlugin(myMainFrame, false);
-                    integratePlugin(plugin, true);
-                } else if (current.equalsIgnoreCase("-imputeMethod")) {
-                    GenotypeImputationPlugin plugin = (GenotypeImputationPlugin) findLastPluginFromCurrentPipe(new Class[]{GenotypeImputationPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Impute step defined: " + current);
-                    }
-                    String temp = args[index++].trim();
-                    if (temp.equalsIgnoreCase(GenotypeImputationPlugin.ImpMethod.Length.toString())) {
-                        plugin.setMethod(GenotypeImputationPlugin.ImpMethod.Length);
-                    } else if (temp.equalsIgnoreCase(GenotypeImputationPlugin.ImpMethod.MajorAllele.toString())) {
-                        plugin.setMethod(GenotypeImputationPlugin.ImpMethod.MajorAllele);
-                    } else if (temp.equalsIgnoreCase(GenotypeImputationPlugin.ImpMethod.IBDProb.toString())) {
-                        plugin.setMethod(GenotypeImputationPlugin.ImpMethod.IBDProb);
-                    } else if (temp.equalsIgnoreCase(GenotypeImputationPlugin.ImpMethod.SimilarWindow.toString())) {
-                        plugin.setMethod(GenotypeImputationPlugin.ImpMethod.SimilarWindow);
-                    } else {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Not defined impute method: " + temp);
-                    }
-                } else if (current.equalsIgnoreCase("-imputeMinLength")) {
-                    GenotypeImputationPlugin plugin = (GenotypeImputationPlugin) findLastPluginFromCurrentPipe(new Class[]{GenotypeImputationPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Impute step defined: " + current);
-                    }
-                    String temp = args[index++].trim();
-                    int minLength = 0;
-                    try {
-                        minLength = Integer.parseInt(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing impute min length: " + temp);
-                    }
-                    plugin.setMinLength(minLength);
-                } else if (current.equalsIgnoreCase("-imputeMaxMismatch")) {
-                    GenotypeImputationPlugin plugin = (GenotypeImputationPlugin) findLastPluginFromCurrentPipe(new Class[]{GenotypeImputationPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Impute step defined: " + current);
-                    }
-                    String temp = args[index++].trim();
-                    int maxMismatch = 0;
-                    try {
-                        maxMismatch = Integer.parseInt(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing impute max mismatch: " + temp);
-                    }
-                    plugin.setMaxMisMatch(maxMismatch);
-                } else if (current.equalsIgnoreCase("-imputeMinProb")) {
-                    GenotypeImputationPlugin plugin = (GenotypeImputationPlugin) findLastPluginFromCurrentPipe(new Class[]{GenotypeImputationPlugin.class});
-                    if (plugin == null) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No Impute step defined: " + current);
-                    }
-                    String temp = args[index++].trim();
-                    double minProb = 0;
-                    try {
-                        minProb = Double.parseDouble(temp);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Problem parsing impute min probability: " + temp);
-                    }
-                    plugin.setMinProb(minProb);
                 } else if (current.equalsIgnoreCase("-filterAlign")) {
                     FilterAlignmentPlugin plugin = new FilterAlignmentPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);

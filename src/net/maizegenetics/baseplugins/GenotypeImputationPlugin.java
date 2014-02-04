@@ -143,7 +143,7 @@ public class GenotypeImputationPlugin extends AbstractDisplayPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = GenotypeImputationPlugin.class.getResource("images/ImputeSNP.gif");
+        URL imageURL = GenotypeImputationPlugin.class.getResource("/net/maizegenetics/analysis/images/ImputeSNP.gif");
         if (imageURL == null) {
             return null;
         } else {
