@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins.genomicselection;
+package net.maizegenetics.analysis.association;
 
 import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.trait.Phenotype;
@@ -201,7 +201,7 @@ public class RidgeRegressionEmmaPlugin extends AbstractPlugin {
 
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = RidgeRegressionEmmaPlugin.class.getResource("LinearAssociation.gif");
+        URL imageURL = RidgeRegressionEmmaPlugin.class.getResource("/net/maizegenetics/analysis/images/LinearAssociation.gif");
         if (imageURL == null) {
             return null;
         } else {

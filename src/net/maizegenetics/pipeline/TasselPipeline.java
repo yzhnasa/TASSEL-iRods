@@ -28,7 +28,7 @@ import net.maizegenetics.analysis.filter.FilterAlignmentPlugin;
 import net.maizegenetics.analysis.filter.FilterTraitsPlugin;
 import net.maizegenetics.analysis.tree.CreateTreePlugin;
 import net.maizegenetics.baseplugins.*;
-import net.maizegenetics.baseplugins.genomicselection.RidgeRegressionEmmaPlugin;
+import net.maizegenetics.analysis.association.RidgeRegressionEmmaPlugin;
 import net.maizegenetics.dna.map.TagsOnPhysMapHDF5;
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.snp.io.BuilderFromHapMap;

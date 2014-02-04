@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins.genomicselection;
+package net.maizegenetics.analysis.association;
     
 import net.maizegenetics.stats.EMMA.EMMAforDoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.*;
