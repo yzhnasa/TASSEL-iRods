@@ -6,6 +6,7 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.data.ConvertAlignmentCoordinatesPlugin;
 import net.maizegenetics.analysis.association.FixedEffectLMPlugin;
 import net.maizegenetics.analysis.association.MLMPlugin;
 import net.maizegenetics.analysis.data.PlinkLoadPlugin;

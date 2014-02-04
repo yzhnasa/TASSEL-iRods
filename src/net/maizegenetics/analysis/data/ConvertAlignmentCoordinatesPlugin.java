@@ -1,9 +1,8 @@
 /*
  * ConvertAlignmentCoordinatesPlugin
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.data;
 
-import net.maizegenetics.analysis.filter.FilterAlignmentPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
@@ -56,7 +55,7 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
             Datum current = alignInList.get(0);
             Datum result = processDatum(current);
             DataSet output = new DataSet(result, this);
-            fireDataSetReturned(new PluginEvent(output, FilterAlignmentPlugin.class));
+            fireDataSetReturned(new PluginEvent(output, ConvertAlignmentCoordinatesPlugin.class));
 
             return output;
 
@@ -114,7 +113,6 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
 
                 String locus1 = getLocusName(parsedline[1]);
 
-
                 if (myAlignmentLociMap.get(locus1) != null) {
 
                     String snpID = new String(parsedline[0]);
@@ -141,13 +139,11 @@ public class ConvertAlignmentCoordinatesPlugin extends AbstractPlugin {
                         newPos.chromosome(getLocusObj(locus2)).position(pos2).snpName(snpID);
                         posBuilder.set(site, newPos.build());
 
-
                         // posBuilder.setPositionOfSite(site, pos2);
                         //
                         // if (!locus1.equals(locus2)) {
                         //     posBuilder.setLocusOfSite(site, getLocusObj(locus2));
                         // }
-
                     }
 
                 }
