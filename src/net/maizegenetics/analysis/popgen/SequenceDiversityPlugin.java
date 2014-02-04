@@ -4,7 +4,7 @@
  * Created on December 22, 2006, 5:02 PM
  *
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.popgen;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.popgen.DiversityAnalyses;
@@ -155,7 +155,7 @@ public class SequenceDiversityPlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = SequenceDiversityPlugin.class.getResource("images/Diversity.gif");
+        URL imageURL = SequenceDiversityPlugin.class.getResource("/net/maizegenetics/analysis/images/Diversity.gif");
         if (imageURL == null) {
             return null;
         } else {
