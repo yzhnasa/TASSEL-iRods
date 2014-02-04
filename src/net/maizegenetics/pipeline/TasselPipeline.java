@@ -6,6 +6,9 @@
  */
 package net.maizegenetics.pipeline;
 
+import net.maizegenetics.analysis.distance.KinshipPlugin;
+import net.maizegenetics.analysis.distance.DistanceMatrixRangesPlugin;
+import net.maizegenetics.analysis.distance.DistanceMatrixPlugin;
 import net.maizegenetics.analysis.chart.AbstractDisplayPlugin;
 import net.maizegenetics.analysis.chart.TableDisplayPlugin;
 import net.maizegenetics.analysis.numericaltransform.NumericalGenotypePlugin;

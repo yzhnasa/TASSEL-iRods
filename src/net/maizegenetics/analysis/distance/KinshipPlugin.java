@@ -1,4 +1,4 @@
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.distance;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.trait.SimplePhenotype;
@@ -10,13 +10,7 @@ import net.maizegenetics.popgen.distance.Kinship;
 
 import javax.swing.*;
 import java.net.URL;
-import java.awt.Container;
 import java.awt.Frame;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -105,7 +99,7 @@ public class KinshipPlugin extends AbstractPlugin {
     }
 
     public ImageIcon getIcon() {
-        URL imageURL = KinshipPlugin.class.getResource("images/Kin.gif");
+        URL imageURL = KinshipPlugin.class.getResource("/net/maizegenetics/analysis/images/Kin.gif");
         if (imageURL == null) {
             return null;
         } else {

@@ -1,7 +1,7 @@
 /*
  * DistanceMatrixRangesPlugin
  */
-package net.maizegenetics.baseplugins;
+package net.maizegenetics.analysis.distance;
 
 import java.awt.*;
 import java.util.ArrayList;
