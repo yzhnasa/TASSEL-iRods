@@ -35,7 +35,7 @@ public class FilterTraitsPlugin extends AbstractPlugin {
 
 	@Override
 	public ImageIcon getIcon() {
-        URL imageURL = FilterTraitsPlugin.class.getResource("images/Filter.gif");
+        URL imageURL = FilterTraitsPlugin.class.getResource("/net/maizegenetics/analysis/images/Filter.gif");
         if (imageURL == null) {
             return null;
         } else {

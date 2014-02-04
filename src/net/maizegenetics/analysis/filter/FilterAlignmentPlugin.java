@@ -385,7 +385,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = FilterAlignmentPlugin.class.getResource("images/Filter.gif");
+        URL imageURL = FilterAlignmentPlugin.class.getResource("/net/maizegenetics/analysis/images/Filter.gif");
         if (imageURL == null) {
             return null;
         } else {
