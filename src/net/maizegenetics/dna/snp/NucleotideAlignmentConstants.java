@@ -38,7 +38,6 @@ public final class NucleotideAlignmentConstants {
      * Number of nucleotide states excluding rare and unknown.
      */
     public static final int NUMBER_NUCLEOTIDE_ALLELES = 6;
-    private static final String QUESTION_MARK = "?";
     private static final Map<String, Byte> NUCLEOTIDE_DIPLOID_HASH = new HashMap<String, Byte>();
 
     static {
@@ -253,8 +252,8 @@ public final class NucleotideAlignmentConstants {
     private static final char[] NUCLEOTIDE_IUPAC_CHARARRAY = new char[256];
 
     static {
-        Arrays.fill(NUCLEOTIDE_IUPAC_ARRAY, QUESTION_MARK);
-        Arrays.fill(NUCLEOTIDE_IUPAC_CHARARRAY,QUESTION_MARK.charAt(0));
+        Arrays.fill(NUCLEOTIDE_IUPAC_ARRAY, UNDEFINED_ALLELE_STR);
+        Arrays.fill(NUCLEOTIDE_IUPAC_CHARARRAY,UNDEFINED_ALLELE_STR.charAt(0));
         for (Byte temp : NUCLEOTIDE_IUPAC_HASH.keySet()) {
             NUCLEOTIDE_IUPAC_ARRAY[temp & 0xFF] = NUCLEOTIDE_IUPAC_HASH.get(temp);
             NUCLEOTIDE_IUPAC_CHARARRAY[temp & 0xFF] = NUCLEOTIDE_IUPAC_HASH.get(temp).charAt(0);
@@ -357,16 +356,7 @@ public final class NucleotideAlignmentConstants {
      * @return IUPAC String
      */
     public static String getNucleotideIUPAC(byte value) {
-        try {
-            String result = NUCLEOTIDE_IUPAC_ARRAY[value & 0xFF];
-            if (result == null) {
-                return QUESTION_MARK;
-            } else {
-                return result;
-            }
-        } catch (NullPointerException e) {
-            return QUESTION_MARK;
-        }
+        return NUCLEOTIDE_IUPAC_ARRAY[value & 0xFF];
     }
 
     /**
