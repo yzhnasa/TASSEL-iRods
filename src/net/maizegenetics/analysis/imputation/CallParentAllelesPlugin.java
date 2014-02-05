@@ -38,6 +38,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	private boolean useClusterAlgorithm = false;
 	private boolean checkSubPops = false;
 	private boolean useHets = true;
+	private ArrayList<PopulationData> familyList = null;
 	
 	public CallParentAllelesPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -55,7 +56,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 
 		for (Datum d : inputAlignments) {
 			GenotypeTable align = (GenotypeTable) d.getData();
-			ArrayList<PopulationData> familyList = PopulationData.readPedigreeFile(pedfileName);
+			if (familyList == null) familyList = PopulationData.readPedigreeFile(pedfileName);
 			for (PopulationData family : familyList) {
 				myLogger.info("Calling parent alleles for family " + family.name + ", chromosome " + align.chromosomeName(0) + ".");
 				
@@ -234,5 +235,9 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 		usage.append("? : print the parameter list.\n");
 
 		return usage.toString();
+	}
+
+	public void setFamilyList(ArrayList<PopulationData> familyList) {
+		this.familyList = familyList;
 	}
 }
