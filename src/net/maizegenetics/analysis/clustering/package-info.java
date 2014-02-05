@@ -4,4 +4,4 @@
  * Because of missing data an individual genotype can belong to more than one haplotype cluster. Resulting clusters can be merged and cluster distances calculated using different methods.
  */
 
-package net.maizegenetics.gwas.imputation.clustering;
+package net.maizegenetics.analysis.clustering;

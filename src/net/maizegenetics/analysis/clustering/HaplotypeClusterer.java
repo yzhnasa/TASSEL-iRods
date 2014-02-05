@@ -1,4 +1,4 @@
-package net.maizegenetics.gwas.imputation.clustering;
+package net.maizegenetics.analysis.clustering;
 
 import java.util.ArrayList;
 import java.util.Arrays;

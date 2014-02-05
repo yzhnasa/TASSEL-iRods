@@ -1,4 +1,4 @@
-package net.maizegenetics.gwas.imputation.clustering;
+package net.maizegenetics.analysis.clustering;
 
 import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;

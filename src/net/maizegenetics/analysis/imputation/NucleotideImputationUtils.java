@@ -1,17 +1,19 @@
- package net.maizegenetics.gwas.imputation;
+ package net.maizegenetics.analysis.imputation;
 
+import net.maizegenetics.analysis.clustering.Haplotype;
+import net.maizegenetics.analysis.clustering.HaplotypeCluster;
+import net.maizegenetics.analysis.clustering.HaplotypeClusterer;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
-import net.maizegenetics.gwas.imputation.clustering.Haplotype;
-import net.maizegenetics.gwas.imputation.clustering.HaplotypeCluster;
-import net.maizegenetics.gwas.imputation.clustering.HaplotypeClusterer;
+
 import net.maizegenetics.popgen.distance.DistanceMatrix;
 import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.stats.math.GammaFunction;
@@ -29,6 +31,7 @@ import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
+
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.stat.inference.TestUtils;
 import org.apache.log4j.Logger;

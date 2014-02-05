@@ -1,4 +1,4 @@
-package net.maizegenetics.gwas.imputation;
+package net.maizegenetics.analysis.imputation;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;

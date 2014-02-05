@@ -1,4 +1,4 @@
-package net.maizegenetics.gwas.imputation;
+package net.maizegenetics.analysis.imputation;
 
 public class EmissionProbability {
 	double[][] probObsGivenState; //state in rows, observation in columns

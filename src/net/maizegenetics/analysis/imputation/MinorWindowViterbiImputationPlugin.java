@@ -6,13 +6,11 @@ package net.maizegenetics.analysis.imputation;
 
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.DonorHaplotypes;
 import net.maizegenetics.dna.snp.*;
 import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
-import net.maizegenetics.gwas.imputation.EmissionProbability;
-import net.maizegenetics.gwas.imputation.TransitionProbability;
-import net.maizegenetics.gwas.imputation.ViterbiAlgorithm;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.popgen.DonorHypoth;
@@ -20,9 +18,11 @@ import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.*;
 import net.maizegenetics.util.BitSet;
+
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.io.File;
 import java.util.*;
