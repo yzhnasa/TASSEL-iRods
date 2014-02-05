@@ -31,11 +31,18 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
     private static final long serialVersionUID = -7873729831795750538L;
     public static final String DELIMITER = ":";
     public static Taxon ANONYMOUS = new Taxon("");
+    /**Standard key for the father of the taxon*/
     public static final String FatherKey = "FATHER";
+    /**Standard key for the mother of the taxon*/
     public static final String MotherKey = "MOTHER";
+    /**Standard key for the pedigree of the taxon*/
     public static final String PedigreeKey = "PEDIGREE";
+    /**Standard key for the sex of the taxon*/
     public static final String SexKey = "SEX";
-    public static final String InbreedFKey = "InbreedF";
+    /**Standard key for inbreeding coefficient of the taxon*/
+    public static final String InbreedFKey = "INBREEDF";
+    /**Standard key for a synonym of the taxon*/
+    public static final String SynonymKey = "SYNONYM";
     private final Map.Entry<String, String>[] myAnno;
     private final String myName;
     private final int hashCode;
@@ -250,6 +257,13 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
          */
         public Builder pedigree(String val) {
             return addAnno(PedigreeKey, val);
+        }
+
+        /**
+         * Set text definition of pedigree (default=null)
+         */
+        public Builder synonym(String val) {
+            return addAnno(SynonymKey, val);
         }
 
         public Taxon build() {
