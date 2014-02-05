@@ -2,15 +2,18 @@ package net.maizegenetics.dna.snp.io;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTableBuilder;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.HapMapHDF5Constants;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
+import net.maizegenetics.util.HDF5Constants;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -42,7 +45,20 @@ public class BuilderFromGenotypeHDF5 {
     //TODO subset??
     public GenotypeTable build() {
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
+        //test for newest version
         TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
+        //test and correct taxa number bug in TASSEL 4 HDF5
+        //TODO move to migration code
+        int numTaxa = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA);
+        if(numTaxa!=tL.numberOfTaxa()) {
+            reader.close();
+            IHDF5Writer writer=HDF5Factory.open(infile);
+            writer.setIntAttribute(HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, HDF5Constants.GENOTYPES_NUM_TAXA, tL.numberOfTaxa());
+            writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, tL.numberOfTaxa());
+
+            writer.close();
+            reader=HDF5Factory.openForReading(infile);
+        }
         PositionList pL=PositionListBuilder.getInstance(reader);
         GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
         return GenotypeTableBuilder.getInstance(geno,pL, tL);

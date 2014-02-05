@@ -23,7 +23,7 @@ public final class HDF5Utils {
     }
 
     public static void writeHDF5GenotypesNumTaxa(IHDF5Writer h5w, int numTaxa) {
-        h5w.setIntAttribute(HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, HDF5Constants.GENOTYPES_MAX_NUM_ALLELES, numTaxa);
+        h5w.setIntAttribute(HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, HDF5Constants.GENOTYPES_NUM_TAXA, numTaxa);
     }
 
     public static void writeHDF5GenotypesScoreType(IHDF5Writer h5w, String scoreType) {
