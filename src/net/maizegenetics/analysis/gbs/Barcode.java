@@ -1,4 +1,5 @@
-package net.maizegenetics.gbs.homology;
+
+package net.maizegenetics.analysis.gbs;
 
 import java.util.Arrays;
 

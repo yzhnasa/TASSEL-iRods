@@ -8,8 +8,6 @@ import net.maizegenetics.dna.tag.TagsByTaxaShort;
 import net.maizegenetics.dna.tag.TagsByTaxaByte;
 import net.maizegenetics.dna.tag.TagCounts;
 import net.maizegenetics.dna.tag.Tags;
-import net.maizegenetics.gbs.homology.ParseBarcodeRead;
-import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.plugindef.AbstractPlugin;

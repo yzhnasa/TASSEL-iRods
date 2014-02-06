@@ -3,8 +3,6 @@
  */
 package net.maizegenetics.analysis.gbs;
 
-import net.maizegenetics.gbs.homology.ParseBarcodeRead;
-import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.tag.TagCounts;
 import net.maizegenetics.dna.tag.Tags;

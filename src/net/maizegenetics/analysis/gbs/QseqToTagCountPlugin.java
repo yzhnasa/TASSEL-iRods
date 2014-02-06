@@ -1,7 +1,5 @@
 package net.maizegenetics.analysis.gbs;
 
-import net.maizegenetics.gbs.homology.ParseBarcodeRead;
-import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.dna.tag.TagCountMutable;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.plugindef.AbstractPlugin;

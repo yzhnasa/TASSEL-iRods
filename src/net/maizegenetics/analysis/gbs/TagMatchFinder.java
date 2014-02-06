@@ -1,4 +1,4 @@
-package net.maizegenetics.gbs.homology;
+package net.maizegenetics.analysis.gbs;
 
 import cern.colt.GenericSorting;
 import cern.colt.Swapper;

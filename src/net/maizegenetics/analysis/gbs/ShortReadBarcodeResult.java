@@ -1,7 +1,7 @@
 /*
  * ReadBarcodeResult
  */
-package net.maizegenetics.gbs.homology;
+package net.maizegenetics.analysis.gbs;
 
 import net.maizegenetics.gbs.util.BaseEncoder;
 

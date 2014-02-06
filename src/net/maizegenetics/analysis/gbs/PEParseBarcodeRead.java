@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.maizegenetics.gbs.homology;
+package net.maizegenetics.analysis.gbs;
 
 import net.maizegenetics.gbs.util.BaseEncoder;
 

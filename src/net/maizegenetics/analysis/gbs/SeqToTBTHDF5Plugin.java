@@ -14,8 +14,6 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
-import net.maizegenetics.gbs.homology.ParseBarcodeRead;
-import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.tag.TagCounts;
 import net.maizegenetics.dna.tag.Tags;

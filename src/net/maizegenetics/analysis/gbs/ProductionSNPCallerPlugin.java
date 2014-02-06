@@ -20,13 +20,10 @@ import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
-import net.maizegenetics.gbs.homology.ParseBarcodeRead;
-import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.gbs.homology.TagMatchFinder;
 import net.maizegenetics.dna.snp.ExportUtils;
 
 import java.awt.Frame;

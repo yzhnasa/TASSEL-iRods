@@ -14,10 +14,6 @@ import java.util.Arrays;
 
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import javax.swing.ImageIcon;
-import net.maizegenetics.gbs.homology.PEParseBarcodeRead;
-import net.maizegenetics.gbs.homology.PEReadBarcodeResult;
-import net.maizegenetics.gbs.homology.ParseBarcodeRead;
-import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.dna.tag.TagCountMutable;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.util.ArgsEngine;

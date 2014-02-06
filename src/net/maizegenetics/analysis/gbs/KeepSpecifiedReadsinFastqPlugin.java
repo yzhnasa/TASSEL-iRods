@@ -7,8 +7,6 @@ import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.File;
 import javax.swing.ImageIcon;
-import net.maizegenetics.gbs.homology.ParseBarcodeRead;
-import net.maizegenetics.gbs.homology.ReadBarcodeResult;
 import net.maizegenetics.dna.map.TOPMInterface;
 import net.maizegenetics.dna.map.TOPMUtils;
 import net.maizegenetics.gbs.util.FastqReader;
