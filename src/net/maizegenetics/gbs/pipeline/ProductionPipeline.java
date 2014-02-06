@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 
 import java.util.Date;
 import java.util.Properties;
+import net.maizegenetics.util.Utils;
 
 /**
  * This class is for running the GBS Production Pipeline. It is to be run from
@@ -60,11 +61,10 @@ public class ProductionPipeline {
 
     private static final SimpleDateFormat LOGGING_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
 
+    private static final String RUN_FILE_SUFFIX = ".run";
+
     // host on which pipeline is running
     private String myApplicationHost = "unknown";
-
-    // run file suffix
-    private String myRunFileSuffix = ".run";
 
     // default server to be used to send email notifications
     private String myEmailHost = "appsmtp.mail.cornell.edu";
@@ -98,8 +98,7 @@ public class ProductionPipeline {
     private String myPropertiesFileContents = null;
 
     private static final String EXAMPLE_CONFIG_FILE
-            = "runFileSuffix=.run\n"
-            + "emailHost=appsmtp.mail.cornell.edu\n"
+            = "emailHost=appsmtp.mail.cornell.edu\n"
             + "emailAddress=dek29@cornell.edu\n"
             + "runDirectory=/SSD/prop_pipeline/run/\n"
             + "archiveDirectory=/SSD/prop_pipeline/arcvtmp/\n"
@@ -140,29 +139,30 @@ public class ProductionPipeline {
         if (!dir.exists()) {
             System.out.println("Could not find the directory containing .run files: " + dir.getPath());
             System.out.println("Exiting program.");
-            sendAlertNotification(EMAIL_SUBJECT_BASE + "- Error", "Could not find directory: " + dir.getAbsolutePath()
+            sendAlertNotification(EMAIL_SUBJECT_BASE + "- Error", "Could not find run directory: " + dir.getAbsolutePath()
                     + " on  server " + myApplicationHost);
             System.exit(1);
         }
 
         // get all property files in the directory
         File[] files = dir.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
-                return name.toLowerCase().endsWith(myRunFileSuffix);
+                return name.toLowerCase().endsWith(RUN_FILE_SUFFIX);
             }
         });
 
         if (files == null) {
             System.out.println("************** Could not find a valid .run file ***************");
             System.out.println("************** Example .run file: ");
-            System.out.println(EXAMPLE_RUN_FILE);   // display properly configured run file
-            sendAlertNotification(EMAIL_SUBJECT_BASE + "- No Files", "No .run files found on " + myApplicationHost);
+            System.out.println(EXAMPLE_RUN_FILE);
+            sendAlertNotification(EMAIL_SUBJECT_BASE + "- No Run Files", "No .run files found on " + myApplicationHost);
         } else {
             StringBuilder sb = new StringBuilder();
             for (File f : files) {
-                sb.append(f + "\n");
+                sb.append(f).append("\n");
             }
-            sb.append("\nRunning on server: " + myApplicationHost + "\n");
+            sb.append("\nRunning on server: ").append(myApplicationHost).append("\n");
             sendAlertNotification(EMAIL_SUBJECT_BASE + "- File Count: " + files.length, sb.toString());
         }
 
@@ -171,28 +171,22 @@ public class ProductionPipeline {
             String msgBody = "Starting to run " + aFile.getAbsolutePath() + " on server " + myApplicationHost;
             sendAlertNotification(EMAIL_SUBJECT_BASE + " File: " + aFile.getName(), msgBody);
             String runFileContents = loadRunConfiguration(aFile);
-            SimpleDateFormat yyyyMMdd_format = new SimpleDateFormat("yyyyMMdd");
-            String todayDate = yyyyMMdd_format.format(new Date());
+            String todayDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
 
             String fileName = FilenameUtils.removeExtension(aFile.getName());
             String fileNameBase = todayDate + "_" + fileName;
             String logFileName = fileNameBase + ".log";
-
-            String contextLog = recordContext(doCheckSum);    // get file MD5sum
-
-            String runFileMsg = getTimeStamp() + ": Contents of the .run file: ";
 
             File logFile = new File(myOutputFolder + "/" + logFileName);
             try {
                 if (!logFile.exists()) {
                     logFile.createNewFile();
                 }
-                BufferedWriter bw = new BufferedWriter(new FileWriter(logFile.getAbsolutePath()));
+                BufferedWriter bw = Utils.getBufferedWriter(logFile);
                 bw.write("Contents of the .properties file:\n" + myPropertiesFileContents);
-                bw.write(runFileMsg + "\n" + runFileContents);
-                bw.write(contextLog);
+                bw.write(getTimeStamp() + ": Contents of the .run file: " + "\n" + runFileContents);
+                bw.write(getCurrentRunContext(doCheckSum));
                 bw.close();
-
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
@@ -200,16 +194,15 @@ public class ProductionPipeline {
             // redirect System.out and System.err to the log file
             PrintStream ps = null;
             try {
-                ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFile.getAbsolutePath(), true)));
-
+                ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFile, true)));
             } catch (FileNotFoundException fnfe) {
                 fnfe.printStackTrace();
             }
             System.setOut(ps);
             System.setErr(ps);
 
-            System.out.println(getTimeStamp() + " Initializing ProductionSNPCallerPlugin \n");
-            Date start = new Date();
+            System.out.println(getTimeStamp() + ": Initializing ProductionSNPCallerPlugin \n");
+            long start = System.nanoTime();
 
             String[] pluginArgs = getPipelinePluginArgs();
             StringBuilder builder = new StringBuilder();
@@ -218,26 +211,26 @@ public class ProductionPipeline {
             }
             System.out.println("Arguments passed to ProductionSNPCallerPlugin:\n" + builder.toString());
             ProductionSNPCallerPlugin pscp = new ProductionSNPCallerPlugin();
-            System.out.println(getTimeStamp() + " Initialized ProductionSNPCallerPlugin \n");
+            System.out.println(getTimeStamp() + ": Initialized ProductionSNPCallerPlugin \n");
             pscp.setParameters(pluginArgs);
-            System.out.println(getTimeStamp() + " Done with ProductionSNPCallerPlugin.setParameters() \n");
+            System.out.println(getTimeStamp() + ": Done with ProductionSNPCallerPlugin.setParameters() \n");
             pscp.performFunction(null);
-            System.out.println(getTimeStamp() + " Done with ProductionSNPCallerPlugin.performFunction() \n");
+            System.out.println(getTimeStamp() + ": Done with ProductionSNPCallerPlugin.performFunction() \n");
+
+            double elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
+            System.out.println(getTimeStamp() + ": Time to run ProductionSNPCallerPlugin: " + elapsedSeconds + " sec.");
 
             if (runImputation) {
+                start = System.nanoTime();
                 String[] name = aFile.getName().split("\\.");
                 String h5File = myOutputFolder + "/" + name[0] + ".hmp.h5";
                 String haploDir = myHaplotypeDirectory + "/" + "AllZeaGBSv27.gX.hmp.txt.gz";
                 String targetFile = myOutputFolder + "/" + name[0] + ".globalimp.hmp.h5";
 
                 runImputation(h5File, haploDir, targetFile);
+                elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
+                System.out.println(getTimeStamp() + ": Time to run Imputation: " + elapsedSeconds + " sec.");
             }
-            Date stop = new Date();
-
-            long startTime = start.getTime();
-            long stopTime = stop.getTime();
-            long diff = stopTime - startTime;
-            long elapsedSeconds = diff / 1000;
 
             String emailSubject = EMAIL_SUBJECT_BASE + myInputFolder;
             String email = "Ran:\n " + myInputFolder
@@ -296,12 +289,15 @@ public class ProductionPipeline {
                     sendAlertNotification(EMAIL_SUBJECT_BASE + "- Error", msg);
                 }
             }
+
             // send email notification that a .run file has been processed
             SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
 
             try {
                 sc.sendMessageWithAttachment(emailSubject, emailMsg.toString(), logFile.getAbsolutePath());
-            } catch (javax.mail.MessagingException me) {   /* ignore */ }
+            } catch (javax.mail.MessagingException me) {
+                // do nothing
+            }
         }
     }
 
@@ -344,11 +340,8 @@ public class ProductionPipeline {
             System.exit(1);
         }
 
-        String configurationElement = "runFileSuffix";
-        myRunFileSuffix = props.getProperty(configurationElement, myRunFileSuffix);
-
         // server used for sending email
-        configurationElement = "emailHost";
+        String configurationElement = "emailHost";
         myEmailHost = props.getProperty(configurationElement, myEmailHost);
 
         // to whom the email notifications should be sent
@@ -503,9 +496,10 @@ public class ProductionPipeline {
      *
      * @param calculateChecksum Calculating MD5sum can be time consuming. This
      * allows it to be skipped when appropriate.
-     * @return
+     *
+     * @return Information about current run
      */
-    private String recordContext(boolean calculateChecksum) {
+    private String getCurrentRunContext(boolean calculateChecksum) {
 
         StringBuilder sb = new StringBuilder();
 
@@ -519,26 +513,24 @@ public class ProductionPipeline {
         // hostname
         sb.append("Name of Machine on which JVM is Running: ").append(myApplicationHost).append("\n");
 
-        String checkSumString = " md5sum: ";
         // for each file in a directory, include the md5sum
         if (calculateChecksum) {
-            sb.append(getTimeStamp() + checkSumString + myKeyFile + " " + CheckSum.getMD5Checksum(myKeyFile) + "\n");
+            sb.append(getTimeStamp()).append(": MD5: ").append(myKeyFile).append(": ").append(CheckSum.getMD5Checksum(myKeyFile)).append("\n");
             File inFldr = new File(myInputFolder);
 
             if (inFldr.isDirectory()) {
                 File[] files = inFldr.listFiles();
                 for (File f : files) {
-                    String fCheckSum = CheckSum.getMD5Checksum(f.getPath());
-                    String msg = getTimeStamp() + checkSumString + f.getPath() + " " + fCheckSum + "\n";
-                    sb.append(msg);
+                    sb.append(getTimeStamp()).append(": MD5: ").append(f.getPath()).append(": ").append(CheckSum.getMD5Checksum(f.getPath())).append("\n");
                 }
             } else {
-                sb.append(getTimeStamp() + CheckSum.getMD5Checksum(myInputFolder) + "\n");
+                sb.append(getTimeStamp()).append(CheckSum.getMD5Checksum(myInputFolder)).append("\n");
             }
 
         } else {
-            sb.append(getTimeStamp() + "MD5sum checking has been switched off using the --skipCheckSum argument");
+            sb.append(getTimeStamp()).append(": MD5sum checking has been switched off using the --skipCheckSum argument");
         }
+
         return sb.toString();
     }
 
