@@ -11,7 +11,7 @@ import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.trait.ReadPhenotypeUtils;
 import net.maizegenetics.dna.snp.ReadPolymorphismUtils;
 import net.maizegenetics.dna.snp.ReadSequenceAlignmentUtils;
-import net.maizegenetics.popgen.distance.ReadDistanceMatrix;
+import net.maizegenetics.taxa.distance.ReadDistanceMatrix;
 import net.maizegenetics.util.Report;
 import net.maizegenetics.util.TableReportUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;

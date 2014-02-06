@@ -13,8 +13,8 @@ import org.forester.archaeopteryx.Archaeopteryx;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 
-import net.maizegenetics.popgen.tree.Node;
-import net.maizegenetics.popgen.tree.Tree;
+import net.maizegenetics.taxa.tree.Node;
+import net.maizegenetics.taxa.tree.Tree;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

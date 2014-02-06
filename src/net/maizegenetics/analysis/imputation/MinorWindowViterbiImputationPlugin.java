@@ -11,7 +11,7 @@ import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.analysis.popgen.DonorHypoth;
-import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
+import net.maizegenetics.taxa.distance.IBSDistanceMatrix;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.*;
 import net.maizegenetics.util.BitSet;

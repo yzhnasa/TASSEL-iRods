@@ -15,12 +15,12 @@ import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.jGLiM.dm.SweepFast;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.popgen.distance.DistanceMatrix;
+import net.maizegenetics.taxa.distance.DistanceMatrix;
 import net.maizegenetics.util.SimpleTableReport;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.popgen.tree.UPGMATree;
+import net.maizegenetics.taxa.tree.UPGMATree;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.stats.EMMA.EMMAforDoubleMatrix;
 

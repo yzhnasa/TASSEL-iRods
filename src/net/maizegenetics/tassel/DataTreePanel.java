@@ -19,10 +19,10 @@ import net.maizegenetics.dna.snp.FilterGenotypeTable;
 import net.maizegenetics.gui.GenotypeTableMask;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.popgen.distance.DistanceMatrix;
+import net.maizegenetics.taxa.distance.DistanceMatrix;
 import net.maizegenetics.taxa.IdentifierSynonymizer;
 import net.maizegenetics.util.TableReport;
-import net.maizegenetics.popgen.tree.Tree;
+import net.maizegenetics.taxa.tree.Tree;
 
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;

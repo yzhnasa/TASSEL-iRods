@@ -11,7 +11,7 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
+import net.maizegenetics.taxa.distance.IBSDistanceMatrix;
 
 import javax.swing.*;
 import java.awt.*;
@@ -91,13 +91,13 @@ public class CreateTreePlugin extends AbstractPlugin {
         // SitePattern sp = new SitePattern(aa);
         IBSDistanceMatrix adm = new IBSDistanceMatrix(aa, this);
         // adm.recompute(sp);
-        net.maizegenetics.popgen.tree.Tree theTree;
+        net.maizegenetics.taxa.tree.Tree theTree;
         List<Datum> results = new ArrayList<Datum>();
         if (isNJ) {
-            theTree = new net.maizegenetics.popgen.tree.NeighborJoiningTree(adm);
+            theTree = new net.maizegenetics.taxa.tree.NeighborJoiningTree(adm);
             results.add(new Datum("Tree:" + input.getName(), theTree, "NJ Tree"));
         } else {
-            theTree = new net.maizegenetics.popgen.tree.UPGMATree(adm);
+            theTree = new net.maizegenetics.taxa.tree.UPGMATree(adm);
             results.add(new Datum("Tree:" + input.getName(), theTree, "UPGMA Tree"));
         }
         if (isSaveMatrix) {

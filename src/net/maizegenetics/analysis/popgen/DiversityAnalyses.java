@@ -16,7 +16,7 @@ package net.maizegenetics.analysis.popgen;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
-import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
+import net.maizegenetics.taxa.distance.IBSDistanceMatrix;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.util.AbstractTableReport;
 import net.maizegenetics.util.TableReport;

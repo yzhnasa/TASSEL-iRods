@@ -7,7 +7,7 @@ import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.dna.snp.GeneticMap;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Phenotype;
-import net.maizegenetics.popgen.distance.DistanceMatrix;
+import net.maizegenetics.taxa.distance.DistanceMatrix;
 import net.maizegenetics.stats.MLM.*;
 import net.maizegenetics.gui.ReportDestinationDialog;
 

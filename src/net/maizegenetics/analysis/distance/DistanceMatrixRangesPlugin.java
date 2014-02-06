@@ -10,7 +10,7 @@ import java.util.List;
 import javax.swing.*;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;
-import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
+import net.maizegenetics.taxa.distance.IBSDistanceMatrix;
 import net.maizegenetics.util.SimpleTableReport;
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;

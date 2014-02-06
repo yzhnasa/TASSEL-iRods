@@ -14,8 +14,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
 
-import net.maizegenetics.popgen.distance.DistanceMatrix;
-import net.maizegenetics.popgen.distance.IBSDistanceMatrix;
+import net.maizegenetics.taxa.distance.DistanceMatrix;
 import net.maizegenetics.stats.math.GammaFunction;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.PositionListBuilder;
@@ -23,11 +22,6 @@ import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.TaxaListUtils;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.popgen.tree.Tree;
-import net.maizegenetics.popgen.tree.TreeClusters;
-import net.maizegenetics.popgen.tree.UPGMATree;
-import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.OpenBitSet;
@@ -36,9 +30,6 @@ import org.apache.commons.math.MathException;
 import org.apache.commons.math.stat.inference.TestUtils;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 public class NucleotideImputationUtils {
