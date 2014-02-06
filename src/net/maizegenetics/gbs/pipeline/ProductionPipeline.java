@@ -184,7 +184,7 @@ public class ProductionPipeline {
                 }
                 BufferedWriter bw = Utils.getBufferedWriter(logFile);
                 bw.write("Contents of the .properties file:\n" + myPropertiesFileContents);
-                bw.write(getTimeStamp() + ": Contents of the .run file: " + "\n" + runFileContents);
+                bw.write(getTimeStamp() + "Contents of the .run file: " + "\n" + runFileContents);
                 bw.write(getCurrentRunContext(doCheckSum));
                 bw.close();
             } catch (IOException ioe) {
@@ -201,7 +201,7 @@ public class ProductionPipeline {
             System.setOut(ps);
             System.setErr(ps);
 
-            System.out.println(getTimeStamp() + ": Initializing ProductionSNPCallerPlugin \n");
+            System.out.println(getTimeStamp() + "Initializing ProductionSNPCallerPlugin \n");
             long start = System.nanoTime();
 
             String[] pluginArgs = getPipelinePluginArgs();
@@ -211,14 +211,14 @@ public class ProductionPipeline {
             }
             System.out.println("Arguments passed to ProductionSNPCallerPlugin:\n" + builder.toString());
             ProductionSNPCallerPlugin pscp = new ProductionSNPCallerPlugin();
-            System.out.println(getTimeStamp() + ": Initialized ProductionSNPCallerPlugin \n");
+            System.out.println(getTimeStamp() + "Initialized ProductionSNPCallerPlugin \n");
             pscp.setParameters(pluginArgs);
-            System.out.println(getTimeStamp() + ": Done with ProductionSNPCallerPlugin.setParameters() \n");
+            System.out.println(getTimeStamp() + "Done with ProductionSNPCallerPlugin.setParameters() \n");
             pscp.performFunction(null);
-            System.out.println(getTimeStamp() + ": Done with ProductionSNPCallerPlugin.performFunction() \n");
+            System.out.println(getTimeStamp() + "Done with ProductionSNPCallerPlugin.performFunction() \n");
 
             double elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
-            System.out.println(getTimeStamp() + ": Time to run ProductionSNPCallerPlugin: " + elapsedSeconds + " sec.");
+            System.out.println(getTimeStamp() + "Time to run ProductionSNPCallerPlugin: " + elapsedSeconds + " sec.");
 
             if (runImputation) {
                 start = System.nanoTime();
@@ -229,7 +229,7 @@ public class ProductionPipeline {
 
                 runImputation(h5File, haploDir, targetFile);
                 elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
-                System.out.println(getTimeStamp() + ": Time to run Imputation: " + elapsedSeconds + " sec.");
+                System.out.println(getTimeStamp() + "Time to run Imputation: " + elapsedSeconds + " sec.");
             }
 
             String emailSubject = EMAIL_SUBJECT_BASE + myInputFolder;
@@ -465,11 +465,12 @@ public class ProductionPipeline {
 
     /**
      * Verify that element specifying a directory exists in a configuration or
-     * properties file and that the directory exists on the filesystem.
+     * properties file and that the directory exists on the file system.
      *
      * @param filename Name of configuration/properties/.run file
      * @param input String containing the fully qualified path of a directory
      * @param configurationElement
+     * 
      * @return Description of the problem with the input. If return is null then
      * there is no problem with the entered file or directory
      */
@@ -515,20 +516,20 @@ public class ProductionPipeline {
 
         // for each file in a directory, include the md5sum
         if (calculateChecksum) {
-            sb.append(getTimeStamp()).append(": MD5: ").append(myKeyFile).append(": ").append(CheckSum.getMD5Checksum(myKeyFile)).append("\n");
+            sb.append(getTimeStamp()).append("MD5: ").append(myKeyFile).append(": ").append(CheckSum.getMD5Checksum(myKeyFile)).append("\n");
             File inFldr = new File(myInputFolder);
 
             if (inFldr.isDirectory()) {
                 File[] files = inFldr.listFiles();
                 for (File f : files) {
-                    sb.append(getTimeStamp()).append(": MD5: ").append(f.getPath()).append(": ").append(CheckSum.getMD5Checksum(f.getPath())).append("\n");
+                    sb.append(getTimeStamp()).append("MD5: ").append(f.getPath()).append(": ").append(CheckSum.getMD5Checksum(f.getPath())).append("\n");
                 }
             } else {
                 sb.append(getTimeStamp()).append(CheckSum.getMD5Checksum(myInputFolder)).append("\n");
             }
 
         } else {
-            sb.append(getTimeStamp()).append(": MD5sum checking has been switched off using the --skipCheckSum argument");
+            sb.append(getTimeStamp()).append("MD5sum checking has been switched off using the --skipCheckSum argument");
         }
 
         return sb.toString();
@@ -550,7 +551,7 @@ public class ProductionPipeline {
             "-mxInbErr", "0.02",
             "-mxHybErr", "0.005",
             "-mnTestSite", "50",
-            "-mxDonH", "10", //           "-projA",
+            "-mxDonH", "10", // "-projA",
         };
 
         StringBuilder builder = new StringBuilder();
@@ -558,7 +559,6 @@ public class ProductionPipeline {
             builder.append(s).append("\n");
         }
         System.out.println("Arguments passed to MinorWindowViterbiImputationPlugin:\n" + builder.toString());
-        System.out.println("TasselPrefs: " + TasselPrefs.getAlignmentRetainRareAlleles());
         TasselPrefs.putAlignmentRetainRareAlleles(false);
         MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
         plugin.setParameters(args2);
@@ -660,7 +660,7 @@ public class ProductionPipeline {
      * Convenience method to provide uniformly labeled timestamps
      */
     private static String getTimeStamp() {
-        return "Timestamp: " + LOGGING_DATE_FORMAT.format(new Date()) + " ";
+        return "Timestamp: " + LOGGING_DATE_FORMAT.format(new Date()) + ": ";
     }
 
     /**
@@ -676,7 +676,9 @@ public class ProductionPipeline {
         SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
         try {
             sc.sendMessage(subject, message);
-        } catch (javax.mail.MessagingException me) { /* ignore */        }
+        } catch (javax.mail.MessagingException me) {
+            // do nothing
+        }
     }
 
     public static void main(String[] args) {
