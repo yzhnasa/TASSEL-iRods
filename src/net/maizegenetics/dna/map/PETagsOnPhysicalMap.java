@@ -20,7 +20,7 @@ import net.maizegenetics.dna.tag.AbstractPETags;
 import net.maizegenetics.dna.tag.PETagCounts;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.gbs.util.SAMUtils;
+import net.maizegenetics.dna.tag.SAMUtils;
 
 /**
  *

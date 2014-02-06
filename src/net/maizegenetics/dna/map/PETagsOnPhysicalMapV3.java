@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import net.maizegenetics.dna.tag.AbstractTags;
 import net.maizegenetics.dna.tag.Tags;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.gbs.util.SAMUtils;
+import net.maizegenetics.dna.tag.SAMUtils;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
 /**

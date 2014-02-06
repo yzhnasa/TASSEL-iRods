@@ -1,7 +1,7 @@
 /*
  * SAMUtils
  */
-package net.maizegenetics.gbs.util;
+package net.maizegenetics.dna.tag;
 
 /**
  *

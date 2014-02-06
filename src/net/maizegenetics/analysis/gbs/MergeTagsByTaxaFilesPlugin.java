@@ -7,7 +7,7 @@ import net.maizegenetics.dna.tag.TagCountMutable;
 import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.dna.tag.TagsByTaxaByteFileMap;
 import net.maizegenetics.dna.tag.TagsByTaxaUtils;
-import net.maizegenetics.gbs.util.ReadsByTaxa;
+import net.maizegenetics.dna.tag.ReadsByTaxa;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

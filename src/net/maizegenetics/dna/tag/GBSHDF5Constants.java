@@ -1,5 +1,5 @@
 
-package net.maizegenetics.gbs.util;
+package net.maizegenetics.dna.tag;
 
 /**
  * Path definitions for the HDF5 GBS file formats.

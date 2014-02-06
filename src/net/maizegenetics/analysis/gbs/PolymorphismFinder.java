@@ -10,7 +10,7 @@ import cern.colt.function.IntComparator;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import net.maizegenetics.gbs.util.ReadsByTaxa;
+import net.maizegenetics.dna.tag.ReadsByTaxa;
 
 /**
  *

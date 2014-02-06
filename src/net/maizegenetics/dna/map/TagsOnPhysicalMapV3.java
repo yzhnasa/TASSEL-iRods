@@ -15,7 +15,7 @@ import net.maizegenetics.dna.tag.TagCounts;
 import net.maizegenetics.dna.tag.Tags;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.gbs.util.GBSHDF5Constants;
+import net.maizegenetics.dna.tag.GBSHDF5Constants;
 import org.apache.log4j.Logger;
 
 /**

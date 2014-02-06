@@ -1,7 +1,7 @@
 /*
  * ReadsByTaxa
  */
-package net.maizegenetics.gbs.util;
+package net.maizegenetics.dna.tag;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -15,6 +15,7 @@ import java.io.FileReader;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import net.maizegenetics.gbs.util.BaseEncoder;
 import net.maizegenetics.util.BitUtil;
 
 import net.maizegenetics.util.OpenBitSet;

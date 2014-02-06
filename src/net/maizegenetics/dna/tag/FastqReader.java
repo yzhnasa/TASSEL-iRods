@@ -1,7 +1,7 @@
 /*
  * FastqReader
  */
-package net.maizegenetics.gbs.util;
+package net.maizegenetics.dna.tag;
 
 import java.io.BufferedReader;
 import net.maizegenetics.util.Utils;

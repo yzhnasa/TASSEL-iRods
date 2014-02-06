@@ -6,7 +6,7 @@ package net.maizegenetics.dna.map;
 import ch.systemsx.cisd.hdf5.*;
 import java.io.File;
 import java.util.Arrays;
-import net.maizegenetics.gbs.util.GBSHDF5Constants;
+import net.maizegenetics.dna.tag.GBSHDF5Constants;
 import org.apache.log4j.Logger;
 
 /**

@@ -9,7 +9,7 @@ import java.io.File;
 import javax.swing.ImageIcon;
 import net.maizegenetics.dna.map.TOPMInterface;
 import net.maizegenetics.dna.map.TOPMUtils;
-import net.maizegenetics.gbs.util.FastqReader;
+import net.maizegenetics.dna.tag.FastqReader;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

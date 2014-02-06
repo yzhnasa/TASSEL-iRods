@@ -13,7 +13,7 @@ import java.util.TreeSet;
 
 import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.gbs.util.BaseEncoder;
-import net.maizegenetics.gbs.util.ReadsByTaxa;
+import net.maizegenetics.dna.tag.ReadsByTaxa;
 
 /**
  *

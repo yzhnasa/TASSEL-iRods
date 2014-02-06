@@ -1,7 +1,7 @@
 /*
  * Reads
  */
-package net.maizegenetics.gbs.util;
+package net.maizegenetics.dna.tag;
 
 /**
  * Basic methods for working with nextgen reads
