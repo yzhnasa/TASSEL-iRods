@@ -1,4 +1,4 @@
-package net.maizegenetics.gwas.modelfitter;
+package net.maizegenetics.analysis.modelfitter;
 
 import java.awt.Frame;
 import java.net.URL;

@@ -1,4 +1,4 @@
-package net.maizegenetics.gwas.modelfitter;
+package net.maizegenetics.analysis.modelfitter;
 
 import java.awt.Color;
 import java.awt.Component;
