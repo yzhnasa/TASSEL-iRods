@@ -12,7 +12,7 @@
  * public license. 
  *
  */
-package net.maizegenetics.popgen;
+package net.maizegenetics.analysis.popgen;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.FilterGenotypeTable;

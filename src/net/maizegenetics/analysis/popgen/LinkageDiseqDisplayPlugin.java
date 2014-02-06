@@ -6,7 +6,6 @@
  */
 package net.maizegenetics.analysis.popgen;
 
-import net.maizegenetics.popgen.LinkageDisequilibrium;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 

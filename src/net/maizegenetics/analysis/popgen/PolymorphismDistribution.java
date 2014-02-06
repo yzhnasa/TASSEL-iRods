@@ -1,4 +1,4 @@
-package net.maizegenetics.popgen;
+package net.maizegenetics.analysis.popgen;
 
 import net.maizegenetics.util.TableReport;
 import net.maizegenetics.util.AbstractTableReport;

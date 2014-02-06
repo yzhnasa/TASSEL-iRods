@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.maizegenetics.popgen;
+package net.maizegenetics.analysis.popgen;
 
 /**
  *

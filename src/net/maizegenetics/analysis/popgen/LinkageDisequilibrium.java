@@ -4,7 +4,7 @@
 //
 // This package may be distributed under the
 // terms of the Lesser GNU General Public License (LGPL)
-package net.maizegenetics.popgen;
+package net.maizegenetics.analysis.popgen;
 
 import cern.colt.map.OpenLongObjectHashMap;
 import net.maizegenetics.dna.snp.GenotypeTable;

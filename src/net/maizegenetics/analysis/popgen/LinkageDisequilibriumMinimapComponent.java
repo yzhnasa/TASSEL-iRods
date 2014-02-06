@@ -10,8 +10,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import javax.swing.JComponent;
 
-import net.maizegenetics.popgen.LinkageDisequilibrium;
-
 /**
  *
  * @author yz79

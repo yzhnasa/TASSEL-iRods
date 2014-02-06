@@ -7,7 +7,6 @@
 package net.maizegenetics.analysis.popgen;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.popgen.LinkageDisequilibrium;
 
 import javax.swing.*;
 import java.awt.*;

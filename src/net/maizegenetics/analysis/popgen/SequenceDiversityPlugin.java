@@ -7,8 +7,6 @@
 package net.maizegenetics.analysis.popgen;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.popgen.DiversityAnalyses;
-import net.maizegenetics.popgen.PolymorphismDistribution;
 import net.maizegenetics.util.SimpleTableReport;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
