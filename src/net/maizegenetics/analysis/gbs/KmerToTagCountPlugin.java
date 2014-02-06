@@ -2,7 +2,7 @@ package net.maizegenetics.analysis.gbs;
 
 import net.maizegenetics.dna.tag.TagCountMutable;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

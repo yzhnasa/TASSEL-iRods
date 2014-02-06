@@ -15,7 +15,7 @@ import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.dna.tag.TagsByTaxaByteFileMap;
 import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;

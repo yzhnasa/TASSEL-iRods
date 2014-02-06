@@ -3,7 +3,7 @@ package net.maizegenetics.analysis.gbs;
 
 import java.util.Arrays;
 
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 
 /**
  * Container class for storing information on GBS barcodes.

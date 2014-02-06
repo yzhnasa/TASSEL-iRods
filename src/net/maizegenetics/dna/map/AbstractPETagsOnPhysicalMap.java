@@ -17,7 +17,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import net.maizegenetics.dna.tag.AbstractPETags;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 
 /**
  * Basic method of working with alignment of PE tags

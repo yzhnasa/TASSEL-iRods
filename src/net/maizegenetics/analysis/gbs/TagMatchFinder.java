@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import net.maizegenetics.dna.tag.Tags;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 
 /**
  * Very simple but fast homology finder.  Very similar to BLAT, with long word searches.

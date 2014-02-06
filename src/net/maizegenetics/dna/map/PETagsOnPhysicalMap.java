@@ -19,7 +19,7 @@ import java.util.HashMap;
 import net.maizegenetics.dna.tag.AbstractPETags;
 import net.maizegenetics.dna.tag.PETagCounts;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 import net.maizegenetics.dna.tag.SAMUtils;
 
 /**

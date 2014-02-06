@@ -7,7 +7,7 @@ import cern.colt.GenericSorting;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.Arrays;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 import org.biojava3.alignment.Alignments;
 import org.biojava3.alignment.SimpleGapPenalty;
 import org.biojava3.alignment.SubstitutionMatrixHelper;

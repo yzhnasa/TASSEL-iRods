@@ -1,7 +1,7 @@
 package net.maizegenetics.dna.tag;
 
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.util.OpenBitSet;

@@ -15,7 +15,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 
 /**
  * Holds tags counts.  Tags sequences are compressed in long, tags lengths are tracked,

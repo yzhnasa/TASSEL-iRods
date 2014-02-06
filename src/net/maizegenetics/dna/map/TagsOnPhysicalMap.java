@@ -19,7 +19,7 @@ import net.maizegenetics.dna.tag.TagCountMutable;
 import net.maizegenetics.dna.tag.Tags;
 
 import net.maizegenetics.dna.tag.SAMUtils;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;

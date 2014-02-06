@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.analysis.gbs;
 
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 
 /**
  * Container class for returning the results of parsed barcoded sequencing read.

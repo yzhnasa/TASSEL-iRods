@@ -17,7 +17,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import net.maizegenetics.dna.tag.AbstractTags;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 
 /**
  * Class that hold genetic position of tags, genetic positions are the position of markers associated with tags

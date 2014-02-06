@@ -15,7 +15,7 @@ import java.io.FileReader;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 import net.maizegenetics.util.BitUtil;
 
 import net.maizegenetics.util.OpenBitSet;

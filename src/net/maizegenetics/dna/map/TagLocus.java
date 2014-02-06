@@ -4,7 +4,7 @@
 package net.maizegenetics.dna.map;
 
 import net.maizegenetics.dna.tag.TagsByTaxa;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;

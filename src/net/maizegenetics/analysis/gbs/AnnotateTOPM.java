@@ -9,7 +9,7 @@ import net.maizegenetics.dna.map.TagMappingInfoV3;
 import net.maizegenetics.dna.map.TagsOnGeneticMap;
 import net.maizegenetics.dna.map.TagsOnPhysicalMapV3;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
-import net.maizegenetics.gbs.util.BaseEncoder;
+import net.maizegenetics.dna.BaseEncoder;
 import net.maizegenetics.dna.tag.SAMUtils;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 

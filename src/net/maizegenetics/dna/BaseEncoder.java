@@ -1,4 +1,4 @@
-package net.maizegenetics.gbs.util;
+package net.maizegenetics.dna;
 
 /**
  * Utility class for encoding tags into longs.
