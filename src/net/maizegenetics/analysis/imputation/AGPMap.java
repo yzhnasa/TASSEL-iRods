@@ -1,4 +1,4 @@
-package net.maizegenetics.gwas.NAM;
+package net.maizegenetics.analysis.imputation;
 
 import java.io.BufferedReader;
 import java.io.File;
