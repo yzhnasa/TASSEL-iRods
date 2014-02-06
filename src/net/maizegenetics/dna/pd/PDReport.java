@@ -1,4 +1,4 @@
-package net.maizegenetics.pd;
+package net.maizegenetics.dna.pd;
 
 import ch.systemsx.cisd.hdf5.*;
 
