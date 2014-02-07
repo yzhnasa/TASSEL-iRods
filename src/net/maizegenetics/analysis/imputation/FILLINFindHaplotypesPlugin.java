@@ -12,7 +12,7 @@ import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
-import net.maizegenetics.taxa.distance.IBSDistanceMatrix;
+import net.maizegenetics.analysis.distance.IBSDistanceMatrix;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;

@@ -12,9 +12,10 @@
  * public license. 
  *
  */
-package net.maizegenetics.taxa.distance;
+package net.maizegenetics.analysis.distance;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.taxa.distance.DistanceMatrix;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.BitUtil;
 import net.maizegenetics.util.ProgressListener;

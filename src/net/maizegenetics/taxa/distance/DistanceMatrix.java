@@ -29,7 +29,7 @@ import java.io.StringWriter;
  * @author Korbinian Strimmer
  * @author Alexei Drummond
  */
-public class DistanceMatrix implements IdGroupMatrix, TableReport {
+public class DistanceMatrix implements TaxaListMatrix, TableReport {
 
     //
     // Private stuff
@@ -197,7 +197,7 @@ public class DistanceMatrix implements IdGroupMatrix, TableReport {
     /**
      * Returns the distances as a 2-dimensional array of doubles (in the actual array used to store the distances)
      */
-    protected final double[][] getDistances() {
+    public final double[][] getDistances() {
         return getClonedDistances();
     }
 

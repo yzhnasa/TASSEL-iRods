@@ -11,7 +11,7 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.taxa.distance.IBSDistanceMatrix;
+import net.maizegenetics.analysis.distance.IBSDistanceMatrix;
 
 import javax.swing.*;
 import java.awt.*;

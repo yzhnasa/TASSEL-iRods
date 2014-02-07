@@ -3,7 +3,7 @@
  */
 package net.maizegenetics.gui;
 
-import net.maizegenetics.taxa.distance.IBSDistanceMatrix;
+import net.maizegenetics.analysis.distance.IBSDistanceMatrix;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.dna.snp.GenotypeTable;
 
