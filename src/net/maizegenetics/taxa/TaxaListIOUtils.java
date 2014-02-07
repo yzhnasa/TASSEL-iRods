@@ -1,9 +1,14 @@
 package net.maizegenetics.taxa;
 
-import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 import net.maizegenetics.util.Utils;
 
 import java.io.BufferedReader;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -16,14 +21,22 @@ public class TaxaListIOUtils {
     private TaxaListIOUtils() {
     }
 
-    public static TreeMultimap<String,Taxon> getMapOfTaxonByAnnotation(TaxaList taxaList, String annotation) {
-        TreeMultimap<String,Taxon> annoMap=TreeMultimap.create();
+
+    /**
+     * Create a Multimap of all the taxa associated with a particular annotation value.
+     * @param taxaList input taxa list with annotation associated with
+     * @param annotation annotation key used to create the multimap, the values of these keys become the key of the
+     *                   resulting Multimap
+     * @return Map of AnnotationValues -> Taxon
+     */
+    public static Multimap<String,Taxon> getMapOfTaxonByAnnotation(TaxaList taxaList, String annotation) {
+        ImmutableMultimap.Builder<String,Taxon> annoMap=new ImmutableMultimap.Builder<String,Taxon>().orderKeysBy(Ordering.natural());
         for (Taxon taxon : taxaList) {
             for (String value : taxon.getTextAnnotation(annotation)) {
                 annoMap.put(value,taxon);
             }
         }
-        return annoMap;
+        return annoMap.build();
     }
 
     /**
@@ -47,16 +60,54 @@ public class TaxaListIOUtils {
         return tlb.build();
     }
 
-    public static TaxaList retainSpecificAnnotations(TaxaList tl, String[] annotationsToKeep) {
-      return null;
+    /**
+     * Creates a new taxa list with the taxa only retaining annotations within a specified list.  All taxa are retained,
+     * only the annotations are changed.
+     * @param baseTaxaList
+     * @param annotationsToKeep the retained keys annotation
+     * @return new TaxaList with a subset of the annotations
+     */
+    public static TaxaList retainSpecificAnnotations(TaxaList baseTaxaList, String[] annotationsToKeep) {
+        Set<String> keepers=new ImmutableSet.Builder<String>().addAll(Arrays.asList(annotationsToKeep)).build();
+        TaxaListBuilder tlb=new TaxaListBuilder();
+        for (Taxon taxon : baseTaxaList) {
+            Taxon.Builder tb=new Taxon.Builder(taxon.getName());
+            for (Map.Entry<String,String> entry : taxon.getAllAnnotationEntries()) {
+                if(keepers.contains(entry.getKey())) {tb.addAnno(entry.getKey(), entry.getValue());}
+            }
+            tlb.add(tb.build());
+        }
+        return tlb.build();
     }
 
-    public static TaxaList removeSpecificAnnotations(TaxaList tl, String[] annotationsToRemove) {
-        return null;
+    /**
+     * Creates a new taxa list with the taxa retaining annotations EXCEPT those specified by the list.
+     * All taxa are retained,
+     * only the annotations are changed.
+     * @param baseTaxaList
+     * @param annotationsToRemove the retained keys annotation
+     * @return new TaxaList with a subset of the annotations
+     */
+    public static TaxaList removeSpecificAnnotations(TaxaList baseTaxaList, String[] annotationsToRemove) {
+        Set<String> keepers=new ImmutableSet.Builder<String>().addAll(Arrays.asList(annotationsToRemove)).build();
+        TaxaListBuilder tlb=new TaxaListBuilder();
+        for (Taxon taxon : baseTaxaList) {
+            Taxon.Builder tb=new Taxon.Builder(taxon.getName());
+            for (Map.Entry<String,String> entry : taxon.getAllAnnotationEntries()) {
+                if(!keepers.contains(entry.getKey())) {tb.addAnno(entry.getKey(), entry.getValue());}
+            }
+            tlb.add(tb.build());
+        }
+        return tlb.build();
     }
 
     public static Set<String> allUniqueAnnotation(TaxaList tl) {
+
         return null;
+    }
+
+    public static void exportAnnotatedTaxaListTable() {
+        //TODO
     }
 
 
