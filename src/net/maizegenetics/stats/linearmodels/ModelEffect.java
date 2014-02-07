@@ -1,4 +1,4 @@
-package net.maizegenetics.jGLiM.dm;
+package net.maizegenetics.stats.linearmodels;
 
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 

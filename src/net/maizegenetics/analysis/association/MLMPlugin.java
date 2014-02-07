@@ -8,16 +8,17 @@ import net.maizegenetics.dna.snp.GeneticMap;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.taxa.distance.DistanceMatrix;
-import net.maizegenetics.stats.MLM.*;
 import net.maizegenetics.gui.ReportDestinationDialog;
 
 import javax.swing.*;
+
 import java.net.URL;
 import java.util.*;
 import java.util.List;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 
 
 

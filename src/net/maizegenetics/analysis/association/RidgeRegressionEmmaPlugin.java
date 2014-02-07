@@ -1,13 +1,13 @@
 package net.maizegenetics.analysis.association;
 
+import net.maizegenetics.stats.linearmodels.FactorModelEffect;
+import net.maizegenetics.stats.linearmodels.ModelEffectUtils;
 import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.MarkerPhenotypeAdapter;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Trait;
 import net.maizegenetics.trait.SimplePhenotype;
-import net.maizegenetics.jGLiM.dm.FactorModelEffect;
-import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.util.SimpleTableReport;
@@ -16,9 +16,11 @@ import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.net.URL;
 import java.util.ArrayList;

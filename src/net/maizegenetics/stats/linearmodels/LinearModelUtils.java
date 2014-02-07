@@ -1,11 +1,9 @@
-package net.maizegenetics.jGLiM;
+package net.maizegenetics.stats.linearmodels;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-import net.maizegenetics.jGLiM.dm.FactorModelEffect;
-import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 

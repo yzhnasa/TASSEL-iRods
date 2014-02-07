@@ -1,14 +1,9 @@
-package net.maizegenetics.jGLiM.dm;
+package net.maizegenetics.stats.linearmodels;
 
 import java.util.Arrays;
 
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import cern.colt.matrix.DoubleFactory1D;
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.jet.math.Functions;
 
 public class CovariateModelEffect implements ModelEffect {
     private final double[] covariate;

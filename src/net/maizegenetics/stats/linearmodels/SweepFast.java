@@ -1,6 +1,4 @@
-package net.maizegenetics.jGLiM.dm;
-
-import java.util.ArrayList;
+package net.maizegenetics.stats.linearmodels;
 
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;

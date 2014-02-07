@@ -1,7 +1,13 @@
 package net.maizegenetics.analysis.modelfitter;
 
-import net.maizegenetics.jGLiM.LinearModelUtils;
-import net.maizegenetics.jGLiM.dm.*;
+import net.maizegenetics.stats.linearmodels.CovariateModelEffect;
+import net.maizegenetics.stats.linearmodels.FactorModelEffect;
+import net.maizegenetics.stats.linearmodels.LinearModelUtils;
+import net.maizegenetics.stats.linearmodels.ModelEffect;
+import net.maizegenetics.stats.linearmodels.ModelEffectUtils;
+import net.maizegenetics.stats.linearmodels.NestedCovariateModelEffect;
+import net.maizegenetics.stats.linearmodels.PartitionedLinearModel;
+import net.maizegenetics.stats.linearmodels.SweepFastLinearModel;
 import net.maizegenetics.trait.MarkerPhenotypeAdapter;
 import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.util.SimpleTableReport;

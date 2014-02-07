@@ -1,8 +1,7 @@
-package net.maizegenetics.jGLiM;
+package net.maizegenetics.stats.linearmodels;
 
 import org.apache.log4j.Logger;
 
-import net.maizegenetics.jGLiM.dm.SweepFast;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 
 

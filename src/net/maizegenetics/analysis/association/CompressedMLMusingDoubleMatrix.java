@@ -1,4 +1,4 @@
-package net.maizegenetics.stats.MLM;
+package net.maizegenetics.analysis.association;
 
 import net.maizegenetics.dna.snp.GeneticMap;
 import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
@@ -7,12 +7,6 @@ import net.maizegenetics.trait.MarkerPhenotypeAdapter;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Trait;
 import net.maizegenetics.trait.SimplePhenotype;
-import net.maizegenetics.analysis.association.MLMPlugin;
-import net.maizegenetics.jGLiM.LinearModelUtils;
-import net.maizegenetics.jGLiM.SymmetricMatrixInverterDM;
-import net.maizegenetics.jGLiM.dm.FactorModelEffect;
-import net.maizegenetics.jGLiM.dm.ModelEffectUtils;
-import net.maizegenetics.jGLiM.dm.SweepFast;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.taxa.distance.DistanceMatrix;
@@ -23,6 +17,11 @@ import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.taxa.tree.UPGMATree;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.stats.EMMA.EMMAforDoubleMatrix;
+import net.maizegenetics.stats.linearmodels.FactorModelEffect;
+import net.maizegenetics.stats.linearmodels.LinearModelUtils;
+import net.maizegenetics.stats.linearmodels.ModelEffectUtils;
+import net.maizegenetics.stats.linearmodels.SweepFast;
+import net.maizegenetics.stats.linearmodels.SymmetricMatrixInverterDM;
 
 import org.apache.log4j.Logger;
 

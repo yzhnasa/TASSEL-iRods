@@ -1,15 +1,20 @@
 package net.maizegenetics.analysis.association;
 
-import net.maizegenetics.dna.snp.GeneticMap;
+import net.maizegenetics.stats.linearmodels.CovariateModelEffect;
+import net.maizegenetics.stats.linearmodels.FactorModelEffect;
+import net.maizegenetics.stats.linearmodels.LinearModelUtils;
+import net.maizegenetics.stats.linearmodels.ModelEffect;
+import net.maizegenetics.stats.linearmodels.ModelEffectUtils;
+import net.maizegenetics.stats.linearmodels.SweepFastLinearModel;
+import net.maizegenetics.stats.linearmodels.SweepFastNestedModel;
 import net.maizegenetics.trait.MarkerPhenotypeAdapterUtils;
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.MarkerPhenotypeAdapter;
 import net.maizegenetics.trait.MarkerPhenotype;
 import net.maizegenetics.trait.Trait;
 import net.maizegenetics.trait.SimplePhenotype;
+import net.maizegenetics.dna.snp.GeneticMap;
 import net.maizegenetics.gui.ReportDestinationDialog;
-import net.maizegenetics.jGLiM.LinearModelUtils;
-import net.maizegenetics.jGLiM.dm.*;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.util.SimpleTableReport;
@@ -20,9 +25,11 @@ import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
+
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

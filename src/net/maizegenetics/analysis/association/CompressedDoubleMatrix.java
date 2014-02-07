@@ -1,4 +1,4 @@
-package net.maizegenetics.stats.MLM;
+package net.maizegenetics.analysis.association;
 
 import java.util.ArrayList;
 import java.util.Collections;

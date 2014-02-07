@@ -1,67 +1,68 @@
-package net.maizegenetics.jGLiM;
+package net.maizegenetics.stats.linearmodels;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.util.SimpleTableReport;
 
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-
-public class LinearModelforStepwiseRegression {
+public class LinearModelForStepwiseRegression {
     ArrayList<ModelEffect> modelEffects;
     int numberOfRequiredEffects = 1;
-    DoubleMatrix2D[][] xtxmatrices;
-    DoubleMatrix2D[][] xtymatrices;
     double[] data;
     double enterLimit = 1e-3;
     double exitLimit = 1e-3;
-    
-    LinearModelWithSweep lm;
+    DoubleMatrix[][] xtxmatrices;
+    DoubleMatrix[] xtymatrices;
+    SweepFastLinearModel lm;
     PartitionedLinearModel plm;
     
-    public LinearModelforStepwiseRegression(ArrayList<ModelEffect> requiredEffects, double[] data) {
+    public LinearModelForStepwiseRegression(ArrayList<ModelEffect> requiredEffects, double[] data) {
         modelEffects = requiredEffects;
         numberOfRequiredEffects = modelEffects.size();
         this.data = data;
-        xtxmatrices = new DoubleMatrix2D[numberOfRequiredEffects][numberOfRequiredEffects];
-        xtymatrices = new DoubleMatrix2D[numberOfRequiredEffects][1];
+        
+        xtxmatrices = new DoubleMatrix[numberOfRequiredEffects][numberOfRequiredEffects];
+        xtymatrices = new DoubleMatrix[numberOfRequiredEffects];
         for (int i = 0; i < numberOfRequiredEffects; i++) {
-            ModelEffect me = requiredEffects.get(i);
-            xtxmatrices[i][i] = me.getXTX();
-            xtymatrices[i][0] = DoubleFactory2D.dense.make(me.getXTy(data).toArray(), me.getNumberOfLevels());
-            for (int j = 0; j < i; j++) {
-                xtxmatrices[i][j] = ModelEffect.getX1TX2(me, requiredEffects.get(j));
-                xtxmatrices[j][i] = xtxmatrices[i][j].viewDice();
-            }
+        	xtymatrices[i] = requiredEffects.get(i).getXty(data);
+        	xtxmatrices[i][i] = requiredEffects.get(i).getXtX();
+        	for (int j = i + 1; j < numberOfRequiredEffects; j++) {
+        		xtxmatrices[i][j] = ModelEffectUtils.getXtY(requiredEffects.get(i), requiredEffects.get(j));
+        	}
         }
         
-        lm = new LinearModelWithSweep(xtxmatrices, xtymatrices, data);
+        lm = new SweepFastLinearModel(requiredEffects, data);
+        double ss = lm.getResiduals().crossproduct().get(0, 0);
+        double[] ssdf = lm.getResidualSSdf();
+
         plm = new PartitionedLinearModel(modelEffects, lm);
     }
     
     public void addEffect(ModelEffect me) {
         modelEffects.add(me);
         int newdim = xtxmatrices.length + 1;
-        DoubleMatrix2D[][] oldxtx = xtxmatrices;
-        DoubleMatrix2D[][] oldxty = xtymatrices;
-        xtxmatrices = new DoubleMatrix2D[newdim][newdim];
-        xtymatrices = new DoubleMatrix2D[newdim][1];
+        DoubleMatrix[][] oldxtx = xtxmatrices;
+        DoubleMatrix[] oldxty = xtymatrices;
+        xtxmatrices = new DoubleMatrix[newdim][newdim];
+        xtymatrices = new DoubleMatrix[newdim];
         for (int i = 0; i < newdim - 1; i++) {
-            xtymatrices[i][0] = oldxty[i][0];
-            for (int j = 0; j < newdim - 1; j++) {
+            xtymatrices[i] = oldxty[i];
+            for (int j = i; j < newdim - 1; j++) {
                 xtxmatrices[i][j] = oldxtx[i][j];
             }
         }
-        xtxmatrices[newdim - 1][newdim - 1] = me.getXTX();
-        xtymatrices[newdim - 1][0] = 
-            DoubleFactory2D.dense.make(me.getXTy(data).toArray(), me.getNumberOfLevels());
+        xtxmatrices[newdim - 1][newdim - 1] = me.getXtX();
+        xtymatrices[newdim - 1] = me.getXty(data);
         for (int i = 0; i < newdim - 1; i++) {
-            xtxmatrices[i][newdim - 1] = ModelEffect.getX1TX2(modelEffects.get(i), me);
-            xtxmatrices[newdim - 1][i] = xtxmatrices[i][newdim - 1].viewDice();
+            xtxmatrices[i][newdim - 1] = ModelEffectUtils.getXtY(modelEffects.get(i), me);
         }
         
-        lm = new LinearModelWithSweep(xtxmatrices, xtymatrices, data);
+        lm = new SweepFastLinearModel(modelEffects, xtxmatrices, xtymatrices, data);
+        double ss = lm.getResiduals().crossproduct().get(0, 0);
+        double[] ssdf = lm.getResidualSSdf();
+        
         plm = new PartitionedLinearModel(modelEffects, lm);
     }
     
@@ -70,25 +71,30 @@ public class LinearModelforStepwiseRegression {
         //see if there is a term that can be added using a partitioned model
         
         plm.testNewModelEffect(me);
-        double F = plm.getF();
-        double p = plm.getp();
-        return new double[]{F,p};
+        return plm.getFp();
     }
     
+    public double testNewEffect(double[] covariate) {
+    	return plm.testNewModelEffect(covariate);
+    }
+    
+    public double[] getFpFromModelSS(double modelss) {
+    	plm.setModelSS(modelss);
+    	return plm.getFp();
+    }
     
     public ModelEffect backwardStep() {
         int numberOfModelEffects = modelEffects.size();
         if (numberOfModelEffects - numberOfRequiredEffects > 1) {
             double maxp = -1;
-            double errordf = lm.getErrordf();
-            double errorss = lm.getErrorSS();
-            double errorms = errorss / errordf;
+            double[] errorSSdf = lm.getResidualSSdf();
+            double errorms = errorSSdf[0] / errorSSdf[1];
             int maxEffectnumber = -1;
             for (int i = numberOfRequiredEffects; i < numberOfModelEffects; i++) {
-                double[] ssdf = lm.marginalEffectSSdf(i);
+                double[] ssdf = lm.getMarginalSSdf(i);
                 double F = ssdf[0] / ssdf[1] / errorms;
                 double p = -1;
-                try { p = AbstractLinearModel.Ftest(F, ssdf[1], errordf); }
+                try { p = LinearModelUtils.Ftest(F, ssdf[1], errorSSdf[1]); }
                 catch(Exception e) {
                 	System.err.println("Error calculating p value at effect = " + i);
                 }
@@ -108,38 +114,39 @@ public class LinearModelforStepwiseRegression {
         //remove the effect from the matrices
         int olddim = xtxmatrices.length;
         int newdim = olddim -1;
-        DoubleMatrix2D[][] oldxtx = xtxmatrices;
-        DoubleMatrix2D[][] oldxty = xtymatrices;
-        xtxmatrices = new DoubleMatrix2D[newdim][newdim];
-        xtymatrices = new DoubleMatrix2D[newdim][1];
+        DoubleMatrix[][] oldxtx = xtxmatrices;
+        DoubleMatrix[] oldxty = xtymatrices;
+        xtxmatrices = new DoubleMatrix[newdim][newdim];
+        xtymatrices = new DoubleMatrix[newdim];
         for (int i = 0; i < newdim; i++) {
             int ii = i;
             if (i >= termNumber) ii++;
-            xtymatrices[i][0] = oldxty[ii][0];
-            for (int j = 0; j < newdim; j++) {
+            xtymatrices[i] = oldxty[ii];
+            for (int j = i; j < newdim; j++) {
                 int jj = j;
                 if (j >= termNumber) jj++;
                 xtxmatrices[i][j] = oldxtx[ii][jj];
             }
         }
         //recalculate the model
-        lm = new LinearModelWithSweep(xtxmatrices, xtymatrices, data);
+        ModelEffect removedEffect = modelEffects.remove(termNumber);
+        lm = new SweepFastLinearModel(modelEffects, xtxmatrices, xtymatrices, data);
         plm = new PartitionedLinearModel(modelEffects, lm);
 
-        return modelEffects.remove(termNumber);
+        return removedEffect;
     }
     
-    public double[] getyhat() {
-        DoubleMatrix1D beta = lm.getBeta();
-        double[] yhat = null;
+    public DoubleMatrix getyhat() {
+        double[] beta = lm.getBeta();
         int numberOfEffects = modelEffects.size();
         int start = 0;
+        
+        DoubleMatrix yhat = DoubleMatrixFactory.DEFAULT.make(data.length, 1, 0);
         for (int i = 0; i < numberOfEffects; i++) {
             ModelEffect me = modelEffects.get(i);
-            DoubleMatrix1D effectyhat = me.getyhat(beta.viewPart(start, me.getNumberOfLevels()));
-            if (i == 0) yhat = effectyhat.toArray();
-            else for (int j = 0; j < yhat.length; j++) yhat[j] += effectyhat.getQuick(j);
-            start += me.getNumberOfLevels();
+            int nLevels = me.getNumberOfLevels();
+            yhat.plusEquals(me.getyhat(Arrays.copyOfRange(beta, start, start + nLevels)));
+            start += nLevels;
         }
         return yhat;
     }
@@ -149,10 +156,10 @@ public class LinearModelforStepwiseRegression {
         int numberOfEffects = modelEffects.size();
         for (int i = 0; i < numberOfEffects; i++) {
             ModelEffect me = modelEffects.get(i);
-            xtymatrices[i][0] = DoubleFactory2D.dense.make(me.getXTy(data).toArray(), me.getNumberOfLevels());
+            xtymatrices[i] = me.getXty(newdata);
         }
 
-        lm = new LinearModelWithSweep(xtxmatrices, xtymatrices, data);
+        lm = new SweepFastLinearModel(modelEffects, xtxmatrices, xtymatrices, data);
         plm = new PartitionedLinearModel(modelEffects, lm);
     }
     
@@ -160,27 +167,26 @@ public class LinearModelforStepwiseRegression {
         String[] heads = new String[]{"Trait","Term","SS","df", "MS", "F", "p", "Rsq"};
         int numberOfEffects = modelEffects.size();
         Object[][] results = new Object[numberOfEffects + 1][];
-        double errordf = lm.getErrordf();
-        double errorss = lm.getErrorSS();
-        double totalss = lm.getTotalSS();
-        double modelss = lm.getModelSS();
-        double modeldf = lm.getModeldf();
+        double errordf = lm.getResidualSSdf()[1];
+        double errorss = lm.getResidualSSdf()[0];
+        double modelss = lm.getModelcfmSSdf()[0];
+        double modeldf = lm.getModelcfmSSdf()[1];
+        double totalss = lm.getFullModelSSdf()[0] + errorss;
         
         Object[] result;
         for (int i = 1; i < numberOfEffects; i++) {
-            result = new Object[heads.length];
-            result[0] = modelEffects.get(i).getId();
-            double[] ssdf = lm.marginalEffectSSdf(i);
             int col = 0;
+            result = new Object[heads.length];
+            double[] ssdf = lm.getMarginalSSdf(i);
             result[col++] = traitname;
-            result[col++] = modelEffects.get(i).getId();
+            result[col++] = modelEffects.get(i).getID();
             result[col++] = ssdf[0];
             result[col++] = ssdf[1];
             result[col++] = ssdf[0]/ssdf[1];
             double F = ssdf[0] / ssdf[1] / errorss * errordf;
             result[col++] = F;
             
-            try {result[col++] = AbstractLinearModel.Ftest(F, ssdf[1], errordf);}
+            try {result[col++] = LinearModelUtils.Ftest(F, ssdf[1], errordf);}
             catch(Exception e) {result[col++] = Double.NaN;}
             
             result[col++] = ssdf[0] / totalss;
@@ -197,7 +203,7 @@ public class LinearModelforStepwiseRegression {
         double F = modelss / modeldf / errorss * errordf;
         result[col++] = F;
         
-        try {result[col] = AbstractLinearModel.Ftest(F, modeldf, errordf);}
+        try {result[col] = LinearModelUtils.Ftest(F, modeldf, errordf);}
         catch(Exception e) {result[col] = Double.NaN;}
         col++;
         
@@ -218,7 +224,7 @@ public class LinearModelforStepwiseRegression {
         return new SimpleTableReport(title, heads, results);
     }
     
-    public LinearModelWithSweep getLinearModel() {
+    public SweepFastLinearModel getLinearModel() {
         return lm;
     }
 
@@ -241,6 +247,4 @@ public class LinearModelforStepwiseRegression {
     public void setExitLimit(double exitLimit) {
         this.exitLimit = exitLimit;
     }
-    
-    
 }

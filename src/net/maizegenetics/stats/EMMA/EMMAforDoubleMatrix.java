@@ -5,12 +5,10 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import net.maizegenetics.jGLiM.AbstractLinearModel;
-import net.maizegenetics.jGLiM.LinearModelUtils;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
-import net.maizegenetics.matrixalgebra.decomposition.EJMLEigenvalueDecomposition;
 import net.maizegenetics.matrixalgebra.decomposition.EigenvalueDecomposition;
+import net.maizegenetics.stats.linearmodels.LinearModelUtils;
 
 public class EMMAforDoubleMatrix {
 	

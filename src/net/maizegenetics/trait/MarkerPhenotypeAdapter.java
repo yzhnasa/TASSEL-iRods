@@ -7,9 +7,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeSet;
 
-import net.maizegenetics.jGLiM.BasicLevel;
 import net.maizegenetics.dna.snp.GenotypeTable;
-
+import net.maizegenetics.stats.linearmodels.BasicLevel;
 import net.maizegenetics.taxa.Taxon;
 
 public class MarkerPhenotypeAdapter {

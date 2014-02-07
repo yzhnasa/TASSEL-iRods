@@ -1,4 +1,4 @@
-package net.maizegenetics.jGLiM;
+package net.maizegenetics.stats.linearmodels;
 /*
  * jGLiM: Java for General Linear Models
  * for more information: http://www.maizegenetics.net

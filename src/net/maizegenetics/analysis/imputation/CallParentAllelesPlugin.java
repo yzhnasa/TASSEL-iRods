@@ -46,7 +46,7 @@ public class CallParentAllelesPlugin extends AbstractPlugin {
 	
 	@Override
 	public DataSet performFunction(DataSet input) {
-		if (pedfileName == null) {
+		if (pedfileName == null && familyList == null) {
 			myLogger.error(getUsage());
 			return null;
 		}

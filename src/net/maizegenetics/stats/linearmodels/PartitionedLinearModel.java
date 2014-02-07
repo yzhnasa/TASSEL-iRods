@@ -1,18 +1,11 @@
-package net.maizegenetics.jGLiM.dm;
+package net.maizegenetics.stats.linearmodels;
 
 import java.util.ArrayList;
 
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.jet.math.Functions;
-
-import net.maizegenetics.jGLiM.AbstractLinearModel;
-import net.maizegenetics.jGLiM.LinearModelUtils;
-import net.maizegenetics.jGLiM.dm.SweepFastLinearModel;
-import net.maizegenetics.jGLiM.dm.ModelEffect;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
+import net.maizegenetics.stats.linearmodels.ModelEffect;
+import net.maizegenetics.stats.linearmodels.SweepFastLinearModel;
 
 
 public class PartitionedLinearModel {

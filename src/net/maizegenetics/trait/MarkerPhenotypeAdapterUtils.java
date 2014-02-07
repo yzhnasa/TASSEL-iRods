@@ -3,11 +3,6 @@ package net.maizegenetics.trait;
 import net.maizegenetics.trait.MarkerPhenotypeAdapter;
 import java.util.ArrayList;
 
-import net.maizegenetics.jGLiM.ModelEffect;
-import net.maizegenetics.jGLiM.RestrictedModelEffect;
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix2D;
-
 public class MarkerPhenotypeAdapterUtils {
 
     //to prevent istantiation of this utility class
@@ -227,92 +222,6 @@ public class MarkerPhenotypeAdapterUtils {
             }
         }
         return nonmiss;
-    }
-
-    /**
-     * This function creates a "restricted" fixed effects matrix for all the values in the argument line. 
-     * All arrays must of the same length. If the ith value in any of the supplied arrays is missing,
-     * then missing[i] must be true, false otherwise. Missing rows will not be included in the output matrix.
-     * 
-     * @param factorList	an ArrayList of String[] containing factor labels
-     * @param covariateList	an ArrayList of double[] containing covariate values
-     * @param markerList	an ArrayList of String[] or double[] containing marker values
-     * @param markerIds		if the markers are discrete, an ArrayList of markerLabels with one label for each unique marker value 
-     * @param missing		a boolean[] with value of false for rows of data with no missing values and true for rows of data with some missing values.
-     * @return	a fixed effects matrix for the effects included as arguments
-     */
-    public static DoubleMatrix2D createFixedEffectArray(ArrayList<String[]> factorList, ArrayList<double[]> covariateList, ArrayList<Object> markerList, ArrayList<Object> markerIds, boolean[] missing) {
-
-        //identify the rows with no missing data
-        int[] nonmissingRows = MarkerPhenotypeAdapterUtils.getNonMissingIndex(missing);
-
-        //number of observations in this data set
-        int numberOfObs = nonmissingRows.length;
-
-        //set up the fixedEffectsArray, first column is the mean
-        DoubleMatrix2D fixedEffectsArray = DoubleFactory2D.dense.make(numberOfObs, 1, 1);
-
-        //add factors
-        int numberOfFactors;
-        if (factorList == null) {
-            numberOfFactors = 0;
-        } else {
-            numberOfFactors = factorList.size();
-        }
-        for (int f = 0; f < numberOfFactors; f++) {
-            String[] afactor = factorList.get(f);
-            String[] factorLabels = new String[numberOfObs];
-            for (int i = 0; i < numberOfObs; i++) {
-                factorLabels[i] = afactor[nonmissingRows[i]];
-            }
-            ModelEffect factorEffect = new RestrictedModelEffect(ModelEffect.getIntegerLevels(factorLabels));
-            fixedEffectsArray = DoubleFactory2D.dense.appendColumns(fixedEffectsArray, factorEffect.getX());
-        }
-
-        //add covariates
-        int numberOfCovariates;
-        if (covariateList == null) {
-            numberOfCovariates = 0;
-        } else {
-            numberOfCovariates = covariateList.size();
-        }
-        for (int c = 0; c < numberOfCovariates; c++) {
-            double[] covar = covariateList.get(c);
-            DoubleMatrix2D covArray = DoubleFactory2D.dense.make(numberOfObs, 1, 0);
-            for (int i = 0; i < numberOfObs; i++) {
-                covArray.setQuick(i, 0, covar[nonmissingRows[i]]);
-            }
-            fixedEffectsArray = DoubleFactory2D.dense.appendColumns(fixedEffectsArray, covArray);
-        }
-
-        //add markers;
-        int numberOfMarkers;
-        if (markerList == null) {
-            numberOfMarkers = 0;
-        } else {
-            numberOfMarkers = markerList.size();
-        }
-        for (int m = 0; m < numberOfMarkers; m++) {
-            Object markerdata = markerList.get(m);
-            if (markerdata instanceof double[]) {
-                double[] dblmarker = (double[]) markerdata;
-                DoubleMatrix2D markermatrix = DoubleFactory2D.dense.make(numberOfObs, 1, 0);
-                for (int r = 0; r < numberOfObs; r++) {
-                    markermatrix.setQuick(r, 0, dblmarker[nonmissingRows[r]]);
-                }
-                fixedEffectsArray = DoubleFactory2D.dense.appendColumns(fixedEffectsArray, markermatrix);
-            } else if (markerdata instanceof Object[]) {
-                Object[] amarker = (Object[]) markerList.get(m);
-                Object[] markerLabels = new Object[numberOfObs];
-                for (int i = 0; i < numberOfObs; i++) {
-                    markerLabels[i] = amarker[nonmissingRows[i]];
-                }
-                ModelEffect markerEffect = new RestrictedModelEffect(ModelEffect.getIntegerLevels(markerLabels, markerIds));
-                fixedEffectsArray = DoubleFactory2D.dense.appendColumns(fixedEffectsArray, markerEffect.getX());
-            }
-        }
-
-        return fixedEffectsArray;
     }
 
     /**
