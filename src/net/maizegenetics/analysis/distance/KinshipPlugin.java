@@ -6,7 +6,6 @@ import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
-import net.maizegenetics.taxa.distance.Kinship;
 
 import javax.swing.*;
 import java.net.URL;
