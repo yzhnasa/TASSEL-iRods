@@ -1,9 +1,7 @@
 package net.maizegenetics.dna.snp.io;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableTable;
-import com.google.common.collect.Table;
+import com.google.common.collect.SetMultimap;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.Position;
@@ -18,6 +16,7 @@ import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.TaxaListIOUtils;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.Utils;
 import org.apache.log4j.Logger;
@@ -27,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -73,32 +73,26 @@ public class BuilderFromVCF {
             ExecutorService pool=Executors.newFixedThreadPool(numThreads);
             BufferedReader r=Utils.getBufferedReader(infile, -1);
             //Read the ## annotation rows
-
-
             String currLine;
             Map<String,String> infoMap=new HashMap<>();
             Map<String,String> formatMap=new HashMap<>();
-            ImmutableTable.Builder<String,String,String> sampAnnoBuild=new ImmutableTable.Builder<>();
+            Map<String,SetMultimap<String,String>> sampAnnoBuild=new TreeMap<>();
             while (((currLine=r.readLine())!=null)&&(currLine.startsWith("##"))) {
-//                System.out.println(currLine);
                 String[] cat=currLine.split("=",2);
                 if(cat.length<2) continue;
-                Map<String, String> mapOfAnno=parseVCFHeadersIntoMap(cat[1]);
                 switch (cat[0]) {
-                    case "##INFO":
-                        infoMap.put(mapOfAnno.get("ID"),mapOfAnno.get("Description"));
-                        break;
-                    case "##FILTER":break;
-                    case "##FORMAT":
-                        formatMap.put(mapOfAnno.get("ID"),mapOfAnno.get("Description"));
-                        break;
+//                    case "##INFO":
+//                        infoMap.put(mapOfAnno.get("ID"), mapOfAnno.get("Description"));
+//                        break;
+//                    case "##FILTER":break;
+//                    case "##FORMAT":
+//                        formatMap.put(mapOfAnno.get("ID"),mapOfAnno.get("Description"));
+//                        break;
                     case "##SAMPLE":
-                        String taxaID=mapOfAnno.get("ID");
+                        SetMultimap<String, String> mapOfAnno=TaxaListIOUtils.parseVCFHeadersIntoMap(cat[1]);
+                        String taxaID=mapOfAnno.get("ID").iterator().next();
                         if(taxaID==null) break;
-                        for (Map.Entry<String,String> en: mapOfAnno.entrySet()) {
-                            if(en.getKey().equals("ID")) continue;
-                            sampAnnoBuild.put(taxaID,en.getKey(),en.getValue());
-                        }
+                        sampAnnoBuild.put(taxaID,mapOfAnno);
                         break;
                     case "##PEDIGREE":break;
                     default : break;
@@ -106,12 +100,7 @@ public class BuilderFromVCF {
 
 //                System.out.println(currLine);
             }
-            Table<String,String,String> taxaAnnotation =sampAnnoBuild.build();
-//            System.out.println("Taxa Annotations");
-//            System.out.println(taxaAnnotation);
-//            System.out.println("infoMap");
-//            System.out.println(infoMap);
-            TaxaList taxaList=processTaxa(currLine,taxaAnnotation);
+            TaxaList taxaList=processTaxa(currLine,sampAnnoBuild);
             int linesAtTime=1<<12;  //this is a critical lines with 20% or more swings.  Needs to be optimized with transposing
             //  int linesAtTime=1<<8;  //better for with lots of taxa.
             ArrayList<String> txtLines=new ArrayList<>(linesAtTime);
@@ -172,31 +161,28 @@ public class BuilderFromVCF {
         return result;
     }
 
-    private static Map<String,String> parseVCFHeadersIntoMap(String s) {
-        if(s==null) return null;
-        if(!(s.startsWith("<") && s.endsWith(">"))) return null;
-        String value=s.substring(1,s.length()-1);
- //       System.out.println(s);
-        value=getReplaceCommaWithQuote(value);
- //       System.out.println(value);
-        Map<String, String> splitKeyValues = Splitter.on(",")
-                .omitEmptyStrings()
-                .trimResults()
-                .withKeyValueSeparator("=")
-                .split(value);
-        ImmutableMap.Builder<String,String> im=new ImmutableMap.Builder<>();
-        for (Map.Entry<String, String> ssEntry : splitKeyValues.entrySet()) {
-            String v=ssEntry.getValue();
-            if(v.contains(""+(char) ((int) ','+256)) || v.contains(""+(char) ((int) '='+256))) {
-                v=v.replace((char)((int)','+256),',');
-                v=v.replace((char)((int)'='+256),'=');
-            }
-            im.put(ssEntry.getKey(),v);
-        }
-         return im.build();
-    }
+//    static SetMultimap<String,String> parseVCFHeadersIntoMap(String s) {
+//        if(s==null) return null;
+//        if(!(s.startsWith("<") && s.endsWith(">"))) return null;
+//        String value=s.substring(1,s.length()-1);
+// //       System.out.println(s);
+//        value=getReplaceCommaWithinQuote(value);
+//
+//        ImmutableSetMultimap.Builder<String,String> im=new ImmutableSetMultimap.Builder<String,String>()
+//                .orderKeysBy(Ordering.natural()).orderValuesBy(Ordering.natural());
+//        for (String s1 : Splitter.on(",").trimResults().split(value)) {
+//            String[] ssEntry=s1.split("=",2);
+//            String v=ssEntry[1];
+//            if(v.contains(""+(char) ((int) ','+256)) || v.contains(""+(char) ((int) '='+256))) {
+//                v=v.replace((char)((int)','+256),',');
+//                v=v.replace((char)((int)'='+256),'=');
+//            }
+//            im.put(ssEntry[0],v);
+//        }
+//         return im.build();
+//    }
 
-    private static String getReplaceCommaWithQuote(String s) {
+    private static String getReplaceCommaWithinQuote(String s) {
         StringBuilder sb =new StringBuilder(s);
         boolean inQuote=false;
         for (int i=0; i<sb.length(); i++) {
@@ -207,18 +193,21 @@ public class BuilderFromVCF {
         return sb.toString();
     }
 
-    private TaxaList processTaxa(String readLn, Table<String,String,String> taxaAnnotation) {
+    private TaxaList processTaxa(String readLn, Map<String,SetMultimap<String,String>> taxaAnnotation) {
         String[] header=WHITESPACE_PATTERN.split(readLn);
         hp=new HeaderPositions(header);
         int numTaxa=header.length-hp.NUM_HAPMAP_NON_TAXA_HEADERS;
         TaxaListBuilder tlb=new TaxaListBuilder();
         for (int i=0; i<numTaxa; i++) {
             String taxonID=header[i+hp.NUM_HAPMAP_NON_TAXA_HEADERS];
-            Taxon.Builder at=new Taxon.Builder(header[i+hp.NUM_HAPMAP_NON_TAXA_HEADERS]);
-            Map<String,String> taMap=taxaAnnotation.row(taxonID);
-            for (Map.Entry<String,String> en: taMap.entrySet()) {
-                String s=en.getValue().replace("\"","");
-                at.addAnno(en.getKey(),s);
+            Taxon.Builder at=new Taxon.Builder(taxonID);
+            SetMultimap<String,String> taMap=taxaAnnotation.get(taxonID);
+            if(taMap!=null) {
+                for (Map.Entry<String,String> en : taMap.entries()) {
+                    if(en.getKey().equals("ID")) continue; //skip the IDs as these became the name
+                    String s=en.getValue().replace("\"","");
+                    at.addAnno(en.getKey(),s);
+                }
             }
             tlb.add(at.build());
         }

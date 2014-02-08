@@ -4,6 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Multimap;
 import com.google.common.primitives.Ints;
 import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.taxa.TaxaList;
@@ -60,161 +61,6 @@ public class ExportUtils {
         return newHDF5file;
     }
 
-
-    //TODO TAS-55 on new filters for HDF5 covers this.
-//   public static String writeToMutableHDF5(Alignment a, String newHDF5file, int[] snpIndex) {
-//        return writeToMutableHDF5(a, newHDF5file, snpIndex, null, false);
-//   }
-//
-//   public static String writeToMutableHDF5(Alignment a, String newHDF5file, int[] snpIndex, TaxaList exportTaxa, boolean keepDepth) {
-//        IHDF5Writer h5w = null;
-//        try {
-//            int numSites = snpIndex.length;
-//            int numTaxa = a.numberOfTaxa();
-//            newHDF5file = Utils.addSuffixIfNeeded(newHDF5file, "hmp.h5");
-//            File hdf5File = new File(newHDF5file);
-//            if (hdf5File.exists()) {
-//                throw new IllegalArgumentException("ExportUtils: writeToMutableHDF5: File already exists: " + newHDF5file);
-//            }
-//            IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
-//            myLogger.info("Writing Mutable HDF5 file: " + newHDF5file);
-//            config.overwrite();
-//            config.dontUseExtendableDataTypes();
-//            h5w = config.writer();
-//            HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.MAX_DEFLATION_LEVEL);
-//            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES, a.maxNumAlleles());
-//            h5w.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, a.retainsRareAlleles());
-//            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, numTaxa);
-//            String[][] aEncodings = a.alleleDefinitions();
-//            int numEncodings = aEncodings.length;
-//            int numStates = aEncodings[0].length;
-//            MDArray<String> alleleEncodings = new MDArray<String>(String.class, new int[]{numEncodings, numStates});
-//            for (int s = 0; s < numEncodings; s++) {
-//                for (int x = 0; x < numStates; x++) {
-//                    alleleEncodings.set(aEncodings[s][x], s, x);
-//                }
-//            }
-//            h5w.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
-//            h5w.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
-//            MDArray<String> alleleEncodingReadAgain = h5w.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
-//            if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
-//                throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
-//            }
-//            String[] originalSNPID = a.getSNPIDs();
-//            String[] outputSNPID = new String[snpIndex.length];
-//            for (int i = 0; i < outputSNPID.length; i++) {
-//                outputSNPID[i] = originalSNPID[snpIndex[i]];
-//            }
-//            h5w.writeStringArray(HapMapHDF5Constants.SNP_IDS, outputSNPID);  //consider adding compression
-//
-//            h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, numSites);
-//
-//            TreeSet<Chromosome> lset = new TreeSet();
-//            for (int i = 0; i < numSites; i++) {
-//                lset.add(a.chromosome(snpIndex[i]));
-//            }
-//            Chromosome[] outLoci = lset.toArray(new Chromosome[lset.size()]);
-//            String[] lociNames = new String[outLoci.length];
-//            HashMap<Chromosome, Integer> locusToIndex=new HashMap<Chromosome, Integer>(10);
-//            for (int i = 0; i < lociNames.length; i++) {
-//                lociNames[i] = outLoci[i].getName();
-//                locusToIndex.put(outLoci[i],i);
-//            }
-//
-//            h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames.length);
-//            h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
-//
-////            h5w.createIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getNumLoci());
-////            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_OFFSETS, a.getLociOffsets());
-//
-//            int[] locusIndicesArray = new int[snpIndex.length];
-//            for (int i = 0; i < locusIndicesArray.length; i++) {
-//                locusIndicesArray[i] = locusToIndex.get(a.chromosome(snpIndex[i]));
-//            }
-//
-//            h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.numberOfSites(),features);
-//            h5w.writeIntArray(HapMapHDF5Constants.LOCUS_INDICES, locusIndicesArray,features);
-//
-//            int[] originalPositions = a.physicalPositions();
-//            int[] outPositions = new int[snpIndex.length];
-//            for (int i = 0; i < snpIndex.length; i++) {
-//                outPositions[i] = originalPositions[snpIndex[i]];
-//            }
-//            h5w.createIntArray(HapMapHDF5Constants.POSITIONS, numSites);
-//            h5w.writeIntArray(HapMapHDF5Constants.POSITIONS, outPositions);
-//
-//            // Write Bases
-//
-//  //        HDF5IntStorageFeatures features = HDF5IntStorageFeatures.createDeflation(HDF5IntStorageFeatures.NO_DEFLATION_LEVEL);
-//
-//            h5w.createGroup(HapMapHDF5Constants.GENOTYPES);
-//            if((exportTaxa!=null)&&(exportTaxa.numberOfTaxa()==0)) {h5w.close(); return newHDF5file;}
-//            h5w.close();
-//            MutableNucleotideAlignmentHDF5 addA=MutableNucleotideAlignmentHDF5.getInstance(newHDF5file);
-//            for (int t = 0; t < numTaxa; t++) {
-//                  if((exportTaxa!=null)&&(exportTaxa.whichIdNumber(a.taxaName(t))<0)) continue;  //taxon not in export list
-//                  byte[] originalBases = a.genotypeAllSites(t);
-//                  byte[] bases = new byte[snpIndex.length];
-//                  for (int i = 0; i < bases.length; i++) {
-//                      bases[i] = originalBases[snpIndex[i]];
-//                  }
-//
-//                  if (keepDepth==false) addA.addTaxon(new Taxon(a.taxaName(t)), bases, null);
-//                  else {
-//                      MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
-//                      byte[][] originalDepth = m.depthForAlleles(t);
-//                      byte[][] depth = new byte[originalDepth.length][snpIndex.length];
-//                      for (int i = 0; i < depth.length; i++) {
-//                          for (int j = 0; j < snpIndex.length; j++) {
-//                              depth[i][j] = originalDepth[i][snpIndex[j]];
-//                          }
-//                      }
-//                      addA.addTaxon(new Taxon(a.taxaName(t)), bases, depth);
-//                  }
-//            }
-//            addA.clean();
-//            return newHDF5file;
-//
-//        } finally {
-//            try {
-//                h5w.close();
-//            } catch (Exception e) {
-//                // do nothing
-//            }
-//        }
-//    }
-
-    
-//         /**
-//     * This merge multiple alignment together into one ByteNucleotideHDF5 File.
-//     * This is designed for putting multiple chromosomes together into one whole genome file.  The
-//     * sites must be exactly the same.
-//     * <p>
-//     * TODO:  Need to add option for merging depth.
-//     * @param sourceFiles array of sourcefile names in ByteNucleotideHDF5 format with the new taxa
-//     * @param targetFile name of ByteNucleotideHDF5 file to receive the new taxa
-//     */
-//    public static void addTaxaFromExistingByteHDF5File(String[] sourceFiles, String targetFile, boolean addDepth) {
-//        System.out.println("Opening:"+targetFile);
-//        MutableNucleotideAlignmentHDF5 trgA=(MutableNucleotideAlignmentHDF5)ImportUtils.readGuessFormat(targetFile, false);
-//        for (String srcFile : sourceFiles) {
-//           System.out.println("Opening:"+srcFile);
-//            MutableNucleotideAlignmentHDF5 srcA=(MutableNucleotideAlignmentHDF5)ImportUtils.readGuessFormat(srcFile, false);
-//            System.out.println("Target now has taxon:"+trgA.numberOfTaxa());
-//            if(srcA.numberOfSites()!=trgA.numberOfSites()) {
-//                throw new IllegalStateException("ExportUtils: addTaxaFromExistingByteHDF5File: Mismatch in number of sites");
-//            }
-//            System.out.println("Copying first taxon:"+srcA.taxaName(0));
-//            for (int i = 0; i < srcA.numberOfTaxa(); i++) {
-//                if (addDepth==true) trgA.addTaxon(srcA.taxa().getTaxon(i), srcA.genotypeAllSites(i), srcA.depthForAlleles(i));
-//                else trgA.addTaxon(srcA.taxa().getTaxon(i), srcA.genotypeAllSites(i), null);
-//            }
-//        }
-//
-//        trgA.clean();
-//        System.out.println("Target now has taxon:"+trgA.numberOfTaxa());
-//    }
-
     /**
      * Write a GenotypeTable to HapMap format with standard settings - unphased single character, tab delimiter,
      * and no progress tracking.
@@ -245,34 +91,17 @@ public class ExportUtils {
         try {
             String fullFileName = Utils.addSuffixIfNeeded(filename, ".hmp.txt", new String[]{".hmp.txt", ".hmp.txt.gz"});
             bw = Utils.getBufferedWriter(fullFileName);
-            bw.write("rs#");
-            bw.write(delimChar);
-            bw.write("alleles");
-            bw.write(delimChar);
-            bw.write("chrom");
-            bw.write(delimChar);
-            bw.write("pos");
-            bw.write(delimChar);
-            bw.write("strand");
-            bw.write(delimChar);
-            bw.write("assembly#");
-            bw.write(delimChar);
-            bw.write("center");
-            bw.write(delimChar);
-            bw.write("protLSID");
-            bw.write(delimChar);
-            bw.write("assayLSID");
-            bw.write(delimChar);
-            bw.write("panelLSID");
-            bw.write(delimChar);
-            bw.write("QCcode");
+            if(true) {
+                for (Taxon taxon : alignment.taxa()) {
+                    if(taxon.getAllAnnotationEntries().length==0) continue;
+                    bw.write("##SAMPLE="+taxon.toStringWithVCFAnnotation()+"\n");
+                }
+            }
+            bw.write(Joiner.on(delimChar).join("rs#","alleles","chrom","pos","strand","assembly#","center","protLSID",
+                    "assayLSID","panelLSID","QCcode"));
             bw.write(delimChar);
             int numTaxa = alignment.numberOfTaxa();
             for (int taxa = 0; taxa < numTaxa; taxa++) {
-                //finish filling out first row
-                //not completely sure this does what I want, I need to access the
-                //accession name from every alleleBLOB in bytes [52-201] but there
-                //doesn't seem to be a method to access that in Alignment
                 String sequenceID = alignment.taxaName(taxa).trim();
                 bw.write(sequenceID);
                 if (taxa != numTaxa - 1) {
@@ -284,8 +113,6 @@ public class ExportUtils {
             for (int site = 0; site < numSites; site++) {
                 bw.write(alignment.siteName(site));
                 bw.write(delimChar);
-//                byte[] alleles = alignment.alleles(site); // doesn't work right for MutableVCFAlignment (always returns 3 alleles, even if no data)
-//                int numAlleles = alleles.length;
                 int[][] sortedAlleles = alignment.allelesSortedByFrequency(site); // which alleles are actually present among the genotypes
                 int numAlleles = sortedAlleles[0].length;
                 if (numAlleles == 0) {
@@ -302,23 +129,8 @@ public class ExportUtils {
                     }
                 }
                 bw.write(delimChar);
-                bw.write(alignment.chromosomeName(site));
-                bw.write(delimChar);
-                bw.write(String.valueOf(alignment.chromosomalPosition(site)));
-                bw.write(delimChar);
-                bw.write("+"); //strand
-                bw.write(delimChar);
-                bw.write("NA"); //assembly# not supported
-                bw.write(delimChar);
-                bw.write("NA"); //center unavailable
-                bw.write(delimChar);
-                bw.write("NA"); //protLSID unavailable
-                bw.write(delimChar);
-                bw.write("NA"); //assayLSID unavailable
-                bw.write(delimChar);
-                bw.write("NA"); //panelLSID unavailable
-                bw.write(delimChar);
-                bw.write("NA"); //QCcode unavailable
+                bw.write(Joiner.on(delimChar).join(alignment.chromosomeName(site),String.valueOf(alignment.chromosomalPosition(site)),
+                    "+","NA","NA","NA","NA","NA","NA"));
                 bw.write(delimChar);
                 for (int taxa = 0; taxa < numTaxa; taxa++) {
                     if (diploid == false) {
@@ -407,11 +219,7 @@ public class ExportUtils {
             bw.newLine();
             bw.write("##INFO=<ID=AF,Number=.,Type=Float,Description=\"Allele Frequency\">");
             bw.newLine();
-            for (Taxon taxon : gt.taxa()) {
-                String annoString=Joiner.on(',').withKeyValueSeparator("=").join(taxon.getAnnotationAsMap());
-                bw.write("##SAMPLE=<ID="+taxon.getName()+","+annoString+">");
-                bw.newLine();
-            }
+            writeVCFSampleAnnotationToWriter(gt,bw);
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
             boolean refTaxon = false;
             for (int taxa = 0; taxa < gt.numberOfTaxa(); taxa++) {
@@ -530,6 +338,16 @@ public class ExportUtils {
             throw new IllegalArgumentException("Error writing VCF file: " + filename + ": " + ExceptionUtils.getExceptionCauses(e));
         }
         return filename;
+    }
+
+    private static void writeVCFSampleAnnotationToWriter(GenotypeTable gt, BufferedWriter bw) throws IOException{
+        for (Taxon taxon : gt.taxa()) {
+            Multimap annoMap=taxon.getAnnotationAsMap();
+            if(annoMap.size()==0) continue;
+            String annoString=Joiner.on(',').withKeyValueSeparator("=").join(annoMap.entries());
+            bw.write("##SAMPLE=<ID="+taxon.getName()+","+annoString+">");
+            bw.newLine();
+        }
     }
 
     /**

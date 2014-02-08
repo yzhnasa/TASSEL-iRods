@@ -1,9 +1,11 @@
 package net.maizegenetics.dna.map;
 
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.SetMultimap;
 import net.maizegenetics.util.GeneralAnnotation;
 
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -106,12 +108,13 @@ public class Chromosome implements Comparable<Chromosome>, GeneralAnnotation {
     }
 
     @Override
-    public Map<String, String> getAnnotationAsMap() {
-        Map<String,String> result=new TreeMap<>();
+    public SetMultimap<String, String> getAnnotationAsMap() {
+        ImmutableSetMultimap.Builder<String,String> result=new ImmutableSetMultimap.Builder<String,String>()
+                .orderKeysBy(Ordering.natural()).orderValuesBy(Ordering.natural());
         for (Map.Entry<String, String> en : myGA.getAllAnnotationEntries()) {
             result.put(en.getKey(),en.getValue());
         }
-        return result;
+        return result.build();
     }
 
     @Override
