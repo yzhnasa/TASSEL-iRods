@@ -2,6 +2,9 @@ package net.maizegenetics.util;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import com.google.common.base.Joiner;
+import com.google.common.collect.SetMultimap;
+import net.maizegenetics.taxa.Taxon;
 
 import java.util.Arrays;
 
@@ -12,6 +15,18 @@ import java.util.Arrays;
 public final class HDF5Utils {
 
     private HDF5Utils() {
+    }
+
+    public static boolean addTaxon(IHDF5Writer h5w, Taxon taxon) {
+        String path=HDF5Constants.TAXA_MODULE+"/"+taxon.getName();
+        if(h5w.exists(path)) return false;
+        h5w.createGroup(path);
+        SetMultimap<String, String> annoMap=taxon.getAnnotationAsMap();
+        for (String keys : annoMap.keys()) {
+            String s=Joiner.on(",").join(annoMap.get(keys));
+            h5w.setStringAttribute(path,keys,s);
+        }
+        return true;
     }
 
     public static void writeHDF5GenotypesMaxNumAlleles(IHDF5Writer h5w, int maxNumAlleles) {

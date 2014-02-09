@@ -79,6 +79,13 @@ public class TaxaListBuilder {
         return new TaxaArrayList(this);
     }
 
+    /**
+     * Builds TaxaList with annotations from an HDF5 file.  The list of Taxa come from the those taxa that have been genotyped
+     * (in /Genotypes/ path), while the annotations come from the /Taxa/ path.  Frequently these two lists are
+     * identical, but sometimes this can Genotypes can have a subset of the taxa in /Taxa/
+     * @param reader
+     * @return
+     */
     public TaxaList buildFromHDF5Genotypes(IHDF5Reader reader) {
         //IHDF5Reader reader = HDF5Factory.openForReading(hdf5FileName);
         myTaxaList.clear();
@@ -92,13 +99,35 @@ public class TaxaListBuilder {
         return build();
     }
 
-    public TaxaList buildFromNewHDF5(IHDF5Reader reader) {
+    /**
+     * Builds TaxaList with annotations from an HDF5 file.  The list of Taxa and annotations come from the /Taxa/ path.
+     * This maybe a super set of what is present in the /Genotypes/ or /TBT/ paths.
+     * @param reader
+     * @return
+     */
+    public TaxaList buildFromHDF5(IHDF5Reader reader) {
         myTaxaList.clear();
         List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(HDF5Constants.TAXA_MODULE, true);
         for (HDF5LinkInformation is : fields) {
             if (is.isGroup() == false) continue;
             Taxon.Builder tb=new Taxon.Builder(is.getName());
+            for (String a : reader.getAllAttributeNames(is.getPath())) {
+                for(String s: Splitter.on(",").split(reader.getStringAttribute(is.getPath(),a))) {
+                    tb.addAnno(a,s);
+                }
+            }
+            myTaxaList.add(tb.build());
+        }
+        return build();
+    }
 
+    private TaxaList buildFromHDF5(IHDF5Reader reader, boolean inGenotype, boolean inTBT) {
+        myTaxaList.clear();
+        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(HDF5Constants.TAXA_MODULE, true);
+        for (HDF5LinkInformation is : fields) {
+            if (is.isGroup() == false) continue;
+            if(inGenotype && !reader.exists(HapMapHDF5Constants.GENOTYPES+"/"+is.getName())) continue;
+            Taxon.Builder tb=new Taxon.Builder(is.getName());
             for (String a : reader.getAllAttributeNames(is.getPath())) {
                 for(String s: Splitter.on(",").split(reader.getStringAttribute(is.getPath(),a))) {
                     tb.addAnno(a,s);

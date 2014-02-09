@@ -37,6 +37,12 @@ public final class HDF5Constants {
         return GENOTYPES_MODULE + "/" + taxon + "/score";
     }
 
+    //Taxa Module
+    public static final String TAXA_MODULE = "Taxa";
+    public static final String TAXA_ATTRIBUTES_PATH = TAXA_MODULE + "/";
+    public static final String TAXA_NUM_TAXA = "numTaxa";
+
+
     private HDF5Constants() {
         // do not instantiate
     }

@@ -50,7 +50,7 @@ public class ExportUtils {
         for (int t = 0; t < a.numberOfTaxa(); t++) {
               if((exportTaxa!=null)&&(!exportTaxa.contains(a.taxa().get(t)))) continue;  //taxon not in export list
               byte[] bases = a.genotypeAllSites(t);
-              if (keepDepth==false) aB.addTaxon(new Taxon(a.taxaName(t)), bases, null);
+              if (keepDepth==false) aB.addTaxon(a.taxa().get(t), bases, null);
               else {
                   //todo restore depth save
 //                  MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
