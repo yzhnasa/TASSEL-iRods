@@ -46,7 +46,7 @@ public class BuilderFromGenotypeHDF5 {
     public GenotypeTable build() {
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
         //test for newest version
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
         //test and correct taxa number bug in TASSEL 4 HDF5
         //TODO move to migration code
         int numTaxa = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA);
@@ -123,7 +123,7 @@ public class BuilderFromGenotypeHDF5 {
         TreeSet<Taxon> taxa = new TreeSet<>();
         for (String infile : infiles) {
             IHDF5Reader reader=HDF5Factory.openForReading(infile);
-            TaxaList aTL=new TaxaListBuilder().buildFromHDF5(reader);
+            TaxaList aTL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
             reader.close();
             taxa.addAll(aTL);
             inTL.add(aTL);

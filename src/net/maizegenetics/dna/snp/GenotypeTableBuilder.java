@@ -220,7 +220,7 @@ public class GenotypeTableBuilder {
 
     public static GenotypeTable getInstance(String hdf5File) {
         IHDF5Reader reader=HDF5Factory.openForReading(hdf5File);
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
         PositionList pL=PositionListBuilder.getInstance(reader);
         GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
         return GenotypeTableBuilder.getInstance(geno, pL, tL);
@@ -367,6 +367,8 @@ public class GenotypeTableBuilder {
         int chunk=1<<16;
         int myNumSites=positionList.numberOfSites();
         if(myNumSites<chunk) chunk=myNumSites;
+        boolean goodAdd=HDF5Utils.addTaxon(myWriter,id);
+        if(goodAdd==false) System.out.println("Taxa ("+id.getName()+") exists in the taxa path");
         String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getName();
         if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
         if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
@@ -387,7 +389,7 @@ public class GenotypeTableBuilder {
     private void annotateHDF5File(IHDF5Writer writer) {
         int hdf5GenoBlock=writer.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.BLOCK_SIZE);
         int sites=writer.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5(writer);
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(writer);
         int taxa=tL.numberOfTaxa();
         writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA,taxa);
         int[][] af=new int[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][sites];

@@ -142,7 +142,7 @@ class HDF5ByteGenotypeCallTable extends AbstractGenotypeCallTable {
     private HDF5ByteGenotypeCallTable(IHDF5Reader reader, int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
         super(numTaxa, numSites, phased, alleleEncodings);
         genotypePaths = new String[numTaxa];
-        TaxaList tL = new TaxaListBuilder().buildFromHDF5(reader);  //not the most efficient thing to do, but ensures sort is the same.
+        TaxaList tL = new TaxaListBuilder().buildFromHDF5Genotypes(reader);  //not the most efficient thing to do, but ensures sort is the same.
         for (int i = 0; i < numTaxa; i++) {
             genotypePaths[i] = HapMapHDF5Constants.GENOTYPES + "/" + tL.taxaName(i);
         }
