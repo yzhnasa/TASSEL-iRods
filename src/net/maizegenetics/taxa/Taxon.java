@@ -6,6 +6,9 @@
 // terms of the Lesser GNU General Public License (LGPL)
 package net.maizegenetics.taxa;
 
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.SetMultimap;
 import net.maizegenetics.util.GeneralAnnotation;
 import net.maizegenetics.util.GeneralAnnotationUtils;
 
@@ -43,6 +46,16 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
     public static final String InbreedFKey = "INBREEDF";
     /**Standard key for a synonym of the taxon*/
     public static final String SynonymKey = "SYNONYM";
+    /**Standard key for the latitude the taxon was sampled*/
+    public static final String LatitudeKey = "LATITUDE";
+    /**Standard key for the longitude the taxon was sampled*/
+    public static final String LongitudeKey = "LONGITUDE";
+    /**Standard key for altitude the taxon was sampled*/
+    public static final String AltitudeKey = "ALTITUDE";
+    /**Standard key for a genus of the taxon*/
+    public static final String GenusKey = "GENUS";
+    /**Standard key for a species of the taxon*/
+    public static final String SpeciesKey = "SPECIES";
     private final Map.Entry<String, String>[] myAnno;
     private final String myName;
     private final int hashCode;
@@ -77,10 +90,11 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
         return getName();
     }
 
-    public String toStringWithAnnotation(){
-        StringBuilder sb=new StringBuilder(getName()+"<");
+    public String toStringWithVCFAnnotation(){
+        StringBuilder sb=new StringBuilder("<");
+        sb.append("ID="+getName()+",");
         for (Map.Entry<String, String> en : myAnno) {
-            sb.append(en.getKey()+"="+en.getValue()+";");
+            sb.append(en.getKey()+"="+en.getValue()+",");
         }
         if(myAnno.length>0) sb.deleteCharAt(sb.length()-1);
         sb.append(">");
@@ -154,12 +168,13 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
     }
 
     @Override
-    public Map<String, String> getAnnotationAsMap() {
-        Map<String,String> result=new TreeMap<>();
+    public SetMultimap<String, String> getAnnotationAsMap() {
+        ImmutableSetMultimap.Builder<String,String> result=new ImmutableSetMultimap.Builder<String,String>()
+                .orderKeysBy(Ordering.natural()).orderValuesBy(Ordering.natural());
         for (Map.Entry<String, String> en : myAnno) {
             result.put(en.getKey(),en.getValue());
         }
-        return result;
+        return result.build();
     }
 
     /**
@@ -269,7 +284,9 @@ public class Taxon implements Serializable, Comparable<Taxon>, GeneralAnnotation
         public Taxon build() {
             Collections.sort(myAnnotations, new Comparator<Map.Entry<String, String>>(){
                 public int compare(Map.Entry<String, String> s1, Map.Entry<String, String> s2) {
-                    return s1.getKey().compareTo(s2.getKey());
+                    int keyComp=s1.getKey().compareTo(s2.getKey());
+                    if(keyComp!=0) return keyComp;
+                    return s1.getValue().compareTo(s2.getValue());
                 }
             });
             return new Taxon(this);

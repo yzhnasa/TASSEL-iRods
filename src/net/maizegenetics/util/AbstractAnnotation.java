@@ -1,9 +1,11 @@
 package net.maizegenetics.util;
 
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.SetMultimap;
 
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Not sure we want to do this, but if we do then we need to use the myAnno approach, as it massively reduces the overhead
@@ -67,11 +69,12 @@ public class AbstractAnnotation implements GeneralAnnotation {
     }
 
     @Override
-    public Map<String, String> getAnnotationAsMap() {
-        Map<String,String> result=new TreeMap<>();
+    public SetMultimap<String, String> getAnnotationAsMap() {
+        ImmutableSetMultimap.Builder<String,String> result=new ImmutableSetMultimap.Builder<String,String>()
+                .orderKeysBy(Ordering.natural()).orderValuesBy(Ordering.natural());
         for (Map.Entry<String, Object> en : getAllAnnotationEntries()) {
             result.put(en.getKey(),en.getValue().toString());
         }
-        return result;
+        return result.build();
     }
 }

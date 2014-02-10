@@ -1,5 +1,7 @@
 package net.maizegenetics.util;
 
+import com.google.common.collect.SetMultimap;
+
 import java.util.Map;
 
 /**
@@ -53,7 +55,7 @@ public interface GeneralAnnotation {
      * Returns all annotations in a TreeMap.
      * @return Map of annotations
      */
-    public Map<String, String> getAnnotationAsMap();
+    public SetMultimap<String, String> getAnnotationAsMap();
 
     //should we provide methods, to average the quantitative annotations, the first annotation
     //

@@ -6,21 +6,20 @@
  */
 package net.maizegenetics.analysis.data;
 
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.trait.ReadPhenotypeUtils;
 import net.maizegenetics.dna.snp.ReadPolymorphismUtils;
 import net.maizegenetics.dna.snp.ReadSequenceAlignmentUtils;
 import net.maizegenetics.taxa.distance.ReadDistanceMatrix;
-import net.maizegenetics.util.Report;
-import net.maizegenetics.util.TableReportUtils;
+import net.maizegenetics.util.*;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.prefs.TasselPrefs;
-import net.maizegenetics.util.ExceptionUtils;
-import net.maizegenetics.util.Utils;
 
 import org.apache.log4j.Logger;
 
@@ -59,7 +58,7 @@ public class FileLoadPlugin extends AbstractPlugin {
     public static final String FILE_EXT_PLINK_MAP = ".plk.map";
     public static final String FILE_EXT_PLINK_PED = ".plk.ped";
     public static final String FILE_EXT_SERIAL_GZ = ".serial.gz";
-    public static final String FILE_EXT_HDF5 = ".hmp.h5";
+    public static final String FILE_EXT_HDF5 = ".h5";
     public static final String FILE_EXT_VCF = ".vcf";
 
     /**
@@ -298,6 +297,16 @@ public class FileLoadPlugin extends AbstractPlugin {
                     break;
                 }
                 case HDF5: {
+                    IHDF5Reader reader=HDF5Factory.openForReading(inFile);
+                    boolean t4HDF5=HDF5Utils.isTASSEL4HDF5Format(HDF5Factory.openForReading(inFile));
+                    reader.close();
+                    if(t4HDF5) {
+                        DialogUtils.showError("This file is TASSEL4 HDF5 format. It will be converted to TASSEL5 " +
+                                "HDF5 format with the t5.h5 suffix added.  This may take a few minutes.",getParentFrame());
+                        String newInfile=inFile.replace(".h5",".t5.h5");
+                        MigrateHDF5FromT4T5.copyGenotypes(inFile,newInfile);
+                        inFile=newInfile;
+                    }
                     suffix = FILE_EXT_HDF5;
                     result = ImportUtils.readGuessFormat(inFile);
                     break;

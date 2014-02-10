@@ -1,18 +1,20 @@
 package net.maizegenetics.dna.snp.io;
 
+import com.google.common.collect.SetMultimap;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.GeneralPosition;
-import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.map.Position;
-import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
-import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.TaxaListIOUtils;
+import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.Utils;
 import org.apache.log4j.Logger;
 
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -61,10 +64,22 @@ public class BuilderFromHapMap {
             int numThreads=Runtime.getRuntime().availableProcessors();
             ExecutorService pool=Executors.newFixedThreadPool(numThreads);
             BufferedReader r=Utils.getBufferedReader(infile, -1);
-            TaxaList taxaList=processTaxa(r.readLine());
+            Map<String,SetMultimap<String,String>> sampAnnoBuild=new TreeMap<>();
             String currLine;
+            while (((currLine=r.readLine())!=null)&&(currLine.startsWith("##"))) {
+                String[] cat=currLine.split("=",2);
+                if(cat.length<2) continue;
+                if(cat[0].startsWith("##SAMPLE")) {
+                    SetMultimap<String, String> mapOfAnno=TaxaListIOUtils.parseVCFHeadersIntoMap(cat[1]);
+                    String taxaID=mapOfAnno.get("ID").iterator().next();
+                    if(taxaID==null) break;
+                    sampAnnoBuild.put(taxaID,mapOfAnno);
+                }
+            }
+            TaxaList taxaList=processTaxa(currLine,sampAnnoBuild);
             int linesAtTime=1<<12;  //this is a critical lines with 20% or more swings.  Needs to be optimized with transposing
             //  int linesAtTime=1<<8;  //better for with lots of taxa.
+            ArrayList<String> commentLines=new ArrayList<>();
             ArrayList<String> txtLines=new ArrayList<>(linesAtTime);
             ArrayList<ProcessHapMapBlock> pbs=new ArrayList<>();
             int lines=0;
@@ -113,13 +128,22 @@ public class BuilderFromHapMap {
         return result;
     }
 
-    private static TaxaList processTaxa(String readLn) {
+    private static TaxaList processTaxa(String readLn, Map<String,SetMultimap<String,String>> taxaAnnotation) {
         String[] header=WHITESPACE_PATTERN.split(readLn);
         int numTaxa=header.length-NUM_HAPMAP_NON_TAXA_HEADERS;
         TaxaListBuilder tlb=new TaxaListBuilder();
         for (int i=0; i<numTaxa; i++) {
-            Taxon at=new Taxon.Builder(header[i+NUM_HAPMAP_NON_TAXA_HEADERS]).build();
-            tlb.add(at);
+            String taxonID=header[i+NUM_HAPMAP_NON_TAXA_HEADERS];
+            Taxon.Builder at=new Taxon.Builder(taxonID);
+            SetMultimap<String,String> taMap=taxaAnnotation.get(taxonID);
+            if(taMap!=null) {
+                for (Map.Entry<String,String> en : taMap.entries()) {
+                    if(en.getKey().equals("ID")) continue; //skip the IDs as these became the name
+                    String s=en.getValue().replace("\"","");
+                    at.addAnno(en.getKey(),s);
+                }
+            }
+            tlb.add(at.build());
         }
         return tlb.build();
     }

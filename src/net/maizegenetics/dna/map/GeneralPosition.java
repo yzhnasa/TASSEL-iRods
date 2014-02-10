@@ -4,13 +4,16 @@
  */
 package net.maizegenetics.dna.map;
 
-import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.*;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.GeneralAnnotationUtils;
 
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 //import java.util.Objects;
@@ -372,12 +375,13 @@ public final class GeneralPosition implements Position {
     }
 
     @Override
-    public Map<String, String> getAnnotationAsMap() {
-        Map<String,String> result=new TreeMap<>();
+    public SetMultimap<String, String> getAnnotationAsMap() {
+        ImmutableSetMultimap.Builder<String,String> result=new ImmutableSetMultimap.Builder<String,String>()
+                .orderKeysBy(Ordering.natural()).orderValuesBy(Ordering.natural());
         for (Map.Entry<String, String> en : myVariantsAndAnno) {
             result.put(en.getKey(),en.getValue());
         }
-        return result;
+        return result.build();
     }
     
 }

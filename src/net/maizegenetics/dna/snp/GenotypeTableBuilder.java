@@ -3,22 +3,22 @@
  */
 package net.maizegenetics.dna.snp;
 
-import net.maizegenetics.dna.map.PositionListBuilder;
-import net.maizegenetics.dna.map.Position;
-import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
+import net.maizegenetics.dna.map.Position;
+import net.maizegenetics.dna.map.PositionList;
+import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.snp.score.SiteScore;
-import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.HDF5Utils;
+import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -220,7 +220,7 @@ public class GenotypeTableBuilder {
 
     public static GenotypeTable getInstance(String hdf5File) {
         IHDF5Reader reader=HDF5Factory.openForReading(hdf5File);
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5(reader);
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
         PositionList pL=PositionListBuilder.getInstance(reader);
         GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
         return GenotypeTableBuilder.getInstance(geno, pL, tL);
@@ -336,45 +336,53 @@ public class GenotypeTableBuilder {
 
 
     private synchronized void setupGenotypeTaxaInHDF5(IHDF5Writer writer) {
-        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.MAX_NUM_ALLELES,
-                NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
-        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.BLOCK_SIZE,
-                1<<16);
-        writer.setBooleanAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.RETAIN_RARE_ALLELES, false);
-        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, 0);
-        String[][] aEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
-        int numEncodings = aEncodings.length;
-        int numStates = aEncodings[0].length;
-        MDArray<String> alleleEncodings = new MDArray<>(String.class, new int[]{numEncodings, numStates});
-        for (int s = 0; s < numEncodings; s++) {
-            for (int x = 0; x < numStates; x++) {
-                alleleEncodings.set(aEncodings[s][x], s, x);
-            }
-        }
-        writer.createStringMDArray(HapMapHDF5Constants.ALLELE_STATES, 100, new int[]{numEncodings, numStates});
-        writer.writeStringMDArray(HapMapHDF5Constants.ALLELE_STATES, alleleEncodings);
-        MDArray<String> alleleEncodingReadAgain = writer.readStringMDArray(HapMapHDF5Constants.ALLELE_STATES);
-        if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
-            throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
-        }
-        writer.createGroup(HapMapHDF5Constants.GENOTYPES);
+        HDF5Utils.createHDF5GenotypeModule(writer);
+        HDF5Utils.writeHDF5GenotypesMaxNumAlleles(writer,NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+        HDF5Utils.writeHDF5GenotypesRetainRareAlleles(writer,false);
+        HDF5Utils.writeHDF5GenotypesNumTaxa(writer,0);
+        HDF5Utils.writeHDF5GenotypesAlleleStates(writer,NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
+//        writer.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_MAX_NUM_ALLELES,
+//                NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+//        writer.setIntAttribute(Tassel5HDF5Constants.DEFAULT_ATTRIBUTES_PATH, Tassel5HDF5Constants.BLOCK_SIZE,
+//                1<<16);
+//        writer.setBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_RETAIN_RARE_ALLELES, false);
+//        writer.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA, 0);
+//        String[][] aEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
+//        int numEncodings = aEncodings.length;
+//        int numStates = aEncodings[0].length;
+//        MDArray<String> alleleEncodings = new MDArray<>(String.class, new int[]{numEncodings, numStates});
+//        for (int s = 0; s < numEncodings; s++) {
+//            for (int x = 0; x < numStates; x++) {
+//                alleleEncodings.set(aEncodings[s][x], s, x);
+//            }
+//        }
+//        writer.createStringMDArray(Tassel5HDF5Constants.GENOTYPES_ALLELE_STATES, 100, new int[]{numEncodings, numStates});
+//        writer.writeStringMDArray(Tassel5HDF5Constants.GENOTYPES_ALLELE_STATES, alleleEncodings);
+//        MDArray<String> alleleEncodingReadAgain = writer.readStringMDArray(Tassel5HDF5Constants.GENOTYPES_ALLELE_STATES);
+//        if (alleleEncodings.equals(alleleEncodingReadAgain) == false) {
+//            throw new IllegalStateException("ExportUtils: writeToMutableHDF5: Mismatch Allele States, expected '" + alleleEncodings + "', found '" + alleleEncodingReadAgain + "'!");
+//        }
+//        writer.createGroup(Tassel5HDF5Constants.GENOTYPES_MODULE);
     }
 
     /**
      * Code needed to add a Taxon to HDF5, potentially split into functions in TaxaListBuilder & GenotypeBuilder
      */
     private synchronized void addTaxon(IHDF5Writer myWriter, Taxon id, byte[] genotype, byte[][] depth) {
-        int chunk=1<<16;
-        int myNumSites=positionList.numberOfSites();
-        if(myNumSites<chunk) chunk=myNumSites;
-        String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + id.getName();
-        if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Name Already Exists:"+basesPath);
-        if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
-        myWriter.createByteArray(basesPath, myNumSites, chunk, HapMapHDF5Constants.intDeflation);
-        HDF5Utils.writeHDF5EntireArray(basesPath, myWriter, genotype.length, 1<<16, genotype);
+//        int chunk=1<<16;
+//        int myNumSites=positionList.numberOfSites();
+//        if(myNumSites<chunk) chunk=myNumSites;
+        boolean goodAdd=HDF5Utils.addTaxon(myWriter,id);
+        if(goodAdd==false) System.out.println("Taxa ("+id.getName()+") exists in the taxa path");
+        HDF5Utils.writeHDF5GenotypesCalls(myWriter,id.getName(),genotype);
+//        String basesPath = Tassel5HDF5Constants.getGenotypesCallsPath(id.getName());
+//        if(myWriter.exists(basesPath)) throw new IllegalStateException("Taxa Calls Already Exists:"+basesPath);
+//        if(genotype.length!=myNumSites) throw new IllegalStateException("Setting all genotypes in addTaxon.  Wrong number of sites");
+//        myWriter.createByteArray(basesPath, myNumSites, chunk, Tassel5HDF5Constants.intDeflation);
+//        HDF5Utils.writeHDF5EntireArray(basesPath, myWriter, genotype.length, 1<<16, genotype);
         if(depth!=null) {
             if(depth.length!=6) throw new IllegalStateException("Just set A, C, G, T, -, + all at once");
-            if(depth[0].length!=myNumSites) throw new IllegalStateException("Setting all depth in addTaxon.  Wrong number of sites");
+            if(depth[0].length!=positionList.numberOfSites()) throw new IllegalStateException("Setting all depth in addTaxon.  Wrong number of sites");
             //           myWriter.writeByteMatrix(getTaxaDepthPath(taxonIndex), depth, HapMapHDF5Constants.intDeflation);
         }
     }
@@ -385,17 +393,18 @@ public class GenotypeTableBuilder {
      * @param writer
      */
     private void annotateHDF5File(IHDF5Writer writer) {
-        int hdf5GenoBlock=writer.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.BLOCK_SIZE);
-        int sites=writer.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5(writer);
+       // int hdf5GenoBlock=writer.getIntAttribute(Tassel5HDF5Constants.DEFAULT_ATTRIBUTES_PATH, Tassel5HDF5Constants.BLOCK_SIZE);
+        int hdf5GenoBlock=Tassel5HDF5Constants.BLOCK_SIZE;
+        int sites=writer.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES);
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(writer);
         int taxa=tL.numberOfTaxa();
-        writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA,taxa);
+        writer.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA,taxa);
         int[][] af=new int[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][sites];
         byte[][] afOrder=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][sites];
         float[] coverage=new float[taxa];
         float[] hets=new float[taxa];
         for (int taxon = 0; taxon < taxa; taxon++) {
-            String basesPath = HapMapHDF5Constants.GENOTYPES + "/" + tL.taxaName(taxon);
+            String basesPath = Tassel5HDF5Constants.getGenotypesCallsPath(tL.taxaName(taxon));
             byte[] genotype=writer.readByteArray(basesPath);
             int covSum=0;  //coverage of the taxon
             int hetSum=0;
@@ -427,25 +436,25 @@ public class GenotypeTableBuilder {
             if(afOrder[1][s]!=GenotypeTable.UNKNOWN_ALLELE) maf[s]=(float)af[afOrder[1][s]][s]/(float)sum;
             paf[s]=(float)sum/(float)(2*taxa);
         }
-        writer.createGroup(HapMapHDF5Constants.SITE_DESC);
+        writer.createGroup(Tassel5HDF5Constants.GENO_DESC);
         int chunk=(sites<hdf5GenoBlock)?sites:hdf5GenoBlock;
-        writer.createIntMatrix(HapMapHDF5Constants.ALLELE_CNT, 6, sites, 1, chunk, HapMapHDF5Constants.intDeflation);
-        writer.createByteMatrix(HapMapHDF5Constants.ALLELE_FREQ_ORD, 6, sites, 1, chunk, HapMapHDF5Constants.intDeflation);
-        writer.createFloatArray(HapMapHDF5Constants.MAF, sites, chunk, HapMapHDF5Constants.floatDeflation);
-        writer.createFloatArray(HapMapHDF5Constants.SITECOV, sites, chunk, HapMapHDF5Constants.floatDeflation);
-        writer.createGroup(HapMapHDF5Constants.TAXA_DESC);
+        writer.createIntMatrix(Tassel5HDF5Constants.ALLELE_CNT, 6, sites, 1, chunk, Tassel5HDF5Constants.intDeflation);
+        writer.createByteMatrix(Tassel5HDF5Constants.ALLELE_FREQ_ORD, 6, sites, 1, chunk, Tassel5HDF5Constants.intDeflation);
+        writer.createFloatArray(Tassel5HDF5Constants.MAF, sites, chunk, Tassel5HDF5Constants.floatDeflation);
+        writer.createFloatArray(Tassel5HDF5Constants.SITECOV, sites, chunk, Tassel5HDF5Constants.floatDeflation);
+      //  writer.createGroup(Tassel5HDF5Constants.TAXA_DESC);
         chunk=(tL.numberOfTaxa()<hdf5GenoBlock)?tL.numberOfTaxa():hdf5GenoBlock;
-        writer.createFloatArray(HapMapHDF5Constants.TAXACOV, tL.numberOfTaxa(), chunk, HapMapHDF5Constants.floatDeflation);
-        writer.createFloatArray(HapMapHDF5Constants.TAXAHET, tL.numberOfTaxa(), chunk, HapMapHDF5Constants.floatDeflation);
-        if(af[0].length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_CNT, writer, af[0].length, 1<<16, af);
-        if(afOrder[0].length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.ALLELE_FREQ_ORD, writer, afOrder[0].length, 1<<16, afOrder);
-        if(maf.length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.MAF, writer, maf.length, 1<<16, maf);
-        if(paf.length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.SITECOV, writer, paf.length, 1<<16, paf);
+        writer.createFloatArray(Tassel5HDF5Constants.TAXACOV, tL.numberOfTaxa(), chunk, Tassel5HDF5Constants.floatDeflation);
+        writer.createFloatArray(Tassel5HDF5Constants.TAXAHET, tL.numberOfTaxa(), chunk, Tassel5HDF5Constants.floatDeflation);
+        if(af[0].length>0) HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.ALLELE_CNT, writer, af[0].length, 1<<16, af);
+        if(afOrder[0].length>0) HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.ALLELE_FREQ_ORD, writer, afOrder[0].length, 1<<16, afOrder);
+        if(maf.length>0) HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.MAF, writer, maf.length, 1<<16, maf);
+        if(paf.length>0) HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.SITECOV, writer, paf.length, 1<<16, paf);
 
-        if(coverage.length>0) HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.TAXACOV, writer, coverage.length, 1<<16, coverage);
+        if(coverage.length>0) HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.TAXACOV, writer, coverage.length, 1<<16, coverage);
         if(hets.length>0) {
             System.out.println("Hets Length:"+hets.length);
-            HDF5Utils.writeHDF5EntireArray(HapMapHDF5Constants.TAXAHET, writer, hets.length, 1<<16, hets);
+            HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.TAXAHET, writer, hets.length, 1<<16, hets);
         }
     }
 }

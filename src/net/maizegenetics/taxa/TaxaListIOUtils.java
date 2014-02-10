@@ -1,9 +1,7 @@
 package net.maizegenetics.taxa;
 
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
+import com.google.common.base.Splitter;
+import com.google.common.collect.*;
 import net.maizegenetics.util.Utils;
 
 import java.io.BufferedReader;
@@ -101,9 +99,14 @@ public class TaxaListIOUtils {
         return tlb.build();
     }
 
-    public static Set<String> allUniqueAnnotation(TaxaList tl) {
-
-        return null;
+    public static Set<String> allAnnotationKeys(TaxaList baseTaxaList) {
+        ImmutableSet.Builder<String> keepers=new ImmutableSet.Builder<String>();
+        for (Taxon taxon : baseTaxaList) {
+            for (Map.Entry<String,String> entry : taxon.getAllAnnotationEntries()) {
+                keepers.add(entry.getKey());
+            }
+        }
+        return keepers.build();
     }
 
     public static void exportAnnotatedTaxaListTable() {
@@ -123,8 +126,8 @@ public class TaxaListIOUtils {
      *{@literal MO17	Inbred	Goodman282	0.98    UMC;IBMFounder}<br></br>
      * <p></p>
      * Produces:<br></br>
-     * {@literal B73<GermType=Inbred;Set=Goodman282;Set=ISU;Set=IBMFounder;f=0.98>}<br></br>
-     * {@literal MO17<GermType=Inbred;Set=Goodman282;Set=UMC;Set=IBMFounder;f=0.98>}<br></br>
+     * {@literal B73<GermType=Inbred,Set=Goodman282,Set=ISU,Set=IBMFounder,f=0.98>}<br></br>
+     * {@literal MO17<GermType=Inbred,Set=Goodman282,Set=UMC,Set=IBMFounder,f=0.98>}<br></br>
      * The standardized keys are described in the {@link net.maizegenetics.taxa.Taxon}, and these constant fields are all upper
      * case.
      * @param fileName with complete path
@@ -189,5 +192,25 @@ public class TaxaListIOUtils {
         }    
         return null;
     }
+
+    /**
+     * Parses a VCF header with the taxa names and annotations into a multimap.  The taxa name is return as the "ID" key,
+     * as used by the VCF format.
+     * @param s
+     * @return
+     */
+    public static SetMultimap<String,String> parseVCFHeadersIntoMap(String s) {
+        if(s==null) return null;
+        if(!(s.startsWith("<") && s.endsWith(">"))) return null;
+        String value=s.substring(1,s.length()-1);
+        ImmutableSetMultimap.Builder<String,String> im=new ImmutableSetMultimap.Builder<String,String>()
+                .orderKeysBy(Ordering.natural()).orderValuesBy(Ordering.natural());
+        for (String s1 : Splitter.on(",").trimResults().split(value)) {
+            String[] ssEntry=s1.split("=",2);
+            im.put(ssEntry[0],ssEntry[1]);
+        }
+        return im.build();
+    }
+
     
 }

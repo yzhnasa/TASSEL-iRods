@@ -4,9 +4,9 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.map.Position.Allele;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.lang.reflect.Array;
 import java.nio.IntBuffer;
@@ -60,10 +60,10 @@ final class PositionHDF5List implements PositionList {
             int length=((numPositions-startSite)<BLOCKSIZE)?numPositions-startSite:BLOCKSIZE;
 //           System.out.println("Reading from HDF5 site anno:"+startSite);
             synchronized(reader) {
-                afOrder = reader.readByteMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_FREQ_ORD, 2, length, 0l, startSite);
-                maf= reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.MAF,length, startSite);
-                paf= reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.SITECOV,length, startSite);
-                snpIDs=reader.readStringArrayBlockWithOffset(HapMapHDF5Constants.SNP_IDS,length, startSite);
+                afOrder = reader.readByteMatrixBlockWithOffset(Tassel5HDF5Constants.ALLELE_FREQ_ORD, 2, length, 0l, startSite);
+                maf= reader.readFloatArrayBlockWithOffset(Tassel5HDF5Constants.MAF,length, startSite);
+                paf= reader.readFloatArrayBlockWithOffset(Tassel5HDF5Constants.SITECOV,length, startSite);
+                snpIDs=reader.readStringArrayBlockWithOffset(Tassel5HDF5Constants.SNP_IDS,length, startSite);
             }
             for (int i=0; i<length; i++) {
                 int site=i+startSite;
@@ -95,14 +95,14 @@ final class PositionHDF5List implements PositionList {
 
     PositionHDF5List(IHDF5Reader reader) {
         this.reader=reader;
-        int[] variableSites = reader.readIntArray(HapMapHDF5Constants.POSITIONS);
+        int[] variableSites = reader.readIntArray(Tassel5HDF5Constants.POSITIONS);
         this.numPositions=variableSites.length;
-        String[] lociStrings = reader.readStringArray(HapMapHDF5Constants.LOCI);
+        String[] lociStrings = reader.readStringArray(Tassel5HDF5Constants.CHROMOSOMES);
         ArrayList<Chromosome> chrs=new ArrayList<Chromosome>();
         for (String ls : lociStrings) {
             chrs.add(new Chromosome(ls));
         }
-        int[] locusIndices = reader.readIntArray(HapMapHDF5Constants.LOCUS_INDICES);
+        int[] locusIndices = reader.readIntArray(Tassel5HDF5Constants.CHROMOSOME_INDICES);
         myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
         myChrNameHash=new HashMap<String,Chromosome>();
         int currStart=0;

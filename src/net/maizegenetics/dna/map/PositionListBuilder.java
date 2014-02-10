@@ -7,9 +7,9 @@ import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import com.google.common.base.Preconditions;
-import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.util.HDF5Utils;
+import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.*;
 
@@ -143,7 +143,8 @@ public class PositionListBuilder {
      * Creates a positionList in a new HDF5 file.
      */
     public PositionListBuilder(IHDF5Writer h5w, PositionList a) {
-        h5w.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES, a.size());
+        HDF5Utils.createHDF5PositionModule(h5w);
+        h5w.setIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES, a.size());
         String[] lociNames = new String[a.numChromosomes()];
         Map<Chromosome, Integer> locusToIndex=new HashMap<>(10);
         Chromosome[] loci = a.chromosomes();
@@ -151,14 +152,15 @@ public class PositionListBuilder {
             lociNames[i] = loci[i].getName();
             locusToIndex.put(loci[i],i);
         }
-        h5w.createStringVariableLengthArray(HapMapHDF5Constants.LOCI, a.numChromosomes());
-        h5w.writeStringVariableLengthArray(HapMapHDF5Constants.LOCI, lociNames);
+        h5w.createStringVariableLengthArray(Tassel5HDF5Constants.CHROMOSOMES, a.numChromosomes());
+        h5w.writeStringVariableLengthArray(Tassel5HDF5Constants.CHROMOSOMES, lociNames);
 
         int blockSize=1<<16;
-        h5w.createStringArray(HapMapHDF5Constants.SNP_IDS, 15,a.numberOfSites(),blockSize,HapMapHDF5Constants.genDeflation);
-        h5w.createIntArray(HapMapHDF5Constants.LOCUS_INDICES, a.numberOfSites(),HapMapHDF5Constants.intDeflation);
-        h5w.createIntArray(HapMapHDF5Constants.POSITIONS, a.numberOfSites(), HapMapHDF5Constants.intDeflation);
+        h5w.createStringArray(Tassel5HDF5Constants.SNP_IDS, 15,a.numberOfSites(),blockSize,Tassel5HDF5Constants.genDeflation);
+        h5w.createIntArray(Tassel5HDF5Constants.CHROMOSOME_INDICES, a.numberOfSites(),Tassel5HDF5Constants.intDeflation);
+        h5w.createIntArray(Tassel5HDF5Constants.POSITIONS, a.numberOfSites(), Tassel5HDF5Constants.intDeflation);
 
+        //This is written in blocks to deal with datasets in the scale for 50M positions
         int blocks=((a.numberOfSites()-1)/blockSize)+1;
         for (int block = 0; block < blocks; block++) {
             int startPos=block*blockSize;
@@ -172,9 +174,9 @@ public class PositionListBuilder {
                 locusIndicesArray[i] = locusToIndex.get(gp.getChromosome());
                 positions[i]=gp.getPosition();
             }
-            HDF5Utils.writeHDF5Block(HapMapHDF5Constants.SNP_IDS,h5w,blockSize,block,snpIDs);
-            HDF5Utils.writeHDF5Block(HapMapHDF5Constants.LOCUS_INDICES,h5w,blockSize,block,locusIndicesArray);
-            HDF5Utils.writeHDF5Block(HapMapHDF5Constants.POSITIONS,h5w,blockSize,block,positions);
+            HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.SNP_IDS,h5w,blockSize,block,snpIDs);
+            HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.CHROMOSOME_INDICES,h5w,blockSize,block,locusIndicesArray);
+            HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.POSITIONS,h5w,blockSize,block,positions);
         }
         this.reader = h5w;
         isHDF5=true;

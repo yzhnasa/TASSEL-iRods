@@ -8,10 +8,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.concurrent.ExecutionException;
 
@@ -60,10 +60,10 @@ class HDF5ByteGenotypeCallTable extends AbstractGenotypeCallTable {
             System.out.println("Reading from HDF5 site anno:" + startSite);
             System.out.println("");
             synchronized (myHDF5Reader) {
-                af = myHDF5Reader.readIntMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_CNT, 6, length, 0l, startSite);
-                afOrder = myHDF5Reader.readByteMatrixBlockWithOffset(HapMapHDF5Constants.ALLELE_FREQ_ORD, 6, length, 0l, startSite);
-                maf = myHDF5Reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.MAF, length, startSite);
-                paf = myHDF5Reader.readFloatArrayBlockWithOffset(HapMapHDF5Constants.SITECOV, length, startSite);
+                af = myHDF5Reader.readIntMatrixBlockWithOffset(Tassel5HDF5Constants.ALLELE_CNT, 6, length, 0l, startSite);
+                afOrder = myHDF5Reader.readByteMatrixBlockWithOffset(Tassel5HDF5Constants.ALLELE_FREQ_ORD, 6, length, 0l, startSite);
+                maf = myHDF5Reader.readFloatArrayBlockWithOffset(Tassel5HDF5Constants.MAF, length, startSite);
+                paf = myHDF5Reader.readFloatArrayBlockWithOffset(Tassel5HDF5Constants.SITECOV, length, startSite);
                 lastCachedStartSite = startSite;
             }
             //perhaps kickoff a process to load the rest
@@ -142,9 +142,10 @@ class HDF5ByteGenotypeCallTable extends AbstractGenotypeCallTable {
     private HDF5ByteGenotypeCallTable(IHDF5Reader reader, int numTaxa, int numSites, boolean phased, String[][] alleleEncodings) {
         super(numTaxa, numSites, phased, alleleEncodings);
         genotypePaths = new String[numTaxa];
-        TaxaList tL = new TaxaListBuilder().buildFromHDF5(reader);  //not the most efficient thing to do, but ensures sort is the same.
+        TaxaList tL = new TaxaListBuilder().buildFromHDF5Genotypes(reader);  //not the most efficient thing to do, but ensures sort is the same.
         for (int i = 0; i < numTaxa; i++) {
-            genotypePaths[i] = HapMapHDF5Constants.GENOTYPES + "/" + tL.taxaName(i);
+            //genotypePaths[i] = Tassel5HDF5Constants.GENOTYPES + "/" + tL.taxaName(i);
+            genotypePaths[i] = Tassel5HDF5Constants.getGenotypesCallsPath(tL.taxaName(i));
         }
         myHDF5Reader = reader;
         myGenoCache = CacheBuilder.newBuilder()
@@ -156,8 +157,8 @@ class HDF5ByteGenotypeCallTable extends AbstractGenotypeCallTable {
     }
 
     static HDF5ByteGenotypeCallTable getInstance(IHDF5Reader reader) {
-        int numTaxa = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA);
-        int numSites = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
+        int numTaxa = reader.getIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA);
+        int numSites = reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES);
         String[][] alleleEncodings = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
         return new HDF5ByteGenotypeCallTable(reader, numTaxa, numSites, false, alleleEncodings);
     }

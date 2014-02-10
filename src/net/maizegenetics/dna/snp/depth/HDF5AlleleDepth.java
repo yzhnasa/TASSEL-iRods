@@ -4,8 +4,8 @@
 package net.maizegenetics.dna.snp.depth;
 
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,10 +31,10 @@ public class HDF5AlleleDepth extends AbstractAlleleDepth {
     
     HDF5AlleleDepth(IHDF5Reader reader) {
         super(6,
-                reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES),
-                reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA));
+                reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES),
+                reader.getIntAttribute(Tassel5HDF5Constants.GENOTYPES_MODULE, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA));
         myReader = reader;
-        myNumSites = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_SITES);
+        myNumSites = reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES);
         // TODO: Some how we need to get taxa names.  Either passed
         // in as a parameter or read from the HDF5 file.
         myTaxa = null;
@@ -72,14 +72,14 @@ public class HDF5AlleleDepth extends AbstractAlleleDepth {
         return result;
     }
     
-    private String getTaxaDepthPath(int taxon) {
-        return HapMapHDF5Constants.DEPTH + "/" + myTaxa.taxaName(taxon);
-    }
+//    private String getTaxaDepthPath(int taxon) {
+//        return HapMapHDF5Constants.DEPTH + "/" + myTaxa.taxaName(taxon);
+//    }
     
     private byte[][] cacheDepthBlock(int taxon, int site, long key) {
         int start = (site / MAX_CACHE_SIZE) * MAX_CACHE_SIZE;
         int realSiteCache = (myNumSites - start < MAX_CACHE_SIZE) ? myNumSites - start : MAX_CACHE_SIZE;
-        byte[][] data = myReader.readByteMatrixBlockWithOffset(getTaxaDepthPath(taxon), 6, realSiteCache, 0, start);
+        byte[][] data = myReader.readByteMatrixBlockWithOffset(Tassel5HDF5Constants.getGenotypesDepthPath(myTaxa.taxaName(taxon)), 6, realSiteCache, 0, start);
         if (data == null) {
             return null;
         }
