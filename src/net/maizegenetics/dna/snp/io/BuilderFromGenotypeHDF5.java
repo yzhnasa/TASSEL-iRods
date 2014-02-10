@@ -7,13 +7,12 @@ import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
-import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.util.HDF5Constants;
+import net.maizegenetics.util.HDF5Utils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -49,12 +48,14 @@ public class BuilderFromGenotypeHDF5 {
         TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
         //test and correct taxa number bug in TASSEL 4 HDF5
         //TODO move to migration code
-        int numTaxa = reader.getIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA);
+        int numTaxa =HDF5Utils.getHDF5GenotypeTaxaNumber(reader);
         if(numTaxa!=tL.numberOfTaxa()) {
             reader.close();
             IHDF5Writer writer=HDF5Factory.open(infile);
-            writer.setIntAttribute(HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, HDF5Constants.GENOTYPES_NUM_TAXA, tL.numberOfTaxa());
-            writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, tL.numberOfTaxa());
+            HDF5Utils.writeHDF5GenotypesNumTaxa(writer,tL.numberOfTaxa());
+           // writer.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA, tL.numberOfTaxa());
+            HDF5Utils.writeHDF5GenotypesNumTaxa(writer,tL.numberOfTaxa());
+     //       writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, tL.numberOfTaxa());
 
             writer.close();
             reader=HDF5Factory.openForReading(infile);

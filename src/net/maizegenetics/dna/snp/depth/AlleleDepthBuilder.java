@@ -6,11 +6,11 @@ package net.maizegenetics.dna.snp.depth;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
+import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +36,9 @@ public class AlleleDepthBuilder {
         myHDF5Writer = writer;
         myMaxNumAlleles = maxNumAlleles;
         myNumSites = numSites;
-        if (!myHDF5Writer.exists(HapMapHDF5Constants.DEPTH)) {
-            myHDF5Writer.createGroup(HapMapHDF5Constants.DEPTH);
-        }
+//        if (!myHDF5Writer.exists(Tassel5HDF5Constants.)) {
+//            myHDF5Writer.createGroup(HapMapHDF5Constants.DEPTH);
+//        }
     }
 
     private AlleleDepthBuilder(int numSites, int maxNumAlleles) {
@@ -198,9 +198,9 @@ public class AlleleDepthBuilder {
         return this;
     }
 
-    private String getTaxaDepthPath(Taxon taxon) {
-        return HapMapHDF5Constants.DEPTH + "/" + taxon.getName();
-    }
+//    private String getTaxaDepthPath(Taxon taxon) {
+//        return HapMapHDF5Constants.DEPTH + "/" + taxon.getName();
+//    }
 
     /**
      * Add taxon and set values for all sites and alleles for that taxon. First
@@ -221,7 +221,7 @@ public class AlleleDepthBuilder {
                 throw new IllegalStateException("AlleleDepthBuilder: addTaxon: Number of sites: " + depths[0].length + " should be: " + myNumSites);
             }
             synchronized (myHDF5Writer) {
-                myHDF5Writer.writeByteMatrix(getTaxaDepthPath(taxon), depths, HDF5_FEATURES);
+                myHDF5Writer.writeByteMatrix(Tassel5HDF5Constants.getGenotypesDepthPath(taxon.getName()), depths, HDF5_FEATURES);
             }
             myNumTaxa++;
         } else {

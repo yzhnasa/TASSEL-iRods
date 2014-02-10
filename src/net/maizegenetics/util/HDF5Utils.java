@@ -1,9 +1,11 @@
 package net.maizegenetics.util;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import com.google.common.base.Joiner;
 import com.google.common.collect.SetMultimap;
+import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.taxa.Taxon;
 
 import java.util.Arrays;
@@ -17,8 +19,28 @@ public final class HDF5Utils {
     private HDF5Utils() {
     }
 
+    public static boolean isTASSEL4HDF5Format(IHDF5Reader reader) {
+        return reader.exists(HapMapHDF5Constants.LOCI);
+    }
+
+    public static int getHDF5GenotypeTaxaNumber(IHDF5Reader reader){
+        return reader.getIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_NUM_TAXA);
+    }
+
+    public static int getHDF5PositionNumber(IHDF5Reader reader){
+        return reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH,Tassel5HDF5Constants.POSITION_NUM_SITES);
+    }
+
+    public static boolean doTaxonCallsExist(IHDF5Reader reader, String taxonName){
+        return reader.exists(Tassel5HDF5Constants.getGenotypesCallsPath(taxonName));
+    }
+
+    public static boolean doTaxonCallsExist(IHDF5Reader reader, Taxon taxon){
+        return reader.exists(Tassel5HDF5Constants.getGenotypesCallsPath(taxon.getName()));
+    }
+
     public static boolean addTaxon(IHDF5Writer h5w, Taxon taxon) {
-        String path=HDF5Constants.TAXA_MODULE+"/"+taxon.getName();
+        String path=Tassel5HDF5Constants.TAXA_MODULE+"/"+taxon.getName();
         if(h5w.exists(path)) return false;
         h5w.createGroup(path);
         SetMultimap<String, String> annoMap=taxon.getAnnotationAsMap();
@@ -29,20 +51,28 @@ public final class HDF5Utils {
         return true;
     }
 
+    public static void writeHDF5TaxaNumTaxa(IHDF5Writer h5w, int numTaxa) {
+        h5w.setIntAttribute(Tassel5HDF5Constants.TAXA_ATTRIBUTES_PATH, Tassel5HDF5Constants.TAXA_NUM_TAXA, numTaxa);
+    }
+
+    public static void createHDF5GenotypeModule(IHDF5Writer h5w) {
+        h5w.createGroup(Tassel5HDF5Constants.GENOTYPES_MODULE);
+    }
+
     public static void writeHDF5GenotypesMaxNumAlleles(IHDF5Writer h5w, int maxNumAlleles) {
-        h5w.setIntAttribute(HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, HDF5Constants.GENOTYPES_MAX_NUM_ALLELES, maxNumAlleles);
+        h5w.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_MAX_NUM_ALLELES, maxNumAlleles);
     }
 
     public static void writeHDF5GenotypesRetainRareAlleles(IHDF5Writer h5w, boolean retainRareAlleles) {
-        h5w.setBooleanAttribute(HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, HDF5Constants.GENOTYPES_RETAIN_RARE_ALLELES, retainRareAlleles);
+        h5w.setBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_RETAIN_RARE_ALLELES, retainRareAlleles);
     }
 
     public static void writeHDF5GenotypesNumTaxa(IHDF5Writer h5w, int numTaxa) {
-        h5w.setIntAttribute(HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, HDF5Constants.GENOTYPES_NUM_TAXA, numTaxa);
+        h5w.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA, numTaxa);
     }
 
     public static void writeHDF5GenotypesScoreType(IHDF5Writer h5w, String scoreType) {
-        h5w.setStringAttribute(HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, HDF5Constants.GENOTYPES_MAX_NUM_ALLELES, scoreType);
+        h5w.setStringAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_MAX_NUM_ALLELES, scoreType);
     }
 
     public static void writeHDF5GenotypesAlleleStates(IHDF5Writer h5w, String[][] aEncodings) {
@@ -54,13 +84,32 @@ public final class HDF5Utils {
                 alleleEncodings.set(aEncodings[s][x], s, x);
             }
         }
-        h5w.createStringMDArray(HDF5Constants.GENOTYPES_ALLELE_STATES, 100, new int[]{numEncodings, numStates});
-        h5w.writeStringMDArray(HDF5Constants.GENOTYPES_ALLELE_STATES, alleleEncodings);
+        h5w.createStringMDArray(Tassel5HDF5Constants.GENOTYPES_ALLELE_STATES, 100, new int[]{numEncodings, numStates});
+        h5w.writeStringMDArray(Tassel5HDF5Constants.GENOTYPES_ALLELE_STATES, alleleEncodings);
     }
 
     public static void writeHDF5GenotypesCalls(IHDF5Writer h5w, String taxon, byte[] calls) {
-        writeHDF5EntireArray(HDF5Constants.getGenotypesCallsPath(taxon), h5w, calls.length, 1 << 16, calls);
+        writeHDF5EntireArray(Tassel5HDF5Constants.getGenotypesCallsPath(taxon), h5w, calls.length, 1 << 16, calls);
     }
+
+//    Positions/numSites
+    public static void createHDF5PositionModule(IHDF5Writer h5w) {
+        h5w.createGroup(Tassel5HDF5Constants.POSITION_MODULE);
+    }
+
+
+    public static void writeHDF5PositionNumSite(IHDF5Writer h5w, int numSites) {
+        h5w.setIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES, numSites);
+    }
+
+  //Writers for these should also be implemented, but there are some data scale issue that they are written in blocks.
+    //see public PositionListBuilder(IHDF5Writer h5w, PositionList a)
+    //    Positions/Positions
+//    Positions/Chromosome
+//    Positions/ChromosomeIndices
+//    Positions/SnpIds
+
+
 
     /**
      *

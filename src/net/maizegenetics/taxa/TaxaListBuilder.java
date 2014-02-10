@@ -7,9 +7,9 @@ import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import com.google.common.base.Splitter;
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
-import net.maizegenetics.util.HDF5Constants;
+import net.maizegenetics.util.HDF5Utils;
+import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -89,11 +89,13 @@ public class TaxaListBuilder {
     public TaxaList buildFromHDF5Genotypes(IHDF5Reader reader) {
         //IHDF5Reader reader = HDF5Factory.openForReading(hdf5FileName);
         myTaxaList.clear();
-        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(HapMapHDF5Constants.GENOTYPES, true);
+        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(Tassel5HDF5Constants.GENOTYPES_MODULE, true);
         for (HDF5LinkInformation is : fields) {
-            if (is.isDataSet() == false) {
-                continue;
-            }
+            String tN=is.getName();
+            if(!HDF5Utils.doTaxonCallsExist(reader,tN)) continue;
+//            if (is.isDataSet() == false) {
+//                continue;
+//            }
             myTaxaList.add(new Taxon.Builder(is.getName()).build());
         }
         return build();
@@ -107,7 +109,7 @@ public class TaxaListBuilder {
      */
     public TaxaList buildFromHDF5(IHDF5Reader reader) {
         myTaxaList.clear();
-        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(HDF5Constants.TAXA_MODULE, true);
+        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(Tassel5HDF5Constants.TAXA_MODULE, true);
         for (HDF5LinkInformation is : fields) {
             if (is.isGroup() == false) continue;
             Taxon.Builder tb=new Taxon.Builder(is.getName());
@@ -123,10 +125,10 @@ public class TaxaListBuilder {
 
     private TaxaList buildFromHDF5(IHDF5Reader reader, boolean inGenotype, boolean inTBT) {
         myTaxaList.clear();
-        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(HDF5Constants.TAXA_MODULE, true);
+        List<HDF5LinkInformation> fields = reader.getAllGroupMemberInformation(Tassel5HDF5Constants.TAXA_MODULE, true);
         for (HDF5LinkInformation is : fields) {
             if (is.isGroup() == false) continue;
-            if(inGenotype && !reader.exists(HapMapHDF5Constants.GENOTYPES+"/"+is.getName())) continue;
+            if(inGenotype && !HDF5Utils.doTaxonCallsExist(reader,is.getName())) continue;
             Taxon.Builder tb=new Taxon.Builder(is.getName());
             for (String a : reader.getAllAttributeNames(is.getPath())) {
                 for(String s: Splitter.on(",").split(reader.getStringAttribute(is.getPath(),a))) {
