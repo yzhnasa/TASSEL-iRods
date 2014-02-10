@@ -2,7 +2,6 @@ package net.maizegenetics.dna.snp.io;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
@@ -44,22 +43,20 @@ public class BuilderFromGenotypeHDF5 {
     //TODO subset??
     public GenotypeTable build() {
         IHDF5Reader reader=HDF5Factory.openForReading(infile);
-        //test for newest version
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
-        //test and correct taxa number bug in TASSEL 4 HDF5
-        //TODO move to migration code
-        int numTaxa =HDF5Utils.getHDF5GenotypeTaxaNumber(reader);
-        if(numTaxa!=tL.numberOfTaxa()) {
+        if(HDF5Utils.isTASSEL4HDF5Format(reader)) {
             reader.close();
-            IHDF5Writer writer=HDF5Factory.open(infile);
-            HDF5Utils.writeHDF5GenotypesNumTaxa(writer,tL.numberOfTaxa());
-           // writer.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA, tL.numberOfTaxa());
-            HDF5Utils.writeHDF5GenotypesNumTaxa(writer,tL.numberOfTaxa());
-     //       writer.setIntAttribute(HapMapHDF5Constants.DEFAULT_ATTRIBUTES_PATH, HapMapHDF5Constants.NUM_TAXA, tL.numberOfTaxa());
-
-            writer.close();
-            reader=HDF5Factory.openForReading(infile);
+            throw new UnsupportedOperationException("TASSEL4 HDF5 file, please migrate to TASSEL5 using MigrateHDF5FromT4T5");
         }
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
+        //TODO move to migration code
+//        int numTaxa =HDF5Utils.getHDF5GenotypeTaxaNumber(reader);
+//        if(numTaxa!=tL.numberOfTaxa()) {
+//            reader.close();
+//            IHDF5Writer writer=HDF5Factory.open(infile);
+//            HDF5Utils.writeHDF5GenotypesNumTaxa(writer,tL.numberOfTaxa());
+//            writer.close();
+//            reader=HDF5Factory.openForReading(infile);
+//        }
         PositionList pL=PositionListBuilder.getInstance(reader);
         GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
         return GenotypeTableBuilder.getInstance(geno,pL, tL);

@@ -57,6 +57,10 @@ public final class Tassel5HDF5Constants {
     public static final String TAXA_ATTRIBUTES_PATH = TAXA_MODULE + "/";
     public static final String TAXA_NUM_TAXA = "numTaxa";
 
+    public static final String getTaxonPath(String taxon) {
+        return TAXA_MODULE + "/" + taxon;
+    }
+
     //Position Module
     public static final String POSITION_MODULE = "Positions";
     public static final String POSITION_ATTRIBUTES_PATH = POSITION_MODULE + "/";

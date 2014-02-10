@@ -32,7 +32,7 @@ public class ImportUtils {
 
     public static GenotypeTable readGuessFormat(String fileName) {
         try {
-            if (fileName.endsWith("h5")) {
+            if (fileName.endsWith(".h5")) {
                 return BuilderFromGenotypeHDF5.getBuilder(fileName).build();
             } else if (fileName.endsWith("hmp.txt.gz") || fileName.endsWith("hmp.txt")) {
                 return readFromHapmap(fileName, null);
