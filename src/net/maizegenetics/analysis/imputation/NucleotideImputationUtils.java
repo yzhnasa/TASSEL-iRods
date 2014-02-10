@@ -1246,17 +1246,19 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 	}
 
 	public static double computeGenotypeR(int site1, int site2, GenotypeTable a) throws IllegalStateException {
-		BitSet s1mj = a.allelePresenceForAllSites(site1, WHICH_ALLELE.Major);
-		BitSet s1mn = a.allelePresenceForAllSites(site1, WHICH_ALLELE.Minor);
-		BitSet s2mj = a.allelePresenceForAllSites(site2, WHICH_ALLELE.Major);
-		BitSet s2mn = a.allelePresenceForAllSites(site2, WHICH_ALLELE.Minor);
-		OpenBitSet bothpresent = new OpenBitSet(s1mj.getBits(), s1mj.getNumWords());
+		
+		BitSet s1mj = a.allelePresenceForAllTaxa(site1, WHICH_ALLELE.Major);
+		BitSet s1mn = a.allelePresenceForAllTaxa(site1, WHICH_ALLELE.Minor);
+		BitSet s2mj = a.allelePresenceForAllTaxa(site2, WHICH_ALLELE.Major);
+		BitSet s2mn = a.allelePresenceForAllTaxa(site2, WHICH_ALLELE.Minor);
+		
+		OpenBitSet bothpresent = new OpenBitSet(s1mj);
 		bothpresent.union(s1mn);
-		OpenBitSet s2present = new OpenBitSet(s2mj.getBits(), s2mj.getNumWords());
+		OpenBitSet s2present = new OpenBitSet(s2mj);
 		s2present.union(s2mn);
 		bothpresent.intersect(s2present);
 		
-		long nsites = s1mj.capacity();
+		long nsites = a.numberOfTaxa();
 		double sum1 = 0;
 		double sum2 = 0;
 		double sumsq1 = 0;
