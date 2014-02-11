@@ -198,7 +198,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 				byte Callele = popdata.alleleC[snpIndex[s]];
 				byte[] val = GenotypeTableUtils.getDiploidValues(popdata.original.genotype(t, snpIndex[s]));
 				if (val[0] == Aallele && val[1] == Aallele) taxonGeno[s] = AA;
-				else if (val[0] == Callele && val[1] == Callele) taxonGeno[s] = AA;
+				else if (val[0] == Callele && val[1] == Callele) taxonGeno[s] = CC;
 				else if ((val[0] == Aallele && val[1] == Callele) || (val[0] == Callele && val[1] == Aallele)) taxonGeno[s] = AC;
 				else taxonGeno[s] = NN;
 			}
@@ -316,18 +316,19 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 			ntaxa = popTaxaList.numberOfTaxa();
 			int[] taxaIndex = new int[ntaxa];
 			for (int t = 0; t < ntaxa; t++) taxaIndex[t] = target.taxa().indexOf(popTaxaList.get(t));
-
+			
 			BitSet subpopSnpUse = popdata.subpoplationSiteIndex.get(p);
+			nsnps = target.numberOfSites();
 			for (int t = 0; t < ntaxa; t++) {
 				byte[] taxonGeno = new byte[nsnps];
-				int taxonTargetIndex = target.taxa().indexOf(popTaxaList.get(t));
+				String gstr = target.genotypeAsStringRow(t);
 				for (int s = 0; s < nsnps; s++) {
 					byte Aallele = popdata.alleleA[snpIndex[s]];
 					byte Callele = popdata.alleleC[snpIndex[s]];
-					byte[] val = GenotypeTableUtils.getDiploidValues(target.genotype(taxonTargetIndex, s));
-					if (val[0] == Aallele && val[1] == Aallele) taxonGeno[s] = AA;
-					else if (val[0] == Callele && val[1] == Callele) taxonGeno[s] = CC;
-					else if ((val[0] == Aallele && val[1] == Callele)||(val[0] == Callele && val[1] == Aallele)) taxonGeno[s] = AC;
+					byte val = target.genotype(taxaIndex[t], s);
+					if (val == Aallele) taxonGeno[s] = AA;
+					else if (val == Callele) taxonGeno[s] = CC;
+					else if (GenotypeTableUtils.isHeterozygous(val)) taxonGeno[s] = AC;
 					else taxonGeno[s] = NN;
 				}
 				builder.addTaxon(popTaxaList.get(t), taxonGeno);
@@ -1565,6 +1566,7 @@ public static void callParentAllelesByWindow(PopulationData popdata, double maxM
 					stateCount++;
 				}
 			}
+			builder.addTaxon(a.taxa().get(t), taxonGeno);
 		}
 		
 		return builder.build();
