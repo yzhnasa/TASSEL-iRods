@@ -64,6 +64,7 @@ import org.apache.log4j.Logger;
  This at least eliminates the 3Gb overhead of mutableDepthAlignment.
  *
  * @author Jeff Glaubitz
+ * @author Ed Buckler
  */
 public class ProductionSNPCallerPlugin extends AbstractPlugin {
 
@@ -78,7 +79,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private int[] chromosomes = null;
     private boolean fastq = true;
     private Map<String,Integer> keyFileColumns = new HashMap<>();
-    private Map<String,Boolean> flowcellLanes = new TreeMap<>();  // true = corresponding fastq (or qseq) file is present in input directory
+    private Map<String,Boolean> flowcellLanesInKey = new TreeMap<>();  // flowcellLanes present in key file (stored here as "Flowcell:Lane"); True if corresponding fastq (or qseq) available in input directory
+    private Set<String> flowcellLanesInKeyAndDir = new TreeSet<>();  // fastq (or qseq) file names present in input directory that have a "Flowcell:Lane" in the key file
     private Map<String,String> fullNameToFinalName = new TreeMap<>();
 //    private Map<String,ArrayList<String>> libraryPrepIDToFlowCellLanes = new TreeMap<String,ArrayList<String>>();
     private Multimap<String, String> libraryPrepIDToFlowCellLanes = TreeMultimap.create();
@@ -231,7 +233,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
 
 
     private void readRawSequencesAndRecordDepth() {
+        int nFilesProcessed = 0;
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
+            if ( !flowcellLanesInKeyAndDir.contains(myRawSeqFileNames[fileNum]) ) continue;  // skip fastq/qseq files that are not in the key file
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
             ParseBarcodeRead thePBR = setUpBarcodes(fileNum);
             if (thePBR == null || thePBR.getBarCodeCount() == 0) {
@@ -266,7 +270,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 System.out.println("Last line read: "+temp);
                 e.printStackTrace();
             }
-            reportTotals(fileNum, counters);
+            ++nFilesProcessed;
+            reportTotals(fileNum, counters, nFilesProcessed);
         }
     }
  
@@ -281,15 +286,16 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         );
     }
    
-    private void reportTotals(int fileNum, int[] counters) {
+    private void reportTotals(int fileNum, int[] counters, int nFilesProcessed) {
         System.out.println("Total number of reads in lane=" + counters[0]);
         System.out.println("Total number of good, barcoded reads=" + counters[1]);
         System.out.println("Total number of good, barcoded reads matched to the TOPM=" + counters[2]);
-        System.out.println("Finished reading " + (fileNum+1) + " of " + myRawSeqFileNames.length + " sequence files: " + myRawSeqFileNames[fileNum] + "\n");
+        System.out.println("Finished reading "+nFilesProcessed+" of "+flowcellLanesInKeyAndDir.size()+" sequence files: "+myRawSeqFileNames[fileNum]+"\n");
     }
     
     private void readKeyFile() {
-        flowcellLanes.clear();
+        flowcellLanesInKey.clear();
+        flowcellLanesInKeyAndDir.clear();
         fullNameToFinalName.clear();
         libraryPrepIDToFlowCellLanes.clear();
         libraryPrepIDToSampleName.clear();
@@ -383,7 +389,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         fullNameToFinalName.put(fullName, fullName);
 
         String flowCellLane = cells[keyFileColumns.get("Flowcell")]+":"+cells[keyFileColumns.get("Lane")];
-        flowcellLanes.put(flowCellLane, false);
+        flowcellLanesInKey.put(flowCellLane,false);  // false = no corresponding fastq or qseq file (default)
         libraryPrepIDToFlowCellLanes.put(libPrepID,flowCellLane);
 
         String prevSample = libraryPrepIDToSampleName.get(libPrepID);
@@ -404,8 +410,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         System.out.println("\nThe following raw sequence files in the input directory conform to one of our file naming conventions and have corresponding samples in the barcode key file:");
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             String[] flowcellLane = parseRawSeqFileName(myRawSeqFileNames[fileNum]);
-            if (flowcellLane != null && flowcellLanes.containsKey(flowcellLane[0]+":"+flowcellLane[1])) {
-                flowcellLanes.put(flowcellLane[0]+":"+flowcellLane[1], true);  // change from false to true
+            if (flowcellLane != null && flowcellLanesInKey.containsKey(flowcellLane[0]+":"+flowcellLane[1])) {
+                flowcellLanesInKey.put(flowcellLane[0]+":"+flowcellLane[1], true);  // true = fastq (or qseq) file is available for this flowcell:lane
+                flowcellLanesInKeyAndDir.add(myRawSeqFileNames[fileNum]);
                 System.out.println("  "+myRawSeqFileNames[fileNum]);
             }
         }
@@ -477,7 +484,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             String tempFullName="(NoCorrespondingRawSeqFileForLibPrepID):"+LibPrepID;
             int nRepSamplesWithRawSeqFile = 0;
             for (String flowcellLane : flowcellLanesForLibPrep) {
-                if (flowcellLanes.get(flowcellLane)) { // is fastq (or qseq) file available?
+                if (flowcellLanesInKey.get(flowcellLane)) { // is fastq (or qseq) file available?
                     nRepSamplesWithRawSeqFile++;
                     tempFullName = sample+":"+flowcellLane+":"+LibPrepID;
                     rawReadCountsForFullSampleName.put(tempFullName, 0);
@@ -496,7 +503,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 rawReadCountsForFinalSampleName.put(finalName, 0);
                 matchedReadCountsForFinalSampleName.put(finalName, 0);
                 for (String flowcellLane : flowcellLanesForLibPrep) {
-                    if (flowcellLanes.get(flowcellLane)) {
+                    if (flowcellLanesInKey.get(flowcellLane)) { // is fastq (or qseq) file available?
                         fullNameToFinalName.put(sample+":"+flowcellLane+":"+LibPrepID, finalName);
                     }
                 }
@@ -606,7 +613,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         if (chromosome == TOPMInterface.INT_MISSING) return;
         int startPos = topm.getStartPosition(tagIndex);
         for (int variant = 0; variant < topm.getMaxNumVariants(); variant++) {
-            byte newBase = topm.getVariantDef(tagIndex, variant); // Nb: this should return Tassel4 allele encodings
+            byte newBase = topm.getVariantDef(tagIndex, variant);
             if ((newBase == TOPMInterface.BYTE_MISSING) || (newBase == GenotypeTable.UNKNOWN_ALLELE)) continue;
             int offset = topm.getVariantPosOff(tagIndex, variant);
             int pos = startPos + offset;
