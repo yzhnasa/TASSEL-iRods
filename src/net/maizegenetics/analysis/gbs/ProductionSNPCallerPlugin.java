@@ -3,40 +3,31 @@
  */
 package net.maizegenetics.analysis.gbs;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-
 import cern.colt.list.IntArrayList;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeMultimap;
 import net.maizegenetics.dna.map.*;
+import net.maizegenetics.dna.snp.ExportUtils;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
-import net.maizegenetics.taxa.TaxaList;
-import net.maizegenetics.taxa.TaxaListBuilder;
-import net.maizegenetics.util.MultiMemberGZIPInputStream;
-import net.maizegenetics.util.ArgsEngine;
-import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.dna.snp.ExportUtils;
-
-import java.awt.Frame;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.util.*;
-import javax.swing.ImageIcon;
-
-import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.util.ArgsEngine;
+import net.maizegenetics.util.DirectoryCrawler;
+import net.maizegenetics.util.MultiMemberGZIPInputStream;
 import net.maizegenetics.util.VCFUtil;
 import org.apache.commons.math.distribution.BinomialDistributionImpl;
 import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.*;
 
 /**
  * This plugin converts all of the fastq (and/or qseq) files in the input
@@ -664,7 +655,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
         return genos;
     }
-    
+
+    @Deprecated
+    //use BasicGenotypeMergeRule
     private byte resolveGeno(int[] depths) {
         if (stacksL) {
             int nAlleles = depths.length;
@@ -690,7 +683,10 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
         return resolveHetGeno(depths);
     }
-    
+
+
+    @Deprecated
+    //use BasicGenotypeMergeRule
     private byte resolveHetGeno(int[] depths) {
         int max = 0;
         byte maxAllele = GenotypeTable.UNKNOWN_ALLELE;
@@ -791,6 +787,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         System.out.print("   ...done\n");
     }
 
+    @Deprecated
+    //use BasicGenotypeMergeRule
     static void setLikelihoodThresh(double errorRate) {   // initialize the likelihood ratio cutoffs for quantitative SNP calling
         likelihoodRatioThreshAlleleCnt = new int[maxCountAtGeno];
         System.out.println("\n\nInitializing the cutoffs for quantitative SNP calling likelihood ratio (pHet/pErr) >1\n");

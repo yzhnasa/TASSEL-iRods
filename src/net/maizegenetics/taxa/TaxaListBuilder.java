@@ -8,10 +8,7 @@ import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.util.HDF5Utils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * A builder for creating immutable {@link TaxaList} instances.
@@ -36,38 +33,45 @@ import java.util.List;
  */
 public class TaxaListBuilder {
     //TODO need to move union and intersection utils to the builder
-
     private List<Taxon> myTaxaList;
+    private HashMap<Taxon,Integer> tempLookup;
 
     public TaxaListBuilder() {
-        myTaxaList = new ArrayList<Taxon>();
+        myTaxaList = new ArrayList<>();
+        tempLookup = new HashMap<>();
     }
 
     public TaxaListBuilder add(Taxon taxon) {
+        if(tempLookup.containsKey(taxon)) throw new IllegalStateException("Taxon already exists in the list.  Duplicated taxa not allowed.");
         myTaxaList.add(taxon);
+        tempLookup.put(taxon,myTaxaList.size());
         return this;
     }
 
     public TaxaListBuilder addAll(Collection<Taxon> taxa) {
-        myTaxaList.addAll(taxa);
+        for (Taxon taxon : taxa) {
+            add(taxon);
+        }
         return this;
     }
 
     public TaxaListBuilder addAll(GenotypeTable a) {
-        myTaxaList.addAll(a.taxa());
+        for (Taxon taxon : a.taxa()) {
+            add(taxon);
+        }
         return this;
     }
 
     public TaxaListBuilder addAll(String[] taxa) {
         for (int i = 0, n = taxa.length; i < n; i++) {
-            myTaxaList.add(new Taxon.Builder(taxa[i]).build());
+            add(new Taxon.Builder(taxa[i]).build());
         }
         return this;
     }
 
     public TaxaListBuilder addAll(Taxon[] taxa) {
         for (int i = 0, n = taxa.length; i < n; i++) {
-            myTaxaList.add(new Taxon.Builder(taxa[i]).build());
+            add(new Taxon.Builder(taxa[i]).build());
         }
         return this;
     }

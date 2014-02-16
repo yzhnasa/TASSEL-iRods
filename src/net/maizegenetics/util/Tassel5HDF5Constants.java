@@ -23,6 +23,7 @@ public final class Tassel5HDF5Constants {
     public static final String GENOTYPES_MAX_NUM_ALLELES = "maxNumAlleles";
     public static final String GENOTYPES_RETAIN_RARE_ALLELES = "retainRareAlleles";
     public static final String GENOTYPES_NUM_TAXA = "numTaxa";
+    public static final String GENOTYPES_LOCKED = "locked";
     public static final String GENOTYPES_SCORE_TYPE = "scoreType";
     public static final String GENOTYPES_ALLELE_STATES = GENOTYPES_MODULE + "/AlleleStates";
     public static final String GENO_DESC= GENOTYPES_MODULE + "/_Descriptors/";
@@ -56,6 +57,9 @@ public final class Tassel5HDF5Constants {
     public static final String TAXA_MODULE = "Taxa";
     public static final String TAXA_ATTRIBUTES_PATH = TAXA_MODULE + "/";
     public static final String TAXA_NUM_TAXA = "numTaxa";
+    public static final String TAXA_LOCKED = "locked";
+
+
 
     public static final String getTaxonPath(String taxon) {
         return TAXA_MODULE + "/" + taxon;

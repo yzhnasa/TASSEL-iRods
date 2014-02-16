@@ -15,8 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author Ed Buckler
+ *
  * @author Terry Casstevens
+ * @author Ed Buckler
  */
 public final class HDF5Utils {
 
@@ -28,13 +29,13 @@ public final class HDF5Utils {
     }
 
  //TAXA Module
+     public static void createHDF5TaxaModule(IHDF5Writer h5w) {
+         h5w.createGroup(Tassel5HDF5Constants.TAXA_MODULE);
+         h5w.setBooleanAttribute(Tassel5HDF5Constants.TAXA_ATTRIBUTES_PATH,Tassel5HDF5Constants.TAXA_LOCKED,false);
+     }
 
-    public static int getHDF5GenotypeTaxaNumber(IHDF5Reader reader){
-        return reader.getIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_NUM_TAXA);
-    }
-
-    public static int getHDF5PositionNumber(IHDF5Reader reader){
-        return reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH,Tassel5HDF5Constants.POSITION_NUM_SITES);
+    public static void lockHDF5TaxaModule(IHDF5Writer h5w) {
+        h5w.setBooleanAttribute(Tassel5HDF5Constants.TAXA_ATTRIBUTES_PATH,Tassel5HDF5Constants.TAXA_LOCKED,true);
     }
 
     public static boolean doTaxonCallsExist(IHDF5Reader reader, String taxonName){
@@ -45,7 +46,12 @@ public final class HDF5Utils {
         return reader.exists(Tassel5HDF5Constants.getGenotypesCallsPath(taxon.getName()));
     }
 
+    public static boolean isTaxaLocked(IHDF5Reader reader){
+        return reader.getBooleanAttribute(Tassel5HDF5Constants.TAXA_ATTRIBUTES_PATH,Tassel5HDF5Constants.TAXA_LOCKED);
+    }
+
     public static boolean addTaxon(IHDF5Writer h5w, Taxon taxon) {
+        if(isTaxaLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         String path=Tassel5HDF5Constants.getTaxonPath(taxon.getName());
         if(h5w.exists(path)) return false;
         h5w.createGroup(path);
@@ -86,27 +92,46 @@ public final class HDF5Utils {
 
  //GENOTYPE Module
 
+    public static int getHDF5GenotypeTaxaNumber(IHDF5Reader reader){
+        return reader.getIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_NUM_TAXA);
+    }
+
     public static void createHDF5GenotypeModule(IHDF5Writer h5w) {
+        if(h5w.exists(Tassel5HDF5Constants.GENOTYPES_MODULE)) throw new UnsupportedOperationException("Genotypes module already exists in HDF5 file");
         h5w.createGroup(Tassel5HDF5Constants.GENOTYPES_MODULE);
+        h5w.setBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_LOCKED,false);
+    }
+
+    public static void lockHDF5GenotypeModule(IHDF5Writer h5w) {
+        h5w.setBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_LOCKED,true);
+    }
+
+    public static boolean isHDF5GenotypeLocked(IHDF5Reader reader){
+        return reader.getBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_LOCKED);
     }
 
     public static void writeHDF5GenotypesMaxNumAlleles(IHDF5Writer h5w, int maxNumAlleles) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         h5w.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_MAX_NUM_ALLELES, maxNumAlleles);
     }
 
     public static void writeHDF5GenotypesRetainRareAlleles(IHDF5Writer h5w, boolean retainRareAlleles) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         h5w.setBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_RETAIN_RARE_ALLELES, retainRareAlleles);
     }
 
     public static void writeHDF5GenotypesNumTaxa(IHDF5Writer h5w, int numTaxa) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         h5w.setIntAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA, numTaxa);
     }
 
     public static void writeHDF5GenotypesScoreType(IHDF5Writer h5w, String scoreType) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         h5w.setStringAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH, Tassel5HDF5Constants.GENOTYPES_MAX_NUM_ALLELES, scoreType);
     }
 
     public static void writeHDF5GenotypesAlleleStates(IHDF5Writer h5w, String[][] aEncodings) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         int numEncodings = aEncodings.length;
         int numStates = aEncodings[0].length;
         MDArray<String> alleleEncodings = new MDArray<>(String.class, new int[]{numEncodings, numStates});
@@ -120,6 +145,7 @@ public final class HDF5Utils {
     }
 
     public static void writeHDF5GenotypesCalls(IHDF5Writer h5w, String taxon, byte[] calls) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         String callsPath = Tassel5HDF5Constants.getGenotypesCallsPath(taxon);
         if(h5w.exists(callsPath)) throw new IllegalStateException("Taxa Calls Already Exists:"+calls);
         h5w.createByteArray(callsPath, calls.length, Math.min(Tassel5HDF5Constants.BLOCK_SIZE,calls.length), Tassel5HDF5Constants.intDeflation);
@@ -128,10 +154,13 @@ public final class HDF5Utils {
 
 
 //    Positions/numSites
+    public static int getHDF5PositionNumber(IHDF5Reader reader){
+        return reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH,Tassel5HDF5Constants.POSITION_NUM_SITES);
+    }
+
     public static void createHDF5PositionModule(IHDF5Writer h5w) {
         h5w.createGroup(Tassel5HDF5Constants.POSITION_MODULE);
     }
-
 
     public static void writeHDF5PositionNumSite(IHDF5Writer h5w, int numSites) {
         h5w.setIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES, numSites);
