@@ -4,22 +4,18 @@
  */
 package net.maizegenetics.analysis.gbs;
 
-import net.maizegenetics.dna.map.PETagsOnPhysicalMapV3;
-import net.maizegenetics.dna.map.TagMappingInfoV3;
-import net.maizegenetics.dna.map.TagsOnGeneticMap;
-import net.maizegenetics.dna.map.TagsOnPhysicalMapV3;
-import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.dna.BaseEncoder;
+import net.maizegenetics.dna.map.*;
+import net.maizegenetics.dna.map.TagMappingInfoV3.Aligner;
 import net.maizegenetics.dna.tag.SAMUtils;
+import net.maizegenetics.dna.tag.TagCounts;
+import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.TreeSet;
-import net.maizegenetics.dna.map.TagGeneticMappingInfo;
-import net.maizegenetics.dna.map.TagMappingInfoV3.Aligner;
-import net.maizegenetics.dna.tag.TagCounts;
 
 /**
  * Methods to annotate TOPM file, including adding mapping info from aligners, adding PE tag position and genetic position, model prediction for the best position
@@ -28,7 +24,8 @@ import net.maizegenetics.dna.tag.TagCounts;
 public class AnnotateTOPM {
     /**TOPM file that will be annotated*/
     TagsOnPhysicalMapV3 topm;
-    /**Record Sam record. When tmiBuffers[0] is full, output to TOPM block. Substitute tmiBuffers[i] with tmiBuffers[i+1]. Size = numBuffers×maxMappingNum(-K option)×TOPM CHUNK_SIZE
+    /**Record Sam record. When tmiBuffers[0] is full, output to TOPM block. Substitute tmiBuffers[i] with tmiBuffers[i+1]
+     * Size = numBuffers x maxMappingNum(-K option) x TOPM CHUNK_SIZE
      * Multiple buffers are used because the output in SAM is not exactly the order of input tag, roughly in the same order though
      */
     TagMappingInfoV3[][][] tmiBuffers = null;
@@ -233,7 +230,6 @@ public class AnnotateTOPM {
      * @param br
      * @param bestStrand
      * @param bestChr
-     * @param multimapsm
      * @param bestEvidence 
      */
     private void incorperateBestGeneticMapping (int tagIndex, Integer[] mapIndices, BufferedReader br, byte[] bestStrand, int[] bestChr, int[] bestStartPos, int[] bestEndPos, byte[] bestDivergence, byte[] bestMapP, byte[] bestDcoP, byte[] bestEvidence, byte[] bestMapIndices) {
@@ -1104,7 +1100,6 @@ public class AnnotateTOPM {
      * @param tmiBuffer
      * @param dataSetNames
      * @param chunkIndex
-     * @param mappingSource 
      */
     private void saveTMIBufferToTOPM (TagMappingInfoV3[][] tmiBuffer, String[] dataSetNames, int chunkIndex) {
         for (int i = 0; i < tmiBuffer[0].length; i++) {

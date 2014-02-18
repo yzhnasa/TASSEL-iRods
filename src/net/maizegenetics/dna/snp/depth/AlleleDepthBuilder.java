@@ -8,9 +8,9 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.Taxon;
+import net.maizegenetics.util.HDF5Utils;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
-import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -221,7 +221,8 @@ public class AlleleDepthBuilder {
                 throw new IllegalStateException("AlleleDepthBuilder: addTaxon: Number of sites: " + depths[0].length + " should be: " + myNumSites);
             }
             synchronized (myHDF5Writer) {
-                myHDF5Writer.writeByteMatrix(Tassel5HDF5Constants.getGenotypesDepthPath(taxon.getName()), depths, HDF5_FEATURES);
+                //TAS-167 Ed tried to fix this - Terry needs to check with his unit tests once they are written
+                HDF5Utils.writeHDF5GenotypesDepth(myHDF5Writer,taxon.getName(),depths);
             }
             myNumTaxa++;
         } else {

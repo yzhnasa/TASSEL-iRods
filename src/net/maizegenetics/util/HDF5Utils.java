@@ -144,13 +144,47 @@ public final class HDF5Utils {
         h5w.writeStringMDArray(Tassel5HDF5Constants.GENOTYPES_ALLELE_STATES, alleleEncodings);
     }
 
+    public static byte[] getHDF5GenotypesCalls(IHDF5Reader reader, String taxon) {
+        String callsPath = Tassel5HDF5Constants.getGenotypesCallsPath(taxon);
+        return reader.readAsByteArray(callsPath);
+    }
+
     public static void writeHDF5GenotypesCalls(IHDF5Writer h5w, String taxon, byte[] calls) {
         if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         String callsPath = Tassel5HDF5Constants.getGenotypesCallsPath(taxon);
-        if(h5w.exists(callsPath)) throw new IllegalStateException("Taxa Calls Already Exists:"+calls);
+        if(h5w.exists(callsPath)) throw new IllegalStateException("Taxa Calls Already Exists:"+taxon);
         h5w.createByteArray(callsPath, calls.length, Math.min(Tassel5HDF5Constants.BLOCK_SIZE,calls.length), Tassel5HDF5Constants.intDeflation);
         writeHDF5EntireArray(callsPath, h5w, calls.length, Tassel5HDF5Constants.BLOCK_SIZE, calls);
     }
+
+    public static void replaceHDF5GenotypesCalls(IHDF5Writer h5w, String taxon, byte[] calls) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
+        String callsPath = Tassel5HDF5Constants.getGenotypesCallsPath(taxon);
+        if(!h5w.exists(callsPath)) throw new IllegalStateException("Taxa Calls Do Not Already Exists to replace");
+        writeHDF5EntireArray(callsPath, h5w, calls.length, Tassel5HDF5Constants.BLOCK_SIZE, calls);
+    }
+
+    public static byte[][] getHDF5GenotypesDepth(IHDF5Reader reader, String taxon) {
+        String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
+        return reader.readByteMatrix(callsPath);
+    }
+
+    public static void writeHDF5GenotypesDepth(IHDF5Writer h5w, String taxon, byte[][] depth) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
+        String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
+        if(h5w.exists(callsPath)) throw new IllegalStateException("Taxa Depth Already Exists:"+taxon);
+        h5w.createByteMatrix(callsPath, depth.length, depth[0].length, 6, Math.min(Tassel5HDF5Constants.BLOCK_SIZE,depth.length), Tassel5HDF5Constants.intDeflation);
+        writeHDF5EntireArray(callsPath, h5w, depth.length, Tassel5HDF5Constants.BLOCK_SIZE, depth);
+    }
+
+    public static void replaceHDF5GenotypesDepth(IHDF5Writer h5w, String taxon, byte[][] depth) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
+        String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
+        if(!h5w.exists(callsPath)) throw new IllegalStateException("Taxa Depth Does Not Already Exists to Replace");
+        writeHDF5EntireArray(callsPath, h5w, depth.length, Tassel5HDF5Constants.BLOCK_SIZE, depth);
+    }
+
+
 
 
 //    Positions/numSites

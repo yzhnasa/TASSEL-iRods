@@ -11,6 +11,7 @@ import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
+import net.maizegenetics.dna.snp.depth.AlleleDepthUtil;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeMergeRule;
@@ -23,6 +24,7 @@ import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Builder for GenotypeTables.  New genotypeTables are built from a minimum of TaxaList, PositionList, and
@@ -55,12 +57,14 @@ public class GenotypeTableBuilder {
     private PositionList positionList=null;
     private TaxaListBuilder taxaListBuilder=null;
     private ArrayList<byte[]> incGeno=null;
+    private ArrayList<byte[][]> incDepth=null;
+    private HashMap<Taxon,Integer> incTaxonIndex=null;
 
     //Fields for incremental sites
     private TaxaList taxaList=null;
     private PositionListBuilder posListBuilder=null;
 
-    private enum BuildType{TAXA_INC, SITE_INC, GENO_EDIT};
+    private enum BuildType{TAXA_INC, SITE_INC};//, GENO_EDIT}; //GENO_EDIT is not
     private boolean isTaxaMerge=false; //if in taxa merge mode, this only works with TAXA_INC build type
     private GenotypeMergeRule mergeRule=null;
     private boolean isHDF5=false;
@@ -74,8 +78,13 @@ public class GenotypeTableBuilder {
         this.positionList=positionList;
         this.myBuildType=BuildType.TAXA_INC;
         this.mergeRule=mergeRule;
-        this.isTaxaMerge=true;
+        if(mergeRule!=null) {
+            this.isTaxaMerge=true;
+
+        }
         incGeno=new ArrayList<>();
+        incDepth=new ArrayList<>();
+        incTaxonIndex=new HashMap<>();
         taxaListBuilder=new TaxaListBuilder();
     }
 
@@ -149,23 +158,55 @@ public class GenotypeTableBuilder {
         return addTaxon(taxon, genos, null);
     }
 
-    public GenotypeTableBuilder addTaxon(Taxon taxon, byte[] genos, byte[] depth) {
+    public GenotypeTableBuilder addTaxon(Taxon taxon, byte[] genos, byte[][] depth) {
         if(myBuildType!=BuildType.TAXA_INC) throw new IllegalArgumentException("addTaxon only be used with AlignmentBuilder.getTaxaIncremental");
         if(genos.length!=positionList.numberOfSites()) throw new IndexOutOfBoundsException("Number of sites and genotypes do not agree");
         if(isHDF5) {
-            //TODO add merge functions
-            addTaxon(writer, taxon, genos, null);
-
+            if(isTaxaMerge && HDF5Utils.doTaxonCallsExist(writer,taxon)) {
+                mergeTaxonInHDF5(writer,taxon,genos,depth);
+            } else {
+                addTaxon(writer, taxon, genos, depth);
+            }
         } else {
-            //TODO add merge functions
-            taxaListBuilder.add(taxon);
-            incGeno.add(genos);
+            if(isTaxaMerge && incTaxonIndex.containsKey(taxon)) {
+                mergeTaxonInMemory(taxon,genos,depth);
+            }  else {
+                taxaListBuilder.add(taxon);
+                incGeno.add(genos);
+                incDepth.add(depth);
+                incTaxonIndex.put(taxon,incGeno.size());
+            }
         }
+
         return this;
     }
 
+    private void mergeTaxonInMemory(Taxon taxon, byte[] genos, byte[][] depth) {
+        int taxonIndex=incTaxonIndex.get(taxon);
+        byte[] combGenos=new byte[genos.length];
+        if(depth!=null) {
+            byte[][] existingDepth=incDepth.get(taxonIndex);
+            byte[][] combDepth=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][genos.length];
+            byte[] currDepths=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES];
+            for (int site=0; site<combDepth[0].length; site++) {
+                for (int allele=0; allele<combDepth.length; allele++) {
+                    currDepths[allele]=combDepth[site][allele]=AlleleDepthUtil.addByteDepths(depth[site][allele],existingDepth[site][allele]);
+                }
+                combGenos[site]=mergeRule.callBasedOnDepth(currDepths);
+            }
+            incGeno.set(taxonIndex,combGenos);
+            incDepth.set(taxonIndex,combDepth);
+        } else {
+            byte[] existingGenos=incGeno.get(taxonIndex);
+            for (int site=0; site<combGenos.length; site++) {
+                combGenos[site]=mergeRule.mergeCalls(genos[site],existingGenos[site]);
+            }
+            incGeno.set(taxonIndex,combGenos);
+        }
+    }
+
     public boolean isHDF5() {
-        return isHDF5;
+       return isHDF5;
     }
 
     /**
@@ -386,6 +427,7 @@ public class GenotypeTableBuilder {
 
         IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
         //config.overwrite();
+
         config.dontUseExtendableDataTypes();
         writer = config.writer();
         this.positionList=new PositionListBuilder(writer,positionList).build();  //create a new position list
@@ -407,16 +449,39 @@ public class GenotypeTableBuilder {
     }
 
     /**
-     * Code needed to add a Taxon to HDF5, potentially split into functions in TaxaListBuilder & GenotypeBuilder
+     * Code needed to add a Taxon to HDF5
      */
     private synchronized void addTaxon(IHDF5Writer myWriter, Taxon id, byte[] genotype, byte[][] depth) {
         boolean goodAdd=HDF5Utils.addTaxon(myWriter,id);
-        if(goodAdd==false) System.out.println("Taxa ("+id.getName()+") exists in the taxa path");
+        if(goodAdd==false) throw new IllegalStateException("Taxon ["+id.getName()+"] already exists in the HDF5 file.  Duplicated taxa not allowed.");
         HDF5Utils.writeHDF5GenotypesCalls(myWriter,id.getName(),genotype);
         if(depth!=null) {
             if(depth.length!=6) throw new IllegalStateException("Just set A, C, G, T, -, + all at once");
             if(depth[0].length!=positionList.numberOfSites()) throw new IllegalStateException("Setting all depth in addTaxon.  Wrong number of sites");
-            //           myWriter.writeByteMatrix(getTaxaDepthPath(taxonIndex), depth, HapMapHDF5Constants.intDeflation);
+            HDF5Utils.writeHDF5GenotypesDepth(myWriter,id.getName(),depth);
+        }
+    }
+
+    private synchronized void mergeTaxonInHDF5(IHDF5Writer myWriter, Taxon id, byte[] genotype, byte[][] depth) {
+        byte[] combGenos=new byte[genotype.length];
+        if(depth!=null) {
+            byte[][] existingDepth=HDF5Utils.getHDF5GenotypesDepth(myWriter,id.getName());
+            byte[][] combDepth=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][genotype.length];
+            byte[] currDepths=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES];
+            for (int site=0; site<combDepth[0].length; site++) {
+                for (int allele=0; allele<combDepth.length; allele++) {
+                    currDepths[allele]=combDepth[site][allele]=AlleleDepthUtil.addByteDepths(depth[site][allele],existingDepth[site][allele]);
+                }
+                combGenos[site]=mergeRule.callBasedOnDepth(currDepths);
+            }
+            HDF5Utils.replaceHDF5GenotypesCalls(myWriter,id.getName(),combGenos);
+            HDF5Utils.replaceHDF5GenotypesDepth(myWriter,id.getName(),combDepth);
+        } else {
+            byte[] existingGenos=HDF5Utils.getHDF5GenotypesCalls(myWriter,id.getName());
+            for (int site=0; site<combGenos.length; site++) {
+                combGenos[site]=mergeRule.mergeCalls(genotype[site],existingGenos[site]);
+            }
+            HDF5Utils.replaceHDF5GenotypesCalls(myWriter,id.getName(),combGenos);
         }
     }
 
