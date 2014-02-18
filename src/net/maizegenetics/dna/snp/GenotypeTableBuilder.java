@@ -59,6 +59,7 @@ public class GenotypeTableBuilder {
     private ArrayList<byte[]> incGeno=null;
     private ArrayList<byte[][]> incDepth=null;
     private HashMap<Taxon,Integer> incTaxonIndex=null;
+    private boolean sortAlphabetically=false;
 
     //Fields for incremental sites
     private TaxaList taxaList=null;
@@ -174,7 +175,7 @@ public class GenotypeTableBuilder {
                 taxaListBuilder.add(taxon);
                 incGeno.add(genos);
                 incDepth.add(depth);
-                incTaxonIndex.put(taxon,incGeno.size());
+                incTaxonIndex.put(taxon,incGeno.size()-1);
             }
         }
 
@@ -209,6 +210,15 @@ public class GenotypeTableBuilder {
        return isHDF5;
     }
 
+    /*
+    Set the builder so that when built it will sort the taxa
+     */
+    public GenotypeTableBuilder sortTaxa() {
+        if(myBuildType!=BuildType.TAXA_INC) throw new IllegalArgumentException("sortTaxa can only be used with AlignmentBuilder.getTaxaIncremental");
+        sortAlphabetically=true;
+        return this;
+    }
+
     /**
      * Finishes building the GenotypeTable.  For HDF5 files it locks the taxa and genotype modules so that cannot be
      * modified again.
@@ -226,10 +236,10 @@ public class GenotypeTableBuilder {
         switch (myBuildType) {
             case TAXA_INC: {
                 //TODO optional sort
-                TaxaList tl=taxaListBuilder.build();
+                TaxaList tl=(sortAlphabetically)?taxaListBuilder.sortTaxaAlphabetically().build():taxaListBuilder.build();
                 GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(tl.numberOfTaxa(),positionList.numberOfSites());
                 for (int i=0; i<incGeno.size(); i++) {
-                    gB.setBaseRangeForTaxon(i, 0, incGeno.get(i));
+                    gB.setBaseRangeForTaxon(i, 0, incGeno.get(incTaxonIndex.get(tl.get(i))));
                 }
                 return new CoreGenotypeTable(gB.build(), positionList, tl);
             }

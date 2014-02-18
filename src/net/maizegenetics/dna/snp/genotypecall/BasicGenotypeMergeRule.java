@@ -18,8 +18,8 @@ public class BasicGenotypeMergeRule implements GenotypeMergeRule {
     private final int[] likelihoodRatioThreshAlleleCnt;
 
     private void setLikelihoodThresh() {   // initialize the likelihood ratio cutoffs for quantitative SNP calling
-        System.out.println("\n\nInitializing the cutoffs for quantitative SNP calling likelihood ratio (pHet/pErr) >1\n");
-        System.out.println("totalReadsForSNPInIndiv\tminLessTaggedAlleleCountForHet");
+//        System.out.println("\n\nInitializing the cutoffs for quantitative SNP calling likelihood ratio (pHet/pErr) >1\n");
+//        System.out.println("totalReadsForSNPInIndiv\tminLessTaggedAlleleCountForHet");
         for (int trials = 0; trials < 2; ++trials) {
             likelihoodRatioThreshAlleleCnt[trials] = 1;
         }
@@ -35,7 +35,7 @@ public class BasicGenotypeMergeRule implements GenotypeMergeRule {
                     LikeRatio = binomHet.cumulativeProbability(lastThresh) / (1 - binomErr.cumulativeProbability(lastThresh) + binomErr.probability(lastThresh));
                 }
                 likelihoodRatioThreshAlleleCnt[trials] = lastThresh;
-                System.out.println(trials + "\t" + lastThresh);
+//                System.out.println(trials + "\t" + lastThresh);
             } catch (Exception e) {
                 System.err.println("Error in the TagsAtLocus.BinomialDistributionImpl");
             }
