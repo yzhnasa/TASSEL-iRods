@@ -11,6 +11,7 @@ import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.depth.AlleleDepth;
+import net.maizegenetics.dna.snp.depth.AlleleDepthBuilder;
 import net.maizegenetics.dna.snp.depth.AlleleDepthUtil;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
@@ -36,15 +37,32 @@ import java.util.HashMap;
  In many situations only GenotypeTables are built incrementally, either by Taxa or Site.
  <p></p>
  For taxa building:
- {@code
-     GenotypeTableBuilder gtb=GenotypeTableBuilder.getTaxaIncremental(gbs.positions(),outFile);
-     for (int i=0; i<hm2.numberOfTaxa(); i++) {
-         Taxon taxon=hm2.taxa().get(i);
-         byte[] geno=hm2.genotypeAllSites(i);
-         gtb.addTaxon(taxon,geno);
-         }
-     GenotypeTable gt=gtb.build();
- }
+ <pre>
+ *{@code
+ *    GenotypeTableBuilder gtb=GenotypeTableBuilder.getTaxaIncremental(gbs.positions(),outFile);
+ *    for (int i=0; i<hm2.numberOfTaxa(); i++) {
+ *        Taxon taxon=hm2.taxa().get(i);
+ *        byte[] geno=hm2.genotypeAllSites(i);
+ *        gtb.addTaxon(taxon,geno);
+ *        }
+ *    GenotypeTable gt=gtb.build();
+ *}
+ </pre>
+ <p></p>
+ In many cases, genotype want to add taxa to an existing genotypeTable.  Direct addition is not possible, as GenotypeTables
+ are immutable, but the GenotypeTableBuilder.mergeTaxaIncremental provides a strategy for creating and merging taxa together.
+ Key to the process is that GenotypeMergeRule defines how the taxa with identical names will be merged.<br></br>
+ Merging is possible with HDF5 files, but only if the closeUnfinished() method was used with the previous building.
+ <pre>{@code
+GenotypeTable existingGenotypeTable1, existingGenotypeTable2;
+GenotypeTableBuilder gtb=GenotypeTableBuilder.mergeTaxaIncremental(existingGenotypeTable1,
+    new BasicGenotypeMergeRule(0.01));
+for (int i=0; i<existingGenotypeTable2.numberOfTaxa(); i++) {
+    gtb.addTaxon(existingGenotypeTable2.taxa().get(i), existingGenotypeTable2.genotypeAllSites(i)
+        existingGenotypeTable2.depth().depthAllSitesByte(i));
+}
+ }</pre>
+
  *
  * @author Terry Casstevens
  * @author Ed Buckler
@@ -125,8 +143,13 @@ public class GenotypeTableBuilder {
     public static GenotypeTableBuilder mergeTaxaIncremental(GenotypeTable genotypeTable, GenotypeMergeRule mergeRule) {
         PositionList positionList=genotypeTable.positions();
         GenotypeTableBuilder gtb= new GenotypeTableBuilder(positionList, mergeRule);
+        boolean hasDepth=genotypeTable.hasDepth();
         for (int i=0; i<genotypeTable.numberOfTaxa(); i++) {
-            gtb.addTaxon(genotypeTable.taxa().get(i),genotypeTable.genotypeAllSites(i));
+            if(hasDepth) {
+                gtb.addTaxon(genotypeTable.taxa().get(i),genotypeTable.genotypeAllSites(i), genotypeTable.depth().depthAllSitesByte(i));
+            } else {
+                gtb.addTaxon(genotypeTable.taxa().get(i),genotypeTable.genotypeAllSites(i));
+            }
         }
         return gtb;
     }
@@ -187,11 +210,14 @@ public class GenotypeTableBuilder {
         byte[] combGenos=new byte[genos.length];
         if(depth!=null) {
             byte[][] existingDepth=incDepth.get(taxonIndex);
+//            System.out.println("ExistingDepth");
+//            System.out.println(Arrays.deepToString(existingDepth));
+//            System.out.println(Arrays.deepToString(depth));
             byte[][] combDepth=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][genos.length];
             byte[] currDepths=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES];
             for (int site=0; site<combDepth[0].length; site++) {
                 for (int allele=0; allele<combDepth.length; allele++) {
-                    currDepths[allele]=combDepth[site][allele]=AlleleDepthUtil.addByteDepths(depth[site][allele],existingDepth[site][allele]);
+                    currDepths[allele]=combDepth[allele][site]=AlleleDepthUtil.addByteDepths(depth[allele][site],existingDepth[allele][site]);
                 }
                 combGenos[site]=mergeRule.callBasedOnDepth(currDepths);
             }
@@ -235,13 +261,19 @@ public class GenotypeTableBuilder {
         }
         switch (myBuildType) {
             case TAXA_INC: {
-                //TODO optional sort
                 TaxaList tl=(sortAlphabetically)?taxaListBuilder.sortTaxaAlphabetically().build():taxaListBuilder.build();
                 GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(tl.numberOfTaxa(),positionList.numberOfSites());
+                boolean hasDepth=(incDepth.size()==tl.numberOfTaxa() && incDepth.get(0)!=null);
+                AlleleDepthBuilder adb=null;
+                if(hasDepth) {adb=AlleleDepthBuilder.getNucleotideInstance(tl.numberOfTaxa(),positionList.numberOfSites());}
                 for (int i=0; i<incGeno.size(); i++) {
                     gB.setBaseRangeForTaxon(i, 0, incGeno.get(incTaxonIndex.get(tl.get(i))));
+                    if(hasDepth) {
+                        adb.setDepth(i,incDepth.get(incTaxonIndex.get(tl.get(i))));
+                    }
                 }
-                return new CoreGenotypeTable(gB.build(), positionList, tl);
+                AlleleDepth ad=(hasDepth)?adb.build():null;
+                return new CoreGenotypeTable(gB.build(), positionList, tl,null,ad);
             }
             case SITE_INC: {
                 //TODO validate sort order, sort if needed

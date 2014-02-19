@@ -192,7 +192,7 @@ public class AlleleDepthBuilder {
         }
         for (int a = 0; a < myMaxNumAlleles; a++) {
             for (int s = 0; s < myNumSites; s++) {
-                setDepth(taxon, s, (byte) a, depths[s][a]);
+                setDepth(taxon, s, (byte) a, depths[a][s]);
             }
         }
         return this;
