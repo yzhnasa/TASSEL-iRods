@@ -518,6 +518,11 @@ public class TasselPipeline implements PluginListener {
 
                 } else if (current.equalsIgnoreCase("-diversitySlidingWin")) {
                     SequenceDiversityPlugin plugin = null;
+                    try {
+                        plugin = (SequenceDiversityPlugin) myCurrentPipe.get(myCurrentPipe.size() - 1);
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: No SequenceDiversityPlugin step defined: " + current);
+                    }
                     plugin.setSlidingWindowAnalysis(true);
                 } else if (current.equalsIgnoreCase("-diversitySlidingWinStep")) {
 
