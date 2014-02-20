@@ -297,6 +297,7 @@ public class GenotypeTableBuilder {
      */
     public void closeUnfinished(){
         if(isHDF5==false) throw new UnsupportedOperationException("Only a HDF5 GenotypeTableBuilder can be closed");
+        taxaListBuilder=null;
         writer.close();
     }
 
