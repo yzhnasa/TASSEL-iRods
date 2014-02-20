@@ -174,7 +174,7 @@ public class AlleleDepthBuilder {
      * dimension is sites.
      *
      * @param taxon Index of taxon
-     * @param depths array[sites][allele] of all values
+     * @param depths array[allele][sites] of all values
      *
      * @return builder
      */
@@ -197,10 +197,6 @@ public class AlleleDepthBuilder {
         }
         return this;
     }
-
-//    private String getTaxaDepthPath(Taxon taxon) {
-//        return HapMapHDF5Constants.DEPTH + "/" + taxon.getName();
-//    }
 
     /**
      * Add taxon and set values for all sites and alleles for that taxon. First
