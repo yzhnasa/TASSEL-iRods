@@ -49,15 +49,19 @@ final class PositionArrayList implements PositionList {
               alleles[allele.index()][i]=ap.getAllele(allele);
             }
             mySiteList.add(ap);
-            if((i==(builderList.size()-1))||!ap.getChromosome().equals(currChr)) {
-                int end=(i==builderList.size()-1)?i:i-1;
+            if(!ap.getChromosome().equals(currChr)) {
                 myChrOffPosTree.put(currChr, new ChrOffPos(currStart, i-1, null));
                 currChr=ap.getChromosome();
                 currStart=i;
             }
+            if(i==(builderList.size()-1)) {
+                myChrOffPosTree.put(currChr, new ChrOffPos(currStart, i, null));
+                currChr=null;
+            }
             pTS.put(ap.getChromosome(),ap.getPosition());
         }
         for (Chromosome chr: pTS.keySet()) {
+            System.out.println(chr.toString());
             List<Integer> p=pTS.get(chr);
             int[] intP=new int[p.size()];
             for (int i=0; i<intP.length; i++) {intP[i]=p.get(i);}
