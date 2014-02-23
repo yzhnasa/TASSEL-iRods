@@ -5,6 +5,7 @@ package net.maizegenetics.dna.snp.depth;
 
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.LinkedHashMap;
@@ -37,7 +38,7 @@ public class HDF5AlleleDepth extends AbstractAlleleDepth {
         myNumSites = reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES);
         // TODO: Some how we need to get taxa names.  Either passed
         // in as a parameter or read from the HDF5 file.
-        myTaxa = null;
+        myTaxa =new TaxaListBuilder().buildFromHDF5(reader);
     }
     
     private static long getCacheKey(int taxon, int site) {
@@ -89,7 +90,8 @@ public class HDF5AlleleDepth extends AbstractAlleleDepth {
     
     @Override
     public int[] depthForAlleles(int taxon, int site) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return AlleleDepthUtil.depthByteToInt(depthForAllelesBytes(taxon,site));
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
     
     @Override

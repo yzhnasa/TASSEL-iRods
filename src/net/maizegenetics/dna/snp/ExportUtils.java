@@ -34,7 +34,7 @@ public class ExportUtils {
     }
 
     public static String writeToMutableHDF5(GenotypeTable a, String newHDF5file) {
-        return writeToMutableHDF5(a, newHDF5file, null, false);
+        return writeToMutableHDF5(a, newHDF5file, null, true);
     }
    
    /**
@@ -50,8 +50,9 @@ public class ExportUtils {
         for (int t = 0; t < a.numberOfTaxa(); t++) {
               if((exportTaxa!=null)&&(!exportTaxa.contains(a.taxa().get(t)))) continue;  //taxon not in export list
               byte[] bases = a.genotypeAllSites(t);
-              if (keepDepth==false) aB.addTaxon(a.taxa().get(t), bases, null);
+              if (a.hasDepth()==false || keepDepth==false) aB.addTaxon(a.taxa().get(t), bases, null);
               else {
+                  aB.addTaxon(a.taxa().get(t), bases, a.depth().depthAllSitesByte(t));
                   //todo restore depth save
 //                  MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
 //                  addA.addTaxon(new Taxon(a.taxaName(t)), bases, m.depthForAlleles(t));

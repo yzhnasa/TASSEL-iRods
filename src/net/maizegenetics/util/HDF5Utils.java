@@ -106,6 +106,10 @@ public final class HDF5Utils {
         h5w.setBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_LOCKED,true);
     }
 
+    public static boolean doesGenotypeModuleExist(IHDF5Reader reader){
+        return reader.exists(Tassel5HDF5Constants.GENOTYPES_MODULE);
+    }
+
     public static boolean isHDF5GenotypeLocked(IHDF5Reader reader){
         return reader.getBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_LOCKED);
     }
