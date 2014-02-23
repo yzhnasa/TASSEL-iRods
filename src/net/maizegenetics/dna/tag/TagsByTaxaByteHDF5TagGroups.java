@@ -142,8 +142,7 @@ public class TagsByTaxaByteHDF5TagGroups extends AbstractTagsByTaxa {
             nH5.createGroup("tbttg/c" + tc);
         }
         
-        nH5.setIntAttribute("/", "taxaNum", taxaNum);
-        nH5.setIntAttribute("/", "tagCount", tagCount);
+
         nH5.createStringVariableLengthArray("tbttg/taxaNames", taxaNum);
         nH5.writeStringVariableLengthArray("tbttg/taxaNames", this.getTaxaNames());
         
