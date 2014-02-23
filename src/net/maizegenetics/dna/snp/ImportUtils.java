@@ -3,7 +3,6 @@
  */
 package net.maizegenetics.dna.snp;
 
-import net.maizegenetics.dna.snp.io.BuilderFromGenotypeHDF5;
 import net.maizegenetics.dna.snp.io.BuilderFromHapMap;
 import net.maizegenetics.dna.snp.io.BuilderFromVCF;
 import net.maizegenetics.util.ExceptionUtils;
@@ -33,7 +32,8 @@ public class ImportUtils {
     public static GenotypeTable readGuessFormat(String fileName) {
         try {
             if (fileName.endsWith(".h5")) {
-                return BuilderFromGenotypeHDF5.getBuilder(fileName).build();
+                //return BuilderFromGenotypeHDF5.getBuilder(fileName).build();
+                return GenotypeTableBuilder.getInstance(fileName);
             } else if (fileName.endsWith("hmp.txt.gz") || fileName.endsWith("hmp.txt")) {
                 return readFromHapmap(fileName, null);
             } else if (fileName.endsWith(".vcf") || fileName.endsWith(".vcf.gz")) {

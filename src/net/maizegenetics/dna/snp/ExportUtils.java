@@ -33,8 +33,12 @@ public class ExportUtils {
         // Utility Class - do not instantiate.
     }
 
-    public static String writeToMutableHDF5(GenotypeTable a, String newHDF5file) {
-        return writeToMutableHDF5(a, newHDF5file, null, true);
+    public static String writeGenotypeHDF5(GenotypeTable a, String newHDF5file) {
+        return writeGenotypeHDF5(a, newHDF5file, null, true);
+    }
+
+    public static String writeGenotypeHDF5(GenotypeTable a, String newHDF5file, boolean keepDepth) {
+        return writeGenotypeHDF5(a, newHDF5file, null, keepDepth);
     }
    
    /**
@@ -44,7 +48,7 @@ public class ExportUtils {
     * @param exportTaxa  subset of taxa (if null exports ALL taxa)
     * @return 
     */ 
-   public static String writeToMutableHDF5(GenotypeTable a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
+   public static String writeGenotypeHDF5(GenotypeTable a, String newHDF5file, TaxaList exportTaxa, boolean keepDepth) {
         GenotypeTableBuilder aB=GenotypeTableBuilder.getTaxaIncremental(a.positions(),newHDF5file);
         if((exportTaxa!=null)&&(exportTaxa.numberOfTaxa()==0)) {aB.build(); return newHDF5file;}
         for (int t = 0; t < a.numberOfTaxa(); t++) {
@@ -53,9 +57,6 @@ public class ExportUtils {
               if (a.hasDepth()==false || keepDepth==false) aB.addTaxon(a.taxa().get(t), bases, null);
               else {
                   aB.addTaxon(a.taxa().get(t), bases, a.depth().depthAllSitesByte(t));
-                  //todo restore depth save
-//                  MutableNucleotideAlignmentHDF5 m= (MutableNucleotideAlignmentHDF5) a;
-//                  addA.addTaxon(new Taxon(a.taxaName(t)), bases, m.depthForAlleles(t));
               }
         }
         aB.build();
@@ -190,10 +191,9 @@ public class ExportUtils {
      * @param filename
      * @return
      */
-    public static String writeToVCF(GenotypeTable gt, String filename) {
+    public static String writeToVCF(GenotypeTable gt, String filename, boolean keepDepth) {
         final char delimChar='\t';
-        //todo restore depth
-        boolean hasDepth=gt.hasDepth();  //in future test for this
+        boolean hasDepth=gt.hasDepth() && keepDepth;
         try {
 
             filename = Utils.addSuffixIfNeeded(filename, ".vcf", new String[]{".vcf", ".vcf.gz"});

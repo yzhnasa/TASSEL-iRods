@@ -31,13 +31,11 @@ public class HDF5AlleleDepth extends AbstractAlleleDepth {
     private final TaxaList myTaxa;
     
     HDF5AlleleDepth(IHDF5Reader reader) {
-        super(6,
-                reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES),
-                reader.getIntAttribute(Tassel5HDF5Constants.GENOTYPES_MODULE, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA));
+        super(6,reader.getIntAttribute(Tassel5HDF5Constants.GENOTYPES_MODULE, Tassel5HDF5Constants.GENOTYPES_NUM_TAXA),
+                reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES)
+                );
         myReader = reader;
         myNumSites = reader.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES);
-        // TODO: Some how we need to get taxa names.  Either passed
-        // in as a parameter or read from the HDF5 file.
         myTaxa =new TaxaListBuilder().buildFromHDF5(reader);
     }
     
@@ -73,10 +71,6 @@ public class HDF5AlleleDepth extends AbstractAlleleDepth {
         return result;
     }
     
-//    private String getTaxaDepthPath(int taxon) {
-//        return HapMapHDF5Constants.DEPTH + "/" + myTaxa.taxaName(taxon);
-//    }
-    
     private byte[][] cacheDepthBlock(int taxon, int site, long key) {
         int start = (site / MAX_CACHE_SIZE) * MAX_CACHE_SIZE;
         int realSiteCache = (myNumSites - start < MAX_CACHE_SIZE) ? myNumSites - start : MAX_CACHE_SIZE;
@@ -96,12 +90,17 @@ public class HDF5AlleleDepth extends AbstractAlleleDepth {
     
     @Override
     public int depthForAllele(int taxon, int site, int allele) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return AlleleDepthUtil.depthByteToInt(depthForAlleleByte(taxon, site, allele));
     }
     
     @Override
     public byte depthForAlleleByte(int taxon, int site, int allele) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        long key = getCacheKey(taxon, site);
+        byte[][] data = myDepthCache.get(key);
+        if (data == null) {
+            data = cacheDepthBlock(taxon, site, key);
+        }
+        return data[allele][site % MAX_CACHE_SIZE];
     }
     
 }

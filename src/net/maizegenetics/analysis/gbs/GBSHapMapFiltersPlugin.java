@@ -137,7 +137,7 @@ public class GBSHapMapFiltersPlugin extends AbstractPlugin {
             }
             else
             {
-                ExportUtils.writeToVCF(a, outfile);
+                ExportUtils.writeToVCF(a, outfile, true);
             }
             
             myLogger.info("File written after basic filtering:" + outfile);
