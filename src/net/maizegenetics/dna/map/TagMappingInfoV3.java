@@ -73,6 +73,15 @@ public class TagMappingInfoV3 {
             if (name.equalsIgnoreCase(PEEnd2.name)) return PEEnd2;
             return null;
         }
+        public static Aligner getAlignerFromValue (byte value) {
+            if (value == Bowtie2.getValue()) return Bowtie2;
+            if (value == BWA.getValue()) return BWA;
+            if (value == Blast.getValue()) return Blast;
+            if (value == BWAMEM.getValue()) return BWAMEM;
+            if (value == PEEnd1.getValue()) return PEEnd1;
+            if (value == PEEnd2.getValue()) return PEEnd2;
+            return null;
+        }
     }
 
     public TagMappingInfoV3() {   

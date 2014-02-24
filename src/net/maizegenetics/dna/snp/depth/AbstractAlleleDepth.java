@@ -59,5 +59,15 @@ public abstract class AbstractAlleleDepth implements AlleleDepth {
         }
         return result;
     }
-    
+
+    @Override
+    public byte[][] depthAllSitesByte(int taxon) {
+        byte[][] result=new byte[myNumAlleles][myNumSites];
+        for (int allele=0; allele<myNumAlleles; allele++) {
+            for (int site=0; site<myNumSites; site++) {
+                result[allele][site] += depthForAllele(taxon, site, allele);
+            }
+        }
+        return result;
+    }
 }

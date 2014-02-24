@@ -81,8 +81,8 @@ import java.util.zip.ZipOutputStream;
 public class TASSELMainFrame extends JFrame implements ActionListener {
 
     private static final Logger myLogger = Logger.getLogger(TASSELMainFrame.class);
-    public static final String version = "5.0.1";
-    public static final String versionDate = "January 16, 2014";
+    public static final String version = "5.0.2";
+    public static final String versionDate = "February 20, 2014";
     private DataTreePanel myDataTreePanel;
     private String tasselDataFile = "TasselDataFile";
     //a variable to control when the progress bar was last updated

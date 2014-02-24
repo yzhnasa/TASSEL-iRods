@@ -42,7 +42,7 @@ public class TaxaListBuilder {
     }
 
     public TaxaListBuilder add(Taxon taxon) {
-        if(tempLookup.containsKey(taxon)) throw new IllegalStateException("Taxon already exists in the list.  Duplicated taxa not allowed.");
+        if(tempLookup.containsKey(taxon)) throw new IllegalStateException("Taxon ["+taxon.getName()+"] already exists in the list.  Duplicated taxa not allowed.");
         myTaxaList.add(taxon);
         tempLookup.put(taxon,myTaxaList.size());
         return this;

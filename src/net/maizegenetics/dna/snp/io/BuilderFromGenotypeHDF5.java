@@ -6,12 +6,9 @@ import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
-import net.maizegenetics.util.HDF5Utils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -34,33 +31,33 @@ public class BuilderFromGenotypeHDF5 {
         this.infile=infile;
     }
 
-    public static BuilderFromGenotypeHDF5 getBuilder(String infile) {
-        return new BuilderFromGenotypeHDF5(infile);
-    }
-
-    //TODO provide options on caching to use, read only some sites, etc.
-    //TODO update to the newest version
-    //TODO subset??
-    public GenotypeTable build() {
-        IHDF5Reader reader=HDF5Factory.openForReading(infile);
-        if(HDF5Utils.isTASSEL4HDF5Format(reader)) {
-            reader.close();
-            throw new UnsupportedOperationException("TASSEL4 HDF5 file, please migrate to TASSEL5 using MigrateHDF5FromT4T5");
-        }
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
-        //TODO move to migration code
-//        int numTaxa =HDF5Utils.getHDF5GenotypeTaxaNumber(reader);
-//        if(numTaxa!=tL.numberOfTaxa()) {
+//    public static BuilderFromGenotypeHDF5 getBuilder(String infile) {
+//        return new BuilderFromGenotypeHDF5(infile);
+//    }
+//
+//    //TODO provide options on caching to use, read only some sites, etc.
+//    //TODO update to the newest version
+//    //TODO subset??
+//    public GenotypeTable build() {
+//        IHDF5Reader reader=HDF5Factory.openForReading(infile);
+//        if(HDF5Utils.isTASSEL4HDF5Format(reader)) {
 //            reader.close();
-//            IHDF5Writer writer=HDF5Factory.open(infile);
-//            HDF5Utils.writeHDF5GenotypesNumTaxa(writer,tL.numberOfTaxa());
-//            writer.close();
-//            reader=HDF5Factory.openForReading(infile);
+//            throw new UnsupportedOperationException("TASSEL4 HDF5 file, please migrate to TASSEL5 using MigrateHDF5FromT4T5");
 //        }
-        PositionList pL=PositionListBuilder.getInstance(reader);
-        GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
-        return GenotypeTableBuilder.getInstance(geno,pL, tL);
-    }
+//        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
+//        //TODO move to migration code
+////        int numTaxa =HDF5Utils.getHDF5GenotypeTaxaNumber(reader);
+////        if(numTaxa!=tL.numberOfTaxa()) {
+////            reader.close();
+////            IHDF5Writer writer=HDF5Factory.open(infile);
+////            HDF5Utils.writeHDF5GenotypesNumTaxa(writer,tL.numberOfTaxa());
+////            writer.close();
+////            reader=HDF5Factory.openForReading(infile);
+////        }
+//        PositionList pL=PositionListBuilder.getInstance(reader);
+//        GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
+//        return GenotypeTableBuilder.getInstance(geno,pL, tL);
+//    }
 
     /**
      * This merge multiple alignment together into one ByteNucleotideHDF5 File.

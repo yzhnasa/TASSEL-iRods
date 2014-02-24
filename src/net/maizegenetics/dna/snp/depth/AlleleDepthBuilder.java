@@ -8,9 +8,9 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.taxa.Taxon;
+import net.maizegenetics.util.HDF5Utils;
 import net.maizegenetics.util.SuperByteMatrix;
 import net.maizegenetics.util.SuperByteMatrixBuilder;
-import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,8 +69,25 @@ public class AlleleDepthBuilder {
         return new AlleleDepthBuilder(numTaxa, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
     }
 
+    /**
+     * AlleleDepthBuilder is created and depths are stored in a HDF5 file.  setDepth methods are used to set the depths.
+     * Finish the building with build()
+     * @param writer
+     * @param numSites
+     * @return
+     */
     public static AlleleDepthBuilder getHDF5NucleotideInstance(IHDF5Writer writer, int numSites) {
         return new AlleleDepthBuilder(writer, numSites, NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
+    }
+
+    /**
+     * AlleleDepth is returned for an immutable HDF5 file
+     * @param reader
+     * @return allele depths
+     */
+    public static AlleleDepth getExistingHDF5Instance(IHDF5Reader reader) {
+        //TODO is this the right name for this
+        return new HDF5AlleleDepth(reader);
     }
 
     /**
@@ -174,7 +191,7 @@ public class AlleleDepthBuilder {
      * dimension is sites.
      *
      * @param taxon Index of taxon
-     * @param depths array[sites][allele] of all values
+     * @param depths array[allele][sites] of all values
      *
      * @return builder
      */
@@ -192,15 +209,11 @@ public class AlleleDepthBuilder {
         }
         for (int a = 0; a < myMaxNumAlleles; a++) {
             for (int s = 0; s < myNumSites; s++) {
-                setDepth(taxon, s, (byte) a, depths[s][a]);
+                setDepth(taxon, s, (byte) a, depths[a][s]);
             }
         }
         return this;
     }
-
-//    private String getTaxaDepthPath(Taxon taxon) {
-//        return HapMapHDF5Constants.DEPTH + "/" + taxon.getName();
-//    }
 
     /**
      * Add taxon and set values for all sites and alleles for that taxon. First
@@ -221,7 +234,8 @@ public class AlleleDepthBuilder {
                 throw new IllegalStateException("AlleleDepthBuilder: addTaxon: Number of sites: " + depths[0].length + " should be: " + myNumSites);
             }
             synchronized (myHDF5Writer) {
-                myHDF5Writer.writeByteMatrix(Tassel5HDF5Constants.getGenotypesDepthPath(taxon.getName()), depths, HDF5_FEATURES);
+                //TAS-167 Ed tried to fix this - Terry needs to check with his unit tests once they are written
+                HDF5Utils.writeHDF5GenotypesDepth(myHDF5Writer,taxon.getName(),depths);
             }
             myNumTaxa++;
         } else {

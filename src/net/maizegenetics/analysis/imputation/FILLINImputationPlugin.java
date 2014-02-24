@@ -190,7 +190,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             mna=new ProjectionBuilder(ImportUtils.readGuessFormat(donorFile));
         } else {
             if(exportFile.contains("hmp.h5")) {
-//                ExportUtils.writeToMutableHDF5(unimpAlign, exportFile, new SimpleIdGroup(0), false);
+//                ExportUtils.writeGenotypeHDF5(unimpAlign, exportFile, new SimpleIdGroup(0), false);
 //                mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
                 mna= GenotypeTableBuilder.getTaxaIncremental(this.unimpAlign.positions(),exportFile);
             }else {

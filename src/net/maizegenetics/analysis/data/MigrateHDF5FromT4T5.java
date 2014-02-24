@@ -2,6 +2,7 @@ package net.maizegenetics.analysis.data;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
+import ch.systemsx.cisd.hdf5.HDF5ObjectType;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
@@ -69,6 +70,9 @@ public class MigrateHDF5FromT4T5 {
         reader.copy(HapMapHDF5Constants.ALLELE_FREQ_ORD, writer, Tassel5HDF5Constants.ALLELE_FREQ_ORD);
         reader.copy(HapMapHDF5Constants.TAXACOV, writer, Tassel5HDF5Constants.TAXACOV);
         reader.copy(HapMapHDF5Constants.TAXAHET, writer, Tassel5HDF5Constants.TAXAHET);
+        
+        HDF5Utils.lockHDF5GenotypeModule(writer);
+        HDF5Utils.lockHDF5TaxaModule(writer);
         reader.close();
         writer.close();
     }

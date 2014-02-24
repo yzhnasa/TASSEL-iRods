@@ -47,6 +47,8 @@ public class BuilderFromHapMap {
     private static final Pattern WHITESPACE_PATTERN=Pattern.compile("\\s");
     private static final int NUM_HAPMAP_NON_TAXA_HEADERS=11;
     private final String infile;
+    private int[] taxaRedirect;
+    private boolean sortAlphabetically=false;
 
     private BuilderFromHapMap(String infile) {
         this.infile=infile;
@@ -106,12 +108,13 @@ public class BuilderFromHapMap {
             }
             int currentSite=0;
             PositionListBuilder posBuild=new PositionListBuilder();
+            taxaList=sortTaxaListIfNeeded(taxaList);
             GenotypeCallTableBuilder gb=GenotypeCallTableBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), lines);
             for (ProcessHapMapBlock pb : pbs) {
                 posBuild.addAll(pb.getBlkPosList());
                 byte[][] bgTS=pb.getGenoTS();
                 for (int t=0; t<bgTS.length; t++) {
-                    gb.setBaseRangeForTaxon(t, currentSite, bgTS[t]);
+                    gb.setBaseRangeForTaxon(taxaRedirect[t], currentSite, bgTS[t]);
                 }
                 currentSite+=pb.getSiteNumber();
             }
@@ -126,6 +129,28 @@ public class BuilderFromHapMap {
         long totalTime=System.nanoTime()-time;
         System.out.printf("BuilderFromHapMap data timing %gs %n", totalTime/1e9);
         return result;
+    }
+
+    /*
+   Set the builder so that when built it will sort the taxa
+    */
+    public BuilderFromHapMap sortTaxa() {
+        sortAlphabetically=true;
+        return this;
+    }
+
+    private TaxaList sortTaxaListIfNeeded(TaxaList origTL) {
+        TaxaList resultTL;
+        if(sortAlphabetically){
+            resultTL=new TaxaListBuilder().addAll(origTL).sortTaxaAlphabetically().build();
+        } else {
+            resultTL=origTL;
+        }
+        taxaRedirect=new int[origTL.numberOfTaxa()];
+        for (int i=0; i<taxaRedirect.length; i++) {
+            taxaRedirect[i]=resultTL.indexOf(origTL.get(i));
+        }
+        return resultTL;
     }
 
     private static TaxaList processTaxa(String readLn, Map<String,SetMultimap<String,String>> taxaAnnotation) {
