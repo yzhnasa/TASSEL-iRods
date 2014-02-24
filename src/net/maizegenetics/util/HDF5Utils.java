@@ -37,6 +37,10 @@ public final class HDF5Utils {
     public static void lockHDF5TaxaModule(IHDF5Writer h5w) {
         h5w.setBooleanAttribute(Tassel5HDF5Constants.TAXA_ATTRIBUTES_PATH,Tassel5HDF5Constants.TAXA_LOCKED,true);
     }
+    
+    public static void unlockHDF5TaxaModule(IHDF5Writer h5w) {
+        h5w.setBooleanAttribute(Tassel5HDF5Constants.TAXA_ATTRIBUTES_PATH,Tassel5HDF5Constants.TAXA_LOCKED,false);
+    }
 
     public static boolean doTaxonCallsExist(IHDF5Reader reader, String taxonName){
         return reader.exists(Tassel5HDF5Constants.getGenotypesCallsPath(taxonName));
@@ -104,6 +108,10 @@ public final class HDF5Utils {
 
     public static void lockHDF5GenotypeModule(IHDF5Writer h5w) {
         h5w.setBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_LOCKED,true);
+    }
+    
+    public static void unlockHDF5GenotypeModule(IHDF5Writer h5w) {
+        h5w.setBooleanAttribute(Tassel5HDF5Constants.GENOTYPES_ATTRIBUTES_PATH,Tassel5HDF5Constants.GENOTYPES_LOCKED,false);
     }
 
     public static boolean isHDF5GenotypeLocked(IHDF5Reader reader){
