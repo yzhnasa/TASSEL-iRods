@@ -453,7 +453,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         myLogger.info(
                 "\n\n\nAvailable options for the FindMergeHaplotypesPlugin are as follows:\n"
                 + "-hmp   Input HapMap file (either hmp.txt.gz or hmp.h5)\n"
-                + "-o     Output file(s) must include 's+.' plus will be replace by segment (0..(~sites/hapSize)\n"
+                + "-o     Output file(s) must include '.gX.' plus will be replace by segment (0..(~sites/hapSize)\n"
                 + "-oE  Optional file to record site by sites errors as the haplotypes are developed\n"
                 + "-sC    Start chromosome\n"
                 + "-eC    End chromosome\n"
