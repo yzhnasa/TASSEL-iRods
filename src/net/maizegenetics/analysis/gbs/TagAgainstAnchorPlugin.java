@@ -1,7 +1,5 @@
 package net.maizegenetics.analysis.gbs;
 
-import net.maizegenetics.dna.tag.TagCountMutable;
-import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.util.ArgsEngine;
@@ -14,12 +12,11 @@ import java.awt.*;
 import java.io.*;
 
 /** 
- * Derives a tagCount list for each qseq file in the qseqDirectory.
- *
- * Keeps only good reads having a barcode and a cut site and no N's in the
- * useful part of the sequence.  Trims off the barcodes and truncates sequences
- * that (1) have a second cut site, or (2) read into the common adapter.
- * 
+ * Genetic mapping of GBS tags.
+ * Steps:
+ * 1. Using -pc and -t option to calculate the number of TBT chunks.
+ * 2. When -pc is 0, run the program on cluster. Submit jobs to nodes by specifying chunkStartIndex and chunkEndIndex
+ * @author Fei Lu
  */
 public class TagAgainstAnchorPlugin extends AbstractPlugin {
 

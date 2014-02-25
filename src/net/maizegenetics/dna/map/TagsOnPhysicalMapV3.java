@@ -170,11 +170,11 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         this.mappingNum = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING);
         //this.ifHasGM = myHDF5.getBooleanAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.IFHASGM);
         //this.ifHasGMGW = myHDF5.getBooleanAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.IFHASGMGW);
-        if (myHDF5.exists(GBSHDF5Constants.MAPBASE)) {
+        if (myHDF5.exists(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(0))) {
             this.renameMapNames();
             this.getMappingInfo(0, 0);
         }
-        if (myHDF5.exists(GBSHDF5Constants.GENETICMAMMPING)) {
+        if (myHDF5.exists(GBSHDF5Constants.GENETICMAMMPING+this.getThreeFigureString(0))) {
             this.renameGeneticMapNames();
             this.getGeneticMappingInfo(0, 0);
         }

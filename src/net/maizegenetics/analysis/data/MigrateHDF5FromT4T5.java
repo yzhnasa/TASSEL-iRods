@@ -24,6 +24,9 @@ public class MigrateHDF5FromT4T5 {
         IHDF5Writer writer=HDF5Factory.open(newT5File);
 
         writer.createGroup(Tassel5HDF5Constants.GENOTYPES_MODULE);
+        HDF5Utils.unlockHDF5GenotypeModule(writer);
+        writer.createGroup(Tassel5HDF5Constants.TAXA_MODULE);
+        HDF5Utils.unlockHDF5TaxaModule(writer);
         int numTaxa = 0;
         HDF5Utils.writeHDF5GenotypesAlleleStates(writer,NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES);
         HDF5Utils.writeHDF5GenotypesMaxNumAlleles(writer,NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES);
