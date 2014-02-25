@@ -550,12 +550,13 @@ public class GenotypeTableBuilder {
     }
 
     /**
-     * Annotates the HDF5 HapMap file after it is built.
+     * Annotates the HDF5 Genotype file with allele frequency information.  Can only be called on unlocked HDF5 files.
      * Currently, placed in the GenotypeTableBuilder as it still above genotypes, taxa, and sites.
      * @param writer
      */
-    private void annotateHDF5File(IHDF5Writer writer) {
+    public static void annotateHDF5File(IHDF5Writer writer) {
        // int hdf5GenoBlock=writer.getIntAttribute(Tassel5HDF5Constants.DEFAULT_ATTRIBUTES_PATH, Tassel5HDF5Constants.BLOCK_SIZE);
+        if(HDF5Utils.isHDF5GenotypeLocked(writer)) throw new UnsupportedOperationException("This is a locked HDF5 file");
         int hdf5GenoBlock=Tassel5HDF5Constants.BLOCK_SIZE;
         int sites=writer.getIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES);
         TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(writer);
