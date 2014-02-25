@@ -43,6 +43,7 @@ public class ExportPlugin extends AbstractPlugin {
     private FileLoadPlugin.TasselFileType myFileType = FileLoadPlugin.TasselFileType.Hapmap;
     private String mySaveFile = null;
     private boolean myIsDiploid = false;
+    private boolean myKeepDepth = true;
 
     /**
      * Creates a new instance of ExportPlugin
@@ -200,6 +201,7 @@ public class ExportPlugin extends AbstractPlugin {
                 return null;
             }
             myFileType = theDialog.getTasselFileType();
+            myKeepDepth = theDialog.keepDepth();
 
             theDialog.dispose();
 
@@ -288,9 +290,9 @@ public class ExportPlugin extends AbstractPlugin {
         } else if (myFileType == FileLoadPlugin.TasselFileType.Serial) {
             resultFile = ExportUtils.writeAlignmentToSerialGZ(inputAlignment, mySaveFile);
         } else if (myFileType == FileLoadPlugin.TasselFileType.HDF5) {
-            resultFile = ExportUtils.writeToMutableHDF5(inputAlignment, mySaveFile);
+            resultFile = ExportUtils.writeGenotypeHDF5(inputAlignment, mySaveFile, myKeepDepth);
         } else if (myFileType == FileLoadPlugin.TasselFileType.VCF) {
-            resultFile = ExportUtils.writeToVCF(inputAlignment, mySaveFile);
+            resultFile = ExportUtils.writeToVCF(inputAlignment, mySaveFile, myKeepDepth);
         } else {
             throw new IllegalStateException("ExportPlugin: performFunction: Unknown Alignment File Format: " + myFileType);
         }
@@ -436,6 +438,8 @@ public class ExportPlugin extends AbstractPlugin {
         private JRadioButton myPhylipInterRadioButton = new JRadioButton("Write Phylip (Interleaved)");
         private JRadioButton myTabTableRadioButton = new JRadioButton("Write Tab Delimited");
 
+        private JCheckBox myKeepDepthCheck = new JCheckBox("Keep Depth (VCF or HDF5)",true);
+
         public ExportPluginDialog() {
             super((Frame) null, "Export...", true);
             try {
@@ -452,21 +456,13 @@ public class ExportPlugin extends AbstractPlugin {
             setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
             setUndecorated(false);
             getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-
-
             Container contentPane = getContentPane();
-
             BoxLayout layout = new BoxLayout(contentPane, BoxLayout.Y_AXIS);
             contentPane.setLayout(layout);
-
             JPanel main = getMain();
-
             contentPane.add(main);
-
             pack();
-
             setResizable(false);
-
             myButtonGroup.add(myHapMapRadioButton);
             myButtonGroup.add(myByteHDF5RadioButton);
             myButtonGroup.add(myVCFRadioButton);
@@ -479,47 +475,34 @@ public class ExportPlugin extends AbstractPlugin {
         }
 
         private JPanel getMain() {
-
-            JPanel inputs = new JPanel();
-            BoxLayout layout = new BoxLayout(inputs, BoxLayout.Y_AXIS);
+            JPanel inputs=new JPanel();
+            BoxLayout layout=new BoxLayout(inputs, BoxLayout.Y_AXIS);
             inputs.setLayout(layout);
             inputs.setAlignmentX(JPanel.CENTER_ALIGNMENT);
-
             inputs.add(Box.createRigidArea(new Dimension(1, 10)));
-
             inputs.add(getLabel());
-
             inputs.add(Box.createRigidArea(new Dimension(1, 10)));
-
+            inputs.add(getFileTypePanel());
+            inputs.add(Box.createRigidArea(new Dimension(1, 10)));
             inputs.add(getOptionPanel());
-
-            inputs.add(Box.createRigidArea(new Dimension(1, 10)));
-
+            inputs.add(Box.createRigidArea(new Dimension(1, 5)));
             inputs.add(getButtons());
-
             inputs.add(Box.createRigidArea(new Dimension(1, 10)));
-
             return inputs;
-
         }
 
         private JPanel getLabel() {
-
             JPanel result = new JPanel();
             BoxLayout layout = new BoxLayout(result, BoxLayout.Y_AXIS);
             result.setLayout(layout);
             result.setAlignmentX(JPanel.CENTER_ALIGNMENT);
-
             JLabel jLabel1 = new JLabel("Choose File Type to Export.");
             jLabel1.setFont(new Font("Dialog", Font.BOLD, 18));
             result.add(jLabel1);
-
             return result;
-
         }
 
-        private JPanel getOptionPanel() {
-
+        private JPanel getFileTypePanel() {
             JPanel result = new JPanel();
             BoxLayout layout = new BoxLayout(result, BoxLayout.Y_AXIS);
             result.setLayout(layout);
@@ -535,6 +518,19 @@ public class ExportPlugin extends AbstractPlugin {
             result.add(myTabTableRadioButton);
 
             result.add(Box.createRigidArea(new Dimension(1, 20)));
+
+            return result;
+
+        }
+
+        private JPanel getOptionPanel() {
+            JPanel result = new JPanel();
+            BoxLayout layout = new BoxLayout(result, BoxLayout.Y_AXIS);
+            result.setLayout(layout);
+            result.setAlignmentX(JPanel.CENTER_ALIGNMENT);
+            result.setBorder(BorderFactory.createEtchedBorder());
+            result.add(myKeepDepthCheck);
+            result.add(Box.createRigidArea(new Dimension(1, 10)));
 
             return result;
 
@@ -592,6 +588,10 @@ public class ExportPlugin extends AbstractPlugin {
                 return FileLoadPlugin.TasselFileType.Table;
             }
             return null;
+        }
+
+        public boolean keepDepth() {
+            return myKeepDepthCheck.isSelected();
         }
 
         private void okButton_actionPerformed(ActionEvent e) {

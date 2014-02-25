@@ -1,19 +1,16 @@
 package net.maizegenetics.util;
 
+import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Table;
+import org.apache.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-
-import net.maizegenetics.util.DoubleFormat;
-import net.maizegenetics.util.ExceptionUtils;
-import net.maizegenetics.util.Utils;
-
-import org.apache.log4j.Logger;
 
 /**
  * @author terry
@@ -23,11 +20,9 @@ public class TableReportUtils {
     private static final Logger myLogger = Logger.getLogger(TableReportUtils.class);
 
     public static void saveDelimitedTableReport(TableReport theTableSource, String delimit, File saveFile) {
-
         if (saveFile == null) {
             return;
         }
-
         BufferedWriter bw = null;
         try {
 
@@ -73,7 +68,6 @@ public class TableReportUtils {
     }
 
     public static TableReport readDelimitedTableReport(String saveFile, String delimit) {
-
         myLogger.info("readDelimitedTableReport: Reading: " + saveFile);
         int numLines = Utils.getNumberLines(saveFile) - 1;
         myLogger.info("readDelimitedTableReport: Num Lines (Not including header): " + numLines);
@@ -134,5 +128,17 @@ public class TableReportUtils {
                 myData[myLineNum++] = myPattern.split(myLines[i]);
             }
         }
+    }
+
+    public static Table<Integer,String,Object> convertTableReportToGuavaTable(TableReport tr) {
+        ImmutableTable.Builder<Integer,String,Object> result=new ImmutableTable.Builder<>();
+        String[] colNames=new String[tr.getColumnCount()];
+        for (int i=0; i<colNames.length; i++) {colNames[i]=tr.getTableColumnNames()[i].toString();}
+        for (int i=0; i<tr.getRowCount(); i++) {
+            for (int j=0; j<tr.getColumnCount(); j++) {
+                result.put(i,colNames[j],tr.getValueAt(i,j));
+            }
+        }
+        return result.build();
     }
 }

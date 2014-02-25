@@ -50,12 +50,12 @@ import java.util.HashMap;
  </pre>
  <p></p>
  In many cases, genotype want to add taxa to an existing genotypeTable.  Direct addition is not possible, as GenotypeTables
- are immutable, but the GenotypeTableBuilder.mergeTaxaIncremental provides a strategy for creating and merging taxa together.
+ are immutable, but the GenotypeTableBuilder.getTaxaIncremental provides a strategy for creating and merging taxa together.
  Key to the process is that GenotypeMergeRule defines how the taxa with identical names will be merged.<br></br>
  Merging is possible with HDF5 files, but only if the closeUnfinished() method was used with the previous building.
  <pre>{@code
 GenotypeTable existingGenotypeTable1, existingGenotypeTable2;
-GenotypeTableBuilder gtb=GenotypeTableBuilder.mergeTaxaIncremental(existingGenotypeTable1,
+GenotypeTableBuilder gtb=GenotypeTableBuilder.getTaxaIncremental(existingGenotypeTable1,
     new BasicGenotypeMergeRule(0.01));
 for (int i=0; i<existingGenotypeTable2.numberOfTaxa(); i++) {
     gtb.addTaxon(existingGenotypeTable2.taxa().get(i), existingGenotypeTable2.genotypeAllSites(i)
@@ -82,14 +82,11 @@ public class GenotypeTableBuilder {
     //Fields for incremental sites
     private TaxaList taxaList=null;
     private PositionListBuilder posListBuilder=null;
-
-    private enum BuildType{TAXA_INC, SITE_INC};//, GENO_EDIT}; //GENO_EDIT is not
-    private boolean isTaxaMerge=false; //if in taxa merge mode, this only works with TAXA_INC build type
+    private boolean isTaxaMerge=false; //if in taxa merge mode, this only works with TAXA_INC build type;//, GENO_EDIT}; //GENO_EDIT is not
     private GenotypeMergeRule mergeRule=null;
     private boolean isHDF5=false;
     private IHDF5Writer writer=null;
     private BuildType myBuildType;
-
     /*
     Builder for in memory taxa incremental
      */
@@ -117,30 +114,66 @@ public class GenotypeTableBuilder {
         posListBuilder=new PositionListBuilder();
     }
 
+    /**
+     * Creates a new HDF5 file if positionList is not null.  Opens an existing HDF5 File if positionList is null.
+     * Merging is allowed depending on whether a mergeRule is included
+     * that can used with TaxaIncremental addition.
+     * @param hdf5File
+     * @param positionList
+     */
+    private GenotypeTableBuilder(String hdf5File, PositionList positionList, GenotypeMergeRule mergeRule) {
+        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+        config.dontUseExtendableDataTypes();
+        writer = config.writer();
+        if(HDF5Utils.doesGenotypeModuleExist(writer) && HDF5Utils.isHDF5GenotypeLocked(writer)) {
+            writer.close();
+            throw new UnsupportedOperationException("This file is locked for genotypic additions");
+        }
+        if(positionList!=null) {
+            this.positionList=new PositionListBuilder(writer,positionList).build();  //create a new position list
+            setupGenotypeTaxaInHDF5(writer);
+        } else {
+            this.positionList=PositionListBuilder.getInstance(writer);
+
+        }
+        this.mergeRule=mergeRule;
+        if(mergeRule!=null) {
+            this.isTaxaMerge=true;
+        }
+        this.myBuildType=BuildType.TAXA_INC;
+        isHDF5=true;
+        //taxaListBuilder=new TaxaListBuilder();
+    }
+
+    /**
+     * Creates an in memory builder for addition by taxon.  Each taxon can only be added once,
+     * i.e. merging is not possible
+     * @param positionList The positions used for the builder
+     * @return
+     */
     public static GenotypeTableBuilder getTaxaIncremental(PositionList positionList) {
         return new GenotypeTableBuilder(positionList,(GenotypeMergeRule)null);
     }
 
     /**
-     * Create a taxa incremental HDF5 GenotypeTableBuilder
-     * @param positionList the defined list of positions
-     * @param newHDF5File  hdf5 file to be created
-     * @return the builder to add taxa to
-     */
-    public static GenotypeTableBuilder getTaxaIncremental(PositionList positionList, String newHDF5File) {
-        return new GenotypeTableBuilder(positionList,newHDF5File, null);
-    }
-
-
-    /**
-     * Merges taxa to with the Genotypes in a existing GenotypeTable.  The position list and initial taxa list is
-     * derived from the positions, taxa, and genotypes already in the GenotypeTable.  The initial GenotypeTable is
-     * not changed as it is immutable.
-     * @param genotypeTable
-     * @param mergeRule
+     * Creates an in memory builder for addition by taxon, which permits the merging of taxa.
+     * @param positionList The positions used for the builder
+     * @param mergeRule rules for merging identically named taxa
      * @return
      */
-    public static GenotypeTableBuilder mergeTaxaIncremental(GenotypeTable genotypeTable, GenotypeMergeRule mergeRule) {
+    public static GenotypeTableBuilder getTaxaIncremental(PositionList positionList, GenotypeMergeRule mergeRule) {
+        return new GenotypeTableBuilder(positionList,(GenotypeMergeRule)null);
+    }
+
+    /**
+     * Creates a builder initialized with the Genotypes in a existing GenotypeTable.  The position list and initial taxa list is
+     * derived from the positions, taxa, and genotypes already in the GenotypeTable.  The initial GenotypeTable is
+     * not changed as it is immutable.
+     * @param genotypeTable input genotype table
+     * @param mergeRule rules for merging identically named taxa
+     * @return
+     */
+    public static GenotypeTableBuilder getTaxaIncremental(GenotypeTable genotypeTable, GenotypeMergeRule mergeRule) {
         PositionList positionList=genotypeTable.positions();
         GenotypeTableBuilder gtb= new GenotypeTableBuilder(positionList, mergeRule);
         boolean hasDepth=genotypeTable.hasDepth();
@@ -155,6 +188,16 @@ public class GenotypeTableBuilder {
     }
 
     /**
+     * Create a new taxa incremental HDF5 GenotypeTableBuilder
+     * @param positionList the defined list of positions
+     * @param newHDF5File  hdf5 file to be created
+     * @return the builder to add taxa to
+     */
+    public static GenotypeTableBuilder getTaxaIncremental(PositionList positionList, String newHDF5File) {
+        return new GenotypeTableBuilder(newHDF5File, positionList, null);
+    }
+
+    /**
      * Merges taxa to an existing HDF5 file.  The position list is derived from the positions already in the
      * existing HDF5 file.
      * @param existingHDFFile
@@ -162,12 +205,167 @@ public class GenotypeTableBuilder {
      * @return
      */
     public static GenotypeTableBuilder mergeTaxaIncremental(String existingHDFFile, GenotypeMergeRule mergeRule) {
-        PositionList positionList=PositionListBuilder.getInstance(existingHDFFile);
-        return new GenotypeTableBuilder(positionList,existingHDFFile,mergeRule);
+        return new GenotypeTableBuilder(existingHDFFile, null, mergeRule);
     }
+
+
+
 
     public static GenotypeTableBuilder getSiteIncremental(TaxaList taxaList) {
         return new GenotypeTableBuilder(taxaList);
+    }
+
+    public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
+        if (genotype.numberOfSites() != positionList.numberOfSites()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
+        }
+        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
+        }
+        return new CoreGenotypeTable(genotype, positionList, taxaList, siteScore, alleleDepth);
+    }
+
+    /**
+     * Standard approach for creating a new Alignment
+     * @param genotype
+     * @param positionList
+     * @param taxaList
+     * @return new alignment
+     */
+    public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
+        if (genotype.numberOfSites() != positionList.numberOfSites()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
+        }
+        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
+        }
+        return new CoreGenotypeTable(genotype, positionList, taxaList);
+    }
+
+    /**
+     * Creates a new HDF5 file alignment based on existing Genotype, PositionList, and TaxaList.
+     * @param genotype
+     * @param positionList
+     * @param taxaList
+     * @param hdf5File name of the file
+     * @return alignment backed by new HDF5 file
+     */
+    public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
+        if (genotype.numberOfSites() != positionList.numberOfSites()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
+        }
+        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
+            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
+        }
+        GenotypeTableBuilder aB=GenotypeTableBuilder.getTaxaIncremental(positionList,hdf5File);
+        for (int i=0; i<taxaList.numberOfTaxa(); i++) {
+            aB.addTaxon(taxaList.get(i),genotype.genotypeAllSites(i));
+        }
+        return aB.build();
+    }
+
+    /**
+     * Creates a new HDF5 file alignment based on an existing alignment.
+     * @param a existing alignment
+     * @param hdf5File name of the file
+     * @return alignment backed by new HDF5 file
+     */
+    public static GenotypeTable getInstance(GenotypeTable a, String hdf5File) {
+        return getInstance(a.genotypeMatrix(), a.positions(), a.taxa(), hdf5File);
+    }
+
+    public static GenotypeTable getInstance(String hdf5File) {
+        IHDF5Reader reader=HDF5Factory.openForReading(hdf5File);
+        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
+        PositionList pL=PositionListBuilder.getInstance(reader);
+        GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
+        AlleleDepth depth=AlleleDepthBuilder.getExistingHDF5Instance(reader);
+        return GenotypeTableBuilder.getInstance(geno, pL, tL,null,depth);
+    }
+
+    public static GenotypeTable getInstanceOnlyMajorMinor(GenotypeTable alignment) {
+        int numTaxa = alignment.numberOfTaxa();
+        int numSites = alignment.numberOfSites();
+        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
+        byte[] majorAllele = new byte[64];
+        byte[] minorAllele = new byte[64];
+        for (int bigS = 0; bigS < numSites; bigS += 64) {
+            int blockSize = Math.min(64, numSites - bigS);
+
+            for (int s = 0; s < blockSize; s++) {
+                majorAllele[s] = alignment.majorAllele(s + bigS);
+                minorAllele[s] = alignment.minorAllele(s + bigS);
+            }
+
+            for (int t = 0; t < numTaxa; t++) {
+                for (int s = 0; s < blockSize; s++) {
+                    byte[] currentAlleles = alignment.genotypeArray(t, s + bigS);
+                    if ((currentAlleles[0] != majorAllele[s]) && (currentAlleles[0] != minorAllele[s])) {
+                        currentAlleles[0] = GenotypeTable.UNKNOWN_ALLELE;
+                    }
+                    if ((currentAlleles[1] != majorAllele[s]) && (currentAlleles[1] != minorAllele[s])) {
+                        currentAlleles[1] = GenotypeTable.UNKNOWN_ALLELE;
+                    }
+                    builder.setBase(t, s, GenotypeTableUtils.getDiploidValue(currentAlleles[0], currentAlleles[1]));
+                }
+            }
+        }
+        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
+    }
+
+    public static GenotypeTable getHomozygousInstance(GenotypeTable alignment) {
+        int numTaxa = alignment.numberOfTaxa();
+        int numSites = alignment.numberOfSites();
+        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
+        //TODO this would be even faster to work through the SuperByteMatrix, as knowledge of site or taxa is not needed.
+        for (int t = 0; t < numTaxa; t++) {
+            for (int s = 0; s < numSites; s++) {
+                byte currGeno=alignment.genotype(t, s);
+                if(GenotypeTableUtils.isHeterozygous(currGeno)) {
+                    builder.setBase(t, s, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
+                } else {
+                    builder.setBase(t, s, currGeno);
+                }
+            }
+
+        }
+        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
+    }
+
+    /**
+     * Returns a taxa optimized version of a filtered alignment.  Only needed in performance critical situations
+     * like imputation.
+     * @param alignment
+     * @return alignment backed by a single SuperByteMatrix
+     */
+    public static GenotypeTable getGenotypeCopyInstance(FilterGenotypeTable alignment) {
+        return copyGenotypeInstance(alignment);
+    }
+
+    /**
+     * Returns a taxa optimized version of a combine alignment.  Only needed in performance critical situations
+     * like imputation.
+     * @param alignment
+     * @return alignment backed by a single SuperByteMatrix
+     */
+    public static GenotypeTable getGenotypeCopyInstance(CombineGenotypeTable alignment) {
+        return copyGenotypeInstance(alignment);
+    }
+
+    /**
+     * This is private as the method used by combine and filter alignment, as other data structures
+     * are immutable and optimized that is unneeded except for these alignment types.
+     * @param alignment
+     * @return alignment backed by a single SuperByteMatrix
+     */
+    private static GenotypeTable copyGenotypeInstance(GenotypeTable alignment) {
+        int numTaxa = alignment.numberOfTaxa();
+        int numSites = alignment.numberOfSites();
+        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
+        for (int t = 0; t < numTaxa; t++) {
+            for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.genotype(t, s));}
+        }
+        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
     }
 
     public GenotypeTableBuilder addSite(Position pos, byte[] genos) {
@@ -301,186 +499,9 @@ public class GenotypeTableBuilder {
         writer.close();
     }
 
-
-
-    public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
-        if (genotype.numberOfSites() != positionList.numberOfSites()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
-        }
-        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
-        }
-        return new CoreGenotypeTable(genotype, positionList, taxaList, siteScore, alleleDepth);
-    }
-
-    /**
-     * Standard approach for creating a new Alignment
-     * @param genotype
-     * @param positionList
-     * @param taxaList
-     * @return new alignment
-     */
-    public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList) {
-        if (genotype.numberOfSites() != positionList.numberOfSites()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
-        }
-        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
-        }
-        return new CoreGenotypeTable(genotype, positionList, taxaList);
-    }
-
-    /**
-     * Creates a new HDF5 file alignment based on existing Genotype, PositionList, and TaxaList.
-     * @param genotype
-     * @param positionList
-     * @param taxaList
-     * @param hdf5File name of the file
-     * @return alignment backed by new HDF5 file
-     */
-    public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, String hdf5File) {
-        if (genotype.numberOfSites() != positionList.numberOfSites()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of sites in genotype: " + genotype.numberOfSites() + " doesn't equal number of sites in position list: " + positionList.numberOfSites());
-        }
-        if (genotype.numberOfTaxa() != taxaList.numberOfTaxa()) {
-            throw new IllegalArgumentException("GenotypeTableBuilder: getInstance: number of taxa in genotype: " + genotype.numberOfTaxa() + " doesn't equal number of taxa in taaxa list: " + taxaList.numberOfTaxa());
-        }
-        GenotypeTableBuilder aB=GenotypeTableBuilder.getTaxaIncremental(positionList,hdf5File);
-        for (int i=0; i<taxaList.numberOfTaxa(); i++) {
-            aB.addTaxon(taxaList.get(i),genotype.genotypeAllSites(i));
-        }
-        return aB.build();
-    }
-
-    /**
-     * Creates a new HDF5 file alignment based on an existing alignment.
-     * @param a existing alignment
-     * @param hdf5File name of the file
-     * @return alignment backed by new HDF5 file
-     */
-    public static GenotypeTable getInstance(GenotypeTable a, String hdf5File) {
-        return getInstance(a.genotypeMatrix(),a.positions(),a.taxa(),hdf5File);
-    }
-
-    public static GenotypeTable getInstance(String hdf5File) {
-        IHDF5Reader reader=HDF5Factory.openForReading(hdf5File);
-        TaxaList tL=new TaxaListBuilder().buildFromHDF5Genotypes(reader);
-        PositionList pL=PositionListBuilder.getInstance(reader);
-        GenotypeCallTable geno=GenotypeCallTableBuilder.buildHDF5(reader);
-        return GenotypeTableBuilder.getInstance(geno, pL, tL);
-    }
-
-    public static GenotypeTable getInstanceOnlyMajorMinor(GenotypeTable alignment) {
-        int numTaxa = alignment.numberOfTaxa();
-        int numSites = alignment.numberOfSites();
-        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
-        byte[] majorAllele = new byte[64];
-        byte[] minorAllele = new byte[64];
-        for (int bigS = 0; bigS < numSites; bigS += 64) {
-            int blockSize = Math.min(64, numSites - bigS);
-
-            for (int s = 0; s < blockSize; s++) {
-                majorAllele[s] = alignment.majorAllele(s + bigS);
-                minorAllele[s] = alignment.minorAllele(s + bigS);
-            }
-
-            for (int t = 0; t < numTaxa; t++) {
-                for (int s = 0; s < blockSize; s++) {
-                    byte[] currentAlleles = alignment.genotypeArray(t, s + bigS);
-                    if ((currentAlleles[0] != majorAllele[s]) && (currentAlleles[0] != minorAllele[s])) {
-                        currentAlleles[0] = GenotypeTable.UNKNOWN_ALLELE;
-                    }
-                    if ((currentAlleles[1] != majorAllele[s]) && (currentAlleles[1] != minorAllele[s])) {
-                        currentAlleles[1] = GenotypeTable.UNKNOWN_ALLELE;
-                    }
-                    builder.setBase(t, s, GenotypeTableUtils.getDiploidValue(currentAlleles[0], currentAlleles[1]));
-                }
-            }
-        }
-        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
-    }
-
-    public static GenotypeTable getHomozygousInstance(GenotypeTable alignment) {
-        int numTaxa = alignment.numberOfTaxa();
-        int numSites = alignment.numberOfSites();
-        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
-        //TODO this would be even faster to work through the SuperByteMatrix, as knowledge of site or taxa is not needed.
-        for (int t = 0; t < numTaxa; t++) {
-            for (int s = 0; s < numSites; s++) {
-                byte currGeno=alignment.genotype(t, s);
-                if(GenotypeTableUtils.isHeterozygous(currGeno)) {
-                    builder.setBase(t, s, GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
-                } else {
-                    builder.setBase(t, s, currGeno);
-                }
-            }
-
-        }
-        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
-    }
-
-    /**
-     * Returns a taxa optimized version of a filtered alignment.  Only needed in performance critical situations
-     * like imputation.
-     * @param alignment
-     * @return alignment backed by a single SuperByteMatrix
-     */
-    public static GenotypeTable getGenotypeCopyInstance(FilterGenotypeTable alignment) {
-        return copyGenotypeInstance(alignment);
-    }
-
-    /**
-     * Returns a taxa optimized version of a combine alignment.  Only needed in performance critical situations
-     * like imputation.
-     * @param alignment
-     * @return alignment backed by a single SuperByteMatrix
-     */
-    public static GenotypeTable getGenotypeCopyInstance(CombineGenotypeTable alignment) {
-        return copyGenotypeInstance(alignment);
-    }
-
-    /**
-     * This is private as the method used by combine and filter alignment, as other data structures
-     * are immutable and optimized that is unneeded except for these alignment types.
-     * @param alignment
-     * @return alignment backed by a single SuperByteMatrix
-     */
-    private static GenotypeTable copyGenotypeInstance(GenotypeTable alignment) {
-        int numTaxa = alignment.numberOfTaxa();
-        int numSites = alignment.numberOfSites();
-        GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites);
-        for (int t = 0; t < numTaxa; t++) {
-            for (int s = 0; s < numSites; s++) { builder.setBase(t, s, alignment.genotype(t, s));}
-        }
-        return new CoreGenotypeTable(builder.build(), alignment.positions(), alignment.taxa());
-    }
-
     /*
     HDF5 Alignment section.
      */
-
-    /**
-     * Creates a new HDF5 file that can used with TaxaIncremental addition.
-     * @param positionList
-     * @param hdf5File
-     */
-    private GenotypeTableBuilder(PositionList positionList, String hdf5File, GenotypeMergeRule mergeRule) {
-        //TODO setup merge
-        //TODO test if HDF5 is mergeable
-
-        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
-        //config.overwrite();
-
-        config.dontUseExtendableDataTypes();
-        writer = config.writer();
-        this.positionList=new PositionListBuilder(writer,positionList).build();  //create a new position list
-        setupGenotypeTaxaInHDF5(writer);
-        this.myBuildType=BuildType.TAXA_INC;
-        isHDF5=true;
-        taxaListBuilder=new TaxaListBuilder();
-    }
-
-
 
     private synchronized void setupGenotypeTaxaInHDF5(IHDF5Writer writer) {
         HDF5Utils.createHDF5TaxaModule(writer);
@@ -513,7 +534,7 @@ public class GenotypeTableBuilder {
             byte[] currDepths=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES];
             for (int site=0; site<combDepth[0].length; site++) {
                 for (int allele=0; allele<combDepth.length; allele++) {
-                    currDepths[allele]=combDepth[site][allele]=AlleleDepthUtil.addByteDepths(depth[site][allele],existingDepth[site][allele]);
+                    currDepths[allele]=combDepth[allele][site]=AlleleDepthUtil.addByteDepths(depth[allele][site],existingDepth[allele][site]);
                 }
                 combGenos[site]=mergeRule.callBasedOnDepth(currDepths);
             }
@@ -598,4 +619,6 @@ public class GenotypeTableBuilder {
             HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.TAXAHET, writer, hets.length, 1<<16, hets);
         }
     }
+
+private enum BuildType{TAXA_INC, SITE_INC}
 }

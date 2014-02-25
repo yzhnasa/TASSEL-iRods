@@ -3,14 +3,15 @@
  */
 package net.maizegenetics.dna.snp;
 
-import net.maizegenetics.dna.snp.bit.BitStorage;
-import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
-import net.maizegenetics.dna.snp.depth.AlleleDepth;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
+import net.maizegenetics.dna.snp.bit.BitStorage;
+import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
+import net.maizegenetics.dna.snp.depth.AlleleDepth;
+import net.maizegenetics.dna.snp.depth.FilterAlleleDepth;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.Taxon;
@@ -41,6 +42,7 @@ public class FilterGenotypeTable implements GenotypeTable {
     private Chromosome[] myChromosomes;
     private int[] myChromosomeOffsets;
     private PositionList myPositionList;
+    private AlleleDepth myAlleleDepth=null;
     private final GenotypeCallTable myGenotype;
     private final Map<WHICH_ALLELE, BitStorage> myBitStorage = new HashMap<>();
 
@@ -897,7 +899,10 @@ public class FilterGenotypeTable implements GenotypeTable {
 
     @Override
     public AlleleDepth depth() {
-        throw new UnsupportedOperationException("Not supported");
+        if(myAlleleDepth==null) {
+           myAlleleDepth=new FilterAlleleDepth(myBaseAlignment.depth(),this);
+        }
+        return myAlleleDepth;
     }
 
     @Override
