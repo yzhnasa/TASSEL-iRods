@@ -1067,7 +1067,6 @@ public class AnnotateTOPM {
             topm.writeTagGeneticMappingInfoGWDataSet(dataSetName, gmChunk, i);
             if (i%100 == 0) System.out.println("Chunk " + i + "(index) with " + topm.getChunkSize() + " tags is annotated with genome wide genetic mapping");
         }
-        topm.setIfHasGeneticMappingGW(true);
     }
     
     /**

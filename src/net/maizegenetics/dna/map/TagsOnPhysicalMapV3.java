@@ -46,10 +46,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     
     /**Number of physical positions from different aligner or aligner with different parameters*/
     protected int mappingNum = 0;
-    /**Boolean value of if the file contains GM hypothesis test info*/
-    protected boolean ifHasGM = false;
-    /**Boolean value of if the file contains GM hypothesis test info*/
-    protected boolean ifHasGMGW = false;
+
     /**Writer/Reader of TagsOnPhysicalMapV3*/
     private IHDF5Writer myHDF5 = null;
     /**Tag index (in whole tag list), for cachedTMI*/
@@ -170,16 +167,18 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         this.mappingNum = myHDF5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.MAXMAPPING);
         //this.ifHasGM = myHDF5.getBooleanAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.IFHASGM);
         //this.ifHasGMGW = myHDF5.getBooleanAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.IFHASGMGW);
-        if (myHDF5.exists(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(0))) {
+        if (this.getIfHasMapping()) {
             this.renameMapNames();
             this.getMappingInfo(0, 0);
         }
-        if (myHDF5.exists(GBSHDF5Constants.GENETICMAMMPING+this.getThreeFigureString(0))) {
+        if (this.getIfHasGeneticMapping()) {
             this.renameGeneticMapNames();
+            this.cachedTagIndex = -1;
             this.getGeneticMappingInfo(0, 0);
         }
-        if (myHDF5.exists(GBSHDF5Constants.GENETICMAMMPINGGW)) {
-            this.cacheGeneticMappingInfoGWChunk(0); 
+        if (this.getIfHasGeneticMappingGW()) {
+            this.getGeneticMappingInfoGW(0) ;
+            this.cachedTagIndex = -1;
             cachedTGMIGW = this.cachedTGMIGWChunk[0];
         }
        
@@ -341,7 +340,6 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
                 }
                 topm.writeTagGeneticMappingInfoDataSets(mapNames, tgmiBuffer, i);
             }
-            topm.setIfHasGeneticMapping(this.getIfHasGeneticMapping());
         }
         if (this.getIfHasGeneticMappingGW() == true) {
             String dataSetName = topm.creatTagGeneticMappingInfoGWDataset();
@@ -364,7 +362,6 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
                 topm.writeTagGeneticMappingInfoGWDataSet(dataSetName, gmChunk, i);
                 if (i%100 == 0) System.out.println("Chunk " + i + "(index) with " + topm.getChunkSize() + " tags is annotated with genome wide genetic mapping");
             }
-            topm.setIfHasGeneticMappingGW(true);
         }
     }
     
@@ -511,26 +508,7 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
         System.out.println("TOPM maxMapping attibute was set to " + String.valueOf(mappingNum));
     }
     
-    /**
-     * Set if file has genetic mapping test result, true/false
-     * @param value 
-     */
-    public void setIfHasGeneticMapping (boolean value) {
-        this.ifHasGM = value;
-//      myHDF5.setBooleanAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.IFHASGM, ifHasGM);
-        this.renameGeneticMapNames();
-        System.out.println("TOPM genetic mapping status was set to " + String.valueOf(value));
-    }
-    
-    /**
-     * Set if file has genome wide genetic mapping result, true/false
-     * @param value 
-     */
-    public void setIfHasGeneticMappingGW (boolean value) {
-        this.ifHasGMGW = value;
-//      myHDF5.setBooleanAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.IFHASGMGW, ifHasGMGW);
-        System.out.println("TOPM genome wide genetic mapping status was set to " + String.valueOf(value));
-    }
+ 
     
     /**
      * Rename the mapNames based on the number of mapping
@@ -747,15 +725,26 @@ public class TagsOnPhysicalMapV3 extends AbstractTagsOnPhysicalMap implements TO
     }
     
     /**
+     * Return if the file has alignment mapping annotation
+     * @return 
+     */
+    public boolean getIfHasMapping() {
+        return myHDF5.exists(GBSHDF5Constants.MAPBASE+this.getThreeFigureString(0));
+    }
+    /**
      * Return if the file has genetic mapping test result
      * @return 
      */
     public boolean getIfHasGeneticMapping () {
-        return this.ifHasGM;
+        return myHDF5.exists(GBSHDF5Constants.GENETICMAMMPING+this.getThreeFigureString(0));
     }
     
+    /**
+     * Return if the file has genome wide genetic mapping annotation
+     * @return 
+     */
     public boolean getIfHasGeneticMappingGW () {
-        return this.ifHasGMGW;
+        return myHDF5.exists(GBSHDF5Constants.GENETICMAMMPINGGW+this.getThreeFigureString(0));
     }
     /**
      * Calculate TMI indices of an aligner
