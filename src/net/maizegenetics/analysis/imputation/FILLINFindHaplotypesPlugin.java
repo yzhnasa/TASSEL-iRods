@@ -35,13 +35,9 @@ import java.util.Map.Entry;
  * highest coverage taxa and looks within windows of near perfect matches.  Combines
  * all matches together into one haplotype.  The haplotype is named for the highest coverage
  * sample.  
- * 
- * TODO:
- * 1.  plus add short inbred segments not present full ones
- * 2.  Cluster and choose haplotypes by cluster and number of new minor alleles (or information)
- * 3.  Set max het frequency as a setting
- * 
- * @author edbuckler
+ *
+ * @author Ed Buckler
+ * @author Kelly Swarts
  */
 public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
     private int startChr, endChr;
@@ -66,10 +62,12 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
     private double[] propMissing;
     private int[] siteErrors, siteCallCnt;
     private BitSet badMask=null;
+
     
     private static ArgsEngine engine = new ArgsEngine();
     private static final Logger myLogger = Logger.getLogger(FILLINFindHaplotypesPlugin.class);
-    
+    private boolean verboseOutput;
+
     public FILLINFindHaplotypesPlugin() {
         super(null, false);
     }
@@ -92,7 +90,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
 
         System.out.println("Reading: "+inFile);
         GenotypeTable baseAlign=ImportUtils.readGuessFormat(inFile);
-        int[][] divisions=divideChromosome(baseAlign, appoxSitesPerHaplotype);  
+        int[][] divisions=divideChromosome(baseAlign, appoxSitesPerHaplotype, verboseOutput);
         System.out.printf("In taxa:%d sites:%d %n",baseAlign.numberOfTaxa(),baseAlign.numberOfSites());
         siteErrors=new int[baseAlign.numberOfSites()];
         siteCallCnt=new int[baseAlign.numberOfSites()];
@@ -116,15 +114,15 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         FilterGenotypeTable fa=FilterGenotypeTable.getInstance(baseAlign, startSite, endSite);
         GenotypeTable inAlign=GenotypeTableBuilder.getGenotypeCopyInstance(fa);
         int sites=inAlign.numberOfSites();
-        System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.chromosome(0),
+        if(verboseOutput) System.out.printf("SubInAlign Locus:%s StartPos:%d taxa:%d sites:%d %n",inAlign.chromosome(0),
                 inAlign.chromosomalPosition(0),inAlign.numberOfTaxa(),inAlign.numberOfSites());
 
         propMissing=new double[inAlign.numberOfTaxa()];
         int startBlock=0;
         int endBlock=inAlign.allelePresenceForAllSites(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords();
         TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(inAlign, startBlock, endBlock, minSites, maxHetFreq);
-        System.out.printf("Block %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
-        System.out.printf("Current Site %d Current block %d EndBlock: %d %n",startSite, startBlock, endBlock);
+        if(verboseOutput) System.out.printf("Block %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
+        if(verboseOutput) System.out.printf("Current Site %d Current block %d EndBlock: %d %n",startSite, startBlock, endBlock);
         TreeMap<Integer,byte[][]> results=mergeWithinWindow(inAlign, presentRanking, startBlock, endBlock, maxDistance, startSite);
         TaxaListBuilder tLB=new TaxaListBuilder();
         GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(results.size(),inAlign.numberOfSites());
@@ -137,7 +135,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         return GenotypeTableBuilder.getInstance(gB.build(),inAlign.positions(),tLB.build());
     }
     
-    public static int[][] divideChromosome(GenotypeTable a, int appoxSitesPerHaplotype) {
+    public static int[][] divideChromosome(GenotypeTable a, int appoxSitesPerHaplotype, boolean verboseOutput) {
         Chromosome[] theL=a.chromosomes();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
         for (Chromosome aL: theL) {
@@ -148,7 +146,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
             int subAlignCnt=(int)Math.round((double)locusSites/(double)appoxSitesPerHaplotype);
             if(subAlignCnt==0) subAlignCnt++;
             int prefBlocks=(locusSites/(subAlignCnt*64));
-            System.out.printf("Chr:%s Alignment Sites:%d subAlignCnt:%d RealSites:%d %n",
+            if(verboseOutput) System.out.printf("Chr:%s Alignment Sites:%d subAlignCnt:%d RealSites:%d %n",
                     aL.getName(),locusSites, subAlignCnt, prefBlocks*64);
             for (int i = 0; i < subAlignCnt; i++) {
                 int[] divs=new int[2];
@@ -162,7 +160,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         for (int i = 0; i < result.length; i++) {
             result[i]=allDivisions.get(i);
            // 
-            System.out.printf("Chromosome Divisions: %s start:%d end:%d %n", a.chromosome(result[i][0]).getName(),
+            if(verboseOutput) System.out.printf("Chromosome Divisions: %s start:%d end:%d %n", a.chromosome(result[i][0]).getName(),
                     result[i][0], result[i][1]);
         }
         return result;
@@ -191,20 +189,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         }
         return presentRanking;
     }
-    
-//    private MutableNucleotideAlignment createEmptyHaplotypeAlignment(Alignment inAlign, int maxHaplotypes) {
-//        IdGroup outIDG=new SimpleIdGroup(maxHaplotypes);
-//        for (int i = 0; i < maxHaplotypes; i++) {
-//            outIDG.setIdentifier(i, new Identifier("Hap"+i));
-//        }
-//        MutableNucleotideAlignment mna=MutableNucleotideAlignment.getInstance(outIDG, inAlign.getSiteCount());
-//        for (int i = 0; i < inAlign.getSiteCount(); i++) {
-//            mna.addSite(i);
-//            mna.setLocusOfSite(i, inAlign.getLocus(i));
-//            mna.setPositionOfSite(i, inAlign.getPositionInLocus(i));
-//        }
-//        return mna;
-//    }
+
 
 //    private BitSet maskBadSites(GeneticMap gm, GenotypeTable a) {
 //        OpenBitSet obs=new OpenBitSet(a.numberOfSites());
@@ -287,7 +272,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
             double hetFreq=(double)unkCnt[1]/(double)(inAlign.numberOfSites()-unkCnt[0]);
             if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq))) {
                 int index=(hits.size()*200000)+taxon1;
-                System.out.printf("Output %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.taxaName(taxon1),
+                if(verboseOutput) System.out.printf("Output %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.taxaName(taxon1),
                         hits.size(), missingFreq, hetFreq, index);
                 byte[][] callPlusNames=new byte[2][];
                 callPlusNames[0]=calls;
@@ -408,6 +393,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         engine.add("-maxOutMiss", "--maxOutMiss", true);
         engine.add("-sD", "--startDivision", true);
         engine.add("-eD", "--endDivision", true);
+        engine.add("-nV", "--nonVerbose",false);
         engine.parse(args);
         if (engine.getBoolean("-sC")) {
             startChr = Integer.parseInt(engine.getString("-sC"));
@@ -445,6 +431,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         if (engine.getBoolean("-maxHap")) {
             maxHaplotypes = Integer.parseInt(engine.getString("-maxHap"));
         }
+        if(engine.getBoolean("-nV")) verboseOutput=false;
     }
 
 

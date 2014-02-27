@@ -38,7 +38,7 @@ public class LowLevelCopyOfHDF5 {
             if (is.isGroup() == false) continue;
             String taxonName=is.getName();
             if(subsetTaxa.indexOf(taxonName)<0) continue;
-            System.out.println(taxonName);
+           // System.out.println(taxonName);
             reader.copy(Tassel5HDF5Constants.GENOTYPES_MODULE+"/"+taxonName, writer,
                     Tassel5HDF5Constants.GENOTYPES_MODULE+"/"+taxonName);
             HDF5Utils.addTaxon(writer, new Taxon(taxonName));

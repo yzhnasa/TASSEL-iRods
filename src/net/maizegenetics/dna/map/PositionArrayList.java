@@ -61,7 +61,6 @@ final class PositionArrayList implements PositionList {
             pTS.put(ap.getChromosome(),ap.getPosition());
         }
         for (Chromosome chr: pTS.keySet()) {
-            System.out.println(chr.toString());
             List<Integer> p=pTS.get(chr);
             int[] intP=new int[p.size()];
             for (int i=0; i<intP.length; i++) {intP[i]=p.get(i);}

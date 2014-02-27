@@ -112,6 +112,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     private int totalRight=0, totalWrong=0, totalHets=0; //global variables tracking errors on the fly
     private int[] siteErrors, siteCorrectCnt, taxonErrors, taxonCorrectCnt;  //error recorded by sites
 
+    private boolean verboseOutput=true;
 
     //initialize the transition matrix (T1)
     double[][] transition = new double[][] {
@@ -170,13 +171,13 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         TasselPrefs.putAlignmentRetainRareAlleles(false);
         System.out.println("Retain Rare alleles is:"+TasselPrefs.getAlignmentRetainRareAlleles());
         GenotypeTable[] donorAlign;
-        if(donorFile.contains(".gX")) {donorAlign=loadDonors(donorFile);}
-        else {donorAlign=loadDonors(donorFile);}
+        if(donorFile.contains(".gX")) {donorAlign=loadDonors(donorFile, verboseOutput);}
+        else {donorAlign=loadDonors(donorFile, verboseOutput);}
         this.minTestSites=minTestSites;
         this.isOutputProjection=isOutputProjection;
         unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile);
 
-        OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, true);
+        OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, verboseOutput);
 
         siteErrors=new int[unimpAlign.numberOfSites()];
         siteCorrectCnt=new int[unimpAlign.numberOfSites()];
@@ -190,12 +191,9 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             mna=new ProjectionBuilder(ImportUtils.readGuessFormat(donorFile));
         } else {
             if(exportFile.contains("hmp.h5")) {
-//                ExportUtils.writeGenotypeHDF5(unimpAlign, exportFile, new SimpleIdGroup(0), false);
-//                mna=MutableNucleotideAlignmentHDF5.getInstance(exportFile);
                 mna= GenotypeTableBuilder.getTaxaIncremental(this.unimpAlign.positions(),exportFile);
             }else {
                 mna= GenotypeTableBuilder.getTaxaIncremental(this.unimpAlign.positions());
-//                mna=MutableNucleotideAlignment.getInstance(this.unimpAlign);
             }
 
         }
@@ -233,10 +231,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         System.out.println(s.toString());
         double errRate=(double)totalWrong/(double)(totalRight+totalWrong);
         System.out.printf("TotalRight %d  TotalWrong %d TotalHets: %d ErrRateExcHet:%g %n",totalRight, totalWrong, totalHets, errRate);
-//        for (int i = 0; i < siteErrors.length; i++) {
-//            System.out.printf("%d %d %d %g %g %n",i,siteCallCnt[i],siteErrors[i],
-//                    (double)siteErrors[i]/(double)siteCallCnt[i], unimpAlign.getMinorAlleleFrequency(i));
-//        }
         if(isOutputProjection) {
             ProjectionAlignmentIO.writeToFile(exportFile, ((ProjectionBuilder)mna).build());
         } else {
@@ -354,7 +348,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 //            double rate=(double)taxon/(double)(System.currentTimeMillis()-time);
 //            double remaining=(unimpAlign.getSequenceCount()-taxon)/(rate*1000);
 //            System.out.printf("TimeLeft:%.1fs %n", remaining);
-            System.out.println(sb.toString());
+            if(verboseOutput) System.out.println(sb.toString());
 //            if(isOutputProjection) {
 //                // System.out.println(breakPoints.toString());
 //                ((ProjectionAlignment)mna).setCompositionOfTaxon(taxon, impTaxon.breakPoints);
@@ -363,7 +357,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     }
 
-     public static GenotypeTable[] loadDonors(String donorFileRoot){
+     public static GenotypeTable[] loadDonors(String donorFileRoot, boolean verboseOutput ){
         File theDF=new File(donorFileRoot);
         String prefilter=theDF.getName().split(".gX.")[0]+".gc"; //grabs the left side of the file
         String prefilterOld=theDF.getName().split("s\\+")[0]+"s"; //grabs the left side of the file
@@ -375,10 +369,10 @@ public class FILLINImputationPlugin extends AbstractPlugin {
          }
         GenotypeTable[] donorAlign=new GenotypeTable[d.size()];
         for (int i = 0; i < donorAlign.length; i++) {
-            System.out.println("Starting Read");
+            if(verboseOutput) System.out.println("Starting Read");
             donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), (ProgressListener)null);
-            System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
-            System.out.println("Taxa Optimization Done");
+            if(verboseOutput) System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
+            if(verboseOutput) System.out.println("Taxa Optimization Done");
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
         if (generateMAFFile) generateMAF(donorFileRoot, donorAlign);
@@ -1112,8 +1106,8 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         engine.add("-o", "--outFile", true);
         engine.add("-d", "--donorH", true);
         engine.add("-mxHet", "--hetThresh", true);
-        engine.add("-sC", "--startChrom", false);
-        engine.add("-eC", "--endChrom", false);
+        engine.add("-sC", "--startChrom", false); //TODO why set to false
+        engine.add("-eC", "--endChrom", false); //TODO why set to false
         engine.add("-minMnCnt", "--minMnCnt", true);
         engine.add("-mxInbErr", "--mxInbErr", true);
         engine.add("-mxHybErr", "--mxHybErr", true);
@@ -1127,6 +1121,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         engine.add("-mnTestSite", "--mnTestSite", true);
         engine.add("-projA", "--projAlign", false);
         engine.add("-runChrMode", "--runChrMode", false);
+        engine.add("-nV", "--nonVerbose",false);
         engine.parse(args);
         hmpFile = engine.getString("-hmp");
         outFileBase = engine.getString("-o");
@@ -1164,6 +1159,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             minTestSites = Integer.parseInt(engine.getString("-mnTestSite"));
         }
         if (engine.getBoolean("-projA")) isOutputProjection=true;
+        if(engine.getBoolean("-nV")) verboseOutput=false;
     }
 
 
@@ -1206,63 +1202,12 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     @Override
     public String getButtonName() {
-        return "ImputeByNN&HMM";
+        return "ImputeByFILLIN";
     }
 
     @Override
     public String getToolTipText() {
         return "Imputation that relies on a combination of HMM and Nearest Neighbor";
-    }
-
-    public static void main(String[] args) {
-
-//        String rootOrig="/Volumes/LaCie/build20120701/IMP26/orig/";
-//        String rootHaplos="/Volumes/LaCie/build20120701/IMP26/haplos/";
-//        String rootImp="/Volumes/LaCie/build20120701/IMP26/imp/";
-        String rootOrig="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-        String rootHaplos="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-        String rootImp="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/imp/";
-        //String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6_MERGEDUPSNPS_20130513_chr+.hmp.txt.gz";
-        //      String unImpTargetFile=rootOrig+"Samp82v26.chr8.hmp.txt.gz";
-//        String unImpTargetFile=rootOrig+"AllZeaGBS_v2.6.chr+.hmp.h5";
-        String unImpTargetFile=rootOrig+"USNAM142v26.chr10.hmp.txt.gz";
-//       String unImpTargetFile=rootOrig+"Ames105v26.chr10.hmp.txt.gz";
-        String donorFile=rootHaplos+"all26_8k.c10s+.hmp.txt.gz";
-//        String donorFile=rootHaplos+"HM26_Allk.c10s+.hmp.txt.gz";
-//        String impTargetFile=rootImp+"newmnaTall26.c+.imp.hmp.txt.gz";
-        Random r=new Random();
-        String impTargetFile=rootImp+r.nextInt()+"newmnaTall26.c+.imp.hmp.h5";
-        //      String impTargetFile=rootImp+"T3AllZeaGBSv2_6.c+.pa.txt.gz";
-
-
-        String[] args2 = new String[]{
-                "-hmp", unImpTargetFile,
-                "-d",donorFile,
-                "-o", impTargetFile,
-                "-sC","10",
-                "-eC","10",
-                "-minMnCnt","20",
-                "-mxInbErr","0.02",
-                "-mxHybErr","0.005",
-                "-mnTestSite","50",
-                "-mxDonH","10",
-                "-runChrMode",
-                //           "-projA",
-        };
-        System.out.println("TasselPrefs:"+TasselPrefs.getAlignmentRetainRareAlleles());
-        TasselPrefs.putAlignmentRetainRareAlleles(false);
-        FILLINImputationPlugin plugin = new FILLINImputationPlugin();
-        plugin.setParameters(args2);
-        plugin.performFunction(null);
-        //       compareAlignment(rootImp+"newmnaTall26.c10.imp.hmp.txt.gz", null, rootImp+"newmnaTall26.c10.imp.mhmp.h5", true);
-//        TasselPrefs.putAlignmentRetainRareAlleles(false);
-//        System.out.println("Reading PA file");
-////        ProjectionAlignment pa=ProjectionAlignment.getInstance(rootImp+"TAllZeaGBSv2_6.c10.pa.txt.gz", donorFile);
-//        ProjectionAlignment pa=ProjectionAlignment.getInstance(rootImp+"AllZeaGBSv2_6.c10.pa.txt.gz", donorFile);
-//        System.out.println("Writing PA file to HapMap");
-//        ExportUtils.writeToHapmap(pa, false, rootImp+"PostPATall26.c10.hmp.txt.gz", '\t', null);
-//        System.out.printf("Cache:%d Lookup:%d %n",pa.cacheUseCnt, pa.lookupCnt);
-//        compareAlignment(unImpTargetFile, null, rootImp+"PostPATall26.c10.hmp.txt.gz", true);
     }
 }
 
