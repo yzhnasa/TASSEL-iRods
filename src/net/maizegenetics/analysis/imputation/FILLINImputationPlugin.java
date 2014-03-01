@@ -67,8 +67,6 @@ import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.GAP_DIPLOID
  * rates that that were observed to be zero.
  * <p>
  * TODO:
- * <li>Smaller scale Viterbi, evaluate whether there are regions where 1 or 2 haplotypes are very common (>50% blocks)
- * <li>Use a diversity index of the DHs to determine what transition/emmission matrices to use
  * <li>Move accuracy to one method outside of setAlignmentWithDonors
  *
  * @author Edward Buckler

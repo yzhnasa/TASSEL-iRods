@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<FlowPane id="Content" fx:id="windowPanel" prefHeight="142.0" prefWidth="400.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
+    <children>
+        <Button fx:id="closeButton" onAction="#onAction2" prefHeight="35.0" prefWidth="300.0" text="Sout  Action2">
+        </Button><Button fx:id="button4" mnemonicParsing="false" onAction="#hitButton4" text="Button" />
+    </children>
+</FlowPane>
