@@ -484,42 +484,5 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
     public String getToolTipText() {
         return "Creates haplotype alignments based on long IBD regions of inbred lines";
     }
-   
-    
-    /**
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-       // String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/impOrig/";
-//        String root="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/orig/";
-//        String rootOut="/Users/edbuckler/SolexaAnal/GBS/build20120701/IMP26/haplos/";
-        String root="/Volumes/LaCie/build20120701/IMP26/orig/";
-        String rootOut="/Volumes/LaCie/build20120701/IMP26/haplos/";
 
-        
-        String infileH5=root+"AllZeaGBS_v2.6.chrX.hmp.h5";
-        String secFile26v=rootOut+"Tall26_8k.cXsX.hmp.txt.gz";
-
-        String errorFile=rootOut+"mcErrorXMerge20130425.txt";
-
-        String[] args2 = new String[]{
-            "-hmp", infileH5,
-            "-o", secFile26v,
-            "-sC","8",
-            "-eC","8",
-            "-mxDiv", "0.01",
-            "-mxHet", "0.01",
-            "-hapSize", "8000",
-            "-minPres", "500",
-            "-maxOutMiss","0.4",
-            "-maxHap", "2000",
-            "-minTaxa", "2",
-        };
-
-        FILLINFindHaplotypesPlugin plugin = new FILLINFindHaplotypesPlugin();
-        plugin.setParameters(args2);
-        plugin.performFunction(null);
-
-    }
 }
