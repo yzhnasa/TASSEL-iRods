@@ -27,6 +27,8 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import net.maizegenetics.util.Utils;
 
@@ -66,6 +68,9 @@ public class ProductionPipeline {
     // host on which pipeline is running
     private String myApplicationHost = "unknown";
 
+    // application properties file
+    private String myAppPropertiesFile = null;
+
     // default server to be used to send email notifications
     private String myEmailHost = "appsmtp.mail.cornell.edu";
 
@@ -97,6 +102,8 @@ public class ProductionPipeline {
 
     private String myPropertiesFileContents = null;
 
+    private Map<String, String> myEmailSubjects = new HashMap<>();
+
     private static final String EXAMPLE_CONFIG_FILE
             = "emailHost=appsmtp.mail.cornell.edu\n"
             + "emailAddress=dek29@cornell.edu\n"
@@ -120,12 +127,43 @@ public class ProductionPipeline {
         }
 
         // if no application property file is specified, try looking for something in the home directory
-        if (appPropertiesFile == null) {
-            appPropertiesFile = DEFAULT_APPLICATION_CONFIGURATION;
+        myAppPropertiesFile = appPropertiesFile;
+        if (myAppPropertiesFile == null) {
+            myAppPropertiesFile = DEFAULT_APPLICATION_CONFIGURATION;
         }
-        myPropertiesFileContents = loadApplicationConfiguration(appPropertiesFile);
+        myPropertiesFileContents = loadApplicationConfiguration(myAppPropertiesFile);
 
         loadRunFiles(myRunDirectory, runCheckSum, runImputation, testingCheckSum);
+    }
+
+    private String getEmailSubjectRun(String runFile) {
+        String result = myEmailSubjects.get(runFile);
+        if (result != null) {
+            return result;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("Discussion: ");
+        builder.append(getTimeStamp());
+        builder.append("Run File: ").append(runFile).append(" ");
+        result = builder.toString();
+        myEmailSubjects.put(runFile, result);
+        return result;
+    }
+
+    private String getEmailSubjectApp() {
+        String result = myEmailSubjects.get(myAppPropertiesFile);
+        if (result != null) {
+            return result;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("Discussion: ");
+        builder.append(getTimeStamp());
+        builder.append("Properties File: ").append(myAppPropertiesFile).append(" ");
+        result = builder.toString();
+        myEmailSubjects.put(myAppPropertiesFile, result);
+        return result;
     }
 
     /**
@@ -139,7 +177,7 @@ public class ProductionPipeline {
         if (!dir.exists()) {
             System.out.println("Could not find the directory containing .run files: " + dir.getPath());
             System.out.println("Exiting program.");
-            sendAlertNotification(EMAIL_SUBJECT_BASE + "- Error", "Could not find run directory: " + dir.getAbsolutePath()
+            sendAlertNotification(getEmailSubjectApp(), "Could not find run directory: " + dir.getAbsolutePath()
                     + " on  server " + myApplicationHost);
             System.exit(1);
         }
@@ -156,20 +194,21 @@ public class ProductionPipeline {
             System.out.println("************** Could not find a valid .run file ***************");
             System.out.println("************** Example .run file: ");
             System.out.println(EXAMPLE_RUN_FILE);
-            sendAlertNotification(EMAIL_SUBJECT_BASE + "- No Run Files", "No .run files found on " + myApplicationHost);
+            sendAlertNotification(getEmailSubjectApp(), "No .run files found on " + myApplicationHost);
         } else {
             StringBuilder sb = new StringBuilder();
             for (File f : files) {
                 sb.append(f).append("\n");
             }
             sb.append("\nRunning on server: ").append(myApplicationHost).append("\n");
-            sendAlertNotification(EMAIL_SUBJECT_BASE + "- File Count: " + files.length, sb.toString());
+            sendAlertNotification(getEmailSubjectApp(), sb.toString());
         }
 
         for (File aFile : files) {
 
-            String msgBody = "Starting to run " + aFile.getAbsolutePath() + " on server " + myApplicationHost;
-            sendAlertNotification(EMAIL_SUBJECT_BASE + " File: " + aFile.getName(), msgBody);
+            String currentRunFile = aFile.getAbsolutePath();
+            String msgBody = "Starting to run " + currentRunFile + " on server " + myApplicationHost;
+            sendAlertNotification(getEmailSubjectRun(currentRunFile), msgBody);
             String runFileContents = loadRunConfiguration(aFile);
             String todayDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
 
@@ -232,7 +271,6 @@ public class ProductionPipeline {
                 System.out.println(getTimeStamp() + "Time to run Imputation: " + elapsedSeconds + " sec.");
             }
 
-            String emailSubject = EMAIL_SUBJECT_BASE + myInputFolder;
             String email = "Ran:\n " + myInputFolder
                     + "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds"
                     + "\n\n Attachment:\n " + logFile.getAbsolutePath()
@@ -256,21 +294,20 @@ public class ProductionPipeline {
                 for (File f : hapMapFiles) {
                     // get checksum
                     String filename = f.getAbsolutePath();
-                    String cksum = CheckSum.getChecksum(filename, "MD5");
+                    String cksum = CheckSum.getMD5Checksum(filename);
                     if (cksum.equalsIgnoreCase(expectedCheckSum)) {
-
-                        emailSubject = EMAIL_SUBJECT_BASE + "test passed";
+                        //emailSubject = EMAIL_SUBJECT_BASE + "test passed";
                         passedTest = true;
                     }
                     emailMsg.append("\nFile: " + filename + "\tChecksum:" + cksum);
                 }
 
                 if (!passedTest) {
-                    emailSubject = EMAIL_SUBJECT_BASE + "TEST FAILED!";
+                    //emailSubject = EMAIL_SUBJECT_BASE + "TEST FAILED!";
                 }
             } else {
 
-                emailSubject = EMAIL_SUBJECT_BASE + myInputFolder;
+                //emailSubject = EMAIL_SUBJECT_BASE + myInputFolder;
                 File toFile = new File(myArchiveDirectory + "/" + aFile.getName());
 
                 boolean movedFile = false;
@@ -286,7 +323,7 @@ public class ProductionPipeline {
                     String msg = "******* COULD NOT MOVE FILE " + aFile.getAbsolutePath() + " TO " + toFile.getAbsolutePath()
                             + " on server: " + myApplicationHost;
                     System.out.println(msg);
-                    sendAlertNotification(EMAIL_SUBJECT_BASE + "- Error", msg);
+                    sendAlertNotification(getEmailSubjectRun(currentRunFile), msg);
                 }
             }
 
@@ -294,7 +331,7 @@ public class ProductionPipeline {
             SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
 
             try {
-                sc.sendMessageWithAttachment(emailSubject, emailMsg.toString(), logFile.getAbsolutePath());
+                sc.sendMessageWithAttachment(getEmailSubjectRun(currentRunFile), emailMsg.toString(), logFile.getAbsolutePath());
             } catch (javax.mail.MessagingException me) {
                 // do nothing
             }
@@ -313,6 +350,16 @@ public class ProductionPipeline {
             "-m", myTopmFile
         };
         return args;
+    }
+
+    private String getPipelinePluginArgsString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("-i ").append(myInputFolder);
+        builder.append(" -k ").append(myKeyFile);
+        builder.append(" -e ").append(myEnzyme);
+        builder.append(" -o ").append(myOutputFolder);
+        builder.append(" -m ").append(myTopmFile);
+        return builder.toString();
     }
 
     /**
@@ -335,7 +382,7 @@ public class ProductionPipeline {
             System.out.println("************** Example .properties file: ");
             System.out.println(EXAMPLE_CONFIG_FILE);
             ioe.printStackTrace();
-            sendAlertNotification(EMAIL_SUBJECT_BASE + "- Error", "Properties file could not be loaded: "
+            sendAlertNotification(getEmailSubjectApp(), "Properties file could not be loaded: "
                     + aFileIn + " on server " + myApplicationHost);
             System.exit(1);
         }
@@ -406,7 +453,6 @@ public class ProductionPipeline {
      */
     private String loadRunConfiguration(File aFileIn) {
 
-        String usage = aFileIn.getName() + " is missing a run configuration element:  ";
         Properties props = new Properties();
         try {
             props.load(new FileInputStream(aFileIn));
@@ -470,7 +516,7 @@ public class ProductionPipeline {
      * @param filename Name of configuration/properties/.run file
      * @param input String containing the fully qualified path of a directory
      * @param configurationElement
-     * 
+     *
      * @return Description of the problem with the input. If return is null then
      * there is no problem with the entered file or directory
      */

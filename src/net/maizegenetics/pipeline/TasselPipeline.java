@@ -60,6 +60,7 @@ import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
+import net.maizegenetics.analysis.filter.FilterSubsetPlugin;
 
 /**
  *
@@ -1220,6 +1221,36 @@ public class TasselPipeline implements PluginListener {
                         names[i] = (String) siteNames.get(i);
                     }
                     plugin.setSiteNamesToRemove(names);
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-subsetSites")) {
+                    FilterSubsetPlugin plugin = new FilterSubsetPlugin(myMainFrame, false);
+                    try {
+                        double siteVal = Double.parseDouble(args[index++].trim());
+                        plugin.setSiteSubset(siteVal);
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Value following -subsetSites must be a number (decimal or integer)");
+                    } catch (Exception e) {
+                        // do nothing
+                    }
+                    if (args[index].equalsIgnoreCase("-step")) {
+                        plugin.setIsRandom(false);
+                        index++;
+                    }
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-subsetTaxa")) {
+                    FilterSubsetPlugin plugin = new FilterSubsetPlugin(myMainFrame, false);
+                    try {
+                        double taxaVal = Double.parseDouble(args[index++].trim());
+                        plugin.setTaxaSubset(taxaVal);
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException("TasselPipeline: parseArgs: Value following -subsetTaxa must be a number (decimal or integer)");
+                    } catch (Exception e) {
+                        // do nothing
+                    }
+                    if (args[index].equalsIgnoreCase("-step")) {
+                        plugin.setIsRandom(false);
+                        index++;
+                    }
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-newCoordinates")) {
                     ConvertAlignmentCoordinatesPlugin plugin = new ConvertAlignmentCoordinatesPlugin(myMainFrame);
