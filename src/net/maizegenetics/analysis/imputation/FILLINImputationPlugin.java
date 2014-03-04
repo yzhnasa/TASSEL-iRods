@@ -96,7 +96,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     //kelly options
     private boolean twoWayViterbi= true;//if true, the viterbi runs in both directions (the longest path length wins, if inconsistencies)
     private double maxHybridErrFocusHomo= .001;//max error rate for discrepacy between two haplotypes for the focus block. it's default is higher because calculating for fewer sites
-    private double maxInbredErrFocusHomo= .005;
+    private double maxInbredErrFocusHomo= .003;
     private double maxSmashErrFocusHomo= .01;
     private double maxInbredErrFocusHet= .001;//the error rate for imputing one haplotype in focus block for a het taxon
     private double maxSmashErrFocusHet= .01;
@@ -106,7 +106,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     private String maskKeyFile= null;
     private double propSitesMask= .001;
     private GenotypeTable maskKey= null;
-    private double[] MAFClass= new double[]{0,.02,.05,.10,.20,.3,.4,.5,1};
+    private double[] MAFClass= null;//new double[]{0,.02,.05,.10,.20,.3,.4,.5,1};
     private int[] MAF= null;
     private static String MAFFile;
     private double[][][] mafAll= new double[MAFClass.length][3][5]; //sam as all, but first array holds MAF category
@@ -189,10 +189,11 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         this.isOutputProjection=isOutputProjection;
         unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile);
         if (maskKeyFile!=null) {
+            System.out.println("File already masked. Use input key file for calculating accuracy");
             GenotypeTable inMaskKey= ImportUtils.readGuessFormat(maskKeyFile);
             if (inMaskKey.positions()!=unimpAlign.positions()) maskKey= filterKey(inMaskKey, unimpAlign);
             else maskKey= inMaskKey;
-            System.out.println("File already masked. Use input key file for calculating accuracy");}
+            }
         else if (unimpAlign.depth()!=null) unimpAlign= maskFileByDepth(unimpAlign,7, 7);
         else unimpAlign= maskPropSites(unimpAlign,propSitesMask);
 
@@ -221,11 +222,11 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         double notMissing= 0;
         double het= 0;
         for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon++) {het+= (double)unimpAlign.heterozygousCountForTaxon(taxon); notMissing+= (double)unimpAlign.totalNonMissingForTaxon(taxon);}
-        double avgHet= het/notMissing; System.out.println("Average Heterozygosity: "+avgHet);
+        double avgHet= het/notMissing;
         double sqDif= 0;
         for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon++) {double x= avgHet-((double)unimpAlign.heterozygousCountForTaxon(taxon)/(double)unimpAlign.totalNonMissingForTaxon(taxon)); sqDif+= (x*x);}
-        System.out.println("Standard Error for Average Heterozygosity: "+Math.sqrt(sqDif/(unimpAlign.numberOfTaxa()-1))/Math.sqrt(unimpAlign.numberOfTaxa()));
-        System.out.println("Time to read in files and generate masks: "+((System.currentTimeMillis()-time)/1000)+" sec"); time= System.currentTimeMillis();
+        System.out.println("Average Heterozygosity: "+avgHet+" plus/minus std error: "+Math.sqrt(sqDif/(unimpAlign.numberOfTaxa()-1))/Math.sqrt(unimpAlign.numberOfTaxa()));
+        System.out.println("Time to read in files and generate masks: "+((System.currentTimeMillis()-time)/1000)+" sec");
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
         if (MAFFile!=null && MAFClass!=null) {MAF= readInMAFFile(MAFFile,unimpAlign, MAFClass); System.out.println("Calculating accuracy within supplied MAF categories.");}
         for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon+=1) {
@@ -263,9 +264,10 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             }
         }
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
-        System.out.println("Time to impute target genotypes and calculate accuracy: "+((System.currentTimeMillis()-time)/1000+" seconds"));
-        accuracyOut(all);
+        double runtime= (double)(System.currentTimeMillis()-time)/(double)1000;
+        accuracyOut(all, runtime);
         accuracyMAFOut(mafAll);
+        System.out.println("Time to read in files, impute target genotypes, and calculate accuracy: "+runtime+" seconds");
     }
 
     private class ImputeOneTaxon implements Runnable{
@@ -407,7 +409,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                     else if (GenotypeTableUtils.isEqual(imp, known) == true) {all[1][1]++; if (use) mafTaxon[maf][1][1]++;}
                     else if (GenotypeTableUtils.isHeterozygous(imp) == false && GenotypeTableUtils.isPartiallyEqual(imp, unimpAlign.minorAllele(site)) == true) {all[1][0]++; if (use) mafTaxon[maf][1][0]++;}//to minor 
                     else if (GenotypeTableUtils.isHeterozygous(imp) == false && GenotypeTableUtils.isPartiallyEqual(imp, unimpAlign.majorAllele(site)) == true) {all[1][2]++; if (use) mafTaxon[maf][1][2]++;}
-                    else {System.out.println("Exclude: More than two allele states at site index "+site); all[1][4]--;  if (use) mafTaxon[maf][1][4]++;}
+                    else {all[1][4]--;  if (use) mafTaxon[maf][1][4]--;}//implies >2 allele states at given genotype
                 } else if (known == GenotypeTableUtils.getDiploidValue(unimpAlign.minorAllele(site),unimpAlign.minorAllele(site))) {
                     all[0][4]++; if (use) mafTaxon[maf][0][4]++;
                     if (imp == diploidN) {all[0][3]++;  if (use) mafTaxon[maf][0][3]++;}
@@ -625,6 +627,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                     mask.setBase(taxon, site, NucleotideGenotypeTable.UNKNOWN_DIPLOID_ALLELE); key.setBase(taxon, site, a.genotype(taxon, site)); taxaCnt++;
                 }
             }
+            cnt+= taxaCnt;
         }
         System.out.println(cnt+" sites masked randomly not based on depth ("+expected+" expected at "+propSitesMask+")");
         maskKey= GenotypeTableBuilder.getInstance(key.build(), a.positions(), a.taxa());
@@ -658,7 +661,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         return r2;
     }
     
-    private void accuracyOut(double[][] all) {
+    private void accuracyOut(double[][] all, double time) {
         DecimalFormat df = new DecimalFormat("0.########");
         double r2= pearsonR2(all);
         try {
@@ -680,7 +683,8 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                     +1+"\t"+0+"\t"+all[2][0]+"\t"+df.format((all[2][0])/(all[2][0]+all[2][1]+all[2][2]))+"\n"
                     +1+"\t"+.5+"\t"+all[2][1]+"\t"+df.format((all[2][1])/(all[2][0]+all[2][1]+all[2][2]))+"\n"
                     +1+"\t"+1+"\t"+all[2][2]+"\t"+df.format((all[2][2])/(all[2][0]+all[2][1]+all[2][2]))+"\n");
-            outStream.writeBytes("#Proportion unimputed:\n#minor <- "+all[0][3]/all[0][4]+"\n#het<- "+all[1][3]/all[1][4]+"\n#major<- "+all[2][3]/all[2][4]);
+            outStream.writeBytes("#Proportion unimputed:\n#minor <- "+all[0][3]/all[0][4]+"\n#het<- "+all[1][3]/all[1][4]+"\n#major<- "+all[2][3]/all[2][4]+"\n");
+            outStream.writeBytes("Time to impute and calculate accuracy: "+time);
             System.out.println("##Taxon\tTotalSitesMasked\tTotalSitesCompared\tTotalPropUnimputed\tNumMinor\tCorrectMinor\tMinorToHet\tMinorToMajor\tUnimpMinor"
                     + "\tNumHets\tHetToMinor\tCorrectHet\tHetToMajor\tUnimpHet\tNumMajor\tMajorToMinor\tMajorToHet\tCorrectMajor\tUnimpMajor\tR2");
             System.out.println("TotalByImputed\t"+(all[0][4]+all[1][4]+all[2][4])+"\t"+(all[0][4]+all[1][4]+all[2][4]-all[0][3]-all[1][3]-all[2][3])+"\t"+
@@ -706,7 +710,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     
     private void accuracyMAFOut(double[][][] mafAll) {
         DecimalFormat df = new DecimalFormat("0.########");
-        double r2= pearsonR2(all);
         if (MAF!=null && MAFClass!=null) try {
             File outputFile = new File(outFileBase.substring(0, outFileBase.indexOf(".hmp")) + "DepthAccuracyMAF.txt");
             DataOutputStream outStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
@@ -716,7 +719,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 outStream.writeBytes("##TotalByImputed\t"+MAFClass[i]+"\t"+(mafAll[i][0][4]+mafAll[i][1][4]+mafAll[i][2][4])+"\t"+(mafAll[i][0][4]+mafAll[i][1][4]+mafAll[i][2][4]-mafAll[i][0][3]-mafAll[i][1][3]-mafAll[i][2][3])+"\t"+
                     ((mafAll[i][0][3]+mafAll[i][1][3]+mafAll[i][2][3])/(mafAll[i][0][4]+mafAll[i][1][4]+mafAll[i][2][4]))+"\t"+mafAll[i][0][4]+"\t"+mafAll[i][0][0]+"\t"+mafAll[i][0][1]+"\t"+mafAll[i][0][2]+"\t"+mafAll[i][0][3]+
                     "\t"+mafAll[i][1][4]+"\t"+mafAll[i][1][0]+"\t"+mafAll[i][1][1]+"\t"+mafAll[i][1][2]+"\t"+mafAll[i][1][3]+"\t"+mafAll[i][2][4]+"\t"+mafAll[i][2][0]+"\t"+mafAll[i][2][1]+"\t"+mafAll[i][2][2]+
-                    "\t"+mafAll[i][2][3]+"\t"+r2+"\n");
+                    "\t"+mafAll[i][2][3]+"\t"+pearsonR2(mafAll[i])+"\n");
             }
             outStream.writeBytes("#MAFClass,Minor=0,Het=1,Major=2;x is masked(known), y is predicted\nMAF\tx\ty\tN\tprop\n");
             for (int i= 0; i<MAFClass.length;i++) { outStream.writeBytes(
