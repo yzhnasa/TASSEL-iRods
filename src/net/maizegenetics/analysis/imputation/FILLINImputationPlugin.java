@@ -109,7 +109,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     private double[] MAFClass= null;//new double[]{0,.02,.05,.10,.20,.3,.4,.5,1};
     private int[] MAF= null;
     private static String MAFFile;
-    private double[][][] mafAll= new double[MAFClass.length][3][5]; //sam as all, but first array holds MAF category
+    private double[][][] mafAll= null;//sam as all, but first array holds MAF category
     private double[][] all= new double[3][5]; //arrays held ("columns"): 0-maskedMinor, 1-maskedHet, 2-maskedMajor; each array ("rows"):0-to minor, 1-to het, 2-to major, 3-unimp, 4-total for known type
         
     
@@ -228,7 +228,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         System.out.println("Average Heterozygosity: "+avgHet+" plus/minus std error: "+Math.sqrt(sqDif/(unimpAlign.numberOfTaxa()-1))/Math.sqrt(unimpAlign.numberOfTaxa()));
         System.out.println("Time to read in files and generate masks: "+((System.currentTimeMillis()-time)/1000)+" sec");
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
-        if (MAFFile!=null && MAFClass!=null) {MAF= readInMAFFile(MAFFile,unimpAlign, MAFClass); System.out.println("Calculating accuracy within supplied MAF categories.");}
+        if (MAFFile!=null && MAFClass!=null) {MAF= readInMAFFile(MAFFile,unimpAlign, MAFClass); mafAll= new double[MAFClass.length][3][5]; System.out.println("Calculating accuracy within supplied MAF categories.");}
         for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon+=1) {
             byte[] taxonKey= maskKey.genotypeAllSites(maskKey.taxa().indexOf(unimpAlign.taxaName(taxon)));//this is sloppy, but need to figure out how to filter taxon and sites. Key file does have to be in the same ordre as unimputed but need to contain all taxa.
             int[] trackBlockNN= new int[5];//global variable to track number of focus blocks solved in NN search for system out; index 0 is inbred, 1 is viterbi, 2 is smash, 3 is not solved, 4 is total for all modes
@@ -266,7 +266,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
         double runtime= (double)(System.currentTimeMillis()-time)/(double)1000;
         accuracyOut(all, runtime);
-        accuracyMAFOut(mafAll);
+        if (MAFClass!=null) accuracyMAFOut(mafAll);
         System.out.println("Time to read in files, impute target genotypes, and calculate accuracy: "+runtime+" seconds");
     }
 
@@ -394,7 +394,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         
         public double[][] taxonAccuracy(byte[] key, byte[] imputed, GenotypeTable unimpAlign, int[] MAF, double[] MAFClass) {
             byte diploidN= GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
-            double[][] all= new double[3][5]; 
+            double[][] all= new double[3][5];
             boolean use= false; boolean mafOn= false; int maf= -1;
             if (MAF!=null && MAFClass!=null) {mafTaxon= new double[MAFClass.length][3][5]; use= true; mafOn= true;}
             for (int site = 0; site < imputed.length; site++) {
