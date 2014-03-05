@@ -80,8 +80,8 @@ public class AlleleDepthUtil {
     }
     
     /**
-     * Converts a two dimensional of depths to a 2D byte array version.  Positive return values are exact,
-     * negative return values are log approximations
+     * Converts a two dimensional integer array of depths to a 2D byte array version.
+     * Positive return values are exact, negative return values are log approximations
      */
     public static byte[][] depthIntToByte(int[][] depth) {
         byte[][] result = new byte[depth.length][depth[0].length];
