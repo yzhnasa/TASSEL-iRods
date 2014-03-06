@@ -354,7 +354,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                     countFullLength++; continue;}
                 //resorts to solving block by block, first by inbred, then by viterbi, and then by hybrid
                 impTaxon=applyBlockNN(impTaxon, taxon, donorAlign[da], donorOffset, regionHypthInbred, hybridNN, maskedTargetBits,
-                            minMinorCnt, focusInbredErr, focusHybridErr, focusSmashErr, donorIndices, trackBlockNN);
+                            minMinorCnt, focusInbredErr, focusHybridErr, focusSmashErr, donorIndices, trackBlockNN, hetsMiss);
                 if(impTaxon.isSegmentSolved()) {
 //                    System.out.printf("VertSolved da:%d L:%s%n",da, donorAlign[da].getLocus(0));
                     countByFocus++; continue;
@@ -792,7 +792,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
      */
     private ImputedTaxon applyBlockNN(ImputedTaxon impT, int targetTaxon,
             GenotypeTable donorAlign, int donorOffset, DonorHypoth[][] regionHypth, boolean hybridMode, BitSet[] maskedTargetBits, 
-            int minMinorCnt, double focusInbredErr, double focusHybridErr, double focusSmashErr, int[] donorIndices, int[] blockNN) {
+            int minMinorCnt, double focusInbredErr, double focusHybridErr, double focusSmashErr, int[] donorIndices, int[] blockNN, boolean hetsToMiss) {
         int[] currBlocksSolved= new int[5];//track number of focus blocks solved in NN search for system out; index 0 is inbred, 1 is viterbi, 2 is smash, 3 is not solved, 4 is total for all modes
         int blocks=maskedTargetBits[0].getNumWords();
         for (int focusBlock = 0; focusBlock < blocks; focusBlock++) {
@@ -838,7 +838,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                         DonorHypoth[] vdh=new DonorHypoth[goodDH.size()];
                         for (int i = 0; i < vdh.length; i++) {vdh[i]=goodDH.get(i);}
                         regionHypth[focusBlock]= vdh;
-                        impT= setAlignmentWithDonors(donorAlign, regionHypth[focusBlock], donorOffset, true,impT, true, true);//only set donors for focus block //KLS0201
+                        impT= setAlignmentWithDonors(donorAlign, regionHypth[focusBlock], donorOffset, true,impT, true, hetsToMiss);//only set donors for focus block //KLS0201
                         impT.incBlocksSolved(); currBlocksSolved[2]++; currBlocksSolved[4]++; continue;
             }
         }
@@ -1402,8 +1402,8 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         outFileBase = engine.getString("-o");
         donorFile = engine.getString("-d");
         maskKeyFile = engine.getString("-maskKeyFile");
-        hetThresh = Double.parseDouble(engine.getString("-mxHet"));
-        propSitesMask = Double.parseDouble(engine.getString("-propSitesMask"));
+        if(engine.getString("-mxHet") != null) hetThresh = Double.parseDouble(engine.getString("-mxHet"));
+        if(engine.getString("-mxHet") != null) propSitesMask = Double.parseDouble(engine.getString("-propSitesMask"));
         if (engine.getBoolean("-mxInbErr")) {
             maximumInbredError = Double.parseDouble(engine.getString("-mxInbErr"));
         }
