@@ -1264,7 +1264,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 else {//if not imputed to a het
                     impT.resolveGeno[cs+donorOffset]= donorEst;}
             } else if (isHeterozygous(donorEst)){
-                if(resolveHetIfUndercalled&&GenotypeTableUtils.isPartiallyEqual(knownBase, donorEst)&&smashOn==false){//if hybrid off, set homozygotes imputed to het to het
+                if(resolveHetIfUndercalled&&GenotypeTableUtils.isPartiallyEqual(knownBase, donorEst)&&smashOn==false){//if smash off, set homozygotes imputed to het to het
                     System.out.println("ResolveHet:"+theDH[0].targetTaxon+":"+cs+donorOffset+":"+knownBaseString+":"+donorEstString);
                     impT.resolveGeno[cs+donorOffset]= donorEst;
                 }
@@ -1402,8 +1402,12 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         outFileBase = engine.getString("-o");
         donorFile = engine.getString("-d");
         maskKeyFile = engine.getString("-maskKeyFile");
-        if(engine.getString("-mxHet") != null) hetThresh = Double.parseDouble(engine.getString("-mxHet"));
-        if(engine.getString("-mxHet") != null) propSitesMask = Double.parseDouble(engine.getString("-propSitesMask"));
+        if(engine.getBoolean("-mxHet")) {
+            hetThresh = Double.parseDouble(engine.getString("-mxHet"));
+        }
+        if(engine.getBoolean("-mxHet")) {
+            propSitesMask = Double.parseDouble(engine.getString("-propSitesMask"));
+        }
         if (engine.getBoolean("-mxInbErr")) {
             maximumInbredError = Double.parseDouble(engine.getString("-mxInbErr"));
         }
@@ -1447,9 +1451,9 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                         + "-hmp   Input HapMap file(s). Required\n"
                         + "-d    Donor haplotype files '.gX' to denote sections. Required\n"
                         + "-o     Output file; hmp.txt.gz and .hmp.h5 accepted. Required\n"
-                        + "-maskKeyFile A key file to indicate that file is already masked for accuracy calculation. Non-missing genotypes indicate masked sites\n"
-                        + "-propSitesMask   The proportion of non missing sites to mask for accuracy calculation if depth is not available"
-                        + "-mxHet   Threshold per taxon heterozygosity for treating taxon as heterozygous (no Viterbi, het thresholds). Required\n"
+                        + "-maskKeyFile An optional key file to indicate that file is already masked for accuracy calculation. Non-missing genotypes indicate masked sites. Else, will generate own mask\n"
+                        + "-propSitesMask   The proportion of non missing sites to mask for accuracy calculation if depth is not available (default:"+propSitesMask+"\n"
+                        + "-mxHet   Threshold per taxon heterozygosity for treating taxon as heterozygous (no Viterbi, het thresholds). (default:"+hetThresh+"\n"
                         + "-minMnCnt    Minor number of minor alleles in the search window (or "+minMajorRatioToMinorCnt+"X major)\n"
                         + "-mxInbErr    Maximum inbred error rate (default:"+maximumInbredError+"\n"
                         + "-mxHybErr    Maximum hybrid error rate (default:"+maxHybridErrorRate+"\n"
