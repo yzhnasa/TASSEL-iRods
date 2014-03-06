@@ -402,6 +402,11 @@ public class GenotypeTableBuilder {
 
         return this;
     }
+    
+    public GenotypeTableBuilder addTaxon(Taxon taxon, int[][] depths, byte[] genos) {  // reversed signature so it does clash with above statement: "return addTaxon(taxon, genos, null);"
+        byte[][] byteDepths = AlleleDepthUtil.depthIntToByte(depths);
+        return addTaxon(taxon, genos, byteDepths);
+    }
 
     private void mergeTaxonInMemory(Taxon taxon, byte[] genos, byte[][] depth) {
         int taxonIndex=incTaxonIndex.get(taxon);
