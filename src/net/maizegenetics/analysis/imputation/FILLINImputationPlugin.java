@@ -27,10 +27,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import net.maizegenetics.dna.map.PositionList;
 
 import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
 import static net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE.Major;
@@ -182,12 +182,12 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         long time=System.currentTimeMillis();
         TasselPrefs.putAlignmentRetainRareAlleles(false);
         System.out.println("Retain Rare alleles is:"+TasselPrefs.getAlignmentRetainRareAlleles());
-        GenotypeTable[] donorAlign;
-        if(donorFile.contains(".gX")) {donorAlign=loadDonors(donorFile, verboseOutput);}
-        else {donorAlign=loadDonors(donorFile, verboseOutput);}
         this.minTestSites=minTestSites;
         this.isOutputProjection=isOutputProjection;
         unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile);
+        GenotypeTable[] donorAlign;
+        if(donorFile.contains(".gX")) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, verboseOutput);}
+        else {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, verboseOutput);}
         if (maskKeyFile!=null) {
             System.out.println("File already masked. Use input key file for calculating accuracy");
             GenotypeTable inMaskKey= ImportUtils.readGuessFormat(maskKeyFile);
@@ -380,8 +380,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             } else {
                 projBuilder.addTaxon(unimpAlign.taxa().get(taxon),impTaxon.getBreakPoints());
             }
-            double errRate=calcErrorForTaxonAndSite(impTaxon);
-            sb.append(String.format("ErR:%g ", errRate));
 //            double rate=(double)taxon/(double)(System.currentTimeMillis()-time);
 //            double remaining=(unimpAlign.getSequenceCount()-taxon)/(rate*1000);
 //            System.out.printf("TimeLeft:%.1fs %n", remaining);
@@ -429,7 +427,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     }
 
-     public static GenotypeTable[] loadDonors(String donorFileRoot, boolean verboseOutput ){
+     public static GenotypeTable[] loadDonors(String donorFileRoot, GenotypeTable unimpAlign, int minTestSites, boolean verboseOutput){
         File theDF=new File(donorFileRoot);
         String prefilter=theDF.getName().split(".gX.")[0]+".gc"; //grabs the left side of the file
         String prefilterOld=theDF.getName().split("s\\+")[0]+"s"; //grabs the left side of the file
@@ -439,14 +437,30 @@ public class FILLINImputationPlugin extends AbstractPlugin {
              if(file.getName().startsWith(prefilter)) {d.add(file);}
              if(file.getName().startsWith(prefilterOld)) {d.add(file);}
          }
+        ArrayList<Integer> removeDonors= new ArrayList<>();
+        PositionList donU= unimpAlign.positions();
         GenotypeTable[] donorAlign=new GenotypeTable[d.size()];
         for (int i = 0; i < donorAlign.length; i++) {
             if(verboseOutput) System.out.println("Starting Read");
             donorAlign[i]=ImportUtils.readFromHapmap(d.get(i).getPath(), (ProgressListener)null);
-            if(verboseOutput) System.out.printf("Donor file:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
-            if(verboseOutput) System.out.println("Taxa Optimization Done");
+            ArrayList<Integer> subSites= new ArrayList<>();
+            PositionList donP= donorAlign[i].positions();
+            for (int j = 0; j < donorAlign[i].numberOfSites(); j++) {if (donU.indexOf(donP.get(j)) > -1) subSites.add(j);} //if unimputed contains donorAlign position keep in donor align
+            if (subSites.size()!=donorAlign[i].numberOfSites()){
+                if (subSites.size()<2) {
+                    if(verboseOutput) System.out.printf("Donor file contains <2 matching sites and will not be used:%s",d.get(i).getPath());
+                    removeDonors.add(i);
+                }
+                else {
+                    donorAlign[i]= FilterGenotypeTable.getInstance(donorAlign[i], ArrayUtils.toPrimitive(subSites.toArray(new Integer[subSites.size()])));
+                    if(verboseOutput) System.out.printf("Donor file sites filtered to match target:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
+                }
+                if (subSites.size() < minTestSites*2 && verboseOutput) System.out.println("This donor alignment contains marginally sufficient matching snp positions. Region unlikely to impute well.");
+            }
+            else if(verboseOutput) System.out.printf("Donor file shares all sites with target:%s taxa:%d sites:%d %n",d.get(i).getPath(), donorAlign[i].numberOfTaxa(),donorAlign[i].numberOfSites());
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
+        if (removeDonors.isEmpty()==false) for(GenotypeTable gt:donorAlign) {donorAlign= (GenotypeTable[])ArrayUtils.removeElement(donorAlign, gt);}
         MAFFile= donorFileRoot.substring(0, donorFileRoot.indexOf(".gX"))+"MAF.txt";
         if (new File(MAFFile).isFile()==false) generateMAF(MAFFile, donorAlign);
         return donorAlign;
@@ -530,7 +544,8 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     private OpenBitSet[][] createMaskForAlignmentConflicts(GenotypeTable unimpAlign, GenotypeTable[] donorAlign, boolean print) {
         OpenBitSet[][] result=new OpenBitSet[donorAlign.length][4];
         for (int da = 0; da < result.length; da++) {
-            int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].chromosome(0), donorAlign[da].siteName(0));
+//            int donorOffset=unimpAlign.siteOfPhysicalPosition(donorAlign[da].chromosomalPosition(0), donorAlign[da].chromosome(0), donorAlign[da].siteName(0));
+            int donorOffset=unimpAlign.positions().indexOf(donorAlign[da].positions().get(0));
             OpenBitSet goodMask=new OpenBitSet(donorAlign[da].numberOfSites());
             OpenBitSet swapMjMnMask=new OpenBitSet(donorAlign[da].numberOfSites());
             OpenBitSet errorMask=new OpenBitSet(donorAlign[da].numberOfSites());
@@ -1448,23 +1463,23 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     private void printUsage() {
         myLogger.info(
                 "\n\n\nAvailable options for the FILLINImputationPlugin are as follows:\n"
-                        + "-hmp   Input HapMap file(s). Required\n"
-                        + "-d    Donor haplotype files '.gX' to denote sections. Required\n"
+                        + "-hmp   Input HapMap file of target genotypes to impute. Accepts all file types supported by TASSEL5\n"
+                        + "-d    Donor haplotype files from output of FILLINFindHaplotypesPlugin. Use “.gX” in the input filename to denote the substring “.gc#s#” found in donor files\n"
                         + "-o     Output file; hmp.txt.gz and .hmp.h5 accepted. Required\n"
                         + "-maskKeyFile An optional key file to indicate that file is already masked for accuracy calculation. Non-missing genotypes indicate masked sites. Else, will generate own mask\n"
                         + "-propSitesMask   The proportion of non missing sites to mask for accuracy calculation if depth is not available (default:"+propSitesMask+"\n"
                         + "-mxHet   Threshold per taxon heterozygosity for treating taxon as heterozygous (no Viterbi, het thresholds). (default:"+hetThresh+"\n"
-                        + "-minMnCnt    Minor number of minor alleles in the search window (or "+minMajorRatioToMinorCnt+"X major)\n"
-                        + "-mxInbErr    Maximum inbred error rate (default:"+maximumInbredError+"\n"
-                        + "-mxHybErr    Maximum hybrid error rate (default:"+maxHybridErrorRate+"\n"
-                        + "-mxVitFocusErr    Maximum error rate to use Viterbi for focus blocks (default:"+maxHybridErrFocusHomo+")\n"
-                        + "-mxInbFocusErr    Maximum error rate to use inbred for focus blocks (default:"+maxInbredErrFocusHomo+")\n"
-                        + "-mxComFocusErr    Maximum error rate to use two haplotype combination for focus blocks (default:"+maxSmashErrFocusHomo+")\n"
-                        + "-mxInbFocusErrHet    Maximum error rate to use inbred for focus blocks (default:"+maxInbredErrFocusHet+")\n"
-                        + "-mxComFocusErrHet    Maximum error rate to use two haplotype combination for focus blocks (default:"+maxSmashErrFocusHet+")\n"
-                        + "-hybNNOff    Whether to use the two haplotype combination for focus blocks. If true, this attempts inbred, viterbi, and two haplotype combination mode in that order by focus block (default:"+hybridNN+")\n"
+                        + "-minMnCnt    Minimum number of informative minor alleles in the search window (or "+minMajorRatioToMinorCnt+"X major)\n"
+                        + "-mxInbErr    Maximum error rate for applying one haplotype to entire site window (default:"+maximumInbredError+"\n"
+                        + "-mxHybErr    Maximum error rate for applying Viterbi with to haplotypes to entire site window (default:"+maxHybridErrorRate+"\n"
+                        + "-mxVitFocusErr    Maximum error rate for applying Viterbi with to haplotypes to entire site window  (default:"+maxHybridErrFocusHomo+")\n"
+                        + "-mxInbFocusErr    Maximum error rate to apply one haplotype for inbred (heterozygosity below mxHet) taxon  for 64-site focus blocks (default:"+maxInbredErrFocusHomo+")\n"
+                        + "-mxComFocusErr    Maximum error rate to apply two haplotypes modeled as a heterozygote for inbred (heterozygosity below mxHet) taxon  for 64-site focus blocks (default:"+maxSmashErrFocusHomo+")\n"
+                        + "-mxInbFocusErrHet    Maximum error rate to apply one haplotype for outbred (heterozygosity above mxHet) taxon  for 64-site focus blocks (default:"+maxInbredErrFocusHet+")\n"
+                        + "-mxComFocusErrHet    Maximum error rate to apply two haplotypes modeled as a heterozygote for outbred (heterozygosity above mxHet) taxon  for 64-site focus blocks (default:"+maxSmashErrFocusHet+")\n"
+                        + "-hybNNOff    Whether to model two haplotypes as heterozygotic for focus blocks (default:"+hybridNN+")\n"
                         + "-mxDonH   Maximum number of donor hypotheses to be explored (default: "+maxDonorHypotheses+")\n"
-                        + "-mnTestSite   Minimum number of sites to test for NN IBD (default:"+minTestSites+")\n"
+                        + "-mnTestSite   Minimum number of sites to test for IBS between haplotype and target in focus block  (default:"+minTestSites+")\n"
                         + "-projA   Create a projection alignment for high density markers (default off)\n"
         );
     }
