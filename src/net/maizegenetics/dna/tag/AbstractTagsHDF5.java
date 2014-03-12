@@ -10,14 +10,13 @@ import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import net.maizegenetics.util.Tassel5HDF5;
 import net.maizegenetics.util.Tassel5HDF5Constants;
 
 /**
  * Basic implementations of HDF5 tags. This is designed to annotate tags with a bunch of attributes, to solve the memory issues
  * @author Fei Lu
  */
-public abstract class AbstractTagsHDF5 extends AbstractTags implements Tassel5HDF5 {
+public abstract class AbstractTagsHDF5 extends AbstractTags implements TagsHDF5 {
     protected IHDF5Writer h5 = null;
     protected int currentBlockIndex = -1;
     protected int currentIndex = -1;

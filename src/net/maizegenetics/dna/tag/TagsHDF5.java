@@ -4,17 +4,17 @@
  * and open the template in the editor.
  */
 
-package net.maizegenetics.util;
+package net.maizegenetics.dna.tag;
 
 import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 
 /**
- * Interface of HDF5 operations
+ * Interface of HDF5 operations of tags
  * @author Fei Lu
  */
-public interface Tassel5HDF5 {
+public interface TagsHDF5 {
     
     /**
      * Returns the size of HDF5 block
