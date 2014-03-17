@@ -131,7 +131,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             + "-mnMAF   Minimum minor allele frequency (default: " + minMAF + ")\n"
             + "-mnMAC   Minimum minor allele count (default: " + minMAC + ")\n"
             + "-mnLCov  Minimum locus coverage (proportion of Taxa with a genotype) (default: " + defaultMinPropTaxaWithLocus + ")\n"
-            + "-errRate Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
+            + "-eR      Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
             + "-ref     Path to reference genome in fasta format. Ensures that a tag from the reference genome is always included\n"
             + "         when the tags at a locus are aligned against each other to call SNPs. The reference allele for each site\n"
             + "         is then provided in the output HapMap files, under the taxon name \"REFERENCE_GENOME\" (first taxon).\n"
@@ -168,7 +168,7 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             myArgsEngine.add("-mnMAF", "--minMinorAlleleFreq", true);
             myArgsEngine.add("-mnMAC", "--minMinorAlleleCount", true);
             myArgsEngine.add("-mnLCov", "--minLocusCov", true);
-            myArgsEngine.add("-errRate", "--seqErrRate", true);
+            myArgsEngine.add("-eR", "-errRate", true);  // shortened shortForm from -errRate to -eR & longForm from --seqErrRate to -errRate
             myArgsEngine.add("-ref", "--referenceGenome", true);
 //            myArgsEngine.add("-LocusBorder", "--locus-border", true);
             myArgsEngine.add("-inclRare", "--includeRare", false);
@@ -276,8 +276,8 @@ public class DiscoverySNPCallerPlugin extends AbstractPlugin {
             double minPropTaxaWithLocus = Double.parseDouble(myArgsEngine.getString("-mnLCov"));
             minTaxaWithLocus = (int) Math.round(theTBT.getTaxaCount() * minPropTaxaWithLocus);
         }
-        if (myArgsEngine.getBoolean("-errRate")) {
-            errorRate = Double.parseDouble(myArgsEngine.getString("-errRate"));
+        if (myArgsEngine.getBoolean("-eR") || myArgsEngine.getBoolean("-errRate")) {
+            errorRate = Double.parseDouble(myArgsEngine.getString("-eR")); // both shortForm and longForm are used as keys to the same Option
         }
         if (myArgsEngine.getBoolean("-ref")) {
             refGenomeFileStr = myArgsEngine.getString("-ref");
