@@ -134,7 +134,15 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         }
         return GenotypeTableBuilder.getInstance(gB.build(),inAlign.positions(),tLB.build());
     }
-    
+
+
+    /**
+     * Divides a genome up into roughly equally sized blocks of sites
+     * @param a
+     * @param appoxSitesPerHaplotype
+     * @param verboseOutput
+     * @return array of start and last positions
+     */
     public static int[][] divideChromosome(GenotypeTable a, int appoxSitesPerHaplotype, boolean verboseOutput) {
         Chromosome[] theL=a.chromosomes();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
@@ -440,7 +448,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         myLogger.info(
                 "\n\n\nAvailable options for the FindMergeHaplotypesPlugin are as follows:\n"
                 + "-hmp   Input HapMap file (any Tassel5 supported format)\n"
-                + "-o     Output file(s) must include '.gX.' This will be replaced by “.gc#s#” in the output donor files\n"
+                + "-o     Output file(s) must include '.gX.' This will be replaced by .gc#s# in the output donor files\n"
                 + "-oE  Optional file to record site by sites errors as the haplotypes are developed\n"
                 + "-mxDiv    Maximum genetic divergence from founder haplotype to cluster sequences (default: "+maxDistFromFounder+")\n"
                 + "-mxHet    Maximum heterozygosity of output haplotype (default: "+maxHetFreq+")\n"

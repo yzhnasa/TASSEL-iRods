@@ -4,36 +4,33 @@ package net.maizegenetics.analysis.imputation;
  */
 
 
+import net.maizegenetics.analysis.distance.IBSDistanceMatrix;
+import net.maizegenetics.analysis.popgen.DonorHypoth;
+import net.maizegenetics.dna.map.DonorHaplotypes;
+import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.snp.*;
 import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.analysis.popgen.DonorHypoth;
-import net.maizegenetics.analysis.distance.IBSDistanceMatrix;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.*;
 import net.maizegenetics.util.BitSet;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
-
 import java.awt.*;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.dna.map.PositionList;
 
 import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
 import static net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE.Major;
 import static net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE.Minor;
 import static net.maizegenetics.dna.snp.GenotypeTableUtils.isHeterozygous;
 import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 
 
 
@@ -126,15 +123,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             {.0002,.00005,.00005,.999,.0002},
             {.0005,.0001,.0003,.0001,.999}
     };
-    //i tried to optimize the transition matrix for the focus blocks, but peter's worked the best
-    double[][] transitionFocus = transition;
-    //            new double[][] {
-//                    {.98,.04,.08,.04,.003},
-//                    {.02,.98,.05,.0005,.0002},
-//                    {.0002,.0005,.98,.0005,.0002},
-//                    {.0002,.0005,.005,.98,.0002},
-//                    {.003,.04,.08,.04,.98}
-//        };
+
     //initialize the emission matrix, states (5) in rows, observations (3) in columns
     double[][] emission = new double[][] {
                     {.998,.001,.001},
@@ -145,7 +134,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     };
 
 
-    //    int[] donorIndices;
     private static ArgsEngine engine = new ArgsEngine();
     private static final Logger myLogger = Logger.getLogger(FILLINImputationPlugin.class);
 
@@ -180,14 +168,14 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile);
         GenotypeTable[] donorAlign= null;
         try {
-            if (donorFile.contains(".gX")) donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, verboseOutput);
+            if (donorFile.contains(".gX")) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, verboseOutput);}
+            else if(true) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, 8000,true);}  //todo add option for size
+            //todo break into lots of little alignments
             else throw new IllegalArgumentException();
         }
         catch (IllegalArgumentException e){
             throw new IllegalArgumentException("Incorrect donor file supplied. Must contain '.gX' within the file name,\nand match a set of files output from FILLINFindHaplotypesPlugin()");
         }
-        if (accuracyOn) ImputationAccuracy.initiateAccuracy(unimpAlign, donorAlign, maskKeyFile, MAFClass, propSitesMask, outFileBase);
-        
 
         OpenBitSet[][] conflictMasks=createMaskForAlignmentConflicts(unimpAlign, donorAlign, verboseOutput);
 
@@ -197,7 +185,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         taxonCorrectCnt=new int[unimpAlign.numberOfTaxa()];
         
         System.out.printf("Unimputed taxa:%d sites:%d %n",unimpAlign.numberOfTaxa(),unimpAlign.numberOfSites());
-        System.out.println("Creating mutable alignment");
+        System.out.println("Creating Export GenotypeTable:"+exportFile);
         Object mna=null;
         if(isOutputProjection) {
             mna=new ProjectionBuilder(ImportUtils.readGuessFormat(donorFile));
@@ -209,15 +197,8 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             }
 
         }
-        
+        characterizeHeterozygosity();
         int numThreads = Runtime.getRuntime().availableProcessors();
-        double notMissing= 0;
-        double het= 0;
-        for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon++) {het+= (double)unimpAlign.heterozygousCountForTaxon(taxon); notMissing+= (double)unimpAlign.totalNonMissingForTaxon(taxon);}
-        double avgHet= het/notMissing;
-        double sqDif= 0;
-        for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon++) {double x= avgHet-((double)unimpAlign.heterozygousCountForTaxon(taxon)/(double)unimpAlign.totalNonMissingForTaxon(taxon)); sqDif+= (x*x);}
-        System.out.println("Average Heterozygosity: "+avgHet+" plus/minus std error: "+Math.sqrt(sqDif/(unimpAlign.numberOfTaxa()-1))/Math.sqrt(unimpAlign.numberOfTaxa()));
         System.out.println("Time to read in files and generate masks: "+((System.currentTimeMillis()-time)/1000)+" sec");
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
         
@@ -226,7 +207,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             ImputeOneTaxon theTaxon= (((double)unimpAlign.heterozygousCountForTaxon(taxon)/(double)unimpAlign.totalNonMissingForTaxon(taxon))<hetThresh)?
                 new ImputeOneTaxon(taxon, donorAlign, minSitesPresent, conflictMasks,imputeDonorFile, mna, trackBlockNN, maxInbredErrFocusHomo, maxHybridErrFocusHomo, maxSmashErrFocusHomo, true):
                     new ImputeOneTaxon(taxon, donorAlign, minSitesPresent, conflictMasks,imputeDonorFile, mna, trackBlockNN, maxInbredErrFocusHet, 0, maxSmashErrFocusHet, false);
-            //        theTaxon.run();
+            //        theTaxon.run(); //retained to provide a quick way to debug.  uncomment to help in debugging.
             pool.execute(theTaxon);
         }
         pool.shutdown();
@@ -241,8 +222,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         StringBuilder s=new StringBuilder();
         s.append(String.format("%s %s MinMinor:%d ", donorFile, unImpTargetFile, minMinorCnt));
         System.out.println(s.toString());
-        //double errRate=(double)totalWrong/(double)(totalRight+totalWrong);
-        //System.out.printf("TotalRight %d  TotalWrong %d TotalHets: %d ErrRateExcHet:%g %n",totalRight, totalWrong, totalHets, errRate);
         
         double runtime= (double)(System.currentTimeMillis()-time)/(double)1000;
         if(isOutputProjection) {
@@ -255,7 +234,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 ExportUtils.writeToHapmap(ab.build(), false, exportFile, '\t', null);
             }
         }
-        if (accuracyOn) ImputationAccuracy.calcAccuracy(ImportUtils.readGuessFormat(exportFile),unimpAlign, runtime);
         System.out.printf("%d %g %d %n",minMinorCnt, maximumInbredError, maxDonorHypotheses);
         System.out.println("Time to read in files, impute target genotypes, and calculate accuracy: "+runtime+" seconds");
     }
@@ -369,7 +347,22 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         }
     }
 
-     public static GenotypeTable[] loadDonors(String donorFileRoot, GenotypeTable unimpAlign, int minTestSites, boolean verboseOutput){
+    private void characterizeHeterozygosity() {
+        double notMissing= 0;
+        double het= 0;
+        for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon++) {
+            het+= (double)unimpAlign.heterozygousCountForTaxon(taxon);
+            notMissing+= (double)unimpAlign.totalNonMissingForTaxon(taxon);}
+        double avgHet= het/notMissing;
+        double sqDif= 0;
+        for (int taxon = 0; taxon < unimpAlign.numberOfTaxa(); taxon++) {
+            double x= avgHet-((double)unimpAlign.heterozygousCountForTaxon(taxon)/(double)unimpAlign.totalNonMissingForTaxon(taxon));
+            sqDif+= (x*x);}
+        System.out.println("Average Heterozygosity: "+avgHet+" plus/minus std error: "+Math.sqrt(sqDif/(unimpAlign.numberOfTaxa()-1))/Math.sqrt(unimpAlign.numberOfTaxa()));
+
+    }
+
+    private static GenotypeTable[] loadDonors(String donorFileRoot, GenotypeTable unimpAlign, int minTestSites, boolean verboseOutput){
         File theDF=new File(donorFileRoot);
         String prefilter=theDF.getName().split(".gX.")[0]+".gc"; //grabs the left side of the file
         String prefilterOld=theDF.getName().split("s\\+")[0]+"s"; //grabs the left side of the file
@@ -404,6 +397,18 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             //createMaskForAlignmentConflicts(unimpAlign,donorAlign[i],true);
         }
         if (removeDonors.isEmpty()==false) for(GenotypeTable gt:donorAlign) {donorAlign= (GenotypeTable[])ArrayUtils.removeElement(donorAlign, gt);}
+        return donorAlign;
+    }
+
+    private static GenotypeTable[] loadDonors(String donorFile, GenotypeTable unimpAlign, int minTestSites, int appoxSitesPerHaplotype, boolean verboseOutput){
+        GenotypeTable donorMasterGT=ImportUtils.readGuessFormat(donorFile);
+        int[][] donorFirstLastSites=FILLINFindHaplotypesPlugin.divideChromosome(donorMasterGT,appoxSitesPerHaplotype,true);
+        PositionList donU= unimpAlign.positions();
+        GenotypeTable[] donorAlign=new GenotypeTable[donorFirstLastSites.length];
+        for (int i = 0; i < donorAlign.length; i++) {
+            if(verboseOutput) System.out.println("Starting Read");
+            donorAlign[i]=FilterGenotypeTable.getInstance(donorMasterGT,donorFirstLastSites[i][0],donorFirstLastSites[i][1]);
+            }
         return donorAlign;
     }
 
@@ -939,6 +944,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         if(theDH[0].getPhaseForSite(startSite)==0) {prevDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor1Taxon};}
         else if(theDH[0].getPhaseForSite(startSite)==2) {prevDonors=new int[]{theDH[0].donor2Taxon, theDH[0].donor2Taxon};}
         else if(theDH[0].getPhaseForSite(startSite)==1) {prevDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor2Taxon};}
+        int prevDonorStart=0;
 //        if(impT.areBreakPointsEmpty()) {
 //            prevDonors=new int[]{-1, -1};
 //        } else {
@@ -984,6 +990,11 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             if(!Arrays.equals(prevDonors, currDonors)) {
       //          impT.breakPoints.put(donorAlign.chromosomalPosition(cs), currDonors);    //TODO fix this for projection
                 prevDonors=currDonors;
+                DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
+                        donorAlign.chromosomalPosition(cs),prevDonors[0],prevDonors[1]);
+                impT.addBreakPoint(dhaps);
+                prevDonors=currDonors;
+                prevDonorStart=cs;   //todo this doesn't seem to increment correctly for hets
             }
             if(theDH[0].phasedResults==null) {impT.chgHis[cs+donorOffset]=(byte)-neighbor;}
             else {impT.chgHis[cs+donorOffset]=(byte)neighbor;}
@@ -1012,6 +1023,9 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         int nextSite=unimpAlign.siteOfPhysicalPosition(lastDApos, donorAlign.chromosome(0))+1;
        // if(nextSite<unimpAlign.numberOfSites()) impT.breakPoints.put(unimpAlign.chromosomalPosition(nextSite), new int[]{-1,-1});       //TODO fix this for projection
         //    if (print) System.out.println("E:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
+        DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
+                donorAlign.chromosomalPosition(endSite),prevDonors[0],prevDonors[1]);
+        impT.addBreakPoint(dhaps);
         return impT;
 
         /**
@@ -1188,7 +1202,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         myLogger.info(
                 "\n\n\nAvailable options for the FILLINImputationPlugin are as follows:\n"
                         + "-hmp   Input HapMap file of target genotypes to impute. Accepts all file types supported by TASSEL5\n"
-                        + "-d    Donor haplotype files from output of FILLINFindHaplotypesPlugin. Use “.gX” in the input filename to denote the substring “.gc#s#” found in donor files\n"
+                        + "-d    Donor haplotype files from output of FILLINFindHaplotypesPlugin. Use .gX in the input filename to denote the substring .gc#s# found in donor files\n"
                         + "-o     Output file; hmp.txt.gz and .hmp.h5 accepted. Required\n"
                         + "-maskKeyFile An optional key file to indicate that file is already masked for accuracy calculation. Non-missing genotypes indicate masked sites. Else, will generate own mask\n"
                         + "-propSitesMask   The proportion of non missing sites to mask for accuracy calculation if depth is not available (default:"+propSitesMask+"\n"
