@@ -134,7 +134,15 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         }
         return GenotypeTableBuilder.getInstance(gB.build(),inAlign.positions(),tLB.build());
     }
-    
+
+
+    /**
+     * Divides a genome up into roughly equally sized blocks of sites
+     * @param a
+     * @param appoxSitesPerHaplotype
+     * @param verboseOutput
+     * @return array of start and last positions
+     */
     public static int[][] divideChromosome(GenotypeTable a, int appoxSitesPerHaplotype, boolean verboseOutput) {
         Chromosome[] theL=a.chromosomes();
         ArrayList<int[]> allDivisions=new ArrayList<int[]>();
