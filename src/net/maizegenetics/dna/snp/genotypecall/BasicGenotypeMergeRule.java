@@ -11,6 +11,7 @@ import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
  * genotypic calls and for read depth.  In general if depth is available, it will be used to merge.
  *
  * @author Ed Buckler
+ * @author Jeff Glaubitz
  */
 public class BasicGenotypeMergeRule implements GenotypeMergeRule {
     private final double errorRate;
