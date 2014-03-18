@@ -1464,7 +1464,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         myLogger.info(
                 "\n\n\nAvailable options for the FILLINImputationPlugin are as follows:\n"
                         + "-hmp   Input HapMap file of target genotypes to impute. Accepts all file types supported by TASSEL5\n"
-                        + "-d    Donor haplotype files from output of FILLINFindHaplotypesPlugin. Use “.gX” in the input filename to denote the substring “.gc#s#” found in donor files\n"
+                        + "-d    Donor haplotype files from output of FILLINFindHaplotypesPlugin. Use .gX in the input filename to denote the substring .gc#s# found in donor files\n"
                         + "-o     Output file; hmp.txt.gz and .hmp.h5 accepted. Required\n"
                         + "-maskKeyFile An optional key file to indicate that file is already masked for accuracy calculation. Non-missing genotypes indicate masked sites. Else, will generate own mask\n"
                         + "-propSitesMask   The proportion of non missing sites to mask for accuracy calculation if depth is not available (default:"+propSitesMask+"\n"
