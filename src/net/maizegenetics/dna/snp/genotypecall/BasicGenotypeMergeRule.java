@@ -15,7 +15,10 @@ import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
 public class BasicGenotypeMergeRule implements GenotypeMergeRule {
     private final double errorRate;
     private final int maxCountAtGeno=500;
-    private final int[] likelihoodRatioThreshAlleleCnt;
+    private final int[] likelihoodRatioThreshAlleleCnt;  // index = sample size; value = min count of less tagged allele for likelihood ratio > 1
+        // if less tagged allele has counts < likelihoodRatioThreshAlleleCnt[totalCount], call it a homozygote
+        // where likelihood ratio = (binomial likelihood het) / (binomial likelihood all less tagged alleles are errors)
+
 
     private void setLikelihoodThresh() {   // initialize the likelihood ratio cutoffs for quantitative SNP calling
 //        System.out.println("\n\nInitializing the cutoffs for quantitative SNP calling likelihood ratio (pHet/pErr) >1\n");
