@@ -65,6 +65,7 @@ public class BuilderFromHapMap {
         try {
             int numThreads=Runtime.getRuntime().availableProcessors();
             ExecutorService pool=Executors.newFixedThreadPool(numThreads);
+            System.out.print("Reading :"+infile+" ");
             BufferedReader r=Utils.getBufferedReader(infile, -1);
             Map<String,SetMultimap<String,String>> sampAnnoBuild=new TreeMap<>();
             String currLine;
@@ -94,6 +95,7 @@ public class BuilderFromHapMap {
                     //     pb.run();
                     pool.execute(pb);
                     txtLines=new ArrayList<>(linesAtTime);
+                    System.out.print(".");
                 }
             }
             r.close();
@@ -123,6 +125,7 @@ public class BuilderFromHapMap {
             }
             GenotypeCallTable g=gb.build();
             result=GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList);
+            System.out.println(" finished");
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         }
