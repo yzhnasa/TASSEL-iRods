@@ -74,7 +74,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private TaxaList taxaList=null;
     private PositionList myPositionList=null;
     private IntArrayList[] obsTagsForEachTaxon=null;
-    private Table<Chromosome,Integer,Integer> positionToSite = null;  // indices = chrIndices.  For a given position (key), each HashMap provides the site in the MutableNucleotideDepthAlignment (value)
+    private Table<Integer,Integer,Integer> positionToSite = null;  // indices = chrIndices.  For a given position (key), each HashMap provides the site in the MutableNucleotideDepthAlignment (value)
     private int totalNSites = 0;
 
     //Documentation of read depth per sample (one recored per replicate)
@@ -502,7 +502,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         ImmutableTable.Builder ptsB=new ImmutableTable.Builder<Chromosome, Integer, Integer>();
         for (int i = 0; i < pl.numberOfSites(); i++) {
             Position position=pl.get(i);
-            ptsB.put(position.getChromosome(),position.getPosition(),i);
+            ptsB.put(position.getChromosome().getChromosomeNumber(),position.getPosition(),i);
         }
         positionToSite=ptsB.build();
     }
