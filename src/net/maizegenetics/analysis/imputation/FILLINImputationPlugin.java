@@ -495,6 +495,9 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         return new int[]{cnt,cntHets};
     }
 
+    /*
+    Major and minor allele get swapped between alignment.  This method flips these, and sets the bad sites to missing
+     */
     private BitSet[] arrangeMajorMinorBtwAlignments(GenotypeTable unimpAlign, int bt, int donorOffset, int donorLength,
             OpenBitSet goodMask, OpenBitSet swapMjMnMask) {
         int unimpAlignStartBlock=donorOffset/64;
@@ -944,7 +947,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         if(theDH[0].getPhaseForSite(startSite)==0) {prevDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor1Taxon};}
         else if(theDH[0].getPhaseForSite(startSite)==2) {prevDonors=new int[]{theDH[0].donor2Taxon, theDH[0].donor2Taxon};}
         else if(theDH[0].getPhaseForSite(startSite)==1) {prevDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor2Taxon};}
-        int prevDonorStart=0;
+        int prevDonorStart=startSite;
 //        if(impT.areBreakPointsEmpty()) {
 //            prevDonors=new int[]{-1, -1};
 //        } else {

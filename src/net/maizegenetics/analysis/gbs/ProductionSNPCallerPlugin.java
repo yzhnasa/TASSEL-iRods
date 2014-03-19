@@ -82,6 +82,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private Map<String,Integer> matchedReadCountsForFullSampleName = new TreeMap<>();
 
     private boolean stacksL = false;  // if true, use STACKS likelihood method for calling hets
+    private boolean keepOpen = false; // if true, keep the HDF5 genotypes file open for future edits ( i.e., final close is: genos.closeUnfinished() )
     private double errorRate = 0.01;
     private BasicGenotypeMergeRule genoMergeRule = null;
     
@@ -102,6 +103,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             + "  -m   Physical map file containing tags and corresponding variants (production TOPM)\n"
             + "  -o   Output (target) HDF5 genotypes file to add new genotypes to (new file created if it doesn't exist)\n"
             + "  -eR  Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
+            + "  -ko  Keep hdf5 genotypes open for future runs that add more taxa or more depth\n (default: finalize hdf5 file)"
 //            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)\n\n\n"
 //            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
         );
@@ -121,6 +123,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             myArgsEngine.add("-m",  "--physical-map", true);
             myArgsEngine.add("-o",  "--target-HDF5", true);
             myArgsEngine.add("-eR", "--seqErrRate", true);
+            myArgsEngine.add("-ko", "--keep-open", false);
             myArgsEngine.add("-sL", "--STACKS-likelihood", false);
             myArgsEngine.add("-d",  "--divergence", true);
         }
@@ -186,6 +189,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-sL")) {
             stacksL = true;
         }
+        if (myArgsEngine.getBoolean("-ko")) {
+            keepOpen = true;
+        }
         if (myArgsEngine.getBoolean("-d")) {
             maxDivergence = Integer.parseInt(myArgsEngine.getString("-d"));
         }
@@ -207,6 +213,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             callGenotypes();
             ++nFilesProcessed;
             reportTotals(fileNum, counters, nFilesProcessed);
+            if(fileNum == myRawSeqFileNames.length-1 && !keepOpen) {
+                genos.build();
+            } else {
+                genos.closeUnfinished();
+            }
         }
         writeReadsPerSampleReports();
         return null;
@@ -577,7 +588,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
     
     private void callGenotypes() {
-        System.out.print("\nCalling genotypes...");
+        System.out.println("\nCalling genotypes...");
         for (int currTaxonIndex = 0; currTaxonIndex < obsTagsForEachTaxon.length; currTaxonIndex++) {
             IntArrayList currTagList=obsTagsForEachTaxon[currTaxonIndex];
             currTagList.sort();
@@ -594,22 +605,22 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 }
             }
             incrementDepthForTagVariants(prevTag,alleleDepths,currInc);
-            byte[] taxonGenos=resolveGenosForTaxon(alleleDepths);
-            genos.addTaxon(taxaList.get(currTaxonIndex),alleleDepths,taxonGenos);  //GenotypeBuilder takes care of the int to byte conversion for alleleDepths.
+            byte[][] byteDepths = AlleleDepthUtil.depthIntToByte(alleleDepths);
+            byte[] taxonGenos = resolveGenosForTaxon(byteDepths);
+            genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,byteDepths);
+            System.out.println("  finished calling genotypes for "+taxaList.get(currTaxonIndex).getName());
         }
-        genos.closeUnfinished();
-        System.out.print("   ...done\n");
+        System.out.println("Finished calling genotypes for "+obsTagsForEachTaxon.length+" taxa\n");
     }
     
-    private byte[] resolveGenosForTaxon(int[][] depthsForTaxon) {
-        byte[][] byteDepthsForTaxon = AlleleDepthUtil.depthIntToByte(depthsForTaxon);
-        int nAlleles = byteDepthsForTaxon.length;
+    private byte[] resolveGenosForTaxon(byte[][] depthsForTaxon) {
+        int nAlleles = depthsForTaxon.length;
         byte[] depthsAtSite = new byte[nAlleles];
-        int nSites = byteDepthsForTaxon[0].length;
+        int nSites = depthsForTaxon[0].length;
         byte[] genos = new byte[nSites];
         for (int site = 0; site < nSites; site++) {
             for (int allele = 0; allele < nAlleles; allele++) {
-                depthsAtSite[allele] = byteDepthsForTaxon[allele][site];
+                depthsAtSite[allele] = depthsForTaxon[allele][site];
             }
             genos[site] = genoMergeRule.callBasedOnDepth(depthsAtSite);
         }

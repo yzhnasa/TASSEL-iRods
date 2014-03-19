@@ -42,6 +42,7 @@ final class PositionArrayList implements PositionList {
         myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
         myChrNameHash=new HashMap();
         int currStart=0;
+        if(builderList.isEmpty()) return;  //allows for the creation of an empty PositionArrayList
         Chromosome currChr=builderList.get(0).getChromosome();
         for (int i=0; i<builderList.size(); i++) {
             Position ap=builderList.get(i);
