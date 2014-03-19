@@ -23,6 +23,8 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
     private static final Logger myLogger = Logger.getLogger(StepwiseOLSModelFitterPlugin.class);
     private double enterlimit = 1e-5;
     private double exitlimit = 2e-5;
+    private int numberOfPermutations = 0;
+    private double alpha = 0.05;
     private double[] enterlimits = null;
     private double[] exitlimits = null;
     int maxNumberOfMarkers = 1000;
@@ -94,6 +96,9 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 			nestMarkers = myDialog.isNested();
             modelType = myDialog.getModelType();
 
+                        numberOfPermutations = myDialog.getNumberOfPermutations();
+                        alpha = myDialog.getAlpha();
+
 			if (nestMarkers) {
 				String blahblah = myDialog.getNestedEffect();
 				int ptr = 0;
@@ -114,17 +119,27 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 		modelFitter.setNested(nestMarkers);
 		modelFitter.setNestingEffectIndex(nestingFactorIndex);
 		modelFitter.setModelType(modelType);
+                modelFitter.setNumberOfPermutations(numberOfPermutations);
+                modelFitter.setAlpha(alpha);
                 
 		modelFitter.runAnalysis();
 		
 		TableReport trResults = modelFitter.getAnovaReport();
 		TableReport trEffects = modelFitter.getMarkerEffectReport();
+		TableReport trResultsAfterCIScan = modelFitter.getAnovaReportWithCI();
+		TableReport trEffectsAfterCIScan = modelFitter.getMarkerEffectReportWithCI();
+                TableReport trPermPvalues = modelFitter.getPermutationReport();
+                
 		LinkedList<Datum> datumList = new LinkedList<Datum>();
 		if (trResults != null) datumList.add(new Datum("ANOVA_stepwise_" + datasets.get(0).getName(), trResults, "comments"));
 		if (trEffects != null) datumList.add(new Datum("Marker_estimates_" + datasets.get(0).getName(), trEffects, "comments"));
+		if (trResultsAfterCIScan != null) datumList.add(new Datum("ANOVA_stepwise_After_CI_Scan" + datasets.get(0).getName(), trResultsAfterCIScan, "comments"));
+		if (trEffectsAfterCIScan != null) datumList.add(new Datum("Marker_estimates_After_CI_Scan" + datasets.get(0).getName(), trEffectsAfterCIScan, "comments"));
+		if (trPermPvalues != null) datumList.add(new Datum("Permuted_Pvalues" + datasets.get(0).getName(), trPermPvalues, "comments"));
 		
 		DataSet myResult = new DataSet(datumList, this);
 		fireDataSetReturned(myResult);
+ 
 		return myResult;
 	}
 
@@ -162,6 +177,14 @@ public class StepwiseOLSModelFitterPlugin extends AbstractPlugin {
 
 	public void setExitlimits(double[] exitlimits) {
 		this.exitlimits = exitlimits;
+	}
+
+	public void setNumberOfPermutations(int numberOfPermutations) {
+		this.numberOfPermutations = numberOfPermutations;
+	}
+ 
+	public void setAlpha(double alpha) {
+		this.alpha = alpha;
 	}
 
 	public void setMaxNumberOfMarkers(int maxNumberOfMarkers) {

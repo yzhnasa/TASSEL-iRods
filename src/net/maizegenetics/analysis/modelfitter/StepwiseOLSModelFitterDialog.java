@@ -21,7 +21,6 @@ import javax.swing.JRadioButton;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
 
-import net.maizegenetics.dna.snp.GenotypeTable;
 
 public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListener {
 	JCheckBox chkNested = null;
@@ -30,7 +29,7 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 	JButton btnOk = new JButton("OK");
 	JButton btnCancel = new JButton("Cancel");
 	JLabel lblWhich = new JLabel("Which factor?");
-	JTextField txtEnter, txtExit, txtMax;
+	JTextField txtEnter, txtExit, txtMax, txtPerm, txtAlpha;
 	String enterlim, exitlim;
 	String[] mainEffects = null;
 	int indexOfSelectedEffect = 0;
@@ -67,80 +66,106 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
         modelSelectionButtonGroup.add(AICRadioButton);
         PvalueRadioButton.setSelected(true);
         
-		if (numberOfMainEffects > 1) {
-			chkNested = new JCheckBox("Nest markers within a factor", null, false);
-			myPanel.add(chkNested);
-			chkNested.setAlignmentX(CENTER_ALIGNMENT);
-			chkNested.addActionListener(this);
-			chkNested.setActionCommand("nest");
-			
-			
-			lblWhich.setAlignmentX(CENTER_ALIGNMENT);
-			lblWhich.setEnabled(false);
-			myPanel.add(Box.createVerticalStrut(30));
-			myPanel.add(lblWhich);
-			
-			listMainEffects = new JList<String>(mainEffects);
-			listMainEffects.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			myPanel.add(Box.createVerticalStrut(10));
-			myPanel.add(listMainEffects);
-			listMainEffects.setAlignmentX(Component.CENTER_ALIGNMENT);
-			listMainEffects.setEnabled(false);
-			
-		} else if (numberOfMainEffects == 1) {
-			chkNested = new JCheckBox("Nest markers within " + mainEffects[0], null, false);
-			myPanel.add(chkNested);
-			chkNested.setAlignmentX(CENTER_ALIGNMENT);
-			chkNested.addActionListener(this);
-			chkNested.setActionCommand("nest");
-		}
-		
-		if (numberOfMainEffects > 0) {
-			myPanel.add(Box.createVerticalStrut(20));
-			JLabel sep1 = new JLabel("-----------------------");
-			sep1.setAlignmentX(CENTER_ALIGNMENT);
-			myPanel.add(sep1);
-		}
+            if (numberOfMainEffects > 1) {
+                    chkNested = new JCheckBox("Nest markers within a factor", null, false);
+                    myPanel.add(chkNested);
+                    chkNested.setAlignmentX(CENTER_ALIGNMENT);
+                    chkNested.addActionListener(this);
+                    chkNested.setActionCommand("nest");
 
-		myPanel.add(Box.createVerticalStrut(20));
 
-		Box enterBox = Box.createHorizontalBox();
-		enterBox.add(new JLabel("enter limit"));
-		txtEnter = new JTextField(enterlim, 15);
-		enterBox.add(txtEnter);
-		myPanel.add(enterBox);
-		
-		myPanel.add(Box.createVerticalStrut(10));
-		
-		Box exitBox = Box.createHorizontalBox();
-		exitBox.add(new JLabel("exit limit"));
-		txtExit = new JTextField(exitlim, 15);
-		exitBox.add(txtExit);
-		myPanel.add(exitBox);
-		
-		myPanel.add(Box.createVerticalStrut(10));
-		myPanel.add(btnLimits);
-		btnLimits.setActionCommand("limits");
-		btnLimits.setAlignmentX(CENTER_ALIGNMENT);
-		
-		
-		myPanel.add(Box.createVerticalStrut(20));
-		JLabel sep2 = new JLabel("-----------------------");
-		myPanel.add(sep2);
-		sep2.setAlignmentX(CENTER_ALIGNMENT);
-		myPanel.add(Box.createVerticalStrut(20));
-		
-		Box maxBox = Box.createHorizontalBox();
-		maxBox.add(new JLabel("Maximum number of markers"));
-		txtMax = new JTextField("30", 6);
-		maxBox.add(txtMax);
-		myPanel.add(maxBox);
-		
-		myPanel.add(Box.createVerticalStrut(20));
-        myPanel.add(Box.createVerticalStrut(20));
-        JLabel sep3 = new JLabel("-----------------------");
+                    lblWhich.setAlignmentX(CENTER_ALIGNMENT);
+                    lblWhich.setEnabled(false);
+                    myPanel.add(Box.createVerticalStrut(30));
+                    myPanel.add(lblWhich);
+
+                    listMainEffects = new JList<String>(mainEffects);
+                    listMainEffects.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                    myPanel.add(Box.createVerticalStrut(10));
+                    myPanel.add(listMainEffects);
+                    listMainEffects.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    listMainEffects.setEnabled(false);
+
+            } else if (numberOfMainEffects == 1) {
+                    chkNested = new JCheckBox("Nest markers within " + mainEffects[0], null, false);
+                    myPanel.add(chkNested);
+                    chkNested.setAlignmentX(CENTER_ALIGNMENT);
+                    chkNested.addActionListener(this);
+                    chkNested.setActionCommand("nest");
+            }
+
+            if (numberOfMainEffects > 0) {
+                    myPanel.add(Box.createVerticalStrut(20));
+                    JLabel sep1 = new JLabel("-----------------------");
+                    sep1.setAlignmentX(CENTER_ALIGNMENT);
+                    myPanel.add(sep1);
+            }
+
+            myPanel.add(Box.createVerticalStrut(20));
+
+            Box enterBox = Box.createHorizontalBox();
+            enterBox.add(new JLabel("enter limit"));
+            txtEnter = new JTextField(enterlim, 15);
+            enterBox.add(txtEnter);
+            myPanel.add(enterBox);
+
+            myPanel.add(Box.createVerticalStrut(10));
+
+            Box exitBox = Box.createHorizontalBox();
+            exitBox.add(new JLabel("exit limit"));
+            txtExit = new JTextField(exitlim, 15);
+            exitBox.add(txtExit);
+            myPanel.add(exitBox);
+
+            myPanel.add(Box.createVerticalStrut(10));
+            myPanel.add(btnLimits);
+            btnLimits.setActionCommand("limits");
+            btnLimits.setAlignmentX(CENTER_ALIGNMENT);
+
+
+            myPanel.add(Box.createVerticalStrut(20));
+            JLabel sep2 = new JLabel("-----------------------");
+            myPanel.add(sep2);
+            sep2.setAlignmentX(CENTER_ALIGNMENT);
+            myPanel.add(Box.createVerticalStrut(20));
+
+            Box maxBox = Box.createHorizontalBox();
+            maxBox.add(new JLabel("Maximum number of markers"));
+            txtMax = new JTextField("30", 6);
+            maxBox.add(txtMax);
+            myPanel.add(maxBox);
+
+            myPanel.add(Box.createVerticalStrut(20));
+    JLabel sep3 = new JLabel("-----------------------");
         myPanel.add(sep3);
         sep3.setAlignmentX(CENTER_ALIGNMENT);  
+		myPanel.add(Box.createVerticalStrut(20));
+
+                Box permBox = Box.createHorizontalBox();
+		permBox.add(new JLabel("Number of Permutations (only for P-value model selection)"));
+		txtPerm = new JTextField("0", 6);
+		permBox.add(txtPerm);
+		myPanel.add(permBox);
+                myPanel.add(Box.createVerticalStrut(20));
+ 
+		
+                myPanel.add(Box.createVerticalStrut(20));
+		JLabel sep4 = new JLabel("------");
+		myPanel.add(sep4);
+		sep4.setAlignmentX(CENTER_ALIGNMENT);
+		myPanel.add(Box.createVerticalStrut(20));
+                
+                Box alphaBox = Box.createHorizontalBox();
+		alphaBox.add(new JLabel("Type I Error Rate for Permutations"));
+		txtAlpha = new JTextField("0.05", 6);
+		alphaBox.add(txtAlpha);
+		myPanel.add(alphaBox);
+		
+		myPanel.add(Box.createVerticalStrut(20));
+                myPanel.add(Box.createVerticalStrut(20));
+                JLabel sep5 = new JLabel("-----------------------");
+                myPanel.add(sep5);
+                sep5.setAlignmentX(CENTER_ALIGNMENT);  
 
         myPanel.add(PvalueRadioButton);
         myPanel.add(mBICRadioButton);
@@ -153,9 +178,9 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
         AICRadioButton.setAlignmentX(CENTER_ALIGNMENT);
 
         myPanel.add(Box.createVerticalStrut(20));
-        JLabel sep4 = new JLabel("-----------------------");
-        myPanel.add(sep4);
-		sep4.setAlignmentX(CENTER_ALIGNMENT);
+                JLabel sep6 = new JLabel("-----------------------");
+                myPanel.add(sep6);
+		sep6.setAlignmentX(CENTER_ALIGNMENT);
 		myPanel.add(Box.createVerticalStrut(20));
 		
 		Box buttonBox = Box.createHorizontalBox();
@@ -171,9 +196,9 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 		buttonBox.setAlignmentX(CENTER_ALIGNMENT);
 
 		myPanel.add(Box.createVerticalStrut(20));
-		JLabel sep5 = new JLabel("------Developed by Peter Bradbury and Alex Lipka, 2013-----------------");
-		myPanel.add(sep5);
-		sep5.setAlignmentX(CENTER_ALIGNMENT);
+		JLabel sep7 = new JLabel("------Developed by Peter Bradbury and Alex Lipka, 2013-----------------");
+		myPanel.add(sep7);
+		sep7.setAlignmentX(CENTER_ALIGNMENT);
 		JLabel note1 = new JLabel("Note: Because the Stepwise method does not allow missing marker data,");
 		JLabel note2 = new JLabel("the marker value N will be treated as a marker class, not missing data.");
 		note1.setAlignmentX(CENTER_ALIGNMENT);
@@ -227,6 +252,14 @@ public class StepwiseOLSModelFitterDialog extends JDialog implements ActionListe
 	
 	public double[] getExitLimits() {
 		return StepwiseOLSModelFitterPlugin.parseDoubles(txtExit.getText(), ",");
+	}
+	
+        public int getNumberOfPermutations() {
+		return Integer.parseInt(txtPerm.getText());
+	}
+
+        public double getAlpha() {
+		return Double.parseDouble(txtAlpha.getText());
 	}
 	
 	public int getMaxNumberOfMarkers() {
