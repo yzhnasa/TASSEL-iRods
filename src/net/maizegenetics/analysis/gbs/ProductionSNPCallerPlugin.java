@@ -9,7 +9,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeMultimap;
 import net.maizegenetics.dna.map.*;
-import net.maizegenetics.dna.snp.ExportUtils;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
@@ -20,13 +19,12 @@ import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.DirectoryCrawler;
 import net.maizegenetics.util.MultiMemberGZIPInputStream;
-import net.maizegenetics.util.VCFUtil;
-import org.apache.commons.math.distribution.BinomialDistributionImpl;
 import org.apache.log4j.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
+import net.maizegenetics.dna.snp.depth.AlleleDepthUtil;
 import net.maizegenetics.dna.snp.genotypecall.BasicGenotypeMergeRule;
 
 /**
@@ -45,6 +43,8 @@ import net.maizegenetics.dna.snp.genotypecall.BasicGenotypeMergeRule;
  * 
  * It requires a TOPM with variants added from a previous "Discovery Pipeline"
  * run.  In binary topm or HDF5 format (TOPMInterface).
+ * 
+ * TODO add the Stacks likelihood method to BasicGenotypeMergeRule
  *
  * @author Jeff Glaubitz
  * @author Ed Buckler
@@ -74,7 +74,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private TaxaList taxaList=null;
     private PositionList myPositionList=null;
     private IntArrayList[] obsTagsForEachTaxon=null;
-    private Table<Chromosome,Integer,Integer> positionToSite = null;  // indices = chrIndices.  For a given position (key), each HashMap provides the site in the MutableNucleotideDepthAlignment (value)
+    private Table<Integer,Integer,Integer> positionToSite = null;  // indices = chrIndices.  For a given position (key), each HashMap provides the site in the MutableNucleotideDepthAlignment (value)
     private int totalNSites = 0;
 
     //Documentation of read depth per sample (one recored per replicate)
@@ -82,12 +82,10 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private Map<String,Integer> matchedReadCountsForFullSampleName = new TreeMap<>();
 
     private boolean stacksL = false;  // if true, use STACKS likelihood method for calling hets
+    private boolean keepOpen = false; // if true, keep the HDF5 genotypes file open for future edits ( i.e., final close is: genos.closeUnfinished() )
     private double errorRate = 0.01;
-    private final static int maxCountAtGeno = 500;  // maximum value for likelihoodRatioThreshAlleleCnt[] lookup table
-    private static int[] likelihoodRatioThreshAlleleCnt = null;  // index = sample size; value = min count of less tagged allele for likelihood ratio > 1
-    // if less tagged allele has counts < likelihoodRatioThreshAlleleCnt[totalCount], call it a homozygote
-    // where likelihood ratio = (binomial likelihood het) / (binomial likelihood all less tagged alleles are errors)
-
+    private BasicGenotypeMergeRule genoMergeRule = null;
+    
     public ProductionSNPCallerPlugin() {
         super(null, false);
     }
@@ -103,9 +101,10 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             + "  -k   Barcode key file\n"
             + "  -e   Enzyme used to create the GBS library\n"
             + "  -m   Physical map file containing tags and corresponding variants (production TOPM)\n"
-            + "  -t   Target HDF5 genotypes file to add new genotypes to (new file created if target does not exist)\n"
+            + "  -o   Output (target) HDF5 genotypes file to add new genotypes to (new file created if it doesn't exist)\n"
             + "  -eR  Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
-            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)\n\n\n"
+            + "  -ko  Keep hdf5 genotypes open for future runs that add more taxa or more depth\n (default: finalize hdf5 file)"
+//            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)\n\n\n"
 //            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
         );
     }
@@ -122,8 +121,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             myArgsEngine.add("-k",  "--key-file", true);
             myArgsEngine.add("-e",  "--enzyme", true);
             myArgsEngine.add("-m",  "--physical-map", true);
-            myArgsEngine.add("-t",  "--target-HDF5", true);
+            myArgsEngine.add("-o",  "--target-HDF5", true);
             myArgsEngine.add("-eR", "--seqErrRate", true);
+            myArgsEngine.add("-ko", "--keep-open", false);
             myArgsEngine.add("-sL", "--STACKS-likelihood", false);
             myArgsEngine.add("-d",  "--divergence", true);
         }
@@ -175,8 +175,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-eR")) {
             errorRate = Double.parseDouble(myArgsEngine.getString("-eR"));
         }
-        if (myArgsEngine.getBoolean("-t")) {
-            myTargetHDF5file = myArgsEngine.getString("-t");
+        if (myArgsEngine.getBoolean("-o")) {
+            myTargetHDF5file = myArgsEngine.getString("-o");
             myOutputDir = myTargetHDF5file.substring(0, myTargetHDF5file.lastIndexOf(File.separator));
             File outDir = new File(myOutputDir);
             if (!outDir.isDirectory()) {
@@ -188,6 +188,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
         if (myArgsEngine.getBoolean("-sL")) {
             stacksL = true;
+        }
+        if (myArgsEngine.getBoolean("-ko")) {
+            keepOpen = true;
         }
         if (myArgsEngine.getBoolean("-d")) {
             maxDivergence = Integer.parseInt(myArgsEngine.getString("-d"));
@@ -210,6 +213,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             callGenotypes();
             ++nFilesProcessed;
             reportTotals(fileNum, counters, nFilesProcessed);
+            if(fileNum == myRawSeqFileNames.length-1 && !keepOpen) {
+                genos.build();
+            } else {
+                genos.closeUnfinished();
+            }
         }
         writeReadsPerSampleReports();
         return null;
@@ -223,7 +231,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
         setUpGenotypeTableBuilder(fileNum);
         obsTagsForEachTaxon = new IntArrayList[taxaList.numberOfTaxa()];
-        for (IntArrayList intArrayList : obsTagsForEachTaxon) intArrayList=new IntArrayList(750_000); // initial capacity
+        for (int t = 0; t < obsTagsForEachTaxon.length; t++) {
+            obsTagsForEachTaxon[t]=new IntArrayList(750_000); // initial capacity
+        }
         String temp = "Nothing has been read from the raw sequence file yet";
         BufferedReader br = getBufferedReaderForRawSeqFile(fileNum);
         try {
@@ -441,11 +451,12 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
     
     private void setUpGenotypeTableBuilder(int fileNum) {
+        genoMergeRule = new BasicGenotypeMergeRule(errorRate);
         File hdf5File = new File(myTargetHDF5file);
         if (hdf5File.exists()) {
             System.out.println("\nGenotypes from the raw sequence file:\n  "+myRawSeqFileNames[fileNum]);
             System.out.println("will be added to existing HDF5 file:\n  "+myTargetHDF5file+"\n");
-            genos = GenotypeTableBuilder.mergeTaxaIncremental(myTargetHDF5file, new BasicGenotypeMergeRule(errorRate));
+            genos = GenotypeTableBuilder.mergeTaxaIncremental(myTargetHDF5file, genoMergeRule);
         } else {
             System.out.println("\nThe target HDF5 file:\n  "+myTargetHDF5file);
             System.out.println("does not exist. A new HDF5 file of that name will be created \nto hold the genotypes from the raw sequence file:");
@@ -502,7 +513,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         ImmutableTable.Builder ptsB=new ImmutableTable.Builder<Chromosome, Integer, Integer>();
         for (int i = 0; i < pl.numberOfSites(); i++) {
             Position position=pl.get(i);
-            ptsB.put(position.getChromosome(),position.getPosition(),i);
+            ptsB.put(position.getChromosome().getChromosomeNumber(),position.getPosition(),i);
         }
         positionToSite=ptsB.build();
     }
@@ -577,7 +588,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
     
     private void callGenotypes() {
-        System.out.print("\nCalling genotypes...");
+        System.out.println("\nCalling genotypes...");
         for (int currTaxonIndex = 0; currTaxonIndex < obsTagsForEachTaxon.length; currTaxonIndex++) {
             IntArrayList currTagList=obsTagsForEachTaxon[currTaxonIndex];
             currTagList.sort();
@@ -594,115 +605,26 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 }
             }
             incrementDepthForTagVariants(prevTag,alleleDepths,currInc);
-            byte[] taxonGenos=resolveGenosForTaxon(alleleDepths);
-            genos.addTaxon(taxaList.get(currTaxonIndex),alleleDepths,taxonGenos);  //GenotypeBuilder takes care of the int to byte conversion for alleleDepths.
+            byte[][] byteDepths = AlleleDepthUtil.depthIntToByte(alleleDepths);
+            byte[] taxonGenos = resolveGenosForTaxon(byteDepths);
+            genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,byteDepths);
+            System.out.println("  finished calling genotypes for "+taxaList.get(currTaxonIndex).getName());
         }
-        genos.closeUnfinished();
-        System.out.print("   ...done\n");
+        System.out.println("Finished calling genotypes for "+obsTagsForEachTaxon.length+" taxa\n");
     }
     
-    private byte[] resolveGenosForTaxon(int[][] depthsForTaxon) {
+    private byte[] resolveGenosForTaxon(byte[][] depthsForTaxon) {
         int nAlleles = depthsForTaxon.length;
-        int[] depthsAtSite = new int[nAlleles];
+        byte[] depthsAtSite = new byte[nAlleles];
         int nSites = depthsForTaxon[0].length;
         byte[] genos = new byte[nSites];
         for (int site = 0; site < nSites; site++) {
             for (int allele = 0; allele < nAlleles; allele++) {
                 depthsAtSite[allele] = depthsForTaxon[allele][site];
             }
-            genos[site] = resolveGeno(depthsAtSite);
+            genos[site] = genoMergeRule.callBasedOnDepth(depthsAtSite);
         }
         return genos;
-    }
-
-    @Deprecated
-    //use BasicGenotypeMergeRule
-    private byte resolveGeno(int[] depths) {
-        if (stacksL) {
-            int nAlleles = depths.length;
-            byte[] alleles = new byte[nAlleles];
-            for (byte a = 0; a < nAlleles; a++) {
-                alleles[a] = a;
-            }
-            return VCFUtil.resolveVCFGeno(alleles, depths);
-        }
-        int count = 0;
-        for (int a = 0; a < depths.length; a++) {
-            count += depths[a];
-        }
-        if (count == 0) {
-            return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
-        }
-        // check for each possible homozygote
-        for (int a = 0; a < depths.length; a++) {
-            if ((count - depths[a]) == 0) {
-                byte byteA = (byte) a;
-                return (byte) ((byteA << 4) | byteA);
-            }
-        }
-        return resolveHetGeno(depths);
-    }
-
-
-    @Deprecated
-    //use BasicGenotypeMergeRule
-    private byte resolveHetGeno(int[] depths) {
-        int max = 0;
-        byte maxAllele = GenotypeTable.UNKNOWN_ALLELE;
-        int nextMax = 0;
-        byte nextMaxAllele = GenotypeTable.UNKNOWN_ALLELE;
-        for (int a = 0; a < depths.length; a++) {
-            if (depths[a] > max) {
-                nextMax = max;
-                nextMaxAllele = maxAllele;
-                max = depths[a];
-                maxAllele = (byte) a;
-            } else if (depths[a] > nextMax) {
-                nextMax = depths[a];
-                nextMaxAllele = (byte) a;
-            }
-        }
-        // use the Glaubitz/Buckler LR method (if binomialPHet/binomialPErr > 1, call it a het)
-        int totCount = max + nextMax;
-        if (totCount < maxCountAtGeno) {
-            if (nextMax < likelihoodRatioThreshAlleleCnt[totCount]) {
-                return (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
-            } else {
-                return (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
-            }
-        } else {
-            if (nextMax / totCount < 0.1) {
-                return (byte) ((maxAllele << 4) | maxAllele); // call it a homozygote
-            } else {
-                return (byte) ((maxAllele << 4) | nextMaxAllele); // call it a het
-            }
-        }
-    }
-    
-
-    
-    private void throwSNPIDMismatchError(int nMismatches) {
-        String SNPIDMismatchMessage =
-            nMismatches+" mismatches between site indices in MutableNucleotideDepthAlignment and MutableNucleotideAlignmentHDF5\n";
-        try {
-            throw new IllegalStateException(SNPIDMismatchMessage);
-        } catch (Exception e) {
-            System.out.println("Problem writing to HDF5: " + e);
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-    
-    private void throwMissingTaxonInHDF5Error(String taxonName) {
-        String TaxonNotFoundMessage =
-            "The taxon \""+taxonName+"\" was not found in the MutableNucleotideAlignmentHDF5\n";
-        try {
-            throw new IllegalStateException(TaxonNotFoundMessage);
-        } catch (Exception e) {
-            System.out.println("Problem writing to HDF5: " + e);
-            e.printStackTrace();
-            System.exit(1);
-        }
     }
     
     private void writeReadsPerSampleReports() {
@@ -723,35 +645,6 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             System.exit(1);
         }
         System.out.print("   ...done\n");
-    }
-
-    @Deprecated
-    //use BasicGenotypeMergeRule
-    static void setLikelihoodThresh(double errorRate) {   // initialize the likelihood ratio cutoffs for quantitative SNP calling
-        likelihoodRatioThreshAlleleCnt = new int[maxCountAtGeno];
-        System.out.println("\n\nInitializing the cutoffs for quantitative SNP calling likelihood ratio (pHet/pErr) >1\n");
-        System.out.println("totalReadsForSNPInIndiv\tminLessTaggedAlleleCountForHet");
-        for (int trials = 0; trials < 2; ++trials) {
-            likelihoodRatioThreshAlleleCnt[trials] = 1;
-        }
-        int lastThresh = 1;
-        for (int trials = 2; trials < likelihoodRatioThreshAlleleCnt.length; ++trials) {
-            BinomialDistributionImpl binomHet = new BinomialDistributionImpl(trials, 0.5);
-            BinomialDistributionImpl binomErr = new BinomialDistributionImpl(trials, errorRate);
-            double LikeRatio;
-            try {
-                LikeRatio = binomHet.cumulativeProbability(lastThresh) / (1 - binomErr.cumulativeProbability(lastThresh) + binomErr.probability(lastThresh));
-                while (LikeRatio <= 1.0) {
-                    ++lastThresh;
-                    LikeRatio = binomHet.cumulativeProbability(lastThresh) / (1 - binomErr.cumulativeProbability(lastThresh) + binomErr.probability(lastThresh));
-                }
-                likelihoodRatioThreshAlleleCnt[trials] = lastThresh;
-                System.out.println(trials + "\t" + lastThresh);
-            } catch (Exception e) {
-                System.err.println("Error in the TagsAtLocus.BinomialDistributionImpl");
-            }
-        }
-        System.out.println("\n");
     }
 
     private void printFileNameConventions(String actualFileName) {
