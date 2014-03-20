@@ -115,7 +115,8 @@ public class DonorHypoth implements Comparable<DonorHypoth>{
     }
 
     public String toString() {
-        return String.format("FTx:%d D1Tx:%d D2Tx:%d SBk:%d FBk:%d EBk:%d TS:%d MS:%d ", targetTaxon, donor1Taxon, donor2Taxon, startBlock, focusBlock, endBlock, totalSites, mendelianErrors);
+        return String.format("TargetTx:%d Donor11Tx:%d Donor2Tx:%d FirstBlock:%d FocusBlock:%d LastBlock:%d TotalSites:%d MendelErrors:%d ",
+                targetTaxon, donor1Taxon, donor2Taxon, startBlock, focusBlock, endBlock, totalSites, mendelianErrors);
     }
     
 }

@@ -331,6 +331,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             int[] unk=countUnknownAndHets(impTaxon.resolveGeno);
             sb.append(String.format("Unk:%d PropMissing:%g ", unk[0], (double) unk[0] / (double) impTaxon.getOrigGeno().length));
             sb.append(String.format("Het:%d PropHet:%g ", unk[1], (double)unk[1]/(double)impTaxon.getOrigGeno().length));
+            System.out.println(sb.append(" BP:"+impTaxon.getBreakPoints().size()));
             if(!isOutputProjection) {
                 alignBuilder.addTaxon(unimpAlign.taxa().get(taxon), impTaxon.resolveGeno);
             } else {
@@ -654,23 +655,24 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         double[] pTrue = new double[]{phom, .25*probHeterozygous ,.5 * probHeterozygous, .25*probHeterozygous, phom};
         ViterbiAlgorithm vaF = new ViterbiAlgorithm(informStatesF, tpF, ep, pTrue);
         vaF.calculate();
-        if(testing==1) System.out.println("Input:"+Arrays.toString(informStatesF));
+        if(testing==1) System.out.println("Input:"+Arrays.toString(informStatesF)+" Swaps"+countSwaps(informStatesF));
         byte[] resultStatesF=vaF.getMostProbableStateSequence();
-        if(testing==1) System.out.println("Resul:"+Arrays.toString(resultStatesF));
+        if(testing==1) System.out.println("Resul:"+Arrays.toString(resultStatesF)+" Swaps"+countSwaps(resultStatesF));
         DonorHypoth dh2=new DonorHypoth(dh.targetTaxon,dh.donor1Taxon,
                 dh.donor2Taxon, dh.startBlock, dh.focusBlock, dh.endBlock);
         int currPos=0;
-        for(int cs=0; cs<sites; cs++) {
+        for(int cs=0; cs<sites; cs++) {  //converts to informative states back to all states
             callsF[cs]=(resultStatesF[currPos]==1)?(byte)1:(byte)(resultStatesF[currPos]/2); //converts the scale back to 0,1,2 from 0..4
             if((pos[currPos]<cs+startSite)&&(currPos<resultStatesF.length-1)) currPos++;
         }
+        if(testing==1) System.out.println("callsF:"+Arrays.toString(callsF)+" Swaps"+countSwaps(callsF));
 
         if (forwardReverse==true) {
             TransitionProbability tpR = new TransitionProbability();
             tpR.setTransitionProbability(transition);
-            byte[] informStatesR= informStatesF;
+            byte[] informStatesR=Arrays.copyOf(informStatesF,informStatesF.length);
             ArrayUtils.reverse(informStatesR);
-            int[] posR= pos;
+            int[] posR= Arrays.copyOf(pos,pos.length);
             ArrayUtils.reverse(posR);
             tpR.setAverageSegmentLength( chrlength / sites );
             tpR.setPositions(posR);
@@ -683,19 +685,26 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 callsR[cs]=(resultStatesR[currPosR]==1)?(byte)1:(byte)(resultStatesR[currPosR]/2);
                 if((pos[currPosR]<cs+startSite)&&(currPosR<resultStatesF.length-1)) currPosR++;
             }
+            if(testing==1) System.out.println("callsR:"+Arrays.toString(callsR)+" Swaps"+countSwaps(callsR));
             //compare the forward and reverse viterbi, use the one with the longest path length if they contradict
-            byte[] callsC=callsF;
+            byte[] callsC=Arrays.copyOf(callsF,callsF.length);  //this does not copy it is just a pointer assignment
             for(int i= 0;i<pos.length;i++) {
                 int cs= pos[i]-startSite;
                 if (callsF[cs]!=callsR[cs]&&i<pos.length/2) callsC[cs]= callsR[cs];
             }
             if (testing==1) {
-                if (resultStatesF[0]!=resultStatesR[0]||resultStatesF[resultStatesF.length-1]!=resultStatesR[resultStatesR.length-1]) System.out.println("FR:\n"+Arrays.toString(informStatesF)+"\n"+Arrays.toString(informStatesR)+"\n"+Arrays.toString(resultStatesF)+"\n"+Arrays.toString(resultStatesR)+"\n"+Arrays.toString(callsF)+"\n"+Arrays.toString(callsR)+"\n"+Arrays.toString(callsC));
+                if (resultStatesF[0]!=resultStatesR[0]||resultStatesF[resultStatesF.length-1]!=resultStatesR[resultStatesR.length-1]) {
+                    System.out.println("FR:\n"+Arrays.toString(informStatesF)+"\n"+Arrays.toString(informStatesR)+"\n"+
+                            Arrays.toString(resultStatesF)+"\n"+Arrays.toString(resultStatesR)+"\n"+Arrays.toString(callsF)+"\n"+
+                            Arrays.toString(callsR)+"\n"+Arrays.toString(callsC));
+                }
             }
+            if(testing==1) System.out.println("callsC:"+Arrays.toString(callsC)+" Swaps"+countSwaps(callsC));
+            if(testing==1) System.out.println("DonorOffset:"+donorOffset+" Reverse:"+countSwaps(callsC)+" dh:"+dh.toString());
             dh2.phasedResults= callsC;
             return dh2;
         }
-
+        System.out.println("Forward:"+countSwaps(callsF)+" dh:"+dh.toString());
         dh2.phasedResults= callsF;
         return dh2;
     }
@@ -948,22 +957,9 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         else if(theDH[0].getPhaseForSite(startSite)==2) {prevDonors=new int[]{theDH[0].donor2Taxon, theDH[0].donor2Taxon};}
         else if(theDH[0].getPhaseForSite(startSite)==1) {prevDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor2Taxon};}
         int prevDonorStart=startSite;
-//        if(impT.areBreakPointsEmpty()) {
-//            prevDonors=new int[]{-1, -1};
-//        } else {
-//            prevDonors=impT.breakPoints.lastEntry().getValue();
-//        }
+
         int[] currDonors=prevDonors;
 
-        //this generates an alignment of the closest donors for the taxon block from the results of the hybrid donor search (to use for frequencies using 2PQ)
-//        TreeSet<Identifier> closeDonors;
-//        closeDonors= new TreeSet<>();
-//        for (DonorHypoth dh:theDH) {
-//            closeDonors.add(donorAlign.getIdGroup().getIdentifier(dh.donor1Taxon)); closeDonors.add(donorAlign.getIdGroup().getIdentifier(dh.donor2Taxon));
-//        }
-//        IdGroup ids= new SimpleIdGroup(closeDonors.toArray(new Identifier[closeDonors.size()]));
-//            Alignment bestDonors= FilterAlignment.getInstance(donorAlign, ids);
-////
         for(int cs=startSite; cs<=endSite; cs++) {
             byte donorEst=UNKNOWN_DIPLOID_ALLELE;
             byte neighbor=0;
@@ -1031,30 +1027,18 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         impT.addBreakPoint(dhaps);
         return impT;
 
-        /**
-         * Code that records results to projectionGenotype.  Some of this may be needed above.
-         if(!Arrays.equals(prevDonors, currDonors)) {
-         DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
-         donorAlign.chromosomalPosition(cs),prevDonors[0],prevDonors[1]);
-         impT.addBreakPoint(dhaps);
-         prevDonors=currDonors;
-         prevDonorStart=cs;
-         }
-         if(theDH[0].phasedResults==null) {impT.chgHis[cs+donorOffset]=(byte)-neighbor;}
-         else {impT.chgHis[cs+donorOffset]=(byte)neighbor;}
+    }
 
-         impT.impGeno[cs+donorOffset]= donorEst;  //predicted based on neighbor
-         if(knownBase==UNKNOWN_DIPLOID_ALLELE) {impT.resolveGeno[cs+donorOffset]= donorEst;}
-         else {if(isHeterozygous(donorEst)) {
-         if(resolveHetIfUndercalled&&GenotypeTableUtils.isPartiallyEqual(knownBase,donorEst))
-         {//System.out.println(theDH[0].targetTaxon+":"+knownBase+":"+donorEst);
-         impT.resolveGeno[cs+donorOffset]= donorEst;}
-         }}
-         } //end of cs loop
-         DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
-         donorAlign.chromosomalPosition(endSite),prevDonors[0],prevDonors[1]);
-         impT.addBreakPoint(dhaps);
-         */
+    private int countSwaps(byte[] swaps) {
+        int nSwap=0;
+        byte lastValue=swaps[0];
+        for (byte swap : swaps) {
+            if(lastValue!=swap) {
+                nSwap++;
+                lastValue=swap;
+            }
+        }
+        return nSwap;
     }
 
     private double calcErrorForTaxonAndSite(ImputedTaxon impT) {
