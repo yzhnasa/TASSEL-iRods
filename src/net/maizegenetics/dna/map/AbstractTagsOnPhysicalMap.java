@@ -222,7 +222,17 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
         if(myChromosomes==null) populateChrAndVarPositions();
         return myChromosomes;
     }
-        
+    
+    @Override
+    public int getChromosomeIndex(int intChrName) {
+        for (int chrIndex = 0; chrIndex < myChromosomes.length; chrIndex++) {
+            if (myChromosomes[chrIndex] == intChrName) {
+                return chrIndex;
+            }
+        }
+        return TOPMInterface.INT_MISSING;
+    }
+    
     @Override
     public int[] getUniquePositions(int chromosome) {
         if(myUniquePositions==null) populateChrAndVarPositions();

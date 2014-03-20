@@ -70,6 +70,14 @@ public interface TOPMInterface extends Tags {
      * @return list of distinct chromosomes
      */
     public int[] getChromosomes();
+    
+    /**
+     * Finds the index in the myChromosomes[] (length = # of chromosomes) corresponding
+     * to the provided int version of the chromosome name
+     * @param IntChrName
+     * @return int index of that chromosome if present (Integer.MIN_VALUE otherwise)  
+     */
+    public int getChromosomeIndex(int intChrName);
 
     /**
      * Round(Log2(P))
