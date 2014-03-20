@@ -498,7 +498,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         chromosomes = topm.getChromosomes();
         for (Integer chrNum : chromosomes) {
             Chromosome chr=new Chromosome(chrNum.toString());
-            for (int pos : topm.getUniquePositions(chrNum)) {
+            for (int pos : topm.getUniquePositions(topm.getChromosomeIndex(chrNum))) {
                 Position p=new GeneralPosition.Builder(chr,pos).build();
                 plb.add(p);
             }
