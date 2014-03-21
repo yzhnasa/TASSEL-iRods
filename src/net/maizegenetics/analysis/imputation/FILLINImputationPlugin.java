@@ -35,9 +35,11 @@ import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.GAP_DIPLOID
 
 
 /**
- * Imputation approach that relies on nearest neighbor searches of defined haplotypes,
+ * FILLIN imputation relies on a libary of haplotypes and uses nearest neighbor searches
  * followed by HMM Viterbi resolution or block-based resolution.
- * In June 2013, it is the best approach for substantially unrelated taxa.
+ * It is the best approach for substantially unrelated taxa in TASSEL.  BEAGLE4 is a better
+ * approach currently for landraces, while FILLIN outperforms if there is a good reference
+ * set of haplotypes.
  * <p>
  * The algorithm relies on having a series of donor haplotypes.  If phased haplotypes are
  * already known, they can be used directly.  If they need to be reconstructed, the
@@ -337,14 +339,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             } else {
                 projBuilder.addTaxon(unimpAlign.taxa().get(taxon),impTaxon.getBreakPoints());
             }
-//            double rate=(double)taxon/(double)(System.currentTimeMillis()-time);
-//            double remaining=(unimpAlign.getSequenceCount()-taxon)/(rate*1000);
-//            System.out.printf("TimeLeft:%.1fs %n", remaining);
             if(verboseOutput) System.out.println(sb.toString());
-//            if(isOutputProjection) {
-//                // System.out.println(breakPoints.toString());
-//                ((ProjectionAlignment)mna).setCompositionOfTaxon(taxon, impTaxon.breakPoints);
-//            }
         }
     }
 
