@@ -11,14 +11,10 @@
     <property name="build" location="build"/>
     <property name="dist" location="dist"/>
     <property name="lib" location="lib"/>
-    <property name="lib_deploy" location="..\lib_deploy"/>
-    <property name="images_plugins" value="net\maizegenetics\baseplugins\images"/>
     <property name="images" value="net\maizegenetics\tassel\images"/>
     
     <property name="tassel" location="${dist}\sTASSEL.jar"/>
-    <property name="tasselGBS" location="${dist}\sTASSELGBS.jar"/>
     <property name="test" location="test"/>
-    <property name="pal_src" value="${basedir}/src/net/maizegenetics/pal"/>
     <property name="keystore_dir" value="${basedir}/common"/>
     <property name="javadoc" value="${basedir}/javadoc"/>
     
@@ -26,7 +22,6 @@
     <path id="build.class.path">
         <fileset dir="${lib}">
             <include name="*.jar"/>
-            <include name="*.zip"/>
         </fileset>
     </path>
 
@@ -62,7 +57,6 @@
                 <pathelement path="${lib}"/>
                 <fileset dir="${lib}">
                     <include name="**/*.jar"/>
-                    <include name="**/*.zip"/>
                 </fileset>
             </classpath>
         </javac>
@@ -114,25 +108,6 @@
             </sourcepath>
         </javadoc>
         
-    </target>
-    
-    
-    <target name="run" description="Run the program">
-        <copy file="${tassel}" todir="${test}"/>
-        <copy file="${lib}\gdpc.jar" todir="${test}" />
-        <copy file="${lib_deploy}\tasselLib.zip" todir="${test}" />
-        <!-- run the class -->
-        <java classname="net.maizegenetics.tassel.TASSELMainApp" fork="true" spawn="true">
-            <arg value="-h"/>
-            <jvmarg value="-Xms128m"/>
-            <jvmarg value="-Xmx256m"/>
-            <classpath>
-                <!-- include all jar files  -->
-                <pathelement location="${test}/tasselLib.zip"/>
-                <pathelement location="${test}/sTASSEL.jar"/>
-                <pathelement location="${test}/browser.jar"/>
-            </classpath>
-        </java>
     </target>
     
     <target name="clean" description="clean up">
