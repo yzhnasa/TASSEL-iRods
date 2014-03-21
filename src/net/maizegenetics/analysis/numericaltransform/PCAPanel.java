@@ -1,28 +1,24 @@
 package net.maizegenetics.analysis.numericaltransform;
 
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-
 import net.maizegenetics.trait.Phenotype;
 import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.trait.Trait;
 import net.maizegenetics.util.SimpleTableReport;
 import net.maizegenetics.util.TableReport;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.plugindef.Datum;
-import net.maizegenetics.stats.PCA.PCA;
-import net.maizegenetics.stats.PCA.PrincipalComponents;
+import net.maizegenetics.stats.PCA.PrinComp;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-
 import java.util.ArrayList;
 
 /**
@@ -202,9 +198,9 @@ public class PCAPanel extends JPanel {
             JOptionPane.showMessageDialog(myParentFrame, "Please select a column to test.");
             return null;
         }
-        PCA thePCA = null;
+        PrinComp thePCA = null;
         try {
-            thePCA = doPCAAnalysis(colSelected, this.aCharacterAlignment);
+            thePCA = doPrinCompAnalysis(colSelected, this.aCharacterAlignment);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(myParentFrame, "There is bad data in the PCA.  Impute missing data or remove non-variable columns.");
             return null;
@@ -215,15 +211,13 @@ public class PCAPanel extends JPanel {
         return null;
     }
 
-    //Create PCA Data
-    private PCA doPCAAnalysis(int[] colSelected, Phenotype ca) {
+    private PrinComp doPrinCompAnalysis(int[] colSelected, Phenotype ca) {
         double[][] tempData = null;
         tempData = Conversion.parseColumnData(ca, colSelected);
         if (tempData == null) {
             return null;
         }
-        DoubleMatrix2D values = new DenseDoubleMatrix2D(tempData);
-//        values.assign(tempData);
+        DoubleMatrix values = DoubleMatrixFactory.DEFAULT.make(tempData);
         
         //Procedure Reports
         procedure = new StringBuffer("(");
@@ -231,19 +225,21 @@ public class PCAPanel extends JPanel {
         // Filter by Eigenvalue
         procedure.append(" eigenvalues");
         procedureReport.append("\n\tPCA Eigenvalues: ");
-        return new PCA(values, false, rdoCor.getModel().isSelected());
-
-    }  //end create PCA
-
-    private java.util.List<Datum> makeOutputFiles(PCA thePCAAnalysis) {
+//        return new PCA(values, false, rdoCor.getModel().isSelected());
+        PrinComp.PC_TYPE type;
+        if (rdoCor.getModel().isSelected()) type = PrinComp.PC_TYPE.corr;
+        else type = PrinComp.PC_TYPE.cov;
+        return new PrinComp(values, type);
+    }
+    
+    private java.util.List<Datum> makeOutputFiles(PrinComp thePCAAnalysis) {
         java.util.List<Datum> resultList = new ArrayList<Datum>();
-        DoubleMatrix2D principalComponents = thePCAAnalysis.getPC().viewDice();
-        DoubleMatrix1D eigenvalues = thePCAAnalysis.getEigenValues();
-        DoubleMatrix2D eigenvectors = thePCAAnalysis.getEigenVectors();
-        double[] eigenvalueArray = eigenvalues.toArray();
+        DoubleMatrix principalComponents = thePCAAnalysis.getPrincipalComponents();
+        double[] eigenvalueArray = thePCAAnalysis.getEigenValues();
+        DoubleMatrix eigenvectors = thePCAAnalysis.getEigenVectors();
         int numberOfPC = eigenvalueArray.length;
         int filterNumberOfPC = 0;
-        int taxaNumber = principalComponents.rows();
+        int taxaNumber = principalComponents.numberOfRows();
         
         //Determine the number of columns and rows necessary in new matrix filtered by entered eigenvalue
         //int filterNumberOfPC = 0;
@@ -265,8 +261,17 @@ public class PCAPanel extends JPanel {
         }
 
         //Generate eigenFilter
-        double[][] eigenFilter = principalComponents.viewPart(0, 0, taxaNumber, filterNumberOfPC).toArray();
-
+//        double[][] eigenFilter = principalComponents.viewPart(0, 0, taxaNumber, filterNumberOfPC).toArray();
+//        int[] selectedCols = new int[filterNumberOfPC];
+//        for (int i = 0; i < filterNumberOfPC; i++) selectedCols[i] = i;
+//        double[][] eigenFilter = principalComponents.getSelection(null, selectedCols).t;
+        double[][] eigenFilter = new double[taxaNumber][filterNumberOfPC];
+        for (int r = 0; r < taxaNumber; r++) {
+        	for (int c = 0; c < filterNumberOfPC; c++) {
+        		eigenFilter[r][c] = principalComponents.get(r, c);
+        	}
+        }
+        
         //Number Principal Components
         ArrayList<Trait> PCNames = new ArrayList<Trait>();
         for (int n = 1; n < filterNumberOfPC + 1; n++) {
@@ -274,8 +279,15 @@ public class PCAPanel extends JPanel {
         }
         
         // Creates Eigenvectors to be displayed in Data Tree
-        double[][] eigenVectorsArray = eigenvectors.viewPart(0, 0, numberOfPC, filterNumberOfPC).toArray();
-
+//        double[][] eigenVectorsArray = eigenvectors.viewPart(0, 0, numberOfPC, filterNumberOfPC).toArray();
+        int numberOfEigenVecRows = eigenvectors.numberOfRows();
+        double[][] eigenVectorsArray = new double[numberOfEigenVecRows][filterNumberOfPC];
+        for (int r = 0; r < numberOfEigenVecRows; r++) {
+        	for (int c = 0; c < filterNumberOfPC; c++) {
+        		eigenVectorsArray[r][c] = eigenvectors.get(r, c);
+        	}
+        }
+ 
         if (eigenvalue >= 0) {
             //SimplePhenotype sca = new SimplePhenotype(aCharacterAlignment, eigenFilterT, PCNames);
             SimplePhenotype sca = new SimplePhenotype(aCharacterAlignment.getTaxa(), PCNames, eigenFilter);
