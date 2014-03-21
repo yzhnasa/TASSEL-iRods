@@ -460,7 +460,7 @@ public class EJMLDoubleMatrix implements DoubleMatrix {
 	public double rowSum(int row) {
 		int n = myMatrix.numCols;
 		DenseMatrix64F vector = new DenseMatrix64F(n, 1);
-		SpecializedOps.subvector(myMatrix, 0, row, n, false, 0, vector);
+		SpecializedOps.subvector(myMatrix, row, 0, n, true, 0, vector);
 		return CommonOps.elementSum(vector);
 	}
 
