@@ -112,7 +112,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     private boolean resolveHetIfUndercalled=false;//if true, sets genotypes called to a het to a het, even if already a homozygote
     //variables for tracking accuracy
-    private int totalRight=0, totalWrong=0, totalHets=0; //global variables tracking errors on the fly
     private int[] siteErrors, siteCorrectCnt, taxonErrors, taxonCorrectCnt;  //error recorded by sites
 
     private boolean verboseOutput=true;
@@ -612,6 +611,8 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         byte[] d1b=donorAlign.genotypeRange(dh.donor1Taxon, startSite, endSite + 1);
         byte[] d2b=donorAlign.genotypeRange(dh.donor2Taxon, startSite, endSite + 1);
         byte[] t1b=unimpAlign.genotypeRange(dh.targetTaxon, startSite + donorOffset, endSite + 1 + donorOffset);
+        //Selects only the informatives sites for the Viterbi algorithm
+        //Perhaps hets should be removed from the donor
         int informSites=0, nonMendel=0;
         ArrayList<Byte> nonMissingObs = new ArrayList<Byte>();
         ArrayList<Integer> snpPositions = new ArrayList<Integer>();
