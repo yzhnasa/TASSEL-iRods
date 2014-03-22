@@ -18,6 +18,7 @@ final class PositionArrayList implements PositionList {
     private final byte[][] alleles;
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
     private final Map<String,Chromosome> myChrNameHash;
+    private final Chromosome firstChromosome;  //null chromosome calls revert to the first chromosome
 
     private static class ChrOffPos {
         final int startSiteOff;
@@ -40,9 +41,12 @@ final class PositionArrayList implements PositionList {
         ArrayListMultimap<Chromosome,Integer> pTS=ArrayListMultimap.create();
         mySiteList=new ArrayList<Position>(builderList.size());
         myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
-        myChrNameHash=new HashMap();
+        myChrNameHash=new HashMap<>();
         int currStart=0;
-        if(builderList.isEmpty()) return;  //allows for the creation of an empty PositionArrayList
+        if(builderList.isEmpty()) {
+            firstChromosome=null;
+            return;  //allows for the creation of an empty PositionArrayList
+        }
         Chromosome currChr=builderList.get(0).getChromosome();
         for (int i=0; i<builderList.size(); i++) {
             Position ap=builderList.get(i);
@@ -69,6 +73,7 @@ final class PositionArrayList implements PositionList {
             myChrOffPosTree.put(chr, new ChrOffPos(currOff.startSiteOff, currOff.endSiteOff, intP));
             myChrNameHash.put(chr.getName(),chr);
             }
+        firstChromosome=((TreeMap<Chromosome,ChrOffPos>)myChrOffPosTree).firstKey();
         pTS=null;
     }
 
@@ -111,6 +116,7 @@ final class PositionArrayList implements PositionList {
 
     @Override
     public int[] startAndEndOfChromosome(Chromosome chromosome) {
+        if(chromosome==null) chromosome=firstChromosome;
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return null;
         return new int[]{cop.startSiteOff,cop.endSiteOff};
@@ -123,6 +129,7 @@ final class PositionArrayList implements PositionList {
 
     @Override
     public int siteOfPhysicalPosition(int physicalPosition, Chromosome chromosome) {
+        if(chromosome==null) chromosome=firstChromosome;
         ChrOffPos cop=myChrOffPosTree.get(chromosome);
         if(cop==null) return Integer.MIN_VALUE;
         int i=Arrays.binarySearch(cop.position, physicalPosition); //AvgPerObj:227.5715ns  for 2million positions
