@@ -313,7 +313,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                     regionHypthInbred[focusBlock]=getBestInbredDonors(taxon, impTaxon, resultRange[0],resultRange[2], focusBlock, donorAlign[da], donorIndices);
                 }
                 impTaxon.setSegmentSolved(false);
-                //tries to solve the entire donorAlign region with 1 or 2 donor haplotypes
+                //tries to solve the entire donorAlign region with 1 or 2 donor haplotypes by Virterbi
                 impTaxon=apply1or2Haplotypes(taxon, donorAlign[da], donorOffset, regionHypthInbred,  impTaxon, maskedTargetBits, maxHybridErrorRate);
                 if(impTaxon.isSegmentSolved()) {
 //                    System.out.printf("VertSolved da:%d L:%s%n",da, donorAlign[da].getLocus(0));
@@ -333,7 +333,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             int[] unk=countUnknownAndHets(impTaxon.resolveGeno);
             sb.append(String.format("Unk:%d PropMissing:%g ", unk[0], (double) unk[0] / (double) impTaxon.getOrigGeno().length));
             sb.append(String.format("Het:%d PropHet:%g ", unk[1], (double)unk[1]/(double)impTaxon.getOrigGeno().length));
-            System.out.println(sb.append(" BP:"+impTaxon.getBreakPoints().size()));
+            sb.append(" BreakPoints:"+impTaxon.getBreakPoints().size());
             if(!isOutputProjection) {
                 alignBuilder.addTaxon(unimpAlign.taxa().get(taxon), impTaxon.resolveGeno);
             } else {
@@ -598,6 +598,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     }
 
     private DonorHypoth getStateBasedOnViterbi(DonorHypoth dh, int donorOffset, GenotypeTable donorAlign, boolean forwardReverse, double[][] trans) {
+        forwardReverse=true;
         TransitionProbability tpF = new TransitionProbability();
         EmissionProbability ep = new EmissionProbability();
         tpF.setTransitionProbability(trans);
@@ -652,9 +653,9 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         double[] pTrue = new double[]{phom, .25*probHeterozygous ,.5 * probHeterozygous, .25*probHeterozygous, phom};
         ViterbiAlgorithm vaF = new ViterbiAlgorithm(informStatesF, tpF, ep, pTrue);
         vaF.calculate();
-        if(testing==1) System.out.println("Input:"+Arrays.toString(informStatesF)+" Swaps"+countSwaps(informStatesF));
+        if(testing>0) System.out.println("Input:"+Arrays.toString(informStatesF)+" Swaps"+countSwaps(informStatesF));
         byte[] resultStatesF=vaF.getMostProbableStateSequence();
-        if(testing==1) System.out.println("Resul:"+Arrays.toString(resultStatesF)+" Swaps"+countSwaps(resultStatesF));
+        if(testing>0) System.out.println("Resul:"+Arrays.toString(resultStatesF)+" Swaps"+countSwaps(resultStatesF));
         DonorHypoth dh2=new DonorHypoth(dh.targetTaxon,dh.donor1Taxon,
                 dh.donor2Taxon, dh.startBlock, dh.focusBlock, dh.endBlock);
         int currPos=0;
@@ -662,7 +663,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             callsF[cs]=(resultStatesF[currPos]==1)?(byte)1:(byte)(resultStatesF[currPos]/2); //converts the scale back to 0,1,2 from 0..4
             if((pos[currPos]<cs+startSite)&&(currPos<resultStatesF.length-1)) currPos++;
         }
-        if(testing==1) System.out.println("callsF:"+Arrays.toString(callsF)+" Swaps"+countSwaps(callsF));
+        if(testing>1) System.out.println("callsF:"+Arrays.toString(callsF)+" Swaps"+countSwaps(callsF));
 
         if (forwardReverse==true) {
             TransitionProbability tpR = new TransitionProbability();
@@ -682,22 +683,22 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 callsR[cs]=(resultStatesR[currPosR]==1)?(byte)1:(byte)(resultStatesR[currPosR]/2);
                 if((pos[currPosR]<cs+startSite)&&(currPosR<resultStatesF.length-1)) currPosR++;
             }
-            if(testing==1) System.out.println("callsR:"+Arrays.toString(callsR)+" Swaps"+countSwaps(callsR));
+            if(testing>1) System.out.println("callsR:"+Arrays.toString(callsR)+" Swaps"+countSwaps(callsR));
             //compare the forward and reverse viterbi, use the one with the longest path length if they contradict
             byte[] callsC=Arrays.copyOf(callsF,callsF.length);  //this does not copy it is just a pointer assignment
             for(int i= 0;i<pos.length;i++) {
                 int cs= pos[i]-startSite;
                 if (callsF[cs]!=callsR[cs]&&i<pos.length/2) callsC[cs]= callsR[cs];
             }
-            if (testing==1) {
+            if (testing>0) {
                 if (resultStatesF[0]!=resultStatesR[0]||resultStatesF[resultStatesF.length-1]!=resultStatesR[resultStatesR.length-1]) {
                     System.out.println("FR:\n"+Arrays.toString(informStatesF)+"\n"+Arrays.toString(informStatesR)+"\n"+
                             Arrays.toString(resultStatesF)+"\n"+Arrays.toString(resultStatesR)+"\n"+Arrays.toString(callsF)+"\n"+
                             Arrays.toString(callsR)+"\n"+Arrays.toString(callsC));
                 }
             }
-            if(testing==1) System.out.println("callsC:"+Arrays.toString(callsC)+" Swaps"+countSwaps(callsC));
-            if(testing==1) System.out.println("DonorOffset:"+donorOffset+" Reverse:"+countSwaps(callsC)+" dh:"+dh.toString());
+            if(testing>1) System.out.println("callsC:"+Arrays.toString(callsC)+" Swaps"+countSwaps(callsC));
+            if(testing>1) System.out.println("DonorOffset:"+donorOffset+" Reverse:"+countSwaps(callsC)+" dh:"+dh.toString());
             dh2.phasedResults= callsC;
             return dh2;
         }
@@ -947,8 +948,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         int startSite=(setJustFocus)?theDH[0].getFocusStartSite():theDH[0].startSite;
         int endSite=(setJustFocus)?theDH[0].getFocusEndSite():theDH[0].endSite;
         if(endSite>=donorAlign.numberOfSites()) endSite=donorAlign.numberOfSites()-1;
-//        if (print) System.out.println("B:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
-//        int[] prevDonors;
+        //prevDonors is used to track recombination breakpoint start and stop
         int[] prevDonors=new int[]{-1, -1};
         if(theDH[0].getPhaseForSite(startSite)==0) {prevDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor1Taxon};}
         else if(theDH[0].getPhaseForSite(startSite)==2) {prevDonors=new int[]{theDH[0].donor2Taxon, theDH[0].donor2Taxon};}
@@ -960,6 +960,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         for(int cs=startSite; cs<=endSite; cs++) {
             byte donorEst=UNKNOWN_DIPLOID_ALLELE;
             byte neighbor=0;
+            //site imputation will try to use all donor hypotheses; breakpoints only use the best (e.g. i==0 tests)
             for (int i = 0; (i < theDH.length) && (donorEst==UNKNOWN_DIPLOID_ALLELE); i++) {
                 neighbor++;
                 if((theDH[i]==null)||(theDH[i].donor1Taxon<0)) continue;
@@ -982,21 +983,19 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 }
             }
             byte knownBase=impT.getOrigGeno(cs+donorOffset);
-            String knownBaseString= NucleotideAlignmentConstants.getNucleotideIUPAC(knownBase);
+            //record recombination breakpoint if it changes
             if(!Arrays.equals(prevDonors, currDonors)) {
-      //          impT.breakPoints.put(donorAlign.chromosomalPosition(cs), currDonors);    //TODO fix this for projection
                 prevDonors=currDonors;
                 DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
                         donorAlign.chromosomalPosition(cs),prevDonors[0],prevDonors[1]);
                 impT.addBreakPoint(dhaps);
                 prevDonors=currDonors;
-                prevDonorStart=cs;   //todo this doesn't seem to increment correctly for hets
+                prevDonorStart=cs;
             }
             if(theDH[0].phasedResults==null) {impT.chgHis[cs+donorOffset]=(byte)-neighbor;}
             else {impT.chgHis[cs+donorOffset]=(byte)neighbor;}
 
             impT.impGeno[cs+donorOffset]= donorEst;  //predicted based on neighbor
-            String donorEstString= NucleotideAlignmentConstants.getNucleotideIUPAC(donorEst);
             if(knownBase==UNKNOWN_DIPLOID_ALLELE) {
                 if (isHeterozygous(donorEst)) {
                     if (smashOn && hetsMiss) {//if imputing a heterozygote, just set to missing
@@ -1009,16 +1008,12 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                     impT.resolveGeno[cs+donorOffset]= donorEst;}
             } else if (isHeterozygous(donorEst)){
                 if(resolveHetIfUndercalled&&GenotypeTableUtils.isPartiallyEqual(knownBase, donorEst)&&smashOn==false){//if smash off, set homozygotes imputed to het to het
-                    System.out.println("ResolveHet:"+theDH[0].targetTaxon+":"+cs+donorOffset+":"+knownBaseString+":"+donorEstString);
+                    //System.out.println("ResolveHet:"+theDH[0].targetTaxon+":"+cs+donorOffset+":"+knownBaseString+":"+donorEstString);
                     impT.resolveGeno[cs+donorOffset]= donorEst;
                 }
             }
         } //end of cs loop
         //enter a stop of the DH at the beginning of the next block
-        int lastDApos=donorAlign.chromosomalPosition(endSite);
-        int nextSite=unimpAlign.siteOfPhysicalPosition(lastDApos, donorAlign.chromosome(0))+1;
-       // if(nextSite<unimpAlign.numberOfSites()) impT.breakPoints.put(unimpAlign.chromosomalPosition(nextSite), new int[]{-1,-1});       //TODO fix this for projection
-        //    if (print) System.out.println("E:"+mna.getBaseAsStringRange(theDH[0].targetTaxon, startSite, endSite));
         DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
                 donorAlign.chromosomalPosition(endSite),prevDonors[0],prevDonors[1]);
         impT.addBreakPoint(dhaps);
@@ -1058,49 +1053,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
         }
         return (double)taxonErrors[impT.taxon()]/(double)(taxonCorrectCnt[impT.taxon()]+taxonErrors[impT.taxon()]);
-    }
-
-    public static int[] compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
-        boolean taxaOut=false;
-        GenotypeTable oA=ImportUtils.readGuessFormat(origFile);
-        System.out.printf("Orig taxa:%d sites:%d %n",oA.numberOfTaxa(),oA.numberOfSites());
-        GenotypeTable mA=null;
-        if(noMask==false) {mA=ImportUtils.readGuessFormat(maskFile);
-            System.out.printf("Mask taxa:%d sites:%d %n",mA.numberOfTaxa(),mA.numberOfSites());
-        }
-        GenotypeTable iA=ImportUtils.readGuessFormat(impFile);
-        System.out.printf("Imp taxa:%d sites:%d %n",iA.numberOfTaxa(),iA.numberOfSites());
-        int correct=0;
-        int errors=0;
-        int unimp=0;
-        int hets=0;
-        int gaps=0;
-        for (int t = 0; t < iA.numberOfTaxa(); t++) {
-            int e=0,c=0,u=0,h=0;
-            int oATaxa=oA.taxa().indexOf(iA.taxaName(t));
-            for (int s = 0; s < iA.numberOfSites(); s++) {
-                if(noMask||(oA.genotype(oATaxa, s)!=mA.genotype(t, s))) {
-                    byte ib=iA.genotype(t, s);
-                    byte ob=oA.genotype(oATaxa, s);
-                    if((ib==UNKNOWN_DIPLOID_ALLELE)||(ob==UNKNOWN_DIPLOID_ALLELE)) {unimp++; u++;}
-                    else if(ib==GAP_DIPLOID_ALLELE) {gaps++;}
-                    else if(ib==ob) {
-                        correct++;
-                        c++;
-                    } else {
-                        if(isHeterozygous(ob)||isHeterozygous(ib)) {hets++; h++;}
-                        else {errors++;
-                            e++;
-//                            if(t==0) System.out.printf("%d %d %s %s %n",t,s,oA.getBaseAsString(oATaxa, s), iA.getBaseAsString(t, s));
-                        }
-                    }
-                }
-            }
-            if(taxaOut) System.out.printf("%s %d %d %d %d %n",iA.taxaName(t),u,h,c,e);
-        }
-        System.out.println("MFile\tIFile\tGap\tUnimp\tUnimpHets\tCorrect\tErrors");
-        System.out.printf("%s\t%s\t%d\t%d\t%d\t%d\t%d%n",maskFile, impFile, gaps, unimp,hets,correct,errors);
-        return new int[]{gaps, unimp,hets,correct,errors};
     }
 
     @Override

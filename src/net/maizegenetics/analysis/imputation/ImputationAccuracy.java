@@ -4,6 +4,9 @@
  */
 package net.maizegenetics.analysis.imputation;
 
+import net.maizegenetics.dna.snp.*;
+import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
+
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -11,15 +14,10 @@ import java.io.FileOutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.dna.snp.FilterGenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTableBuilder;
-import net.maizegenetics.dna.snp.GenotypeTableUtils;
-import net.maizegenetics.dna.snp.ImportUtils;
-import net.maizegenetics.dna.snp.NucleotideGenotypeTable;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
-import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
+
+import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
+import static net.maizegenetics.dna.snp.GenotypeTableUtils.isHeterozygous;
+import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
 
 /**
  *
@@ -275,5 +273,53 @@ public class ImputationAccuracy {
         }
         accuracyOut(all, runtime);
         if (MAFClass!=null) accuracyMAFOut(mafAll);
+    }
+
+    /**
+     * Legacy approach for measuring accuracy, but need to maintain some tests.
+     * @deprecated
+     */
+    @Deprecated
+    public static int[] compareAlignment(String origFile, String maskFile, String impFile, boolean noMask) {
+        boolean taxaOut=false;
+        GenotypeTable oA=ImportUtils.readGuessFormat(origFile);
+        System.out.printf("Orig taxa:%d sites:%d %n",oA.numberOfTaxa(),oA.numberOfSites());
+        GenotypeTable mA=null;
+        if(noMask==false) {mA=ImportUtils.readGuessFormat(maskFile);
+            System.out.printf("Mask taxa:%d sites:%d %n",mA.numberOfTaxa(),mA.numberOfSites());
+        }
+        GenotypeTable iA=ImportUtils.readGuessFormat(impFile);
+        System.out.printf("Imp taxa:%d sites:%d %n",iA.numberOfTaxa(),iA.numberOfSites());
+        int correct=0;
+        int errors=0;
+        int unimp=0;
+        int hets=0;
+        int gaps=0;
+        for (int t = 0; t < iA.numberOfTaxa(); t++) {
+            int e=0,c=0,u=0,h=0;
+            int oATaxa=oA.taxa().indexOf(iA.taxaName(t));
+            for (int s = 0; s < iA.numberOfSites(); s++) {
+                if(noMask||(oA.genotype(oATaxa, s)!=mA.genotype(t, s))) {
+                    byte ib=iA.genotype(t, s);
+                    byte ob=oA.genotype(oATaxa, s);
+                    if((ib==UNKNOWN_DIPLOID_ALLELE)||(ob==UNKNOWN_DIPLOID_ALLELE)) {unimp++; u++;}
+                    else if(ib==GAP_DIPLOID_ALLELE) {gaps++;}
+                    else if(ib==ob) {
+                        correct++;
+                        c++;
+                    } else {
+                        if(isHeterozygous(ob)||isHeterozygous(ib)) {hets++; h++;}
+                        else {errors++;
+                            e++;
+//                            if(t==0) System.out.printf("%d %d %s %s %n",t,s,oA.getBaseAsString(oATaxa, s), iA.getBaseAsString(t, s));
+                        }
+                    }
+                }
+            }
+            if(taxaOut) System.out.printf("%s %d %d %d %d %n",iA.taxaName(t),u,h,c,e);
+        }
+        System.out.println("MFile\tIFile\tGap\tUnimp\tUnimpHets\tCorrect\tErrors");
+        System.out.printf("%s\t%s\t%d\t%d\t%d\t%d\t%d%n",maskFile, impFile, gaps, unimp,hets,correct,errors);
+        return new int[]{gaps, unimp,hets,correct,errors};
     }
 }
