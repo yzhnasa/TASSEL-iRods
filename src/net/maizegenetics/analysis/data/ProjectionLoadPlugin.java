@@ -6,7 +6,7 @@ package net.maizegenetics.analysis.data;
 
 
 import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
+import net.maizegenetics.dna.snp.io.ProjectionGenotypeIO;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
@@ -147,7 +147,7 @@ public class ProjectionLoadPlugin extends AbstractPlugin {
         GenotypeTable theAlignmentForGenotype = null;
         //Terry - fix this
         try {
-        theAlignmentForGenotype = ProjectionAlignmentIO.getInstance(theRecombinationBreakpoints, theHighDensityMarkers);
+        theAlignmentForGenotype = ProjectionGenotypeIO.getInstance(theRecombinationBreakpoints, theHighDensityMarkers);
         
         //Run ProjectionBuilder() to create the breakpoints
         //ProjectionBuilder theProjectionBuilder =  new ProjectionBuilder(theAlignment);

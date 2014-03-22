@@ -7,7 +7,7 @@ package net.maizegenetics.analysis.imputation;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.map.DonorHaplotypes;
 import net.maizegenetics.dna.snp.*;
-import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
+import net.maizegenetics.dna.snp.io.ProjectionGenotypeIO;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.analysis.popgen.DonorHypoth;
@@ -207,7 +207,7 @@ public class MinorWindowViterbiImputationPlugin extends AbstractPlugin {
 //                    (double)siteErrors[i]/(double)siteCallCnt[i], unimpAlign.minorAlleleFrequency(i));
 //        }
         if(isOutputProjection) {
-            ProjectionAlignmentIO.writeToFile(exportFile, ((ProjectionBuilder)mna).build());
+            ProjectionGenotypeIO.writeToFile(exportFile, ((ProjectionBuilder) mna).build());
         } else {
             GenotypeTableBuilder ab=(GenotypeTableBuilder)mna;
             if(ab.isHDF5()) {

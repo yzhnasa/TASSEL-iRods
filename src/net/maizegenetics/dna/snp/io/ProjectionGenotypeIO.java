@@ -16,17 +16,31 @@ import java.io.BufferedWriter;
 import java.util.*;
 
 /**
- * Methods for reading and writing ProjectionAlignments to files.
+ * Methods for reading and writing ProjectionGenotypes to files. ProjectionGenotypes have two parts - one is the
+ * Projection file that has the names of high density genotyped taxa and the recombination breakpoints for
+ * each of the low density taxa that point to the high density taxa.
  *
  * @author Ed Buckler
  */
-public class ProjectionAlignmentIO {
+public class ProjectionGenotypeIO {
 
+    /**
+     * Returns a genotypeTable based on a projection genotype file and high density genotype table
+     * @param paFile file name for projection file
+     * @param baseHighDensityAlignmentFile file name for high density file
+     * @return GenotypeTable based on both
+     */
     public static GenotypeTable getInstance(String paFile, String baseHighDensityAlignmentFile) {
         if(baseHighDensityAlignmentFile.endsWith(".h5")) return getInstance(paFile, GenotypeTableBuilder.getInstance(baseHighDensityAlignmentFile));
         return getInstance(paFile, ImportUtils.readFromHapmap(baseHighDensityAlignmentFile, null));
     }
 
+    /**
+     * Returns a genotypeTable based on a projection genotype file and high density genotype table
+     * @param paFile file name for projection file
+     * @param baseHighDensityAlignment GenotypeTable of high density taxa
+     * @return Projection GenotypeTable based on both
+     */
     public static GenotypeTable getInstance(String paFile, GenotypeTable baseHighDensityAlignment) {
         BufferedReader br = null;
         try {
@@ -37,6 +51,7 @@ public class ProjectionAlignmentIO {
                 System.err.println("Error in number of base taxa"); return null;
             }
             int taxaCnt=Integer.parseInt(sl[1]);
+            //Reading the map of high density taxa index to high density taxa name, e.g. 1 B73\n
             Map<Integer,Integer> paIndexToBaseIndex=new HashMap<>();
             for (int i = 0; i < baseTaxaCnt; i++) {
                 sl=Utils.readLineSkipComments(br).split("\t");
@@ -48,6 +63,7 @@ public class ProjectionAlignmentIO {
                 }
                 paIndexToBaseIndex.put(index, matches);
             }
+            //Reading the recombination breakpoints for each of the projected taxa
             ProjectionBuilder pb=new ProjectionBuilder(baseHighDensityAlignment);
             for (int i = 0; i < taxaCnt; i++) {
                 sl=Utils.readLineSkipComments(br).split("\t");
@@ -77,6 +93,11 @@ public class ProjectionAlignmentIO {
         }
     }
 
+    /**
+     * Exports the ProjectionGenotypes to a file
+     * @param outfile the path and name of the projection file
+     * @param pa GenotypeTable with a ProjectionGenotypeCallTable
+     */
     public static void writeToFile(String outfile, GenotypeTable pa) {
         if(!(pa.genotypeMatrix() instanceof ProjectionGenotypeCallTable)) {
             throw new UnsupportedOperationException("Save only works for Alignments with projection genotypes");

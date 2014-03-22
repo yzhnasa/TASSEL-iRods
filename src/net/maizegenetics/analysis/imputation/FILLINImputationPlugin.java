@@ -9,7 +9,7 @@ import net.maizegenetics.analysis.popgen.DonorHypoth;
 import net.maizegenetics.dna.map.DonorHaplotypes;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.snp.*;
-import net.maizegenetics.dna.snp.io.ProjectionAlignmentIO;
+import net.maizegenetics.dna.snp.io.ProjectionGenotypeIO;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.prefs.TasselPrefs;
@@ -227,7 +227,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         
         double runtime= (double)(System.currentTimeMillis()-time)/(double)1000;
         if(isOutputProjection) {
-            ProjectionAlignmentIO.writeToFile(exportFile, ((ProjectionBuilder)mna).build());
+            ProjectionGenotypeIO.writeToFile(exportFile, ((ProjectionBuilder) mna).build());
         } else {
             GenotypeTableBuilder ab=(GenotypeTableBuilder)mna;
             if(ab.isHDF5()) {
