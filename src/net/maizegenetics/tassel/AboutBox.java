@@ -82,7 +82,7 @@ public class AboutBox extends JDialog implements ActionListener {
     }
 
     private void jbInit() throws Exception {
-        URL imageURL = getClass().getResource("images/AboutPicture.GIF");
+        URL imageURL = getClass().getResource("images/Tassel_Logo.png");
 
         if (imageURL != null) {
             imageIcon = new ImageIcon(imageURL);
