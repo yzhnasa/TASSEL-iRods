@@ -6,38 +6,28 @@
  */
 package net.maizegenetics.analysis.filter;
 
-import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.analysis.data.SeparatePlugin;
 import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.snp.CombineGenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.prefs.TasselPrefs;
-import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Frame;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
-
 import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.maizegenetics.analysis.data.SeparatePlugin;
-import net.maizegenetics.dna.snp.GenotypeTableBuilder;
-
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -995,6 +985,10 @@ class DataFilterAlignmentDialog extends JDialog {
     private void endPosTextField_focusLost(FocusEvent e) {
 
         try {
+            if(endPosTextField.getText().toLowerCase().trim().contains("e")) {  //converts scientific notation of positions
+                int expandedValue=Double.valueOf(endPosTextField.getText().trim()).intValue();
+                endPosTextField.setText(""+expandedValue);
+            }
             int endPosFromField = Integer.parseInt(endPosTextField.getText().trim());
             if (endPosFromField < 0) {
                 throw new IllegalArgumentException("End Position Can't be Negative.");
@@ -1041,6 +1035,10 @@ class DataFilterAlignmentDialog extends JDialog {
     private void startPosTextField_focusLost(FocusEvent e) {
 
         try {
+            if(startPosTextField.getText().toLowerCase().trim().contains("e")) {  //converts scientific notation of positions
+                int expandedValue=Double.valueOf(startPosTextField.getText().trim()).intValue();
+                startPosTextField.setText(""+expandedValue);
+            }
             int startPosFromField = Integer.parseInt(startPosTextField.getText().trim());
             if (startPosFromField < 0) {
                 throw new IllegalArgumentException("Start Position Can't be Negative.");
