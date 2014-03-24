@@ -119,8 +119,8 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         bestStartPos = new int[rows];  // chromosomal position of the barcoded end of the tag  // 4 bytes
         endPosition = new int[rows];  // chromosomal position of the common adapter end of the tag (smaller than bestStartPos if tag matches minus bestStrand)  // 4 bytes
         divergence = new byte[rows];  // number of diverging bp from reference, unknown = Byte.MIN_VALUE
-        variantOffsets = new byte[rows][myMaxVariants];  // offset from position minimum, maximum number of variants is defined above  // myMaxVariants bytes
-        variantDefs = new byte[rows][myMaxVariants];     // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes
+        variantOffsets = new byte[rows][];  // offset from position minimum, maximum number of variants is defined above  // myMaxVariants bytes
+        variantDefs = new byte[rows][];     // allele state - A, C, G, T or some indel definition  // myMaxVariants bytes
         dcoP = new byte[rows];
         mapP = new byte[rows];  // Round(Log2(P)), unknown = Byte.MIN_VALUE;  if these disagree with the location, then set the p to negative
         myNumTags = rows;
@@ -460,14 +460,31 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
 
     @Override
     public int addVariant(int tagIndex, byte offset, byte base) {
-        for (int i = 0; i < myMaxVariants; i++) {
-            if ((variantOffsets[tagIndex][i] == Byte.MIN_VALUE) && (variantDefs[tagIndex][i] == Byte.MIN_VALUE)) {
-                variantOffsets[tagIndex][i] = offset;
-                variantDefs[tagIndex][i] = base;
-                return i;
+        // code for ragged arrays
+        if (variantOffsets[tagIndex] == null) {
+            variantOffsets[tagIndex] = new byte[]{offset};
+            variantDefs[tagIndex] = new byte[]{base};
+            return 0;
+        } else {
+            if (variantOffsets[tagIndex].length == myMaxVariants) {
+                return -1; // no free space
             }
+            variantOffsets[tagIndex] = Arrays.copyOf(variantOffsets[tagIndex], variantOffsets[tagIndex].length+1);
+            variantOffsets[tagIndex][variantOffsets[tagIndex].length-1] = offset;
+            variantDefs[tagIndex] = Arrays.copyOf(variantDefs[tagIndex], variantDefs[tagIndex].length+1);
+            variantDefs[tagIndex][variantDefs[tagIndex].length-1] = base;
+            return variantDefs.length-1;
         }
-        return -1; //no free space
+
+// This commented out code was for non-ragged arrays, where Byte.MIN_VALUE (=TOPMInterface.BYTE_MISSING) signified the absence of a defined variant    
+//        for (int i = 0; i < myMaxVariants; i++) {
+//            if ((variantOffsets[tagIndex][i] == Byte.MIN_VALUE) && (variantDefs[tagIndex][i] == Byte.MIN_VALUE)) {
+//                variantOffsets[tagIndex][i] = offset;
+//                variantDefs[tagIndex][i] = base;
+//                return i;
+//            }
+//        }
+//        return -1; //no free space
     }
 
     /**
@@ -627,10 +644,13 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         bestStartPos[tagIndex] = Integer.MIN_VALUE;
         endPosition[tagIndex] = Integer.MIN_VALUE;
         divergence[tagIndex] = Byte.MIN_VALUE;
-        for (int var = 0; var < myMaxVariants; var++) {
-            variantOffsets[tagIndex][var] = Byte.MIN_VALUE;
-            variantDefs[tagIndex][var] = Byte.MIN_VALUE;
-        }
+
+//        // no longer necessary for ragged arrays
+//        for (int var = 0; var < myMaxVariants; var++) {
+//            variantOffsets[tagIndex][var] = Byte.MIN_VALUE;
+//            variantDefs[tagIndex][var] = Byte.MIN_VALUE;
+//        }
+
         dcoP[tagIndex] = Byte.MIN_VALUE;
         mapP[tagIndex] = Byte.MIN_VALUE;
     }
@@ -649,10 +669,13 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
             endPosition[tagIndex] = Integer.MIN_VALUE;
         }
         divergence[tagIndex] = editDist;
-        for (int var = 0; var < myMaxVariants; var++) {
-            variantOffsets[tagIndex][var] = Byte.MIN_VALUE;
-            variantDefs[tagIndex][var] = Byte.MIN_VALUE;
-        }
+
+//        // no longer necessary for ragged arrays
+//        for (int var = 0; var < myMaxVariants; var++) {
+//            variantOffsets[tagIndex][var] = Byte.MIN_VALUE;
+//            variantDefs[tagIndex][var] = Byte.MIN_VALUE;
+//        }
+
         dcoP[tagIndex] = Byte.MIN_VALUE;
         mapP[tagIndex] = Byte.MIN_VALUE;
     }
@@ -738,14 +761,20 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         tb = divergence[index1];
         divergence[index1] = divergence[index2];
         divergence[index2] = (byte) tb;
-        for (int j = 0; j < myMaxVariants; j++) {
-            tb = variantOffsets[index1][j];
-            variantOffsets[index1][j] = variantOffsets[index2][j];
-            variantOffsets[index2][j] = (byte) tb;
-            tb = variantDefs[index1][j];
-            variantDefs[index1][j] = variantDefs[index2][j];
-            variantDefs[index2][j] = (byte) tb;
-        }
+        byte[] tba = variantOffsets[index1];
+        variantOffsets[index1] = variantOffsets[index2];
+        variantOffsets[index2] = tba;
+        tba = variantDefs[index1];
+        variantDefs[index1] = variantDefs[index2];
+        variantDefs[index2] = tba;
+//        for (int j = 0; j < myMaxVariants; j++) {
+//            tb = variantOffsets[index1][j];
+//            variantOffsets[index1][j] = variantOffsets[index2][j];
+//            variantOffsets[index2][j] = (byte) tb;
+//            tb = variantDefs[index1][j];
+//            variantDefs[index1][j] = variantDefs[index2][j];
+//            variantDefs[index2][j] = (byte) tb;
+//        }
         tb = dcoP[index1];
         dcoP[index1] = dcoP[index2];
         dcoP[index2] = (byte) tb;
