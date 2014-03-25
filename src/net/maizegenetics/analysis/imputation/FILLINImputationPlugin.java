@@ -415,7 +415,10 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         int blocks=maskedTargetBits[0].getNumWords();
         //do flanking search
         if(testing==1) System.out.println("Starting complete hybrid search");
+        //create a list of the best donors across entire region
         int[] d=getAllBestDonorsAcrossChromosome(regionHypth,blocks/20);  //TODO
+        //make all combination of best donor and find the the pairs that minimize errors
+        //with the true switch also will make inbreds
         DonorHypoth[] best2donors=getBestHybridDonors(taxon, maskedTargetBits[0].getBits(),
                 maskedTargetBits[1].getBits(), 0, blocks-1, blocks/2, donorAlign, d, d, true);
         if(testing==1) System.out.println(Arrays.toString(best2donors));
@@ -598,7 +601,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     }
 
     private DonorHypoth getStateBasedOnViterbi(DonorHypoth dh, int donorOffset, GenotypeTable donorAlign, boolean forwardReverse, double[][] trans) {
-        forwardReverse=true;
         TransitionProbability tpF = new TransitionProbability();
         EmissionProbability ep = new EmissionProbability();
         tpF.setTransitionProbability(trans);
@@ -625,6 +627,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             if(t1b[cs]==GAP_DIPLOID_ALLELE) continue;
             if(d1b[cs]==GAP_DIPLOID_ALLELE) continue;
             if(d2b[cs]==GAP_DIPLOID_ALLELE) continue;
+            if(isHeterozygous(d1b[cs]) || isHeterozygous(d2b[cs])) continue;
             if(d1b[cs]==d2b[cs]) {
                 if(t1b[cs]!=d1b[cs]) nonMendel++;
                 continue;
@@ -870,18 +873,19 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     /**
      * Simple algorithm that tests every possible two donor combination to minimize
-     * the number of unmatched informative alleles.  Currently, there is litte tie
+     * the number of unmatched informative alleles.  Currently, there is little tie
      * breaking, longer matches are favored.
      * @param targetTaxon
      * @param startBlock
      * @param endBlock
      * @param focusBlock
-     * @return int[] array of {donor1, donor2, testSites}
+     * @return int[] array of {donor1, donor2, testSites}  sorted by  testPropUnmatched
      */
     private DonorHypoth[] getBestHybridDonors(int targetTaxon, long[] mjT, long[] mnT,
                                               int startBlock, int endBlock, int focusBlock, GenotypeTable donorAlign, int[] donor1Indices, int[] donor2Indices,
                                               boolean viterbiSearch) {
         TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
+        Set<Long> testedDonorPairs=new HashSet<>();
         double lastKeytestPropUnmatched=1.0;
         double inc=1e-9;
         double[] donorDist;
@@ -890,6 +894,9 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             long[] mn1=donorAlign.allelePresenceForSitesBlock(d1, Minor, startBlock, endBlock + 1);
             for (int d2 : donor2Indices) {
                 if((!viterbiSearch)&&(d1==d2)) continue;
+                if(testedDonorPairs.contains(((long)d1<<32)+(long)d2)) continue;
+                if(testedDonorPairs.contains(((long)d2<<32)+(long)d1)) continue;
+                testedDonorPairs.add(((long)d1<<32)+(long)d2);
                 long[] mj2=donorAlign.allelePresenceForSitesBlock(d2, Major, startBlock, endBlock + 1);
                 long[] mn2=donorAlign.allelePresenceForSitesBlock(d2, Minor, startBlock, endBlock + 1);
                 if(viterbiSearch) {
@@ -985,22 +992,23 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             byte knownBase=impT.getOrigGeno(cs+donorOffset);
             //record recombination breakpoint if it changes
             if(!Arrays.equals(prevDonors, currDonors)) {
-                prevDonors=currDonors;
                 DonorHaplotypes dhaps=new DonorHaplotypes(donorAlign.chromosome(prevDonorStart), donorAlign.chromosomalPosition(prevDonorStart),
                         donorAlign.chromosomalPosition(cs),prevDonors[0],prevDonors[1]);
                 impT.addBreakPoint(dhaps);
                 prevDonors=currDonors;
                 prevDonorStart=cs;
             }
+            //chgHis records the section of the imputation pipeline that made the change, Viterbi negative, blockNN positive
             if(theDH[0].phasedResults==null) {impT.chgHis[cs+donorOffset]=(byte)-neighbor;}
             else {impT.chgHis[cs+donorOffset]=(byte)neighbor;}
 
             impT.impGeno[cs+donorOffset]= donorEst;  //predicted based on neighbor
+            //if genotype is unknown or het undercall then resolves
+            //todo there is currently not an option if the predicted disagrees with a homozygous call
             if(knownBase==UNKNOWN_DIPLOID_ALLELE) {
                 if (isHeterozygous(donorEst)) {
                     if (smashOn && hetsMiss) {//if imputing a heterozygote, just set to missing
                         impT.resolveGeno[cs+donorOffset]= knownBase;
-                        //System.out.println("SetToMissing"+":"+theDH[0].targetTaxon+":"+cs+donorOffset+":"+knownBaseString+":"+donorEstString);
                     }
                     else impT.resolveGeno[cs+donorOffset]= donorEst; //if not in hybrid, set to het
                 }
