@@ -217,6 +217,16 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant= new String[]{"AATTC"};
             likelyReadEnd = new String[]{"GAATTC","GAATTAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
             readEndCutSiteRemnantLength = 5;
+        } else if(enzyme.matches("(?i)cviq[i1]")){  
+            theEnzyme = "CviQI";  // CviQI and Csp6I are isoschizomers (same recognition seq and overhang)
+            initialCutSiteRemnant=new String[]{"TAC"};
+            likelyReadEnd = new String[]{"GTAC","GTAAGATCGG"}; // full cut site (from partial digest or chimera) or common adapter start
+            readEndCutSiteRemnantLength = 3;
+        } else if(enzyme.matches("(?i)csp6[i1]")){  
+            theEnzyme = "Csp6I";  // Csp6I and CviQI are isoschizomers (same recognition seq and overhang)
+            initialCutSiteRemnant=new String[]{"TAC"};
+            likelyReadEnd = new String[]{"GTAC","GTAAGATCGG"}; // full cut site (from partial digest or chimera) or common adapter start
+            readEndCutSiteRemnantLength = 3;
         } else if (enzyme.matches("(?i)RBSTA")) {
             theEnzyme = "RBSTA";
             initialCutSiteRemnant = new String[]{"TA"};
@@ -233,6 +243,8 @@ public class ParseBarcodeRead {
                     +"  ApeKI"    +"\n"
                     +"  ApoI"     +"\n"
                     +"  BamHI"    +"\n"
+                    +"  Csp6I"    +"\n"
+                    +"  CviQI"    +"\n"
                     +"  EcoRI"    +"\n"
                     +"  EcoT22I"  +"\n"
                     +"  HindIII"  +"\n"
