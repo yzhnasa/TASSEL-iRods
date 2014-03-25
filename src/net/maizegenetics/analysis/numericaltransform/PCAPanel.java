@@ -113,7 +113,7 @@ public class PCAPanel extends JPanel {
 
         bgrpVar.add(rdoCor);
         bgrpVar.add(rdoCovar);
-        bgrpVar.setSelected(rdoCor.getModel(), true);
+        bgrpVar.setSelected(rdoCovar.getModel(), true);
 
         SpinnerNumberModel aSpinnerNumberModel = new SpinnerNumberModel(columnNames.length, 1, columnNames.length, 1);
         spnComp = new JSpinner(aSpinnerNumberModel);
@@ -121,8 +121,8 @@ public class PCAPanel extends JPanel {
         spnComp.setOpaque(true);
         //Panel Setup
         pnlPCA.add(lblMethod, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 7));
-        pnlPCA.add(rdoCor, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 7));
-        pnlPCA.add(rdoCovar, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 7));
+        pnlPCA.add(rdoCovar, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 7));
+        pnlPCA.add(rdoCor, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 7));
         pnlPCA.add(lblOutput, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 7));
 
         pnlPCA.add(rdoEigen, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, new Insets(34, -10, 0, 50), 0, 7));
