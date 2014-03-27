@@ -48,10 +48,6 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
     private static ArgsEngine engine = new ArgsEngine();
     private static final Logger myLogger = Logger.getLogger(FILLINImputationPlugin.class);
     
-    public FILLINImputationAccuracyPlugin(Frame parentFrame) {
-       super(parentFrame, false);
-   }
-    
     public void initiateAccuracy(String unimpFile, String maskKeyFile, double[] mafClass, double propSitesMask) {
         GenotypeTable unimp= ImportUtils.readGuessFormat(unimpFile);
 //        if (mafClass!=null) {//if mafClass not null, assign MAF categories to sites in unimputed
@@ -296,9 +292,18 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
         }
     }
     
+    public void checkForMAF() {
+        if (MAFClass!=null) {//if mafClass not null, assign MAF categories to sites in unimputed
+            generateMAF(FILLINImputationPlugin.donorAlign, FILLINImputationPlugin.unimpAlign, MAFClass);
+            mafAll= new double[MAFClass.length][3][5];
+            if (verboseOutput) System.out.println("Calculating accuracy within supplied MAF categories.");
+        }
+    }
+    
     public void calcAccuracy(GenotypeTable imputed, GenotypeTable unimpAlign, double runtime) {
         byte diploidN= GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
         boolean use= false; boolean mafOn= false; int maf= -1;
+        checkForMAF();
         if (mafAll!=null) {use= true; mafOn= true;}
         for (int taxon = 0; taxon < imputed.numberOfTaxa(); taxon++) {
             int keyTaxon= maskKey.taxa().indexOf(imputed.taxaName(taxon));//if key file contains fewer taxa, or different numbers, or different order

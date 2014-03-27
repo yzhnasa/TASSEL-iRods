@@ -100,6 +100,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         
     
     public static GenotypeTable unimpAlign= null;  //the unimputed alignment to be imputed, unphased
+    public static GenotypeTable[] donorAlign= null;
     private int testing=0;  //level of reporting to stdout
     //major and minor alleles can be differ between the donor and unimp alignment
     private boolean isSwapMajorMinor=true;  //if swapped try to fix it
@@ -162,7 +163,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         this.minTestSites=minTestSites;
         this.isOutputProjection=isOutputProjection;
         if (unimpAlign==null) unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile);
-        GenotypeTable[] donorAlign= null;
         try {
             if (donorFile.contains(".gX")) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, verboseOutput);}
             else if(true) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, 8000,true);}  //todo add option for size
