@@ -84,28 +84,22 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     private int maxDonorHypotheses=20;  //number of hypotheses of record from an inbred or hybrid search of a focus block
     private boolean isOutputProjection=false;
 
-    private double maximumInbredError=0.01;  //inbreds are tested first, if too much error hybrids are tested.
-    private double maxHybridErrorRate=0.003;
+    private double maximumInbredError=0.01; //apply one haplotype if error less than this
+    private double maxHybridErrorRate=0.003;//threshold for two donors to go to Viterbi
     private int minTestSites=100;  //minimum number of compared sites to find a hit
-
-    //kelly options
     private boolean twoWayViterbi= true;//if true, the viterbi runs in both directions (the longest path length wins, if inconsistencies)
-    private double maxHybridErrFocusHomo= .001;//max error rate for discrepacy between two haplotypes for the focus block. it's default is higher because calculating for fewer sites
-    private double maxInbredErrFocusHomo= .003;
-    private double maxSmashErrFocusHomo= .01;
-    private double maxInbredErrFocusHet= .001;//the error rate for imputing one haplotype in focus block for a het taxon
-    private double maxSmashErrFocusHet= .01;
+
+    //options for focus blocks
+    private double maxHybridErrFocusHomo= .3333*maxHybridErrorRate;////max error rate for discrepacy between two haplotypes for the focus block. it's default is higher because calculating for fewer sites
+    private double maxInbredErrFocusHomo= .3*maximumInbredError;//.003;
+    private double maxSmashErrFocusHomo= maximumInbredError;//.01;
+    private double maxInbredErrFocusHet= .1*maximumInbredError;//.001;//the error rate for imputing one haplotype in focus block for a het taxon
+    private double maxSmashErrFocusHet= maximumInbredError;//.01;
     private double hetThresh= 0.02;//threshold for whether a taxon is considered heterozygous
     
-    //options for masking and calculating accuracy
-    private boolean accuracyOn= true;
-    private String maskKeyFile= null;
-    private double propSitesMask= .001;
-    private GenotypeTable maskKey= null;
-    private double[] MAFClass= null;//new double[]{0,.02,.05,.10,.20,.3,.4,.5,1};
         
     
-    public static GenotypeTable unimpAlign;  //the unimputed alignment to be imputed, unphased
+    public static GenotypeTable unimpAlign= null;  //the unimputed alignment to be imputed, unphased
     private int testing=0;  //level of reporting to stdout
     //major and minor alleles can be differ between the donor and unimp alignment
     private boolean isSwapMajorMinor=true;  //if swapped try to fix it
@@ -167,7 +161,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         System.out.println("Retain Rare alleles is:"+TasselPrefs.getAlignmentRetainRareAlleles());
         this.minTestSites=minTestSites;
         this.isOutputProjection=isOutputProjection;
-        unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile);
+        if (unimpAlign==null) unimpAlign=ImportUtils.readGuessFormat(unImpTargetFile);
         GenotypeTable[] donorAlign= null;
         try {
             if (donorFile.contains(".gX")) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, verboseOutput);}
@@ -688,7 +682,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             }
             if(testing>1) System.out.println("callsR:"+Arrays.toString(callsR)+" Swaps"+countSwaps(callsR));
             //compare the forward and reverse viterbi, use the one with the longest path length if they contradict
-            byte[] callsC=Arrays.copyOf(callsF,callsF.length);  //this does not copy it is just a pointer assignment
+            byte[] callsC=Arrays.copyOf(callsF,callsF.length);  
             for(int i= 0;i<pos.length;i++) {
                 int cs= pos[i]-startSite;
                 if (callsF[cs]!=callsR[cs]&&i<pos.length/2) callsC[cs]= callsR[cs];
@@ -962,7 +956,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         else if(theDH[0].getPhaseForSite(startSite)==1) {prevDonors=new int[]{theDH[0].donor1Taxon, theDH[0].donor2Taxon};}
         int prevDonorStart=startSite;
 
-        int[] currDonors=prevDonors;
+        int[] currDonors=Arrays.copyOf(prevDonors, prevDonors.length);
 
         for(int cs=startSite; cs<=endSite; cs++) {
             byte donorEst=UNKNOWN_DIPLOID_ALLELE;
@@ -1073,7 +1067,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         engine.add("-hmp", "-hmpFile", true);
         engine.add("-o", "--outFile", true);
         engine.add("-d", "--donorH", true);
-        engine.add("-accuracyOff", "--accuracyOff", true);
         engine.add("-maskKeyFile", "--maskKeyFile", true);
         engine.add("-propSitesMask", "--propSitesMask", true);
         engine.add("-mxHet", "--hetThresh", true);
@@ -1082,12 +1075,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         engine.add("-minMnCnt", "--minMnCnt", true);
         engine.add("-mxInbErr", "--mxInbErr", true);
         engine.add("-mxHybErr", "--mxHybErr", true);
-        engine.add("-mxVitFocusErr", "--mxVitFocusErr", true);
-        engine.add("-mxInbFocusErr", "--mbIndFocusErr", true);
-        engine.add("-mxComFocusErr", "--mxComFocusErr", true);
-        engine.add("-mxInbFocusErrHet", "--mxInbFocusErrHet", true);
-        engine.add("-mxComFocusErrHet", "--mxComFocusErrHet", true);
-        engine.add("-hybNNOff", "--hybNNOff", true);
         engine.add("-mxDonH", "--mxDonH", true);
         engine.add("-mnTestSite", "--mnTestSite", true);
         engine.add("-projA", "--projAlign", false);
@@ -1097,33 +1084,14 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         hmpFile = engine.getString("-hmp");
         outFileBase = engine.getString("-o");
         donorFile = engine.getString("-d");
-        maskKeyFile = engine.getString("-maskKeyFile");
         if(engine.getBoolean("-mxHet")) {
             hetThresh = Double.parseDouble(engine.getString("-mxHet"));
-        }
-        if(engine.getBoolean("-propSitesMask")) {
-            propSitesMask = Double.parseDouble(engine.getString("-propSitesMask"));
         }
         if (engine.getBoolean("-mxInbErr")) {
             maximumInbredError = Double.parseDouble(engine.getString("-mxInbErr"));
         }
         if (engine.getBoolean("-mxHybErr")) {
             maxHybridErrorRate = Double.parseDouble(engine.getString("-mxHybErr"));
-        }
-        if (engine.getBoolean("-mxVitFocusErr")) {
-            maxHybridErrFocusHomo = Double.parseDouble(engine.getString("-mxVitFocusErr"));
-        }
-        if (engine.getBoolean("-mxInbFocusErr")) {
-            maxInbredErrFocusHomo = Double.parseDouble(engine.getString("-mxInbFocusErr"));
-        }
-        if (engine.getBoolean("-mxComFocusErr")) {
-            maxSmashErrFocusHomo = Double.parseDouble(engine.getString("-mxComFocusErr"));
-        }
-        if (engine.getBoolean("-mxInbFocusErrHet")) {
-            maxInbredErrFocusHet = Double.parseDouble(engine.getString("-mxInbFocusErrHet"));
-        }
-        if (engine.getBoolean("-mxComFocusErrHet")) {
-            maxSmashErrFocusHet = Double.parseDouble(engine.getString("-mxComFocusErrHet"));
         }
         if (engine.getBoolean("-minMnCnt")) {
             minMinorCnt = Integer.parseInt(engine.getString("-minMnCnt"));
@@ -1135,7 +1103,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         if (engine.getBoolean("-mnTestSite")) {
             minTestSites = Integer.parseInt(engine.getString("-mnTestSite"));
         }
-        if (engine.getBoolean("-accuracyOff")) accuracyOn=false;
         if (engine.getBoolean("-projA")) isOutputProjection=true;
         if (engine.getBoolean("-nV")) verboseOutput=false;
     }
@@ -1148,22 +1115,15 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                         + "-hmp   Input HapMap file of target genotypes to impute. Accepts all file types supported by TASSEL5\n"
                         + "-d    Donor haplotype files from output of FILLINFindHaplotypesPlugin. Use .gX in the input filename to denote the substring .gc#s# found in donor files\n"
                         + "-o     Output file; hmp.txt.gz and .hmp.h5 accepted. Required\n"
-                        + "-maskKeyFile An optional key file to indicate that file is already masked for accuracy calculation. Non-missing genotypes indicate masked sites. Else, will generate own mask\n"
-                        + "-propSitesMask   The proportion of non missing sites to mask for accuracy calculation if depth is not available (default:"+propSitesMask+"\n"
                         + "-mxHet   Threshold per taxon heterozygosity for treating taxon as heterozygous (no Viterbi, het thresholds). (default:"+hetThresh+"\n"
                         + "-minMnCnt    Minimum number of informative minor alleles in the search window (or "+minMajorRatioToMinorCnt+"X major)\n"
                         + "-mxInbErr    Maximum error rate for applying one haplotype to entire site window (default:"+maximumInbredError+"\n"
                         + "-mxHybErr    Maximum error rate for applying Viterbi with to haplotypes to entire site window (default:"+maxHybridErrorRate+"\n"
-                        + "-mxVitFocusErr    Maximum error rate for applying Viterbi with to haplotypes to entire site window  (default:"+maxHybridErrFocusHomo+")\n"
-                        + "-mxInbFocusErr    Maximum error rate to apply one haplotype for inbred (heterozygosity below mxHet) taxon  for 64-site focus blocks (default:"+maxInbredErrFocusHomo+")\n"
-                        + "-mxComFocusErr    Maximum error rate to apply two haplotypes modeled as a heterozygote for inbred (heterozygosity below mxHet) taxon  for 64-site focus blocks (default:"+maxSmashErrFocusHomo+")\n"
-                        + "-mxInbFocusErrHet    Maximum error rate to apply one haplotype for outbred (heterozygosity above mxHet) taxon  for 64-site focus blocks (default:"+maxInbredErrFocusHet+")\n"
-                        + "-mxComFocusErrHet    Maximum error rate to apply two haplotypes modeled as a heterozygote for outbred (heterozygosity above mxHet) taxon  for 64-site focus blocks (default:"+maxSmashErrFocusHet+")\n"
                         + "-hybNNOff    Whether to model two haplotypes as heterozygotic for focus blocks (default:"+hybridNN+")\n"
                         + "-mxDonH   Maximum number of donor hypotheses to be explored (default: "+maxDonorHypotheses+")\n"
                         + "-mnTestSite   Minimum number of sites to test for IBS between haplotype and target in focus block  (default:"+minTestSites+")\n"
-                        + "-accuracyOff   Do not calculate accuracy for imputation (default on)\n"
                         + "-projA   Create a projection alignment for high density markers (default off)\n"
+                        + "-nV   Supress system out if flagged\n"
         );
     }
 
