@@ -64,7 +64,6 @@ public final class Utils {
      * everything after last . is removed.
      *
      * @param str original filename
-     * @param suffix suffix
      *
      * @return trimmed filename
      */

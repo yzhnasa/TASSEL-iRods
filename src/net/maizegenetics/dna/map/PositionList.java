@@ -75,7 +75,7 @@ public interface PositionList extends List<Position> {
     public int chromosomeSiteCount(Chromosome chromosome);
 
     /**
-     * Get the first (inclusive) and last (exclusive) site of the specified
+     * Get the first (inclusive) and last (inclusive) site of the specified
      * chromosome in this alignment.
      *
      * @param chromosome chromosome

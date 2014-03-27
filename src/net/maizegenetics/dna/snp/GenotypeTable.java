@@ -421,7 +421,7 @@ public interface GenotypeTable {
     public int chromosomeSiteCount(Chromosome chromosome);
 
     /**
-     * Get the first (inclusive) and last (exclusive) site of the specified
+     * Get the first (inclusive) and last (inclusive) site of the specified
      * chromosome in this genotype table.
      *
      * @param chromosome chromosome

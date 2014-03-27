@@ -4,7 +4,6 @@
  */
 package net.maizegenetics.analysis.imputation;
 
-import java.awt.Frame;
 import net.maizegenetics.dna.snp.*;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 
@@ -146,8 +145,8 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
         if (maskKey==null) return null;
         for (Chromosome chr:unimp.chromosomes()) {
             int[] startEndUnimp= unimp.startAndEndOfChromosome(chr); int[] startEndKey= maskKey.startAndEndOfChromosome(chr);
-            unimpPos= Arrays.copyOfRange(unimp.physicalPositions(), startEndUnimp[0], startEndUnimp[1]+1);
-            keyPos= Arrays.copyOfRange(maskKey.physicalPositions(), startEndKey[0], startEndKey[1]+1);
+            unimpPos= Arrays.copyOfRange(unimp.physicalPositions(), startEndUnimp[0], startEndUnimp[1]);
+            keyPos= Arrays.copyOfRange(maskKey.physicalPositions(), startEndKey[0], startEndKey[1]);
             for (int posOnChr = 0; posOnChr < unimpPos.length; posOnChr++) {//if input hapmap sites not in key, return null
                 if (Arrays.binarySearch(keyPos, unimpPos[posOnChr])<0) return null;
             }
@@ -172,7 +171,8 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
         }
         for (Chromosome chr:keyChr) { //keep sites on key that are on matching chromosomes
             if (Arrays.binarySearch(unimpChr, chr)>-1) {
-                for (int site = maskKey.startAndEndOfChromosome(chr)[0]; site < maskKey.startAndEndOfChromosome(chr)[1]; site++) {
+                int[] startEnd = maskKey.startAndEndOfChromosome(chr);
+                for (int site = startEnd[0]; site <= startEnd[1]; site++) {
                     keepSites.add(site);
                 }
             }

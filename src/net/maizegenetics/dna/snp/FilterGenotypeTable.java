@@ -51,7 +51,7 @@ public class FilterGenotypeTable implements GenotypeTable {
         myTaxaList = subList;
 
         if (myTaxaList.numberOfTaxa() != taxaRedirect.length) {
-            throw new IllegalArgumentException("FilterAlignment: init: subList should be same size as taxaRedirect.");
+            throw new IllegalArgumentException("FilterGenotypeTable: init: subList should be same size as taxaRedirect.");
         }
 
         myIsTaxaFilter = true;
@@ -194,15 +194,15 @@ public class FilterGenotypeTable implements GenotypeTable {
         myTaxaList = original == null ? a.taxa() : original.taxa();
 
         if (startSite > endSite) {
-            throw new IllegalArgumentException("FilterAlignment: init: start site: " + startSite + " is larger than end site: " + endSite);
+            throw new IllegalArgumentException("FilterGenotypeTable: init: start site: " + startSite + " is larger than end site: " + endSite);
         }
 
         if ((startSite < 0) || (startSite > a.numberOfSites() - 1)) {
-            throw new IllegalArgumentException("FilterAlignment: init: start site: " + startSite + " is out of range.");
+            throw new IllegalArgumentException("FilterGenotypeTable: init: start site: " + startSite + " is out of range.");
         }
 
         if ((endSite < 0) || (endSite > a.numberOfSites() - 1)) {
-            throw new IllegalArgumentException("FilterAlignment: init: end site: " + endSite + " is out of range.");
+            throw new IllegalArgumentException("FilterGenotypeTable: init: end site: " + endSite + " is out of range.");
         }
 
         myBaseAlignment = a;
@@ -289,7 +289,7 @@ public class FilterGenotypeTable implements GenotypeTable {
             } else if (original.isTaxaFilter()) {
                 return new FilterGenotypeTable(baseAlignment, subSites, original);
             } else {
-                throw new IllegalStateException("FilterAlignment: getInstance: original not in known state.");
+                throw new IllegalStateException("FilterGenotypeTable: getInstance: original not in known state.");
             }
         } else {
             return new FilterGenotypeTable(a, subSites, null);
@@ -371,7 +371,7 @@ public class FilterGenotypeTable implements GenotypeTable {
 
     public static FilterGenotypeTable getInstance(GenotypeTable a, Chromosome chromosome) {
         int[] endStart = a.startAndEndOfChromosome(chromosome);
-        return getInstance(a, endStart[0], endStart[1] - 1);
+        return getInstance(a, endStart[0], endStart[1]);
     }
 
     /**
@@ -401,7 +401,7 @@ public class FilterGenotypeTable implements GenotypeTable {
             } else if (original.isTaxaFilter()) {
                 return new FilterGenotypeTable(baseAlignment, startSite, endSite, original);
             } else {
-                throw new IllegalStateException("FilterAlignment: getInstance: original not in known state.");
+                throw new IllegalStateException("FilterGenotypeTable: getInstance: original not in known state.");
             }
         } else {
             return new FilterGenotypeTable(a, startSite, endSite, null);
@@ -555,14 +555,14 @@ public class FilterGenotypeTable implements GenotypeTable {
             if (chromosome.equals(myChromosomes[i])) {
                 int end = 0;
                 if (i == numChromosomes() - 1) {
-                    end = numberOfSites();
+                    end = numberOfSites() - 1;
                 } else {
-                    end = myChromosomeOffsets[i + 1];
+                    end = myChromosomeOffsets[i + 1] - 1;
                 }
                 return new int[]{myChromosomeOffsets[i], end};
             }
         }
-        throw new IllegalArgumentException("FilterAlignment: getStartAndEndOfLocus: this locus not defined: " + chromosome.getName());
+        throw new IllegalArgumentException("FilterGenotypeTable: getStartAndEndOfLocus: this locus not defined: " + chromosome.getName());
     }
 
     @Override
@@ -970,7 +970,7 @@ public class FilterGenotypeTable implements GenotypeTable {
     @Override
     public int chromosomeSiteCount(Chromosome chromosome) {
         int[] startEnd = startAndEndOfChromosome(chromosome);
-        return startEnd[1] - startEnd[0];
+        return startEnd[1] - startEnd[0] + 1;
     }
 
     @Override
