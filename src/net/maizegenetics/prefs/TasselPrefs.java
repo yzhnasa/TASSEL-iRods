@@ -26,6 +26,10 @@ public class TasselPrefs {
     public static final String TASSEL_SAVE_DIR_DEFAULT = "";
     public static final String TASSEL_OPEN_DIR = "openDir";
     public static final String TASSEL_OPEN_DIR_DEFAULT = "";
+    public static final String TASSEL_X_DIM = "xDimension";
+    public static final int TASSEL_X_DIM_DEFAULT = -1;
+    public static final String TASSEL_Y_DIM = "yDimension";
+    public static final int TASSEL_Y_DIM_DEFAULT = -1;
     //
     // FilterAlignmentPlugin preferences
     //
@@ -207,6 +211,22 @@ public class TasselPrefs {
 
     public static void putOpenDir(String value) {
         putPref(TASSEL_TOP, TASSEL_OPEN_DIR, value);
+    }
+
+    public static int getXDim() {
+        return getIntPref(TASSEL_TOP, TASSEL_X_DIM, TASSEL_X_DIM_DEFAULT);
+    }
+
+    public static void putXDim(int value) {
+        putIntPref(TASSEL_TOP, TASSEL_X_DIM, value);
+    }
+
+    public static int getYDim() {
+        return getIntPref(TASSEL_TOP, TASSEL_Y_DIM, TASSEL_Y_DIM_DEFAULT);
+    }
+
+    public static void putYDim(int value) {
+        putIntPref(TASSEL_TOP, TASSEL_Y_DIM, value);
     }
 
     //
