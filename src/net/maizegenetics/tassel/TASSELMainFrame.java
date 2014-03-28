@@ -73,6 +73,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import net.maizegenetics.analysis.data.HetsToUnknownPlugin;
 
 /**
  * TASSELMainFrame
@@ -557,6 +558,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         result.add(createMenuItem(new UnionAlignmentPlugin(this, true)));
         result.add(createMenuItem(new MergeAlignmentsPlugin(this, true)));
         result.add(createMenuItem(new SeparatePlugin(this, true)));
+        result.add(createMenuItem(new HetsToUnknownPlugin()));
         result.addSeparator();
 
         JMenuItem delete = new JMenuItem("Delete Dataset");
