@@ -60,6 +60,7 @@ import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
+import net.maizegenetics.analysis.data.HetsToUnknownPlugin;
 import net.maizegenetics.analysis.filter.FilterSubsetPlugin;
 
 /**
@@ -333,6 +334,9 @@ public class TasselPipeline implements PluginListener {
                         plugin.setChromosomesToSeparate(chromosomes);
                         index++;
                     }
+                    integratePlugin(plugin, true);
+                } else if (current.equalsIgnoreCase("-homozygous")) {
+                    HetsToUnknownPlugin plugin = new HetsToUnknownPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-synonymizer")) {
                     SynonymizerPlugin plugin = new SynonymizerPlugin(myMainFrame, false);

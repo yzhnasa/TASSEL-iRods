@@ -6,6 +6,7 @@
  */
 package net.maizegenetics.analysis.data;
 
+import java.awt.Frame;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.PluginEvent;
@@ -27,8 +28,8 @@ public class HetsToUnknownPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(HetsToUnknownPlugin.class);
 
-    public HetsToUnknownPlugin() {
-        super(null, false);
+    public HetsToUnknownPlugin(Frame parentFrame, boolean isInteractive) {
+        super(parentFrame, isInteractive);
     }
 
     /**

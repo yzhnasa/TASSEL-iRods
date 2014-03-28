@@ -558,7 +558,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         result.add(createMenuItem(new UnionAlignmentPlugin(this, true)));
         result.add(createMenuItem(new MergeAlignmentsPlugin(this, true)));
         result.add(createMenuItem(new SeparatePlugin(this, true)));
-        result.add(createMenuItem(new HetsToUnknownPlugin()));
+        result.add(createMenuItem(new HetsToUnknownPlugin(this, true)));
         result.addSeparator();
 
         JMenuItem delete = new JMenuItem("Delete Dataset");
