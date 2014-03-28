@@ -90,12 +90,14 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     //kelly options
     private boolean twoWayViterbi= true;//if true, the viterbi runs in both directions (the longest path length wins, if inconsistencies)
-    private double maxHybridErrFocusHomo= .001;//max error rate for discrepacy between two haplotypes for the focus block. it's default is higher because calculating for fewer sites
-    private double maxInbredErrFocusHomo= .003;
-    private double maxSmashErrFocusHomo= .01;
-    private double maxInbredErrFocusHet= .001;//the error rate for imputing one haplotype in focus block for a het taxon
-    private double maxSmashErrFocusHet= .01;
     private double minimumHybridDonorDistance=0.10;
+
+    //options for focus blocks
+    private double maxHybridErrFocusHomo= .3333*maxHybridErrorRate;////max error rate for discrepacy between two haplotypes for the focus block. it's default is higher because calculating for fewer sites
+    private double maxInbredErrFocusHomo= .3*maximumInbredError;//.003;
+    private double maxSmashErrFocusHomo= maximumInbredError;//.01;
+    private double maxInbredErrFocusHet= .1*maximumInbredError;//.001;//the error rate for imputing one haplotype in focus block for a het taxon
+    private double maxSmashErrFocusHet= maximumInbredError;//.01;
     private double hetThresh= 0.02;//threshold for whether a taxon is considered heterozygous
     
     //options for masking and calculating accuracy

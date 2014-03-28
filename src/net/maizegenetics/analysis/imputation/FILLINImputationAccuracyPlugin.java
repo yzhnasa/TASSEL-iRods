@@ -4,9 +4,16 @@
  */
 package net.maizegenetics.analysis.imputation;
 
+import net.maizegenetics.dna.map.Chromosome;
 import net.maizegenetics.dna.snp.*;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
+import net.maizegenetics.plugindef.AbstractPlugin;
+import net.maizegenetics.plugindef.DataSet;
+import net.maizegenetics.util.ArgsEngine;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.log4j.Logger;
 
+import javax.swing.*;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -14,17 +21,10 @@ import java.io.FileOutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.swing.ImageIcon;
-import net.maizegenetics.dna.map.Chromosome;
 
 import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
 import static net.maizegenetics.dna.snp.GenotypeTableUtils.isHeterozygous;
 import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.GAP_DIPLOID_ALLELE;
-import net.maizegenetics.plugindef.AbstractPlugin;
-import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.util.ArgsEngine;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -293,11 +293,12 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
     }
     
     public void checkForMAF() {
-        if (MAFClass!=null) {//if mafClass not null, assign MAF categories to sites in unimputed
-            generateMAF(FILLINImputationPlugin.donorAlign, FILLINImputationPlugin.unimpAlign, MAFClass);
-            mafAll= new double[MAFClass.length][3][5];
-            if (verboseOutput) System.out.println("Calculating accuracy within supplied MAF categories.");
-        }
+        //todo exposing these variables publicly needs to be fixed
+//        if (MAFClass!=null) {//if mafClass not null, assign MAF categories to sites in unimputed
+//            generateMAF(FILLINImputationPlugin.donorAlign, FILLINImputationPlugin.unimpAlign, MAFClass);
+//            mafAll= new double[MAFClass.length][3][5];
+//            if (verboseOutput) System.out.println("Calculating accuracy within supplied MAF categories.");
+//        }
     }
     
     public void calcAccuracy(GenotypeTable imputed, GenotypeTable unimpAlign, double runtime) {
