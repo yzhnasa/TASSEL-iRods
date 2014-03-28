@@ -580,13 +580,13 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         String[] inputLine = inputStr.split("\t");
         int name = 0, flag = 1, chr = 2, pos = 3, cigar = 5, tagS = 9; // column indices in inputLine
         String nullS = this.getNullTag();
+        byte currStrand = ((Integer.parseInt(inputLine[flag]) & 16) == 16) ? (byte) -1 : (byte) 1; // bit 0x10 (= 2^4 = 16) is set: REVERSE COMPLEMENTED
         if ((Integer.parseInt(inputLine[flag]) & 4) == 4) {  // bit 0x4 (= 2^2 = 4) is set: NO ALIGNMENT
-            recordLackOfSAMAlign(tagIndex, inputLine[tagS], inputLine[name], nullS);
+            recordLackOfSAMAlign(tagIndex, inputLine[tagS], inputLine[name], nullS, currStrand);
         } else {  // aligns to one or more positions
             HashMap<String, Integer> SAMFields = parseOptionalFieldsFromSAMAlignment(inputLine);
             byte bestHits = (byte) Math.min(SAMFields.get("nBestHits"), Byte.MAX_VALUE);
             byte editDist = (byte) Math.min(SAMFields.get("editDist"), Byte.MAX_VALUE);
-            byte currStrand = (Integer.parseInt(inputLine[flag]) == 16) ? (byte) -1 : (byte) 1;
             recordSAMAlign(
                     tagIndex,
                     inputLine[tagS],
@@ -636,8 +636,8 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         return SAMFields;
     }
 
-    private void recordLackOfSAMAlign(int tagIndex, String tagS, String tagName, String nullS) {
-        recordTagFromSAMAlignment(tagIndex, tagS, tagName, nullS, (byte) 1);
+    private void recordLackOfSAMAlign(int tagIndex, String tagS, String tagName, String nullS, byte strand) {
+        recordTagFromSAMAlignment(tagIndex, tagS, tagName, nullS, strand);
         multimaps[tagIndex] = 0;   // or should this be unknown = Byte.MIN_VALUE???
         bestChr[tagIndex] = Integer.MIN_VALUE;
         bestStrand[tagIndex] = Byte.MIN_VALUE;

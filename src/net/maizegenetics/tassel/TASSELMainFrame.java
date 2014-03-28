@@ -128,10 +128,18 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         // it is time for TASSEL to claim more (almost all) of the screen real estate for itself
         // this size was selected so as to encourage the user to resize to full screen,  thereby
         // insuring that all parts of the frame are visible.
-        setSize(new Dimension(screenSize.width * 19 / 20, screenSize.height * 19 / 20));
+        int xDim = TasselPrefs.getXDim();
+        int yDim = TasselPrefs.getYDim();
+        if ((xDim < 50) || (yDim < 50)) {
+            setSize(new Dimension(screenSize.width * 19 / 20, screenSize.height * 19 / 20));
+        } else {
+            setSize(xDim, yDim);
+        }
         setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage)");
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(WindowEvent e) {
+                TasselPrefs.putXDim(getWidth());
+                TasselPrefs.putYDim(getHeight());
                 System.exit(0);
             }
         });
@@ -627,6 +635,8 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                TasselPrefs.putXDim(getWidth());
+                TasselPrefs.putYDim(getHeight());
                 System.exit(0);
             }
         });
