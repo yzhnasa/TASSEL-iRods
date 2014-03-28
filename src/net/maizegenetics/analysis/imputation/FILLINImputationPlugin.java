@@ -95,6 +95,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     private double maxSmashErrFocusHomo= .01;
     private double maxInbredErrFocusHet= .001;//the error rate for imputing one haplotype in focus block for a het taxon
     private double maxSmashErrFocusHet= .01;
+    private double minimumHybridDonorDistance=0.10;
     private double hetThresh= 0.02;//threshold for whether a taxon is considered heterozygous
     
     //options for masking and calculating accuracy
@@ -901,7 +902,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 long[] mn2=donorAlign.allelePresenceForSitesBlock(d2, Minor, startBlock, endBlock + 1);
                 if(viterbiSearch) {
                     donorDist=IBSDistanceMatrix.computeHetBitDistances(mj1, mn1, mj2, mn2, minTestSites);
-                    if((d1!=d2)&&(donorDist[0]<this.maximumInbredError)) continue;
+                    if((d1!=d2)&&(donorDist[0]<this.minimumHybridDonorDistance)) continue;
                 }
                 int[] mendErr=mendelErrorComparison(mjT, mnT, mj1, mn1, mj2, mn2);
                 if(mendErr[1]<minTestSites) continue;
