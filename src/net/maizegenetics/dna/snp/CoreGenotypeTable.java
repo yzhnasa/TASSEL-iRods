@@ -184,7 +184,7 @@ public class CoreGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public int[] startAndEndOfChromosome(Chromosome chromosome) {
+    public int[] firstLastSiteOfChromosome(Chromosome chromosome) {
         return myPositionList.startAndEndOfChromosome(chromosome);
     }
 

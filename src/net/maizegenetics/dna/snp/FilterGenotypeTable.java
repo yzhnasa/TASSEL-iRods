@@ -370,7 +370,7 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     public static FilterGenotypeTable getInstance(GenotypeTable a, Chromosome chromosome) {
-        int[] endStart = a.startAndEndOfChromosome(chromosome);
+        int[] endStart = a.firstLastSiteOfChromosome(chromosome);
         return getInstance(a, endStart[0], endStart[1]);
     }
 
@@ -550,7 +550,7 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public int[] startAndEndOfChromosome(Chromosome chromosome) {
+    public int[] firstLastSiteOfChromosome(Chromosome chromosome) {
         for (int i = 0; i < numChromosomes(); i++) {
             if (chromosome.equals(myChromosomes[i])) {
                 int end = 0;
@@ -969,7 +969,7 @@ public class FilterGenotypeTable implements GenotypeTable {
 
     @Override
     public int chromosomeSiteCount(Chromosome chromosome) {
-        int[] startEnd = startAndEndOfChromosome(chromosome);
+        int[] startEnd = firstLastSiteOfChromosome(chromosome);
         return startEnd[1] - startEnd[0] + 1;
     }
 

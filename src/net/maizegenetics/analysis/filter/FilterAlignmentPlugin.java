@@ -114,7 +114,7 @@ public class FilterAlignmentPlugin extends AbstractPlugin {
                 throw new IllegalStateException("FilterAlignmentPlugin: processDatum: Alignment doesn't contain locus: " + myLocusStr);
             }
             if (myStartPos == -1) {
-                int[] startEnd = aa.startAndEndOfChromosome(theLocus);
+                int[] startEnd = aa.firstLastSiteOfChromosome(theLocus);
                 myStart = startEnd[0];
                 myEnd = startEnd[1];
             }

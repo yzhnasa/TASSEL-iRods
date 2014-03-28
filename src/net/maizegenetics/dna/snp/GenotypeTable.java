@@ -428,7 +428,7 @@ public interface GenotypeTable {
      *
      * @return first and last site
      */
-    public int[] startAndEndOfChromosome(Chromosome chromosome);
+    public int[] firstLastSiteOfChromosome(Chromosome chromosome);
 
     /**
      * Returns number of taxa

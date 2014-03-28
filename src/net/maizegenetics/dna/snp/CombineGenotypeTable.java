@@ -744,7 +744,7 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public int[] startAndEndOfChromosome(Chromosome chromosome) {
+    public int[] firstLastSiteOfChromosome(Chromosome chromosome) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
