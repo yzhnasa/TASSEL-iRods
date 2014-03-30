@@ -16,7 +16,6 @@ import net.maizegenetics.dna.map.TagMappingInfoV3.Aligner;
 import net.maizegenetics.dna.map.TagsOnPhysicalMapV3;
 import net.maizegenetics.dna.tag.TagsByTaxaByte;
 import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
-import net.maizegenetics.gbs.pipeline.SimpleGenotypeSBit;
 import net.maizegenetics.util.OpenBitSet;
 
 /**

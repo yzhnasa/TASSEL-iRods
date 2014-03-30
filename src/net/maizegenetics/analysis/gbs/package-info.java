@@ -14,9 +14,10 @@
  * PLoS One 6(5): e19379.
  * 
  * The bioinformatics has developed substantially since then and a new publication describing
- * the approaches is forthcoming:
+ * the approaches is:
  * <p>
- * Glaubitz, Casstevens, Harriman, Elshire, and Buckler (2013) in prep.
+ * Glaubitz JC, Casstevens TM, Lu F, Harriman J, Elshire RJ, Sun Q, Buckler ES. (2014)
+ * TASSEL-GBS: A High Capacity Genotyping by Sequencing Analysis Pipeline. PLoS ONE 9(2): e90346.
  * <p>
  * Key design principles:
  * Observed sequences are calls READS.  These reads are trimmed and combined into

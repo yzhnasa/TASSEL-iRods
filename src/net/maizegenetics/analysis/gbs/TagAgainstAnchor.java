@@ -9,10 +9,6 @@ import edu.cornell.lassp.houle.RngPack.RandomJava;
 import net.maizegenetics.dna.tag.TagsByTaxaByte;
 import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
 import net.maizegenetics.dna.BaseEncoder;
-import net.maizegenetics.dna.snp.GenotypeTable;
-import net.maizegenetics.dna.snp.GenotypeTableBuilder;
-import net.maizegenetics.dna.snp.ImportUtils;
-import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.util.OpenBitSet;
 
 import java.io.BufferedWriter;
@@ -21,8 +17,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import net.maizegenetics.gbs.pipeline.SimpleGenotypeSBit;
 
 /**
  *
