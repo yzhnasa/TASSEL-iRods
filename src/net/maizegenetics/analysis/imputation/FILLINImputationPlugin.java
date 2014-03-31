@@ -283,9 +283,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                     unimpAlign.allelePresenceForAllSites(taxon, Major).cardinality(),
                     unimpAlign.allelePresenceForAllSites(taxon, Minor).cardinality(), unkHets[0], unkHets[1]));
             boolean enoughData=(unimpAlign.totalNonMissingForTaxon(taxon)>minSitesPresent);
-//                System.out.println("Too much missing data");
-//                continue;
-//            }
             int countFullLength=0;
             int countByFocus= 0;
             for (int da = 0; (da < donorAlign.length)&&enoughData ; da++) {
@@ -293,6 +290,8 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 int blocks=donorAlign[da].allelePresenceForAllSites(0, Major).getNumWords();
                 BitSet[] maskedTargetBits=arrangeMajorMinorBtwAlignments(unimpAlign, taxon, donorOffset,
                         donorAlign[da].numberOfSites(),conflictMasks[da][0],conflictMasks[da][1]);
+
+                //if imputing the donor file, these donor indices prevent self imputation
                 int[] donorIndices;
                 if(imputeDonorFile){
                     donorIndices=new int[donorAlign[da].numberOfTaxa()-1];
@@ -301,13 +300,16 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                     donorIndices=new int[donorAlign[da].numberOfTaxa()];
                     for (int i = 0; i < donorIndices.length; i++) {donorIndices[i]=i;}
                 }
+
+                //Finds the best haplotype donors for each focus block within a donorGenotypeTable
                 DonorHypoth[][] regionHypthInbred=new DonorHypoth[blocks][maxDonorHypotheses];
-                calcInbredDist(impTaxon,maskedTargetBits, donorAlign[da]);
+                byte[][][] targetToDonorDistances=FILLINImputationUtils.calcAllelePresenceCountsBtwTargetAndDonors(maskedTargetBits, donorAlign[da]);
                 for (int focusBlock = 0; focusBlock < blocks; focusBlock++) {
                     int[] resultRange=getBlockWithMinMinorCount(maskedTargetBits[0].getBits(),maskedTargetBits[1].getBits(), focusBlock, minMinorCnt);
                     if(resultRange==null) continue; //no data in the focus Block
                     //search for the best inbred donors for a segment
-                    regionHypthInbred[focusBlock]=getBestInbredDonors(taxon, impTaxon, resultRange[0],resultRange[2], focusBlock, donorAlign[da], donorIndices);
+                    regionHypthInbred[focusBlock]=FILLINImputationUtils.getBestInbredDonors(taxon, resultRange[0],resultRange[2], focusBlock,
+                            donorIndices, targetToDonorDistances, minTestSites,maxDonorHypotheses);
                 }
                 impTaxon.setSegmentSolved(false);
                 //tries to solve the entire donorAlign region with 1 or 2 donor haplotypes by Virterbi
@@ -743,87 +745,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
     }
 
 
-    /**
-     * Calculates an inbred distance
-     * TODO:  Should be converted to the regular same, diff, hets, & sum
-     * @param modBitsOfTarget
-     * @return array with sites, same count, diff count, het count
-     */
-    private void calcInbredDist(ImputedTaxon impT, BitSet[] modBitsOfTarget, GenotypeTable donorAlign) {
-        int blocks=modBitsOfTarget[0].getNumWords();
-        impT.allDist=new byte[donorAlign.numberOfTaxa()][4][blocks];
-        long[] iMj=modBitsOfTarget[0].getBits();
-        long[] iMn=modBitsOfTarget[1].getBits();
-        for (int donor1 = 0; donor1 < impT.allDist.length; donor1++) {
-            long[] jMj=donorAlign.allelePresenceForAllSites(donor1, Major).getBits();
-            long[] jMn=donorAlign.allelePresenceForAllSites(donor1, Minor).getBits();
-            for (int i = 0; i <blocks; i++) {
-                long same = (iMj[i] & jMj[i]) | (iMn[i] & jMn[i]);
-                long diff = (iMj[i] & jMn[i]) | (iMn[i] & jMj[i]);
-                long hets = same & diff;
-                int sameCnt = BitUtil.pop(same);
-                int diffCnt = BitUtil.pop(diff);
-                int hetCnt = BitUtil.pop(hets);
-                int sites = sameCnt + diffCnt - hetCnt;
-                impT.allDist[donor1][2][i]=(byte)diffCnt;
-                impT.allDist[donor1][3][i]=(byte)hetCnt;
-                impT.allDist[donor1][0][i]=(byte)sites;
-                impT.allDist[donor1][1][i]=(byte)sameCnt;
-            }
-        }
-    }
 
-    /**
-     * Simple algorithm that tests every possible two donor combination to minimize
-     * the number of unmatched informative alleles.  Currently, there is litte tie
-     * breaking, longer matches are favored.
-     * @param targetTaxon
-     * @param startBlock
-     * @param endBlock
-     * @param focusBlock
-     * @return int[] array of {donor1, donor2, testSites}
-     */
-    private DonorHypoth[] getBestInbredDonors(int targetTaxon, ImputedTaxon impT, int startBlock, int endBlock,
-            int focusBlock, GenotypeTable donorAlign, int[] donor1indices) {
-        TreeMap<Double,DonorHypoth> bestDonors=new TreeMap<Double,DonorHypoth>();
-        double lastKeytestPropUnmatched=1.0;
-        double inc=1e-9;
-        int donorTaxaCnt=donorAlign.numberOfTaxa();
-        for (int d1 : donor1indices) {
-            int testSites=0;
-            int sameCnt = 0, diffCnt = 0, hetCnt = 0;
-            for (int i = startBlock; i <=endBlock; i++) {
-                sameCnt+=impT.allDist[d1][1][i];
-                diffCnt+=impT.allDist[d1][2][i];
-                hetCnt+=impT.allDist[d1][3][i];
-            }
-            testSites= sameCnt + diffCnt - hetCnt;
-            if(testSites<minTestSites) continue;
-            double testPropUnmatched = 1.0-(((double) (sameCnt) - (double)(0.5*hetCnt)) / (double) (testSites));
-            int totalMendelianErrors=(int)((double)testSites*testPropUnmatched);
-            //prob of this given poisson with lambda=1, total Mendelian errors=k (WE SHOULD DO THIS)
-            inc+=1e-9;  //this looks strange, but makes the keys unique and ordered
-            testPropUnmatched+=inc;  //this looks strange, but makes the keys unique and ordered
-            if(testPropUnmatched<lastKeytestPropUnmatched) {
-                DonorHypoth theDH=new DonorHypoth(targetTaxon, d1, d1, startBlock,
-                        focusBlock, endBlock, testSites, totalMendelianErrors);
-                DonorHypoth prev=bestDonors.put(new Double(testPropUnmatched), theDH);
-                if(prev!=null) System.out.println("Inbred TreeMap index crash:"+testPropUnmatched);
-                if(bestDonors.size()>maxDonorHypotheses) {
-                    bestDonors.remove(bestDonors.lastKey());
-                    lastKeytestPropUnmatched=bestDonors.lastKey();
-                }
-            }
-        }
-        //TODO consider reranking by Poisson.  The calculating Poisson on the fly is too slow.
-        DonorHypoth[] result=new DonorHypoth[maxDonorHypotheses];
-        int count=0;
-        for (DonorHypoth dh : bestDonors.values()) {
-            result[count]=dh;
-            count++;
-        }
-        return result;
-    }
 
     /**
      * Produces a sort list of most prevalent donorHypotheses across the donorAlign.
@@ -837,7 +759,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         for (int i = 0; i < allDH.length; i++) {
             DonorHypoth dh=allDH[i][0];
             if(dh==null) continue;
-            if(bd.containsKey(dh.donor1Taxon)) {
+            if(bd.containsKey(dh.donor1Taxon)) {  //counts the frequency of best hit
                 bd.put(dh.donor1Taxon, bd.get(dh.donor1Taxon)+1);
             } else {
                 bd.put(dh.donor1Taxon, 1);

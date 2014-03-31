@@ -7,7 +7,7 @@ package net.maizegenetics.analysis.gbs;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import net.maizegenetics.analysis.imputation.MinorWindowViterbiImputationPlugin;
+import net.maizegenetics.analysis.imputation.FILLINImputationPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.prefs.TasselPrefs;
@@ -542,7 +542,7 @@ public class ProductionPipelineMain {
         System.out.println("Arguments passed to MinorWindowViterbiImputationPlugin:\n" +builder.toString());
         System.out.println("TasselPrefs: "+ TasselPrefs.getAlignmentRetainRareAlleles());
         TasselPrefs.putAlignmentRetainRareAlleles(false);
-        MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
+        FILLINImputationPlugin plugin = new FILLINImputationPlugin();
         plugin.setParameters(args2);
         plugin.performFunction(null);
     }
