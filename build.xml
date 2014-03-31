@@ -92,6 +92,10 @@
     
     <target name="javadoc">
         
+        <tstamp>
+            <format property="build-date" pattern="MMMMM d, yyyy"/>
+        </tstamp>
+
         <delete dir="${javadoc}"/>
         <mkdir dir="${javadoc}"/>
         
@@ -99,9 +103,10 @@
                  source="1.7"
                  destdir="${javadoc}"
                  author="true"
+                 version="true"
                  use="true"
                  windowtitle="net.maizegenetics API"
-                 doctitle="TASSEL: Trait Analysis by aSSociation, Evolution and Linkage">
+                 doctitle="TASSEL 5.0: Trait Analysis by aSSociation, Evolution and Linkage (${build-date})">
             <classpath refid="build.class.path"/>
             
             <sourcepath>
