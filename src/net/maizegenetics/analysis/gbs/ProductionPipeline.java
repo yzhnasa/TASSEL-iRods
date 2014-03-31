@@ -6,31 +6,25 @@ package net.maizegenetics.analysis.gbs;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
-import net.maizegenetics.analysis.imputation.MinorWindowViterbiImputationPlugin;
+import net.maizegenetics.analysis.imputation.FILLINImputationPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.CheckSum;
 import net.maizegenetics.util.SMTPClient;
-
+import net.maizegenetics.util.Utils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.log4j.Logger;
 
 import java.io.*;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
 import java.text.SimpleDateFormat;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import net.maizegenetics.util.Utils;
 
 /**
  * This class is for running the GBS Production Pipeline. It is to be run from
@@ -571,7 +565,7 @@ public class ProductionPipeline {
         }
         System.out.println("Arguments passed to MinorWindowViterbiImputationPlugin:\n" + builder.toString());
         TasselPrefs.putAlignmentRetainRareAlleles(false);
-        MinorWindowViterbiImputationPlugin plugin = new MinorWindowViterbiImputationPlugin();
+        FILLINImputationPlugin plugin = new FILLINImputationPlugin();
         plugin.setParameters(args2);
         plugin.performFunction(null);
     }

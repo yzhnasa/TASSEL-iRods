@@ -25,7 +25,7 @@ class ImputedTaxon {
     byte[] resolveGeno;  //what to set the alignment with combination of original and imp.
     byte[] chgHis; //Viterbi is negative, blockNN is positive
     BitSet[] modBitsOfTarget;
-    byte[][][] allDist;
+    //byte[][][] allDist;
   //  TreeMap<Integer,int[]> breakPoints;
     private final NavigableSet<DonorHaplotypes> breakPoints;
     private int blocksSolved=0;

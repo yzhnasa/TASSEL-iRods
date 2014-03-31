@@ -69,7 +69,7 @@ public class FindMergeHaplotypesPlugin extends AbstractPlugin {
     private BitSet badMask=null;
     
     private static ArgsEngine engine = new ArgsEngine();
-    private static final Logger myLogger = Logger.getLogger(MinorWindowViterbiImputationPlugin.class);
+    private static final Logger myLogger = Logger.getLogger(FindMergeHaplotypesPlugin.class);
     
     public FindMergeHaplotypesPlugin() {
         super(null, false);
