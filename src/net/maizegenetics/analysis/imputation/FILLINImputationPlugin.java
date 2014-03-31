@@ -1,8 +1,4 @@
 package net.maizegenetics.analysis.imputation;
-/*
- * MinorWindowViterbiImputationPlugin
- */
-
 
 import net.maizegenetics.analysis.distance.IBSDistanceMatrix;
 import net.maizegenetics.analysis.popgen.DonorHypoth;
@@ -40,33 +36,31 @@ import static net.maizegenetics.dna.snp.NucleotideAlignmentConstants.GAP_DIPLOID
  * It is the best approach for substantially unrelated taxa in TASSEL.  BEAGLE4 is a better
  * approach currently for landraces, while FILLIN outperforms if there is a good reference
  * set of haplotypes.
- * <p>
+ * <p></p>
  * The algorithm relies on having a series of donor haplotypes.  If phased haplotypes are
  * already known, they can be used directly.  If they need to be reconstructed, the
  * {@link FindMergeHaplotypesPlugin} can be used to create haplotypes for windows
  * across the genome.
- * <p>
+ * <p></p>
  * Imputation is done one taxon at a time using the donor haplotypes.  The strategy is as
  *  follows:
- * <li> Every 64 sites is considered a block (or a word in the bitset terminology - length of a long).  There is
+ * <li></li>Every 64 sites is considered a block (or a word in the bitset terminology - length of a long).  There is
  * a separate initial search for nearest neighbors centered around each block. The flanks
  * of the scan window vary but always contain the number of minor alleles specified (a key parameter).
  * Minor alleles approximate the information content of the search.
- * <li> Calculate distance between the target taxon and the donor haplotypes for every window, and rank
+ * <li></li> Calculate distance between the target taxon and the donor haplotypes for every window, and rank
  * the top 10 donor haplotypes for each 64 site focus block.
- * <li> Evaluate by Viterbi whether 1 or 2 haplotypes will explain all the sites across the
+ * <li></li> Evaluate by Viterbi whether 1 or 2 haplotypes will explain all the sites across the
  * donor haplotype window.  If successful, move to the next region for donor haplotypes.
- * <li> Resolve each focus block by nearest neighbors.  If inbred NN are not close enough,
+ * <li></li> Resolve each focus block by nearest neighbors.  If inbred NN are not close enough,
  * then do a hybrid search seeded with one parent being the initial 10 haplotypes.
  * Set bases based on what is resolved first inbred or hybrid.
  *
- *<p>
+ *<p></p>
  * Error rates are bounded away from zero, but adding 0.5 error to all error
  * rates that that were observed to be zero.
- * <p>
- * TODO:
- * <li>Move accuracy to one method outside of setAlignmentWithDonors
- *
+ * <p></p>
+
  * @author Edward Buckler
  * @author Kelly Swarts
  * @cite

@@ -26,8 +26,8 @@ import java.util.*;
  *   PositionList instance=b.build();}
  * <p></p>
  * If being built separately from the genotypes, then use validate ordering to make sure sites are added in the
- * indended order.  This list WILL be sorted.
- * <p>Builder instances can be reused - it is safe to call {@link #build}
+ * intended order.  This list WILL be sorted.
+ * <p>Builder instances can be reused - it is safe to call {@link #build()}
  * multiple times to build multiple lists in series. Each new list
  * contains the one created before it.
  *
@@ -37,7 +37,7 @@ import java.util.*;
  *   PositionList instance=new PositionHDF5List.Builder("fileName").build();
  *   }
  *
- * <p>Builder instances can be reused - it is safe to call {@link #build}
+ * <p>Builder instances can be reused - it is safe to call {@link #build()}
  */
 public class PositionListBuilder {
 
