@@ -139,6 +139,7 @@ public class TasselPipeline implements PluginListener {
             String xmlFilename = args[1].trim();
             String[] temp = new String[args.length - 2];
             System.arraycopy(args, 2, temp, 0, temp.length);
+            temp = addForkFlagsIfNeeded(temp);
             TasselPipelineXMLUtil.writeArgsAsXML(xmlFilename, temp);
         } else if ((args.length >= 2) && (args[0].equalsIgnoreCase("-translateXML"))) {
             String xmlFilename = args[1].trim();
@@ -161,6 +162,7 @@ public class TasselPipeline implements PluginListener {
             args = TasselPipelineXMLUtil.readXMLAsArgs(xmlFilename);
         }
 
+        args = addForkFlagsIfNeeded(args);
         int index = 0;
         while (index < args.length) {
 
@@ -1299,15 +1301,20 @@ public class TasselPipeline implements PluginListener {
                         }
 
                         if (plugin != null) {
-                            List pluginArgs = new ArrayList();
+                            List<String> pluginArgs = new ArrayList<>();
                             if (index == args.length) {
-                                throw new IllegalArgumentException("TasselPipeline: parseArgs: No -endPlugin flag specified.");
+                                integratePlugin(plugin, true);
                             }
                             String temp = args[index++].trim();
                             while (!temp.equalsIgnoreCase("-endPlugin")) {
+                                if (temp.startsWith("-runfork")) {
+                                    index--;
+                                    break;
+                                }
                                 pluginArgs.add(temp);
                                 if (index == args.length) {
-                                    throw new IllegalArgumentException("TasselPipeline: parseArgs: No -endPlugin flag specified.");
+                                    integratePlugin(plugin, true);
+                                    myLogger.warn("TasselPipeline: parseArgs: No -endPlugin flag specified.");
                                 }
                                 temp = args[index++].trim();
                             }
@@ -1349,6 +1356,22 @@ public class TasselPipeline implements PluginListener {
             myLogger.warn("parseArgs: no arguments specified.");
         }
 
+    }
+
+    public static String[] addForkFlagsIfNeeded(String[] args) {
+        for (String a : args) {
+            if (a.toLowerCase().startsWith("-fork") || a.toLowerCase().startsWith("-runfork")) {
+                // If forks included, return arguments unchanged
+                return args;
+            }
+        }
+
+        // If no arguments have "-fork" or "-runfork", add them
+        String[] newArgs = new String[args.length + 2];
+        newArgs[0] = "-fork1";
+        newArgs[newArgs.length - 1] = "-runfork1";
+        System.arraycopy(args, 0, newArgs, 1, args.length);
+        return newArgs;
     }
 
     private void tracePipeline() {
