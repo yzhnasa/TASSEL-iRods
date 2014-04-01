@@ -21,8 +21,8 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 /**
- * Taxa and site filtering of GenotypeTables.  The class
- * essentially creates views of the baseGenotypeTable through arrays for indirection.
+ * Taxa and site filtering of GenotypeTables. The class essentially creates
+ * views of the baseGenotypeTable through arrays for indirection.
  *
  * @author Terry Casstevens
  */
@@ -42,7 +42,7 @@ public class FilterGenotypeTable implements GenotypeTable {
     private Chromosome[] myChromosomes;
     private int[] myChromosomeOffsets;
     private PositionList myPositionList;
-    private AlleleDepth myAlleleDepth=null;
+    private AlleleDepth myAlleleDepth = null;
     private final GenotypeCallTable myGenotype;
     private final Map<WHICH_ALLELE, BitStorage> myBitStorage = new HashMap<>();
 
@@ -85,8 +85,8 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     /**
-     * This returns FilterGenotypeTable with only specified subTaxaList. Defaults to
-     * retain unknown taxa.
+     * This returns FilterGenotypeTable with only specified subTaxaList.
+     * Defaults to retain unknown taxa.
      *
      * @param a alignment
      * @param subTaxaList subset id group
@@ -297,6 +297,10 @@ public class FilterGenotypeTable implements GenotypeTable {
 
     }
 
+    public static FilterGenotypeTable getInstance(GenotypeTable a, List<String> siteNamesToKeep) {
+        return getInstance(a, siteNamesToKeep.toArray(new String[siteNamesToKeep.size()]));
+    }
+
     public static FilterGenotypeTable getInstance(GenotypeTable a, String[] siteNamesToKeep) {
 
         Arrays.sort(siteNamesToKeep);
@@ -320,6 +324,10 @@ public class FilterGenotypeTable implements GenotypeTable {
         }
         return getInstance(a, result);
 
+    }
+
+    public static FilterGenotypeTable getInstanceRemoveSiteNames(GenotypeTable a, List<String> siteNamesToRemove) {
+        return getInstance(a, siteNamesToRemove.toArray(new String[siteNamesToRemove.size()]));
     }
 
     public static FilterGenotypeTable getInstanceRemoveSiteNames(GenotypeTable a, String[] siteNamesToRemove) {
@@ -899,8 +907,8 @@ public class FilterGenotypeTable implements GenotypeTable {
 
     @Override
     public AlleleDepth depth() {
-        if(myAlleleDepth==null) {
-           myAlleleDepth=new FilterAlleleDepth(myBaseAlignment.depth(),this);
+        if (myAlleleDepth == null) {
+            myAlleleDepth = new FilterAlleleDepth(myBaseAlignment.depth(), this);
         }
         return myAlleleDepth;
     }
