@@ -89,6 +89,8 @@ public class ProductionPipeline {
     private String myTopmFile = null;
     private String myOutputFolder = null;
     private String myKeyFile = null;
+    
+    private boolean runImputation = true;
 
     private String myPropertiesFileContents = null;
 
@@ -108,7 +110,7 @@ public class ProductionPipeline {
             + "outputFolder=/workdir/tassel/tassel4-src/20130716test/hap_maps\n"
             + "keyFile=/workdir/tassel/tassel4-src/20130716test/keyfile/MGP1_low_vol_2smallReps_key.txt";
 
-    public ProductionPipeline(String appPropertiesFile, boolean runCheckSum, boolean runImputation) {
+    public ProductionPipeline(String appPropertiesFile, boolean runCheckSum) {
 
         try {
             myApplicationHost = InetAddress.getLocalHost().getHostName();
@@ -123,7 +125,7 @@ public class ProductionPipeline {
         }
         myPropertiesFileContents = loadApplicationConfiguration(myAppPropertiesFile);
 
-        executeRunFiles(myRunDirectory, runCheckSum, runImputation);
+        executeRunFiles(myRunDirectory, runCheckSum);
     }
 
     private String getEmailSubjectRun(String runFile) {
@@ -160,7 +162,7 @@ public class ProductionPipeline {
      *
      * @param runDirectoryIn Directory containing any number of .run files
      */
-    private void executeRunFiles(String runDirectoryIn, boolean doCheckSum, boolean runImputation) {
+    private void executeRunFiles(String runDirectoryIn, boolean doCheckSum) {
 
         File dir = new File(runDirectoryIn);
 
@@ -691,17 +693,11 @@ public class ProductionPipeline {
         String msg = "--skipImputation flag allows imputation to be skipped\n"
                 + "--propsFile should be followed by a fully-qualified path name without spaces\n";
 
-        boolean doImputation = true;
         String propsFile = "propsFile";
         String propsFilePath = null;
         boolean doCheckSum = true;
-        String skipImputation = "skipImputation";
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
-                if (StringUtils.containsIgnoreCase(args[i], skipImputation)) {
-                    doImputation = false;
-                    System.out.println("Skipping Imputation");
-                }
                 if (StringUtils.containsIgnoreCase(args[i], propsFile)) {
                     if (args.length > i + 1) {
                         propsFilePath = args[i + 1];
@@ -718,6 +714,6 @@ public class ProductionPipeline {
             System.out.println(msg);
         }
 
-        new ProductionPipeline(propsFilePath, doCheckSum, doImputation);
+        new ProductionPipeline(propsFilePath, doCheckSum);
     }
 }
