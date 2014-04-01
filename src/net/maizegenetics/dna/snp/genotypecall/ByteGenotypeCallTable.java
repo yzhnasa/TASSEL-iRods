@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 class ByteGenotypeCallTable extends AbstractGenotypeCallTable {
 
     private static final Logger myLogger = Logger.getLogger(ByteGenotypeCallTable.class);
-    private SuperByteMatrix myGenotype;
+    SuperByteMatrix myGenotype;
     private SuperByteMatrix mySiteInnerLoop;
     private SuperByteMatrix myTaxonInnerLoop;
 

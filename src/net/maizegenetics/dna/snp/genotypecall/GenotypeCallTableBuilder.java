@@ -13,8 +13,8 @@ import net.maizegenetics.util.SuperByteMatrixBuilder;
 import java.util.regex.Pattern;
 
 /**
- * Builder to construct a GenotypeCallTable.  This builder is generally only used in complex situations, where
- * the GenotypeTableBuilder does not suffice.
+ * Builder to construct a GenotypeCallTable. This builder is generally only used
+ * in complex situations, where the GenotypeTableBuilder does not suffice.
  *
  * @author Terry Casstevens
  */
@@ -80,6 +80,24 @@ public class GenotypeCallTableBuilder {
 
     public static GenotypeCallTable getFilteredInstance(GenotypeCallTable genotype, int numTaxa, int[] taxaRedirect, int numSites, int[] siteRedirect) {
         return new FilterGenotypeCallTable(genotype, numTaxa, taxaRedirect, numSites, siteRedirect);
+    }
+
+    public static GenotypeCallTableBuilder getInstanceCopy(GenotypeCallTable genotype) {
+        if (genotype instanceof ByteGenotypeCallTable) {
+            SuperByteMatrix matrix = SuperByteMatrixBuilder.getInstanceCopy(((ByteGenotypeCallTable) genotype).myGenotype);
+            return new GenotypeCallTableBuilder(matrix).isPhased(genotype.isPhased()).alleleEncodings(genotype.alleleDefinitions());
+        } else {
+            int numTaxa = genotype.numberOfTaxa();
+            int numSites = genotype.numberOfSites();
+            GenotypeCallTableBuilder builder = GenotypeCallTableBuilder.getInstance(numTaxa, numSites).isPhased(genotype.isPhased()).alleleEncodings(genotype.alleleDefinitions());
+            for (int t = 0; t < numTaxa; t++) {
+                for (int s = 0; s < numSites; s++) {
+                    builder.setBase(t, s, genotype.genotype(t, s));
+                }
+
+            }
+            return builder;
+        }
     }
 
     public GenotypeCallTableBuilder setBase(int taxon, int site, byte value) {
