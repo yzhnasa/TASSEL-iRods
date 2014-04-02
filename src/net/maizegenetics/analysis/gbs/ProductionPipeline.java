@@ -14,7 +14,6 @@ import net.maizegenetics.util.CheckSum;
 import net.maizegenetics.util.SMTPClient;
 import net.maizegenetics.util.Utils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -60,9 +59,6 @@ public class ProductionPipeline {
     // host on which pipeline is running
     private String myApplicationHost = "unknown";
 
-    // application properties file
-    private String myAppPropertiesFile = null;
-
     // default server to be used to send email notifications
     private String myEmailHost = "appsmtp.mail.cornell.edu";
 
@@ -89,8 +85,8 @@ public class ProductionPipeline {
     private String myTopmFile = null;
     private String myOutputFolder = null;
     private String myKeyFile = null;
-    
-    private boolean runImputation = true;
+
+    private boolean myRunImputation = true;
 
     private String myPropertiesFileContents = null;
 
@@ -110,7 +106,7 @@ public class ProductionPipeline {
             + "outputFolder=/workdir/tassel/tassel4-src/20130716test/hap_maps\n"
             + "keyFile=/workdir/tassel/tassel4-src/20130716test/keyfile/MGP1_low_vol_2smallReps_key.txt";
 
-    public ProductionPipeline(String appPropertiesFile, boolean runCheckSum) {
+    public ProductionPipeline() {
 
         try {
             myApplicationHost = InetAddress.getLocalHost().getHostName();
@@ -118,14 +114,7 @@ public class ProductionPipeline {
             // do nothing
         }
 
-        // if no application property file is specified, try looking for something in the home directory
-        myAppPropertiesFile = appPropertiesFile;
-        if (myAppPropertiesFile == null) {
-            myAppPropertiesFile = DEFAULT_APPLICATION_CONFIGURATION;
-        }
-        myPropertiesFileContents = loadApplicationConfiguration(myAppPropertiesFile);
-
-        executeRunFiles(myRunDirectory, runCheckSum);
+        executeRunFiles(myRunDirectory);
     }
 
     private String getEmailSubjectRun(String runFile) {
@@ -144,25 +133,18 @@ public class ProductionPipeline {
     }
 
     private String getEmailSubjectApp() {
-        String result = myEmailSubjects.get(myAppPropertiesFile);
-        if (result != null) {
-            return result;
-        }
-
         StringBuilder builder = new StringBuilder();
         builder.append("Discussion: ");
         builder.append(getTimeStamp());
-        builder.append("Properties File: ").append(myAppPropertiesFile).append(" ");
-        result = builder.toString();
-        myEmailSubjects.put(myAppPropertiesFile, result);
-        return result;
+        builder.append("Tassel GBS Production Pipeline on Host: ").append(myApplicationHost);
+        return builder.toString();
     }
 
     /**
      *
      * @param runDirectoryIn Directory containing any number of .run files
      */
-    private void executeRunFiles(String runDirectoryIn, boolean doCheckSum) {
+    private void executeRunFiles(String runDirectoryIn) {
 
         File dir = new File(runDirectoryIn);
 
@@ -216,7 +198,7 @@ public class ProductionPipeline {
                 BufferedWriter bw = Utils.getBufferedWriter(logFile);
                 bw.write("Contents of the .properties file:\n" + myPropertiesFileContents);
                 bw.write(getTimeStamp() + "Contents of the .run file: " + "\n" + runFileContents);
-                bw.write(getCurrentRunContext(doCheckSum));
+                bw.write(getCurrentRunContext());
                 bw.close();
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -251,7 +233,7 @@ public class ProductionPipeline {
             double elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
             System.out.println(getTimeStamp() + "Time to run ProductionSNPCallerPlugin: " + elapsedSeconds + " sec.");
 
-            if (runImputation) {
+            if (myRunImputation) {
                 start = System.nanoTime();
                 String[] name = runFile.getName().split("\\.");
                 String h5File = myOutputFolder + "/" + name[0] + ".hmp.h5";
@@ -324,22 +306,20 @@ public class ProductionPipeline {
     }
 
     /**
-     * Load application-wide properties file and initialize variables.
+     * Load a file containing the information necessary to write out an XML
+     * output file necessary for running the production pipeline
      *
-     * @param aFileIn config file
-     *
-     * @return Contents of config file
+     * @param aFileIn
+     * @return
      */
-    private String loadApplicationConfiguration(String aFileIn) {
+    private String loadRunConfiguration(File aFileIn) {
 
         Properties props = new Properties();
         try {
-            File propsFile = new File(aFileIn);
-            System.out.println(propsFile.getAbsoluteFile());
-
+            System.out.println(aFileIn.getAbsoluteFile());
             props.load(new FileInputStream(aFileIn));
         } catch (IOException ioe) {
-            System.out.println("Problem loading application configuration file:" + aFileIn);
+            System.out.println("Problem loading run file configuration file:" + aFileIn);
             System.out.println("************** Example .properties file: ");
             System.out.println(EXAMPLE_CONFIG_FILE);
             ioe.printStackTrace();
@@ -384,74 +364,37 @@ public class ProductionPipeline {
             System.out.println(response);
         }
 
-        // read in the contents of the properties file so it can be placed into the log
-        BufferedReader br = null;
-        StringBuilder sb = new StringBuilder();
-        try {
-            br = new BufferedReader(new FileReader(aFileIn));
-            String line = null;
-            while ((line = br.readLine()) != null) {
-                sb.append(line + "\n");
-            }
-        } catch (IOException ioe) {
-
-        } finally {
-            try {
-                br.close();
-            } catch (Exception e) {
-                // do nothing
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Load a file containing the information necessary to write out an XML
-     * output file necessary for running the production pipeline
-     *
-     * @param aFileIn
-     * @return
-     */
-    private String loadRunConfiguration(File aFileIn) {
-
-        Properties props = new Properties();
-        try {
-            props.load(new FileInputStream(aFileIn));
-        } catch (IOException ioe) {
-            System.err.println("Issue loading run configuration file: " + aFileIn.getName());
-            ioe.printStackTrace();
-        }
-        String configurationElement = "inputFolder";
+        configurationElement = "inputFolder";
         myInputFolder = props.getProperty(configurationElement);
-        String response = testInputDirectory(aFileIn.getName(), myInputFolder, configurationElement);
+        response = testInputDirectory(aFileIn, myInputFolder, configurationElement);
         if (response != null) {
             System.out.println(response);
         }
 
         configurationElement = "enzyme";
         myEnzyme = props.getProperty(configurationElement);
-        response = testInputDirectory(aFileIn.getName(), myInputFolder, configurationElement);
+        response = testInputDirectory(aFileIn, myInputFolder, configurationElement);
         if (response != null) {
             System.out.println(response);
         }
 
         configurationElement = "topmFile";
         myTopmFile = props.getProperty(configurationElement);
-        response = testInputDirectory(aFileIn.getName(), myInputFolder, configurationElement);
+        response = testInputDirectory(aFileIn, myInputFolder, configurationElement);
         if (response != null) {
             System.out.println(response);
         }
 
         configurationElement = "outputFolder";
         myOutputFolder = props.getProperty(configurationElement);
-        response = testInputDirectory(aFileIn.getName(), myInputFolder, configurationElement);
+        response = testInputDirectory(aFileIn, myInputFolder, configurationElement);
         if (response != null) {
             System.out.println(response);
         }
 
         configurationElement = "keyFile";
         myKeyFile = props.getProperty(configurationElement);
-        response = testInputDirectory(aFileIn.getName(), myInputFolder, configurationElement);
+        response = testInputDirectory(aFileIn, myInputFolder, configurationElement);
         if (response != null) {
             System.out.println(response);
         }
@@ -481,15 +424,15 @@ public class ProductionPipeline {
      * @return Description of the problem with the input. If return is null then
      * there is no problem with the entered file or directory
      */
-    private String testInputDirectory(String filename, String input, String configurationElement) {
+    private String testInputDirectory(File filename, String input, String configurationElement) {
 
         String response = null;
         if (input == null) {
-            response = filename + " is missing a run configuration element:  " + configurationElement;
+            response = filename.getAbsolutePath() + " is missing a run configuration element:  " + configurationElement;
         } else {
             File aFileOrDir = new File(input);
             if (!aFileOrDir.exists()) {
-                response = filename + "'s configuration element " + configurationElement + " does not exist.  Please confirm path and filename.";
+                response = filename.getAbsolutePath() + "'s configuration element " + configurationElement + " does not exist.  Please confirm path and filename.";
             }
         }
         return response;
@@ -502,12 +445,9 @@ public class ProductionPipeline {
      * used and their MD5sums 5) Contents of XML configuration file used to run
      * TasselPipeline
      *
-     * @param calculateChecksum Calculating MD5sum can be time consuming. This
-     * allows it to be skipped when appropriate.
-     *
      * @return Information about current run
      */
-    private String getCurrentRunContext(boolean calculateChecksum) {
+    private String getCurrentRunContext() {
 
         StringBuilder sb = new StringBuilder();
 
@@ -522,21 +462,16 @@ public class ProductionPipeline {
         sb.append("Name of Machine on which JVM is Running: ").append(myApplicationHost).append("\n");
 
         // for each file in a directory, include the md5sum
-        if (calculateChecksum) {
-            sb.append(getTimeStamp()).append("MD5: ").append(myKeyFile).append(": ").append(CheckSum.getMD5Checksum(myKeyFile)).append("\n");
-            File inFldr = new File(myInputFolder);
+        sb.append(getTimeStamp()).append("MD5: ").append(myKeyFile).append(": ").append(CheckSum.getMD5Checksum(myKeyFile)).append("\n");
+        File inFldr = new File(myInputFolder);
 
-            if (inFldr.isDirectory()) {
-                File[] files = inFldr.listFiles();
-                for (File f : files) {
-                    sb.append(getTimeStamp()).append("MD5: ").append(f.getPath()).append(": ").append(CheckSum.getMD5Checksum(f.getPath())).append("\n");
-                }
-            } else {
-                sb.append(getTimeStamp()).append(CheckSum.getMD5Checksum(myInputFolder)).append("\n");
+        if (inFldr.isDirectory()) {
+            File[] files = inFldr.listFiles();
+            for (File f : files) {
+                sb.append(getTimeStamp()).append("MD5: ").append(f.getPath()).append(": ").append(CheckSum.getMD5Checksum(f.getPath())).append("\n");
             }
-
         } else {
-            sb.append(getTimeStamp()).append("MD5sum checking has been switched off using the --skipCheckSum argument");
+            sb.append(getTimeStamp()).append(CheckSum.getMD5Checksum(myInputFolder)).append("\n");
         }
 
         return sb.toString();
@@ -690,30 +625,30 @@ public class ProductionPipeline {
 
     public static void main(String[] args) {
 
-        String msg = "--skipImputation flag allows imputation to be skipped\n"
-                + "--propsFile should be followed by a fully-qualified path name without spaces\n";
+        if (args.length != 1) {
+            myLogger.error("Usage: ProductionPipeline <run directory>");
+            System.exit(1);
+        }
+        
+        File inputDirectory = new File(args[0]);
+        File[] runFiles = inputDirectory.listFiles(new FileFilter() {
 
-        String propsFile = "propsFile";
-        String propsFilePath = null;
-        boolean doCheckSum = true;
-        if (args != null) {
-            for (int i = 0; i < args.length; i++) {
-                if (StringUtils.containsIgnoreCase(args[i], propsFile)) {
-                    if (args.length > i + 1) {
-                        propsFilePath = args[i + 1];
-                        i++;
-                        System.out.println("--" + propsFile + "\tUsing this properties file: " + propsFilePath);
-                    } else {
-                        System.out.println("No path following --" + propsFile + " flag.\n"
-                                + "Will look for " + DEFAULT_APPLICATION_CONFIGURATION + " file in the current directory");
-                        System.out.println(msg);
-                    }
+            @Override
+            public boolean accept(File pathname) {
+                if (pathname.isDirectory()) {
+                    return false;
                 }
+                if (pathname.getName().endsWith(".run")) {
+                    return true;
+                }
+                return false;
             }
-        } else {
-            System.out.println(msg);
+        });
+        
+        for (File current: runFiles) {
+            System.out.println("current: " + current.getAbsolutePath());
         }
 
-        new ProductionPipeline(propsFilePath, doCheckSum);
+        new ProductionPipeline();
     }
 }
