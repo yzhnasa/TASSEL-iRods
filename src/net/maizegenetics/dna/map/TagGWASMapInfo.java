@@ -13,8 +13,8 @@ package net.maizegenetics.dna.map;
 public class TagGWASMapInfo {
     /**Tag count in master tagCount file, unknown = Integer.MIN_VALUE*/
     public int readCount = Integer.MIN_VALUE;
-    /**Physical chromosome of tag, unknown = Short.MIN_VALUE*/
-    public short pChr = Short.MIN_VALUE;
+    /**Physical chromosome of tag, unknown = Integer.MIN_VALUE*/
+    public int pChr = Integer.MIN_VALUE;
     /**Physical position of tag, unknown = Integer.MIN_VALUE*/
     public int pPos = Integer.MIN_VALUE;
     /**If the tag is mapped by aligner*/
@@ -23,8 +23,8 @@ public class TagGWASMapInfo {
     public boolean ifRef = false;
     /**If the tag is unique to one position in genome*/
     public boolean ifUnique = false;
-    /**Genetic mapping chromosome of a tag, unknown = Short.MIN_VALUE*/
-    public short gChr = Short.MIN_VALUE;
+    /**Genetic mapping chromosome of a tag, unknown = Integer.MIN_VALUE*/
+    public int gChr = Integer.MIN_VALUE;
     /**Genetic mapping position of a tag, unknown  = Integer.MIN_VALUE*/
     public int gPos = Integer.MIN_VALUE;
     /**P-value of genetic mapping of a tag*/
@@ -34,7 +34,7 @@ public class TagGWASMapInfo {
     /**Number of taxa where tag exist, unknown  = Integer.MIN_VALUE*/
     public int tagTaxaCount = Integer.MIN_VALUE;
     /**Total number of significant chromosome, unknown  = Integer.MIN_VALUE*/
-    public short numSigChr = Short.MIN_VALUE;
+    public int numSigChr = Integer.MIN_VALUE;
     /**Likelihood ratio of the most significant chromosome Vs the second most significant chromosome, log10 value, unknown  = 0*/
     public double lRatioSB = 0;
     /**Likelihood ratio of the most significant chromosome Vs the median most significant chromosome, log10 value, unknown  = 0*/
@@ -48,7 +48,7 @@ public class TagGWASMapInfo {
     
     public TagGWASMapInfo () {}
     
-    public TagGWASMapInfo (int readCount, short pChr, int pPos, boolean ifMap, boolean ifRef, boolean ifUnique, short gChr, int gPos, double gwasPValue, int numSigSite, int tagTaxaCount, short numSigChr,
+    public TagGWASMapInfo (int readCount, int pChr, int pPos, boolean ifMap, boolean ifRef, boolean ifUnique, int gChr, int gPos, double gwasPValue, int numSigSite, int tagTaxaCount, int numSigChr,
                              double lRatioSB, double lRatioMB, int numSiteOnBestChrThanSecondBest, int sigSiteStart, int sigSiteEnd) {
         this.readCount = readCount; this.pChr = pChr; this.pPos = pPos; this.ifMap = ifMap; this.ifRef = ifRef; this.ifUnique = ifUnique; this.gChr = gChr; this.gPos = gPos;
         this.gwasPValue = gwasPValue; this.numSigSite = numSigSite; this.tagTaxaCount = tagTaxaCount; this.numSigChr = numSigChr; this.lRatioSB = lRatioSB;

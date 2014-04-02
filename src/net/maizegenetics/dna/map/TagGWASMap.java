@@ -24,7 +24,7 @@ import net.maizegenetics.dna.tag.TagsHDF5;
 import net.maizegenetics.util.Tassel5HDF5Constants;
 
 /**
- * Holding tag genetic mapping result from GWAS. It includes attributes and methods for machine learning prediciton of mapping accuracy 
+ * Holding tag genetic mapping result from GWAS. It includes attributes and methods for machine learning prediction of mapping accuracy 
  * @author Fei Lu
  */
 public class TagGWASMap extends AbstractTagsHDF5 {
@@ -93,24 +93,19 @@ public class TagGWASMap extends AbstractTagsHDF5 {
                     }
                     if (pMaps[0].chromosome != Integer.MIN_VALUE) {
                         ifMap = true;
-                        if (pMaps[0].divergence == 0) {
-                            ifRef = true;
-                            if (pMaps[1].mappingRank == 1) ifUnique = true;
-                        }
-                        else {
-                            if (pMaps[1].mappingRank == 1) ifUnique = true;
-                        }
+                        if (pMaps[0].divergence == 0) ifRef = true;
+                        if (pMaps[1].mappingRank == 1) ifUnique = true;
                     }
                     tem = br.readLine().split("\t");
                     int readCount = Integer.valueOf(tem[1]);
-                    short pChr = Short.valueOf(tem[2]);
-                    int pPos = Integer.valueOf(tem[3]);
-                    short gChr = Short.valueOf(tem[5]);
+                    int pChr = pMaps[0].chromosome;
+                    int pPos = pMaps[0].startPosition;
+                    int gChr = Integer.valueOf(tem[5]);
                     int gPos = Integer.valueOf(tem[7]);
                     double gwasPValue = Double.valueOf(tem[8]);
                     int numSigSite = Integer.valueOf(tem[9]);
                     int tagTaxaCount = Integer.valueOf(tem[10]);
-                    short numSigChr = Short.valueOf(tem[11]);
+                    int numSigChr = Integer.valueOf(tem[11]);
                     double lRatioSB = Double.valueOf(tem[12]);
                     if (Double.isInfinite(lRatioSB) || Double.isNaN(lRatioSB)) lRatioSB = 310; // 305 is the max likelihood observed
                     double lRatioMB = Double.valueOf(tem[13]);

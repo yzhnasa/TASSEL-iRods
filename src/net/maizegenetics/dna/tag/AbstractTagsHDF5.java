@@ -59,7 +59,7 @@ public abstract class AbstractTagsHDF5 extends AbstractTags implements TagsHDF5 
      * @param tagLengthInLong 
      */
     protected void initializeMatrix (int tagCount, int tagLengthInLong) {
-        tagLengthInLong = tagLengthInLong;
+        this.tagLengthInLong = tagLengthInLong;
         tags = new long[tagLengthInLong][tagCount];
         tagLength = new byte[tagCount];
     }
