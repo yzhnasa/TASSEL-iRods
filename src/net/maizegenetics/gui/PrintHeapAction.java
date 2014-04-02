@@ -25,7 +25,7 @@ import net.maizegenetics.util.Utils;
 public class PrintHeapAction extends AbstractAction implements Runnable {
 
     private static final Map myInstances = new HashMap(1);
-    public static final String TEXT = "Print Heap";
+    public static final String TEXT = "Show Memory";
     private final Frame myParentFrame;
     private long myLastRecordedHeap = 0;
     private static final NumberFormat myFormat = NumberFormat.getInstance();
