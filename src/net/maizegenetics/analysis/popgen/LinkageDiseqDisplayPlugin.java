@@ -121,7 +121,7 @@ public class LinkageDiseqDisplayPlugin extends AbstractDisplayPlugin {
      * @return ImageIcon
      */
     public ImageIcon getIcon() {
-        URL imageURL = LinkageDiseqDisplayPlugin.class.getResource("images/LDPlot.gif");
+        URL imageURL = LinkageDiseqDisplayPlugin.class.getResource("/net/maizegenetics/analysis/images/LDPlot.gif");
         if (imageURL == null) {
             return null;
         } else {
