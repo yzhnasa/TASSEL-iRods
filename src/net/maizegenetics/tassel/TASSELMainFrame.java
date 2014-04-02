@@ -681,7 +681,12 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
             }
         }, -1));
 
-        helpMenu.add(createMenuItem(new AbstractAction("About", null) {
+        URL aboutImageURL = TASSELMainFrame.class.getResource("images/Tassel_Logo16.png");
+        Icon aboutIcon = null;
+        if (aboutImageURL != null) {
+            aboutIcon = new ImageIcon(aboutImageURL);
+        }
+        helpMenu.add(createMenuItem(new AbstractAction("About", aboutIcon) {
 
             @Override
             public void actionPerformed(ActionEvent e) {
