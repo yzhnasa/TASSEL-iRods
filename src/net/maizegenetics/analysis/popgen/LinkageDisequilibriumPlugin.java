@@ -212,7 +212,7 @@ public class LinkageDisequilibriumPlugin extends AbstractPlugin {
      */
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = LinkageDisequilibriumPlugin.class.getResource("images/LDPlot.gif");
+        URL imageURL = LinkageDisequilibriumPlugin.class.getResource("/net/maizegenetics/analysis/images/LDPlot.gif");
         if (imageURL == null) {
             return null;
         } else {
