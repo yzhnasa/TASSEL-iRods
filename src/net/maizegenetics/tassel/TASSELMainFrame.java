@@ -528,6 +528,27 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         return menuItem;
     }
 
+    private JMenuItem createMenuItem(Action action, int mnemonic) {
+
+        Icon icon = (Icon) action.getValue("SmallIcon");
+
+        JMenuItem menuItem = new JMenuItem(action.getValue("Name").toString(), icon);
+        if (mnemonic != -1) {
+            menuItem.setMnemonic(mnemonic);
+        }
+        int pixels = 30;
+        if (icon != null) {
+            pixels -= icon.getIconWidth();
+            pixels /= 2;
+        }
+        menuItem.setIconTextGap(pixels);
+        menuItem.setBackground(Color.white);
+        menuItem.setMargin(new Insets(2, 2, 2, 2));
+        menuItem.addActionListener(action);
+        return menuItem;
+
+    }
+
     private JMenu getFiltersMenu() {
         JMenu result = new JMenu("Filter");
         result.setMnemonic(KeyEvent.VK_F);
@@ -652,26 +673,28 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         helpMenu.setMnemonic(KeyEvent.VK_H);
         helpMenu.setText("Help");
 
-        JMenuItem helpMenuItem = new JMenuItem("Help Manual");
-        helpMenuItem.addActionListener(new java.awt.event.ActionListener() {
+        helpMenu.add(createMenuItem(new AbstractAction("Help Manual", null) {
+
+            @Override
             public void actionPerformed(ActionEvent e) {
                 helpButton_actionPerformed(e);
             }
-        });
-        helpMenu.add(helpMenuItem);
+        }, -1));
 
-        JMenuItem aboutMenuItem = new JMenuItem("About");
-        aboutMenuItem.addActionListener(new java.awt.event.ActionListener() {
+        URL aboutImageURL = TASSELMainFrame.class.getResource("images/Tassel_Logo16.png");
+        Icon aboutIcon = null;
+        if (aboutImageURL != null) {
+            aboutIcon = new ImageIcon(aboutImageURL);
+        }
+        helpMenu.add(createMenuItem(new AbstractAction("About", aboutIcon) {
+
+            @Override
             public void actionPerformed(ActionEvent e) {
                 helpAbout_actionPerformed(e);
             }
-        });
-        helpMenu.add(aboutMenuItem);
+        }, -1));
 
-        JMenuItem memoryUsage = new JMenuItem("Show Memory");
-        memoryUsage.addActionListener(PrintHeapAction.getInstance(this));
-        memoryUsage.setToolTipText("Show Memory Usage");
-        helpMenu.add(memoryUsage);
+        helpMenu.add(createMenuItem(PrintHeapAction.getInstance(this), -1));
 
         return helpMenu;
     }

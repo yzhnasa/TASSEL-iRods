@@ -4,6 +4,8 @@
  */
 package net.maizegenetics.analysis.popgen;
 
+import com.google.common.collect.Ordering;
+
 /**
  *
  * @author edbuckler
@@ -24,14 +26,33 @@ public class DonorHypoth implements Comparable<DonorHypoth>{
     public int startSite=-1;
     public int endSite=-1;
     public byte[] phasedResults=null;
+    private double errorRate=Double.NaN;
+    private int prevalenceScore=Integer.MIN_VALUE;
+    private int myHash=Integer.MIN_VALUE;
+
+
+    public static Ordering<DonorHypoth> byErrorRateOrdering = new Ordering<DonorHypoth>() {
+        public int compare(DonorHypoth left, DonorHypoth right) {
+            return Double.compare(left.getErrorRate(),right.getErrorRate());
+        }
+    };
+
+    public static Ordering<DonorHypoth> byPrevalenceOrdering = new Ordering<DonorHypoth>() {
+        public int compare(DonorHypoth left, DonorHypoth right) {
+            return Double.compare(left.getErrorRate(),right.getErrorRate());
+        }
+    };
+
 
     public DonorHypoth() {
     }
 
-    public DonorHypoth(int targetTaxon, int donor1Taxon, int donor2Taxon, int startBlock, int focusBlock, int endBlock, int totalSites, int mendelianErrors) {
+    public DonorHypoth(int targetTaxon, int donor1Taxon, int donor2Taxon, int startBlock, int focusBlock, int endBlock,
+                       int totalSites, int mendelianErrors) {
         this(targetTaxon, donor1Taxon, donor2Taxon, startBlock, focusBlock, endBlock);
         this.totalSites = totalSites;
         this.mendelianErrors = mendelianErrors;
+        errorRate= ((double)mendelianErrors+0.5) / (double) totalSites;
     }
 
     public DonorHypoth(int targetTaxon, int donor1Taxon, int donor2Taxon, int startBlock, int focusBlock, int endBlock) {
@@ -56,7 +77,7 @@ public class DonorHypoth implements Comparable<DonorHypoth>{
     }
 
     public double getErrorRate() {
-        return (double) mendelianErrors / (double) totalSites;
+        return errorRate;
     }
     
     public boolean isInbred() {
@@ -106,12 +127,14 @@ public class DonorHypoth implements Comparable<DonorHypoth>{
 
     @Override
     public int hashCode() {
+        if(myHash!=Integer.MIN_VALUE) return myHash;
         int hash = 5;
         hash = 83 * hash + this.targetTaxon;
         hash = 83 * hash + this.donor1Taxon;
         hash = 83 * hash + this.donor2Taxon;
         hash = 83 * hash + this.focusBlock;
-        return hash;
+        myHash=hash;
+        return myHash;
     }
 
     public String toString() {

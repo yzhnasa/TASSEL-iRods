@@ -9,8 +9,10 @@ import net.maizegenetics.dna.snp.io.ProjectionGenotypeIO;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.prefs.TasselPrefs;
-import net.maizegenetics.util.*;
+import net.maizegenetics.util.ArgsEngine;
 import net.maizegenetics.util.BitSet;
+import net.maizegenetics.util.OpenBitSet;
+import net.maizegenetics.util.ProgressListener;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
@@ -84,7 +86,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     //kelly options
     private boolean twoWayViterbi= true;//if true, the viterbi runs in both directions (the longest path length wins, if inconsistencies)
-    private double minimumHybridDonorDistance=0.10;
+    private double minimumHybridDonorDistance=maximumInbredError*5;
 
     //options for focus blocks
     private double maxHybridErrFocusHomo= .3333*maxHybridErrorRate;////max error rate for discrepacy between two haplotypes for the focus block. it's default is higher because calculating for fewer sites
@@ -168,7 +170,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         GenotypeTable[] donorAlign= null;
         try {
             if (donorFile.contains(".gX")) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, verboseOutput);}
-            else if(true) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, 8000,true);}  //todo add option for size
+            else if(true) {donorAlign=loadDonors(donorFile, unimpAlign, minTestSites, 4000,true);}  //todo add option for size
             //todo break into lots of little alignments
             else throw new IllegalArgumentException();
         }
@@ -303,17 +305,20 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
                 //Finds the best haplotype donors for each focus block within a donorGenotypeTable
                 DonorHypoth[][] regionHypthInbred=new DonorHypoth[blocks][maxDonorHypotheses];
-                byte[][][] targetToDonorDistances=FILLINImputationUtils.calcAllelePresenceCountsBtwTargetAndDonors(maskedTargetBits, donorAlign[da]);
+                byte[][][] targetToDonorDistances=FILLINImputationUtils.calcAllelePresenceCountsBtwTargetAndDonors(maskedTargetBits,
+                        donorAlign[da]);
                 for (int focusBlock = 0; focusBlock < blocks; focusBlock++) {
-                    int[] resultRange=getBlockWithMinMinorCount(maskedTargetBits[0].getBits(),maskedTargetBits[1].getBits(), focusBlock, minMinorCnt);
+                    int[] resultRange=getBlockWithMinMinorCount(maskedTargetBits[0].getBits(),maskedTargetBits[1].getBits(),
+                            focusBlock, minMinorCnt);
                     if(resultRange==null) continue; //no data in the focus Block
                     //search for the best inbred donors for a segment
-                    regionHypthInbred[focusBlock]=FILLINImputationUtils.getBestInbredDonors(taxon, resultRange[0],resultRange[2], focusBlock,
-                            donorIndices, targetToDonorDistances, minTestSites,maxDonorHypotheses);
+                    regionHypthInbred[focusBlock]=FILLINImputationUtils.findHomozygousDonorHypoth(taxon, resultRange[0], resultRange[2],
+                            focusBlock, donorIndices, targetToDonorDistances, minTestSites, maxDonorHypotheses);
                 }
                 impTaxon.setSegmentSolved(false);
                 //tries to solve the entire donorAlign region with 1 or 2 donor haplotypes by Virterbi
-                impTaxon=apply1or2Haplotypes(taxon, donorAlign[da], donorOffset, regionHypthInbred,  impTaxon, maskedTargetBits, maxHybridErrorRate);
+                impTaxon=apply1or2Haplotypes(taxon, donorAlign[da], donorOffset, regionHypthInbred,  impTaxon, maskedTargetBits,
+                        maxHybridErrorRate, targetToDonorDistances);
                 if(impTaxon.isSegmentSolved()) {
 //                    System.out.printf("VertSolved da:%d L:%s%n",da, donorAlign[da].getLocus(0));
                     countFullLength++; continue;}
@@ -397,6 +402,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     private static GenotypeTable[] loadDonors(String donorFile, GenotypeTable unimpAlign, int minTestSites, int appoxSitesPerHaplotype, boolean verboseOutput){
         GenotypeTable donorMasterGT=ImportUtils.readGuessFormat(donorFile);
+        donorMasterGT=GenotypeTableBuilder.getHomozygousInstance(donorMasterGT);
         int[][] donorFirstLastSites=FILLINFindHaplotypesPlugin.divideChromosome(donorMasterGT,appoxSitesPerHaplotype,true);
         PositionList donU= unimpAlign.positions();
         GenotypeTable[] donorAlign=new GenotypeTable[donorFirstLastSites.length];
@@ -407,30 +413,60 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         return donorAlign;
     }
 
+    /**
+     * Solve the entire donor alignment window with either one or two haplotypes.  Generally, it is solved with the
+     * HMM Viterbi algorithm.  The Viterbi algorithm is relatively slow the big choice is how to choose the potential
+     * donors.
+     *
+     *
+     * @param taxon
+     * @param donorAlign
+     * @param donorOffset
+     * @param regionHypoth
+     * @param impT
+     * @param maskedTargetBits
+     * @param maxHybridErrorRate
+     * @return
+     */
     private ImputedTaxon apply1or2Haplotypes(int taxon, GenotypeTable donorAlign, int donorOffset,
-                                             DonorHypoth[][] regionHypth, ImputedTaxon impT,
-                                             BitSet[] maskedTargetBits, double maxHybridErrorRate) {
+                                             DonorHypoth[][] regionHypoth, ImputedTaxon impT,
+                                             BitSet[] maskedTargetBits, double maxHybridErrorRate, byte[][][] targetToDonorDistances) {
 
         int blocks=maskedTargetBits[0].getNumWords();
-        //do flanking search
         if(testing==1) System.out.println("Starting complete hybrid search");
-        //create a list of the best donors across entire region
-        int[] d=getAllBestDonorsAcrossChromosome(regionHypth,blocks/20);  //TODO
+        //create a list of the best donors based on showing up frequently high in many focus blocks
+        //in the test data set the best results achieved with on the best hypothesis recovered.
+//        int[] d=FILLINImputationUtils.mostFrequentDonorsAcrossFocusBlocks(regionHypoth, maxDonorHypotheses);
+        //Alternative test is find best donors
+       int[] d=FILLINImputationUtils.bestDonorsAcrossEntireRegion(targetToDonorDistances, minTestSites,maxDonorHypotheses);
+        int[] testList=FILLINImputationUtils.fillInc(0,donorAlign.numberOfTaxa()-1);
+        int[] bestDonorList=Arrays.copyOfRange(d,0,Math.min(d.length,5));
+        DonorHypoth[] bestDBasedOnBest=FILLINImputationUtils.findHeterozygousDonorHypoth(taxon, maskedTargetBits[0].getBits(),
+                maskedTargetBits[1].getBits(), 0, blocks-1, blocks/2, donorAlign, bestDonorList, testList, maxDonorHypotheses, minTestSites);
+
         //make all combination of best donor and find the the pairs that minimize errors
         //with the true switch also will make inbreds
-        DonorHypoth[] best2donors=getBestHybridDonors(taxon, maskedTargetBits[0].getBits(),
-                maskedTargetBits[1].getBits(), 0, blocks-1, blocks/2, donorAlign, d, d, true);
+        DonorHypoth[] best2Dsearchdonors=FILLINImputationUtils.findHeterozygousDonorHypoth(taxon, maskedTargetBits[0].getBits(), maskedTargetBits[1].getBits(), 0, blocks-1, blocks/2, donorAlign, d, d, maxDonorHypotheses, minTestSites);
+        DonorHypoth[] best2donors=FILLINImputationUtils.combineDonorHypothArrays(maxDonorHypotheses,bestDBasedOnBest,best2Dsearchdonors);
         if(testing==1) System.out.println(Arrays.toString(best2donors));
         ArrayList<DonorHypoth> goodDH=new ArrayList<DonorHypoth>();
         for (DonorHypoth dh : best2donors) {
             if((dh!=null)&&(dh.getErrorRate()<maxHybridErrorRate)) {
-                if(dh.isInbred()==false){
+                if(dh.isInbred()==false){  //if not inbred then Virterbi is needed to determine segments
                     dh=getStateBasedOnViterbi(dh, donorOffset, donorAlign, twoWayViterbi, transition);
                 }
                 if(dh!=null) goodDH.add(dh);
             }
         }
-        if(goodDH.isEmpty()) return impT;
+        if(goodDH.isEmpty()) {
+//            System.out.printf("%s %s SS:%d LS:%d %s %s %n",unimpAlign.taxaName(taxon),donorAlign.chromosome(0).getName(),
+//                    donorAlign.chromosomalPosition(0),donorAlign.chromosomalPosition(donorAlign.numberOfSites()-1),
+//                    Arrays.toString(d), Arrays.toString(d1));
+//            for (DonorHypoth donorHypoth : bestDBasedOnBest) {
+//                System.out.println(donorHypoth.toString());
+//            }
+            return impT;
+        }
         DonorHypoth[] vdh=new DonorHypoth[goodDH.size()];
         for (int i = 0; i < vdh.length; i++) {vdh[i]=goodDH.get(i);}
         impT.setSegmentSolved(true);
@@ -747,35 +783,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
 
 
-    /**
-     * Produces a sort list of most prevalent donorHypotheses across the donorAlign.
-     * Currently it is only looking at the very best for each focus block.
-     * @param allDH
-     * @param minHypotheses
-     * @return
-     */
-    private int[] getAllBestDonorsAcrossChromosome(DonorHypoth[][] allDH, int minHypotheses) {
-        TreeMap<Integer,Integer> bd=new TreeMap<Integer,Integer>();
-        for (int i = 0; i < allDH.length; i++) {
-            DonorHypoth dh=allDH[i][0];
-            if(dh==null) continue;
-            if(bd.containsKey(dh.donor1Taxon)) {  //counts the frequency of best hit
-                bd.put(dh.donor1Taxon, bd.get(dh.donor1Taxon)+1);
-            } else {
-                bd.put(dh.donor1Taxon, 1);
-            }
-        }
-        if(testing==1) System.out.println(bd.size()+":"+bd.toString());
-        if(testing==1) System.out.println("");
-        int highDonors=0;
-        for (int i : bd.values()) {if(i>minHypotheses) highDonors++;}
-        int[] result=new int[highDonors];
-        highDonors=0;
-        for (Map.Entry<Integer,Integer> e: bd.entrySet()) {
-            if(e.getValue()>minHypotheses) result[highDonors++]=e.getKey();}
-        if(testing==1) System.out.println(Arrays.toString(result));
-        return result;
-    }
+
 
     private int[] getUniqueDonorsForBlock(DonorHypoth[][] regionHypth, int block) {//change so only adding those donors that are not identical for target blocks
         TreeSet<Integer> donors= new TreeSet<>();
@@ -996,8 +1004,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         engine.add("-maskKeyFile", "--maskKeyFile", true);
         engine.add("-propSitesMask", "--propSitesMask", true);
         engine.add("-mxHet", "--hetThresh", true);
-        engine.add("-sC", "--startChrom", false); //TODO why set to false
-        engine.add("-eC", "--endChrom", false); //TODO why set to false
         engine.add("-minMnCnt", "--minMnCnt", true);
         engine.add("-mxInbErr", "--mxInbErr", true);
         engine.add("-mxHybErr", "--mxHybErr", true);
