@@ -49,7 +49,6 @@ public class ProductionPipeline {
 
     private static final Logger myLogger = Logger.getLogger(ProductionPipeline.class);
 
-    private static final String DEFAULT_APPLICATION_CONFIGURATION = "production_pipeline.properties";
     private static final String EMAIL_ADDRESS_DELIMITER = ";";
 
     private static final SimpleDateFormat LOGGING_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
@@ -64,10 +63,6 @@ public class ProductionPipeline {
 
     // pipeline admin default email address
     private String[] myRecipientEmailAddresses = null;
-
-    // directory into which the key and run files are
-    // placed for pickup by cron job
-    private String myRunDirectory = "/SSD/prop_pipeline/run/";
 
     // directory into which the key and run files are placed
     // after being run a dated directory will be created
@@ -86,7 +81,7 @@ public class ProductionPipeline {
     private String myOutputFolder = null;
     private String myKeyFile = null;
 
-    private boolean myRunImputation = true;
+    private final boolean myRunImputation = true;
 
     private String myPropertiesFileContents = null;
 
@@ -106,7 +101,7 @@ public class ProductionPipeline {
             + "outputFolder=/workdir/tassel/tassel4-src/20130716test/hap_maps\n"
             + "keyFile=/workdir/tassel/tassel4-src/20130716test/keyfile/MGP1_low_vol_2smallReps_key.txt";
 
-    public ProductionPipeline() {
+    public ProductionPipeline(File runFile) {
 
         try {
             myApplicationHost = InetAddress.getLocalHost().getHostName();
@@ -114,7 +109,7 @@ public class ProductionPipeline {
             // do nothing
         }
 
-        executeRunFiles(myRunDirectory);
+        executeRunFile(runFile);
     }
 
     private String getEmailSubjectRun(String runFile) {
@@ -144,41 +139,7 @@ public class ProductionPipeline {
      *
      * @param runDirectoryIn Directory containing any number of .run files
      */
-    private void executeRunFiles(String runDirectoryIn) {
-
-        File dir = new File(runDirectoryIn);
-
-        if (!dir.exists()) {
-            System.out.println("Could not find the directory containing .run files: " + dir.getPath());
-            System.out.println("Exiting program.");
-            sendAlertNotification(getEmailSubjectApp(), "Could not find run directory: " + dir.getAbsolutePath()
-                    + " on  server " + myApplicationHost);
-            System.exit(1);
-        }
-
-        // get all property files in the directory
-        File[] files = dir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.toLowerCase().endsWith(RUN_FILE_SUFFIX);
-            }
-        });
-
-        if (files == null) {
-            System.out.println("************** Could not find a valid .run file ***************");
-            System.out.println("************** Example .run file: ");
-            System.out.println(EXAMPLE_RUN_FILE);
-            sendAlertNotification(getEmailSubjectApp(), "No .run files found on " + myApplicationHost);
-        } else {
-            StringBuilder sb = new StringBuilder();
-            for (File f : files) {
-                sb.append(f).append("\n");
-            }
-            sb.append("\nRunning on server: ").append(myApplicationHost).append("\n");
-            sendAlertNotification(getEmailSubjectApp(), sb.toString());
-        }
-
-        for (File runFile : files) {
+    private void executeRunFile(File runFile) {
 
             String currentRunFile = runFile.getAbsolutePath();
             String msgBody = "Starting to run " + currentRunFile + " on server " + myApplicationHost;
@@ -278,7 +239,6 @@ public class ProductionPipeline {
             } catch (javax.mail.MessagingException me) {
                 // do nothing
             }
-        }
     }
 
     /**
@@ -340,18 +300,10 @@ public class ProductionPipeline {
             myRecipientEmailAddresses = Iterables.toArray(results, String.class);
         }
 
-        // directory where the .run files are expected to be
-        configurationElement = "runDirectory";
-        myRunDirectory = props.getProperty(configurationElement);
-        String response = testInputDirectory(aFileIn, myRunDirectory, configurationElement);
-        if (response != null) {
-            System.out.println(response);
-        }
-
         // directory into which the key and run files are placed after being run
         configurationElement = "archiveDirectory";
         myArchiveDirectory = props.getProperty(configurationElement);
-        response = testInputDirectory(aFileIn, myArchiveDirectory, configurationElement);
+        String response = testInputDirectory(aFileIn, myArchiveDirectory, configurationElement);
         if (response != null) {
             System.out.println(response);
         }
@@ -631,24 +583,23 @@ public class ProductionPipeline {
         }
         
         File inputDirectory = new File(args[0]);
-        File[] runFiles = inputDirectory.listFiles(new FileFilter() {
-
+        File[] runFiles = inputDirectory.listFiles(new FilenameFilter() {
             @Override
-            public boolean accept(File pathname) {
-                if (pathname.isDirectory()) {
-                    return false;
-                }
-                if (pathname.getName().endsWith(".run")) {
-                    return true;
-                }
-                return false;
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().endsWith(RUN_FILE_SUFFIX);
             }
         });
         
+        if ((runFiles == null) || (runFiles.length == 0)) {
+            myLogger.error("ProductionPipeline: Could not find a valid .run files in directory: " + args[0]);
+            myLogger.error("ProductionPipeline: Example .run file: ");
+            myLogger.error(EXAMPLE_RUN_FILE);
+        }
+        
         for (File current: runFiles) {
-            System.out.println("current: " + current.getAbsolutePath());
+            myLogger.info("ProductionPipeline: current run file: " + current.getAbsolutePath());
+            new ProductionPipeline(current);
         }
 
-        new ProductionPipeline();
     }
 }
