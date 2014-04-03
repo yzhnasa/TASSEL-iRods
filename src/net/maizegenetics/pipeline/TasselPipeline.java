@@ -1359,6 +1359,10 @@ public class TasselPipeline implements PluginListener {
     }
 
     public static String[] addForkFlagsIfNeeded(String[] args) {
+        if ((args == null) || (args.length == 0)) {
+            return args;
+        }
+        
         for (String a : args) {
             if (a.toLowerCase().startsWith("-fork") || a.toLowerCase().startsWith("-runfork")) {
                 // If forks included, return arguments unchanged
