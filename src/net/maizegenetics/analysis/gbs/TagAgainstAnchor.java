@@ -451,6 +451,8 @@ public class TagAgainstAnchor {
                     ScanChromosome bestChrNewThres = new ScanChromosome(singleTagDist, bestResWithNewThreshold, 0, chrStartIndex[bestAlignment], chrEndIndex[bestAlignment], pRank[1], 1, blastPos);
                     bestChrNewThres.scan();
                     int countOfSitesBetterThanNextBestChr=(int)bestResWithNewThreshold[0][0][4];
+                    if (pRank[0] == 0) pRank[0] = Double.MIN_VALUE; // can't devide by 0
+                    
                     String s=String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%g\t%d\t%d\t%d\t%g\t%g\t%d\t%d\t%d\t%n", BaseEncoder.getSequenceFromLong(testTag[j]), subTBT.getReadCount(blockTagIndex[j]), blastChr[0], blastPos[0], refDiv[j],
                             (int)bestR[0],(int)bestR[1],(int)bestR[2], bestR[3], (int)bestR[4], subTBT.getNumberOfTaxaWithTag(blockTagIndex[j]),
                             countRealSig, Math.log10(pRank[1]/pRank[0]), Math.log10(pRank[chromosomeNumber.length/2]/pRank[0]), countOfSitesBetterThanNextBestChr,
