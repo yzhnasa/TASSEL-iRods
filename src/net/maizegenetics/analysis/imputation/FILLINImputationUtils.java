@@ -117,7 +117,7 @@ public class FILLINImputationUtils {
                 //break;//this line allows only the best hypothesis to go into set (original method)
             }
         }
-        TreeMultimap<Integer,Integer> rankings= TreeMultimap.create(Ordering.natural().reversed(),Ordering.natural());
+        TreeMultimap<Integer,Integer> rankings= TreeMultimap.create(Ordering.natural().reverse(),Ordering.natural());
         for (Map.Entry<Integer, Integer> dhs : bd.entrySet()) {
             rankings.put(dhs.getValue(),dhs.getKey());
         }
