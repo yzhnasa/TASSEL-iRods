@@ -1063,6 +1063,11 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         if (engine.getBoolean("-accuracyOff")) accuracyOn=false;
         if (engine.getBoolean("-projA")) isOutputProjection=true;
         if (engine.getBoolean("-nV")) verboseOutput=false;
+        maxHybridErrFocusHomo= .3333*maxHybridErrorRate;
+        maxInbredErrFocusHomo= .3*maximumInbredError;
+        maxSmashErrFocusHomo= maximumInbredError;
+        maxInbredErrFocusHet= .1*maximumInbredError;
+        maxSmashErrFocusHet= maximumInbredError;
     }
 
 
@@ -1079,11 +1084,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                         + "-minMnCnt    Minimum number of informative minor alleles in the search window (or "+minMajorRatioToMinorCnt+"X major)\n"
                         + "-mxInbErr    Maximum error rate for applying one haplotype to entire site window (default:"+maximumInbredError+"\n"
                         + "-mxHybErr    Maximum error rate for applying Viterbi with to haplotypes to entire site window (default:"+maxHybridErrorRate+"\n"
-                        + "-mxVitFocusErr    Maximum error rate for applying Viterbi with to haplotypes to entire site window  (default:"+maxHybridErrFocusHomo+")\n"
-                        + "-mxInbFocusErr    Maximum error rate to apply one haplotype for inbred (heterozygosity below mxHet) taxon  for 64-site focus blocks (default:"+maxInbredErrFocusHomo+")\n"
-                        + "-mxComFocusErr    Maximum error rate to apply two haplotypes modeled as a heterozygote for inbred (heterozygosity below mxHet) taxon  for 64-site focus blocks (default:"+maxSmashErrFocusHomo+")\n"
-                        + "-mxInbFocusErrHet    Maximum error rate to apply one haplotype for outbred (heterozygosity above mxHet) taxon  for 64-site focus blocks (default:"+maxInbredErrFocusHet+")\n"
-                        + "-mxComFocusErrHet    Maximum error rate to apply two haplotypes modeled as a heterozygote for outbred (heterozygosity above mxHet) taxon  for 64-site focus blocks (default:"+maxSmashErrFocusHet+")\n"
                         + "-hybNNOff    Whether to model two haplotypes as heterozygotic for focus blocks (default:"+hybridNN+")\n"
                         + "-mxDonH   Maximum number of donor hypotheses to be explored (default: "+maxDonorHypotheses+")\n"
                         + "-mnTestSite   Minimum number of sites to test for IBS between haplotype and target in focus block  (default:"+minTestSites+")\n"
