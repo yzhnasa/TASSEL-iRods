@@ -451,10 +451,11 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         if(testing==1) System.out.println(Arrays.toString(best2donors));
         ArrayList<DonorHypoth> goodDH=new ArrayList<DonorHypoth>();
         for (DonorHypoth dh : best2donors) {
-            if((dh!=null)&&(dh.getErrorRate()<maxHybridErrorRate)) {
-                if(dh.isInbred()==false){  //if not inbred then Virterbi is needed to determine segments
-                    dh=getStateBasedOnViterbi(dh, donorOffset, donorAlign, twoWayViterbi, transition);
-                }
+            if(dh==null) continue;
+            if(dh.isInbred() && (dh.getErrorRate()<maximumInbredError)) {
+                goodDH.add(dh);
+            } else if(dh.getErrorRate()<maxHybridErrorRate) {
+                dh=getStateBasedOnViterbi(dh, donorOffset, donorAlign, twoWayViterbi, transition);
                 if(dh!=null) goodDH.add(dh);
             }
         }
