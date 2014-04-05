@@ -1,15 +1,18 @@
 package net.maizegenetics.stats.EMMA;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import org.apache.log4j.Logger;
-
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
 import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.matrixalgebra.decomposition.EigenvalueDecomposition;
 import net.maizegenetics.stats.linearmodels.LinearModelUtils;
+import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
+/**
+ * Class for implementation of the EMMA algorithm often used in GWAS.  Initially developer by
+ * Kang et al Genetics March 2008 178:1709-1723
+ */
 public class EMMAforDoubleMatrix {
 	
 	private static final Logger myLogger = Logger.getLogger(EMMAforDoubleMatrix.class);
