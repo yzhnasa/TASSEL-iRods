@@ -673,7 +673,12 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         helpMenu.setMnemonic(KeyEvent.VK_H);
         helpMenu.setText("Help");
 
-        helpMenu.add(createMenuItem(new AbstractAction("Help Manual", null) {
+        URL infoImageURL = TASSELMainFrame.class.getResource("images/info.gif");
+        Icon infoIcon = null;
+        if (infoImageURL != null) {
+            infoIcon = new ImageIcon(infoImageURL);
+        }
+        helpMenu.add(createMenuItem(new AbstractAction("Help Manual", infoIcon) {
 
             @Override
             public void actionPerformed(ActionEvent e) {
