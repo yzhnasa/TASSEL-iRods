@@ -182,6 +182,16 @@ public final class HDF5Utils {
         return reader.readByteMatrix(callsPath);
     }
 
+    public static boolean doesGenotypeDepthExist(IHDF5Reader reader) {
+        List<String> taxaNames=getAllTaxaNames(reader);
+        boolean depthExist=false;
+        for (String taxon : taxaNames) {
+            String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
+            if(reader.exists(callsPath)) depthExist=true;
+        }
+        return depthExist;
+    }
+
     public static void writeHDF5GenotypesDepth(IHDF5Writer h5w, String taxon, byte[][] depth) {
         if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
@@ -291,5 +301,6 @@ public final class HDF5Utils {
             myWriter.writeStringArrayBlockWithOffset(objectPath, sval, sval.length, (long) startPos);
         }
     }
+
 
 }

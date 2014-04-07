@@ -23,8 +23,8 @@ public class DonorHypoth implements Comparable<DonorHypoth>{
     public double pHomoD2 = -11;
     public int totalSites = 0;
     public int mendelianErrors = 0;
-    public int startSite=-1;
-    public int endSite=-1;
+    public final int startSite;
+    public final int endSite;
     public byte[] phasedResults=null;
     private double errorRate=Double.NaN;
     private int prevalenceScore=Integer.MIN_VALUE;
@@ -43,9 +43,6 @@ public class DonorHypoth implements Comparable<DonorHypoth>{
         }
     };
 
-
-    public DonorHypoth() {
-    }
 
     public DonorHypoth(int targetTaxon, int donor1Taxon, int donor2Taxon, int startBlock, int focusBlock, int endBlock,
                        int totalSites, int mendelianErrors) {

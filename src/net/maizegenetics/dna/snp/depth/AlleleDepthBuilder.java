@@ -87,6 +87,7 @@ public class AlleleDepthBuilder {
      */
     public static AlleleDepth getExistingHDF5Instance(IHDF5Reader reader) {
         //TODO is this the right name for this
+        if(HDF5Utils.doesGenotypeDepthExist(reader)==false) return null;
         return new HDF5AlleleDepth(reader);
     }
 
