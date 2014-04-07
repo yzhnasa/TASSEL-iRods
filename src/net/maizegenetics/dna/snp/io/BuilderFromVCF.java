@@ -302,68 +302,80 @@ class ProcessVCFBlock implements Runnable {
         for (int s=0; s<siteN; s++) {
             //really needs to use a Splitter iterator to make this cleaner if it is performant
             String input=txtL.get(s);
-            int[] tabPos=new int[hp.NUM_HAPMAP_NON_TAXA_HEADERS+taxaN];
-            int tabIndex=0;
-            int len=input.length();
-            for (int i=0; (tabIndex<hp.NUM_HAPMAP_NON_TAXA_HEADERS+taxaN)&&(i<len); i++) {
-                if (input.charAt(i)=='\t') {
-                    tabPos[tabIndex++]=i;
-                }
-            }
-            String chrName=input.substring(0, tabPos[hp.CHROMOSOME_INDEX]);
-            Chromosome currChr=chromosomeLookup.get(chrName);
-            if (currChr==null) {
-                currChr=new Chromosome(new String(chrName));
-                chromosomeLookup.put(chrName, currChr);
-            }
-            String snpID=null;
-            if(hp.SNPID_INDEX>0) snpID=input.substring(tabPos[hp.SNPID_INDEX-1]+1, tabPos[hp.SNPID_INDEX]);
-            String refS=input.substring(tabPos[hp.REF_INDEX-1]+1, tabPos[hp.REF_INDEX]);
-            String alt=input.substring(tabPos[hp.ALT_INDEX-1]+1, tabPos[hp.ALT_INDEX]);
-            String variants;
-            if(alt.equals(".")) {variants=refS;}
-            else {variants=(refS+"/"+alt).replace(',','/').replace('I','+').replace('D','-');}
-            GeneralPosition.Builder apb=new GeneralPosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[hp.POSITION_INDEX-1]+1, tabPos[hp.POSITION_INDEX])))
-                    .knownVariants(variants) //TODO strand, variants,
-                    ;
-            if(snpID!=null && !snpID.equals(".")) {
-                apb.snpName(snpID);
-            }
-            byte[] alleles=new byte[(variants.length()+1)/2];
-            for (int i = 0, varInd=0; i < alleles.length; i++, varInd+=2) {
-                alleles[i]=NucleotideAlignmentConstants.getNucleotideAlleleByte(variants.charAt(varInd));
-            }
-            apb.allele(Position.Allele.REF, alleles[0]);
-            for(String annoS: Splitter.on(";").split(input.substring(tabPos[hp.INFO_INDEX-1]+1, tabPos[hp.INFO_INDEX]))) {
-                apb.addAnno(annoS);
-            }
-            blkPosList.add(apb.build());
-            final int iGT=0; //genotype index
-            int iAD=-1,iDP=-1,iGQ=-1, iPL=-1;  //alleleDepth, overall depth, genotypeQuality, phredGenotypeLikelihoods
-            if(hp.FORMAT_INDEX>=0) {
-                String[] formatS=input.substring(tabPos[hp.FORMAT_INDEX-1]+1, tabPos[hp.FORMAT_INDEX]).split(":");
-                iAD=firstEqualIndex(formatS,"AD");
-            }
-            int t=0;
-            for(String taxaAllG: Splitter.on("\t").split(input.substring(tabPos[hp.NUM_HAPMAP_NON_TAXA_HEADERS-1]+1))) {
-                int f=0;
-                for(String fieldS: Splitter.on(":").split(taxaAllG)) {
-                    if(f==iGT) {
-                        int a1=fieldS.charAt(0)-'0';
-                        int a2=fieldS.charAt(2)-'0';
-                        if(a1<0 || a2<0 ) {gTS[t][s]=GenotypeTable.UNKNOWN_DIPLOID_ALLELE;}
-                        else {gTS[t][s]=GenotypeTableUtils.getDiploidValue(alleles[a1],alleles[a2]);}
-                    } else if(f==iAD) {
-                        int i=0;
-                        for(String ad: Splitter.on(",").split(fieldS)){
-                            int adInt=Integer.parseInt(ad);
-                            dTS[t][alleles[i++]][s]=AlleleDepthUtil.depthIntToByte(adInt);
-                        }
+            try{
+                int[] tabPos=new int[hp.NUM_HAPMAP_NON_TAXA_HEADERS+taxaN];
+                int tabIndex=0;
+                int len=input.length();
+                for (int i=0; (tabIndex<hp.NUM_HAPMAP_NON_TAXA_HEADERS+taxaN)&&(i<len); i++) {
+                    if (input.charAt(i)=='\t') {
+                        tabPos[tabIndex++]=i;
                     }
-                    f++;
                 }
-                t++;
+                String chrName=input.substring(0, tabPos[hp.CHROMOSOME_INDEX]);
+                Chromosome currChr=chromosomeLookup.get(chrName);
+                if (currChr==null) {
+                    currChr=new Chromosome(new String(chrName));
+                    chromosomeLookup.put(chrName, currChr);
+                }
+                String snpID=null;
+                if(hp.SNPID_INDEX>0) snpID=input.substring(tabPos[hp.SNPID_INDEX-1]+1, tabPos[hp.SNPID_INDEX]);
+                String refS=input.substring(tabPos[hp.REF_INDEX-1]+1, tabPos[hp.REF_INDEX]);
+                String alt=input.substring(tabPos[hp.ALT_INDEX-1]+1, tabPos[hp.ALT_INDEX]);
+                String variants;
+                if(alt.equals(".")) {variants=refS;}
+                else {variants=(refS+"/"+alt).replace(',','/')
+                        .replace("<INS>", "+").replace('I', '+')
+                        .replace("<DEL>", "-").replace('D', '-');}
+                GeneralPosition.Builder apb=new GeneralPosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[hp.POSITION_INDEX-1]+1, tabPos[hp.POSITION_INDEX])))
+                        .knownVariants(variants) //TODO strand, variants,
+                        ;
+                if(snpID!=null && !snpID.equals(".")) {
+                    apb.snpName(snpID);
+                }
+                byte[] alleles=new byte[(variants.length()+1)/2];
+                for (int i = 0, varInd=0; i < alleles.length; i++, varInd+=2) {
+                    alleles[i]=NucleotideAlignmentConstants.getNucleotideAlleleByte(variants.charAt(varInd));
+                }
+                apb.allele(Position.Allele.REF, alleles[0]);
+                for(String annoS: Splitter.on(";").split(input.substring(tabPos[hp.INFO_INDEX-1]+1, tabPos[hp.INFO_INDEX]))) {
+                    apb.addAnno(annoS);
+                }
+                blkPosList.add(apb.build());
+                final int iGT=0; //genotype index
+                int iAD=-1,iDP=-1,iGQ=-1, iPL=-1;  //alleleDepth, overall depth, genotypeQuality, phredGenotypeLikelihoods
+                if(hp.FORMAT_INDEX>=0) {
+                    String[] formatS=input.substring(tabPos[hp.FORMAT_INDEX-1]+1, tabPos[hp.FORMAT_INDEX]).split(":");
+                    iAD=firstEqualIndex(formatS,"AD");
+                }
+                int t=0;
+                for(String taxaAllG: Splitter.on("\t").split(input.substring(tabPos[hp.NUM_HAPMAP_NON_TAXA_HEADERS-1]+1))) {
+                    int f=0;
+                    for(String fieldS: Splitter.on(":").split(taxaAllG)) {
+                        if(f==iGT) {
+                            int a1=fieldS.charAt(0)-'0';
+                            int a2=fieldS.charAt(2)-'0';
+                            if(a1<0 || a2<0 ) {gTS[t][s]=GenotypeTable.UNKNOWN_DIPLOID_ALLELE;}
+                            else {gTS[t][s]=GenotypeTableUtils.getDiploidValue(alleles[a1],alleles[a2]);}
+                        } else if(f==iAD) {
+                            int i=0;
+                            for(String ad: Splitter.on(",").split(fieldS)){
+                                if(alleles[i]==GenotypeTable.UNKNOWN_ALLELE) {  //no position for depth of unknown alleles, so skip
+                                    i++;
+                                    continue;}
+                                int adInt=Integer.parseInt(ad);
+                                dTS[t][alleles[i++]][s]=AlleleDepthUtil.depthIntToByte(adInt);
+                            }
+                        }
+                        f++;
+                    }
+                    t++;
+                }
+            } catch(Exception e) {
+                System.err.println("Err Site Number:"+s);
+                System.err.println("Err:"+input);
+                throw e;
             }
+
         }
         txtL=null;
     }
