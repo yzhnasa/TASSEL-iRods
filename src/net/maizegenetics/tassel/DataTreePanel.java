@@ -61,6 +61,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.maizegenetics.dna.map.TOPMInterface;
+import net.maizegenetics.dna.map.TOPMTableReport;
 
 import org.apache.batik.util.gui.MemoryMonitor;
 
@@ -85,6 +87,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
     public static final String NODE_TYPE_VARIANCES = "Variances";
     public static final String NODE_TYPE_SYNONYMIZER = "Synonymizer";
     public static final String NODE_TYPE_STEPWISE = "Stepwise";
+    public static final String NODE_TYPE_TOPM = "TOPM";
     public static final String NODE_TYPE_DEFAULT = NODE_TYPE_DATA;
     //Possible line styles...
     //"Angled", "Horizontal", and "None" (the default).
@@ -377,11 +380,22 @@ public class DataTreePanel extends JPanel implements PluginListener {
                                 myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
                             } else {
                                 TableReportPanel theATP;
-                                if (book.getData() instanceof Phenotype) {
-                                    theATP = new TableReportPanel((Phenotype) book.getData());
-                                } else {
-                                    theATP = new TableReportPanel((TableReport) book.getData());
-                                }
+                                theATP = new TableReportPanel((TableReport) book.getData());
+                                myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
+                            }
+                        } else if (book.getData() instanceof TOPMInterface) {
+                            //This method issues that giant files are not opened as JTables
+                            //In the future it may be good to add a getSize method to TableReport
+                            int size = ((TOPMInterface) book.getData()).getTagCount();
+                            myLogger.info("initSelectionListener: TOPM Tag Count: " + size);
+                            if (size == 0) {
+                                JPanel blankPanel = new JPanel();
+                                blankPanel.setLayout(new BorderLayout());
+                                blankPanel.add(new JLabel("     Nothing to Display"), BorderLayout.CENTER);
+                                myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
+                            } else {
+                                TableReportPanel theATP;
+                                theATP = new TableReportPanel(new TOPMTableReport((TOPMInterface)book.getData()));
                                 myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
                             }
                         } else if (book.getData() instanceof GenotypeTable) {
@@ -488,6 +502,9 @@ public class DataTreePanel extends JPanel implements PluginListener {
         book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_SYNONYMIZER, "Node on data tree", "Taxa Synonyms"));
         myDataNode.add(book);
         myNodeHash.put(NODE_TYPE_SYNONYMIZER, book);
+        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_TOPM, "Node on data tree", "TOPM"));
+        myDataNode.add(book);
+        myNodeHash.put(NODE_TYPE_TOPM, book);
 
         book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_DIVERSITY, "Node on data tree", "Diversity"));
         myResultNode.add(book);
@@ -507,7 +524,6 @@ public class DataTreePanel extends JPanel implements PluginListener {
         book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_STEPWISE, "Node on data tree", "Stepwise Regression"));
         myResultNode.add(book);
         myNodeHash.put(NODE_TYPE_STEPWISE, book);
-
     }
 
     private void jbInit() throws Exception {
@@ -539,80 +555,62 @@ public class DataTreePanel extends JPanel implements PluginListener {
                     || (theCreator instanceof FixedEffectLMPlugin)) {
                 addDatum(NODE_TYPE_ASSOCIATIONS, d);
                 continue;
-
             }
-
 
             if (theCreator instanceof SequenceDiversityPlugin) {
                 addDatum(NODE_TYPE_DIVERSITY, d);
                 continue;
-
             }
-
 
             if (theCreator instanceof LinkageDisequilibriumPlugin) {
                 addDatum(NODE_TYPE_LD, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof GenotypeTable) {
                 addDatum(NODE_TYPE_SEQUENCE, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof GenotypeTableMask) {
                 addDatum(d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof IdentifierSynonymizer) {
                 addDatum(NODE_TYPE_SYNONYMIZER, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof Phenotype) {
                 addDatum(NODE_TYPE_NUMERICAL, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof DistanceMatrix) {
                 addDatum(NODE_TYPE_MATRIX, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof TableReport) {
                 addDatum(NODE_TYPE_NUMERICAL, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof Tree) {
                 addDatum(NODE_TYPE_TREE, d);
                 continue;
-
             }
-
+            
+            if (d.getData() instanceof TOPMInterface) {
+                addDatum(NODE_TYPE_TOPM, d);
+                continue;
+            }
 
             if (defaultNode == null) {
                 addDatum(NODE_TYPE_DEFAULT, d);
                 continue;
-
             }
-
-
 
             addDatum(defaultNode, d);
         }
