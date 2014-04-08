@@ -745,7 +745,8 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         engine.add("-hmp", "-hmpFile", true);
         engine.add("-o", "--outFile", true);
         engine.add("-d", "--donorH", true);
-        engine.add("-accuracyOff", "--accuracyOff", true);
+        engine.add("-maskKeyFile", "--maskKeyFile", true);
+        engine.add("-propSitesMask", "--propSitesMask", true);
         engine.add("-mxHet", "--hetThresh", true);
         engine.add("-minMnCnt", "--minMnCnt", true);
         engine.add("-mxInbErr", "--mxInbErr", true);
@@ -817,7 +818,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 + "-hmp   Input HapMap file of target genotypes to impute. Accepts all file types supported by TASSEL5\n"
                 + "-d    Donor haplotype files from output of FILLINFindHaplotypesPlugin. Use .gX in the input filename to denote the substring .gc#s# found in donor files\n"
                 + "-o     Output file; hmp.txt.gz and .hmp.h5 accepted. Required\n"
-                + "-maskKeyFile An optional key file to indicate that file is already masked for accuracy calculation. Non-missing genotypes indicate masked sites. Else, will generate own mask\n"
                 + "-mxHet   Threshold per taxon heterozygosity for treating taxon as heterozygous (no Viterbi, het thresholds). (default:"+hetThresh+"\n"
                 + "-minMnCnt    Minimum number of informative minor alleles in the search window (or "+minMajorRatioToMinorCnt+"X major)\n"
                 + "-mxInbErr    Maximum error rate for applying one haplotype to entire site window (default:"+maximumInbredError+"\n"
@@ -825,7 +825,6 @@ public class FILLINImputationPlugin extends AbstractPlugin {
                 + "-hybNNOff    Whether to model two haplotypes as heterozygotic for focus blocks (default:"+hybridNN+")\n"
                 + "-mxDonH   Maximum number of donor hypotheses to be explored (default: "+maxDonorHypotheses+")\n"
                 + "-mnTestSite   Minimum number of sites to test for IBS between haplotype and target in focus block  (default:"+minTestSites+")\n"
-                + "-accuracyOff   Do not calculate accuracy for imputation (default on)\n"
                 + "-projA   Create a projection alignment for high density markers (default off)\n"
                 + "-hapSize    Preferred haplotype block size in sites when a single donor file is used (e.g. phased whole genome) \n"
 
