@@ -8,6 +8,7 @@ package net.maizegenetics.dna.map;
  * The mappingSource can be an identifier. Byte.MIN_VALUE means the tag doesn't exist (missing) in the mapping result. Other values means it exist in mapping result. The result could be either mapped or unmapped.
  * 
  * Note: BWA doesn't provide mapping score, so the rank is just based on the order provided for multiple hits
+ * Note: Currently, perfectMatch of PE is unknown (Byte.MIN_VALUE);
  * 
  * @author edbuckler Fei Lu
  */
@@ -21,7 +22,9 @@ public class TagMappingInfoV3 {
     /**Chromosomal position of the common adapter end of the tag (smaller than startPosition if tag matches minus strand), inclusive, unknown = Integer.MIN_VALUE */
     public int endPosition=Integer.MIN_VALUE;  //   // 4 bytes
     /**Number of diverging bp (edit distance) from reference, unknown = Byte.MIN_VALUE*/
-    public byte divergence=Byte.MIN_VALUE;  
+    public byte divergence=Byte.MIN_VALUE;
+    /**If the alignment is a perfect match to the reference, y = 1, n = 0, unknown = Byte.MIN_VALUE*/
+    public byte perfectMatch = Byte.MIN_VALUE;
     /**Code of mappingSource.0: Bowtie2; 1: BWA; 2: BLAST; 3: BWAMEM; 4: PE one end; 5: PE the other end; 6: Genetic Mapping; missing = Byte.MIN_VALUE*/
     public byte mappingSource = Byte.MIN_VALUE;
     /**The rank of this mapping based on the scores from one aligner, starting from 0. If there are two 0, the rank of the third one is 1*/
@@ -87,20 +90,21 @@ public class TagMappingInfoV3 {
     public TagMappingInfoV3() {   
     }
     
-    public TagMappingInfoV3(int chromosome, byte strand, int startPosition, int endPosition, byte divergence, byte mappingSource, short mappingScore) {
+    public TagMappingInfoV3(int chromosome, byte strand, int startPosition, int endPosition, byte divergence, byte perfectMatch, byte mappingSource, short mappingScore) {
         this.chromosome=chromosome;
         this.strand=strand;
         this.startPosition=startPosition;
         this.endPosition=endPosition;
         this.divergence=divergence;
+        this.perfectMatch = perfectMatch;
         this.mappingSource = mappingSource;
         this.mappingScore = mappingScore;
     } 
     
     public TagMappingInfoV3(int chromosome, byte strand, int startPosition, 
-                int endPosition, byte divergence, byte mappingSource, short mappingScore, byte[] variantPosOff, byte[] variantDef,
+                int endPosition, byte divergence, byte perfectMatch, byte mappingSource, short mappingScore, byte[] variantPosOff, byte[] variantDef,
                 byte dcoP, byte mapP) {
-        this(chromosome, strand, startPosition, endPosition, divergence, mappingSource, mappingScore);
+        this(chromosome, strand, startPosition, endPosition, divergence, perfectMatch, mappingSource, mappingScore);
         this.dcoP=dcoP;
         this.mapP=mapP;
     }

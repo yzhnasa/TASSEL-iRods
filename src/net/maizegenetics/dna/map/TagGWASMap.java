@@ -93,8 +93,8 @@ public class TagGWASMap extends AbstractTagsHDF5 {
                     }
                     if (pMaps[0].chromosome != Integer.MIN_VALUE) {
                         ifMap = true;
-                        if (pMaps[0].divergence == 0) ifRef = true;
-                        if (pMaps[1].mappingRank == 1) ifUnique = true;
+                        if (pMaps[0].perfectMatch == 1) ifRef = true;
+                        if (pMaps[1].chromosome == Integer.MIN_VALUE) ifUnique = true;
                     }
                     tem = br.readLine().split("\t");
                     int readCount = Integer.valueOf(tem[1]);
