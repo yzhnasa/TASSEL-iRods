@@ -541,7 +541,7 @@ public class GenotypeTableBuilder {
                             +" previously added to taxon "+id.getName());
             }
             Taxon modifiedTaxon = new Taxon.Builder(HDF5Utils.getTaxon(writer, id.getName())).addAnno("Flowcell_Lane",newFlowCellLanes[0]).build();
-            HDF5Utils.addTaxonAnnotations(myWriter, modifiedTaxon);
+            HDF5Utils.replaceTaxonAnnotations(myWriter, modifiedTaxon);
         }
         byte[] combGenos=new byte[genotype.length];
         if(depth!=null) {

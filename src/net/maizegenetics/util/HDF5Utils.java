@@ -67,10 +67,10 @@ public final class HDF5Utils {
         return true;
     }
     
-    public static void addTaxonAnnotations(IHDF5Writer h5w, Taxon modifiedTaxon) {
+    public static void replaceTaxonAnnotations(IHDF5Writer h5w, Taxon modifiedTaxon) {
         if(isTaxaLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         String path=Tassel5HDF5Constants.getTaxonPath(modifiedTaxon.getName());
-        if(!h5w.exists(path))  throw new IllegalStateException("Taxon does not already exist to add annotations to");;
+        if(!h5w.exists(path))  throw new IllegalStateException("Taxon does not already exist to replace annotations of");;
         SetMultimap<String, String> annoMap=modifiedTaxon.getAnnotationAsMap();
         for (String keys : annoMap.keys()) {
             String s=Joiner.on(",").join(annoMap.get(keys));
