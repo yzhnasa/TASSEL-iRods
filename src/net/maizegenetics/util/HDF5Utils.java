@@ -66,6 +66,17 @@ public final class HDF5Utils {
         }
         return true;
     }
+    
+    public static void addTaxonAnnotations(IHDF5Writer h5w, Taxon modifiedTaxon) {
+        if(isTaxaLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
+        String path=Tassel5HDF5Constants.getTaxonPath(modifiedTaxon.getName());
+        if(!h5w.exists(path))  throw new IllegalStateException("Taxon does not already exist to add annotations to");;
+        SetMultimap<String, String> annoMap=modifiedTaxon.getAnnotationAsMap();
+        for (String keys : annoMap.keys()) {
+            String s=Joiner.on(",").join(annoMap.get(keys));
+            h5w.setStringAttribute(path,keys,s);
+        }
+    }
 
     public static Taxon getTaxon(IHDF5Reader reader, String taxonName) {
         String taxonPath=Tassel5HDF5Constants.getTaxonPath(taxonName);
