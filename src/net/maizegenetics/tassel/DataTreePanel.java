@@ -126,71 +126,6 @@ public class DataTreePanel extends JPanel implements PluginListener {
 
         myTree.putClientProperty("JTree.lineStyle", myLineStyle);
 
-        URL tsBitURL = DataTreePanel.class.getResource("images/tsBit.gif");
-        final ImageIcon tsBitIcon;
-        if (tsBitURL != null) {
-            tsBitIcon = new ImageIcon(tsBitURL);
-        } else {
-            tsBitIcon = null;
-        }
-
-        URL sBitURL = DataTreePanel.class.getResource("images/sBit.gif");
-        final ImageIcon sBitIcon;
-        if (sBitURL != null) {
-            sBitIcon = new ImageIcon(sBitURL);
-        } else {
-            sBitIcon = null;
-        }
-
-        URL tBitURL = DataTreePanel.class.getResource("images/tBit.gif");
-        final ImageIcon tBitIcon;
-        if (tBitURL != null) {
-            tBitIcon = new ImageIcon(tBitURL);
-        } else {
-            tBitIcon = null;
-        }
-
-        URL combineURL = DataTreePanel.class.getResource("images/combineAlign.gif");
-        final ImageIcon combineIcon;
-        if (combineURL != null) {
-            combineIcon = new ImageIcon(combineURL);
-        } else {
-            combineIcon = null;
-        }
-
-        URL filterURL = DataTreePanel.class.getResource("images/filterAlign.gif");
-        final ImageIcon filterIcon;
-        if (filterURL != null) {
-            filterIcon = new ImageIcon(filterURL);
-        } else {
-            filterIcon = null;
-        }
-
-        URL sBitCombineURL = DataTreePanel.class.getResource("images/sBitCombine.gif");
-        final ImageIcon sBitCombineIcon;
-        if (sBitCombineURL != null) {
-            sBitCombineIcon = new ImageIcon(sBitCombineURL);
-        } else {
-            sBitCombineIcon = null;
-        }
-
-        URL sBitFilterURL = DataTreePanel.class.getResource("images/sBitFilter.gif");
-        final ImageIcon sBitFilterIcon;
-        if (sBitFilterURL != null) {
-            sBitFilterIcon = new ImageIcon(sBitFilterURL);
-        } else {
-            sBitFilterIcon = null;
-        }
-
-        URL tBitFilterURL = DataTreePanel.class.getResource("images/tBitFilter.gif");
-        final ImageIcon tBitFilterIcon;
-        if (tBitFilterURL != null) {
-            tBitFilterIcon = new ImageIcon(tBitFilterURL);
-        } else {
-            tBitFilterIcon = null;
-        }
-
-
         myTree.setCellRenderer(new DefaultTreeCellRenderer() {
             public Component getTreeCellRendererComponent(JTree pTree,
                     Object pValue, boolean pIsSelected, boolean pIsExpanded,
@@ -204,10 +139,6 @@ public class DataTreePanel extends JPanel implements PluginListener {
                     result.setForeground(((GenotypeTableMask) nodeInfo.getData()).getColor());
                 }
 
-                if (data instanceof GenotypeTable) {
-                    GenotypeTable align = (GenotypeTable) data;
-                    setIcon(sBitIcon);
-                }
                 return result;
             }
         });
@@ -395,7 +326,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
                                 myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
                             } else {
                                 TableReportPanel theATP;
-                                theATP = new TableReportPanel(new TOPMTableReport((TOPMInterface)book.getData()));
+                                theATP = new TableReportPanel(new TOPMTableReport((TOPMInterface) book.getData()));
                                 myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
                             }
                         } else if (book.getData() instanceof GenotypeTable) {
