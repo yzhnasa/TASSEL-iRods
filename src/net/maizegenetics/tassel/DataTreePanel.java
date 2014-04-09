@@ -60,6 +60,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.maizegenetics.analysis.data.GenotypeSummaryPlugin;
 import net.maizegenetics.dna.map.TOPMInterface;
 import net.maizegenetics.dna.map.TOPMTableReport;
 
@@ -87,6 +88,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
     public static final String NODE_TYPE_SYNONYMIZER = "Synonymizer";
     public static final String NODE_TYPE_STEPWISE = "Stepwise";
     public static final String NODE_TYPE_TOPM = "TOPM";
+    public static final String NODE_TYPE_GENO_SUMMARY = "Genotype Summary";
     public static final String NODE_TYPE_DEFAULT = NODE_TYPE_DATA;
     private static final List<String> NODE_TYPE_DATA_CHILDREN = new ArrayList<>();
 
@@ -481,6 +483,11 @@ public class DataTreePanel extends JPanel implements PluginListener {
             if ((theCreator instanceof MLMPlugin)
                     || (theCreator instanceof FixedEffectLMPlugin)) {
                 addDatum(NODE_TYPE_ASSOCIATIONS, d);
+                continue;
+            }
+            
+            if (theCreator instanceof GenotypeSummaryPlugin) {
+                addDatum(NODE_TYPE_GENO_SUMMARY, d);
                 continue;
             }
 
