@@ -298,6 +298,11 @@ public class DataTreePanel extends JPanel implements PluginListener {
                         builder.append(tr.getElementCount());
                         builder.append("\n");
                     }
+                    if (book.getData() instanceof TOPMInterface) {
+                        TOPMInterface topm = (TOPMInterface) book.getData();
+                        builder.append("Number of Tags: ");
+                        builder.append(topm.getSize());
+                    }
                     if (book.getData() instanceof GenotypeTableMask) {
                         GenotypeTableMask mask = (GenotypeTableMask) book.getData();
                     }
