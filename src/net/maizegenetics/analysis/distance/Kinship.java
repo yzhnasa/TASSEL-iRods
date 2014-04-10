@@ -48,7 +48,10 @@ public class Kinship extends DistanceMatrix {
     public Kinship(GenotypeTable mar, KINSHIP_TYPE kinshipType) {
     	this.mar = mar;
     	this.kinshipType = kinshipType;
+    	System.out.println("Starting Kinship.buildFromMarker.");
+    	long start = System.currentTimeMillis();
     	buildFromMarker();
+    	System.out.printf("Built Kinship in %d millisec.\n", System.currentTimeMillis() - start);
     }
     
     public Kinship(SimplePhenotype ped) {
@@ -254,8 +257,7 @@ public class Kinship extends DistanceMatrix {
     			double pi = ((double) alleleFreq[1][a]) / ((double) totalAlleleCount);
     			double pix2 = 2 * pi;
     			piList.add(pi);
-    			DoubleMatrix scores = DoubleMatrixFactory.DEFAULT.make(ntaxa, 1);
-    			
+    			DoubleMatrix scores = DoubleMatrixFactory.DEFAULT.make(ntaxa, 1, 0);
     			for (int t = 0; t < ntaxa; t++) {
     				byte[] geno = GenotypeTableUtils.getDiploidValues(mar.genotype(t,s));
     				double thisScore = 0;
@@ -267,7 +269,15 @@ public class Kinship extends DistanceMatrix {
     				scores.set(t, 0, thisScore);
     			}
     			
-    			dmDistance.plusEquals(scores);
+    			for (int r = 0; r < ntaxa; r++) {
+    				double rowval = scores.get(r,0);
+					double val = dmDistance.get(r, r) + rowval * rowval;
+					dmDistance.set(r, r, val);
+    				for (int c = r + 1; c < ntaxa; c++) {
+    					val = dmDistance.get(r, c) + rowval * scores.get(c, 0);
+    					dmDistance.set(r, c, val);
+    				}
+    			}
     		}
     	}
     	
@@ -276,11 +286,14 @@ public class Kinship extends DistanceMatrix {
     	sumpk *= 2;
     	
     	for (int r = 0; r < ntaxa; r++) {
-    		for (int c = 0; c < ntaxa; c++) {
-    			distance[r][c] = dmDistance.get(r, c) / sumpk;
+    		distance[r][r] = dmDistance.get(r, r) / sumpk;
+    		for (int c = r + 1; c < ntaxa; c++) {
+    			distance[r][c] = distance[c][r] = dmDistance.get(r, c) / sumpk;
     		}
     	}
     	
+    	double maxsim = 0;
+    	for (double[] row : distance) for (double val : row) maxsim = Math.max(maxsim, val);
     	dm = new DistanceMatrix(distance, mar.taxa());
     }
 
