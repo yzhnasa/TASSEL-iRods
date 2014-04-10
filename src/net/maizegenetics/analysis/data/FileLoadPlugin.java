@@ -33,6 +33,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import net.maizegenetics.dna.map.TOPMUtils;
 
 /**
  *
@@ -51,7 +52,7 @@ public class FileLoadPlugin extends AbstractPlugin {
 
         SqrMatrix, Sequence, Numerical, Unknown, Fasta,
         Hapmap, Plink, Phenotype, ProjectionAlignment, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
-        Serial, HapmapDiploid, Text, VCF, HDF5
+        Serial, HapmapDiploid, Text, VCF, HDF5, TOPM
     };
     public static final String FILE_EXT_HAPMAP = ".hmp.txt";
     public static final String FILE_EXT_HAPMAP_GZ = ".hmp.txt.gz";
@@ -60,6 +61,8 @@ public class FileLoadPlugin extends AbstractPlugin {
     public static final String FILE_EXT_SERIAL_GZ = ".serial.gz";
     public static final String FILE_EXT_HDF5 = ".h5";
     public static final String FILE_EXT_VCF = ".vcf";
+    public static final String FILE_EXT_TOPM = ".topm";
+    public static final String FILE_EXT_TOPM_H5 = ".topm.h5";
 
     /**
      * Creates a new instance of FileLoadPlugin
@@ -119,6 +122,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Hapmap);
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = processDatum(myOpenFiles[i], TasselFileType.Hapmap);
+                        } else if ((myOpenFiles[i].endsWith(FILE_EXT_TOPM_H5)) || (myOpenFiles[i].endsWith(FILE_EXT_TOPM))) {
+                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.TOPM);
+                            alreadyLoaded.add(myOpenFiles[i]);
+                            tds = processDatum(myOpenFiles[i], TasselFileType.TOPM);
                         } else if (myOpenFiles[i].endsWith(FILE_EXT_PLINK_PED)) {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.Plink);
                             String theMapFile = myOpenFiles[i].replaceFirst(FILE_EXT_PLINK_PED, FILE_EXT_PLINK_MAP);
@@ -200,13 +207,6 @@ public class FileLoadPlugin extends AbstractPlugin {
             String[] sval1 = line1.split("\\s");
             String line2 = br.readLine().trim();
             String[] sval2 = line2.split("\\s");
-            boolean lociMatchNumber = false;
-            if (!sval1[0].startsWith("<") && (sval1.length == 2) && (line1.indexOf(':') < 0)) {
-                int countLoci = Integer.parseInt(sval1[1]);
-                if (countLoci == sval2.length) {
-                    lociMatchNumber = true;
-                }
-            }
             if (line1.startsWith("<") || line1.startsWith("#")) {
                 boolean isTrait = false;
                 boolean isMarker = false;
@@ -341,6 +341,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                 }
                 case Table: {
                     result = TableReportUtils.readDelimitedTableReport(inFile, "\t");
+                    break;
+                }
+                case TOPM: {
+                    result = TOPMUtils.readTOPM(inFile);
                     break;
                 }
             }
@@ -486,6 +490,7 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton projectionAlignmentRadioButton = new JRadioButton("Load Projection Alignment");
     JRadioButton geneticMapRadioButton = new JRadioButton("Load a Genetic Map");
     JRadioButton tableReportRadioButton = new JRadioButton("Load a Table Report");
+    JRadioButton topmRadioButton = new JRadioButton("Load a TOPM (Tags on Physical Map)");
 
     public FileLoadPluginDialog() {
         super((Frame) null, "File Loader", true);
@@ -529,6 +534,7 @@ class FileLoadPluginDialog extends JDialog {
         conversionButtonGroup.add(numericalRadioButton);
         conversionButtonGroup.add(geneticMapRadioButton);
         conversionButtonGroup.add(tableReportRadioButton);
+        conversionButtonGroup.add(topmRadioButton);
         conversionButtonGroup.add(guessRadioButton);
         guessRadioButton.setSelected(true);
 
@@ -593,6 +599,7 @@ class FileLoadPluginDialog extends JDialog {
         result.add(loadMatrixRadioButton);
         result.add(geneticMapRadioButton);
         result.add(tableReportRadioButton);
+        result.add(topmRadioButton);
         result.add(guessRadioButton);
 
         result.add(Box.createRigidArea(new Dimension(1, 20)));
@@ -663,6 +670,9 @@ class FileLoadPluginDialog extends JDialog {
         }
         if (tableReportRadioButton.isSelected()) {
             return FileLoadPlugin.TasselFileType.Table;
+        }
+        if (topmRadioButton.isSelected()) {
+            return FileLoadPlugin.TasselFileType.TOPM;
         }
         return FileLoadPlugin.TasselFileType.Unknown;
     }

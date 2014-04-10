@@ -7,6 +7,7 @@
 package net.maizegenetics.analysis.data;
 
 import java.awt.Frame;
+import java.net.URL;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.PluginEvent;
@@ -74,7 +75,12 @@ public class HetsToUnknownPlugin extends AbstractPlugin {
     }
 
     public ImageIcon getIcon() {
-        return null;
+        URL imageURL = UnionAlignmentPlugin.class.getResource("/net/maizegenetics/analysis/images/homozygous.gif");
+        if (imageURL == null) {
+            return null;
+        } else {
+            return new ImageIcon(imageURL);
+        }
     }
 
     public String getButtonName() {

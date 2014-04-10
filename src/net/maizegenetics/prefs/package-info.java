@@ -1,6 +1,5 @@
 /**
- * Preferences used by TASSEL.
- * //todo should this me moved to package.tassel
+ * Preferences used by TASSEL.  For example, read / write directory, filter values, etc.
  * @author Terry Casstevens
  */
 package net.maizegenetics.prefs;

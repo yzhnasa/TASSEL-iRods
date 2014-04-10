@@ -28,6 +28,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import net.maizegenetics.util.SuperByteMatrix;
+import net.maizegenetics.util.SuperByteMatrixBuilder;
 
 /**
  * Create an alignment based on HapMap format file (either .txt or compressed).  Alleles are set as global major and
@@ -114,9 +116,12 @@ public class BuilderFromHapMap {
             GenotypeCallTableBuilder gb=GenotypeCallTableBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), lines);
             for (ProcessHapMapBlock pb : pbs) {
                 posBuild.addAll(pb.getBlkPosList());
-                byte[][] bgTS=pb.getGenoTS();
-                for (int t=0; t<bgTS.length; t++) {
-                    gb.setBaseRangeForTaxon(taxaRedirect[t], currentSite, bgTS[t]);
+                SuperByteMatrix bgTS=pb.getGenoTS();
+                for (int t=0; t<bgTS.getNumRows(); t++) {
+                    int currentTaxa = taxaRedirect[t];
+                    for (int s=0; s<bgTS.getNumColumns(); s++) {
+                        gb.setBase(currentTaxa, currentSite+s, bgTS.get(t, s));
+                    }
                 }
                 currentSite+=pb.getSiteNumber();
             }
@@ -190,7 +195,7 @@ class ProcessHapMapBlock implements Runnable {
     private final int taxaN;
     private final int siteN;
     private ArrayList<String> txtL;
-    private byte[][] gTS;
+    private SuperByteMatrix gTS;
     private final ArrayList<Position> blkPosList;
  //   private final byte[] convert;
     private final boolean isOneLetter; //true e.g. A,R, false=AA,CT
@@ -218,7 +223,7 @@ class ProcessHapMapBlock implements Runnable {
     //@Override
     public void run() {
         Map<String, Chromosome> chromosomeLookup=new HashMap<>();
-        gTS=new byte[taxaN][siteN];
+        gTS = SuperByteMatrixBuilder.getInstance(taxaN, siteN);
         for (int s=0; s<siteN; s++) {
             String input=txtL.get(s);
             int[] tabPos=new int[NUM_HAPMAP_NON_TAXA_HEADERS];
@@ -255,14 +260,14 @@ class ProcessHapMapBlock implements Runnable {
             int offset=tabPos[NUM_HAPMAP_NON_TAXA_HEADERS-1]+1;
             if (isOneLetter) {
                 for (int i=offset; i<len; i+=2) {
-                    gTS[(i-offset)/2][s]=NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i));
+                    gTS.set((i-offset)/2, s, NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i)));
                 }
             } else {
                 for (int i=offset; i<len; i+=3) {
                     //System.out.println(i+":"+input.charAt(i+1)+input.charAt(i));
                     //there is a phasing conflict with the existing import approach
-                    gTS[(i-offset)/3][s]=GenotypeTableUtils.getDiploidValue(NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i+1)),
-                            NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i)));
+                    gTS.set((i-offset)/3, s, GenotypeTableUtils.getDiploidValue(NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i+1)),
+                            NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i))));
                 }
             }
         }
@@ -273,7 +278,7 @@ class ProcessHapMapBlock implements Runnable {
         return siteN;
     }
 
-    byte[][] getGenoTS() {
+    SuperByteMatrix getGenoTS() {
         return gTS;
     }
 

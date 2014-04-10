@@ -212,5 +212,34 @@ public class TagsOnGeneticMap extends AbstractTags {
         catch (Exception e) {
             e.printStackTrace();
         }
-    }  
+    }
+    
+    public void writeFastQ (String outfileS) {
+        String defaultQualityS = null;
+        for (int i = 0; i < this.getTagSizeInLong()*32; i++) {
+            defaultQualityS+="f";
+        }
+        long[] t = new long[this.getTagSizeInLong()];
+        try {
+            BufferedWriter bw = new BufferedWriter (new FileWriter(outfileS), 65536);
+            for (int i = 0; i < this.getTagCount(); i++) {
+                bw.write("@"+String.valueOf(i));
+                bw.newLine();
+                for (int j = 0; j < this.getTagSizeInLong(); j++) {
+                    t[j] = this.tags[j][i];
+                }
+                bw.write(BaseEncoder.getSequenceFromLong(t).substring(0, this.getTagLength(i)));
+                bw.newLine();
+                bw.write("+");
+                bw.newLine();
+                bw.write(defaultQualityS.substring(0, this.getTagLength(i)));
+                bw.newLine();
+            }
+            bw.flush();
+            bw.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

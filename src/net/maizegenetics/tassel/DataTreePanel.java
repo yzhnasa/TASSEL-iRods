@@ -52,15 +52,17 @@ import java.awt.event.KeyEvent;
 
 import java.io.Serializable;
 
-import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.maizegenetics.analysis.data.GenotypeSummaryPlugin;
+import net.maizegenetics.dna.map.TOPMInterface;
+import net.maizegenetics.dna.map.TOPMTableReport;
 
 import org.apache.batik.util.gui.MemoryMonitor;
 
@@ -85,14 +87,27 @@ public class DataTreePanel extends JPanel implements PluginListener {
     public static final String NODE_TYPE_VARIANCES = "Variances";
     public static final String NODE_TYPE_SYNONYMIZER = "Synonymizer";
     public static final String NODE_TYPE_STEPWISE = "Stepwise";
+    public static final String NODE_TYPE_TOPM = "TOPM";
+    public static final String NODE_TYPE_GENO_SUMMARY = "Genotype Summary";
     public static final String NODE_TYPE_DEFAULT = NODE_TYPE_DATA;
+    private static final List<String> NODE_TYPE_DATA_CHILDREN = new ArrayList<>();
+
+    static {
+        NODE_TYPE_DATA_CHILDREN.add(NODE_TYPE_SEQUENCE);
+        NODE_TYPE_DATA_CHILDREN.add(NODE_TYPE_POLYMORPHISMS);
+        NODE_TYPE_DATA_CHILDREN.add(NODE_TYPE_NUMERICAL);
+        NODE_TYPE_DATA_CHILDREN.add(NODE_TYPE_MATRIX);
+        NODE_TYPE_DATA_CHILDREN.add(NODE_TYPE_TREE);
+        NODE_TYPE_DATA_CHILDREN.add(NODE_TYPE_FUSIONS);
+        NODE_TYPE_DATA_CHILDREN.add(NODE_TYPE_TOPM);
+    }
     //Possible line styles...
     //"Angled", "Horizontal", and "None" (the default).
     private String myLineStyle = "Angled";
     private JTree myTree;
     private DefaultTreeModel myTreeModel;
     private TASSELMainFrame myTASSELMainFrame;
-    private HashMap myNodeHash = new HashMap();
+    private HashMap<String, DefaultMutableTreeNode> myNodeHash = new HashMap<>();
     private LinkedHashMap myDataSetList = new LinkedHashMap();
     private Datum myLastBookSelected;
     private DefaultMutableTreeNode myTopNode;
@@ -123,71 +138,6 @@ public class DataTreePanel extends JPanel implements PluginListener {
 
         myTree.putClientProperty("JTree.lineStyle", myLineStyle);
 
-        URL tsBitURL = DataTreePanel.class.getResource("images/tsBit.gif");
-        final ImageIcon tsBitIcon;
-        if (tsBitURL != null) {
-            tsBitIcon = new ImageIcon(tsBitURL);
-        } else {
-            tsBitIcon = null;
-        }
-
-        URL sBitURL = DataTreePanel.class.getResource("images/sBit.gif");
-        final ImageIcon sBitIcon;
-        if (sBitURL != null) {
-            sBitIcon = new ImageIcon(sBitURL);
-        } else {
-            sBitIcon = null;
-        }
-
-        URL tBitURL = DataTreePanel.class.getResource("images/tBit.gif");
-        final ImageIcon tBitIcon;
-        if (tBitURL != null) {
-            tBitIcon = new ImageIcon(tBitURL);
-        } else {
-            tBitIcon = null;
-        }
-
-        URL combineURL = DataTreePanel.class.getResource("images/combineAlign.gif");
-        final ImageIcon combineIcon;
-        if (combineURL != null) {
-            combineIcon = new ImageIcon(combineURL);
-        } else {
-            combineIcon = null;
-        }
-
-        URL filterURL = DataTreePanel.class.getResource("images/filterAlign.gif");
-        final ImageIcon filterIcon;
-        if (filterURL != null) {
-            filterIcon = new ImageIcon(filterURL);
-        } else {
-            filterIcon = null;
-        }
-
-        URL sBitCombineURL = DataTreePanel.class.getResource("images/sBitCombine.gif");
-        final ImageIcon sBitCombineIcon;
-        if (sBitCombineURL != null) {
-            sBitCombineIcon = new ImageIcon(sBitCombineURL);
-        } else {
-            sBitCombineIcon = null;
-        }
-
-        URL sBitFilterURL = DataTreePanel.class.getResource("images/sBitFilter.gif");
-        final ImageIcon sBitFilterIcon;
-        if (sBitFilterURL != null) {
-            sBitFilterIcon = new ImageIcon(sBitFilterURL);
-        } else {
-            sBitFilterIcon = null;
-        }
-
-        URL tBitFilterURL = DataTreePanel.class.getResource("images/tBitFilter.gif");
-        final ImageIcon tBitFilterIcon;
-        if (tBitFilterURL != null) {
-            tBitFilterIcon = new ImageIcon(tBitFilterURL);
-        } else {
-            tBitFilterIcon = null;
-        }
-
-
         myTree.setCellRenderer(new DefaultTreeCellRenderer() {
             public Component getTreeCellRendererComponent(JTree pTree,
                     Object pValue, boolean pIsSelected, boolean pIsExpanded,
@@ -201,14 +151,9 @@ public class DataTreePanel extends JPanel implements PluginListener {
                     result.setForeground(((GenotypeTableMask) nodeInfo.getData()).getColor());
                 }
 
-                if (data instanceof GenotypeTable) {
-                    GenotypeTable align = (GenotypeTable) data;
-                    setIcon(sBitIcon);
-                }
                 return result;
             }
         });
-
 
         try {
             jbInit();
@@ -353,6 +298,11 @@ public class DataTreePanel extends JPanel implements PluginListener {
                         builder.append(tr.getElementCount());
                         builder.append("\n");
                     }
+                    if (book.getData() instanceof TOPMInterface) {
+                        TOPMInterface topm = (TOPMInterface) book.getData();
+                        builder.append("Number of Tags: ");
+                        builder.append(topm.getSize());
+                    }
                     if (book.getData() instanceof GenotypeTableMask) {
                         GenotypeTableMask mask = (GenotypeTableMask) book.getData();
                     }
@@ -377,11 +327,22 @@ public class DataTreePanel extends JPanel implements PluginListener {
                                 myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
                             } else {
                                 TableReportPanel theATP;
-                                if (book.getData() instanceof Phenotype) {
-                                    theATP = new TableReportPanel((Phenotype) book.getData());
-                                } else {
-                                    theATP = new TableReportPanel((TableReport) book.getData());
-                                }
+                                theATP = new TableReportPanel((TableReport) book.getData());
+                                myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
+                            }
+                        } else if (book.getData() instanceof TOPMInterface) {
+                            //This method issues that giant files are not opened as JTables
+                            //In the future it may be good to add a getSize method to TableReport
+                            int size = ((TOPMInterface) book.getData()).getTagCount();
+                            myLogger.info("initSelectionListener: TOPM Tag Count: " + size);
+                            if (size == 0) {
+                                JPanel blankPanel = new JPanel();
+                                blankPanel.setLayout(new BorderLayout());
+                                blankPanel.add(new JLabel("     Nothing to Display"), BorderLayout.CENTER);
+                                myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
+                            } else {
+                                TableReportPanel theATP;
+                                theATP = new TableReportPanel(new TOPMTableReport((TOPMInterface) book.getData()));
                                 myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
                             }
                         } else if (book.getData() instanceof GenotypeTable) {
@@ -459,55 +420,44 @@ public class DataTreePanel extends JPanel implements PluginListener {
     }
 
     private void createNodes() {
-        DefaultMutableTreeNode book = null;
-
         myDataNode = new DefaultMutableTreeNode(new Datum(NODE_TYPE_DATA, "Node on data tree", "Holds the basic data structures"));
         myTopNode.add(myDataNode);
         myNodeHash.put(NODE_TYPE_DATA, myDataNode);
         myResultNode = new DefaultMutableTreeNode(new Datum(NODE_TYPE_RESULT, "Node on data tree", "Holds the basic result structures"));
         myTopNode.add(myResultNode);
         myNodeHash.put(NODE_TYPE_RESULT, myResultNode);
-        DefaultMutableTreeNode geneNode = new DefaultMutableTreeNode(new Datum(NODE_TYPE_SEQUENCE, "Node on data tree", "Please load some genes"));
-        myDataNode.add(geneNode);
-        myNodeHash.put(NODE_TYPE_SEQUENCE, geneNode);
-        DefaultMutableTreeNode polymorphismNode = new DefaultMutableTreeNode(new Datum(NODE_TYPE_POLYMORPHISMS, "Node on data tree", "Please load some polymorphisms"));
-        myDataNode.add(polymorphismNode);
-        myNodeHash.put(NODE_TYPE_POLYMORPHISMS, polymorphismNode);
-        DefaultMutableTreeNode phenotypeNode = new DefaultMutableTreeNode(new Datum(NODE_TYPE_NUMERICAL, "Node on data tree", "Please load some phenotypes"));
-        myDataNode.add(phenotypeNode);
-        myNodeHash.put(NODE_TYPE_NUMERICAL, phenotypeNode);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_MATRIX, "Node on data tree", "Kinship matrix"));
-        myDataNode.add(book);
-        myNodeHash.put(NODE_TYPE_MATRIX, book);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_TREE, "Node on data tree", "Cladograms and Trees"));
-        myDataNode.add(book);
-        myNodeHash.put(NODE_TYPE_TREE, book);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_FUSIONS, "Node on data tree", "Fusions between genes and datatypes"));
-        myDataNode.add(book);
-        myNodeHash.put(NODE_TYPE_FUSIONS, book);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_SYNONYMIZER, "Node on data tree", "Taxa Synonyms"));
-        myDataNode.add(book);
-        myNodeHash.put(NODE_TYPE_SYNONYMIZER, book);
+    }
 
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_DIVERSITY, "Node on data tree", "Diversity"));
-        myResultNode.add(book);
-        myNodeHash.put(NODE_TYPE_DIVERSITY, book);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_SNP_ASSAYS, "Node on data tree", "SNP Extracted Data"));
-        myResultNode.add(book);
-        myNodeHash.put(NODE_TYPE_SNP_ASSAYS, book);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_LD, "Node on data tree", "Linkage Disequilibrium"));
-        myResultNode.add(book);
-        myNodeHash.put(NODE_TYPE_LD, book);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_ASSOCIATIONS, "Node on data tree", "Phenotypic Associations"));
-        myResultNode.add(book);
-        myNodeHash.put(NODE_TYPE_ASSOCIATIONS, book);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_VARIANCES, "Node on data tree", "Additive genetic and residual variance"));
-        myResultNode.add(book);
-        myNodeHash.put(NODE_TYPE_VARIANCES, book);
-        book = new DefaultMutableTreeNode(new Datum(NODE_TYPE_STEPWISE, "Node on data tree", "Stepwise Regression"));
-        myResultNode.add(book);
-        myNodeHash.put(NODE_TYPE_STEPWISE, book);
+    private synchronized DefaultMutableTreeNode getTreeNode(String nodeString) {
+        DefaultMutableTreeNode result = myNodeHash.get(nodeString);
+        if (result == null) {
+            if (NODE_TYPE_DATA_CHILDREN.contains(nodeString)) {
+                result = new DefaultMutableTreeNode(new Datum(nodeString, nodeString, nodeString));
+                int childIndex = getInsertLocation(myDataNode, nodeString);
+                myTreeModel.insertNodeInto(result, myDataNode, childIndex);
+                myNodeHash.put(nodeString, result);
+            } else {
+                result = new DefaultMutableTreeNode(new Datum(nodeString, nodeString, nodeString));
+                int childIndex = getInsertLocation(myResultNode, nodeString);
+                myTreeModel.insertNodeInto(result, myResultNode, childIndex);
+                myNodeHash.put(nodeString, result);
+            }
+        }
+        return result;
+    }
 
+    private int getInsertLocation(DefaultMutableTreeNode node, String newNode) {
+        Enumeration<DefaultMutableTreeNode> children = node.children();
+        int result = 0;
+        while (children.hasMoreElements()) {
+            DefaultMutableTreeNode currentNode = children.nextElement();
+            Datum current = (Datum) currentNode.getUserObject();
+            if (current.getName().compareTo(newNode) > 0) {
+                break;
+            }
+            result++;
+        }
+        return result;
     }
 
     private void jbInit() throws Exception {
@@ -539,80 +489,67 @@ public class DataTreePanel extends JPanel implements PluginListener {
                     || (theCreator instanceof FixedEffectLMPlugin)) {
                 addDatum(NODE_TYPE_ASSOCIATIONS, d);
                 continue;
-
             }
-
+            
+            if (theCreator instanceof GenotypeSummaryPlugin) {
+                addDatum(NODE_TYPE_GENO_SUMMARY, d);
+                continue;
+            }
 
             if (theCreator instanceof SequenceDiversityPlugin) {
                 addDatum(NODE_TYPE_DIVERSITY, d);
                 continue;
-
             }
-
 
             if (theCreator instanceof LinkageDisequilibriumPlugin) {
                 addDatum(NODE_TYPE_LD, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof GenotypeTable) {
                 addDatum(NODE_TYPE_SEQUENCE, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof GenotypeTableMask) {
                 addDatum(d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof IdentifierSynonymizer) {
                 addDatum(NODE_TYPE_SYNONYMIZER, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof Phenotype) {
                 addDatum(NODE_TYPE_NUMERICAL, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof DistanceMatrix) {
                 addDatum(NODE_TYPE_MATRIX, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof TableReport) {
                 addDatum(NODE_TYPE_NUMERICAL, d);
                 continue;
-
             }
-
 
             if (d.getData() instanceof Tree) {
                 addDatum(NODE_TYPE_TREE, d);
                 continue;
-
             }
 
+            if (d.getData() instanceof TOPMInterface) {
+                addDatum(NODE_TYPE_TOPM, d);
+                continue;
+            }
 
             if (defaultNode == null) {
                 addDatum(NODE_TYPE_DEFAULT, d);
                 continue;
-
             }
-
-
 
             addDatum(defaultNode, d);
         }
@@ -633,7 +570,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
             return;
         }
 
-        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) myNodeHash.get(dataParent);
+        DefaultMutableTreeNode parentNode = getTreeNode(dataParent);
         DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(theDatum);
         myNodeHash.put(theDatum.getName(), childNode);
         myTreeModel.insertNodeInto(childNode, parentNode, parentNode.getChildCount());
@@ -777,7 +714,6 @@ public class DataTreePanel extends JPanel implements PluginListener {
                 // do nothing
             }
         }
-
 
     }
 

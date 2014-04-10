@@ -12,8 +12,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
 import static net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE.Major;
 import static net.maizegenetics.dna.snp.GenotypeTable.WHICH_ALLELE.Minor;
+import static net.maizegenetics.dna.snp.GenotypeTableUtils.isHeterozygous;
 
 /**
  * Basic utility functions to support imputation by blocks.
@@ -269,6 +271,51 @@ public class FILLINImputationUtils {
         return result;
     }
 
+    /**
+     * Given a start 64 site block, it expands to the left and right until it hits
+     * the minimum Minor Site count or MajorSiteCount in the target taxon
+     * @param mnT - minor allele bit presence in a series of longs
+     * @param focusBlock  index of the focus block
+     * @param minMinorCnt minimum count to stop expanding for minor allele sites
+     * @param minMajorCnt minimum count to stop expanding for major allele sites
+     * @return arrays of blocks {startBlock, focusBlock, endBlock}
+     */
+    public static int[] getBlockWithMinMinorCount(long[] mjT, long[] mnT, int focusBlock, int minMinorCnt,
+                                            int minMajorCnt) {
+        int blocks=mjT.length;
+        int majorCnt=Long.bitCount(mjT[focusBlock]);
+        int minorCnt=Long.bitCount(mnT[focusBlock]);
+        int endBlock=focusBlock, startBlock=focusBlock;
+        while((minorCnt<minMinorCnt)&&(majorCnt<minMajorCnt)) {
+            boolean preferMoveStart=(focusBlock-startBlock<endBlock-focusBlock)?true:false;
+            if(startBlock==0) {preferMoveStart=false;}
+            if(endBlock==blocks-1) {preferMoveStart=true;}
+            if((startBlock==0)&&(endBlock==blocks-1)) break;
+            if(preferMoveStart) {//expand start
+                startBlock--;
+                minorCnt+=Long.bitCount(mnT[startBlock]);
+                majorCnt+=Long.bitCount(mjT[startBlock]);
+            } else { //expand end
+                endBlock++;
+                minorCnt+=Long.bitCount(mnT[endBlock]);
+                majorCnt+=Long.bitCount(mjT[startBlock]);
+            }
+        }
+        int[] result={startBlock, focusBlock, endBlock};
+        return result;
+    }
+
+    /**
+     * Determines the number of sites in which the target (T) sequence cannot be explained by the genotypes of
+     * either donor (1 & 2).  Only sites where the genotype for all taxa can be tested.
+     * @param mjT major allele bits of target
+     * @param mnT minor allele bits of target
+     * @param mj1 major allele bits of donor 1
+     * @param mn1 minor allele bits of donor 1
+     * @param mj2 major allele bits of donor 2
+     * @param mn2 minor allele bits of donor 2
+     * @return array with [count of mendelian errors, total sites tested]
+     */
     public static int[] mendelErrorComparison(long[] mjT, long[] mnT, long[] mj1, long[] mn1,
                                         long[] mj2, long[] mn2) {
         int mjUnmatched=0;
@@ -281,7 +328,20 @@ public class FILLINImputationUtils {
             testSites+=Long.bitCount(siteMask);
         }
         int totalMendelianErrors=mjUnmatched+mnUnmatched;
-        // double testPropUnmatched=(double)(totalMendelianErrors)/(double)testSites;
         return (new int[] {totalMendelianErrors, testSites});
+    }
+
+    /**
+     * Sums the number of unknown and heterozgyous sites in a byte genotype
+     * @param a a byte genotype
+     * @return sum of unknown and heterozgyous sites
+     */
+    public static int[] countUnknownAndHeterozygotes(byte[] a) {
+        int cnt=0, cntHets=0;
+        for (int i = 0; i < a.length; i++) {
+            if(a[i]==UNKNOWN_DIPLOID_ALLELE) {cnt++;}
+            else if(isHeterozygous(a[i])) {cntHets++;}
+        }
+        return new int[]{cnt,cntHets};
     }
 }

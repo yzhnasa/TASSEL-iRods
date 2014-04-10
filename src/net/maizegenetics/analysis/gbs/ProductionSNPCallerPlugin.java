@@ -26,23 +26,31 @@ import java.io.*;
 import java.util.*;
 import net.maizegenetics.dna.snp.depth.AlleleDepthUtil;
 import net.maizegenetics.dna.snp.genotypecall.BasicGenotypeMergeRule;
+import net.maizegenetics.taxa.Taxon;
 
 /**
  * This plugin converts all of the fastq (and/or qseq) files in the input
  * folder and keyfile to genotypes and adds these to a genotype file in HDF5 format.
+ * 
  * We refer to this step as the "Production Pipeline".
  * 
  * The output format is HDF5 genotypes with allelic depth stored. SNP calling 
  * is quantitative with the option of using either the Glaubitz/Buckler binomial
- * method (pHet/pErr > 1 = het) (=default), or the VCF/Stacks method.
+ * method (pHet/pErr > 1 = het) (=default), or the Stacks method.
  * 
  * Merging of samples with the same LibraryPrepID is handled by GenotypeTableBuilder.addTaxon(),
- * with the genotypes re-called based upon the new depths.  Therefore the input 
- * and output GenotypeTableBuilder must be mutable, using closeUnfinished() rather
- * than build()
+ * with the genotypes re-called based upon the new depths.  Therefore, if you want
+ * to keep adding genotypes to the same target HDF5 file in subsequent runs, use 
+ * the -ko (keep open) option so that the output GenotypeTableBuilder will be mutable,
+ * using closeUnfinished() rather than build().
  * 
- * It requires a TOPM with variants added from a previous "Discovery Pipeline"
- * run.  In binary topm or HDF5 format (TOPMInterface).
+ * If the target output HDF5 GenotypeTable file doesn't exist, it will be created.
+ * 
+ * Each taxon in the HDF5 file is named "ShortName:LibraryPrepID" and is annotated 
+ * with "Flowcell_Lanes" (=source seq data for current genotype).
+ * 
+ * Requires a TOPM with variants added from a previous "Discovery Pipeline" run.
+ * In binary topm or HDF5 format (TOPMInterface).
  * 
  * TODO add the Stacks likelihood method to BasicGenotypeMergeRule
  *
@@ -63,11 +71,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private int[] chromosomes = null;
     private boolean fastq = true;
     private Map<String,Integer> keyFileColumns = new HashMap<>();
-    private Map<String,Boolean> flowcellLanesInKey = new TreeMap<>();  // flowcellLanes present in key file (stored here as "Flowcell:Lane"); True if corresponding fastq (or qseq) available in input directory
-    private Map<String,String> seqFileNameToFlowcellLane = new HashMap<>(); // map from name of fastq or qseq file to "Flowcell:Lane"
-    private Set<String> flowcellLanesInKeyAndDir = new TreeSet<>();  // fastq (or qseq) file names present in input directory that have a "Flowcell:Lane" in the key file
+    private Set<String> flowcellLanesInKey = new TreeSet<>();  // flowcellLanes present in key file (stored here as "Flowcell_Lane")
+    private Map<String,String> seqFileNameToFlowcellLane = new HashMap<>(); // map from name of fastq or qseq file to "Flowcell_Lane"
+    private Set<String> seqFilesInKeyAndDir = new TreeSet<>(); // fastq (or qseq) file names present in input directory that have a "Flowcell_Lane" in the key file
     private Map<String,String> fullNameToHDF5Name = new TreeMap<>();
-    private Multimap<String, String> libraryPrepIDToFlowCellLanes = TreeMultimap.create();
+    private Multimap<String, String> flowCellLaneToLibPrepIDs = TreeMultimap.create();
     private Map<String,String> libraryPrepIDToSampleName = new TreeMap<String,String>();
 
     private GenotypeTableBuilder genos = null; //output genotype table
@@ -75,7 +83,6 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private PositionList myPositionList=null;
     private IntArrayList[] obsTagsForEachTaxon=null;
     private Table<Integer,Integer,Integer> positionToSite = null;  // indices = chrIndices.  For a given position (key), each HashMap provides the site in the MutableNucleotideDepthAlignment (value)
-    private int totalNSites = 0;
 
     //Documentation of read depth per sample (one recored per replicate)
     private Map<String,Integer> rawReadCountsForFullSampleName = new TreeMap<>();
@@ -103,9 +110,10 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             + "  -m   Physical map file containing tags and corresponding variants (production TOPM)\n"
             + "  -o   Output (target) HDF5 genotypes file to add new genotypes to (new file created if it doesn't exist)\n"
             + "  -eR  Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
-            + "  -ko  Keep hdf5 genotypes open for future runs that add more taxa or more depth\n (default: finalize hdf5 file)"
-//            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)\n\n\n"
+            + "  -ko  Keep hdf5 genotypes open for future runs that add more taxa or more depth\n (default: finalize hdf5 file)\n"
+//            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)\n"
 //            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
+            +"\n\n"
         );
     }
 
@@ -205,7 +213,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         generateFastSiteLookup(myPositionList);
         int nFilesProcessed = 0;
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
-            if ( !flowcellLanesInKeyAndDir.contains(myRawSeqFileNames[fileNum]) ) continue;  // skip fastq/qseq files that are not in the key file
+            if ( !seqFilesInKeyAndDir.contains(myRawSeqFileNames[fileNum]) ) continue;  // skip fastq/qseq files that are not in the key file
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
             System.out.println("\nLooking for known SNPs in sequence reads from file:");
             System.out.println("  "+myRawSeqFileNames[fileNum]+"\n");
@@ -276,14 +284,15 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         System.out.println("Total number of reads in lane=" + counters[0]);
         System.out.println("Total number of good, barcoded reads=" + counters[1]);
         System.out.println("Total number of good, barcoded reads matched to the TOPM=" + counters[2]);
-        System.out.println("Finished reading "+nFilesProcessed+" of "+flowcellLanesInKeyAndDir.size()+" sequence files: "+myRawSeqFileNames[fileNum]+"\n");
+        System.out.println("Finished reading "+nFilesProcessed+" of "+seqFilesInKeyAndDir.size()+" sequence files: "+myRawSeqFileNames[fileNum]+"\n");
     }
     
     private void readKeyFile() {
         flowcellLanesInKey.clear();
-        flowcellLanesInKeyAndDir.clear();
+        seqFileNameToFlowcellLane.clear();
+        seqFilesInKeyAndDir.clear();
         fullNameToHDF5Name.clear();
-        libraryPrepIDToFlowCellLanes.clear();
+        flowCellLaneToLibPrepIDs.clear();
         libraryPrepIDToSampleName.clear();
         String inputLine = "Nothing has been read from the keyfile yet";
         try {
@@ -376,9 +385,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         matchedReadCountsForFullSampleName.put(fullName, 0);
         fullNameToHDF5Name.put(fullName, sample+":"+libPrepID);
 
-        String flowCellLane = cells[keyFileColumns.get("Flowcell")]+":"+cells[keyFileColumns.get("Lane")];
-        flowcellLanesInKey.put(flowCellLane,false);  // false = no corresponding fastq or qseq file (default)
-        libraryPrepIDToFlowCellLanes.put(libPrepID,flowCellLane);
+        String flowCell_Lane = cells[keyFileColumns.get("Flowcell")]+"_"+cells[keyFileColumns.get("Lane")];
+        flowcellLanesInKey.add(flowCell_Lane);
+        flowCellLaneToLibPrepIDs.put(flowCell_Lane, libPrepID);
 
         String prevSample = libraryPrepIDToSampleName.get(libPrepID);
         if (prevSample == null) {
@@ -398,10 +407,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         System.out.println("\nThe following raw sequence files in the input directory conform to one of our file naming conventions and have corresponding samples in the barcode key file:");
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             String[] flowcellLane = parseRawSeqFileName(myRawSeqFileNames[fileNum]);
-            if (flowcellLane != null && flowcellLanesInKey.containsKey(flowcellLane[0]+":"+flowcellLane[1])) {
-                flowcellLanesInKey.put(flowcellLane[0]+":"+flowcellLane[1], true);  // true = fastq (or qseq) file is available for this flowcell:lane
-                seqFileNameToFlowcellLane.put(myRawSeqFileNames[fileNum],flowcellLane[0]+":"+flowcellLane[1]);
-                flowcellLanesInKeyAndDir.add(myRawSeqFileNames[fileNum]);
+            if (flowcellLane != null && flowcellLanesInKey.contains(flowcellLane[0]+"_"+flowcellLane[1])) {
+                seqFileNameToFlowcellLane.put(myRawSeqFileNames[fileNum],flowcellLane[0]+"_"+flowcellLane[1]);
+                seqFilesInKeyAndDir.add(myRawSeqFileNames[fileNum]);
                 System.out.println("  "+myRawSeqFileNames[fileNum]);
             }
         }
@@ -463,32 +471,23 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             System.out.println("  "+myRawSeqFileNames[fileNum]+"\n");
             genos = GenotypeTableBuilder.getTaxaIncremental(myPositionList, myTargetHDF5file);
         }
-        taxaList= new TaxaListBuilder().addAll(getHDF5TaxaNames(fileNum)).sortTaxaAlphabetically().build();
+        taxaList= new TaxaListBuilder().addAll(getHDF5Taxa(fileNum)).sortTaxaAlphabetically().build();
     }
 
     /**
-     * Gets the list of desired HDF5 taxa names ("Sample:LibraryPrepID") for the LibraryPrepIDs in the
-     * key file for the corresponding fastq file. 
-     * @return String[]
+     * Gets the list of taxa (each named "Sample:LibraryPrepID" and annotated with Flowcell_Lane)
+     * for the LibraryPrepIDs in the key file for the corresponding fastq file. 
+     * @return ArrayList<Taxon>
      */
-    private String[] getHDF5TaxaNames(int fileNum) {
+    private ArrayList<Taxon> getHDF5Taxa(int fileNum) {
+        ArrayList<Taxon> taxaAL = new ArrayList();
         String currFlowcellLane = seqFileNameToFlowcellLane.get(myRawSeqFileNames[fileNum]);
-        TreeSet<String> hdf5TaxaNamesTS = new TreeSet<String>(); // this will keep the names sorted
-        for (String LibPrepID : libraryPrepIDToSampleName.keySet()) {
-            Collection<String> flowcellLanesForLibPrep = libraryPrepIDToFlowCellLanes.get(LibPrepID);
-            for (String flowcellLane : flowcellLanesForLibPrep) {
-                if (flowcellLane.equals(currFlowcellLane)) { // libraryPrepID was run on the current flowcellLane
-                    String hdf5Name = libraryPrepIDToSampleName.get(LibPrepID)+":"+LibPrepID;
-//                    hdf5Name = hdf5Name.replaceAll(":", " "); // for sorting of taxa based on the short name (" " sorts before any acceptable chars) (matches HDF5 sorting)
-                    hdf5TaxaNamesTS.add(hdf5Name);
-                }
-            }
+        for (String libPrepID : flowCellLaneToLibPrepIDs.get(currFlowcellLane)) {
+            String hdf5Name = libraryPrepIDToSampleName.get(libPrepID)+":"+libPrepID;
+            Taxon gbsTaxon = new Taxon.Builder(hdf5Name).addAnno("Flowcell_Lane", currFlowcellLane).build();
+            taxaAL.add(gbsTaxon);
         }
-        String[] hdf5TaxaNames = hdf5TaxaNamesTS.toArray(new String[0]);
-//        for (int i = 0; i < finalNames.length; i++) {
-//            finalNames[i] = finalNames[i].replaceAll(" ", ":");
-//        }
-        return hdf5TaxaNames;
+        return taxaAL;
     }
 
     private PositionList getUniquePositions() {
@@ -504,8 +503,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             }
         }
         PositionList pl=plb.sortPositions().build();
-        totalNSites = pl.numberOfSites();
-        System.out.println("In total, the TOPM contains "+chromosomes.length+" chromosomes and "+totalNSites+" sites.");
+        System.out.println("In total, the TOPM contains "+chromosomes.length+" chromosomes and "+pl.numberOfSites()+" sites.");
         return pl;
     }
     

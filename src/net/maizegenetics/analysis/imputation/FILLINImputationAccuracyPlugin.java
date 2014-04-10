@@ -49,6 +49,7 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
     
     public void initiateAccuracy(String unimpFile, String maskKeyFile, double[] mafClass, double propSitesMask) {
         GenotypeTable unimp= ImportUtils.readGuessFormat(unimpFile);
+        System.out.println(unimpFile+" read in with "+unimp.numberOfSites()+" sites and "+unimp.numberOfTaxa()+" taxa");
 //        if (mafClass!=null) {//if mafClass not null, assign MAF categories to sites in unimputed
 //            generateMAF(donors, unimp, mafClass);
 //            mafAll= new double[mafClass.length][3][5];
@@ -65,6 +66,7 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
                 FILLINImputationPlugin.unimpAlign= maskPropSites(unimp,propSitesMask);
             }
         }
+        
         //else if (unimp.depth()!=null) FILLINImputationPlugin.unimpAlign= maskFileByDepth(unimp,7, 7);
         else FILLINImputationPlugin.unimpAlign= maskPropSites(unimp,propSitesMask);
     }
@@ -135,7 +137,7 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
     
     //filters for site position and chromosome. returns null if mask has fewer chromosomes or positions in chromosomes than unimp
     private GenotypeTable filterKey(GenotypeTable maskKey, GenotypeTable unimp) {
-        if (verboseOutput) System.out.println("Filtering user input key file...\nSites in original Key file: "+maskKey.numberOfSites());
+        if (verboseOutput) System.out.println("Filtering user input key file...\nsites in original Key file: "+maskKey.numberOfSites());
         String[] unimpNames= new String[unimp.numberOfSites()];
         for (int site = 0; site < unimp.numberOfSites(); site++) {unimpNames[site]= unimp.siteName(site);}
         int[] unimpPos;
@@ -145,8 +147,8 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
         if (maskKey==null) return null;
         for (Chromosome chr:unimp.chromosomes()) {
             int[] startEndUnimp= unimp.firstLastSiteOfChromosome(chr); int[] startEndKey= maskKey.firstLastSiteOfChromosome(chr);
-            unimpPos= Arrays.copyOfRange(unimp.physicalPositions(), startEndUnimp[0], startEndUnimp[1]);
-            keyPos= Arrays.copyOfRange(maskKey.physicalPositions(), startEndKey[0], startEndKey[1]);
+            unimpPos= Arrays.copyOfRange(unimp.physicalPositions(), startEndUnimp[0], startEndUnimp[1]+1);
+            keyPos= Arrays.copyOfRange(maskKey.physicalPositions(), startEndKey[0], startEndKey[1]+1);
             for (int posOnChr = 0; posOnChr < unimpPos.length; posOnChr++) {//if input hapmap sites not in key, return null
                 if (Arrays.binarySearch(keyPos, unimpPos[posOnChr])<0) return null;
             }

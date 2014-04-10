@@ -559,6 +559,7 @@ public class AnnotateTOPM {
                 int endPos = Integer.MIN_VALUE;
                 short mappingScore = Short.MIN_VALUE;
                 byte divergence = Byte.MIN_VALUE;
+                byte perfectMatch = Byte.MIN_VALUE;
                 String seqS = temp[9];
                 if (orientiation == 4) {
                     
@@ -577,6 +578,8 @@ public class AnnotateTOPM {
                     else {
                         divergence = Byte.parseByte(temp[16].split(":")[2]);
                     }
+                    if (temp[5].equals(String.valueOf(seqS.length())+"M") && divergence == 0) perfectMatch = 1;
+                    else perfectMatch = 0;
                 }
                 else {
                     chr = Integer.parseInt(temp[2]);
@@ -591,8 +594,10 @@ public class AnnotateTOPM {
                     else {
                         divergence = Byte.parseByte(temp[16].split(":")[2]);
                     }
+                    if (temp[5].equals(String.valueOf(seqS.length())+"M") && divergence == 0) perfectMatch = 1;
+                    else perfectMatch = 0;
                 }
-                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
+                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
                 long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*32);
                 int tagIndex = topm.getTagIndex(seq);
                 if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[1]) {
@@ -657,6 +662,7 @@ public class AnnotateTOPM {
                 int endPos = Integer.MIN_VALUE;
                 short mappingScore = Short.MIN_VALUE;
                 byte divergence = Byte.MIN_VALUE;
+                byte perfectMatch = Byte.MIN_VALUE;
                 String seqS = temp[9];
                 String XAString = null;
                 if (temp[temp.length-1].startsWith("XA")) {
@@ -673,6 +679,8 @@ public class AnnotateTOPM {
                     startPos = alignSpan[1];
                     endPos = alignSpan[0];
                     divergence = Byte.parseByte(temp[12].split(":")[2]);
+                    if (temp[5].equals(String.valueOf(seqS.length())+"M") && divergence == 0) perfectMatch = 1;
+                    else perfectMatch = 0;
                 }
                 else {
                     chr = Integer.parseInt(temp[2]);
@@ -681,8 +689,10 @@ public class AnnotateTOPM {
                     startPos = alignSpan[0];
                     endPos = alignSpan[1];
                     divergence = Byte.parseByte(temp[12].split(":")[2]);
+                    if (temp[5].equals(String.valueOf(seqS.length())+"M") && divergence == 0) perfectMatch = 1;
+                    else perfectMatch = 0;
                 }
-                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
+                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
                 long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*32);
                 int tagIndex = topm.getTagIndex(seq);
                 if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[1]) {
@@ -719,7 +729,9 @@ public class AnnotateTOPM {
                             endPos = alignSpan[1];
                         }
                         divergence = Byte.parseByte(tem[3]);
-                        theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
+                        if (tem[2].equals(String.valueOf(seqS.length())+"M") && divergence == 0) perfectMatch = 1;
+                        else perfectMatch = 0;
+                        theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
                         tmiBuffers[bufferIndex][mappingDatasetIndex][bufferTagIndex] = theTMI;
                     }
                 }
@@ -765,6 +777,7 @@ public class AnnotateTOPM {
             int mapCnt = 0;
             int tagIndex = 0;
             int chunkCnt = 0;
+            int seqLength = Integer.MIN_VALUE;
             while(inputStr!=null) {
                 String[] temp =inputStr.split("\\s");
                 int orientiation=Integer.parseInt(temp[1]);
@@ -774,12 +787,14 @@ public class AnnotateTOPM {
                 int endPos = Integer.MIN_VALUE;
                 short mappingScore = Short.MIN_VALUE;
                 byte divergence = Byte.MIN_VALUE;
+                byte perfectMatch = Byte.MIN_VALUE;
                 String seqS = temp[9];
                 if (seqS.equals("*")) {
                     mapCnt++;
                 }
                 else {
                     mapCnt = 1;
+                    seqLength = seqS.length();
                 }
                 if (mapCnt > maxMappingNum) {
                     inputStr=br.readLine();
@@ -796,6 +811,8 @@ public class AnnotateTOPM {
                     startPos = alignSpan[1];
                     endPos = alignSpan[0];
                     divergence = Byte.parseByte(temp[11].split(":")[2]);
+                    if (temp[5].equals(String.valueOf(seqLength)+"M") && divergence == 0) perfectMatch = 1;
+                    else perfectMatch = 0;
                     mappingScore = Byte.parseByte(temp[12].split(":")[2]);
                 }
                 else if (orientiation == 0 || orientiation == 256) {
@@ -805,6 +822,8 @@ public class AnnotateTOPM {
                     startPos = alignSpan[0];
                     endPos = alignSpan[1];
                     divergence = Byte.parseByte(temp[11].split(":")[2]);
+                    if (temp[5].equals(String.valueOf(seqLength)+"M") && divergence == 0) perfectMatch = 1;
+                    perfectMatch = 0;
                     mappingScore = Byte.parseByte(temp[12].split(":")[2]);
                 }
                 else {
@@ -815,7 +834,7 @@ public class AnnotateTOPM {
                     inputStr=br.readLine();
                     continue;
                 }
-                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
+                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
                 if (!seqS.equals("*")) {
                     long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*32);
                     tagIndex = topm.getTagIndex(seq);
@@ -895,7 +914,9 @@ public class AnnotateTOPM {
                         strand = -1;
                     }
                     short mappingScore = Short.parseShort(temp[11].replaceAll("\\..+", ""));
-                    byte divergence = Byte.MIN_VALUE;
+                    byte divergence = Byte.valueOf(temp[4]);
+                    byte perfectMatch = 0;
+                    if (temp[2].startsWith("100")) perfectMatch = 1;
                     int tagIndex = Integer.parseInt(temp[0]);
                     if (tagIndex >= this.bufferStartTagIndex[1]) {
                         int n = (tagIndex - bufferStartTagIndex[1]) /topm.getChunkSize()+1;
@@ -909,7 +930,7 @@ public class AnnotateTOPM {
                     int bufferTagIndex = tagIndex % topm.getChunkSize();
                     int mappingDatasetIndex = this.getMappingDatasetIndex(bufferIndex, bufferTagIndex);
                     if (mappingDatasetIndex == Integer.MIN_VALUE) continue;
-                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
+                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
                     tmiBuffers[bufferIndex][mappingDatasetIndex][bufferTagIndex] = theTMI;
                 }
                 br.close();
@@ -957,7 +978,9 @@ public class AnnotateTOPM {
                     strand = -1;
                 }
                 short mappingScore = Short.parseShort(temp[11].replaceAll("\\..+", ""));
-                byte divergence = Byte.MIN_VALUE;
+                byte divergence = Byte.valueOf(temp[4]);
+                byte perfectMatch = 0;
+                if (temp[2].startsWith("100")) perfectMatch = 1;
                 int tagIndex = Integer.parseInt(temp[0]);
                 if (tagIndex >= this.bufferStartTagIndex[1]) {
                     int n = (tagIndex - bufferStartTagIndex[1]) /topm.getChunkSize()+1;
@@ -971,7 +994,7 @@ public class AnnotateTOPM {
                 int bufferTagIndex = tagIndex % topm.getChunkSize();
                 int mappingDatasetIndex = this.getMappingDatasetIndex(bufferIndex, bufferTagIndex);
                 if (mappingDatasetIndex == Integer.MIN_VALUE) continue;
-                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, mappingSource, mappingScore);
+                TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
                 System.out.println(++chunkCnt + " chunks are annotated. " + topm.getChunkNum() + " chunks in total");
                 tmiBuffers[bufferIndex][mappingDatasetIndex][bufferTagIndex] = theTMI;
             }
@@ -1017,7 +1040,7 @@ public class AnnotateTOPM {
                     int startPos = ptopm.getStartPos(index, k);
                     short mappingScore = ptopm.getScore(index, k);
                     byte divergence = ptopm.getDivergence(index, k);
-                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, forwardMappingSource, mappingScore);
+                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, Byte.MIN_VALUE, forwardMappingSource, mappingScore);
                     forwardBuffer[k][j-startIndex] = theTMI;
                 }
                 max = ptopm.getMappingNum(ptopm.getPairIndex(index));
@@ -1028,7 +1051,7 @@ public class AnnotateTOPM {
                     int startPos = ptopm.getStartPos(ptopm.getPairIndex(index), k);
                     short mappingScore = ptopm.getScore(ptopm.getPairIndex(index), k);
                     byte divergence = ptopm.getDivergence(ptopm.getPairIndex(index), k);
-                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, backMappingSource, mappingScore);
+                    TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, Integer.MIN_VALUE, divergence, Byte.MIN_VALUE, backMappingSource, mappingScore);
                     backBuffer[k][j-startIndex] = theTMI;
                 } 
             }
