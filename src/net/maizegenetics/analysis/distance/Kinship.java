@@ -1,10 +1,15 @@
 package net.maizegenetics.analysis.distance;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableUtils;
+import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrix;
+import net.maizegenetics.matrixalgebra.Matrix.DoubleMatrixFactory;
 import net.maizegenetics.taxa.distance.DistanceMatrix;
 import net.maizegenetics.trait.SimplePhenotype;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -26,7 +31,10 @@ public class Kinship extends DistanceMatrix {
     private double kSD = 0;
     private double cutOff = 2;
     private int numSeqs;
-
+    private KINSHIP_TYPE kinshipType = KINSHIP_TYPE.IBS;
+    
+    public enum KINSHIP_TYPE {Endelman, IBS};
+    
     public Kinship(GenotypeTable mar) {
         this(mar, false, true);
     }
@@ -37,6 +45,12 @@ public class Kinship extends DistanceMatrix {
         buildFromMarker();
     }
 
+    public Kinship(GenotypeTable mar, KINSHIP_TYPE kinshipType) {
+    	this.mar = mar;
+    	this.kinshipType = kinshipType;
+    	buildFromMarker();
+    }
+    
     public Kinship(SimplePhenotype ped) {
         this.ped = ped;
         buildFromPed();
@@ -47,15 +61,18 @@ public class Kinship extends DistanceMatrix {
     }
 
     public void buildFromMarker() {
-
-    	IBSDistanceMatrix adm = new IBSDistanceMatrix(mar, 0, true, null);
-    	dm = new DistanceMatrix(adm.getDistances(), mar.taxa());
-    	toSimilarity();
-    	getKStatistics();
-//    	pullBackExtrem();
-    	//cutOff();
-    	rescale();
-    	System.out.println("Kinship was built from markers");
+    	if (kinshipType == KINSHIP_TYPE.Endelman) {
+    		calculateKinshipFromMarkers();
+    	} else {
+        	IBSDistanceMatrix adm = new IBSDistanceMatrix(mar, 0, true, null);
+        	dm = new DistanceMatrix(adm.getDistances(), mar.taxa());
+        	toSimilarity();
+        	getKStatistics();
+//        	pullBackExtrem();
+        	//cutOff();
+        	rescale();
+        	System.out.println("Kinship was built from markers");
+    	}
     }
 
     public void buildFromPed() {
@@ -207,9 +224,68 @@ public class Kinship extends DistanceMatrix {
 
     }
 
+    /**
+     * Calculates a kinship matrix from genotypes using the method described in 
+     * Endelman and Jannink (2012) G3 2:1407-1413. It is best to impute missing data before calculating. 
+     * However, if data is missing it is replaced by the allele average at that site.
+     * 
+     */
+    public void calculateKinshipFromMarkers() {
+    	//mar is the input genotype table
+    	byte missingAllele = GenotypeTable.UNKNOWN_ALLELE;
+    	
+		// from Endelman and Jannink. 2012. G3 2:1407ff
+    	// A = WW'/[2*sumk(pk*qk)]
+    	// where W = centered genotype matrix (centered on marker mean value, marker coded as 2,1,0)
+    	// where marker is multi-allelic, leave one allele out to keep markers independent
+    	int ntaxa = mar.numberOfTaxa();
+    	int nsites = mar.numberOfSites();
+    	double[][] distance = new double[ntaxa][ntaxa];
+    	DoubleMatrix dmDistance = DoubleMatrixFactory.DEFAULT.make(ntaxa, ntaxa, 0.0);
+    	ArrayList<Double> piList = new ArrayList<Double>();
+    	
+    	//calculate WW' by summing ww' for each allele, where w is a column vector of centered allele counts {2,1,0}
+    	for (int s = 0; s < nsites; s++) {
+    		int[][] alleleFreq = mar.allelesSortedByFrequency(s);
+    		int nalleles = alleleFreq[0].length;
+    		int totalAlleleCount = mar.totalGametesNonMissingForSite(s);
+    		
+    		for (int a = 0; a < nalleles - 1; a++) {
+    			double pi = ((double) alleleFreq[1][a]) / ((double) totalAlleleCount);
+    			double pix2 = 2 * pi;
+    			piList.add(pi);
+    			DoubleMatrix scores = DoubleMatrixFactory.DEFAULT.make(ntaxa, 1);
+    			
+    			for (int t = 0; t < ntaxa; t++) {
+    				byte[] geno = GenotypeTableUtils.getDiploidValues(mar.genotype(t,s));
+    				double thisScore = 0;
+    				if (geno[0] != missingAllele) {
+    					if (geno[0] == alleleFreq[0][a]) thisScore++;
+    					if (geno[1] == alleleFreq[0][a]) thisScore++;
+    					thisScore -= pix2;
+    				}
+    				scores.set(t, 0, thisScore);
+    			}
+    			
+    			dmDistance.plusEquals(scores);
+    		}
+    	}
+    	
+    	double sumpk = 0;
+    	for (Double p : piList) sumpk += p * (1 - p);
+    	sumpk *= 2;
+    	
+    	for (int r = 0; r < ntaxa; r++) {
+    		for (int c = 0; c < ntaxa; c++) {
+    			distance[r][c] = dmDistance.get(r, c) / sumpk;
+    		}
+    	}
+    	
+    	dm = new DistanceMatrix(distance, mar.taxa());
+    }
+
     public DistanceMatrix getDm() {
         return dm;
     }
-
 
 }
