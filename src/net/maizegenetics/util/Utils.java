@@ -513,6 +513,77 @@ public final class Utils {
         }
     }
 
+    /**
+     * Return number of lines in given file that doesn't begin with Hash (#) and
+     * isn't blank.
+     *
+     * @param filename file name
+     *
+     * @return number of lines
+     */
+    public static int getNumberLinesNotHashOrBlank(String filename) {
+
+        InputStream input = getInputStream(filename);
+        try {
+
+            byte[] buffer = new byte[1024];
+            int result = 0;
+            boolean isHash = false;
+            boolean isBlank = true;
+            int numChrsRead = input.read(buffer);
+            // Check if first char of file is #
+            if (numChrsRead > 0) {
+                isHash = buffer[0] == '#';
+            }
+            while (numChrsRead > 0) {
+
+                for (int i = 0; i < numChrsRead - 1; ++i) {
+                    if (buffer[i] == '\n') {
+                        if (isHash) {
+                            isHash = false;
+                        } else if (!isBlank) {
+                            ++result;
+                        }
+                        if (buffer[i + 1] == '#') {
+                            isHash = true;
+                        }
+                        isBlank = true;
+                    } else {
+                        isBlank = false;
+                    }
+                }
+
+                if (buffer[numChrsRead - 1] == '\n') {
+                    if (isHash) {
+                        isHash = false;
+                    } else if (!isBlank) {
+                        ++result;
+                    }
+                    numChrsRead = input.read(buffer);
+                    if (numChrsRead > 0) {
+                        isHash = buffer[0] == '#';
+                    }
+                    isBlank = true;
+                } else {
+                    numChrsRead = input.read(buffer);
+                }
+
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Utils: getNumberLinesNotHashOrBlank: Problem getting number lines: " + filename);
+        } finally {
+            try {
+                input.close();
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+    }
+
     public static String readLineSkipComments(BufferedReader br) throws IOException {
         String s = br.readLine();
         while ((s.startsWith("#"))) {
