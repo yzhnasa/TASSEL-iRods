@@ -87,15 +87,13 @@ public class ProductionPipeline {
 
     private final Map<String, String> myEmailSubjects = new HashMap<>();
 
-    private static final String EXAMPLE_CONFIG_FILE
+    private static final String EXAMPLE_RUN_FILE
             = "emailHost=appsmtp.mail.cornell.edu\n"
             + "emailAddress=dek29@cornell.edu\n"
             + "runDirectory=/SSD/prop_pipeline/run/\n"
             + "archiveDirectory=/SSD/prop_pipeline/arcvtmp/\n"
-            + "haplosDirectory=/SSD/haplos/\n";
-
-    private static final String EXAMPLE_RUN_FILE
-            = "inputFolder=/workdir/tassel/tassel4-src/20130716test/raw_seq\n"
+            + "haplosDirectory=/SSD/haplos/\n"
+            + "inputFolder=/workdir/tassel/tassel4-src/20130716test/raw_seq\n"
             + "enzyme=ApeKI\n"
             + "topmFile=/workdir/tassel/tassel4-src/20130716test/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5\n"
             + "outputFolder=/workdir/tassel/tassel4-src/20130716test/hap_maps\n"
@@ -281,7 +279,7 @@ public class ProductionPipeline {
         } catch (IOException ioe) {
             System.out.println("Problem loading run file configuration file:" + aFileIn);
             System.out.println("************** Example .properties file: ");
-            System.out.println(EXAMPLE_CONFIG_FILE);
+            System.out.println(EXAMPLE_RUN_FILE);
             ioe.printStackTrace();
             sendAlertNotification(getEmailSubjectApp(), "Properties file could not be loaded: "
                     + aFileIn + " on server " + myApplicationHost);
