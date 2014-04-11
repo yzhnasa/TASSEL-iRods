@@ -48,6 +48,7 @@ public class Kinship extends DistanceMatrix {
     public Kinship(GenotypeTable mar, KINSHIP_TYPE kinshipType) {
     	this.mar = mar;
     	this.kinshipType = kinshipType;
+        numSeqs = this.mar.numberOfTaxa();
     	System.out.println("Starting Kinship.buildFromMarker.");
     	long start = System.currentTimeMillis();
     	buildFromMarker();

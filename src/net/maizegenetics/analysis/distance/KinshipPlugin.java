@@ -1,5 +1,6 @@
 package net.maizegenetics.analysis.distance;
 
+import net.maizegenetics.analysis.distance.Kinship.KINSHIP_TYPE;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.trait.SimplePhenotype;
 import net.maizegenetics.plugindef.AbstractPlugin;
@@ -8,9 +9,9 @@ import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 
 import javax.swing.*;
+
 import java.net.URL;
 import java.awt.Frame;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -20,7 +21,10 @@ import java.util.List;
  * Date: Apr 29, 2007
  */
 public class KinshipPlugin extends AbstractPlugin {
-
+	
+	Kinship.KINSHIP_TYPE kinshipType = KINSHIP_TYPE.Endelman;
+	boolean cancelMe = false;
+	
     public KinshipPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
 
@@ -42,6 +46,18 @@ public class KinshipPlugin extends AbstractPlugin {
                 return null;
             }
 
+            if (isInteractive()) {
+            	//set the kinship type
+            	KinshipMethodDialog kmd = new KinshipMethodDialog(getParentFrame());
+            	if (kmd.isCancelled) cancelMe = true;
+            	else {
+            		cancelMe = false;
+            		if (kmd.isEndelmanSelected()) kinshipType = KINSHIP_TYPE.Endelman;
+            		else kinshipType = KINSHIP_TYPE.IBS;
+            	}
+            	kmd.dispose();
+            }
+            
             List result = new ArrayList();
             Iterator itr = alignInList.iterator();
             while (itr.hasNext()) {
@@ -55,7 +71,7 @@ public class KinshipPlugin extends AbstractPlugin {
                     if (current.getData() instanceof GenotypeTable) {
                         //this section implements additional options for calculating kinship
                         GenotypeTable theAlignment = (GenotypeTable) current.getData();
-                        kin = new Kinship(theAlignment);
+                        kin = new Kinship(theAlignment, kinshipType);
 
                     } else if (current.getData() instanceof SimplePhenotype) { //pedigree data
                         SimplePhenotype ped = (SimplePhenotype) current.getData();
@@ -114,4 +130,7 @@ public class KinshipPlugin extends AbstractPlugin {
         return "Calculate kinship from marker data";
     }
 
+    public void setKinshipType(KINSHIP_TYPE kinshipType) {
+    	this.kinshipType = kinshipType;
+    }
 }
