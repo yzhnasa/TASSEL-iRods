@@ -92,11 +92,11 @@ public class TOPMTableReport implements TableReport {
             case 7:
                 return AbstractTagsOnPhysicalMap.printWithMissing(myTOPM.getDivergence(row));
             default:
-                int varIndex = col - 7;
+                int varIndex = col - 8;
                 if (varIndex % 2 == 0) {
                     return AbstractTagsOnPhysicalMap.printWithMissing(myTOPM.getVariantPosOff(row, varIndex / 2));
                 } else {
-                    byte vd = myTOPM.getVariantDef(row, varIndex / 2 + 1);
+                    byte vd = myTOPM.getVariantDef(row, varIndex / 2);
                     if (vd == TOPMInterface.BYTE_MISSING) {
                         return AbstractTagsOnPhysicalMap.printWithMissing(vd);
                     } else {
