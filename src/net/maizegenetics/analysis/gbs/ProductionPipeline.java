@@ -573,6 +573,8 @@ public class ProductionPipeline {
      * @param message Message body of email
      */
     private void sendAlertNotification(String subject, String message) {
+        System.out.println("myEmailHost: " + myEmailHost);
+        System.out.println("myRecipientEmailAddresses: " + myRecipientEmailAddresses);
         SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
         try {
             sc.sendMessage(subject, message);
@@ -584,7 +586,7 @@ public class ProductionPipeline {
     public static void main(String[] args) {
 
         if (args.length != 1) {
-            myLogger.error("Usage: ProductionPipeline <run directory>");
+            System.out.println("Usage: ProductionPipeline <run directory>");
             System.exit(1);
         }
 
@@ -597,13 +599,13 @@ public class ProductionPipeline {
         });
 
         if ((runFiles == null) || (runFiles.length == 0)) {
-            myLogger.error("ProductionPipeline: Could not find a valid .run files in directory: " + args[0]);
-            myLogger.error("ProductionPipeline: Example .run file: ");
-            myLogger.error(EXAMPLE_RUN_FILE);
+            System.out.println("ProductionPipeline: Could not find a valid .run files in directory: " + args[0]);
+            System.out.println("ProductionPipeline: Example .run file: ");
+            System.out.println(EXAMPLE_RUN_FILE);
         }
 
         for (File current : runFiles) {
-            myLogger.info("ProductionPipeline: current run file: " + current.getAbsolutePath());
+            System.out.println("ProductionPipeline: current run file: " + current.getAbsolutePath());
             new ProductionPipeline(current);
         }
 
