@@ -466,14 +466,12 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         byte[] callsF=callsFromViterbi(trans, chrlength/sites, informative);
         DonorHypoth dh2=new DonorHypoth(dh.targetTaxon,dh.donor1Taxon, dh.donor2Taxon, dh.startBlock, dh.focusBlock, dh.endBlock);
         dh2.phasedResults= callsF;
-        if (forwardReverse==true) {
+        if (forwardReverse) {
             byte[] callsR=callsFromViterbi(trans, chrlength/sites, StatePositionChain.reverseInstance(informative));
-//            //compare the forward and reverse viterbi, use the one with the longest path length if they contradict
-            byte[] callsC=Arrays.copyOf(callsF,callsF.length);
-            for(int i= 0;i<informative.informSites.length;i++) {
-                int cs=informative.informSites[i]-dh.startSite;
-                if (callsF[cs]!=callsR[cs]&&i<informative.informSites.length/2) callsC[cs]=callsR[cs];
-            }
+            ArrayUtils.reverse(callsR);  //These are now in same direction as callsF
+            byte[] callsC=new byte[callsF.length];
+            System.arraycopy(callsR,0,callsC,0,callsC.length/2);
+            System.arraycopy(callsF,callsC.length/2,callsC,callsC.length/2,callsC.length-callsC.length/2);
             dh2.phasedResults= callsC;
         }
         return dh2;
@@ -536,7 +534,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         //if the target has too many unexplained sites then return false
         if((double)nonMendel/(double)informSites.size()>maxNonMendelian) return null;
         //if the donors are too similar Viterbi performs poorly.  Only accepted different donors
-        if((double)donorDifferences/(double)informSites.size()>minDonorDistance) return null;
+        if((double)donorDifferences/(double)informSites.size()<minDonorDistance) return null;
         return new StatePositionChain(startSite,targetGenotype.length,Bytes.toArray(nonMissingObs), Ints.toArray(informSites));
     }
 
