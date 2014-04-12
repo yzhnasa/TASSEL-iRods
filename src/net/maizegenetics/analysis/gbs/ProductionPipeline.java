@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  * This class is for running the GBS Production Pipeline. It is to be run from
@@ -87,21 +88,26 @@ public class ProductionPipeline {
 
     private final Map<String, String> myEmailSubjects = new HashMap<>();
 
-    private static final String EXAMPLE_CONFIG_FILE
+    private static final String EXAMPLE_RUN_FILE
             = "emailHost=appsmtp.mail.cornell.edu\n"
             + "emailAddress=dek29@cornell.edu\n"
-            + "runDirectory=/SSD/prop_pipeline/run/\n"
             + "archiveDirectory=/SSD/prop_pipeline/arcvtmp/\n"
-            + "haplosDirectory=/SSD/haplos/\n";
-
-    private static final String EXAMPLE_RUN_FILE
-            = "inputFolder=/workdir/tassel/tassel4-src/20130716test/raw_seq\n"
+            + "haplosDirectory=/SSD/haplos/\n"
+            + "inputFolder=/workdir/tassel/tassel4-src/20130716test/raw_seq\n"
             + "enzyme=ApeKI\n"
             + "topmFile=/workdir/tassel/tassel4-src/20130716test/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5\n"
             + "outputFolder=/workdir/tassel/tassel4-src/20130716test/hap_maps\n"
             + "keyFile=/workdir/tassel/tassel4-src/20130716test/keyfile/MGP1_low_vol_2smallReps_key.txt";
 
     public ProductionPipeline(File runFile) {
+
+        java.util.Properties props = new java.util.Properties();
+        props.setProperty("log4j.logger.net.maizegenetics", "INFO, stdout");
+        props.setProperty("log4j.appender.stdout",
+                "org.apache.log4j.ConsoleAppender");
+        props.setProperty("log4j.appender.stdout.layout",
+                "org.apache.log4j.TTCCLayout");
+        PropertyConfigurator.configure(props);
 
         try {
             myApplicationHost = InetAddress.getLocalHost().getHostName();
@@ -141,104 +147,104 @@ public class ProductionPipeline {
      */
     private void executeRunFile(File runFile) {
 
-            String currentRunFile = runFile.getAbsolutePath();
-            String msgBody = "Starting to run " + currentRunFile + " on server " + myApplicationHost;
-            sendAlertNotification(getEmailSubjectRun(currentRunFile), msgBody);
-            String runFileContents = loadRunConfiguration(runFile);
-            String todayDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
+        String currentRunFile = runFile.getAbsolutePath();
+        String msgBody = "Starting to run " + currentRunFile + " on server " + myApplicationHost;
+        sendAlertNotification(getEmailSubjectRun(currentRunFile), msgBody);
+        String runFileContents = loadRunConfiguration(runFile);
+        String todayDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
 
-            String fileName = FilenameUtils.removeExtension(runFile.getName());
-            String fileNameBase = todayDate + "_" + fileName;
-            String logFileName = fileNameBase + ".log";
+        String fileName = FilenameUtils.removeExtension(runFile.getName());
+        String fileNameBase = todayDate + "_" + fileName;
+        String logFileName = fileNameBase + ".log";
 
-            File logFile = new File(myOutputFolder + "/" + logFileName);
-            try {
-                if (!logFile.exists()) {
-                    logFile.createNewFile();
-                }
-                BufferedWriter bw = Utils.getBufferedWriter(logFile);
-                bw.write("Contents of the .properties file:\n" + myPropertiesFileContents);
-                bw.write(getTimeStamp() + "Contents of the .run file: " + "\n" + runFileContents);
-                bw.write(getCurrentRunContext());
-                bw.close();
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
+        File logFile = new File(myOutputFolder + "/" + logFileName);
+        try {
+            if (!logFile.exists()) {
+                logFile.createNewFile();
             }
+            BufferedWriter bw = Utils.getBufferedWriter(logFile);
+            bw.write("Contents of the .properties file:\n" + myPropertiesFileContents);
+            bw.write(getTimeStamp() + "Contents of the .run file: " + "\n" + runFileContents);
+            bw.write(getCurrentRunContext());
+            bw.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
 
-            // redirect System.out and System.err to the log file
-            PrintStream ps = null;
-            try {
-                ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFile, true)));
-            } catch (FileNotFoundException fnfe) {
-                fnfe.printStackTrace();
-            }
-            System.setOut(ps);
-            System.setErr(ps);
+        // redirect System.out and System.err to the log file
+        PrintStream ps = null;
+        try {
+            ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFile, true)));
+        } catch (FileNotFoundException fnfe) {
+            fnfe.printStackTrace();
+        }
+        System.setOut(ps);
+        System.setErr(ps);
 
-            System.out.println(getTimeStamp() + "Initializing ProductionSNPCallerPlugin \n");
-            long start = System.nanoTime();
+        System.out.println(getTimeStamp() + "Initializing ProductionSNPCallerPlugin \n");
+        long start = System.nanoTime();
 
-            String[] pluginArgs = getPipelinePluginArgs();
-            StringBuilder builder = new StringBuilder();
-            for (String s : pluginArgs) {
-                builder.append(s + "\n");
-            }
-            System.out.println("Arguments passed to ProductionSNPCallerPlugin:\n" + builder.toString());
-            ProductionSNPCallerPlugin pscp = new ProductionSNPCallerPlugin();
-            System.out.println(getTimeStamp() + "Initialized ProductionSNPCallerPlugin \n");
-            pscp.setParameters(pluginArgs);
-            System.out.println(getTimeStamp() + "Done with ProductionSNPCallerPlugin.setParameters() \n");
-            pscp.performFunction(null);
-            System.out.println(getTimeStamp() + "Done with ProductionSNPCallerPlugin.performFunction() \n");
+        String[] pluginArgs = getPipelinePluginArgs();
+        StringBuilder builder = new StringBuilder();
+        for (String s : pluginArgs) {
+            builder.append(s + "\n");
+        }
+        System.out.println("Arguments passed to ProductionSNPCallerPlugin:\n" + builder.toString());
+        ProductionSNPCallerPlugin pscp = new ProductionSNPCallerPlugin();
+        System.out.println(getTimeStamp() + "Initialized ProductionSNPCallerPlugin \n");
+        pscp.setParameters(pluginArgs);
+        System.out.println(getTimeStamp() + "Done with ProductionSNPCallerPlugin.setParameters() \n");
+        pscp.performFunction(null);
+        System.out.println(getTimeStamp() + "Done with ProductionSNPCallerPlugin.performFunction() \n");
 
-            double elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
-            System.out.println(getTimeStamp() + "Time to run ProductionSNPCallerPlugin: " + elapsedSeconds + " sec.");
+        double elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
+        System.out.println(getTimeStamp() + "Time to run ProductionSNPCallerPlugin: " + elapsedSeconds + " sec.");
 
-            if (myRunImputation) {
-                start = System.nanoTime();
-                String[] name = runFile.getName().split("\\.");
-                String h5File = myOutputFolder + "/" + name[0] + ".hmp.h5";
-                String haploDir = myHaplotypeDirectory + "/" + "AllZeaGBSv27.gX.hmp.txt.gz";
-                String targetFile = myOutputFolder + "/" + name[0] + ".globalimp.hmp.h5";
+        if (myRunImputation) {
+            start = System.nanoTime();
+            String[] name = runFile.getName().split("\\.");
+            String h5File = myOutputFolder + "/" + name[0] + ".hmp.h5";
+            String haploDir = myHaplotypeDirectory + "/" + "AllZeaGBSv27.gX.hmp.txt.gz";
+            String targetFile = myOutputFolder + "/" + name[0] + ".globalimp.hmp.h5";
 
-                runImputation(h5File, haploDir, targetFile);
-                elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
-                System.out.println(getTimeStamp() + "Time to run Imputation: " + elapsedSeconds + " sec.");
-            }
+            runImputation(h5File, haploDir, targetFile);
+            elapsedSeconds = (double) (System.nanoTime() - start) / 1_000_000_000.0;
+            System.out.println(getTimeStamp() + "Time to run Imputation: " + elapsedSeconds + " sec.");
+        }
 
-            String email = "Ran:\n " + myInputFolder
-                    + "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds"
-                    + "\n\n Attachment:\n " + logFile.getAbsolutePath()
-                    + "\nRun on server: " + myApplicationHost;
+        String email = "Ran:\n " + myInputFolder
+                + "\n\n  Tassel Pipeline Execution Time: " + elapsedSeconds + " seconds"
+                + "\n\n Attachment:\n " + logFile.getAbsolutePath()
+                + "\nRun on server: " + myApplicationHost;
 
-            StringBuilder emailMsg = new StringBuilder(email);
+        StringBuilder emailMsg = new StringBuilder(email);
 
-            File toFile = new File(myArchiveDirectory + "/" + runFile.getName());
+        File toFile = new File(myArchiveDirectory + "/" + runFile.getName());
 
-            boolean movedFile = false;
-            try {
-                Files.move(runFile, toFile);
-                movedFile = true;
-            } catch (IOException ioe) {
-            }
+        boolean movedFile = false;
+        try {
+            Files.move(runFile, toFile);
+            movedFile = true;
+        } catch (IOException ioe) {
+        }
 
-            if (movedFile) {
-                System.out.println("Moved file " + runFile.getAbsolutePath() + " to " + toFile.getAbsolutePath());
-            } else {
-                String msg = "******* COULD NOT MOVE FILE " + runFile.getAbsolutePath() + " TO " + toFile.getAbsolutePath()
-                        + " on server: " + myApplicationHost;
-                System.out.println(msg);
-                sendAlertNotification(getEmailSubjectRun(currentRunFile), msg);
-            }
+        if (movedFile) {
+            System.out.println("Moved file " + runFile.getAbsolutePath() + " to " + toFile.getAbsolutePath());
+        } else {
+            String msg = "******* COULD NOT MOVE FILE " + runFile.getAbsolutePath() + " TO " + toFile.getAbsolutePath()
+                    + " on server: " + myApplicationHost;
+            System.out.println(msg);
+            sendAlertNotification(getEmailSubjectRun(currentRunFile), msg);
+        }
 
-            // send email notification that a .run file has been processed
-            SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
+        // send email notification that a .run file has been processed
+        SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
 
-            try {
-                sc.sendMessageWithAttachment(getEmailSubjectRun(currentRunFile), emailMsg.toString(), logFile.getAbsolutePath());
-            } catch (javax.mail.MessagingException me) {
-                // do nothing
-            }
+        try {
+            sc.sendMessageWithAttachment(getEmailSubjectRun(currentRunFile), emailMsg.toString(), logFile.getAbsolutePath());
+        } catch (javax.mail.MessagingException me) {
+            // do nothing
+        }
     }
 
     /**
@@ -281,7 +287,7 @@ public class ProductionPipeline {
         } catch (IOException ioe) {
             System.out.println("Problem loading run file configuration file:" + aFileIn);
             System.out.println("************** Example .properties file: ");
-            System.out.println(EXAMPLE_CONFIG_FILE);
+            System.out.println(EXAMPLE_RUN_FILE);
             ioe.printStackTrace();
             sendAlertNotification(getEmailSubjectApp(), "Properties file could not be loaded: "
                     + aFileIn + " on server " + myApplicationHost);
@@ -567,6 +573,8 @@ public class ProductionPipeline {
      * @param message Message body of email
      */
     private void sendAlertNotification(String subject, String message) {
+        System.out.println("myEmailHost: " + myEmailHost);
+        System.out.println("myRecipientEmailAddresses: " + myRecipientEmailAddresses);
         SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
         try {
             sc.sendMessage(subject, message);
@@ -578,10 +586,10 @@ public class ProductionPipeline {
     public static void main(String[] args) {
 
         if (args.length != 1) {
-            myLogger.error("Usage: ProductionPipeline <run directory>");
+            System.out.println("Usage: ProductionPipeline <run directory>");
             System.exit(1);
         }
-        
+
         File inputDirectory = new File(args[0]);
         File[] runFiles = inputDirectory.listFiles(new FilenameFilter() {
             @Override
@@ -589,15 +597,15 @@ public class ProductionPipeline {
                 return name.toLowerCase().endsWith(RUN_FILE_SUFFIX);
             }
         });
-        
+
         if ((runFiles == null) || (runFiles.length == 0)) {
-            myLogger.error("ProductionPipeline: Could not find a valid .run files in directory: " + args[0]);
-            myLogger.error("ProductionPipeline: Example .run file: ");
-            myLogger.error(EXAMPLE_RUN_FILE);
+            System.out.println("ProductionPipeline: Could not find a valid .run files in directory: " + args[0]);
+            System.out.println("ProductionPipeline: Example .run file: ");
+            System.out.println(EXAMPLE_RUN_FILE);
         }
-        
-        for (File current: runFiles) {
-            myLogger.info("ProductionPipeline: current run file: " + current.getAbsolutePath());
+
+        for (File current : runFiles) {
+            System.out.println("ProductionPipeline: current run file: " + current.getAbsolutePath());
             new ProductionPipeline(current);
         }
 
