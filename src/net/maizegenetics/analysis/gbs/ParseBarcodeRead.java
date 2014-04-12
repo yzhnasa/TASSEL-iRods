@@ -171,10 +171,35 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant = new String[]{"GATCC"};
             likelyReadEnd = new String[]{"AATT", "GGATCC", "AATTAGATC"}; // look for MluCI site, BamHI site, or Poland et al. 2012 Y-adapter for MluCI
             readEndCutSiteRemnantLength = 4;
-        } else if (enzyme.matches("(?i)apo[i1]")) {
+        } else if (enzyme.matches("(?i)psti-msei|(?i)pst1-mse1")) {
+            theEnzyme = "PstI-MseI"; // CTGCA^G   T^TAA
+            initialCutSiteRemnant = new String[]{"TGCAG"};
+            likelyReadEnd = new String[]{"TTAA", "CTGCAG", "TTAAGATC"}; // look for MseI site, PstI site, or Poland et al. 2012 Y-adapter for MseI
+            readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)avaii-msei|(?i)ava2-mse1")) {
+            theEnzyme = "AvaII-MseI"; // G^GWCC   T^TAA  W=AorT
+            initialCutSiteRemnant = new String[]{"GACC", "GTCC"};
+            likelyReadEnd = new String[]{"TTAA", "GGACC", "GGTCC", "TTAAGATC"}; // look for MseI site, AvaII site, or Poland et al. 2012 Y-adapter for MseI
+            readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)ecori-msei|(?i)ecor1-mse1")) {
+            theEnzyme = "EcoRI-MseI"; // G^AATTC   T^TAA
+            initialCutSiteRemnant = new String[]{"AATTC"};
+            likelyReadEnd = new String[]{"TTAA", "GAATTC", "TTAAGATC"}; // look for MseI site, EcoRI site, or Poland et al. 2012 Y-adapter for MseI
+            readEndCutSiteRemnantLength = 3;
+        } else if (enzyme.matches("(?i)ecori-avaii|(?i)ecor1-ava2")) {
+            theEnzyme = "EcoRI-AvaII"; // G^AATTC   G^GWCC
+            initialCutSiteRemnant = new String[]{"AATTC"};
+            likelyReadEnd = new String[]{"GGACC", "GGTCC", "GAATTC", "GGACAGATC", "GGTCAGATC"}; // look for AvaII site, EcoRI site, or Poland et al. 2012 Y-adapter for AvaII
+            readEndCutSiteRemnantLength = 4;
+        } else if (enzyme.matches("(?i)ecori-hinfi|(?i)ecor1-hinf1")) {
+            theEnzyme = "EcoRI-HinfI"; // G^AATTC   G^ANTC
+            initialCutSiteRemnant = new String[]{"AATTC"};
+            likelyReadEnd = new String[]{"GAATC", "GACTC", "GAGTC", "GATTC", "GAATTC", "GAATAGATC", "GACTAGATC", "GAGTAGATC", "GATTAGATC"}; // look for HinfI site, EcoRI site, or Poland et al. 2012 Y-adapter for HinfI
+            readEndCutSiteRemnantLength = 4;
+        } else if(enzyme.matches("(?i)apo[i1]")){
             theEnzyme = "ApoI";
-            initialCutSiteRemnant = new String[]{"AATTC", "AATTT"};  // corrected from {"AATTG","AATTC"} by Jeff Glaubitz on 2012/09/12
-            likelyReadEnd = new String[]{"AAATTC", "AAATTT", "GAATTC", "GAATTT", "AAATTAGAT", "GAATTAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
+            initialCutSiteRemnant=new String[]{"AATTC","AATTT"};
+            likelyReadEnd = new String[]{"AAATTC","AAATTT","GAATTC","GAATTT","AAATTAGAT","GAATTAGAT"}; // full cut site (from partial digest or chimera) or common adapter start
             readEndCutSiteRemnantLength = 5;
         } else if (enzyme.matches("(?i)BamH[i1l]")) {
             theEnzyme = "BamHI";
@@ -261,14 +286,20 @@ public class ParseBarcodeRead {
                     +"  RBSCG"    +"\n"
                     +"Or the following for two-enzyme digests:\n"
                     +"  AsiSI-MspI"   +"\n"
+                    +"  AvaII-MseI"   +"\n"
                     +"  BamHI-MluCI"  +"\n"
                     +"  BssHII-MspI"  +"\n"
+                    +"  EcoRI-AvaII"  +"\n"
+                    +"  EcoRI-HinfI"  +"\n"
+                    +"  EcoRI-MseI"   +"\n"
                     +"  EcoRI-MspI"   +"\n"
                     +"  FseI-MspI"    +"\n"
                     +"  HindIII-MspI" +"\n"
+                    +"  HindIII-NlaIII" +"\n"
                     +"  PaeR7I-HhaI"  +"\n"
                     +"  PstI-ApeKI"   +"\n"
                     +"  PstI-EcoT22I" +"\n"
+                    +"  PstI-MseI"    +"\n"
                     +"  PstI-MspI"    +"\n"
                     +"  PstI-TaqI"    +"\n"
                     +"  SalI-MspI"    +"\n"
