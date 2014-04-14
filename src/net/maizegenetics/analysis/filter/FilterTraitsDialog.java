@@ -33,6 +33,9 @@ public class FilterTraitsDialog extends JDialog implements ActionListener, Table
     public final static String CMD_INCLUDE_ALL = "includeall";
     public final static String CMD_OK = "ok";
     public final static String CMD_CANCEL = "cancel";
+    public final static String CMD_CHANGE_DATA = "change2data";
+    public final static String CMD_CHANGE_MARKER = "change2marker";
+    public final static String CMD_CHANGE_COV = "change2cov";
 
     public FilterTraitsDialog(Frame parent, Phenotype aPhenotype) {
         super(parent);
@@ -43,7 +46,7 @@ public class FilterTraitsDialog extends JDialog implements ActionListener, Table
 
     private void init() {
         setTitle("Filter Traits / Modify Trait Properties");
-        setSize(new Dimension(600, 600));
+        setSize(new Dimension(600, 800));
         setModal(true);
         Container contentPane = getContentPane();
         contentPane.setLayout(new GridBagLayout());
@@ -84,6 +87,17 @@ public class FilterTraitsDialog extends JDialog implements ActionListener, Table
         JButton btnIncludeAll = new JButton("Include All");
         btnIncludeAll.setActionCommand(CMD_INCLUDE_ALL);
         btnIncludeAll.addActionListener(this);
+        
+        JButton btnChangeData = new JButton("Change Selected Type to Data");
+        btnChangeData.setActionCommand(CMD_CHANGE_DATA);
+        btnChangeData.addActionListener(this);
+        JButton btnChangeCov = new JButton("Change Selected Type to Covariate");
+        btnChangeCov.setActionCommand(CMD_CHANGE_COV);
+        btnChangeCov.addActionListener(this);
+        JButton btnChangeMarker = new JButton("Change Selected Type to Marker");
+        btnChangeMarker.setActionCommand(CMD_CHANGE_MARKER);
+        btnChangeMarker.addActionListener(this);
+        
         JButton btnOK = new JButton("OK");
         btnOK.setActionCommand(CMD_OK);
         btnOK.addActionListener(this);
@@ -119,12 +133,30 @@ public class FilterTraitsDialog extends JDialog implements ActionListener, Table
 
         gbc.gridx = 0;
         gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(15, 5, 5, 5); //top, left, bottom, right
+        gbc.anchor = GridBagConstraints.CENTER;
+        contentPane.add(btnChangeData, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.insets = new Insets(5, 5, 5, 5); //top, left, bottom, right
+        gbc.anchor = GridBagConstraints.CENTER;
+        contentPane.add(btnChangeCov, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.insets = new Insets(5, 5, 15, 5); //top, left, bottom, right
+        gbc.anchor = GridBagConstraints.CENTER;
+        contentPane.add(btnChangeMarker, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 1;
         gbc.insets = new Insets(5, 5, 5, 5); //top, left, bottom, right
         gbc.anchor = GridBagConstraints.EAST;
         contentPane.add(btnOK, gbc);
 
         gbc.gridx = 1;
-        gbc.gridy = 3;
+        gbc.gridy = 6;
         gbc.insets = new Insets(5, 5, 5, 5); //top, left, bottom, right
         gbc.anchor = GridBagConstraints.WEST;
         contentPane.add(btnCancel, gbc);
@@ -184,9 +216,23 @@ public class FilterTraitsDialog extends JDialog implements ActionListener, Table
         } else if (e.getActionCommand().equals(CMD_CANCEL)) {
             setVisible(false);
             clickedOK = false;
+        } else if (e.getActionCommand().equals(CMD_CHANGE_DATA)) {
+        	changeSelectedType("data");
+        } else if (e.getActionCommand().equals(CMD_CHANGE_COV)) {
+        	changeSelectedType("covariate");
+        } else if (e.getActionCommand().equals(CMD_CHANGE_MARKER)) {
+        	changeSelectedType("marker");
         }
+        
     }
 
+    private void changeSelectedType(String toNewType) {
+    	for (int i : traitTable.getSelectedRows()) {
+    		traitModel.setValueAt(toNewType, i, traitModel.getTypeColumnNumber());
+    	}
+    	traitModel.fireTableDataChanged();
+    }
+    
     @Override
     public void tableChanged(TableModelEvent e) {
         System.out.println("table model changed");

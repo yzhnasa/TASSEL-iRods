@@ -32,6 +32,7 @@ public class Kinship extends DistanceMatrix {
     private double cutOff = 2;
     private int numSeqs;
     private KINSHIP_TYPE kinshipType = KINSHIP_TYPE.IBS;
+    public static double matrixMultiplier = 2; //scale the numeric matrix produced by the transform function which codes phenotypes as {1,0.5,0}
     
     public enum KINSHIP_TYPE {Endelman, IBS};
     
@@ -57,7 +58,7 @@ public class Kinship extends DistanceMatrix {
     
     public Kinship(SimplePhenotype ped) {
         this.ped = ped;
-        buildFromPed();
+        buildFromPhenotype();
     }
 
     public Kinship(DistanceMatrix dm) {
@@ -79,9 +80,18 @@ public class Kinship extends DistanceMatrix {
     	}
     }
 
+    public void buildFromPhenotype() {
+    	// if there are two traits assume pedigree
+    	//if there are more assume they are numeric markers
+    	
+    	int ntraits = ped.getNumberOfTraits();
+    	if (ntraits > 2) calculateRelationshipKinshipFromPhenotype();
+    	else buildFromPed();
+    }
+    
     public void buildFromPed() {
         // get data from ped (SimplePhenotype) to parents (int[][]);
-        //to do;
+    	
         System.out.println("Building Kinship From pedigree");
         parents = new int[ped.getNumberOfTaxa()][ped.getNumberOfTraits()];
         try {
@@ -298,6 +308,47 @@ public class Kinship extends DistanceMatrix {
     	dm = new DistanceMatrix(distance, mar.taxa());
     }
 
+    public void calculateRelationshipKinshipFromPhenotype() {
+    	double[][] W = ped.getData(); 
+    	
+    	//calculate the column averages and sumpq, center W
+    	int ncol = W[0].length;
+    	int nrow = W.length;
+    	for (int r = 0; r < nrow; r++) {
+    		for (int c = 0; c < ncol; c++) W[r][c] *= matrixMultiplier;
+    	}
+    	
+    	double sumpq = 0;
+    	for (int c = 0; c < ncol; c++) {
+    		double colTotal = 0;
+    		int colCount = 0;
+    		for (int r = 0; r < nrow; r++) {
+    			if (!Double.isNaN(W[r][c])) {
+    				colTotal += W[r][c];
+    				colCount++;
+    			}
+    		}
+    		
+    		double pi = colTotal / colCount / 2.0;
+    		double pix2 = pi * 2;
+    		sumpq += pi * (1 - pi);
+    		for (int r = 0; r < nrow; r++) {
+    			if (Double.isNaN(W[r][c])) W[r][c] = 0;
+    			else W[r][c] -= pix2;
+    		}
+    	}
+    	
+    	
+    	DoubleMatrix WWt = DoubleMatrixFactory.DEFAULT.make(W).tcrossproduct();
+    	
+    	double[][] scaledIBS = new double[nrow][nrow];
+    	for (int r = 0; r < nrow; r++) {
+    		for (int c = 0; c < nrow; c++) scaledIBS[r][c] = WWt.get(r, c) / sumpq /2 ;
+    	}
+    	dm = new DistanceMatrix(scaledIBS, ped.getTaxa());
+    	
+    }
+    
     public DistanceMatrix getDm() {
         return dm;
     }

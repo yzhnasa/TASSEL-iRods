@@ -80,7 +80,7 @@ public class FILLINDonorGenotypeUtils {
     public static GenotypeTable[] loadDonors(String donorFile, int appoxSitesPerHaplotype, boolean verboseOutput){
         GenotypeTable donorMasterGT=ImportUtils.readGuessFormat(donorFile);
         donorMasterGT=GenotypeTableBuilder.getHomozygousInstance(donorMasterGT);
-        int[][] donorFirstLastSites=FILLINFindHaplotypesPlugin.divideChromosome(donorMasterGT,appoxSitesPerHaplotype,true);
+        int[][] donorFirstLastSites=FILLINFindHaplotypesPlugin.divideChromosome(donorMasterGT,appoxSitesPerHaplotype,verboseOutput);
         GenotypeTable[] donorAlign=new GenotypeTable[donorFirstLastSites.length];
         for (int i = 0; i < donorAlign.length; i++) {
             if(verboseOutput) System.out.println("Starting Read");

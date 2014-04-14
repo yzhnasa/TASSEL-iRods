@@ -162,7 +162,7 @@ public class GenotypeTableBuilder {
      * @return
      */
     public static GenotypeTableBuilder getTaxaIncremental(PositionList positionList, GenotypeMergeRule mergeRule) {
-        return new GenotypeTableBuilder(positionList,(GenotypeMergeRule)null);
+        return new GenotypeTableBuilder(positionList,(GenotypeMergeRule)mergeRule);
     }
 
     /**
