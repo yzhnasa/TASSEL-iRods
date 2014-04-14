@@ -196,6 +196,11 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant = new String[]{"AATTC"};
             likelyReadEnd = new String[]{"GAATC", "GACTC", "GAGTC", "GATTC", "GAATTC", "GAATAGATC", "GACTAGATC", "GAGTAGATC", "GATTAGATC"}; // look for HinfI site, EcoRI site, or Poland et al. 2012 Y-adapter for HinfI
             readEndCutSiteRemnantLength = 4;
+        } else if (enzyme.matches("(?i)bbvci-mspi|(?i)bbvc1-msp1")) {
+            theEnzyme = "BbvCI-MspI"; // CCTCAGC (-5/-2)   C^CGG
+            initialCutSiteRemnant = new String[]{"TCAGC"};
+            likelyReadEnd = new String[]{"CCGG", "CCTCAGC", "CCGAGATC"}; // look for MspI site, BbvCI site, or Poland et al. 2012 Y-adapter for MspI
+            readEndCutSiteRemnantLength = 3;
         } else if(enzyme.matches("(?i)apo[i1]")){
             theEnzyme = "ApoI";
             initialCutSiteRemnant=new String[]{"AATTC","AATTT"};
@@ -288,6 +293,7 @@ public class ParseBarcodeRead {
                     +"  AsiSI-MspI"   +"\n"
                     +"  AvaII-MseI"   +"\n"
                     +"  BamHI-MluCI"  +"\n"
+                    +"  BbvCI-MspI"   +"\n"
                     +"  BssHII-MspI"  +"\n"
                     +"  EcoRI-AvaII"  +"\n"
                     +"  EcoRI-HinfI"  +"\n"
