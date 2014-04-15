@@ -229,6 +229,10 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         generateFastSiteLookup(myPositionList);
         current = System.nanoTime();
         System.out.println("ProductionSNPCallerPlugin: performFunction: generateFastSiteLookup: " + ((double) (current - previous) / 1_000_000_000.0));
+        previous = System.nanoTime();
+        setUpGenotypeTableBuilder();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: setUpGenotypeTableBuilder: " + ((double) (current - previous) / 1_000_000_000.0));
         int nFilesProcessed = 0;
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             if ( !seqFilesInKeyAndDir.contains(myRawSeqFileNames[fileNum]) ) continue;  // skip fastq/qseq files that are not in the key file
@@ -248,17 +252,17 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             reportTotals(fileNum, counters, nFilesProcessed);
             current = System.nanoTime();
             System.out.println("ProductionSNPCallerPlugin: performFunction: reportTotals: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0));
-            if(fileNum == myRawSeqFileNames.length-1 && !keepOpen) {
-                previous = System.nanoTime();
-                genos.build();
-                current = System.nanoTime();
-                System.out.println("ProductionSNPCallerPlugin: performFunction: build: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0));
-            } else {
-                previous = System.nanoTime();
-                genos.closeUnfinished();
-                current = System.nanoTime();
-                System.out.println("ProductionSNPCallerPlugin: performFunction: closeUnfinished: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0));
-            }
+        }
+        if(keepOpen) {
+            previous = System.nanoTime();
+            genos.closeUnfinished();
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: genos.closeUnfinished(): " + ((double) (current - previous) / 1_000_000_000.0));
+        } else {
+            previous = System.nanoTime();
+            genos.build();
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: genos.build(): " + ((double) (current - previous) / 1_000_000_000.0));
         }
         previous = System.nanoTime();
         writeReadsPerSampleReports();
@@ -280,9 +284,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         current = System.nanoTime();
         System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: getBarCodeCount: " + ((double) (current - previous) / 1_000_000_000.0));
         previous = System.nanoTime();
-        setUpGenotypeTableBuilder(fileNum);
+        taxaList= new TaxaListBuilder().addAll(getHDF5Taxa(fileNum)).sortTaxaAlphabetically().build();
         current = System.nanoTime();
-        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: setUpGenotypeTableBuilder: " + ((double) (current - previous) / 1_000_000_000.0));
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: new TaxaListBuilder(): " + ((double) (current - previous) / 1_000_000_000.0));
         previous = System.nanoTime();
         obsTagsForEachTaxon = new IntArrayList[taxaList.numberOfTaxa()];
         for (int t = 0; t < obsTagsForEachTaxon.length; t++) {
@@ -296,7 +300,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             long readSeqReadTime = 0;
             long ifRRNotNullTime = 0;
             while ((temp = br.readLine()) != null) {
-                if (counters[0] % 1000000 == 0)  reportProgress(counters);
+                if (counters[0] % 1000000 == 0)  reportProgress(counters, readSeqReadTime, ifRRNotNullTime);
                 previous = System.nanoTime();
                 ReadBarcodeResult rr = readSequenceRead(br, temp, thePBR, counters);
                 current = System.nanoTime();
@@ -317,8 +321,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 current = System.nanoTime();
                 ifRRNotNullTime += (current - previous);
             }
-            System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: readSequenceRead: " + ((double) (readSeqReadTime) / 1_000_000_000.0));
-            System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: ifRRNotNullTime: " + ((double) (ifRRNotNullTime) / 1_000_000_000.0));
+            System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: readSequenceTime: " + ((double) (readSeqReadTime) / 1_000_000_000.0));
+            System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: processSequenceTime: " + ((double) (ifRRNotNullTime) / 1_000_000_000.0));
             br.close();
         } catch (Exception e) {
             System.out.println("Catch in readRawSequencesAndRecordDepth() at nReads=" + counters[0] + " e=" + e);
@@ -327,7 +331,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
     }
  
-    private void reportProgress(int[] counters) {
+    private void reportProgress(int[] counters, long readSeqReadTime, long ifRRNotNullTime) {
         System.out.println(
             "totalReads:" + counters[0]
             + "  goodBarcodedReads:" + counters[1]
@@ -335,6 +339,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
 //            + "  perfectMatches:" + counters[3]
 //            + "  nearMatches:" + counters[4]
 //            + "  uniqueNearMatches:" + counters[5]
+            + "  cumulReadSequenceTime:"+((double) (readSeqReadTime) / 1_000_000_000.0)
+            + "  cumulProcessSequenceTime:"+ ((double) (ifRRNotNullTime) / 1_000_000_000.0)
         );
     }
    
@@ -516,20 +522,17 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
     }
     
-    private void setUpGenotypeTableBuilder(int fileNum) {
+    private void setUpGenotypeTableBuilder() {
         genoMergeRule = new BasicGenotypeMergeRule(errorRate);
         File hdf5File = new File(myTargetHDF5file);
         if (hdf5File.exists()) {
-            System.out.println("\nGenotypes from the raw sequence file:\n  "+myRawSeqFileNames[fileNum]);
-            System.out.println("will be added to existing HDF5 file:\n  "+myTargetHDF5file+"\n");
+            System.out.println("Genotypes will be added to existing HDF5 file:\n  "+myTargetHDF5file+"\n");
             genos = GenotypeTableBuilder.mergeTaxaIncremental(myTargetHDF5file, genoMergeRule);
         } else {
             System.out.println("\nThe target HDF5 file:\n  "+myTargetHDF5file);
-            System.out.println("does not exist. A new HDF5 file of that name will be created \nto hold the genotypes from the raw sequence file:");
-            System.out.println("  "+myRawSeqFileNames[fileNum]+"\n");
+            System.out.println("does not exist. A new HDF5 file of that name will be created \nto hold the genotypes from this run.");
             genos = GenotypeTableBuilder.getTaxaIncremental(myPositionList, myTargetHDF5file);
         }
-        taxaList= new TaxaListBuilder().addAll(getHDF5Taxa(fileNum)).sortTaxaAlphabetically().build();
     }
 
     /**
