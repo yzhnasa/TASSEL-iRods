@@ -44,6 +44,7 @@ public class ExportPlugin extends AbstractPlugin {
     private String mySaveFile = null;
     private boolean myIsDiploid = false;
     private boolean myKeepDepth = true;
+    private final JFileChooser myFileChooserSave = new JFileChooser(TasselPrefs.getSaveDir());
 
     /**
      * Creates a new instance of ExportPlugin
@@ -415,13 +416,12 @@ public class ExportPlugin extends AbstractPlugin {
     }
 
     private File getFileByChooser() {
-        JFileChooser fileSave = new JFileChooser(TasselPrefs.getSaveDir());
-        fileSave.setMultiSelectionEnabled(false);
+        myFileChooserSave.setMultiSelectionEnabled(false);
         File result = null;
-        int returnVal = fileSave.showSaveDialog(getParentFrame());
+        int returnVal = myFileChooserSave.showSaveDialog(getParentFrame());
         if (returnVal == JFileChooser.SAVE_DIALOG || returnVal == JFileChooser.APPROVE_OPTION) {
-            result = fileSave.getSelectedFile();
-            TasselPrefs.putSaveDir(fileSave.getCurrentDirectory().getPath());
+            result = myFileChooserSave.getSelectedFile();
+            TasselPrefs.putSaveDir(myFileChooserSave.getCurrentDirectory().getPath());
         }
         return result;
     }
