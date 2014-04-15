@@ -213,27 +213,57 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
+        long previous = System.nanoTime();
         readKeyFile();  // TODO: read/write full set of metadata
+        long current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: readKeyFile: " + ((double) (current - previous) / 1_000_000_000.0));
+        previous = System.nanoTime();
         matchKeyFileToAvailableRawSeqFiles();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: matchKeyFileToAvailableRawSeqFiles: " + ((double) (current - previous) / 1_000_000_000.0));
+        previous = System.nanoTime();
         myPositionList = getUniquePositions();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: getUniquePositions: " + ((double) (current - previous) / 1_000_000_000.0));
+        previous = System.nanoTime();
         generateFastSiteLookup(myPositionList);
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: generateFastSiteLookup: " + ((double) (current - previous) / 1_000_000_000.0));
         int nFilesProcessed = 0;
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             if ( !seqFilesInKeyAndDir.contains(myRawSeqFileNames[fileNum]) ) continue;  // skip fastq/qseq files that are not in the key file
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
             System.out.println("\nLooking for known SNPs in sequence reads from file:");
             System.out.println("  "+myRawSeqFileNames[fileNum]+"\n");
+            previous = System.nanoTime();
             readRawSequencesAndRecordDepth(fileNum, counters);  // TODO: read the machine name from the fastq/qseq file
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: readRawSequencesAndRecordDepth: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0));
+            previous = System.nanoTime();
             callGenotypes();
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: callGenotypes: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0));
             ++nFilesProcessed;
+            previous = System.nanoTime();
             reportTotals(fileNum, counters, nFilesProcessed);
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: reportTotals: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0));
             if(fileNum == myRawSeqFileNames.length-1 && !keepOpen) {
+                previous = System.nanoTime();
                 genos.build();
+                current = System.nanoTime();
+                System.out.println("ProductionSNPCallerPlugin: performFunction: build: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0));
             } else {
+                previous = System.nanoTime();
                 genos.closeUnfinished();
+                current = System.nanoTime();
+                System.out.println("ProductionSNPCallerPlugin: performFunction: closeUnfinished: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0));
             }
         }
+        previous = System.nanoTime();
         writeReadsPerSampleReports();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: writeReadsPerSampleReports: " + ((double) (current - previous) / 1_000_000_000.0));
         return null;
     }
 
