@@ -88,10 +88,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private Map<String,Integer> rawReadCountsForFullSampleName = new TreeMap<>();
     private Map<String,Integer> matchedReadCountsForFullSampleName = new TreeMap<>();
 
-    private boolean stacksL = false;  // if true, use STACKS likelihood method for calling hets
+    private boolean stacksL = false;  // if true, use STACKS likelihood method for calling hets // not implemented yet
     private boolean keepOpen = false; // if true, keep the HDF5 genotypes file open for future edits ( i.e., final close is: genos.closeUnfinished() )
     private double errorRate = 0.01;
     private BasicGenotypeMergeRule genoMergeRule = null;
+    private boolean noDepthOutput = false; // if true, the depths are not passed to the GenotypeTableBuilder when taxa are added (or merged with exisiting replicate libraryPrepIDs)
     
     public ProductionSNPCallerPlugin() {
         super(null, false);
@@ -111,6 +112,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             + "  -o   Output (target) HDF5 genotypes file to add new genotypes to (new file created if it doesn't exist)\n"
             + "  -eR  Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
             + "  -ko  Keep hdf5 genotypes open for future runs that add more taxa or more depth\n (default: finalize hdf5 file)\n"
+//            + "  -ndo No depth output: do not write depths to the output hdf5 genotypes file\n"  // PRIVATE OPTION
 //            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)\n"
 //            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
             +"\n\n"
@@ -134,6 +136,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             myArgsEngine.add("-ko", "--keep-open", false);
             myArgsEngine.add("-sL", "--STACKS-likelihood", false);
             myArgsEngine.add("-d",  "--divergence", true);
+            myArgsEngine.add("-ndo","--no-depth-output", false);
         }
         myArgsEngine.parse(args);
         String tempDirectory = myArgsEngine.getString("-i");
@@ -200,6 +203,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-ko")) {
             keepOpen = true;
         }
+        if (myArgsEngine.getBoolean("-ndo")) {
+            noDepthOutput = true;
+        }
         if (myArgsEngine.getBoolean("-d")) {
             maxDivergence = Integer.parseInt(myArgsEngine.getString("-d"));
         }
@@ -263,7 +269,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             }
             br.close();
         } catch (Exception e) {
-            System.out.println("Catch in readRawSequencesAndCallGenos() at nReads=" + counters[0] + " e=" + e);
+            System.out.println("Catch in readRawSequencesAndRecordDepth() at nReads=" + counters[0] + " e=" + e);
             System.out.println("Last line read: "+temp);
             e.printStackTrace();
         }
@@ -605,7 +611,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             incrementDepthForTagVariants(prevTag,alleleDepths,currInc);
             byte[][] byteDepths = AlleleDepthUtil.depthIntToByte(alleleDepths);
             byte[] taxonGenos = resolveGenosForTaxon(byteDepths);
-            genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,byteDepths);
+            if (noDepthOutput) {
+                genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,null);
+            } else {
+                genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,byteDepths);
+            }
             System.out.println("  finished calling genotypes for "+taxaList.get(currTaxonIndex).getName());
         }
         System.out.println("Finished calling genotypes for "+obsTagsForEachTaxon.length+" taxa\n");
