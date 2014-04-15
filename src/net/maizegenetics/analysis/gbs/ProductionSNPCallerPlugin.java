@@ -268,22 +268,40 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
 
     private void readRawSequencesAndRecordDepth(int fileNum, int[] counters) {
+        long previous = System.nanoTime();
         ParseBarcodeRead thePBR = setUpBarcodes(fileNum);
+        long current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: setUpBarcodes: " + ((double) (current - previous) / 1_000_000_000.0));
+        previous = System.nanoTime();
         if (thePBR == null || thePBR.getBarCodeCount() == 0) {
             System.out.println("No barcodes found. Skipping this raw sequence file.");
             return;
         }
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: getBarCodeCount: " + ((double) (current - previous) / 1_000_000_000.0));
+        previous = System.nanoTime();
         setUpGenotypeTableBuilder(fileNum);
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: setUpGenotypeTableBuilder: " + ((double) (current - previous) / 1_000_000_000.0));
+        previous = System.nanoTime();
         obsTagsForEachTaxon = new IntArrayList[taxaList.numberOfTaxa()];
         for (int t = 0; t < obsTagsForEachTaxon.length; t++) {
             obsTagsForEachTaxon[t]=new IntArrayList(750_000); // initial capacity
         }
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: IntArrayList: " + ((double) (current - previous) / 1_000_000_000.0));
         String temp = "Nothing has been read from the raw sequence file yet";
         BufferedReader br = getBufferedReaderForRawSeqFile(fileNum);
         try {
+            long readSeqReadTime = 0;
+            long ifRRNotNullTime = 0;
             while ((temp = br.readLine()) != null) {
                 if (counters[0] % 1000000 == 0)  reportProgress(counters);
+                previous = System.nanoTime();
                 ReadBarcodeResult rr = readSequenceRead(br, temp, thePBR, counters);
+                current = System.nanoTime();
+                readSeqReadTime += (current - previous);
+                previous = System.nanoTime();
                 if (rr != null) {
                     counters[1]++;  // goodBarcodedReads
                     rawReadCountsForFullSampleName.put(rr.getTaxonName(),rawReadCountsForFullSampleName.get(rr.getTaxonName())+1);
@@ -296,7 +314,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                     int taxonIndex = taxaList.indexOf(fullNameToHDF5Name.get(rr.getTaxonName()));
                     obsTagsForEachTaxon[taxonIndex].add(tagIndex);
                 }
+                current = System.nanoTime();
+                ifRRNotNullTime += (current - previous);
             }
+            System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: readSequenceRead: " + ((double) (readSeqReadTime) / 1_000_000_000.0));
+            System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: ifRRNotNullTime: " + ((double) (ifRRNotNullTime) / 1_000_000_000.0));
             br.close();
         } catch (Exception e) {
             System.out.println("Catch in readRawSequencesAndRecordDepth() at nReads=" + counters[0] + " e=" + e);
