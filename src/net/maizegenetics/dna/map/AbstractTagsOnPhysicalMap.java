@@ -408,6 +408,61 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
     }
 
     /**
+     * Outputs a new binary topm containing only tags with start positions that lie within 
+     * the specified chromosomal region (inclusive).
+     * To obtain the whole chromosome, set minPos to Integer.MIN_VALUE and maxPos 
+     * to Integer.MAX_VALUE
+     * TODO : generalize to other types of topm (HDF5, text)?
+     * @param outFile : use the suffix .topm 
+     * @param targetChr
+     * @param minPos : set to Integer.MIN_VALUE for no cutoff
+     * @param maxPos : set to Integer.MAX_VALUE for no cutoff 
+     */
+    public void writeBinaryFileForChromosomalRegion(File outFile, int targetChr, int minPos, int maxPos) {
+        int nTagsInRegion = 0;
+        for (int tag = 0; tag < myNumTags; tag++) {
+            if ((bestChr[tag] == targetChr && bestStartPos[tag] >= minPos && bestStartPos[tag] <= maxPos)) {
+                nTagsInRegion++;
+            }
+        }
+        int tagsOutput = 0;
+        try {
+            DataOutputStream fw = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile), 4000000));
+            fw.writeInt(nTagsInRegion);
+            fw.writeInt(tagLengthInLong);
+            fw.writeInt(myMaxVariants);
+            for (int row = 0; row < myNumTags; row++) {
+                if ((bestChr[row] != targetChr || bestStartPos[row] < minPos || bestStartPos[row] > maxPos)) {
+                    continue;
+                }
+                for (int j = 0; j < tagLengthInLong; j++) {
+                    fw.writeLong(tags[j][row]);
+                }
+                fw.writeByte(tagLength[row]);
+                fw.writeByte(multimaps[row]);
+                fw.writeInt(bestChr[row]);
+                fw.writeByte(bestStrand[row]);
+                fw.writeInt(bestStartPos[row]);
+                fw.writeInt(getEndPosition(row));
+                fw.writeByte(getDivergence(row));
+                for (int j = 0; j < myMaxVariants; j++) {
+                    fw.writeByte(getVariantPosOff(row,j));
+                    fw.writeByte(getVariantDef(row,j));
+                }
+                fw.writeByte(getDcoP(row));
+                fw.writeByte(getMapP(row));
+                tagsOutput++;
+            }
+            fw.flush();
+            fw.close();
+            System.out.println("Tag positions written to:" + outFile.toString());
+            System.out.println("Number of tags in file:" + tagsOutput);
+        } catch (Exception e) {
+            System.err.println("Catch in writing output file e=" + e);
+        }
+    }
+
+    /**
      * @return An int[] result where : result[0] = The number of tags with a
      * unique physical positions in this file (i.e. , tags for which the
      * bestChr number is known). result[1] = The number of tags which align
