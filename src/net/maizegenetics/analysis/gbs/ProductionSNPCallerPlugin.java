@@ -531,7 +531,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         } else {
             System.out.println("\nThe target HDF5 file:\n  "+myTargetHDF5file);
             System.out.println("does not exist. A new HDF5 file of that name will be created \nto hold the genotypes from this run.");
-            genos = GenotypeTableBuilder.getTaxaIncremental(myPositionList, myTargetHDF5file);
+            genos = GenotypeTableBuilder.getTaxaIncrementalWithMerging(myTargetHDF5file, myPositionList, genoMergeRule);
         }
     }
 

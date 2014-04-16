@@ -208,6 +208,16 @@ public class GenotypeTableBuilder {
         return new GenotypeTableBuilder(existingHDFFile, null, mergeRule);
     }
 
+    /**
+     * Creates a new taxa incremental HDF5 GenotypeTableBuilder to which replicate taxa can be added
+     * @param newHDFFile
+     * @param positionList
+     * @param mergeRule
+     * @return 
+     */
+    public static GenotypeTableBuilder getTaxaIncrementalWithMerging(String newHDFFile, PositionList positionList, GenotypeMergeRule mergeRule) {
+        return new GenotypeTableBuilder(newHDFFile, positionList, mergeRule);
+    }
 
 
 
