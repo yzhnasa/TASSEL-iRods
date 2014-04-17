@@ -393,8 +393,6 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 keyFileColumns.put("Sample", col);
             } else if (header[col].equalsIgnoreCase("LibraryPrepID")) {
                 keyFileColumns.put("LibPrepID", col);
-            } else if (header[col].equalsIgnoreCase("Enzyme")) {
-                keyFileColumns.put("Enzyme", col);
             }
         }
         if (!confirmKeyFileHeader()) {
@@ -403,6 +401,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
     
     private boolean confirmKeyFileHeader() {
+        // check the headers
         if (!keyFileColumns.containsKey("Flowcell"))
             return false;
         if (!keyFileColumns.containsKey("Lane"))
@@ -413,26 +412,35 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             return false;
         if (!keyFileColumns.containsKey("LibPrepID"))
             return false;
-        if (!keyFileColumns.containsKey("Enzyme"))
+
+        // check the column order (needed for ParseBarcodeReads)
+        if (!keyFileColumns.get("Flowcell").equals(0))
+            return false;
+        if (!keyFileColumns.get("Lane").equals(1))
+            return false;
+        if (!keyFileColumns.get("Barcode").equals(2))
+            return false;
+        if (!keyFileColumns.get("Sample").equals(3))
+            return false;
+        if (!keyFileColumns.get("LibPrepID").equals(7))
             return false;
         return true;
     }
     
     private void throwBadKeyFileError() {
         String badKeyFileMessage =
-            "The keyfile does not conform to expections.\n" +
-            "It must contain columns with the following (exact) headers:\n"+
-            "   Flowcell\n"+
-            "   Lane\n" +
-            "   Barcode\n" +
-            "   DNASample (or \"Sample\")\n" +
-            "   LibraryPrepID\n" +
-            "   Enzyme\n" +
-            "\n";
+            "\n\nThe keyfile does not conform to expections.\n" +
+            "It must contain columns with the following (exact) headers, and\n"+
+            "in the indicated columns:\n"+
+            "   \"Flowcell\"                 (column A)\n"+
+            "   \"Lane\"                     (column B)\n" +
+            "   \"Barcode\"                  (column C)\n" +
+            "   \"DNASample\" or \"Sample\"    (column D)\n" +
+            "   \"LibraryPrepID\"            (column H)\n" +
+            "\n\n";
         try {
             throw new IllegalStateException(badKeyFileMessage);
         } catch (Exception e) {
-            System.out.println("Couldn't read key file: " + e);
             e.printStackTrace();
             System.exit(1);
         }
