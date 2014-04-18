@@ -19,6 +19,7 @@ import net.maizegenetics.util.BitSet;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import net.maizegenetics.dna.map.Position;
 
 /**
  * Taxa and site filtering of GenotypeTables. The class essentially creates
@@ -350,6 +351,29 @@ public class FilterGenotypeTable implements GenotypeTable {
         }
         return getInstance(a, result);
 
+    }
+    
+    public static FilterGenotypeTable getInstance(GenotypeTable a, PositionList subPositionList) {
+        
+        int[] temp = new int[subPositionList.size()];
+        int count = 0;
+        PositionList positionList = a.positions();
+        for (Position position: subPositionList) {
+            int index = positionList.indexOf(position);
+            if (index >= 0) {
+                temp[count++] = index;
+            }
+        }
+
+        int[] result = null;
+        if (count == subPositionList.size()) {
+            result = temp;
+        } else {
+            result = new int[count];
+            System.arraycopy(temp, 0, result, 0, count);
+        }
+        return getInstance(a, result);
+        
     }
 
     public static FilterGenotypeTable getInstance(GenotypeTable a, String chromosome, int startPhysicalPos, int endPhysicalPos) {
