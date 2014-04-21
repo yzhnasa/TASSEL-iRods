@@ -74,7 +74,7 @@ public class MergeHDF5GenotypesSameSitesPlugin extends AbstractPlugin {
             myArgsEngine = new ArgsEngine();
             myArgsEngine.add("-i", "--input-folder", true);
             myArgsEngine.add("-o", "--output-file", true);
-            myArgsEngine.add("iD", "--ignore-depth", false);
+            myArgsEngine.add("-iD", "--ignore-depth", false);
         }
         myArgsEngine.parse(args);
         String inDirName = myArgsEngine.getString("-i");
