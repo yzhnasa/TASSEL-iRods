@@ -236,7 +236,7 @@ public class TasselPipeline implements PluginListener {
                     integratePlugin(new CombineDataSetsPlugin(), false);
                 } else if (current.equalsIgnoreCase("-t")) {
                     String traitFile = args[index++].trim();
-                    loadFile(traitFile, FileLoadPlugin.TasselFileType.Numerical);
+                    loadFile(traitFile, FileLoadPlugin.TasselFileType.Phenotype);
                 } else if (current.equalsIgnoreCase("-s")) {
                     String inputFile = args[index++].trim();
                     loadFile(inputFile, FileLoadPlugin.TasselFileType.Sequence);

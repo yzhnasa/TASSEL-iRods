@@ -50,7 +50,7 @@ public class FileLoadPlugin extends AbstractPlugin {
 
     public enum TasselFileType {
 
-        SqrMatrix, Sequence, Numerical, Unknown, Fasta,
+        SqrMatrix, Sequence, Unknown, Fasta,
         Hapmap, Plink, Phenotype, ProjectionAlignment, Phylip_Seq, Phylip_Inter, GeneticMap, Table,
         Serial, HapmapDiploid, Text, VCF, HDF5, TOPM
     };
@@ -268,8 +268,6 @@ public class FileLoadPlugin extends AbstractPlugin {
             } else if ((line1.startsWith("#Nexus")) || (line1.startsWith("#NEXUS")) || (line1.startsWith("CLUSTAL"))
                     || ((sval1.length == 2) && (sval2.length == 2))) {
                 guess = TasselFileType.Sequence;
-            } else if (sval1.length == 3) {
-                guess = TasselFileType.Numerical;
             }
 
             myLogger.info("guessAtUnknowns: type: " + guess);
@@ -321,10 +319,6 @@ public class FileLoadPlugin extends AbstractPlugin {
                 }
                 case Sequence: {
                     result = ReadSequenceAlignmentUtils.readBasicAlignments(inFile, 40);
-                    break;
-                }
-                case Numerical: {
-                    result = ReadPhenotypeUtils.readNumericalAlignment(inFile);
                     break;
                 }
                 case SqrMatrix: {
