@@ -190,7 +190,11 @@ public final class HDF5Utils {
 
     public static byte[][] getHDF5GenotypesDepth(IHDF5Reader reader, String taxon) {
         String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
-        return reader.readByteMatrix(callsPath);
+        if(reader.exists(callsPath)) {
+            return reader.readByteMatrix(callsPath);
+        } else {
+            return null;
+        }
     }
 
     public static boolean doesGenotypeDepthExist(IHDF5Reader reader) {
@@ -198,7 +202,10 @@ public final class HDF5Utils {
         boolean depthExist=false;
         for (String taxon : taxaNames) {
             String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
-            if(reader.exists(callsPath)) depthExist=true;
+            if(reader.exists(callsPath)) {
+                depthExist=true;
+                break;
+            }
         }
         return depthExist;
     }

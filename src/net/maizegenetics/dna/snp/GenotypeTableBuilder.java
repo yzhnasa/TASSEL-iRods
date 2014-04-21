@@ -556,6 +556,9 @@ public class GenotypeTableBuilder {
         byte[] combGenos=new byte[genotype.length];
         if(depth!=null) {
             byte[][] existingDepth=HDF5Utils.getHDF5GenotypesDepth(myWriter,id.getName());
+            if (existingDepth == null) {
+                throw new IllegalStateException("mergeTaxonInHDF5: Trying to merge genotypes with and without depth.");
+            }
             byte[][] combDepth=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES][genotype.length];
             byte[] currDepths=new byte[NucleotideAlignmentConstants.NUMBER_NUCLEOTIDE_ALLELES];
             for (int site=0; site<combDepth[0].length; site++) {
@@ -642,7 +645,7 @@ public class GenotypeTableBuilder {
 
         if(coverage.length>0) HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.TAXACOV, writer, coverage.length, 1<<16, coverage);
         if(hets.length>0) {
-            System.out.println("Hets Length:"+hets.length);
+            System.out.println("Number of taxa in HDF5 file:"+hets.length);
             HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.TAXAHET, writer, hets.length, 1<<16, hets);
         }
     }
