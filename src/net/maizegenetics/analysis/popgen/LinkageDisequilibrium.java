@@ -9,11 +9,11 @@ package net.maizegenetics.analysis.popgen;
 import cern.colt.map.OpenLongObjectHashMap;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
-import net.maizegenetics.util.TableReport;
 import net.maizegenetics.stats.statistics.FisherExact;
 import net.maizegenetics.util.BitSet;
 import net.maizegenetics.util.OpenBitSet;
 import net.maizegenetics.util.ProgressListener;
+import net.maizegenetics.util.TableReport;
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
@@ -125,7 +125,9 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
      * @param sitesList
      * @param hetTreatment
      */
-    public LinkageDisequilibrium(GenotypeTable alignment, int windowSize, testDesign LDType, int testSite, ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals, int[] sitesList, HetTreatment hetTreatment) {
+    public LinkageDisequilibrium(GenotypeTable alignment, int windowSize, testDesign LDType, int testSite,
+                                 ProgressListener listener, boolean isAccumulativeReport, int numAccumulateIntervals,
+                                 int[] sitesList, HetTreatment hetTreatment) {
         myAlignment = alignment;
         myFisherExact = new FisherExact((2 * myAlignment.numberOfTaxa()) + 10);
         myWindowSize = windowSize;
@@ -196,7 +198,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         BitSet rMn = alignment.allelePresenceForAllTaxa(site1, GenotypeTable.WHICH_ALLELE.Minor);
         BitSet cMj = alignment.allelePresenceForAllTaxa(site2, GenotypeTable.WHICH_ALLELE.Major);
         BitSet cMn = alignment.allelePresenceForAllTaxa(site2, GenotypeTable.WHICH_ALLELE.Minor);
-        return getLDForSitePair(rMj, rMn, cMj, cMn, 2, minTaxaForEstimate, -1.0f, fisherExact);
+        return getLDForSitePair(rMj, rMn, cMj, cMn, 2, minTaxaForEstimate, -1.0f, fisherExact, site1, site2);
     }
 
     private void calculateBitLDForHaplotype(boolean ignoreHets) {
@@ -216,14 +218,14 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             BitSet rMn = workingAlignment.allelePresenceForAllTaxa(r, GenotypeTable.WHICH_ALLELE.Minor);
             BitSet cMj = workingAlignment.allelePresenceForAllTaxa(c, GenotypeTable.WHICH_ALLELE.Major);
             BitSet cMn = workingAlignment.allelePresenceForAllTaxa(c, GenotypeTable.WHICH_ALLELE.Minor);
-            LDResult ldr = getLDForSitePair(rMj, rMn, cMj, cMn, 2, myMinTaxaForEstimate, -1.0f, myFisherExact);
+            LDResult ldr = getLDForSitePair(rMj, rMn, cMj, cMn, 2, myMinTaxaForEstimate, -1.0f, myFisherExact,r,c);
             if (myIsAccumulativeReport) {
-                if (ldr.r2 == Float.NaN) {
+                if (ldr.r2() == Float.NaN) {
                     myAccumulativeRValueBins[myNumAccumulativeBins]++;
-                } else if (ldr.r2 == 1.0f) {
+                } else if (ldr.r2() == 1.0f) {
                     myAccumulativeRValueBins[myNumAccumulativeBins - 1]++;
                 } else {
-                    int index = (int) Math.floor(ldr.r2 / myAccumulativeInterval);
+                    int index = (int) Math.floor(ldr.r2() / myAccumulativeInterval);
                     myAccumulativeRValueBins[index]++;
                 }
             } else {
@@ -286,38 +288,54 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         return rsqr;
     }
 
+
+    /**
+     * Method for estimating LD between a pair of bit sets.  Since there can be tremendous missing data, minimum minor and
+     * minimum site counts ensure that meaningful results are estimated.  Site indices are merely there for annotating the LDResult.
+     * @param rMj site 1 major alleles
+     * @param rMn site 1 minor alleles
+     * @param cMj site 2 major alleles
+     * @param cMn site 2 minor alleles
+     * @param minMinorCnt minimum minor allele count after intersection
+     * @param minCnt minimum count after intersection
+     * @param minR2 results below this r2 are ignored for p-value calculation (save times)
+     * @param myFisherExact
+     * @param site1Index annotation of LDresult with sites indices
+     * @param site2Index annotation of LDresult with sites indices
+     * @return
+     */
     public static LDResult getLDForSitePair(BitSet rMj, BitSet rMn, BitSet cMj, BitSet cMn,
-            int minMinorCnt, int minCnt, float minR2, FisherExact myFisherExact) {
+            int minMinorCnt, int minCnt, float minR2, FisherExact myFisherExact, int site1Index, int site2Index) {
         // float[] results = {Float.NaN, Float.NaN, Float.NaN, Float.NaN};
-        LDResult results = new LDResult();
+        LDResult.Builder results = new LDResult.Builder(site1Index,site2Index);
         int n = 0;
         int[][] contig = new int[2][2];
         n += contig[1][1] = (int) OpenBitSet.intersectionCount(rMn, cMn);
         n += contig[1][0] = (int) OpenBitSet.intersectionCount(rMn, cMj);
         if (contig[1][0] + contig[1][1] < minMinorCnt) {
-            return results;
+            return results.build();
         }
         n += contig[0][1] = (int) OpenBitSet.intersectionCount(rMj, cMn);
         if (contig[0][1] + contig[1][1] < minMinorCnt) {
-            return results;
+            return results.build();
         }
         n += contig[0][0] = (int) OpenBitSet.intersectionCount(rMj, cMj);
-        results.n = n;
+        results.n(n);
         if (n < minCnt) {
-            return results;
+            return results.build();
         }
         double rValue = LinkageDisequilibrium.calculateRSqr(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minCnt);
-        results.r2 = (float) rValue;
+        results.r2((float)rValue);
         if (Double.isNaN(rValue)) {
-            return results;
+            return results.build();
         }
-        results.dprime = (float) LinkageDisequilibrium.calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minCnt);;
+        results.dprime((float) LinkageDisequilibrium.calculateDPrime(contig[0][0], contig[1][0], contig[0][1], contig[1][1], minCnt));
         if (rValue < minR2) {
-            return results;
+            return results.build();
         }
         double pValue = myFisherExact.getTwoTailedP(contig[0][0], contig[1][0], contig[0][1], contig[1][1]);
-        results.p = (float) pValue;
-        return results;
+        results.p((float) pValue);
+        return results.build();
     }
 
     private int getRowFromIndex(long index) {
@@ -409,7 +427,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (result == null) {
             return Float.NaN;
         }
-        return result.p;
+        return result.p();
     }
 
     /**
@@ -426,7 +444,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (result == null) {
             return 0;
         }
-        return result.n;
+        return result.n();
     }
 
     /**
@@ -442,7 +460,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (result == null) {
             return Float.NaN;
         }
-        return result.dprime;
+        return result.dPrime();
     }
 
     /**
@@ -458,7 +476,7 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
         if (result == null) {
             return Float.NaN;
         }
-        return result.r2;
+        return result.r2();
     }
 
     public int getX(int row) {
@@ -637,22 +655,10 @@ public class LinkageDisequilibrium extends Thread implements Serializable, Table
             myListener.progress(percent, null);
         }
     }
+
+
 }
 
-/**
- * Container class for reporting LD results
- *
- * @author edbuckler
- */
-class LDResult {
 
-    public float r2 = Float.NaN;
-    public float dprime = Float.NaN;
-    public float p = Float.NaN;
-    public int n = 0;
 
-    @Override
-    public String toString() {
-        return "LDResult{" + "r2=" + r2 + ", dprime=" + dprime + ", p=" + p + ", n=" + n + '}';
-    }
-}
+
