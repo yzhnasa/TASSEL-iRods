@@ -73,6 +73,7 @@ final class PositionHDF5List implements PositionList {
                 Position p=new GeneralPosition.Builder(chr,pos)
                         .snpName(snpIDs[i])
                         .allele(Allele.GLBMAJ,afOrder[0][i])
+                        .allele(Allele.GLBMIN,afOrder[1][i])
                         .maf(maf[i])
                         .siteCoverage(paf[i])
                         .build();
