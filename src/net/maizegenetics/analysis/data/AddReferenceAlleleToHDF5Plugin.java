@@ -19,7 +19,6 @@ import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
-import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 import net.maizegenetics.util.Utils;
 
@@ -37,6 +36,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
     private int currChr = Integer.MIN_VALUE;
     private int currPos = Integer.MIN_VALUE;
     private String contextSeq;
+    private final boolean writePositions = false;
 
     public AddReferenceAlleleToHDF5Plugin() {
         super(null, false);
@@ -119,6 +119,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
             try {Thread.sleep(500);} catch(Exception e) {}
             throw new IllegalStateException(message);
         }
+        try {refReader.close();} catch (IOException e) {}
         fireProgress(100);
         return null;
     }
@@ -126,7 +127,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
     private String addRefAlleleToHDF5GenoTable() {
         IHDF5Writer h5Writer = HDF5Factory.open(inHDF5FileName);
         PositionList oldPosList = PositionListBuilder.getInstance(h5Writer);
-        System.out.println("SNPID\tchr\tpos\tstr\tmaj\tmin\tref\tmaf\tcov\tcontext");
+        if (writePositions) System.out.println("SNPID\tchr\tpos\tstr\tmaj\tmin\tref\tmaf\tcov\tcontext");
         for (Position oldPos : oldPosList) {
             int chr = oldPos.getChromosome().getChromosomeNumber();
             int pos = oldPos.getPosition();
@@ -135,7 +136,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
             if (refAllele == Byte.MIN_VALUE) {
                 return "\nCould not find position "+pos+" on chromosome "+chr+" in the reference genome fasta file.\n\n\n";
             }
-            GeneralPosition newPos = new GeneralPosition.Builder(oldPos) // this only assigns chr,pos,strand,CM,SNPID,isNucleotide,isIndel
+            Position newPos = new GeneralPosition.Builder(oldPos) // this only copies chr,pos,strand,CM,SNPID,isNucleotide,isIndel from oldPos
                 .maf(oldPos.getGlobalMAF())
                 .siteCoverage(oldPos.getGlobalSiteCoverage())
                 .allele(Position.Allele.GLBMAJ, oldPos.getAllele(Position.Allele.GLBMAJ))
@@ -144,18 +145,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
                 .allele(Position.Allele.HIDEP, oldPos.getAllele(Position.Allele.HIDEP))
                 .allele(Position.Allele.REF, refAllele)
                 .build();
-            System.out.println(
-                newPos.getSNPID()+
-                "\t"+newPos.getChromosome().getChromosomeNumber()+
-                "\t"+newPos.getPosition()+
-                "\t"+newPos.getStrand()+
-                "\t"+newPos.getAllele(Position.Allele.GLBMAJ)+
-                "\t"+newPos.getAllele(Position.Allele.GLBMIN)+
-                "\t"+newPos.getAllele(Position.Allele.REF)+
-                "\t"+newPos.getGlobalMAF()+
-                "\t"+newPos.getGlobalSiteCoverage()+
-                "\t"+contextSeq
-            );
+            if (writePositions) writePosition(newPos, contextSeq);
         }
         System.out.println("\n\nFinished adding reference alleles to file:");
         System.out.println("  "+inHDF5FileName+"\n\n");
@@ -191,7 +181,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
                                 + "(>1, >2, >3, etc.) OR to 'chr' followed by an integer (>chr1, >chr2, >chr3, etc.)\n\n");
                         System.exit(1);
                     }
-//                    myLogger.info("\nCurrently reading chromosome "+currChr+" from reference genome fasa file\n\n");
+                    if (!writePositions) myLogger.info("\nCurrently reading chromosome "+currChr+" from reference genome fasa file\n\n");
                 }
                 currPos = 0;
             }
@@ -231,6 +221,21 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
             System.exit(1);
         }
         return currChar;
+    }
+    
+    private void writePosition(Position pos, String contextSeq) {
+        System.out.println(
+            pos.getSNPID()+
+            "\t"+pos.getChromosome().getChromosomeNumber()+
+            "\t"+pos.getPosition()+
+            "\t"+pos.getStrand()+
+            "\t"+pos.getAllele(Position.Allele.GLBMAJ)+
+            "\t"+pos.getAllele(Position.Allele.GLBMIN)+
+            "\t"+pos.getAllele(Position.Allele.REF)+
+            "\t"+pos.getGlobalMAF()+
+            "\t"+pos.getGlobalSiteCoverage()+
+            "\t"+contextSeq
+        );
     }
 
     @Override
