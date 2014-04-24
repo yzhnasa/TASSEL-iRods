@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import net.maizegenetics.dna.map.GeneralPosition;
+import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
@@ -204,8 +205,8 @@ public class MergeHDF5GenotypesSameSitesPlugin extends AbstractPlugin {
         }
         for (int j = 0; j < PosListA.size(); j++) {
             // only GeneralPosition seems to have an appropriate equals() method
-            GeneralPosition genPos1 = new GeneralPosition.Builder(PosListA.get(j)).build();
-            GeneralPosition genPos2 = new GeneralPosition.Builder(PosListB.get(j)).build();
+            Position genPos1 = new GeneralPosition.Builder(PosListA.get(j)).build();
+            Position genPos2 = new GeneralPosition.Builder(PosListB.get(j)).build();
             if(!genPos1.equals(genPos2)) return false;
         }
         return true;
