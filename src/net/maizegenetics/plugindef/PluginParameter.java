@@ -7,7 +7,7 @@ import com.google.common.collect.Range;
  *
  * @author Ed Buckler
  */
-public class PluginParameter {
+public class PluginParameter {  //TODO concept make this generic
     private final String guiName;
     private final String guiUnits;
     private final String cmdLineName;
@@ -15,7 +15,7 @@ public class PluginParameter {
     private final String description;
     private final Class type;
     private final Range range;
-    private final Object value;
+    private final Object value; //TODO make this of the type generic
 
     private PluginParameter(String guiName, String guiUnits, String cmdLineName,
                            String cmdLineLongName, String description, Class type, Range range, Object value) {
@@ -76,20 +76,21 @@ public class PluginParameter {
 
     public Object value() {
         return value;
-    }
+    }   //TODO change to generic return
 
 
-    public static class Builder {
+    public static class Builder { //TODO make generic
         private String guiName;
         private String guiUnits="";
         private String cmdLineName;
         private String cmdLineLongName="";
         private String description="";
-        private Class type;
+        private Class type;     //TODO remove as generic should know its type
         private Range range=null;
-        private Object value;
+        private Object value;    //TODO make generic
 
         public Builder(String guiName, String cmdLineName, Class type, Object value) {
+            //TODO perhaps simplify to  cmdLineName and value, guiName will be cmdLineName by default
             this.guiName=guiName;
             this.cmdLineName=cmdLineName;
             this.type=type;

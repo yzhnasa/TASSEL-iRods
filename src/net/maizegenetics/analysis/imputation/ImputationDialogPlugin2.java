@@ -34,7 +34,17 @@ public class ImputationDialogPlugin2 extends AbstractPlugin {
     @FXML private static TextField hap_mxHets;
     @FXML private static TextField hap_mxDiv;
 
+//  Concept for TAS-336
+//   Actually dialog plugins should get most of their parameters from the analysis plugin, not themselves.
+//    PluginParameter<Integer> hapSize=new PluginParameter.Builder("Maximum output haplotypes","maxHap", 1000)
+//            .description("Maximum number of haplotypes per segment")
+//            .range(Range.closed(0,10000)).build();
+
     static {
+        //TAS-336 Concept - use reflection to find all parameters and put them in the list rather than adding them as done below
+
+
+
         haplotypeParam.add(new PluginParameter.Builder("Maximum output data missing","maxOutMiss", Double.TYPE, 0.6)
             .description("Maximum frequency of missing data in the output haplotype").range(Range.closed(0.01,1.0)).build());
         haplotypeParam.add(new PluginParameter.Builder("Maximum output haplotypes","maxHap", Integer.TYPE, 1000)
