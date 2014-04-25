@@ -196,6 +196,11 @@ public class ParseBarcodeRead {
             initialCutSiteRemnant = new String[]{"AATTC"};
             likelyReadEnd = new String[]{"GAATC", "GACTC", "GAGTC", "GATTC", "GAATTC", "GAATAGATC", "GACTAGATC", "GAGTAGATC", "GATTAGATC"}; // look for HinfI site, EcoRI site, or Poland et al. 2012 Y-adapter for HinfI
             readEndCutSiteRemnantLength = 4;
+        } else if (enzyme.matches("(?i)bbvci-mspi|(?i)bbvc1-msp1")) {
+            theEnzyme = "BbvCI-MspI"; // CCTCAGC (-5/-2)   C^CGG
+            initialCutSiteRemnant = new String[]{"TCAGC"};
+            likelyReadEnd = new String[]{"CCGG", "CCTCAGC", "CCGAGATC"}; // look for MspI site, BbvCI site, or Poland et al. 2012 Y-adapter for MspI
+            readEndCutSiteRemnantLength = 3;
         } else if(enzyme.matches("(?i)apo[i1]")){
             theEnzyme = "ApoI";
             initialCutSiteRemnant=new String[]{"AATTC","AATTT"};
@@ -288,6 +293,7 @@ public class ParseBarcodeRead {
                     +"  AsiSI-MspI"   +"\n"
                     +"  AvaII-MseI"   +"\n"
                     +"  BamHI-MluCI"  +"\n"
+                    +"  BbvCI-MspI"   +"\n"
                     +"  BssHII-MspI"  +"\n"
                     +"  EcoRI-AvaII"  +"\n"
                     +"  EcoRI-HinfI"  +"\n"
@@ -344,7 +350,7 @@ public class ParseBarcodeRead {
      * Reads in an Illumina key file, creates a linear array of {@link Barcode} objects
      * representing the barcodes in the key file, then creates a hash map containing
      * indices from the linear array indexed by sequence.  The names of barcode objects
-     * follow the pattern samplename:flowcell:lane:well, since sample names alone are not unique.
+     * follow the pattern samplename:flowcell:lane:LibraryPrepID, since sample names alone are not unique.
      *
      * @param keyFile Illumina key file.
      * @param flowcell Only barcodes from this flowcell will be added to the array.
@@ -360,16 +366,10 @@ public class ParseBarcodeRead {
                 String[] s = temp.split("\\t");  //split by whitespace
                 Barcode theBC = null;
                 if (s[0].equals(flowcell) && s[1].equals(lane)) {
-                    String well = (s[6].length() < 2) ? (s[5] + '0' + s[6]) : s[5] + s[6];
-                    if (s.length < 8 || s[7] == null || s[7].equals("")) {  // use the plate and well
-                        theBC = new Barcode(s[2], initialCutSiteRemnant, s[3] + ":" + s[0] + ":" + s[1] + ":" + s[4] + ":" + well, flowcell, lane);
-                    } else {  // use the "libraryPlateWellID" or whatever is in column H of the key file, IF it is an integer
-                        try {
-                            int libPrepID = Integer.parseInt(s[7]);
-                            theBC = new Barcode(s[2], initialCutSiteRemnant, s[3] + ":" + s[0] + ":" + s[1] + ":" + libPrepID, flowcell, lane);
-                        } catch (NumberFormatException nfe) {
-                            theBC = new Barcode(s[2], initialCutSiteRemnant, s[3] + ":" + s[0] + ":" + s[1] + ":" + s[4] + ":" + well, flowcell, lane);
-                        }
+                    if (s.length < 8 || s[7] == null || s[7].trim().equals("")) {  // column H (LibraryPrepID) is required for TASSEL5
+                        throw new IllegalArgumentException("Column H of the key file must contain a LibraryPrepID (integer or alphanumeric)");
+                    } else {  // use the "libraryPrepID" or whatever is in column H of the key file
+                        theBC = new Barcode(s[2], initialCutSiteRemnant, s[3]+":"+s[0]+":"+s[1]+":"+ s[7],flowcell,lane);
                     }
                     theBarcodesArrayList.add(theBC);
                     System.out.println(theBC.barcodeS + " " + theBC.taxaName);
@@ -391,7 +391,6 @@ public class ParseBarcodeRead {
         } catch (Exception e) {
             System.out.println("Error with setupBarcodeFiles: " + e);
         }
-
         return theBarcodes.length;
     }
 

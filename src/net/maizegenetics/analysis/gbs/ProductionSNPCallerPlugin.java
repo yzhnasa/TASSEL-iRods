@@ -88,10 +88,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     private Map<String,Integer> rawReadCountsForFullSampleName = new TreeMap<>();
     private Map<String,Integer> matchedReadCountsForFullSampleName = new TreeMap<>();
 
-    private boolean stacksL = false;  // if true, use STACKS likelihood method for calling hets
+    private boolean stacksL = false;  // if true, use STACKS likelihood method for calling hets // not implemented yet
     private boolean keepOpen = false; // if true, keep the HDF5 genotypes file open for future edits ( i.e., final close is: genos.closeUnfinished() )
     private double errorRate = 0.01;
     private BasicGenotypeMergeRule genoMergeRule = null;
+    private boolean noDepthOutput = false; // if true, the depths are not passed to the GenotypeTableBuilder when taxa are added (or merged with exisiting replicate libraryPrepIDs)
     
     public ProductionSNPCallerPlugin() {
         super(null, false);
@@ -111,6 +112,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             + "  -o   Output (target) HDF5 genotypes file to add new genotypes to (new file created if it doesn't exist)\n"
             + "  -eR  Average sequencing error rate per base (used to decide between heterozygous and homozygous calls) (default: "+errorRate+")\n"
             + "  -ko  Keep hdf5 genotypes open for future runs that add more taxa or more depth\n (default: finalize hdf5 file)\n"
+//            + "  -ndo No depth output: do not write depths to the output hdf5 genotypes file\n"  // PRIVATE OPTION
 //            + "  -sL  Use STACKS likelihood method to call heterozygotes (default: use tasselGBS likelihood ratio method)\n"
 //            + "  -d  Maximum divergence (edit distance) between new read and previously mapped read (Default: 0 = perfect matches only)\n"  // NOT IMPLEMENTED YET
             +"\n\n"
@@ -134,6 +136,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             myArgsEngine.add("-ko", "--keep-open", false);
             myArgsEngine.add("-sL", "--STACKS-likelihood", false);
             myArgsEngine.add("-d",  "--divergence", true);
+            myArgsEngine.add("-ndo","--no-depth-output", false);
         }
         myArgsEngine.parse(args);
         String tempDirectory = myArgsEngine.getString("-i");
@@ -200,6 +203,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         if (myArgsEngine.getBoolean("-ko")) {
             keepOpen = true;
         }
+        if (myArgsEngine.getBoolean("-ndo")) {
+            noDepthOutput = true;
+        }
         if (myArgsEngine.getBoolean("-d")) {
             maxDivergence = Integer.parseInt(myArgsEngine.getString("-d"));
         }
@@ -207,47 +213,99 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
+        long previous = System.nanoTime();
         readKeyFile();  // TODO: read/write full set of metadata
+        long current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: readKeyFile: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        previous = System.nanoTime();
         matchKeyFileToAvailableRawSeqFiles();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: matchKeyFileToAvailableRawSeqFiles: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        previous = System.nanoTime();
         myPositionList = getUniquePositions();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: getUniquePositions: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        previous = System.nanoTime();
         generateFastSiteLookup(myPositionList);
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: generateFastSiteLookup: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        previous = System.nanoTime();
+        setUpGenotypeTableBuilder();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: setUpGenotypeTableBuilder: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
         int nFilesProcessed = 0;
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             if ( !seqFilesInKeyAndDir.contains(myRawSeqFileNames[fileNum]) ) continue;  // skip fastq/qseq files that are not in the key file
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
             System.out.println("\nLooking for known SNPs in sequence reads from file:");
             System.out.println("  "+myRawSeqFileNames[fileNum]+"\n");
+            previous = System.nanoTime();
             readRawSequencesAndRecordDepth(fileNum, counters);  // TODO: read the machine name from the fastq/qseq file
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: readRawSequencesAndRecordDepth: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+            previous = System.nanoTime();
             callGenotypes();
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: callGenotypes: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
             ++nFilesProcessed;
+            previous = System.nanoTime();
             reportTotals(fileNum, counters, nFilesProcessed);
-            if(fileNum == myRawSeqFileNames.length-1 && !keepOpen) {
-                genos.build();
-            } else {
-                genos.closeUnfinished();
-            }
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: reportTotals: " + myRawSeqFileNames[fileNum] + ": " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
         }
+        if(keepOpen) {
+            previous = System.nanoTime();
+            genos.closeUnfinished();
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: genos.closeUnfinished(): " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        } else {
+            previous = System.nanoTime();
+            genos.build();
+            current = System.nanoTime();
+            System.out.println("ProductionSNPCallerPlugin: performFunction: genos.build(): " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        }
+        previous = System.nanoTime();
         writeReadsPerSampleReports();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: performFunction: writeReadsPerSampleReports: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
         return null;
     }
 
     private void readRawSequencesAndRecordDepth(int fileNum, int[] counters) {
+        long previous = System.nanoTime();
         ParseBarcodeRead thePBR = setUpBarcodes(fileNum);
+        long current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: setUpBarcodes: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        previous = System.nanoTime();
         if (thePBR == null || thePBR.getBarCodeCount() == 0) {
             System.out.println("No barcodes found. Skipping this raw sequence file.");
             return;
         }
-        setUpGenotypeTableBuilder(fileNum);
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: getBarCodeCount: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        previous = System.nanoTime();
+        taxaList= new TaxaListBuilder().addAll(getHDF5Taxa(fileNum)).sortTaxaAlphabetically().build();
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: new TaxaListBuilder(): " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
+        previous = System.nanoTime();
         obsTagsForEachTaxon = new IntArrayList[taxaList.numberOfTaxa()];
         for (int t = 0; t < obsTagsForEachTaxon.length; t++) {
             obsTagsForEachTaxon[t]=new IntArrayList(750_000); // initial capacity
         }
+        current = System.nanoTime();
+        System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: IntArrayList: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
         String temp = "Nothing has been read from the raw sequence file yet";
         BufferedReader br = getBufferedReaderForRawSeqFile(fileNum);
         try {
+            long readSeqReadTime = 0;
+            long ifRRNotNullTime = 0;
             while ((temp = br.readLine()) != null) {
-                if (counters[0] % 1000000 == 0)  reportProgress(counters);
+                if (counters[0] % 1000000 == 0)  reportProgress(counters, readSeqReadTime, ifRRNotNullTime);
+                previous = System.nanoTime();
                 ReadBarcodeResult rr = readSequenceRead(br, temp, thePBR, counters);
+                current = System.nanoTime();
+                readSeqReadTime += (current - previous);
+                previous = System.nanoTime();
                 if (rr != null) {
                     counters[1]++;  // goodBarcodedReads
                     rawReadCountsForFullSampleName.put(rr.getTaxonName(),rawReadCountsForFullSampleName.get(rr.getTaxonName())+1);
@@ -260,16 +318,20 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                     int taxonIndex = taxaList.indexOf(fullNameToHDF5Name.get(rr.getTaxonName()));
                     obsTagsForEachTaxon[taxonIndex].add(tagIndex);
                 }
+                current = System.nanoTime();
+                ifRRNotNullTime += (current - previous);
             }
+            System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: readSequenceTime: " + ((double) (readSeqReadTime) / 1_000_000_000.0) +" sec");
+            System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: processSequenceTime: " + ((double) (ifRRNotNullTime) / 1_000_000_000.0) +" sec");
             br.close();
         } catch (Exception e) {
-            System.out.println("Catch in readRawSequencesAndCallGenos() at nReads=" + counters[0] + " e=" + e);
+            System.out.println("Catch in readRawSequencesAndRecordDepth() at nReads=" + counters[0] + " e=" + e);
             System.out.println("Last line read: "+temp);
             e.printStackTrace();
         }
     }
  
-    private void reportProgress(int[] counters) {
+    private void reportProgress(int[] counters, long readSeqReadTime, long ifRRNotNullTime) {
         System.out.println(
             "totalReads:" + counters[0]
             + "  goodBarcodedReads:" + counters[1]
@@ -277,6 +339,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
 //            + "  perfectMatches:" + counters[3]
 //            + "  nearMatches:" + counters[4]
 //            + "  uniqueNearMatches:" + counters[5]
+            + "  cumulReadSequenceTime: "+((double) (readSeqReadTime) / 1_000_000_000.0) +" sec"
+            + "  cumulProcessSequenceTime: "+ ((double) (ifRRNotNullTime) / 1_000_000_000.0) +" sec"
         );
     }
    
@@ -329,8 +393,6 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 keyFileColumns.put("Sample", col);
             } else if (header[col].equalsIgnoreCase("LibraryPrepID")) {
                 keyFileColumns.put("LibPrepID", col);
-            } else if (header[col].equalsIgnoreCase("Enzyme")) {
-                keyFileColumns.put("Enzyme", col);
             }
         }
         if (!confirmKeyFileHeader()) {
@@ -339,6 +401,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
     
     private boolean confirmKeyFileHeader() {
+        // check the headers
         if (!keyFileColumns.containsKey("Flowcell"))
             return false;
         if (!keyFileColumns.containsKey("Lane"))
@@ -349,26 +412,35 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             return false;
         if (!keyFileColumns.containsKey("LibPrepID"))
             return false;
-        if (!keyFileColumns.containsKey("Enzyme"))
+
+        // check the column order (needed for ParseBarcodeReads)
+        if (!keyFileColumns.get("Flowcell").equals(0))
+            return false;
+        if (!keyFileColumns.get("Lane").equals(1))
+            return false;
+        if (!keyFileColumns.get("Barcode").equals(2))
+            return false;
+        if (!keyFileColumns.get("Sample").equals(3))
+            return false;
+        if (!keyFileColumns.get("LibPrepID").equals(7))
             return false;
         return true;
     }
     
     private void throwBadKeyFileError() {
         String badKeyFileMessage =
-            "The keyfile does not conform to expections.\n" +
-            "It must contain columns with the following (exact) headers:\n"+
-            "   Flowcell\n"+
-            "   Lane\n" +
-            "   Barcode\n" +
-            "   DNASample (or \"Sample\")\n" +
-            "   LibraryPrepID\n" +
-            "   Enzyme\n" +
-            "\n";
+            "\n\nThe keyfile does not conform to expections.\n" +
+            "It must contain columns with the following (exact) headers, and\n"+
+            "in the indicated columns:\n"+
+            "   \"Flowcell\"                 (column A)\n"+
+            "   \"Lane\"                     (column B)\n" +
+            "   \"Barcode\"                  (column C)\n" +
+            "   \"DNASample\" or \"Sample\"    (column D)\n" +
+            "   \"LibraryPrepID\"            (column H)\n" +
+            "\n\n";
         try {
             throw new IllegalStateException(badKeyFileMessage);
         } catch (Exception e) {
-            System.out.println("Couldn't read key file: " + e);
             e.printStackTrace();
             System.exit(1);
         }
@@ -458,20 +530,17 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         }
     }
     
-    private void setUpGenotypeTableBuilder(int fileNum) {
+    private void setUpGenotypeTableBuilder() {
         genoMergeRule = new BasicGenotypeMergeRule(errorRate);
         File hdf5File = new File(myTargetHDF5file);
         if (hdf5File.exists()) {
-            System.out.println("\nGenotypes from the raw sequence file:\n  "+myRawSeqFileNames[fileNum]);
-            System.out.println("will be added to existing HDF5 file:\n  "+myTargetHDF5file+"\n");
+            System.out.println("Genotypes will be added to existing HDF5 file:\n  "+myTargetHDF5file+"\n");
             genos = GenotypeTableBuilder.mergeTaxaIncremental(myTargetHDF5file, genoMergeRule);
         } else {
             System.out.println("\nThe target HDF5 file:\n  "+myTargetHDF5file);
-            System.out.println("does not exist. A new HDF5 file of that name will be created \nto hold the genotypes from the raw sequence file:");
-            System.out.println("  "+myRawSeqFileNames[fileNum]+"\n");
-            genos = GenotypeTableBuilder.getTaxaIncremental(myPositionList, myTargetHDF5file);
+            System.out.println("does not exist. A new HDF5 file of that name will be created \nto hold the genotypes from this run.");
+            genos = GenotypeTableBuilder.getTaxaIncrementalWithMerging(myTargetHDF5file, myPositionList, genoMergeRule);
         }
-        taxaList= new TaxaListBuilder().addAll(getHDF5Taxa(fileNum)).sortTaxaAlphabetically().build();
     }
 
     /**
@@ -605,7 +674,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             incrementDepthForTagVariants(prevTag,alleleDepths,currInc);
             byte[][] byteDepths = AlleleDepthUtil.depthIntToByte(alleleDepths);
             byte[] taxonGenos = resolveGenosForTaxon(byteDepths);
-            genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,byteDepths);
+            if (noDepthOutput) {
+                genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,null);
+            } else {
+                genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,byteDepths);
+            }
             System.out.println("  finished calling genotypes for "+taxaList.get(currTaxonIndex).getName());
         }
         System.out.println("Finished calling genotypes for "+obsTagsForEachTaxon.length+" taxa\n");

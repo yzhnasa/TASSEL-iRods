@@ -190,7 +190,11 @@ public final class HDF5Utils {
 
     public static byte[][] getHDF5GenotypesDepth(IHDF5Reader reader, String taxon) {
         String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
-        return reader.readByteMatrix(callsPath);
+        if(reader.exists(callsPath)) {
+            return reader.readByteMatrix(callsPath);
+        } else {
+            return null;
+        }
     }
 
     public static boolean doesGenotypeDepthExist(IHDF5Reader reader) {
@@ -198,7 +202,10 @@ public final class HDF5Utils {
         boolean depthExist=false;
         for (String taxon : taxaNames) {
             String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
-            if(reader.exists(callsPath)) depthExist=true;
+            if(reader.exists(callsPath)) {
+                depthExist=true;
+                break;
+            }
         }
         return depthExist;
     }
@@ -207,7 +214,7 @@ public final class HDF5Utils {
         if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
         if(h5w.exists(callsPath)) throw new IllegalStateException("Taxa Depth Already Exists:"+taxon);
-        h5w.createByteMatrix(callsPath, depth.length, depth[0].length, 6, Math.min(Tassel5HDF5Constants.BLOCK_SIZE,depth.length), Tassel5HDF5Constants.intDeflation);
+        h5w.createByteMatrix(callsPath, depth.length, depth[0].length, 6, Math.min(Tassel5HDF5Constants.BLOCK_SIZE,depth[0].length), Tassel5HDF5Constants.intDeflation);
         writeHDF5EntireArray(callsPath, h5w, depth[0].length, Tassel5HDF5Constants.BLOCK_SIZE, depth);
     }
 

@@ -21,6 +21,8 @@ import java.io.FileOutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.InputMismatchException;
+import java.util.Random;
 
 import static net.maizegenetics.dna.snp.GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
 import static net.maizegenetics.dna.snp.GenotypeTableUtils.isHeterozygous;
@@ -532,5 +534,67 @@ public class FILLINImputationAccuracyPlugin extends AbstractPlugin {
         System.out.println("MFile\tIFile\tGap\tUnimp\tUnimpHets\tCorrect\tErrors");
         System.out.printf("%s\t%s\t%d\t%d\t%d\t%d\t%d%n",maskFile, impFile, gaps, unimp,hets,correct,errors);
         return new int[]{gaps, unimp,hets,correct,errors};
+    }
+
+    /**
+     * Calculates proportion imputed, homozygous proportion right, heterozygous proportion right
+     * @param impGT
+     * @param keyGT
+     * @return
+     * @deprecated a similar method is need in the core part of accuracy.
+     */
+    @Deprecated
+    public static double[] compareAlignment(GenotypeTable impGT, GenotypeTable keyGT, String taxaPrefix) {
+        int hetKeys=0, hetCompared=0, hetRight=0;
+        int homoKeys=0, homoCompared=0, homoRight=0;
+        //if(impGT.numberOfTaxa()!=keyGT.numberOfTaxa()) throw new InputMismatchException("Number of Taxa do not match");
+        if(impGT.numberOfSites()!=keyGT.numberOfSites()) throw new InputMismatchException("Number of Sites do not match");
+        Random r=new Random();
+        for (int t=0; t<impGT.numberOfTaxa(); t++) {
+            if(taxaPrefix!=null && !impGT.taxaName(t).startsWith(taxaPrefix)) continue;
+            int tCompStart=homoCompared;
+            int tHomoRightStart=homoRight;
+            int key_t=keyGT.taxa().indexOf(impGT.taxaName(t));
+            if(key_t<0) continue;
+            //key_t=r.nextInt(impGT.numberOfTaxa());
+            //System.out.print(impGT.taxaName(t)+"\t"+keyGT.taxaName(t));
+            boolean report=impGT.taxaName(t).startsWith("XZ009E0126");
+            for (int s=0; s<impGT.numberOfSites(); s++) {
+                byte keyB=keyGT.genotype(key_t,s);
+                if(keyB==UNKNOWN_DIPLOID_ALLELE) continue;
+                byte impB=impGT.genotype(t,s);
+                if(isHeterozygous(keyB)) {
+                    hetKeys++;
+                    if(impB!=UNKNOWN_DIPLOID_ALLELE) {
+                        hetCompared++;
+                        if(keyB==impB) hetRight++;
+                    }
+                }   else {
+                    homoKeys++;
+                    if(impB!=UNKNOWN_DIPLOID_ALLELE) {
+                        homoCompared++;
+                        if(keyB==impB) homoRight++;
+                        if(report) {
+                            if(keyB!=impB) {System.out.print("Wrong\t");} else {System.out.print("Right\t");}
+                            System.out.printf("%s %d %s %s %n",
+                                impGT.chromosome(s).getName(),
+                                impGT.chromosomalPosition(s),
+                                NucleotideAlignmentConstants.getNucleotideIUPAC(keyB),
+                                NucleotideAlignmentConstants.getNucleotideIUPAC(impB));
+
+                        }
+//                        if(keyB!=impB) System.out.printf("Wrong: %s %s %n",
+//                                NucleotideAlignmentConstants.getNucleotideIUPAC(keyB),
+//                                NucleotideAlignmentConstants.getNucleotideIUPAC(impB));
+                    }
+                }
+            }
+            //System.out.println("\t"+(homoCompared-tCompStart)+"\t"+(homoRight-tHomoRightStart));
+        }
+        double totalKey=hetKeys+homoKeys;
+        double propImp=(double)(hetCompared+homoCompared)/totalKey;
+        double homoRightProp=(double)homoRight/(double)homoCompared;
+        double hetRightProp=(double)hetRight/(double)hetCompared;
+        return new double[]{propImp,homoRightProp,hetRightProp};
     }
 }
