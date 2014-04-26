@@ -694,6 +694,16 @@ public class GenotypeTableBuilder {
             HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.TAXAHET, writer, hets.length, 1<<16, hets);
         }
     }
+    
+    /**
+     * Annotates the HDF5 Genotype file with the reference allele and reference genome version.
+     * Can only be called on unlocked HDF5 files. 
+     * @param writer
+     * @param refAlleles 
+     */
+    public static void annotateHDF5FileWithRefAllele(IHDF5Writer writer, byte[] refAlleles) {
+        ;
+    }
 
 private enum BuildType{TAXA_INC, SITE_INC}
 }

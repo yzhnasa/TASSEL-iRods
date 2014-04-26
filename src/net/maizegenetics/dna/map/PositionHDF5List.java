@@ -27,6 +27,7 @@ final class PositionHDF5List implements PositionList {
     private final Map<String,Chromosome> myChrNameHash;
     private final int[] chrOffsets;  //starting site for each chromosome
     private final Chromosome[] chrIndex;
+    private final String genomeVersion;
 
     /*Byte representations of DNA sequences are stored in blocks of 65536 sites*/
     public static final int BLOCKSIZE=1<<16;
@@ -53,6 +54,7 @@ final class PositionHDF5List implements PositionList {
             int key=keys.iterator().next();
             HashMap<Integer, Position> result=new HashMap<Integer, Position>(BLOCKSIZE);
             byte[][] afOrder;
+            byte[] ref;
             float[] maf;
             float[] paf;
             String[] snpIDs;
@@ -61,6 +63,14 @@ final class PositionHDF5List implements PositionList {
 //           System.out.println("Reading from HDF5 site anno:"+startSite);
             synchronized(reader) {
                 afOrder = reader.readByteMatrixBlockWithOffset(Tassel5HDF5Constants.ALLELE_FREQ_ORD, 2, length, 0l, startSite);
+                if (reader.exists(Tassel5HDF5Constants.REF_ALLELES)) {
+                    ref = reader.readByteArrayBlockWithOffset(Tassel5HDF5Constants.REF_ALLELES,length, startSite);
+                } else {
+                    ref = new byte[length];
+                    for (int i=0; i < length; i++) {
+                        ref[i] = GenotypeTable.UNKNOWN_ALLELE;
+                    }
+                }
                 maf= reader.readFloatArrayBlockWithOffset(Tassel5HDF5Constants.MAF,length, startSite);
                 paf= reader.readFloatArrayBlockWithOffset(Tassel5HDF5Constants.SITECOV,length, startSite);
                 snpIDs=reader.readStringArrayBlockWithOffset(Tassel5HDF5Constants.SNP_IDS,length, startSite);
@@ -74,6 +84,7 @@ final class PositionHDF5List implements PositionList {
                         .snpName(snpIDs[i])
                         .allele(Allele.GLBMAJ,afOrder[0][i])
                         .allele(Allele.GLBMIN,afOrder[1][i])
+                        .allele(Allele.REF, ref[i])
                         .maf(maf[i])
                         .siteCoverage(paf[i])
                         .build();
@@ -96,6 +107,11 @@ final class PositionHDF5List implements PositionList {
 
     PositionHDF5List(IHDF5Reader reader) {
         this.reader=reader;
+        if (reader.hasAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH,Tassel5HDF5Constants.POSITION_GENOME_VERSION)) {
+            genomeVersion = reader.getStringAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH,Tassel5HDF5Constants.POSITION_GENOME_VERSION);
+        } else {
+            genomeVersion = null;
+        }
         int[] variableSites = reader.readIntArray(Tassel5HDF5Constants.POSITIONS);
         this.numPositions=variableSites.length;
         String[] lociStrings = reader.readStringArray(Tassel5HDF5Constants.CHROMOSOMES);
@@ -132,7 +148,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public byte referenceGenotype(int site) {
+    public byte referenceAllele(int site) {
         try {
             return mySiteList.get(site).getAllele(Allele.REF);
         } catch (ExecutionException e) {
@@ -142,7 +158,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public byte[] referenceGenotypes(int startSite, int endSite) {
+    public byte[] referenceAlleles(int startSite, int endSite) {
         throw new UnsupportedOperationException("Not implemented yet.");
 //        byte[] result = new byte[endSite - startSite];
 //        //System.arraycopy(refAlleles,startSite,result,0, result.length);
@@ -150,7 +166,7 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public byte[] referenceGenotypeForAllSites() {
+    public byte[] referenceAlleleForAllSites() {
         throw new UnsupportedOperationException("Not implemented yet.");
       //  return null;
        // return Arrays.copyOf(refAlleles,refAlleles.length);
@@ -158,6 +174,9 @@ final class PositionHDF5List implements PositionList {
 
     @Override
     public boolean hasReference() {
+        if (genomeVersion == null) {
+            return false;
+        }
         return true;
     }
 
@@ -295,7 +314,7 @@ final class PositionHDF5List implements PositionList {
 
     @Override
     public String genomeVersion() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return genomeVersion;
     }
 
     @Override

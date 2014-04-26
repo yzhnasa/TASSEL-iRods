@@ -200,7 +200,7 @@ public class ExportUtils {
             BufferedWriter bw = Utils.getBufferedWriter(filename);
             bw.write("##fileformat=VCFv4.0");
             bw.newLine();
-            if (gt.referenceGenotype(0) == GenotypeTable.UNKNOWN_ALLELE) {
+            if (!gt.hasReference()) {
                 bw.write("##Tassel=<ID=GenotypeTable,Version=5,Description=\"Reference allele is not known. The major allele was used as reference allele\">");
                 bw.newLine();
             }
@@ -222,7 +222,6 @@ public class ExportUtils {
             bw.newLine();
             writeVCFSampleAnnotationToWriter(gt,bw);
             bw.write("#CHROM" + delimChar + "POS" + delimChar + "ID" + delimChar + "REF" + delimChar + "ALT" + delimChar + "QUAL" + delimChar + "FILTER" + delimChar + "INFO" + delimChar + "FORMAT");
-            boolean refTaxon = false;
             for (int taxa = 0; taxa < gt.numberOfTaxa(); taxa++) {
                 String taxonName = gt.taxaName(taxa).trim();
                 bw.write(delimChar + taxonName);

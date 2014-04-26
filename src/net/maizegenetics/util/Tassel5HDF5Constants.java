@@ -69,10 +69,13 @@ public final class Tassel5HDF5Constants {
     public static final String POSITION_MODULE = "Positions";
     public static final String POSITION_ATTRIBUTES_PATH = POSITION_MODULE + "/";
     public static final String POSITION_NUM_SITES = "numSites";
+    public static final String POSITION_HAS_REFEFERENCE = "hasReferenceAlleles";
+    public static final String POSITION_GENOME_VERSION = "genomeVersion";
     public static final String POSITIONS = POSITION_ATTRIBUTES_PATH + "Positions";
     public static final String CHROMOSOMES = POSITION_ATTRIBUTES_PATH + "Chromosomes";
     public static final String CHROMOSOME_INDICES = POSITION_ATTRIBUTES_PATH + "ChromosomeIndices";
     public static final String SNP_IDS = POSITION_ATTRIBUTES_PATH + "SnpIds";
+    public static final String REF_ALLELES = POSITION_ATTRIBUTES_PATH + "ReferenceAlleles";
 
     //Standard Compression (deflation) levels
     public static final HDF5IntStorageFeatures intDeflation = HDF5IntStorageFeatures.createDeflation(2);

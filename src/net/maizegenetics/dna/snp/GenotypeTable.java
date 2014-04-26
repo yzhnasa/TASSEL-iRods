@@ -337,36 +337,32 @@ public interface GenotypeTable {
     public String[] genotypeAsStringArray(int taxon, int site);
 
     /**
-     * Return reference diploid allele values at given site.
+     * Return (haploid) reference allele values at given site.
      *
      * @param site site
      *
      * @return first four bits are the first allele value and the second four
      * bits are the second allele value.
      */
-    public byte referenceGenotype(int site);
+    public byte referenceAllele(int site);
 
     /**
-     * Returns reference sequence of diploid allele values for given taxon in
-     * specified range (end site not included). Each value in array contains
-     * both diploid values. First four bits holds the first allele, and the
-     * second four bits holds the second allele.
+     * Returns (haploid) reference alleles in specified range.
+     * End site not included.
      *
      * @param startSite start site
      * @param endSite end site
      *
-     * @return reference sequence of diploid allele values.
+     * @return reference allele values.
      */
-    public byte[] referenceGenotypes(int startSite, int endSite);
+    public byte[] referenceAlleles(int startSite, int endSite);
 
     /**
-     * Returns reference sequence of diploid allele values. Each value in array
-     * contains both diploid values. First four bits holds the first allele, and
-     * the second four bits holds the second allele.
+     * Returns (haploid) reference alleles for all sites.
      *
-     * @return reference sequence of diploid allele values.
+     * @return reference allele values.
      */
-    public byte[] referenceGenotypeForAllSites();
+    public byte[] referenceAlleleForAllSites();
 
     /**
      * Return whether this genotype table has defined reference sequence.
