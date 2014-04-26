@@ -102,7 +102,6 @@ public final class GeneralPosition implements Position {
         private long myAllelesAsLong;
         //in an general annotation object
         private ArrayList<Map.Entry<String, String>> myAnnotations=new ArrayList<>(0);
-        private Map.Entry<String, String>[] myAnnotationsArray;
 
         /**Constructor requires a Position before annotation of the position*/
         public Builder(Chromosome chr, int position) {
@@ -121,13 +120,10 @@ public final class GeneralPosition implements Position {
             isIndel=aCorePosition.isIndel();
             myMAF=aCorePosition.getGlobalMAF();
             mySiteCoverage=aCorePosition.getGlobalSiteCoverage();
-            myAlleles[0]=aCorePosition.getAllele(Allele.REF);
-            myAlleles[1]=aCorePosition.getAllele(Allele.GLBMAJ);
-            myAlleles[2]=aCorePosition.getAllele(Allele.GLBMIN);
-            myAlleles[3]=aCorePosition.getAllele(Allele.ANC);
-            myAlleles[4]=aCorePosition.getAllele(Allele.HIDEP);
-            myAnnotationsArray=aCorePosition.getAllAnnotationEntries();
-            for (Map.Entry<String, String> entry : myAnnotationsArray) {
+            for (Allele alleleType: Allele.values()) {
+                myAlleles[alleleType.index()] = aCorePosition.getAllele(alleleType);
+            }
+            for (Map.Entry<String, String> entry : aCorePosition.getAllAnnotationEntries()) {
                 myAnnotations.add(entry);
             }
 //            myKnownVariants=aCorePosition.getKnownVariants(); //todo Fix
