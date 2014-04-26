@@ -50,14 +50,38 @@ public class BuilderFromVCF {
     private HeaderPositions hp=null;
     private final String infile;
     private boolean includeDepth=false;
+    private boolean inMemory=true;
+    private String hdf5Outfile=null;
+    private GenotypeTableBuilder hdf5GenoTableBuilder=null;
 
     private BuilderFromVCF(String infile) {
         this.infile=infile;
     }
 
+    /**
+     * Create a builder for loading a VCF file into memory
+     * @param infile name of the VCF file to be load
+     * @return a builder
+     */
     public static BuilderFromVCF getBuilder(String infile) {
         return new BuilderFromVCF(infile);
     }
+
+    /**
+     * Create a HDF5 version of file from the VCF file.  This is useful in many cases where VCF files are
+     * too large to load fully into memory.
+     * @param hdf5Outfile
+     * @return
+     */
+    public BuilderFromVCF convertToHDF5(String hdf5Outfile) {
+        inMemory=false;
+        this.hdf5Outfile=hdf5Outfile;
+        int numberOfSites=Utils.getNumberLinesNotHashOrBlank(hdf5Outfile);
+        //hdf5GenoTableBuilder=new GenotypeTableBuilder(hdf5Outfile,numberOfSites);
+        return this;
+    }
+
+
 
     public BuilderFromVCF keepDepth() {
         includeDepth=true;
@@ -77,29 +101,8 @@ public class BuilderFromVCF {
             Map<String,String> infoMap=new HashMap<>();
             Map<String,String> formatMap=new HashMap<>();
             Map<String,SetMultimap<String,String>> sampAnnoBuild=new TreeMap<>();
-            while (((currLine=r.readLine())!=null)&&(currLine.startsWith("##"))) {
-                String[] cat=currLine.split("=",2);
-                if(cat.length<2) continue;
-                switch (cat[0]) {
-//                    case "##INFO":
-//                        infoMap.put(mapOfAnno.get("ID"), mapOfAnno.get("Description"));
-//                        break;
-//                    case "##FILTER":break;
-//                    case "##FORMAT":
-//                        formatMap.put(mapOfAnno.get("ID"),mapOfAnno.get("Description"));
-//                        break;
-                    case "##SAMPLE":
-                        SetMultimap<String, String> mapOfAnno=TaxaListIOUtils.parseVCFHeadersIntoMap(cat[1]);
-                        String taxaID=mapOfAnno.get("ID").iterator().next();
-                        if(taxaID==null) break;
-                        sampAnnoBuild.put(taxaID,mapOfAnno);
-                        break;
-                    case "##PEDIGREE":break;
-                    default : break;
-                }
+            currLine=parseVCFHeadersIntoMaps(infoMap,formatMap,sampAnnoBuild,r);
 
-//                System.out.println(currLine);
-            }
             TaxaList taxaList=processTaxa(currLine,sampAnnoBuild);
             int linesAtTime=1<<12;  //this is a critical lines with 20% or more swings.  Needs to be optimized with transposing
             //  int linesAtTime=1<<8;  //better for with lots of taxa.
@@ -111,10 +114,15 @@ public class BuilderFromVCF {
                 txtLines.add(currLine);
                 lines++;
                 if (lines%linesAtTime==0) {
-                    ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);
+                    ProcessVCFBlock pb;
+                    if(inMemory) {
+                        pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);}
+                    else{
+                        pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);
+                    }
                     pbs.add(pb);
-                         pb.run();
-                    //pool.execute(pb);
+                    //     pb.run(); //used for testing
+                    pool.execute(pb);  //used for production
                     txtLines=new ArrayList<>(linesAtTime);
                 }
             }
@@ -161,26 +169,34 @@ public class BuilderFromVCF {
         return result;
     }
 
-//    static SetMultimap<String,String> parseVCFHeadersIntoMap(String s) {
-//        if(s==null) return null;
-//        if(!(s.startsWith("<") && s.endsWith(">"))) return null;
-//        String value=s.substring(1,s.length()-1);
-// //       System.out.println(s);
-//        value=getReplaceCommaWithinQuote(value);
-//
-//        ImmutableSetMultimap.Builder<String,String> im=new ImmutableSetMultimap.Builder<String,String>()
-//                .orderKeysBy(Ordering.natural()).orderValuesBy(Ordering.natural());
-//        for (String s1 : Splitter.on(",").trimResults().split(value)) {
-//            String[] ssEntry=s1.split("=",2);
-//            String v=ssEntry[1];
-//            if(v.contains(""+(char) ((int) ','+256)) || v.contains(""+(char) ((int) '='+256))) {
-//                v=v.replace((char)((int)','+256),',');
-//                v=v.replace((char)((int)'='+256),'=');
-//            }
-//            im.put(ssEntry[0],v);
-//        }
-//         return im.build();
-//    }
+    private static String parseVCFHeadersIntoMaps(Map<String,String> infoMap, Map<String,String> formatMap,
+        Map<String,SetMultimap<String,String>> sampAnnoBuild, BufferedReader r) throws IOException {
+        String currLine;
+        while (((currLine=r.readLine())!=null)&&(currLine.startsWith("##"))) {
+            String[] cat=currLine.split("=",2);
+            if(cat.length<2) continue;
+            switch (cat[0]) {
+//                    case "##INFO":
+//                        infoMap.put(mapOfAnno.get("ID"), mapOfAnno.get("Description"));
+//                        break;
+//                    case "##FILTER":break;
+//                    case "##FORMAT":
+//                        formatMap.put(mapOfAnno.get("ID"),mapOfAnno.get("Description"));
+//                        break;
+                case "##SAMPLE":
+                    SetMultimap<String, String> mapOfAnno=TaxaListIOUtils.parseVCFHeadersIntoMap(cat[1]);
+                    String taxaID=mapOfAnno.get("ID").iterator().next();
+                    if(taxaID==null) break;
+                    sampAnnoBuild.put(taxaID,mapOfAnno);
+                    break;
+                case "##PEDIGREE":break;
+                default : break;
+            }
+
+//                System.out.println(currLine);
+        }
+        return currLine;
+    }
 
     private static String getReplaceCommaWithinQuote(String s) {
         StringBuilder sb =new StringBuilder(s);
@@ -263,38 +279,38 @@ class ProcessVCFBlock implements Runnable {
 
     private static final Pattern WHITESPACE_PATTERN=Pattern.compile("\\s");
     private static final Pattern SLASH_PATTERN=Pattern.compile("/");
-//    private static final int NUM_HAPMAP_NON_TAXA_HEADERS=5;
-//    private static final int GENOIDX=NUM_HAPMAP_NON_TAXA_HEADERS;
-//    private static final int SNPID_INDEX=-1;
-//    private static final int VARIANT_INDEX=-1;
-//    private static final int CHROMOSOME_INDEX=0;
-//    private static final int POSITION_INDEX=1;
-//    private static final int REF_INDEX=2;
-//    private static final int ALT_INDEX=3;
-//    private static final int INFO_INDEX=3;
     private final HeaderPositions hp;
     private final int taxaN;
     private final int siteN;
+    private final int startSite; //if unknown Int.Mini
+    private final GenotypeTableBuilder hdf5Builder; //null is building in memory
     private ArrayList<String> txtL;
     private byte[][] gTS;  //genotypes
     private byte[][][] dTS; //depth
     private final ArrayList<Position> blkPosList;
 
 
-    private ProcessVCFBlock(int taxaN, HeaderPositions hp, ArrayList<String> txtL) {
+    private ProcessVCFBlock(int taxaN, HeaderPositions hp, ArrayList<String> txtL, int startSite,
+                            GenotypeTableBuilder hdf5Builder) {
         this.taxaN=taxaN;
         this.siteN=txtL.size();
         this.txtL=txtL;
         this.hp=hp;
         blkPosList=new ArrayList<>(siteN);
-
+        this.startSite=startSite;
+        this.hdf5Builder=hdf5Builder;
+    }
+    /*Used to process VCF blocks and return the result for a in memory GenotypeTable*/
+    static ProcessVCFBlock getInstance(int taxaN, HeaderPositions hp, ArrayList<String> txtL) {
+        return new ProcessVCFBlock(taxaN, hp, txtL, Integer.MIN_VALUE, null);
     }
 
-    public static ProcessVCFBlock getInstance(int taxaN, HeaderPositions hp, ArrayList<String> txtL) {
-        return new ProcessVCFBlock(taxaN, hp, txtL);
+    /*Used to process VCF blocks and return the result for a on disk HDF5 GenotypeTable*/
+    static ProcessVCFBlock getInstance(int taxaN, HeaderPositions hp, ArrayList<String> txtL, int startSite, GenotypeTableBuilder hdf5Builder) {
+        return new ProcessVCFBlock(taxaN, hp, txtL, startSite, hdf5Builder);
     }
 
-    //@Override
+    @Override
     public void run() {
         Map<String, Chromosome> chromosomeLookup=new HashMap<>();
         gTS=new byte[taxaN][siteN];
