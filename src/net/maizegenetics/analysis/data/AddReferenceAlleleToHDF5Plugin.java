@@ -42,7 +42,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
     private String refGenomeFileStr = null;
     private String genomeVersion = null;
     private BufferedReader refReader = null;
-    private PositionListBuilder newPosList = null;
+    private PositionListBuilder newPosListBuilder = null;
     private int currChr = Integer.MIN_VALUE;
     private int currPos = Integer.MIN_VALUE;
     private String contextSeq;
@@ -149,8 +149,13 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
     private String addRefAlleleToHDF5GenoTable() {
         String message = populatePositionsWithRefAllele();
         if (message != null) return message;
+        PositionList newPos = newPosListBuilder.build();
+        if (writePositions) {
+            String genomeVer = newPos.hasReference() ? newPos.genomeVersion() : "unkown";
+            System.out.println("\nNew genome version: "+genomeVer+"\n");
+        }
         String outHDF5FileName = inHDF5FileName.replaceFirst("\\.h5$", "_withRef.h5");
-        GenotypeTableBuilder newGenos = GenotypeTableBuilder.getTaxaIncremental(newPosList.build(), outHDF5FileName);
+        GenotypeTableBuilder newGenos = GenotypeTableBuilder.getTaxaIncremental(newPos, outHDF5FileName);
         IHDF5Reader h5Reader = HDF5Factory.open(inHDF5FileName);
         List<String> taxaNames = HDF5Utils.getAllTaxaNames(h5Reader);
         for (String taxonName : taxaNames) {
@@ -169,10 +174,10 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
         IHDF5Writer h5Writer = HDF5Factory.open(inHDF5FileName);
         PositionList oldPosList = PositionListBuilder.getInstance(h5Writer);
 //        h5Writer.close();
-        newPosList = new PositionListBuilder();
+        newPosListBuilder = new PositionListBuilder();
         if (writePositions) {
             String genomeVer = oldPosList.hasReference() ? oldPosList.genomeVersion() : "unkown";
-            System.out.println("\nGenome version: "+genomeVer+"\n");
+            System.out.println("\ncurrent genome version: "+genomeVer+"\n");
             System.out.println("SNPID\tchr\tpos\tstr\tmaj\tmin\tref\tmaf\tcov\tcontext");
         }
         for (Position oldPos : oldPosList) {
@@ -194,9 +199,9 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
                 .allele(Position.Allele.REF, refAllele)
                 .build();
             if (writePositions) writePosition(newPos, contextSeq);
-            newPosList.add(newPos);
+            newPosListBuilder.add(newPos);
         }
-        newPosList.genomeVersion(genomeVersion);
+        newPosListBuilder.genomeVersion(genomeVersion);
         return null;
     }
     
