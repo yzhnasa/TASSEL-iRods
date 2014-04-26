@@ -93,6 +93,7 @@ public final class GeneralPosition implements Position {
         private boolean isIndel=false;
         private NumberFormat nf=NumberFormat.getInstance();
         private Map.Entry<String, String> myKnownVariants=null;
+        private Map.Entry<String, String>[] myVariantsAndAnno;
 
         //in an allele annotation objects
         private float myMAF = Float.NaN;
@@ -101,6 +102,7 @@ public final class GeneralPosition implements Position {
         private long myAllelesAsLong;
         //in an general annotation object
         private ArrayList<Map.Entry<String, String>> myAnnotations=new ArrayList<>(0);
+        private Map.Entry<String, String>[] myAnnotationsArray;
 
         /**Constructor requires a Position before annotation of the position*/
         public Builder(Chromosome chr, int position) {
@@ -109,16 +111,28 @@ public final class GeneralPosition implements Position {
             Arrays.fill(myAlleles,GenotypeTable.UNKNOWN_ALLELE);
         }
 
-        /**Constructor requires a Position before annotation of the position*/
+        /**Constructor from an existing position*/
         public Builder(Position aCorePosition) {
-           this(aCorePosition.getChromosome(),aCorePosition.getPosition());
-           myStrand=aCorePosition.getStrand();
-           myCM=aCorePosition.getCM();
-           mySNPID=aCorePosition.getSNPID();
-           isNucleotide=aCorePosition.isNucleotide();
-           isIndel=aCorePosition.isIndel();
-           //myKnownVariants=aCorePosition.getKnownVariants(); //todo Fix
+            this(aCorePosition.getChromosome(),aCorePosition.getPosition());
+            myStrand=aCorePosition.getStrand();
+            myCM=aCorePosition.getCM();
+            mySNPID=aCorePosition.getSNPID();
+            isNucleotide=aCorePosition.isNucleotide();
+            isIndel=aCorePosition.isIndel();
+            myMAF=aCorePosition.getGlobalMAF();
+            mySiteCoverage=aCorePosition.getGlobalSiteCoverage();
+            myAlleles[0]=aCorePosition.getAllele(Allele.REF);
+            myAlleles[1]=aCorePosition.getAllele(Allele.GLBMAJ);
+            myAlleles[2]=aCorePosition.getAllele(Allele.GLBMIN);
+            myAlleles[3]=aCorePosition.getAllele(Allele.ANC);
+            myAlleles[4]=aCorePosition.getAllele(Allele.HIDEP);
+            myAnnotationsArray=aCorePosition.getAllAnnotationEntries();
+            for (Map.Entry<String, String> entry : myAnnotationsArray) {
+                myAnnotations.add(entry);
+            }
+//            myKnownVariants=aCorePosition.getKnownVariants(); //todo Fix
         }
+        
         /**Set Chromosome*/
          public Builder chromosome(Chromosome val) {myChromosome = val; return this;}
         /**Set Position in Chromosome*/

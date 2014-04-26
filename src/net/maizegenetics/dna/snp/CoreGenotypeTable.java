@@ -134,18 +134,18 @@ public class CoreGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte referenceGenotype(int site) {
-        return myPositionList.referenceGenotype(site);
+    public byte referenceAllele(int site) {
+        return myPositionList.referenceAllele(site);
     }
 
     @Override
-    public byte[] referenceGenotypes(int startSite, int endSite) {
-        return myPositionList.referenceGenotypes(startSite, endSite);
+    public byte[] referenceAlleles(int startSite, int endSite) {
+        return myPositionList.referenceAlleles(startSite, endSite);
     }
 
     @Override
-    public byte[] referenceGenotypeForAllSites() {
-        return myPositionList.referenceGenotypeForAllSites();
+    public byte[] referenceAlleleForAllSites() {
+        return myPositionList.referenceAlleleForAllSites();
     }
 
     @Override

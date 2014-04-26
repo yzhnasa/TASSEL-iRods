@@ -623,8 +623,8 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte referenceGenotype(int site) {
-        return myBaseAlignment.referenceGenotype(translateSite(site));
+    public byte referenceAllele(int site) {
+        return myBaseAlignment.referenceAllele(translateSite(site));
     }
 
     @Override
@@ -743,15 +743,15 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte[] referenceGenotypeForAllSites() {
+    public byte[] referenceAlleleForAllSites() {
         if ((myIsSiteFilterByRange) || (myIsSiteFilter)) {
             byte[] result = new byte[numberOfSites()];
             for (int i = 0, n = numberOfSites(); i < n; i++) {
-                result[i] = referenceGenotype(i);
+                result[i] = referenceAllele(i);
             }
             return result;
         } else {
-            return myBaseAlignment.referenceGenotypeForAllSites();
+            return myBaseAlignment.referenceAlleleForAllSites();
         }
     }
 
@@ -987,14 +987,14 @@ public class FilterGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte[] referenceGenotypes(int startSite, int endSite) {
+    public byte[] referenceAlleles(int startSite, int endSite) {
         if (!hasReference()) {
             return null;
         }
 
         byte[] result = new byte[endSite - startSite];
         for (int i = startSite; i < endSite; i++) {
-            result[i] = referenceGenotype(i);
+            result[i] = referenceAllele(i);
         }
         return result;
     }

@@ -43,6 +43,7 @@ public class PositionListBuilder {
 
     private ArrayList<Position> myPositions = new ArrayList<Position>();
     private boolean isHDF5=false;
+    private String genomeVersion = null;
     private IHDF5Reader reader;
 
     /**
@@ -99,6 +100,11 @@ public class PositionListBuilder {
         myPositions.set(index,element);
         return this;
     }
+    
+    public PositionListBuilder genomeVersion(String genomeVersion) {
+        this.genomeVersion = genomeVersion;
+        return this;
+    }
 
     /**
      * Returns whether List is already ordered. Important to check this if
@@ -145,6 +151,10 @@ public class PositionListBuilder {
     public PositionListBuilder(IHDF5Writer h5w, PositionList a) {
         HDF5Utils.createHDF5PositionModule(h5w);
         h5w.setIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES, a.size());
+        if (a.hasReference()) {
+            h5w.setStringAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_GENOME_VERSION, a.genomeVersion());
+            h5w.setBooleanAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_HAS_REFEFERENCE, true);
+        }
         String[] lociNames = new String[a.numChromosomes()];
         Map<Chromosome, Integer> locusToIndex=new HashMap<>(10);
         Chromosome[] loci = a.chromosomes();
@@ -159,6 +169,7 @@ public class PositionListBuilder {
         h5w.createStringArray(Tassel5HDF5Constants.SNP_IDS, 15,a.numberOfSites(),blockSize,Tassel5HDF5Constants.genDeflation);
         h5w.createIntArray(Tassel5HDF5Constants.CHROMOSOME_INDICES, a.numberOfSites(),Tassel5HDF5Constants.intDeflation);
         h5w.createIntArray(Tassel5HDF5Constants.POSITIONS, a.numberOfSites(), Tassel5HDF5Constants.intDeflation);
+        h5w.createIntArray(Tassel5HDF5Constants.REF_ALLELES, a.numberOfSites(), Tassel5HDF5Constants.intDeflation);
 
         //This is written in blocks to deal with datasets in the scale for 50M positions
         int blocks=((a.numberOfSites()-1)/blockSize)+1;
@@ -168,15 +179,18 @@ public class PositionListBuilder {
             String[] snpIDs = new String[length];
             int[] locusIndicesArray = new int[length];
             int[] positions=new int[length];
+            byte[] refAlleles = new byte[length];
             for (int i=0; i<length; i++) {
                 Position gp=a.get(i+startPos);
                 snpIDs[i]=gp.getSNPID();
                 locusIndicesArray[i] = locusToIndex.get(gp.getChromosome());
                 positions[i]=gp.getPosition();
+                refAlleles[i]=gp.getAllele(Position.Allele.REF);
             }
             HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.SNP_IDS,h5w,blockSize,block,snpIDs);
             HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.CHROMOSOME_INDICES,h5w,blockSize,block,locusIndicesArray);
             HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.POSITIONS,h5w,blockSize,block,positions);
+            HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.REF_ALLELES, h5w, blockSize, block, refAlleles);
         }
         this.reader = h5w;
         isHDF5=true;
@@ -191,13 +205,13 @@ public class PositionListBuilder {
             return new PositionHDF5List(reader);
         } else {
             Collections.sort(myPositions);
-            return new PositionArrayList(myPositions);
+            return new PositionArrayList(myPositions, genomeVersion);
         }
     }
 
     public PositionList build(GenotypeCallTableBuilder genotypes) {
         sortPositions(genotypes);
-        return new PositionArrayList(myPositions);
+        return new PositionArrayList(myPositions, genomeVersion);
     }
 
     public PositionListBuilder sortPositions(GenotypeCallTableBuilder genotypes) {
