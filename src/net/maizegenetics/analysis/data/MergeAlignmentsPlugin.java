@@ -13,11 +13,27 @@ import org.apache.log4j.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import net.maizegenetics.dna.map.Position;
+import net.maizegenetics.dna.map.PositionList;
+import net.maizegenetics.dna.map.PositionListBuilder;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.genotypecall.BasicGenotypeMergeRule;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
+import net.maizegenetics.taxa.Taxon;
 
 /**
+ * Merge alignments into a single alignment containing all taxa and positions.
+ * TODO: Add capacity for depth
  *
- * @author terry
+ * @author Jason Wallace
+ * @author Terry Casstevens
+ *
  */
 public class MergeAlignmentsPlugin extends AbstractPlugin {
 
@@ -46,8 +62,8 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
                 alignments[i] = (GenotypeTable) ((Datum) inputs.get(i)).getData();
             }
 
-            GenotypeTable alignment = getInstance(alignments);
-            DataSet result = new DataSet(new Datum("Merged Alignment", alignment, null), this);
+            GenotypeTable merged = mergeGenotypeTables(alignments);
+            DataSet result = new DataSet(new Datum("Merged Alignment", merged, null), this);
 
             fireDataSetReturned(new PluginEvent(result, MergeAlignmentsPlugin.class));
 
@@ -60,7 +76,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = SeparatePlugin.class.getResource("/net/maizegenetics/analysis/images/Merge.gif");
+        URL imageURL = MergeAlignmentsPlugin.class.getResource("/net/maizegenetics/analysis/images/Merge.gif");
         if (imageURL == null) {
             return null;
         } else {
@@ -78,150 +94,143 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
         return "Merge Alignments";
     }
 
-    //todo TAS-54 covers some of these topics, as we want general merging rule sets
-    public static GenotypeTable getInstance(GenotypeTable[] alignments) {
-       throw new UnsupportedOperationException("Logic for merging can be done much better now in TASSEL 5");
-//        if ((alignments == null) || (alignments.length == 0)) {
-//            return null;
-//        }
-//
-//        String[][] resultEncodings = alignments[0].getAlleleEncodings();
-//        if (resultEncodings.length != 1) {
-//            throw new IllegalArgumentException("MutableSingleEncodeAlignment: getInstance: Alignments must have single allele encoding.");
-//        }
-//
-//        String[][][] encodings = new String[alignments.length][][];
-//        for (int i = 0; i < alignments.length; i++) {
-//            encodings[i] = alignments[i].getAlleleEncodings();
-//        }
-//        if (!AlignmentUtils.areEncodingsEqual(encodings)) {
-//            throw new IllegalArgumentException("MutableSingleEncodeAlignment: getInstance: Alignments must have same allele encoding.");
-//        }
-//
-//        TreeSet<Taxon> taxa = new TreeSet<>();
-//        List<String> siteNames = new ArrayList<>();
-//        List<Integer> physicalPositions = new ArrayList<Integer>();
-//        List<Chromosome> locusToLociIndex = new ArrayList<>();
-//        List<Integer> locusIndices = new ArrayList<Integer>();
-//
-//        for (int i = 0; i < alignments.length; i++) {
-//
-//            TaxaList currentIds = alignments[i].getTaxaList();
-//            for (int j = 0, n = currentIds.numberOfTaxa(); j < n; j++) {
-//                Taxon current = currentIds.getTaxon(j);
-//                if (taxa.contains(current)) {
-//                    Taxon match = taxa.floor(current);
-//                    Taxon merged = Identifier.getMergedInstance(match, current);
-//                    taxa.remove(match);
-//                    taxa.add(merged);
-//                } else {
-//                    taxa.add(current);
-//                }
-//            }
-//
-//            for (int s = 0, m = alignments[i].getSiteCount(); s < m; s++) {
-//                String currentSiteName = alignments[i].getSNPID(s);
-//                int currentPhysicalPos = alignments[i].getPositionInLocus(s);
-//                Chromosome currentLocus = alignments[i].getLocus(s);
-//                int index = siteNames.indexOf(currentSiteName);
-//                if (index == -1) {
-//                    siteNames.add(currentSiteName);
-//                    physicalPositions.add(currentPhysicalPos);
-//                    //int locusIndex = locusToLociIndex.indexOf(currentLocus);
-//                    int locusIndex = -1;
-//                    for (int li = 0; li < locusToLociIndex.size(); li++) {
-//                        if (currentLocus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
-//                            locusIndex = li;
-//                            locusToLociIndex.set(li, Locus.getMergedInstance(currentLocus, locusToLociIndex.get(li)));
-//                            break;
-//                        }
-//                    }
-//                    if (locusIndex == -1) {
-//                        locusIndices.add(locusToLociIndex.size());
-//                        locusToLociIndex.add(currentLocus);
-//                    } else {
-//                        locusIndices.add(locusIndex);
-//                    }
-//                } else {
-//                    if (i == 0) {
-//                        throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Duplicate site name in alignment: " + currentSiteName);
-//                    } else {
-//                        if (currentPhysicalPos != physicalPositions.get(index)) {
-//                            throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Physical Positions do not match for site name: " + currentSiteName);
-//                        }
-//                        int locusIndex = -1;
-//                        for (int li = 0; li < locusToLociIndex.size(); li++) {
-//                            if (currentLocus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
-//                                locusIndex = li;
-//                                break;
-//                            }
-//                        }
-//                        if (locusIndices.get(index) != locusIndex) {
-//                            throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: Loci do not match for site name: " + currentSiteName + " expecting: " + locusToLociIndex.get(locusIndices.get(index)) + " but doesn't match: " + currentLocus);
-//                        }
-//                    }
-//                }
-//            }
-//
-//        }
-//        int[] variableSites = new int[physicalPositions.size()];
-//        for (int i = 0, n = physicalPositions.size(); i < n; i++) {
-//            variableSites[i] = physicalPositions.get(i);
-//        }
-//
-//        int[] locusIndicesArray = new int[locusIndices.size()];
-//        for (int i = 0, n = locusIndices.size(); i < n; i++) {
-//            locusIndicesArray[i] = (int) locusIndices.get(i);
-//        }
-//
-//        String[] siteNamesArray = new String[siteNames.size()];
-//        siteNames.toArray(siteNamesArray);
-//
-//        List taxaList = new ArrayList<Identifier>(taxa);
-//        MutableSingleEncodeAlignment result = null;
-//
-//        encodings = new String[2][][];
-//        encodings[0] = NucleotideAlignmentConstants.NUCLEOTIDE_ALLELES;
-//        encodings[1] = resultEncodings;
-//        if (AlignmentUtils.areEncodingsEqual(encodings)) {
-//            result = MutableNucleotideAlignment.getInstance(taxaList, variableSites, locusToLociIndex, locusIndicesArray, siteNamesArray);
-//        } else {
-//            result = getInstance(resultEncodings, taxaList, variableSites, locusToLociIndex, locusIndicesArray, siteNamesArray);
-//        }
-//        result.sortSitesByPhysicalPositionEmptyData();
-//        result.setClean();
-//
-//        for (int i = 0; i < alignments.length; i++) {
-//            myLogger.info("Merging Alignment: " + (i + 1) + " of " + alignments.length);
-//            Alignment currentAlignment = alignments[i];
-//            IdGroup ids = currentAlignment.getTaxaList();
-//            int numSeqs = ids.numberOfTaxa();
-//            int[] taxaIndices = new int[numSeqs];
-//            for (int t = 0; t < numSeqs; t++) {
-//                taxaIndices[t] = taxaList.indexOf(ids.getTaxon(t));
-//            }
-//            for (int s = 0, n = currentAlignment.getSiteCount(); s < n; s++) {
-//                String siteName = currentAlignment.getSNPID(s);
-//                int physicalPosition = currentAlignment.getPositionInLocus(s);
-//                Locus locus = currentAlignment.getLocus(s);
-//                for (int li = 0; li < locusToLociIndex.size(); li++) {
-//                    if (locus.getChromosomeName().equals(locusToLociIndex.get(li).getChromosomeName())) {
-//                        locus = locusToLociIndex.get(li);
-//                        break;
-//                    }
-//                }
-//                int site = result.getSiteOfPhysicalPosition(physicalPosition, locus, siteName);
-//                if (site < 0) {
-//                    throw new IllegalStateException("MutableSingleEncodeAlignment: getInstance: physical position: " + physicalPosition + " in locus: " + locus.getName() + " not found.");
-//                }
-//
-//                for (int t = 0; t < numSeqs; t++) {
-//                    result.setBase(taxaIndices[t], site, currentAlignment.getBase(t, s));
-//                }
-//            }
-//        }
-//
-//        return result;
+    /**
+     * Merge an array of GenotypeTables into a single GenotypeTable
+     */
+    public static GenotypeTable mergeGenotypeTables(GenotypeTable[] alignments) {
+        if ((alignments == null) || (alignments.length == 0)) {
+            return null;
+        }
 
+        //Create the needed TaxaList and PositionList, including only unique entries
+        TaxaList masterTaxa = generateMasterTaxaList(alignments);
+        PositionList masterPos = generateMasterPositionList(alignments);
+
+        //Make helper hashmaps of taxa and positions for each input alignment
+        //Done to to avoid the O(n) search time to find the index of a Taxon or Position in them
+        myLogger.info("Creating helper data structures (to speed merging)");
+        HashMap[] taxaHashes = makeTaxaHashes(alignments);
+        HashMap[] posHashes = makePositionHashes(alignments);
+
+        //Set up for merging
+        double errorRate = 0.01;
+        myLogger.info("Merging genotype calls with assumed error rate " + errorRate);
+        BasicGenotypeMergeRule mergeRule = new BasicGenotypeMergeRule(errorRate);
+        GenotypeTableBuilder genoBuilder = GenotypeTableBuilder.getTaxaIncremental(masterPos, mergeRule);
+
+        //Merge actual calls. Dut to setup of GenotypeBuilder, must get all calls for a taxon and then add as a unit
+        for (Taxon t : masterTaxa) {
+            //System.out.println("Processing taxon" + t.getName());
+            byte[] taxonCalls = new byte[masterPos.size()];
+            for (int i_pos = 0; i_pos < masterPos.size(); i_pos++) {
+                /*if(i_pos % 5000 == 0){    //For debugging
+                 System.out.println("\tProcessed" +  i_pos + "sites");
+                 }*/
+                Position p = masterPos.get(i_pos);
+
+                //Go through each individual GenotypeTable and assemble all the calls
+                ArrayList<Byte> callList = new ArrayList(alignments.length);
+                for (int i_align = 0; i_align < alignments.length; i_align++) {
+                    GenotypeTable a = alignments[i_align];
+                    //Check that this alignment actually has this site-taxon combination
+                    if (taxaHashes[i_align].containsKey(t) && posHashes[i_align].containsKey(p)) {
+                        int taxonnum = (Integer) taxaHashes[i_align].get(t);
+                        int sitenum = (Integer) posHashes[i_align].get(p);
+                        byte genotype = a.genotype(taxonnum, sitenum);
+                        if (genotype != GenotypeTable.UNKNOWN_DIPLOID_ALLELE) { // Skip missing genotypes
+                            callList.add(genotype);
+                        }
+                    }
+                }
+                Byte[] calls = callList.toArray(new Byte[0]);
+                taxonCalls[i_pos] = mergeCalls(calls); // Where to implement merging rules
+            }
+            genoBuilder.addTaxon(t, taxonCalls);
+        }
+
+        myLogger.info("Finalizing genotype table with " + masterTaxa.size() + " taxa and " + masterPos.size() + "sites");
+        GenotypeTable genos = genoBuilder.build();
+        return genos;
+    }
+
+    /**
+     * Generate a list of unique taxa given an array of alignments
+     */
+    public static TaxaList generateMasterTaxaList(GenotypeTable[] alignments) {
+        myLogger.info("Creating unified taxa list");
+        //Make a HashSet of taxa, adding each in to get the final union of them all
+        HashSet<Taxon> taxaSet = new HashSet();
+        for (GenotypeTable a : alignments) {
+            taxaSet.addAll(a.taxa());
+        }
+
+        //Sort unique taxa, since not done automatically
+        Taxon[] taxaArray = taxaSet.toArray(new Taxon[0]);
+        Arrays.sort(taxaArray);
+
+        //Make into TaxaList
+        TaxaListBuilder taxaBuilder = new TaxaListBuilder();
+        taxaBuilder.addAll(taxaArray);
+        return taxaBuilder.build();
+    }
+
+    /**
+     * Generate a list of unique positions given an array of alignments
+     */
+    public static PositionList generateMasterPositionList(GenotypeTable[] alignments) {
+        myLogger.info("Creating unified position list");
+        //Make a HashSet of positions, adding each in to get the final union of them all
+        HashSet posSet = new HashSet();
+        for (GenotypeTable a : alignments) {
+            posSet.addAll(a.positions());
+        }
+        PositionListBuilder posBuilder = new PositionListBuilder();
+        posBuilder.addAll(posSet);
+        return posBuilder.build();
+    }
+
+    /**
+     * Takes an array of GenotypeTables and returns a matching array of HashMaps
+     * linking each Taxon to its index
+     */
+    public static HashMap[] makeTaxaHashes(GenotypeTable[] alignments) {
+        HashMap[] taxaHashes = new HashMap[alignments.length];
+        for (int i = 0; i < alignments.length; i++) {
+            taxaHashes[i] = new HashMap<Taxon, Integer>();
+            GenotypeTable a = alignments[i];
+            Taxon[] taxaArray = a.taxa().toArray(new Taxon[0]);
+            for (int t = 0; t < taxaArray.length; t++) {
+                taxaHashes[i].put(taxaArray[t], t);
+            }
+        }
+        return taxaHashes;
+    }
+
+    /**
+     * Takes an array of GenotypeTables and returns a matching array of HashMaps
+     * linking each Position to its index
+     */
+    public static HashMap[] makePositionHashes(GenotypeTable[] alignments) {
+        HashMap[] posHashes = new HashMap[alignments.length];
+        for (int i = 0; i < alignments.length; i++) {
+            posHashes[i] = new HashMap<Position, Integer>();
+            GenotypeTable a = alignments[i];
+            Position[] posArray = a.positions().toArray(new Position[0]);
+            for (int t = 0; t < posArray.length; t++) {
+                posHashes[i].put(posArray[t], t);
+            }
+        }
+        return posHashes;
+    }
+
+    /**
+     * Take an array of Byte genotype calls and merge TODO: Make this smarter;
+     * currently just uses the last call (to be same as in TASSEL4)
+     */
+    public static byte mergeCalls(Byte[] calls) {
+        if (calls.length > 0) {
+            return (byte) calls[calls.length - 1];
+        }
+        return GenotypeTable.UNKNOWN_DIPLOID_ALLELE;
     }
 }
