@@ -63,6 +63,7 @@ import java.util.Map;
 import net.maizegenetics.analysis.data.GenotypeSummaryPlugin;
 import net.maizegenetics.dna.map.TOPMInterface;
 import net.maizegenetics.dna.map.TOPMTableReport;
+import net.maizegenetics.dna.snp.TOPMGenotypeTable;
 
 import org.apache.batik.util.gui.MemoryMonitor;
 
@@ -341,9 +342,10 @@ public class DataTreePanel extends JPanel implements PluginListener {
                                 blankPanel.add(new JLabel("     Nothing to Display"), BorderLayout.CENTER);
                                 myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
                             } else {
-                                TableReportPanel theATP;
-                                theATP = new TableReportPanel(new TOPMTableReport((TOPMInterface) book.getData()));
-                                myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
+                                //TableReportPanel theATP = new TableReportPanel(new TOPMTableReport((TOPMInterface) book.getData()));
+                                //myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
+                                SeqViewerPanel seqViewer = SeqViewerPanel.getInstance((TOPMInterface) book.getData(), getThis());
+                                myTASSELMainFrame.mainDisplayPanel.add(seqViewer, BorderLayout.CENTER);
                             }
                         } else if (book.getData() instanceof GenotypeTable) {
                             GenotypeTable align = (GenotypeTable) book.getData();
