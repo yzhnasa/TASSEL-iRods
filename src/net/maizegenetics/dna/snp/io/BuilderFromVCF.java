@@ -76,7 +76,7 @@ public class BuilderFromVCF {
     public BuilderFromVCF convertToHDF5(String hdf5Outfile) {
         inMemory=false;
         this.hdf5Outfile=hdf5Outfile;
-        int numberOfSites=Utils.getNumberLinesNotHashOrBlank(hdf5Outfile);
+        //int numberOfSites=Utils.getNumberLinesNotHashOrBlank(hdf5Outfile);
         //hdf5GenoTableBuilder=new GenotypeTableBuilder(hdf5Outfile,numberOfSites);
         return this;
     }
@@ -92,7 +92,10 @@ public class BuilderFromVCF {
     public GenotypeTable build() {
         long time=System.nanoTime();
         GenotypeTable result=null;
+        int totalSites=-1;//unknown
+        GenotypeTableBuilder gtbDiskBuild=null;
         try {
+
             int numThreads=Runtime.getRuntime().availableProcessors();
             ExecutorService pool=Executors.newFixedThreadPool(numThreads);
             BufferedReader r=Utils.getBufferedReader(infile, -1);
@@ -104,21 +107,25 @@ public class BuilderFromVCF {
             currLine=parseVCFHeadersIntoMaps(infoMap,formatMap,sampAnnoBuild,r);
 
             TaxaList taxaList=processTaxa(currLine,sampAnnoBuild);
+            if(inMemory==false) {
+                totalSites=Utils.getNumberLinesNotHashOrBlank(infile);
+                gtbDiskBuild=GenotypeTableBuilder.getSiteIncremental(taxaList,totalSites,hdf5Outfile);
+            }
             int linesAtTime=1<<12;  //this is a critical lines with 20% or more swings.  Needs to be optimized with transposing
             //  int linesAtTime=1<<8;  //better for with lots of taxa.
             ArrayList<String> txtLines=new ArrayList<>(linesAtTime);
             ArrayList<ProcessVCFBlock> pbs=new ArrayList<>();
-            int lines=0;
+            int sitesRead=0;
             while ((currLine=r.readLine())!=null) {
                 if(currLine.startsWith("#")) continue;
                 txtLines.add(currLine);
-                lines++;
-                if (lines%linesAtTime==0) {
+                sitesRead++;
+                if (sitesRead%linesAtTime==0) {
                     ProcessVCFBlock pb;
                     if(inMemory) {
                         pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);}
                     else{
-                        pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);
+                        pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines, sitesRead-txtLines.size(),gtbDiskBuild);
                     }
                     pbs.add(pb);
                     //     pb.run(); //used for testing
@@ -136,37 +143,71 @@ public class BuilderFromVCF {
             if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("BuilderFromHapMap: processing threads timed out.");
             }
-            int currentSite=0;
-            PositionListBuilder posBuild=new PositionListBuilder();
-            GenotypeCallTableBuilder gb=GenotypeCallTableBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), lines);
-            AlleleDepthBuilder db=null;
-            if(includeDepth) db=AlleleDepthBuilder.getInstance(taxaList.numberOfTaxa(),lines,6);
-            for (ProcessVCFBlock pb : pbs) {
-                posBuild.addAll(pb.getBlkPosList());
-                byte[][] bgTS=pb.getGenoTS();
-                for (int t=0; t<bgTS.length; t++) {
-                    gb.setBaseRangeForTaxon(t, currentSite, bgTS[t]);
-                }
-                if(includeDepth) {
-                    byte[][][] bdTS=pb.getDepthTS();
-                    for (int t=0; t<bgTS.length; t++) {
-                        db.setDepthRangeForTaxon(t, currentSite, bdTS[t]);
-                    }
-                }
-                currentSite+=pb.getSiteNumber();
+            if(inMemory) {
+                result=completeInMemoryBuilding(pbs, taxaList, sitesRead, includeDepth);
+            } else {
+                gtbDiskBuild.build();
             }
-            if (posBuild.validateOrdering()==false) {
-                throw new IllegalStateException("BuilderFromHapMap: Ordering incorrect HapMap must be ordered by position");
-            }
-            GenotypeCallTable g=gb.build();
-            if(includeDepth) {result=GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList, null, db.build());}
-            else {result=GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList);}
+//            int currentSite=0;
+//            PositionListBuilder posBuild=new PositionListBuilder();
+//            GenotypeCallTableBuilder gb=GenotypeCallTableBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), lines);
+//            AlleleDepthBuilder db=null;
+//            if(includeDepth) db=AlleleDepthBuilder.getInstance(taxaList.numberOfTaxa(),lines,6);
+//            for (ProcessVCFBlock pb : pbs) {
+//                posBuild.addAll(pb.getBlkPosList());
+//                byte[][] bgTS=pb.getGenoTS();
+//                for (int t=0; t<bgTS.length; t++) {
+//                    gb.setBaseRangeForTaxon(t, currentSite, bgTS[t]);
+//                }
+//                if(includeDepth) {
+//                    byte[][][] bdTS=pb.getDepthTS();
+//                    for (int t=0; t<bgTS.length; t++) {
+//                        db.setDepthRangeForTaxon(t, currentSite, bdTS[t]);
+//                    }
+//                }
+//                currentSite+=pb.getSiteNumber();
+//            }
+//            if (posBuild.validateOrdering()==false) {
+//                throw new IllegalStateException("BuilderFromHapMap: Ordering incorrect HapMap must be ordered by position");
+//            }
+//            GenotypeCallTable g=gb.build();
+//            if(includeDepth) {result=GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList, null, db.build());}
+//            else {result=GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList);}
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         }
         long totalTime=System.nanoTime()-time;
         System.out.printf("BuilderFromVCF data timing %gs %n", totalTime/1e9);
         return result;
+    }
+
+    private static GenotypeTable completeInMemoryBuilding(ArrayList<ProcessVCFBlock> pbs, TaxaList taxaList, int numberOfSites, boolean includeDepth) {
+        int currentSite=0;
+        PositionListBuilder posBuild=new PositionListBuilder();
+        GenotypeCallTableBuilder gb=GenotypeCallTableBuilder.getUnphasedNucleotideGenotypeBuilder(taxaList.numberOfTaxa(), numberOfSites);
+        AlleleDepthBuilder db=null;
+        if(includeDepth) db=AlleleDepthBuilder.getInstance(taxaList.numberOfTaxa(),numberOfSites,6);
+        for (ProcessVCFBlock pb : pbs) {
+            posBuild.addAll(pb.getBlkPosList());
+            byte[][] bgTS=pb.getGenoTS();
+            for (int t=0; t<bgTS.length; t++) {
+                gb.setBaseRangeForTaxon(t, currentSite, bgTS[t]);
+            }
+            if(includeDepth) {
+                byte[][][] bdTS=pb.getDepthTS();
+                for (int t=0; t<bgTS.length; t++) {
+                    db.setDepthRangeForTaxon(t, currentSite, bdTS[t]);
+                }
+            }
+            currentSite+=pb.getSiteNumber();
+        }
+        if (posBuild.validateOrdering()==false) {
+            throw new IllegalStateException("BuilderFromHapMap: Ordering incorrect HapMap must be ordered by position");
+        }
+        GenotypeCallTable g=gb.build();
+        if(includeDepth) {return GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList, null, db.build());}
+        else {return GenotypeTableBuilder.getInstance(g, posBuild.build(), taxaList);}
+
     }
 
     private static String parseVCFHeadersIntoMaps(Map<String,String> infoMap, Map<String,String> formatMap,
@@ -305,7 +346,7 @@ class ProcessVCFBlock implements Runnable {
         return new ProcessVCFBlock(taxaN, hp, txtL, Integer.MIN_VALUE, null);
     }
 
-    /*Used to process VCF blocks and return the result for a on disk HDF5 GenotypeTable*/
+    /*Used to process VCF blocks and return the result for on disk HDF5 GenotypeTable*/
     static ProcessVCFBlock getInstance(int taxaN, HeaderPositions hp, ArrayList<String> txtL, int startSite, GenotypeTableBuilder hdf5Builder) {
         return new ProcessVCFBlock(taxaN, hp, txtL, startSite, hdf5Builder);
     }
@@ -394,6 +435,7 @@ class ProcessVCFBlock implements Runnable {
 
         }
         txtL=null;
+        //TODO TAS-315 Create memory efficient VCF to HDF5 insert writing to Builder of direct.
     }
 
     int getSiteNumber() {

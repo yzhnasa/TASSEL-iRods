@@ -153,9 +153,11 @@ public class GenotypeTableBuilder {
      * @param taxaList
      */
     private GenotypeTableBuilder(String hdf5File, TaxaList taxaList, int numberOfSites) {
-//        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
-//        config.dontUseExtendableDataTypes();
-//        writer = config.writer();
+        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+        config.dontUseExtendableDataTypes();
+        writer = config.writer();
+        //TODO TAS-315 Create memory efficient VCF to HDF5
+//        TaxaListBuilder   taxaListBuilder=new TaxaListBuilder();
 //        if(HDF5Utils.doesGenotypeModuleExist(writer) && HDF5Utils.isHDF5GenotypeLocked(writer)) {
 //            writer.close();
 //            throw new UnsupportedOperationException("This file is locked for genotypic additions");
@@ -167,13 +169,10 @@ public class GenotypeTableBuilder {
 //            this.positionList=PositionListBuilder.getInstance(writer);
 //
 //        }
-//        this.mergeRule=mergeRule;
-//        if(mergeRule!=null) {
-//            this.isTaxaMerge=true;
-//        }
-//        this.myBuildType=BuildType.TAXA_INC;
-//        isHDF5=true;
-        //taxaListBuilder=new TaxaListBuilder();
+
+        this.myBuildType=BuildType.SITE_INC;
+        isHDF5=true;
+
     }
 
     /**
