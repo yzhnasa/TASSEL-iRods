@@ -220,14 +220,6 @@ public class GenotypeSummaryPlugin extends AbstractPlugin {
             data2[count++][3] = numValue.doubleValue() / (double) totalDiploidsNotMissing;
         }
 
-        numDiploidsMissing = 0;
-        for (int j = 0; j < numMajorMinorAlleles; j++) {
-            if ((majorMinorDiploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_ALLELE_STR)) || (majorMinorDiploidValueCounts[0][j].equals(GenotypeTable.UNKNOWN_DIPLOID_ALLELE_STR))) {
-                numDiploidsMissing = (Long) majorMinorDiploidValueCounts[1][j];
-                break;
-            }
-        }
-
         for (int i = 0; i < numMajorMinorAlleles; i++) {
             String value = (String) majorMinorDiploidValueCounts[0][i];
             Long numValue = (Long) majorMinorDiploidValueCounts[1][i];
