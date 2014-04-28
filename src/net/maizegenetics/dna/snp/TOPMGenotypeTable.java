@@ -47,6 +47,27 @@ public class TOPMGenotypeTable implements GenotypeTable {
         myTaxaList = getTaxaList();
     }
 
+    private int getStartPosition(int index) {
+        if (myTOPM.getStrand(index) == -1) {
+            int tagLength = myTOPM.getTagLength(index);
+            if (tagLength < 64) {
+                return myTOPM.getStartPosition(index) - (tagLength - 1);
+            } else {
+                return myTOPM.getEndPosition(index);
+            }
+        } else {
+            return myTOPM.getStartPosition(index);
+        }
+    }
+
+    private int getEndPosition(int index) {
+        if (myTOPM.getStrand(index) == -1) {
+            return myTOPM.getStartPosition(index);
+        } else {
+            return myTOPM.getEndPosition(index);
+        }
+    }
+
     private void sortByTag() {
 
         final int[] indicesOfSortByPosition = new int[myNumTags];
@@ -76,19 +97,9 @@ public class TOPMGenotypeTable implements GenotypeTable {
                     return 1;
                 }
 
-                int startPosA;
-                if (myTOPM.getStrand(indicesOfSortByPosition[a]) == -1) {
-                    startPosA = myTOPM.getEndPosition(indicesOfSortByPosition[a]);
-                } else {
-                    startPosA = myTOPM.getStartPosition(indicesOfSortByPosition[a]);
-                }
+                int startPosA = getStartPosition(indicesOfSortByPosition[a]);
 
-                int startPosB;
-                if (myTOPM.getStrand(indicesOfSortByPosition[b]) == -1) {
-                    startPosB = myTOPM.getEndPosition(indicesOfSortByPosition[b]);
-                } else {
-                    startPosB = myTOPM.getStartPosition(indicesOfSortByPosition[b]);
-                }
+                int startPosB = getStartPosition(indicesOfSortByPosition[b]);
 
                 if (startPosA < startPosB) {
                     return -1;
@@ -123,20 +134,10 @@ public class TOPMGenotypeTable implements GenotypeTable {
                 previousChr = myTOPM.getChromosome(currentIndex);
             }
 
-            int startPosition;
-            if (myTOPM.getStrand(currentIndex) == -1) {
-                startPosition = myTOPM.getEndPosition(currentIndex);
-            } else {
-                startPosition = myTOPM.getStartPosition(currentIndex);
-            }
+            int startPosition = getStartPosition(currentIndex);
 
             if (previousEndPosition >= startPosition) {
-                int previousStartPosition;
-                if (myTOPM.getStrand(previousIndex) == -1) {
-                    previousStartPosition = myTOPM.getEndPosition(previousIndex);
-                } else {
-                    previousStartPosition = myTOPM.getStartPosition(previousIndex);
-                }
+                int previousStartPosition = getStartPosition(previousIndex);
                 siteOffsetForEachTag.add(startPosition - previousStartPosition + siteOffsetForEachTag.get(siteOffsetForEachTag.size() - 1));
             } else {
                 tempIndicesOfSortByPosition.add(tempIndicesOfSortByPosition.size() - 1, -1);
@@ -144,11 +145,7 @@ public class TOPMGenotypeTable implements GenotypeTable {
                 siteOffsetForEachTag.add(0);
             }
 
-            if (myTOPM.getStrand(currentIndex) == -1) {
-                previousEndPosition = myTOPM.getStartPosition(currentIndex);
-            } else {
-                previousEndPosition = myTOPM.getEndPosition(currentIndex);
-            }
+            previousEndPosition = getEndPosition(currentIndex);
 
             previousIndex = currentIndex;
 
@@ -196,12 +193,7 @@ public class TOPMGenotypeTable implements GenotypeTable {
         TaxaListBuilder builder = new TaxaListBuilder();
         for (int i = 0; i < myIndicesOfSortByPosition.length; i++) {
             if (myIndicesOfSortByPosition[i] != -1) {
-                int startPosition;
-                if (myTOPM.getStrand(myIndicesOfSortByPosition[i]) == -1) {
-                    startPosition = myTOPM.getEndPosition(myIndicesOfSortByPosition[i]);
-                } else {
-                    startPosition = myTOPM.getStartPosition(myIndicesOfSortByPosition[i]);
-                }
+                int startPosition = getStartPosition(myIndicesOfSortByPosition[i]);
                 String taxaName = String.valueOf(myTOPM.getStrand(myIndicesOfSortByPosition[i])) + String.valueOf(myIndicesOfSortByPosition[i])
                         + "_" + String.valueOf(myTOPM.getChromosome(myIndicesOfSortByPosition[i]))
                         + "_" + String.valueOf(startPosition);
@@ -228,10 +220,13 @@ public class TOPMGenotypeTable implements GenotypeTable {
         }
         int tagLength = myTOPM.getTagLength(myIndicesOfSortByPosition[taxon]);
         if (myTOPM.getStrand(myIndicesOfSortByPosition[taxon]) == -1) {
+            // first
             //int index = (site - mySiteOffsetForEachTag[taxon]) - 63;
-            int startPos = myTOPM.getStartPosition(myIndicesOfSortByPosition[taxon]);
-            int endPos = myTOPM.getEndPosition(myIndicesOfSortByPosition[taxon]);
-            int index = -startPos + (endPos + (site - mySiteOffsetForEachTag[taxon]));
+            // second
+            //int startPos = myTOPM.getStartPosition(myIndicesOfSortByPosition[taxon]);
+            //int endPos = myTOPM.getEndPosition(myIndicesOfSortByPosition[taxon]);
+            //int index = -startPos + (endPos + (site - mySiteOffsetForEachTag[taxon]));
+            int index = -myTOPM.getStartPosition(myIndicesOfSortByPosition[taxon]) + getStartPosition(myIndicesOfSortByPosition[taxon]) + site - mySiteOffsetForEachTag[taxon];
             if ((index <= 0) && (index > -tagLength)) {
                 for (byte offset : offsets) {
                     if (offset == index) {

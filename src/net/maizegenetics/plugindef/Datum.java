@@ -10,7 +10,7 @@ import java.io.Serializable;
  * This wraps data elements used as input or output to
  * Tassel modules.
  *
- * @author terryc
+ * @author Terry Casstevens
  */
 public class Datum implements Serializable {
 
@@ -64,7 +64,24 @@ public class Datum implements Serializable {
         return myData.getClass();
     }
 
+    @Override
     public String toString() {
         return myName;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        Datum instance;
+        if (obj instanceof Datum) {
+            instance = (Datum) obj;
+        } else {
+            return false;
+        }
+        
+        if ((myName.equals(instance.getName()) && (myData == instance.getData()) && (myComment.equals(instance.getComment())))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

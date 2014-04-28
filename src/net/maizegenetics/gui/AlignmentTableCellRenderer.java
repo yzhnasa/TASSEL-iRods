@@ -42,7 +42,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
     public static enum RENDERING_TYPE {
 
-        Nucleotide, NucleotideHeterozygous, MajorAllele, MinorAllele, MajorMinorAllele, Heterozygous, ReferenceMasks, GeneticDistanceMasks, None, TOPM
+        Nucleotide, NucleotideHeterozygous, MajorAllele, MinorAllele, MajorMinorAllele, Heterozygous, ReferenceMasks, GeneticDistanceMasks, None, TOPM, SNPs
     };
     private static RENDERING_TYPE[] SUPPORTED_RENDERING_TYPES = new RENDERING_TYPE[]{RENDERING_TYPE.Nucleotide, RENDERING_TYPE.NucleotideHeterozygous,
         RENDERING_TYPE.MajorAllele, RENDERING_TYPE.MinorAllele, RENDERING_TYPE.MajorMinorAllele, RENDERING_TYPE.Heterozygous,
@@ -91,7 +91,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
     }
 
-    private Component getDefaultRendering(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+    protected Component getDefaultRendering(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
 
         Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
 
