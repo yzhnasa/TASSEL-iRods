@@ -31,6 +31,9 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myDescription = description;
         myRange = range;
         myValue = value;
+        if (!myRange.contains(myValue)) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: new value: " + value.toString() + " outside range: " + myRange.toString());
+        }
         myRequired = required;
         myMustBeChanged = required;
         myClass = theClass;
@@ -50,6 +53,9 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myDescription = oldParameter.myDescription;
         myRange = oldParameter.myRange;
         myValue = newValue;
+        if (!myRange.contains(myValue)) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: new value: " + newValue.toString() + " outside range: " + myRange.toString());
+        }
         myRequired = oldParameter.myRequired;
         myMustBeChanged = false;
         myClass = oldParameter.myClass;
@@ -63,6 +69,9 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myRange = oldParameter.myRange;
         myClass = oldParameter.myClass;
         myValue = convert(newValue, myClass);
+        if (!myRange.contains(myValue)) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: new value: " + newValue + " outside range: " + myRange.toString());
+        }
         myRequired = oldParameter.myRequired;
         myMustBeChanged = false;
     }
