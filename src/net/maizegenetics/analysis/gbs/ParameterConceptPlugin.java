@@ -26,7 +26,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(ParameterConceptPlugin.class);
 
-    private final Map<String, PluginParameterTerry<?>> myParameters = new LinkedHashMap<>();
+    private final Map<String, PluginParameterTerry<? extends Comparable>> myParameters = new LinkedHashMap<>();
 
     public static enum PARAMETERS {
 
@@ -103,6 +103,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
                     }
                     if ((i != args.length - 1) && (args[i + 1]).startsWith("-")) {
                         PluginParameterTerry<Boolean> newParameter = new PluginParameterTerry(parameter, Boolean.TRUE);
+                        myParameters.put(arg, newParameter);
                     } else {
                         PluginParameterTerry<?> newParameter = new PluginParameterTerry(parameter, args[i + 1]);
                         myParameters.put(arg, newParameter);
@@ -154,6 +155,20 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     public Object getParameterValue(PARAMETERS key) {
         return myParameters.get(key.toString());
+    }
+
+    public Object getParameterValue(String key) {
+        return myParameters.get(key);
+    }
+
+    public <T extends Comparable<T>> ParameterConceptPlugin setParameterValue(String key, T value) {
+        PluginParameterTerry parameter = myParameters.get(key);
+        if (parameter == null) {
+            throw new IllegalArgumentException("AbstractPlugin: setParameterValue: Unknown Parameter: " + key);
+        }
+        PluginParameterTerry<T> newParameter = new PluginParameterTerry<>(parameter, value);
+        myParameters.put(key, newParameter);
+        return this;
     }
 
     @Override
