@@ -19,17 +19,21 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     private final String myDescription;
     private final Range<T> myRange;
     private final T myValue;
+    private final boolean myRequired;
     private final boolean myMustBeChanged;
+    private final Class<T> myClass;
 
     private PluginParameterTerry(String guiName, String guiUnits, String cmdLineName,
-            String description, Range<T> range, T value, boolean mustBeChanged) {
+            String description, Range<T> range, T value, boolean required, Class<T> theClass) {
         myGuiName = guiName;
         myUnits = guiUnits;
         myCmdLineName = cmdLineName;
         myDescription = description;
         myRange = range;
         myValue = value;
-        myMustBeChanged = mustBeChanged;
+        myRequired = required;
+        myMustBeChanged = required;
+        myClass = theClass;
     }
 
     /**
@@ -46,9 +50,36 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myDescription = oldParameter.myDescription;
         myRange = oldParameter.myRange;
         myValue = newValue;
+        myRequired = oldParameter.myRequired;
+        myMustBeChanged = false;
+        myClass = oldParameter.myClass;
+    }
+
+    public PluginParameterTerry(PluginParameterTerry<T> oldParameter, String newValue) {
+        myGuiName = oldParameter.myGuiName;
+        myUnits = oldParameter.myUnits;
+        myCmdLineName = oldParameter.myCmdLineName;
+        myDescription = oldParameter.myDescription;
+        myRange = oldParameter.myRange;
+        myClass = oldParameter.myClass;
+        myValue = convert(newValue, myClass);
+        myRequired = oldParameter.myRequired;
         myMustBeChanged = false;
     }
-    
+
+    private T convert(String input, Class<T> outputClass) {
+
+        try {
+            return input == null ? null : outputClass.getConstructor(String.class).newInstance(input);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("PluginParameterTerry: convert: Unknown type: " + outputClass.getName());
+        }
+
+        // We might need something like this if above
+        // doesn't handle all cases.
+        // if (outputClass.isAssignableFrom(Double.class))
+    }
+
     public String guiName() {
         return myGuiName;
     }
@@ -77,6 +108,10 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         return myMustBeChanged;
     }
 
+    public boolean required() {
+        return myRequired;
+    }
+
     public static class Builder<T extends Comparable<T>> {
 
         private final String myGuiName;
@@ -86,12 +121,14 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         private Range<T> myRange = null;
         private final T myValue;
         private final boolean myIsRequired;
+        private final Class<T> myClass;
 
-        public Builder(String guiName, String cmdLineName, T value, boolean isRequired) {
+        public Builder(String guiName, String cmdLineName, T value, boolean isRequired, Class<T> type) {
             myGuiName = guiName;
             myCmdLineName = cmdLineName;
             myValue = value;
             myIsRequired = isRequired;
+            myClass = type;
         }
 
         public Builder<T> units(String units) {
@@ -113,8 +150,8 @@ public class PluginParameterTerry<T extends Comparable<T>> {
             if (myDescription.isEmpty()) {
                 myDescription = myGuiName;
             }
-            return new PluginParameterTerry<T>(myGuiName, myUnits, myCmdLineName,
-                    myDescription, myRange, myValue, myIsRequired);
+            return new PluginParameterTerry<>(myGuiName, myUnits, myCmdLineName,
+                    myDescription, myRange, myValue, myIsRequired, (Class<T>) myClass);
         }
     }
 }
