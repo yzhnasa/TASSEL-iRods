@@ -8,15 +8,21 @@ import net.maizegenetics.util.DoubleFormat;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
+import java.util.Map;
+import java.util.WeakHashMap;
+import net.maizegenetics.dna.map.TOPMInterface;
+import net.maizegenetics.dna.map.TOPMTableReport;
 
 /**
  */
 public class TableReportPanel extends JPanel {
 
+    private static final Map<Object, TableReportPanel> INSTANCES = new WeakHashMap<>();
+
     private JTable myDataTable;
     private int myTaxaColumnIndex = -1;
 
-    public TableReportPanel(TableReport theTableSource) {
+    private TableReportPanel(TableReport theTableSource) {
 
         TableModel theModel = null;
 
@@ -73,6 +79,24 @@ public class TableReportPanel extends JPanel {
 
         setVisible(true);
 
+    }
+
+    public static TableReportPanel getInstance(TableReport theTableSource) {
+        TableReportPanel result = INSTANCES.get(theTableSource);
+        if (result == null) {
+            result = new TableReportPanel(theTableSource);
+            INSTANCES.put(theTableSource, result);
+        }
+        return result;
+    }
+
+    public static TableReportPanel getInstance(TOPMInterface topm) {
+        TableReportPanel result = INSTANCES.get(topm);
+        if (result == null) {
+            result = new TableReportPanel(new TOPMTableReport(topm));
+            INSTANCES.put(topm, result);
+        }
+        return result;
     }
 
     private String[][] getRowHeadings(TableReport report) {
