@@ -160,7 +160,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
                 myDescription = myGuiName;
             }
             return new PluginParameterTerry<>(myGuiName, myUnits, myCmdLineName,
-                    myDescription, myRange, myValue, myIsRequired, (Class<T>) myClass);
+                    myDescription, myRange, myValue, myIsRequired, myClass);
         }
     }
 }

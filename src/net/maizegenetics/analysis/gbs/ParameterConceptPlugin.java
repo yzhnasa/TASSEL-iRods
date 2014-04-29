@@ -74,7 +74,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         myParameters.put(cmdLineName, builder.build());
     }
 
-    private void modifyBuilder(PluginParameterTerry.Builder builder, String description, Range<?> range, String units) {
+    private static <T extends Comparable<T>> void modifyBuilder(PluginParameterTerry.Builder<T> builder, String description, Range<T> range, String units) {
         if (description != null) {
             builder.description(description);
         }
@@ -130,7 +130,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     private void printUsage() {
         StringBuilder builder = new StringBuilder();
         builder.append("\nUsage:\n");
-        builder.append(Utils.getBasename(getClass().getName()) + " <options>\n");
+        builder.append(Utils.getBasename(getClass().getName())).append(" <options>\n");
         for (PluginParameterTerry<?> current : myParameters.values()) {
             builder.append("-");
             builder.append(current.cmdLineName());
@@ -153,7 +153,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     }
 
     public Object getParameterValue(PARAMETERS key) {
-        return myParameters.get(key);
+        return myParameters.get(key.toString());
     }
 
     @Override
