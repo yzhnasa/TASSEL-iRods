@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
@@ -95,6 +96,13 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         siteCallCnt=new int[baseAlign.numberOfSites()];
         if(startDiv==-1) startDiv=0;
         if(endDiv==-1) endDiv=divisions.length-1;
+        try {
+                if (exportFile.contains("gX")==false) throw new IOException();
+                        }
+            catch (Exception e) {
+                System.out.println("output file name must contain gX, eg outfile.gX.hmp.txt");
+            }
+        if (!exportFile.contains(".hmp")) exportFile= exportFile+".hmp.txt";
         for (int i = startDiv; i <=endDiv; i++) {
             GenotypeTable mna=createHaplotypeAlignment(divisions[i][0], divisions[i][1], baseAlign,
              minSites,  maxDistance);
@@ -278,7 +286,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
             unkCnt=countUnknown(calls);//kls
             missingFreq=(double)unkCnt[0]/(double)inAlign.numberOfSites();//kls
             double hetFreq=(double)unkCnt[1]/(double)(inAlign.numberOfSites()-unkCnt[0]);
-            if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq))) {
+            if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq)&&(hits.size()>=this.minTaxaInGroup))) {
                 int index=(hits.size()*200000)+taxon1;
                 if(verboseOutput) System.out.printf("\t\tOutput %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.taxaName(taxon1),
                         hits.size(), missingFreq, hetFreq, index);

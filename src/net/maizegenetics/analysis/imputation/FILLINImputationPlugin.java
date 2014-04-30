@@ -199,6 +199,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             ProjectionGenotypeIO.writeToFile(exportFile, ((ProjectionBuilder) mna).build());
         } else {
             GenotypeTableBuilder ab=(GenotypeTableBuilder)mna;
+//            ab.sortTaxa();
             if(ab.isHDF5()) {
                 ab.build();
             } else {
@@ -735,9 +736,9 @@ public class FILLINImputationPlugin extends AbstractPlugin {
 
     @Override
     public void setParameters(String[] args) {
-        if (args.length == 0) {
+        if (args.length < 3) {
             printUsage();
-            throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
+            throw new IllegalArgumentException("\n\nPlease use the above arguments/options. -hmp, -o, -d required.\n\n");
         }
 
         engine.add("-hmp", "-hmpFile", true);
