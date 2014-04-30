@@ -50,6 +50,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
     private double maxDistFromFounder=0.01;
     private int appoxSitesPerHaplotype=8192;
     private int minSitesPresentPerHap=500;
+    private boolean anonymous= false;
 
     private double maximumMissing=0.4;
     private int maxHaplotypes=3000;
@@ -136,7 +137,8 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(results.size(),inAlign.numberOfSites());
         int index=0;
         for (byte[][] calls : results.values()) {
-            tLB.add(new Taxon("h"+index+(new String(calls[1]))));
+            if (anonymous) tLB.add(new Taxon("h"+index));
+            else tLB.add(new Taxon("h"+index+(new String(calls[1]))));
             gB.setBaseRangeForTaxon(index,0,calls[0]);
             index++;
         }
@@ -409,11 +411,14 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         engine.add("-maxOutMiss", "--maxOutMiss", true);
         engine.add("-sD", "--startDivision", true);
         engine.add("-eD", "--endDivision", true);
+        engine.add("-anon", "--anon", true);
         engine.add("-nV", "--nonVerbose",false);
         engine.parse(args);
         if (engine.getBoolean("-sD")) {
             startDiv = Integer.parseInt(engine.getString("-sD"));
         }
+        if (engine.getBoolean("-anon")) anonymous = true;
+        
         if (engine.getBoolean("-eD")) {
             endDiv = Integer.parseInt(engine.getString("-eD"));
         }
@@ -467,6 +472,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
                 + "-maxHap    Maximum number of haplotypes per segment (default: "+maxHaplotypes+")\n"
                 + "-minTaxa Minimum number of taxa to generate a haplotype (default: "+minTaxaInGroup+")\n"
                 + "-maxOutMiss  Maximum frequency of missing data in the output haplotype (default: "+maximumMissing+")\n"
+                + "-anon  If flagged, haplotype seed will not be transferred to haplotype name (default: "+anonymous+")\n"
                 + "-nV  If flagged, output will be supressed\n"
                 );
     }
