@@ -48,18 +48,9 @@ public class PluginParameterTerry<T extends Comparable<T>> {
      * @param newValue
      */
     public PluginParameterTerry(PluginParameterTerry<T> oldParameter, T newValue) {
-        myGuiName = oldParameter.myGuiName;
-        myUnits = oldParameter.myUnits;
-        myCmdLineName = oldParameter.myCmdLineName;
-        myDescription = oldParameter.myDescription;
-        myRange = oldParameter.myRange;
-        myValue = newValue;
-        if ((myRange != null) && (!myRange.contains(myValue))) {
-            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + newValue.toString() + " outside range: " + myRange.toString());
-        }
-        myRequired = oldParameter.myRequired;
-        myMustBeChanged = false;
-        myClass = oldParameter.myClass;
+        this(oldParameter.myGuiName, oldParameter.myUnits, oldParameter.myCmdLineName,
+                oldParameter.myDescription, oldParameter.myRange, newValue,
+                oldParameter.myRequired, oldParameter.myClass);
     }
 
     public PluginParameterTerry(PluginParameterTerry<T> oldParameter, String newValue) {
