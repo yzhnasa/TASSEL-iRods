@@ -359,9 +359,9 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte referenceGenotype(int site) {
+    public byte referenceAllele(int site) {
         int translate = translateSite(site);
-        return myAlignments[translate].referenceGenotype(site - mySiteOffsets[translate]);
+        return myAlignments[translate].referenceAllele(site - mySiteOffsets[translate]);
     }
 
     @Override
@@ -456,17 +456,17 @@ public class CombineGenotypeTable implements GenotypeTable {
     }
 
     @Override
-    public byte[] referenceGenotypes(int startSite, int endSite) {
+    public byte[] referenceAlleles(int startSite, int endSite) {
         int numSites = endSite - startSite;
         byte[] result = new byte[numSites];
         for (int i = 0; i < numSites; i++) {
-            result[i] = referenceGenotype(startSite + i);
+            result[i] = referenceAllele(startSite + i);
         }
         return result;
     }
 
     @Override
-    public byte[] referenceGenotypeForAllSites() {
+    public byte[] referenceAlleleForAllSites() {
 
         for (int i = 0; i < myAlignments.length; i++) {
             if (!myAlignments[i].hasReference()) {
@@ -477,7 +477,7 @@ public class CombineGenotypeTable implements GenotypeTable {
         byte[] result = new byte[numberOfSites()];
         int count = 0;
         for (int i = 0; i < myAlignments.length; i++) {
-            byte[] current = myAlignments[i].referenceGenotypeForAllSites();
+            byte[] current = myAlignments[i].referenceAlleleForAllSites();
             for (int j = 0; j < current.length; j++) {
                 result[count++] = current[j];
             }

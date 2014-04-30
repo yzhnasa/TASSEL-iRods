@@ -326,8 +326,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
                                 blankPanel.add(new JLabel("     Nothing to Display"), BorderLayout.CENTER);
                                 myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
                             } else {
-                                TableReportPanel theATP;
-                                theATP = new TableReportPanel((TableReport) book.getData());
+                                TableReportPanel theATP = TableReportPanel.getInstance((TableReport) book.getData());
                                 myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
                             }
                         } else if (book.getData() instanceof TOPMInterface) {
@@ -338,12 +337,18 @@ public class DataTreePanel extends JPanel implements PluginListener {
                             if (size == 0) {
                                 JPanel blankPanel = new JPanel();
                                 blankPanel.setLayout(new BorderLayout());
-                                blankPanel.add(new JLabel("     Nothing to Display"), BorderLayout.CENTER);
+                                blankPanel.add(new JLabel("     No Tags"), BorderLayout.CENTER);
                                 myTASSELMainFrame.mainDisplayPanel.add(blankPanel, BorderLayout.CENTER);
                             } else {
-                                TableReportPanel theATP;
-                                theATP = new TableReportPanel(new TOPMTableReport((TOPMInterface) book.getData()));
-                                myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
+                                String name = book.getName();
+                                if (name.endsWith("(Graphical)")) {
+                                    SeqViewerPanel seqViewer = SeqViewerPanel.getInstance((TOPMInterface) book.getData(), getThis());
+                                    myTASSELMainFrame.mainDisplayPanel.add(seqViewer, BorderLayout.CENTER);
+                                } else {
+                                    TableReportPanel theATP = TableReportPanel.getInstance((TOPMInterface) book.getData());
+                                    myTASSELMainFrame.mainDisplayPanel.add(theATP, BorderLayout.CENTER);
+                                }
+
                             }
                         } else if (book.getData() instanceof GenotypeTable) {
                             GenotypeTable align = (GenotypeTable) book.getData();
@@ -490,7 +495,7 @@ public class DataTreePanel extends JPanel implements PluginListener {
                 addDatum(NODE_TYPE_ASSOCIATIONS, d);
                 continue;
             }
-            
+
             if (theCreator instanceof GenotypeSummaryPlugin) {
                 addDatum(NODE_TYPE_GENO_SUMMARY, d);
                 continue;
@@ -542,7 +547,8 @@ public class DataTreePanel extends JPanel implements PluginListener {
             }
 
             if (d.getData() instanceof TOPMInterface) {
-                addDatum(NODE_TYPE_TOPM, d);
+                addDatum(NODE_TYPE_TOPM, new Datum(d.getName() + " (Text)", d.getData(), null));
+                addDatum(NODE_TYPE_TOPM, new Datum(d.getName() + " (Graphical)", d.getData(), null));
                 continue;
             }
 
@@ -610,12 +616,11 @@ public class DataTreePanel extends JPanel implements PluginListener {
 
     private DefaultMutableTreeNode findOnTree(Datum theDatum) {
 
-        Object obj = theDatum.getData();
         Iterator itr = myNodeHash.values().iterator();
         while (itr.hasNext()) {
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) itr.next();
-            Object current = ((Datum) parentNode.getUserObject()).getData();
-            if (current == obj) {
+            Datum current = (Datum) parentNode.getUserObject();
+            if (current.equals(theDatum)) {
                 return parentNode;
             }
         }

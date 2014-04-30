@@ -44,6 +44,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.plaf.basic.BasicTableUI;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import net.maizegenetics.dna.map.TOPMInterface;
 
 import net.maizegenetics.gui.AlignmentTableCellRenderer;
 import net.maizegenetics.gui.AlignmentTableModel;
@@ -51,9 +52,11 @@ import net.maizegenetics.gui.RowHeaderRenderer;
 import net.maizegenetics.gui.TableRowHeaderListModel;
 import net.maizegenetics.gui.VerticalLabelUI;
 import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.TOPMGenotypeTable;
 import net.maizegenetics.gui.GenotypeTableMask;
 import net.maizegenetics.gui.GenotypeTableMaskGeneticDistance;
 import net.maizegenetics.gui.GenotypeTableMaskReference;
+import net.maizegenetics.gui.TOPMGenotypeTableCellRenderer;
 import net.maizegenetics.taxa.Taxon;
 import net.maizegenetics.plugindef.Datum;
 
@@ -63,7 +66,7 @@ import net.maizegenetics.plugindef.Datum;
  */
 public class SeqViewerPanel extends JPanel implements ComponentListener, TableModelListener {
 
-    private static final Map INSTANCES = new WeakHashMap();
+    private static final Map<Object, Object[]> INSTANCES = new WeakHashMap<>();
     private static final int ROW_HEADER_WIDTH = 150;
     private static final int SCROLL_BAR_WIDTH = 25;
     private static final int TABLE_COLUMN_WIDTH = 10;
@@ -94,6 +97,10 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         this(alignment, masks, dataTreePanel, -1, AlignmentTableCellRenderer.RENDERING_TYPE.MajorMinorAllele);
     }
 
+    private SeqViewerPanel(TOPMGenotypeTable alignment, DataTreePanel dataTreePanel) {
+        this(alignment, null, dataTreePanel, 0, AlignmentTableCellRenderer.RENDERING_TYPE.TOPM);
+    }
+
     private SeqViewerPanel(GenotypeTable alignment, GenotypeTableMask[] masks, DataTreePanel dataTreePanel, int sliderPosition, AlignmentTableCellRenderer.RENDERING_TYPE type) {
 
         setLayout(new BorderLayout());
@@ -101,9 +108,13 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         myDataTreePanel = dataTreePanel;
         myTableModel = new AlignmentTableModel(alignment);
 
-        myTableCellRenderer = new AlignmentTableCellRenderer(myTableModel, myAlignment, masks);
+        if (myAlignment instanceof TOPMGenotypeTable) {
+            myTableCellRenderer = new TOPMGenotypeTableCellRenderer(myTableModel, (TOPMGenotypeTable) myAlignment);
+        } else {
+            myTableCellRenderer = new AlignmentTableCellRenderer(myTableModel, myAlignment, masks);
+        }
 
-        myHighlightingComboBox = new JComboBox(AlignmentTableCellRenderer.RENDERING_TYPE.values());
+        myHighlightingComboBox = new JComboBox(myTableCellRenderer.getRenderingTypes());
         myHighlightingComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -174,28 +185,6 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         if (instance == null) {
             result = new SeqViewerPanel(alignment, masks, dataTreePanel);
             saveInstance(result, alignment, masks);
-        } else if (false) {
-
-            int arraySize = 1;
-            if (masks != null) {
-                arraySize = arraySize + masks.length;
-            }
-            if (instance.length != arraySize) {
-                result = new SeqViewerPanel(alignment, masks, dataTreePanel, ((SeqViewerPanel) instance[0]).getSliderPositionAsSite(), ((SeqViewerPanel) instance[0]).getCellRenderingType());
-                saveInstance(result, alignment, masks);
-            } else {
-                if (masks != null) {
-                    for (int i = 0; i < masks.length; i++) {
-                        if (masks[i] != instance[i + 1]) {
-                            result = new SeqViewerPanel(alignment, masks, dataTreePanel, ((SeqViewerPanel) instance[0]).getSliderPositionAsSite(), ((SeqViewerPanel) instance[0]).getCellRenderingType());
-                            saveInstance(result, alignment, masks);
-                            break;
-                        }
-                    }
-                }
-                result = (SeqViewerPanel) instance[0];
-            }
-
         } else {
             result = (SeqViewerPanel) instance[0];
             result.setMasks(masks);
@@ -204,10 +193,22 @@ public class SeqViewerPanel extends JPanel implements ComponentListener, TableMo
         return result;
     }
 
-    private static void saveInstance(SeqViewerPanel panel, GenotypeTable alignment, GenotypeTableMask[] masks) {
+    public static SeqViewerPanel getInstance(TOPMInterface topm, DataTreePanel dataTreePanel) {
+        Object[] instance = (Object[]) INSTANCES.get(topm);
+        SeqViewerPanel result = null;
+        if (instance == null) {
+            result = new SeqViewerPanel(new TOPMGenotypeTable(topm), dataTreePanel);
+            saveInstance(result, topm, null);
+        } else {
+            result = (SeqViewerPanel) instance[0];
+        }
+        return result;
+    }
+
+    private static void saveInstance(SeqViewerPanel panel, Object alignment, GenotypeTableMask[] masks) {
         int arraySize = 1;
         if (masks != null) {
-            arraySize = arraySize + masks.length;
+            arraySize += masks.length;
         }
         Object[] instance = new Object[arraySize];
         instance[0] = panel;

@@ -19,6 +19,7 @@ final class PositionArrayList implements PositionList {
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
     private final Map<String,Chromosome> myChrNameHash;
     private final Chromosome firstChromosome;  //null chromosome calls revert to the first chromosome
+    private final String genomeVersion;
 
     private static class ChrOffPos {
         final int startSiteOff;
@@ -31,7 +32,8 @@ final class PositionArrayList implements PositionList {
         }
     }
 
-    PositionArrayList(ArrayList<Position> builderList) {
+    PositionArrayList(ArrayList<Position> builderList, String genomeVersion) {
+        this.genomeVersion=genomeVersion;
         this.numPositions=builderList.size();
         alleles=new byte[Allele.COUNT][numPositions];
 //        refAlleles=new byte[numPositions];
@@ -78,24 +80,27 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public byte referenceGenotype(int site) {
+    public byte referenceAllele(int site) {
         return mySiteList.get(site).getAllele(Allele.REF);
     }
     
     @Override
-    public byte[] referenceGenotypes(int startSite, int endSite) {
+    public byte[] referenceAlleles(int startSite, int endSite) {
         byte[] result = new byte[endSite - startSite];
         System.arraycopy(alleles[Allele.REF.index()],startSite,result,0, result.length);
         return result;
     }
 
     @Override
-    public byte[] referenceGenotypeForAllSites() {
+    public byte[] referenceAlleleForAllSites() {
         return Arrays.copyOf(alleles[Allele.REF.index()],alleles[Allele.REF.index()].length);
     }
 
     @Override
     public boolean hasReference() {
+        if (genomeVersion == null) {
+            return false;
+        }
         return true;
     }
 
@@ -213,7 +218,7 @@ final class PositionArrayList implements PositionList {
 
     @Override
     public String genomeVersion() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return genomeVersion;
     }
 
     @Override

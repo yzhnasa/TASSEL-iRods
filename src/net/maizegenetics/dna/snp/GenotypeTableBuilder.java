@@ -146,6 +146,36 @@ public class GenotypeTableBuilder {
     }
 
     /**
+     * Creates a new HDF5 file if positionList is not null.  Opens an existing HDF5 File if positionList is null.
+     * Merging is allowed depending on whether a mergeRule is included
+     * that can used with TaxaIncremental addition.
+     * @param hdf5File
+     * @param taxaList
+     */
+    private GenotypeTableBuilder(String hdf5File, TaxaList taxaList, int numberOfSites) {
+        IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
+        config.dontUseExtendableDataTypes();
+        writer = config.writer();
+        //TODO TAS-315 Create memory efficient VCF to HDF5
+//        TaxaListBuilder   taxaListBuilder=new TaxaListBuilder();
+//        if(HDF5Utils.doesGenotypeModuleExist(writer) && HDF5Utils.isHDF5GenotypeLocked(writer)) {
+//            writer.close();
+//            throw new UnsupportedOperationException("This file is locked for genotypic additions");
+//        }
+//        if(positionList!=null) {
+//            this.positionList=new PositionListBuilder(writer,positionList).build();  //create a new position list
+//            setupGenotypeTaxaInHDF5(writer);
+//        } else {
+//            this.positionList=PositionListBuilder.getInstance(writer);
+//
+//        }
+
+        this.myBuildType=BuildType.SITE_INC;
+        isHDF5=true;
+
+    }
+
+    /**
      * Creates an in memory builder for addition by taxon.  Each taxon can only be added once,
      * i.e. merging is not possible
      * @param positionList The positions used for the builder
@@ -202,7 +232,7 @@ public class GenotypeTableBuilder {
      * existing HDF5 file.
      * @param existingHDFFile
      * @param mergeRule
-     * @return
+     * @return builder to merge taxa with
      */
     public static GenotypeTableBuilder mergeTaxaIncremental(String existingHDFFile, GenotypeMergeRule mergeRule) {
         return new GenotypeTableBuilder(existingHDFFile, null, mergeRule);
@@ -219,10 +249,24 @@ public class GenotypeTableBuilder {
         return new GenotypeTableBuilder(newHDFFile, positionList, mergeRule);
     }
 
-
-
+    /**
+     * Build an alignment site by site in memory
+     * @param taxaList
+     * @return builder to add sites to
+     */
     public static GenotypeTableBuilder getSiteIncremental(TaxaList taxaList) {
         return new GenotypeTableBuilder(taxaList);
+    }
+
+
+    /**
+     * Build an GenotypeTable by site block (1<<16 sites).  Number of positions (sites) must be known from the beginning.  Positions
+     * and genotypes must be added by block
+     * @param taxaList
+     * @return builder to add site blocks to
+     */
+    public static GenotypeTableBuilder getSiteIncremental(TaxaList taxaList, int numberOfPositions, String newHDF5File) {
+        return new GenotypeTableBuilder(newHDF5File, taxaList, numberOfPositions);
     }
 
     public static GenotypeTable getInstance(GenotypeCallTable genotype, PositionList positionList, TaxaList taxaList, SiteScore siteScore, AlleleDepth alleleDepth) {
@@ -648,6 +692,16 @@ public class GenotypeTableBuilder {
             System.out.println("Number of taxa in HDF5 file:"+hets.length);
             HDF5Utils.writeHDF5EntireArray(Tassel5HDF5Constants.TAXAHET, writer, hets.length, 1<<16, hets);
         }
+    }
+    
+    /**
+     * Annotates the HDF5 Genotype file with the reference allele and reference genome version.
+     * Can only be called on unlocked HDF5 files. 
+     * @param writer
+     * @param refAlleles 
+     */
+    public static void annotateHDF5FileWithRefAllele(IHDF5Writer writer, byte[] refAlleles) {
+        ;
     }
 
 private enum BuildType{TAXA_INC, SITE_INC}

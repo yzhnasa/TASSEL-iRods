@@ -93,6 +93,7 @@ public final class GeneralPosition implements Position {
         private boolean isIndel=false;
         private NumberFormat nf=NumberFormat.getInstance();
         private Map.Entry<String, String> myKnownVariants=null;
+        private Map.Entry<String, String>[] myVariantsAndAnno;
 
         //in an allele annotation objects
         private float myMAF = Float.NaN;
@@ -109,16 +110,25 @@ public final class GeneralPosition implements Position {
             Arrays.fill(myAlleles,GenotypeTable.UNKNOWN_ALLELE);
         }
 
-        /**Constructor requires a Position before annotation of the position*/
+        /**Constructor from an existing position*/
         public Builder(Position aCorePosition) {
-           this(aCorePosition.getChromosome(),aCorePosition.getPosition());
-           myStrand=aCorePosition.getStrand();
-           myCM=aCorePosition.getCM();
-           mySNPID=aCorePosition.getSNPID();
-           isNucleotide=aCorePosition.isNucleotide();
-           isIndel=aCorePosition.isIndel();
-           //myKnownVariants=aCorePosition.getKnownVariants(); //todo Fix
+            this(aCorePosition.getChromosome(),aCorePosition.getPosition());
+            myStrand=aCorePosition.getStrand();
+            myCM=aCorePosition.getCM();
+            mySNPID=aCorePosition.getSNPID();
+            isNucleotide=aCorePosition.isNucleotide();
+            isIndel=aCorePosition.isIndel();
+            myMAF=aCorePosition.getGlobalMAF();
+            mySiteCoverage=aCorePosition.getGlobalSiteCoverage();
+            for (Allele alleleType: Allele.values()) {
+                myAlleles[alleleType.index()] = aCorePosition.getAllele(alleleType);
+            }
+            for (Map.Entry<String, String> entry : aCorePosition.getAllAnnotationEntries()) {
+                myAnnotations.add(entry);
+            }
+//            myKnownVariants=aCorePosition.getKnownVariants(); //todo Fix
         }
+        
         /**Set Chromosome*/
          public Builder chromosome(Chromosome val) {myChromosome = val; return this;}
         /**Set Position in Chromosome*/

@@ -4,6 +4,7 @@ import cern.colt.GenericSorting;
 import cern.colt.Swapper;
 import cern.colt.function.IntComparator;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.util.HDF5Utils;
@@ -108,6 +109,10 @@ public class TaxaListBuilder {
             myTaxaList.add(HDF5Utils.getTaxon(reader, taxonName));
         }
         return build();
+    }
+
+    public static void createHDF5TaxaList(IHDF5Writer writer, TaxaList exportList) {
+        //TODO TAS-315 Create memory efficient VCF to HDF5
     }
 
     //Default package private method to hand the list to the instance

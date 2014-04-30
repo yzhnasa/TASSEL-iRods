@@ -19,7 +19,7 @@ import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
 
 /**
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
@@ -42,9 +42,12 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
     public static enum RENDERING_TYPE {
 
-        Nucleotide, NucleotideHeterozygous, MajorAllele, MinorAllele, MajorMinorAllele, Heterozygous, ReferenceMasks, GeneticDistanceMasks, None
+        Nucleotide, NucleotideHeterozygous, MajorAllele, MinorAllele, MajorMinorAllele, Heterozygous, ReferenceMasks, GeneticDistanceMasks, None, TOPM, SNPs
     };
-    private final AlignmentTableModel myAlignmentTableModel;
+    private static RENDERING_TYPE[] SUPPORTED_RENDERING_TYPES = new RENDERING_TYPE[]{RENDERING_TYPE.Nucleotide, RENDERING_TYPE.NucleotideHeterozygous,
+        RENDERING_TYPE.MajorAllele, RENDERING_TYPE.MinorAllele, RENDERING_TYPE.MajorMinorAllele, RENDERING_TYPE.Heterozygous,
+        RENDERING_TYPE.ReferenceMasks, RENDERING_TYPE.GeneticDistanceMasks, RENDERING_TYPE.None};
+    protected final AlignmentTableModel myAlignmentTableModel;
     private final GenotypeTable myAlignment;
     private GenotypeTableMask[] myMasks;
     private RENDERING_TYPE myRenderingType = RENDERING_TYPE.Nucleotide;
@@ -88,7 +91,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
     }
 
-    private Component getDefaultRendering(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+    protected Component getDefaultRendering(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
 
         Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
 
@@ -104,7 +107,7 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
     }
 
-    private Component getNucleotideRendering(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+    protected Component getNucleotideRendering(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
 
         Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
 
@@ -406,5 +409,9 @@ public class AlignmentTableCellRenderer extends DefaultTableCellRenderer {
 
     public void setMasks(GenotypeTableMask[] masks) {
         myMasks = masks;
+    }
+
+    public RENDERING_TYPE[] getRenderingTypes() {
+        return SUPPORTED_RENDERING_TYPES;
     }
 }

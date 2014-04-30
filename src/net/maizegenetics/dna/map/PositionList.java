@@ -13,36 +13,31 @@ import java.util.List;
 public interface PositionList extends List<Position> {
 
     /**
-     * Return reference diploid allele values at given site.
+     * Return the (haploid) reference allele at given site.
      *
      * @param site site
      *
-     * @return first four bits are the first allele value and the second four
-     * bits are the second allele value.
+     * @return byte from 0-15
      */
-    public byte referenceGenotype(int site);
+    public byte referenceAllele(int site);
 
     /**
-     * Returns reference sequence of diploid allele values for given taxon in
-     * specified range (end site not included). Each value in array contains
-     * both diploid values. First four bits holds the first allele, and the
-     * second four bits holds the second allele.
+     * Returns reference sequence alleles in specified range.
+     * End site not included. One haploid allele for each site.
      *
      * @param startSite start site
-     * @param endSite end site
+     * @param endSite end site (not included in result)
      *
-     * @return reference sequence of diploid allele values.
+     * @return reference sequence of haploid allele values.
      */
-    public byte[] referenceGenotypes(int startSite, int endSite);
+    public byte[] referenceAlleles(int startSite, int endSite);
 
     /**
-     * Returns reference sequence of diploid allele values. Each value in array
-     * contains both diploid values. First four bits holds the first allele, and
-     * the second four bits holds the second allele.
+     * Returns reference sequence alleles. One haploid allele for each site.
      *
-     * @return reference sequence of diploid allele values.
+     * @return reference sequence of haploid allele values.
      */
-    public byte[] referenceGenotypeForAllSites();
+    public byte[] referenceAlleleForAllSites();
 
     /**
      * Return whether this alignment has defined reference sequence.
@@ -50,7 +45,7 @@ public interface PositionList extends List<Position> {
      * @return true if this alignment has reference sequence.
      */
     public boolean hasReference();
-
+    
     /**
      * Get SNP ID for specified site.
      *

@@ -4,6 +4,7 @@
 package net.maizegenetics.analysis.data;
 
 import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -19,8 +20,15 @@ import net.maizegenetics.dna.map.GeneralPosition;
 import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.map.PositionListBuilder;
+import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.dna.snp.GenotypeTableBuilder;
+import net.maizegenetics.dna.snp.ImportUtils;
 import net.maizegenetics.dna.snp.NucleotideAlignmentConstants;
+import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.Taxon;
+import net.maizegenetics.util.HDF5Utils;
 import net.maizegenetics.util.Utils;
+import java.util.List;
 
 /**
  *
@@ -32,7 +40,9 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
     private ArgsEngine myArgsEngine = null;
     private String inHDF5FileName = null;
     private String refGenomeFileStr = null;
+    private String genomeVersion = null;
     private BufferedReader refReader = null;
+    private PositionListBuilder newPosListBuilder = null;
     private int currChr = Integer.MIN_VALUE;
     private int currPos = Integer.MIN_VALUE;
     private String contextSeq;
@@ -52,6 +62,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
             +"The options for the TASSEL5 AddReferenceAlleleToHDF5Plugin are as follows:\n"
             +"  -i    Input HDF5 genotype (*.h5) file to be annotated with the reference allele.\n"
             +"  -ref  Path to reference genome in fasta format.\n"
+            +"  -ver  Genome version.\n"
             +"\n\n"
         );
     }
@@ -67,6 +78,7 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
             myArgsEngine = new ArgsEngine();
             myArgsEngine.add("-i", "--input-file", true);
             myArgsEngine.add("-ref", "--referenceGenome", true);
+            myArgsEngine.add("-ver", "--genome-version", true);
         }
         myArgsEngine.parse(args);
         inHDF5FileName = myArgsEngine.getString("-i");
@@ -109,6 +121,16 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
             try {Thread.sleep(500);} catch(InterruptedException e) {}
             throw new IllegalArgumentException(errMessage);
         }
+        if (myArgsEngine.getBoolean("-ver")) {
+            genomeVersion = myArgsEngine.getString("-ver");
+        } else {
+            printUsage();
+            try {Thread.sleep(500);} catch(InterruptedException e) {}
+            String errMessage = "\nPlease specify the name of the reference genome version (e.g. -ver \"B73 RefGen_v2\")\n\n";
+            myLogger.error(errMessage);
+            try {Thread.sleep(500);} catch(InterruptedException e) {}
+            throw new IllegalArgumentException(errMessage);
+        }
     }
 
     @Override
@@ -125,9 +147,39 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
     }
 
     private String addRefAlleleToHDF5GenoTable() {
+        String message = populatePositionsWithRefAllele();
+        if (message != null) return message;
+        PositionList newPos = newPosListBuilder.build();
+        if (writePositions) {
+            String genomeVer = newPos.hasReference() ? newPos.genomeVersion() : "unkown";
+            System.out.println("\nNew genome version: "+genomeVer+"\n");
+        }
+        String outHDF5FileName = inHDF5FileName.replaceFirst("\\.h5$", "_withRef.h5");
+        GenotypeTableBuilder newGenos = GenotypeTableBuilder.getTaxaIncremental(newPos, outHDF5FileName);
+        IHDF5Reader h5Reader = HDF5Factory.open(inHDF5FileName);
+        List<String> taxaNames = HDF5Utils.getAllTaxaNames(h5Reader);
+        for (String taxonName : taxaNames) {
+            Taxon taxon = HDF5Utils.getTaxon(h5Reader, taxonName);
+            byte[] genos = HDF5Utils.getHDF5GenotypesCalls(h5Reader, taxonName);
+            byte[][] depth = HDF5Utils.getHDF5GenotypesDepth(h5Reader, taxonName);
+            newGenos.addTaxon(taxon, genos, depth);
+        }
+        newGenos.build();
+        System.out.println("\n\nFinished adding reference alleles to file:");
+        System.out.println("  "+outHDF5FileName+"\n\n");
+        return null;
+    }
+    
+    private String populatePositionsWithRefAllele() {
         IHDF5Writer h5Writer = HDF5Factory.open(inHDF5FileName);
         PositionList oldPosList = PositionListBuilder.getInstance(h5Writer);
-        if (writePositions) System.out.println("SNPID\tchr\tpos\tstr\tmaj\tmin\tref\tmaf\tcov\tcontext");
+//        h5Writer.close();
+        newPosListBuilder = new PositionListBuilder();
+        if (writePositions) {
+            String genomeVer = oldPosList.hasReference() ? oldPosList.genomeVersion() : "unkown";
+            System.out.println("\ncurrent genome version: "+genomeVer+"\n");
+            System.out.println("SNPID\tchr\tpos\tstr\tmaj\tmin\tref\tmaf\tcov\tcontext");
+        }
         for (Position oldPos : oldPosList) {
             int chr = oldPos.getChromosome().getChromosomeNumber();
             int pos = oldPos.getPosition();
@@ -136,19 +188,20 @@ public class AddReferenceAlleleToHDF5Plugin extends AbstractPlugin {
             if (refAllele == Byte.MIN_VALUE) {
                 return "\nCould not find position "+pos+" on chromosome "+chr+" in the reference genome fasta file.\n\n\n";
             }
-            Position newPos = new GeneralPosition.Builder(oldPos) // this only copies chr,pos,strand,CM,SNPID,isNucleotide,isIndel from oldPos
-                .maf(oldPos.getGlobalMAF())
-                .siteCoverage(oldPos.getGlobalSiteCoverage())
-                .allele(Position.Allele.GLBMAJ, oldPos.getAllele(Position.Allele.GLBMAJ))
-                .allele(Position.Allele.GLBMIN, oldPos.getAllele(Position.Allele.GLBMIN))
-                .allele(Position.Allele.ANC, oldPos.getAllele(Position.Allele.ANC))
-                .allele(Position.Allele.HIDEP, oldPos.getAllele(Position.Allele.HIDEP))
+            Position newPos = new GeneralPosition.Builder(oldPos) 
+//                // previous version only copied chr,pos,strand,CM,SNPID,isNucleotide,isIndel from oldPos
+//                .maf(oldPos.getGlobalMAF())
+//                .siteCoverage(oldPos.getGlobalSiteCoverage())
+//                .allele(Position.Allele.GLBMAJ, oldPos.getAllele(Position.Allele.GLBMAJ))
+//                .allele(Position.Allele.GLBMIN, oldPos.getAllele(Position.Allele.GLBMIN))
+//                .allele(Position.Allele.ANC, oldPos.getAllele(Position.Allele.ANC))
+//                .allele(Position.Allele.HIDEP, oldPos.getAllele(Position.Allele.HIDEP))
                 .allele(Position.Allele.REF, refAllele)
                 .build();
             if (writePositions) writePosition(newPos, contextSeq);
+            newPosListBuilder.add(newPos);
         }
-        System.out.println("\n\nFinished adding reference alleles to file:");
-        System.out.println("  "+inHDF5FileName+"\n\n");
+        newPosListBuilder.genomeVersion(genomeVersion);
         return null;
     }
     
