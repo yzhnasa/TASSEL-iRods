@@ -42,6 +42,8 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     @Override
     public DataSet performFunction(DataSet input) {
 
+        printParameterValues();
+
         try {
             return null;
         } finally {
@@ -73,6 +75,36 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         modifyBuilder(builder, description, range, units);
         myParameters.put(cmdLineName, builder.build());
     }
+    
+    protected void addFloatParameter(String guiName, String cmdLineName, Float defaultValue, boolean isRequired, String description, Range<Float> range, String units) {
+        PluginParameterTerry.Builder<Float> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Float.class);
+        modifyBuilder(builder, description, range, units);
+        myParameters.put(cmdLineName, builder.build());
+    }
+    
+    protected void addIntegerParameter(String guiName, String cmdLineName, Integer defaultValue, boolean isRequired, String description, Range<Integer> range, String units) {
+        PluginParameterTerry.Builder<Integer> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Integer.class);
+        modifyBuilder(builder, description, range, units);
+        myParameters.put(cmdLineName, builder.build());
+    }
+    
+    protected void addByteParameter(String guiName, String cmdLineName, Byte defaultValue, boolean isRequired, String description, Range<Byte> range, String units) {
+        PluginParameterTerry.Builder<Byte> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Byte.class);
+        modifyBuilder(builder, description, range, units);
+        myParameters.put(cmdLineName, builder.build());
+    }
+    
+    protected void addLongParameter(String guiName, String cmdLineName, Long defaultValue, boolean isRequired, String description, Range<Long> range, String units) {
+        PluginParameterTerry.Builder<Long> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Long.class);
+        modifyBuilder(builder, description, range, units);
+        myParameters.put(cmdLineName, builder.build());
+    }
+    
+    protected void addCharParameter(String guiName, String cmdLineName, Character defaultValue, boolean isRequired, String description, Range<Character> range, String units) {
+        PluginParameterTerry.Builder<Character> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Character.class);
+        modifyBuilder(builder, description, range, units);
+        myParameters.put(cmdLineName, builder.build());
+    }
 
     private static <T extends Comparable<T>> void modifyBuilder(PluginParameterTerry.Builder<T> builder, String description, Range<T> range, String units) {
         if (description != null) {
@@ -101,9 +133,15 @@ public class ParameterConceptPlugin extends AbstractPlugin {
                         printUsage();
                         System.exit(1);
                     }
-                    if ((i != args.length - 1) && (args[i + 1]).startsWith("-")) {
-                        PluginParameterTerry<Boolean> newParameter = new PluginParameterTerry(parameter, Boolean.TRUE);
-                        myParameters.put(arg, newParameter);
+                    if ((i == args.length - 1) || (args[i + 1]).startsWith("-")) {
+                        if (parameter.valueType().isAssignableFrom(Boolean.class)) {
+                            PluginParameterTerry<Boolean> newParameter = new PluginParameterTerry(parameter, Boolean.TRUE);
+                            myParameters.put(arg, newParameter);
+                        } else {
+                            myLogger.error("Parameter requires a value: " + args[i]);
+                            printUsage();
+                            System.exit(1);
+                        }
                     } else {
                         PluginParameterTerry<?> newParameter = new PluginParameterTerry(parameter, args[i + 1]);
                         myParameters.put(arg, newParameter);
@@ -128,6 +166,20 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     }
 
+    private void printParameterValues() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n");
+        builder.append(Utils.getBasename(getClass().getName()));
+        builder.append(" Parameters\n");
+        for (PluginParameterTerry<?> current : myParameters.values()) {
+            builder.append(current.cmdLineName());
+            builder.append(": ");
+            builder.append(current.value());
+            builder.append("\n");
+        }
+        myLogger.info(builder.toString());
+    }
+
     private void printUsage() {
         StringBuilder builder = new StringBuilder();
         builder.append("\nUsage:\n");
@@ -136,7 +188,19 @@ public class ParameterConceptPlugin extends AbstractPlugin {
             builder.append("-");
             builder.append(current.cmdLineName());
             builder.append(" ");
+            if (current.valueType().isAssignableFrom(Boolean.class)) {
+                builder.append("<true | false>");
+            } else {
+                builder.append("<");
+                builder.append(current.guiName());
+                builder.append(">");
+            }
+            builder.append(" : ");
             builder.append(current.description());
+            if (current.range() != null) {
+                builder.append(" ");
+                builder.append(current.range().toString());
+            }
             if (current.required()) {
                 builder.append(" (required)");
             }
@@ -168,6 +232,16 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         }
         PluginParameterTerry<T> newParameter = new PluginParameterTerry<>(parameter, value);
         myParameters.put(key, newParameter);
+        return this;
+    }
+    
+    public <T extends Comparable<T>> ParameterConceptPlugin setParameterValue(Enum key, T value) {
+        PluginParameterTerry parameter = myParameters.get(key.toString());
+        if (parameter == null) {
+            throw new IllegalArgumentException("AbstractPlugin: setParameterValue: Unknown Parameter: " + key.toString());
+        }
+        PluginParameterTerry<T> newParameter = new PluginParameterTerry<>(parameter, value);
+        myParameters.put(key.toString(), newParameter);
         return this;
     }
 

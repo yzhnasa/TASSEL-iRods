@@ -1,6 +1,7 @@
 package net.maizegenetics.plugindef;
 
 import com.google.common.collect.Range;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Defines the attributes of parameters to be used in the plugins
@@ -31,8 +32,8 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myDescription = description;
         myRange = range;
         myValue = value;
-        if (!myRange.contains(myValue)) {
-            throw new IllegalArgumentException("PluginParameterTerry: init: new value: " + value.toString() + " outside range: " + myRange.toString());
+        if ((myRange != null) && (!myRange.contains(myValue))) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + value.toString() + " outside range: " + myRange.toString());
         }
         myRequired = required;
         myMustBeChanged = required;
@@ -53,8 +54,8 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myDescription = oldParameter.myDescription;
         myRange = oldParameter.myRange;
         myValue = newValue;
-        if (!myRange.contains(myValue)) {
-            throw new IllegalArgumentException("PluginParameterTerry: init: new value: " + newValue.toString() + " outside range: " + myRange.toString());
+        if ((myRange != null) && (!myRange.contains(myValue))) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + newValue.toString() + " outside range: " + myRange.toString());
         }
         myRequired = oldParameter.myRequired;
         myMustBeChanged = false;
@@ -69,8 +70,8 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myRange = oldParameter.myRange;
         myClass = oldParameter.myClass;
         myValue = convert(newValue, myClass);
-        if (!myRange.contains(myValue)) {
-            throw new IllegalArgumentException("PluginParameterTerry: init: new value: " + newValue + " outside range: " + myRange.toString());
+        if ((myRange != null) && (!myRange.contains(myValue))) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + newValue.toString() + " outside range: " + myRange.toString());
         }
         myRequired = oldParameter.myRequired;
         myMustBeChanged = false;
@@ -80,6 +81,8 @@ public class PluginParameterTerry<T extends Comparable<T>> {
 
         try {
             return input == null ? null : outputClass.getConstructor(String.class).newInstance(input);
+        } catch (InvocationTargetException nfe) {
+            throw new IllegalArgumentException("PluginParameterTerry: convert: " + myCmdLineName + " Problem converting: " + input + " to " + outputClass.getName());
         } catch (Exception e) {
             throw new IllegalArgumentException("PluginParameterTerry: convert: Unknown type: " + outputClass.getName());
         }
@@ -119,6 +122,10 @@ public class PluginParameterTerry<T extends Comparable<T>> {
 
     public boolean required() {
         return myRequired;
+    }
+
+    public Class<T> valueType() {
+        return myClass;
     }
 
     public static class Builder<T extends Comparable<T>> {
