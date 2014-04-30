@@ -75,31 +75,31 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         modifyBuilder(builder, description, range, units);
         myParameters.put(cmdLineName, builder.build());
     }
-    
+
     protected void addFloatParameter(String guiName, String cmdLineName, Float defaultValue, boolean isRequired, String description, Range<Float> range, String units) {
         PluginParameterTerry.Builder<Float> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Float.class);
         modifyBuilder(builder, description, range, units);
         myParameters.put(cmdLineName, builder.build());
     }
-    
+
     protected void addIntegerParameter(String guiName, String cmdLineName, Integer defaultValue, boolean isRequired, String description, Range<Integer> range, String units) {
         PluginParameterTerry.Builder<Integer> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Integer.class);
         modifyBuilder(builder, description, range, units);
         myParameters.put(cmdLineName, builder.build());
     }
-    
+
     protected void addByteParameter(String guiName, String cmdLineName, Byte defaultValue, boolean isRequired, String description, Range<Byte> range, String units) {
         PluginParameterTerry.Builder<Byte> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Byte.class);
         modifyBuilder(builder, description, range, units);
         myParameters.put(cmdLineName, builder.build());
     }
-    
+
     protected void addLongParameter(String guiName, String cmdLineName, Long defaultValue, boolean isRequired, String description, Range<Long> range, String units) {
         PluginParameterTerry.Builder<Long> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Long.class);
         modifyBuilder(builder, description, range, units);
         myParameters.put(cmdLineName, builder.build());
     }
-    
+
     protected void addCharParameter(String guiName, String cmdLineName, Character defaultValue, boolean isRequired, String description, Range<Character> range, String units) {
         PluginParameterTerry.Builder<Character> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Character.class);
         modifyBuilder(builder, description, range, units);
@@ -210,11 +210,12 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     }
 
     public ParameterConceptPlugin setInput(String filename) {
+        setParameterValue(PARAMETERS.inputFile, filename);
         return this;
     }
 
     public String getInput() {
-        return null;
+        return (String) getParameterValue(PARAMETERS.inputFile);
     }
 
     public Object getParameterValue(PARAMETERS key) {
@@ -223,6 +224,10 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     public Object getParameterValue(String key) {
         return myParameters.get(key);
+    }
+
+    public Object getParameterValue(Enum key) {
+        return getParameterValue(key.toString());
     }
 
     public <T extends Comparable<T>> ParameterConceptPlugin setParameterValue(String key, T value) {
@@ -234,15 +239,9 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         myParameters.put(key, newParameter);
         return this;
     }
-    
+
     public <T extends Comparable<T>> ParameterConceptPlugin setParameterValue(Enum key, T value) {
-        PluginParameterTerry parameter = myParameters.get(key.toString());
-        if (parameter == null) {
-            throw new IllegalArgumentException("AbstractPlugin: setParameterValue: Unknown Parameter: " + key.toString());
-        }
-        PluginParameterTerry<T> newParameter = new PluginParameterTerry<>(parameter, value);
-        myParameters.put(key.toString(), newParameter);
-        return this;
+        return setParameterValue(key.toString(), value);
     }
 
     @Override
