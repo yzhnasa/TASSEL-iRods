@@ -411,7 +411,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         engine.add("-maxOutMiss", "--maxOutMiss", true);
         engine.add("-sD", "--startDivision", true);
         engine.add("-eD", "--endDivision", true);
-        engine.add("-anon", "--anon", true);
+        engine.add("-anon", "--anon", false);
         engine.add("-nV", "--nonVerbose",false);
         engine.parse(args);
         if (engine.getBoolean("-sD")) {
