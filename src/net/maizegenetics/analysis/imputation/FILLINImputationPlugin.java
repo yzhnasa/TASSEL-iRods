@@ -199,7 +199,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
             ProjectionGenotypeIO.writeToFile(exportFile, ((ProjectionBuilder) mna).build());
         } else {
             GenotypeTableBuilder ab=(GenotypeTableBuilder)mna;
-//            ab.sortTaxa();
+            ab.sortTaxa();
             if(ab.isHDF5()) {
                 ab.build();
             } else {
