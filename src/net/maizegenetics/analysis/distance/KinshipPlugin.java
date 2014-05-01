@@ -23,7 +23,6 @@ import java.util.List;
 public class KinshipPlugin extends AbstractPlugin {
 	
 	Kinship.KINSHIP_TYPE kinshipType = KINSHIP_TYPE.Endelman;
-	boolean cancelMe = false;
 	
     public KinshipPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
@@ -49,9 +48,12 @@ public class KinshipPlugin extends AbstractPlugin {
             if (isInteractive()) {
             	//set the kinship type
             	KinshipMethodDialog kmd = new KinshipMethodDialog(getParentFrame());
-            	if (kmd.isCancelled) cancelMe = true;
+                kmd.setLocationRelativeTo(getParentFrame());
+                kmd.setVisible(true);
+            	if (kmd.isCancelled) {
+                    return null;
+                }
             	else {
-            		cancelMe = false;
             		if (kmd.isEndelmanSelected()) kinshipType = KINSHIP_TYPE.Endelman;
             		else kinshipType = KINSHIP_TYPE.IBS;
             	}
