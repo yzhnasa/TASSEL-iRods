@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -37,6 +38,24 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     public ParameterConceptPlugin(Frame parentFrame) {
         super(parentFrame, false);
         defineParameters();
+    }
+
+    public static void main(String[] args) {
+
+        java.util.Properties props = new java.util.Properties();
+        props.setProperty("log4j.logger.net.maizegenetics", "INFO, stdout");
+        props.setProperty("log4j.appender.stdout",
+                "org.apache.log4j.ConsoleAppender");
+        props.setProperty("log4j.appender.stdout.layout",
+                "org.apache.log4j.TTCCLayout");
+        PropertyConfigurator.configure(props);
+
+        ParameterConceptPlugin plugin = new ParameterConceptPlugin(null);
+        plugin.setParameter(PARAMETERS.inputFile, "terry.txt")
+                .setParameter(PARAMETERS.minAlleleFreq, 0.2)
+                .setParameter(PARAMETERS.useReference, true);
+        
+        plugin.performFunction(null);
     }
 
     @Override
@@ -209,28 +228,24 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         myLogger.info(builder.toString());
     }
 
-    public ParameterConceptPlugin setInput(String filename) {
-        setParameterValue(PARAMETERS.inputFile, filename);
+    public ParameterConceptPlugin setInputFile(String filename) {
+        setParameter(PARAMETERS.inputFile, filename);
         return this;
     }
 
-    public String getInput() {
-        return (String) getParameterValue(PARAMETERS.inputFile);
+    public String inputFile() {
+        return (String) getParameter(PARAMETERS.inputFile);
     }
 
-    public Object getParameterValue(PARAMETERS key) {
-        return myParameters.get(key.toString());
-    }
-
-    public Object getParameterValue(String key) {
+    public Object getParameter(String key) {
         return myParameters.get(key);
     }
 
-    public Object getParameterValue(Enum key) {
-        return getParameterValue(key.toString());
+    public Object getParameter(Enum key) {
+        return getParameter(key.toString());
     }
 
-    public <T extends Comparable<T>> ParameterConceptPlugin setParameterValue(String key, T value) {
+    public <T extends Comparable<T>> ParameterConceptPlugin setParameter(String key, T value) {
         PluginParameterTerry parameter = myParameters.get(key);
         if (parameter == null) {
             throw new IllegalArgumentException("AbstractPlugin: setParameterValue: Unknown Parameter: " + key);
@@ -240,8 +255,8 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         return this;
     }
 
-    public <T extends Comparable<T>> ParameterConceptPlugin setParameterValue(Enum key, T value) {
-        return setParameterValue(key.toString(), value);
+    public <T extends Comparable<T>> ParameterConceptPlugin setParameter(Enum key, T value) {
+        return setParameter(key.toString(), value);
     }
 
     @Override
