@@ -6,6 +6,7 @@ package net.maizegenetics.analysis.gbs;
 import com.google.common.collect.Range;
 
 import java.awt.Frame;
+import java.io.File;
 import javax.swing.ImageIcon;
 
 import java.util.LinkedHashMap;
@@ -34,6 +35,8 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         inputFile, useReference, minAlleleFreq;
 
     };
+
+    private PluginParameterTerry<String> myInputFile;
 
     public ParameterConceptPlugin(Frame parentFrame) {
         super(parentFrame, false);
@@ -69,6 +72,10 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
             printParameterValues();
             checkRequiredParameters();
+            
+            if (!new File(myInputFile.value()).exists()) {
+                // do something
+            }
 
             // Code to perform function of plugin
             // This should return data set produced by this plugin
@@ -80,15 +87,17 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     }
 
     private void defineParameters() {
-        addStringParameter("Input File", PARAMETERS.inputFile.toString(), null, true, null, null, null);
+        myInputFile = addStringParameter("Input File", PARAMETERS.inputFile.toString(), null, true, null, null, null);
         addBooleanParameter("Use Reference", PARAMETERS.useReference.toString(), Boolean.FALSE, false, null, null);
         addDoubleParameter("Minimum Allele Frequency", PARAMETERS.minAlleleFreq.toString(), 0.01, false, null, Range.closed(0.0, 1.0), "Percentage");
     }
 
-    protected void addStringParameter(String guiName, String cmdLineName, String defaultValue, boolean isRequired, String description, Range<String> range, String units) {
+    protected PluginParameterTerry<String> addStringParameter(String guiName, String cmdLineName, String defaultValue, boolean isRequired, String description, Range<String> range, String units) {
         PluginParameterTerry.Builder<String> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, String.class);
         modifyBuilder(builder, description, range, units);
-        myParameters.put(cmdLineName, builder.build());
+        PluginParameterTerry<String> result = builder.build();
+        myParameters.put(cmdLineName, result);
+        return result;
     }
 
     protected void addBooleanParameter(String guiName, String cmdLineName, Boolean defaultValue, boolean isRequired, String description, String units) {
