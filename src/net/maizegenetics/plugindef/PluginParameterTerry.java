@@ -21,7 +21,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     private final Range<T> myRange;
     private final T myValue;
     private final boolean myRequired;
-    private final boolean myMustBeChanged;
+    private boolean myMustBeChanged;
     private final Class<T> myClass;
 
     private PluginParameterTerry(String guiName, String guiUnits, String cmdLineName,
@@ -32,12 +32,15 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myDescription = description;
         myRange = range;
         myValue = value;
+        myClass = theClass;
+        if ((myValue != null) && (!myClass.isInstance(myValue))) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + value + " not correct type: " + myClass.getName());
+        }
         if ((myRange != null) && (!myRange.contains(myValue))) {
             throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + value.toString() + " outside range: " + myRange.toString());
         }
         myRequired = required;
         myMustBeChanged = required;
-        myClass = theClass;
     }
 
     /**
@@ -51,6 +54,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         this(oldParameter.myGuiName, oldParameter.myUnits, oldParameter.myCmdLineName,
                 oldParameter.myDescription, oldParameter.myRange, newValue,
                 oldParameter.myRequired, oldParameter.myClass);
+        myMustBeChanged = false;
     }
 
     public PluginParameterTerry(PluginParameterTerry<T> oldParameter, String newValue) {
@@ -61,6 +65,9 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         myRange = oldParameter.myRange;
         myClass = oldParameter.myClass;
         myValue = convert(newValue, myClass);
+        if ((myValue != null) && (!myClass.isInstance(myValue))) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + newValue + " not correct type: " + myClass.getClass().getName());
+        }
         if ((myRange != null) && (!myRange.contains(myValue))) {
             throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + newValue.toString() + " outside range: " + myRange.toString());
         }

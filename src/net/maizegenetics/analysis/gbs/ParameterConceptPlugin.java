@@ -27,7 +27,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(ParameterConceptPlugin.class);
 
-    private final Map<String, PluginParameterTerry<? extends Comparable>> myParameters = new LinkedHashMap<>();
+    private final Map<String, PluginParameterTerry<?>> myParameters = new LinkedHashMap<>();
 
     public static enum PARAMETERS {
 
@@ -54,16 +54,24 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         plugin.setParameter(PARAMETERS.inputFile, "terry.txt")
                 .setParameter(PARAMETERS.minAlleleFreq, 0.2)
                 .setParameter(PARAMETERS.useReference, true);
-        
+
         plugin.performFunction(null);
     }
 
     @Override
     public DataSet performFunction(DataSet input) {
 
-        printParameterValues();
-
         try {
+
+            if (isInteractive()) {
+                // TODO: Generate dialog based on parameters
+            }
+
+            printParameterValues();
+            checkRequiredParameters();
+
+            // Code to perform function of plugin
+            // This should return data set produced by this plugin
             return null;
         } finally {
             fireProgress(100);
@@ -175,14 +183,22 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
         }
 
+        checkRequiredParameters();
+
+    }
+
+    private void checkRequiredParameters() {
         for (PluginParameterTerry<?> current : myParameters.values()) {
             if (current.mustBeChanged()) {
-                myLogger.error("flag -" + current.cmdLineName() + " is required.\n");
-                printUsage();
-                System.exit(1);
+                if (isInteractive()) {
+                    // TODO: Show Dialog with Error Message
+                } else {
+                    myLogger.error("flag -" + current.cmdLineName() + " is required.\n");
+                    printUsage();
+                    System.exit(1);
+                }
             }
         }
-
     }
 
     private void printParameterValues() {
@@ -248,7 +264,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     public <T extends Comparable<T>> ParameterConceptPlugin setParameter(String key, T value) {
         PluginParameterTerry parameter = myParameters.get(key);
         if (parameter == null) {
-            throw new IllegalArgumentException("AbstractPlugin: setParameterValue: Unknown Parameter: " + key);
+            throw new IllegalArgumentException("AbstractPlugin: setParameter: Unknown Parameter: " + key);
         }
         PluginParameterTerry<T> newParameter = new PluginParameterTerry<>(parameter, value);
         myParameters.put(key, newParameter);
@@ -272,5 +288,10 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     @Override
     public String getToolTipText() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getCitation() {
+        return "Casstevens T (2014) TASSEL: Self-Describing Plugins. Publication 1:1.";
     }
 }
