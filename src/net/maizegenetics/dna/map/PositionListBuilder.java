@@ -143,6 +143,22 @@ public class PositionListBuilder {
     public static PositionList getInstance(IHDF5Reader reader) {
         return new PositionHDF5List(reader);
     }
+    
+    /**
+     * Generates a generic position list when no position information
+     * known
+     * 
+     * @param numSites number of sites
+     * 
+     * @return generic position list
+     */
+    public static PositionList getInstance(int numSites) {
+        PositionListBuilder builder = new PositionListBuilder();
+        for (int i=0; i<numSites; i++) {
+            builder.add(new GeneralPosition.Builder(Chromosome.UNKNOWN, i).build());
+        }
+        return builder.build();
+    }
 
 
     /**
