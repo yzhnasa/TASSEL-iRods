@@ -63,6 +63,7 @@ public class FileLoadPlugin extends AbstractPlugin {
     public static final String FILE_EXT_VCF = ".vcf";
     public static final String FILE_EXT_TOPM = ".topm";
     public static final String FILE_EXT_TOPM_H5 = ".topm.h5";
+    public static final String FILE_EXT_FASTA = ".fasta";
 
     /**
      * Creates a new instance of FileLoadPlugin
@@ -150,6 +151,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                             myLogger.info("guessAtUnknowns: type: " + TasselFileType.VCF);
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = processDatum(myOpenFiles[i], TasselFileType.VCF);
+                        } else if (myOpenFiles[i].endsWith(FILE_EXT_FASTA) || myOpenFiles[i].endsWith(FILE_EXT_FASTA + ".gz")) {
+                            myLogger.info("guessAtUnknowns: type: " + TasselFileType.Fasta);
+                            alreadyLoaded.add(myOpenFiles[i]);
+                            tds = processDatum(myOpenFiles[i], TasselFileType.Fasta);
                         } else {
                             alreadyLoaded.add(myOpenFiles[i]);
                             tds = guessAtUnknowns(myOpenFiles[i]);
@@ -321,6 +326,10 @@ public class FileLoadPlugin extends AbstractPlugin {
                     result = ReadSequenceAlignmentUtils.readBasicAlignments(inFile, 40);
                     break;
                 }
+                case Fasta: {
+                    result = ImportUtils.readFasta(inFile);
+                    break;
+                }
                 case SqrMatrix: {
                     result = ReadDistanceMatrix.readDistanceMatrix(inFile);
                     break;
@@ -478,7 +487,7 @@ class FileLoadPluginDialog extends JDialog {
     JRadioButton plinkRadioButton = new JRadioButton("Load Plink");
     JRadioButton sequenceAlignRadioButton = new JRadioButton("Load Phylip");
     JRadioButton fastaRadioButton = new JRadioButton("Load FASTA File");
-    JRadioButton numericalRadioButton = new JRadioButton("Load Trait (data, covariates, or factors)");
+    JRadioButton numericalRadioButton = new JRadioButton("Load Numerical (trait, covariates, or factors)");
     JRadioButton loadMatrixRadioButton = new JRadioButton("Load Square Numerical Matrix (i.e. kinship)");
     JRadioButton guessRadioButton = new JRadioButton("Make Best Guess");
     JRadioButton projectionAlignmentRadioButton = new JRadioButton("Load Projection Alignment");
