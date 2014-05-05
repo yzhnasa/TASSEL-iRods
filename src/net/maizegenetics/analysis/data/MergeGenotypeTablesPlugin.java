@@ -63,7 +63,7 @@ public class MergeGenotypeTablesPlugin extends AbstractPlugin {
             }
 
             GenotypeTable merged = mergeGenotypeTables(alignments);
-            DataSet result = new DataSet(new Datum("Merged Alignment", merged, null), this);
+            DataSet result = new DataSet(new Datum("Merged Genotype Table", merged, null), this);
 
             fireDataSetReturned(new PluginEvent(result, MergeGenotypeTablesPlugin.class));
 
@@ -86,12 +86,12 @@ public class MergeGenotypeTablesPlugin extends AbstractPlugin {
 
     @Override
     public String getButtonName() {
-        return "Merge Alignments";
+        return "Merge Genotype Tables";
     }
 
     @Override
     public String getToolTipText() {
-        return "Merge Alignments";
+        return "Merge Genotype Tables";
     }
 
     /**
