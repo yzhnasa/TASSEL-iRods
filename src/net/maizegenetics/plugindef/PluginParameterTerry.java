@@ -1,7 +1,6 @@
 package net.maizegenetics.plugindef;
 
 import com.google.common.collect.Range;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Defines the attributes of parameters to be used in the plugins
@@ -25,22 +24,20 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     private final Class<T> myClass;
 
     private PluginParameterTerry(String guiName, String guiUnits, String cmdLineName,
-            String description, Range<T> range, T value, boolean required, Class<T> theClass) {
+            String description, Range<T> range, T value, boolean required, Class<T> type) {
         myGuiName = guiName;
         myUnits = guiUnits;
         myCmdLineName = cmdLineName;
         myDescription = description;
         myRange = range;
         myValue = value;
-        myClass = theClass;
-        if ((myValue != null) && (!myClass.isInstance(myValue))) {
-            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + value + " not correct type: " + myClass.getName());
-        }
         if ((myRange != null) && (!myRange.contains(myValue))) {
             throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + value.toString() + " outside range: " + myRange.toString());
         }
         myRequired = required;
         myMustBeChanged = required;
+        myClass = type;
+        ;
     }
 
     /**
@@ -55,39 +52,6 @@ public class PluginParameterTerry<T extends Comparable<T>> {
                 oldParameter.myDescription, oldParameter.myRange, newValue,
                 oldParameter.myRequired, oldParameter.myClass);
         myMustBeChanged = false;
-    }
-
-    public PluginParameterTerry(PluginParameterTerry<T> oldParameter, String newValue) {
-        myGuiName = oldParameter.myGuiName;
-        myUnits = oldParameter.myUnits;
-        myCmdLineName = oldParameter.myCmdLineName;
-        myDescription = oldParameter.myDescription;
-        myRange = oldParameter.myRange;
-        myClass = oldParameter.myClass;
-        myValue = convert(newValue, myClass);
-        if ((myValue != null) && (!myClass.isInstance(myValue))) {
-            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + newValue + " not correct type: " + myClass.getClass().getName());
-        }
-        if ((myRange != null) && (!myRange.contains(myValue))) {
-            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + newValue.toString() + " outside range: " + myRange.toString());
-        }
-        myRequired = oldParameter.myRequired;
-        myMustBeChanged = false;
-    }
-
-    private T convert(String input, Class<T> outputClass) {
-
-        try {
-            return input == null ? null : outputClass.getConstructor(String.class).newInstance(input);
-        } catch (InvocationTargetException nfe) {
-            throw new IllegalArgumentException("PluginParameterTerry: convert: " + myCmdLineName + " Problem converting: " + input + " to " + outputClass.getName());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("PluginParameterTerry: convert: Unknown type: " + outputClass.getName());
-        }
-
-        // We might need something like this if above
-        // doesn't handle all cases.
-        // if (outputClass.isAssignableFrom(Double.class))
     }
 
     public String guiName() {
@@ -128,20 +92,18 @@ public class PluginParameterTerry<T extends Comparable<T>> {
 
     public static class Builder<T extends Comparable<T>> {
 
-        private final String myGuiName;
+        private String myGuiName;
         private String myUnits = "";
         private final String myCmdLineName;
         private String myDescription = "";
         private Range<T> myRange = null;
         private final T myValue;
-        private final boolean myIsRequired;
+        private boolean myIsRequired = false;
         private final Class<T> myClass;
 
-        public Builder(String guiName, String cmdLineName, T value, boolean isRequired, Class<T> type) {
-            myGuiName = guiName;
-            myCmdLineName = cmdLineName;
-            myValue = value;
-            myIsRequired = isRequired;
+        public Builder(Enum cmdLineName, T defaultValue, Class<T> type) {
+            myCmdLineName = cmdLineName.toString();
+            myValue = defaultValue;
             myClass = type;
         }
 
@@ -160,7 +122,29 @@ public class PluginParameterTerry<T extends Comparable<T>> {
             return this;
         }
 
+        public Builder<T> required(boolean required) {
+            myIsRequired = required;
+            return this;
+        }
+
+        public Builder<T> guiName(String guiName) {
+            myGuiName = guiName;
+            return this;
+        }
+
         public PluginParameterTerry<T> build() {
+            if ((myGuiName == null) || (myGuiName.isEmpty())) {
+                StringBuilder builder = new StringBuilder();
+                builder.append(Character.toUpperCase(myCmdLineName.charAt(0)));
+                for (int i = 1; i < myCmdLineName.length(); i++) {
+                    char current = myCmdLineName.charAt(i);
+                    if (Character.isUpperCase(current)) {
+                        builder.append(" ");
+                    }
+                    builder.append(current);
+                }
+                myGuiName = builder.toString();
+            }
             if (myDescription.isEmpty()) {
                 myDescription = myGuiName;
             }

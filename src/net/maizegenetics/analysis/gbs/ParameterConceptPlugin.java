@@ -6,11 +6,15 @@ package net.maizegenetics.analysis.gbs;
 import com.google.common.collect.Range;
 
 import java.awt.Frame;
-import java.io.File;
 import javax.swing.ImageIcon;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.File;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -28,19 +32,17 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(ParameterConceptPlugin.class);
 
-    private final Map<String, PluginParameterTerry<?>> myParameters = new LinkedHashMap<>();
+    public enum PARAMETERS {
 
-    public static enum PARAMETERS {
-
-        inputFile, useReference, minAlleleFreq;
-
+        inputFile, useReference, minAlleleFreq
     };
 
-    private PluginParameterTerry<String> myInputFile;
+    private PluginParameterTerry<String> myInputFile = new PluginParameterTerry.Builder<String>(PARAMETERS.inputFile, null, String.class).required(true).build();
+    private PluginParameterTerry<Boolean> myUseReference = new PluginParameterTerry.Builder<Boolean>(PARAMETERS.useReference, false, Boolean.class).build();
+    private PluginParameterTerry<Double> myMinAlleleFreq = new PluginParameterTerry.Builder<Double>(PARAMETERS.minAlleleFreq, 0.01, Double.class).range(Range.closed(0.0, 1.0)).units("Ratio").build();
 
     public ParameterConceptPlugin(Frame parentFrame) {
         super(parentFrame, false);
-        defineParameters();
     }
 
     public static void main(String[] args) {
@@ -53,10 +55,10 @@ public class ParameterConceptPlugin extends AbstractPlugin {
                 "org.apache.log4j.TTCCLayout");
         PropertyConfigurator.configure(props);
 
-        ParameterConceptPlugin plugin = new ParameterConceptPlugin(null);
-        plugin.setParameter(PARAMETERS.inputFile, "terry.txt")
+        ParameterConceptPlugin plugin = new ParameterConceptPlugin.Builder(null)
+                .setParameter(PARAMETERS.inputFile, "terry.txt")
                 .setParameter(PARAMETERS.minAlleleFreq, 0.2)
-                .setParameter(PARAMETERS.useReference, true);
+                .setParameter(PARAMETERS.useReference, true).build();
 
         plugin.performFunction(null);
     }
@@ -72,7 +74,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
             printParameterValues();
             checkRequiredParameters();
-            
+
             if (!new File(myInputFile.value()).exists()) {
                 // do something
             }
@@ -86,71 +88,86 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     }
 
-    private void defineParameters() {
-        myInputFile = addStringParameter("Input File", PARAMETERS.inputFile.toString(), null, true, null, null, null);
-        addBooleanParameter("Use Reference", PARAMETERS.useReference.toString(), Boolean.FALSE, false, null, null);
-        addDoubleParameter("Minimum Allele Frequency", PARAMETERS.minAlleleFreq.toString(), 0.01, false, null, Range.closed(0.0, 1.0), "Percentage");
-    }
+    private List<PluginParameterTerry<?>> getParameterInstances() {
 
-    protected PluginParameterTerry<String> addStringParameter(String guiName, String cmdLineName, String defaultValue, boolean isRequired, String description, Range<String> range, String units) {
-        PluginParameterTerry.Builder<String> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, String.class);
-        modifyBuilder(builder, description, range, units);
-        PluginParameterTerry<String> result = builder.build();
-        myParameters.put(cmdLineName, result);
+        List<PluginParameterTerry<?>> result = new ArrayList<>();
+        Field[] fields = getClass().getDeclaredFields();
+        for (Field current : fields) {
+            if (current.getType().isAssignableFrom(PluginParameterTerry.class)) {
+                try {
+                    PluginParameterTerry<?> parameter = (PluginParameterTerry) current.get(this);
+                    result.add(parameter);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new IllegalArgumentException("AbstractPlugin: getParameterInstances: problem getting parameter instances");
+                }
+
+            }
+        }
+
         return result;
     }
 
-    protected void addBooleanParameter(String guiName, String cmdLineName, Boolean defaultValue, boolean isRequired, String description, String units) {
-        PluginParameterTerry.Builder<Boolean> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Boolean.class);
-        modifyBuilder(builder, description, null, units);
-        myParameters.put(cmdLineName, builder.build());
-    }
+    private Field getParameterField(String key) {
 
-    protected void addDoubleParameter(String guiName, String cmdLineName, Double defaultValue, boolean isRequired, String description, Range<Double> range, String units) {
-        PluginParameterTerry.Builder<Double> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Double.class);
-        modifyBuilder(builder, description, range, units);
-        myParameters.put(cmdLineName, builder.build());
-    }
+        Field[] fields = getClass().getDeclaredFields();
+        for (Field current : fields) {
+            if (current.getType().isAssignableFrom(PluginParameterTerry.class)) {
+                try {
+                    PluginParameterTerry<?> parameter = (PluginParameterTerry) current.get(this);
+                    if (parameter.cmdLineName().equals(key)) {
+                        return current;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new IllegalArgumentException("AbstractPlugin: getParameterField: problem with key: " + key);
+                }
 
-    protected void addFloatParameter(String guiName, String cmdLineName, Float defaultValue, boolean isRequired, String description, Range<Float> range, String units) {
-        PluginParameterTerry.Builder<Float> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Float.class);
-        modifyBuilder(builder, description, range, units);
-        myParameters.put(cmdLineName, builder.build());
-    }
-
-    protected void addIntegerParameter(String guiName, String cmdLineName, Integer defaultValue, boolean isRequired, String description, Range<Integer> range, String units) {
-        PluginParameterTerry.Builder<Integer> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Integer.class);
-        modifyBuilder(builder, description, range, units);
-        myParameters.put(cmdLineName, builder.build());
-    }
-
-    protected void addByteParameter(String guiName, String cmdLineName, Byte defaultValue, boolean isRequired, String description, Range<Byte> range, String units) {
-        PluginParameterTerry.Builder<Byte> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Byte.class);
-        modifyBuilder(builder, description, range, units);
-        myParameters.put(cmdLineName, builder.build());
-    }
-
-    protected void addLongParameter(String guiName, String cmdLineName, Long defaultValue, boolean isRequired, String description, Range<Long> range, String units) {
-        PluginParameterTerry.Builder<Long> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Long.class);
-        modifyBuilder(builder, description, range, units);
-        myParameters.put(cmdLineName, builder.build());
-    }
-
-    protected void addCharParameter(String guiName, String cmdLineName, Character defaultValue, boolean isRequired, String description, Range<Character> range, String units) {
-        PluginParameterTerry.Builder<Character> builder = new PluginParameterTerry.Builder<>(guiName, cmdLineName, defaultValue, isRequired, Character.class);
-        modifyBuilder(builder, description, range, units);
-        myParameters.put(cmdLineName, builder.build());
-    }
-
-    private static <T extends Comparable<T>> void modifyBuilder(PluginParameterTerry.Builder<T> builder, String description, Range<T> range, String units) {
-        if (description != null) {
-            builder.description(description);
+            }
         }
-        if (range != null) {
-            builder.range(range);
+
+        throw new IllegalArgumentException("AbstractPlugin: getParameterField: unknown key: " + key);
+    }
+
+    private PluginParameterTerry<?> getParameterInstance(String key) {
+        try {
+            Field field = getParameterField(key);
+            return (PluginParameterTerry) field.get(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("AbstractPlugin: getParameterInstance: problem with key: " + key);
         }
-        if (units != null) {
-            builder.units(units);
+    }
+
+    private <T extends Comparable<T>> Class<T> getParameterGeneric(String key) {
+
+        Field[] fields = getClass().getDeclaredFields();
+        for (Field current : fields) {
+            if (current.getType().isAssignableFrom(PluginParameterTerry.class)) {
+                try {
+                    PluginParameterTerry<T> parameter = (PluginParameterTerry<T>) current.get(this);
+                    if (parameter.cmdLineName().equals(key)) {
+                        System.out.println("generic type: " + current.getGenericType());
+                        return (Class<T>) current.getGenericType().getClass();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new IllegalArgumentException("AbstractPlugin: getParameter: problem with key: " + key);
+                }
+
+            }
+        }
+
+        throw new IllegalArgumentException("AbstractPlugin: getParameter: unknown key: " + key);
+    }
+
+    public static <T> T convert(String input, Class<T> outputClass) {
+        try {
+            return input == null ? null : outputClass.getConstructor(String.class).newInstance(input);
+        } catch (InvocationTargetException nfe) {
+            throw new IllegalArgumentException("convert: Problem converting: " + input + " to " + outputClass.getName());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("convert: Unknown type: " + outputClass.getName());
         }
     }
 
@@ -163,7 +180,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
                 String arg = args[i];
                 if (args[i].startsWith("-")) {
                     arg = arg.substring(1);
-                    PluginParameterTerry<?> parameter = myParameters.get(arg);
+                    PluginParameterTerry<?> parameter = getParameterInstance(arg);
                     if (parameter == null) {
                         myLogger.error("Unrecognized argument: " + args[i]);
                         printUsage();
@@ -171,16 +188,14 @@ public class ParameterConceptPlugin extends AbstractPlugin {
                     }
                     if ((i == args.length - 1) || (args[i + 1]).startsWith("-")) {
                         if (parameter.valueType().isAssignableFrom(Boolean.class)) {
-                            PluginParameterTerry<Boolean> newParameter = new PluginParameterTerry(parameter, Boolean.TRUE);
-                            myParameters.put(arg, newParameter);
+                            setParameter(arg, Boolean.TRUE);
                         } else {
                             myLogger.error("Parameter requires a value: " + args[i]);
                             printUsage();
                             System.exit(1);
                         }
                     } else {
-                        PluginParameterTerry<?> newParameter = new PluginParameterTerry(parameter, args[i + 1]);
-                        myParameters.put(arg, newParameter);
+                        setParameter(arg, args[i + 1]);
                         i++;
                     }
                 } else {
@@ -197,7 +212,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     }
 
     private void checkRequiredParameters() {
-        for (PluginParameterTerry<?> current : myParameters.values()) {
+        for (PluginParameterTerry<?> current : getParameterInstances()) {
             if (current.mustBeChanged()) {
                 if (isInteractive()) {
                     // TODO: Show Dialog with Error Message
@@ -215,7 +230,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         builder.append("\n");
         builder.append(Utils.getBasename(getClass().getName()));
         builder.append(" Parameters\n");
-        for (PluginParameterTerry<?> current : myParameters.values()) {
+        for (PluginParameterTerry<?> current : getParameterInstances()) {
             builder.append(current.cmdLineName());
             builder.append(": ");
             builder.append(current.value());
@@ -228,7 +243,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         StringBuilder builder = new StringBuilder();
         builder.append("\nUsage:\n");
         builder.append(Utils.getBasename(getClass().getName())).append(" <options>\n");
-        for (PluginParameterTerry<?> current : myParameters.values()) {
+        for (PluginParameterTerry<?> current : getParameterInstances()) {
             builder.append("-");
             builder.append(current.cmdLineName());
             builder.append(" ");
@@ -253,34 +268,55 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         myLogger.info(builder.toString());
     }
 
-    public ParameterConceptPlugin setInputFile(String filename) {
-        setParameter(PARAMETERS.inputFile, filename);
-        return this;
-    }
-
     public String inputFile() {
-        return (String) getParameter(PARAMETERS.inputFile);
-    }
-
-    public Object getParameter(String key) {
-        return myParameters.get(key);
+        return myInputFile.value();
     }
 
     public Object getParameter(Enum key) {
-        return getParameter(key.toString());
+        return getParameterInstance(key.toString()).value();
     }
 
-    public <T extends Comparable<T>> ParameterConceptPlugin setParameter(String key, T value) {
-        PluginParameterTerry parameter = myParameters.get(key);
-        if (parameter == null) {
-            throw new IllegalArgumentException("AbstractPlugin: setParameter: Unknown Parameter: " + key);
+    protected <T extends Comparable<T>> ParameterConceptPlugin setParameter(String key, T value) {
+        try {
+
+            Field field = getParameterField(key);
+            PluginParameterTerry<T> parameter = (PluginParameterTerry<T>) field.get(this);
+            if (parameter == null) {
+                throw new IllegalArgumentException("AbstractPlugin: setParameter: Unknown Parameter: " + key);
+            }
+            if ((parameter.range() != null) && (!parameter.range().contains(value))) {
+                throw new IllegalArgumentException("AbstractPlugin: setParameter: " + parameter.cmdLineName() + " value: " + value.toString() + " outside range: " + parameter.range().toString());
+            }
+            PluginParameterTerry<T> newParameter = new PluginParameterTerry<>(parameter, value);
+            field.set(this, newParameter);
+
+        } catch (Exception e) {
+            myLogger.error(key + ": " + e.getMessage());
+            printUsage();
+            System.exit(1);
         }
-        PluginParameterTerry<T> newParameter = new PluginParameterTerry<>(parameter, value);
-        myParameters.put(key, newParameter);
+
         return this;
     }
 
-    public <T extends Comparable<T>> ParameterConceptPlugin setParameter(Enum key, T value) {
+    protected <T extends Comparable<T>> ParameterConceptPlugin setParameter(String key, String value) {
+        try {
+            System.out.println("generic: " + getParameterGeneric(key));
+            PluginParameterTerry<T> parameter = (PluginParameterTerry<T>) getParameterInstance(key);
+            return setParameter(key, convert(value, parameter.valueType()));
+        } catch (Exception e) {
+            myLogger.error(key + ": " + e.getMessage());
+            printUsage();
+            System.exit(1);
+            return null;
+        }
+    }
+
+    protected <T extends Comparable<T>> ParameterConceptPlugin setParameter(Enum<PARAMETERS> key, T value) {
+        return setParameter(key.toString(), value);
+    }
+
+    protected <T extends Comparable<T>> ParameterConceptPlugin setParameter(Enum<PARAMETERS> key, String value) {
         return setParameter(key.toString(), value);
     }
 
@@ -302,5 +338,24 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     @Override
     public String getCitation() {
         return "Casstevens T (2014) TASSEL: Self-Describing Plugins. Publication 1:1.";
+    }
+
+    public static class Builder {
+
+        private final ParameterConceptPlugin myPlugin;
+
+        public Builder(Frame frame) {
+            myPlugin = new ParameterConceptPlugin(frame);
+        }
+
+        protected <T extends Comparable<T>> Builder setParameter(Enum<PARAMETERS> key, T value) {
+            myPlugin.setParameter(key.toString(), value);
+            return this;
+        }
+
+        public ParameterConceptPlugin build() {
+            return myPlugin;
+        }
+
     }
 }
