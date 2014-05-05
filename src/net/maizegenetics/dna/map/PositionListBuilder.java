@@ -12,6 +12,7 @@ import net.maizegenetics.util.HDF5Utils;
 import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.util.*;
+import org.apache.log4j.Logger;
 
 /**
  * A builder for creating immutable PositionList.  Can be used for either an in memory or HDF5 list.
@@ -40,6 +41,8 @@ import java.util.*;
  * <p>Builder instances can be reused - it is safe to call {@link #build()}
  */
 public class PositionListBuilder {
+    
+    private static final Logger myLogger = Logger.getLogger(PositionListBuilder.class);
 
     private ArrayList<Position> myPositions = new ArrayList<Position>();
     private boolean isHDF5=false;
@@ -115,7 +118,10 @@ public class PositionListBuilder {
         boolean result=true;
         Position startAP=myPositions.get(0);
         for (Position ap:myPositions) {
-            if(ap.compareTo(startAP)<0) return false;
+            if(ap.compareTo(startAP)<0) {
+                myLogger.error("validateOrdering: " + ap.toString() + " and " + startAP.toString() + " out of order.");
+                return false;
+            }
             startAP=ap;
             }
         return result;
