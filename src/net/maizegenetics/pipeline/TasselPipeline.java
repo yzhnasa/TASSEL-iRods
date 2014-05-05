@@ -343,7 +343,7 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-synonymizer")) {
                     SynonymizerPlugin plugin = new SynonymizerPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
-                } else if (current.equalsIgnoreCase("-mergeAlignments")) {
+                } else if (current.equalsIgnoreCase("-mergeGenotypeTables")) {
                     MergeGenotypeTablesPlugin plugin = new MergeGenotypeTablesPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-mergeAlignmentsSameSites")) {
