@@ -156,6 +156,20 @@ public class GenotypeTableBuilder {
         IHDF5WriterConfigurator config = HDF5Factory.configure(hdf5File);
         config.dontUseExtendableDataTypes();
         writer = config.writer();
+        if(HDF5Utils.doesGenotypeModuleExist(writer) && HDF5Utils.isHDF5GenotypeLocked(writer)) {
+            writer.close();
+            throw new UnsupportedOperationException("This file is locked for genotypic additions");
+        }
+        this.taxaList=taxaList;
+        setupGenotypeTaxaInHDF5(writer);
+        posListBuilder=new PositionListBuilder(numberOfSites);
+        byte[] missingGenotypes=new byte[numberOfSites];
+        Arrays.fill(missingGenotypes,GenotypeTable.UNKNOWN_DIPLOID_ALLELE);
+        for (Taxon taxon : taxaList) {
+            HDF5Utils.addTaxon(writer,taxon);
+            HDF5Utils.writeHDF5GenotypesCalls(writer, taxon.getName(), missingGenotypes);
+        }
+
         //TODO TAS-315 Create memory efficient VCF to HDF5
 //        TaxaListBuilder   taxaListBuilder=new TaxaListBuilder();
 //        if(HDF5Utils.doesGenotypeModuleExist(writer) && HDF5Utils.isHDF5GenotypeLocked(writer)) {
@@ -430,6 +444,23 @@ public class GenotypeTableBuilder {
         return this;
     }
 
+    /**
+     *
+     * @param startSite start site for positioning blocks correction
+     * @param blkPositionList
+     * @param blockGenotypes array of genotypes [taxonIndex][siteIndex]  true site=startSite+siteIndex
+     * @param blockDepths
+     */
+    public void addSiteBlock(int startSite, PositionList blkPositionList, byte[][] blockGenotypes, byte[][][] blockDepths) {
+        if((myBuildType!=BuildType.SITE_INC)||(isHDF5==false)) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getSiteIncremental and with HDF5");
+        if(blockGenotypes.length!=taxaList.numberOfTaxa()) throw new IndexOutOfBoundsException("Number of taxa and genotypes do not agree");
+        int s=startSite;
+        for (Position position : blkPositionList) {posListBuilder.set(s++,position);}
+        for (int t=0; t<taxaList.numberOfTaxa(); t++) {
+            HDF5Utils.replaceHDF5GenotypesCalls(writer,taxaList.taxaName(t),startSite,blockGenotypes[t]);
+        }
+    }
+
     public GenotypeTableBuilder addTaxon(Taxon taxon, byte[] genos) {
         return addTaxon(taxon, genos, null);
     }
@@ -509,6 +540,14 @@ public class GenotypeTableBuilder {
      */
     public GenotypeTable build(){
         if(isHDF5) {
+            switch (myBuildType) {
+                case TAXA_INC: {
+
+                }
+                case SITE_INC: {
+                    //WRITE THE POSITIONLISTBUILDER OUT.
+                }
+            }
             String name=writer.getFile().getAbsolutePath();
             annotateHDF5File(writer);
             HDF5Utils.lockHDF5GenotypeModule(writer);
@@ -704,5 +743,7 @@ public class GenotypeTableBuilder {
         ;
     }
 
-private enum BuildType{TAXA_INC, SITE_INC}
+
+
+    private enum BuildType{TAXA_INC, SITE_INC}
 }

@@ -2,10 +2,7 @@ package net.maizegenetics.dna.snp.io;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.SetMultimap;
-import net.maizegenetics.dna.map.Chromosome;
-import net.maizegenetics.dna.map.GeneralPosition;
-import net.maizegenetics.dna.map.Position;
-import net.maizegenetics.dna.map.PositionListBuilder;
+import net.maizegenetics.dna.map.*;
 import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.GenotypeTableBuilder;
 import net.maizegenetics.dna.snp.GenotypeTableUtils;
@@ -18,6 +15,7 @@ import net.maizegenetics.taxa.TaxaList;
 import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.taxa.TaxaListIOUtils;
 import net.maizegenetics.taxa.Taxon;
+import net.maizegenetics.util.Tassel5HDF5Constants;
 import net.maizegenetics.util.Utils;
 import org.apache.log4j.Logger;
 
@@ -111,7 +109,7 @@ public class BuilderFromVCF {
                 totalSites=Utils.getNumberLinesNotHashOrBlank(infile);
                 gtbDiskBuild=GenotypeTableBuilder.getSiteIncremental(taxaList,totalSites,hdf5Outfile);
             }
-            int linesAtTime=1<<12;  //this is a critical lines with 20% or more swings.  Needs to be optimized with transposing
+            int linesAtTime=(inMemory)?1<<12:Tassel5HDF5Constants.BLOCK_SIZE;  //this is a critical lines with 20% or more swings.  Needs to be optimized with transposing
             //  int linesAtTime=1<<8;  //better for with lots of taxa.
             ArrayList<String> txtLines=new ArrayList<>(linesAtTime);
             ArrayList<ProcessVCFBlock> pbs=new ArrayList<>();
@@ -435,7 +433,15 @@ class ProcessVCFBlock implements Runnable {
 
         }
         txtL=null;
+        if(hdf5Builder!=null) {
+            addResultsToHDF5Builder();
+        }
         //TODO TAS-315 Create memory efficient VCF to HDF5 insert writing to Builder of direct.
+    }
+
+    private void addResultsToHDF5Builder() {
+
+        hdf5Builder.addSiteBlock(startSite, PositionListBuilder.getInstance(blkPosList), gTS, dTS);
     }
 
     int getSiteNumber() {
