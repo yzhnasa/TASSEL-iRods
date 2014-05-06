@@ -290,7 +290,6 @@ public class LinkageDisequilibriumComponent extends JComponent {
         if (totalBlocks == 0) {
             totalBlocks = 1;
         }
-        System.out.println("totalBlocks: " + totalBlocks);
         blockStart = new double[totalBlocks];
         blockEnd = new double[totalBlocks];
         blockNames = new String[totalBlocks];
@@ -468,7 +467,6 @@ public class LinkageDisequilibriumComponent extends JComponent {
         calculateCoordinates(g);
         g.setColor(theColor.white);
         g.fillRect(0, 0, d.width, d.height);
-        System.out.println("UpperProb=" + upperProb + "  LowerProb=" + lowerProb);
         g.setColor(theColor.darkGray);
         g.fillRect(xPos[0], yPos[0], xPos[myWindowSize] - xPos[0], yPos[myWindowSize] - yPos[0] + 2);
         //checks to see if a jump has occured
