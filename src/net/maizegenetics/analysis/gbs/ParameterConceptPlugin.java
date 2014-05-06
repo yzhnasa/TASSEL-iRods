@@ -5,8 +5,23 @@ package net.maizegenetics.analysis.gbs;
 
 import com.google.common.collect.Range;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+
 import javax.swing.ImageIcon;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.JOptionPane;
 
 import java.io.File;
 
@@ -14,7 +29,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -22,7 +39,9 @@ import org.apache.log4j.PropertyConfigurator;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.PluginParameterTerry;
+import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
+import net.maizegenetics.gui.DialogUtils;
 
 /**
  *
@@ -43,6 +62,10 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     public ParameterConceptPlugin(Frame parentFrame) {
         super(parentFrame, false);
+    }
+
+    public ParameterConceptPlugin(Frame parentFrame, boolean isInteractive) {
+        super(parentFrame, isInteractive);
     }
 
     public static void main(String[] args) {
@@ -69,11 +92,13 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         try {
 
             if (isInteractive()) {
-                // TODO: Generate dialog based on parameters
+                setParametersViaGUI();
             }
 
             printParameterValues();
-            checkRequiredParameters();
+            if (!checkRequiredParameters()) {
+                return null;
+            }
 
             if (!new File(myInputFile.value()).exists()) {
                 // do something
@@ -211,18 +236,31 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     }
 
-    private void checkRequiredParameters() {
+    /**
+     * Checks that all required parameters have been set.
+     *
+     * @return true if all required parameters are set.
+     */
+    private boolean checkRequiredParameters() {
         for (PluginParameterTerry<?> current : getParameterInstances()) {
             if (current.mustBeChanged()) {
                 if (isInteractive()) {
-                    // TODO: Show Dialog with Error Message
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("Parameters ");
+                    builder.append(current.guiName());
+                    builder.append(" is Required.");
+                    builder.append("\n");
+                    String str = builder.toString();
+                    DialogUtils.showError(str, getParentFrame());
                 } else {
                     myLogger.error("flag -" + current.cmdLineName() + " is required.\n");
                     printUsage();
                     System.exit(1);
                 }
+                return false;
             }
         }
+        return true;
     }
 
     private void printParameterValues() {
@@ -322,22 +360,121 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     @Override
     public ImageIcon getIcon() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return null;
     }
 
     @Override
     public String getButtonName() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return "Parameter Concept";
     }
 
     @Override
     public String getToolTipText() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return "Parameter Concept Plugin";
     }
 
     @Override
     public String getCitation() {
         return "Casstevens T (2014) TASSEL: Self-Describing Plugins. Publication 1:1.";
+    }
+
+    private static final int TEXT_FIELD_WIDTH = 10;
+
+    protected <T extends Comparable<T>> void setParametersViaGUI() {
+
+        final JDialog dialog = new JDialog(getParentFrame(), getToolTipText(), true);
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+        final Map<PluginParameterTerry<?>, JTextField> parameterFields = new HashMap<>();
+
+        JButton okButton = new JButton();
+        okButton.setActionCommand("Ok");
+        okButton.setText("Ok");
+        okButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    for (final PluginParameterTerry<?> current : getParameterInstances()) {
+                        String input = parameterFields.get(current).getText().trim();
+                        if (!input.isEmpty()) {
+                            setParameter(current.cmdLineName(), input);
+                        }
+                    }
+                } catch (Exception ex) {
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("Problem Setting Parameters: ");
+                    builder.append("\n");
+                    builder.append(Utils.shortenStrLineLen(ExceptionUtils.getExceptionCauses(ex), 50));
+                    String str = builder.toString();
+                    DialogUtils.showError(str, getParentFrame());
+                    return;
+                }
+                dialog.setVisible(false);
+            }
+        });
+        JButton cancelButton = new JButton();
+        cancelButton.setText("Cancel");
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialog.setVisible(false);
+            }
+        });
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        for (final PluginParameterTerry<?> current : getParameterInstances()) {
+            final JTextField field = new JTextField(TEXT_FIELD_WIDTH);
+            if (current.value() != null) {
+                field.setText(current.value().toString());
+            }
+            if (current.range() != null) {
+                field.addFocusListener(new FocusAdapter() {
+                    @Override
+                    public void focusLost(FocusEvent e) {
+                        String input = field.getText().trim();
+                        T value = convert(input, (Class<T>) current.valueType());
+                        if (!((Range<T>) current.range()).contains(value)) {
+                            JOptionPane.showMessageDialog(dialog, current.guiName() + " range: " + current.range().toString());
+                        }
+                    }
+                });
+            }
+            panel.add(getLine(current.guiName(), field));
+            parameterFields.put(current, field);
+        }
+
+        tabbedPane.add(panel, getToolTipText());
+
+        JPanel pnlButtons = new JPanel();
+        pnlButtons.setLayout(new FlowLayout());
+        pnlButtons.add(okButton);
+        pnlButtons.add(cancelButton);
+        dialog.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        dialog.getContentPane().add(pnlButtons, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setLocationRelativeTo(getParentFrame());
+        dialog.setVisible(true);
+
+    }
+
+    private JPanel getLine(String label, JTextField ref) {
+
+        JPanel result = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        result.add(new JLabel(label));
+        ref.setEditable(true);
+        ref.setHorizontalAlignment(JTextField.LEFT);
+        ref.setAlignmentX(JTextField.CENTER_ALIGNMENT);
+        ref.setAlignmentY(JTextField.CENTER_ALIGNMENT);
+        ref.setMaximumSize(ref.getPreferredSize());
+        result.add(ref);
+
+        return result;
+
     }
 
     public static class Builder {
