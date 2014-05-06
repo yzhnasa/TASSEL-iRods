@@ -92,7 +92,9 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         try {
 
             if (isInteractive()) {
-                setParametersViaGUI();
+                if (!setParametersViaGUI()) {
+                    return null;
+                }
             }
 
             printParameterValues();
@@ -246,9 +248,8 @@ public class ParameterConceptPlugin extends AbstractPlugin {
             if (current.mustBeChanged()) {
                 if (isInteractive()) {
                     StringBuilder builder = new StringBuilder();
-                    builder.append("Parameters ");
                     builder.append(current.guiName());
-                    builder.append(" is Required.");
+                    builder.append(" must be defined.");
                     builder.append("\n");
                     String str = builder.toString();
                     DialogUtils.showError(str, getParentFrame());
@@ -379,14 +380,25 @@ public class ParameterConceptPlugin extends AbstractPlugin {
     }
 
     private static final int TEXT_FIELD_WIDTH = 10;
+    
+    boolean parametersIsSet = true;
 
-    protected <T extends Comparable<T>> void setParametersViaGUI() {
+    /**
+     * Generates dialog based on this plugins define parameters.
+     * 
+     * @param <T>
+     * 
+     * @return true if OK clicked, false if canceled
+     */
+    protected <T extends Comparable<T>> boolean setParametersViaGUI() {
 
         final JDialog dialog = new JDialog(getParentFrame(), getToolTipText(), true);
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
         final Map<PluginParameterTerry<?>, JTextField> parameterFields = new HashMap<>();
+        
+        parametersIsSet = true;
 
         JButton okButton = new JButton();
         okButton.setActionCommand("Ok");
@@ -418,6 +430,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                parametersIsSet = false;
                 dialog.setVisible(false);
             }
         });
@@ -458,6 +471,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         dialog.pack();
         dialog.setLocationRelativeTo(getParentFrame());
         dialog.setVisible(true);
+        return parametersIsSet;
 
     }
 
