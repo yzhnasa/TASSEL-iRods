@@ -445,16 +445,21 @@ public class GenotypeTableBuilder {
     }
 
     /**
-     *
+     * Add TasselHDF5 Block of positions (generally 1<<16 positions).
+     * @note
+     * This is synchronized, which certainly slows things
+     * down but it is needed to prevent the same taxa dataset from being accessed at once.  This can probably be rethought
+     * with parallelization at this stage across datasets
      * @param startSite start site for positioning blocks correction
      * @param blkPositionList
      * @param blockGenotypes array of genotypes [taxonIndex][siteIndex]  true site=startSite+siteIndex
      * @param blockDepths
      */
-    public void addSiteBlock(int startSite, PositionList blkPositionList, byte[][] blockGenotypes, byte[][][] blockDepths) {
+    public synchronized void addSiteBlock(int startSite, PositionList blkPositionList, byte[][] blockGenotypes, byte[][][] blockDepths) {
         if((myBuildType!=BuildType.SITE_INC)||(isHDF5==false)) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getSiteIncremental and with HDF5");
         if(blockGenotypes.length!=taxaList.numberOfTaxa()) throw new IndexOutOfBoundsException("Number of taxa and genotypes do not agree");
         int s=startSite;
+        System.out.println("startSite = ["+startSite+"], blkPositionList = ["+blkPositionList.size()+"], blockGenotypes = ["+blockGenotypes.length+"], blockDepths = ["+blockDepths+"]");
         for (Position position : blkPositionList) {posListBuilder.set(s++,position);}
         for (int t=0; t<taxaList.numberOfTaxa(); t++) {
             HDF5Utils.replaceHDF5GenotypesCalls(writer,taxaList.taxaName(t),startSite,blockGenotypes[t]);
@@ -542,10 +547,12 @@ public class GenotypeTableBuilder {
         if(isHDF5) {
             switch (myBuildType) {
                 case TAXA_INC: {
-
+                   break;
                 }
                 case SITE_INC: {
-                    //WRITE THE POSITIONLISTBUILDER OUT.
+                    //copy the in memory position list to the HDF5 file
+                    this.positionList=new PositionListBuilder(writer,posListBuilder.build()).build();
+                    break;
                 }
             }
             String name=writer.getFile().getAbsolutePath();

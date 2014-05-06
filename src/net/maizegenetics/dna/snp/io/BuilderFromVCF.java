@@ -107,6 +107,7 @@ public class BuilderFromVCF {
             TaxaList taxaList=processTaxa(currLine,sampAnnoBuild);
             if(inMemory==false) {
                 totalSites=Utils.getNumberLinesNotHashOrBlank(infile);
+                System.out.println("TotalSite count:"+totalSites);
                 gtbDiskBuild=GenotypeTableBuilder.getSiteIncremental(taxaList,totalSites,hdf5Outfile);
             }
             int linesAtTime=(inMemory)?1<<12:Tassel5HDF5Constants.BLOCK_SIZE;  //this is a critical lines with 20% or more swings.  Needs to be optimized with transposing
@@ -133,8 +134,14 @@ public class BuilderFromVCF {
             }
             r.close();
             if (txtLines.size()>0) {
-                ProcessVCFBlock pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);
+                ProcessVCFBlock pb;//=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);
+                if(inMemory) {
+                    pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);}
+                else{
+                    pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines, sitesRead-txtLines.size(),gtbDiskBuild);
+                }
                 pbs.add(pb);
+                //  pb.run(); //used for testing
                 pool.execute(pb);
             }
             pool.shutdown();

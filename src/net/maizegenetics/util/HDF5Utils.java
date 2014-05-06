@@ -308,7 +308,6 @@ public final class HDF5Utils {
      * @param val
      */
     public static void writeHDF5Block(String objectPath, IHDF5Writer myWriter, int blockSize, int block, Object val) {
-        System.out.println("objectPath = ["+objectPath+"], myWriter = ["+myWriter+"], blockSize = ["+blockSize+"], block = ["+block+"], val = ["+val+"]");
         int startPos = block * blockSize;
         if (val instanceof byte[][]) {
             byte[][] bval = (byte[][]) val;
