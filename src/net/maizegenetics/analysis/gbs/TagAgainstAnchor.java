@@ -43,6 +43,7 @@ public class TagAgainstAnchor {
     
     Task[] jobs;
     static int threadNumPerCore = 4; //32 can be faster, but the admin will complain about too many threads
+    int acutualUseCoreNum;
     int threadNum;
     int chunkSize;
     int chunkNum;
@@ -114,8 +115,8 @@ public class TagAgainstAnchor {
         int left = tagNum % chunkSize;
         if (left == 0) chunkNum = tagNum / chunkSize;
         else chunkNum = tagNum / chunkSize + 1;
+        System.out.println("Number of tags in each chunk was set to " + chunkSize);
         System.out.println("There are " + chunkNum + " TBT chunks");
-        System.out.println("Each chunk has " + chunkSize + " tags");
         if (left != 0) {
             System.out.println("The last chunk has " + left + " tags");
         }
@@ -216,7 +217,7 @@ public class TagAgainstAnchor {
                         System.out.println(e.toString());
                     }
                 }
-                System.out.println("Each LD compirison took " + (double)this.getTimeSpanNano(lastTimePoint)/actualChunkSize/anchor.getSiteNum() + " nano seconds");
+                System.out.println("Each LD compirison took " + (double)this.getTimeSpanNano(lastTimePoint)/actualChunkSize/anchor.getSiteNum()*acutualUseCoreNum + " nano seconds/core");
                 System.out.println("Multiple threading mapping took " + this.getTimeSpanSecond(lastTimePoint) + " seconds");
                 for (int j = 0; j < jobs.length; j++) {
                     String[] result = jobs[j].getResult();
@@ -226,7 +227,7 @@ public class TagAgainstAnchor {
                     }
                 }
                 bw.flush();
-                System.out.println("Mapping result from chunk " + i + " was written\n");
+                System.out.println("Mapping result from chunk " + i + " was written to "+outfileS+"\n");
             }
             bw.flush();
             bw.close();
@@ -256,12 +257,12 @@ public class TagAgainstAnchor {
             System.out.println("TBT will be mapped by " + threadNum + " tasks");
             System.out.println("Each core runs 1 tasks, or 1 threads");
         }
-        int acutualUseCoreNum = numOfProcessors;
+        acutualUseCoreNum = numOfProcessors;
         if (acutualUseCoreNum > threadNum) acutualUseCoreNum = threadNum;
         System.out.println("This node has " + numOfProcessors + " processors. Will use " + acutualUseCoreNum + " processors");
         System.out.println("TBT will be mapped by " + threadNum + " threads");
         System.out.println("Each core runs " + threadNumPerCore + " threads");
-        System.out.println("Each TBT chunk has " + chunkSize + " tags, which will be split and mapped by the " + threadNum + " threads");
+        System.out.println("Each TBT chunk was set to " + chunkSize + " tags, which will be split and mapped by the " + threadNum + " threads");
         System.out.println("Each thread will map " + chunkSize/threadNum + " tags");
         int left = tbt.getTagCount()%chunkSize;
         if (left != 0) {
@@ -675,7 +676,7 @@ public class TagAgainstAnchor {
         for (int i = 0; i < tbtRedirect.length; i++) {
             tbtRedirect[i] = anchor.getTaxonIndex(tbt.getTaxaName(i));
         }
-        System.out.println("Taxa redirection took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
+        System.out.println("Taxa redirection between TBT and anchor map took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
     }
     
     private void loadBlockChrPosition (String blockFileS) {
@@ -715,7 +716,7 @@ public class TagAgainstAnchor {
         System.out.println("Start loading anchor map");
         long lastTimePoint = this.getCurrentTimeNano();
         anchor = new SimpleGenotypeSBit(hapMapHDF5);
-        System.out.println("Loading hapmap (SimpleGenotypeSBit) HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
+        System.out.println("Loading anchor map (SimpleGenotypeSBit) HDF5 took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds");
         System.out.println("The anchor map has " + anchor.getSiteNum() + " sites and " + anchor.getTaxaNum() + " taxa");
         chromosomeNumber = anchor.chromosomeNumber;
         chrStartIndex = anchor.chrStartIndex;
