@@ -20,11 +20,12 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     private final Range<T> myRange;
     private final T myValue;
     private final boolean myRequired;
-    private boolean myMustBeChanged;
     private final Class<T> myClass;
+    public enum FILE_TYPE {NA, IN, OUT};
+    private final FILE_TYPE myFileType;
 
     private PluginParameterTerry(String guiName, String guiUnits, String cmdLineName,
-            String description, Range<T> range, T value, boolean required, Class<T> type) {
+            String description, Range<T> range, T value, boolean required, FILE_TYPE fileType, Class<T> type) {
         myGuiName = guiName;
         myUnits = guiUnits;
         myCmdLineName = cmdLineName;
@@ -35,9 +36,8 @@ public class PluginParameterTerry<T extends Comparable<T>> {
             throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + value.toString() + " outside range: " + myRange.toString());
         }
         myRequired = required;
-        myMustBeChanged = required;
         myClass = type;
-        ;
+        myFileType = fileType;
     }
 
     /**
@@ -50,8 +50,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     public PluginParameterTerry(PluginParameterTerry<T> oldParameter, T newValue) {
         this(oldParameter.myGuiName, oldParameter.myUnits, oldParameter.myCmdLineName,
                 oldParameter.myDescription, oldParameter.myRange, newValue,
-                oldParameter.myRequired, oldParameter.myClass);
-        myMustBeChanged = false;
+                oldParameter.myRequired, oldParameter.myFileType, oldParameter.myClass);
     }
 
     public String guiName() {
@@ -78,16 +77,16 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         return myValue;
     }
 
-    public boolean mustBeChanged() {
-        return myMustBeChanged;
-    }
-
     public boolean required() {
         return myRequired;
     }
 
     public Class<T> valueType() {
         return myClass;
+    }
+    
+    public FILE_TYPE fileType() {
+        return myFileType;
     }
 
     public static class Builder<T extends Comparable<T>> {
@@ -100,6 +99,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         private final T myValue;
         private boolean myIsRequired = false;
         private final Class<T> myClass;
+        private FILE_TYPE myFileType = FILE_TYPE.NA;
 
         public Builder(Enum cmdLineName, T defaultValue, Class<T> type) {
             myCmdLineName = cmdLineName.toString();
@@ -131,6 +131,16 @@ public class PluginParameterTerry<T extends Comparable<T>> {
             myGuiName = guiName;
             return this;
         }
+        
+        public Builder<T> inFile() {
+            myFileType = FILE_TYPE.IN;
+            return this;
+        }
+        
+        public Builder<T> outFile() {
+            myFileType = FILE_TYPE.OUT;
+            return this;
+        }
 
         public PluginParameterTerry<T> build() {
             if ((myGuiName == null) || (myGuiName.isEmpty())) {
@@ -149,7 +159,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
                 myDescription = myGuiName;
             }
             return new PluginParameterTerry<>(myGuiName, myUnits, myCmdLineName,
-                    myDescription, myRange, myValue, myIsRequired, myClass);
+                    myDescription, myRange, myValue, myIsRequired, myFileType, myClass);
         }
     }
 }
