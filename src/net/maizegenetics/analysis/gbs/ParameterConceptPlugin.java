@@ -102,11 +102,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
             }
 
             printParameterValues();
-            checkRequiredParameters();
-
-            if (!new File(myInputFile.value()).exists()) {
-                // do something
-            }
+            checkParameters();
 
             // Code to perform function of plugin
             // This should return data set produced by this plugin
@@ -131,7 +127,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         }
 
     }
-    
+
     private List<PluginParameterTerry<?>> getParameterInstances() {
 
         List<PluginParameterTerry<?>> result = new ArrayList<>();
@@ -251,32 +247,43 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
         }
 
-        checkRequiredParameters();
-
     }
 
     /**
-     * Checks that all required parameters have been set.
-     *
-     * @return true if all required parameters are set.
+     * Verification checks of parameters.
      */
-    private void checkRequiredParameters() {
+    private void checkParameters() {
+
         for (PluginParameterTerry<?> current : getParameterInstances()) {
+
             if (current.required()) {
-                if (current.value().toString().trim().length() == 0) {
+                Object value = current.value();
+                if ((value == null) || (value.toString().trim().length() == 0)) {
                     if (isInteractive()) {
-                        StringBuilder builder = new StringBuilder();
-                        builder.append(current.guiName());
-                        builder.append(" must be defined.");
-                        throw new IllegalStateException(builder.toString());
+                        throw new IllegalStateException(current.guiName() + " must be defined.");
                     } else {
-                        myLogger.error("flag -" + current.cmdLineName() + " is required.\n");
+                        myLogger.error("-" + current.cmdLineName() + " is required.\n");
                         printUsage();
                         System.exit(1);
                     }
                 }
             }
+
+            if (current.fileType() == PluginParameterTerry.FILE_TYPE.IN) {
+                String filename = current.value().toString();
+                if (!new File(filename).exists()) {
+                    if (isInteractive()) {
+                        throw new IllegalStateException(current.guiName() + ": " + filename + " doesn't exist.");
+                    } else {
+                        myLogger.error("-" + current.cmdLineName() + ": " + filename + " doesn't exist\n");
+                        printUsage();
+                        System.exit(1);
+                    }
+                }
+            }
+
         }
+
     }
 
     private void printParameterValues() {
