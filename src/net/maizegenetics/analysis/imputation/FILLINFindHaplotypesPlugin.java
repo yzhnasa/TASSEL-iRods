@@ -51,6 +51,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
     private int appoxSitesPerHaplotype=8192;
     private int minSitesPresentPerHap=500;
     private boolean anonymous= false;
+    private boolean extendedOutput= false;
 
     private double maximumMissing=0.4;
     private int maxHaplotypes=3000;
@@ -292,6 +293,10 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
                 int index=(hits.size()*200000)+taxon1;
                 if(verboseOutput) System.out.printf("\t\tOutput %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.taxaName(taxon1),
                         hits.size(), missingFreq, hetFreq, index);
+                if(extendedOutput) {
+                    for (Integer taxon:hits) {System.out.println("\t\t\t"+inIDG.taxaName(taxon));}
+                            
+                }
                 byte[][] callPlusNames=new byte[2][];
                 callPlusNames[0]=calls;
                 String newName=inIDG.taxaName(taxon1)+":d"+(hits.size()+1);
@@ -411,6 +416,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         engine.add("-maxOutMiss", "--maxOutMiss", true);
         engine.add("-sD", "--startDivision", true);
         engine.add("-eD", "--endDivision", true);
+        engine.add("-extOut", "--extOut", false);
         engine.add("-anon", "--anon", false);
         engine.add("-nV", "--nonVerbose",false);
         engine.parse(args);
@@ -452,6 +458,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
         if (engine.getBoolean("-maxHap")) {
             maxHaplotypes = Integer.parseInt(engine.getString("-maxHap"));
         }
+        if(engine.getBoolean("-extOut")) extendedOutput=true;
         if(engine.getBoolean("-nV")) verboseOutput=false;
     }
 
@@ -473,6 +480,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
                 + "-minTaxa Minimum number of taxa to generate a haplotype (default: "+minTaxaInGroup+")\n"
                 + "-maxOutMiss  Maximum frequency of missing data in the output haplotype (default: "+maximumMissing+")\n"
                 + "-anon  If flagged, haplotype seed will not be transferred to haplotype name (default: "+anonymous+")\n"
+                + "-extOut  If flagged, the taxon that go into each haplotype will be output as system out (default: "+extendedOutput+")\n"
                 + "-nV  If flagged, output will be supressed\n"
                 );
     }
