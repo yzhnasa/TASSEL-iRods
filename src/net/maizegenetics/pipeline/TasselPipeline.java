@@ -20,7 +20,7 @@ import net.maizegenetics.analysis.data.PlinkLoadPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
 import net.maizegenetics.analysis.data.CombineDataSetsPlugin;
-import net.maizegenetics.analysis.data.MergeAlignmentsPlugin;
+import net.maizegenetics.analysis.data.MergeGenotypeTablesPlugin;
 import net.maizegenetics.analysis.data.MergeAlignmentsSameSitesPlugin;
 import net.maizegenetics.analysis.data.UnionAlignmentPlugin;
 import net.maizegenetics.analysis.data.FileLoadPlugin;
@@ -343,8 +343,8 @@ public class TasselPipeline implements PluginListener {
                 } else if (current.equalsIgnoreCase("-synonymizer")) {
                     SynonymizerPlugin plugin = new SynonymizerPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
-                } else if (current.equalsIgnoreCase("-mergeAlignments")) {
-                    MergeAlignmentsPlugin plugin = new MergeAlignmentsPlugin(myMainFrame, false);
+                } else if (current.equalsIgnoreCase("-mergeGenotypeTables")) {
+                    MergeGenotypeTablesPlugin plugin = new MergeGenotypeTablesPlugin(myMainFrame, false);
                     integratePlugin(plugin, true);
                 } else if (current.equalsIgnoreCase("-mergeAlignmentsSameSites")) {
                     MergeAlignmentsSameSitesPlugin plugin = new MergeAlignmentsSameSitesPlugin(myMainFrame);

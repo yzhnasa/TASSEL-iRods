@@ -12,6 +12,7 @@ import net.maizegenetics.taxa.TaxaList;
 
 import java.io.IOException;
 import java.io.PushbackReader;
+import net.maizegenetics.dna.map.PositionListBuilder;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTable;
 import net.maizegenetics.dna.snp.genotypecall.GenotypeCallTableBuilder;
 import net.maizegenetics.taxa.TaxaListBuilder;
@@ -155,7 +156,7 @@ public class ReadSequenceAlignmentUtils {
                 .setBases(s)
                 .build();
 
-        return GenotypeTableBuilder.getInstance(genotype, null, idGroup);
+        return GenotypeTableBuilder.getInstance(genotype, PositionListBuilder.getInstance(numSites), idGroup);
     }
 
     private static int readSeqLineP(PushbackReader in, int s, int pos, int maxPos, char[][] data, String[] identifiers,

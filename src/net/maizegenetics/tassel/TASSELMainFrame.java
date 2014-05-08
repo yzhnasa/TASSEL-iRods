@@ -31,7 +31,7 @@ import net.maizegenetics.analysis.association.MLMPlugin;
 import net.maizegenetics.analysis.data.PlinkLoadPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
-import net.maizegenetics.analysis.data.MergeAlignmentsPlugin;
+import net.maizegenetics.analysis.data.MergeGenotypeTablesPlugin;
 import net.maizegenetics.analysis.data.UnionAlignmentPlugin;
 import net.maizegenetics.analysis.data.FileLoadPlugin;
 import net.maizegenetics.analysis.data.IntersectionAlignmentPlugin;
@@ -577,7 +577,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         result.add(createMenuItem(new SynonymizerPlugin(this, true)));
         result.add(createMenuItem(new IntersectionAlignmentPlugin(this, true)));
         result.add(createMenuItem(new UnionAlignmentPlugin(this, true)));
-        result.add(createMenuItem(new MergeAlignmentsPlugin(this, true)));
+        result.add(createMenuItem(new MergeGenotypeTablesPlugin(this, true)));
         result.add(createMenuItem(new SeparatePlugin(this, true)));
         result.add(createMenuItem(new HetsToUnknownPlugin(this, true)));
         result.addSeparator();

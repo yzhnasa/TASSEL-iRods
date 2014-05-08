@@ -48,7 +48,7 @@ public class KinshipMethodDialog extends JDialog {
         });
         
         JButton cancelButton = new JButton();
-        cancelButton.setText("CancelClose");
+        cancelButton.setText("Cancel");
         cancelButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
             	isCancelled = true;
@@ -68,7 +68,7 @@ public class KinshipMethodDialog extends JDialog {
         final JTextArea txtInfo = new JTextArea(helpText.toString());
         txtInfo.setLineWrap(true);
         txtInfo.setWrapStyleWord(true);
-        txtInfo.setPreferredSize(new Dimension(500, 150));
+        txtInfo.setPreferredSize(new Dimension(500, 100));
         txtInfo.setEditable(false);
 
         gbc.gridx = 0;
@@ -97,7 +97,6 @@ public class KinshipMethodDialog extends JDialog {
         
         getContentPane().add(panel, BorderLayout.CENTER);
         pack();
-        setVisible(true);
 	}
 	
 	public boolean isEndelmanSelected() {

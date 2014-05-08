@@ -642,7 +642,6 @@ class LinkageDiseqDisplayDialog extends JDialog {
 
         if ( myLockedBars ) {
             int diff = myXPos - windowXSlider.getValue();
-            System.out.println(diff + "");
             if ( diff < 0) {
                 windowYSlider.setValue(Math.max(windowYSlider.getMinimum(), windowYSlider.getValue() - diff));
             } else {

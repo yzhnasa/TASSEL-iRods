@@ -11,8 +11,12 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import net.maizegenetics.dna.map.AbstractTagsOnPhysicalMap;
 import net.maizegenetics.dna.map.TagMappingInfoV3;
+import net.maizegenetics.dna.map.TagsOnPhysMapHDF5;
+import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.map.TagsOnPhysicalMapV3;
+import net.maizegenetics.dna.tag.TagsByTaxa;
 import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
 
 /**
@@ -23,6 +27,42 @@ import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
 public class TagBlockPosition {
     int[] blockChr;
     int[] blockPos;
+    
+    public TagBlockPosition (String tbtH5FileS, String topmFileS, int TOPMVersionValue) {
+        long lastTimePoint = System.nanoTime();
+        AbstractTagsOnPhysicalMap topm = null;
+        if (TOPMVersionValue == 0) {
+            topm = new TagsOnPhysicalMap (topmFileS, true);
+        }
+        else if (TOPMVersionValue == 1){
+            topm = new TagsOnPhysMapHDF5(topmFileS);
+        }
+        else if (TOPMVersionValue == 2) {
+            topm = new TagsOnPhysicalMapV3(topmFileS);
+        }
+        else {
+            System.out.println("Input TOPM version value doesn't exist");
+            System.exit(0);
+        }
+        TagsByTaxaByteHDF5TagGroups tbt = new TagsByTaxaByteHDF5TagGroups (tbtH5FileS);
+        blockChr = new int[tbt.getTagCount()];
+        blockPos = new int[tbt.getTagCount()];
+        long[] t;
+        int index;
+        for (int i = 0; i < tbt.getTagCount(); i++) {
+            t = tbt.getTag(i);
+            index = topm.getTagIndex(t);
+            if (index < 0) {
+                blockChr[i] = Integer.MIN_VALUE;
+                blockPos[i] = Integer.MIN_VALUE;
+            }
+            else {
+                blockChr[i] = topm.getChromosome(index);
+                blockPos[i] = topm.getStartPosition(index);
+            }
+        }
+        System.out.println("Generating TagBlockPosition from TOPM took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds\n");
+    }
     
     public TagBlockPosition (String tbtH5FileS, String topmH5FileS, String software) {
         long lastTimePoint = System.nanoTime();

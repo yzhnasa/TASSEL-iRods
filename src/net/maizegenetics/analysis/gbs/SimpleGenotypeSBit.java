@@ -56,9 +56,9 @@ public class SimpleGenotypeSBit {
     String OBSMAJOR = "obsMajor";
     String OBSMINOR = "obsMinor";
     /**compression level*/
-    HDF5IntStorageFeatures intFeature = HDF5IntStorageFeatures.createDeflation(9);
-    HDF5GenericStorageFeatures genericFeature = HDF5GenericStorageFeatures.createDeflation(9);
-    HDF5FloatStorageFeatures floatFeature = HDF5FloatStorageFeatures.createDeflation(9);
+    HDF5IntStorageFeatures intFeature = HDF5IntStorageFeatures.createDeflation(1);
+    HDF5GenericStorageFeatures genericFeature = HDF5GenericStorageFeatures.createDeflation(1);
+    HDF5FloatStorageFeatures floatFeature = HDF5FloatStorageFeatures.createDeflation(1);
     
     /**
      * Convert HDF5 Alignment/Genotype file to SimpleGenotypeSBit
@@ -105,6 +105,7 @@ public class SimpleGenotypeSBit {
             majorCount = bsMa.cardinality();
             minorCount = bsMi.cardinality();
             maf[i] = (double)minorCount/(majorCount+minorCount);
+            if (i%10000 == 0) System.out.println(String.valueOf(i+1)+" sites are converted to bits. " +String.valueOf((double)(i+1)/position.length) + " completed");
         }
         wordNum = obsMajor[0].getNumWords();
         System.out.println("Transform Genotype to sBit took " + this.getTimeSpanSecond(lastTimePoint) +  " seconds");

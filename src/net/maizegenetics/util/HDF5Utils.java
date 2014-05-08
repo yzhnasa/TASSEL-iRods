@@ -188,6 +188,14 @@ public final class HDF5Utils {
         writeHDF5EntireArray(callsPath, h5w, calls.length, Tassel5HDF5Constants.BLOCK_SIZE, calls);
     }
 
+    public static void replaceHDF5GenotypesCalls(IHDF5Writer h5w, String taxon, int startSite, byte[] calls) {
+        if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
+        String callsPath = Tassel5HDF5Constants.getGenotypesCallsPath(taxon);
+        if(!h5w.exists(callsPath)) throw new IllegalStateException("Taxa Calls Do Not Already Exists to replace");
+        if(startSite%Tassel5HDF5Constants.BLOCK_SIZE!=0) throw new IllegalStateException("Taxa Calls Start Site not a multiple of the block size");
+        writeHDF5Block(callsPath,h5w,calls.length,startSite/Tassel5HDF5Constants.BLOCK_SIZE,calls);
+    }
+
     public static byte[][] getHDF5GenotypesDepth(IHDF5Reader reader, String taxon) {
         String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
         if(reader.exists(callsPath)) {
@@ -217,6 +225,8 @@ public final class HDF5Utils {
         h5w.createByteMatrix(callsPath, depth.length, depth[0].length, 6, Math.min(Tassel5HDF5Constants.BLOCK_SIZE,depth[0].length), Tassel5HDF5Constants.intDeflation);
         writeHDF5EntireArray(callsPath, h5w, depth[0].length, Tassel5HDF5Constants.BLOCK_SIZE, depth);
     }
+
+
 
     public static void replaceHDF5GenotypesDepth(IHDF5Writer h5w, String taxon, byte[][] depth) {
         if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
@@ -319,6 +329,7 @@ public final class HDF5Utils {
             myWriter.writeStringArrayBlockWithOffset(objectPath, sval, sval.length, (long) startPos);
         }
     }
+
 
 
 }

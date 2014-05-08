@@ -1,5 +1,5 @@
 /*
- * MergeAlignmentsPlugin
+ * MergeGenotypeTablesPlugin
  */
 package net.maizegenetics.analysis.data;
 
@@ -35,11 +35,11 @@ import net.maizegenetics.taxa.Taxon;
  * @author Terry Casstevens
  *
  */
-public class MergeAlignmentsPlugin extends AbstractPlugin {
+public class MergeGenotypeTablesPlugin extends AbstractPlugin {
 
-    private static final Logger myLogger = Logger.getLogger(MergeAlignmentsPlugin.class);
+    private static final Logger myLogger = Logger.getLogger(MergeGenotypeTablesPlugin.class);
 
-    public MergeAlignmentsPlugin(Frame parentFrame, boolean isInteractive) {
+    public MergeGenotypeTablesPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
     }
 
@@ -63,9 +63,9 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
             }
 
             GenotypeTable merged = mergeGenotypeTables(alignments);
-            DataSet result = new DataSet(new Datum("Merged Alignment", merged, null), this);
+            DataSet result = new DataSet(new Datum("Merged Genotype Table", merged, null), this);
 
-            fireDataSetReturned(new PluginEvent(result, MergeAlignmentsPlugin.class));
+            fireDataSetReturned(new PluginEvent(result, MergeGenotypeTablesPlugin.class));
 
             return result;
         } finally {
@@ -76,7 +76,7 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 
     @Override
     public ImageIcon getIcon() {
-        URL imageURL = MergeAlignmentsPlugin.class.getResource("/net/maizegenetics/analysis/images/Merge.gif");
+        URL imageURL = MergeGenotypeTablesPlugin.class.getResource("/net/maizegenetics/analysis/images/Merge.gif");
         if (imageURL == null) {
             return null;
         } else {
@@ -86,12 +86,12 @@ public class MergeAlignmentsPlugin extends AbstractPlugin {
 
     @Override
     public String getButtonName() {
-        return "Merge Alignments";
+        return "Merge Genotype Tables";
     }
 
     @Override
     public String getToolTipText() {
-        return "Merge Alignments";
+        return "Merge Genotype Tables";
     }
 
     /**

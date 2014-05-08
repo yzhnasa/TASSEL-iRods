@@ -1,7 +1,6 @@
 package net.maizegenetics.plugindef;
 
 import com.google.common.collect.Range;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Defines the attributes of parameters to be used in the plugins
@@ -21,11 +20,12 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     private final Range<T> myRange;
     private final T myValue;
     private final boolean myRequired;
-    private final boolean myMustBeChanged;
     private final Class<T> myClass;
+    public enum FILE_TYPE {NA, IN, OUT};
+    private final FILE_TYPE myFileType;
 
     private PluginParameterTerry(String guiName, String guiUnits, String cmdLineName,
-            String description, Range<T> range, T value, boolean required, Class<T> theClass) {
+            String description, Range<T> range, T value, boolean required, FILE_TYPE fileType, Class<T> type) {
         myGuiName = guiName;
         myUnits = guiUnits;
         myCmdLineName = cmdLineName;
@@ -36,8 +36,8 @@ public class PluginParameterTerry<T extends Comparable<T>> {
             throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + value.toString() + " outside range: " + myRange.toString());
         }
         myRequired = required;
-        myMustBeChanged = required;
-        myClass = theClass;
+        myClass = type;
+        myFileType = fileType;
     }
 
     /**
@@ -50,37 +50,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     public PluginParameterTerry(PluginParameterTerry<T> oldParameter, T newValue) {
         this(oldParameter.myGuiName, oldParameter.myUnits, oldParameter.myCmdLineName,
                 oldParameter.myDescription, oldParameter.myRange, newValue,
-                oldParameter.myRequired, oldParameter.myClass);
-    }
-
-    public PluginParameterTerry(PluginParameterTerry<T> oldParameter, String newValue) {
-        myGuiName = oldParameter.myGuiName;
-        myUnits = oldParameter.myUnits;
-        myCmdLineName = oldParameter.myCmdLineName;
-        myDescription = oldParameter.myDescription;
-        myRange = oldParameter.myRange;
-        myClass = oldParameter.myClass;
-        myValue = convert(newValue, myClass);
-        if ((myRange != null) && (!myRange.contains(myValue))) {
-            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + newValue.toString() + " outside range: " + myRange.toString());
-        }
-        myRequired = oldParameter.myRequired;
-        myMustBeChanged = false;
-    }
-
-    private T convert(String input, Class<T> outputClass) {
-
-        try {
-            return input == null ? null : outputClass.getConstructor(String.class).newInstance(input);
-        } catch (InvocationTargetException nfe) {
-            throw new IllegalArgumentException("PluginParameterTerry: convert: " + myCmdLineName + " Problem converting: " + input + " to " + outputClass.getName());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("PluginParameterTerry: convert: Unknown type: " + outputClass.getName());
-        }
-
-        // We might need something like this if above
-        // doesn't handle all cases.
-        // if (outputClass.isAssignableFrom(Double.class))
+                oldParameter.myRequired, oldParameter.myFileType, oldParameter.myClass);
     }
 
     public String guiName() {
@@ -107,10 +77,6 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         return myValue;
     }
 
-    public boolean mustBeChanged() {
-        return myMustBeChanged;
-    }
-
     public boolean required() {
         return myRequired;
     }
@@ -118,23 +84,26 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     public Class<T> valueType() {
         return myClass;
     }
+    
+    public FILE_TYPE fileType() {
+        return myFileType;
+    }
 
     public static class Builder<T extends Comparable<T>> {
 
-        private final String myGuiName;
+        private String myGuiName;
         private String myUnits = "";
         private final String myCmdLineName;
         private String myDescription = "";
         private Range<T> myRange = null;
         private final T myValue;
-        private final boolean myIsRequired;
+        private boolean myIsRequired = false;
         private final Class<T> myClass;
+        private FILE_TYPE myFileType = FILE_TYPE.NA;
 
-        public Builder(String guiName, String cmdLineName, T value, boolean isRequired, Class<T> type) {
-            myGuiName = guiName;
-            myCmdLineName = cmdLineName;
-            myValue = value;
-            myIsRequired = isRequired;
+        public Builder(Enum cmdLineName, T defaultValue, Class<T> type) {
+            myCmdLineName = cmdLineName.toString();
+            myValue = defaultValue;
             myClass = type;
         }
 
@@ -153,12 +122,44 @@ public class PluginParameterTerry<T extends Comparable<T>> {
             return this;
         }
 
+        public Builder<T> required(boolean required) {
+            myIsRequired = required;
+            return this;
+        }
+
+        public Builder<T> guiName(String guiName) {
+            myGuiName = guiName;
+            return this;
+        }
+        
+        public Builder<T> inFile() {
+            myFileType = FILE_TYPE.IN;
+            return this;
+        }
+        
+        public Builder<T> outFile() {
+            myFileType = FILE_TYPE.OUT;
+            return this;
+        }
+
         public PluginParameterTerry<T> build() {
+            if ((myGuiName == null) || (myGuiName.isEmpty())) {
+                StringBuilder builder = new StringBuilder();
+                builder.append(Character.toUpperCase(myCmdLineName.charAt(0)));
+                for (int i = 1; i < myCmdLineName.length(); i++) {
+                    char current = myCmdLineName.charAt(i);
+                    if (Character.isUpperCase(current)) {
+                        builder.append(" ");
+                    }
+                    builder.append(current);
+                }
+                myGuiName = builder.toString();
+            }
             if (myDescription.isEmpty()) {
                 myDescription = myGuiName;
             }
             return new PluginParameterTerry<>(myGuiName, myUnits, myCmdLineName,
-                    myDescription, myRange, myValue, myIsRequired, myClass);
+                    myDescription, myRange, myValue, myIsRequired, myFileType, myClass);
         }
     }
 }
