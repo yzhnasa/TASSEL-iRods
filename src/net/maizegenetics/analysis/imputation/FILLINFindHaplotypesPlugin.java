@@ -291,11 +291,13 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
             double hetFreq=(double)unkCnt[1]/(double)(inAlign.numberOfSites()-unkCnt[0]);
             if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq)&&(hits.size()>=this.minTaxaInGroup))) {
                 int index=(hits.size()*200000)+taxon1;
-                if(verboseOutput) System.out.printf("\t\tOutput %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.taxaName(taxon1),
+                if(verboseOutput && !extendedOutput) System.out.printf("\t\tOutput %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.taxaName(taxon1),
                         hits.size(), missingFreq, hetFreq, index);
                 if(extendedOutput) {
+                    System.out.printf("\t\tChromosome: %s StartPos: %d EndPos: %d missingF:%g hetF:%g index: %d %n",inAlign.chromosomeName(startSite),
+                            inAlign.physicalPositions()[startSite], inAlign.physicalPositions()[endSite], missingFreq, hetFreq, index);
+                    System.out.println("\t\t\t"+inIDG.taxaName(taxon1));
                     for (Integer taxon:hits) {System.out.println("\t\t\t"+inIDG.taxaName(taxon));}
-                            
                 }
                 byte[][] callPlusNames=new byte[2][];
                 callPlusNames[0]=calls;
