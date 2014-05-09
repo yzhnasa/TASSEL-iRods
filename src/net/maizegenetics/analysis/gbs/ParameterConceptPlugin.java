@@ -45,6 +45,7 @@ import net.maizegenetics.plugindef.PluginParameterTerry;
 import net.maizegenetics.util.ExceptionUtils;
 import net.maizegenetics.util.Utils;
 import net.maizegenetics.gui.DialogUtils;
+import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.prefs.TasselPrefs;
 
 /**
@@ -104,9 +105,11 @@ public class ParameterConceptPlugin extends AbstractPlugin {
             printParameterValues();
             checkParameters();
 
-            // Code to perform function of plugin
-            // This should return data set produced by this plugin
-            return null;
+            DataSet output = processData(input);
+            if (output != null) {
+                fireDataSetReturned(new PluginEvent(output, getClass()));
+            }
+            return output;
 
         } catch (Exception e) {
 
@@ -126,6 +129,10 @@ public class ParameterConceptPlugin extends AbstractPlugin {
             fireProgress(100);
         }
 
+    }
+
+    private DataSet processData(DataSet input) {
+        return null;
     }
 
     private List<PluginParameterTerry<?>> getParameterInstances() {
@@ -276,6 +283,21 @@ public class ParameterConceptPlugin extends AbstractPlugin {
                         throw new IllegalStateException(current.guiName() + ": " + filename + " doesn't exist.");
                     } else {
                         myLogger.error("-" + current.cmdLineName() + ": " + filename + " doesn't exist\n");
+                        printUsage();
+                        System.exit(1);
+                    }
+                }
+            }
+
+            if (current.fileType() == PluginParameterTerry.FILE_TYPE.OUT) {
+                String filename = current.value().toString();
+                String outFolder = Utils.getDirectory(filename);
+                File outDir = new File(outFolder);
+                if (!outDir.isDirectory()) {
+                    if (isInteractive()) {
+                        throw new IllegalStateException(current.guiName() + ": Output Directory: " + outFolder + " doesn't exist.");
+                    } else {
+                        myLogger.error("-" + current.cmdLineName() + ": Output Directory: " + outFolder + " doesn't exist\n");
                         printUsage();
                         System.exit(1);
                     }

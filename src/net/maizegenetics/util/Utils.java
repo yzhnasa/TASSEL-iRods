@@ -123,6 +123,25 @@ public final class Utils {
         return result;
 
     }
+    
+    /**
+     * Returns just the directory with the filename removed.
+     * 
+     * @param str original filename
+     * 
+     * @return directory
+     */
+    public static String getDirectory(String str) {
+
+        int index = str.lastIndexOf(File.separator);
+
+        if (index == -1) {
+            return ".";
+        } else {
+            return str.substring(0, index);
+        }
+
+    }
 
     public static List<String> getFullyQualifiedClassNames(String simpleName) {
 
