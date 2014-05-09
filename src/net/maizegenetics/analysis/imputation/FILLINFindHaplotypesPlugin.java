@@ -289,7 +289,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
             unkCnt=countUnknown(calls);//kls
             missingFreq=(double)unkCnt[0]/(double)inAlign.numberOfSites();//kls
             double hetFreq=(double)unkCnt[1]/(double)(inAlign.numberOfSites()-unkCnt[0]);
-            if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq)&&(hits.size()>=this.minTaxaInGroup))) {
+            if(((missingFreq<maximumMissing)&&(hetFreq<maxHetFreq)&&(hits.size()>=(this.minTaxaInGroup-1)))) {
                 int index=(hits.size()*200000)+taxon1;
                 if(verboseOutput && !extendedOutput) System.out.printf("\t\tOutput %s plus %d missingF:%g hetF:%g index: %d %n",inIDG.taxaName(taxon1),
                         hits.size(), missingFreq, hetFreq, index);
