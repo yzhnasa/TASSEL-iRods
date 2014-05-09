@@ -579,15 +579,14 @@ public class GenotypeTableBuilder {
                 return new CoreGenotypeTable(gB.build(), positionList, tl,null,ad);
             }
             case SITE_INC: {
-                //TODO validate sort order, sort if needed
-                PositionList pl=posListBuilder.build();
-                GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(taxaList.numberOfTaxa(),pl.numberOfSites());
-                for (int s=0; s<pl.numberOfSites(); s++) {
+                GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(taxaList.numberOfTaxa(),posListBuilder.size());
+                for (int s=0; s<posListBuilder.size(); s++) {
                     byte[] b=incGeno.get(s);
                     for (int t=0; t<b.length; t++) {
                         gB.setBase(t,s,b[t]);
                     }
                 }
+                PositionList pl=posListBuilder.build(gB);
                 return new CoreGenotypeTable(gB.build(), pl, taxaList);
             }
         }
