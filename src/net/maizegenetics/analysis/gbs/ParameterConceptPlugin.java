@@ -25,11 +25,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JFileChooser;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JComboBox;
 
 import java.io.File;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -131,7 +131,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     }
 
-    private DataSet processData(DataSet input) {
+    protected DataSet processData(DataSet input) {
         return null;
     }
 
@@ -210,11 +210,13 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     public static <T> T convert(String input, Class<T> outputClass) {
         try {
-            return input == null ? null : outputClass.getConstructor(String.class).newInstance(input);
-        } catch (InvocationTargetException nfe) {
+            if (outputClass.isEnum()) {
+                return (T) Enum.valueOf(outputClass.asSubclass(Enum.class), input);
+            } else {
+                return input == null ? null : outputClass.getConstructor(String.class).newInstance(input);
+            }
+        } catch (Exception nfe) {
             throw new IllegalArgumentException("convert: Problem converting: " + input + " to " + outputClass.getName());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("convert: Unknown type: " + outputClass.getName());
         }
     }
 
@@ -340,8 +342,25 @@ public class ParameterConceptPlugin extends AbstractPlugin {
             builder.append(" : ");
             builder.append(current.description());
             if (current.range() != null) {
-                builder.append(" ");
-                builder.append(current.range().toString());
+                if (current.valueType().isEnum()) {
+                    builder.append(" [");
+                    Comparable[] values = current.valueType().getEnumConstants();
+                    for (int i = 0; i < values.length; i++) {
+                        if (i != 0) {
+                            builder.append(" ");
+                        }
+                        builder.append(values[i].toString());
+                    }
+                    builder.append("]");
+                } else {
+                    builder.append(" ");
+                    builder.append(current.range().toString());
+                }
+            }
+            if (current.defaultValue() != null) {
+                builder.append(" (Default: ");
+                builder.append(current.defaultValue());
+                builder.append(")");
             }
             if (current.required()) {
                 builder.append(" (required)");
@@ -411,11 +430,11 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         return this;
     }
 
-    protected <T extends Comparable<T>> ParameterConceptPlugin setParameter(Enum<PARAMETERS> key, T value) {
+    protected <T extends Comparable<T>> ParameterConceptPlugin setParameter(Enum<?> key, T value) {
         return setParameter(key.toString(), value);
     }
 
-    protected <T extends Comparable<T>> ParameterConceptPlugin setParameter(Enum<PARAMETERS> key, String value) {
+    protected <T extends Comparable<T>> ParameterConceptPlugin setParameter(Enum<?> key, String value) {
         return setParameter(key.toString(), value);
     }
 
@@ -439,7 +458,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         return "Casstevens T (2014) TASSEL: Self-Describing Plugins. Publication 1:1.";
     }
 
-    private static final int TEXT_FIELD_WIDTH = 20;
+    private static final int TEXT_FIELD_WIDTH = 25;
 
     boolean parametersIsSet = true;
 
@@ -476,6 +495,9 @@ public class ParameterConceptPlugin extends AbstractPlugin {
                             } else {
                                 setParameter(current.cmdLineName(), Boolean.FALSE);
                             }
+                        } else if (component instanceof JComboBox) {
+                            Enum temp = (Enum) ((JComboBox) component).getSelectedItem();
+                            setParameter(current.cmdLineName(), temp);
                         }
                     }
                 } catch (Exception ex) {
@@ -504,21 +526,33 @@ public class ParameterConceptPlugin extends AbstractPlugin {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         for (final PluginParameterTerry<?> current : getParameterInstances()) {
-            if (current.valueType().isAssignableFrom(Boolean.class)) {
+            if (current.valueType().isEnum()) {
+                JComboBox menu = new JComboBox();
+                Comparable[] values = current.valueType().getEnumConstants();
+                for (Comparable item : values) {
+                    menu.addItem(item);
+                }
+                menu.setSelectedItem(current.value());
+                JPanel temp = new JPanel(new FlowLayout(FlowLayout.CENTER));
+                temp.add(new JLabel(current.guiName()));
+                temp.add(menu);
+                panel.add(temp);
+                parameterFields.put(current.cmdLineName(), menu);
+            } else if (current.valueType().isAssignableFrom(Boolean.class)) {
                 JCheckBox check = new JCheckBox(current.guiName());
                 if (current.value() == Boolean.TRUE) {
                     check.setSelected(true);
                 } else {
                     check.setSelected(false);
                 }
-                JPanel temp = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                JPanel temp = new JPanel(new FlowLayout(FlowLayout.CENTER));
                 temp.add(check);
                 panel.add(temp);
                 parameterFields.put(current.cmdLineName(), check);
             } else {
                 final JTextField field;
                 if ((current.fileType() == PluginParameterTerry.FILE_TYPE.IN) || (current.fileType() == PluginParameterTerry.FILE_TYPE.OUT)) {
-                    field = new JTextField(TEXT_FIELD_WIDTH - 5);
+                    field = new JTextField(TEXT_FIELD_WIDTH - 8);
                 } else {
                     field = new JTextField(TEXT_FIELD_WIDTH);
                 }

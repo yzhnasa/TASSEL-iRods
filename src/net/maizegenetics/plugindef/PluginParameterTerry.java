@@ -18,24 +18,37 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     private final String myCmdLineName;
     private final String myDescription;
     private final Range<T> myRange;
+    private final T myDefaultValue;
     private final T myValue;
     private final boolean myRequired;
     private final Class<T> myClass;
-    public enum FILE_TYPE {NA, IN, OUT};
+
+    public enum FILE_TYPE {
+
+        NA, IN, OUT
+    };
     private final FILE_TYPE myFileType;
 
     private PluginParameterTerry(String guiName, String guiUnits, String cmdLineName,
-            String description, Range<T> range, T value, boolean required, FILE_TYPE fileType, Class<T> type) {
+            String description, Range<T> range, T defaultValue, T value, boolean required, FILE_TYPE fileType, Class<T> type) {
         myGuiName = guiName;
         myUnits = guiUnits;
         myCmdLineName = cmdLineName;
         myDescription = description;
         myRange = range;
-        myValue = value;
+        myDefaultValue = defaultValue;
+        if (value == null) {
+            myValue = defaultValue;
+        } else {
+            myValue = value;
+        }
         if ((myRange != null) && (!myRange.contains(myValue))) {
             throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " value: " + value.toString() + " outside range: " + myRange.toString());
         }
         myRequired = required;
+        if ((myDefaultValue != null) && (myRequired)) {
+            throw new IllegalArgumentException("PluginParameterTerry: init: " + myCmdLineName + " shouldn't have default value and be required.");
+        }
         myClass = type;
         myFileType = fileType;
     }
@@ -49,7 +62,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
      */
     public PluginParameterTerry(PluginParameterTerry<T> oldParameter, T newValue) {
         this(oldParameter.myGuiName, oldParameter.myUnits, oldParameter.myCmdLineName,
-                oldParameter.myDescription, oldParameter.myRange, newValue,
+                oldParameter.myDescription, oldParameter.myRange, oldParameter.myDefaultValue, newValue,
                 oldParameter.myRequired, oldParameter.myFileType, oldParameter.myClass);
     }
 
@@ -76,6 +89,10 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     public T value() {
         return myValue;
     }
+    
+    public T defaultValue() {
+        return myDefaultValue;
+    }
 
     public boolean required() {
         return myRequired;
@@ -84,7 +101,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
     public Class<T> valueType() {
         return myClass;
     }
-    
+
     public FILE_TYPE fileType() {
         return myFileType;
     }
@@ -96,14 +113,14 @@ public class PluginParameterTerry<T extends Comparable<T>> {
         private final String myCmdLineName;
         private String myDescription = "";
         private Range<T> myRange = null;
-        private final T myValue;
+        private final T myDefaultValue;
         private boolean myIsRequired = false;
         private final Class<T> myClass;
         private FILE_TYPE myFileType = FILE_TYPE.NA;
 
         public Builder(Enum cmdLineName, T defaultValue, Class<T> type) {
             myCmdLineName = cmdLineName.toString();
-            myValue = defaultValue;
+            myDefaultValue = defaultValue;
             myClass = type;
         }
 
@@ -131,12 +148,12 @@ public class PluginParameterTerry<T extends Comparable<T>> {
             myGuiName = guiName;
             return this;
         }
-        
+
         public Builder<T> inFile() {
             myFileType = FILE_TYPE.IN;
             return this;
         }
-        
+
         public Builder<T> outFile() {
             myFileType = FILE_TYPE.OUT;
             return this;
@@ -159,7 +176,7 @@ public class PluginParameterTerry<T extends Comparable<T>> {
                 myDescription = myGuiName;
             }
             return new PluginParameterTerry<>(myGuiName, myUnits, myCmdLineName,
-                    myDescription, myRange, myValue, myIsRequired, myFileType, myClass);
+                    myDescription, myRange, myDefaultValue, null, myIsRequired, myFileType, myClass);
         }
     }
 }
