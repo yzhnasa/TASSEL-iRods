@@ -1270,34 +1270,14 @@ public class TasselPipeline implements PluginListener {
                         String possibleClassName = current.substring(1);
                         List<String> matches = Utils.getFullyQualifiedClassNames(possibleClassName);
                         for (String match : matches) {
-                            try {
-                                Class currentMatch = Class.forName(match);
-                                Constructor constructor = currentMatch.getConstructor(Frame.class);
-                                plugin = (Plugin) constructor.newInstance(myMainFrame);
+                            plugin = getPluginInstance(match);
+                            if (plugin != null) {
                                 break;
-                            } catch (NoSuchMethodException nsme) {
-                                myLogger.warn("Self-describing Plugins should implement this constructor: " + current);
-                                myLogger.warn("public Plugin(Frame parentFrame) {");
-                                myLogger.warn("   super(parentFrame, false);");
-                                myLogger.warn("}");
-                            } catch (Exception e) {
-                                // do nothing
                             }
                         }
 
                         if (plugin == null) {
-                            try {
-                                Class possibleClass = Class.forName(possibleClassName);
-                                Constructor constructor = possibleClass.getConstructor(Frame.class);
-                                plugin = (Plugin) constructor.newInstance(myMainFrame);
-                            } catch (NoSuchMethodException nsme) {
-                                myLogger.warn("Self-describing Plugins should implement this constructor: " + current);
-                                myLogger.warn("public Plugin(Frame parentFrame) {");
-                                myLogger.warn("   super(parentFrame, false);");
-                                myLogger.warn("}");
-                            } catch (Exception e) {
-                                // do nothing
-                            }
+                            plugin = getPluginInstance(possibleClassName);
                         }
 
                         if (plugin != null) {
@@ -1325,6 +1305,7 @@ public class TasselPipeline implements PluginListener {
                             try {
                                 plugin.setParameters(result);
                             } catch (Exception e) {
+                                e.printStackTrace();
                                 // Self-describing Plugin Should already output Usage and any other error information.
                                 ExceptionUtils.logExceptionCauses(e, myLogger, Level.ERROR);
                                 System.exit(1);
@@ -1358,11 +1339,34 @@ public class TasselPipeline implements PluginListener {
 
     }
 
+    private Plugin getPluginInstance(String className) {
+        try {
+            Class currentMatch = Class.forName(className);
+            Constructor constructor = currentMatch.getConstructor(Frame.class);
+            return (Plugin) constructor.newInstance(myMainFrame);
+        } catch (Exception ex) {
+            try {
+                Class currentMatch = Class.forName(className);
+                Constructor constructor = currentMatch.getConstructor(Frame.class, boolean.class);
+                return (Plugin) constructor.newInstance(myMainFrame, false);
+            } catch (NoSuchMethodException nsme) {
+                myLogger.warn("Self-describing Plugins should implement this constructor: " + className);
+                myLogger.warn("public Plugin(Frame parentFrame, boolean isInteractive) {");
+                myLogger.warn("   super(parentFrame, isInteractive);");
+                myLogger.warn("}");
+                return null;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+    }
+
     public static String[] addForkFlagsIfNeeded(String[] args) {
         if ((args == null) || (args.length == 0)) {
             return args;
         }
-        
+
         for (String a : args) {
             if (a.toLowerCase().startsWith("-fork") || a.toLowerCase().startsWith("-runfork")) {
                 // If forks included, return arguments unchanged
