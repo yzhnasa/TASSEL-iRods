@@ -207,7 +207,8 @@ public class TagAgainstAnchor {
                 lastTimePoint = this.getCurrentTimeNano();       
                 for (int j = 0; j < actualThreadNum; j++) {
                     mts[j] = new Thread(jobs[j]);
-                    mts[j].start();
+                    //mts[j].start();
+                    mts[j].run();
                 }
                 for (int j = 0; j < actualThreadNum; j++) {
                     try {
@@ -287,8 +288,8 @@ public class TagAgainstAnchor {
         /**tag index of subTBT in block, where taxaCountWithTag > minCount*/
         int[] blockTagIndex;
         
-        int[] blastChr = null;
-        int[] blastPos = null;
+        int[] blockChromosome = null;
+        int[] blockPosition = null;
         int[] refDiv = null;
         long[][] testTag = null;
         long[][] testTagDist = null;
@@ -363,8 +364,8 @@ public class TagAgainstAnchor {
 		}
         
         private void initialize (int blockSize) {
-            blastChr = new int[blockSize];
-            blastPos = new int[blockSize];
+            blockChromosome = new int[blockSize];
+            blockPosition = new int[blockSize];
             refDiv = new int[blockSize];
             testTag = new long[blockSize][];
             testTagDist = new long[blockSize][];
@@ -374,15 +375,15 @@ public class TagAgainstAnchor {
         
         private void populate (int blockSize) {
             for (int i = 0; i < blockSize; i++) {
-                blastChr[i] = Integer.MIN_VALUE;
-                blastPos[i] = Integer.MIN_VALUE;
+                blockChromosome[i] = Integer.MIN_VALUE;
+                blockPosition[i] = Integer.MIN_VALUE;
                 refDiv[i] = Integer.MIN_VALUE;
                 theResults[i] = new double[chromosomeNumber.length][];
             }
         }
         
         @Override
-		public void run() {
+	public void run() {
             long lastTimePoint = getCurrentTimeNano();
 			ArrayList<String> resultList = new ArrayList(); 
             ScanChromosome[] scanOnChr = null;
@@ -406,19 +407,19 @@ public class TagAgainstAnchor {
                 }
                 scanOnChr = new ScanChromosome[chromosomeNumber.length];
                 for (int j = 0; j < chromosomeNumber.length; j++) {
-                    blastChr = new int[blockSize];
-                    blastPos = new int[blockSize];
+                    blockChromosome = new int[blockSize];
+                    blockPosition = new int[blockSize];
                     for (int k = 0; k < blockSize; k++) {
-                        if (blockChr[tagStartIndex+blockStartIndex[i]+k] != chromosomeNumber[j]) {
-                            blastChr[k] = Integer.MIN_VALUE;
-                            blastPos[k] = Integer.MIN_VALUE;
+                        if (blockChr[tagStartIndex+blockStartIndex[i]+blockTagIndex[k]] != chromosomeNumber[j]) {
+                            blockChromosome[k] = Integer.MIN_VALUE;
+                            blockPosition[k] = Integer.MIN_VALUE;
                         }
                         else {
-                            blastChr[k] = blockChr[tagStartIndex+blockStartIndex[i]+k];
-                            blastPos[k] = blockPos[tagStartIndex+blockStartIndex[i]+k];
+                            blockChromosome[k] = blockChr[tagStartIndex+blockStartIndex[i]+blockTagIndex[k]];
+                            blockPosition[k] = blockPos[tagStartIndex+blockStartIndex[i]+blockTagIndex[k]];
                         }
                     }
-                    scanOnChr[j] = new ScanChromosome(testTagDist, theResults, j, chrStartIndex[j], chrEndIndex[j], pThresh, 1, blastPos);
+                    scanOnChr[j] = new ScanChromosome(testTagDist, theResults, j, chrStartIndex[j], chrEndIndex[j], pThresh, 1, blockPosition);
                     scanOnChr[j].scan();
                 }
 
@@ -439,22 +440,24 @@ public class TagAgainstAnchor {
                     long[][] singleTagDist = new long[1][];
                     singleTagDist[0] = testTagDist[j];
                     double[][][] bestResWithNewThreshold=new double[1][1][];
-                    blastChr = new int[1];
-                    blastPos = new int[1];
-                    if (blockChr[tagStartIndex+blockStartIndex[i]+j] != chromosomeNumber[bestAlignment]) {
-                        blastChr[0] = Integer.MIN_VALUE;
-                        blastPos[0] = Integer.MIN_VALUE;
+                    blockChromosome = new int[1];
+                    blockPosition = new int[1];
+                    int blastChr = blockChr[tagStartIndex+blockStartIndex[i]+blockTagIndex[j]];
+                    int blastPos = blockPos[tagStartIndex+blockStartIndex[i]+blockTagIndex[j]];
+                    if (blastChr != chromosomeNumber[bestAlignment]) {
+                        blockChromosome[0] = Integer.MIN_VALUE;
+                        blockPosition[0] = Integer.MIN_VALUE;
                     }
                     else {
-                        blastChr[0] = blockChr[tagStartIndex+blockStartIndex[i]+j];
-                        blastPos[0] = blockPos[tagStartIndex+blockStartIndex[i]+j];
+                        blockChromosome[0] = blastChr;
+                        blockPosition[0] = blastPos;
                     } 
-                    ScanChromosome bestChrNewThres = new ScanChromosome(singleTagDist, bestResWithNewThreshold, 0, chrStartIndex[bestAlignment], chrEndIndex[bestAlignment], pRank[1], 1, blastPos);
+                    ScanChromosome bestChrNewThres = new ScanChromosome(singleTagDist, bestResWithNewThreshold, 0, chrStartIndex[bestAlignment], chrEndIndex[bestAlignment], pRank[1], 1, blockPosition);
                     bestChrNewThres.scan();
                     int countOfSitesBetterThanNextBestChr=(int)bestResWithNewThreshold[0][0][4];
                     if (pRank[0] == 0) pRank[0] = Double.MIN_VALUE; // can't devide by 0
                     
-                    String s=String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%g\t%d\t%d\t%d\t%g\t%g\t%d\t%d\t%d\t%n", BaseEncoder.getSequenceFromLong(testTag[j]), subTBT.getReadCount(blockTagIndex[j]), blastChr[0], blastPos[0], refDiv[j],
+                    String s=String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%g\t%d\t%d\t%d\t%g\t%g\t%d\t%d\t%d\t%n", BaseEncoder.getSequenceFromLong(testTag[j]), subTBT.getReadCount(blockTagIndex[j]), blastChr, blastPos, refDiv[j],
                             (int)bestR[0],(int)bestR[1],(int)bestR[2], bestR[3], (int)bestR[4], subTBT.getNumberOfTaxaWithTag(blockTagIndex[j]),
                             countRealSig, Math.log10(pRank[1]/pRank[0]), Math.log10(pRank[chromosomeNumber.length/2]/pRank[0]), countOfSitesBetterThanNextBestChr,
                             bestChrNewThres.minSigPos[0], bestChrNewThres.maxSigPos[0]);
@@ -692,6 +695,10 @@ public class TagAgainstAnchor {
         }
         long lastTimePoint = System.nanoTime();
         TagBlockPosition tbp = new TagBlockPosition(blockFileS);
+        if (tbp.getBlockPos().length != tbt.getTagCount()) {
+            System.out.println("counts of TBT and TBP don't match. Program stops");
+            System.exit(1);
+        }
         this.blockChr = tbp.getBlockChr();
         this.blockPos = tbp.getBlockPos();
         System.out.println("Loading blocking mapping information took " + String.valueOf(this.getTimeSpanSecond(lastTimePoint)) + " seconds\n");

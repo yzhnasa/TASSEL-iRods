@@ -41,7 +41,7 @@ public class TagBlockPosition {
             topm = new TagsOnPhysicalMapV3(topmFileS);
         }
         else {
-            System.out.println("Input TOPM version value doesn't exist");
+            System.out.println("Input TOPM version value is not supported");
             System.exit(0);
         }
         TagsByTaxaByteHDF5TagGroups tbt = new TagsByTaxaByteHDF5TagGroups (tbtH5FileS);
@@ -110,7 +110,7 @@ public class TagBlockPosition {
     public void readTagBlockPostition (String blockFileS) {
         try {
             DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(blockFileS), 65536));
-            int tagCount = (int)(new File(blockFileS).length()/8);
+            int tagCount = dis.readInt();
             blockChr = new int[tagCount];
             blockPos = new int[tagCount];
             for (int i = 0; i < tagCount; i++) {
@@ -121,6 +121,23 @@ public class TagBlockPosition {
         }
         catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    
+    public void writeTagBlockPosition (String blockFileS, int[] selectIndex) {
+        try {
+            DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(blockFileS), 65536));
+            dos.writeInt(selectIndex.length);
+            for (int i = 0; i < selectIndex.length; i++) {
+                dos.writeInt(blockChr[selectIndex[i]]);
+                dos.writeInt(blockPos[selectIndex[i]]);
+            }
+            dos.flush();
+            dos.close();
+        }
+        catch (Exception e) {
+            System.out.println(e.toString());
+            System.exit(1);
         }
     }
     
