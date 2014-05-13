@@ -943,23 +943,30 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
     }
 
     /**
-     * Fills the variant definition & offset arrays with the value of
-     * "byteMissing".
+     * Sets the variant definition & offset arrays to null for each tag.
      */
     public void clearVariants() {
         for (int i = 0; i < getTagCount(); i++) {
-            Arrays.fill(variantDefs[i], BYTE_MISSING);
-            Arrays.fill(variantOffsets[i], BYTE_MISSING);
+            variantDefs[i] = null;
+            variantOffsets[i] = null;
         }
     }
 
     /**
-     * Fills the variant definition & offset at the given indices with the value
-     * of "byteMissing".
+     * Removes the variant definition & offset at the given indices.
      */
     private void clearVariant(int tag, int variant) {
-        setVariantDef(tag, variant, BYTE_MISSING);
-        setVariantPosOff(tag, variant, BYTE_MISSING);
+        byte[] newDefs = new byte[ variantDefs[tag].length-1 ];
+        byte[] newOffs = new byte[ variantOffsets[tag].length-1 ];
+        int var = 0;
+        for (int v=0; v < variantDefs[tag].length; v++) {
+            if (v != variant) {
+                newDefs[var++] = variantDefs[tag][v];
+                newOffs[var++] = variantOffsets[tag][v];
+            }
+        }
+        variantDefs[tag] = Arrays.copyOf(newDefs, newDefs.length);
+        variantOffsets[tag] = Arrays.copyOf(newOffs, newOffs.length);
     }
 
     /**
