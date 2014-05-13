@@ -3,8 +3,6 @@
  */
 package net.maizegenetics.analysis.gbs;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import net.maizegenetics.analysis.imputation.FILLINImputationPlugin;
 import net.maizegenetics.dna.snp.GenotypeTable;
@@ -89,10 +87,10 @@ public class ProductionPipeline {
     private final Map<String, String> myEmailSubjects = new HashMap<>();
 
     private static final String EXAMPLE_RUN_FILE
-            = "emailHost=appsmtp.mail.cornell.edu\n"
-            + "emailAddress=dek29@cornell.edu\n"
-            + "archiveDirectory=/SSD/prop_pipeline/arcvtmp/\n"
-            + "haplosDirectory=/SSD/haplos/\n"
+            //= "emailHost=appsmtp.mail.cornell.edu\n"
+            //+ "emailAddress=dek29@cornell.edu\n"
+            = "archiveDirectory=/SSD/prop_pipeline/arcvtmp/\n"
+            //+ "haplosDirectory=/SSD/haplos/\n"
             + "inputFolder=/workdir/tassel/tassel4-src/20130716test/raw_seq\n"
             + "enzyme=ApeKI\n"
             + "topmFile=/workdir/tassel/tassel4-src/20130716test/topm/AllZeaGBSv2.6ProdTOPM_20130605.topm.h5\n"
@@ -149,7 +147,7 @@ public class ProductionPipeline {
 
         String currentRunFile = runFile.getAbsolutePath();
         String msgBody = "Starting to run " + currentRunFile + " on server " + myApplicationHost;
-        sendAlertNotification(getEmailSubjectRun(currentRunFile), msgBody);
+        //sendAlertNotification(getEmailSubjectRun(currentRunFile), msgBody);
         String runFileContents = loadRunConfiguration(runFile);
         String todayDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
 
@@ -234,17 +232,16 @@ public class ProductionPipeline {
             String msg = "******* COULD NOT MOVE FILE " + runFile.getAbsolutePath() + " TO " + toFile.getAbsolutePath()
                     + " on server: " + myApplicationHost;
             System.out.println(msg);
-            sendAlertNotification(getEmailSubjectRun(currentRunFile), msg);
+            //sendAlertNotification(getEmailSubjectRun(currentRunFile), msg);
         }
 
         // send email notification that a .run file has been processed
-        SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
-
-        try {
-            sc.sendMessageWithAttachment(getEmailSubjectRun(currentRunFile), emailMsg.toString(), logFile.getAbsolutePath());
-        } catch (javax.mail.MessagingException me) {
-            // do nothing
-        }
+        //SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
+        //try {
+        //    sc.sendMessageWithAttachment(getEmailSubjectRun(currentRunFile), emailMsg.toString(), logFile.getAbsolutePath());
+        //} catch (javax.mail.MessagingException me) {
+        // do nothing
+        //}
     }
 
     /**
@@ -259,16 +256,6 @@ public class ProductionPipeline {
             "-m", myTopmFile
         };
         return args;
-    }
-
-    private String getPipelinePluginArgsString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("-i ").append(myInputFolder);
-        builder.append(" -k ").append(myKeyFile);
-        builder.append(" -e ").append(myEnzyme);
-        builder.append(" -o ").append(myOutputFolder);
-        builder.append(" -m ").append(myTopmFile);
-        return builder.toString();
     }
 
     /**
@@ -289,25 +276,23 @@ public class ProductionPipeline {
             System.out.println("************** Example .properties file: ");
             System.out.println(EXAMPLE_RUN_FILE);
             ioe.printStackTrace();
-            sendAlertNotification(getEmailSubjectApp(), "Properties file could not be loaded: "
-                    + aFileIn + " on server " + myApplicationHost);
+            //sendAlertNotification(getEmailSubjectApp(), "Properties file could not be loaded: "
+            //        + aFileIn + " on server " + myApplicationHost);
             System.exit(1);
         }
 
         // server used for sending email
-        String configurationElement = "emailHost";
-        myEmailHost = props.getProperty(configurationElement, myEmailHost);
-
+        //String configurationElement = "emailHost";
+        //myEmailHost = props.getProperty(configurationElement, myEmailHost);
         // to whom the email notifications should be sent
-        configurationElement = "emailAddress";
-        String address = props.getProperty(configurationElement);
-        if (address != null) {
-            Iterable<String> results = Splitter.on(EMAIL_ADDRESS_DELIMITER).split(address);
-            myRecipientEmailAddresses = Iterables.toArray(results, String.class);
-        }
-
+        //configurationElement = "emailAddress";
+        //String address = props.getProperty(configurationElement);
+        //if (address != null) {
+        //    Iterable<String> results = Splitter.on(EMAIL_ADDRESS_DELIMITER).split(address);
+        //    myRecipientEmailAddresses = Iterables.toArray(results, String.class);
+        //}
         // directory into which the key and run files are placed after being run
-        configurationElement = "archiveDirectory";
+        String configurationElement = "archiveDirectory";
         myArchiveDirectory = props.getProperty(configurationElement);
         String response = testInputDirectory(aFileIn, myArchiveDirectory, configurationElement);
         if (response != null) {
@@ -572,7 +557,7 @@ public class ProductionPipeline {
      * @param subject Subject line of email
      * @param message Message body of email
      */
-    private void sendAlertNotification(String subject, String message) {
+    private void sendAlertXXXNotification(String subject, String message) {
         System.out.println("myEmailHost: " + myEmailHost);
         System.out.println("myRecipientEmailAddresses: " + myRecipientEmailAddresses);
         SMTPClient sc = new SMTPClient(myEmailHost, myRecipientEmailAddresses);
