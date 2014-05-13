@@ -42,11 +42,11 @@ public class TOPMUtils {
 
     public static void writeTOPM(TOPMInterface topm, String filename) {
 
-        filename = Utils.addSuffixIfNeeded(filename, ".topm.h5", new String[]{".topm.bin", ".topm.txt", ".topm.h5"});
+        filename = Utils.addSuffixIfNeeded(filename, ".topm.h5", new String[]{".topm", ".topm.bin", ".topm.txt", ".topm.h5"});
 
         String temp = filename.trim().toLowerCase();
 
-        if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.bin"))) {
+        if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.bin") || temp.endsWith(".topm"))) {
             ((TagsOnPhysicalMap) topm).writeBinaryFile(new File(filename));
         } else if ((topm instanceof TagsOnPhysicalMap) && (temp.endsWith(".topm.txt"))) {
             ((TagsOnPhysicalMap) topm).writeTextFile(new File(filename));
