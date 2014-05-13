@@ -310,7 +310,7 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
     }
 
-    private void printParameterValues() {
+    protected void printParameterValues() {
         StringBuilder builder = new StringBuilder();
         builder.append("\n");
         builder.append(Utils.getBasename(getClass().getName()));
@@ -415,7 +415,6 @@ public class ParameterConceptPlugin extends AbstractPlugin {
 
         PluginParameterTerry<T> parameter = null;
         try {
-            System.out.println("generic: " + getParameterGeneric(key));
             parameter = (PluginParameterTerry<T>) getParameterInstance(key);
             return setParameter(key, convert(value, parameter.valueType()));
         } catch (Exception e) {
