@@ -734,7 +734,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         System.out.println("");
         System.out.println("   Actual Filename: " + actualFileName);
     }
-    private String rawSeqFileNameRegex =
+    public static final String rawSeqFileNameRegex =
             "(?i)" + // case insensitve
             ".*\\.fq" + "$|"
             + ".*\\.fq\\.gz" + "$|"
@@ -747,20 +747,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             + ".*_qseq\\.txt" + "$|"
             + ".*_qseq\\.txt\\.gz" + "$";
     //            \\. denotes escape . so it doesn't mean 'any char'
-    // NOTE: If you add addtional file naming conventions here, you must also
-    //       add them to rawSeqFileNameReplaceRegex immediately below
-    private String rawSeqFileNameReplaceRegex =
-            "(?i)" + // case insensitve
-            "\\.fq" + "$|"
-            + "\\.fq\\.gz" + "$|"
-            + "\\.fastq" + "$|"
-            + "_fastq\\.txt" + "$|"
-            + "_fastq\\.gz" + "$|"
-            + "_fastq\\.txt\\.gz" + "$|"
-            + "_sequence\\.txt" + "$|"
-            + "_sequence\\.txt\\.gz" + "$|"
-            + "_qseq\\.txt" + "$|"
-            + "_qseq\\.txt\\.gz" + "$";
+
     private String noMatchingRawSeqFileNamesMessage =
             "Couldn't find any files that end with "
             + "\".fq\", "
