@@ -80,7 +80,7 @@ public class GenotypeTableBuilder {
     private boolean sortAlphabetically=false;
 
     //Fields for incremental sites
-    private TaxaList taxaList=null;
+    private final TaxaList taxaList;
     private PositionListBuilder posListBuilder=null;
     private boolean isTaxaMerge=false; //if in taxa merge mode, this only works with TAXA_INC build type;//, GENO_EDIT}; //GENO_EDIT is not
     private GenotypeMergeRule mergeRule=null;
@@ -102,6 +102,7 @@ public class GenotypeTableBuilder {
         incDepth=new ArrayList<>();
         incTaxonIndex=new HashMap<>();
         taxaListBuilder=new TaxaListBuilder();
+        this.taxaList = null;
     }
 
     /*
@@ -142,7 +143,7 @@ public class GenotypeTableBuilder {
         }
         this.myBuildType=BuildType.TAXA_INC;
         isHDF5=true;
-        //taxaListBuilder=new TaxaListBuilder();
+        this.taxaList = null;
     }
 
     /**
@@ -439,8 +440,10 @@ public class GenotypeTableBuilder {
     public GenotypeTableBuilder addSite(Position pos, byte[] genos) {
         if((myBuildType!=BuildType.SITE_INC)||isHDF5) throw new IllegalArgumentException("addSite only be used with AlignmentBuilder.getSiteIncremental and without HDF5");
         if(genos.length!=taxaList.numberOfTaxa()) throw new IndexOutOfBoundsException("Number of taxa and genotypes do not agree");
-        posListBuilder.add(pos);
-        incGeno.add(genos);
+        synchronized (taxaList) {
+            posListBuilder.add(pos);
+            incGeno.add(genos);
+        }
         return this;
     }
 
@@ -480,13 +483,15 @@ public class GenotypeTableBuilder {
                 addTaxon(writer, taxon, genos, depth);
             }
         } else {
-            if(isTaxaMerge && incTaxonIndex.containsKey(taxon)) {
-                mergeTaxonInMemory(taxon,genos,depth);
-            }  else {
-                taxaListBuilder.add(taxon);
-                incGeno.add(genos);
-                incDepth.add(depth);
-                incTaxonIndex.put(taxon,incGeno.size()-1);
+            synchronized (taxaListBuilder) {
+                if(isTaxaMerge && incTaxonIndex.containsKey(taxon)) {
+                    mergeTaxonInMemory(taxon,genos,depth);
+                }  else {
+                    taxaListBuilder.add(taxon);
+                    incGeno.add(genos);
+                    incDepth.add(depth);
+                    incTaxonIndex.put(taxon,incGeno.size()-1);
+                }
             }
         }
 
