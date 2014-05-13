@@ -10,6 +10,9 @@ import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import net.maizegenetics.dna.BaseEncoder;
 import net.maizegenetics.util.Tassel5HDF5Constants;
 
 /**
@@ -94,5 +97,26 @@ public abstract class AbstractTagsHDF5 extends AbstractTags implements TagsHDF5 
     @Override
     public void swap(int index1, int index2) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    public void writeToFasta (String outfileS) {
+        try {
+            BufferedWriter bw = new BufferedWriter (new FileWriter(outfileS), 65536);
+            long[] t;
+            for (int i = 0; i < this.getTagCount(); i++) {
+                bw.write(">"+String.valueOf(i));
+                bw.newLine();
+                t = this.getTag(i);
+                bw.write(BaseEncoder.getSequenceFromLong(t).substring(0, this.getTagLength(i)));
+                bw.newLine();
+                if (i%100000 == 1) System.out.println("output " + String.valueOf(i+1) + " tags to Fasta");
+            }
+            bw.flush();
+            bw.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 }

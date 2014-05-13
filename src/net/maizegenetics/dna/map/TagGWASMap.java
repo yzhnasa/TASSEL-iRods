@@ -35,8 +35,77 @@ public class TagGWASMap extends AbstractTagsHDF5 {
         this.readHDF5(tagGWASMapFileS);
     }
     
+    public TagGWASMap (String gwasMappingResultFileS, String tagCountFileS, String tagGWASMapFileS) {
+        this.creatFile(gwasMappingResultFileS, tagCountFileS, tagGWASMapFileS);
+    }
+    
     public TagGWASMap(String gwasMappingFileS, String topmFileS, String tagCountFileS, String tagGWASMapFileS) {
         this.creatFile(gwasMappingFileS, topmFileS, tagCountFileS, tagGWASMapFileS);
+    }
+    
+    private void creatFile (String gwasMappingResultFileS, String tagCountFileS, String tagGWASMapFileS) {
+        try {
+            BufferedReader br = new BufferedReader (new FileReader(gwasMappingResultFileS), 65536);
+            String temp = null;
+            int tagCount = -1;
+            int tagLengthInLong = 0;
+            while ((temp = br.readLine()) != null) {
+                if (tagCount == 0) {
+                    String[] tem = temp.split("\t");
+                    tagLengthInLong = tem[0].length()/BaseEncoder.chunkSize;
+                }
+                tagCount++;
+            }
+            this.initializeMatrix(tagCount, tagLengthInLong);
+            TagCounts tc = new TagCounts(tagCountFileS, FilePacking.Byte);
+            br = new BufferedReader (new FileReader(gwasMappingResultFileS), 65536);
+            br.readLine();
+            int rLen = tagLengthInLong*BaseEncoder.chunkSize;
+            long[] t = new long[tagLengthInLong];
+            int tagIndex;
+            for (int i = 0; i < this.getTagCount(); i++) {
+                temp = br.readLine().substring(0, rLen);
+                t = BaseEncoder.getLongArrayFromSeq(temp);
+                tagIndex = tc.getTagIndex(t);
+                for (int j = 0; j < tagLengthInLong; j++) this.tags[j][i] = t[j];
+                this.tagLength[i] = (byte)tc.getTagLength(tagIndex);
+            }
+            this.initializeHDF5(tagGWASMapFileS);
+            br = new BufferedReader (new FileReader(gwasMappingResultFileS), 65536);
+            br.readLine();
+            String[] tem;
+            int cnt = 0;
+            for (int i = 0; i < this.getBlockNum(); i++) {
+                this.populateBlock(i);
+                for (int j = 0; j < this.getBlockSize() && (i*this.getBlockSize()+j) < this.getTagCount(); j++) {
+                    for (int k = 0; k < this.getTagSizeInLong(); k++)  {
+                        t[k] = this.tags[k][cnt];
+                    }
+                    tem = br.readLine().split("\t");
+                    int readCount = Integer.valueOf(tem[1]);
+                    int gChr = Integer.valueOf(tem[5]);
+                    int gPos = Integer.valueOf(tem[7]);
+                    double gwasPValue = Double.valueOf(tem[8]);
+                    int numSigSite = Integer.valueOf(tem[9]);
+                    int tagTaxaCount = Integer.valueOf(tem[10]);
+                    int numSigChr = Integer.valueOf(tem[11]);
+                    double lRatioSB = Double.valueOf(tem[12]);
+                    if (Double.isInfinite(lRatioSB) || Double.isNaN(lRatioSB)) lRatioSB = 310; // 305 is the max likelihood observed
+                    double lRatioMB = Double.valueOf(tem[13]);
+                    if (Double.isInfinite(lRatioMB) || Double.isNaN(lRatioMB)) lRatioMB = 310; // 305 is the max likelihood observed
+                    int numSiteOnBestChrThanSecondBest = Integer.valueOf(tem[14]);
+                    int sigSiteStart = Integer.valueOf(tem[15]);
+                    int sigSiteEnd = Integer.valueOf(tem[16]);
+                    mapInfo[cnt] = new TagGWASMapInfo(readCount, gChr, gPos, gwasPValue, numSigSite, tagTaxaCount, numSigChr,
+                             lRatioSB, lRatioMB, numSiteOnBestChrThanSecondBest, sigSiteStart, sigSiteEnd);
+                    cnt++;
+                }
+                this.writeBlock(i);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     private void creatFile (String gwasMappingFileS, String topmFileS, String tagCountFileS, String tagGWASMapFileS) {
@@ -65,7 +134,7 @@ public class TagGWASMap extends AbstractTagsHDF5 {
                 t = BaseEncoder.getLongArrayFromSeq(temp);
                 tagIndex = tc.getTagIndex(t);
                 for (int j = 0; j < tagLengthInLong; j++) this.tags[j][i] = t[j];
-                this.tagLength[i] = (byte)tc.getTagLength(i);
+                this.tagLength[i] = (byte)tc.getTagLength(tagIndex);
             }
             this.initializeHDF5(tagGWASMapFileS);
             br = new BufferedReader (new FileReader(gwasMappingFileS), 65536);

@@ -598,7 +598,7 @@ public class AnnotateTOPM {
                     else perfectMatch = 0;
                 }
                 TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
-                long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*32);
+                long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*BaseEncoder.chunkSize);
                 int tagIndex = topm.getTagIndex(seq);
                 if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[1]) {
                     System.out.println("The index of the tag from sam file is out of buffer range. Program quits.");
@@ -693,7 +693,7 @@ public class AnnotateTOPM {
                     else perfectMatch = 0;
                 }
                 TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
-                long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*32);
+                long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*BaseEncoder.chunkSize);
                 int tagIndex = topm.getTagIndex(seq);
                 if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[1]) {
                     System.out.println("The index of the tag from sam file is out of buffer range. Program quits.");
@@ -836,7 +836,7 @@ public class AnnotateTOPM {
                 }
                 TagMappingInfoV3 theTMI = new TagMappingInfoV3(chr, strand, startPos, endPos, divergence, perfectMatch, mappingSource, mappingScore);
                 if (!seqS.equals("*")) {
-                    long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*32);
+                    long[] seq = BaseEncoder.getLongArrayFromSeq(seqS,topm.getTagSizeInLong()*BaseEncoder.chunkSize);
                     tagIndex = topm.getTagIndex(seq);
                     if (tagIndex < this.bufferTagIndexRange[0] || tagIndex >= this.bufferTagIndexRange[1]) {
                         System.out.println("The index of the tag from sam file is out of buffer range. Program quits.");

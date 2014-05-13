@@ -45,8 +45,17 @@ public class TagGWASMapInfo {
     public int sigSiteStart = Integer.MIN_VALUE;
     /**Ending significant site on the best chromosome, inclusive, unknown  = Integer.MIN_VALUE*/
     public int sigSiteEnd = Integer.MIN_VALUE;
+    /**Predicted distance (log10 value) between mapping position and true position.*/
+    public double predictedDistance = Double.NaN;
     
     public TagGWASMapInfo () {}
+    
+    public TagGWASMapInfo (int readCount, int gChr, int gPos, double gwasPValue, int numSigSite, int tagTaxaCount, int numSigChr,
+                             double lRatioSB, double lRatioMB, int numSiteOnBestChrThanSecondBest, int sigSiteStart, int sigSiteEnd) {
+        this.readCount = readCount; this.pChr = pChr; this.pPos = pPos; this.ifMap = ifMap; this.ifRef = ifRef; this.ifUnique = ifUnique; this.gChr = gChr; this.gPos = gPos;
+        this.gwasPValue = gwasPValue; this.numSigSite = numSigSite; this.tagTaxaCount = tagTaxaCount; this.numSigChr = numSigChr; this.lRatioSB = lRatioSB;
+        this.lRatioMB = lRatioMB; this.numSiteOnBestChrThanSecondBest = numSiteOnBestChrThanSecondBest; this.sigSiteStart = sigSiteStart; this.sigSiteEnd = sigSiteEnd;
+    }
     
     public TagGWASMapInfo (int readCount, int pChr, int pPos, boolean ifMap, boolean ifRef, boolean ifUnique, int gChr, int gPos, double gwasPValue, int numSigSite, int tagTaxaCount, int numSigChr,
                              double lRatioSB, double lRatioMB, int numSiteOnBestChrThanSecondBest, int sigSiteStart, int sigSiteEnd) {
