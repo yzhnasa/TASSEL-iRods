@@ -137,9 +137,11 @@ public abstract class AbstractTagsOnPhysicalMap extends AbstractTags implements 
 
     @Override
     public byte[][] getVariantOff() {
-        byte[][] result = new byte[getTagCount()][myMaxVariants];
+        byte[][] result = new byte[getTagCount()][];
         for (int i = 0; i < getTagCount(); i++) {
-            System.arraycopy(variantOffsets[i], 0, result[i], 0, myMaxVariants);
+            for (int j = 0; j < myMaxVariants; j++) {
+                result[i][j] = getVariantPosOff(i, j);
+            }
         }
         return result;
     }
