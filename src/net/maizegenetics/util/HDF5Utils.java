@@ -193,7 +193,7 @@ public final class HDF5Utils {
         String callsPath = Tassel5HDF5Constants.getGenotypesCallsPath(taxon);
         if(!h5w.exists(callsPath)) throw new IllegalStateException("Taxa Calls Do Not Already Exists to replace");
         if(startSite%Tassel5HDF5Constants.BLOCK_SIZE!=0) throw new IllegalStateException("Taxa Calls Start Site not a multiple of the block size");
-        writeHDF5Block(callsPath,h5w,calls.length,startSite/Tassel5HDF5Constants.BLOCK_SIZE,calls);
+        writeHDF5Block(callsPath,h5w,Tassel5HDF5Constants.BLOCK_SIZE,startSite/Tassel5HDF5Constants.BLOCK_SIZE,calls);
     }
 
     public static byte[][] getHDF5GenotypesDepth(IHDF5Reader reader, String taxon) {
