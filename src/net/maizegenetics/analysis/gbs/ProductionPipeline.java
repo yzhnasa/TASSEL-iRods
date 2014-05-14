@@ -9,20 +9,20 @@ import net.maizegenetics.util.Utils;
 import net.maizegenetics.util.DirectoryCrawler;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
+import org.apache.log4j.PropertyConfigurator;
 
 import javax.swing.*;
 import java.awt.*;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import org.apache.log4j.PropertyConfigurator;
 
 /**
  *
@@ -30,7 +30,7 @@ import org.apache.log4j.PropertyConfigurator;
  */
 public class ProductionPipeline extends ParameterConceptPlugin {
 
-    private Logger myLogger = Logger.getLogger(ProductionPipeline.class);
+    private static final Logger myLogger = Logger.getLogger(ProductionPipeline.class);
     private static final SimpleDateFormat LOGGING_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
 
     public enum PARAMETERS {
@@ -129,14 +129,9 @@ public class ProductionPipeline extends ParameterConceptPlugin {
         props.setProperty("log4j.appender.FILE.layout", "org.apache.log4j.TTCCLayout");
         PropertyConfigurator.configure(props);
 
-        try {
-            logFile.createNewFile();
-            myPrintStreamToLog = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFile, true)));
-            System.setOut(myPrintStreamToLog);
-            System.setErr(myPrintStreamToLog);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
+        myPrintStreamToLog = new PrintStream(new ProductionPipelineOutputStream());
+        System.setOut(myPrintStreamToLog);
+        System.setErr(myPrintStreamToLog);
 
     }
 
@@ -160,5 +155,49 @@ public class ProductionPipeline extends ParameterConceptPlugin {
     @Override
     public String getToolTipText() {
         return "Production Pipeline";
+    }
+
+    private class ProductionPipelineOutputStream extends OutputStream {
+
+        private static final int DEFAULT_BUFFER_LENGTH = 2048;
+        private int bufferLength = DEFAULT_BUFFER_LENGTH;
+        private byte[] myBuffer;
+        private int myCounter;
+        private final Level myLevel = Level.DEBUG;
+
+        public ProductionPipelineOutputStream() {
+            myBuffer = new byte[bufferLength];
+            myCounter = 0;
+        }
+
+        @Override
+        public void write(final int b) throws IOException {
+            if (b == 0) {
+                return;
+            }
+            if (myCounter == bufferLength) {
+                final int newBufferLength = bufferLength + DEFAULT_BUFFER_LENGTH;
+                final byte[] temp = new byte[newBufferLength];
+                System.arraycopy(myBuffer, 0, temp, 0, bufferLength);
+                myBuffer = temp;
+                bufferLength = newBufferLength;
+            }
+            myBuffer[myCounter] = (byte) b;
+            myCounter++;
+        }
+
+        @Override
+        public void flush() {
+            if (myCounter == 0) {
+                return;
+            }
+            myLogger.log(myLevel, new String(myBuffer, 0, myCounter));
+            myCounter = 0;
+        }
+
+        @Override
+        public void close() {
+            flush();
+        }
     }
 }
