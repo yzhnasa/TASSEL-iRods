@@ -76,7 +76,8 @@ public class ProductionPipeline extends ParameterConceptPlugin {
             }
 
             myLogger.info("Raw Sequence Files: " + Arrays.deepToString(rawSeqFileNames));
-
+            myLogger.info("Parameters Passed to ProductionSNPCallerPlugin: " + Arrays.deepToString(getPluginArgs()));
+            
             ProductionSNPCallerPlugin plugin = new ProductionSNPCallerPlugin();
             plugin.setParameters(getPluginArgs());
 
