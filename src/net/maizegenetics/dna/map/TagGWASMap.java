@@ -48,7 +48,7 @@ public class TagGWASMap extends AbstractTagsHDF5 {
             BufferedReader br = new BufferedReader (new FileReader(gwasMappingResultFileS), 65536);
             String temp = null;
             int tagCount = -1;
-            int tagLengthInLong = 0;
+            tagLengthInLong = 0;
             while ((temp = br.readLine()) != null) {
                 if (tagCount == 0) {
                     String[] tem = temp.split("\t");
@@ -90,9 +90,11 @@ public class TagGWASMap extends AbstractTagsHDF5 {
                     int tagTaxaCount = Integer.valueOf(tem[10]);
                     int numSigChr = Integer.valueOf(tem[11]);
                     double lRatioSB = Double.valueOf(tem[12]);
-                    if (Double.isInfinite(lRatioSB) || Double.isNaN(lRatioSB)) lRatioSB = 310; // 305 is the max likelihood observed
+                    if (lRatioSB == Double.POSITIVE_INFINITY) lRatioSB = 305; //305 is the max likelihood observed
+                    else if (lRatioSB == Double.NEGATIVE_INFINITY) lRatioSB = -305; //Double.NEGATIVE_INFINITY means P-value on the second best chr is also 0, which indicate strong population structure
                     double lRatioMB = Double.valueOf(tem[13]);
-                    if (Double.isInfinite(lRatioMB) || Double.isNaN(lRatioMB)) lRatioMB = 310; // 305 is the max likelihood observed
+                    if (lRatioMB == Double.POSITIVE_INFINITY) lRatioMB = 305;
+                    else if (lRatioMB == Double.NEGATIVE_INFINITY) lRatioMB = -305;
                     int numSiteOnBestChrThanSecondBest = Integer.valueOf(tem[14]);
                     int sigSiteStart = Integer.valueOf(tem[15]);
                     int sigSiteEnd = Integer.valueOf(tem[16]);
@@ -176,9 +178,11 @@ public class TagGWASMap extends AbstractTagsHDF5 {
                     int tagTaxaCount = Integer.valueOf(tem[10]);
                     int numSigChr = Integer.valueOf(tem[11]);
                     double lRatioSB = Double.valueOf(tem[12]);
-                    if (Double.isInfinite(lRatioSB) || Double.isNaN(lRatioSB)) lRatioSB = 310; // 305 is the max likelihood observed
+                    if (lRatioSB == Double.POSITIVE_INFINITY) lRatioSB = 305; //305 is the max likelihood observed
+                    else if (lRatioSB == Double.NEGATIVE_INFINITY) lRatioSB = -305; //Double.NEGATIVE_INFINITY means P-value on the second best chr is also 0, which indicate strong population structure
                     double lRatioMB = Double.valueOf(tem[13]);
-                    if (Double.isInfinite(lRatioMB) || Double.isNaN(lRatioMB)) lRatioMB = 310; // 305 is the max likelihood observed
+                    if (lRatioMB == Double.POSITIVE_INFINITY) lRatioMB = 305;
+                    else if (lRatioMB == Double.NEGATIVE_INFINITY) lRatioMB = -305;
                     int numSiteOnBestChrThanSecondBest = Integer.valueOf(tem[14]);
                     int sigSiteStart = Integer.valueOf(tem[15]);
                     int sigSiteEnd = Integer.valueOf(tem[16]);
@@ -193,7 +197,41 @@ public class TagGWASMap extends AbstractTagsHDF5 {
             e.printStackTrace();
         }
     }
-
+    
+    public void addAlignment (TagsOnPhysicalMapV3 topm) {
+        Aligner software = Aligner.Bowtie2;
+        int[] mapIndices = topm.getMappingIndicesOfAligner(software);
+        TagMappingInfoV3[] pMaps = new TagMappingInfoV3[mapIndices.length];
+        for (int i = 0; i < this.getTagCount(); i++) {
+            boolean ifMap = false;
+            boolean ifRef = false;
+            boolean ifUnique = false;
+            long[] t =new long[this.getTagSizeInLong()];
+            for (int j = 0; j < this.getTagSizeInLong(); j++)  {
+                t[j] = this.tags[j][i];
+            }
+            int tagIndex = topm.getTagIndex(t);
+            for (int j = 0; j < pMaps.length; j++) {
+                pMaps[j] = topm.getMappingInfo(tagIndex, mapIndices[j]);
+            }
+            int pChr = pMaps[0].chromosome;
+            int pPos = pMaps[0].startPosition;
+            if (pMaps[0].chromosome != Integer.MIN_VALUE) {
+                ifMap = true;
+                if (pMaps[0].perfectMatch == 1) ifRef = true;
+                if (pMaps[1].chromosome == Integer.MIN_VALUE) ifUnique = true;
+            }
+            this.getTagGWASMapInfo(i).setAlignment(pChr, pPos, ifMap, ifRef, ifUnique);
+            if ((i+1)%this.getBlockSize() == 0) {
+                this.writeBlock(this.getCurrentBlockIndex());
+                System.out.println("Added alignment to " + String.valueOf(i+1) + " tags");
+            }
+        }
+        this.writeBlock(this.getCurrentBlockIndex());
+        System.out.println("Added alignment to " + String.valueOf(this.getTagCount()) + " tags");
+        System.out.println("Adding alignment is completed");
+    }
+    
     @Override
     public void initializeHDF5 (String tagGWASMapFileS) {
         IHDF5WriterConfigurator config = HDF5Factory.configure(new File(tagGWASMapFileS));
@@ -221,7 +259,7 @@ public class TagGWASMap extends AbstractTagsHDF5 {
         int tagCount = h5.getIntAttribute(GBSHDF5Constants.ROOT, GBSHDF5Constants.TAGCOUNT);
         tags = h5.readLongMatrix(GBSHDF5Constants.TAGS);
         tagLength = h5.readByteArray(GBSHDF5Constants.TAGLENGTH);
-        this.readBlock(0);
+        this.getTagGWASMapInfo(0);
     }
     
     @Override
@@ -235,11 +273,23 @@ public class TagGWASMap extends AbstractTagsHDF5 {
 
     @Override
     public void readBlock(int blockIndex) {
-        h5.compounds().readArrayBlock(GBSHDF5Constants.MAPBASE, tgType, this.getBlockSize(), blockIndex);
+        this.mapInfo = h5.compounds().readArrayBlock(GBSHDF5Constants.MAPBASE, tgType, this.getBlockSize(), blockIndex);
+        this.currentBlockIndex = blockIndex;
     }
 
     @Override
     public void writeBlock(int blockIndex) {
         h5.compounds().writeArrayBlock(GBSHDF5Constants.MAPBASE, tgType, mapInfo, blockIndex);
+    }
+    
+    public TagGWASMapInfo getTagGWASMapInfo (int tagIndex) {
+        if (this.isInCurrentBlock(tagIndex)) {
+            this.currentIndex = tagIndex;
+        }
+        else {
+            this.readBlock(this.getBlockIndex(tagIndex));
+            this.currentIndex = tagIndex;
+        }
+        return this.mapInfo[this.getCurrentIndexWithinBlock()];
     }
 }

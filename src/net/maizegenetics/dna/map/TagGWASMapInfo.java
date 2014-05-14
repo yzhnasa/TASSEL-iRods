@@ -64,4 +64,20 @@ public class TagGWASMapInfo {
         this.lRatioMB = lRatioMB; this.numSiteOnBestChrThanSecondBest = numSiteOnBestChrThanSecondBest; this.sigSiteStart = sigSiteStart; this.sigSiteEnd = sigSiteEnd;
     }
     
+    public void setAlignment (int pChr, int pPos, boolean ifMap, boolean ifRef, boolean ifUnique) {
+        this.pChr = pChr;
+        this.pPos = pPos;
+        this.ifMap = ifMap;
+        this.ifRef = ifRef;
+        this.ifUnique = ifUnique;
+    }
+    
+    public void setPredictedDistance (double predictedDistance) {
+        this.predictedDistance = predictedDistance;
+    }
+    
+    public boolean isUniqueRef () {
+        if (this.ifRef && this.ifUnique) return true;
+        else return false;
+    }
 }

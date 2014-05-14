@@ -29,11 +29,11 @@ public interface TagsHDF5 {
     public int getBlockNum ();
     
     /**
-     * Returns the block index based on the current record index in a full list
-     * @param currentIndex as the record index in the full list
+     * Returns the block index based on the tag index in a full list
+     * @param tagIndex as the query tag index in the full list
      * @return 
      */
-    public int getBlockIndex (int currentIndex);
+    public int getBlockIndex (int tagIndex);
     
     /**
      * Returns current block index

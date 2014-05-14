@@ -37,8 +37,8 @@ public abstract class AbstractTagsHDF5 extends AbstractTags implements TagsHDF5 
     }
 
     @Override
-    public int getBlockIndex(int currentIndex) {
-        return currentIndex/this.getBlockSize();
+    public int getBlockIndex(int tagIndex) {
+        return tagIndex/this.getBlockSize();
     }
 
     @Override
@@ -71,7 +71,7 @@ public abstract class AbstractTagsHDF5 extends AbstractTags implements TagsHDF5 
     public boolean isInCurrentBlock(int queryIndex) {
         int queryBlockIndex = queryIndex/this.getBlockSize();
         if (queryBlockIndex == currentBlockIndex) return true;
-        return false;
+        else return false;
     }
     
     @Override
