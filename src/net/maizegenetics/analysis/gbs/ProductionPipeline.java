@@ -163,7 +163,6 @@ public class ProductionPipeline extends ParameterConceptPlugin {
         private int bufferLength = DEFAULT_BUFFER_LENGTH;
         private byte[] myBuffer;
         private int myCounter;
-        private final Level myLevel = Level.DEBUG;
 
         public ProductionPipelineOutputStream() {
             myBuffer = new byte[bufferLength];
@@ -191,7 +190,7 @@ public class ProductionPipeline extends ParameterConceptPlugin {
             if (myCounter == 0) {
                 return;
             }
-            myLogger.log(myLevel, new String(myBuffer, 0, myCounter));
+            myLogger.error(new String(myBuffer, 0, myCounter));
             myCounter = 0;
         }
 
