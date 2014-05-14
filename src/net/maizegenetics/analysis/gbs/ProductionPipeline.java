@@ -77,7 +77,7 @@ public class ProductionPipeline extends ParameterConceptPlugin {
 
             myLogger.info("Raw Sequence Files: " + Arrays.deepToString(rawSeqFileNames));
             myLogger.info("Parameters Passed to ProductionSNPCallerPlugin: " + Arrays.deepToString(getPluginArgs()));
-            
+
             ProductionSNPCallerPlugin plugin = new ProductionSNPCallerPlugin();
             plugin.setParameters(getPluginArgs());
 
@@ -118,14 +118,6 @@ public class ProductionPipeline extends ParameterConceptPlugin {
 
         File logFile = new File(myOutputDirectory + "/" + logFileName);
         myLogger.info("Log File: " + logFile.getAbsolutePath());
-        try {
-            logFile.createNewFile();
-            myPrintStreamToLog = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFile, true)));
-            System.setOut(myPrintStreamToLog);
-            System.setErr(myPrintStreamToLog);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
 
         java.util.Properties props = new java.util.Properties();
         props.setProperty("log4j.logger.net.maizegenetics", "DEBUG, FILE");
@@ -136,6 +128,15 @@ public class ProductionPipeline extends ParameterConceptPlugin {
         props.setProperty("log4j.appender.FILE.Append", "true");
         props.setProperty("log4j.appender.FILE.layout", "org.apache.log4j.TTCCLayout");
         PropertyConfigurator.configure(props);
+
+        try {
+            logFile.createNewFile();
+            myPrintStreamToLog = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFile, true)));
+            System.setOut(myPrintStreamToLog);
+            System.setErr(myPrintStreamToLog);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
 
     }
 
