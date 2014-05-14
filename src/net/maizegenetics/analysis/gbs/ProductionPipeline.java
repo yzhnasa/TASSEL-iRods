@@ -9,7 +9,6 @@ import net.maizegenetics.util.Utils;
 import net.maizegenetics.util.DirectoryCrawler;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
 import org.apache.log4j.PropertyConfigurator;
 
 import javax.swing.*;
@@ -190,7 +189,7 @@ public class ProductionPipeline extends ParameterConceptPlugin {
             if (myCounter == 0) {
                 return;
             }
-            myLogger.error(new String(myBuffer, 0, myCounter));
+            myLogger.info(new String(myBuffer, 0, myCounter));
             myCounter = 0;
         }
 
