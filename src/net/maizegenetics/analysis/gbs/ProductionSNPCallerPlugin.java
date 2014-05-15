@@ -152,11 +152,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 throw new IllegalArgumentException(noMatchingRawSeqFileNamesMessage + tempDirectory);
             } else {
                 Arrays.sort(myRawSeqFileNames);
-                myLogger.info("ProductionSNPCallerPlugin:\n\nThe following GBS raw sequence data files were found in the input folder (and sub-folders):");
+                String message = "\nProductionSNPCallerPlugin:\n\nThe following GBS raw sequence data files were found in the input folder (and sub-folders):";
                 for (String filename : myRawSeqFileNames) {
-                    System.out.println("   "+filename);
+                    message+="\n   "+filename;
                 }
-                System.out.println("\n");
+                myLogger.info(message+"\n");
             }
         } else {
             printUsage();
@@ -237,8 +237,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             if ( !seqFilesInKeyAndDir.contains(myRawSeqFileNames[fileNum]) ) continue;  // skip fastq/qseq files that are not in the key file
             int[] counters = {0, 0, 0, 0, 0, 0}; // 0:allReads 1:goodBarcodedReads 2:goodMatched 3:perfectMatches 4:imperfectMatches 5:singleImperfectMatches
-            System.out.println("\nLooking for known SNPs in sequence reads from file:");
-            System.out.println("  "+myRawSeqFileNames[fileNum]+"\n");
+            myLogger.info("\nLooking for known SNPs in sequence reads from file:");
+            myLogger.info("  "+myRawSeqFileNames[fileNum]+"\n");
             previous = System.nanoTime();
             readRawSequencesAndRecordDepth(fileNum, counters);  // TODO: read the machine name from the fastq/qseq file
             current = System.nanoTime();
@@ -278,7 +278,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: setUpBarcodes: " + ((double) (current - previous) / 1_000_000_000.0) +" sec");
         previous = System.nanoTime();
         if (thePBR == null || thePBR.getBarCodeCount() == 0) {
-            System.out.println("No barcodes found. Skipping this raw sequence file.");
+            myLogger.info("No barcodes found. Skipping this raw sequence file.");
             return;
         }
         current = System.nanoTime();
@@ -325,14 +325,15 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             System.out.println("ProductionSNPCallerPlugin: readRawSequencesAndRecordDepth: processSequenceTime: " + ((double) (ifRRNotNullTime) / 1_000_000_000.0) +" sec");
             br.close();
         } catch (Exception e) {
-            System.out.println("Catch in readRawSequencesAndRecordDepth() at nReads=" + counters[0] + " e=" + e);
-            System.out.println("Last line read: "+temp);
+            myLogger.error("Catch in readRawSequencesAndRecordDepth() at nReads=" + counters[0] + " e=" + e);
+            myLogger.error("Last line read: "+temp);
             e.printStackTrace();
+            System.exit(1);
         }
     }
  
     private void reportProgress(int[] counters, long readSeqReadTime, long ifRRNotNullTime) {
-        System.out.println(
+        myLogger.info(
             "totalReads:" + counters[0]
             + "  goodBarcodedReads:" + counters[1]
             + "  goodMatchedToTOPM:" + counters[2]
@@ -345,10 +346,10 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
    
     private void reportTotals(int fileNum, int[] counters, int nFilesProcessed) {
-        System.out.println("Total number of reads in lane=" + counters[0]);
-        System.out.println("Total number of good, barcoded reads=" + counters[1]);
-        System.out.println("Total number of good, barcoded reads matched to the TOPM=" + counters[2]);
-        System.out.println("Finished reading "+nFilesProcessed+" of "+seqFilesInKeyAndDir.size()+" sequence files: "+myRawSeqFileNames[fileNum]+"\n");
+        myLogger.info("Total number of reads in lane=" + counters[0]);
+        myLogger.info("Total number of good, barcoded reads=" + counters[1]);
+        myLogger.info("Total number of good, barcoded reads matched to the TOPM=" + counters[2]);
+        myLogger.info("Finished reading "+nFilesProcessed+" of "+seqFilesInKeyAndDir.size()+" sequence files: "+myRawSeqFileNames[fileNum]+"\n");
     }
     
     private void readKeyFile() {
@@ -371,8 +372,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 currLine++;
             }
         } catch (Exception e) {
-            System.out.println("Couldn't read key file: " + e);
-            System.out.println("Last line read from key file: " + inputLine);
+            myLogger.error("Couldn't read key file: " + e);
+            myLogger.error("Last line read from key file: " + inputLine);
             e.printStackTrace();
             System.exit(1);
         }
@@ -468,7 +469,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             try {
                 throw new IllegalStateException("\nThe key file contains different Sample names (\""+prevSample+"\" and \""+sample+"\") for the sample LibraryPrepID ("+libPrepID+")\n\n");
             } catch (Exception e) {
-                System.out.println("Error in key file: " + e);
+                myLogger.error("Error in key file: " + e);
                 e.printStackTrace();
                 System.exit(1);
             }
@@ -476,36 +477,40 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
     
     private void matchKeyFileToAvailableRawSeqFiles() {
-        System.out.println("\nThe following raw sequence files in the input directory conform to one of our file naming conventions and have corresponding samples in the barcode key file:");
+        String message = 
+            "\nThe following raw sequence files in the input directory conform to one of our file naming conventions and have corresponding samples in the barcode key file:";
         for (int fileNum = 0; fileNum < myRawSeqFileNames.length; fileNum++) {
             String[] flowcellLane = parseRawSeqFileName(myRawSeqFileNames[fileNum]);
             if (flowcellLane != null && flowcellLanesInKey.contains(flowcellLane[0]+"_"+flowcellLane[1])) {
                 seqFileNameToFlowcellLane.put(myRawSeqFileNames[fileNum],flowcellLane[0]+"_"+flowcellLane[1]);
                 seqFilesInKeyAndDir.add(myRawSeqFileNames[fileNum]);
-                System.out.println("  "+myRawSeqFileNames[fileNum]);
+                message += "\n  "+myRawSeqFileNames[fileNum];
             }
         }
-        System.out.println("\n");
+        message += "\n";
+        myLogger.info(message);
     }
 
     private ParseBarcodeRead setUpBarcodes(int fileNum) {
         System.gc();
-        System.out.println("\nWorking on GBS raw sequence file: " + myRawSeqFileNames[fileNum]);
+        String message = "\nWorking on GBS raw sequence file: " + myRawSeqFileNames[fileNum];
         fastq = true;
         if (myRawSeqFileNames[fileNum].substring(myRawSeqFileNames[fileNum].lastIndexOf(File.separator)).contains("qseq")) {
             fastq = false;
         }
         if (fastq) {
-            System.out.println("\tThis file is assumed to be in fastq format");
+            message += "\n\tThis file is assumed to be in fastq format";
         } else {
-            System.out.println("\tThis file contains 'qseq' in its name so is assumed to be in qseq format");
+            message += "\n\tThis file contains 'qseq' in its name so is assumed to be in qseq format";
         }
         String[] flowcellLane = parseRawSeqFileName(myRawSeqFileNames[fileNum]);
         if (flowcellLane == null) {
+            myLogger.info(message);
             return null;
         } else {
             ParseBarcodeRead thePBR = new ParseBarcodeRead(myKeyFile, myEnzyme, flowcellLane[0], flowcellLane[1]);
-            System.out.println("Total barcodes found in key file for this lane:" + thePBR.getBarCodeCount());
+            message += "\nTotal barcodes found in key file for this lane:" + thePBR.getBarCodeCount() +"\n";
+            myLogger.info(message);
             return thePBR;
         }
     }
@@ -534,11 +539,11 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
         genoMergeRule = new BasicGenotypeMergeRule(errorRate);
         File hdf5File = new File(myTargetHDF5file);
         if (hdf5File.exists()) {
-            System.out.println("Genotypes will be added to existing HDF5 file:\n  "+myTargetHDF5file+"\n");
+            myLogger.info("\nGenotypes will be added to existing HDF5 file:\n  "+myTargetHDF5file+"\n");
             genos = GenotypeTableBuilder.mergeTaxaIncremental(myTargetHDF5file, genoMergeRule);
         } else {
-            System.out.println("\nThe target HDF5 file:\n  "+myTargetHDF5file);
-            System.out.println("does not exist. A new HDF5 file of that name will be created \nto hold the genotypes from this run.");
+            myLogger.info("\nThe target HDF5 file:\n  "+myTargetHDF5file+
+            "\ndoes not exist. A new HDF5 file of that name will be created \nto hold the genotypes from this run.");
             genos = GenotypeTableBuilder.getTaxaIncrementalWithMerging(myTargetHDF5file, myPositionList, genoMergeRule);
         }
     }
@@ -572,7 +577,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             }
         }
         PositionList pl=plb.sortPositions().build();
-        System.out.println("In total, the TOPM contains "+chromosomes.length+" chromosomes and "+pl.numberOfSites()+" sites.");
+        myLogger.info("In total, the TOPM contains "+chromosomes.length+" chromosomes and "+pl.numberOfSites()+" sites.");
         return pl;
     }
     
@@ -594,7 +599,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 br = new BufferedReader(new FileReader(myRawSeqFileNames[fileNum]), 65536);
             }
         } catch (Exception e) {
-            System.out.println("Catch in getBufferedReader(): e=" + e);
+            myLogger.error("Catch in getBufferedReader(): e=" + e);
             e.printStackTrace();
         }
         return br;
@@ -615,8 +620,8 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
                 rr = thePBR.parseReadIntoTagAndTaxa(sl, null, false, 0);
             }
         } catch (Exception e) {
-            System.out.println("Catch in readSequenceRead() at nReads=" + counters[0] + " e=" + e);
-            System.out.println(temp);
+            myLogger.error("Catch in readSequenceRead() at nReads=" + counters[0] + " e=" + e);
+            myLogger.error("Last line read:\n"+temp+"\n");
             e.printStackTrace();
         }
         counters[0]++;  // allReads
@@ -655,7 +660,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
     
     private void callGenotypes() {
-        System.out.println("\nCalling genotypes...");
+        myLogger.info("\nCalling genotypes...");
         for (int currTaxonIndex = 0; currTaxonIndex < obsTagsForEachTaxon.length; currTaxonIndex++) {
             IntArrayList currTagList=obsTagsForEachTaxon[currTaxonIndex];
             currTagList.sort();
@@ -679,9 +684,9 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             } else {
                 genos.addTaxon(taxaList.get(currTaxonIndex),taxonGenos,byteDepths);
             }
-            System.out.println("  finished calling genotypes for "+taxaList.get(currTaxonIndex).getName());
+            myLogger.info("  finished calling genotypes for "+taxaList.get(currTaxonIndex).getName());
         }
-        System.out.println("Finished calling genotypes for "+obsTagsForEachTaxon.length+" taxa\n");
+        myLogger.info("Finished calling genotypes for "+obsTagsForEachTaxon.length+" taxa\n");
     }
     
     private byte[] resolveGenosForTaxon(byte[][] depthsForTaxon) {
@@ -699,7 +704,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
     }
     
     private void writeReadsPerSampleReports() {
-        System.out.print("\nWriting ReadsPerSample log file...");
+        myLogger.info("\nWriting ReadsPerSample log file...");
         String outFileS = myOutputDir + myKeyFile.substring(myKeyFile.lastIndexOf(File.separator));
         outFileS = outFileS.replaceAll(".txt", "_ReadsPerSample.log");
         outFileS = outFileS.replaceAll("_key", "");
@@ -711,29 +716,35 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             }
             bw.close();
         } catch (Exception e) {
-            System.out.println("Couldn't write to ReadsPerSample log file: " + e);
+            myLogger.error("Couldn't write to ReadsPerSample log file: " + e);
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.print("   ...done\n");
+        myLogger.info("   ...done\n");
     }
 
     private void printFileNameConventions(String actualFileName) {
-        System.out.println("Error in parsing file name:");
-        System.out.println("   The raw sequence filename does not contain either 3, 4, or 5 underscore-delimited values.");
-        System.out.println("   Acceptable file naming conventions include the following (where FLOWCELL indicates the flowcell name and LANE is an integer):");
-        System.out.println("       FLOWCELL_LANE_fastq.gz");
-        System.out.println("       FLOWCELL_s_LANE_fastq.gz");
-        System.out.println("       code_FLOWCELL_s_LANE_fastq.gz");
-        System.out.println("       FLOWCELL_LANE_fastq.txt.gz");
-        System.out.println("       FLOWCELL_s_LANE_fastq.txt.gz");
-        System.out.println("       code_FLOWCELL_s_LANE_fastq.txt.gz");
-        System.out.println("       FLOWCELL_LANE_qseq.txt.gz");
-        System.out.println("       FLOWCELL_s_LANE_qseq.txt.gz");
-        System.out.println("       code_FLOWCELL_s_LANE_qseq.txt.gz");
-        System.out.println("");
-        System.out.println("   Actual Filename: " + actualFileName);
+        String message =
+        "\n\n"
+        +"Error in parsing file name:"
+        +"\n   The raw sequence filename does not contain either 3, 4, or 5 underscore-delimited values."
+        +"\n   Acceptable file naming conventions include the following (where FLOWCELL indicates the flowcell name and LANE is an integer):"
+        +"\n       FLOWCELL_LANE_fastq.gz"
+        +"\n       FLOWCELL_s_LANE_fastq.gz"
+        +"\n       code_FLOWCELL_s_LANE_fastq.gz"
+        +"\n       FLOWCELL_LANE_fastq.txt.gz"
+        +"\n       FLOWCELL_s_LANE_fastq.txt.gz"
+        +"\n       code_FLOWCELL_s_LANE_fastq.txt.gz"
+        +"\n       FLOWCELL_LANE_qseq.txt.gz"
+        +"\n       FLOWCELL_s_LANE_qseq.txt.gz"
+        +"\n       code_FLOWCELL_s_LANE_qseq.txt.gz"
+        +"\n"
+        +"\n   Actual Filename: " + actualFileName
+        +"\n\n";
+        
+        myLogger.error(message);
     }
+
     public static final String rawSeqFileNameRegex =
             "(?i)" + // case insensitve
             ".*\\.fq" + "$|"
@@ -746,7 +757,7 @@ public class ProductionSNPCallerPlugin extends AbstractPlugin {
             + ".*_sequence\\.txt\\.gz" + "$|"
             + ".*_qseq\\.txt" + "$|"
             + ".*_qseq\\.txt\\.gz" + "$";
-    //            \\. denotes escape . so it doesn't mean 'any char'
+    //                \\. denotes escape . so it doesn't mean 'any char'
 
     private String noMatchingRawSeqFileNamesMessage =
             "Couldn't find any files that end with "
