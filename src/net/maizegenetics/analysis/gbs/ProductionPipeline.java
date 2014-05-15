@@ -59,8 +59,10 @@ public class ProductionPipeline extends ParameterConceptPlugin {
 
     @Override
     public DataSet performFunction(DataSet input) {
-        myOutputDirectory = Utils.getDirectory(myOutputGenotypeFile.value());
-        setupLogfile();
+        if (myOutputGenotypeFile.value() != null) {
+            myOutputDirectory = Utils.getDirectory(myOutputGenotypeFile.value());
+            setupLogfile();
+        }
         myLogger.info(getTimeStamp());
         return super.performFunction(input);
     }
