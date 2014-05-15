@@ -80,4 +80,75 @@ public class TagGWASMapInfo {
         if (this.ifRef && this.ifUnique) return true;
         else return false;
     }
+    
+    public String getBoxcoxAttributesStr (double[] lamdas, String delimiter) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.boxcoxTransform(this.readCount, lamdas[0])).append(delimiter);
+        sb.append(this.boxcoxTransform(this.tagTaxaCount, lamdas[1])).append(delimiter);
+        sb.append(this.boxcoxTransform(this.getMinusLog10PValue(), lamdas[2])).append(delimiter);
+        sb.append(this.boxcoxTransform(this.lRatioSB, lamdas[3])).append(delimiter);
+        sb.append(this.boxcoxTransform(this.lRatioMB, lamdas[4])).append(delimiter);
+        sb.append(this.boxcoxTransform(this.getAdjustedNumSigChr(), lamdas[5])).append(delimiter);
+        sb.append(this.boxcoxTransform(this.getAdjustedNumSigSite(), lamdas[6])).append(delimiter);
+        sb.append(this.boxcoxTransform(this.getAdjustedNumSigSiteBC(), lamdas[7])).append(delimiter);
+        sb.append(this.boxcoxTransform(this.getSigWidthBC(), lamdas[8])).append(delimiter);
+        sb.append(this.getLog10GDist());
+        return sb.toString();
+    }
+    
+    public String getAttributesStr (String delimiter) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.readCount).append(delimiter);
+        sb.append(this.tagTaxaCount).append(delimiter);
+        sb.append(this.getMinusLog10PValue()).append(delimiter);
+        sb.append(this.lRatioSB).append(delimiter);
+        sb.append(this.lRatioMB).append(delimiter);
+        sb.append(this.getAdjustedNumSigChr()).append(delimiter);
+        sb.append(this.getAdjustedNumSigSite()).append(delimiter);
+        sb.append(this.getAdjustedNumSigSiteBC()).append(delimiter);
+        sb.append(this.getSigWidthBC()).append(delimiter);
+        sb.append(this.getLog10GDist());
+        return sb.toString();
+    }
+    
+    private double getMinusLog10PValue () {
+        return -Math.log10(this.gwasPValue);
+    }
+    
+    private int getAdjustedNumSigSiteBC () {
+        if (this.numSiteOnBestChrThanSecondBest == 0) return 1;
+        else return this.numSiteOnBestChrThanSecondBest;
+    }
+    
+    private int getAdjustedNumSigSite () {
+        if (this.numSigSite == 0) return 1;
+        else return this.numSigSite;
+    }
+    
+    private int getAdjustedNumSigChr () {
+        if (this.numSigChr == 0) return 1;
+        else return this.numSigChr;
+    }
+    
+    private int getSigWidthBC () {
+        return Math.abs(this.sigSiteEnd-this.sigSiteStart)+1;
+    }
+    
+    private double getLog10GDist() {
+        if (this.gChr == this.pChr) {
+            return Math.log10(Math.abs(this.gPos-this.pPos));
+        }
+        else {
+            return Math.log10(Integer.MAX_VALUE);
+        }
+    }
+    
+    private double boxcoxTransform (double y, double lambda) {
+        if (lambda != 0) {
+            return (Math.pow(y, lambda)-1)/lambda;
+        }
+        else {
+            return Math.log(y);
+        }
+    }
 }
