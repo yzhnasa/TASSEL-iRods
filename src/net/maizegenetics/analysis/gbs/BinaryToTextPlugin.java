@@ -1,7 +1,9 @@
 /*
- * BinaryToText
+ * BinaryToTextPlugin
  */
 package net.maizegenetics.analysis.gbs;
+
+import com.google.common.collect.Range;
 
 import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.tag.TagCounts;
@@ -9,49 +11,58 @@ import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.dna.tag.TagsByTaxaByte;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.util.ArgsEngine;
+import net.maizegenetics.plugindef.PluginParameter;
+import net.maizegenetics.plugindef.Plugin;
+
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.util.Arrays;
 
 /**
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public class BinaryToTextPlugin extends AbstractPlugin {
 
-    private Logger myLogger = Logger.getLogger(BinaryToTextPlugin.class);
+    private static final Logger myLogger = Logger.getLogger(BinaryToTextPlugin.class);
 
     public static enum FILE_TYPES {
 
-        TOPM, TagCounts, TBTBit, TBTByte
-    };
-    private ArgsEngine myEngine = null;
-    private String myInput;
-    private String myOutput;
-    private FILE_TYPES myType;
+        TOPM, TagCounts, TBTByte
 
-    public BinaryToTextPlugin(Frame parentFrame) {
-        super(parentFrame, false);
+    };
+
+    public enum PARAMETERS {
+
+        inputFile, outputFile, fileType
+    };
+
+    private PluginParameter<String> myInputFile = new PluginParameter.Builder<String>(PARAMETERS.inputFile, null, String.class).required(true).inFile().build();
+    private PluginParameter<String> myOutputFile = new PluginParameter.Builder<String>(PARAMETERS.outputFile, null, String.class).required(true).outFile().build();
+    private PluginParameter<FILE_TYPES> myFileType = new PluginParameter.Builder<FILE_TYPES>(PARAMETERS.fileType, FILE_TYPES.TOPM, FILE_TYPES.class).range(Range.encloseAll(Arrays.asList(FILE_TYPES.values()))).build();
+
+    public BinaryToTextPlugin(Frame parentFrame, boolean isInteractive) {
+        super(parentFrame, isInteractive);
     }
 
     @Override
-    public DataSet performFunction(DataSet input) {
+    public DataSet processData(DataSet input) {
 
-        switch (getType()) {
+        switch (fileType()) {
             case TOPM:
-                TagsOnPhysicalMap topm = new TagsOnPhysicalMap(myInput, true);
-                topm.writeTextFile(new File(myOutput));
+                TagsOnPhysicalMap topm = new TagsOnPhysicalMap(inputFile(), true);
+                topm.writeTextFile(new File(outputFile()));
                 break;
             case TagCounts:
-                TagCounts tc = new TagCounts(myInput, FilePacking.Byte);
-                tc.writeTagCountFile(myOutput, FilePacking.Text, 0);
+                TagCounts tc = new TagCounts(inputFile(), FilePacking.Byte);
+                tc.writeTagCountFile(outputFile(), FilePacking.Text, 0);
                 break;
             case TBTByte:
-                TagsByTaxaByte tbtbyte = new TagsByTaxaByte(myInput, FilePacking.Byte);
-                tbtbyte.writeDistFile(new File(myOutput), FilePacking.Text, 0);
+                TagsByTaxaByte tbtbyte = new TagsByTaxaByte(inputFile(), FilePacking.Byte);
+                tbtbyte.writeDistFile(new File(outputFile()), FilePacking.Text, 0);
                 break;
         }
 
@@ -59,99 +70,45 @@ public class BinaryToTextPlugin extends AbstractPlugin {
 
     }
 
-    @Override
-    public void setParameters(String[] args) {
-        if (args == null || args.length == 0) {
-            printUsage();
-            throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
-        }
-
-        if (myEngine == null) {
-            myEngine = new ArgsEngine();
-            myEngine.add("-i", "--input-file", true);
-            myEngine.add("-o", "--output-file", true);
-            myEngine.add("-t", "--file-type", true);
-        }
-
-        myEngine.parse(args);
-
-        if (myEngine.getBoolean("-i")) {
-            myInput = myEngine.getString("-i");
-        } else {
-            printUsage();
-            throw new IllegalArgumentException("Please specify the input file name.");
-        }
-
-        if (myEngine.getBoolean("-o")) {
-            myOutput = myEngine.getString("-o");
-        } else {
-            printUsage();
-            throw new IllegalArgumentException("Please specify the output file name.");
-        }
-
-        if (myEngine.getBoolean("-t")) {
-            String temp = myEngine.getString("-t");
-            if (temp.equalsIgnoreCase(FILE_TYPES.TOPM.toString())) {
-                setType(FILE_TYPES.TOPM);
-            } else if (temp.equalsIgnoreCase(FILE_TYPES.TagCounts.toString())) {
-                setType(FILE_TYPES.TagCounts);
-            } else if (temp.equalsIgnoreCase(FILE_TYPES.TBTBit.toString())) {
-                setType(FILE_TYPES.TBTBit);
-            } else if (temp.equalsIgnoreCase(FILE_TYPES.TBTByte.toString())) {
-                setType(FILE_TYPES.TBTByte);
-            }
-        } else {
-            printUsage();
-            throw new IllegalArgumentException("Please specify the file type.");
-        }
-
+    public Plugin inputFile(String filename) {
+        setParameter(PARAMETERS.inputFile, filename);
+        return this;
     }
 
-    private void printUsage() {
-        myLogger.info(
-                "\nUsage:\n"
-                + "BinaryToTextPlugin <options>\n"
-                + " -i  Input File Name\n"
-                + " -o  Output File Name\n"
-                + " -t  File Type (TOPM, TagCounts, TBTBit, TBTByte)\n");
+    public String inputFile() {
+        return myInputFile.value();
     }
 
-    public void setInput(String filename) {
-        myInput = filename;
+    public Plugin outputFile(String filename) {
+        setParameter(PARAMETERS.outputFile, filename);
+        return this;
     }
 
-    public String getInput() {
-        return myInput;
+    public String outputFile() {
+        return myOutputFile.value();
     }
 
-    public void setOutput(String filename) {
-        myOutput = filename;
+    public Plugin fileType(FILE_TYPES type) {
+        setParameter(PARAMETERS.fileType, type.toString());
+        return this;
     }
 
-    public String getOutput() {
-        return myOutput;
-    }
-
-    public void setType(FILE_TYPES type) {
-        myType = type;
-    }
-
-    public FILE_TYPES getType() {
-        return myType;
+    public FILE_TYPES fileType() {
+        return myFileType.value();
     }
 
     @Override
     public ImageIcon getIcon() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return null;
     }
 
     @Override
     public String getButtonName() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return "Binary to Text";
     }
 
     @Override
     public String getToolTipText() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return "Binary to Text";
     }
 }

@@ -74,7 +74,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import net.maizegenetics.analysis.data.HetsToUnknownPlugin;
-import net.maizegenetics.analysis.gbs.BinaryToTextPluginNew;
+import net.maizegenetics.analysis.gbs.BinaryToTextPlugin;
 
 /**
  * TASSELMainFrame
@@ -675,7 +675,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         JMenu result = new JMenu("GBS");
         result.setMnemonic(KeyEvent.VK_G);
 
-        result.add(createMenuItem(new BinaryToTextPluginNew(this, true)));
+        result.add(createMenuItem(new BinaryToTextPlugin(this, true)));
 
         return result;
     }

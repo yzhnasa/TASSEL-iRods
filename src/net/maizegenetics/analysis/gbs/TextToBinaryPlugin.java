@@ -18,7 +18,7 @@ import java.io.File;
 
 /**
  *
- * @author terry
+ * @author Terry Casstevens
  */
 public class TextToBinaryPlugin extends AbstractPlugin {
 
@@ -90,8 +90,6 @@ public class TextToBinaryPlugin extends AbstractPlugin {
                 setType(BinaryToTextPlugin.FILE_TYPES.TOPM);
             } else if (temp.equalsIgnoreCase(BinaryToTextPlugin.FILE_TYPES.TagCounts.toString())) {
                 setType(BinaryToTextPlugin.FILE_TYPES.TagCounts);
-            } else if (temp.equalsIgnoreCase(BinaryToTextPlugin.FILE_TYPES.TBTBit.toString())) {
-                setType(BinaryToTextPlugin.FILE_TYPES.TBTBit);
             } else if (temp.equalsIgnoreCase(BinaryToTextPlugin.FILE_TYPES.TBTByte.toString())) {
                 setType(BinaryToTextPlugin.FILE_TYPES.TBTByte);
             }
