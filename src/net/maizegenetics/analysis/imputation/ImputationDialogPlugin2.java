@@ -45,10 +45,10 @@ public class ImputationDialogPlugin2 extends AbstractPlugin {
 
 
 
-        haplotypeParam.add(new PluginParameter.Builder("Maximum output data missing","maxOutMiss", Double.TYPE, 0.6)
-            .description("Maximum frequency of missing data in the output haplotype").range(Range.closed(0.01,1.0)).build());
-        haplotypeParam.add(new PluginParameter.Builder("Maximum output haplotypes","maxHap", Integer.TYPE, 1000)
-                .description("Maximum number of haplotypes per segment").range(Range.closed(0,10000)).build());
+        //haplotypeParam.add(new PluginParameter.Builder("Maximum output data missing","maxOutMiss", Double.TYPE, 0.6)
+        //    .description("Maximum frequency of missing data in the output haplotype").range(Range.closed(0.01,1.0)).build());
+        //haplotypeParam.add(new PluginParameter.Builder("Maximum output haplotypes","maxHap", Integer.TYPE, 1000)
+        //        .description("Maximum number of haplotypes per segment").range(Range.closed(0,10000)).build());
 //
 //        validateFields.put(hap_maxOutMiss, Range.closed(0.01, 1.0));
 //        validateFields.put(hap_maxHap,Range.closed(1,10000));

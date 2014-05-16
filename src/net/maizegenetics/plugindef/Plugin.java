@@ -9,7 +9,6 @@ import net.maizegenetics.util.ProgressListener;
 import javax.swing.*;
 import java.awt.*;
 
-
 /**
  *
  * @author terryc
@@ -33,6 +32,46 @@ public interface Plugin extends PluginListener, ProgressListener, Runnable {
     public DataSet performFunction(DataSet input);
 
     /**
+     * For the new Generic Plugin Parameter design, performFunction() will
+     * automatically call this. Therefore, coders of Plugins should override
+     * this instead of performFunction().
+     *
+     * @param input input
+     *
+     * @return resulting data set or null.
+     */
+    public DataSet processData(DataSet input);
+
+    /**
+     * Returns parameter value for given parameter key.
+     *
+     * @param key key
+     *
+     * @return value
+     */
+    public Comparable getParameter(Enum key);
+
+    /**
+     * Sets parameter value for given parameter key.
+     *
+     * @param key key
+     * @param value value
+     *
+     * @return this plugin
+     */
+    public Plugin setParameter(Enum key, Comparable value);
+
+    /**
+     * Sets parameter value for given parameter key.
+     *
+     * @param key key
+     * @param value value
+     *
+     * @return this plugin
+     */
+    public Plugin setParameter(Enum key, String value);
+
+    /**
      * Sets up this plugin to receive input from another plugin.
      *
      * @param input input
@@ -47,14 +86,15 @@ public interface Plugin extends PluginListener, ProgressListener, Runnable {
     public JPanel getPanel();
 
     /**
-     * If interactive = true, the plugin will create dialogs and panels to interacts with the user
+     * If interactive = true, the plugin will create dialogs and panels to
+     * interacts with the user
      *
      * @return boolean
      */
     public boolean isInteractive();
 
     /**
-     * Parent Frame for this plugin.  Can be null.
+     * Parent Frame for this plugin. Can be null.
      *
      * @return frame
      */
@@ -82,7 +122,7 @@ public interface Plugin extends PluginListener, ProgressListener, Runnable {
     public String getToolTipText();
 
     /**
-     *  Adds listener to this plugin.
+     * Adds listener to this plugin.
      *
      * @param listener listener to add
      */
@@ -103,16 +143,16 @@ public interface Plugin extends PluginListener, ProgressListener, Runnable {
     public boolean cancel();
 
     /**
-     * Allows self-describing Plugins to use args
-     * to set parameters specific to itself.
+     * Allows self-describing Plugins to use args to set parameters specific to
+     * itself.
      *
      * @param args arguments
      */
-    public void setParameters(String [] args);
-    
+    public void setParameters(String[] args);
+
     /**
      * Returns Citation for this plugin.
-     * 
+     *
      * @return Citation
      */
     public String getCitation();

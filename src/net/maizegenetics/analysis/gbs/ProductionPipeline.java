@@ -4,9 +4,10 @@
 package net.maizegenetics.analysis.gbs;
 
 import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.plugindef.PluginParameterTerry;
+import net.maizegenetics.plugindef.PluginParameter;
 import net.maizegenetics.util.Utils;
 import net.maizegenetics.util.DirectoryCrawler;
+import net.maizegenetics.plugindef.AbstractPlugin;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -27,7 +28,7 @@ import java.util.Date;
  *
  * @author Terry Casstevens
  */
-public class ProductionPipeline extends ParameterConceptPlugin {
+public class ProductionPipeline extends AbstractPlugin {
 
     private static final Logger myLogger = Logger.getLogger(ProductionPipeline.class);
     private static final SimpleDateFormat LOGGING_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
@@ -37,17 +38,17 @@ public class ProductionPipeline extends ParameterConceptPlugin {
         inputDirectory, keyFile, enzyme, productionTOPM, outputGenotypeFile, archiveDirectory
     };
 
-    protected PluginParameterTerry<String> myInputDirectory = new PluginParameterTerry.Builder<String>(PARAMETERS.inputDirectory, null, String.class).required(true).inFile()
+    protected PluginParameter<String> myInputDirectory = new PluginParameter.Builder<String>(PARAMETERS.inputDirectory, null, String.class).required(true).inFile()
             .description("Input directory containing fastq AND/OR qseq files").build();
-    protected PluginParameterTerry<String> myKeyFile = new PluginParameterTerry.Builder<String>(PARAMETERS.keyFile, null, String.class).required(true).inFile()
+    protected PluginParameter<String> myKeyFile = new PluginParameter.Builder<String>(PARAMETERS.keyFile, null, String.class).required(true).inFile()
             .description("Barcode Key File").build();
-    protected PluginParameterTerry<String> myEnzyme = new PluginParameterTerry.Builder<String>(PARAMETERS.enzyme, null, String.class).required(true)
+    protected PluginParameter<String> myEnzyme = new PluginParameter.Builder<String>(PARAMETERS.enzyme, null, String.class).required(true)
             .description("Enzyme used to create the GBS library").build();
-    protected PluginParameterTerry<String> myProductionTOPM = new PluginParameterTerry.Builder<String>(PARAMETERS.productionTOPM, null, String.class).required(true).inFile()
+    protected PluginParameter<String> myProductionTOPM = new PluginParameter.Builder<String>(PARAMETERS.productionTOPM, null, String.class).required(true).inFile()
             .description("Physical map file containing tags and corresponding variants (production TOPM)").build();
-    protected PluginParameterTerry<String> myOutputGenotypeFile = new PluginParameterTerry.Builder<String>(PARAMETERS.outputGenotypeFile, null, String.class).required(true).outFile()
+    protected PluginParameter<String> myOutputGenotypeFile = new PluginParameter.Builder<String>(PARAMETERS.outputGenotypeFile, null, String.class).required(true).outFile()
             .description("Output (target) HDF5 genotypes file to add new genotypes to (new file created if it doesn't exist)").build();
-    protected PluginParameterTerry<String> myArchiveDirectory = new PluginParameterTerry.Builder<String>(PARAMETERS.archiveDirectory, null, String.class).required(true).outFile()
+    protected PluginParameter<String> myArchiveDirectory = new PluginParameter.Builder<String>(PARAMETERS.archiveDirectory, null, String.class).required(true).outFile()
             .description("Archive directory where to move processed files").build();
 
     private String myOutputDirectory;

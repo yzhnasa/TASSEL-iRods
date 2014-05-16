@@ -9,8 +9,10 @@ import net.maizegenetics.dna.map.TagsOnPhysicalMap;
 import net.maizegenetics.dna.tag.TagCounts;
 import net.maizegenetics.dna.tag.TagsByTaxa.FilePacking;
 import net.maizegenetics.dna.tag.TagsByTaxaByte;
+import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
-import net.maizegenetics.plugindef.PluginParameterTerry;
+import net.maizegenetics.plugindef.PluginParameter;
+import net.maizegenetics.plugindef.Plugin;
 
 import org.apache.log4j.Logger;
 
@@ -23,13 +25,14 @@ import java.util.Arrays;
  *
  * @author Terry Casstevens
  */
-public class BinaryToTextPluginNew extends ParameterConceptPlugin {
+public class BinaryToTextPluginNew extends AbstractPlugin {
 
-    private Logger myLogger = Logger.getLogger(BinaryToTextPluginNew.class);
+    private static final Logger myLogger = Logger.getLogger(BinaryToTextPluginNew.class);
 
     public static enum FILE_TYPES {
 
         TOPM, TagCounts, TBTByte
+
     };
 
     public enum PARAMETERS {
@@ -37,9 +40,9 @@ public class BinaryToTextPluginNew extends ParameterConceptPlugin {
         inputFile, outputFile, fileType
     };
 
-    protected PluginParameterTerry<String> myInputFile = new PluginParameterTerry.Builder<String>(PARAMETERS.inputFile, null, String.class).required(true).inFile().build();
-    protected PluginParameterTerry<String> myOutputFile = new PluginParameterTerry.Builder<String>(PARAMETERS.outputFile, null, String.class).required(true).outFile().build();
-    protected PluginParameterTerry<FILE_TYPES> myFileType = new PluginParameterTerry.Builder<FILE_TYPES>(PARAMETERS.fileType, FILE_TYPES.TOPM, FILE_TYPES.class).range(Range.encloseAll(Arrays.asList(FILE_TYPES.values()))).build();
+    private PluginParameter<String> myInputFile = new PluginParameter.Builder<String>(PARAMETERS.inputFile, null, String.class).required(true).inFile().build();
+    private PluginParameter<String> myOutputFile = new PluginParameter.Builder<String>(PARAMETERS.outputFile, null, String.class).required(true).outFile().build();
+    private PluginParameter<FILE_TYPES> myFileType = new PluginParameter.Builder<FILE_TYPES>(PARAMETERS.fileType, FILE_TYPES.TOPM, FILE_TYPES.class).range(Range.encloseAll(Arrays.asList(FILE_TYPES.values()))).build();
 
     public BinaryToTextPluginNew(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
@@ -48,18 +51,18 @@ public class BinaryToTextPluginNew extends ParameterConceptPlugin {
     @Override
     public DataSet processData(DataSet input) {
 
-        switch (getType()) {
+        switch (fileType()) {
             case TOPM:
-                TagsOnPhysicalMap topm = new TagsOnPhysicalMap(getInput(), true);
-                topm.writeTextFile(new File(getOutput()));
+                TagsOnPhysicalMap topm = new TagsOnPhysicalMap(inputFile(), true);
+                topm.writeTextFile(new File(outputFile()));
                 break;
             case TagCounts:
-                TagCounts tc = new TagCounts(getInput(), FilePacking.Byte);
-                tc.writeTagCountFile(getOutput(), FilePacking.Text, 0);
+                TagCounts tc = new TagCounts(inputFile(), FilePacking.Byte);
+                tc.writeTagCountFile(outputFile(), FilePacking.Text, 0);
                 break;
             case TBTByte:
-                TagsByTaxaByte tbtbyte = new TagsByTaxaByte(getInput(), FilePacking.Byte);
-                tbtbyte.writeDistFile(new File(getOutput()), FilePacking.Text, 0);
+                TagsByTaxaByte tbtbyte = new TagsByTaxaByte(inputFile(), FilePacking.Byte);
+                tbtbyte.writeDistFile(new File(outputFile()), FilePacking.Text, 0);
                 break;
         }
 
@@ -67,27 +70,30 @@ public class BinaryToTextPluginNew extends ParameterConceptPlugin {
 
     }
 
-    public void setInput(String filename) {
+    public Plugin inputFile(String filename) {
         setParameter(PARAMETERS.inputFile, filename);
+        return this;
     }
 
-    public String getInput() {
+    public String inputFile() {
         return myInputFile.value();
     }
 
-    public void setOutput(String filename) {
+    public Plugin outputFile(String filename) {
         setParameter(PARAMETERS.outputFile, filename);
+        return this;
     }
 
-    public String getOutput() {
+    public String outputFile() {
         return myOutputFile.value();
     }
 
-    public void setType(FILE_TYPES type) {
+    public Plugin fileType(FILE_TYPES type) {
         setParameter(PARAMETERS.fileType, type.toString());
+        return this;
     }
 
-    public FILE_TYPES getType() {
+    public FILE_TYPES fileType() {
         return myFileType.value();
     }
 
