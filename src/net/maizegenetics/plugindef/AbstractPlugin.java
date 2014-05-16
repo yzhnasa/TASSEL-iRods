@@ -154,8 +154,7 @@ abstract public class AbstractPlugin implements Plugin {
             Field field = getParameterField(key);
             return (PluginParameter) field.get(this);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("AbstractPlugin: getParameterInstance: problem with key: " + key);
+            return null;
         }
     }
 
