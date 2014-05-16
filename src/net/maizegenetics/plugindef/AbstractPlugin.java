@@ -262,11 +262,15 @@ abstract public class AbstractPlugin implements Plugin {
     }
 
     protected void printParameterValues() {
+        List<PluginParameter<?>> parameters = getParameterInstances();
+        if ((parameters == null) || (parameters.size() == 0)) {
+            return;
+        }
         StringBuilder builder = new StringBuilder();
         builder.append("\n");
         builder.append(Utils.getBasename(getClass().getName()));
         builder.append(" Parameters\n");
-        for (PluginParameter<?> current : getParameterInstances()) {
+        for (PluginParameter<?> current : parameters) {
             builder.append(current.cmdLineName());
             builder.append(": ");
             builder.append(current.value());
