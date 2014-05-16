@@ -78,6 +78,7 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
             for (int j = 0; j < tagLengthInLong; j++) {
                 tags[j][i] = readList.getTag(i)[j];
             }
+            tagLength[i] = (byte) readList.getTagLength(i);
         }
     }
 
@@ -441,6 +442,14 @@ public class TagsOnPhysicalMap extends AbstractTagsOnPhysicalMap {
         this.mapP[index] = mapP;
     }
 
+    public void setDcoP(int index, byte dcoP) {
+        this.dcoP[index] = dcoP;
+    }
+
+    public void setMultimaps(int index, byte multimaps) {
+        this.multimaps[index] = multimaps;
+    }
+    
     @Override
     public void setMapP(int index, double mapP) {
         if (Double.isInfinite(mapP)) {
