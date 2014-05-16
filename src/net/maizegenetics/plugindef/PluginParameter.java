@@ -119,11 +119,15 @@ public class PluginParameter<T extends Comparable<T>> {
         private FILE_TYPE myFileType = FILE_TYPE.NA;
 
         public Builder(Enum cmdLineName, T defaultValue, Class<T> type) {
+            this(cmdLineName.toString(), defaultValue, type);
+        }
+
+        public Builder(String cmdLineName, T defaultValue, Class<T> type) {
             myCmdLineName = cmdLineName.toString();
             myDefaultValue = defaultValue;
             myClass = type;
         }
-        
+
         public Builder<T> units(String units) {
             myUnits = units;
             return this;
