@@ -492,7 +492,8 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
        if(outFileBase.contains(".gX.")) {
            runFindMergeHaplotypes(hmpFile, outFileBase, errFile, maxDistFromFounder, minSitesPresentPerHap, appoxSitesPerHaplotype);
            return null;
-       }    
+       }
+       System.err.println("Output file(s) must include '.gX.' in the name");
        return null;
     }
 
