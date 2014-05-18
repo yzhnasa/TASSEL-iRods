@@ -270,8 +270,28 @@ class ProcessHapMapBlock implements Runnable {
                             NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i))));
                 }
             }
+            swapSitesIfOutOfOrder(s);
         }
         txtL=null;
+    }
+
+    //Swap adjacent misordered sites, often caused by two sites at the same positions with a different name order
+    private void swapSitesIfOutOfOrder(int site) {
+        if(site<1) return;
+        if(blkPosList.get(site-1).compareTo(blkPosList.get(site))>0) {
+            //swap
+            Position tempP=blkPosList.get(site-1);
+            System.out.println();
+            System.out.print("Swapping:"+tempP.toString()+" <-> "+blkPosList.get(site).toString());
+            blkPosList.set(site - 1, blkPosList.get(site));
+            blkPosList.set(site,tempP);
+            for (int t = 0; t < gTS.getNumRows(); t++) {
+                byte tempG=gTS.get(t, site-1);
+                gTS.set(t, site-1,gTS.get(t,site));
+                gTS.set(t, site,tempG);
+            }
+        }
+
     }
 
     int getSiteNumber() {
