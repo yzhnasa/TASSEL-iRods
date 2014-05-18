@@ -129,11 +129,11 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
 
         propMissing=new double[inAlign.numberOfTaxa()];
         int startBlock=0;
-        int endBlock=inAlign.allelePresenceForAllSites(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords();
-        TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(inAlign, startBlock, endBlock, minSites, maxHetFreq);
+        int lastBlock=inAlign.allelePresenceForAllSites(0, GenotypeTable.WHICH_ALLELE.Major).getNumWords()-1;
+        TreeMap<Integer,Integer> presentRanking=createPresentRankingForWindow(inAlign, startBlock, lastBlock, minSites, maxHetFreq);
         if(verboseOutput) System.out.printf("\tBlock %d Inbred and modest coverage:%d %n",startBlock,presentRanking.size());
-        if(verboseOutput) System.out.printf("\tCurrent Site %d Current block %d EndBlock: %d %n",startSite, startBlock, endBlock);
-        TreeMap<Integer,byte[][]> results=mergeWithinWindow(inAlign, presentRanking, startBlock, endBlock, maxDistance, startSite);
+        if(verboseOutput) System.out.printf("\tCurrent Site %d Current block %d EndBlock: %d %n",startSite, startBlock, lastBlock);
+        TreeMap<Integer,byte[][]> results=mergeWithinWindow(inAlign, presentRanking, startBlock, lastBlock, maxDistance, startSite);
         TaxaListBuilder tLB=new TaxaListBuilder();
         GenotypeCallTableBuilder gB=GenotypeCallTableBuilder.getInstance(results.size(),inAlign.numberOfSites());
         int index=0;
@@ -247,9 +247,9 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
     }
     
     private TreeMap<Integer,byte[][]> mergeWithinWindow(GenotypeTable inAlign, TreeMap<Integer,Integer> presentRanking,
-            int startBlock, int endBlock, double maxDistance, int siteOffsetForError){
-        int startSite=startBlock*64;
-        int endSite=63+(endBlock*64);
+            int firstBlock, int lastBlock, double maxDistance, int siteOffsetForError){
+        int startSite=firstBlock*64;
+        int endSite=63+(lastBlock*64);
         if(endSite>=inAlign.numberOfSites()) endSite=inAlign.numberOfSites()-1;
         TreeMap<Integer,ArrayList> mergeSets=new TreeMap<Integer,ArrayList>();
         TreeMap<Integer,byte[][]> results=new TreeMap<Integer,byte[][]>(Collections.reverseOrder());
@@ -262,7 +262,7 @@ public class FILLINFindHaplotypesPlugin extends AbstractPlugin {
             unmatched.remove(taxon1);
             for(int taxon2 : unmatched) {
                double[] dist=IBSDistanceMatrix.computeHetBitDistances(inAlign, 
-                       taxon1, taxon2, minSitesForSectionComp, startBlock, endBlock, badMask);
+                       taxon1, taxon2, minSitesForSectionComp, firstBlock, lastBlock, badMask);
                if((!Double.isNaN(dist[0]))&&(dist[0]<maxDistance)) {
                    hits.add(taxon2);
                }

@@ -151,7 +151,8 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * 
      * @return array of {distance, number of sites used in comparison}
      */
-    public static double[] computeHetBitDistances(GenotypeTable theTBA, int taxon1, int taxon2, int minSitesCompared, boolean isTrueIBS) {
+    public static double[] computeHetBitDistances(GenotypeTable theTBA, int taxon1, int taxon2, int minSitesCompared,
+                                                  boolean isTrueIBS) {
       //  if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
         long[] iMj = theTBA.allelePresenceForAllSites(taxon1, Major).getBits();
         long[] iMn = theTBA.allelePresenceForAllSites(taxon1, Minor).getBits();
@@ -168,14 +169,14 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @param taxon1 index of taxon 1
      * @param taxon2 index of taxon 2
      * @param minSitesCompared Minimum number of sites needed to estimate distance
-     * @param startWord starting word for calculating distance site=(startWord*64)
-     * @param endWord ending word for calculating distance inclusive site=(endWord*64+63)
+     * @param firstWord starting word for calculating distance site=(firstWord*64)
+     * @param lastWord ending word for calculating distance inclusive site=(lastWord*64+63)
      * @param maskBadSet Optional mask for sites (those set to 1 are kept) 
      * 
      * @return array of {distance, number of sites used in comparison}
      */
     public static double[] computeHetBitDistances(GenotypeTable theTBA, int taxon1, int taxon2, 
-            int minSitesCompared, int startWord, int endWord, BitSet maskBadSet) {
+            int minSitesCompared, int firstWord, int lastWord, BitSet maskBadSet) {
        // if(theTBA.isTBitFriendly()==false) theTBA = AlignmentUtils.optimizeForTaxa(theTBA);
         long[] iMj = theTBA.allelePresenceForAllSites(taxon1, Major).getBits();
         long[] iMn = theTBA.allelePresenceForAllSites(taxon1, Minor).getBits();
@@ -186,8 +187,7 @@ public class IBSDistanceMatrix extends DistanceMatrix {
         }
         long[] jMj = theTBA.allelePresenceForAllSites(taxon2, Major).getBits();
         long[] jMn = theTBA.allelePresenceForAllSites(taxon2, Minor).getBits();
-        return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, 0, iMj.length-1);
-        //return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, startWord, endWord);   //TODO start & endWord not being used
+        return computeHetBitDistances(iMj, iMn, jMj, jMn, minSitesCompared, firstWord, lastWord);   //TODO start & lastWord not being used
     }
     
     /**
@@ -211,13 +211,14 @@ public class IBSDistanceMatrix extends DistanceMatrix {
      * @param jMj Vector of major alleles for taxon j
      * @param jMn Vector of minor alleles for taxon j
      * @param minSitesCompared Minimum number of sites needed to estimate distance
-     * @param endWord ending word for calculating distance inclusive site=(endWord*64+63)
+     * @param firstWord first world for calculating distance
+     * @param lastWord last word for calculating distance inclusive site=(endWord*64+63)
      * @return array of {distance, number of sites used in comparison}
      */
     public static double[] computeHetBitDistances(long[] iMj, long[] iMn, long[] jMj, long[] jMn, 
-            int minSitesCompared, int startWord, int endWord) {
+            int minSitesCompared, int firstWord, int lastWord) {
         int sameCnt = 0, diffCnt = 0, hetCnt = 0;
-        for (int x = startWord; x <= endWord; x++) {
+        for (int x = firstWord; x <= lastWord; x++) {
             long same = (iMj[x] & jMj[x]) | (iMn[x] & jMn[x]);
             long diff = (iMj[x] & jMn[x]) | (iMn[x] & jMj[x]);
             long hets = same & diff;
