@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;

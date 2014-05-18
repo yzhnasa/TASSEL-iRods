@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -10,47 +10,47 @@ import org.apache.log4j.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
-import net.maizegenetics.dna.tag.TagsByTaxaByteHDF5TagGroups;
+import net.maizegenetics.analysis.gbs.TagBlockPosition;
 
 /** 
- * Split large TagsByTaxaByteHDF5TagGroup file into small sub TBTs. Designed to submit genetic mapping jobs in cluster
+ * Split TagBlockPos {@link TagBlockPosition} file into subsets. Designed to submit genetic mapping jobs in cluster
  * 
  * @author Fei Lu
  */
-public class PanASplitTBTPlugin extends AbstractPlugin {
+public class PanASplitTagBlockPosPlugin extends AbstractPlugin {
 
     static long timePoint1;
     private ArgsEngine engine = null;
-    private Logger logger = Logger.getLogger(PanASplitTBTPlugin.class);
+    private Logger logger = Logger.getLogger(PanASplitTagBlockPosPlugin.class);
     
-    String tbtHDF5 = null;
+    String tagBlockFileS = null;
     String outDirS = null;
     int chunkSize = 65536;
 
-    public PanASplitTBTPlugin() {
+    public PanASplitTagBlockPosPlugin() {
         super(null, false);
     }
 
-    public PanASplitTBTPlugin(Frame parentFrame) {
+    public PanASplitTagBlockPosPlugin(Frame parentFrame) {
         super(parentFrame, false);
     }
 
     private void printUsage() {
         logger.info(
                 "\n\nUsage is as follows:\n"
-                + " -i  input TagsByTaxa(TBT) file, TagsByTaxaByteHDF5TagGroups format\n"
-                + " -s  chunkSize, number of tags in a sub TBT. This determines the mapping calculation time usage in a node/computer. Default = 65536\n"        
-                + " -o  output directory of sub TBTs\n");
+                + " -i  input TagBlockPosition file\n"
+                + " -s  chunkSize, number of tag positions in a sub TBP. This should extactly match number of tags in sub TBT. Default = 65536\n"        
+                + " -o  output directory of sub TBPs\n");
     }
 
     public DataSet performFunction(DataSet input) {
-        TagsByTaxaByteHDF5TagGroups tbt = new TagsByTaxaByteHDF5TagGroups (tbtHDF5);
-        int tagNum = tbt.getTagCount();
+        TagBlockPosition tbp = new TagBlockPosition(tagBlockFileS);
+        int tagNum = tbp.getBlockChr().length;
         int fileNum;
         int base = tagNum%chunkSize;
         if (base == 0) fileNum = tagNum/chunkSize;
         else fileNum = tagNum/chunkSize+1;
-        System.out.println("TBT will be split into " + String.valueOf(fileNum) + " subTBTs");
+        System.out.println("TBP will be split into " + String.valueOf(fileNum) + " sub TBPs");
         int big = 10;
         while (fileNum>big) big*=10;
         for (int i = 0; i < fileNum; i++) {
@@ -59,13 +59,14 @@ public class PanASplitTBTPlugin extends AbstractPlugin {
             int actualStart = i*chunkSize;
             int actualEnd = actualStart+actualSize;
             String fileName = "0"+String.valueOf(big+i).substring(1);
-            fileName = "pivotTBT_"+fileName+"_"+String.valueOf(actualStart)+"_"+String.valueOf(actualSize)+".h5";
+            fileName = "TBP_"+fileName+"_"+String.valueOf(actualStart)+"_"+String.valueOf(actualSize)+".bin";
             fileName = new File(outDirS, fileName).getAbsolutePath();
+            
             int[] selectIndex = new int[actualSize];
             for (int j = 0; j < actualSize; j++) {
                 selectIndex[j] = actualStart+j;
             }
-            tbt.writeDistFile(fileName, selectIndex);
+            tbp.writeTagBlockPosition(fileName, selectIndex);
             System.out.println("Completed "+String.valueOf((double)(i+1)/fileNum));
         }
         return null;
@@ -80,14 +81,14 @@ public class PanASplitTBTPlugin extends AbstractPlugin {
         
         if (engine == null) {
             engine = new ArgsEngine();
-            engine.add("-i", "--input-TBT", true);
+            engine.add("-i", "--input-TBP", true);
             engine.add("-s", "--chunk-size", true);
             engine.add("-o", "--output-dir", true);
             engine.parse(args);
         }
 
         if (engine.getBoolean("-i")) {
-            tbtHDF5 = engine.getString("-i");
+            tagBlockFileS = engine.getString("-i");
         }
         else {
             printUsage();

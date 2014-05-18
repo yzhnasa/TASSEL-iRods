@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import net.maizegenetics.analysis.gbs.SimpleGenotypeSBit;
 
 /** 
  * Reformat HDF5 genotype to {@link SimpleGenotypeSBit} anchor.

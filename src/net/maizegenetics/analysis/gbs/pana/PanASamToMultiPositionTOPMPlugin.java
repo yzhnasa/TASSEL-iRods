@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -10,42 +10,48 @@ import org.apache.log4j.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import net.maizegenetics.analysis.gbs.AnnotateTOPM;
+import net.maizegenetics.dna.map.TagGWASMap;
+import net.maizegenetics.dna.map.TagsOnPhysicalMapV3;
 
 /** 
  * Split large TagsByTaxaByteHDF5TagGroup file into small sub TBTs. Designed to submit genetic mapping jobs in cluster
  * 
  * @author Fei Lu
  */
-public class PanAModelTrainingPlugin extends AbstractPlugin {
+public class PanASamToMultiPositionTOPMPlugin extends AbstractPlugin {
 
     static long timePoint1;
     private ArgsEngine engine = null;
-    private Logger logger = Logger.getLogger(PanAModelTrainingPlugin.class);
+    private Logger logger = Logger.getLogger(PanASamToMultiPositionTOPMPlugin.class);
     
-    String trainingSetFileS = null;
-    String wekaPath = null;
-    String modelFileS = null;
-    String reportDirS = null;
+    String samFileS = null;
+    String tagGWASMapFileS = null;
+    String topmV3FileS = null;
+    int maxNumAlignment = 2;
 
-    public PanAModelTrainingPlugin() {
+    public PanASamToMultiPositionTOPMPlugin() {
         super(null, false);
     }
 
-    public PanAModelTrainingPlugin(Frame parentFrame) {
+    public PanASamToMultiPositionTOPMPlugin(Frame parentFrame) {
         super(parentFrame, false);
     }
 
     private void printUsage() {
         logger.info(
                 "\n\nUsage is as follows:\n"
-                + " -t  training data set file, including unique reference tag\n"
-                + " -w  path of weka library file\n"        
-                + " -m  M5 model file\n"
-                + " -r  directory of training report\n");
+                + " -i  bowtie2 alignemnt file in SAM format\n"
+                + " -t  tagGWASMap file\n"        
+                + " -o  output multiple position TOPM file\n");
     }
 
     public DataSet performFunction(DataSet input) {
-           
+        TagGWASMap tgm = new TagGWASMap(this.tagGWASMapFileS); 
+        TagsOnPhysicalMapV3.createFile(tgm, topmV3FileS);
+        TagsOnPhysicalMapV3 topm = new TagsOnPhysicalMapV3(topmV3FileS);
+        AnnotateTOPM anno = new AnnotateTOPM (topm);
+        anno.annotateWithBowtie2(this.samFileS, this.maxNumAlignment);
         return null;
     }
 
@@ -58,44 +64,36 @@ public class PanAModelTrainingPlugin extends AbstractPlugin {
         
         if (engine == null) {
             engine = new ArgsEngine();
-            engine.add("-t", "--training-data", true);
-            engine.add("-w", "--weka-path", true);
-            engine.add("-m", "--output-model", true);
-            engine.add("-r", "--report-dir", true);
+            engine.add("-i", "--sam-file", true);
+            engine.add("-t", "--tagGWASMap-file", true);
+            engine.add("-o", "--topmV3-file", true);
             engine.parse(args);
         }
 
-        if (engine.getBoolean("-t")) {
-            this.trainingSetFileS = engine.getString("-t");
+        if (engine.getBoolean("-i")) {
+            samFileS = engine.getString("-i");
         }
         else {
             printUsage();
             throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
         }
 
-        if (engine.getBoolean("-w")) {
-            this.wekaPath = engine.getString("-w");
+        if (engine.getBoolean("-t")) {
+            tagGWASMapFileS = engine.getString("-t");
         } 
         else {
             printUsage();
             throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
         }
         
-        if (engine.getBoolean("-m")) {
-            modelFileS = engine.getString("-m");
+        if (engine.getBoolean("-o")) {
+            topmV3FileS = engine.getString("-o");
         } 
         else {
             printUsage();
             throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
         }
         
-        if (engine.getBoolean("-r")) {
-            reportDirS = engine.getString("-r");
-        } 
-        else {
-            printUsage();
-            throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
-        }
     }
 
     @Override

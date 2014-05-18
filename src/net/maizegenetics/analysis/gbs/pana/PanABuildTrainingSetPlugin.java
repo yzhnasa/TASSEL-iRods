@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -123,7 +123,6 @@ public class PanABuildTrainingSetPlugin extends AbstractPlugin {
         String cmd = "rscript " + scriptFile.getAbsolutePath();
         Runtime rt = Runtime.getRuntime();
         Process p;
-        int a = 1;
         try {
             p = rt.exec(cmd);
             p.waitFor();

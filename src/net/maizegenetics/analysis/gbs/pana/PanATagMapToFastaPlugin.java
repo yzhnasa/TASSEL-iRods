@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -13,39 +13,37 @@ import java.io.*;
 import net.maizegenetics.dna.map.TagGWASMap;
 
 /** 
- * Convert mapping result to HDF5 {@link TagGWASMap} format
+ * Output sequence in tagMap (e.g. {@link TagGWASMap}) file in Fasta format, which is used in Bowtie2 alignment
  * 
  * @author Fei Lu
  */
-public class PanAMappingResultToTagGWASMapPlugin extends AbstractPlugin {
+public class PanATagMapToFastaPlugin extends AbstractPlugin {
 
     static long timePoint1;
     private ArgsEngine engine = null;
-    private Logger logger = Logger.getLogger(PanAMappingResultToTagGWASMapPlugin.class);
+    private Logger logger = Logger.getLogger(PanATagMapToFastaPlugin.class);
     
-    String mappingResultFileS = null;
-    String tagCountFileS = null;
-    String tagGWASMapFileS = null;
+    String tagMapFileS = null;
+    String fastaFileS = null;
 
-    public PanAMappingResultToTagGWASMapPlugin() {
+    public PanATagMapToFastaPlugin() {
         super(null, false);
     }
 
-    public PanAMappingResultToTagGWASMapPlugin(Frame parentFrame) {
+    public PanATagMapToFastaPlugin(Frame parentFrame) {
         super(parentFrame, false);
     }
 
     private void printUsage() {
         logger.info(
                 "\n\nUsage is as follows:\n"
-                + " -i  tag GWAS mapping result file\n"
-                + " -t  tagCount file\n"        
-                + " -o  output file in tagGWASMap format\n");
+                + " -i  tagMap(e.g. tagGWASMap) file\n"     
+                + " -o  output Fasta format sequence file of tagMap\n");
     }
 
-    @Override
     public DataSet performFunction(DataSet input) {
-        new TagGWASMap (this.mappingResultFileS, this.tagCountFileS, this.tagGWASMapFileS);
+        TagGWASMap tgm = new TagGWASMap(this.tagMapFileS);
+        tgm.writeToFasta(fastaFileS);
         return null;
     }
 
@@ -58,30 +56,21 @@ public class PanAMappingResultToTagGWASMapPlugin extends AbstractPlugin {
         
         if (engine == null) {
             engine = new ArgsEngine();
-            engine.add("-i", "--mapping-result", true);
-            engine.add("-t", "--tagCount-file", true);
-            engine.add("-o", "--tagGWASMap-file", true);
+            engine.add("-i", "--tagMap-file", true);
+            engine.add("-o", "--fasta-file", true);
             engine.parse(args);
         }
 
         if (engine.getBoolean("-i")) {
-            mappingResultFileS = engine.getString("-i");
+            this.tagMapFileS = engine.getString("-i");
         }
-        else {
-            printUsage();
-            throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
-        }
-
-        if (engine.getBoolean("-t")) {
-            tagCountFileS = engine.getString("-t");
-        } 
         else {
             printUsage();
             throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
         }
         
         if (engine.getBoolean("-o")) {
-            tagGWASMapFileS = engine.getString("-o");
+            this.fastaFileS = engine.getString("-o");
         } 
         else {
             printUsage();
