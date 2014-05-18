@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -11,46 +11,41 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import net.maizegenetics.dna.map.TagGWASMap;
-import net.maizegenetics.dna.map.TagsOnPhysicalMapV3;
 
 /** 
- * Split large TagsByTaxaByteHDF5TagGroup file into small sub TBTs. Designed to submit genetic mapping jobs in cluster
+ * Convert mapping result to HDF5 {@link TagGWASMap} format
  * 
  * @author Fei Lu
  */
-public class PanASamToMultiPositionTOPMPlugin extends AbstractPlugin {
+public class PanAMappingResultToTagGWASMapPlugin extends AbstractPlugin {
 
     static long timePoint1;
     private ArgsEngine engine = null;
-    private Logger logger = Logger.getLogger(PanASamToMultiPositionTOPMPlugin.class);
+    private Logger logger = Logger.getLogger(PanAMappingResultToTagGWASMapPlugin.class);
     
-    String samFileS = null;
+    String mappingResultFileS = null;
+    String tagCountFileS = null;
     String tagGWASMapFileS = null;
-    String topmV3FileS = null;
-    int maxNumAlignment = 2;
 
-    public PanASamToMultiPositionTOPMPlugin() {
+    public PanAMappingResultToTagGWASMapPlugin() {
         super(null, false);
     }
 
-    public PanASamToMultiPositionTOPMPlugin(Frame parentFrame) {
+    public PanAMappingResultToTagGWASMapPlugin(Frame parentFrame) {
         super(parentFrame, false);
     }
 
     private void printUsage() {
         logger.info(
                 "\n\nUsage is as follows:\n"
-                + " -i  bowtie2 alignemnt file in SAM format\n"
-                + " -t  tagGWASMap file\n"        
-                + " -o  output multiple position TOPM file\n");
+                + " -i  tag GWAS mapping result file\n"
+                + " -t  tagCount file\n"        
+                + " -o  output file in tagGWASMap format\n");
     }
 
+    @Override
     public DataSet performFunction(DataSet input) {
-        TagGWASMap tgm = new TagGWASMap(this.tagGWASMapFileS); 
-        TagsOnPhysicalMapV3.createFile(tgm, topmV3FileS);
-        TagsOnPhysicalMapV3 topm = new TagsOnPhysicalMapV3(topmV3FileS);
-        AnnotateTOPM anno = new AnnotateTOPM (topm);
-        anno.annotateWithBowtie2(this.samFileS, this.maxNumAlignment);
+        new TagGWASMap (this.mappingResultFileS, this.tagCountFileS, this.tagGWASMapFileS);
         return null;
     }
 
@@ -63,14 +58,14 @@ public class PanASamToMultiPositionTOPMPlugin extends AbstractPlugin {
         
         if (engine == null) {
             engine = new ArgsEngine();
-            engine.add("-i", "--sam-file", true);
-            engine.add("-t", "--tagGWASMap-file", true);
-            engine.add("-o", "--topmV3-file", true);
+            engine.add("-i", "--mapping-result", true);
+            engine.add("-t", "--tagCount-file", true);
+            engine.add("-o", "--tagGWASMap-file", true);
             engine.parse(args);
         }
 
         if (engine.getBoolean("-i")) {
-            samFileS = engine.getString("-i");
+            mappingResultFileS = engine.getString("-i");
         }
         else {
             printUsage();
@@ -78,7 +73,7 @@ public class PanASamToMultiPositionTOPMPlugin extends AbstractPlugin {
         }
 
         if (engine.getBoolean("-t")) {
-            tagGWASMapFileS = engine.getString("-t");
+            tagCountFileS = engine.getString("-t");
         } 
         else {
             printUsage();
@@ -86,7 +81,7 @@ public class PanASamToMultiPositionTOPMPlugin extends AbstractPlugin {
         }
         
         if (engine.getBoolean("-o")) {
-            topmV3FileS = engine.getString("-o");
+            tagGWASMapFileS = engine.getString("-o");
         } 
         else {
             printUsage();
