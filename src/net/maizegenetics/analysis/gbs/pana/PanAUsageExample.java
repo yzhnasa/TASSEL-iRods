@@ -6,26 +6,9 @@
 
 package net.maizegenetics.analysis.gbs.pana;
 
-import gbs.*;
+
 import java.io.File;
 import net.maizegenetics.analysis.gbs.MergeMultipleTagCountPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanAAddPosToTagMapPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanABuildPivotTBTPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanABuildTagBlockPosPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanABuildTrainingSetPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanAFilteringTagMapPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanAH5ToAnchorPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanAMappingResultToTagGWASMapPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanAMergeMappingResultPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanAModelTrainingPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanAPredictionPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanAReadDigestPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanASamToMultiPositionTOPMPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanASplitTBTPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanASplitTagBlockPosPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanATagGWASMappingPlugin;
-import net.maizegenetics.analysis.gbs.pana.PanATagMapToFastaPlugin;
-import net.maizegenetics.analysis.gbs.TagBlockPosition;
 
 /**
  *
@@ -257,6 +240,6 @@ public class PanAUsageExample {
     }
     
     public static void main (String[] args) {
-        new PanATest();
+        new PanAUsageExample();
     }
 }
