@@ -329,7 +329,13 @@ abstract public class AbstractPlugin implements Plugin {
         return getParameterInstance(key.toString()).value();
     }
 
-    private Plugin setParameter(String key, Comparable value) {
+    @Override
+    public Comparable getParameter(String key) {
+        return getParameterInstance(key).value();
+    }
+
+    @Override
+    public Plugin setParameter(String key, Comparable value) {
 
         PluginParameter parameter = null;
         try {
@@ -362,7 +368,8 @@ abstract public class AbstractPlugin implements Plugin {
         return this;
     }
 
-    private Plugin setParameter(String key, String value) {
+    @Override
+    public Plugin setParameter(String key, String value) {
 
         PluginParameter parameter = null;
         try {
