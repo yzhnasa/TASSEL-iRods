@@ -7,6 +7,8 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.SetMultimap;
+import net.maizegenetics.dna.map.Position;
+import net.maizegenetics.dna.snp.GenotypeTable;
 import net.maizegenetics.dna.snp.HapMapHDF5Constants;
 import net.maizegenetics.taxa.Taxon;
 
@@ -226,13 +228,16 @@ public final class HDF5Utils {
         writeHDF5EntireArray(callsPath, h5w, depth[0].length, Tassel5HDF5Constants.BLOCK_SIZE, depth);
     }
 
-
-
     public static void replaceHDF5GenotypesDepth(IHDF5Writer h5w, String taxon, byte[][] depth) {
         if(isHDF5GenotypeLocked(h5w)==true) throw new UnsupportedOperationException("Trying to write to a locked HDF5 file");
         String callsPath = Tassel5HDF5Constants.getGenotypesDepthPath(taxon);
         if(!h5w.exists(callsPath)) throw new IllegalStateException("Taxa Depth Does Not Already Exists to Replace");
         writeHDF5EntireArray(callsPath, h5w, depth[0].length, Tassel5HDF5Constants.BLOCK_SIZE, depth);
+    }
+
+    public static byte[] getHDF5Alleles(IHDF5Reader reader, GenotypeTable.WHICH_ALLELE allele) {
+        return reader.readByteMatrixBlockWithOffset(Tassel5HDF5Constants.ALLELE_FREQ_ORD, 1, getHDF5PositionNumber(reader),
+                (long)allele.index(), 0)[0];
     }
 
 
@@ -250,6 +255,35 @@ public final class HDF5Utils {
     public static void writeHDF5PositionNumSite(IHDF5Writer h5w, int numSites) {
         h5w.setIntAttribute(Tassel5HDF5Constants.POSITION_ATTRIBUTES_PATH, Tassel5HDF5Constants.POSITION_NUM_SITES, numSites);
     }
+
+    public static byte[] getHDF5ReferenceAlleles(IHDF5Reader reader) {
+        return getHDF5Alleles(reader,Tassel5HDF5Constants.REF_ALLELES, 0, getHDF5PositionNumber(reader));
+    }
+
+    public static byte[] getHDF5ReferenceAlleles(IHDF5Reader reader, int startSite, int numSites) {
+        return getHDF5Alleles(reader,Tassel5HDF5Constants.REF_ALLELES, startSite, numSites);
+    }
+
+    public static byte[] getHDF5AncestralAlleles(IHDF5Reader reader) {
+        return getHDF5Alleles(reader,Tassel5HDF5Constants.ANC_ALLELES, 0, getHDF5PositionNumber(reader));
+    }
+
+    public static byte[] getHDF5AncestralAlleles(IHDF5Reader reader, int startSite, int numSites) {
+        return getHDF5Alleles(reader,Tassel5HDF5Constants.ANC_ALLELES, startSite, numSites);
+    }
+
+
+    private static byte[] getHDF5Alleles(IHDF5Reader reader, String allelePath, int startSite, int numSites) {
+        if(reader.exists(allelePath)) {
+            return reader.readByteArrayBlockWithOffset(allelePath, numSites, startSite);
+        }
+        byte[] unknown=new byte[numSites];
+        Arrays.fill(unknown, GenotypeTable.UNKNOWN_ALLELE);
+        return unknown;
+    }
+
+
+
 
   //Writers for these should also be implemented, but there are some data scale issue that they are written in blocks.
     //see public PositionListBuilder(IHDF5Writer h5w, PositionList a)

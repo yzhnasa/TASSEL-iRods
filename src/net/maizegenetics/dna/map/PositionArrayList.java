@@ -36,10 +36,6 @@ final class PositionArrayList implements PositionList {
         this.genomeVersion=genomeVersion;
         this.numPositions=builderList.size();
         alleles=new byte[Allele.COUNT][numPositions];
-//        refAlleles=new byte[numPositions];
-//        majorAlleles=new byte[numPositions];
-//        ancAlleles=new byte[numPositions];
-//        hiDepAlleles=new byte[numPositions];
         ArrayListMultimap<Chromosome,Integer> pTS=ArrayListMultimap.create();
         mySiteList=new ArrayList<Position>(builderList.size());
         myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
@@ -80,20 +76,20 @@ final class PositionArrayList implements PositionList {
     }
 
     @Override
-    public byte referenceAllele(int site) {
-        return mySiteList.get(site).getAllele(Allele.REF);
+    public byte allele(Allele alleleType, int site) {
+        return mySiteList.get(site).getAllele(alleleType);
     }
-    
+
     @Override
-    public byte[] referenceAlleles(int startSite, int endSite) {
+    public byte[] alleles(Allele alleleType, int startSite, int endSite) {
         byte[] result = new byte[endSite - startSite];
-        System.arraycopy(alleles[Allele.REF.index()],startSite,result,0, result.length);
+        System.arraycopy(alleles[alleleType.index()],startSite,result,0, result.length);
         return result;
     }
 
     @Override
-    public byte[] referenceAlleleForAllSites() {
-        return Arrays.copyOf(alleles[Allele.REF.index()],alleles[Allele.REF.index()].length);
+    public byte[] alleleForAllSites(Allele alleleType) {
+        return Arrays.copyOf(alleles[alleleType.index()],alleles[alleleType.index()].length);
     }
 
     @Override

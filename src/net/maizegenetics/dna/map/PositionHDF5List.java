@@ -6,6 +6,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import net.maizegenetics.dna.map.Position.Allele;
 import net.maizegenetics.dna.snp.GenotypeTable;
+import net.maizegenetics.util.HDF5Utils;
 import net.maizegenetics.util.Tassel5HDF5Constants;
 
 import java.lang.reflect.Array;
@@ -22,11 +23,11 @@ import java.util.concurrent.ExecutionException;
 final class PositionHDF5List implements PositionList {
     private final IHDF5Reader reader;
     private final int numPositions;
-//    private final int[] positions;
     private final Map<Chromosome,ChrOffPos> myChrOffPosTree;
     private final Map<String,Chromosome> myChrNameHash;
     private final int[] chrOffsets;  //starting site for each chromosome
     private final Chromosome[] chrIndex;
+    private final byte[][] alleles;  //store reference, major, etc. alleles only fully initialized if requested once.
     private final String genomeVersion;
 
     /*Byte representations of DNA sequences are stored in blocks of 65536 sites*/
@@ -53,8 +54,8 @@ final class PositionHDF5List implements PositionList {
         public Map<Integer, Position> loadAll(Iterable<? extends Integer> keys) throws Exception {
             int key=keys.iterator().next();
             HashMap<Integer, Position> result=new HashMap<Integer, Position>(BLOCKSIZE);
-            byte[][] afOrder;
-            byte[] ref;
+            byte[][] afOrder=new byte[2][];
+            byte[] ref, anc;
             float[] maf;
             float[] paf;
             String[] snpIDs;
@@ -63,14 +64,16 @@ final class PositionHDF5List implements PositionList {
 //           System.out.println("Reading from HDF5 site anno:"+startSite);
             synchronized(reader) {
                 afOrder = reader.readByteMatrixBlockWithOffset(Tassel5HDF5Constants.ALLELE_FREQ_ORD, 2, length, 0l, startSite);
-                if (reader.exists(Tassel5HDF5Constants.REF_ALLELES)) {
-                    ref = reader.readByteArrayBlockWithOffset(Tassel5HDF5Constants.REF_ALLELES,length, startSite);
-                } else {
-                    ref = new byte[length];
-                    for (int i=0; i < length; i++) {
-                        ref[i] = GenotypeTable.UNKNOWN_ALLELE;
-                    }
-                }
+                ref=HDF5Utils.getHDF5ReferenceAlleles(reader,startSite,length);
+                anc=HDF5Utils.getHDF5AncestralAlleles(reader,startSite,length);
+//                if (reader.exists(Tassel5HDF5Constants.REF_ALLELES)) {
+//                    ref = reader.readByteArrayBlockWithOffset(Tassel5HDF5Constants.REF_ALLELES,length, startSite);
+//                } else {
+//                    ref = new byte[length];
+//                    for (int i=0; i < length; i++) {
+//                        ref[i] = GenotypeTable.UNKNOWN_ALLELE;
+//                    }
+//                }
                 maf= reader.readFloatArrayBlockWithOffset(Tassel5HDF5Constants.MAF,length, startSite);
                 paf= reader.readFloatArrayBlockWithOffset(Tassel5HDF5Constants.SITECOV,length, startSite);
                 snpIDs=reader.readStringArrayBlockWithOffset(Tassel5HDF5Constants.SNP_IDS,length, startSite);
@@ -85,6 +88,7 @@ final class PositionHDF5List implements PositionList {
                         .allele(Allele.GLBMAJ,afOrder[0][i])
                         .allele(Allele.GLBMIN,afOrder[1][i])
                         .allele(Allele.REF, ref[i])
+                        .allele(Allele.ANC, anc[i])
                         .maf(maf[i])
                         .siteCoverage(paf[i])
                         .build();
@@ -114,14 +118,15 @@ final class PositionHDF5List implements PositionList {
         }
         int[] variableSites = reader.readIntArray(Tassel5HDF5Constants.POSITIONS);
         this.numPositions=variableSites.length;
+        alleles=new byte[Allele.COUNT][];//only fully initialized if requested
         String[] lociStrings = reader.readStringArray(Tassel5HDF5Constants.CHROMOSOMES);
-        ArrayList<Chromosome> chrs=new ArrayList<Chromosome>();
+        ArrayList<Chromosome> chrs=new ArrayList<>();
         for (String ls : lociStrings) {
             chrs.add(new Chromosome(ls));
         }
         int[] locusIndices = reader.readIntArray(Tassel5HDF5Constants.CHROMOSOME_INDICES);
-        myChrOffPosTree=new TreeMap<Chromosome,ChrOffPos>();
-        myChrNameHash=new HashMap<String,Chromosome>();
+        myChrOffPosTree=new TreeMap<>();
+        myChrNameHash=new HashMap<>();
         int currStart=0;
         int currLocusIndex=locusIndices[0];
         chrOffsets=new int[chrs.size()];
@@ -147,10 +152,32 @@ final class PositionHDF5List implements PositionList {
                 .build(annoPosLoader);
     }
 
+    private void loadAllele(Allele alleleType) {
+        if(alleles[alleleType.index()]==null) {
+            switch (alleleType) {
+                case REF:
+                    alleles[alleleType.index()]=HDF5Utils.getHDF5ReferenceAlleles(reader);
+                    break;
+                case GLBMAJ:
+                    alleles[alleleType.index()]=HDF5Utils.getHDF5Alleles(reader, GenotypeTable.WHICH_ALLELE.Major);
+                    break;
+                case GLBMIN:
+                    alleles[alleleType.index()]=HDF5Utils.getHDF5Alleles(reader, GenotypeTable.WHICH_ALLELE.Minor);
+                    break;
+                case ANC:
+                    alleles[alleleType.index()]=HDF5Utils.getHDF5AncestralAlleles(reader);
+                    break;
+                case HIDEP:
+                    break;
+            }
+        }
+
+    }
+
     @Override
-    public byte referenceAllele(int site) {
+    public byte allele(Allele alleleType, int site) {
         try {
-            return mySiteList.get(site).getAllele(Allele.REF);
+            return mySiteList.get(site).getAllele(alleleType);
         } catch (ExecutionException e) {
             e.printStackTrace();
             return GenotypeTable.UNKNOWN_ALLELE;
@@ -158,18 +185,16 @@ final class PositionHDF5List implements PositionList {
     }
 
     @Override
-    public byte[] referenceAlleles(int startSite, int endSite) {
-        throw new UnsupportedOperationException("Not implemented yet.");
-//        byte[] result = new byte[endSite - startSite];
-//        //System.arraycopy(refAlleles,startSite,result,0, result.length);
-//        return result;
+    public byte[] alleles(Allele alleleType, int startSite, int endSite) {
+        byte[] result = new byte[endSite - startSite];
+        System.arraycopy(alleleForAllSites(alleleType),startSite,result,0, result.length);
+        return result;
     }
 
     @Override
-    public byte[] referenceAlleleForAllSites() {
-        throw new UnsupportedOperationException("Not implemented yet.");
-      //  return null;
-       // return Arrays.copyOf(refAlleles,refAlleles.length);
+    public byte[] alleleForAllSites(Allele alleleType) {
+        if(alleles[alleleType.index()]==null) {loadAllele(alleleType);}
+        return alleles[alleleType.index()];
     }
 
     @Override

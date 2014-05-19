@@ -212,6 +212,7 @@ public class PositionListBuilder {
         h5w.createIntArray(Tassel5HDF5Constants.CHROMOSOME_INDICES, a.numberOfSites(),Tassel5HDF5Constants.intDeflation);
         h5w.createIntArray(Tassel5HDF5Constants.POSITIONS, a.numberOfSites(), Tassel5HDF5Constants.intDeflation);
         h5w.createIntArray(Tassel5HDF5Constants.REF_ALLELES, a.numberOfSites(), Tassel5HDF5Constants.intDeflation);
+        h5w.createIntArray(Tassel5HDF5Constants.ANC_ALLELES, a.numberOfSites(), Tassel5HDF5Constants.intDeflation);
 
         //This is written in blocks to deal with datasets in the scale for 50M positions
         int blocks=((a.numberOfSites()-1)/blockSize)+1;
@@ -222,17 +223,20 @@ public class PositionListBuilder {
             int[] locusIndicesArray = new int[length];
             int[] positions=new int[length];
             byte[] refAlleles = new byte[length];
+            byte[] ancAlleles = new byte[length];
             for (int i=0; i<length; i++) {
                 Position gp=a.get(i+startPos);
                 snpIDs[i]=gp.getSNPID();
                 locusIndicesArray[i] = locusToIndex.get(gp.getChromosome());
                 positions[i]=gp.getPosition();
                 refAlleles[i]=gp.getAllele(Position.Allele.REF);
+                ancAlleles[i]=gp.getAllele(Position.Allele.ANC);
             }
             HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.SNP_IDS,h5w,blockSize,block,snpIDs);
             HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.CHROMOSOME_INDICES,h5w,blockSize,block,locusIndicesArray);
             HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.POSITIONS,h5w,blockSize,block,positions);
             HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.REF_ALLELES, h5w, blockSize, block, refAlleles);
+            HDF5Utils.writeHDF5Block(Tassel5HDF5Constants.ANC_ALLELES, h5w, blockSize, block, ancAlleles);
         }
         this.reader = h5w;
         isHDF5=true;

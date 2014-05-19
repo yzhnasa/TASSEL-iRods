@@ -2,6 +2,7 @@ package net.maizegenetics.dna.map;
 
 import net.maizegenetics.dna.snp.GenotypeTable;
 import java.util.List;
+import static net.maizegenetics.dna.map.Position.Allele;
 
 /**
  * List of positions in the genome. This type is used by every
@@ -11,7 +12,6 @@ import java.util.List;
  * @author Terry Casstevens and Ed Buckler
  */
 public interface PositionList extends List<Position> {
-
     /**
      * Return the (haploid) reference allele at given site.
      *
@@ -19,7 +19,7 @@ public interface PositionList extends List<Position> {
      *
      * @return byte from 0-15
      */
-    public byte referenceAllele(int site);
+    public byte allele(Allele alleleType, int site);
 
     /**
      * Returns reference sequence alleles in specified range.
@@ -30,14 +30,41 @@ public interface PositionList extends List<Position> {
      *
      * @return reference sequence of haploid allele values.
      */
-    public byte[] referenceAlleles(int startSite, int endSite);
+    public byte[] alleles(Allele alleleType, int startSite, int endSite);
 
     /**
-     * Returns reference sequence alleles. One haploid allele for each site.
+     * Returns sequence alleles. One haploid allele for each site.
      *
      * @return reference sequence of haploid allele values.
      */
-    public byte[] referenceAlleleForAllSites();
+    public byte[] alleleForAllSites(Allele alleleType);
+
+//    /**
+//     * Return the (haploid) reference allele at given site.
+//     *
+//     * @param site site
+//     *
+//     * @return byte from 0-15
+//     */
+//    public byte referenceAllele(int site);
+//
+//    /**
+//     * Returns reference sequence alleles in specified range.
+//     * End site not included. One haploid allele for each site.
+//     *
+//     * @param startSite start site
+//     * @param endSite end site (not included in result)
+//     *
+//     * @return reference sequence of haploid allele values.
+//     */
+//    public byte[] referenceAlleles(int startSite, int endSite);
+//
+//    /**
+//     * Returns reference sequence alleles. One haploid allele for each site.
+//     *
+//     * @return reference sequence of haploid allele values.
+//     */
+//    public byte[] referenceAlleleForAllSites();
 
     /**
      * Return whether this alignment has defined reference sequence.
