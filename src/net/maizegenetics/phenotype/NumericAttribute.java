@@ -1,10 +1,18 @@
 package net.maizegenetics.phenotype;
 
-public class NumericAttribute implements PhenotypeAttribute {
-	private String name;
-	private float[] values;
-	private boolean[] missing;
+import net.maizegenetics.util.BitSet;
 
+public class NumericAttribute implements PhenotypeAttribute {
+	private final String name;
+	private final float[] values;
+	private final BitSet missing;
+
+	public NumericAttribute(String name, float[] values, BitSet missing) {
+		this.name = name;
+		this.values = values;
+		this.missing = missing;
+	}
+	
 	public float getFloatValue(int obs) {
 		return values[obs];
 	}
@@ -25,11 +33,11 @@ public class NumericAttribute implements PhenotypeAttribute {
 
 	@Override
 	public boolean isMissing(int obs) {
-		return missing[obs];
+		return missing.fastGet(obs);
 	}
 
 	@Override
-	public boolean[] getMissing() {
+	public BitSet getMissing() {
 		return missing;
 	}
 

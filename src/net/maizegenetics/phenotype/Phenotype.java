@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.maizegenetics.taxa.TaxaList;
+import net.maizegenetics.taxa.TaxaListBuilder;
 import net.maizegenetics.util.TableReport;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -15,7 +16,7 @@ public class Phenotype implements TableReport {
 	private TaxaList myTaxaList;
 	private int numberOfAttributes;
 	private int numberOfObservations;
-	private String tableName;
+	private String tableName = "Phenotype";
 	
 	public Object getValue(int obs, int attrnum) {
 		return attributeList.get(attrnum).getValue(obs);
@@ -23,6 +24,13 @@ public class Phenotype implements TableReport {
 	
 	public PhenotypeAttribute getAttribute(int attrnum) {
 		return attributeList.get(attrnum);
+	}
+	
+	/**
+	 * @return	a shallow copy of the attribute list. 
+	 */
+	public ArrayList<PhenotypeAttribute> getAttributeList() {
+		return new ArrayList<PhenotypeAttribute>(attributeList);
 	}
 	
 	public PhenotypeAttribute getAttributeOfType(ATTRIBUTE_TYPE type, int attrnum) {
@@ -33,7 +41,7 @@ public class Phenotype implements TableReport {
 		return new ArrayList<PhenotypeAttribute>(attributeMultimap.get(type));
 	}
 	
-	public TaxaList getTaxaList() {
+	public TaxaList taxa() {
 		return myTaxaList;
 	}
 	

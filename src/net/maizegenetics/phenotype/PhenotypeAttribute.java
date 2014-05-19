@@ -1,5 +1,7 @@
 package net.maizegenetics.phenotype;
 
+import net.maizegenetics.util.BitSet;
+
 public interface PhenotypeAttribute {
 	
 	/**
@@ -23,7 +25,7 @@ public interface PhenotypeAttribute {
 	/**
 	 * @return an array whose elements are true for each missing observation, false for observations with valid values.
 	 */
-	boolean[] getMissing();
+	BitSet getMissing();
 	
 	/**
 	 * @return	the name of this Attribute

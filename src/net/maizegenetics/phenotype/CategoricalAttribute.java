@@ -1,14 +1,31 @@
 package net.maizegenetics.phenotype;
 
+import java.util.TreeSet;
+
+import net.maizegenetics.util.BitSet;
+
 import com.google.common.collect.ImmutableBiMap;
 
 public class CategoricalAttribute implements PhenotypeAttribute {
 
-	private String name;
-	private int[] values;
-	private ImmutableBiMap<String, Integer> labelBimap;
-	private boolean[] missing;
+	private final String name;
+	private final int[] values;
+	private final ImmutableBiMap<String, Integer> labelBimap;
+	private final BitSet missing;
 
+	public CategoricalAttribute(String name, String[] stringValues , BitSet missing) {
+		this.name = name;
+		int n = stringValues.length;
+		this.missing = missing;
+		values = new int[n];
+		TreeSet<String> labelSet = new TreeSet<String>();
+		for (String label : stringValues) labelSet.add(label);
+		ImmutableBiMap.Builder<String, Integer> bimapBuilder = ImmutableBiMap.builder();
+		int count = 0;
+		for (String label : labelSet) bimapBuilder.put(label, count++);
+		labelBimap = bimapBuilder.build();
+	}
+	
 	public int getIntegerValue(int obs) {
 		return values[obs];
 	}
@@ -42,16 +59,16 @@ public class CategoricalAttribute implements PhenotypeAttribute {
 
 	@Override
 	public Object getValues() {
-		return values;
+		return getValuesAsLabels();
 	}
 
 	@Override
 	public boolean isMissing(int obs) {
-		return missing[obs];
+		return missing.fastGet(obs);
 	}
 
 	@Override
-	public boolean[] getMissing() {
+	public BitSet getMissing() {
 		return missing;
 	}
 
