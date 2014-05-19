@@ -4,6 +4,7 @@
 package net.maizegenetics.dna.snp;
 
 import net.maizegenetics.dna.map.Chromosome;
+import net.maizegenetics.dna.map.Position;
 import net.maizegenetics.dna.map.PositionList;
 import net.maizegenetics.dna.snp.bit.BitStorage;
 import net.maizegenetics.dna.snp.bit.DynamicBitStorage;
@@ -135,17 +136,17 @@ public class CoreGenotypeTable implements GenotypeTable {
 
     @Override
     public byte referenceAllele(int site) {
-        return myPositionList.referenceAllele(site);
+        return myPositionList.allele(Position.Allele.REF,site);
     }
 
     @Override
     public byte[] referenceAlleles(int startSite, int endSite) {
-        return myPositionList.referenceAlleles(startSite, endSite);
+        return myPositionList.alleles(Position.Allele.REF,startSite, endSite);
     }
 
     @Override
     public byte[] referenceAlleleForAllSites() {
-        return myPositionList.referenceAlleleForAllSites();
+        return myPositionList.alleleForAllSites(Position.Allele.REF);
     }
 
     @Override

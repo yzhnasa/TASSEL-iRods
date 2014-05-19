@@ -5,32 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author james
+ * @author James Harriman
+ * @author Terry Casstevens
  */
 public class DirectoryCrawler {
 
     /**
      * The directory to search if the object is created with no parameters.
      */
-    private static String defaultDirectory = ".";
-
-    public static void main(String args[]) {
-        File[] testFileArray = new File[2];
-        testFileArray[0] = new File("c:/file_visitor_test/1");
-        testFileArray[1] = new File("c:/file_visitor_test/xah");
-
-        String[] testStringArray = new String[2];
-        testStringArray[0] = "c:/file_visitor_test/1";
-        testStringArray[1] = "c:/file_visitor_test/xah";
-
-        File testFile = new File("c:/file_visitor_test");
-        String testString = new String("c:/file_visitor_test");
-
-        File[] returnFiles = DirectoryCrawler.listFiles(".*xa.*", testFileArray);
-        for (File returnFile : returnFiles) { //Iterate over results
-            System.out.println(returnFile.getName());
-        }
-    }
+    private static final String DEFAULT_DIRECTORY = ".";
 
     private DirectoryCrawler() {
         // utility class.
@@ -41,6 +24,7 @@ public class DirectoryCrawler {
      *
      * @param pattern A regular expression specifying what filename to look for.
      * For example, pass the string ".*\.qseq.*" to search for .qseq files.
+     * 
      * @return outputFiles A list of matching files found in the directory
      * structure.
      */
@@ -56,6 +40,8 @@ public class DirectoryCrawler {
     /**
      * @param pattern A regular expression specifying a filename to look for.
      * @param inputFile The name of a directory in which to search for files.
+     * 
+     * @return 
      */
     public static String[] listFileNames(String pattern, String inputFile) {
         File[] outputFiles = listFiles(pattern, inputFile);
@@ -71,7 +57,7 @@ public class DirectoryCrawler {
     }
 
     public static File[] listFiles(String pattern) {
-        return listFiles(pattern, new File[]{new File(defaultDirectory)});
+        return listFiles(pattern, new File[]{new File(DEFAULT_DIRECTORY)});
     }
 
     public static File[] listFiles(String pattern, String inputFile) {

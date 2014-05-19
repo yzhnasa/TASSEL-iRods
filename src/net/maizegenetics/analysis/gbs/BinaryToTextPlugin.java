@@ -35,14 +35,9 @@ public class BinaryToTextPlugin extends AbstractPlugin {
 
     };
 
-    public enum PARAMETERS {
-
-        inputFile, outputFile, fileType
-    };
-
-    private PluginParameter<String> myInputFile = new PluginParameter.Builder<String>(PARAMETERS.inputFile, null, String.class).required(true).inFile().build();
-    private PluginParameter<String> myOutputFile = new PluginParameter.Builder<String>(PARAMETERS.outputFile, null, String.class).required(true).outFile().build();
-    private PluginParameter<FILE_TYPES> myFileType = new PluginParameter.Builder<FILE_TYPES>(PARAMETERS.fileType, FILE_TYPES.TOPM, FILE_TYPES.class).range(Range.encloseAll(Arrays.asList(FILE_TYPES.values()))).build();
+    private PluginParameter<String> myInputFile = new PluginParameter.Builder<String>("i", null, String.class).guiName("Input File").required(true).inFile().build();
+    private PluginParameter<String> myOutputFile = new PluginParameter.Builder<String>("o", null, String.class).guiName("Output File").required(true).outFile().build();
+    private PluginParameter<FILE_TYPES> myFileType = new PluginParameter.Builder<FILE_TYPES>("t", FILE_TYPES.TOPM, FILE_TYPES.class).guiName("File Type").range(Range.encloseAll(Arrays.asList(FILE_TYPES.values()))).build();
 
     public BinaryToTextPlugin(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
@@ -71,7 +66,7 @@ public class BinaryToTextPlugin extends AbstractPlugin {
     }
 
     public Plugin inputFile(String filename) {
-        setParameter(PARAMETERS.inputFile, filename);
+        setParameter(myInputFile.cmdLineName(), filename);
         return this;
     }
 
@@ -80,7 +75,7 @@ public class BinaryToTextPlugin extends AbstractPlugin {
     }
 
     public Plugin outputFile(String filename) {
-        setParameter(PARAMETERS.outputFile, filename);
+        setParameter(myOutputFile.cmdLineName(), filename);
         return this;
     }
 
@@ -89,7 +84,7 @@ public class BinaryToTextPlugin extends AbstractPlugin {
     }
 
     public Plugin fileType(FILE_TYPES type) {
-        setParameter(PARAMETERS.fileType, type.toString());
+        setParameter(myFileType.cmdLineName(), type.toString());
         return this;
     }
 

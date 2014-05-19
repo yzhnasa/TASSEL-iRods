@@ -6,8 +6,6 @@
  */
 package net.maizegenetics.plugindef;
 
-import com.google.common.collect.Range;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -154,8 +152,7 @@ abstract public class AbstractPlugin implements Plugin {
             Field field = getParameterField(key);
             return (PluginParameter) field.get(this);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("AbstractPlugin: getParameterInstance: problem with key: " + key);
+            return null;
         }
     }
 
@@ -330,7 +327,13 @@ abstract public class AbstractPlugin implements Plugin {
         return getParameterInstance(key.toString()).value();
     }
 
-    private Plugin setParameter(String key, Comparable value) {
+    @Override
+    public Comparable getParameter(String key) {
+        return getParameterInstance(key).value();
+    }
+
+    @Override
+    public Plugin setParameter(String key, Comparable value) {
 
         PluginParameter parameter = null;
         try {
@@ -363,7 +366,8 @@ abstract public class AbstractPlugin implements Plugin {
         return this;
     }
 
-    private Plugin setParameter(String key, String value) {
+    @Override
+    public Plugin setParameter(String key, String value) {
 
         PluginParameter parameter = null;
         try {
@@ -494,24 +498,21 @@ abstract public class AbstractPlugin implements Plugin {
                     field.setText(current.value().toString());
                 }
 
-                if (current.range() != null) {
-                    field.addFocusListener(new FocusAdapter() {
-                        @Override
-                        public void focusLost(FocusEvent e) {
-                            String input = field.getText().trim();
-                            try {
-                                T value = convert(input, (Class<T>) current.valueType());
-                                if (!((Range<T>) current.range()).contains(value)) {
-                                    JOptionPane.showMessageDialog(dialog, current.guiName() + " range: " + current.range().toString());
-                                    field.setText(getParameterInstance(current.cmdLineName()).value().toString());
-                                }
-                            } catch (Exception ex) {
-                                JOptionPane.showMessageDialog(dialog, current.guiName() + ": " + ex.getMessage());
+                field.addFocusListener(new FocusAdapter() {
+                    @Override
+                    public void focusLost(FocusEvent e) {
+                        String input = field.getText().trim();
+                        try {
+                            if (!current.acceptsValue(input)) {
+                                JOptionPane.showMessageDialog(dialog, current.guiName() + " range: " + current.range().toString());
                                 field.setText(getParameterInstance(current.cmdLineName()).value().toString());
                             }
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(dialog, current.guiName() + ": " + ex.getMessage());
+                            field.setText(getParameterInstance(current.cmdLineName()).value().toString());
                         }
-                    });
-                }
+                    }
+                });
 
                 if (current.fileType() == PluginParameter.FILE_TYPE.IN) {
                     panel.add(getLine(current.guiName(), field, getOpenFile(dialog, field)));

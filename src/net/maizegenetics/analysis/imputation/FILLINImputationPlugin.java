@@ -163,7 +163,7 @@ public class FILLINImputationPlugin extends AbstractPlugin {
         if(isOutputProjection) {
             mna=new ProjectionBuilder(ImportUtils.readGuessFormat(donorFile));
         } else {
-            if(exportFile.contains("hmp.h5")) {
+            if(exportFile.contains(".h5")) {
                 mna= GenotypeTableBuilder.getTaxaIncremental(this.unimpAlign.positions(),exportFile);
             }else {
                 mna= GenotypeTableBuilder.getTaxaIncremental(this.unimpAlign.positions());

@@ -225,53 +225,77 @@ class ProcessHapMapBlock implements Runnable {
         Map<String, Chromosome> chromosomeLookup=new HashMap<>();
         gTS = SuperByteMatrixBuilder.getInstance(taxaN, siteN);
         for (int s=0; s<siteN; s++) {
-            String input=txtL.get(s);
-            int[] tabPos=new int[NUM_HAPMAP_NON_TAXA_HEADERS];
-            int tabIndex=0;
-            int len=input.length();
-            for (int i=0; (tabIndex<NUM_HAPMAP_NON_TAXA_HEADERS)&&(i<len); i++) {
-                if (input.charAt(i)=='\t') {
-                    tabPos[tabIndex++]=i;
-                }
-            }
-            String chrName=input.substring(tabPos[CHROMOSOME_INDEX-1]+1, tabPos[CHROMOSOME_INDEX]);
-            Chromosome currChr=chromosomeLookup.get(chrName);
-            if (currChr==null) {
-                currChr=new Chromosome(new String(chrName));
-                chromosomeLookup.put(chrName, currChr);
-            }
-            String variants=input.substring(tabPos[VARIANT_INDEX-1]+1, tabPos[VARIANT_INDEX]);
-            GeneralPosition.Builder apb=new GeneralPosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[POSITION_INDEX-1]+1, tabPos[POSITION_INDEX])))
-                    .snpName(input.substring(0, tabPos[SNPID_INDEX]))
-                    .knownVariants(variants) //TODO                    strand, variants,
-                    ;
+            String input = txtL.get(s);
             try {
-                byte glbMajor=NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(0));
-                apb.allele(Position.Allele.GLBMAJ, glbMajor);
-                if (variants.length()==3) {
-                    byte glbMinor=NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(2));
-                    apb.allele(Position.Allele.GLBMIN, glbMinor);
+                int[] tabPos = new int[NUM_HAPMAP_NON_TAXA_HEADERS];
+                int tabIndex = 0;
+                int len = input.length();
+                for (int i = 0; (tabIndex < NUM_HAPMAP_NON_TAXA_HEADERS) && (i < len); i++) {
+                    if (input.charAt(i) == '\t') {
+                        tabPos[tabIndex++] = i;
+                    }
                 }
-            } catch (IllegalArgumentException e) {
-                //for the indels that cannot be converted correctly now
-                // System.out.println("Error Parsing this variant"+Arrays.toString(variants));
-            }
-            blkPosList.add(apb.build());
-            int offset=tabPos[NUM_HAPMAP_NON_TAXA_HEADERS-1]+1;
-            if (isOneLetter) {
-                for (int i=offset; i<len; i+=2) {
-                    gTS.set((i-offset)/2, s, NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i)));
+                String chrName = input.substring(tabPos[CHROMOSOME_INDEX - 1] + 1, tabPos[CHROMOSOME_INDEX]);
+                Chromosome currChr = chromosomeLookup.get(chrName);
+                if (currChr == null) {
+                    currChr = new Chromosome(new String(chrName));
+                    chromosomeLookup.put(chrName, currChr);
                 }
-            } else {
-                for (int i=offset; i<len; i+=3) {
-                    //System.out.println(i+":"+input.charAt(i+1)+input.charAt(i));
-                    //there is a phasing conflict with the existing import approach
-                    gTS.set((i-offset)/3, s, GenotypeTableUtils.getDiploidValue(NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i+1)),
-                            NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i))));
+                String variants = input.substring(tabPos[VARIANT_INDEX - 1] + 1, tabPos[VARIANT_INDEX]);
+                GeneralPosition.Builder apb = new GeneralPosition.Builder(currChr, Integer.parseInt(input.substring(tabPos[POSITION_INDEX - 1] + 1, tabPos[POSITION_INDEX])))
+                        .snpName(input.substring(0, tabPos[SNPID_INDEX]))
+                        .knownVariants(variants) //TODO                    strand, variants,
+                        ;
+                try {
+                    byte glbMajor = NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(0));
+                    apb.allele(Position.Allele.GLBMAJ, glbMajor);
+                    if (variants.length() == 3) {
+                        byte glbMinor = NucleotideAlignmentConstants.getNucleotideDiploidByte(variants.charAt(2));
+                        apb.allele(Position.Allele.GLBMIN, glbMinor);
+                    }
+                } catch (IllegalArgumentException e) {
+                    //for the indels that cannot be converted correctly now
+                    // System.out.println("Error Parsing this variant"+Arrays.toString(variants));
                 }
+                blkPosList.add(apb.build());
+                int offset = tabPos[NUM_HAPMAP_NON_TAXA_HEADERS - 1] + 1;
+                if (isOneLetter) {
+                    for (int i = offset; i < len; i += 2) {
+                        gTS.set((i - offset) / 2, s, NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i)));
+                    }
+                } else {
+                    for (int i = offset; i < len; i += 3) {
+                        //there is a phasing conflict with the existing import approach
+                        gTS.set((i - offset) / 3, s, GenotypeTableUtils.getDiploidValue(NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i + 1)),
+                                NucleotideAlignmentConstants.getNucleotideDiploidByte(input.charAt(i))));
+                    }
+                }
+                swapSitesIfOutOfOrder(s);
+            } catch(Exception e) {
+                System.err.println("Error parsing this row "+input);
+                throw e;
             }
         }
         txtL=null;
+    }
+
+    //Swap adjacent misordered sites, often caused by two sites at the same positions with a different name order
+    private void swapSitesIfOutOfOrder(int site) {
+        if(site<1) return;
+        if(blkPosList.get(site-1).compareTo(blkPosList.get(site))>0) {
+            //swap
+            Position tempP=blkPosList.get(site-1);
+            System.out.println();
+            System.out.print("Swapping:" + tempP.toString() + " <-> " + blkPosList.get(site).toString());
+            blkPosList.set(site - 1, blkPosList.get(site));
+            blkPosList.set(site,tempP);
+            for (int t = 0; t < gTS.getNumRows(); t++) {
+                byte tempG=gTS.get(t, site-1);
+                gTS.set(t, site-1,gTS.get(t,site));
+                gTS.set(t, site,tempG);
+            }
+        }
+
     }
 
     int getSiteNumber() {

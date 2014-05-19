@@ -4,21 +4,27 @@
 package net.maizegenetics.analysis;
 
 import org.apache.log4j.Logger;
-
-import javax.swing.*;
-import java.awt.*;
+import org.apache.log4j.Level;
 
 import java.io.File;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import java.awt.Frame;
+import javax.swing.ImageIcon;
+
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Plugin;
+import net.maizegenetics.plugindef.PluginParameter;
+import net.maizegenetics.util.Utils;
 
 /**
  *
@@ -26,21 +32,36 @@ import net.maizegenetics.plugindef.Plugin;
  */
 public class ListPlugins extends AbstractPlugin {
 
-    private static final Logger myLogger = Logger.getLogger(ListPlugins.class);
+    private PluginParameter<Boolean> myFull = new PluginParameter.Builder<Boolean>("full", false, Boolean.class).build();
 
     public ListPlugins(Frame parentFrame, boolean isInteractive) {
         super(parentFrame, isInteractive);
+
+        Logger.getLogger("net.maizegenetics").setLevel(Level.OFF);
+        Logger.getLogger("net.maizegenetics.plugindef").setLevel(Level.INFO);
     }
 
     @Override
     public DataSet processData(DataSet input) {
 
         Set<String> classes = getTasselClasses();
+        List<String> temp = new ArrayList<>();
         for (String current : classes) {
             if (isPlugin(current)) {
-                System.out.println(current);
+                if (full()) {
+                    temp.add(current);
+                } else {
+                    temp.add(Utils.getBasename(current));
+                }
             }
         }
+
+        Collections.sort(temp);
+
+        for (String current : temp) {
+            System.out.println(current);
+        }
+
         return null;
 
     }
@@ -94,6 +115,10 @@ public class ListPlugins extends AbstractPlugin {
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    public boolean full() {
+        return myFull.value();
     }
 
     @Override

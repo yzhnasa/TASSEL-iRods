@@ -49,8 +49,10 @@ public interface Position extends Comparable<Position>, GeneralAnnotation {
     /**
      * Allele types recorded in an annotated position.  If unknown,
      * Alignment.UNKNOWN_ALLELE is returned.
+     *
      */
     public enum Allele {  //The indices are used in effectively as map (EnumMap is not used as it requires 4X more memory)
+        //todo TAS-376 fuse with WhichAllele
         /**Reference Allele*/
         REF(0),
         /**Major (most frequent) allele from the globally defined alignment*/

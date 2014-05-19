@@ -122,9 +122,9 @@ public class BuilderFromVCF {
                 if (sitesRead%linesAtTime==0) {
                     ProcessVCFBlock pb;
                     if(inMemory) {
-                        pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);}
+                        pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines,includeDepth);}
                     else{
-                        pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines, sitesRead-txtLines.size(),gtbDiskBuild);
+                        pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines, sitesRead-txtLines.size(),gtbDiskBuild, includeDepth);
                     }
                     pbs.add(pb);
                     //     pb.run(); //used for testing
@@ -136,9 +136,9 @@ public class BuilderFromVCF {
             if (txtLines.size()>0) {
                 ProcessVCFBlock pb;//=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);
                 if(inMemory) {
-                    pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines);}
+                    pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines, includeDepth);}
                 else{
-                    pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines, sitesRead-txtLines.size(),gtbDiskBuild);
+                    pb=ProcessVCFBlock.getInstance(taxaList.numberOfTaxa(), hp, txtLines, sitesRead-txtLines.size(),gtbDiskBuild, includeDepth);
                 }
                 pbs.add(pb);
                 //  pb.run(); //used for testing
@@ -334,10 +334,11 @@ class ProcessVCFBlock implements Runnable {
     private byte[][] gTS;  //genotypes
     private byte[][][] dTS; //depth
     private final ArrayList<Position> blkPosList;
+    private final boolean keepDepth;
 
 
     private ProcessVCFBlock(int taxaN, HeaderPositions hp, ArrayList<String> txtL, int startSite,
-                            GenotypeTableBuilder hdf5Builder) {
+                            GenotypeTableBuilder hdf5Builder, boolean keepDepth) {
         this.taxaN=taxaN;
         this.siteN=txtL.size();
         this.txtL=txtL;
@@ -345,22 +346,23 @@ class ProcessVCFBlock implements Runnable {
         blkPosList=new ArrayList<>(siteN);
         this.startSite=startSite;
         this.hdf5Builder=hdf5Builder;
+        this.keepDepth=keepDepth;
     }
     /*Used to process VCF blocks and return the result for a in memory GenotypeTable*/
-    static ProcessVCFBlock getInstance(int taxaN, HeaderPositions hp, ArrayList<String> txtL) {
-        return new ProcessVCFBlock(taxaN, hp, txtL, Integer.MIN_VALUE, null);
+    static ProcessVCFBlock getInstance(int taxaN, HeaderPositions hp, ArrayList<String> txtL,boolean keepDepth) {
+        return new ProcessVCFBlock(taxaN, hp, txtL, Integer.MIN_VALUE, null,keepDepth);
     }
 
     /*Used to process VCF blocks and return the result for on disk HDF5 GenotypeTable*/
-    static ProcessVCFBlock getInstance(int taxaN, HeaderPositions hp, ArrayList<String> txtL, int startSite, GenotypeTableBuilder hdf5Builder) {
-        return new ProcessVCFBlock(taxaN, hp, txtL, startSite, hdf5Builder);
+    static ProcessVCFBlock getInstance(int taxaN, HeaderPositions hp, ArrayList<String> txtL, int startSite, GenotypeTableBuilder hdf5Builder, boolean keepDepth) {
+        return new ProcessVCFBlock(taxaN, hp, txtL, startSite, hdf5Builder,keepDepth);
     }
 
     @Override
     public void run() {
         Map<String, Chromosome> chromosomeLookup=new HashMap<>();
         gTS=new byte[taxaN][siteN];
-        dTS=new byte[taxaN][6][siteN];
+        if(keepDepth==true) dTS=new byte[taxaN][6][siteN];
         for (int s=0; s<siteN; s++) {
             //really needs to use a Splitter iterator to make this cleaner if it is performant
             String input=txtL.get(s);
@@ -418,7 +420,7 @@ class ProcessVCFBlock implements Runnable {
                             int a2=fieldS.charAt(2)-'0';
                             if(a1<0 || a2<0 ) {gTS[t][s]=GenotypeTable.UNKNOWN_DIPLOID_ALLELE;}
                             else {gTS[t][s]=GenotypeTableUtils.getDiploidValue(alleles[a1],alleles[a2]);}
-                        } else if(f==iAD) {
+                        } else if((f==iAD)&&keepDepth) {
                             int i=0;
                             for(String ad: Splitter.on(",").split(fieldS)){
                                 if(alleles[i]==GenotypeTable.UNKNOWN_ALLELE) {  //no position for depth of unknown alleles, so skip
@@ -442,6 +444,10 @@ class ProcessVCFBlock implements Runnable {
         txtL=null;
         if(hdf5Builder!=null) {
             addResultsToHDF5Builder();
+            gTS=null;
+            dTS=null;
+            txtL=null;
+            blkPosList.clear();
         }
         //TODO TAS-315 Create memory efficient VCF to HDF5 insert writing to Builder of direct.
     }

@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import net.maizegenetics.analysis.gbs.TagBlockPosition;
 
 /** 
  * Build blocked physical position of tags. The blocked physical position of tag is used to block the corresponding marker in genetic mapping if the tag is mapping to the marker coming from itself

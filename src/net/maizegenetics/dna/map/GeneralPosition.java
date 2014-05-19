@@ -46,7 +46,7 @@ public final class GeneralPosition implements Position {
     private final boolean isIndel;
     private final float myMAF;
     private final float mySiteCoverage;
-    private final long myAlleleValue;
+    private final long myAlleleValue;  //todo consider TAS-376
     /**Name of the site (default = SLocus_Position)*/
     private final byte[] mySNPIDAsBytes;
 //    /**Define the nature of the polymorphism {"ACTAT","-"} or {"A","C","G"} or {"100","103","106"}

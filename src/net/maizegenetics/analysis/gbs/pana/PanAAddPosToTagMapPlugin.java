@@ -1,4 +1,4 @@
-package net.maizegenetics.analysis.gbs;
+package net.maizegenetics.analysis.gbs.pana;
 
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
@@ -11,39 +11,42 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import net.maizegenetics.dna.map.TagGWASMap;
+import net.maizegenetics.dna.map.TagsOnPhysicalMapV3;
 
 /** 
- * Output sequence in tagMap (e.g. {@link TagGWASMap}) file in Fasta format, which is used in Bowtie2 alignment
+ * Add alignment information from Bowtie2 to tagMap. Used to identify unique ref tags for model training
  * 
  * @author Fei Lu
  */
-public class PanATagMapToFastaPlugin extends AbstractPlugin {
+public class PanAAddPosToTagMapPlugin extends AbstractPlugin {
 
     static long timePoint1;
     private ArgsEngine engine = null;
-    private Logger logger = Logger.getLogger(PanATagMapToFastaPlugin.class);
+    private Logger logger = Logger.getLogger(PanAAddPosToTagMapPlugin.class);
     
     String tagMapFileS = null;
-    String fastaFileS = null;
+    String topmV3FileS = null;
 
-    public PanATagMapToFastaPlugin() {
+    public PanAAddPosToTagMapPlugin() {
         super(null, false);
     }
 
-    public PanATagMapToFastaPlugin(Frame parentFrame) {
+    public PanAAddPosToTagMapPlugin(Frame parentFrame) {
         super(parentFrame, false);
     }
 
     private void printUsage() {
         logger.info(
                 "\n\nUsage is as follows:\n"
-                + " -i  tagMap(e.g. tagGWASMap) file\n"     
-                + " -o  output Fasta format sequence file of tagMap\n");
+                + " -i  tagMap (e.g. tagGWASMap) file\n"
+                + " -t  multiple position TOPM file\n");
     }
 
+    @Override
     public DataSet performFunction(DataSet input) {
         TagGWASMap tgm = new TagGWASMap(this.tagMapFileS);
-        tgm.writeToFasta(fastaFileS);
+        TagsOnPhysicalMapV3 topm = new TagsOnPhysicalMapV3(this.topmV3FileS);
+        tgm.addAlignment(topm);
         return null;
     }
 
@@ -57,20 +60,20 @@ public class PanATagMapToFastaPlugin extends AbstractPlugin {
         if (engine == null) {
             engine = new ArgsEngine();
             engine.add("-i", "--tagMap-file", true);
-            engine.add("-o", "--fasta-file", true);
+            engine.add("-t", "--topmV3-file", true);
             engine.parse(args);
         }
 
         if (engine.getBoolean("-i")) {
-            this.tagMapFileS = engine.getString("-i");
+            tagMapFileS = engine.getString("-i");
         }
         else {
             printUsage();
             throw new IllegalArgumentException("\n\nPlease use the above arguments/options.\n\n");
         }
         
-        if (engine.getBoolean("-o")) {
-            this.fastaFileS = engine.getString("-o");
+        if (engine.getBoolean("-t")) {
+            topmV3FileS = engine.getString("-t");
         } 
         else {
             printUsage();

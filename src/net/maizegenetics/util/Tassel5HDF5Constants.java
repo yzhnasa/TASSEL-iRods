@@ -76,6 +76,7 @@ public final class Tassel5HDF5Constants {
     public static final String CHROMOSOME_INDICES = POSITION_ATTRIBUTES_PATH + "ChromosomeIndices";
     public static final String SNP_IDS = POSITION_ATTRIBUTES_PATH + "SnpIds";
     public static final String REF_ALLELES = POSITION_ATTRIBUTES_PATH + "ReferenceAlleles";
+    public static final String ANC_ALLELES = POSITION_ATTRIBUTES_PATH + "AncestralAlleles";
 
     //Standard Compression (deflation) levels
     public static final HDF5IntStorageFeatures intDeflation = HDF5IntStorageFeatures.createDeflation(2);

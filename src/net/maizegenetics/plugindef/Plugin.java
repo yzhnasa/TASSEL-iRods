@@ -50,6 +50,15 @@ public interface Plugin extends PluginListener, ProgressListener, Runnable {
      * @return value
      */
     public Comparable getParameter(Enum key);
+    
+    /**
+     * Returns parameter value for given parameter key.
+     *
+     * @param key key
+     *
+     * @return value
+     */
+    public Comparable getParameter(String key);
 
     /**
      * Sets parameter value for given parameter key.
@@ -70,6 +79,26 @@ public interface Plugin extends PluginListener, ProgressListener, Runnable {
      * @return this plugin
      */
     public Plugin setParameter(Enum key, String value);
+    
+    /**
+     * Sets parameter value for given parameter key.
+     *
+     * @param key key
+     * @param value value
+     *
+     * @return this plugin
+     */
+    public Plugin setParameter(String key, Comparable value);
+
+    /**
+     * Sets parameter value for given parameter key.
+     *
+     * @param key key
+     * @param value value
+     *
+     * @return this plugin
+     */
+    public Plugin setParameter(String key, String value);
 
     /**
      * Sets up this plugin to receive input from another plugin.
