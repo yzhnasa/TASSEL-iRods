@@ -2,6 +2,8 @@ package net.maizegenetics.plugindef;
 
 import com.google.common.collect.Range;
 
+import static net.maizegenetics.plugindef.AbstractPlugin.convert;
+
 /**
  * Defines the attributes of parameters to be used in the plugins
  *
@@ -42,9 +44,26 @@ public class PluginParameter<T extends Comparable<T>> {
         } else {
             myValue = value;
         }
-        if ((myRange != null) && (!myRange.contains(myValue))) {
-            throw new IllegalArgumentException("PluginParameter: init: " + myCmdLineName + " value: " + value.toString() + " outside range: " + myRange.toString());
+
+        if (!acceptsValue(myValue)) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("PluginParameter: init: " + myCmdLineName + " value: " + value.toString() + " outside range: ");
+            if (valueType().isEnum()) {
+                builder.append(" [");
+                Comparable[] values = valueType().getEnumConstants();
+                for (int i = 0; i < values.length; i++) {
+                    if (i != 0) {
+                        builder.append(" ");
+                    }
+                    builder.append(values[i].toString());
+                }
+                builder.append("]");
+            } else {
+                builder.append(myRange.toString());
+            }
+            throw new IllegalArgumentException(builder.toString());
         }
+
         myRequired = required;
         if ((myDefaultValue != null) && (myRequired)) {
             throw new IllegalArgumentException("PluginParameter: init: " + myCmdLineName + " shouldn't have default value and be required.");
@@ -84,6 +103,15 @@ public class PluginParameter<T extends Comparable<T>> {
 
     public Range<T> range() {
         return myRange;
+    }
+
+    public boolean acceptsValue(T value) {
+        return (myRange == null) || (myRange.contains(value));
+    }
+
+    public boolean acceptsValue(String input) {
+        T value = convert(input, valueType());
+        return (myRange == null) || (myRange.contains(value));
     }
 
     public T value() {
