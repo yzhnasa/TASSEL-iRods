@@ -697,7 +697,7 @@ abstract public class AbstractPlugin implements Plugin {
      *
      * @param event event
      */
-    protected void fireDataSetReturned(PluginEvent event) {
+    public void fireDataSetReturned(PluginEvent event) {
 
         synchronized (myListeners) {
             Iterator<PluginListener> itr = myListeners.iterator();

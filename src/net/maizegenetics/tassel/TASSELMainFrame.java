@@ -31,6 +31,7 @@ import net.maizegenetics.analysis.association.MLMPlugin;
 import net.maizegenetics.analysis.data.PlinkLoadPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDiseqDisplayPlugin;
 import net.maizegenetics.analysis.popgen.LinkageDisequilibriumPlugin;
+import net.maizegenetics.analysis.data.IRodsFileLoadPlugin;
 import net.maizegenetics.analysis.data.MergeGenotypeTablesPlugin;
 import net.maizegenetics.analysis.data.UnionAlignmentPlugin;
 import net.maizegenetics.analysis.data.FileLoadPlugin;
@@ -57,6 +58,8 @@ import net.maizegenetics.progress.ProgressPanel;
 import net.maizegenetics.util.Utils;
 
 import org.apache.log4j.Logger;
+import org.bio5.irods.iplugin.bean.IPlugin;
+import org.bio5.irods.iplugin.views.IPlugin_OpenImage;
 
 import javax.swing.*;
 
@@ -73,6 +76,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
 import net.maizegenetics.analysis.data.HetsToUnknownPlugin;
 import net.maizegenetics.analysis.gbs.BinaryToTextPlugin;
 
@@ -100,9 +104,13 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
     private JMenuItem openDataMenuItem = new JMenuItem();
     private JMenuItem saveCompleteDataTreeMenuItem = new JMenuItem();
     private JMenuItem saveDataTreeAsMenuItem = new JMenuItem();
+    private JMenuItem loginIRods = new JMenuItem();
+    private JMenuItem uploadFilesToIRods = new JMenuItem();
     private PreferencesDialog thePreferencesDialog;
     private final ProgressPanel myProgressPanel = ProgressPanel.getInstance();
     private HashMap<JMenuItem, Plugin> myMenuItemHash = new HashMap<JMenuItem, Plugin>();
+    private IPlugin irodsImagej = null;
+    private IRodsFileLoadPlugin iRodsFileLoadPlugin = null;
 
     public TASSELMainFrame() {
         try {
@@ -111,7 +119,12 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
             myDataTreePanel.setToolTipText("Data Tree Panel");
             addMenuBar();
             initializeMyFrame();
-
+            /********************* Zhong Yang ***********************/
+            IPlugin_OpenImage.main(null);								// Start irods-imageJ plugin
+            irodsImagej = IPlugin_OpenImage.getIrodsImagej();			// Get irods-imageJ beans.
+            irodsImagej.setTASSELMainFrame(this);						// Set TASSEL itself to beans.
+            irodsImagej.setIRodsFileLoadPlugin(iRodsFileLoadPlugin);	// Set menu item "Load iRods" to beans.
+            /*******************************************************/
             this.setTitle("TASSEL (Trait Analysis by aSSociation, Evolution, and Linkage) " + version);
 
             myLogger.info("Tassel Version: " + version + "  Date: " + versionDate);
@@ -160,6 +173,32 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         myStatusTextField.setBackground(Color.lightGray);
         myStatusTextField.setBorder(null);
+/***************************** Zhong Yang ******************************/
+        // Adding two items in file menu:
+        // 1. login to iRods;
+        // 2. upload local file to iRods server.
+        loginIRods.setText("Login iRods Account");
+        loginIRods.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				IPlugin_OpenImage.getIrodsImagej().getMainWindow().setVisible(true);
+				IPlugin_OpenImage.getIrodsImagej().getMainWindow().setVisibleFlag(false);
+				if(IPlugin_OpenImage.getIrodsImagej().getMainWindowStatus() == true){
+					IPlugin_OpenImage.getIrodsImagej().getMainWindow().setVisible(false);
+					uploadFilesToIRods.setEnabled(true);
+				}
+			}
+        });
+        
+        uploadFilesToIRods.setText("Upload Files To iRods");
+        uploadFilesToIRods.setEnabled(false);
+        uploadFilesToIRods.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				IPlugin_OpenImage.getIrodsImagej().getMainWindow().setVisible(true);
+			}
+        });
+ /*******************************************************************/
         saveCompleteDataTreeMenuItem.setText("Save Data Tree");
         saveCompleteDataTreeMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -226,7 +265,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         reportProgressSplitPane.setDividerLocation((int) (getSize().height / 3.5));
     }
-
+    
     private void addMenuBar() {
 
         JMenuBar jMenuBar = new JMenuBar();
@@ -243,7 +282,9 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
     }
 
-    //Help | About action performed
+   
+
+	//Help | About action performed
     private void helpAbout_actionPerformed(ActionEvent e) {
         AboutBox dlg = new AboutBox(this);
         Dimension dlgSize = dlg.getPreferredSize();
@@ -253,7 +294,17 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         dlg.setModal(true);
         dlg.setVisible(true);
     }
-
+    
+    /*********************** Zhong Yang ***********************/
+    // Let other class enable "Upload files to iRods", because user may directly login form "Load iRods" in Data menu.
+    public void setLoadDataFromIRodsMenuItemEnable(){
+    	uploadFilesToIRods.setEnabled(true);
+    }
+    // IrodsImageJ is a java beans.
+    public IPlugin getIrodsImagej(){
+    	return irodsImagej;
+    }
+    /**********************************************************/
     public void sendMessage(String text) {
         myStatusTextField.setForeground(Color.BLACK);
         myStatusTextField.setText(text);
@@ -573,7 +624,9 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         ProjectionLoadPlugin projectionLoadPlugin = new ProjectionLoadPlugin(this, true);
         projectionLoadPlugin.addListener(myDataTreePanel);
 
+        iRodsFileLoadPlugin = new IRodsFileLoadPlugin(this, true, plinkLoadPlugin, projectionLoadPlugin);	// Adding Load iRods item for menu.
         result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, projectionLoadPlugin), KeyEvent.VK_L));
+        result.add(createMenuItem(iRodsFileLoadPlugin));
         result.add(createMenuItem(new ExportPlugin(this, true)));
         result.add(createMenuItem(new NumericalTransformPlugin(this, true)));
         result.add(createMenuItem(new SynonymizerPlugin(this, true)));
@@ -636,7 +689,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         return result;
 
     }
-
+    
     private JMenu getFileMenu() {
         JMenu fileMenu = new JMenu();
         fileMenu.setText("File");
@@ -644,6 +697,10 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
         fileMenu.add(openCompleteDataTreeMenuItem);
         fileMenu.add(saveDataTreeAsMenuItem);
         fileMenu.add(openDataMenuItem);
+        /************************* Zhong Yang **************************/
+        fileMenu.add(loginIRods);
+        fileMenu.add(uploadFilesToIRods);
+        /***************************************************************/
         JMenuItem preferencesMenuItem = new JMenuItem();
         preferencesMenuItem.setText("Set Preferences");
 
@@ -715,6 +772,7 @@ public class TASSELMainFrame extends JFrame implements ActionListener {
 
         return helpMenu;
     }
+    
 
     @Override
     public void actionPerformed(ActionEvent e) {

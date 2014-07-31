@@ -396,6 +396,7 @@ public class FileLoadPlugin extends AbstractPlugin {
         int returnVal = myOpenFileChooser.showOpenDialog(getParentFrame());
         if (returnVal == JFileChooser.OPEN_DIALOG || returnVal == JFileChooser.APPROVE_OPTION) {
             lopenFiles = myOpenFileChooser.getSelectedFiles();
+            String test = myOpenFileChooser.getCurrentDirectory().getPath();
             TasselPrefs.putOpenDir(myOpenFileChooser.getCurrentDirectory().getPath());
         }
         return lopenFiles;

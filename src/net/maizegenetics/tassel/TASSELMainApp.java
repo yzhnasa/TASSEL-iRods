@@ -19,6 +19,7 @@
 package net.maizegenetics.tassel;
 
 import javax.swing.*;
+
 import java.awt.*;
 
 import net.maizegenetics.pipeline.TasselPipeline;
@@ -26,6 +27,7 @@ import net.maizegenetics.prefs.TasselPrefs;
 import net.maizegenetics.util.ExceptionUtils;
 
 import org.apache.log4j.PropertyConfigurator;
+import org.bio5.irods.iplugin.views.IPlugin_OpenImage;
 
 public class TASSELMainApp {
 
