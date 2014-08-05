@@ -6,34 +6,60 @@
  */
 package net.maizegenetics.analysis.data;
 
-import ch.systemsx.cisd.hdf5.HDF5Factory;
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import net.maizegenetics.gui.DialogUtils;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JRootPane;
+
+import net.maizegenetics.dna.map.TOPMUtils;
 import net.maizegenetics.dna.snp.ImportUtils;
-import net.maizegenetics.trait.ReadPhenotypeUtils;
 import net.maizegenetics.dna.snp.ReadPolymorphismUtils;
 import net.maizegenetics.dna.snp.ReadSequenceAlignmentUtils;
-import net.maizegenetics.taxa.distance.ReadDistanceMatrix;
-import net.maizegenetics.util.*;
+import net.maizegenetics.gui.DialogUtils;
 import net.maizegenetics.plugindef.AbstractPlugin;
 import net.maizegenetics.plugindef.DataSet;
 import net.maizegenetics.plugindef.Datum;
 import net.maizegenetics.plugindef.PluginEvent;
 import net.maizegenetics.prefs.TasselPrefs;
+import net.maizegenetics.taxa.distance.ReadDistanceMatrix;
+import net.maizegenetics.trait.ReadPhenotypeUtils;
+import net.maizegenetics.util.ExceptionUtils;
+import net.maizegenetics.util.HDF5Utils;
+import net.maizegenetics.util.Report;
+import net.maizegenetics.util.TableReportUtils;
+import net.maizegenetics.util.Utils;
 
 import org.apache.log4j.Logger;
 
-import javax.swing.*;
-
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.*;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-import net.maizegenetics.dna.map.TOPMUtils;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 /**
  *
@@ -480,7 +506,11 @@ public class FileLoadPlugin extends AbstractPlugin {
  */
 class FileLoadPluginDialog extends JDialog {
 
-    boolean isCancel = true;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	boolean isCancel = true;
     ButtonGroup conversionButtonGroup = new ButtonGroup();
     JRadioButton hapMapRadioButton = new JRadioButton("Load Hapmap");
     JRadioButton hdf5RadioButton = new JRadioButton("Load HDF5");

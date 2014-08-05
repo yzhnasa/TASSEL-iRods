@@ -1,0 +1,74 @@
+[1mdiff --cc src/net/maizegenetics/tassel/TASSELMainApp.java[m
+[1mindex 5fe99ac,457b2a8..0000000[m
+[1m--- a/src/net/maizegenetics/tassel/TASSELMainApp.java[m
+[1m+++ b/src/net/maizegenetics/tassel/TASSELMainApp.java[m
+[36m@@@ -19,15 -19,12 +19,22 @@@[m
+  package net.maizegenetics.tassel;[m
+  [m
+  import javax.swing.*;[m
+[32m++<<<<<<< HEAD[m
+[32m +[m
+[32m +import java.awt.*;[m
+[32m++=======[m
+[32m++>>>>>>> f937b9a91220dcf0ecfa9b506a6b63751b6e0988[m
+  [m
+  import net.maizegenetics.pipeline.TasselPipeline;[m
+  import net.maizegenetics.prefs.TasselPrefs;[m
+[31m- import net.maizegenetics.util.ExceptionUtils;[m
+[32m+ import net.maizegenetics.util.LoggingUtils;[m
+  [m
+[32m++<<<<<<< HEAD[m
+[32m +import org.apache.log4j.PropertyConfigurator;[m
+[32m +import org.bio5.irods.iplugin.views.IPlugin_OpenImage;[m
+[32m++=======[m
+[32m+ import org.apache.log4j.Logger;[m
+[32m++>>>>>>> f937b9a91220dcf0ecfa9b506a6b63751b6e0988[m
+  [m
+  public class TASSELMainApp {[m
+  [m
+[1mdiff --cc src/net/maizegenetics/tassel/TASSELMainFrame.java[m
+[1mindex 2573796,846b00b..0000000[m
+[1m--- a/src/net/maizegenetics/tassel/TASSELMainFrame.java[m
+[1m+++ b/src/net/maizegenetics/tassel/TASSELMainFrame.java[m
+[36m@@@ -77,8 -74,24 +77,27 @@@[m [mimport java.util.Map[m
+  import java.util.zip.ZipEntry;[m
+  import java.util.zip.ZipOutputStream;[m
+  [m
+[32m++<<<<<<< HEAD[m
+[32m++=======[m
+[32m+ import net.maizegenetics.analysis.data.GetPositionListPlugin;[m
+[32m+ import net.maizegenetics.analysis.data.GetTaxaListPlugin;[m
+[32m++>>>>>>> f937b9a91220dcf0ecfa9b506a6b63751b6e0988[m
+  import net.maizegenetics.analysis.data.HetsToUnknownPlugin;[m
+[32m+ import net.maizegenetics.analysis.data.SortGenotypeFilePlugin;[m
+  import net.maizegenetics.analysis.gbs.BinaryToTextPlugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.DiscoverySNPCallerPlugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.FastqToTagCountPlugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.MergeMultipleTagCountPlugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.ModifyTBTHDF5Plugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.ProductionSNPCallerPlugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.SAMConverterPlugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.SeqToTBTHDF5Plugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.TagCountToFastqPlugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.UTagCountToTagPairPlugin;[m
+[32m+ import net.maizegenetics.analysis.gbs.UTagPairToTOPMPlugin;[m
+[32m+ import net.maizegenetics.analysis.imputation.FILLINFindHaplotypesPlugin;[m
+[32m+ import net.maizegenetics.analysis.imputation.FILLINImputationPlugin;[m
+[32m+ import net.maizegenetics.analysis.imputation.FSFHapImputationPlugin;[m
+  [m
+  /**[m
+   * TASSELMainFrame[m
+[36m@@@ -624,10 -616,11 +669,13 @@@[m [mpublic class TASSELMainFrame extends JF[m
+          ProjectionLoadPlugin projectionLoadPlugin = new ProjectionLoadPlugin(this, true);[m
+          projectionLoadPlugin.addListener(myDataTreePanel);[m
+  [m
+[32m +        iRodsFileLoadPlugin = new IRodsFileLoadPlugin(this, true, plinkLoadPlugin, projectionLoadPlugin);	// Adding Load iRods item for menu.[m
+          result.add(createMenuItem(new FileLoadPlugin(this, true, plinkLoadPlugin, projectionLoadPlugin), KeyEvent.VK_L));[m
+[32m +        result.add(createMenuItem(iRodsFileLoadPlugin));[m
+          result.add(createMenuItem(new ExportPlugin(this, true)));[m
+[32m+         result.add(createMenuItem(new GetTaxaListPlugin(this, true)));[m
+[32m+         result.add(createMenuItem(new GetPositionListPlugin(this, true)));[m
+[32m+         result.add(createMenuItem(new SortGenotypeFilePlugin(this, true)));[m
+          result.add(createMenuItem(new NumericalTransformPlugin(this, true)));[m
+          result.add(createMenuItem(new SynonymizerPlugin(this, true)));[m
+          result.add(createMenuItem(new IntersectionAlignmentPlugin(this, true)));[m

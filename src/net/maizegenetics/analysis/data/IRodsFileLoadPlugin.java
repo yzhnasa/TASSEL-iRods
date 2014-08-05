@@ -132,7 +132,7 @@ public class IRodsFileLoadPlugin extends AbstractPlugin {
 		try {
 
 			if (isInteractive()) {
-				FileLoadPluginDialog theDialog = new FileLoadPluginDialog();
+				FileLoadPluginDialogForIrods theDialog = new FileLoadPluginDialogForIrods();
 				theDialog.setLocationRelativeTo(getParentFrame());
 				theDialog.setVisible(true);
 				if (theDialog.isCancel()) {
@@ -428,8 +428,12 @@ public class IRodsFileLoadPlugin extends AbstractPlugin {
 
 }
 
-class FileLoadPluginDialog extends JDialog {
+class FileLoadPluginDialogForIrods extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1936743550229835010L;
 	boolean isCancel = true;
 	ButtonGroup conversionButtonGroup = new ButtonGroup();
 	JRadioButton hapMapRadioButton = new JRadioButton("Load Hapmap");
@@ -451,7 +455,7 @@ class FileLoadPluginDialog extends JDialog {
 	JRadioButton topmRadioButton = new JRadioButton(
 			"Load a TOPM (Tags on Physical Map)");
 
-	public FileLoadPluginDialog() {
+	public FileLoadPluginDialogForIrods() {
 		super((Frame) null, "File Loader", true);
 		try {
 			jbInit();
